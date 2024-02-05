@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 
+import { MatButtonModule } from '@angular/material/button';
+
 @Component({
-	selector: 'app-root',
+	selector: 'root',
 	standalone: true,
-	imports: [CommonModule, RouterOutlet],
-	template: '',
+	imports: [CommonModule, RouterOutlet, MatButtonModule],
+	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
 })
 export class AppComponent {
@@ -15,6 +17,6 @@ export class AppComponent {
 
 	constructor(db: AngularFireDatabase) {
 		this.courses$ = db.list('/course').snapshotChanges();
-		this.courses$.subscribe(e=>console.log(e));
+		// this.courses$.subscribe(e=>console.log(e));
 	}
 }

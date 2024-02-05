@@ -4,7 +4,8 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 ## Timeflow
 
-January 17, 2024 -> Project initialization
+### Release 1.0
+February 5, 2024 -> Project initialization
 
 ## Required Dependencies
 - Firebase

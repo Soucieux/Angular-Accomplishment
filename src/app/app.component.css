@@ -4,15 +4,29 @@
 	bottom: 0;
 	left: 0;
 	right: 0;
-	border: 3px;
+}
+
+.nav-button {
+	width: 100%;
+	padding: 5px;
+}
+
+.nav-icon {
+	position: fixed;
+	left: 30px;
+	top: 7px;
+}
+
+.nav-label {
+	position: fixed;
+	top: 11px;
 }
 
 mat-drawer {
-	width: 100px;
+	width: 10%;
 	background-color: white;
 }
 
 mat-drawer-content {
 	background-color: rgb(241, 215, 242);
 }
-

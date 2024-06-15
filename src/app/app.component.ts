@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterModule } from '@angular/router';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -9,7 +9,13 @@ import { MatButtonModule } from '@angular/material/button';
 @Component({
 	selector: 'root',
 	standalone: true,
-	imports: [CommonModule, RouterOutlet, MatSidenavModule, MatButtonModule],
+	imports: [
+		CommonModule,
+		RouterOutlet,
+		RouterModule,
+		MatSidenavModule,
+		MatButtonModule
+	],
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
 })

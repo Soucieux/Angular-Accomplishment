@@ -1,10 +1,16 @@
 <mat-drawer-container class="sidenav-container" hasBackdrop="false">
 	<mat-drawer mode="push" opened disableClose>
-		<button mat-fab extended aria-label="button">
-			<span class="material-symbols-outlined">home</span>
+		<button
+			color="primary"
+			mat-stroked-button
+			routerLink="/entertainment"
+			class="nav-button">
+			<span class="material-symbols-outlined nav-icon">home</span>
+			<label class="nav-label">Home</label>
 		</button>
 	</mat-drawer>
 	<mat-drawer-content>
 		<router-outlet></router-outlet>
+		<nav>123</nav>
 	</mat-drawer-content>
 </mat-drawer-container>

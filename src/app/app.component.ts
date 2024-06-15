@@ -5,6 +5,7 @@ import { AngularFireDatabase } from '@angular/fire/compat/database';
 
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
+import { MatRippleModule } from '@angular/material/core';
 
 @Component({
 	selector: 'root',
@@ -14,7 +15,8 @@ import { MatButtonModule } from '@angular/material/button';
 		RouterOutlet,
 		RouterModule,
 		MatSidenavModule,
-		MatButtonModule
+        MatButtonModule,
+        MatRippleModule
 	],
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'

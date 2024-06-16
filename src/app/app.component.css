@@ -12,6 +12,8 @@
 	color: black !important;
 	background-color: transparent !important;
 	transition: box-shadow 0.3s ease;
+	font-family: inherit;
+	font-size: medium;
 }
 
 .nav-button:hover {
@@ -38,6 +40,7 @@
 .nav-title {
 	display: block;
 	padding: 10px;
+	font-size: large;
 }
 
 mat-drawer {

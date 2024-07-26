@@ -1,29 +1,32 @@
 <mat-drawer-container class="sidenav-container" hasBackdrop="false">
 	<mat-drawer mode="push" opened disableClose>
-		<span class="nav-title">Menu</span>
-		<div style="padding-top: 5px">
-			<button
-				mat-button
-				class="nav-button"
-				matRipple
-				[matRippleCentered]="false"
-				routerLink="">
-				<span class="material-symbols-outlined nav-icon">home</span>
-				<span class="nav-label">Home</span>
-			</button>
-		</div>
-
-		<div style="padding-top: 5px">
-			<button
-				mat-button
-				class="nav-button"
-				matRipple
-				[matRippleCentered]="false"
-				routerLink="/entertainment">
-				<span class="material-symbols-outlined nav-icon">tv</span>
-				<span class="nav-label">Entertainment</span>
-			</button>
-		</div>
+		<ul style="list-style-type: none; padding-left: 0px">
+			<li>
+				<span class="nav-title">Menu</span>
+			</li>
+			<li style="padding-top: 5px">
+				<a
+					mat-button
+					class="nav-button"
+					matRipple
+					[matRippleCentered]="false"
+					routerLink="">
+					<span class="material-symbols-outlined nav-icon">home</span>
+					<span class="nav-label">Home</span>
+				</a>
+			</li>
+			<li style="padding-top: 5px">
+				<a
+					mat-button
+					class="nav-button"
+					matRipple
+					[matRippleCentered]="false"
+					routerLink="/entertainment">
+					<span class="material-symbols-outlined nav-icon">tv</span>
+					<span class="nav-label">Entertainment</span>
+				</a>
+			</li>
+		</ul>
 	</mat-drawer>
 	<mat-drawer-content>
 		<router-outlet></router-outlet>

@@ -27,9 +27,12 @@
 				</a>
 			</li>
 			<li>
+				@if (!currentUser){
 				<button (click)="login()">Login</button>
+				} @else {
 				<button (click)="logout()">Logout</button>
-				<p >{{ currentUser }}</p>
+				<p>{{ currentUser.displayName }}</p>
+				}
 			</li>
 		</ul>
 	</mat-drawer>

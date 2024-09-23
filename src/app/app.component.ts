@@ -37,41 +37,26 @@ export class AppComponent {
 	// 	this.courses$ = db.list('/course').stateChanges();
 	// 	// this.courses$.subscribe(e=>console.log(e));
 	// }
-	currentUser?: User;
+	currentUser?: User | null;
 
-	constructor(private auth: Auth) {
-		/*
-        Note: This is only used in production environment
-        if (typeof window !== 'undefined') {
-			this.afAuth
-				.getRedirectResult()
-				.then((x) => console.log(x.additionalUserInfo?.profile));
-		}
-        */
-	}
+	constructor(private auth: Auth) {}
 
 	ngOnInit() {
-		onAuthStateChanged(this.auth, (user) => console.log(user));
-	}
-
-	/* 
-    Note: This is only used in production environment
-    async login() {
-	 	await this.afAuth.signInWithRedirect(new GoogleAuthProvider());
-	 }
-     */
-
-	login() {
-		signInWithPopup(this.auth, new GoogleAuthProvider()).then((result) => {
-			console.log(result);
+		onAuthStateChanged(this.auth, (user) => {
+			this.currentUser = user;
+			console.log(user);
 		});
 	}
 
-	logout() {
-		signOut(this.auth);
+	login() {
+		signInWithPopup(this.auth, new GoogleAuthProvider()).catch(() =>
+			console.log('ERROR when signing in')
+		);
 	}
 
-	// constructor(db: AngularFireDatabase) {
-	// 	this.courses$ = db.list('/course').stateChanges();
-	// 	// this.courses$.subscribe(e=>console.log(e));
+	logout() {
+		signOut(this.auth).catch(() =>
+			console.log('ERROR when signing out current user')
+		);
+	}
 }

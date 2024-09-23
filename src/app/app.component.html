@@ -26,6 +26,11 @@
 					<span class="nav-label">Entertainment</span>
 				</a>
 			</li>
+			<li>
+				<button (click)="login()">Login</button>
+				<button (click)="logout()">Logout</button>
+				<p >{{ currentUser }}</p>
+			</li>
 		</ul>
 	</mat-drawer>
 	<mat-drawer-content>

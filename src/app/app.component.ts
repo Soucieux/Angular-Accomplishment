@@ -1,7 +1,7 @@
-import { Component, Injectable } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterModule } from '@angular/router';
-// import { Database } from '@firebase/database';
+import { Database, listVal, objectVal, ref } from '@angular/fire/database';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
@@ -14,8 +14,6 @@ import {
 	User
 } from '@angular/fire/auth';
 
-import { EntertainmentComponent } from './entertainment/entertainment.component';
-
 @Component({
 	selector: 'root',
 	standalone: true,
@@ -25,26 +23,22 @@ import { EntertainmentComponent } from './entertainment/entertainment.component'
 		RouterModule,
 		MatSidenavModule,
 		MatButtonModule,
-		MatRippleModule,
-		EntertainmentComponent
+		MatRippleModule
 	],
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
 })
 export class AppComponent {
-	// courses$;
-	// constructor(db: AngularFireDatabase) {
-	// 	this.courses$ = db.list('/course').stateChanges();
-	// 	// this.courses$.subscribe(e=>console.log(e));
-	// }
-	currentUser?: User | null;
+	courses$;
+	currentUser$?: User | null;
 
-	constructor(private auth: Auth) {}
+	constructor(private auth: Auth, private db: Database) {
+		this.courses$ = objectVal(ref(this.db, '/course/2'));
+	}
 
 	ngOnInit() {
 		onAuthStateChanged(this.auth, (user) => {
-			this.currentUser = user;
-			console.log(user);
+			this.currentUser$ = user;
 		});
 	}
 

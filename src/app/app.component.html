@@ -27,12 +27,15 @@
 				</a>
 			</li>
 			<li>
-				@if (!currentUser){
+				@if (!currentUser$){
 				<button (click)="login()">Login</button>
 				} @else {
 				<button (click)="logout()">Logout</button>
-				<p>{{ currentUser.displayName }}</p>
+				<p>{{ currentUser$.displayName }}</p>
 				}
+			</li>
+			<li>
+				{{ this.courses$ | async | json}}
 			</li>
 		</ul>
 	</mat-drawer>

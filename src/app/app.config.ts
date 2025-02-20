@@ -9,6 +9,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { getDatabase, provideDatabase } from '@angular/fire/database';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 export const appConfig: ApplicationConfig = {
 	providers: [
@@ -19,7 +20,6 @@ export const appConfig: ApplicationConfig = {
 			provideFirebaseApp(() => initializeApp(environment.firebase)),
 			provideAuth(() => getAuth()),
 			provideDatabase(() => getDatabase())
-		)
-		// provideAnimationsAsync()
+		), provideAnimationsAsync()
 	]
 };

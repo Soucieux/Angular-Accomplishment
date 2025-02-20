@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterModule } from '@angular/router';
-import { Database, listVal, objectVal, ref } from '@angular/fire/database';
+import { Database, objectVal, ref } from '@angular/fire/database';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
@@ -29,11 +29,11 @@ import {
 	styleUrl: './app.component.css'
 })
 export class AppComponent {
-	courses$;
+	// courses$;
 	currentUser$?: User | null;
 
 	constructor(private auth: Auth, private db: Database) {
-		this.courses$ = objectVal(ref(this.db, '/course/2'));
+		// this.courses$ = objectVal(ref(this.db, '/course/2'));
 	}
 
 	ngOnInit() {

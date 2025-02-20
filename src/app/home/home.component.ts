@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { MatRadioModule } from '@angular/material/radio';
 
 @Component({
 	selector: 'home',
 	standalone: true,
-	imports: [],
+	imports: [MatRadioModule],
 	templateUrl: './home.component.html',
 	styleUrl: './home.component.css'
 })

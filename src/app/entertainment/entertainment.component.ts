@@ -1,10 +1,14 @@
 import { Component } from '@angular/core';
+import { tvShows, tvShow } from './tvShows';
+import { NgFor } from '@angular/common';
 
 @Component({
-	selector: 'app-entertainment',
+	selector: 'entertainment',
 	standalone: true,
-	imports: [],
+	imports: [NgFor],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.scss'
 })
-export class EntertainmentComponent {}
+export class EntertainmentComponent {
+	tvShowsList: tvShow[] = tvShows;
+}

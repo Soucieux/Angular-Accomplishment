@@ -1,11 +1,10 @@
-.tvShow-container {
+.page-container {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 	grid-auto-flow: dense;
-	gap: 10px;
+	gap: 20px;
 }
 
-.container {
+.individual-item {
 	border: 2px solid green;
 	width: 200px;
 	height: 300px;
@@ -21,7 +20,8 @@
 	box-shadow: 0 0 8px red($color: #000000);
 }
 
-.overlay {
+.individual-item-content {
+	border: 2px solid red;
 	width: 100%;
 	height: 20%;
 
@@ -41,14 +41,14 @@
 	bottom: 0px;
 }
 
-.items {
+.contents {
 	// border: 2px solid red;
 	padding-left: 10px;
 	letter-spacing: 3px;
 	height: 30px;
 }
 
-.head {
+.title {
 	font-size: 20px;
 	font-weight: bold;
 	transform: translateY(20px);
@@ -62,8 +62,8 @@
 	transition: all 0.7s;
 }
 
-.container:hover .overlay {
-	& .head {
+.individual-item:hover .individual-item-content {
+	& .title {
 		transform: translateY(0px);
 	}
 

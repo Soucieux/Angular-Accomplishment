@@ -49,5 +49,7 @@ mat-drawer {
 }
 
 mat-drawer-content {
+	padding-left: 20px;
+	padding-top: 20px;
 	background-color: rgb(239, 236, 239);
 }

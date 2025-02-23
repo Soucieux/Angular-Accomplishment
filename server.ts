@@ -4,6 +4,8 @@ import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import bootstrap from './src/main.server';
+import * as fs from 'fs';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
@@ -11,8 +13,17 @@ export function app(): express.Express {
 	const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 	const browserDistFolder = resolve(serverDistFolder, '../browser');
 	const indexHtml = join(serverDistFolder, 'index.server.html');
-
 	const commonEngine = new CommonEngine();
+
+	// Read proxy config file
+	const proxyConfig = JSON.parse(
+		fs.readFileSync(join(process.cwd(), 'proxy.config.json'), 'utf8')
+	);
+
+	// Use the proxy moddleware for API routes (e.g., "/api")
+	Object.keys(proxyConfig).forEach((context) => {
+		server.use(context, createProxyMiddleware(proxyConfig[context]));
+	});
 
 	server.set('view engine', 'html');
 	server.set('views', browserDistFolder);
@@ -52,9 +63,7 @@ function run(): void {
 	// Start up the Node server
 	const server = app();
 	server.listen(port, () => {
-		console.log(
-			`Node Express server listening on http://localhost:${port}`
-		);
+		console.log(`Node Express server listening on http://localhost:${port}`);
 	});
 }
 

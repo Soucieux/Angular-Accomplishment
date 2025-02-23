@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, PLATFORM_ID, Renderer2, Inject } from '@angular/core';
-import { tvShows, tvShow } from './tv.shows.list';
+import { movie, movies } from './movie.list';
 import { isPlatformBrowser, NgFor } from '@angular/common';
+import { doubanService } from './douban.service';
 
 @Component({
 	selector: 'entertainment',
@@ -10,16 +11,21 @@ import { isPlatformBrowser, NgFor } from '@angular/common';
 	styleUrl: './entertainment.component.css'
 })
 export class EntertainmentComponent {
-	//elRef is to get a collection, cannot modify the content directly.
-	pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
+	pageContainer?: any;
 
-	tvShowsList: tvShow[] = tvShows;
+	movieList: movie[] = movies;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef,
-		private renderer: Renderer2
+		private renderer: Renderer2,
+		private boubanService: doubanService
 	) {}
+
+	ngOnInit() {
+		//elRef is to get a collection, cannot modify the content directly.
+		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
+	}
 
 	@HostListener('window:resize')
 	onResize() {
@@ -29,11 +35,10 @@ export class EntertainmentComponent {
 	ngAfterViewInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.updateGridLayout(this.pageContainer);
-			for (let index = 0; index < this.tvShowsList.length; index++) {
-				console.log(
-					this.pageContainer.getElementsByClassName('title')[index].innerText.length
-				);
-			}
+			this.boubanService.searchRates();
+			// this.boubanService.searchRates().subscribe((response) => {
+			// 	console.log(response);
+			// });
 		}
 	}
 

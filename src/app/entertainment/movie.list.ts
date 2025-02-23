@@ -1,9 +1,9 @@
-export interface tvShow {
+export interface movie {
 	name: string;
 	category: string;
 }
 
-export const tvShows: tvShow[] = [
+export const movies: movie[] = [
 	{ name: '无证之罪', category: '悬疑' },
 	{ name: '沙海', category: '悬疑' },
     { name: '长安十二时辰', category: '悬疑' },

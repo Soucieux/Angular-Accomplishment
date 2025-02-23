@@ -1,13 +1,5 @@
-import {
-	Component,
-	ElementRef,
-	HostListener,
-	PLATFORM_ID,
-	Renderer2,
-	Inject,
-	ViewChild
-} from '@angular/core';
-import { tvShows, tvShow } from './tvShows';
+import { Component, ElementRef, HostListener, PLATFORM_ID, Renderer2, Inject } from '@angular/core';
+import { tvShows, tvShow } from './tv.shows.list';
 import { isPlatformBrowser, NgFor } from '@angular/common';
 
 @Component({

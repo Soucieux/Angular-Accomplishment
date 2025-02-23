@@ -15,11 +15,10 @@ export const appConfig: ApplicationConfig = {
 	providers: [
 		provideRouter(routes),
 		provideClientHydration(),
-		importProvidersFrom(
-			BrowserAnimationsModule,
-			provideFirebaseApp(() => initializeApp(environment.firebase)),
-			provideAuth(() => getAuth()),
-			provideDatabase(() => getDatabase())
-		), provideAnimationsAsync()
+		importProvidersFrom(BrowserAnimationsModule),
+		provideAnimationsAsync(),
+		provideFirebaseApp(() => initializeApp(environment.firebase)),
+		provideAuth(() => getAuth()),
+		provideDatabase(() => getDatabase())
 	]
 };

@@ -1,18 +1,31 @@
-import { Component, ElementRef, HostListener, Renderer2 } from '@angular/core';
+import {
+	Component,
+	ElementRef,
+	HostListener,
+	PLATFORM_ID,
+	Renderer2,
+	Inject
+} from '@angular/core';
 import { tvShows, tvShow } from './tvShows';
-import { NgFor } from '@angular/common';
+import { isPlatformBrowser, NgFor } from '@angular/common';
 
 @Component({
 	selector: 'entertainment',
 	standalone: true,
 	imports: [NgFor],
 	templateUrl: './entertainment.component.html',
-	styleUrl: './entertainment.component.scss'
+	styleUrl: './entertainment.component.css'
 })
 export class EntertainmentComponent {
 	tvShowsList: tvShow[] = tvShows;
 
-	constructor(private elRef: ElementRef, private renderer: Renderer2) {}
+	constructor(
+		@Inject(PLATFORM_ID) private platformId: Object,
+		private elRef: ElementRef,
+		private renderer: Renderer2
+	) {}
+
+	ngOnInit() {}
 
 	@HostListener('window:resize')
 	onResize() {
@@ -20,31 +33,33 @@ export class EntertainmentComponent {
 	}
 
 	ngAfterViewInit() {
-		this.updateGridLayout();
+		if (isPlatformBrowser(this.platformId)) {
+			this.updateGridLayout();
+		}
 	}
 
 	updateGridLayout() {
+		//elRef is to get a collection, cannot modify the content directly.
 		const pageContainer =
-			//elRef is to get a collection, cannot modify the content directly.
-			this.elRef.nativeElement.getElementsByClassName('page-container');
+			this.elRef.nativeElement.getElementsByClassName('page-container')[0];
+		// Get item width from css
+		const itemsWidth = getComputedStyle(pageContainer).getPropertyValue(
+			'--individual-item-width'
+		);
+		const itemsGap =
+			getComputedStyle(pageContainer).getPropertyValue('--individual-item-gap');
 		if (pageContainer) {
-			let screenWidth = (pageContainer[0] as HTMLElement).clientWidth;
-			let itemsPerRow = Math.floor(screenWidth / 200);
-			let remainingSpacePerRow = screenWidth - itemsPerRow * 200;
-			console.log(screenWidth);
-			console.log(window.innerWidth);
-
-			// if (remainingSpacePerRow < 220) {
-			// 	itemsPerRow--;
-			// }
+			let componentWidth = (pageContainer as HTMLElement).clientWidth;
+			let itemsPerRow = Math.floor(
+				(componentWidth - parseInt(itemsGap)) /
+					(parseInt(itemsWidth) + parseInt(itemsGap))
+			);
 
 			this.renderer.setStyle(
 				//document is to directly get HTML DOM which can be modified directly
-				document.getElementsByClassName(
-					'page-container'
-				)[0] as HTMLElement,
+				document.getElementsByClassName('page-container')[0] as HTMLElement,
 				'grid-template-columns',
-				`repeat(${itemsPerRow}, minmax(200px, 1fr))`
+				`repeat(${itemsPerRow}, minmax(${parseInt(itemsWidth)}px, 1fr))`
 			);
 		}
 	}

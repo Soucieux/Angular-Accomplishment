@@ -1,6 +1,5 @@
 mat-radio-button {
-    margin-left: 16px;
-    --mdc-radio-unselected-icon-color: yellow !important;
-    --mdc-theme-text-primary-on-background: green !important;
+	margin-left: 16px;
+	--mdc-radio-unselected-icon-color: yellow !important;
+	--mdc-theme-text-primary-on-background: green !important;
 }
-  

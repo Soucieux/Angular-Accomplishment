@@ -7,7 +7,6 @@
 .nav-button {
 	width: 100%;
 	overflow: hidden;
-	color: black !important;
 	background-color: transparent !important;
 	transition: box-shadow 0.3s ease;
 	font-family: inherit;
@@ -43,7 +42,6 @@
 
 mat-drawer {
 	text-align: center;
-	color: black;
 	width: 250px;
 	background-color: rgb(243, 227, 243);
 }

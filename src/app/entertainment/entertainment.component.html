@@ -2,7 +2,9 @@
 	<div class="individual-item" *ngFor="let tvShow of tvShowsList">
 		<div class="individual-item-content">
 			<div class="contents title">
-				<p>{{ tvShow.name }}</p>
+				<p [style.font-size]="calculateFontSize(tvShow.name.length)">
+					{{ tvShow.name }}
+				</p>
 			</div>
 			<div class="contents category">
 				<p>{{ tvShow.category }}</p>

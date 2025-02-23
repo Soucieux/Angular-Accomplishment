@@ -4,7 +4,8 @@ import {
 	HostListener,
 	PLATFORM_ID,
 	Renderer2,
-	Inject
+	Inject,
+	ViewChild
 } from '@angular/core';
 import { tvShows, tvShow } from './tvShows';
 import { isPlatformBrowser, NgFor } from '@angular/common';
@@ -17,6 +18,9 @@ import { isPlatformBrowser, NgFor } from '@angular/common';
 	styleUrl: './entertainment.component.css'
 })
 export class EntertainmentComponent {
+	//elRef is to get a collection, cannot modify the content directly.
+	pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
+
 	tvShowsList: tvShow[] = tvShows;
 
 	constructor(
@@ -25,34 +29,36 @@ export class EntertainmentComponent {
 		private renderer: Renderer2
 	) {}
 
-	ngOnInit() {}
-
 	@HostListener('window:resize')
 	onResize() {
-		this.updateGridLayout();
+		this.updateGridLayout(this.pageContainer);
 	}
 
 	ngAfterViewInit() {
 		if (isPlatformBrowser(this.platformId)) {
-			this.updateGridLayout();
+			this.updateGridLayout(this.pageContainer);
+			for (let index = 0; index < this.tvShowsList.length; index++) {
+				console.log(
+					this.pageContainer.getElementsByClassName('title')[index].innerText.length
+				);
+			}
 		}
 	}
 
-	updateGridLayout() {
-		//elRef is to get a collection, cannot modify the content directly.
-		const pageContainer =
-			this.elRef.nativeElement.getElementsByClassName('page-container')[0];
+	calculateFontSize(length: number) {
+		return length < 9 ? '20px' : String(20 - (length - 8) * 2 + 'px');
+	}
+
+	updateGridLayout(pageContainer: any) {
 		// Get item width from css
-		const itemsWidth = getComputedStyle(pageContainer).getPropertyValue(
-			'--individual-item-width'
-		);
-		const itemsGap =
-			getComputedStyle(pageContainer).getPropertyValue('--individual-item-gap');
+		const itemsWidth =
+			getComputedStyle(pageContainer).getPropertyValue('--individual-item-width');
+		const itemsGap = getComputedStyle(pageContainer).getPropertyValue('--individual-item-gap');
+
 		if (pageContainer) {
 			let componentWidth = (pageContainer as HTMLElement).clientWidth;
 			let itemsPerRow = Math.floor(
-				(componentWidth - parseInt(itemsGap)) /
-					(parseInt(itemsWidth) + parseInt(itemsGap))
+				(componentWidth - parseInt(itemsGap)) / (parseInt(itemsWidth) + parseInt(itemsGap))
 			);
 
 			this.renderer.setStyle(

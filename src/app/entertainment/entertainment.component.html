@@ -1,13 +1,13 @@
 <div class="page-container">
-	<div class="individual-item" *ngFor="let tvShow of tvShowsList">
+	<div class="individual-item" *ngFor="let movie of movieList">
 		<div class="individual-item-content">
 			<div class="contents title">
-				<p [style.font-size]="calculateFontSize(tvShow.name.length)">
-					{{ tvShow.name }}
+				<p [style.font-size]="calculateFontSize(movie.name.length)">
+					{{ movie.name }}
 				</p>
 			</div>
 			<div class="contents category">
-				<p>{{ tvShow.category }}</p>
+				<p>{{ movie.category }}</p>
 			</div>
 		</div>
 	</div>

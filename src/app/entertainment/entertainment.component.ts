@@ -1,6 +1,6 @@
 import { Component, ElementRef, HostListener, PLATFORM_ID, Renderer2, Inject } from '@angular/core';
 import { movie, movies } from './movie.list';
-import { isPlatformBrowser, NgFor } from '@angular/common';
+import { isPlatformBrowser, isPlatformServer, NgFor } from '@angular/common';
 import { doubanService } from './douban.service';
 
 @Component({
@@ -11,20 +11,27 @@ import { doubanService } from './douban.service';
 	styleUrl: './entertainment.component.css'
 })
 export class EntertainmentComponent {
-	pageContainer?: any;
-
-	movieList: movie[] = movies;
+	private readonly className = 'entertainment.component';
+	private pageContainer?: any;
+	protected movieList: movie[] = movies;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef,
 		private renderer: Renderer2,
-		private boubanService: doubanService
+		private doubanService: doubanService
 	) {}
 
 	ngOnInit() {
 		//elRef is to get a collection, cannot modify the content directly.
+		console.log(this.className + 'Inside ngOnInit of entertainment component');
 		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
+		if (isPlatformServer(this.platformId)) {
+			console.log(this.className + 'Fatch data from server');
+			this.doubanService.searchMovie().subscribe((response) => {});
+		} else if (isPlatformBrowser(this.platformId)) {
+			console.log(this.className + 'Fetch data from client');
+		}
 	}
 
 	@HostListener('window:resize')
@@ -35,10 +42,6 @@ export class EntertainmentComponent {
 	ngAfterViewInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.updateGridLayout(this.pageContainer);
-			this.boubanService.searchRates();
-			// this.boubanService.searchRates().subscribe((response) => {
-			// 	console.log(response);
-			// });
 		}
 	}
 

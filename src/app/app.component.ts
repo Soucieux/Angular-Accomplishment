@@ -49,8 +49,6 @@ export class AppComponent {
 	}
 
 	logout() {
-		signOut(this.auth).catch(() =>
-			console.log('ERROR when signing out current user')
-		);
+		signOut(this.auth).catch(() => console.log('ERROR when signing out current user'));
 	}
 }

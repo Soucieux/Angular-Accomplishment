@@ -1,20 +1,24 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class doubanService {
+	private readonly className = 'douban.service';
 	private doubanApi = 'api/movie/subject_search?search_text=Inception';
 
-	constructor(private http: HttpClient) {}
+	constructor(private http: HttpClient) {
+		console.log(this.className + 'Running douban.service.ts');
+	}
 
-	searchRates() {
-		this.http
-			.get(`${this.doubanApi}`, {responseType: 'text'})
-			.subscribe((data) => console.log(data));
+	searchMovie(): Observable<any> {
+		if (typeof window === 'undefined') {
+			console.log(this.className + 'Skip API calling when building');
+			return of({ results: [] });
+		}
+		console.log(this.className + 'Retrieving movie from douban');
+		return this.http.get(`${this.doubanApi}`, { responseType: 'text' });
 	}
 }

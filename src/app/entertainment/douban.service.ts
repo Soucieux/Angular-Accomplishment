@@ -6,7 +6,7 @@ import { Observable, of } from 'rxjs';
 	providedIn: 'root'
 })
 export class doubanService {
-	private readonly className = 'douban.service';
+	private readonly className = doubanService.name;
 	private doubanApi = 'api/movie/subject_search?search_text=Inception';
 
 	constructor(private http: HttpClient) {
@@ -14,10 +14,10 @@ export class doubanService {
 	}
 
 	searchMovie(): Observable<any> {
-		if (typeof window === 'undefined') {
-			console.log(this.className + 'Skip API calling when building');
-			return of({ results: [] });
-		}
+		// if (typeof window === 'undefined') {
+		// 	console.log(this.className + 'Skip API calling when building');
+		// 	return of({ results: [] });
+		// }
 		console.log(this.className + 'Retrieving movie from douban');
 		return this.http.get(`${this.doubanApi}`, { responseType: 'text' });
 	}

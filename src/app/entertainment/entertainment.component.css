@@ -61,6 +61,11 @@
 	transition: all 0.7s;
 }
 
+.rate {
+	font-size: 23px;
+	font-weight: bold;
+}
+
 .individual-item:hover .individual-item-content {
 	& .title {
 		transform: translateY(0px);

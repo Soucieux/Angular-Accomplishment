@@ -11,7 +11,7 @@ import { doubanService } from './douban.service';
 	styleUrl: './entertainment.component.css'
 })
 export class EntertainmentComponent {
-	private readonly className = 'entertainment.component';
+	private readonly className = EntertainmentComponent.name;
 	private pageContainer?: any;
 	protected movieList: movie[] = movies;
 
@@ -24,13 +24,17 @@ export class EntertainmentComponent {
 
 	ngOnInit() {
 		//elRef is to get a collection, cannot modify the content directly.
-		console.log(this.className + 'Inside ngOnInit of entertainment component');
 		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
 		if (isPlatformServer(this.platformId)) {
 			console.log(this.className + 'Fatch data from server');
-			this.doubanService.searchMovie().subscribe((response) => {});
+			this.doubanService.searchMovie().subscribe((response) => {
+				// console.log(response);
+			});
 		} else if (isPlatformBrowser(this.platformId)) {
 			console.log(this.className + 'Fetch data from client');
+			this.doubanService.searchMovie().subscribe((response) => {
+				// console.log(response);
+			});
 		}
 	}
 

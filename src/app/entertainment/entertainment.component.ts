@@ -1,5 +1,5 @@
 import { Component, ElementRef, HostListener, PLATFORM_ID, Renderer2, Inject } from '@angular/core';
-import { movie, movies } from './movie.list';
+import { movies, MovieItem } from './movie.list';
 import { isPlatformBrowser, NgFor } from '@angular/common';
 import { DoubanService } from './douban.service';
 import { LOG } from '../log';
@@ -14,7 +14,7 @@ import { LOG } from '../log';
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
 	private pageContainer?: any;
-	protected movieList: movie[] = movies;
+	protected movieList: MovieItem[] = movies;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -37,8 +37,9 @@ export class EntertainmentComponent {
 					const extractData = response['subjects'][0];
 					const rate = extractData['rate'];
 					const cover = extractData['cover'].replace('\\', '');
-					const id = extractData['id'];
-					console.log(cover);
+                    const id = extractData['id'];
+                    this.movieList[0].cover = cover;
+					console.log(this.movieList[0]);
 				}
 			});
 		}

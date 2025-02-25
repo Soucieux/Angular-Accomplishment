@@ -7,8 +7,22 @@
 				</p>
 			</div>
 			<div class="contents category">
-				<p>{{ movie.category }}</p>
+				<p>
+					{{ movie.category }} <span class="rate">{{ movie.rate }}</span>
+				</p>
 			</div>
 		</div>
+		@if (movie.cover){
+		<!-- <div
+			style="
+				width: 500px;
+				height: 300px;
+				background: url('https://img9.doubanio.com/view/photo/s_ratio_poster/public/p513344864.jpg')
+					no-repeat center/cover;
+			"></div> -->
+		<img
+			src="https://img9.doubanio.com/view/photo/s_ratio_poster/public/p513344864.jpg"
+			alt="Test" />
+		}
 	</div>
 </div>

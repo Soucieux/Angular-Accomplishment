@@ -1,6 +1,6 @@
 {
     "/api":{
-        "target" : "https://search.douban.com",
+        "target" : "https://movie.douban.com/",
         "secure" : false,
         "changeOrigin":true,
         "pathRewrite" :{

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import bootstrap from './src/main.server';
 import * as fs from 'fs';
+import { LOG } from './src/app/log';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
 // The Express app is exported so that it can be used by serverless Functions.
@@ -14,6 +15,7 @@ export function app(): express.Express {
 	const browserDistFolder = resolve(serverDistFolder, '../browser');
 	const indexHtml = join(serverDistFolder, 'index.server.html');
 	const commonEngine = new CommonEngine();
+	const className: string = 'server.ts';
 
 	// Read proxy config file
 	const proxyConfig = JSON.parse(
@@ -22,6 +24,7 @@ export function app(): express.Express {
 
 	// Use the proxy moddleware for API routes (e.g., "/api")
 	Object.keys(proxyConfig).forEach((context) => {
+		LOG.info(className, 'Server proxies API call from client');
 		server.use(context, createProxyMiddleware(proxyConfig[context]));
 	});
 

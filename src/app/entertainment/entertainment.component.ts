@@ -1,7 +1,8 @@
 import { Component, ElementRef, HostListener, PLATFORM_ID, Renderer2, Inject } from '@angular/core';
 import { movie, movies } from './movie.list';
-import { isPlatformBrowser, isPlatformServer, NgFor } from '@angular/common';
-import { doubanService } from './douban.service';
+import { isPlatformBrowser, NgFor } from '@angular/common';
+import { DoubanService } from './douban.service';
+import { LOG } from '../log';
 
 @Component({
 	selector: 'entertainment',
@@ -11,7 +12,7 @@ import { doubanService } from './douban.service';
 	styleUrl: './entertainment.component.css'
 })
 export class EntertainmentComponent {
-	private readonly className = EntertainmentComponent.name;
+	private readonly className = 'EntertainmentComponent';
 	private pageContainer?: any;
 	protected movieList: movie[] = movies;
 
@@ -19,21 +20,26 @@ export class EntertainmentComponent {
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef,
 		private renderer: Renderer2,
-		private doubanService: doubanService
+		private doubanService: DoubanService
 	) {}
 
 	ngOnInit() {
 		//elRef is to get a collection, cannot modify the content directly.
 		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
-		if (isPlatformServer(this.platformId)) {
-			console.log(this.className + 'Fatch data from server');
+		if (isPlatformBrowser(this.platformId)) {
+			LOG.info(this.className, 'Client is making API call');
 			this.doubanService.searchMovie().subscribe((response) => {
-				// console.log(response);
-			});
-		} else if (isPlatformBrowser(this.platformId)) {
-			console.log(this.className + 'Fetch data from client');
-			this.doubanService.searchMovie().subscribe((response) => {
-				// console.log(response);
+				LOG.info(this.className, 'Response received from API');
+				if (response.length === 0) {
+					LOG.error(this.className, 'Data not found');
+				} else {
+					LOG.info(this.className, 'Disassemble data');
+					const extractData = response['subjects'][0];
+					const rate = extractData['rate'];
+					const cover = extractData['cover'].replace('\\', '');
+					const id = extractData['id'];
+					console.log(cover);
+				}
 			});
 		}
 	}

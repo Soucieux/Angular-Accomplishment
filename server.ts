@@ -24,7 +24,7 @@ export function app(): express.Express {
 
 	// Use the proxy moddleware for API routes (e.g., "/api")
 	Object.keys(proxyConfig).forEach((context) => {
-		LOG.info(className, 'Server proxies API call from client');
+		LOG.info(className, `Server proxies API call from client with ${context}`);
 		server.use(context, createProxyMiddleware(proxyConfig[context]));
 	});
 

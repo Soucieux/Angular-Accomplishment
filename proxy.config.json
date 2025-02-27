@@ -1,10 +1,18 @@
 {
-    "/api":{
-        "target" : "https://movie.douban.com/",
-        "secure" : false,
-        "changeOrigin":true,
-        "pathRewrite" :{
-            "^/api":""
-        }
-    }
+	"/api": {
+		"target": "https://movie.douban.com/",
+		"secure": false,
+		"changeOrigin": true,
+		"pathRewrite": {
+			"^/api": ""
+		}
+	},
+	"/download-image": {
+		"target": "https://img9.doubanio.com/view/photo/s_ratio_poster/public/",
+		"secure": false,
+		"changeOrigin": true,
+		"pathRewrite": {
+			"^/download-image": ""
+		}
+	}
 }

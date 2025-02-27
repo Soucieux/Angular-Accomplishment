@@ -9,7 +9,8 @@ export class MovieItem implements MovieItemInterface {
 		public name: string,
 		public category: string,
 		public rate: number = -1,
-		public cover: string = ''
+        public cover: string = '',
+        public id: number = -1,
 	) {}
 }
 export var movies: MovieItem[] = [

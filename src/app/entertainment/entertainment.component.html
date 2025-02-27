@@ -7,8 +7,11 @@
 				</p>
 			</div>
 			<div class="contents category">
-				<p>{{ movie.category }}</p>
+				<p>
+					{{ movie.category }} <span class="rate">{{ movie.rate }}</span>
+				</p>
 			</div>
 		</div>
+		<img *ngIf="movie.cover" [src]="movie.cover" alt="Test" />
 	</div>
 </div>

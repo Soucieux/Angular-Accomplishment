@@ -7,12 +7,12 @@
 			"^/api": ""
 		}
 	},
-	"/download-image": {
+	"/search-cover": {
 		"target": "https://img9.doubanio.com/view/photo/s_ratio_poster/public/",
 		"secure": false,
 		"changeOrigin": true,
 		"pathRewrite": {
-			"^/download-image": ""
+			"^/search-cover": ""
 		}
 	}
 }

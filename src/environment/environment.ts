@@ -5,7 +5,7 @@ export const environment = {
 		authDomain: 'my-own-website-2024.firebaseapp.com',
 		databaseURL: 'https://my-own-website-2024-default-rtdb.firebaseio.com',
 		projectId: 'my-own-website-2024',
-		storageBucket: 'my-own-website-2024.appspot.com',
+		storageBucket: 'gs://my-own-website-2024.firebasestorage.app',
 		messagingSenderId: '402312630147',
 		appId: '1:402312630147:web:49c4e645690f57aec5f0b6',
 		measurementId: 'G-69SWNFCXCQ'

@@ -7,7 +7,11 @@ export class LOG {
 		console.info('[WARNING]' + ' ' + className + ' - ' + message);
 	}
 
-	static error(className: string, message: string) {
-		console.error('[ERROR]' + ' ' + className + ' - ' + message);
+	static error(className: string, message: string, error?: Error) {
+		if (error) {
+			console.error('[ERROR] ' + className + ' - ' + message + ': ' + error.message);
+		} else {
+			console.error('[ERROR] ' + className + ' - ' + message);
+		}
 	}
 }

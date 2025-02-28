@@ -1,9 +1,9 @@
 <div class="page-container">
-	<div class="individual-item" *ngFor="let movie of movieList">
+	<div class="individual-item" *ngFor="let movie of movieList$ | async">
 		<div class="individual-item-content">
 			<div class="contents title">
-				<p [style.font-size]="calculateFontSize(movie.name.length)">
-					{{ movie.name }}
+				<p [style.font-size]="calculateFontSize(movie.title.length)">
+					{{ movie.title }}
 				</p>
 			</div>
 			<div class="contents category">

@@ -12,7 +12,7 @@ export class DoubanService {
 	constructor(private http: HttpClient) {}
 
 	searchMovie(movieName: string): Observable<any> {
-		LOG.info(this.className, 'Retrieving data...');
+		LOG.info(this.className, 'Retrieving data from API...');
 		/*  	
         1.	With ng serve (Development Mode):
 	        •	Simulated SSR: 
@@ -39,8 +39,7 @@ export class DoubanService {
 		return this.http.get(`/api/j/search_subjects?tag=${movieName}`, { responseType: 'json' });
 	}
 
-	downloadMovieCover(imageId: string): Observable<Blob> {
-		LOG.info(this.className, 'Downloading movie cover...');
-		return this.http.get(`/download-image/${imageId}`, { responseType: 'blob' });
+	searchMovieCover(imageId: string): Observable<Blob> {
+		return this.http.get(`/search-cover/${imageId}`, { responseType: 'blob' });
 	}
 }

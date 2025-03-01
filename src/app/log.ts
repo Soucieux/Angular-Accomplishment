@@ -4,7 +4,7 @@ export class LOG {
 	}
 
 	static warn(className: string, message: string) {
-		console.info('[WARNING]' + ' ' + className + ' - ' + message);
+		console.warn('[WARNING]' + ' ' + className + ' - ' + message);
 	}
 
 	static error(className: string, message: string, error?: Error) {

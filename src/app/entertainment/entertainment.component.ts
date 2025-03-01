@@ -1,16 +1,19 @@
-import { Component, ElementRef, HostListener, PLATFORM_ID, Renderer2, Inject } from '@angular/core';
+import {
+	Component,
+	ElementRef,
+	HostListener,
+	PLATFORM_ID,
+	Renderer2,
+	Inject,
+	isDevMode
+} from '@angular/core';
 import { MovieItem } from './movie.list';
 import { isPlatformBrowser, isPlatformServer, NgFor, NgIf, CommonModule } from '@angular/common';
-import { Database, listVal, ref, update } from '@angular/fire/database';
+import { Database, listVal, ref as dbRef, update, ref, get } from '@angular/fire/database';
 import { DoubanService } from './douban.service';
 import { LOG } from '../log';
 import { Observable, firstValueFrom } from 'rxjs';
-import {
-	Storage,
-	ref as storageRef,
-	uploadBytes,
-	uploadBytesResumable
-} from '@angular/fire/storage';
+import { Storage, ref as storageRef, uploadBytesResumable } from '@angular/fire/storage';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -21,6 +24,7 @@ import {
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
 	private pageContainer?: any;
+	private moviesRef?: any;
 	protected movieList$: Observable<MovieItem[]>;
 
 	constructor(
@@ -31,56 +35,106 @@ export class EntertainmentComponent {
 		private db: Database,
 		private storage: Storage
 	) {
+		// Get the movie list (Observable) from firebase
 		LOG.info(this.className, 'Retrieving movie list');
-		this.movieList$ = listVal(ref(this.db, 'movies'));
+		this.moviesRef = ref(this.db, 'movies');
+		this.movieList$ = listVal(this.moviesRef);
 	}
 
 	ngOnInit() {
 		//elRef is to get a collection, cannot modify the content directly.
 		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
-		this.searchMovie('Inception');
-
-		// this.movieList[0].cover = URL.createObjectURL(response);
-		// update(ref(this.db, `movies/0`), {
-		// 	title: extractData['title'],
-
-		// 	rate: extractData['rate'],
-		// 	cover: extractData['cover'],
-		// 	id: extractData['id']
-		// });
+		this.getMovieList();
 	}
 
-	private async searchMovie(movieName: string) {
-		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is making API call`);
-		try {
-			const extractedData = await firstValueFrom(this.doubanService.searchMovie(movieName));
-			if (extractedData == null) {
-				LOG.error(this.className, 'Data not found');
-			} else {
-				LOG.info(this.className, 'Data received');
+	private async getMovieList() {
+		// Step 1: Get the movie list (one-time retrieval) from firebase
+		let movieListSnapshot = await get(this.moviesRef);
 
-				const movieDetails = extractedData['subjects'][0];
-				let coverImageLink = movieDetails['cover'].replace('\\', '');
-				let coverImageId = coverImageLink.substring(coverImageLink.lastIndexOf('/') + 1);
-				if (isPlatformServer(this.platformId)) {
-					this.searchMovieCover(coverImageId);
-				}
-			}
-		} catch (error) {
-			LOG.error(this.className, 'Error while retrieving data from API', error as Error);
+		// Step 2: Loop through the movieList
+		for (const movieKey in movieListSnapshot.val()) {
+			const movie = movieListSnapshot.val()[movieKey];
+			//Step 3: Searches for the specific movie
+			LOG.info(this.className, `Get movie details for ${movie.title}`);
+			this.searchMovie(movie.title).then((movieRate) => {
+				// Step 10: Updates the movie rate to firebase
+				if (movieRate != null) {
+					update(dbRef(this.db, `movies/${movieKey}`), {
+						rate: movieRate
+					})
+						.then(() =>
+							LOG.info(
+								this.className,
+								`Updating movie rate for ${movie.title} is completed`
+							)
+						)
+						.catch((error) =>
+							LOG.error(
+								this.className,
+								`Error while updating movie rate for ${movie.title}`,
+								error as Error
+							)
+						);
+                } else {
+                    LOG.warn(this.className, `Movie rate for ${movie.title} is not found`);
+                }
+			});
 		}
 	}
 
-	private async searchMovieCover(coverImageId: string) {
+	private async searchMovie(movieName: string): Promise<string | null> {
+		try {
+			LOG.info(
+				this.className,
+				`${(this.platformId as string).toUpperCase()} is making API call`
+			);
+			// Step 4: searchMovie returns a Promise and wait for the retrieval to complete
+			const extractedData = await firstValueFrom(this.doubanService.searchMovie(movieName));
+
+			if (extractedData == null || extractedData['subjects'].length === 0) {
+				LOG.warn(this.className, 'Data not found');
+				return null;
+			} else {
+				LOG.info(
+					this.className,
+					`Data received for ${movieName}. Extracting movie details.`
+				);
+				// Step 5: Extracts movie details
+				const movieDetails = extractedData['subjects'][0];
+				let coverImageLink = movieDetails['cover'].replace('\\', '');
+				let coverImageId = coverImageLink.substring(coverImageLink.lastIndexOf('/') + 1);
+
+				// Step 6: Retrieves movies cover and then upload them to firebase storage
+				if (isDevMode() && isPlatformServer(this.platformId)) {
+					this.searchMovieCover(coverImageId);
+				}
+
+				// Step 9: Returns the movie rate once the process to upload movie cover is done
+				return movieDetails['rate'];
+			}
+		} catch (error: unknown) {
+			LOG.error(
+				this.className,
+				`Error while retrieving data for ${movieName}`,
+				error as Error
+			);
+			return null;
+		}
+	}
+
+	private async searchMovieCover(coverImageId: string): Promise<void> {
 		LOG.info(
 			this.className,
 			`${(this.platformId as string).toUpperCase()} is searching movie cover`
 		);
 		try {
+			// Step 7: searchMovieCover returns a Promise and wait for the retrieval to complete
 			const coverImage = await firstValueFrom(
 				this.doubanService.searchMovieCover(coverImageId)
 			);
-			const storageRefer = storageRef(this.storage, '/movies/1.jpeg');
+
+			// Step 8: Uploads the movie cover to firebase storage
+			const storageRefer = storageRef(this.storage, `/movies/${coverImageId}`);
 			const uploadTask = uploadBytesResumable(storageRefer, coverImage);
 			uploadTask.on(
 				'state_changed',
@@ -93,11 +147,11 @@ export class EntertainmentComponent {
 					);
 				},
 				() => {
-					LOG.info(this.className, 'Image upload to filrebase storage has completed.');
+					LOG.info(this.className, 'Image upload to filrebase storage has completed');
 				}
 			);
 		} catch (error) {
-			LOG.error(this.className, 'Error while retrieving movie cover', (error as Error));
+			LOG.error(this.className, 'Error while retrieving movie cover', error as Error);
 		}
 	}
 

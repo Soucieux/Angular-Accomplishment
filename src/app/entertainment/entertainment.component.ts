@@ -51,6 +51,10 @@ export class EntertainmentComponent {
 		// Step 1: Get the movie list (one-time retrieval) from firebase
 		let movieListSnapshot = await get(this.moviesRef);
 
+		// this.doubanService.searchMovie('盗梦空间').subscribe((data) => {
+		// 	console.log(data);
+        // });
+
 		// Step 2: Loop through the movieList
 		for (const movieKey in movieListSnapshot.val()) {
 			const movie = movieListSnapshot.val()[movieKey];
@@ -75,9 +79,9 @@ export class EntertainmentComponent {
 								error as Error
 							)
 						);
-                } else {
-                    LOG.warn(this.className, `Movie rate for ${movie.title} is not found`);
-                }
+		        } else {
+		            LOG.warn(this.className, `Movie rate for ${movie.title} is not found`);
+		        }
 			});
 		}
 	}
@@ -86,10 +90,12 @@ export class EntertainmentComponent {
 		try {
 			LOG.info(
 				this.className,
-				`${(this.platformId as string).toUpperCase()} is making API call`
+				`${(this.platformId as string).toUpperCase()} is retrieving data from API`
 			);
 			// Step 4: searchMovie returns a Promise and wait for the retrieval to complete
-			const extractedData = await firstValueFrom(this.doubanService.searchMovie(movieName));
+			const extractedData = await firstValueFrom(
+				this.doubanService.searchMovieJson(movieName)
+			);
 
 			if (extractedData == null || extractedData['subjects'].length === 0) {
 				LOG.warn(this.className, 'Data not found');
@@ -106,7 +112,7 @@ export class EntertainmentComponent {
 
 				// Step 6: Retrieves movies cover and then upload them to firebase storage
 				if (isDevMode() && isPlatformServer(this.platformId)) {
-					this.searchMovieCover(coverImageId);
+					this.searchMovieCover(coverImageId, movieName);
 				}
 
 				// Step 9: Returns the movie rate once the process to upload movie cover is done
@@ -122,7 +128,7 @@ export class EntertainmentComponent {
 		}
 	}
 
-	private async searchMovieCover(coverImageId: string): Promise<void> {
+	private async searchMovieCover(coverImageId: string, movieName: string): Promise<void> {
 		LOG.info(
 			this.className,
 			`${(this.platformId as string).toUpperCase()} is searching movie cover`
@@ -142,16 +148,16 @@ export class EntertainmentComponent {
 				(error) => {
 					LOG.error(
 						this.className,
-						'Error while uploading movie cover to firebase',
+						`Error while uploading movie cover for ${movieName} to firebase`,
 						error
 					);
 				},
 				() => {
-					LOG.info(this.className, 'Image upload to filrebase storage has completed');
+					LOG.info(this.className, `Image upload for ${movieName} has completed`);
 				}
 			);
 		} catch (error) {
-			LOG.error(this.className, 'Error while retrieving movie cover', error as Error);
+			LOG.error(this.className, `Error while retrieving movie cover for ${movieName}`, error as Error);
 		}
 	}
 

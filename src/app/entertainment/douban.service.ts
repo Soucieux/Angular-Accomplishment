@@ -11,8 +11,13 @@ export class DoubanService {
 
 	constructor(private http: HttpClient) {}
 
-	searchMovie(movieName: string): Observable<any> {
-		LOG.info(this.className, 'Retrieving data from API...');
+	searchMovie(movieName: string): Observable<string> {
+		return this.http.get(`/api/subject_search?search_text=${movieName}`, {
+			responseType: 'text'
+		});
+	}
+
+	searchMovieJson(movieName: string): Observable<any> {
 		/*  	
         1.	With ng serve (Development Mode):
 	        •	Simulated SSR: 
@@ -36,7 +41,9 @@ export class DoubanService {
         3. Even though there is a proxy file set with ng serve, it is still possible that the target API can detect whether the origin of the reuqest is coming from a server or a browser.
                 Therefore, the client could still face CORS issue when trying to access that API. 
                     */
-		return this.http.get(`/api/j/search_subjects?tag=${movieName}`, { responseType: 'json' });
+		return this.http.get(`/api-json/j/search_subjects?tag=${movieName}`, {
+			responseType: 'json'
+		});
 	}
 
 	searchMovieCover(imageId: string): Observable<Blob> {

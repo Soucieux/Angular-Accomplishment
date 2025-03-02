@@ -36,7 +36,6 @@ export class EntertainmentComponent {
 		private storage: Storage
 	) {
 		// Get the movie list (Observable) from firebase
-		LOG.info(this.className, 'Retrieving movie list');
 		this.moviesRef = ref(this.db, 'movies');
 		this.movieList$ = listVal(this.moviesRef);
 	}
@@ -54,7 +53,7 @@ export class EntertainmentComponent {
 		let count = 0;
 		if (isDevMode() && isPlatformServer(this.platformId)) {
 			for (const movieKey in movieListSnapshot.val()) {
-				// Delay 15 seconds for every 5 movies
+				// Delay 20 seconds for every 5 movies
 				count++;
 				if (count % 5 == 0) {
 					LOG.warn(this.className, 'Delay 20 seconds for every 5 movies');
@@ -63,28 +62,26 @@ export class EntertainmentComponent {
 				const movie = movieListSnapshot.val()[movieKey];
 				//Step 3: Searches for the specific movie and get the movie rate
 				LOG.info(this.className, `Get movie details for ${movie.title}`);
-				await this.searchMovie(movie.title).then((result) => {
-					// Step 10: Updates the movie rate to firebase
-					const movieRate = result == null ? -1 : result;
-					update(dbRef(this.db, `movies/${movieKey}`), {
-						rate: movieRate
-					})
-						.then(() => {
-							const logMethod = movieRate === -1 ? LOG.warn : LOG.info;
-							logMethod(
-								this.className,
-								`Movie rate for ${movie.title} is ${
-									movieRate === -1 ? 'not found' : `updated to ${movieRate}`
-								}`
-							);
-						})
-						.catch((error) =>
-							LOG.error(
-								this.className,
-								`Error while updating movie rate for ${movie.title}`,
-								error as Error
-							)
-						);
+				await this.searchMovie(movie.title).then((updatedMovieRate) => {
+					// Step 10: Updates the movie rate to firebase if the movie rate is found
+					updatedMovieRate === null
+						? LOG.warn(this.className, `Movie rate for ${movie.title} is not found`)
+						: update(dbRef(this.db, `movies/${movieKey}`), {
+								rate: updatedMovieRate
+						  })
+								.then(() => {
+									LOG.info(
+										this.className,
+										`Movie rate for ${movie.title} is updated to ${updatedMovieRate}`
+									);
+								})
+								.catch((error) =>
+									LOG.error(
+										this.className,
+										`Error while updating movie rate for ${movie.title}`,
+										error as Error
+									)
+								);
 				});
 			}
 		}

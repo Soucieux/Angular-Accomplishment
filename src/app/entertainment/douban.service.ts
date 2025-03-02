@@ -40,6 +40,7 @@ export class DoubanService {
 				responseType: 'json'
 			})
 			.pipe(
+				delay(10000),
 				catchError((error) => {
 					LOG.error(
 						this.className,

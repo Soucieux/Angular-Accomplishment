@@ -1,7 +1,7 @@
 import { LOG } from './../log';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { catchError, delay, Observable } from 'rxjs';
 
 @Injectable({
 	providedIn: 'root'
@@ -11,13 +11,7 @@ export class DoubanService {
 
 	constructor(private http: HttpClient) {}
 
-	searchMovie(movieName: string): Observable<string> {
-		return this.http.get(`/api/subject_search?search_text=${movieName}`, {
-			responseType: 'text'
-		});
-	}
-
-	searchMovieJson(movieName: string): Observable<any> {
+	searchMovieJSON(movieName: string): Observable<any> {
 		/*  	
         1.	With ng serve (Development Mode):
 	        •	Simulated SSR: 
@@ -41,12 +35,45 @@ export class DoubanService {
         3. Even though there is a proxy file set with ng serve, it is still possible that the target API can detect whether the origin of the reuqest is coming from a server or a browser.
                 Therefore, the client could still face CORS issue when trying to access that API. 
                     */
-		return this.http.get(`/api-json/j/search_subjects?tag=${movieName}`, {
-			responseType: 'json'
-		});
+		return this.http
+			.get(`/api/j/subject_suggest?q=${movieName}`, {
+				responseType: 'json'
+			})
+			.pipe(
+				catchError((error) => {
+					LOG.error(
+						this.className,
+						'Error while retrieving movie JSON for ' + movieName,
+						error as Error
+					);
+					return error;
+				})
+			);
 	}
 
-	searchMovieCover(imageId: string): Observable<Blob> {
-		return this.http.get(`/search-cover/${imageId}`, { responseType: 'blob' });
+	searchMovieCover(imageId: string): Observable<any> {
+		return this.http.get(`/search-cover/${imageId}`, { responseType: 'blob' }).pipe(
+			catchError((error) => {
+				LOG.error(
+					this.className,
+					'Error while retrieving movie cover for ' + imageId,
+					error as Error
+				);
+				return error;
+			})
+		);
+	}
+
+	searchMovie(id: string): Observable<any> {
+		return this.http.get(`/api/subject/${id}`, { responseType: 'text' }).pipe(
+			catchError((error) => {
+				LOG.error(
+					this.className,
+					'Error while retrieving movie webpage for ' + id,
+					error as Error
+				);
+				return error;
+			})
+		);
 	}
 }

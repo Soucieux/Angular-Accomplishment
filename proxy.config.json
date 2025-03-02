@@ -1,10 +1,10 @@
 {
-	"/api-json": {
+	"/api": {
 		"target": "https://movie.douban.com/",
 		"secure": false,
 		"changeOrigin": true,
 		"pathRewrite": {
-			"^/api-json": ""
+			"^/api": ""
 		}
 	},
 	"/search-cover": {
@@ -13,14 +13,6 @@
 		"changeOrigin": true,
 		"pathRewrite": {
 			"^/search-cover": ""
-		}
-	},
-	"/api": {
-		"target": "https://search.douban.com/movie/",
-		"secure": false,
-		"changeOrigin": true,
-		"pathRewrite": {
-			"^/api": ""
 		}
 	}
 }

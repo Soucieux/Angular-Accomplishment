@@ -12,7 +12,7 @@ import { isPlatformBrowser, isPlatformServer, NgFor, NgIf, CommonModule } from '
 import { Database, listVal, ref as dbRef, update, ref, get } from '@angular/fire/database';
 import { DoubanService } from './douban.service';
 import { LOG } from '../log';
-import { Observable, firstValueFrom } from 'rxjs';
+import { Observable, firstValueFrom, timer } from 'rxjs';
 import { Storage, ref as storageRef, uploadBytesResumable } from '@angular/fire/storage';
 @Component({
 	selector: 'entertainment',
@@ -44,34 +44,40 @@ export class EntertainmentComponent {
 	ngOnInit() {
 		//elRef is to get a collection, cannot modify the content directly.
 		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
-		this.getMovieList();
+		this.searchAllMovies();
 	}
 
-	private async getMovieList() {
+	private async searchAllMovies() {
 		// Step 1: Get the movie list (one-time retrieval) from firebase
 		let movieListSnapshot = await get(this.moviesRef);
-
-		// this.doubanService.searchMovie('盗梦空间').subscribe((data) => {
-		// 	console.log(data);
-        // });
-
-		// Step 2: Loop through the movieList
-		for (const movieKey in movieListSnapshot.val()) {
-			const movie = movieListSnapshot.val()[movieKey];
-			//Step 3: Searches for the specific movie
-			LOG.info(this.className, `Get movie details for ${movie.title}`);
-			this.searchMovie(movie.title).then((movieRate) => {
-				// Step 10: Updates the movie rate to firebase
-				if (movieRate != null) {
+		// Step 2: Loop through the movieList to get latest movie details
+		let count = 0;
+		if (isDevMode() && isPlatformServer(this.platformId)) {
+			for (const movieKey in movieListSnapshot.val()) {
+				// Delay 15 seconds for every 5 movies
+				count++;
+				if (count % 5 == 0) {
+					LOG.warn(this.className, 'Delay 20 seconds for every 5 movies');
+					await firstValueFrom(timer(20000));
+				}
+				const movie = movieListSnapshot.val()[movieKey];
+				//Step 3: Searches for the specific movie and get the movie rate
+				LOG.info(this.className, `Get movie details for ${movie.title}`);
+				await this.searchMovie(movie.title).then((result) => {
+					// Step 10: Updates the movie rate to firebase
+					const movieRate = result == null ? -1 : result;
 					update(dbRef(this.db, `movies/${movieKey}`), {
 						rate: movieRate
 					})
-						.then(() =>
-							LOG.info(
+						.then(() => {
+							const logMethod = movieRate === -1 ? LOG.warn : LOG.info;
+							logMethod(
 								this.className,
-								`Updating movie rate for ${movie.title} is completed`
-							)
-						)
+								`Movie rate for ${movie.title} is ${
+									movieRate === -1 ? 'not found' : `updated to ${movieRate}`
+								}`
+							);
+						})
 						.catch((error) =>
 							LOG.error(
 								this.className,
@@ -79,10 +85,8 @@ export class EntertainmentComponent {
 								error as Error
 							)
 						);
-		        } else {
-		            LOG.warn(this.className, `Movie rate for ${movie.title} is not found`);
-		        }
-			});
+				});
+			}
 		}
 	}
 
@@ -94,31 +98,27 @@ export class EntertainmentComponent {
 			);
 			// Step 4: searchMovie returns a Promise and wait for the retrieval to complete
 			const extractedData = await firstValueFrom(
-				this.doubanService.searchMovieJson(movieName)
+				this.doubanService.searchMovieJSON(movieName)
 			);
-
-			if (extractedData == null || extractedData['subjects'].length === 0) {
-				LOG.warn(this.className, 'Data not found');
-				return null;
+			if (extractedData == null || extractedData.length === 0) {
+				LOG.warn(this.className, 'Data is either null or empty');
 			} else {
 				LOG.info(
 					this.className,
 					`Data received for ${movieName}. Extracting movie details.`
 				);
 				// Step 5: Extracts movie details
-				const movieDetails = extractedData['subjects'][0];
-				let coverImageLink = movieDetails['cover'].replace('\\', '');
+				const movieDetails = extractedData[0];
+				let coverImageLink = movieDetails['img'].replace('\\', '');
 				let coverImageId = coverImageLink.substring(coverImageLink.lastIndexOf('/') + 1);
+				let movieId = movieDetails['id'];
 
-				// Step 6: Retrieves movies cover and then upload them to firebase storage
-				if (isDevMode() && isPlatformServer(this.platformId)) {
-					this.searchMovieCover(coverImageId, movieName);
-				}
-
-				// Step 9: Returns the movie rate once the process to upload movie cover is done
-				return movieDetails['rate'];
+				// Step 6: Retrieves movie cover and then upload them to firebase storage
+				await this.searchMovieCover(coverImageId, movieName);
+				return await this.searchMovieRate(movieId);
 			}
-		} catch (error: unknown) {
+			return null;
+		} catch (error) {
 			LOG.error(
 				this.className,
 				`Error while retrieving data for ${movieName}`,
@@ -126,6 +126,17 @@ export class EntertainmentComponent {
 			);
 			return null;
 		}
+	}
+
+	private async searchMovieRate(movieId: any) {
+		const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovie(movieId));
+		const regex = new RegExp(
+			'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
+			'i'
+		);
+		const regexMatch = movieWebpageAsString.match(regex);
+		// Step 9: Returns the movie rate
+		return regexMatch[1];
 	}
 
 	private async searchMovieCover(coverImageId: string, movieName: string): Promise<void> {
@@ -157,7 +168,11 @@ export class EntertainmentComponent {
 				}
 			);
 		} catch (error) {
-			LOG.error(this.className, `Error while retrieving movie cover for ${movieName}`, error as Error);
+			LOG.error(
+				this.className,
+				`Error while retrieving movie cover for ${movieName}`,
+				error as Error
+			);
 		}
 	}
 

@@ -1,19 +1,19 @@
+import { CommonModule, isPlatformBrowser, isPlatformServer, NgFor, NgIf } from '@angular/common';
 import {
 	Component,
 	ElementRef,
 	HostListener,
-	PLATFORM_ID,
-	Renderer2,
 	Inject,
-	isDevMode
+	isDevMode,
+	PLATFORM_ID,
+	Renderer2
 } from '@angular/core';
-import { MovieItem } from './movie.list';
-import { isPlatformBrowser, isPlatformServer, NgFor, NgIf, CommonModule } from '@angular/common';
-import { Database, listVal, ref as dbRef, update, ref, get } from '@angular/fire/database';
-import { DoubanService } from './douban.service';
-import { LOG } from '../log';
-import { Observable, firstValueFrom, timer } from 'rxjs';
+import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire/database';
 import { Storage, ref as storageRef, uploadBytesResumable } from '@angular/fire/storage';
+import { firstValueFrom, Observable, timer } from 'rxjs';
+import { LOG } from '../log';
+import { DoubanService } from './douban.service';
+import { MovieItem } from './movie.list';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -46,11 +46,18 @@ export class EntertainmentComponent {
 		this.searchAllMovies();
 	}
 
+	/**
+	 * Search all movies in the database and update the movie rate with a delay of 20 seconds for every 5 movies.
+	 * If the movie rate is not found, the movie rate stored in the database will not be updated.
+	 *
+	 * @returns A Promise that resolves to void.
+	 */
 	private async searchAllMovies() {
 		// Step 1: Get the movie list (one-time retrieval) from firebase
 		let movieListSnapshot = await get(this.moviesRef);
 		// Step 2: Loop through the movieList to get latest movie details
 		let count = 0;
+		// In development mode, only server is doing the work.
 		if (isDevMode() && isPlatformServer(this.platformId)) {
 			for (const movieKey in movieListSnapshot.val()) {
 				// Delay 20 seconds for every 5 movies
@@ -62,17 +69,18 @@ export class EntertainmentComponent {
 				const movie = movieListSnapshot.val()[movieKey];
 				//Step 3: Searches for the specific movie and get the movie rate
 				LOG.info(this.className, `Get movie details for ${movie.title}`);
-				await this.searchMovie(movie.title).then((updatedMovieRate) => {
+				await this.searchMovie(movie.title).then((updatedMovieDetails) => {
 					// Step 10: Updates the movie rate to firebase if the movie rate is found
-					updatedMovieRate === null
+					updatedMovieDetails === null
 						? LOG.warn(this.className, `Movie rate for ${movie.title} is not found`)
 						: update(dbRef(this.db, `movies/${movieKey}`), {
-								rate: updatedMovieRate
+								rate: updatedMovieDetails[0],
+								id: updatedMovieDetails[1]
 						  })
 								.then(() => {
 									LOG.info(
 										this.className,
-										`Movie rate for ${movie.title} is updated to ${updatedMovieRate}`
+										`Movie rate for ${movie.title} is updated to ${updatedMovieDetails}`
 									);
 								})
 								.catch((error) =>
@@ -87,7 +95,16 @@ export class EntertainmentComponent {
 		}
 	}
 
-	private async searchMovie(movieName: string): Promise<string | null> {
+	/**
+	 * Search for the movie from the Douban API which returns a JSON object.
+	 * If the API responds with empty data, then it is due to too many requests.
+	 * If the API responds with data, then retrieves the image link and movie IDfrom the JSON object,
+	 * and then search for movie cover and movie rate
+	 *
+	 * @param movieName - The name of the movie to search for.
+	 * @returns A Promise that resolves to an array containing the movie rate and the movie ID.
+	 */
+	private async searchMovie(movieName: string): Promise<[string, string] | null> {
 		try {
 			LOG.info(
 				this.className,
@@ -97,8 +114,9 @@ export class EntertainmentComponent {
 			const extractedData = await firstValueFrom(
 				this.doubanService.searchMovieJSON(movieName)
 			);
+			// Step 4.1: The API responds with empty data due to too many requests
 			if (extractedData == null || extractedData.length === 0) {
-				LOG.warn(this.className, 'Data is either null or empty');
+				LOG.warn(this.className, 'API responded with empty data due to too many requests');
 			} else {
 				LOG.info(
 					this.className,
@@ -112,7 +130,7 @@ export class EntertainmentComponent {
 
 				// Step 6: Retrieves movie cover and then upload them to firebase storage
 				await this.searchMovieCover(coverImageId, movieName);
-				return await this.searchMovieRate(movieId);
+				return [await this.searchMovieRate(movieId), movieId];
 			}
 			return null;
 		} catch (error) {
@@ -125,6 +143,12 @@ export class EntertainmentComponent {
 		}
 	}
 
+	/**
+	 * Extracts the movie rate from the movie webpage HTML string using regex.
+	 *
+	 * @param movieId - The ID of the movie to get the rating for.
+	 * @returns A Promise that resolves to the movie rating as a string.
+	 */
 	private async searchMovieRate(movieId: any) {
 		const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovie(movieId));
 		const regex = new RegExp(
@@ -136,6 +160,13 @@ export class EntertainmentComponent {
 		return regexMatch[1];
 	}
 
+	/**
+	 * Get and upload the movie cover obtained from Douban API to firebase storage.
+	 *
+	 * @param coverImageId - The ID of the movie cover to search for.
+	 * @param movieName - The name of the movie to search for.
+	 * @returns A Promise that resolves to the movie cover as a string.
+	 */
 	private async searchMovieCover(coverImageId: string, movieName: string): Promise<void> {
 		LOG.info(
 			this.className,

@@ -40,7 +40,7 @@ export class DoubanService {
 				responseType: 'json'
 			})
 			.pipe(
-				delay(10000),
+				delay(3000),
 				catchError((error) => {
 					LOG.error(
 						this.className,
@@ -68,11 +68,7 @@ export class DoubanService {
 	searchMovie(id: string): Observable<any> {
 		return this.http.get(`/api/subject/${id}`, { responseType: 'text' }).pipe(
 			catchError((error) => {
-				LOG.error(
-					this.className,
-					'Error while retrieving movie webpage for ' + id,
-					error as Error
-				);
+				LOG.error(this.className, 'Error while retrieving movie webpage for ' + id, error as Error);
 				return error;
 			})
 		);

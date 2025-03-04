@@ -186,6 +186,13 @@ export class EntertainmentComponent {
 	private async searchMovieCoverById(coverImageId: string, movieName: string): Promise<void> {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
 		try {
+			// Before uploading the movie cover, check if the movie cover already exists in firebase storage
+			const allImageNames = await this.firebaseStorageService.getAllImageNamesFromFirebase();
+			if (allImageNames.includes(coverImageId)) {
+				LOG.warn(this.className, `Movie cover for ${movieName} already exists`);
+				return;
+			}
+
 			// Step 6: searchMovieCover returns a Promise and wait for the retrieval to complete
 			const coverImage = await firstValueFrom(this.doubanService.searchMovieCover(coverImageId));
 			LOG.info(this.className, `Movie cover retrieved for ${movieName}`);

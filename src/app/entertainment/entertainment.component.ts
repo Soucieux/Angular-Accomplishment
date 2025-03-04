@@ -9,11 +9,11 @@ import {
 	Renderer2
 } from '@angular/core';
 import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire/database';
-import { Storage, ref as storageRef, uploadBytesResumable } from '@angular/fire/storage';
 import { firstValueFrom, Observable, timer } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from './douban.service';
-import { MovieItem } from './movie.list';
+import { FirebaseStorageService } from './firebase.storage.service';
+import { MovieItem } from './movie.item';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -31,9 +31,9 @@ export class EntertainmentComponent {
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef,
 		private renderer: Renderer2,
-		private doubanService: DoubanService,
 		private db: Database,
-		private storage: Storage
+		private doubanService: DoubanService,
+		private firebaseStorageService: FirebaseStorageService
 	) {
 		// Get the movie list (Observable) from firebase
 		this.moviesRef = ref(this.db, 'movies');
@@ -47,8 +47,9 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Search all movies in the database and update the movie rate with a delay of 20 seconds for every 5 movies.
-	 * If the movie rate is not found, the movie rate stored in the database will not be updated.
+	 * Search all movies in the database and update the movie details with a delay of 20 seconds for every 5 movies.
+	 * If the movie ID does not exist, then search for the movie ID first and then update the movie rate and movie ID.
+	 * If the movie ID already exists, then update the movie rate.
 	 *
 	 * @returns A Promise that resolves to void.
 	 */
@@ -68,7 +69,7 @@ export class EntertainmentComponent {
 				}
 				const movieItem = movieListSnapshot.val()[movieKey];
 				//Step 3: Start searching for the specific movie
-				LOG.info(this.className, `Start searching for movie details for ${movieItem.title}`);
+				LOG.info(this.className, `Start searching for ${movieItem.title}`);
 				let movieId = movieItem.id;
 				const movieIdAlreadyExist = movieItem.id ? true : false;
 				!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
@@ -81,15 +82,16 @@ export class EntertainmentComponent {
 				}
 				// Step 5: Either the movie ID exists in the database or the movie ID is retrieved from Douban API.
 				try {
-					const movieRate = await this.searchMovieWithId(movieId, movieItem.title);
+					LOG.info(this.className, `Movie ID found for ${movieItem.title}`);
+					const movieRate = await this.searchMovieRateWithId(movieId, movieItem.title);
 					if (movieIdAlreadyExist) {
-						update(dbRef(this.db, `movies/${movieKey}`), {
+						await update(dbRef(this.db, `movies/${movieKey}`), {
 							rate: movieRate
 						}).then(() => {
 							LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
 						});
 					} else {
-						update(dbRef(this.db, `movies/${movieKey}`), {
+						await update(dbRef(this.db, `movies/${movieKey}`), {
 							rate: movieRate,
 							id: movieId
 						}).then(() => {
@@ -117,7 +119,7 @@ export class EntertainmentComponent {
 	 * @param movieName - The name of the movie to search for.
 	 * @returns A Promise that resolves to the movie rate as a string.
 	 */
-	private async searchMovieWithId(movieId: string, movieName: string): Promise<string> {
+	private async searchMovieRateWithId(movieId: string, movieName: string): Promise<string> {
 		// Step 6: Get the movie webpage as a string
 		const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovie(movieId));
 
@@ -134,7 +136,9 @@ export class EntertainmentComponent {
 			'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
 			'i'
 		);
-		return movieWebpageAsString.match(regexForMovieId)[1];
+		const movieRate = movieWebpageAsString.match(regexForMovieId)[1];
+		LOG.info(this.className, `Movie rate for ${movieName} is ${movieRate}`);
+		return movieRate;
 	}
 
 	/**
@@ -184,26 +188,13 @@ export class EntertainmentComponent {
 		try {
 			// Step 6: searchMovieCover returns a Promise and wait for the retrieval to complete
 			const coverImage = await firstValueFrom(this.doubanService.searchMovieCover(coverImageId));
+			LOG.info(this.className, `Movie cover retrieved for ${movieName}`);
 
 			// Step 7: Uploads the movie cover to firebase storage
-			const storageRefer = storageRef(this.storage, `/movies/${coverImageId}`);
-			const uploadTask = uploadBytesResumable(storageRefer, coverImage);
-			uploadTask.on(
-				'state_changed',
-				null,
-				(error) => {
-					LOG.error(
-						this.className,
-						`Error while uploading movie cover for ${movieName} to firebase`,
-						error
-					);
-				},
-				() => {
-					LOG.info(this.className, `Image upload for ${movieName} has been completed`);
-				}
-			);
+			await this.firebaseStorageService.uploadImageToFirebase(coverImageId, coverImage, movieName);
+			LOG.info(this.className, `Movie cover uploaded for ${movieName}`);
 		} catch (error) {
-			LOG.error(this.className, `Error while retrieving movie cover for ${movieName}`, error as Error);
+			LOG.error(this.className, `Error while processing movie cover for ${movieName}`, error as Error);
 		}
 	}
 

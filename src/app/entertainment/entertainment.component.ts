@@ -68,6 +68,12 @@ export class EntertainmentComponent {
 					await firstValueFrom(timer(20000));
 				}
 				const movieItem = movieListSnapshot.val()[movieKey];
+				//////////////////////////////////////////////////////////////
+				//Temporary skip the movie already exists in the database
+				if (movieItem.id) {
+					continue;
+				}
+				//////////////////////////////////////////////////////////////
 				//Step 3: Start searching for the specific movie
 				LOG.info(this.className, `Start searching for ${movieItem.title}`);
 				let movieId = movieItem.id;
@@ -91,8 +97,8 @@ export class EntertainmentComponent {
 					);
 					if (movieIdAlreadyExist) {
 						await update(dbRef(this.db, `movies/${movieKey}`), {
-                            rate: movieRate,
-                            coverId: coverImageLink
+							rate: movieRate,
+							coverId: coverImageLink
 						}).then(() => {
 							LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
 						});
@@ -135,7 +141,7 @@ export class EntertainmentComponent {
 		movieCover: boolean
 	): Promise<[string, string]> {
 		// Step 6: Get the movie webpage as a string
-        const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovie(movieId));
+		const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovie(movieId));
 
 		// Step 7: Get the movie rate for the current movie
 		const regexForMovieId = new RegExp(

@@ -49,5 +49,19 @@ mat-drawer {
 mat-drawer-content {
 	padding-left: 20px;
 	padding-top: 20px;
-	background-color: rgb(239, 236, 239);
+	background-image: linear-gradient(
+		to right,
+		#d34e99,
+		#c75aaf,
+		#b667c3,
+		#a173d3,
+		#877fdf,
+		#6c90ed,
+		#489ff7,
+		#00adfc,
+		#00c3ff,
+		#00d7ff,
+		#09eaf9,
+		#5ffbf1
+	);
 }

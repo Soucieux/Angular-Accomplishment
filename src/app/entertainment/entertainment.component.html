@@ -1,5 +1,8 @@
 <div class="page-container">
-	<div class="individual-item" *ngFor="let movie of movieList$ | async">
+	<div
+		class="individual-item"
+		*ngFor="let movie of movieList$ | async"
+		[ngStyle]="{ background: 'url(' + movie.coverId + ')' }">
 		<div class="individual-item-content">
 			<div class="contents title">
 				<p [style.font-size]="calculateFontSize(movie.title.length)">
@@ -12,6 +15,5 @@
 				</p>
 			</div>
 		</div>
-		<img *ngIf="movie.cover" [src]="movie.cover" alt="movie.title" />
 	</div>
 </div>

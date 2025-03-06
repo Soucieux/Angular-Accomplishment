@@ -1,4 +1,4 @@
-import { CommonModule, isPlatformBrowser, isPlatformServer, NgFor, NgIf } from '@angular/common';
+import { CommonModule, isPlatformBrowser, isPlatformServer, NgFor } from '@angular/common';
 import {
 	Component,
 	ElementRef,
@@ -17,7 +17,7 @@ import { MovieItem } from './movie.item';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
-	imports: [NgFor, NgIf, CommonModule],
+	imports: [NgFor, CommonModule],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'
 })
@@ -43,7 +43,7 @@ export class EntertainmentComponent {
 	ngOnInit() {
 		//elRef is to get a collection, cannot modify the content directly.
 		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
-		this.searchAllMovies();
+		// this.searchAllMovies();
 	}
 
 	/**
@@ -72,6 +72,7 @@ export class EntertainmentComponent {
 				LOG.info(this.className, `Start searching for ${movieItem.title}`);
 				let movieId = movieItem.id;
 				const movieIdAlreadyExist = movieItem.id ? true : false;
+				const movieCover = movieItem.cover ? true : false;
 				!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
 				// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
 				if (!movieId && !(movieId = await this.searchMovieId(movieItem.title))) {
@@ -83,17 +84,23 @@ export class EntertainmentComponent {
 				// Step 5: Either the movie ID exists in the database or the movie ID is retrieved from Douban API.
 				try {
 					LOG.info(this.className, `Movie ID found for ${movieItem.title}`);
-					const movieRate = await this.searchMovieRateWithId(movieId, movieItem.title);
+					const [movieRate, coverImageLink] = await this.searchMovieCoverAndMovieRate(
+						movieId,
+						movieItem.title,
+						movieCover
+					);
 					if (movieIdAlreadyExist) {
 						await update(dbRef(this.db, `movies/${movieKey}`), {
-							rate: movieRate
+                            rate: movieRate,
+                            coverId: coverImageLink
 						}).then(() => {
 							LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
 						});
 					} else {
 						await update(dbRef(this.db, `movies/${movieKey}`), {
 							rate: movieRate,
-							id: movieId
+							id: movieId,
+							coverId: coverImageLink
 						}).then(() => {
 							LOG.info(
 								this.className,
@@ -113,36 +120,50 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Get the movie webpage from Douban API with given movie ID.
+	 * Get the movie webpage from Douban API with a given movie ID.
+	 * Then, get the movie cover and upload it to firebase storage if not exists already.
+	 * Finally, get the movie rate.
 	 *
 	 * @param movieId - The ID of the movie to search for.
 	 * @param movieName - The name of the movie to search for.
-	 * @returns A Promise that resolves to the movie rate as a string.
+	 * @param movieCover - Whether the movie cover exists in firebase storage.
+	 * @returns A Promise that resolves to the movie rate and movie cover ID.
 	 */
-	private async searchMovieRateWithId(movieId: string, movieName: string): Promise<string> {
+	private async searchMovieCoverAndMovieRate(
+		movieId: string,
+		movieName: string,
+		movieCover: boolean
+	): Promise<[string, string]> {
 		// Step 6: Get the movie webpage as a string
-		const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovie(movieId));
+        const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovie(movieId));
 
-		// Step 7: Retrieves movie cover and then upload them to firebase storage
-		const regexForCoverImage = new RegExp('<img class="media" src="(.*?)" />', 'i');
-		const regexMatchForCoverImage = movieWebpageAsString.match(regexForCoverImage);
-		const coverImageId = regexMatchForCoverImage[1].substring(
-			regexMatchForCoverImage[1].lastIndexOf('/') + 1
-		);
-		await this.searchMovieCoverById(coverImageId, movieName);
-
-		// Step 8: Get the movie rate for the current movie
+		// Step 7: Get the movie rate for the current movie
 		const regexForMovieId = new RegExp(
 			'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
 			'i'
 		);
 		const movieRate = movieWebpageAsString.match(regexForMovieId)[1];
-		LOG.info(this.className, `Movie rate for ${movieName} is ${movieRate}`);
-		return movieRate;
+		LOG.info(this.className, `Movie rate retrieved for ${movieName} is ${movieRate}`);
+
+		// Step 8.1:Check if the movie cover already exists in firebase storage before searching
+		let coverImageLink = '';
+		if (movieCover) {
+			LOG.warn(this.className, `Movie cover for ${movieName} already exists`);
+		} else {
+			// Step 8.2: If the movie cover does not exist, then retrieves movie cover ID from the movie webpage and then upload the movie cover
+			const regexForCoverImage = new RegExp('<img class="media" src="(.*?)" />', 'i');
+			const regexMatchForCoverImage = movieWebpageAsString.match(regexForCoverImage);
+			const coverImageId = regexMatchForCoverImage[1].substring(
+				regexMatchForCoverImage[1].lastIndexOf('/') + 1
+			);
+			coverImageLink = await this.searchMovieCoverById(coverImageId, movieName);
+		}
+
+		return [movieRate, coverImageLink];
 	}
 
 	/**
-	 * Search for the movie ID from the Douban API.
+	 * Search for the movie ID from the Douban API with a given movie name.
 	 * If the API responds with empty data, then it is due to too many requests.
 	 * If the API responds with data, then extracts the movie ID from the JSON object.
 	 *
@@ -178,48 +199,67 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Get and upload the movie cover obtained from Douban API to firebase storage.
+	 * Get and upload the movie cover obtained to firebase storage.
 	 *
 	 * @param coverImageId - The ID of the movie cover to search for.
 	 * @param movieName - The name of the movie to search for.
+	 * @returns A Promise that resolves to the downloadable link of the movie cover.
 	 */
-	private async searchMovieCoverById(coverImageId: string, movieName: string): Promise<void> {
+	private async searchMovieCoverById(coverImageId: string, movieName: string): Promise<string> {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
 		try {
-			// Before uploading the movie cover, check if the movie cover already exists in firebase storage
-			const allImageNames = await this.firebaseStorageService.getAllImageNamesFromFirebase();
-			if (allImageNames.includes(coverImageId)) {
-				LOG.warn(this.className, `Movie cover for ${movieName} already exists`);
-				return;
-			}
-
-			// Step 6: searchMovieCover returns a Promise and wait for the retrieval to complete
+			// Step 9: searchMovieCover returns a Promise and wait for the retrieval to complete
 			const coverImage = await firstValueFrom(this.doubanService.searchMovieCover(coverImageId));
 			LOG.info(this.className, `Movie cover retrieved for ${movieName}`);
 
-			// Step 7: Uploads the movie cover to firebase storage
-			await this.firebaseStorageService.uploadImageToFirebase(coverImageId, coverImage, movieName);
+			// Step 10: Uploads the movie cover to firebase and get the downloadable link
+			const downloadLink = await this.firebaseStorageService.uploadImageAndGetDownloadLink(
+				coverImageId,
+				coverImage,
+				movieName
+			);
 			LOG.info(this.className, `Movie cover uploaded for ${movieName}`);
+			return downloadLink;
 		} catch (error) {
 			LOG.error(this.className, `Error while processing movie cover for ${movieName}`, error as Error);
+			return '';
 		}
 	}
 
+	/**
+	 * Update the grid layout of the page container when the window is resized.
+	 */
 	@HostListener('window:resize')
-	onResize() {
+	protected onResize() {
 		this.updateGridLayout(this.pageContainer);
 	}
 
-	ngAfterViewInit() {
+	/**
+	 * Update the grid layout of the page container after the view is initialized.
+	 *
+	 * @param pageContainer - The page container to update the grid layout.
+	 */
+	protected ngAfterViewInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.updateGridLayout(this.pageContainer);
 		}
 	}
 
+	/**
+	 * Calculate the font size of the movie title.
+	 *
+	 * @param length - The length of the movie title.
+	 * @returns A string that represents the font size.
+	 */
 	protected calculateFontSize(length: number) {
 		return length < 9 ? '20px' : String(20 - (length - 8) * 2 + 'px');
 	}
 
+	/**
+	 * Update the grid layout of the page container.
+	 *
+	 * @param pageContainer - The page container to update the grid layout.
+	 */
 	private updateGridLayout(pageContainer: any) {
 		// Get item width from css
 		const itemsWidth = getComputedStyle(pageContainer).getPropertyValue('--individual-item-width');

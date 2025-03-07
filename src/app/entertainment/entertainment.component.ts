@@ -258,7 +258,7 @@ export class EntertainmentComponent {
 	 * @returns A string that represents the font size.
 	 */
 	protected calculateFontSize(length: number) {
-		return length < 9 ? '20px' : String(20 - (length - 8) * 2 + 'px');
+		return length < 8 ? '20px' : String(20 - (length - 7) * 2 + 'px');
 	}
 
 	/**

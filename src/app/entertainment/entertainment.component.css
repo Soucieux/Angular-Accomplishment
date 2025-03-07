@@ -35,7 +35,7 @@
 }
 
 .individual-item-content {
-	border: 2px solid green;
+	/* border: 2px solid green; */
 	width: var(--content-width);
 
 	display: flex;
@@ -52,23 +52,19 @@
 }
 
 .contents {
-	border: 2px solid rgb(231, 65, 65);
-	padding-left: 10px;
 	letter-spacing: 3px;
 	height: 30px;
 }
 
 .title {
-	font-weight: bold;
-	transform: translateY(25px);
+	transform: translateY(15px);
 	white-space: nowrap;
 	transition: all 0.7s;
 }
 
 .category {
 	font-size: 17px;
-	opacity: 0;
-	transform: translateY(20px);
+	transform: translateY(10px);
 	transition: all 0.7s;
 }
 
@@ -85,6 +81,6 @@
 	& .category {
 		transform: translateY(0px);
 		transition-delay: 0.3s;
-		opacity: 1;
+		/* opacity: 1; */
 	}
 }

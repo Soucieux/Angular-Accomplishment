@@ -35,15 +35,16 @@ export class EntertainmentComponent {
 		private doubanService: DoubanService,
 		private firebaseStorageService: FirebaseStorageService
 	) {
-		// Get the movie list (Observable) from firebase
 		this.moviesRef = ref(this.db, 'movies');
+		// Server has no access to login user
+		// Get the movie list (Observable) from firebase
 		this.movieList$ = listVal(this.moviesRef);
 	}
 
 	ngOnInit() {
 		//elRef is to get a collection, cannot modify the content directly.
 		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
-		// this.searchAllMovies();
+		this.searchAllMovies();
 	}
 
 	/**
@@ -68,17 +69,19 @@ export class EntertainmentComponent {
 					await firstValueFrom(timer(20000));
 				}
 				const movieItem = movieListSnapshot.val()[movieKey];
-				//////////////////////////////////////////////////////////////
-				//Temporary skip the movie already exists in the database
+
+				/* 
+                // Temporarily skip the movie already exists in the database
 				if (movieItem.id) {
-					continue;
+			 	    continue;
 				}
-				//////////////////////////////////////////////////////////////
+                */
+
 				//Step 3: Start searching for the specific movie
 				LOG.info(this.className, `Start searching for ${movieItem.title}`);
 				let movieId = movieItem.id;
 				const movieIdAlreadyExist = movieItem.id ? true : false;
-				const movieCover = movieItem.cover ? true : false;
+				const movieCover = movieItem.coverId ? true : false;
 				!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
 				// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
 				if (!movieId && !(movieId = await this.searchMovieId(movieItem.title))) {

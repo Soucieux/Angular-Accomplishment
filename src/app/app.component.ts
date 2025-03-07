@@ -5,15 +5,8 @@ import { Database } from '@angular/fire/database';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
-import {
-	signInWithPopup,
-	GoogleAuthProvider,
-	onAuthStateChanged,
-	Auth,
-	signOut,
-	User
-} from '@angular/fire/auth';
-
+import { User } from '@angular/fire/auth';
+import { AuthService } from './Authentication/auth.service';
 @Component({
 	selector: 'root',
 	standalone: true,
@@ -23,31 +16,17 @@ import {
 })
 export class AppComponent {
 	// courses$;
-	currentUser$?: User | null;
+	currentUser$ = this.authService.getCurrentUser();
 
-	constructor(private auth: Auth, private db: Database) {
+	constructor(private db: Database, private authService: AuthService) {
 		// this.courses$ = objectVal(ref(this.db, '/course/2'));
 	}
 
-	ngOnInit() {
-		onAuthStateChanged(this.auth, (user) => {
-			this.currentUser$ = user;
-		});
-	}
-
 	login() {
-		signInWithPopup(this.auth, new GoogleAuthProvider())
-			.then(() => {
-				window.location.reload();
-			})
-			.catch(() => console.log('ERROR when signing in'));
+		this.authService.login();
 	}
 
 	logout() {
-		signOut(this.auth)
-			.then(() => {
-				window.location.reload();
-			})
-			.catch(() => console.log('ERROR when signing out current user'));
+		this.authService.logout();
 	}
 }

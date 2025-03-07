@@ -25,7 +25,7 @@ export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
 	private pageContainer?: any;
 	private moviesRef?: any;
-	protected movieList$: Observable<MovieItem[]>;
+	protected movieList$: Observable<MovieItem[]> | undefined;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,

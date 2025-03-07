@@ -25,7 +25,9 @@ export class FirebaseStorageService {
 	): Promise<string> {
 		try {
 			const storageRefer = storageRef(this.storage, `/movies/${coverImageId}`);
-			await uploadBytes(storageRefer, coverImage);
+			await uploadBytes(storageRefer, coverImage, {
+				contentType: 'image/jpeg'
+			});
 			return await getDownloadURL(storageRefer);
 		} catch (error) {
 			LOG.error(

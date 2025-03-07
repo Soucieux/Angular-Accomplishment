@@ -17,14 +17,7 @@ import {
 @Component({
 	selector: 'root',
 	standalone: true,
-	imports: [
-		CommonModule,
-		RouterOutlet,
-		RouterModule,
-		MatSidenavModule,
-		MatButtonModule,
-		MatRippleModule
-	],
+	imports: [CommonModule, RouterOutlet, RouterModule, MatSidenavModule, MatButtonModule, MatRippleModule],
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
 })
@@ -43,12 +36,18 @@ export class AppComponent {
 	}
 
 	login() {
-		signInWithPopup(this.auth, new GoogleAuthProvider()).catch(() =>
-			console.log('ERROR when signing in')
-		);
+		signInWithPopup(this.auth, new GoogleAuthProvider())
+			.then(() => {
+				window.location.reload();
+			})
+			.catch(() => console.log('ERROR when signing in'));
 	}
 
 	logout() {
-		signOut(this.auth).catch(() => console.log('ERROR when signing out current user'));
+		signOut(this.auth)
+			.then(() => {
+				window.location.reload();
+			})
+			.catch(() => console.log('ERROR when signing out current user'));
 	}
 }

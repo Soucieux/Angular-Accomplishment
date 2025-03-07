@@ -12,7 +12,7 @@ import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire
 import { firstValueFrom, Observable, timer } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from './douban.service';
-import { FirebaseStorageService } from './firebase.storage.service';
+import { FirebaseStorageService } from './firebase-storage.service';
 import { MovieItem } from './movie.item';
 @Component({
 	selector: 'entertainment',
@@ -38,13 +38,18 @@ export class EntertainmentComponent {
 		this.moviesRef = ref(this.db, 'movies');
 		// Server has no access to login user
 		// Get the movie list (Observable) from firebase
-		this.movieList$ = listVal(this.moviesRef);
+		if (isPlatformServer(this.platformId)) {
+			this.movieList$ = listVal(this.moviesRef);
+		}
 	}
 
 	ngOnInit() {
 		//elRef is to get a collection, cannot modify the content directly.
 		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
-		this.searchAllMovies();
+		// In development mode, only server is doing the work.
+		if (isDevMode() && isPlatformServer(this.platformId)) {
+			this.searchAllMovies();
+		}
 	}
 
 	/**
@@ -58,72 +63,69 @@ export class EntertainmentComponent {
 		// Step 1: Get the movie list (one-time retrieval) from firebase
 		let movieListSnapshot = await get(this.moviesRef);
 		// Step 2: Loop through the movieList to get latest movie details
-		// In development mode, only server is doing the work.
-		if (isDevMode() && isPlatformServer(this.platformId)) {
-			let countMovies = 0;
-			for (const movieKey in movieListSnapshot.val()) {
-				// Delay 20 seconds for every 5 movies
-				countMovies++;
-				if (countMovies % 5 == 0) {
-					LOG.warn(this.className, 'Delay 20 seconds for every 5 movies');
-					await firstValueFrom(timer(20000));
-				}
-				const movieItem = movieListSnapshot.val()[movieKey];
+		let countMovies = 0;
+		for (const movieKey in movieListSnapshot.val()) {
+			// Delay 20 seconds for every 5 movies
+			countMovies++;
+			if (countMovies % 5 == 0) {
+				LOG.warn(this.className, 'Delay 20 seconds for every 5 movies');
+				await firstValueFrom(timer(20000));
+			}
+			const movieItem = movieListSnapshot.val()[movieKey];
 
-				/* 
+			/* 
                 // Temporarily skip the movie already exists in the database
 				if (movieItem.id) {
 			 	    continue;
 				}
                 */
 
-				//Step 3: Start searching for the specific movie
-				LOG.info(this.className, `Start searching for ${movieItem.title}`);
-				let movieId = movieItem.id;
-				const movieIdAlreadyExist = movieItem.id ? true : false;
-				const movieCover = movieItem.coverId ? true : false;
-				!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
-				// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
-				if (!movieId && !(movieId = await this.searchMovieId(movieItem.title))) {
-					//Step 3.2: If the result of searching movie ID is null, it means the server blocks the request
-					//due to too many requests, then skip the current iteration.
-					LOG.warn(this.className, `Skip movie rate search for ${movieItem.title}`);
-					continue;
+			//Step 3: Start searching for the specific movie
+			LOG.info(this.className, `Start searching for ${movieItem.title}`);
+			let movieId = movieItem.id;
+			const movieIdAlreadyExist = movieItem.id ? true : false;
+			const movieCover = movieItem.coverId ? true : false;
+			!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
+			// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
+			if (!movieId && !(movieId = await this.searchMovieId(movieItem.title))) {
+				//Step 3.2: If the result of searching movie ID is null, it means the server blocks the request
+				//due to too many requests, then skip the current iteration.
+				LOG.warn(this.className, `Skip movie rate search for ${movieItem.title}`);
+				continue;
+			}
+			// Step 5: Either the movie ID exists in the database or the movie ID is retrieved from Douban API.
+			try {
+				LOG.info(this.className, `Movie ID found for ${movieItem.title}`);
+				const [movieRate, coverImageLink] = await this.searchMovieCoverAndMovieRate(
+					movieId,
+					movieItem.title,
+					movieCover
+				);
+				if (movieIdAlreadyExist) {
+					await update(dbRef(this.db, `movies/${movieKey}`), {
+						rate: movieRate,
+						coverId: coverImageLink
+					}).then(() => {
+						LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
+					});
+				} else {
+					await update(dbRef(this.db, `movies/${movieKey}`), {
+						rate: movieRate,
+						id: movieId,
+						coverId: coverImageLink
+					}).then(() => {
+						LOG.info(
+							this.className,
+							`Movie rate and movie ID for ${movieItem.title} have been updated`
+						);
+					});
 				}
-				// Step 5: Either the movie ID exists in the database or the movie ID is retrieved from Douban API.
-				try {
-					LOG.info(this.className, `Movie ID found for ${movieItem.title}`);
-					const [movieRate, coverImageLink] = await this.searchMovieCoverAndMovieRate(
-						movieId,
-						movieItem.title,
-						movieCover
-					);
-					if (movieIdAlreadyExist) {
-						await update(dbRef(this.db, `movies/${movieKey}`), {
-							rate: movieRate,
-							coverId: coverImageLink
-						}).then(() => {
-							LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
-						});
-					} else {
-						await update(dbRef(this.db, `movies/${movieKey}`), {
-							rate: movieRate,
-							id: movieId,
-							coverId: coverImageLink
-						}).then(() => {
-							LOG.info(
-								this.className,
-								`Movie rate and movie ID for ${movieItem.title} have been updated`
-							);
-						});
-					}
-				} catch (error) {
-					LOG.error(
-						this.className,
-						`Error while updating movie rate for ${movieItem.title}`,
-						error as Error
-					);
-				}
+			} catch (error) {
+				LOG.error(
+					this.className,
+					`Error while updating movie rate for ${movieItem.title}`,
+					error as Error
+				);
 			}
 		}
 	}

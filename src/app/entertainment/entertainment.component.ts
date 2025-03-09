@@ -24,7 +24,7 @@ import { MovieItem } from './movie.item';
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
 	// Get the current user from the auth service
-	protected isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+	protected isLoggedIn!: boolean;
 	private pageContainer!: any;
 	private moviesRef!: any;
 	protected movieList$!: Observable<MovieItem[]>;
@@ -54,14 +54,38 @@ export class EntertainmentComponent {
 		}
 	}
 
+	/**
+	 * Anything that needs to be done when the component is initialized.
+	 */
 	ngOnInit() {
-		// Always put DOM manipulation in ngOnInit
-		//elRef is to get a collection, cannot modify the content directly.
-		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
 		// In development mode, only server is doing the work.
 		if (isDevMode() && isPlatformServer(this.platformId)) {
 			this.searchAllMovies();
 		}
+		if (isPlatformBrowser(this.platformId)) {
+			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+		}
+	}
+
+	/**
+	 * Anything that needs to be done after the view is initialized.
+	 */
+	protected ngAfterViewInit() {
+		//elRef is to get a collection, cannot modify the content directly.
+		if (this.isLoggedIn)
+			// Always put DOM manipulation in ngOnInit or ngAfterViewInit as it requires an element reference
+			this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
+		if (isPlatformBrowser(this.platformId)) {
+			this.updateGridLayout(this.pageContainer);
+		}
+	}
+
+	/**
+	 * Update the grid layout of the page container when the window is resized.
+	 */
+	@HostListener('window:resize')
+	protected onResize() {
+		this.updateGridLayout(this.pageContainer);
 	}
 
 	/**
@@ -246,25 +270,6 @@ export class EntertainmentComponent {
 		} catch (error) {
 			LOG.error(this.className, `Error while processing movie cover for ${movieName}`, error as Error);
 			return '';
-		}
-	}
-
-	/**
-	 * Update the grid layout of the page container when the window is resized.
-	 */
-	@HostListener('window:resize')
-	protected onResize() {
-		this.updateGridLayout(this.pageContainer);
-	}
-
-	/**
-	 * Update the grid layout of the page container after the view is initialized.
-	 *
-	 * @param pageContainer - The page container to update the grid layout.
-	 */
-	protected ngAfterViewInit() {
-		if (isPlatformBrowser(this.platformId)) {
-			this.updateGridLayout(this.pageContainer);
 		}
 	}
 

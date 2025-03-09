@@ -1,4 +1,4 @@
-import { LOG } from './../log';
+import { LOG } from '../log';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, delay, Observable } from 'rxjs';

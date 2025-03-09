@@ -9,10 +9,10 @@ import {
 	Renderer2
 } from '@angular/core';
 import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire/database';
-import { firstValueFrom, Observable, timer } from 'rxjs';
+import { catchError, firstValueFrom, Observable, of, timer } from 'rxjs';
 import { LOG } from '../log';
-import { DoubanService } from './douban.service';
-import { FirebaseStorageService } from './firebase-storage.service';
+import { DoubanService } from '../douban/douban.service';
+import { FirebaseStorageService } from '../firebaseStorage/firebase-storage.service';
 import { MovieItem } from './movie.item';
 @Component({
 	selector: 'entertainment',
@@ -23,9 +23,11 @@ import { MovieItem } from './movie.item';
 })
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
-	private pageContainer?: any;
-	private moviesRef?: any;
-	protected movieList$: Observable<MovieItem[]> | undefined;
+	// Get the current user from the auth service
+	protected isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+	private pageContainer!: any;
+	private moviesRef!: any;
+	protected movieList$!: Observable<MovieItem[]>;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -36,14 +38,24 @@ export class EntertainmentComponent {
 		private firebaseStorageService: FirebaseStorageService
 	) {
 		this.moviesRef = ref(this.db, 'movies');
-		// Server has no access to login user
-		// Get the movie list (Observable) from firebase
-		if (isPlatformServer(this.platformId)) {
-			this.movieList$ = listVal(this.moviesRef);
+		// Server has no access to login user information
+		if (isPlatformBrowser(this.platformId)) {
+			// Get the movie list (Observable) from firebase
+			this.movieList$ = listVal<MovieItem>(this.moviesRef).pipe(
+				catchError((error) => {
+					if (error.message == 'Permission denied') {
+						LOG.warn(this.className, 'User does not have permission to access the movie list');
+					} else {
+						LOG.error(this.className, 'Error while retrieving movie list', error as Error);
+					}
+					return of<MovieItem[]>([]);
+				})
+			);
 		}
 	}
 
 	ngOnInit() {
+		// Always put DOM manipulation in ngOnInit
 		//elRef is to get a collection, cannot modify the content directly.
 		this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
 		// In development mode, only server is doing the work.

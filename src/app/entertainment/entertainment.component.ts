@@ -23,8 +23,8 @@ import { MovieItem } from './movie.item';
 })
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
-	// Get the current user from the auth service
-	protected isLoggedIn!: boolean;
+	// This value has to be true initially so that the page will not show access denied page on refresh
+	protected isLoggedIn: boolean = true;
 	private pageContainer!: any;
 	private moviesRef!: any;
 	protected movieList$!: Observable<MovieItem[]>;
@@ -39,7 +39,8 @@ export class EntertainmentComponent {
 	) {
 		this.moviesRef = ref(this.db, 'movies');
 		// Server has no access to login user information
-		if (isPlatformBrowser(this.platformId)) {
+        if (isPlatformBrowser(this.platformId)) {
+            this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 			// Get the movie list (Observable) from firebase
 			this.movieList$ = listVal<MovieItem>(this.moviesRef).pipe(
 				catchError((error) => {
@@ -61,9 +62,6 @@ export class EntertainmentComponent {
 		// In development mode, only server is doing the work.
 		if (isDevMode() && isPlatformServer(this.platformId)) {
 			this.searchAllMovies();
-		}
-		if (isPlatformBrowser(this.platformId)) {
-			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		}
 	}
 

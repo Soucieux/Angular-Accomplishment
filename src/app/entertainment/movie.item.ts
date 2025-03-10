@@ -1,8 +1,9 @@
+// Remember to update the attributes here when the attributes in the firebase are changed
 interface MovieItemInterface {
 	title: string;
 	genre: string;
 	rate: number;
-	coverId: number;
+	coverImageLink: string;
 	id: number;
 }
 export class MovieItem implements MovieItemInterface {
@@ -10,7 +11,7 @@ export class MovieItem implements MovieItemInterface {
 		public title: string,
 		public genre: string,
 		public rate: number = -1,
-		public coverId: number = -1,
+		public coverImageLink: string,
 		public id: number = -1
 	) {}
 }

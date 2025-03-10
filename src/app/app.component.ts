@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
 import { AuthService } from './authentication/auth.service';
 import { Router } from '@angular/router';
+import { LOG } from './log';
 @Component({
 	selector: 'root',
 	standalone: true,
@@ -15,11 +16,19 @@ import { Router } from '@angular/router';
 	styleUrl: './app.component.css'
 })
 export class AppComponent {
+	private readonly className = 'AppComponent';
 	// courses$;
-    currentUser$ = this.authService.currentUser$;
+	currentUser$ = this.authService.currentUser$;
 
 	constructor(private db: Database, private authService: AuthService, private router: Router) {
 		// this.courses$ = objectVal(ref(this.db, '/course/2'));
+	}
+
+	/**
+	 * Anything that needs to be done when the component is destroyed.
+	 */
+	ngOnDestroy() {
+		LOG.info(this.className, 'Component destroyed');
 	}
 
 	login() {
@@ -28,5 +37,5 @@ export class AppComponent {
 
 	logout() {
 		this.authService.logout();
-    }
+	}
 }

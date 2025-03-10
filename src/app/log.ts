@@ -14,7 +14,7 @@ export class LOG {
 		console.warn(LOG.getTimestamp() + '[WARNING]' + className + '-' + message);
 	}
 
-	static error(className: string, message: string, error: Error) {
+	static error(className: string, message: string, error?: Error) {
 		if (error) {
 			console.error(LOG.getTimestamp() + '[ERROR]' + className + '-' + message + ': ' + error.message);
 		} else {

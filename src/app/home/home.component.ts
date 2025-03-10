@@ -1,5 +1,6 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { MatRadioModule } from '@angular/material/radio';
+import { LOG } from '../log';
 
 @Component({
 	selector: 'home',
@@ -8,4 +9,12 @@ import { MatRadioModule } from '@angular/material/radio';
 	templateUrl: './home.component.html',
 	styleUrl: './home.component.css'
 })
-export class HomeComponent {}
+export class HomeComponent {
+	private readonly className = 'HomeComponent';
+	/**
+	 * Anything that needs to be done when the component is destroyed.
+	 */
+	ngOnDestroy() {
+		LOG.info(this.className, 'Component destroyed');
+	}
+}

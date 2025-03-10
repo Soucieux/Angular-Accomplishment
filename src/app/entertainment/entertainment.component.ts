@@ -1,3 +1,4 @@
+import { AuthService } from './../authentication/auth.service';
 import { CommonModule, isPlatformBrowser, isPlatformServer, NgFor } from '@angular/common';
 import {
 	Component,
@@ -9,7 +10,7 @@ import {
 	Renderer2
 } from '@angular/core';
 import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire/database';
-import { catchError, firstValueFrom, Observable, of, timer } from 'rxjs';
+import { firstValueFrom, Observable, of, timer } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../douban/douban.service';
 import { FirebaseStorageService } from '../firebaseStorage/firebase-storage.service';
@@ -27,7 +28,7 @@ export class EntertainmentComponent {
 	protected isLoggedIn: boolean = true;
 	private pageContainer!: any;
 	private moviesRef!: any;
-	protected movieList$!: Observable<MovieItem[]>;
+	protected movieList$: Observable<MovieItem[]> = of([]);
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -35,23 +36,23 @@ export class EntertainmentComponent {
 		private renderer: Renderer2,
 		private db: Database,
 		private doubanService: DoubanService,
-		private firebaseStorageService: FirebaseStorageService
+		private firebaseStorageService: FirebaseStorageService,
+		private authService: AuthService
 	) {
+		// This line has to on the top as server is also using it to get a reference on movie list
 		this.moviesRef = ref(this.db, 'movies');
-		// Server has no access to login user information
-        if (isPlatformBrowser(this.platformId)) {
-            this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
+		// Only logged in user can access the movie list
+		if (this.isLoggedIn) {
 			// Get the movie list (Observable) from firebase
-			this.movieList$ = listVal<MovieItem>(this.moviesRef).pipe(
-				catchError((error) => {
-					if (error.message == 'Permission denied') {
-						LOG.warn(this.className, 'User does not have permission to access the movie list');
-					} else {
-						LOG.error(this.className, 'Error while retrieving movie list', error as Error);
-					}
-					return of<MovieItem[]>([]);
-				})
-			);
+			this.movieList$ = listVal<MovieItem>(this.moviesRef);
+		} else {
+			LOG.error(this.className, 'User does not have permission to access the movie list');
+		}
+
+		// Server has no access to local storage
+		if (isPlatformBrowser(this.platformId)) {
+			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		}
 	}
 
@@ -61,8 +62,15 @@ export class EntertainmentComponent {
 	ngOnInit() {
 		// In development mode, only server is doing the work.
 		if (isDevMode() && isPlatformServer(this.platformId)) {
-			this.searchAllMovies();
+			// this.searchAllMovies();
 		}
+	}
+
+	/**
+	 * Anything that needs to be done when the component is destroyed.
+	 */
+	ngOnDestroy() {
+		LOG.info(this.className, 'Component destroyed');
 	}
 
 	/**
@@ -70,10 +78,9 @@ export class EntertainmentComponent {
 	 */
 	protected ngAfterViewInit() {
 		//elRef is to get a collection, cannot modify the content directly.
-		if (this.isLoggedIn)
+		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Always put DOM manipulation in ngOnInit or ngAfterViewInit as it requires an element reference
 			this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
-		if (isPlatformBrowser(this.platformId)) {
 			this.updateGridLayout(this.pageContainer);
 		}
 	}
@@ -83,7 +90,9 @@ export class EntertainmentComponent {
 	 */
 	@HostListener('window:resize')
 	protected onResize() {
-		this.updateGridLayout(this.pageContainer);
+		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
+			this.updateGridLayout(this.pageContainer);
+		}
 	}
 
 	/**
@@ -96,6 +105,7 @@ export class EntertainmentComponent {
 	private async searchAllMovies() {
 		// Step 1: Get the movie list (one-time retrieval) from firebase
 		let movieListSnapshot = await get(this.moviesRef);
+
 		// Step 2: Loop through the movieList to get latest movie details
 		let countMovies = 0;
 		for (const movieKey in movieListSnapshot.val()) {
@@ -107,18 +117,21 @@ export class EntertainmentComponent {
 			}
 			const movieItem = movieListSnapshot.val()[movieKey];
 
-			/* 
-                // Temporarily skip the movie already exists in the database
-				if (movieItem.id) {
-			 	    continue;
-				}
-                */
+			/////////////////////////////////////////////////////////////////////
+			// A temporary solution to update data in firebase or to skip some movies
+			// if (movieItem.coverImageLink) {
+			// 	await update(dbRef(this.db, `movies/${movieKey}`), {
+			// 		coverImageLink: movieItem.coverImageLink,
+			// 	});
+			// 	continue;
+			// }
+			//////////////////////////////////////////////////////////////////////
 
 			//Step 3: Start searching for the specific movie
 			LOG.info(this.className, `Start searching for ${movieItem.title}`);
 			let movieId = movieItem.id;
 			const movieIdAlreadyExist = movieItem.id ? true : false;
-			const movieCover = movieItem.coverId ? true : false;
+			const movieImageAlreadyExist = movieItem.coverImageLink ? true : false;
 			!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
 			// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
 			if (!movieId && !(movieId = await this.searchMovieId(movieItem.title))) {
@@ -133,12 +146,11 @@ export class EntertainmentComponent {
 				const [movieRate, coverImageLink] = await this.searchMovieCoverAndMovieRate(
 					movieId,
 					movieItem.title,
-					movieCover
+					movieImageAlreadyExist
 				);
 				if (movieIdAlreadyExist) {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
-						rate: movieRate,
-						coverId: coverImageLink
+						rate: movieRate
 					}).then(() => {
 						LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
 					});
@@ -146,7 +158,7 @@ export class EntertainmentComponent {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
 						rate: movieRate,
 						id: movieId,
-						coverId: coverImageLink
+						coverImageLink: coverImageLink
 					}).then(() => {
 						LOG.info(
 							this.className,
@@ -171,13 +183,13 @@ export class EntertainmentComponent {
 	 *
 	 * @param movieId - The ID of the movie to search for.
 	 * @param movieName - The name of the movie to search for.
-	 * @param movieCover - Whether the movie cover exists in firebase storage.
+	 * @param movieImageAlreadyExist - Whether the movie image exists in firebase storage.
 	 * @returns A Promise that resolves to the movie rate and movie cover ID.
 	 */
 	private async searchMovieCoverAndMovieRate(
 		movieId: string,
 		movieName: string,
-		movieCover: boolean
+		movieImageAlreadyExist: boolean
 	): Promise<[string, string]> {
 		// Step 6: Get the movie webpage as a string
 		const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovie(movieId));
@@ -192,7 +204,7 @@ export class EntertainmentComponent {
 
 		// Step 8.1:Check if the movie cover already exists in firebase storage before searching
 		let coverImageLink = '';
-		if (movieCover) {
+		if (movieImageAlreadyExist) {
 			LOG.warn(this.className, `Movie cover for ${movieName} already exists`);
 		} else {
 			// Step 8.2: If the movie cover does not exist, then retrieves movie cover ID from the movie webpage and then upload the movie cover
@@ -201,7 +213,7 @@ export class EntertainmentComponent {
 			const coverImageId = regexMatchForCoverImage[1].substring(
 				regexMatchForCoverImage[1].lastIndexOf('/') + 1
 			);
-			coverImageLink = await this.searchMovieCoverById(coverImageId, movieName);
+			coverImageLink = await this.searchAndUpdateMovieCoverById(coverImageId, movieName);
 		}
 
 		return [movieRate, coverImageLink];
@@ -250,7 +262,7 @@ export class EntertainmentComponent {
 	 * @param movieName - The name of the movie to search for.
 	 * @returns A Promise that resolves to the downloadable link of the movie cover.
 	 */
-	private async searchMovieCoverById(coverImageId: string, movieName: string): Promise<string> {
+	private async searchAndUpdateMovieCoverById(coverImageId: string, movieName: string): Promise<string> {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
 		try {
 			// Step 9: searchMovieCover returns a Promise and wait for the retrieval to complete

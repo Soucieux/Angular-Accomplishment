@@ -1,7 +1,7 @@
 import { LOG } from '../log';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, delay, Observable } from 'rxjs';
+import { catchError, delay, Observable, throwError } from 'rxjs';
 
 @Injectable({
 	providedIn: 'root'
@@ -40,14 +40,14 @@ export class DoubanService {
 				responseType: 'json'
 			})
 			.pipe(
-				delay(3000),
+				delay(2000),
 				catchError((error) => {
 					LOG.error(
 						this.className,
 						'Error while retrieving movie JSON for ' + movieName,
 						error as Error
 					);
-					return error;
+					return throwError(() => error);
 				})
 			);
 	}
@@ -60,16 +60,17 @@ export class DoubanService {
 					'Error while retrieving movie cover for ' + imageId,
 					error as Error
 				);
-				return error;
+				return throwError(() => error);
 			})
 		);
 	}
 
 	searchMovie(id: string): Observable<any> {
 		return this.http.get(`/api/subject/${id}`, { responseType: 'text' }).pipe(
+			delay(2000),
 			catchError((error) => {
 				LOG.error(this.className, 'Error while retrieving movie webpage for ' + id, error as Error);
-				return error;
+				return throwError(() => error);
 			})
 		);
 	}

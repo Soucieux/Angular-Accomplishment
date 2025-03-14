@@ -17,13 +17,15 @@
 				</a>
 			</li>
 			<!-- This is a placeholder to move the login/logout button to the bottom -->
-			<li style="flex: 1 1 305px"></li>
+			<li style="flex: 1 1 273px"></li>
 			@if (currentUser$ | async; as user){
 			<li
 				[ngStyle]="{
 					display: 'flex',
 					flexDirection: 'row',
-					padding: '10px',
+					position: 'absolute',
+					bottom: '4px',
+					paddingLeft: '15px'
 				}">
 				<button (click)="logout()" mat-mini-fab class="material-symbols-outlined login-logout-button">
 					Logout
@@ -33,7 +35,13 @@
 				</p>
 			</li>
 			} @else {
-			<li>
+			<li
+				[ngStyle]="{
+					position: 'absolute',
+					bottom: '4px',
+					left: '50%',
+					transform: 'translateX(-50%)'
+				}">
 				<button
 					(click)="login()"
 					color="accent"

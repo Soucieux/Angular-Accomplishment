@@ -93,7 +93,6 @@ export class EntertainmentComponent {
 	 * @returns A Promise that resolves to void.
 	 */
 	protected async searchAllMovies() {
-		return;
 		// Step 1: Get the movie list (one-time retrieval) from firebase
 		let movieListSnapshot = await get(this.moviesRef);
 

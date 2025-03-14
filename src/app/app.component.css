@@ -11,6 +11,10 @@
 	transition: box-shadow 0.3s ease;
 	font-family: inherit;
 	font-size: medium;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	padding-left: 13px;
 }
 
 .nav-button:hover {
@@ -23,15 +27,14 @@
 }
 
 .nav-icon {
-	position: fixed;
-	left: 25px;
-	top: 7px;
+	position: relative;
+	top: 5px;
+	left: 20px;
 }
 
 .nav-label {
-	position: fixed;
-	margin-left: -35px;
-	top: 11px;
+	position: relative;
+	left: 55px;
 }
 
 .nav-title {
@@ -74,4 +77,18 @@ mat-drawer-container {
 		#09eaf9,
 		#5ffbf1
 	);
+}
+
+.login-logout-button {
+	margin: 10px;
+	transition: box-shadow 0.3s ease;
+}
+
+.login-logout-button:hover {
+	box-shadow: 0 1px 3px 1px black;
+}
+
+.login-logout-button:active {
+	background-color: transparent !important;
+	box-shadow: 0 1px 10px 1px black;
 }

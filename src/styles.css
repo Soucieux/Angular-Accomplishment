@@ -11,3 +11,9 @@ body {
 	font-family: 'f';
 	src: url('./assets/chineseFont.ttf');
 }
+
+button,
+.mat-button,
+.mat-icon {
+	color: black !important;
+}

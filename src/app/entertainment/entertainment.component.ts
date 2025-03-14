@@ -1,25 +1,19 @@
 import { AuthService } from './../authentication/auth.service';
-import { CommonModule, isPlatformBrowser, isPlatformServer, NgFor } from '@angular/common';
-import {
-	Component,
-	ElementRef,
-	HostListener,
-	Inject,
-	isDevMode,
-	PLATFORM_ID,
-	Renderer2
-} from '@angular/core';
+import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
+import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2 } from '@angular/core';
 import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire/database';
 import { firstValueFrom, Observable, of, timer } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../douban/douban.service';
 import { FirebaseStorageService } from '../firebaseStorage/firebase-storage.service';
 import { MovieItem } from './movie.item';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
 	selector: 'entertainment',
 	standalone: true,
-	imports: [NgFor, CommonModule],
+	imports: [NgFor, CommonModule, MatIconModule, MatButtonModule],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'
 })
@@ -38,7 +32,6 @@ export class EntertainmentComponent {
 		private db: Database,
 		private doubanService: DoubanService,
 		private firebaseStorageService: FirebaseStorageService,
-		private authService: AuthService
 	) {
 		// This line has to on the top as server is also using it to get a reference on movie list
 		this.moviesRef = ref(this.db, 'movies');
@@ -101,6 +94,7 @@ export class EntertainmentComponent {
 	 * @returns A Promise that resolves to void.
 	 */
 	protected async searchAllMovies() {
+		return;
 		// Step 1: Get the movie list (one-time retrieval) from firebase
 		let movieListSnapshot = await get(this.moviesRef);
 

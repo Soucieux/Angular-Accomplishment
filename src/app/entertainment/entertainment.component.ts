@@ -15,6 +15,7 @@ import { LOG } from '../log';
 import { DoubanService } from '../douban/douban.service';
 import { FirebaseStorageService } from '../firebaseStorage/firebase-storage.service';
 import { MovieItem } from './movie.item';
+
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -59,12 +60,7 @@ export class EntertainmentComponent {
 	/**
 	 * Anything that needs to be done when the component is initialized.
 	 */
-	ngOnInit() {
-		// In development mode, only server is doing the work.
-		if (isDevMode() && isPlatformServer(this.platformId)) {
-			// this.searchAllMovies();
-		}
-	}
+	ngOnInit() {}
 
 	/**
 	 * Anything that needs to be done when the component is destroyed.
@@ -96,19 +92,23 @@ export class EntertainmentComponent {
 	}
 
 	/**
+	 * Only "Search All Movies" button can trigger this function.
+	 *
 	 * Search all movies in the database and update the movie details with a delay of 20 seconds for every 5 movies.
 	 * If the movie ID does not exist, then search for the movie ID first and then update the movie rate and movie ID.
 	 * If the movie ID already exists, then update the movie rate.
 	 *
 	 * @returns A Promise that resolves to void.
 	 */
-	private async searchAllMovies() {
+	protected async searchAllMovies() {
 		// Step 1: Get the movie list (one-time retrieval) from firebase
 		let movieListSnapshot = await get(this.moviesRef);
 
 		// Step 2: Loop through the movieList to get latest movie details
 		let countMovies = 0;
 		for (const movieKey in movieListSnapshot.val()) {
+			// TODO:Temporary solution to retrieve only the first movie
+			if (countMovies == 1) break;
 			// Delay 20 seconds for every 5 movies
 			countMovies++;
 			if (countMovies % 5 == 0) {
@@ -117,20 +117,19 @@ export class EntertainmentComponent {
 			}
 			const movieItem = movieListSnapshot.val()[movieKey];
 
-			/////////////////////////////////////////////////////////////////////
-			// A temporary solution to update data in firebase or to skip some movies
+			////////////////////////////////////////////////////////////////////////////////////
+			// TODO: A temporary solution to update data in firebase database or to skip some movies
 			// if (movieItem.coverImageLink) {
 			// 	await update(dbRef(this.db, `movies/${movieKey}`), {
 			// 		coverImageLink: movieItem.coverImageLink,
 			// 	});
 			// 	continue;
 			// }
-			//////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////////
 
 			//Step 3: Start searching for the specific movie
 			LOG.info(this.className, `Start searching for ${movieItem.title}`);
 			let movieId = movieItem.id;
-			const movieIdAlreadyExist = movieItem.id ? true : false;
 			const movieImageAlreadyExist = movieItem.coverImageLink ? true : false;
 			!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
 			// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
@@ -148,7 +147,7 @@ export class EntertainmentComponent {
 					movieItem.title,
 					movieImageAlreadyExist
 				);
-				if (movieIdAlreadyExist) {
+				if (movieId) {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
 						rate: movieRate
 					}).then(() => {
@@ -192,7 +191,7 @@ export class EntertainmentComponent {
 		movieImageAlreadyExist: boolean
 	): Promise<[string, string]> {
 		// Step 6: Get the movie webpage as a string
-		const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovie(movieId));
+		const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovieWebpage(movieId));
 
 		// Step 7: Get the movie rate for the current movie
 		const regexForMovieId = new RegExp(

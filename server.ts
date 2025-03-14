@@ -4,9 +4,6 @@ import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import bootstrap from './src/main.server';
-import * as fs from 'fs';
-import { LOG } from './src/app/log';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
@@ -15,25 +12,10 @@ export function app(): express.Express {
 	const browserDistFolder = resolve(serverDistFolder, '../browser');
 	const indexHtml = join(serverDistFolder, 'index.server.html');
 	const commonEngine = new CommonEngine();
-	const className: string = 'server.ts';
-
-	// Read proxy config file
-	const proxyConfig = JSON.parse(
-		fs.readFileSync(join(process.cwd(), 'proxy.config.json'), 'utf8')
-	);
-
-	// Use the proxy moddleware for API routes (e.g., "/api")
-	Object.keys(proxyConfig).forEach((context) => {
-		LOG.info(className, `Server proxies API call from client with ${context}`);
-		server.use(context, createProxyMiddleware(proxyConfig[context]));
-	});
 
 	server.set('view engine', 'html');
 	server.set('views', browserDistFolder);
 
-	// Example Express Rest API endpoints
-	// server.get('/api/**', (req, res) => { });
-	// Serve static files from /browser
 	server.get(
 		'*.*',
 		express.static(browserDistFolder, {

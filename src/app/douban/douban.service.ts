@@ -8,6 +8,9 @@ import { catchError, delay, Observable, throwError } from 'rxjs';
 })
 export class DoubanService {
 	private readonly className = 'DoubanService';
+	private readonly doubanBaseUrl = 'https://movie.douban.com';
+	private readonly corsProxyUrl = 'https://cors-anywhere.herokuapp.com';
+	private readonly doubanImageBaseUrl = 'https://img9.doubanio.com/view/photo/s_ratio_poster/public';
 
 	constructor(private http: HttpClient) {}
 
@@ -36,7 +39,11 @@ export class DoubanService {
                 Therefore, the client could still face CORS issue when trying to access that API. 
                     */
 		return this.http
-			.get(`/api/j/subject_suggest?q=${movieName}`, {
+			.get(`${this.corsProxyUrl}/${this.doubanBaseUrl}/j/subject_suggest?q=${movieName}`, {
+				headers: {
+					Origin: `${window.location.origin}`, // Required to avoid proxy blocking
+					'X-Requested-With': 'XMLHttpRequest' // Also acceptable
+				},
 				responseType: 'json'
 			})
 			.pipe(
@@ -53,25 +60,45 @@ export class DoubanService {
 	}
 
 	searchMovieCover(imageId: string): Observable<any> {
-		return this.http.get(`/search-cover/${imageId}`, { responseType: 'blob' }).pipe(
-			catchError((error) => {
-				LOG.error(
-					this.className,
-					'Error while retrieving movie cover for ' + imageId,
-					error as Error
-				);
-				return throwError(() => error);
+		return this.http
+			.get(`${this.corsProxyUrl}/${this.doubanImageBaseUrl}/${imageId}`, {
+				headers: {
+					Origin: `${window.location.origin}`, // Required to avoid proxy blocking
+					'X-Requested-With': 'XMLHttpRequest' // Also acceptable
+				},
+				responseType: 'blob'
 			})
-		);
+			.pipe(
+				catchError((error) => {
+					LOG.error(
+						this.className,
+						'Error while retrieving movie cover for ' + imageId,
+						error as Error
+					);
+					return throwError(() => error);
+				})
+			);
 	}
 
-	searchMovie(id: string): Observable<any> {
-		return this.http.get(`/api/subject/${id}`, { responseType: 'text' }).pipe(
-			delay(2000),
-			catchError((error) => {
-				LOG.error(this.className, 'Error while retrieving movie webpage for ' + id, error as Error);
-				return throwError(() => error);
+	searchMovieWebpage(id: string): Observable<any> {
+		return this.http
+			.get(`${this.corsProxyUrl}/${this.doubanBaseUrl}/subject/${id}`, {
+				headers: {
+					Origin: `${window.location.origin}`, // Required to avoid proxy blocking
+					'X-Requested-With': 'XMLHttpRequest' // Also acceptable
+				},
+				responseType: 'text'
 			})
-		);
+			.pipe(
+				delay(2000),
+				catchError((error) => {
+					LOG.error(
+						this.className,
+						'Error while retrieving movie webpage for ' + id,
+						error as Error
+					);
+					return throwError(() => error);
+				})
+			);
 	}
 }

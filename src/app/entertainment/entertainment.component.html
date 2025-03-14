@@ -1,7 +1,12 @@
 @if (isLoggedIn) {
+<div>
+	<button (click)="searchAllMovies()">Search All Movies</button>
+</div>
 <div class="page-container">
 	<div class="individual-item" *ngFor="let movie of movieList$ | async">
-		<div class="image-container" [ngStyle]="{ backgroundImage: 'url(' + movie.coverImageLink + ')' }"></div>
+		<div
+			class="image-container"
+			[ngStyle]="{ backgroundImage: 'url(' + movie.coverImageLink + ')' }"></div>
 		<div class="individual-item-content">
 			<div class="contents title">
 				<p [style.font-size]="calculateFontSize(movie.title.length)">

@@ -49,6 +49,8 @@ mat-drawer {
 	margin-top: 15px;
 	backdrop-filter: blur(50px);
 	background-color: rgb(243, 227, 243);
+	border: 0.8px solid rgb(255, 255, 255);
+	box-shadow: 0 0 15px rgb(238, 240, 243);
 }
 
 mat-drawer-content {

@@ -44,7 +44,7 @@ export class EntertainmentComponent {
 		this.moviesRef = ref(this.db, 'movies');
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
-		if (this.isLoggedIn) {
+		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Get the movie list (Observable) from firebase
 			this.movieList$ = listVal<MovieItem>(this.moviesRef);
 		} else {

@@ -1,4 +1,3 @@
-import { AuthService } from './../authentication/auth.service';
 import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
 import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2 } from '@angular/core';
 import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire/database';

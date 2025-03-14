@@ -1,6 +1,9 @@
 @if (isLoggedIn) {
 <div>
-	<button (click)="searchAllMovies()">Search All Movies</button>
+	<button mat-fab extended (click)="searchAllMovies()" class="search-button">
+		<span class="material-symbols-outlined search-button-icon">search</span>
+		<span class="search-button-label">Search All Movies</span>
+	</button>
 </div>
 <div class="page-container">
 	<div class="individual-item" *ngFor="let movie of movieList$ | async">

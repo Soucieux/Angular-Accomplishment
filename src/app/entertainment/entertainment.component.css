@@ -1,3 +1,4 @@
+/* Page Container */
 .page-container {
 	--individual-item-width: 420px;
 	--individual-item-gap: 13px;
@@ -93,4 +94,24 @@
 		transition-delay: 0.3s;
 		/* opacity: 1; */
 	}
+}
+
+/* Search All Movies Button */
+.search-button-label {
+	position: relative;
+	bottom: 4px;
+	left: 5px;
+	font-family: 'f';
+	font-size: medium;
+}
+
+.search-button-icon {
+	position: relative;
+	top: 4px;
+}
+
+.search-button {
+	margin-bottom: 10px;
+	backdrop-filter: blur(10px);
+	background: rgba(145, 89, 180, 0.5);
 }

@@ -30,7 +30,7 @@ export class EntertainmentComponent {
 		private renderer: Renderer2,
 		private db: Database,
 		private doubanService: DoubanService,
-		private firebaseStorageService: FirebaseStorageService,
+		private firebaseStorageService: FirebaseStorageService
 	) {
 		// This line has to on the top as server is also using it to get a reference on movie list
 		this.moviesRef = ref(this.db, 'movies');
@@ -122,7 +122,7 @@ export class EntertainmentComponent {
 			//Step 3: Start searching for the specific movie
 			LOG.info(this.className, `Start searching for ${movieItem.title}`);
 			let movieId = movieItem.id;
-			const movieImageAlreadyExist = movieItem.coverImageLink ? true : false;
+			const movieImageAlreadyExist = false;
 			!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
 			// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
 			if (!movieId && !(movieId = await this.searchMovieId(movieItem.title))) {
@@ -200,11 +200,8 @@ export class EntertainmentComponent {
 		} else {
 			// Step 8.2: If the movie cover does not exist, then retrieves movie cover ID from the movie webpage and then upload the movie cover
 			const regexForCoverImage = new RegExp('<img class="media" src="(.*?)" />', 'i');
-			const regexMatchForCoverImage = movieWebpageAsString.match(regexForCoverImage);
-			const coverImageId = regexMatchForCoverImage[1].substring(
-				regexMatchForCoverImage[1].lastIndexOf('/') + 1
-			);
-			coverImageLink = await this.searchAndUpdateMovieCoverById(coverImageId, movieName);
+			const regexMatchForCoverImageLink = movieWebpageAsString.match(regexForCoverImage);
+			coverImageLink = await this.searchAndUpdateMovieCoverById(regexMatchForCoverImageLink[1], movieName);
 		}
 
 		return [movieRate, coverImageLink];
@@ -249,16 +246,21 @@ export class EntertainmentComponent {
 	/**
 	 * Get and upload the movie cover obtained to firebase storage.
 	 *
-	 * @param coverImageId - The ID of the movie cover to search for.
+	 * @param coverImageLink - The link of the movie cover to search for.
 	 * @param movieName - The name of the movie to search for.
 	 * @returns A Promise that resolves to the downloadable link of the movie cover.
 	 */
-	private async searchAndUpdateMovieCoverById(coverImageId: string, movieName: string): Promise<string> {
+	private async searchAndUpdateMovieCoverById(coverImageLink: string, movieName: string): Promise<string> {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
 		try {
 			// Step 9: searchMovieCover returns a Promise and wait for the retrieval to complete
-			const coverImage = await firstValueFrom(this.doubanService.searchMovieCover(coverImageId));
+			const coverImage = await firstValueFrom(
+				this.doubanService.searchMovieCover(coverImageLink, movieName)
+			);
 			LOG.info(this.className, `Movie cover retrieved for ${movieName}`);
+
+			// Extract the movie cover ID from the movie cover link
+			const coverImageId = coverImageLink.substring(coverImageLink.lastIndexOf('/') + 1);
 
 			// Step 10: Uploads the movie cover to firebase and get the downloadable link
 			const downloadLink = await this.firebaseStorageService.uploadImageAndGetDownloadLink(

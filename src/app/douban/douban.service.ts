@@ -11,6 +11,7 @@ export class DoubanService {
 	private readonly doubanBaseUrl = 'https://movie.douban.com';
 	private readonly corsProxyUrl = 'https://cors-anywhere.herokuapp.com';
 	private readonly doubanImageBaseUrl = 'https://img9.doubanio.com/view/photo/s_ratio_poster/public';
+	private readonly firebaseFunctionUrl = 'https://searchmoviecover-tfsps4dwza-uc.a.run.app';
 
 	constructor(private http: HttpClient) {}
 
@@ -59,20 +60,16 @@ export class DoubanService {
 			);
 	}
 
-	searchMovieCover(imageId: string): Observable<any> {
+	searchMovieCover(imageLink: string, movieName: string): Observable<any> {
 		return this.http
-			.get(`${this.corsProxyUrl}/${this.doubanImageBaseUrl}/${imageId}`, {
-				headers: {
-					Origin: `${window.location.origin}`, // Required to avoid proxy blocking
-					'X-Requested-With': 'XMLHttpRequest' // Also acceptable
-				},
+			.get(`${this.firebaseFunctionUrl}?url=${imageLink}`, {
 				responseType: 'blob'
 			})
 			.pipe(
 				catchError((error) => {
 					LOG.error(
 						this.className,
-						'Error while retrieving movie cover for ' + imageId,
+						'Error while retrieving movie cover for ' + movieName,
 						error as Error
 					);
 					return throwError(() => error);

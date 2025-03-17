@@ -22,16 +22,22 @@ import * as functions from 'firebase-functions';
 import fetch from 'node-fetch';
 
 // Type-safe HTTP function
-export const searchMovieCover = functions.https.onRequest(async (req, res) => {
-	const imageUrl = req.query.url as string;
+export const getMovieData = functions.https.onRequest(async (req, res) => {
+	const url = req.query.url as string;
+	const type = req.query.type as string;
 
-	if (!imageUrl) {
+	if (!url) {
 		res.status(400).json({ error: 'Missing image URL' });
 		return;
 	}
 
+	if (!type) {
+		res.status(400).json({ error: 'Missing type parameter' });
+		return;
+	}
+
 	try {
-		const response = await fetch(imageUrl, {
+		const response = await fetch(url, {
 			headers: {
 				'X-Requested-With': 'XMLHttpRequest',
 				Referer: 'https://movie.douban.com/',
@@ -46,7 +52,13 @@ export const searchMovieCover = functions.https.onRequest(async (req, res) => {
 			return;
 		}
 
-		res.setHeader('Content-Type', response.headers.get('content-type') || 'image/jpeg');
+		if (type === 'image') {
+			res.setHeader('Content-Type', 'image/jpeg');
+		} else if (type === 'json') {
+			res.setHeader('Content-Type', 'application/json; charset=utf-8');
+		} else {
+			res.setHeader('Content-Type', 'text/html; charset=utf-8');
+		}
 
 		if (response.body) {
 			response.body.pipe(res);

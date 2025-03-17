@@ -9,9 +9,7 @@ import { catchError, delay, Observable, throwError } from 'rxjs';
 export class DoubanService {
 	private readonly className = 'DoubanService';
 	private readonly doubanBaseUrl = 'https://movie.douban.com';
-	private readonly corsProxyUrl = 'https://cors-anywhere.herokuapp.com';
-	private readonly doubanImageBaseUrl = 'https://img9.doubanio.com/view/photo/s_ratio_poster/public';
-	private readonly firebaseFunctionUrl = 'https://searchmoviecover-tfsps4dwza-uc.a.run.app';
+	private readonly firebaseFunctionUrl = 'https://getmoviedata-tfsps4dwza-uc.a.run.app';
 
 	constructor(private http: HttpClient) {}
 
@@ -40,13 +38,12 @@ export class DoubanService {
                 Therefore, the client could still face CORS issue when trying to access that API. 
                     */
 		return this.http
-			.get(`${this.corsProxyUrl}/${this.doubanBaseUrl}/j/subject_suggest?q=${movieName}`, {
-				headers: {
-					Origin: `${window.location.origin}`, // Required to avoid proxy blocking
-					'X-Requested-With': 'XMLHttpRequest' // Also acceptable
-				},
-				responseType: 'json'
-			})
+			.get(
+				`${this.firebaseFunctionUrl}?url=${this.doubanBaseUrl}/j/subject_suggest?q=${movieName}&type=json`,
+				{
+					responseType: 'json'
+				}
+			)
 			.pipe(
 				delay(2000),
 				catchError((error) => {
@@ -62,7 +59,7 @@ export class DoubanService {
 
 	searchMovieCover(imageLink: string, movieName: string): Observable<any> {
 		return this.http
-			.get(`${this.firebaseFunctionUrl}?url=${imageLink}`, {
+			.get(`${this.firebaseFunctionUrl}?url=${imageLink}&type=image`, {
 				responseType: 'blob'
 			})
 			.pipe(
@@ -79,11 +76,7 @@ export class DoubanService {
 
 	searchMovieWebpage(id: string): Observable<any> {
 		return this.http
-			.get(`${this.corsProxyUrl}/${this.doubanBaseUrl}/subject/${id}`, {
-				headers: {
-					Origin: `${window.location.origin}`, // Required to avoid proxy blocking
-					'X-Requested-With': 'XMLHttpRequest' // Also acceptable
-				},
+			.get(`${this.firebaseFunctionUrl}?url=${this.doubanBaseUrl}/subject/${id}&type=html`, {
 				responseType: 'text'
 			})
 			.pipe(

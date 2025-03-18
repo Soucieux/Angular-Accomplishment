@@ -17,9 +17,18 @@
 				</p>
 			</div>
 			<div class="contents category">
-				<p>
-					{{ movie.genre }} <span class="rate">{{ movie.rate }}</span>
-				</p>
+				<div>
+					{{ movie.genre }}
+					<ng-container *ngIf="movie.rate; else noRate">
+						<span class="rate">{{ movie.rate }}</span>
+					</ng-container>
+					<ng-template #noRate>
+						<span>暂无评分</span>
+					</ng-template>
+				</div>
+				<div>
+					<span>{{ movie.year }}</span>
+				</div>
 			</div>
 		</div>
 	</div>

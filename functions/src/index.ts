@@ -21,8 +21,7 @@
 import * as functions from 'firebase-functions';
 import fetch from 'node-fetch';
 
-// Type-safe HTTP function
-export const getMovieData = functions.https.onRequest(async (req, res) => {
+const getMovieData = functions.https.onRequest(async (req, res) => {
 	const url = req.query.url as string;
 	const type = req.query.type as string;
 
@@ -48,7 +47,7 @@ export const getMovieData = functions.https.onRequest(async (req, res) => {
 		res.set('Access-Control-Allow-Origin', '*');
 
 		if (!response.ok) {
-			res.status(response.status).send('Failed to fetch image');
+			res.status(response.status).send(response);
 			return;
 		}
 
@@ -71,3 +70,9 @@ export const getMovieData = functions.https.onRequest(async (req, res) => {
 		res.status(500).send('Internal server error');
 	}
 });
+
+export const thread1 = functions.https.onRequest(getMovieData);
+export const thread2 = functions.https.onRequest(getMovieData);
+export const thread3 = functions.https.onRequest(getMovieData);
+export const thread4 = functions.https.onRequest(getMovieData);
+export const thread5 = functions.https.onRequest(getMovieData);

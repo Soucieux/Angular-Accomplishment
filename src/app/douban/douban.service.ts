@@ -1,7 +1,7 @@
 import { LOG } from '../log';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, delay, Observable, throwError } from 'rxjs';
+import { catchError, Observable, throwError } from 'rxjs';
 
 @Injectable({
 	providedIn: 'root'
@@ -9,7 +9,6 @@ import { catchError, delay, Observable, throwError } from 'rxjs';
 export class DoubanService {
 	private readonly className = 'DoubanService';
 	private readonly doubanBaseUrl = 'https://movie.douban.com';
-	private readonly firebaseFunctionUrl = 'https://getmoviedata-tfsps4dwza-uc.a.run.app';
 
 	constructor(private http: HttpClient) {}
 
@@ -39,13 +38,14 @@ export class DoubanService {
                     */
 		return this.http
 			.get(
-				`${this.firebaseFunctionUrl}?url=${this.doubanBaseUrl}/j/subject_suggest?q=${movieName}&type=json`,
+				`${this.getFirebaseFunctionUrl()}?url=${
+					this.doubanBaseUrl
+				}/j/subject_suggest?q=${movieName}&type=json`,
 				{
 					responseType: 'json'
 				}
 			)
 			.pipe(
-				delay(2000),
 				catchError((error) => {
 					LOG.error(
 						this.className,
@@ -59,7 +59,7 @@ export class DoubanService {
 
 	searchMovieCover(imageLink: string, movieName: string): Observable<any> {
 		return this.http
-			.get(`${this.firebaseFunctionUrl}?url=${imageLink}&type=image`, {
+			.get(`${this.getFirebaseFunctionUrl()}?url=${imageLink}&type=image`, {
 				responseType: 'blob'
 			})
 			.pipe(
@@ -76,11 +76,10 @@ export class DoubanService {
 
 	searchMovieWebpage(id: string): Observable<any> {
 		return this.http
-			.get(`${this.firebaseFunctionUrl}?url=${this.doubanBaseUrl}/subject/${id}&type=html`, {
+			.get(`${this.getFirebaseFunctionUrl()}?url=${this.doubanBaseUrl}/subject/${id}&type=json`, {
 				responseType: 'text'
 			})
 			.pipe(
-				delay(2000),
 				catchError((error) => {
 					LOG.error(
 						this.className,
@@ -90,5 +89,16 @@ export class DoubanService {
 					return throwError(() => error);
 				})
 			);
+	}
+
+	private getFirebaseFunctionUrl(): string {
+		const urls = [
+			'https://thread1-tfsps4dwza-uc.a.run.app',
+			'https://thread2-tfsps4dwza-uc.a.run.app',
+			'https://thread3-tfsps4dwza-uc.a.run.app',
+			'https://thread4-tfsps4dwza-uc.a.run.app',
+			'https://thread5-tfsps4dwza-uc.a.run.app'
+		];
+		return urls[Math.floor(Math.random() * urls.length)];
 	}
 }

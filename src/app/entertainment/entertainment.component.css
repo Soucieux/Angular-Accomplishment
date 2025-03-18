@@ -2,7 +2,6 @@
 .page-container {
 	--individual-item-width: 420px;
 	--individual-item-gap: 13px;
-	--content-width: 180px;
 	display: grid;
 	/* grid-auto-flow: dense; */
 	gap: var(--individual-item-gap);
@@ -30,7 +29,7 @@
 }
 
 .image-container {
-	width: var(--content-width);
+	width: 180px;
 	height: 285px;
 	margin: 10px;
 
@@ -47,7 +46,7 @@
 
 .individual-item-content {
 	/* border: 2px solid green; */
-	width: var(--content-width);
+	width: 200px;
 
 	display: flex;
 	flex-direction: column;

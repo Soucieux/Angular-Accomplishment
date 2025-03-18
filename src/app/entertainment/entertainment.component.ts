@@ -97,16 +97,10 @@ export class EntertainmentComponent {
 		let movieListSnapshot = await get(this.moviesRef);
 
 		// Step 2: Loop through the movieList to get latest movie details
-		let countMovies = 0;
+		// let countMovies = 0;
 		for (const movieKey in movieListSnapshot.val()) {
-			// TODO:Temporary solution to retrieve only the first movie
-			if (countMovies == 1) break;
-			// Delay 20 seconds for every 5 movies
-			countMovies++;
-			if (countMovies % 5 == 0) {
-				LOG.warn(this.className, 'Delay 20 seconds for every 5 movies');
-				await firstValueFrom(timer(20000));
-			}
+			// Delay 2 seconds for every movie
+			await firstValueFrom(timer(2000));
 			const movieItem = movieListSnapshot.val()[movieKey];
 
 			////////////////////////////////////////////////////////////////////////////////////
@@ -122,13 +116,17 @@ export class EntertainmentComponent {
 			//Step 3: Start searching for the specific movie
 			LOG.info(this.className, `Start searching for ${movieItem.title}`);
 			let movieId = movieItem.id;
-			const movieImageAlreadyExist = false;
+			const movieIdAlreadyExist = movieId ? true : false;
+			const movieImageAlreadyExist = movieItem.coverImageLink ? true : false;
 			!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
 			// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
-			if (!movieId && !(movieId = await this.searchMovieId(movieItem.title))) {
+			if (
+				!movieIdAlreadyExist &&
+				!(movieId = await this.searchMovieId(movieItem.title, movieItem.year))
+			) {
 				//Step 3.2: If the result of searching movie ID is null, it means the server blocks the request
 				//due to too many requests, then skip the current iteration.
-				LOG.warn(this.className, `Skip movie rate search for ${movieItem.title}`);
+				LOG.warn(this.className, `${movieItem.title} not found`);
 				continue;
 			}
 			// Step 5: Either the movie ID exists in the database or the movie ID is retrieved from Douban API.
@@ -139,9 +137,11 @@ export class EntertainmentComponent {
 					movieItem.title,
 					movieImageAlreadyExist
 				);
-				if (movieId) {
+				if (movieIdAlreadyExist) {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
-						rate: movieRate
+						rate: movieRate,
+						// TODO: This is needed in devlopment to store other info on existing movies
+						coverImageLink: coverImageLink
 					}).then(() => {
 						LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
 					});
@@ -182,29 +182,38 @@ export class EntertainmentComponent {
 		movieName: string,
 		movieImageAlreadyExist: boolean
 	): Promise<[string, string]> {
-		// Step 6: Get the movie webpage as a string
-		const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovieWebpage(movieId));
+		try {
+			// Step 6: Get the movie webpage as a string
+			const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovieWebpage(movieId));
 
-		// Step 7: Get the movie rate for the current movie
-		const regexForMovieId = new RegExp(
-			'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
-			'i'
-		);
-		const movieRate = movieWebpageAsString.match(regexForMovieId)[1];
-		LOG.info(this.className, `Movie rate retrieved for ${movieName} is ${movieRate}`);
+			// Step 7: Get the movie rate for the current movie
+			const regexForMovieRate = new RegExp(
+				'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
+				'i'
+			);
+			const movieRate = movieWebpageAsString.match(regexForMovieRate)[1];
+			LOG.info(this.className, `Movie rate retrieved for ${movieName} is ${movieRate}`);
 
-		// Step 8.1:Check if the movie cover already exists in firebase storage before searching
-		let coverImageLink = '';
-		if (movieImageAlreadyExist) {
-			LOG.warn(this.className, `Movie cover for ${movieName} already exists`);
-		} else {
-			// Step 8.2: If the movie cover does not exist, then retrieves movie cover ID from the movie webpage and then upload the movie cover
-			const regexForCoverImage = new RegExp('<img class="media" src="(.*?)" />', 'i');
-			const regexMatchForCoverImageLink = movieWebpageAsString.match(regexForCoverImage);
-			coverImageLink = await this.searchAndUpdateMovieCoverById(regexMatchForCoverImageLink[1], movieName);
+			// Step 8.1:Check if the movie cover already exists in firebase storage before searching
+			let coverImageFirebaseLink = '';
+			if (movieImageAlreadyExist) {
+				LOG.warn(this.className, `Movie cover for ${movieName} already exists`);
+			} else {
+				// Step 8.2: If the movie cover does not exist, then retrieves movie cover ID from the movie webpage and then upload the movie cover
+				const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
+				const coverImageLink = movieWebpageAsString.match(regexForCoverImageLink)[1];
+				coverImageFirebaseLink = await this.searchAndUpdateMovieCoverById(coverImageLink, movieName);
+			}
+
+			return [movieRate, coverImageFirebaseLink];
+		} catch (error) {
+			LOG.error(
+				this.className,
+				`Error while retrieving movie webpage for ${movieName}`,
+				error as Error
+			);
+			throw error;
 		}
-
-		return [movieRate, coverImageLink];
 	}
 
 	/**
@@ -213,9 +222,10 @@ export class EntertainmentComponent {
 	 * If the API responds with data, then extracts the movie ID from the JSON object.
 	 *
 	 * @param movieName - The name of the movie to search for.
+	 * @param movieYear - The year of the movie to search for.
 	 * @returns A Promise that resolves to the movie ID.
 	 */
-	private async searchMovieId(movieName: string): Promise<string | null> {
+	private async searchMovieId(movieName: string, movieYear: number): Promise<string | null> {
 		// Step 4: Search for the movie ID from the Douban API
 		try {
 			LOG.info(
@@ -234,12 +244,18 @@ export class EntertainmentComponent {
 					this.className,
 					`Movie ID retrieved for ${movieName} with ID ${extractedData[0]['id']}`
 				);
-				// TODO: Here is assuming the first element is the desired movie details.
-				return extractedData[0]['id'];
+				// Step 4.3: Loop through the extracted data to get the correct movie ID as the result is retrieved by regex
+				for (const movie of extractedData) {
+					// Movie name must be exactly the same
+					if (movie.title === movieName && movie.year === movieYear) {
+						return movie.id;
+					}
+				}
+				return null;
 			}
 		} catch (error) {
 			LOG.error(this.className, `Error while retrieving movie ID for ${movieName}`, error as Error);
-			return null;
+			throw error;
 		}
 	}
 
@@ -272,7 +288,7 @@ export class EntertainmentComponent {
 			return downloadLink;
 		} catch (error) {
 			LOG.error(this.className, `Error while processing movie cover for ${movieName}`, error as Error);
-			return '';
+			throw error;
 		}
 	}
 

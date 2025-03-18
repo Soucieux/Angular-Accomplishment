@@ -139,9 +139,8 @@ export class EntertainmentComponent {
 				);
 				if (movieIdAlreadyExist) {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
-						rate: movieRate,
+						rate: movieRate
 						// TODO: This is needed in devlopment to store other info on existing movies
-						coverImageLink: coverImageLink
 					}).then(() => {
 						LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
 					});
@@ -299,7 +298,7 @@ export class EntertainmentComponent {
 	 * @returns A string that represents the font size.
 	 */
 	protected calculateFontSize(length: number) {
-		return length < 8 ? '20px' : String(20 - (length - 7) * 2 + 'px');
+		return length <= 9 ? '20px' : String(20 - (length - 8.5) * 2 + 'px');
 	}
 
 	/**

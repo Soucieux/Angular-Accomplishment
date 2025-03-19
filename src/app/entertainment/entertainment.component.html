@@ -1,8 +1,12 @@
 @if (isLoggedIn) {
-<div>
-	<button mat-fab extended (click)="searchAllMovies()" class="search-button">
-		<span class="material-symbols-outlined search-button-icon">search</span>
-		<span class="search-button-label">Search All Movies</span>
+<div class="control-button-container">
+	<button mat-fab extended (click)="searchAllMovies()" class="control-button">
+		<span class="material-symbols-outlined control-button-icon">search</span>
+		<span class="control-button-label">Search All Movies</span>
+	</button>
+	<button mat-fab extended (click)="cancelSearch()" class="control-button">
+		<span class="material-symbols-outlined control-button-icon">Cancel</span>
+		<span class="control-button-label">Cancel Search</span>
 	</button>
 </div>
 <div class="page-container">

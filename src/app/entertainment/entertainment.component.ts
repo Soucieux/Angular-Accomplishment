@@ -39,13 +39,9 @@ export class EntertainmentComponent {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Get the movie list (Observable) from firebase
 			this.movieList$ = listVal<MovieItem>(this.moviesRef);
+			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {
 			LOG.error(this.className, 'User does not have permission to access the movie list');
-		}
-
-		// Server has no access to local storage
-		if (isPlatformBrowser(this.platformId)) {
-			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		}
 	}
 

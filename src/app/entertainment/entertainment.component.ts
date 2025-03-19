@@ -19,7 +19,8 @@ import { MatButtonModule } from '@angular/material/button';
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
 	// This value has to be true initially so that the page will not show access denied page on refresh
-	protected isLoggedIn: boolean = true;
+    protected isLoggedIn: boolean = true;
+    protected isSearching: boolean = false;
 	private pageContainer!: any;
 	private moviesRef!: any;
 	protected movieList$: Observable<MovieItem[]> = of([]);
@@ -90,11 +91,17 @@ export class EntertainmentComponent {
 	 */
 	protected async searchAllMovies() {
 		// Step 1: Get the movie list (one-time retrieval) from firebase
-		let movieListSnapshot = await get(this.moviesRef);
+        let movieListSnapshot = await get(this.moviesRef);
+        this.isSearching = true;
 
 		// Step 2: Loop through the movieList to get latest movie details
 		// let countMovies = 0;
-		for (const movieKey in movieListSnapshot.val()) {
+        for (const movieKey in movieListSnapshot.val()) {
+            // If the search is cancelled, then break the loop.
+            if (!this.isSearching) {
+                LOG.info(this.className, 'Search cancelled');
+                break;
+            }
 			// Delay 2 seconds for every movie
 			await firstValueFrom(timer(2000));
 			const movieItem = movieListSnapshot.val()[movieKey];
@@ -285,6 +292,14 @@ export class EntertainmentComponent {
 			LOG.error(this.className, `Error while processing movie cover for ${movieName}`, error as Error);
 			throw error;
 		}
+    }
+    
+	/**
+	 * Cancel the search with a button click
+	 */
+    protected cancelSearch() {
+        LOG.info(this.className, 'Search cancel requested');
+		this.isSearching = false;
 	}
 
 	/**

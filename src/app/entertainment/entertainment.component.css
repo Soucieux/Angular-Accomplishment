@@ -117,8 +117,14 @@
 	}
 }
 
-/* Search All Movies Button */
-.search-button-label {
+/* Movie Page Control Button */
+.control-button-container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.control-button-label {
 	position: relative;
 	bottom: 4px;
 	left: 5px;
@@ -126,14 +132,13 @@
 	font-size: medium;
 }
 
-.search-button-icon {
+.control-button-icon {
 	position: relative;
 	top: 4px;
 }
 
-.search-button {
+.control-button {
 	color: white !important;
-	margin-bottom: 10px;
 	backdrop-filter: blur(10px);
 	background: rgba(145, 89, 180, 0.5);
 }

@@ -17,11 +17,10 @@
 
 .individual-item {
 	width: var(--individual-item-width);
-	height: 310px;
 	background: rgba(255, 255, 255, 0.5);
 	border-radius: 20px;
-	border: 0.8px solid rgb(255, 255, 255);
-	box-shadow: 0 5px 10px rgb(238, 240, 243);
+	border: 2px solid rgb(255, 255, 255);
+	box-shadow: 5px 5px 10px rgb(238, 240, 243);
 	backdrop-filter: blur(10px);
 	margin-bottom: 10px;
 	display: flex;
@@ -33,7 +32,6 @@
 .individual-item::before {
 	content: '';
 	position: absolute;
-	bottom: 0;
 	width: 0;
 	height: 100%;
 	background: linear-gradient(-45deg, #f89b29 0%, #ff0f7b 100%);
@@ -44,11 +42,6 @@
 
 .individual-item:hover::before {
 	width: 100%;
-}
-
-.individual-item:hover {
-	border: none;
-	box-shadow: none;
 }
 
 .image-container {
@@ -67,7 +60,6 @@
 }
 
 .individual-item-content {
-	/* border: 2px solid green; */
 	width: 200px;
 
 	display: flex;
@@ -84,20 +76,27 @@
 }
 
 .contents {
+	display: flex;
+	flex-direction: column;
+	row-gap: 3px;
 	letter-spacing: 3px;
-	height: 30px;
+	height: 100%;
 }
 
 .title {
-	transform: translateY(15px);
 	white-space: nowrap;
-	transition: all 0.7s;
+	margin-top: 5px;
+	margin-bottom: 10px;
+	/* transform: translateY(15px); */
+	/* transition: all 0.7s; */
 }
 
-.category {
+.text {
 	font-size: 17px;
-	transform: translateY(10px);
-	transition: all 0.7s;
+	display: flex;
+	flex-direction: row;
+	/* transform: translateY(10px); */
+	/* transition: all 0.7s; */
 }
 
 .rate {
@@ -105,25 +104,32 @@
 	font-weight: bold;
 }
 
-.individual-item-content:hover {
-	& .title {
-		transform: translateY(0px);
-	}
+.genre {
+	background: linear-gradient(-45deg, #f89b29 0%, #ff0f7b 100%);
+	box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
+	border-radius: 5px;
+	color: white;
+}
 
-	& .category {
-		transform: translateY(0px);
-		transition-delay: 0.3s;
-		/* opacity: 1; */
+.individual-item:hover {
+	border: none;
+	box-shadow: none;
+
+	& .genre {
+		background: white;
+		color: black;
+		backdrop-filter: blur(10px);
 	}
 }
 
 /* Movie Page Control Button */
 .control-button-container {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    margin-bottom: 10px;
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	margin-bottom: 10px;
 }
+
 .control-button-label {
 	position: relative;
 	bottom: 4px;

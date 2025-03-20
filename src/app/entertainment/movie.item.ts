@@ -6,6 +6,8 @@ interface MovieItemInterface {
 	coverImageLink: string;
 	id: number;
 	year: number;
+	firstReleaseDate: string;
+	episodeNumber: string;
 }
 export class MovieItem implements MovieItemInterface {
 	constructor(
@@ -14,6 +16,8 @@ export class MovieItem implements MovieItemInterface {
 		public rate: number = -1,
 		public coverImageLink: string,
 		public id: number = -1,
-		public year: number = -1
+		public year: number = -1,
+		public firstReleaseDate: string = '',
+		public episodeNumber: string = ''
 	) {}
 }

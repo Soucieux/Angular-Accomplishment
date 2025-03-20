@@ -19,8 +19,8 @@ import { MatButtonModule } from '@angular/material/button';
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
 	// This value has to be true initially so that the page will not show access denied page on refresh
-    protected isLoggedIn: boolean = true;
-    protected isSearching: boolean = false;
+	protected isLoggedIn: boolean = true;
+	protected isSearching: boolean = false;
 	private pageContainer!: any;
 	private moviesRef!: any;
 	protected movieList$: Observable<MovieItem[]> = of([]);
@@ -91,17 +91,17 @@ export class EntertainmentComponent {
 	 */
 	protected async searchAllMovies() {
 		// Step 1: Get the movie list (one-time retrieval) from firebase
-        let movieListSnapshot = await get(this.moviesRef);
-        this.isSearching = true;
+		let movieListSnapshot = await get(this.moviesRef);
+		this.isSearching = true;
 
 		// Step 2: Loop through the movieList to get latest movie details
 		// let countMovies = 0;
-        for (const movieKey in movieListSnapshot.val()) {
-            // If the search is cancelled, then break the loop.
-            if (!this.isSearching) {
-                LOG.info(this.className, 'Search cancelled');
-                break;
-            }
+		for (const movieKey in movieListSnapshot.val()) {
+			// If the search is cancelled, then break the loop.
+			if (!this.isSearching) {
+				LOG.warn(this.className, 'Search cancelled');
+				break;
+			}
 			// Delay 2 seconds for every movie
 			await firstValueFrom(timer(2000));
 			const movieItem = movieListSnapshot.val()[movieKey];
@@ -135,15 +135,14 @@ export class EntertainmentComponent {
 			// Step 5: Either the movie ID exists in the database or the movie ID is retrieved from Douban API.
 			try {
 				LOG.info(this.className, `Movie ID found for ${movieItem.title}`);
-				const [movieRate, coverImageLink] = await this.searchMovieCoverAndMovieRate(
-					movieId,
-					movieItem.title,
-					movieImageAlreadyExist
-				);
+				const [movieRate, coverImageLink, firstReleaseDate, episodeNumber] =
+					await this.searchMovieCoverAndMovieRate(movieId, movieItem.title, movieImageAlreadyExist);
 				if (movieIdAlreadyExist) {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
-						rate: movieRate
+						rate: movieRate,
 						// TODO: This is needed in devlopment to store other info on existing movies
+						firstReleaseDate: firstReleaseDate,
+						episodeNumber: episodeNumber
 					}).then(() => {
 						LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
 					});
@@ -151,7 +150,9 @@ export class EntertainmentComponent {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
 						rate: movieRate,
 						id: movieId,
-						coverImageLink: coverImageLink
+                        coverImageLink: coverImageLink,
+                        firstReleaseDate: firstReleaseDate,
+						episodeNumber: episodeNumber
 					}).then(() => {
 						LOG.info(
 							this.className,
@@ -172,29 +173,43 @@ export class EntertainmentComponent {
 	/**
 	 * Get the movie webpage from Douban API with a given movie ID.
 	 * Then, get the movie cover and upload it to firebase storage if not exists already.
-	 * Finally, get the movie rate.
+	 * Finally, get the movie rate, first release date, and total episode number.
 	 *
 	 * @param movieId - The ID of the movie to search for.
 	 * @param movieName - The name of the movie to search for.
 	 * @param movieImageAlreadyExist - Whether the movie image exists in firebase storage.
-	 * @returns A Promise that resolves to the movie rate and movie cover ID.
+	 * @returns A Promise that resolves to the movie rate, first release date, and total episode number.
 	 */
 	private async searchMovieCoverAndMovieRate(
 		movieId: string,
 		movieName: string,
 		movieImageAlreadyExist: boolean
-	): Promise<[string, string]> {
+	): Promise<[string, string, string, string]> {
 		try {
 			// Step 6: Get the movie webpage as a string
 			const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovieWebpage(movieId));
 
-			// Step 7: Get the movie rate for the current movie
+			// Step 7.1: Get the movie rate for the current movie
 			const regexForMovieRate = new RegExp(
 				'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
 				'i'
 			);
 			const movieRate = movieWebpageAsString.match(regexForMovieRate)[1];
 			LOG.info(this.className, `Movie rate retrieved for ${movieName} is ${movieRate}`);
+
+			// Step 7.2: Get the first release date for the current movie
+			const regexForFirstReleaseDate = new RegExp(
+				'<span class="pl">首播:</span> <span property="v:initialReleaseDate" content="(.*?)">(.*?)</span><br/>',
+				'i'
+			);
+			let firstReleaseDate = movieWebpageAsString.match(regexForFirstReleaseDate)[1];
+			firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
+			LOG.info(this.className, `First release date for ${movieName} is ${firstReleaseDate}`);
+
+			// Step 7.3: Get the total episode number for the current movie
+			const regexForEpisodeNumber = new RegExp('<span class="pl">集数:</span> (.*?)<br/>', 'i');
+			const episodeNumber = movieWebpageAsString.match(regexForEpisodeNumber)[1];
+			LOG.info(this.className, `Total episode number for ${movieName} is ${episodeNumber}`);
 
 			// Step 8.1:Check if the movie cover already exists in firebase storage before searching
 			let coverImageFirebaseLink = '';
@@ -207,7 +222,7 @@ export class EntertainmentComponent {
 				coverImageFirebaseLink = await this.searchAndUpdateMovieCoverById(coverImageLink, movieName);
 			}
 
-			return [movieRate, coverImageFirebaseLink];
+			return [movieRate, coverImageFirebaseLink, firstReleaseDate, episodeNumber];
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -292,13 +307,13 @@ export class EntertainmentComponent {
 			LOG.error(this.className, `Error while processing movie cover for ${movieName}`, error as Error);
 			throw error;
 		}
-    }
-    
+	}
+
 	/**
 	 * Cancel the search with a button click
 	 */
-    protected cancelSearch() {
-        LOG.info(this.className, 'Search cancel requested');
+	protected cancelSearch() {
+		LOG.warn(this.className, 'Search cancel requested');
 		this.isSearching = false;
 	}
 

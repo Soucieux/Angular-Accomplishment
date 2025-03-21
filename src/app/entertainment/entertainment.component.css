@@ -34,7 +34,6 @@
 	position: absolute;
 	width: 0;
 	height: 100%;
-	background: linear-gradient(-45deg, #f89b29 0%, #ff0f7b 100%);
 	z-index: -1;
 	transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 	border-radius: 20px;
@@ -72,7 +71,7 @@
 	color: black;
 	transition: all 0.5s;
 
-	font-family: 'f';
+	font-family: 'cf';
 }
 
 .contents {
@@ -99,23 +98,43 @@
 	/* transition: all 0.7s; */
 }
 
-.rate {
-	font-size: 23px;
-	font-weight: bold;
+.individual-item.very-high-rate::before,
+.individual-item.very-high-rate .rate {
+	background: linear-gradient(-45deg, #e21f1f 0%, #e21f1f 100%);
 }
 
-.genre {
+.individual-item.high-rate::before,
+.individual-item.high-rate .rate {
 	background: linear-gradient(-45deg, #f89b29 0%, #ff0f7b 100%);
+}
+
+.individual-item.medium-rate::before,
+.individual-item.medium-rate .rate {
+	background: linear-gradient(-45deg, #e8c602 0%, #e47a00 100%);
+}
+
+.individual-item.low-rate::before,
+.individual-item.low-rate .rate {
+	background: linear-gradient(-45deg, #c5e50d 0%, #e8c602 100%);
+}
+
+.rate {
+	font-size: 25px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: 20px;
 	box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
 	border-radius: 5px;
 	color: white;
+	font-family: 'nlf';
 }
 
 .individual-item:hover {
 	border: none;
 	box-shadow: none;
 
-	& .genre {
+	& .rate {
 		background: white;
 		color: black;
 		backdrop-filter: blur(10px);
@@ -134,7 +153,7 @@
 	position: relative;
 	bottom: 4px;
 	left: 5px;
-	font-family: 'f';
+	font-family: 'cf';
 	font-size: medium;
 }
 

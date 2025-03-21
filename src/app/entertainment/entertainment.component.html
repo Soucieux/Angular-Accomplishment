@@ -10,7 +10,15 @@
 	</button>
 </div>
 <div class="page-container">
-	<div class="individual-item" *ngFor="let movie of movieList$ | async">
+	<div
+		class="individual-item"
+		[ngClass]="{
+			'very-high-rate': movie.rate >= 9,
+			'high-rate': movie.rate >= 7.9 && movie.rate < 9,
+			'medium-rate': movie.rate >= 7 && movie.rate < 7.9,
+			'low-rate': movie.rate < 7
+		}"
+		*ngFor="let movie of movieList$ | async">
 		<div
 			class="image-container"
 			[ngStyle]="{ backgroundImage: 'url(' + movie.coverImageLink + ')' }"></div>
@@ -19,13 +27,13 @@
 				<span class="title" [style.font-size]="calculateFontSize(movie.title.length)">
 					{{ movie.title }}
 				</span>
-				<span class="text">
-					类型：<span class="genre">{{ movie.genre }}</span>
-				</span>
+				<span class="text">类型：{{ movie.genre }} </span>
 				<span class="text">集数：{{ movie.episodeNumber }}</span>
 				<span class="text">年份：{{ movie.firstReleaseDate }}</span>
 				<ng-container *ngIf="movie.rate; else noRate">
-					<span class="rate">{{ movie.rate }}</span>
+					<span class="rate">
+						{{ movie.rate }}
+					</span>
 				</ng-container>
 				<ng-template #noRate>
 					<span class="rate">暂无评分</span>

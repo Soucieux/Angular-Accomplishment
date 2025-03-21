@@ -4,12 +4,17 @@
 
 html,
 body {
-	font-family: 'f';
+	font-family: 'cf';
 }
 
 @font-face {
-	font-family: 'f';
-	src: url('./assets/chineseFont.ttf');
+	font-family: 'cf';
+	src: url('./assets/chinese-font.ttf');
+}
+
+@font-face {
+	font-family: 'nlf';
+	src: url('./assets/number-letter-font.ttf');
 }
 
 button,

@@ -95,7 +95,6 @@ export class EntertainmentComponent {
 		this.isSearching = true;
 
 		// Step 2: Loop through the movieList to get latest movie details
-		// let countMovies = 0;
 		for (const movieKey in movieListSnapshot.val()) {
 			// If the search is cancelled, then break the loop.
 			if (!this.isSearching) {
@@ -136,7 +135,7 @@ export class EntertainmentComponent {
 			try {
 				LOG.info(this.className, `Movie ID found for ${movieItem.title}`);
 				const [movieRate, coverImageLink, firstReleaseDate, episodeNumber] =
-					await this.searchMovieCoverAndMovieRate(movieId, movieItem.title, movieImageAlreadyExist);
+					await this.searchMovieData(movieId, movieItem.title, movieImageAlreadyExist);
 				if (movieIdAlreadyExist) {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
 						rate: movieRate,
@@ -150,8 +149,8 @@ export class EntertainmentComponent {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
 						rate: movieRate,
 						id: movieId,
-                        coverImageLink: coverImageLink,
-                        firstReleaseDate: firstReleaseDate,
+						coverImageLink: coverImageLink,
+						firstReleaseDate: firstReleaseDate,
 						episodeNumber: episodeNumber
 					}).then(() => {
 						LOG.info(
@@ -180,7 +179,7 @@ export class EntertainmentComponent {
 	 * @param movieImageAlreadyExist - Whether the movie image exists in firebase storage.
 	 * @returns A Promise that resolves to the movie rate, first release date, and total episode number.
 	 */
-	private async searchMovieCoverAndMovieRate(
+	private async searchMovieData(
 		movieId: string,
 		movieName: string,
 		movieImageAlreadyExist: boolean

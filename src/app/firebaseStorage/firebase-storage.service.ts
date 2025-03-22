@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Storage, ref as storageRef } from '@angular/fire/storage';
 import { LOG } from '../log';
-import { getDownloadURL, listAll, uploadBytes } from 'firebase/storage';
+import { getDownloadURL, uploadBytes } from 'firebase/storage';
 
 @Injectable({
 	providedIn: 'root'

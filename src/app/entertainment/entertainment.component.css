@@ -45,13 +45,26 @@
 
 /* The max-width here is the current maximum width of the browser*/
 @media (max-width: 420px) {
-	.individual-item {
-		width: 97.8% !important;
+	.hide-on-mobile {
+		display: none;
 	}
 
-	.image-container {
-		width: 130px !important;
-		height: 180px !important;
+	.content-container {
+		gap: 3px;
+	}
+    
+    .individual-item {
+        width: 97.8% !important;
+    }
+
+    .image-container {
+        width: 130px !important;
+        height: 180px !important;
+    }
+
+	.control-button {
+		width: 20px;
+		height: 40px;
 	}
 }
 

@@ -1,11 +1,11 @@
 import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
 import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2 } from '@angular/core';
 import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire/database';
-import { firstValueFrom, Observable, of, timer } from 'rxjs';
+import { firstValueFrom, map, Observable, of, timer } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../douban/douban.service';
 import { FirebaseStorageService } from '../firebaseStorage/firebase-storage.service';
-import { MovieItem } from './movie.item';
+import { MovieItemVO } from './movie.item.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -23,7 +23,7 @@ export class EntertainmentComponent {
 	protected isSearching: boolean = false;
 	private contentContainer!: any;
 	private moviesRef!: any;
-	protected movieList$: Observable<MovieItem[]> = of([]);
+	protected movieList$: Observable<MovieItemVO[]> = of([]);
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -39,7 +39,21 @@ export class EntertainmentComponent {
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Get the movie list (Observable) from firebase
-			this.movieList$ = listVal<MovieItem>(this.moviesRef);
+			this.movieList$ = listVal<MovieItemVO>(this.moviesRef).pipe(
+				map((movies: any[]) =>
+					movies.map((movie: any) => {
+						const movieItemVO = new MovieItemVO(movie.title);
+						movieItemVO.setMovieId(movie.id);
+						movieItemVO.setMovieGenre(movie.genre);
+						movieItemVO.setMovieRate(movie.rate);
+						movieItemVO.setMovieCoverImageLink(movie.coverImageLink);
+						movieItemVO.setMovieYear(movie.year);
+						movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
+						movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
+						return movieItemVO;
+					})
+				)
+			);
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
 			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
@@ -94,6 +108,7 @@ export class EntertainmentComponent {
 	protected async searchAllMovies() {
 		// Step 1: Get the movie list (one-time retrieval) from firebase
 		let movieListSnapshot = await get(this.moviesRef);
+		console.log(movieListSnapshot);
 		this.isSearching = true;
 
 		// Step 2: Loop through the movieList to get latest movie details
@@ -384,8 +399,8 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Note: This only works for iPhone 16 Pro or other devices with a width of 430px.
 	 * Check if the current device is a mobile device.
+	 * Note: This only works for iPhone 16 Pro or other devices with a width of 430px.
 	 *
 	 * @returns A boolean value that indicates if the current device is a mobile device.
 	 */

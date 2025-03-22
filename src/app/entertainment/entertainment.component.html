@@ -12,27 +12,27 @@
 <div class="content-container">
 	<div
 		class="individual-item"
+		*ngFor="let movie of movieList$ | async"
 		[ngClass]="{
-			'very-high-rate': movie.rate >= 9,
-			'high-rate': movie.rate >= 7.9 && movie.rate < 9,
-			'medium-rate': movie.rate >= 7 && movie.rate < 7.9,
-			'low-rate': movie.rate < 7
-		}"
-		*ngFor="let movie of movieList$ | async">
+			'very-high-rate': movie.getMovieRate() >= 9,
+			'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,
+			'medium-rate': movie.getMovieRate() >= 7 && movie.getMovieRate() < 7.9,
+			'low-rate': movie.getMovieRate() < 7
+		}">
 		<div
 			class="image-container"
-			[ngStyle]="{ backgroundImage: 'url(' + movie.coverImageLink + ')' }"></div>
+			[ngStyle]="{ backgroundImage: 'url(' + movie.getMovieCoverImageLink() + ')' }"></div>
 		<div class="individual-item-content">
 			<div class="contents">
-				<span class="title" [style.font-size]="calculateFontSize(movie.title.length)">
-					{{ movie.title }}
+				<span class="title" [style.font-size]="calculateFontSize(movie.getMovieTitle().length)">
+					{{ movie.getMovieTitle() }}
 				</span>
-				<span class="text">类型：{{ movie.genre }} </span>
-				<span class="text">集数：{{ movie.episodeNumber }}</span>
-				<span class="text">年份：{{ movie.firstReleaseDate }}</span>
-				<ng-container *ngIf="movie.rate; else noRate">
+				<span class="text">类型：{{ movie.getMovieGenre() }} </span>
+				<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
+				<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
+				<ng-container *ngIf="movie.getMovieRate(); else noRate">
 					<span class="rate">
-						{{ movie.rate }}
+						{{ movie.getMovieRate() }}
 					</span>
 				</ng-container>
 				<ng-template #noRate>

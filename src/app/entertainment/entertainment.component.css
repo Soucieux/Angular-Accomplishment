@@ -43,8 +43,8 @@
 	width: 100%;
 }
 
-/* The max-width here is the current maximum width of the browser*/
-@media (max-width: 420px) {
+/* The max-width here is the **current** maximum width of the browser */
+@media (max-width: 430px) {
 	.hide-on-mobile {
 		display: none;
 	}
@@ -52,15 +52,15 @@
 	.content-container {
 		gap: 3px;
 	}
-    
-    .individual-item {
-        width: 97.8% !important;
-    }
 
-    .image-container {
-        width: 130px !important;
-        height: 180px !important;
-    }
+	.individual-item {
+		width: 97.8% !important;
+	}
+
+	.image-container {
+		width: 130px !important;
+		height: 180px !important;
+	}
 
 	.control-button {
 		width: 20px;

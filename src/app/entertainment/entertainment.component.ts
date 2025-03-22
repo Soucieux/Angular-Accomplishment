@@ -42,7 +42,7 @@ export class EntertainmentComponent {
 			this.movieList$ = listVal<MovieItem>(this.moviesRef);
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
-			// this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {
 			LOG.error(this.className, 'User does not have permission to access the movie list');
 		}
@@ -140,10 +140,8 @@ export class EntertainmentComponent {
 					await this.searchMovieData(movieId, movieItem.title, movieImageAlreadyExist);
 				if (movieIdAlreadyExist) {
 					await update(dbRef(this.db, `movies/${movieKey}`), {
-						rate: movieRate,
+						rate: movieRate
 						// TODO: This is needed in devlopment to store other info on existing movies
-						firstReleaseDate: firstReleaseDate,
-						episodeNumber: episodeNumber
 					}).then(() => {
 						LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
 					});
@@ -357,12 +355,12 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Note: This only works for iPhone 12 Pro or other devices with a width of 420px.
+	 * Note: This only works for iPhone 16 Pro or other devices with a width of 430px.
 	 * Check if the current device is a mobile device.
 	 *
 	 * @returns A boolean value that indicates if the current device is a mobile device.
 	 */
 	private isMobile() {
-		return window.innerWidth <= 420;
+		return window.innerWidth <= 430;
 	}
 }

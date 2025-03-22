@@ -1,5 +1,5 @@
 /* Page Container */
-.page-container {
+.content-container {
 	--individual-item-width: 420px;
 	--individual-item-gap: 13px;
 	display: grid;
@@ -41,6 +41,18 @@
 
 .individual-item:hover::before {
 	width: 100%;
+}
+
+/* The max-width here is the current maximum width of the browser*/
+@media (max-width: 420px) {
+	.individual-item {
+		width: 97.8% !important;
+	}
+
+	.image-container {
+		width: 130px !important;
+		height: 180px !important;
+	}
 }
 
 .image-container {

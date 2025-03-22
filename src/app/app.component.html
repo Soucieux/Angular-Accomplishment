@@ -1,47 +1,34 @@
-<mat-drawer-container class="sidenav-container" hasBackdrop="false">
+<mat-drawer-container class="drawer-container" hasBackdrop="false">
 	<mat-drawer mode="side" opened disableClose>
 		<ul style="list-style-type: none; padding-left: 0px; display: flex; flex-direction: column">
 			<li>
-				<span class="nav-title">Menu</span>
+				<span class="nav-title hide-on-mobile">Menu</span>
 			</li>
 			<li style="padding-top: 5px">
 				<a mat-button class="nav-button" matRipple routerLink="">
 					<span class="material-symbols-outlined nav-icon">home</span>
-					<span class="nav-label">Home</span>
+					<span class="nav-label hide-on-mobile">Home</span>
 				</a>
 			</li>
 			<li style="padding-top: 5px">
 				<a mat-button class="nav-button" matRipple routerLink="/entertainment">
 					<span class="material-symbols-outlined nav-icon">tv</span>
-					<span class="nav-label">Entertainment</span>
+					<span class="nav-label hide-on-mobile">Entertainment</span>
 				</a>
 			</li>
 			<!-- This is a placeholder to move the login/logout button to the bottom -->
 			<li style="flex: 1 1 273px"></li>
 			@if (currentUser$ | async; as user){
-			<li
-				[ngStyle]="{
-					display: 'flex',
-					flexDirection: 'row',
-					position: 'absolute',
-					bottom: '4px',
-					paddingLeft: '15px'
-				}">
+			<li class="logout-button-container">
 				<button (click)="logout()" mat-mini-fab class="material-symbols-outlined login-logout-button">
 					Logout
 				</button>
-				<p [ngStyle]="{ position: 'relative', top: '20px', fontSize: '18px' }">
+				<p class="hide-on-mobile" [ngStyle]="{ position: 'relative', top: '20px', fontSize: '18px' }">
 					{{ user.displayName }}
 				</p>
 			</li>
 			} @else {
-			<li
-				[ngStyle]="{
-					position: 'absolute',
-					bottom: '4px',
-					left: '50%',
-					transform: 'translateX(-50%)'
-				}">
+			<li class="login-button-container">
 				<button
 					(click)="login()"
 					color="accent"

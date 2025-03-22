@@ -21,7 +21,7 @@ export class EntertainmentComponent {
 	// This value has to be true initially so that the page will not show access denied page on refresh
 	protected isLoggedIn: boolean = true;
 	protected isSearching: boolean = false;
-	private pageContainer!: any;
+	private contentContainer!: any;
 	private moviesRef!: any;
 	protected movieList$: Observable<MovieItem[]> = of([]);
 
@@ -40,7 +40,9 @@ export class EntertainmentComponent {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Get the movie list (Observable) from firebase
 			this.movieList$ = listVal<MovieItem>(this.moviesRef);
-			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+			// TODO: If the user is not logged in, and you set the read access on firebase to any,
+			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
+			// this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {
 			LOG.error(this.className, 'User does not have permission to access the movie list');
 		}
@@ -65,8 +67,8 @@ export class EntertainmentComponent {
 		//elRef is to get a collection, cannot modify the content directly.
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Always put DOM manipulation in ngOnInit or ngAfterViewInit as it requires an element reference
-			this.pageContainer = this.elRef.nativeElement.getElementsByClassName('page-container')[0];
-			this.updateGridLayout(this.pageContainer);
+			this.contentContainer = this.elRef.nativeElement.getElementsByClassName('content-container')[0];
+			this.updateGridLayout(this.contentContainer);
 		}
 	}
 
@@ -76,7 +78,7 @@ export class EntertainmentComponent {
 	@HostListener('window:resize')
 	protected onResize() {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
-			this.updateGridLayout(this.pageContainer);
+			this.updateGridLayout(this.contentContainer);
 		}
 	}
 
@@ -323,6 +325,9 @@ export class EntertainmentComponent {
 	 * @returns A string that represents the font size.
 	 */
 	protected calculateFontSize(length: number) {
+		if (this.isMobile()) {
+			return length <= 8 ? '18px' : String(18 - (length - 8) * 2 + 'px');
+		}
 		return length <= 9 ? '20px' : String(20 - (length - 8.5) * 2 + 'px');
 	}
 
@@ -344,10 +349,20 @@ export class EntertainmentComponent {
 
 			this.renderer.setStyle(
 				//document is to directly get HTML DOM which can be modified directly
-				document.getElementsByClassName('page-container')[0] as HTMLElement,
+				document.getElementsByClassName('content-container')[0] as HTMLElement,
 				'grid-template-columns',
 				`repeat(${itemsPerRow}, minmax(${parseInt(itemsWidth)}px, 1fr))`
 			);
 		}
+	}
+
+	/**
+	 * Note: This only works for iPhone 12 Pro or other devices with a width of 420px.
+	 * Check if the current device is a mobile device.
+	 *
+	 * @returns A boolean value that indicates if the current device is a mobile device.
+	 */
+	private isMobile() {
+		return window.innerWidth <= 420;
 	}
 }

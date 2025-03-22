@@ -118,34 +118,44 @@ export class EntertainmentComponent {
 			////////////////////////////////////////////////////////////////////////////////////
 
 			//Step 3: Start searching for the specific movie
-			LOG.info(this.className, `Start searching for ${movieItem.title}`);
 			let movieId = movieItem.id;
-			const movieIdAlreadyExist = movieId ? true : false;
-			const movieImageAlreadyExist = movieItem.coverImageLink ? true : false;
-			!movieId && LOG.info(this.className, `Movie ID not found, start searching for it.`);
+			const movieTitle = movieItem.title;
+			const isMovieIdAlreadyExist = movieId ? true : false;
+			const retrieveMovieImage = movieItem.coverImageLink ? false : true;
+			const retrieveMovieFirstReleaseDate = movieItem.firstReleaseDate ? false : true;
+			const retrieveMovieEpisodeNumber = movieItem.episodeNumber ? false : true;
+			LOG.info(this.className, `Start searching for ${movieTitle}`);
 			// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
-			if (
-				!movieIdAlreadyExist &&
-				!(movieId = await this.searchMovieId(movieItem.title, movieItem.year))
-			) {
+			if (!movieId) {
+				LOG.info(this.className, `Movie ID not found, start searching for it.`);
+				movieId = await this.searchMovieId(movieTitle, movieItem.year);
 				//Step 3.2: If the result of searching movie ID is null, it means the server blocks the request
 				//due to too many requests, then skip the current iteration.
-				LOG.warn(this.className, `${movieItem.title} not found`);
-				continue;
+				if (!movieId) {
+					LOG.warn(this.className, `${movieTitle} not found`);
+					continue;
+				}
 			}
+			LOG.info(this.className, `Movie ID found for ${movieTitle}`);
+
 			// Step 5: Either the movie ID exists in the database or the movie ID is retrieved from Douban API.
 			try {
-				LOG.info(this.className, `Movie ID found for ${movieItem.title}`);
-				const [movieRate, coverImageLink, firstReleaseDate, episodeNumber] =
-					await this.searchMovieData(movieId, movieItem.title, movieImageAlreadyExist);
-				if (movieIdAlreadyExist) {
+				if (isMovieIdAlreadyExist) {
+					const movieRate = await this.updateMovieRateOnly(movieId, movieTitle);
 					await update(dbRef(this.db, `movies/${movieKey}`), {
 						rate: movieRate
-						// TODO: This is needed in devlopment to store other info on existing movies
 					}).then(() => {
-						LOG.info(this.className, `Movie rate for ${movieItem.title} has been updated`);
+						LOG.info(this.className, `Movie rate for ${movieTitle} has been updated`);
 					});
 				} else {
+					const [movieRate, coverImageLink, firstReleaseDate, episodeNumber] =
+						await this.searchMovieData(
+							movieId,
+							movieTitle,
+							retrieveMovieImage,
+							retrieveMovieFirstReleaseDate,
+							retrieveMovieEpisodeNumber
+						);
 					await update(dbRef(this.db, `movies/${movieKey}`), {
 						rate: movieRate,
 						id: movieId,
@@ -155,14 +165,14 @@ export class EntertainmentComponent {
 					}).then(() => {
 						LOG.info(
 							this.className,
-							`Movie rate and movie ID for ${movieItem.title} have been updated`
+							`Movie rate and movie ID for ${movieTitle} have been updated`
 						);
 					});
 				}
 			} catch (error) {
 				LOG.error(
 					this.className,
-					`Error while updating movie rate for ${movieItem.title}`,
+					`Error while updating movie rate for ${movieTitle}`,
 					error as Error
 				);
 			}
@@ -170,25 +180,41 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Get the movie webpage from Douban API with a given movie ID.
-	 * Then, get the movie cover and upload it to firebase storage if not exists already.
-	 * Finally, get the movie rate, first release date, and total episode number.
+	 * Get the latest movie rate from Douban API with a given movie ID.
 	 *
 	 * @param movieId - The ID of the movie to search for.
 	 * @param movieName - The name of the movie to search for.
-	 * @param movieImageAlreadyExist - Whether the movie image exists in firebase storage.
+	 * @returns A Promise that resolves to the movie rate.
+	 */
+	private async updateMovieRateOnly(movieId: string, movieName: string): Promise<string> {
+		const [updatedMovieRate, , ,] = await this.searchMovieData(movieId, movieName, false, false, false);
+		return updatedMovieRate;
+	}
+
+	/**
+	 * Get the movie webpage from Douban API with a given movie ID.
+	 * Then, get the movie cover and upload it to firebase storage if not exists already.
+	 * Finally, get the movie rate, first release date, and total episode number, if the corresponding flag is true.
+	 *
+	 * @param movieId - The ID of the movie to search for.
+	 * @param movieName - The name of the movie to search for.
+	 * @param retrieveMovieImage - Whether to retrieve the movie image.
+	 * @param retrieveMovieFirstReleaseDate - Whether to retrieve the movie first release date.
+	 * @param retrieveMovieEpisodeNumber - Whether to retrieve the movie episode number.
 	 * @returns A Promise that resolves to the movie rate, first release date, and total episode number.
 	 */
 	private async searchMovieData(
 		movieId: string,
 		movieName: string,
-		movieImageAlreadyExist: boolean
+		retrieveMovieImage: boolean,
+		retrieveMovieFirstReleaseDate: boolean,
+		retrieveMovieEpisodeNumber: boolean
 	): Promise<[string, string, string, string]> {
 		try {
 			// Step 6: Get the movie webpage as a string
 			const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovieWebpage(movieId));
 
-			// Step 7.1: Get the movie rate for the current movie
+			// Step 7.1: Get the latest movie rate for the current movie
 			const regexForMovieRate = new RegExp(
 				'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
 				'i'
@@ -196,26 +222,29 @@ export class EntertainmentComponent {
 			const movieRate = movieWebpageAsString.match(regexForMovieRate)[1];
 			LOG.info(this.className, `Movie rate retrieved for ${movieName} is ${movieRate}`);
 
-			// Step 7.2: Get the first release date for the current movie
-			const regexForFirstReleaseDate = new RegExp(
-				'<span class="pl">首播:</span> <span property="v:initialReleaseDate" content="(.*?)">(.*?)</span><br/>',
-				'i'
-			);
-			let firstReleaseDate = movieWebpageAsString.match(regexForFirstReleaseDate)[1];
-			firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
-			LOG.info(this.className, `First release date for ${movieName} is ${firstReleaseDate}`);
+			let firstReleaseDate = '';
+			// Step 7.2: Get the first release date for the current movie if not retrieved already
+			if (retrieveMovieFirstReleaseDate) {
+				const regexForFirstReleaseDate = new RegExp(
+					'<span class="pl">首播:</span> <span property="v:initialReleaseDate" content="(.*?)">(.*?)</span><br/>',
+					'i'
+				);
+				firstReleaseDate = movieWebpageAsString.match(regexForFirstReleaseDate)[1];
+				firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
+				LOG.info(this.className, `First release date for ${movieName} is ${firstReleaseDate}`);
+			}
 
-			// Step 7.3: Get the total episode number for the current movie
-			const regexForEpisodeNumber = new RegExp('<span class="pl">集数:</span> (.*?)<br/>', 'i');
-			const episodeNumber = movieWebpageAsString.match(regexForEpisodeNumber)[1];
-			LOG.info(this.className, `Total episode number for ${movieName} is ${episodeNumber}`);
+			let episodeNumber = '';
+			// Step 7.3: Get the total episode number for the current movie if not retrieved already
+			if (retrieveMovieEpisodeNumber) {
+				const regexForEpisodeNumber = new RegExp('<span class="pl">集数:</span> (.*?)<br/>', 'i');
+				episodeNumber = movieWebpageAsString.match(regexForEpisodeNumber)[1];
+				LOG.info(this.className, `Total episode number for ${movieName} is ${episodeNumber}`);
+			}
 
-			// Step 8.1:Check if the movie cover already exists in firebase storage before searching
 			let coverImageFirebaseLink = '';
-			if (movieImageAlreadyExist) {
-				LOG.warn(this.className, `Movie cover for ${movieName} already exists`);
-			} else {
-				// Step 8.2: If the movie cover does not exist, then retrieves movie cover ID from the movie webpage and then upload the movie cover
+			// Step 7.4: Get the movie cover from the movie webpage and upload it to firebase storage if not exists already
+			if (retrieveMovieImage) {
 				const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
 				const coverImageLink = movieWebpageAsString.match(regexForCoverImageLink)[1];
 				coverImageFirebaseLink = await this.searchAndUpdateMovieCoverById(coverImageLink, movieName);
@@ -285,7 +314,7 @@ export class EntertainmentComponent {
 	private async searchAndUpdateMovieCoverById(coverImageLink: string, movieName: string): Promise<string> {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
 		try {
-			// Step 9: searchMovieCover returns a Promise and wait for the retrieval to complete
+			// Step 8: searchMovieCover returns a Promise and wait for the retrieval to complete
 			const coverImage = await firstValueFrom(
 				this.doubanService.searchMovieCover(coverImageLink, movieName)
 			);
@@ -294,7 +323,7 @@ export class EntertainmentComponent {
 			// Extract the movie cover ID from the movie cover link
 			const coverImageId = coverImageLink.substring(coverImageLink.lastIndexOf('/') + 1);
 
-			// Step 10: Uploads the movie cover to firebase and get the downloadable link
+			// Step 9: Uploads the movie cover to firebase and get the downloadable link
 			const downloadLink = await this.firebaseStorageService.uploadImageAndGetDownloadLink(
 				coverImageId,
 				coverImage,

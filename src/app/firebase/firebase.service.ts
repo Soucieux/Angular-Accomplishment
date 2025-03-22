@@ -6,8 +6,8 @@ import { getDownloadURL, uploadBytes } from 'firebase/storage';
 @Injectable({
 	providedIn: 'root'
 })
-export class FirebaseStorageService {
-	private readonly className = 'FirebaseStorageService';
+export class FirebaseService {
+	private readonly className = 'FirebaseService';
 	constructor(private storage: Storage) {}
 
 	/**

@@ -4,7 +4,7 @@ import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire
 import { firstValueFrom, map, Observable, of, timer } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../douban/douban.service';
-import { FirebaseStorageService } from '../firebaseStorage/firebase-storage.service';
+import { FirebaseService } from '../firebase/firebase.service';
 import { MovieItemVO } from './movie.item.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -31,7 +31,7 @@ export class EntertainmentComponent {
 		private renderer: Renderer2,
 		private db: Database,
 		private doubanService: DoubanService,
-		private firebaseStorageService: FirebaseStorageService
+		private firebaseService: FirebaseService
 	) {
 		// This line has to on the top as server is also using it to get a reference on movie list
 		this.moviesRef = ref(this.db, 'movies');
@@ -339,7 +339,7 @@ export class EntertainmentComponent {
 			const coverImageId = coverImageLink.substring(coverImageLink.lastIndexOf('/') + 1);
 
 			// Step 9: Uploads the movie cover to firebase and get the downloadable link
-			const downloadLink = await this.firebaseStorageService.uploadImageAndGetDownloadLink(
+			const downloadLink = await this.firebaseService.uploadImageAndGetDownloadLink(
 				coverImageId,
 				coverImage,
 				movieName

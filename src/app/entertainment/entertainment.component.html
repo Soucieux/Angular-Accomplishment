@@ -2,13 +2,12 @@
 <div class="control-button-container">
 	<button mat-fab extended (click)="searchAllMovies()" class="control-button">
 		<span class="material-symbols-outlined control-button-icon">search</span>
-		<span class="control-button-label">Search All Movies</span>
+		<span class="control-button-label hide-on-mobile">Search All Movies</span>
 	</button>
-	<!-- TODO fix this for mobile -->
-	<!-- <button mat-fab extended (click)="cancelSearch()" class="control-button">
+	<button mat-fab extended (click)="cancelSearch()" class="control-button">
 		<span class="material-symbols-outlined control-button-icon">Cancel</span>
-		<span class="control-button-label">Cancel Search</span>
-	</button> -->
+		<span class="control-button-label hide-on-mobile">Cancel Search</span>
+	</button>
 </div>
 <div class="content-container">
 	<div

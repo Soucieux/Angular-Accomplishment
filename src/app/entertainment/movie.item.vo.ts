@@ -1,13 +1,11 @@
-// Remember to update the attributes here when the attributes in the firebase are changed
 export class MovieItemVO {
 	private id: number = -1;
 	private genre: string = '';
 	private rate: number = -1;
 	private coverImageLink: string = '';
-	private year: number = -1;
 	private firstReleaseDate: string = '';
-	private episodeNumber: string = '';
-	constructor(public title: string) {}
+	private episodeNumber: number = -1;
+	constructor(private title: string, private year: number, private movieKey: string, public isMovieIdAlreadyExist: boolean) {}
 
 	getMovieTitle(): string {
 		return this.title;
@@ -37,12 +35,16 @@ export class MovieItemVO {
 		return this.firstReleaseDate;
 	}
 
-	getMovieEpisodeNumber(): string {
+	getMovieEpisodeNumber(): number {
 		return this.episodeNumber;
+    }
+
+	getMovieKey(): string {
+		return this.movieKey;
 	}
 
 	setMovieId(id: number) {
-		this.id = id;
+		this.id = Number(id);
 	}
 
 	setMovieGenre(genre: string) {
@@ -50,38 +52,18 @@ export class MovieItemVO {
 	}
 
 	setMovieRate(rate: number) {
-		this.rate = rate;
+		this.rate = Number(rate);
 	}
 
 	setMovieCoverImageLink(coverImageLink: string) {
 		this.coverImageLink = coverImageLink;
 	}
 
-	setMovieYear(year: number) {
-		this.year = year;
-	}
-
 	setMovieFirstReleaseDate(firstReleaseDate: string) {
 		this.firstReleaseDate = firstReleaseDate;
 	}
 
-	setMovieEpisodeNumber(episodeNumber: string) {
-		this.episodeNumber = episodeNumber;
-	}
-
-	isMovieIdAlreadyExist(): boolean {
-		return this.id !== -1;
-	}
-
-	isMovieCoverImageExist(): boolean {
-		return this.coverImageLink !== '';
-	}
-
-	isMovieFirstReleaseDateExist(): boolean {
-		return this.firstReleaseDate !== '';
-	}
-
-	isMovieEpisodeNumberExist(): boolean {
-		return this.episodeNumber !== '';
+	setMovieEpisodeNumber(episodeNumber: number) {
+		this.episodeNumber = Number(episodeNumber);
 	}
 }

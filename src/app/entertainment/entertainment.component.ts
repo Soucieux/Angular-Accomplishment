@@ -1,7 +1,6 @@
 import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
 import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2 } from '@angular/core';
-import { Database, ref as dbRef, get, listVal, ref, update } from '@angular/fire/database';
-import { firstValueFrom, map, Observable, of, timer } from 'rxjs';
+import { firstValueFrom, Observable, of, timer } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../douban/douban.service';
 import { FirebaseService } from '../firebase/firebase.service';
@@ -22,38 +21,21 @@ export class EntertainmentComponent {
 	protected isLoggedIn: boolean = true;
 	protected isSearching: boolean = false;
 	private contentContainer!: any;
-	private moviesRef!: any;
 	protected movieList$: Observable<MovieItemVO[]> = of([]);
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef,
 		private renderer: Renderer2,
-		private db: Database,
 		private doubanService: DoubanService,
 		private firebaseService: FirebaseService
 	) {
-		// This line has to on the top as server is also using it to get a reference on movie list
-		this.moviesRef = ref(this.db, 'movies');
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Get the movie list (Observable) from firebase
-			this.movieList$ = listVal<MovieItemVO>(this.moviesRef).pipe(
-				map((movies: any[]) =>
-					movies.map((movie: any) => {
-						const movieItemVO = new MovieItemVO(movie.title);
-						movieItemVO.setMovieId(movie.id);
-						movieItemVO.setMovieGenre(movie.genre);
-						movieItemVO.setMovieRate(movie.rate);
-						movieItemVO.setMovieCoverImageLink(movie.coverImageLink);
-						movieItemVO.setMovieYear(movie.year);
-						movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
-						movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
-						return movieItemVO;
-					})
-				)
-			);
+			this.movieList$ = this.firebaseService.getMovieList();
+
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
 			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
@@ -99,111 +81,81 @@ export class EntertainmentComponent {
 	/**
 	 * Only "Search All Movies" button can trigger this function.
 	 *
-	 * Search all movies in the database and update the movie details with a delay of 20 seconds for every 5 movies.
-	 * If the movie ID does not exist, then search for the movie ID first and then update the movie rate and movie ID.
+	 * Search all movies in the database and update the required movie details.
+	 * If the movie ID does not exist, then search for the movie ID first and then update all other details.
 	 * If the movie ID already exists, then update the movie rate.
-	 *
-	 * @returns A Promise that resolves to void.
 	 */
-	protected async searchAllMovies() {
-		// Step 1: Get the movie list (one-time retrieval) from firebase
-		let movieListSnapshot = await get(this.moviesRef);
-		console.log(movieListSnapshot);
+	protected async updateAllMovies() {
+		// Step 1: Get the movie list (one-time retrieval) from current movieList$
+		let movieListVOs = await firstValueFrom(this.movieList$);
 		this.isSearching = true;
 
 		// Step 2: Loop through the movieList to get latest movie details
-		for (const movieKey in movieListSnapshot.val()) {
+		for (let movieItemVO of movieListVOs) {
 			// If the search is cancelled, then break the loop.
 			if (!this.isSearching) {
 				LOG.warn(this.className, 'Search cancelled');
 				break;
 			}
-			// Delay 2 seconds for every movie
+
+			LOG.info(this.className, `Start searching for ${movieItemVO.getMovieTitle()}`);
+
+			// Step 3: Delay 2 seconds for every movie
 			await firstValueFrom(timer(2000));
-			const movieItem = movieListSnapshot.val()[movieKey];
 
-			////////////////////////////////////////////////////////////////////////////////////
-			// TODO: A temporary solution to update data in firebase database or to skip some movies
-			// if (movieItem.coverImageLink) {
-			// 	await update(dbRef(this.db, `movies/${movieKey}`), {
-			// 		coverImageLink: movieItem.coverImageLink,
-			// 	});
-			// 	continue;
-			// }
-			////////////////////////////////////////////////////////////////////////////////////
-
-			//Step 3: Start searching for the specific movie
-			let movieId = movieItem.id;
-			const movieTitle = movieItem.title;
-			const isMovieIdAlreadyExist = movieId ? true : false;
-			const retrieveMovieImage = movieItem.coverImageLink ? false : true;
-			const retrieveMovieFirstReleaseDate = movieItem.firstReleaseDate ? false : true;
-			const retrieveMovieEpisodeNumber = movieItem.episodeNumber ? false : true;
-			LOG.info(this.className, `Start searching for ${movieTitle}`);
-			// Step 3.1: If the movie ID is undefined in the database, then search for the movie ID first.
-			if (!movieId) {
-				LOG.info(this.className, `Movie ID not found, start searching for it.`);
-				movieId = await this.searchMovieId(movieTitle, movieItem.year);
-				//Step 3.2: If the result of searching movie ID is null, it means the server blocks the request
-				//due to too many requests, then skip the current iteration.
-				if (!movieId) {
-					LOG.warn(this.className, `${movieTitle} not found`);
-					continue;
-				}
-			}
-			LOG.info(this.className, `Movie ID found for ${movieTitle}`);
-
-			// Step 5: Either the movie ID exists in the database or the movie ID is retrieved from Douban API.
 			try {
-				if (isMovieIdAlreadyExist) {
-					const movieRate = await this.updateMovieRateOnly(movieId, movieTitle);
-					await update(dbRef(this.db, `movies/${movieKey}`), {
-						rate: movieRate
-					}).then(() => {
-						LOG.info(this.className, `Movie rate for ${movieTitle} has been updated`);
-					});
+				if (movieItemVO.isMovieIdAlreadyExist) {
+					LOG.info(this.className, `Movie ID found`);
+					// Step 4: Since movie ID already exists in the database, we only need to get the movie rate.
+					movieItemVO = await this.getMovieRateOnly(movieItemVO);
+					await this.firebaseService.updateMovieRateOnlyToFirebase(movieItemVO);
 				} else {
-					const [movieRate, coverImageLink, firstReleaseDate, episodeNumber] =
-						await this.searchMovieData(
-							movieId,
-							movieTitle,
-							retrieveMovieImage,
-							retrieveMovieFirstReleaseDate,
-							retrieveMovieEpisodeNumber
-						);
-					await update(dbRef(this.db, `movies/${movieKey}`), {
-						rate: movieRate,
-						id: movieId,
-						coverImageLink: coverImageLink,
-						firstReleaseDate: firstReleaseDate,
-						episodeNumber: episodeNumber
-					}).then(() => {
-						LOG.info(
-							this.className,
-							`Movie rate and movie ID for ${movieTitle} have been updated`
-						);
-					});
+					// Step 4: If the movie ID is undefined in the database, then search for the movie ID first.
+					LOG.info(this.className, `Movie ID not found, start searching for it.`);
+					movieItemVO = await this.getMovieId(movieItemVO);
+
+					//Step 5: If the result of searching movie ID is null, it means the server blocks the request
+					//due to too many requests, then skip the current iteration.
+					if (!movieItemVO.getMovieId()) {
+						LOG.warn(this.className, `${movieItemVO.getMovieTitle()} not found`);
+						continue;
+					}
+
+					// Step 6 : Since movie ID is retrieved just now, we need to get all the movie details.
+					movieItemVO = await this.getAllMovieData(movieItemVO);
+					await this.firebaseService.updateAllMovieDataToFirebase(movieItemVO);
 				}
 			} catch (error) {
 				LOG.error(
 					this.className,
-					`Error while updating movie rate for ${movieTitle}`,
+					`Error while updating movie rate for ${movieItemVO.getMovieTitle()}`,
 					error as Error
 				);
 			}
 		}
+		LOG.info(this.className, 'Searching completes');
 	}
 
 	/**
 	 * Get the latest movie rate from Douban API with a given movie ID.
 	 *
-	 * @param movieId - The ID of the movie to search for.
-	 * @param movieName - The name of the movie to search for.
-	 * @returns A Promise that resolves to the movie rate.
+	 * @param movieItemVO - The movie item to search for.
+	 * @param retrieveOtherData - false
+	 * @returns movieItemVO with the movie rate updated
 	 */
-	private async updateMovieRateOnly(movieId: string, movieName: string): Promise<string> {
-		const [updatedMovieRate, , ,] = await this.searchMovieData(movieId, movieName, false, false, false);
-		return updatedMovieRate;
+	private async getMovieRateOnly(movieItemVO: MovieItemVO): Promise<MovieItemVO> {
+		return await this.getMovieData(movieItemVO, false);
+	}
+
+	/**
+	 * Get the latest movie rate, first release date, total episode number, and movie cover image link.
+	 *
+	 * @param movieItemVO - The movie item to search for.
+	 * @param retrieveOtherData - true
+	 * @returns movieItemVO with required data updated
+	 */
+	private async getAllMovieData(movieItemVO: MovieItemVO): Promise<MovieItemVO> {
+		return await this.getMovieData(movieItemVO, true);
 	}
 
 	/**
@@ -211,65 +163,63 @@ export class EntertainmentComponent {
 	 * Then, get the movie cover and upload it to firebase storage if not exists already.
 	 * Finally, get the movie rate, first release date, and total episode number, if the corresponding flag is true.
 	 *
-	 * @param movieId - The ID of the movie to search for.
-	 * @param movieName - The name of the movie to search for.
-	 * @param retrieveMovieImage - Whether to retrieve the movie image.
-	 * @param retrieveMovieFirstReleaseDate - Whether to retrieve the movie first release date.
-	 * @param retrieveMovieEpisodeNumber - Whether to retrieve the movie episode number.
-	 * @returns A Promise that resolves to the movie rate, first release date, and total episode number.
+	 * @param movieItemVO - The movie item to search for.
+	 * @param retrieveOtherData - Whether to retrieve movie cover image, first release date, and total episode number.
+	 * @returns movieItemVO with the movie rate, first release date, total episode number, and movie cover image link updated.
 	 */
-	private async searchMovieData(
-		movieId: string,
-		movieName: string,
-		retrieveMovieImage: boolean,
-		retrieveMovieFirstReleaseDate: boolean,
-		retrieveMovieEpisodeNumber: boolean
-	): Promise<[string, string, string, string]> {
+	private async getMovieData(movieItemVO: MovieItemVO, retrieveOtherData: boolean): Promise<MovieItemVO> {
 		try {
-			// Step 6: Get the movie webpage as a string
-			const movieWebpageAsString = await firstValueFrom(this.doubanService.searchMovieWebpage(movieId));
+			// Step 1: Get the movie webpage as text
+			const movieWebpageAsString = await firstValueFrom(
+				this.doubanService.searchMovieWebpage(movieItemVO.getMovieId())
+			);
 
-			// Step 7.1: Get the latest movie rate for the current movie
+			// Step 2: Get the latest movie rate for the current movie
 			const regexForMovieRate = new RegExp(
 				'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
 				'i'
 			);
 			const movieRate = movieWebpageAsString.match(regexForMovieRate)[1];
-			LOG.info(this.className, `Movie rate retrieved for ${movieName} is ${movieRate}`);
+			movieItemVO.setMovieRate(movieRate);
+			LOG.info(
+				this.className,
+				`Movie rate retrieved for ${movieItemVO.getMovieTitle()} is ${movieRate}`
+			);
 
-			let firstReleaseDate = '';
-			// Step 7.2: Get the first release date for the current movie if not retrieved already
-			if (retrieveMovieFirstReleaseDate) {
+			// Step 3: Retrieve other data if the flag is true
+			if (retrieveOtherData) {
+				// Step 4: Get the first release date for the current movie
 				const regexForFirstReleaseDate = new RegExp(
 					'<span class="pl">首播:</span> <span property="v:initialReleaseDate" content="(.*?)">(.*?)</span><br/>',
 					'i'
 				);
-				firstReleaseDate = movieWebpageAsString.match(regexForFirstReleaseDate)[1];
+				let firstReleaseDate = movieWebpageAsString.match(regexForFirstReleaseDate)[1];
 				firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
-				LOG.info(this.className, `First release date for ${movieName} is ${firstReleaseDate}`);
-			}
+				movieItemVO.setMovieFirstReleaseDate(firstReleaseDate);
+				LOG.info(
+					this.className,
+					`First release date for ${movieItemVO.getMovieTitle()} is ${firstReleaseDate}`
+				);
 
-			let episodeNumber = '';
-			// Step 7.3: Get the total episode number for the current movie if not retrieved already
-			if (retrieveMovieEpisodeNumber) {
+				// Step 5: Get the total episode number for the current movie
 				const regexForEpisodeNumber = new RegExp('<span class="pl">集数:</span> (.*?)<br/>', 'i');
-				episodeNumber = movieWebpageAsString.match(regexForEpisodeNumber)[1];
-				LOG.info(this.className, `Total episode number for ${movieName} is ${episodeNumber}`);
-			}
+				const episodeNumber = movieWebpageAsString.match(regexForEpisodeNumber)[1];
+				movieItemVO.setMovieEpisodeNumber(episodeNumber);
+				LOG.info(
+					this.className,
+					`Total episode number for ${movieItemVO.getMovieTitle()} is ${episodeNumber}`
+				);
 
-			let coverImageFirebaseLink = '';
-			// Step 7.4: Get the movie cover from the movie webpage and upload it to firebase storage if not exists already
-			if (retrieveMovieImage) {
+				// Step 6: Get the movie cover for the current movie and upload it to firebase storage
 				const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
 				const coverImageLink = movieWebpageAsString.match(regexForCoverImageLink)[1];
-				coverImageFirebaseLink = await this.searchAndUpdateMovieCoverById(coverImageLink, movieName);
+				movieItemVO = await this.getAndUpdateMovieImageById(coverImageLink, movieItemVO);
 			}
-
-			return [movieRate, coverImageFirebaseLink, firstReleaseDate, episodeNumber];
+			return movieItemVO;
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while retrieving movie webpage for ${movieName}`,
+				`Error while retrieving movie webpage for ${movieItemVO.getMovieTitle()}`,
 				error as Error
 			);
 			throw error;
@@ -281,40 +231,50 @@ export class EntertainmentComponent {
 	 * If the API responds with empty data, then it is due to too many requests.
 	 * If the API responds with data, then extracts the movie ID from the JSON object.
 	 *
-	 * @param movieName - The name of the movie to search for.
-	 * @param movieYear - The year of the movie to search for.
-	 * @returns A Promise that resolves to the movie ID.
+	 * @param movieItemVO - The movie item to search for.
+	 * @returns A Promise that resolves to the movie item.
 	 */
-	private async searchMovieId(movieName: string, movieYear: number): Promise<string | null> {
-		// Step 4: Search for the movie ID from the Douban API
+	private async getMovieId(movieItemVO: MovieItemVO): Promise<MovieItemVO> {
 		try {
+			EntertainmentComponent.checkMovieItemVO(movieItemVO);
 			LOG.info(
 				this.className,
 				`${(this.platformId as string).toUpperCase()} is retrieving movie ID from API`
 			);
-			// Step 4: searchMovie returns a Promise and wait for the retrieval to complete
-			const extractedData = await firstValueFrom(this.doubanService.searchMovieJSON(movieName));
-			// Step 4.1: If empty data is received, it means the API is not responding due to too many requests.
+			// Step 1: searchMovie returns a Promise and wait for the retrieval to complete
+			const extractedData = await firstValueFrom(
+				this.doubanService.searchMovieJSON(movieItemVO.getMovieTitle())
+			);
+			// Step 2: If empty data is received, it means the API is not responding due to too many requests.
 			if (extractedData == null || extractedData.length === 0) {
 				LOG.warn(this.className, 'API responded with empty data due to too many requests');
-				return null;
+				return movieItemVO;
 			} else {
-				// Step 4.2: If data is received, then extract the movie ID from the JSON object.
-				LOG.info(
-					this.className,
-					`Movie ID retrieved for ${movieName} with ID ${extractedData[0]['id']}`
-				);
-				// Step 4.3: Loop through the extracted data to get the correct movie ID as the result is retrieved by regex
-				for (const movie of extractedData) {
-					// Movie name must be exactly the same
-					if (movie.title === movieName && movie.year === movieYear) {
-						return movie.id;
+				// Step 2: If data is received, then loop through the extracted data to get the correct movie ID
+				// as the result is retrieved by regex.
+				for (const movieData of extractedData) {
+					// Movie name and year must be exactly the same
+					if (
+						movieData.title === movieItemVO.getMovieTitle() &&
+						movieData.year === movieItemVO.getMovieYear()
+					) {
+						// Step 3: Set the movie ID to the movie item VO
+						movieItemVO.setMovieId(movieData.id);
+						LOG.info(
+							this.className,
+							`Movie ID retrieved for ${movieItemVO.getMovieTitle()} with ID ${movieData.id}`
+						);
+						return movieItemVO;
 					}
 				}
-				return null;
+				return movieItemVO;
 			}
 		} catch (error) {
-			LOG.error(this.className, `Error while retrieving movie ID for ${movieName}`, error as Error);
+			LOG.error(
+				this.className,
+				`Error while retrieving movie ID for ${movieItemVO.getMovieTitle()}`,
+				error as Error
+			);
 			throw error;
 		}
 	}
@@ -323,31 +283,39 @@ export class EntertainmentComponent {
 	 * Get and upload the movie cover obtained to firebase storage.
 	 *
 	 * @param coverImageLink - The link of the movie cover to search for.
-	 * @param movieName - The name of the movie to search for.
-	 * @returns A Promise that resolves to the downloadable link of the movie cover.
+	 * @param movieItemVO - The movie item to search for.
+	 * @returns movieItemVO with the movie cover link updated
 	 */
-	private async searchAndUpdateMovieCoverById(coverImageLink: string, movieName: string): Promise<string> {
+	private async getAndUpdateMovieImageById(
+		coverImageLink: string,
+		movieItemVO: MovieItemVO
+	): Promise<MovieItemVO> {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
 		try {
-			// Step 8: searchMovieCover returns a Promise and wait for the retrieval to complete
+			// Step 1: searchMovieCover returns a Promise and wait for the retrieval to complete
 			const coverImage = await firstValueFrom(
-				this.doubanService.searchMovieCover(coverImageLink, movieName)
+				this.doubanService.searchMovieCover(coverImageLink, movieItemVO.getMovieTitle())
 			);
-			LOG.info(this.className, `Movie cover retrieved for ${movieName}`);
+			LOG.info(this.className, `Movie cover retrieved for ${movieItemVO.getMovieTitle()}`);
 
-			// Extract the movie cover ID from the movie cover link
+			// Step 2:Extract the movie cover ID from the movie cover link
 			const coverImageId = coverImageLink.substring(coverImageLink.lastIndexOf('/') + 1);
 
-			// Step 9: Uploads the movie cover to firebase and get the downloadable link
-			const downloadLink = await this.firebaseService.uploadImageAndGetDownloadLink(
+			// Step 3: Upload the movie cover to firebase and get the downloadable link
+			const downloadableLink = await this.firebaseService.uploadImageAndGetDownloadLink(
 				coverImageId,
 				coverImage,
-				movieName
+				movieItemVO.getMovieTitle()
 			);
-			LOG.info(this.className, `Movie cover uploaded for ${movieName}`);
-			return downloadLink;
+			movieItemVO.setMovieCoverImageLink(downloadableLink);
+			LOG.info(this.className, `Movie cover uploaded for ${movieItemVO.getMovieTitle()}`);
+			return movieItemVO;
 		} catch (error) {
-			LOG.error(this.className, `Error while processing movie cover for ${movieName}`, error as Error);
+			LOG.error(
+				this.className,
+				`Error while processing movie cover for ${movieItemVO.getMovieTitle()}`,
+				error as Error
+			);
 			throw error;
 		}
 	}
@@ -406,5 +374,16 @@ export class EntertainmentComponent {
 	 */
 	private isMobile() {
 		return window.innerWidth <= 430;
+	}
+
+	/**
+	 * Check if the movie item is valid.
+	 *
+	 * @param movieItemVO - The movie item to check.
+	 */
+	private static checkMovieItemVO(movieItemVO: MovieItemVO) {
+		if (movieItemVO.getMovieTitle() === '' || movieItemVO.getMovieYear() === -1) {
+			throw new Error('Movie item VO is invalid');
+		}
 	}
 }

@@ -1,14 +1,20 @@
 import { Injectable } from '@angular/core';
-import { Storage, ref as storageRef } from '@angular/fire/storage';
+import { Storage, ref as storageRef, getDownloadURL, uploadBytes } from '@angular/fire/storage';
 import { LOG } from '../log';
-import { getDownloadURL, uploadBytes } from 'firebase/storage';
+import { Database, ref as dbRef, list, update } from '@angular/fire/database';
+import { map, Observable } from 'rxjs';
+import { MovieItemVO } from '../entertainment/movie.item.vo';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class FirebaseService {
 	private readonly className = 'FirebaseService';
-	constructor(private storage: Storage) {}
+	private moviesRef!: any;
+
+	constructor(private storage: Storage, private db: Database) {
+		this.moviesRef = dbRef(this.db, 'movies');
+	}
 
 	/**
 	 * Upload the movie cover to firebase storage and return the downloadable link.
@@ -18,7 +24,7 @@ export class FirebaseService {
 	 * @param movieName - The name of the movie to upload.
 	 * @returns A string that represents the downloadable link of the movie cover.
 	 */
-	async uploadImageAndGetDownloadLink(
+	public async uploadImageAndGetDownloadLink(
 		coverImageId: string,
 		coverImage: Blob,
 		movieName: string
@@ -37,5 +43,63 @@ export class FirebaseService {
 			);
 			return '';
 		}
+	}
+
+	/**
+	 * Get the movie list from firebase.
+	 *
+	 * @returns An observable that emits the movie list.
+	 */
+	public getMovieList(): Observable<MovieItemVO[]> {
+		return list(this.moviesRef).pipe(
+			map((snapshots: any[]) =>
+				snapshots.map((snapshot: any) => {
+					const movie = snapshot.snapshot.val();
+					const movieItemVO = new MovieItemVO(
+						movie.title,
+						Number(movie.year),
+						snapshot.snapshot.key,
+						movie.id !== -1
+					);
+					movieItemVO.setMovieId(movie.id);
+					movieItemVO.setMovieGenre(movie.genre);
+					movieItemVO.setMovieRate(movie.rate);
+					movieItemVO.setMovieCoverImageLink(movie.coverImageLink);
+					movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
+					movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
+					return movieItemVO;
+				})
+			)
+		);
+	}
+
+	/**
+	 * Update the movie rate to firebase.
+	 *
+	 * @param movieItemVO - The movie item to update.
+	 */
+	public async updateMovieRateOnlyToFirebase(movieItemVO: MovieItemVO) {
+		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
+			rate: movieItemVO.getMovieRate()
+		}).then(() => {
+			LOG.info(this.className, `Movie rate for ${movieItemVO.getMovieTitle()} has been updated`);
+		});
+	}
+
+	/**
+	 * Update all movie data to firebase.
+	 *
+	 * @param movieItemVO - The movie item to update.
+	 */
+	public async updateAllMovieDataToFirebase(movieItemVO: MovieItemVO) {
+		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
+			rate: movieItemVO.getMovieRate(),
+			id: movieItemVO.getMovieId(),
+			coverImageLink: movieItemVO.getMovieCoverImageLink(),
+			firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
+			episodeNumber: movieItemVO.getMovieEpisodeNumber()
+		}).then(() => {
+			LOG.info(this.className, `Movie details for ${movieItemVO.getMovieTitle()} has been updated`);
+		});
 	}
 }

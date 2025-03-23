@@ -2,10 +2,18 @@ export class MovieItemVO {
 	private id: number = -1;
 	private genre: string = '';
 	private rate: number = -1;
+	private year: number = -1;
 	private coverImageLink: string = '';
 	private firstReleaseDate: string = '';
 	private episodeNumber: number = -1;
-	constructor(private title: string, private year: number, private movieKey: string, public isMovieIdAlreadyExist: boolean) {}
+	constructor(
+		private title: string,
+		year: number,
+		private movieKey: string,
+		public isMovieIdAlreadyExist: boolean
+	) {
+		this.year = typeof year === 'string' ? Number(year) : year;
+	}
 
 	getMovieTitle(): string {
 		return this.title;
@@ -37,14 +45,14 @@ export class MovieItemVO {
 
 	getMovieEpisodeNumber(): number {
 		return this.episodeNumber;
-    }
+	}
 
 	getMovieKey(): string {
 		return this.movieKey;
 	}
 
 	setMovieId(id: number) {
-		this.id = Number(id);
+		this.id = typeof id === 'string' ? Number(id) : id;
 	}
 
 	setMovieGenre(genre: string) {
@@ -52,7 +60,7 @@ export class MovieItemVO {
 	}
 
 	setMovieRate(rate: number) {
-		this.rate = Number(rate);
+		this.rate = typeof rate === 'string' ? Number(rate) : rate;
 	}
 
 	setMovieCoverImageLink(coverImageLink: string) {
@@ -64,6 +72,6 @@ export class MovieItemVO {
 	}
 
 	setMovieEpisodeNumber(episodeNumber: number) {
-		this.episodeNumber = Number(episodeNumber);
+		this.episodeNumber = typeof episodeNumber === 'string' ? Number(episodeNumber) : episodeNumber;
 	}
 }

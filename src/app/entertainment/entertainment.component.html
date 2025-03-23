@@ -32,7 +32,7 @@
 				<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
 				<ng-container *ngIf="movie.getMovieRate(); else noRate">
 					<span class="rate">
-						{{ movie.getMovieRate() }}
+						{{ movie.getMovieRate().toFixed(1) }}
 					</span>
 				</ng-container>
 				<ng-template #noRate>

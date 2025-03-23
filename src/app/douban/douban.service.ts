@@ -74,7 +74,7 @@ export class DoubanService {
 			);
 	}
 
-	searchMovieWebpage(id: string): Observable<any> {
+	searchMovieWebpage(id: number): Observable<any> {
 		return this.http
 			.get(`${this.getFirebaseFunctionUrl()}?url=${this.doubanBaseUrl}/subject/${id}&type=json`, {
 				responseType: 'text'

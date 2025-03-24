@@ -8,10 +8,19 @@ import { MatRippleModule } from '@angular/material/core';
 import { AuthService } from './authentication/auth.service';
 import { Router } from '@angular/router';
 import { LOG } from './log';
+import { MatIconModule } from '@angular/material/icon';
 @Component({
 	selector: 'root',
 	standalone: true,
-	imports: [CommonModule, RouterOutlet, RouterModule, MatSidenavModule, MatButtonModule, MatRippleModule],
+	imports: [
+		CommonModule,
+		RouterOutlet,
+		RouterModule,
+		MatSidenavModule,
+		MatButtonModule,
+		MatRippleModule,
+		MatIconModule
+	],
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
 })

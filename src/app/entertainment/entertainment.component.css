@@ -166,7 +166,7 @@
 	}
 }
 
-/* Movie Page Control Button */
+/* Control Button */
 .control-button-container {
 	display: flex;
 	flex-direction: row;
@@ -175,20 +175,48 @@
 }
 
 .control-button-label {
-	position: relative;
-	bottom: 4px;
-	left: 5px;
 	font-family: 'cf';
 	font-size: medium;
+	font-size: 17px;
 }
 
 .control-button-icon {
+	font-size: 30px;
 	position: relative;
-	top: 4px;
+	left: 5px;
 }
 
 .control-button {
 	color: white !important;
 	backdrop-filter: blur(10px);
 	background: rgba(145, 89, 180, 0.5);
+}
+
+/* Category Button */
+.category-container {
+	margin-bottom: 10px;
+}
+
+.category-button-container {
+	display: flex;
+	flex-direction: row;
+}
+
+#english-label {
+	border: 1px solid red;
+	writing-mode: vertical-rl;
+	transform: rotate(180deg);
+}
+
+.category-button {
+	width: 100px;
+	height: 100px;
+	border: 1.5px solid black;
+	background-color: transparent;
+	border-radius: 10px;
+	font-family: inherit;
+	margin-right: 5px;
+	font-size: 15px;
+	display: flex !important;
+	flex-direction: row !important;
 }

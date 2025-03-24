@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes } from '@angular/fire/storage';
 import { LOG } from '../log';
 import { Database, ref as dbRef, list, update } from '@angular/fire/database';
-import { map, Observable } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 import { MovieItemVO } from '../entertainment/movie.item.vo';
 
 @Injectable({
@@ -50,7 +50,8 @@ export class FirebaseService {
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
-	public getMovieList(): Observable<MovieItemVO[]> {
+    public getMovieList(): Observable<MovieItemVO[]> {
+        return of([]);
 		return list(this.moviesRef).pipe(
 			map((snapshots: any[]) =>
 				snapshots.map((snapshot: any) => {

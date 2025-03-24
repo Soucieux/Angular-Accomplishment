@@ -7,11 +7,11 @@ import { FirebaseService } from '../firebase/firebase.service';
 import { MovieItemVO } from './movie.item.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
-	imports: [NgFor, CommonModule, MatIconModule, MatButtonModule],
+	imports: [NgFor, CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'
 })

@@ -6,13 +6,13 @@
 			</li>
 			<li style="padding-top: 5px">
 				<a mat-button class="nav-button" matRipple routerLink="">
-					<span class="material-symbols-outlined nav-icon">home</span>
+					<span class="material-icons nav-icon">home</span>
 					<span class="nav-label hide-on-mobile">Home</span>
 				</a>
 			</li>
 			<li style="padding-top: 5px">
 				<a mat-button class="nav-button" matRipple routerLink="/entertainment">
-					<span class="material-symbols-outlined nav-icon">tv</span>
+					<span class="material-icons nav-icon">tv</span>
 					<span class="nav-label hide-on-mobile">Entertainment</span>
 				</a>
 			</li>
@@ -20,8 +20,8 @@
 			<li style="flex: 1 1 273px"></li>
 			@if (currentUser$ | async; as user){
 			<li class="logout-button-container">
-				<button (click)="logout()" mat-mini-fab class="material-symbols-outlined login-logout-button">
-					Logout
+				<button (click)="logout()" mat-mini-fab class="material-icons login-logout-button">
+					logout
 				</button>
 				<p class="hide-on-mobile" [ngStyle]="{ position: 'relative', top: '20px', fontSize: '18px' }">
 					{{ user.displayName }}
@@ -33,8 +33,8 @@
 					(click)="login()"
 					color="accent"
 					mat-mini-fab
-					class="material-symbols-outlined login-logout-button">
-					Login
+					class="material-icons login-logout-button">
+					login
 				</button>
 			</li>
 			}

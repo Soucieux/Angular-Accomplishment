@@ -51,8 +51,7 @@
 	font-size: medium;
 	display: flex;
 	flex-direction: row;
-	justify-content: space-between;
-	padding-left: 13px;
+	justify-content: left;
 }
 
 .nav-button:hover {
@@ -66,7 +65,6 @@
 
 .nav-icon {
 	position: relative;
-	top: 5px;
 	left: 20px;
 }
 

@@ -6,14 +6,14 @@
 			<span>所有</span>
 			<span
 				><p class="genre-count">{{ stats.totalNumber }}</p>
-				<span>to watch</span></span
+				<span class="hide-on-mobile">to watch</span></span
 			>
 		</div>
 		<div *ngFor="let genre of stats.genre | keyvalue" matRipple class="category-button">
 			<span>{{ genre.key }}</span>
 			<span
 				><p class="genre-count">{{ genre.value }}</p>
-				<span>to watch</span></span
+				<span class="hide-on-mobile">to watch</span></span
 			>
 		</div>
 	</div>

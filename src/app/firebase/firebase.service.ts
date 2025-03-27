@@ -1,7 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes } from '@angular/fire/storage';
 import { LOG } from '../log';
-import { Database, ref as dbRef, list, object, onValue, update } from '@angular/fire/database';
+import {
+	Database,
+	ref as dbRef,
+	list,
+	object,
+	onValue,
+	runTransaction,
+	update
+} from '@angular/fire/database';
 import { map, Observable } from 'rxjs';
 import { MovieItemVO } from '../entertainment/movie.item.vo';
 
@@ -93,8 +101,7 @@ export class FirebaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-    public async updateMovieRateOnlyToFirebase(movieItemVO: MovieItemVO) {
-        
+	public async updateMovieRateOnlyToFirebase(movieItemVO: MovieItemVO) {
 		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
 			rate: movieItemVO.getMovieRate()
 		}).then(() => {
@@ -108,6 +115,15 @@ export class FirebaseService {
 	 * @param movieItemVO - The movie item to update.
 	 */
 	public async updateAllMovieDataToFirebase(movieItemVO: MovieItemVO) {
+		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+			currentData.genre[movieItemVO.getMovieGenre()] =
+				(currentData.genre[movieItemVO.getMovieGenre()] || 0) + 1;
+			currentData.totalNumber = (currentData.totalNumber || 0) + 1;
+			return currentData;
+		}).then(() => {
+			LOG.info(this.className, `Movie statistics has been updated`);
+		});
+
 		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
 			rate: movieItemVO.getMovieRate(),
 			id: movieItemVO.getMovieId(),

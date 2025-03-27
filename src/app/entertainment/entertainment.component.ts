@@ -39,7 +39,7 @@ export class EntertainmentComponent {
 			this.movieList$ = this.firebaseService.getMovieList();
 			this.statistics$ = this.firebaseService.getStatistics();
 
-            // TODO: If the user is not logged in, and you set the read access on firebase to any,
+			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
 			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {
@@ -110,12 +110,12 @@ export class EntertainmentComponent {
 				if (movieItemVO.isMovieIdAlreadyExist) {
 					LOG.info(this.className, `Movie ID found`);
 					// Step 4: Since movie ID already exists in the database, we only need to get the movie rate.
-					movieItemVO = await this.getMovieRateOnly(movieItemVO);
+					await this.getMovieRateOnly(movieItemVO);
 					await this.firebaseService.updateMovieRateOnlyToFirebase(movieItemVO);
 				} else {
 					// Step 4: If the movie ID is undefined in the database, then search for the movie ID first.
 					LOG.info(this.className, `Movie ID not found, start searching for it.`);
-					movieItemVO = await this.getMovieId(movieItemVO);
+					await this.getMovieId(movieItemVO);
 
 					//Step 5: If the result of searching movie ID is null, it means the server blocks the request
 					//due to too many requests, then skip the current iteration.
@@ -125,7 +125,7 @@ export class EntertainmentComponent {
 					}
 
 					// Step 6 : Since movie ID is retrieved just now, we need to get all the movie details.
-					movieItemVO = await this.getAllMovieData(movieItemVO);
+					await this.getAllMovieData(movieItemVO);
 					await this.firebaseService.updateAllMovieDataToFirebase(movieItemVO);
 				}
 			} catch (error) {
@@ -144,10 +144,9 @@ export class EntertainmentComponent {
 	 *
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - false
-	 * @returns movieItemVO with the movie rate updated
 	 */
-	private async getMovieRateOnly(movieItemVO: MovieItemVO): Promise<MovieItemVO> {
-		return await this.getMovieData(movieItemVO, false);
+	private async getMovieRateOnly(movieItemVO: MovieItemVO) {
+		await this.getMovieData(movieItemVO, false);
 	}
 
 	/**
@@ -155,10 +154,9 @@ export class EntertainmentComponent {
 	 *
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - true
-	 * @returns movieItemVO with required data updated
 	 */
-	private async getAllMovieData(movieItemVO: MovieItemVO): Promise<MovieItemVO> {
-		return await this.getMovieData(movieItemVO, true);
+	private async getAllMovieData(movieItemVO: MovieItemVO) {
+		await this.getMovieData(movieItemVO, true);
 	}
 
 	/**
@@ -168,9 +166,8 @@ export class EntertainmentComponent {
 	 *
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - Whether to retrieve movie cover image, first release date, and total episode number.
-	 * @returns movieItemVO with the movie rate, first release date, total episode number, and movie cover image link updated.
 	 */
-	private async getMovieData(movieItemVO: MovieItemVO, retrieveOtherData: boolean): Promise<MovieItemVO> {
+	private async getMovieData(movieItemVO: MovieItemVO, retrieveOtherData: boolean) {
 		try {
 			// Step 1: Get the movie webpage as text
 			const movieWebpageAsString = await firstValueFrom(
@@ -216,9 +213,8 @@ export class EntertainmentComponent {
 				// Step 6: Get the movie cover for the current movie and upload it to firebase storage
 				const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
 				const coverImageLink = movieWebpageAsString.match(regexForCoverImageLink)[1];
-				movieItemVO = await this.getAndUpdateMovieImageById(coverImageLink, movieItemVO);
+				await this.getAndUpdateMovieImageById(coverImageLink, movieItemVO);
 			}
-			return movieItemVO;
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -235,15 +231,10 @@ export class EntertainmentComponent {
 	 * If the API responds with data, then extracts the movie ID from the JSON object.
 	 *
 	 * @param movieItemVO - The movie item to search for.
-	 * @returns A Promise that resolves to the movie item.
 	 */
-	private async getMovieId(movieItemVO: MovieItemVO): Promise<MovieItemVO> {
+	private async getMovieId(movieItemVO: MovieItemVO) {
 		try {
 			EntertainmentComponent.checkMovieItemVO(movieItemVO);
-			LOG.info(
-				this.className,
-				`${(this.platformId as string).toUpperCase()} is retrieving movie ID from API`
-			);
 			// Step 1: searchMovie returns a Promise and wait for the retrieval to complete
 			const extractedData = await firstValueFrom(
 				this.doubanService.searchMovieJSON(movieItemVO.getMovieTitle())
@@ -251,7 +242,6 @@ export class EntertainmentComponent {
 			// Step 2: If empty data is received, it means the API is not responding due to too many requests.
 			if (extractedData == null || extractedData.length === 0) {
 				LOG.warn(this.className, 'API responded with empty data due to too many requests');
-				return movieItemVO;
 			} else {
 				// Step 2: If data is received, then loop through the extracted data to get the correct movie ID
 				// as the result is retrieved by regex.
@@ -267,10 +257,8 @@ export class EntertainmentComponent {
 							this.className,
 							`Movie ID retrieved for ${movieItemVO.getMovieTitle()} with ID ${movieData.id}`
 						);
-						return movieItemVO;
 					}
 				}
-				return movieItemVO;
 			}
 		} catch (error) {
 			LOG.error(
@@ -287,12 +275,8 @@ export class EntertainmentComponent {
 	 *
 	 * @param coverImageLink - The link of the movie cover to search for.
 	 * @param movieItemVO - The movie item to search for.
-	 * @returns movieItemVO with the movie cover link updated
 	 */
-	private async getAndUpdateMovieImageById(
-		coverImageLink: string,
-		movieItemVO: MovieItemVO
-	): Promise<MovieItemVO> {
+	private async getAndUpdateMovieImageById(coverImageLink: string, movieItemVO: MovieItemVO) {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
 		try {
 			// Step 1: searchMovieCover returns a Promise and wait for the retrieval to complete
@@ -312,7 +296,6 @@ export class EntertainmentComponent {
 			);
 			movieItemVO.setMovieCoverImageLink(downloadableLink);
 			LOG.info(this.className, `Movie cover uploaded for ${movieItemVO.getMovieTitle()}`);
-			return movieItemVO;
 		} catch (error) {
 			LOG.error(
 				this.className,

@@ -8,10 +8,11 @@ import { MovieItemVO } from './movie.item.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatRippleModule } from '@angular/material/core';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
-	imports: [NgFor, CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule],
+	imports: [NgFor, CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule, MatRippleModule],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'
 })
@@ -22,6 +23,7 @@ export class EntertainmentComponent {
 	protected isSearching: boolean = false;
 	private contentContainer!: any;
 	protected movieList$: Observable<MovieItemVO[]> = of([]);
+	protected statistics$: Observable<any> = of([]);
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -33,10 +35,11 @@ export class EntertainmentComponent {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
-			// Get the movie list (Observable) from firebase
+			// Get the movie list (Observable) and statistics (Observable) from firebase
 			this.movieList$ = this.firebaseService.getMovieList();
+			this.statistics$ = this.firebaseService.getStatistics();
 
-			// TODO: If the user is not logged in, and you set the read access on firebase to any,
+            // TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
 			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {

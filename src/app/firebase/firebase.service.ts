@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes } from '@angular/fire/storage';
 import { LOG } from '../log';
-import { Database, ref as dbRef, list, update } from '@angular/fire/database';
-import { map, Observable, of } from 'rxjs';
+import { Database, ref as dbRef, list, object, onValue, update } from '@angular/fire/database';
+import { map, Observable } from 'rxjs';
 import { MovieItemVO } from '../entertainment/movie.item.vo';
 
 @Injectable({
@@ -11,9 +11,11 @@ import { MovieItemVO } from '../entertainment/movie.item.vo';
 export class FirebaseService {
 	private readonly className = 'FirebaseService';
 	private moviesRef!: any;
+	private statisticsRef!: any;
 
 	constructor(private storage: Storage, private db: Database) {
 		this.moviesRef = dbRef(this.db, 'movies');
+		this.statisticsRef = dbRef(this.db, 'statistics');
 	}
 
 	/**
@@ -50,8 +52,7 @@ export class FirebaseService {
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
-    public getMovieList(): Observable<MovieItemVO[]> {
-        return of([]);
+	public getMovieList(): Observable<MovieItemVO[]> {
 		return list(this.moviesRef).pipe(
 			map((snapshots: any[]) =>
 				snapshots.map((snapshot: any) => {
@@ -75,11 +76,25 @@ export class FirebaseService {
 	}
 
 	/**
+	 * Get the statistics from firebase.
+	 *
+	 * @returns An observable that emits the statistics.
+	 */
+	public getStatistics(): Observable<any> {
+		return new Observable((observer) => {
+			onValue(this.statisticsRef, (snapshot) => {
+				observer.next(snapshot.val());
+			});
+		});
+	}
+
+	/**
 	 * Update the movie rate to firebase.
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public async updateMovieRateOnlyToFirebase(movieItemVO: MovieItemVO) {
+    public async updateMovieRateOnlyToFirebase(movieItemVO: MovieItemVO) {
+        
 		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
 			rate: movieItemVO.getMovieRate()
 		}).then(() => {

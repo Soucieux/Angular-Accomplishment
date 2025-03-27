@@ -1,19 +1,21 @@
 @if (isLoggedIn) {
 <div class="category-container">
 	<h3 style="font-weight: bold">Categories</h3>
-	<div class="category-button-container">
-		<div>
-			<button mat-button class="category-button">
-				<span id="english-label">All</span>
-				<span style="border: 1px solid red">所有</span>
-			</button>
+	<div *ngIf="statistics$ | async as stats" class="category-button-container">
+		<div matRipple class="category-button">
+			<span>所有</span>
+			<span
+				><p class="genre-count">{{ stats.totalNumber }}</p>
+				<span>to watch</span></span
+			>
 		</div>
-		<div><button mat-button class="category-button">悬疑</button></div>
-		<div><button mat-button class="category-button">刑侦</button></div>
-		<div><button mat-button class="category-button">校园</button></div>
-		<div><button mat-button class="category-button">现代</button></div>
-		<div><button mat-button class="category-button">古装</button></div>
-		<div><button mat-button class="category-button">谍战</button></div>
+		<div *ngFor="let genre of stats.genre | keyvalue" matRipple class="category-button">
+			<span>{{ genre.key }}</span>
+			<span
+				><p class="genre-count">{{ genre.value }}</p>
+				<span>to watch</span></span
+			>
+		</div>
 	</div>
 </div>
 <div class="control-button-container">

@@ -330,15 +330,15 @@ export class EntertainmentComponent {
 	/**
 	 * Update the grid layout of the page container.
 	 *
-	 * @param pageContainer - The page container to update the grid layout.
+	 * @param contentContainer - The page container to update the grid layout.
 	 */
-	private updateGridLayout(pageContainer: any) {
+	private updateGridLayout(contentContainer: any) {
 		// Get item width from css
-		const itemsWidth = getComputedStyle(pageContainer).getPropertyValue('--individual-item-width');
-		const itemsGap = getComputedStyle(pageContainer).getPropertyValue('--individual-item-gap');
+		const itemsWidth = getComputedStyle(contentContainer).getPropertyValue('--individual-item-width');
+		const itemsGap = getComputedStyle(contentContainer).getPropertyValue('--individual-item-gap');
 
-		if (pageContainer) {
-			let componentWidth = (pageContainer as HTMLElement).clientWidth;
+		if (contentContainer) {
+			let componentWidth = (contentContainer as HTMLElement).clientWidth;
 			let itemsPerRow = Math.floor(
 				(componentWidth - parseInt(itemsGap)) / (parseInt(itemsWidth) + parseInt(itemsGap))
 			);

@@ -235,6 +235,13 @@
 	font-weight: bold;
 }
 
+.selected-genre {
+	background: rgba(255, 255, 255, 0.5);
+	border: 2px solid rgb(255, 255, 255);
+	box-shadow: 5px 5px 10px rgb(238, 240, 243);
+	backdrop-filter: blur(10px);
+}
+
 /* The max-width here is the **current** maximum width of the browser */
 @media (max-width: 430px) {
 	.hide-on-mobile {

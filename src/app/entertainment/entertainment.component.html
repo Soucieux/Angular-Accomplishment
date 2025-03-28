@@ -1,19 +1,15 @@
 @if (isLoggedIn) {
-<div class="category-container">
-	<h3 style="font-weight: bold">Categories</h3>
-	<div *ngIf="statistics$ | async as stats" class="category-button-container">
-		<div matRipple class="category-button">
-			<span>所有</span>
-			<span
-				><p class="genre-count">{{ stats.totalNumber }}</p>
-				<p class="hide-on-mobile">to watch</p></span
-			>
-		</div>
+<div *ngIf="statistics$ | async as stats" class="category-container">
+	<h3 style="font-weight: bold">Categories ({{ stats.totalNumber }})</h3>
+	<div class="category-button-container">
 		<div
 			*ngFor="let genre of stats.genre | keyvalue"
 			matRipple
 			class="category-button"
-			(click)="filterByGenre(genre.key)">
+			(click)="filterByGenre($any(genre.key))"
+			[ngClass]="{
+				'selected-genre': (selectedGenres$ | async)?.includes($any(genre.key))
+			}">
 			<span>{{ genre.key }}</span>
 			<span
 				><p class="genre-count">{{ genre.value }}</p>

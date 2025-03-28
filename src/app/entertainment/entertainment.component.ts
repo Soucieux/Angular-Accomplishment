@@ -33,7 +33,7 @@ export class EntertainmentComponent {
 	protected isSearching: boolean = false;
 	private contentContainer!: any;
 	protected movieList$: Observable<MovieItemVO[]> = of([]);
-	protected selectedGenres$ = new BehaviorSubject<string[]>([]);
+	protected selectedGenres$ = new BehaviorSubject<string>('');
 	protected filteredMovieList$: Observable<MovieItemVO[]> = of([]);
 	protected statistics$: Observable<any> = of([]);
 
@@ -53,12 +53,10 @@ export class EntertainmentComponent {
 			// Create a filter to listen for genre changes
 			this.filteredMovieList$ = combineLatest([this.movieList$, this.selectedGenres$]).pipe(
 				map(([movieList, selectedGenres]) => {
-					if (selectedGenres.length === 0) {
+					if (selectedGenres === '') {
 						return movieList;
 					}
-					return movieList.filter((movie) =>
-						selectedGenres.every((genre) => movie.getMovieGenre().includes(genre))
-					);
+					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
 				})
 			);
 
@@ -375,9 +373,9 @@ export class EntertainmentComponent {
 		}
 	}
 
-	filterByGenre(genre: unknown) {
-		const genreString = genre as string;
-		this.selectedGenres$.next([genreString]);
+	filterByGenre(genre: string) {
+		const currentGenre = this.selectedGenres$.getValue();
+		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
 	}
 
 	/**

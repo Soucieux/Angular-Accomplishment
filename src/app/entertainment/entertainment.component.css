@@ -168,14 +168,21 @@
 	}
 }
 
-/* Control Button */
-.control-button-container {
+/* Category Header Container */
+.category-header-container {
 	display: flex;
 	flex-direction: row;
+	align-items: center;
 	gap: 10px;
-	margin-bottom: 10px;
 }
 
+.category-header-title {
+	font-size: 25px;
+	font-weight: bold;
+	padding: 10px;
+}
+
+/* Control Button */
 .control-button-label {
 	font-family: 'cf';
 	font-size: medium;
@@ -192,6 +199,8 @@
 	color: white !important;
 	backdrop-filter: blur(10px);
 	background: rgba(145, 89, 180, 0.5);
+	height: 38px;
+	bottom: 4px;
 }
 
 /* Category Button */

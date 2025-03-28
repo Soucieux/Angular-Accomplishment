@@ -1,6 +1,16 @@
 @if (isLoggedIn) {
 <div *ngIf="statistics$ | async as stats" class="category-container">
-	<h3 style="font-weight: bold">Categories ({{ stats.totalNumber }})</h3>
+	<div class="category-header-container">
+		<div class="category-header-title">Categories ({{ stats.totalNumber }})</div>
+		<button mat-fab extended (click)="updateAllMovies()" class="control-button">
+			<span class="material-icons control-button-icon">search</span>
+			<span class="control-button-label hide-on-mobile">Search All Movies</span>
+		</button>
+		<button mat-fab extended (click)="cancelSearch()" class="control-button">
+			<span class="material-icons control-button-icon">search_off</span>
+			<span class="control-button-label hide-on-mobile">Cancel Search</span>
+		</button>
+	</div>
 	<div class="category-button-container">
 		<div
 			*ngFor="let genre of stats.genre | keyvalue"
@@ -17,16 +27,6 @@
 			>
 		</div>
 	</div>
-</div>
-<div class="control-button-container">
-	<button mat-fab extended (click)="updateAllMovies()" class="control-button">
-		<span class="material-icons control-button-icon">search</span>
-		<span class="control-button-label hide-on-mobile">Search All Movies</span>
-	</button>
-	<button mat-fab extended (click)="cancelSearch()" class="control-button">
-		<span class="material-icons control-button-icon">search_off</span>
-		<span class="control-button-label hide-on-mobile">Cancel Search</span>
-	</button>
 </div>
 <div class="content-container">
 	<div

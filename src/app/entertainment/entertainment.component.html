@@ -6,14 +6,18 @@
 			<span>所有</span>
 			<span
 				><p class="genre-count">{{ stats.totalNumber }}</p>
-				<span class="hide-on-mobile">to watch</span></span
+				<p class="hide-on-mobile">to watch</p></span
 			>
 		</div>
-		<div *ngFor="let genre of stats.genre | keyvalue" matRipple class="category-button">
+		<div
+			*ngFor="let genre of stats.genre | keyvalue"
+			matRipple
+			class="category-button"
+			(click)="filterByGenre(genre.key)">
 			<span>{{ genre.key }}</span>
 			<span
 				><p class="genre-count">{{ genre.value }}</p>
-				<span class="hide-on-mobile">to watch</span></span
+				<p class="hide-on-mobile">to watch</p></span
 			>
 		</div>
 	</div>
@@ -31,7 +35,7 @@
 <div class="content-container">
 	<div
 		class="individual-item"
-		*ngFor="let movie of movieList$ | async"
+		*ngFor="let movie of filteredMovieList$ | async"
 		[ngClass]="{
 			'very-high-rate': movie.getMovieRate() >= 9,
 			'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,

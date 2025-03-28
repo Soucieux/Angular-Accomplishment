@@ -1,6 +1,16 @@
 import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
 import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2 } from '@angular/core';
-import { firstValueFrom, Observable, of, timer } from 'rxjs';
+import {
+	firstValueFrom,
+	Observable,
+	of,
+	timer,
+	Subject,
+	filter,
+	BehaviorSubject,
+	combineLatest,
+	map
+} from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../douban/douban.service';
 import { FirebaseService } from '../firebase/firebase.service';
@@ -23,6 +33,8 @@ export class EntertainmentComponent {
 	protected isSearching: boolean = false;
 	private contentContainer!: any;
 	protected movieList$: Observable<MovieItemVO[]> = of([]);
+	protected selectedGenres$ = new BehaviorSubject<string[]>([]);
+	protected filteredMovieList$: Observable<MovieItemVO[]> = of([]);
 	protected statistics$: Observable<any> = of([]);
 
 	constructor(
@@ -38,6 +50,17 @@ export class EntertainmentComponent {
 			// Get the movie list (Observable) and statistics (Observable) from firebase
 			this.movieList$ = this.firebaseService.getMovieList();
 			this.statistics$ = this.firebaseService.getStatistics();
+			// Create a filter to listen for genre changes
+			this.filteredMovieList$ = combineLatest([this.movieList$, this.selectedGenres$]).pipe(
+				map(([movieList, selectedGenres]) => {
+					if (selectedGenres.length === 0) {
+						return movieList;
+					}
+					return movieList.filter((movie) =>
+						selectedGenres.every((genre) => movie.getMovieGenre().includes(genre))
+					);
+				})
+			);
 
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
@@ -90,7 +113,7 @@ export class EntertainmentComponent {
 	 */
 	protected async updateAllMovies() {
 		// Step 1: Get the movie list (one-time retrieval) from current movieList$
-		let movieListVOs = await firstValueFrom(this.movieList$);
+		let movieListVOs = await firstValueFrom(this.filteredMovieList$);
 		this.isSearching = true;
 
 		// Step 2: Loop through the movieList to get latest movie details
@@ -350,6 +373,11 @@ export class EntertainmentComponent {
 				`repeat(${itemsPerRow}, minmax(${parseInt(itemsWidth)}px, 1fr))`
 			);
 		}
+	}
+
+	filterByGenre(genre: unknown) {
+		const genreString = genre as string;
+		this.selectedGenres$.next([genreString]);
 	}
 
 	/**

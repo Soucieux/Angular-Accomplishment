@@ -242,6 +242,7 @@
 
 	.individual-item {
 		width: 97.8% !important;
+		height: 210px !important;
 	}
 
 	.image-container {
@@ -280,7 +281,7 @@
 	}
 
 	.delete-button {
-		top: 5px;
-		left: 120px;
+		top: -130px;
+		left: 140px;
 	}
 }

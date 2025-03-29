@@ -52,7 +52,7 @@ export class EntertainmentComponent {
 
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
-			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+			// this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {
 			LOG.error(this.className, 'User does not have permission to access the movie list');
 		}

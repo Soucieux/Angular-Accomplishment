@@ -18,11 +18,11 @@
 			class="category-button"
 			(click)="filterByGenre($any(genre.key))"
 			[ngClass]="{
-				'selected-genre': (selectedGenres$ | async)?.includes($any(genre.key))
+				'selected-category': (selectedGenres$ | async)?.includes($any(genre.key))
 			}">
 			<span>{{ genre.key }}</span>
 			<span
-				><p class="genre-count">{{ genre.value }}</p>
+				><p class="category-count">{{ genre.value }}</p>
 				<p class="hide-on-mobile">to watch</p></span
 			>
 		</div>

@@ -1,16 +1,6 @@
 import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
 import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2 } from '@angular/core';
-import {
-	firstValueFrom,
-	Observable,
-	of,
-	timer,
-	Subject,
-	filter,
-	BehaviorSubject,
-	combineLatest,
-	map
-} from 'rxjs';
+import { firstValueFrom, Observable, of, timer, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../douban/douban.service';
 import { FirebaseService } from '../firebase/firebase.service';
@@ -32,10 +22,10 @@ export class EntertainmentComponent {
 	protected isLoggedIn: boolean = true;
 	protected isSearching: boolean = false;
 	private contentContainer!: any;
-	protected movieList$: Observable<MovieItemVO[]> = of([]);
+	protected movieList$!: Observable<MovieItemVO[]>;
 	protected selectedGenres$ = new BehaviorSubject<string>('');
-	protected filteredMovieList$: Observable<MovieItemVO[]> = of([]);
-	protected statistics$: Observable<any> = of([]);
+	protected filteredMovieList$!: Observable<MovieItemVO[]>;
+	protected statistics$!: Observable<any>;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,

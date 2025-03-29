@@ -42,22 +42,23 @@
 			class="image-container"
 			[ngStyle]="{ backgroundImage: 'url(' + movie.getMovieCoverImageLink() + ')' }"></div>
 		<div class="individual-item-content">
-			<div class="contents">
-				<span class="title" [style.font-size]="calculateFontSize(movie.getMovieTitle().length)">
-					{{ movie.getMovieTitle() }}
+			<span class="title" [style.font-size]="calculateFontSize(movie.getMovieTitle().length)">
+				{{ movie.getMovieTitle() }}
+			</span>
+			<span class="text">类型：{{ movie.getMovieGenre() }} </span>
+			<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
+			<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
+			<ng-container *ngIf="movie.getMovieRate(); else noRate">
+				<span class="rate">
+					{{ movie.getMovieRate().toFixed(1) }}
 				</span>
-				<span class="text">类型：{{ movie.getMovieGenre() }} </span>
-				<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
-				<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
-				<ng-container *ngIf="movie.getMovieRate(); else noRate">
-					<span class="rate">
-						{{ movie.getMovieRate().toFixed(1) }}
-					</span>
-				</ng-container>
-				<ng-template #noRate>
-					<span class="rate">暂无评分</span>
-				</ng-template>
-			</div>
+			</ng-container>
+			<button mat-icon-button class="delete-button">
+				<span class="material-icons delete-icon">delete_forever</span>
+			</button>
+			<ng-template #noRate>
+				<span class="rate">暂无评分</span>
+			</ng-template>
 		</div>
 	</div>
 </div>

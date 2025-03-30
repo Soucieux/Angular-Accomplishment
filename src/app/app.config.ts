@@ -12,7 +12,6 @@ import { getDatabase, provideDatabase } from '@angular/fire/database';
 import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withFetch } from '@angular/common/http';
-import { MatDialogModule } from '@angular/material/dialog';
 export const appConfig: ApplicationConfig = {
 	providers: [
 		provideRouter(routes),
@@ -24,6 +23,5 @@ export const appConfig: ApplicationConfig = {
 		provideAuth(() => getAuth()),
 		provideDatabase(() => getDatabase()),
 		provideHttpClient(withFetch()),
-		importProvidersFrom(MatDialogModule)
 	]
 };

@@ -2,14 +2,13 @@ import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
 import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2, inject } from '@angular/core';
 import { firstValueFrom, Observable, of, timer, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { LOG } from '../log';
-import { DoubanService } from '../douban/douban.service';
-import { FirebaseService } from '../firebase/firebase.service';
+import { DoubanService } from '../douban-service/douban.service';
+import { FirebaseService } from '../firebase-service/firebase.service';
 import { MovieItemVO } from './movie.item.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRippleModule } from '@angular/material/core';
-import { MatDialog } from '@angular/material/dialog';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -27,7 +26,6 @@ export class EntertainmentComponent {
 	protected selectedGenres$ = new BehaviorSubject<string>('');
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
 	protected statistics$!: Observable<any>;
-	private dialog = inject(MatDialog);
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef,
@@ -370,8 +368,8 @@ export class EntertainmentComponent {
 	}
 
 	openConfirmationDialog(movieTitle: string) {
-		// this.dialog.open(ConfirmationDialogComponent, {
-			// data: { movieTitle: movieTitle }
+		// .open(ConfirmationDialogComponent, {
+		// 	data: { movieTitle: movieTitle }
 		// });
 	}
 

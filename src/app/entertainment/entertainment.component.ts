@@ -1,5 +1,5 @@
 import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
-import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2 } from '@angular/core';
+import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2, inject } from '@angular/core';
 import { firstValueFrom, Observable, of, timer, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../douban/douban.service';
@@ -9,11 +9,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRippleModule } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
 @Component({
-    selector: 'entertainment',
-    imports: [NgFor, CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule, MatRippleModule],
-    templateUrl: './entertainment.component.html',
-    styleUrl: './entertainment.component.css'
+	selector: 'entertainment',
+	standalone: true,
+	imports: [NgFor, CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule, MatRippleModule],
+	templateUrl: './entertainment.component.html',
+	styleUrl: './entertainment.component.css'
 })
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
@@ -25,7 +27,7 @@ export class EntertainmentComponent {
 	protected selectedGenres$ = new BehaviorSubject<string>('');
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
 	protected statistics$!: Observable<any>;
-
+	private dialog = inject(MatDialog);
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef,
@@ -51,7 +53,7 @@ export class EntertainmentComponent {
 
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
-			// this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {
 			LOG.error(this.className, 'User does not have permission to access the movie list');
 		}
@@ -365,6 +367,12 @@ export class EntertainmentComponent {
 	filterByGenre(genre: string) {
 		const currentGenre = this.selectedGenres$.getValue();
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
+	}
+
+	openConfirmationDialog(movieTitle: string) {
+		// this.dialog.open(ConfirmationDialogComponent, {
+			// data: { movieTitle: movieTitle }
+		// });
 	}
 
 	/**

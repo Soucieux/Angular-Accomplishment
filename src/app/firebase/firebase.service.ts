@@ -1,11 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes } from '@angular/fire/storage';
 import { LOG } from '../log';
 import {
 	Database,
 	ref as dbRef,
 	list,
-	object,
 	onValue,
 	runTransaction,
 	update
@@ -21,7 +20,7 @@ export class FirebaseService {
 	private moviesRef!: any;
 	private statisticsRef!: any;
 
-	constructor(private storage: Storage, private db: Database) {
+	constructor(@Inject(Storage) private storage: Storage, @Inject(Database) private db: Database) {
 		this.moviesRef = dbRef(this.db, 'movies');
 		this.statisticsRef = dbRef(this.db, 'statistics');
 	}

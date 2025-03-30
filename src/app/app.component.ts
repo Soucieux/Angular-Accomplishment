@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterModule } from '@angular/router';
-import { Database } from '@angular/fire/database';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
@@ -10,25 +9,26 @@ import { Router } from '@angular/router';
 import { LOG } from './log';
 import { MatIconModule } from '@angular/material/icon';
 @Component({
-    selector: 'root',
-    imports: [
-        CommonModule,
-        RouterOutlet,
-        RouterModule,
-        MatSidenavModule,
-        MatButtonModule,
-        MatRippleModule,
-        MatIconModule
-    ],
-    templateUrl: 'app.component.html',
-    styleUrl: './app.component.css'
+	selector: 'root',
+	standalone: true,
+	imports: [
+		CommonModule,
+		RouterOutlet,
+		RouterModule,
+		MatSidenavModule,
+		MatButtonModule,
+		MatRippleModule,
+		MatIconModule
+	],
+	templateUrl: 'app.component.html',
+	styleUrl: './app.component.css'
 })
 export class AppComponent {
 	private readonly className = 'AppComponent';
 	// courses$;
 	currentUser$ = this.authService.currentUser$;
 
-	constructor(private db: Database, private authService: AuthService, private router: Router) {
+	constructor(private authService: AuthService, private router: Router) {
 		// this.courses$ = objectVal(ref(this.db, '/course/2'));
 	}
 

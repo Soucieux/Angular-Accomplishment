@@ -53,7 +53,10 @@
 					{{ movie.getMovieRate().toFixed(1) }}
 				</span>
 			</ng-container>
-			<button mat-icon-button class="delete-button">
+			<button
+				mat-icon-button
+				class="delete-button"
+				(click)="openConfirmationDialog(movie.getMovieTitle())">
 				<span class="material-icons delete-icon">delete_forever</span>
 			</button>
 			<ng-template #noRate>

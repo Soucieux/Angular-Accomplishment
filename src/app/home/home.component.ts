@@ -3,11 +3,10 @@ import { MatRadioModule } from '@angular/material/radio';
 import { LOG } from '../log';
 
 @Component({
-	selector: 'home',
-	standalone: true,
-	imports: [MatRadioModule],
-	templateUrl: './home.component.html',
-	styleUrl: './home.component.css'
+    selector: 'home',
+    imports: [MatRadioModule],
+    templateUrl: './home.component.html',
+    styleUrl: './home.component.css'
 })
 export class HomeComponent {
 	private readonly className = 'HomeComponent';

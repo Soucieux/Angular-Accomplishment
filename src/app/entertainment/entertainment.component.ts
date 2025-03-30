@@ -10,11 +10,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRippleModule } from '@angular/material/core';
 @Component({
-	selector: 'entertainment',
-	standalone: true,
-	imports: [NgFor, CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule, MatRippleModule],
-	templateUrl: './entertainment.component.html',
-	styleUrl: './entertainment.component.css'
+    selector: 'entertainment',
+    imports: [NgFor, CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule, MatRippleModule],
+    templateUrl: './entertainment.component.html',
+    styleUrl: './entertainment.component.css'
 })
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';

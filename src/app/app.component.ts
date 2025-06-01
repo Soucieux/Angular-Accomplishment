@@ -8,6 +8,7 @@ import { AuthService } from './authentication-service/auth.service';
 import { Router } from '@angular/router';
 import { LOG } from './log';
 import { MatIconModule } from '@angular/material/icon';
+import { ToastModule } from 'primeng/toast';
 @Component({
 	selector: 'root',
 	standalone: true,
@@ -18,7 +19,8 @@ import { MatIconModule } from '@angular/material/icon';
 		MatSidenavModule,
 		MatButtonModule,
 		MatRippleModule,
-		MatIconModule
+		MatIconModule,
+		ToastModule
 	],
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'

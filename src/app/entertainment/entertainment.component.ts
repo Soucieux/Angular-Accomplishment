@@ -1,6 +1,15 @@
 import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
-import { Component, ElementRef, HostListener, Inject, PLATFORM_ID, Renderer2, inject } from '@angular/core';
-import { firstValueFrom, Observable, of, timer, BehaviorSubject, combineLatest, map } from 'rxjs';
+import {
+	Component,
+	ElementRef,
+	HostListener,
+	Inject,
+	PLATFORM_ID,
+	Renderer2,
+	ViewChild,
+	ViewContainerRef
+} from '@angular/core';
+import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../douban-service/douban.service';
 import { FirebaseService } from '../firebase-service/firebase.service';
@@ -9,6 +18,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRippleModule } from '@angular/material/core';
+import { DialogService } from '../dialog-service/dialog.service';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -18,6 +28,9 @@ import { MatRippleModule } from '@angular/material/core';
 })
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
+	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
+	// This value is assigned to ViewContainerRef (a predefined keyword) of automatically after view is initialized
+	private dialogComponentContainer!: ViewContainerRef;
 	// This value has to be true initially so that the page will not show access denied page on refresh
 	protected isLoggedIn: boolean = true;
 	protected isSearching: boolean = false;
@@ -31,7 +44,8 @@ export class EntertainmentComponent {
 		private elRef: ElementRef,
 		private renderer: Renderer2,
 		private doubanService: DoubanService,
-		private firebaseService: FirebaseService
+		private firebaseService: FirebaseService,
+		private dialogService: DialogService
 	) {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
@@ -51,7 +65,7 @@ export class EntertainmentComponent {
 
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
-			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+			// this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {
 			LOG.error(this.className, 'User does not have permission to access the movie list');
 		}
@@ -367,10 +381,14 @@ export class EntertainmentComponent {
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
 	}
 
-	openConfirmationDialog(movieTitle: string) {
-		// .open(ConfirmationDialogComponent, {
-		// 	data: { movieTitle: movieTitle }
-		// });
+	openDeleteConfirmationDialog(movieTitle: string) {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'delete',
+			`Are you sure you want to delete ${movieTitle}?`,
+			() => {},
+			() => {}
+		);
 	}
 
 	/**

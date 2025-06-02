@@ -39,14 +39,14 @@ export class DeleteDialogComponent {
 			},
 
 			accept: () => {
-				this.messageService.add({ severity: 'info', summary: 'Confirmed', detail: 'Record deleted' });
+				this.messageService.add({ severity: 'info', summary: 'Confirmed', detail: 'Movie deleted' });
 				acceptCallback();
 			},
 			reject: () => {
 				this.messageService.add({
-					severity: 'error',
-					summary: 'Rejected',
-					detail: 'You have rejected'
+					severity: 'info',
+					summary: 'Cancelled',
+					detail: 'Operation cancelled'
 				});
 				rejectCallback();
 			}

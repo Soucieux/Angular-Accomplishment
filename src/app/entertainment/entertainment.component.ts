@@ -270,10 +270,11 @@ export class EntertainmentComponent {
 				// Step 2: If data is received, then loop through the extracted data to get the correct movie ID
 				// as the result is retrieved by regex.
 				for (const movieData of extractedData) {
+					//This means that NEW movie must have title and year
 					// Movie name and year must be exactly the same
 					if (
 						movieData.title === movieItemVO.getMovieTitle() &&
-						movieData.year === movieItemVO.getMovieYear()
+						movieData.year == movieItemVO.getMovieYear()
 					) {
 						// Step 3: Set the movie ID to the movie item VO
 						movieItemVO.setMovieId(movieData.id);

@@ -379,13 +379,13 @@ export class EntertainmentComponent {
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
 	}
 
-	openDeleteConfirmationDialog(movieName: string, movieKey: string) {
+	openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'delete',
-			`Are you sure you want to delete ${movieName}?`,
+			`Are you sure you want to delete ${movieItemVO.getMovieTitle()}?`,
 			() => {
-				this.firebaseService.removeMovieFromDatabase(movieName, movieKey);
+				this.firebaseService.removeMovieFromDatabase(movieItemVO);
 			}
 		);
 	}

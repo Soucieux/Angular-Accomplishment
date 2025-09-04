@@ -65,7 +65,7 @@ export class EntertainmentComponent {
 
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
-			// this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {
 			LOG.error(this.className, 'User does not have permission to access the movie list');
 		}
@@ -311,12 +311,8 @@ export class EntertainmentComponent {
 			);
 			LOG.info(this.className, `Movie cover retrieved for ${movieItemVO.getMovieTitle()}`);
 
-			// Step 2:Extract the movie cover ID from the movie cover link
-			const coverImageId = coverImageLink.substring(coverImageLink.lastIndexOf('/') + 1);
-
-			// Step 3: Upload the movie cover to firebase and get the downloadable link
+			// Step 2: Upload the movie cover to firebase and get the downloadable link
 			const downloadableLink = await this.firebaseService.uploadImageAndGetDownloadLink(
-				coverImageId,
 				coverImage,
 				movieItemVO.getMovieTitle()
 			);
@@ -383,14 +379,13 @@ export class EntertainmentComponent {
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
 	}
 
-	openDeleteConfirmationDialog(movieTitle: string) {
+	openDeleteConfirmationDialog(movieName: string, movieKey: string) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'delete',
-			`Are you sure you want to delete ${movieTitle}?`,
+			`Are you sure you want to delete ${movieName}?`,
 			() => {
-				console.log(`${movieTitle} was removed from the database`);
-				// this.firebaseService.removeMovieFromDatabase(movieTitle);
+				this.firebaseService.removeMovieFromDatabase(movieName, movieKey);
 			}
 		);
 	}

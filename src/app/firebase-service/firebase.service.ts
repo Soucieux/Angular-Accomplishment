@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
-import { Storage, ref as storageRef, getDownloadURL, uploadBytes } from '@angular/fire/storage';
+import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
 import { LOG } from '../log';
 import {
 	Database,
@@ -7,7 +7,8 @@ import {
 	list,
 	onValue,
 	runTransaction,
-	update
+	update,
+	remove
 } from '@angular/fire/database';
 import { map, Observable } from 'rxjs';
 import { MovieItemVO } from '../entertainment/movie.item.vo';
@@ -28,18 +29,13 @@ export class FirebaseService {
 	/**
 	 * Upload the movie cover to firebase storage and return the downloadable link.
 	 *
-	 * @param coverImageId - The ID of the movie cover to upload.
 	 * @param coverImage - The movie cover to upload.
 	 * @param movieName - The name of the movie to upload.
 	 * @returns A string that represents the downloadable link of the movie cover.
 	 */
-	public async uploadImageAndGetDownloadLink(
-		coverImageId: string,
-		coverImage: Blob,
-		movieName: string
-	): Promise<string> {
+	public async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
 		try {
-			const storageRefer = storageRef(this.storage, `/movies/${coverImageId}`);
+			const storageRefer = storageRef(this.storage, `/movies/${movieName}`);
 			await uploadBytes(storageRefer, coverImage, {
 				contentType: 'image/jpeg'
 			});
@@ -132,5 +128,30 @@ export class FirebaseService {
 		}).then(() => {
 			LOG.info(this.className, `Movie details for ${movieItemVO.getMovieTitle()} has been updated`);
 		});
+	}
+
+	/**
+	 * Remove the movie from the database.
+	 *
+	 * @param movieName - The name of the movie to remove.
+	 * @param movieKey - The key of the movie to remove.
+	 */
+	public async removeMovieFromDatabase(movieName: string, movieKey: string) {
+		try {
+			// Remove the movie cover from the storage
+			const storageRefer = storageRef(this.storage, `/movies/${movieName}`);
+			await deleteObject(storageRefer);
+
+			// Remove the movie info from the database
+			await remove(dbRef(this.db, `movies/${movieKey}`));
+
+			LOG.info(this.className, `${movieName} has been DELETED from the database`);
+		} catch (error) {
+			LOG.error(
+				this.className,
+				`Error while deleting movie from database for ${movieName}`,
+				error as Error
+			);
+		}
 	}
 }

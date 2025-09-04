@@ -107,6 +107,7 @@ export class EntertainmentComponent {
 
 	/**
 	 * Only "Search All Movies" button can trigger this function.
+	 * Only currently filtered movie will be updated.
 	 *
 	 * Search all movies in the database and update the required movie details.
 	 * If the movie ID does not exist, then search for the movie ID first and then update all other details.
@@ -387,8 +388,10 @@ export class EntertainmentComponent {
 			this.dialogComponentContainer,
 			'delete',
 			`Are you sure you want to delete ${movieTitle}?`,
-			() => {},
-			() => {}
+			() => {
+				console.log(`${movieTitle} was removed from the database`);
+				// this.firebaseService.removeMovieFromDatabase(movieTitle);
+			}
 		);
 	}
 

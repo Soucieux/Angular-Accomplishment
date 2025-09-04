@@ -31,14 +31,12 @@ export class DialogService {
 	 * @param dialogType - The type of dialog to open
 	 * @param message - The message to display in the dialog
 	 * @param acceptCallback - The callback to call when the dialog is accepted
-	 * @param rejectCallback - The callback to call when the dialog is rejected
 	 */
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
 		message: string,
-		acceptCallback: () => void,
-		rejectCallback: () => void
+		acceptCallback: () => void
 	) {
 		if (!dialogContainerRef) {
 			const error = new Error('Dialog container not found');
@@ -58,7 +56,7 @@ export class DialogService {
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			// Open up delete confirmation dialog and pass callbacks
-			dialogComponentRef.instance.openDialog(message, acceptCallback, rejectCallback);
+			dialogComponentRef.instance.openDialog(message, acceptCallback);
 
 			// Subscribe to dialog closed event
 			dialogComponentRef.instance.closed$.subscribe(() => {

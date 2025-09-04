@@ -19,9 +19,8 @@ export class DeleteDialogComponent {
 	 *
 	 * @param message - The message to display in the dialog
 	 * @param acceptCallback - The callback to call when the dialog is accepted
-	 * @param rejectCallback - The callback to call when the dialog is rejected
 	 */
-	openDialog(message: string, acceptCallback: () => void, rejectCallback: () => void) {
+	openDialog(message: string, acceptCallback: () => void) {
 		this.confirmationService.confirm({
 			message: message,
 			header: 'Delete Movie',
@@ -39,7 +38,7 @@ export class DeleteDialogComponent {
 			},
 
 			accept: () => {
-				this.messageService.add({ severity: 'info', summary: 'Confirmed', detail: 'Movie deleted' });
+				this.messageService.add({ severity: 'info', summary: 'Confirmed', detail: 'Record deleted' });
 				acceptCallback();
 			},
 			reject: () => {
@@ -48,7 +47,6 @@ export class DeleteDialogComponent {
 					summary: 'Cancelled',
 					detail: 'Operation cancelled'
 				});
-				rejectCallback();
 			}
 		});
 	}

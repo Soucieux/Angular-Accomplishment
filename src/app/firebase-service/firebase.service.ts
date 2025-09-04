@@ -112,8 +112,8 @@ export class FirebaseService {
 	public async updateAllMovieDataToFirebase(movieItemVO: MovieItemVO) {
 		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
 			currentData.genre[movieItemVO.getMovieGenre()] =
-				(currentData.genre[movieItemVO.getMovieGenre()] || 0) + 1;
-			currentData.totalNumber = (currentData.totalNumber || 0) + 1;
+				(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
+			currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
 			return currentData;
 		}).then(() => {
 			LOG.info(this.className, `Movie statistics has been updated`);
@@ -133,23 +133,34 @@ export class FirebaseService {
 	/**
 	 * Remove the movie from the database.
 	 *
-	 * @param movieName - The name of the movie to remove.
-	 * @param movieKey - The key of the movie to remove.
+	 * @param movieItemVO - The movie item to remove.
 	 */
-	public async removeMovieFromDatabase(movieName: string, movieKey: string) {
+	public async removeMovieFromDatabase(movieItemVO: MovieItemVO) {
 		try {
 			// Remove the movie cover from the storage
-			const storageRefer = storageRef(this.storage, `/movies/${movieName}`);
+			const storageRefer = storageRef(this.storage, `/movies/${movieItemVO.getMovieTitle()}`);
 			await deleteObject(storageRefer);
 
 			// Remove the movie info from the database
-			await remove(dbRef(this.db, `movies/${movieKey}`));
+			await remove(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`));
 
-			LOG.info(this.className, `${movieName} has been DELETED from the database`);
+			LOG.info(this.className, `${movieItemVO.getMovieTitle()} has been DELETED from the database`);
+
+			// Update the movie statistics
+			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+				currentData.genre[movieItemVO.getMovieGenre()] =
+					currentData.genre[movieItemVO.getMovieGenre()] - 1 > 0
+						? currentData.genre[movieItemVO.getMovieGenre()] - 1
+						: 0;
+				currentData.totalNumber = currentData.totalNumber - 1 > 0 ? currentData.totalNumber - 1 : 0;
+				return currentData;
+			}).then(() => {
+				LOG.info(this.className, `Movie statistics has been updated`);
+			});
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while deleting movie from database for ${movieName}`,
+				`Error while deleting movie from database for ${movieItemVO.getMovieTitle()}`,
 				error as Error
 			);
 		}

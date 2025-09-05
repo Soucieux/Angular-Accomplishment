@@ -56,7 +56,7 @@ export class FirebaseService {
 	 * @returns An observable that emits the movie list.
 	 */
 	public getMovieList(): Observable<MovieItemVO[]> {
-		return list(this.moviesRef).pipe(
+		const list$ = list(this.moviesRef).pipe(
 			map((snapshots: any[]) =>
 				snapshots.map((snapshot: any) => {
 					const movie = snapshot.snapshot.val();
@@ -74,6 +74,16 @@ export class FirebaseService {
 					movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
 					return movieItemVO;
 				})
+			)
+		);
+
+		// Sort movies by first release date
+		// Note: By using this method, make sure the first release date has the format of YYYY.MM.DD
+		return list$.pipe(
+			map((movies) =>
+				movies.sort((a, b) =>
+					a.getMovieFirstReleaseDate().localeCompare(b.getMovieFirstReleaseDate())
+				)
 			)
 		);
 	}

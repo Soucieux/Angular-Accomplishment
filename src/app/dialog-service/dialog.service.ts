@@ -1,5 +1,6 @@
-import { ComponentRef, Injectable, ViewContainerRef } from '@angular/core';
+import { ComponentRef, Injectable, Type, ViewContainerRef } from '@angular/core';
 import { DeleteDialogComponent } from './delete-dialog/delete.dialog.component';
+import { AddDialogComponent } from './add-dialog/add.dialog.component';
 import { LOG } from '../log';
 @Injectable({
 	providedIn: 'root'
@@ -16,10 +17,12 @@ export class DialogService {
 	 * @param dialogType - The type of dialog to get
 	 * @returns The dialog component
 	 */
-	getDialogComponent(dialogType: string) {
+	getDialogComponent(dialogType: string): Type<any> {
 		switch (dialogType) {
 			case 'delete':
 				return DeleteDialogComponent;
+			case 'add':
+				return AddDialogComponent;
 			default:
 				throw new Error('Invalid dialog type');
 		}
@@ -27,6 +30,7 @@ export class DialogService {
 
 	/**
 	 * Open a dialog
+	 *
 	 * @param dialogContainerRef - The container where dialogs should be attached
 	 * @param dialogType - The type of dialog to open
 	 * @param message - The message to display in the dialog
@@ -55,7 +59,7 @@ export class DialogService {
 			const dialogComponent = this.getDialogComponent(dialogType);
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
-			// Open up delete confirmation dialog and pass callbacks
+			// Open up corresponding dialog and pass callbacks
 			dialogComponentRef.instance.openDialog(message, acceptCallback);
 
 			// Subscribe to dialog closed event

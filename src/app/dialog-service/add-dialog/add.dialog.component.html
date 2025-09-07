@@ -1,0 +1,50 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	[appendTo]="'body'"
+	(onHide)="onDialogClosed()"
+	styleClass="add-dialog">
+	<ng-template #header>
+		<div>
+			<p-avatar
+				image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png"
+				shape="circle"
+				styleClass="avatar" />
+			<span>Amy Elsner</span>
+		</div>
+	</ng-template>
+	<span class="dialog-title">New movie details</span>
+	<form #addMovieForm="ngForm" (ngSubmit)="onSubmit(addMovieForm)" class="form-grid">
+		<div class="form-row">
+			<label for="movieName">Name</label>
+			<input pInputText id="movieName" autocomplete="off" />
+		</div>
+		<div class="form-row">
+			<label for="Year">Year</label>
+			<p-select
+				[options]="years"
+				name="years"
+				optionLabel="year"
+				[appendTo]="'body'"
+				class="year-dropdown"></p-select>
+		</div>
+		<div class="form-row">
+			<label for="id">ID</label>
+			<input pInputText id="id" autocomplete="off" />
+		</div>
+	</form>
+	<ng-template #footer>
+		<p-button
+			label="Cancel"
+			type="button"
+			[text]="true"
+			severity="secondary"
+			(click)="onDialogClosed()" />
+		<p-button
+			label="Submit"
+			type="submit"
+			[outlined]="true"
+			severity="primary"
+			(click)="onDialogClosed()" />
+	</ng-template>
+</p-dialog>

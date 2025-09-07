@@ -3,7 +3,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
-	selector: 'dialog',
+	selector: 'delete-dialog',
 	template: ` <p-confirmdialog (onHide)="onDialogClosed()" /> `,
 	standalone: true,
 	imports: [ConfirmDialogModule],

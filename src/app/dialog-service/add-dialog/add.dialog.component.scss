@@ -1,0 +1,31 @@
+::ng-deep .add-dialog {
+	width: 500px;
+	height: 350px;
+	user-select: none;
+    // When adding & in the front, it targets img inside .add-dialog. Without &, it tagets all img (not just .add-dialog).
+	img {
+		pointer-events: none;
+	}
+}
+
+.form-grid {
+	display: grid;
+	grid-template-columns: 30px 180px; /* first col = labels, second col = inputs */
+	gap: 1rem 1rem; /* row gap and column gap */
+	align-items: center; /* vertical alignment */
+}
+
+.form-row {
+	display: contents; /* let children span grid directly */
+}
+
+.form-grid label {
+	text-align: center;
+}
+
+.dialog-title {
+	display: flex;
+	justify-content: center;
+	font-size: 18px;
+	margin-bottom: 1rem;
+}

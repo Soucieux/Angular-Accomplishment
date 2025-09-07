@@ -29,7 +29,7 @@ import { DialogService } from '../dialog-service/dialog.service';
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
-	// This value is assigned to ViewContainerRef (a predefined keyword) of automatically after view is initialized
+	// This value is assigned to ViewContainerRef (a predefined keyword) automatically after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	// This value has to be true initially so that the page will not show access denied page on refresh
 	protected isLoggedIn: boolean = true;
@@ -374,6 +374,7 @@ export class EntertainmentComponent {
 		}
 	}
 
+	//////////////////////Below are Event Handlers triggered by user actions///////////////////////
 	filterByGenre(genre: string) {
 		const currentGenre = this.selectedGenres$.getValue();
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
@@ -390,6 +391,12 @@ export class EntertainmentComponent {
 		);
 	}
 
+	openAddNewMovieDialog() {
+		this.dialogService.openDialog(this.dialogComponentContainer, 'add', 'Add New Movie', () => {});
+		// this.firebaseService.addNewMovieToDatabase();
+	}
+
+	////////////////////////////////Below are Helper Functions////////////////////////////////
 	/**
 	 * Check if the current device is a mobile device.
 	 * Note: This only works for iPhone 16 Pro or other devices with a width of 430px.

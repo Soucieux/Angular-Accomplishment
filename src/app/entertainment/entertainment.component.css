@@ -171,7 +171,7 @@
 .control-button-icon {
 	font-size: 30px;
 	position: relative;
-	left: 5px;
+	left: 10px;
 }
 
 .control-button {
@@ -180,6 +180,7 @@
 	background: rgba(145, 89, 180, 0.5);
 	height: 38px;
 	bottom: 4px;
+	width: 100px;
 }
 
 /* Category Button */

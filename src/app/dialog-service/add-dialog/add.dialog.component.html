@@ -14,37 +14,56 @@
 		</div>
 	</ng-template>
 	<span class="dialog-title">New movie details</span>
-	<form #addMovieForm="ngForm" (ngSubmit)="onSubmit(addMovieForm)" class="form-grid">
+	<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit(addMovieForm)" class="form-grid">
 		<div class="form-row">
 			<label for="movieName">Name</label>
-			<input pInputText id="movieName" autocomplete="off" />
+			<input pInputText name="movieName" ngModel id="movieName" autocomplete="off" required />
 		</div>
 		<div class="form-row">
-			<label for="Year">Year</label>
+			<label for="years">Year</label>
+			<!-- name is used to register control inside ngForm, used to track its value, validation status, errors etc. -->
+			<!-- id is used to link a <label> to the input -->
+			<!-- for inside <label> uses id to focus on the input when clicked -->
+			<!-- optionLabel tells which property(element) in [options] to display in the dropdown -->
+			<!-- ngModel is used to register the current field to the form -->
+			<!-- [ngModel]="movieName" is used to bind the value of the current field to a variable in the ts file -->
+			<!-- #movieName="ngModel" is used to create a local variable that references the ngModel directive so that we can access control state (value, validation status, errors etc.) for this specific control -->
 			<p-select
 				[options]="years"
 				name="years"
+				id="years"
+				ngModel
 				optionLabel="year"
 				[appendTo]="'body'"
-				class="year-dropdown"></p-select>
+				class="year-dropdown"
+				required></p-select>
 		</div>
 		<div class="form-row">
 			<label for="id">ID</label>
-			<input pInputText id="id" autocomplete="off" />
+			<input pInputText name="id" ngModel id="id" autocomplete="off" required />
 		</div>
 	</form>
 	<ng-template #footer>
 		<p-button
+			label="Search"
+			type="button"
+			[outlined]="true"
+			severity="secondary"
+			[attr.form]="'addMovieForm'"
+			[disabled]="addMovieForm.invalid"
+			(click)="searchCurrentMovie(addMovieForm.value)" />
+		<p-button
 			label="Cancel"
 			type="button"
-			[text]="true"
+			[outlined]="true"
 			severity="secondary"
 			(click)="onDialogClosed()" />
-		<p-button
+		<button
 			label="Submit"
 			type="submit"
+			pButton
 			[outlined]="true"
-			severity="primary"
-			(click)="onDialogClosed()" />
+			severity="secondary"
+			[attr.form]="'addMovieForm'"></button>
 	</ng-template>
 </p-dialog>

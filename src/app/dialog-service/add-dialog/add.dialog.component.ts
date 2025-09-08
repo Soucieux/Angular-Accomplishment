@@ -28,12 +28,17 @@ export class AddDialogComponent {
 		this.visible = true;
 	}
 
-	onDialogClosed() {
-		this.closed$.emit();
-		this.visible = false;
+	searchCurrentMovie(arg0: any) {
+		console.log(arg0);
 	}
 
 	onSubmit(addMovieForm: NgForm) {
+		this.onDialogClosed();
 		console.log(addMovieForm.value);
+	}
+
+	onDialogClosed() {
+		this.closed$.emit();
+		this.visible = false;
 	}
 }

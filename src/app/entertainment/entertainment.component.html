@@ -2,7 +2,7 @@
 <div *ngIf="statistics$ | async as stats" class="category-container">
 	<div class="category-header-container">
 		<div class="category-header-title">Categories ({{ stats.totalNumber }})</div>
-		<button mat-fab extended (click)="updateAllMovies()" class="control-button">
+		<button mat-fab extended (click)="updateAllMoviesRate()" class="control-button">
 			<span class="material-icons control-button-icon">search</span>
 		</button>
 		<button mat-fab extended (click)="cancelSearch()" class="control-button">
@@ -41,7 +41,7 @@
 		}">
 		<div
 			class="image-container"
-			[ngStyle]="{ backgroundImage: 'url(' + movie.getMovieCoverImageLink() + ')' }"></div>
+			[ngStyle]="{ backgroundImage: 'url(' + movie.getMovieCoverImageDownloadableLink() + ')' }"></div>
 		<div class="individual-item-content">
 			<span class="title" [style.font-size]="calculateFontSize(movie.getMovieTitle().length)">
 				{{ movie.getMovieTitle() }}

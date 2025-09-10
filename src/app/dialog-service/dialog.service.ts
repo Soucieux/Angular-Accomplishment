@@ -2,6 +2,7 @@ import { ComponentRef, Injectable, Type, ViewContainerRef } from '@angular/core'
 import { DeleteDialogComponent } from './delete-dialog/delete.dialog.component';
 import { AddDialogComponent } from './add-dialog/add.dialog.component';
 import { LOG } from '../log';
+import { MovieItemVO } from '../entertainment/movie.item.vo';
 @Injectable({
 	providedIn: 'root'
 })
@@ -28,6 +29,21 @@ export class DialogService {
 		}
 	}
 
+	// Overload methods to call correctdialog component
+	openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'delete',
+		message: string,
+		acceptCallback: () => void
+	): void;
+
+	openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'add',
+		message: string,
+		acceptCallback: (newMovieItemVO: MovieItemVO) => void
+	): void;
+
 	/**
 	 * Open a dialog
 	 *
@@ -40,8 +56,8 @@ export class DialogService {
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
 		message: string,
-		acceptCallback: () => void
-	) {
+		acceptCallback: any
+	): void {
 		if (!dialogContainerRef) {
 			const error = new Error('Dialog container not found');
 			LOG.error(this.className, error.message);

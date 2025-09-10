@@ -105,7 +105,7 @@ export class FirebaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public async updateMovieRateOnlyToFirebase(movieItemVO: MovieItemVO) {
+	public async updateMovieRateToFirebase(movieItemVO: MovieItemVO) {
 		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
 			rate: movieItemVO.getMovieRate()
 		}).then(() => {
@@ -118,7 +118,7 @@ export class FirebaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public async updateAllMovieDataAndStatisticsToFirebase(movieItemVO: MovieItemVO) {
+	public async updateNewMovieDataAndStatisticsToFirebase(movieItemVO: MovieItemVO) {
 		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
 			currentData.genre[movieItemVO.getMovieGenre()] =
 				(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;

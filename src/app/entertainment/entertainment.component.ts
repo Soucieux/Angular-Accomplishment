@@ -1,3 +1,4 @@
+import { MovieIdNotFoundError } from './../error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
 import {
 	Component,
@@ -132,7 +133,7 @@ export class EntertainmentComponent {
 				// Step 4: Get movie rate
 				await this.getMovieRateOnly(movieItemVO);
 				// Step 5: Update movie rate
-				await this.firebaseService.updateMovieRateOnlyToFirebase(movieItemVO);
+				await this.firebaseService.updateMovieRateToFirebase(movieItemVO);
 			} catch (error) {
 				LOG.error(
 					this.className,
@@ -160,14 +161,13 @@ export class EntertainmentComponent {
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - true
 	 */
-	private async getAllMovieData(movieItemVO: MovieItemVO) {
+	private async getNewMovieData(movieItemVO: MovieItemVO) {
 		await this.getMovieData(movieItemVO, true);
 	}
 
 	/**
 	 * Get the movie webpage from Douban API with a given movie ID.
-	 * Then, get the movie cover and upload it to firebase storage if not exists already.
-	 * Finally, get the movie rate, first release date, and total episode number, if the corresponding flag is true.
+	 * Then, get the movie rate, first release date, and total episode number, if the corresponding flag is true.
 	 *
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - Whether to retrieve movie cover image, first release date, and total episode number.
@@ -217,10 +217,8 @@ export class EntertainmentComponent {
 
 				// Step 6: Get the movie cover for the current movie and upload it to firebase storage
 				const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
-				const coverImageLink = movieWebpageAsString.match(regexForCoverImageLink)[1];
-				await this.getMovieImageByLink(coverImageLink, movieItemVO);
-				//TODO extract the logic of uploading cover image to firebase, need to do it after the user hit submit in the add movie dialog.
-				await this.uploadMovieImageAndGetDownloadableLink(movieItemVO);
+				const movieCoverImageLink = movieWebpageAsString.match(regexForCoverImageLink)[1];
+				await this.getMovieCoverImageByLink(movieCoverImageLink, movieItemVO);
 			}
 		} catch (error) {
 			LOG.error(
@@ -281,17 +279,17 @@ export class EntertainmentComponent {
 	/**
 	 * Get and upload the movie cover obtained to firebase storage.
 	 *
-	 * @param coverImageLink - The link of the movie cover.
+	 * @param movieCoverImageLink - The link of the movie cover.
 	 * @param movieItemVO - The movie item to search for.
 	 */
-	private async getMovieImageByLink(coverImageLink: string, movieItemVO: MovieItemVO) {
+	private async getMovieCoverImageByLink(movieCoverImageLink: string, movieItemVO: MovieItemVO) {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
 		try {
 			// searchMovieCover returns a Promise and we wait for the retrieval to complete
-			const coverImage = await firstValueFrom(
-				this.doubanService.searchMovieCover(coverImageLink, movieItemVO.getMovieTitle())
+			const movieCoverImage = await firstValueFrom(
+				this.doubanService.searchMovieCover(movieCoverImageLink, movieItemVO.getMovieTitle())
 			);
-			movieItemVO.setMovieCoverImage(coverImage);
+			movieItemVO.setMovieCoverImage(movieCoverImage);
 			LOG.info(this.className, `Movie cover retrieved for ${movieItemVO.getMovieTitle()}`);
 		} catch (error) {
 			LOG.error(
@@ -342,14 +340,13 @@ export class EntertainmentComponent {
 		}
 		//Step 2: If the result of searching movie ID is null, it means the server blocks the request due to too many requests
 		if (!newMovieItemVO.getMovieId()) {
-			const errorMessage = `Movie ID for ${newMovieItemVO.getMovieTitle()} not found`;
-			LOG.warn(this.className, errorMessage);
-			// TODO: Need a new error message class specific for this error
-			throw new Error(errorMessage);
+			LOG.warn(this.className, `Movie ID for ${newMovieItemVO.getMovieTitle()} is not found`);
+			// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.
+			throw new MovieIdNotFoundError(newMovieItemVO.getMovieTitle());
 		}
 
 		// Step 3 : After successful retrieval of movie ID or movie ID is already given, get all the movie details.
-		await this.getAllMovieData(newMovieItemVO);
+		await this.getNewMovieData(newMovieItemVO);
 	}
 
 	//////////////////////Below are Utilities Functions used by HTML template///////////////////////
@@ -417,10 +414,18 @@ export class EntertainmentComponent {
 	}
 
 	openAddNewMovieDialog() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'add', 'Add New Movie', () => {});
-		// TODO: After the dialog is closed, update the movie statistics and add the new movie to the database
-		// this.firebaseService.updateAllMovieDataAndStatisticsToFirebase(newMovieItemVO);
-		// this.firebaseService.addNewMovieToDatabase();
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'add',
+			'',
+			(newMovieItemVO: MovieItemVO) => {
+				// Upload movie cover image to firebase storage and generate downloadable link
+				// The downloadable link needs to be acquired first and it will be uploaded to firebase in the next step
+				this.uploadMovieImageAndGetDownloadableLink(newMovieItemVO);
+				// Save new movie data to firebase and update movie statistics
+				this.firebaseService.updateNewMovieDataAndStatisticsToFirebase(newMovieItemVO);
+			}
+		);
 	}
 
 	////////////////////////////////Below are Helper Functions////////////////////////////////

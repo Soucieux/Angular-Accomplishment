@@ -62,7 +62,6 @@ export class EntertainmentComponent {
 					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
 				})
 			);
-
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
 			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
@@ -106,14 +105,12 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Only "Search All Movies" button can trigger this function.
-	 * Only currently filtered movie will be updated.
+	 * Update all movies' rate in the database.
 	 *
-	 * Search all movies in the database and update the required movie details.
-	 * If the movie ID does not exist, then search for the movie ID first and then update all other details.
-	 * If the movie ID already exists, then update the movie rate.
+	 * Only "Search" button can trigger this function.
+	 * Only currently filtered movie will be updated.
 	 */
-	protected async updateAllMovies() {
+	protected async updateAllMoviesRate() {
 		// Step 1: Get the movie list (one-time retrieval) from current movieList$
 		let movieListVOs = await firstValueFrom(this.filteredMovieList$);
 		this.isSearching = true;
@@ -132,27 +129,10 @@ export class EntertainmentComponent {
 			await firstValueFrom(timer(2000));
 
 			try {
-				if (movieItemVO.isMovieIdAlreadyExist) {
-					LOG.info(this.className, `Movie ID found`);
-					// Step 4: Since movie ID already exists in the database, we only need to get the movie rate.
-					await this.getMovieRateOnly(movieItemVO);
-					await this.firebaseService.updateMovieRateOnlyToFirebase(movieItemVO);
-				} else {
-					// Step 4: If the movie ID is undefined in the database, then search for the movie ID first.
-					LOG.info(this.className, `Movie ID not found, start searching for it.`);
-					await this.getMovieId(movieItemVO);
-
-					//Step 5: If the result of searching movie ID is null, it means the server blocks the request
-					//due to too many requests, then skip the current iteration.
-					if (!movieItemVO.getMovieId()) {
-						LOG.warn(this.className, `${movieItemVO.getMovieTitle()} not found`);
-						continue;
-					}
-
-					// Step 6 : Since movie ID is retrieved just now, we need to get all the movie details.
-					await this.getAllMovieData(movieItemVO);
-					await this.firebaseService.updateAllMovieDataToFirebase(movieItemVO);
-				}
+				// Step 4: Get movie rate
+				await this.getMovieRateOnly(movieItemVO);
+				// Step 5: Update movie rate
+				await this.firebaseService.updateMovieRateOnlyToFirebase(movieItemVO);
 			} catch (error) {
 				LOG.error(
 					this.className,
@@ -238,7 +218,9 @@ export class EntertainmentComponent {
 				// Step 6: Get the movie cover for the current movie and upload it to firebase storage
 				const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
 				const coverImageLink = movieWebpageAsString.match(regexForCoverImageLink)[1];
-				await this.getAndUpdateMovieImageById(coverImageLink, movieItemVO);
+				await this.getMovieImageByLink(coverImageLink, movieItemVO);
+				//TODO extract the logic of uploading cover image to firebase, need to do it after the user hit submit in the add movie dialog.
+				await this.uploadMovieImageAndGetDownloadableLink(movieItemVO);
 			}
 		} catch (error) {
 			LOG.error(
@@ -299,35 +281,78 @@ export class EntertainmentComponent {
 	/**
 	 * Get and upload the movie cover obtained to firebase storage.
 	 *
-	 * @param coverImageLink - The link of the movie cover to search for.
+	 * @param coverImageLink - The link of the movie cover.
 	 * @param movieItemVO - The movie item to search for.
 	 */
-	private async getAndUpdateMovieImageById(coverImageLink: string, movieItemVO: MovieItemVO) {
+	private async getMovieImageByLink(coverImageLink: string, movieItemVO: MovieItemVO) {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
 		try {
-			// Step 1: searchMovieCover returns a Promise and wait for the retrieval to complete
+			// searchMovieCover returns a Promise and we wait for the retrieval to complete
 			const coverImage = await firstValueFrom(
 				this.doubanService.searchMovieCover(coverImageLink, movieItemVO.getMovieTitle())
 			);
+			movieItemVO.setMovieCoverImage(coverImage);
 			LOG.info(this.className, `Movie cover retrieved for ${movieItemVO.getMovieTitle()}`);
-
-			// Step 2: Upload the movie cover to firebase and get the downloadable link
-			const downloadableLink = await this.firebaseService.uploadImageAndGetDownloadLink(
-				coverImage,
-				movieItemVO.getMovieTitle()
-			);
-			movieItemVO.setMovieCoverImageLink(downloadableLink);
-			LOG.info(this.className, `Movie cover uploaded for ${movieItemVO.getMovieTitle()}`);
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while processing movie cover for ${movieItemVO.getMovieTitle()}`,
+				`Error while retrieving movie cover for ${movieItemVO.getMovieTitle()} from Douban`,
 				error as Error
 			);
 			throw error;
 		}
 	}
 
+	/**
+	 * Upload the movie cover to firebase and get the downloadable link.
+	 *
+	 * @param movieItemVO - The movie item to search for.
+	 */
+	private async uploadMovieImageAndGetDownloadableLink(movieItemVO: MovieItemVO) {
+		try {
+			const downloadableLink = await this.firebaseService.uploadImageAndGetDownloadLink(
+				movieItemVO.getMovieCoverImage(),
+				movieItemVO.getMovieTitle()
+			);
+			movieItemVO.setMovieCoverImageDownloadableLink(downloadableLink);
+			LOG.info(this.className, `Movie cover uploaded for ${movieItemVO.getMovieTitle()}`);
+		} catch (error) {
+			LOG.error(
+				this.className,
+				`Error while uploading image to firebase or getting download link for ${movieItemVO.getMovieTitle()}`,
+				error as Error
+			);
+			throw error;
+		}
+	}
+
+	//////////////////////Below are methods triggered by Add New Movie Dialog///////////////////////
+	/**
+	 * Search movie data for a new movie, store it to firebase, and update the movie statistics.
+	 *
+	 * Only the "Search" button in the "Add New Movie" dialog can trigger this function.
+	 *
+	 * @param newMovieItemVO - New movie item to search for.
+	 */
+	private async searchNewMovie(newMovieItemVO: MovieItemVO) {
+		// Step 1: If the movie ID is not entered in the "Add New Movie" dialog, then search for the movie ID first.
+		if (newMovieItemVO.getMovieId() === -1) {
+			LOG.info(this.className, `Movie ID not given, start searching for it.`);
+			await this.getMovieId(newMovieItemVO);
+		}
+		//Step 2: If the result of searching movie ID is null, it means the server blocks the request due to too many requests
+		if (!newMovieItemVO.getMovieId()) {
+			const errorMessage = `Movie ID for ${newMovieItemVO.getMovieTitle()} not found`;
+			LOG.warn(this.className, errorMessage);
+			// TODO: Need a new error message class specific for this error
+			throw new Error(errorMessage);
+		}
+
+		// Step 3 : After successful retrieval of movie ID or movie ID is already given, get all the movie details.
+		await this.getAllMovieData(newMovieItemVO);
+	}
+
+	//////////////////////Below are Utilities Functions used by HTML template///////////////////////
 	/**
 	 * Cancel the search with a button click
 	 */
@@ -393,6 +418,8 @@ export class EntertainmentComponent {
 
 	openAddNewMovieDialog() {
 		this.dialogService.openDialog(this.dialogComponentContainer, 'add', 'Add New Movie', () => {});
+		// TODO: After the dialog is closed, update the movie statistics and add the new movie to the database
+		// this.firebaseService.updateAllMovieDataAndStatisticsToFirebase(newMovieItemVO);
 		// this.firebaseService.addNewMovieToDatabase();
 	}
 

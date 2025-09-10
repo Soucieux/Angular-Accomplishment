@@ -63,13 +63,12 @@ export class FirebaseService {
 					const movieItemVO = new MovieItemVO(
 						movie.title,
 						Number(movie.year),
-						snapshot.snapshot.key,
-						movie.id !== -1
+						snapshot.snapshot.key
 					);
 					movieItemVO.setMovieId(movie.id);
 					movieItemVO.setMovieGenre(movie.genre);
 					movieItemVO.setMovieRate(movie.rate);
-					movieItemVO.setMovieCoverImageLink(movie.coverImageLink);
+					movieItemVO.setMovieCoverImageDownloadableLink(movie.coverImageLink);
 					movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
 					movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
 					return movieItemVO;
@@ -115,11 +114,11 @@ export class FirebaseService {
 	}
 
 	/**
-	 * Update all movie data to firebase.
+	 * Update all movie data and statistics to firebase.
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public async updateAllMovieDataToFirebase(movieItemVO: MovieItemVO) {
+	public async updateAllMovieDataAndStatisticsToFirebase(movieItemVO: MovieItemVO) {
 		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
 			currentData.genre[movieItemVO.getMovieGenre()] =
 				(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
@@ -132,7 +131,7 @@ export class FirebaseService {
 		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
 			rate: movieItemVO.getMovieRate(),
 			id: movieItemVO.getMovieId(),
-			coverImageLink: movieItemVO.getMovieCoverImageLink(),
+			coverImageLink: movieItemVO.getMovieCoverImageDownloadableLink(),
 			firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
 			episodeNumber: movieItemVO.getMovieEpisodeNumber()
 		}).then(() => {

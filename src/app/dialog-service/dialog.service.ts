@@ -29,7 +29,7 @@ export class DialogService {
 		}
 	}
 
-	// Overload methods to call correctdialog component
+	// Overload methods to call correct dialog component
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'delete',
@@ -41,7 +41,8 @@ export class DialogService {
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'add',
 		message: string,
-		acceptCallback: (newMovieItemVO: MovieItemVO) => void
+		submitCallback: (movie: MovieItemVO) => void,
+		searchCallback?: (movie: MovieItemVO) => void
 	): void;
 
 	/**
@@ -50,13 +51,14 @@ export class DialogService {
 	 * @param dialogContainerRef - The container where dialogs should be attached
 	 * @param dialogType - The type of dialog to open
 	 * @param message - The message to display in the dialog
-	 * @param acceptCallback - The callback to call when the dialog is accepted
+	 * @param callback1 - The callback to call
 	 */
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
 		message: string,
-		acceptCallback: any
+		callback1: any,
+		callback2?: any
 	): void {
 		if (!dialogContainerRef) {
 			const error = new Error('Dialog container not found');
@@ -76,7 +78,11 @@ export class DialogService {
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			// Open up corresponding dialog and pass callbacks
-			dialogComponentRef.instance.openDialog(message, acceptCallback);
+			if (dialogType === 'delete') {
+				dialogComponentRef.instance.openDialog(message, callback1);
+			} else if (dialogType === 'add') {
+				dialogComponentRef.instance.openDialog(callback1, callback2);
+			}
 
 			// Subscribe to dialog closed event
 			dialogComponentRef.instance.closed$.subscribe(() => {

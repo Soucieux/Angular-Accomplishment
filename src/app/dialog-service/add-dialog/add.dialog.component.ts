@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { FormsModule, NgForm } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
+import { MovieItemVO } from '../../entertainment/movie.item.vo';
 
 @Component({
 	selector: 'add-dialog',
@@ -17,24 +18,45 @@ import { SelectModule } from 'primeng/select';
 export class AddDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private messageService = inject(MessageService);
+	private submitCallback?: () => void;
+	private searchCallback?: (movie: MovieItemVO) => void;
 	visible: boolean = false;
 	years: { year: number }[] | undefined;
+	genres: { genre: string }[] | undefined;
 
 	ngOnInit() {
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: 2025 - i }));
+		this.genres = [
+			{ genre: '刑侦' },
+			{ genre: '古装' },
+			{ genre: '悬疑' },
+			{ genre: '校园' },
+			{ genre: '现代' },
+			{ genre: '谍战' }
+		];
 	}
 
-	openDialog(message: string, acceptCallback: () => void) {
+	openDialog(submitCallback?: () => void, searchCallback?: (movie: MovieItemVO) => void) {
 		this.visible = true;
+		this.submitCallback = submitCallback;
+		this.searchCallback = searchCallback;
 	}
 
-	searchCurrentMovie(arg0: any) {
-		console.log(arg0);
+	searchCurrentMovie(newMovieData: NgForm['value']) {
+		const movieItemVO = new MovieItemVO(newMovieData.movieName, Number(newMovieData.years.year));
+		movieItemVO.setMovieId(newMovieData.id);
+		movieItemVO.setMovieGenre(newMovieData.genres.genre);
+		this.searchCallback?.(movieItemVO);
 	}
 
-	onSubmit(addMovieForm: NgForm) {
+	onSubmit() {
 		this.onDialogClosed();
-		console.log(addMovieForm.value);
+		this.submitCallback?.();
+		this.messageService.add({
+			severity: 'info',
+			summary: 'Movie added',
+			detail: 'Movie added to the list'
+		});
 	}
 
 	onDialogClosed() {

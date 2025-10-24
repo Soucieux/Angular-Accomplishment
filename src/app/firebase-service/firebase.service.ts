@@ -8,7 +8,8 @@ import {
 	onValue,
 	runTransaction,
 	update,
-	remove
+	remove,
+	get
 } from '@angular/fire/database';
 import { map, Observable } from 'rxjs';
 import { MovieItemVO } from '../entertainment/movie.item.vo';
@@ -60,11 +61,8 @@ export class FirebaseService {
 			map((snapshots: any[]) =>
 				snapshots.map((snapshot: any) => {
 					const movie = snapshot.snapshot.val();
-					const movieItemVO = new MovieItemVO(
-						movie.title,
-						Number(movie.year),
-						snapshot.snapshot.key
-					);
+					const movieItemVO = new MovieItemVO(movie.title, Number(movie.year));
+					movieItemVO.setMovieKey(snapshot.snapshot.key);
 					movieItemVO.setMovieId(movie.id);
 					movieItemVO.setMovieGenre(movie.genre);
 					movieItemVO.setMovieRate(movie.rate);
@@ -118,7 +116,20 @@ export class FirebaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public async updateNewMovieDataAndStatisticsToFirebase(movieItemVO: MovieItemVO) {
+	public async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO) {
+		// Get the reusable keys
+		const keys = await this.getReusableKeys();
+		let movieKey: string;
+
+		if (keys.length > 0) {
+			movieKey = keys.shift()!; // Take the first reusable key
+			await this.saveReusableKeys(keys); // Update the reusable keys
+		} else {
+			const snapshot = await get(this.moviesRef);
+			movieKey = (Object.keys(snapshot.val()).length + 1).toString();
+		}
+
+		// Update the movie statistics
 		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
 			currentData.genre[movieItemVO.getMovieGenre()] =
 				(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
@@ -128,7 +139,11 @@ export class FirebaseService {
 			LOG.info(this.className, `Movie statistics has been updated`);
 		});
 
-		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
+		// Add new movie data
+		await update(dbRef(this.db, `movies/${movieKey}`), {
+			title: movieItemVO.getMovieTitle(),
+			year: movieItemVO.getMovieYear(),
+			genre: movieItemVO.getMovieGenre(),
 			rate: movieItemVO.getMovieRate(),
 			id: movieItemVO.getMovieId(),
 			coverImageLink: movieItemVO.getMovieCoverImageDownloadableLink(),
@@ -153,6 +168,11 @@ export class FirebaseService {
 			// Remove the movie info from the database
 			await remove(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`));
 
+			// Save the movie key to the reusable keys array for later use
+			const keys = await this.getReusableKeys();
+			keys.push(movieItemVO.getMovieKey());
+			await this.saveReusableKeys(keys);
+
 			LOG.info(this.className, `${movieItemVO.getMovieTitle()} has been DELETED from the database`);
 
 			// Update the movie statistics
@@ -173,5 +193,31 @@ export class FirebaseService {
 				error as Error
 			);
 		}
+	}
+
+	/**
+	 * Get the reusable keys from the database.
+	 *
+	 * @returns An array of reusable keys.
+	 */
+	private async getReusableKeys(): Promise<string[]> {
+		try {
+			const snapshot = await get(dbRef(this.db, 'reusableKeys'));
+			return snapshot.exists() ? Object.values(snapshot.val()) : [];
+		} catch (error) {
+			LOG.error(this.className, `Error while getting reusable keys`, error as Error);
+			return [];
+		}
+	}
+
+	/**
+	 * Save the reusable keys to the database.
+	 *
+	 * @param keys - The keys to save.
+	 */
+	private async saveReusableKeys(keys: string[]) {
+		await update(dbRef(this.db), { reusableKeys: keys }).then(() => {
+			LOG.info(this.className, `Reusable keys have been updated`);
+		});
 	}
 }

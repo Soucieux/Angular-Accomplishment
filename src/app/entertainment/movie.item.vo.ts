@@ -7,8 +7,9 @@ export class MovieItemVO {
 	private firstReleaseDate: string = '';
 	private episodeNumber: number = -1;
 	private coverImage: any = null;
+	private movieKey: string = '';
 
-	constructor(private title: string, year: number, private movieKey: string) {
+	constructor(private title: string, year: number) {
 		this.year = typeof year === 'string' ? Number(year) : year;
 	}
 
@@ -74,6 +75,10 @@ export class MovieItemVO {
 
 	setMovieEpisodeNumber(episodeNumber: number) {
 		this.episodeNumber = typeof episodeNumber === 'string' ? Number(episodeNumber) : episodeNumber;
+	}
+
+	setMovieKey(movieKey: string) {
+		this.movieKey = movieKey;
 	}
 
 	setMovieCoverImage(coverImage: any) {

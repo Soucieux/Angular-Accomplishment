@@ -14,7 +14,7 @@
 		</div>
 	</ng-template>
 	<span class="dialog-title">New movie details</span>
-	<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit(addMovieForm)" class="form-grid">
+	<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 		<div class="form-row">
 			<label for="movieName">Name</label>
 			<input pInputText name="movieName" ngModel id="movieName" autocomplete="off" required />
@@ -36,6 +36,18 @@
 				optionLabel="year"
 				[appendTo]="'body'"
 				class="year-dropdown"
+				required></p-select>
+		</div>
+		<div class="form-row">
+			<label for="genres">Genre</label>
+			<p-select
+				[options]="genres"
+				name="genres"
+				id="genres"
+				ngModel
+				optionLabel="genre"
+				[appendTo]="'body'"
+				class="genre-dropdown"
 				required></p-select>
 		</div>
 		<div class="form-row">

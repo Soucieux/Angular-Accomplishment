@@ -40,6 +40,7 @@ export class EntertainmentComponent {
 	protected selectedGenres$ = new BehaviorSubject<string>('');
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
 	protected statistics$!: Observable<any>;
+	private tempMovieItemVO!: MovieItemVO;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef,
@@ -324,31 +325,6 @@ export class EntertainmentComponent {
 		}
 	}
 
-	//////////////////////Below are methods triggered by Add New Movie Dialog///////////////////////
-	/**
-	 * Search movie data for a new movie, store it to firebase, and update the movie statistics.
-	 *
-	 * Only the "Search" button in the "Add New Movie" dialog can trigger this function.
-	 *
-	 * @param newMovieItemVO - New movie item to search for.
-	 */
-	private async searchNewMovie(newMovieItemVO: MovieItemVO) {
-		// Step 1: If the movie ID is not entered in the "Add New Movie" dialog, then search for the movie ID first.
-		if (newMovieItemVO.getMovieId() === -1) {
-			LOG.info(this.className, `Movie ID not given, start searching for it.`);
-			await this.getMovieId(newMovieItemVO);
-		}
-		//Step 2: If the result of searching movie ID is null, it means the server blocks the request due to too many requests
-		if (!newMovieItemVO.getMovieId()) {
-			LOG.warn(this.className, `Movie ID for ${newMovieItemVO.getMovieTitle()} is not found`);
-			// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.
-			throw new MovieIdNotFoundError(newMovieItemVO.getMovieTitle());
-		}
-
-		// Step 3 : After successful retrieval of movie ID or movie ID is already given, get all the movie details.
-		await this.getNewMovieData(newMovieItemVO);
-	}
-
 	//////////////////////Below are Utilities Functions used by HTML template///////////////////////
 	/**
 	 * Cancel the search with a button click
@@ -397,12 +373,12 @@ export class EntertainmentComponent {
 	}
 
 	//////////////////////Below are Event Handlers triggered by user actions///////////////////////
-	filterByGenre(genre: string) {
+	public filterByGenre(genre: string) {
 		const currentGenre = this.selectedGenres$.getValue();
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
 	}
 
-	openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
+	protected openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'delete',
@@ -413,19 +389,55 @@ export class EntertainmentComponent {
 		);
 	}
 
-	openAddNewMovieDialog() {
+	protected openAddNewMovieDialog() {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'add',
 			'',
-			(newMovieItemVO: MovieItemVO) => {
-				// Upload movie cover image to firebase storage and generate downloadable link
-				// The downloadable link needs to be acquired first and it will be uploaded to firebase in the next step
-				this.uploadMovieImageAndGetDownloadableLink(newMovieItemVO);
-				// Save new movie data to firebase and update movie statistics
-				this.firebaseService.updateNewMovieDataAndStatisticsToFirebase(newMovieItemVO);
-			}
+			// "Submit" button in the "Add New Movie" dialog
+			this.handleAddDialogSubmit.bind(this),
+			// "Search" button in the "Add New Movie" dialog
+			this.handleAddDialogSearch.bind(this)
 		);
+	}
+
+	private async handleAddDialogSubmit() {
+		// Upload movie cover image to firebase storage and generate downloadable link
+		// The downloadable link needs to be acquired first and it will be uploaded to firebase in the next step
+		await this.uploadMovieImageAndGetDownloadableLink(this.tempMovieItemVO);
+		// Save new movie data to firebase and update movie statistics
+		await this.firebaseService.addNewMovieDataAndUpdateStatistics(this.tempMovieItemVO);
+	}
+
+	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO) {
+		await this.searchNewMovie(newMovieItemVO);
+		this.tempMovieItemVO = newMovieItemVO;
+		LOG.info(this.className, 'New movie details retrieved.');
+	}
+
+	/**
+	 * Search movie data for a new movie, store it to firebase, and update the movie statistics.
+	 *
+	 * Only the "Search" button in the "Add New Movie" dialog can trigger this function.
+	 *
+	 * @param newMovieItemVO - New movie item to search for.
+	 */
+	private async searchNewMovie(newMovieItemVO: MovieItemVO) {
+		// Step 1: If the movie ID is not entered in the "Add New Movie" dialog, then search for the movie ID first.
+		if (newMovieItemVO.getMovieId() === -1) {
+			LOG.info(this.className, `Movie ID not given, start searching for it.`);
+			await this.getMovieId(newMovieItemVO);
+		}
+		//Step 2: If the result of searching movie ID is null, it means the server blocks the request due to too many requests
+		//TODO make ID input optional and display appropriate message if no ID has been found
+		if (!newMovieItemVO.getMovieId()) {
+			LOG.warn(this.className, `Movie ID for ${newMovieItemVO.getMovieTitle()} is not found`);
+			// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.
+			throw new MovieIdNotFoundError(newMovieItemVO.getMovieTitle());
+		}
+
+		// Step 3 : After successful retrieval of movie ID or movie ID is already given, get all the movie details.
+		await this.getNewMovieData(newMovieItemVO);
 	}
 
 	////////////////////////////////Below are Helper Functions////////////////////////////////

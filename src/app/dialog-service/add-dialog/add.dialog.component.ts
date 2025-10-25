@@ -71,7 +71,11 @@ export class AddDialogComponent {
 				rejectVisible: false,
 				acceptButtonProps: {
 					label: 'OK',
-					severity: 'danger'
+					severity: 'danger',
+					style: {
+						width: '100px',
+						'margin-right': '90px'
+					}
 				},
 				accept: () => {}
 			});

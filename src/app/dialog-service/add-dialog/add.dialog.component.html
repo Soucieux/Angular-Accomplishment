@@ -56,10 +56,12 @@
 			<input pInputText name="id" ngModel id="id" autocomplete="off" required />
 		</div>
 	</form>
-	<!-- overlay inside the dialog when loading -->
+	<!-- progress bar inside the dialog when loading -->
 	<div *ngIf="isLoading" class="loading-overlay">
 		<p-progressbar mode="indeterminate" [style]="{ height: '8px' }" />
 	</div>
+	<!-- Error dialog when searching-->
+	<p-confirmdialog></p-confirmdialog>
 	<!-- #footer -->
 	<ng-template #footer>
 		<p-button

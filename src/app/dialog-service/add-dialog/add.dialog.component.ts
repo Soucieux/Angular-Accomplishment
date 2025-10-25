@@ -8,11 +8,21 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { FormsModule, NgForm } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { MovieItemVO } from '../../entertainment/movie.item.vo';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
 	selector: 'add-dialog',
 	standalone: true,
-	imports: [DialogModule, ButtonModule, AvatarModule, FormsModule, SelectModule, ProgressBarModule, NgIf],
+	imports: [
+		DialogModule,
+		ButtonModule,
+		AvatarModule,
+		FormsModule,
+		SelectModule,
+		ProgressBarModule,
+		NgIf,
+		ConfirmDialogModule
+	],
 	templateUrl: './add.dialog.component.html',
 	styleUrl: './add.dialog.component.scss',
 	providers: [ConfirmationService]
@@ -20,6 +30,7 @@ import { MovieItemVO } from '../../entertainment/movie.item.vo';
 export class AddDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private messageService = inject(MessageService);
+	private confirmationService = inject(ConfirmationService);
 	private submitCallback?: () => void;
 	private searchCallback?: (movie: MovieItemVO) => void;
 	visible: boolean = false;
@@ -52,6 +63,19 @@ export class AddDialogComponent {
 			movieItemVO.setMovieId(newMovieData.id);
 			movieItemVO.setMovieGenre(newMovieData.genres.genre);
 			await this.searchCallback?.(movieItemVO);
+		} catch (error) {
+			this.confirmationService.confirm({
+				message: 'No Movie was found with given info',
+				header: 'Error',
+                icon: 'pi pi-times-circle text-red-500',
+                styleClass: 'error-dialog',
+				rejectVisible: false,
+				acceptButtonProps: {
+					label: 'OK',
+					severity: 'danger'
+				},
+				accept: () => {}
+			});
 		} finally {
 			this.isLoading = false;
 		}

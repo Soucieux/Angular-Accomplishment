@@ -4,6 +4,7 @@
 	[appendTo]="'body'"
 	(onHide)="onDialogClosed()"
 	styleClass="add-dialog">
+	<!-- #header -->
 	<ng-template #header>
 		<div>
 			<p-avatar
@@ -55,6 +56,11 @@
 			<input pInputText name="id" ngModel id="id" autocomplete="off" required />
 		</div>
 	</form>
+	<!-- overlay inside the dialog when loading -->
+	<div *ngIf="isLoading" class="loading-overlay">
+		<p-progressbar mode="indeterminate" [style]="{ height: '8px' }" />
+	</div>
+	<!-- #footer -->
 	<ng-template #footer>
 		<p-button
 			label="Search"

@@ -1,8 +1,10 @@
 import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { NgIf } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { FormsModule, NgForm } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { MovieItemVO } from '../../entertainment/movie.item.vo';
@@ -10,7 +12,7 @@ import { MovieItemVO } from '../../entertainment/movie.item.vo';
 @Component({
 	selector: 'add-dialog',
 	standalone: true,
-	imports: [DialogModule, ButtonModule, AvatarModule, FormsModule, SelectModule],
+	imports: [DialogModule, ButtonModule, AvatarModule, FormsModule, SelectModule, ProgressBarModule, NgIf],
 	templateUrl: './add.dialog.component.html',
 	styleUrl: './add.dialog.component.scss',
 	providers: [ConfirmationService]
@@ -21,6 +23,7 @@ export class AddDialogComponent {
 	private submitCallback?: () => void;
 	private searchCallback?: (movie: MovieItemVO) => void;
 	visible: boolean = false;
+	isLoading: boolean = false;
 	years: { year: number }[] | undefined;
 	genres: { genre: string }[] | undefined;
 
@@ -42,11 +45,16 @@ export class AddDialogComponent {
 		this.searchCallback = searchCallback;
 	}
 
-	searchCurrentMovie(newMovieData: NgForm['value']) {
-		const movieItemVO = new MovieItemVO(newMovieData.movieName, Number(newMovieData.years.year));
-		movieItemVO.setMovieId(newMovieData.id);
-		movieItemVO.setMovieGenre(newMovieData.genres.genre);
-		this.searchCallback?.(movieItemVO);
+	async searchCurrentMovie(newMovieData: NgForm['value']) {
+		this.isLoading = true;
+		try {
+			const movieItemVO = new MovieItemVO(newMovieData.movieName, Number(newMovieData.years.year));
+			movieItemVO.setMovieId(newMovieData.id);
+			movieItemVO.setMovieGenre(newMovieData.genres.genre);
+			await this.searchCallback?.(movieItemVO);
+		} finally {
+			this.isLoading = false;
+		}
 	}
 
 	onSubmit() {

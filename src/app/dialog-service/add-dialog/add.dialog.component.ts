@@ -67,8 +67,7 @@ export class AddDialogComponent {
 			this.confirmationService.confirm({
 				message: 'No Movie was found with given info',
 				header: 'Error',
-                icon: 'pi pi-times-circle text-red-500',
-                styleClass: 'error-dialog',
+				icon: 'pi pi-times-circle text-red-500',
 				rejectVisible: false,
 				acceptButtonProps: {
 					label: 'OK',

@@ -18,11 +18,11 @@
 	<div class="form-image-container">
 		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 			<div class="form-row">
-				<label for="movieName">Name</label>
+				<label for="movieName">Name*</label>
 				<input pInputText name="movieName" ngModel id="movieName" autocomplete="off" required />
 			</div>
 			<div class="form-row">
-				<label for="years">Year</label>
+				<label for="years">Year*</label>
 				<!-- name is used to register control inside ngForm, used to track its value, validation status, errors etc. -->
 				<!-- id is used to link a <label> to the input -->
 				<!-- for inside <label> uses id to focus on the input when clicked -->
@@ -41,7 +41,7 @@
 					required></p-select>
 			</div>
 			<div class="form-row">
-				<label for="genres">Genre</label>
+				<label for="genres">Genre*</label>
 				<p-select
 					[options]="genres"
 					name="genres"
@@ -54,7 +54,7 @@
 			</div>
 			<div class="form-row">
 				<label for="id">ID</label>
-				<input pInputText name="id" ngModel id="id" autocomplete="off" required />
+				<input pInputText name="id" ngModel id="id" autocomplete="off" />
 			</div>
 		</form>
 		<div class="image-container" [ngStyle]="{ backgroundImage: 'url(' + movieImageUrl + ')' }"></div>

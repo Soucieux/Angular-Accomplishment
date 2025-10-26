@@ -10,7 +10,7 @@
 
 .form-grid {
 	display: grid;
-	grid-template-columns: 30px 180px; /* first col = labels, second col = inputs */
+	grid-template-columns: 35px 180px; /* first col = labels, second col = inputs */
 	gap: 1rem 1rem; /* row gap and column gap */
 	align-items: center; /* vertical alignment */
 }

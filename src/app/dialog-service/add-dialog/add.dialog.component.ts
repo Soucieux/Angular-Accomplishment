@@ -62,7 +62,9 @@ export class AddDialogComponent {
 		this.isLoading = true;
 		try {
 			const movieItemVO = new MovieItemVO(newMovieData.movieName, Number(newMovieData.years.year));
-			movieItemVO.setMovieId(newMovieData.id);
+			if (newMovieData.id) {
+				movieItemVO.setMovieId(newMovieData.id);
+			}
 			movieItemVO.setMovieGenre(newMovieData.genres.genre);
 			const movieImage = await this.searchCallback?.(movieItemVO);
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;

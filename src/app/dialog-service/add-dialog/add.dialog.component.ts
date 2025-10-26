@@ -1,6 +1,5 @@
 import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { NgIf } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
@@ -9,6 +8,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { MovieItemVO } from '../../entertainment/movie.item.vo';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { CommonModule } from '@angular/common';
 
 @Component({
 	selector: 'add-dialog',
@@ -20,8 +20,8 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 		FormsModule,
 		SelectModule,
 		ProgressBarModule,
-		NgIf,
-		ConfirmDialogModule
+		ConfirmDialogModule,
+		CommonModule
 	],
 	templateUrl: './add.dialog.component.html',
 	styleUrl: './add.dialog.component.scss',
@@ -32,11 +32,12 @@ export class AddDialogComponent {
 	private messageService = inject(MessageService);
 	private confirmationService = inject(ConfirmationService);
 	private submitCallback?: () => void;
-	private searchCallback?: (movie: MovieItemVO) => void;
+	private searchCallback?: (movie: MovieItemVO) => Blob;
 	visible: boolean = false;
 	isLoading: boolean = false;
 	years: { year: number }[] | undefined;
 	genres: { genre: string }[] | undefined;
+	movieImageUrl: string | null = null;
 
 	ngOnInit() {
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: 2025 - i }));
@@ -50,7 +51,7 @@ export class AddDialogComponent {
 		];
 	}
 
-	openDialog(submitCallback?: () => void, searchCallback?: (movie: MovieItemVO) => void) {
+	openDialog(submitCallback?: () => void, searchCallback?: (movie: MovieItemVO) => Blob) {
 		this.visible = true;
 		this.submitCallback = submitCallback;
 		this.searchCallback = searchCallback;
@@ -62,7 +63,8 @@ export class AddDialogComponent {
 			const movieItemVO = new MovieItemVO(newMovieData.movieName, Number(newMovieData.years.year));
 			movieItemVO.setMovieId(newMovieData.id);
 			movieItemVO.setMovieGenre(newMovieData.genres.genre);
-			await this.searchCallback?.(movieItemVO);
+			const movieImage = await this.searchCallback?.(movieItemVO);
+			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 		} catch (error) {
 			this.confirmationService.confirm({
 				message: 'No Movie was found with given info',

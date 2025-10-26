@@ -409,10 +409,11 @@ export class EntertainmentComponent {
 		await this.firebaseService.addNewMovieDataAndUpdateStatistics(this.tempMovieItemVO);
 	}
 
-	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO) {
+	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob> {
 		await this.searchNewMovie(newMovieItemVO);
 		this.tempMovieItemVO = newMovieItemVO;
 		LOG.info(this.className, 'New movie details retrieved.');
+		return newMovieItemVO.getMovieCoverImage();
 	}
 
 	/**

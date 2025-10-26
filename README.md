@@ -9,13 +9,14 @@ February 5, 2024 -> Project initialization
 
 February 21, 2025 -> Entertainment page
 
-### Access Link
+## Access Link
 [my-own-website-2024.web.app](my-own-website-2024.web.app)
 [my-own-website-2024.firebaseapp.com](my-own-website-2024.firebaseapp.com)
 
 ## Required Dependencies
 - Firebase
 - Angular Material
+- PrimeNG
 
 # Appendix
 ## Development server

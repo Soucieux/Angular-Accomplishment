@@ -1,5 +1,5 @@
-@if (isLoggedIn) {
-<div *ngIf="statistics$ | async as stats" class="category-container">
+@if (isLoggedIn) { @if(statistics$ | async){ @let stats = statistics$ | async;
+<div class="category-container">
 	<div class="category-header-container">
 		<div class="category-header-title">Categories ({{ stats.totalNumber }})</div>
 		<button mat-fab extended (click)="updateAllMoviesRate()" class="control-button">
@@ -13,8 +13,8 @@
 		</button>
 	</div>
 	<div class="category-button-container">
+		@for (genre of stats.genre | keyvalue; track genre.key){
 		<div
-			*ngFor="let genre of stats.genre | keyvalue"
 			matRipple
 			class="category-button"
 			(click)="filterByGenre($any(genre.key))"
@@ -27,12 +27,14 @@
 				<p class="hide-on-mobile">to watch</p></span
 			>
 		</div>
+		}
 	</div>
 </div>
+}
 <div class="content-container">
+	@for (movie of filteredMovieList$ | async; track movie.getMovieId()){
 	<div
 		class="individual-item"
-		*ngFor="let movie of filteredMovieList$ | async"
 		[ngClass]="{
 			'very-high-rate': movie.getMovieRate() >= 9,
 			'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,
@@ -49,19 +51,19 @@
 			<span class="text">类型：{{ movie.getMovieGenre() }} </span>
 			<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
 			<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
-			<ng-container *ngIf="movie.getMovieRate(); else noRate">
-				<span class="rate">
-					{{ movie.getMovieRate().toFixed(1) }}
-				</span>
-			</ng-container>
+			@if (movie.getMovieRate()){
+			<span class="rate">
+				{{ movie.getMovieRate().toFixed(1) }}
+			</span>
+			} @else {
+			<span class="rate">暂无评分</span>
+			}
 			<button mat-icon-button class="delete-button" (click)="openDeleteConfirmationDialog(movie)">
 				<span class="material-icons delete-icon">delete_forever</span>
 			</button>
-			<ng-template #noRate>
-				<span class="rate">暂无评分</span>
-			</ng-template>
 		</div>
 	</div>
+	}
 </div>
 <ng-container #dialogComponentContainer></ng-container>
 } @else {

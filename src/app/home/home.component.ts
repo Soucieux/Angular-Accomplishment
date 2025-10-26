@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatRadioModule } from '@angular/material/radio';
 import { LOG } from '../log';
 

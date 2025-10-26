@@ -15,51 +15,56 @@
 		</div>
 	</ng-template>
 	<span class="dialog-title">New movie details</span>
-	<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
-		<div class="form-row">
-			<label for="movieName">Name</label>
-			<input pInputText name="movieName" ngModel id="movieName" autocomplete="off" required />
-		</div>
-		<div class="form-row">
-			<label for="years">Year</label>
-			<!-- name is used to register control inside ngForm, used to track its value, validation status, errors etc. -->
-			<!-- id is used to link a <label> to the input -->
-			<!-- for inside <label> uses id to focus on the input when clicked -->
-			<!-- optionLabel tells which property(element) in [options] to display in the dropdown -->
-			<!-- ngModel is used to register the current field to the form -->
-			<!-- [ngModel]="movieName" is used to bind the value of the current field to a variable in the ts file -->
-			<!-- #movieName="ngModel" is used to create a local variable that references the ngModel directive so that we can access control state (value, validation status, errors etc.) for this specific control -->
-			<p-select
-				[options]="years"
-				name="years"
-				id="years"
-				ngModel
-				optionLabel="year"
-				[appendTo]="'body'"
-				class="year-dropdown"
-				required></p-select>
-		</div>
-		<div class="form-row">
-			<label for="genres">Genre</label>
-			<p-select
-				[options]="genres"
-				name="genres"
-				id="genres"
-				ngModel
-				optionLabel="genre"
-				[appendTo]="'body'"
-				class="genre-dropdown"
-				required></p-select>
-		</div>
-		<div class="form-row">
-			<label for="id">ID</label>
-			<input pInputText name="id" ngModel id="id" autocomplete="off" required />
-		</div>
-	</form>
+	<div class="form-image-container">
+		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
+			<div class="form-row">
+				<label for="movieName">Name</label>
+				<input pInputText name="movieName" ngModel id="movieName" autocomplete="off" required />
+			</div>
+			<div class="form-row">
+				<label for="years">Year</label>
+				<!-- name is used to register control inside ngForm, used to track its value, validation status, errors etc. -->
+				<!-- id is used to link a <label> to the input -->
+				<!-- for inside <label> uses id to focus on the input when clicked -->
+				<!-- optionLabel tells which property(element) in [options] to display in the dropdown -->
+				<!-- ngModel is used to register the current field to the form -->
+				<!-- [ngModel]="movieName" is used to bind the value of the current field to a variable in the ts file -->
+				<!-- #movieName="ngModel" is used to create a local variable that references the ngModel directive so that we can access control state (value, validation status, errors etc.) for this specific control -->
+				<p-select
+					[options]="years"
+					name="years"
+					id="years"
+					ngModel
+					optionLabel="year"
+					[appendTo]="'body'"
+					class="year-dropdown"
+					required></p-select>
+			</div>
+			<div class="form-row">
+				<label for="genres">Genre</label>
+				<p-select
+					[options]="genres"
+					name="genres"
+					id="genres"
+					ngModel
+					optionLabel="genre"
+					[appendTo]="'body'"
+					class="genre-dropdown"
+					required></p-select>
+			</div>
+			<div class="form-row">
+				<label for="id">ID</label>
+				<input pInputText name="id" ngModel id="id" autocomplete="off" required />
+			</div>
+		</form>
+		<div class="image-container" [ngStyle]="{ backgroundImage: 'url(' + movieImageUrl + ')' }"></div>
+	</div>
 	<!-- progress bar inside the dialog when loading -->
-	<div *ngIf="isLoading" class="loading-overlay">
+	@if (isLoading) {
+	<div class="loading-overlay">
 		<p-progressbar mode="indeterminate" [style]="{ height: '8px' }" />
 	</div>
+	}
 	<!-- Error dialog when searching-->
 	<p-confirmdialog></p-confirmdialog>
 	<!-- #footer -->

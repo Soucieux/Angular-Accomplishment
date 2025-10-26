@@ -1,6 +1,6 @@
 ::ng-deep .add-dialog {
 	width: 500px;
-	height: 445px;
+	height: 475px;
 	user-select: none;
 	// When adding & in the front, it targets img inside .add-dialog. Without &, it tagets all img (not just .add-dialog).
 	img {
@@ -32,4 +32,19 @@
 
 .loading-overlay {
 	margin-top: 15px;
+}
+
+.form-image-container {
+	display: flex;
+	gap: 3rem;
+}
+
+.image-container {
+	width: 165px;
+	height: 255px;
+
+	/* Stretch the image to the container */
+	background-size: 100% 100%;
+	background-position: center;
+	background-repeat: no-repeat;
 }

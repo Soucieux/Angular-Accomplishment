@@ -35,6 +35,7 @@ export class AddDialogComponent {
 	private searchCallback?: (movie: MovieItemVO) => Blob;
 	visible: boolean = false;
 	isLoading: boolean = false;
+	canSubmit: boolean = false;
 	years: { year: number }[] | undefined;
 	genres: { genre: string }[] | undefined;
 	movieImageUrl: string | null = null;
@@ -65,6 +66,7 @@ export class AddDialogComponent {
 			movieItemVO.setMovieGenre(newMovieData.genres.genre);
 			const movieImage = await this.searchCallback?.(movieItemVO);
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
+			this.canSubmit = true;
 		} catch (error) {
 			this.confirmationService.confirm({
 				message: 'No Movie was found with given info',

@@ -1,5 +1,5 @@
 import { MovieIdNotFoundError } from './../error/movie-id-not-found.error';
-import { CommonModule, isPlatformBrowser, NgFor } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
 	Component,
 	ElementRef,
@@ -23,7 +23,7 @@ import { DialogService } from '../dialog-service/dialog.service';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
-	imports: [NgFor, CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule, MatRippleModule],
+	imports: [CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule, MatRippleModule],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'
 })
@@ -430,7 +430,6 @@ export class EntertainmentComponent {
 			await this.getMovieId(newMovieItemVO);
 		}
 		//Step 2: If the result of searching movie ID is null, it means the server blocks the request due to too many requests
-		//TODO make ID input optional and display appropriate message if no ID has been found
 		if (!newMovieItemVO.getMovieId()) {
 			LOG.warn(this.className, `Movie ID for ${newMovieItemVO.getMovieTitle()} is not found`);
 			// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.

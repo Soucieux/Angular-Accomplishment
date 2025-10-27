@@ -1,4 +1,11 @@
-import { Inject, Injectable } from '@angular/core';
+import {
+	EnvironmentInjector,
+	inject,
+	Inject,
+	Injectable,
+	Injector,
+	runInInjectionContext
+} from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
 import { LOG } from '../log';
 import {
@@ -22,7 +29,11 @@ export class FirebaseService {
 	private moviesRef!: any;
 	private statisticsRef!: any;
 
-	constructor(@Inject(Storage) private storage: Storage, @Inject(Database) private db: Database) {
+	constructor(
+		@Inject(Storage) private storage: Storage,
+		@Inject(Database) private db: Database,
+		@Inject(EnvironmentInjector) private ei: EnvironmentInjector
+	) {
 		this.moviesRef = dbRef(this.db, 'movies');
 		this.statisticsRef = dbRef(this.db, 'statistics');
 	}
@@ -92,8 +103,10 @@ export class FirebaseService {
 	 */
 	public getStatistics(): Observable<any> {
 		return new Observable((observer) => {
-			onValue(this.statisticsRef, (snapshot) => {
-				observer.next(snapshot.val());
+			runInInjectionContext(this.ei, () => {
+				onValue(this.statisticsRef, (snapshot) => {
+					observer.next(snapshot.val());
+				});
 			});
 		});
 	}

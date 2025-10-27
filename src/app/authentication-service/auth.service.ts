@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { EnvironmentInjector, inject, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import {
 	GoogleAuthProvider,
 	signInWithPopup,
@@ -13,12 +13,17 @@ import { Observable } from 'rxjs';
 })
 export class AuthService {
 	currentUser$: Observable<User | null>;
-	constructor(@Inject(Auth) private auth: Auth) {
+	constructor(
+		@Inject(Auth) private auth: Auth,
+		@Inject(EnvironmentInjector) private ei: EnvironmentInjector
+	) {
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
 		this.currentUser$ = new Observable((observer) => {
-			// onAuthStateChanged emits the user continuously
-			onAuthStateChanged(this.auth, (user) => {
-				observer.next(user);
+			runInInjectionContext(this.ei, () => {
+				// onAuthStateChanged emits the user continuously
+				onAuthStateChanged(this.auth, (user) => {
+					observer.next(user);
+				});
 			});
 		});
 	}

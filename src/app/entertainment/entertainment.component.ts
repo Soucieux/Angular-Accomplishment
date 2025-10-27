@@ -224,7 +224,7 @@ export class EntertainmentComponent {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while retrieving movie webpage for ${movieItemVO.getMovieTitle()}`,
+				`Error while retrieving movie webpage for movie ${movieItemVO.getMovieTitle()}`,
 				error as Error
 			);
 			throw error;
@@ -248,6 +248,8 @@ export class EntertainmentComponent {
 			// Step 2: If empty data is received, it means the API is not responding due to too many requests.
 			if (extractedData == null || extractedData.length === 0) {
 				LOG.warn(this.className, 'API responded with empty data due to too many requests');
+				// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.
+				throw new MovieIdNotFoundError(movieItemVO.getMovieTitle());
 			} else {
 				// Step 2: If data is received, then loop through the extracted data to get the correct movie ID
 				// as the result is retrieved by regex.
@@ -429,14 +431,7 @@ export class EntertainmentComponent {
 			LOG.info(this.className, `Movie ID not given, start searching for it.`);
 			await this.getMovieId(newMovieItemVO);
 		}
-		//Step 2: If the result of searching movie ID is null, it means the server blocks the request due to too many requests
-		if (!newMovieItemVO.getMovieId()) {
-			LOG.warn(this.className, `Movie ID for ${newMovieItemVO.getMovieTitle()} is not found`);
-			// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.
-			throw new MovieIdNotFoundError(newMovieItemVO.getMovieTitle());
-		}
-
-		// Step 3 : After successful retrieval of movie ID or movie ID is already given, get all the movie details.
+		// Step 2 : After successful retrieval of movie ID or movie ID is already given, get all the movie details.
 		await this.getNewMovieData(newMovieItemVO);
 	}
 

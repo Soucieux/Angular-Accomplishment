@@ -9,6 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { MovieItemVO } from '../../entertainment/movie.item.vo';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CommonModule } from '@angular/common';
+import { MovieIdNotFoundError } from '../../error/movie-id-not-found.error';
 
 @Component({
 	selector: 'add-dialog',
@@ -70,8 +71,12 @@ export class AddDialogComponent {
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 			this.canSubmit = true;
 		} catch (error) {
+			const isMovieIdError =
+				error instanceof MovieIdNotFoundError
+					? 'Movie ID not found\n Please try again or enter manually'
+					: 'No Movie was found with given info';
 			this.confirmationService.confirm({
-				message: 'No Movie was found with given info',
+				message: `<div class="error-dialog-message">${isMovieIdError}</div>`,
 				header: 'Error',
 				icon: 'pi pi-times-circle text-red-500',
 				rejectVisible: false,

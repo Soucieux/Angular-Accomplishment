@@ -83,7 +83,7 @@ export class DoubanService {
 				catchError((error) => {
 					LOG.error(
 						this.className,
-						'Error while retrieving movie webpage for ' + id,
+						'Error while retrieving movie webpage for ID ' + id,
 						error as Error
 					);
 					return throwError(() => error);

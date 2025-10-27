@@ -48,3 +48,15 @@
 	background-position: center;
 	background-repeat: no-repeat;
 }
+
+::ng-deep .error-dialog-message {
+	font-weight: 600;
+	text-align: center;
+	white-space: pre-line; /* preserves line breaks like <br> or \n */
+	line-height: 1.5;
+}
+
+::ng-deep .p-confirm-dialog .pi-times-circle {
+    color: red !important;
+    font-size: 2rem;
+  }

@@ -1,7 +1,11 @@
+<!-- Error dialog when searching-->
+<p-confirmdialog styleClass="error-dialog" [closable]="false"></p-confirmdialog>
 <p-dialog
 	[(visible)]="visible"
 	[modal]="true"
 	[appendTo]="'body'"
+	[resizable]="false"
+	[closable]="false"
 	(onHide)="onDialogClosed()"
 	styleClass="add-dialog">
 	<!-- #header -->
@@ -65,8 +69,6 @@
 		<p-progressbar mode="indeterminate" [style]="{ height: '8px' }" />
 	</div>
 	}
-	<!-- Error dialog when searching-->
-	<p-confirmdialog></p-confirmdialog>
 	<!-- #footer -->
 	<ng-template #footer>
 		<p-button

@@ -233,4 +233,25 @@ export class FirebaseService {
 			LOG.info(this.className, `Reusable keys have been updated`);
 		});
 	}
+
+	public async isMovieAlreadyAdded(movieTitle: string): Promise<boolean> {
+		try {
+			const snapshot = await get(this.moviesRef);
+			const allMovies = snapshot.val();
+			for (const key of Object.keys(allMovies)) {
+				const movie = allMovies[key];
+				if (movie.title === movieTitle) {
+					return true;
+				}
+			}
+			return false;
+		} catch (error) {
+			LOG.error(
+				this.className,
+				`Error while checking if current movie exists in the database for movie ${movieTitle}`,
+				error as Error
+			);
+			return false;
+		}
+	}
 }

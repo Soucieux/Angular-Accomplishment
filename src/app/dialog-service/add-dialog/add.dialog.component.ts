@@ -10,6 +10,7 @@ import { MovieItemVO } from '../../entertainment/movie.item.vo';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CommonModule } from '@angular/common';
 import { MovieIdNotFoundError } from '../../error/movie-id-not-found.error';
+import { MovieAlreadyExistsError } from '../../error/movie-already-exists-error';
 
 @Component({
 	selector: 'add-dialog',
@@ -71,12 +72,16 @@ export class AddDialogComponent {
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 			this.canSubmit = true;
 		} catch (error) {
-			const isMovieIdError =
-				error instanceof MovieIdNotFoundError
-					? 'Movie ID not found\n Please try again or enter manually'
-					: 'No Movie was found with given info';
+			let errorMessage = '';
+			if (error instanceof MovieIdNotFoundError) {
+				errorMessage = 'Movie ID not found\n Please try again or enter manually';
+			} else if (error instanceof MovieAlreadyExistsError) {
+				errorMessage = 'Movie already exists';
+			} else {
+				errorMessage = 'No Movie was found';
+			}
 			this.confirmationService.confirm({
-				message: `<div class="error-dialog-message">${isMovieIdError}</div>`,
+				message: `<div class="error-dialog-message">${errorMessage}</div>`,
 				header: 'Error',
 				icon: 'pi pi-times-circle text-red-500',
 				rejectVisible: false,
@@ -85,7 +90,7 @@ export class AddDialogComponent {
 					severity: 'danger',
 					style: {
 						width: '100px',
-						'margin-right': '90px'
+						'margin-right': '100px'
 					}
 				},
 				accept: () => {}

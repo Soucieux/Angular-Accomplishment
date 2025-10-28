@@ -20,6 +20,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRippleModule } from '@angular/material/core';
 import { DialogService } from '../dialog-service/dialog.service';
+import { MovieAlreadyExistsError } from '../error/movie-already-exists-error';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -412,6 +413,9 @@ export class EntertainmentComponent {
 	}
 
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob> {
+		if (await this.firebaseService.isMovieAlreadyAdded(newMovieItemVO.getMovieTitle())) {
+			throw new MovieAlreadyExistsError(newMovieItemVO.getMovieTitle());
+		}
 		await this.searchNewMovie(newMovieItemVO);
 		this.tempMovieItemVO = newMovieItemVO;
 		LOG.info(this.className, 'New movie details retrieved.');

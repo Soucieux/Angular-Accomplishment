@@ -32,7 +32,7 @@
 
 .loading-overlay {
 	margin-top: 5px;
-    margin-bottom: -13px;
+	margin-bottom: -13px;
 }
 
 .form-image-container {
@@ -69,4 +69,5 @@
 ::ng-deep .error-dialog {
 	width: 350px;
 	height: 210px;
+	user-select: none;         /* standard */
 }

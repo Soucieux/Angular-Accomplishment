@@ -10,7 +10,7 @@
 
 .form-grid {
 	display: grid;
-	grid-template-columns: 35px 180px; /* first col = labels, second col = inputs */
+	grid-template-columns: 40px 180px; /* first col = labels, second col = inputs */
 	gap: 1rem 1rem; /* row gap and column gap */
 	align-items: center; /* vertical alignment */
 }
@@ -31,7 +31,8 @@
 }
 
 .loading-overlay {
-	margin-top: 15px;
+	margin-top: 5px;
+    margin-bottom: -13px;
 }
 
 .form-image-container {
@@ -50,13 +51,22 @@
 }
 
 ::ng-deep .error-dialog-message {
-	font-weight: 600;
+	width: 260px;
+	height: 50px;
 	text-align: center;
+	display: flex; /* enables flexbox */
+	justify-content: center; /* horizontal center */
+	align-items: center; /* vertical center */
 	white-space: pre-line; /* preserves line breaks like <br> or \n */
 	line-height: 1.5;
+	font-size: 18px;
 }
 
-::ng-deep .p-confirm-dialog .pi-times-circle {
-    color: red !important;
-    font-size: 2rem;
-  }
+::ng-deep .error-dialog .p-resizable-handle {
+	display: none !important;
+}
+
+::ng-deep .error-dialog {
+	width: 350px;
+	height: 210px;
+}

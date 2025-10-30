@@ -42,7 +42,7 @@ export class AddDialogComponent {
 	genres: { genre: string }[] | undefined;
 	movieImageUrl: string | null = null;
 
-	ngOnInit() {
+	protected ngOnInit() {
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: 2025 - i }));
 		this.genres = [
 			{ genre: '刑侦' },
@@ -54,13 +54,13 @@ export class AddDialogComponent {
 		];
 	}
 
-	openDialog(submitCallback?: () => void, searchCallback?: (movie: MovieItemVO) => Blob) {
+	protected openDialog(submitCallback?: () => void, searchCallback?: (movie: MovieItemVO) => Blob) {
 		this.visible = true;
 		this.submitCallback = submitCallback;
 		this.searchCallback = searchCallback;
 	}
 
-	async searchCurrentMovie(newMovieData: NgForm['value']) {
+	protected async searchCurrentMovie(newMovieData: NgForm['value']) {
 		this.isLoading = true;
 		try {
 			const movieItemVO = new MovieItemVO(newMovieData.movieName, Number(newMovieData.years.year));
@@ -100,7 +100,7 @@ export class AddDialogComponent {
 		}
 	}
 
-	onSubmit() {
+	protected onSubmit() {
 		this.onDialogClosed();
 		this.submitCallback?.();
 		this.messageService.add({
@@ -110,7 +110,7 @@ export class AddDialogComponent {
 		});
 	}
 
-	onDialogClosed() {
+	protected onDialogClosed() {
 		this.closed$.emit();
 		this.visible = false;
 	}

@@ -36,23 +36,21 @@ export class DialogService {
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'delete',
-		message: string,
-		acceptCallback: () => void
+		acceptCallback: () => void,
+		message: string
 	): void;
 
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'add',
-		message: string,
 		submitCallback: (movie: MovieItemVO) => void,
-		searchCallback?: (movie: MovieItemVO) => void
+		searchCallback: (movie: MovieItemVO) => void
 	): void;
 
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'history',
-		message: string,
-		acceptCallback?: () => void
+		displayDataCallback: () => void
 	): void;
 
 	/**
@@ -60,15 +58,14 @@ export class DialogService {
 	 *
 	 * @param dialogContainerRef - The container where dialogs should be attached
 	 * @param dialogType - The type of dialog to open
-	 * @param message - The message to display in the dialog
-	 * @param callback1 - The callback to call
+	 * @param callback - The callback to call
+	 * @param callbackOrMessage - Second callback to call or message
 	 */
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
-		message: string,
-		callback1: any,
-		callback2?: any
+		callback: any,
+		callbackOrMessage?: any
 	): void {
 		if (!dialogContainerRef) {
 			const error = new Error('Dialog container not found');
@@ -88,10 +85,10 @@ export class DialogService {
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			// Open up corresponding dialog and pass callbacks
-			if (dialogType === 'add') {
-				dialogComponentRef.instance.openDialog(callback1, callback2);
+			if (dialogType === 'history') {
+				dialogComponentRef.instance.openDialog(callback);
 			} else {
-				dialogComponentRef.instance.openDialog(message, callback1);
+				dialogComponentRef.instance.openDialog(callback, callbackOrMessage);
 			}
 
 			// Subscribe to dialog closed event

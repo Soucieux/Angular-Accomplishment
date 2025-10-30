@@ -17,10 +17,10 @@ export class DeleteDialogComponent {
 	/**
 	 * Open the delete dialog
 	 *
-	 * @param message - The message to display in the dialog
 	 * @param acceptCallback - The callback to call when the dialog is accepted
+	 * @param message - The message to display in the dialog
 	 */
-	openDialog(message: string, acceptCallback: () => void) {
+	openDialog(acceptCallback: () => void, message: string) {
 		this.confirmationService.confirm({
 			message: message,
 			header: 'Delete Movie',

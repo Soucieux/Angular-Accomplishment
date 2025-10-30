@@ -11,6 +11,9 @@
 		<button mat-fab extended (click)="openAddNewMovieDialog()" class="control-button">
 			<span class="material-icons control-button-icon">add</span>
 		</button>
+		<button mat-fab extended (click)="openHistoryDialog()" class="control-button">
+			<span class="material-icons control-button-icon">browse_gallery</span>
+		</button>
 	</div>
 	<div class="category-button-container">
 		@for (genre of stats.genre | keyvalue; track genre.key){

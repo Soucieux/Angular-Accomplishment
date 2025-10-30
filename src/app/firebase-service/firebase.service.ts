@@ -152,6 +152,18 @@ export class FirebaseService {
 			LOG.info(this.className, `Movie statistics has been updated`);
 		});
 
+		// Get current time and customize the format
+		const now = new Date();
+		const formattedTime =
+			`${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now
+				.getDate()
+				.toString()
+				.padStart(2, '0')} ` +
+			`${now.getHours().toString().padStart(2, '0')}:${now
+				.getMinutes()
+				.toString()
+				.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
 		// Add new movie data
 		await update(dbRef(this.db, `movies/${movieKey}`), {
 			title: movieItemVO.getMovieTitle(),
@@ -161,7 +173,8 @@ export class FirebaseService {
 			id: movieItemVO.getMovieId(),
 			coverImageLink: movieItemVO.getMovieCoverImageDownloadableLink(),
 			firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
-			episodeNumber: movieItemVO.getMovieEpisodeNumber()
+			episodeNumber: movieItemVO.getMovieEpisodeNumber(),
+			addedTime: formattedTime
 		}).then(() => {
 			LOG.info(this.className, `Movie details for ${movieItemVO.getMovieTitle()} has been updated`);
 		});

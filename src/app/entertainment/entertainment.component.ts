@@ -395,10 +395,10 @@ export class EntertainmentComponent {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'delete',
-			`Are you sure you want to delete ${movieItemVO.getMovieTitle()}?`,
 			() => {
 				this.firebaseService.removeMovieFromDatabase(movieItemVO);
-			}
+			},
+			`Are you sure you want to delete ${movieItemVO.getMovieTitle()}?`
 		);
 	}
 
@@ -409,7 +409,6 @@ export class EntertainmentComponent {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'add',
-			'',
 			// "Submit" button in the "Add New Movie" dialog
 			this.handleAddDialogSubmit.bind(this),
 			// "Search" button in the "Add New Movie" dialog
@@ -465,7 +464,7 @@ export class EntertainmentComponent {
 	 * Triggered by the "History" button click event on the "Entertainment" page
 	 */
 	protected openHistoryDialog() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'history', '', () => {});
+		this.dialogService.openDialog(this.dialogComponentContainer, 'history', () => {});
 	}
 
 	////////////////////////////////Below are Helper Functions////////////////////////////////

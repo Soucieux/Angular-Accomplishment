@@ -3,6 +3,7 @@ import { DeleteDialogComponent } from './delete-dialog/delete.dialog.component';
 import { AddDialogComponent } from './add-dialog/add.dialog.component';
 import { LOG } from '../log';
 import { MovieItemVO } from '../entertainment/movie.item.vo';
+import { HistoryDialogComponent } from './history-dialog/history-dialog.component';
 @Injectable({
 	providedIn: 'root'
 })
@@ -24,6 +25,8 @@ export class DialogService {
 				return DeleteDialogComponent;
 			case 'add':
 				return AddDialogComponent;
+			case 'history':
+				return HistoryDialogComponent;
 			default:
 				throw new Error('Invalid dialog type');
 		}
@@ -43,6 +46,13 @@ export class DialogService {
 		message: string,
 		submitCallback: (movie: MovieItemVO) => void,
 		searchCallback?: (movie: MovieItemVO) => void
+	): void;
+
+	openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'history',
+		message: string,
+		acceptCallback?: () => void
 	): void;
 
 	/**
@@ -78,10 +88,10 @@ export class DialogService {
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			// Open up corresponding dialog and pass callbacks
-			if (dialogType === 'delete') {
-				dialogComponentRef.instance.openDialog(message, callback1);
-			} else if (dialogType === 'add') {
+			if (dialogType === 'add') {
 				dialogComponentRef.instance.openDialog(callback1, callback2);
+			} else {
+				dialogComponentRef.instance.openDialog(message, callback1);
 			}
 
 			// Subscribe to dialog closed event

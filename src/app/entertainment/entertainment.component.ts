@@ -330,14 +330,6 @@ export class EntertainmentComponent {
 
 	//////////////////////Below are Utilities Functions used by HTML template///////////////////////
 	/**
-	 * Cancel the search with a button click
-	 */
-	protected cancelSearch() {
-		LOG.warn(this.className, 'Search cancel requested');
-		this.isSearching = false;
-	}
-
-	/**
 	 * Calculate the font size of the movie title.
 	 *
 	 * @param length - The length of the movie title.
@@ -376,11 +368,29 @@ export class EntertainmentComponent {
 	}
 
 	//////////////////////Below are Event Handlers triggered by user actions///////////////////////
+	/**
+	 * Triggered by the "Cancel Search" button click event on the "Entertainment" page
+	 */
+	protected cancelSearch() {
+		LOG.warn(this.className, 'Search cancel requested');
+		this.isSearching = false;
+	}
+
+	/**
+	 * Triggered by any genre button click event on the "Entertaiment" page
+	 *
+	 * @param genre genre to display
+	 */
 	public filterByGenre(genre: string) {
 		const currentGenre = this.selectedGenres$.getValue();
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
 	}
 
+	/**
+	 * Triggered by the "Remove" button click event on the "Entertainment" page
+	 *
+	 * @param movieItemVO movie to be removed
+	 */
 	protected openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -392,6 +402,9 @@ export class EntertainmentComponent {
 		);
 	}
 
+	/**
+	 * Triggered by the "Add" button click event on the "Entertainment" page
+	 */
 	protected openAddNewMovieDialog() {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -404,6 +417,9 @@ export class EntertainmentComponent {
 		);
 	}
 
+	/**
+	 * Helper function to handle "Submit" button on the "Add New Movie" dialog.
+	 */
 	private async handleAddDialogSubmit() {
 		// Upload movie cover image to firebase storage and generate downloadable link
 		// The downloadable link needs to be acquired first and it will be uploaded to firebase in the next step
@@ -412,6 +428,12 @@ export class EntertainmentComponent {
 		await this.firebaseService.addNewMovieDataAndUpdateStatistics(this.tempMovieItemVO);
 	}
 
+	/**
+	 * Helper functino to handle "Search" button on the "Add New Movie" dialog.
+	 *
+	 * @param newMovieItemVO - New movie item to search for.
+	 * @returns The movie cover image.
+	 */
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob> {
 		if (await this.firebaseService.isMovieAlreadyAdded(newMovieItemVO.getMovieTitle())) {
 			throw new MovieAlreadyExistsError(newMovieItemVO.getMovieTitle());
@@ -425,7 +447,7 @@ export class EntertainmentComponent {
 	/**
 	 * Search movie data for a new movie, store it to firebase, and update the movie statistics.
 	 *
-	 * Only the "Search" button in the "Add New Movie" dialog can trigger this function.
+	 * Only the "Search" button on the "Add New Movie" dialog can trigger this function.
 	 *
 	 * @param newMovieItemVO - New movie item to search for.
 	 */
@@ -437,6 +459,13 @@ export class EntertainmentComponent {
 		}
 		// Step 2 : After successful retrieval of movie ID or movie ID is already given, get all the movie details.
 		await this.getNewMovieData(newMovieItemVO);
+	}
+
+	/**
+	 * Triggered by the "History" button click event on the "Entertainment" page
+	 */
+	protected openHistoryDialog() {
+		this.dialogService.openDialog(this.dialogComponentContainer, 'history', '', () => {});
 	}
 
 	////////////////////////////////Below are Helper Functions////////////////////////////////

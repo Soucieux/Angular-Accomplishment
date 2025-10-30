@@ -130,54 +130,76 @@ export class FirebaseService {
 	 * @param movieItemVO - The movie item to update.
 	 */
 	public async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO) {
-		// Get the reusable keys
-		const keys = await this.getReusableKeys();
-		let movieKey: string;
+		try {
+			// Get reusable keys for movies
+			const keys = await this.getReusableKeys();
+			let movieKey: string;
 
-		if (keys.length > 0) {
-			movieKey = keys.shift()!; // Take the first reusable key
-			await this.saveReusableKeys(keys); // Update the reusable keys
-		} else {
-			const snapshot = await get(this.moviesRef);
-			movieKey = (Object.keys(snapshot.val()).length + 1).toString();
+			if (keys.length > 0) {
+				movieKey = keys.shift()!; // Take the first reusable key
+				await this.saveReusableKeys(keys); // Update the reusable keys
+			} else {
+				const snapshot = await get(this.moviesRef);
+				movieKey = (Object.keys(snapshot.val()).length + 1).toString();
+			}
+
+			// Update the movie statistics
+			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+				currentData.genre[movieItemVO.getMovieGenre()] =
+					(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
+				currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
+				return currentData;
+			}).then(() => {
+				LOG.info(this.className, `Movie statistics has been updated`);
+			});
+
+			// Add new movie data
+			await update(dbRef(this.db, `movies/${movieKey}`), {
+				title: movieItemVO.getMovieTitle(),
+				year: movieItemVO.getMovieYear(),
+				genre: movieItemVO.getMovieGenre(),
+				rate: movieItemVO.getMovieRate(),
+				id: movieItemVO.getMovieId(),
+				coverImageLink: movieItemVO.getMovieCoverImageDownloadableLink(),
+				firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
+				episodeNumber: movieItemVO.getMovieEpisodeNumber()
+			}).then(() => {
+				LOG.info(this.className, `Movie details for ${movieItemVO.getMovieTitle()} has been updated`);
+			});
+
+			// Get current time and customize the format
+			const now = new Date();
+			const formattedTime =
+				`${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now
+					.getDate()
+					.toString()
+					.padStart(2, '0')} ` +
+				`${now.getHours().toString().padStart(2, '0')}:${now
+					.getMinutes()
+					.toString()
+					.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+			// Get key for history
+			const snapshot = await get(dbRef(this.db, 'history'));
+			const historyKey = snapshot.exists() ? (Object.keys(snapshot.val()).length + 1).toString() : 0;
+
+			// Update history
+			await update(dbRef(this.db, `history/${historyKey}`), {
+				status: 'added',
+				time: formattedTime,
+				title: movieItemVO.getMovieTitle(),
+				genre: movieItemVO.getMovieGenre(),
+				rate: movieItemVO.getMovieRate()
+			}).then(() => {
+				LOG.info(this.className, 'Movie history has been updated');
+			});
+		} catch (error) {
+			LOG.error(
+				this.className,
+				`Error while adding new movie data for ${movieItemVO.getMovieTitle()}`,
+				error as Error
+			);
 		}
-
-		// Update the movie statistics
-		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
-			currentData.genre[movieItemVO.getMovieGenre()] =
-				(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
-			currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
-			return currentData;
-		}).then(() => {
-			LOG.info(this.className, `Movie statistics has been updated`);
-		});
-
-		// Get current time and customize the format
-		const now = new Date();
-		const formattedTime =
-			`${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now
-				.getDate()
-				.toString()
-				.padStart(2, '0')} ` +
-			`${now.getHours().toString().padStart(2, '0')}:${now
-				.getMinutes()
-				.toString()
-				.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-
-		// Add new movie data
-		await update(dbRef(this.db, `movies/${movieKey}`), {
-			title: movieItemVO.getMovieTitle(),
-			year: movieItemVO.getMovieYear(),
-			genre: movieItemVO.getMovieGenre(),
-			rate: movieItemVO.getMovieRate(),
-			id: movieItemVO.getMovieId(),
-			coverImageLink: movieItemVO.getMovieCoverImageDownloadableLink(),
-			firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
-			episodeNumber: movieItemVO.getMovieEpisodeNumber(),
-			addedTime: formattedTime
-		}).then(() => {
-			LOG.info(this.className, `Movie details for ${movieItemVO.getMovieTitle()} has been updated`);
-		});
 	}
 
 	/**
@@ -247,6 +269,12 @@ export class FirebaseService {
 		});
 	}
 
+	/**
+	 * Check if a given movie has already been added in the databse
+	 *
+	 * @param movieTitle Movie title to check
+	 * @returns true if the movie already exists, otherwise, false.
+	 */
 	public async isMovieAlreadyAdded(movieTitle: string): Promise<boolean> {
 		try {
 			const snapshot = await get(this.moviesRef);

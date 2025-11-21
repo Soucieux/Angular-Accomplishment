@@ -38,19 +38,23 @@ export class AddDialogComponent {
 	visible: boolean = false;
 	isLoading: boolean = false;
 	canSubmit: boolean = false;
-	years: { year: number }[] | undefined;
+	years: { year: string }[] | undefined;
 	genres: { genre: string }[] | undefined;
 	movieImageUrl: string | null = null;
+	name: string = '';
+	id: string = '';
+	year: string = '';
 
 	protected ngOnInit() {
-		this.years = Array.from({ length: 8 }, (_, i) => ({ year: 2025 - i }));
+		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (2025 - i).toString() }));
 		this.genres = [
 			{ genre: '刑侦' },
 			{ genre: '古装' },
 			{ genre: '悬疑' },
 			{ genre: '校园' },
 			{ genre: '现代' },
-			{ genre: '谍战' }
+			{ genre: '谍战' },
+			{ genre: '其他' }
 		];
 	}
 

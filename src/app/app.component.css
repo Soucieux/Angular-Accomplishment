@@ -98,21 +98,7 @@ mat-drawer-content {
 }
 
 mat-drawer-container {
-	background-image: linear-gradient(
-		to right,
-		#d34e99,
-		#c75aaf,
-		#b667c3,
-		#a173d3,
-		#877fdf,
-		#6c90ed,
-		#489ff7,
-		#00adfc,
-		#00c3ff,
-		#00d7ff,
-		#09eaf9,
-		#5ffbf1
-	);
+	background-image: linear-gradient(90deg, #d53369 0%, #daae51 100%);
 }
 
 .login-logout-button {

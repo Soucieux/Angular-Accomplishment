@@ -18,15 +18,22 @@
 			<span>Amy Elsner</span>
 		</div>
 	</ng-template>
-	<span class="dialog-title">New movie details</span>
+	<span class="dialog-title">Enter either Name & Year or ID</span>
 	<div class="form-image-container">
 		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 			<div class="form-row">
-				<label for="movieName">Name*</label>
-				<input pInputText name="movieName" ngModel id="movieName" autocomplete="off" required />
+				<label for="movieName">{{ (name || year).trim() === '' ? 'Name' : 'Name*' }}</label>
+				<input
+					pInputText
+					name="movieName"
+					id="movieName"
+					[(ngModel)]="name"
+					[disabled]="id.trim() !== ''"
+					autocomplete="off"
+					[required]="(name || year).trim() !== ''" />
 			</div>
 			<div class="form-row">
-				<label for="years">Year*</label>
+				<label for="years">{{ (name || year).trim() === '' ? 'Year' : 'Year*' }}</label>
 				<!-- name is used to register control inside ngForm, used to track its value, validation status, errors etc. -->
 				<!-- id is used to link a <label> to the input -->
 				<!-- for inside <label> uses id to focus on the input when clicked -->
@@ -40,9 +47,22 @@
 					id="years"
 					ngModel
 					optionLabel="year"
+					optionValue="year"
 					[appendTo]="'body'"
+					[(ngModel)]="year"
+					[disabled]="id.trim() !== ''"
 					class="year-dropdown"
-					required></p-select>
+					[required]="(name || year).trim() !== ''"></p-select>
+			</div>
+			<div class="form-row">
+				<label for="id">{{ id.trim() === '' ? 'ID' : 'ID*' }}</label>
+				<input
+					pInputText
+					name="id"
+					id="id"
+					[(ngModel)]="id"
+					[disabled]="(name || year).trim() !== ''"
+					autocomplete="off" />
 			</div>
 			<div class="form-row">
 				<label for="genres">Genre*</label>
@@ -55,10 +75,6 @@
 					[appendTo]="'body'"
 					class="genre-dropdown"
 					required></p-select>
-			</div>
-			<div class="form-row">
-				<label for="id">ID</label>
-				<input pInputText name="id" ngModel id="id" autocomplete="off" />
 			</div>
 		</form>
 		<div class="image-container" [ngStyle]="{ backgroundImage: 'url(' + movieImageUrl + ')' }"></div>

@@ -186,10 +186,9 @@ export class FirebaseService {
 			// Update history
 			await update(dbRef(this.db, `history/${historyKey}`), {
 				status: 'added',
-				time: formattedTime,
-				title: movieItemVO.getMovieTitle(),
-				genre: movieItemVO.getMovieGenre(),
-				rate: movieItemVO.getMovieRate()
+				message: `${movieItemVO.getMovieTitle()}/${movieItemVO.getMovieGenre()}(${
+					movieItemVO.getMovieRate() == 0 ? '暂无评分' : movieItemVO.getMovieRate()
+				}) was added on ${formattedTime}`
 			}).then(() => {
 				LOG.info(this.className, 'Movie history has been updated');
 			});

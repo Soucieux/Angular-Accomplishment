@@ -11,7 +11,7 @@ export class HistoryDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	visible: boolean = false;
 
-	protected openDialog(message: string, acceptCallback: () => void) {
+	protected openDialog(acceptCallback: () => void) {
 		this.visible = true;
 	}
 

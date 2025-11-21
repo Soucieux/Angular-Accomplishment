@@ -240,43 +240,41 @@ export class EntertainmentComponent {
 	 * @param movieItemVO - The movie item to search for.
 	 */
 	private async getMovieId(movieItemVO: MovieItemVO) {
-		try {
-			EntertainmentComponent.checkMovieItemVO(movieItemVO);
-			// Step 1: searchMovie returns a Promise and wait for the retrieval to complete
-			const extractedData = await firstValueFrom(
-				this.doubanService.searchMovieJSON(movieItemVO.getMovieTitle())
-			);
-			// Step 2: If empty data is received, it means the API is not responding due to too many requests.
-			if (extractedData == null || extractedData.length === 0) {
-				LOG.warn(this.className, 'API responded with empty data due to too many requests');
-				// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.
-				throw new MovieIdNotFoundError(movieItemVO.getMovieTitle());
-			} else {
-				// Step 2: If data is received, then loop through the extracted data to get the correct movie ID
-				// as the result is retrieved by regex.
-				for (const movieData of extractedData) {
-					//This means that NEW movie must have title and year
-					// Movie name and year must be exactly the same
-					if (
-						movieData.title === movieItemVO.getMovieTitle() &&
-						movieData.year == movieItemVO.getMovieYear()
-					) {
-						// Step 3: Set the movie ID to the movie item VO
-						movieItemVO.setMovieId(movieData.id);
-						LOG.info(
-							this.className,
-							`Movie ID retrieved for ${movieItemVO.getMovieTitle()} with ID ${movieData.id}`
-						);
-					}
+		EntertainmentComponent.checkMovieItemVO(movieItemVO);
+		// Step 1: searchMovie returns a Promise and wait for the retrieval to complete
+		const extractedData = await firstValueFrom(
+			this.doubanService.searchMovieJSON(movieItemVO.getMovieTitle())
+		);
+		// Step 2: If empty data is received, it means the API is not responding due to too many requests.
+		if (extractedData == null || extractedData.length === 0) {
+			LOG.warn(this.className, 'API responded with empty data due to too many requests');
+			// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.
+			throw new MovieIdNotFoundError(movieItemVO.getMovieTitle());
+		} else {
+			// Step 2: If data is received, then loop through the extracted data to get the correct movie ID
+			// as the result is retrieved by regex.
+			for (const movieData of extractedData) {
+				//This means that NEW movie must have title and year
+				// Movie name and year must be exactly the same
+				if (
+					movieData.title === movieItemVO.getMovieTitle() &&
+					movieData.year == movieItemVO.getMovieYear()
+				) {
+					// Step 3: Set the movie ID to the movie item VO
+					movieItemVO.setMovieId(movieData.id);
+					LOG.info(
+						this.className,
+						`Movie ID retrieved for ${movieItemVO.getMovieTitle()} with ID ${movieData.id}`
+					);
+					return;
 				}
 			}
-		} catch (error) {
-			LOG.error(
+			// throw the error to let the calling method knows that no matching movie ID has been found.
+			LOG.warn(
 				this.className,
-				`Error while retrieving movie ID for ${movieItemVO.getMovieTitle()}`,
-				error as Error
+				`Movie ID not found for ${movieItemVO.getMovieTitle()}. Possible wrong name and year combination.`
 			);
-			throw error;
+			throw new MovieIdNotFoundError(movieItemVO.getMovieTitle());
 		}
 	}
 

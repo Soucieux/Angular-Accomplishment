@@ -61,9 +61,12 @@
 			} @else {
 			<span class="rate">暂无评分</span>
 			}
-			<button mat-icon-button class="delete-button" (click)="openDeleteConfirmationDialog(movie)">
-				<span class="material-icons delete-icon">delete_forever</span>
-			</button>
+			<p-button
+				icon="pi pi-times"
+				class="delete-button"
+				[rounded]="true"
+				severity="danger"
+				(click)="openDeleteConfirmationDialog(movie)" />
 		</div>
 	</div>
 	}

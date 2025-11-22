@@ -21,10 +21,18 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRippleModule } from '@angular/material/core';
 import { DialogService } from '../dialog-service/dialog.service';
 import { MovieAlreadyExistsError } from '../error/movie-already-exists-error';
+import { ButtonModule } from 'primeng/button';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
-	imports: [CommonModule, MatIconModule, MatButtonModule, MatButtonToggleModule, MatRippleModule],
+	imports: [
+		CommonModule,
+		MatIconModule,
+		MatButtonModule,
+		MatButtonToggleModule,
+		MatRippleModule,
+		ButtonModule
+	],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'
 })

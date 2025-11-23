@@ -9,16 +9,7 @@
 	(onHide)="onDialogClosed()"
 	styleClass="add-dialog">
 	<!-- #header -->
-	<ng-template #header>
-		<div>
-			<p-avatar
-				image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png"
-				shape="circle"
-				styleClass="avatar" />
-			<span>Amy Elsner</span>
-		</div>
-	</ng-template>
-	<span class="dialog-title">Enter either Name & Year or ID</span>
+	<span class="dialog-title">Enter either Name & Year or ID to start</span>
 	<div class="form-image-container">
 		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 			<div class="form-row">
@@ -90,24 +81,18 @@
 		<p-button
 			label="Search"
 			type="button"
-			[outlined]="true"
-			severity="secondary"
+			severity="primary"
 			[attr.form]="'addMovieForm'"
-			[disabled]="addMovieForm.invalid"
+			[disabled]="
+				(name.trim() === '' && year.trim() === '' && id.trim() === '') || addMovieForm.invalid
+			"
 			(click)="searchCurrentMovie(addMovieForm.value)" />
+		<p-button label="Cancel" type="button" severity="secondary" (click)="onDialogClosed()" />
 		<p-button
-			label="Cancel"
-			type="button"
-			[outlined]="true"
-			severity="secondary"
-			(click)="onDialogClosed()" />
-		<button
 			label="Submit"
 			type="submit"
-			pButton
-			[outlined]="true"
-			severity="secondary"
+			class="submit-button"
 			[disabled]="!canSubmit"
-			[attr.form]="'addMovieForm'"></button>
+			[attr.form]="'addMovieForm'"></p-button>
 	</ng-template>
 </p-dialog>

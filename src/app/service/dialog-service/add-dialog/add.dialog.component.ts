@@ -6,11 +6,11 @@ import { AvatarModule } from 'primeng/avatar';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { FormsModule, NgForm } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
-import { MovieItemVO } from '../../entertainment/movie.item.vo';
+import { MovieItemVO } from '../../../entertainment/entertainment.movieitem.vo';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CommonModule } from '@angular/common';
-import { MovieIdNotFoundError } from '../../error/movie-id-not-found.error';
-import { MovieAlreadyExistsError } from '../../error/movie-already-exists-error';
+import { MovieIdNotFoundError } from '../../../error/movie-id-not-found.error';
+import { MovieAlreadyExistsError } from '../../../error/movie-already-exists-error';
 
 @Component({
 	selector: 'add-dialog',

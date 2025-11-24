@@ -4,7 +4,7 @@ import { RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
-import { AuthService } from './authentication-service/auth.service';
+import { AuthService } from './service/authentication-service/auth.service';
 import { Router } from '@angular/router';
 import { LOG } from './log';
 import { MatIconModule } from '@angular/material/icon';

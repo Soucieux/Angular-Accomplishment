@@ -7,7 +7,7 @@ import {
 	runInInjectionContext
 } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
-import { LOG } from '../log';
+import { LOG } from '../../log';
 import {
 	Database,
 	ref as dbRef,
@@ -19,7 +19,7 @@ import {
 	get
 } from '@angular/fire/database';
 import { map, Observable } from 'rxjs';
-import { MovieItemVO } from '../entertainment/movie.item.vo';
+import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
 
 @Injectable({
 	providedIn: 'root'

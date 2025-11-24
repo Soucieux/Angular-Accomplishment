@@ -4,8 +4,8 @@ import { DialogModule } from 'primeng/dialog';
 @Component({
 	selector: 'history-dialog',
 	imports: [DialogModule],
-	templateUrl: './history-dialog.component.html',
-	styleUrl: './history-dialog.component.css'
+	templateUrl: './history.component.html',
+	styleUrl: './history.component.css'
 })
 export class HistoryDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();

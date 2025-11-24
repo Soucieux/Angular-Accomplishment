@@ -12,14 +12,14 @@ import {
 } from '@angular/core';
 import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { LOG } from '../log';
-import { DoubanService } from '../douban-service/douban.service';
-import { FirebaseService } from '../firebase-service/firebase.service';
-import { MovieItemVO } from './movie.item.vo';
+import { DoubanService } from '../service/douban-service/douban.service';
+import { FirebaseService } from '../service/firebase-service/firebase.service';
+import { MovieItemVO } from './entertainment.movieitem.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRippleModule } from '@angular/material/core';
-import { DialogService } from '../dialog-service/dialog.service';
+import { DialogService } from '../service/dialog-service/dialog.service';
 import { MovieAlreadyExistsError } from '../error/movie-already-exists-error';
 import { ButtonModule } from 'primeng/button';
 @Component({

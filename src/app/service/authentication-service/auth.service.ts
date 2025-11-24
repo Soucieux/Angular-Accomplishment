@@ -1,4 +1,4 @@
-import { EnvironmentInjector, inject, Inject, Injectable, runInInjectionContext } from '@angular/core';
+import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import {
 	GoogleAuthProvider,
 	signInWithPopup,

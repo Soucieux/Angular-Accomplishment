@@ -1,9 +1,9 @@
 import { ComponentRef, Injectable, Type, ViewContainerRef } from '@angular/core';
-import { DeleteDialogComponent } from './delete-dialog/delete.dialog.component';
-import { AddDialogComponent } from './add-dialog/add.dialog.component';
-import { LOG } from '../log';
-import { MovieItemVO } from '../entertainment/entertainment.movieitem.vo';
-import { HistoryDialogComponent } from './history-dialog/history-dialog.component';
+import { DeleteDialogComponent } from './delete/delete.component';
+import { AddDialogComponent } from './add/add.component';
+import { LOG } from '../../log';
+import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
+import { HistoryDialogComponent } from './history/history.component';
 @Injectable({
 	providedIn: 'root'
 })

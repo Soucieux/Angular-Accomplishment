@@ -42,7 +42,7 @@ export class EntertainmentComponent {
 	// This value is assigned to ViewContainerRef (a predefined keyword) automatically after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	// This value has to be true initially so that the page will not show access denied page on refresh
-	protected isLoggedIn: boolean = true;
+	protected isLoggedIn!: boolean;
 	protected isSearching: boolean = false;
 	private contentContainer!: any;
 	protected movieList$!: Observable<MovieItemVO[]>;
@@ -58,6 +58,17 @@ export class EntertainmentComponent {
 		private firebaseService: FirebaseService,
 		private dialogService: DialogService
 	) {
+		if (isPlatformBrowser(this.platformId)) {
+			// TODO: If the user is not logged in, and you set the read access on firebase to any,
+			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
+			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+		}
+	}
+
+	/**
+	 * Anything that needs to be done when the component is initialized.
+	 */
+	ngOnInit() {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
@@ -73,18 +84,10 @@ export class EntertainmentComponent {
 					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
 				})
 			);
-			// TODO: If the user is not logged in, and you set the read access on firebase to any,
-			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
-			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
 		} else {
 			LOG.error(this.className, 'User does not have permission to access the movie list');
 		}
 	}
-
-	/**
-	 * Anything that needs to be done when the component is initialized.
-	 */
-	ngOnInit() {}
 
 	/**
 	 * Anything that needs to be done when the component is destroyed.

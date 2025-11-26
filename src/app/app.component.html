@@ -29,13 +29,13 @@
 			</li>
 			} @else {
 			<li class="login-button-container">
-				<button
+				<p-button
 					(click)="login()"
-					color="accent"
-					mat-mini-fab
-					class="material-icons login-logout-button">
-					login
-				</button>
+					routerLink="/login"
+					icon="pi pi-user"
+					[rounded]="true"
+					severity="secondary"
+					class="login-logout-button" />
 			</li>
 			}
 		</ul>

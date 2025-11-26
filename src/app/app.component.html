@@ -16,11 +16,11 @@
 					<span class="nav-label hide-on-mobile">Entertainment</span>
 				</a>
 			</li>
-			<!-- This is a placeholder to move the login/logout button to the bottom -->
+			<!-- This is a placeholder to move the signin page button to the bottom -->
 			<li style="flex: 1 1 273px"></li>
 			@if (currentUser$ | async; as user){
 			<li class="logout-button-container">
-				<button (click)="logout()" mat-mini-fab class="material-icons login-logout-button">
+				<button (click)="logout()" mat-mini-fab class="material-icons signin-page-button">
 					logout
 				</button>
 				<p class="hide-on-mobile" [ngStyle]="{ position: 'relative', top: '20px', fontSize: '18px' }">
@@ -28,14 +28,13 @@
 				</p>
 			</li>
 			} @else {
-			<li class="login-button-container">
+			<li class="signin-page-button-container">
 				<p-button
-					(click)="login()"
 					routerLink="/login"
 					icon="pi pi-user"
 					[rounded]="true"
 					severity="secondary"
-					class="login-logout-button" />
+					class="signin-page-button" />
 			</li>
 			}
 		</ul>

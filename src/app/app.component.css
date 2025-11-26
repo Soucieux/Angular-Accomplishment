@@ -1,7 +1,3 @@
-:host {
-	font-family: 'nlf';
-}
-
 .drawer-container {
 	position: absolute;
 	height: 100%;
@@ -38,7 +34,7 @@
 		justify-content: center !important;
 	}
 
-	.login-logout-button {
+	.signin-page-button {
 		margin: 0px !important;
 		width: 30px !important;
 		height: 30px !important;
@@ -105,17 +101,11 @@ mat-drawer-container {
 	background-image: linear-gradient(90deg, #d53369 0%, #daae51 100%);
 }
 
-:host ::ng-deep .login-logout-button .p-button {
+::ng-deep .signin-page-button .p-button {
 	margin: 10px;
-	transition: box-shadow 0.3s ease;
-	overflow: hidden;
 }
 
-:host ::ng-deep .login-logout-button .p-button:hover {
-	border: 1px solid white;
-}
-
-:host ::ng-deep .login-logout-button .p-button:active {
+::ng-deep .signin-page-button .p-button:active {
 	box-shadow: 0 1px 1px 1px black;
 }
 
@@ -127,7 +117,7 @@ mat-drawer-container {
 	padding-left: 15px;
 }
 
-.login-button-container {
+.signin-page-button-container {
 	position: absolute;
 	bottom: 4px;
 	left: 50%;

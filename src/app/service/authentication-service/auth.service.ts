@@ -5,7 +5,8 @@ import {
 	Auth,
 	signOut,
 	User,
-	onAuthStateChanged
+	onAuthStateChanged,
+    signInWithRedirect
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 @Injectable({
@@ -31,8 +32,8 @@ export class AuthService {
 	login() {
 		signInWithPopup(this.auth, new GoogleAuthProvider())
 			.then(() => {
-				window.location.reload();
 				localStorage.setItem('isLoggedIn', 'true');
+				window.location.reload();
 			})
 			.catch(() => console.log('ERROR when signing in'));
 	}

@@ -11,9 +11,9 @@
 .form-grid {
 	display: grid;
 	grid-template-columns: 40px 180px; /* first col = labels, second col = inputs */
-	gap: 1rem 1rem; /* row gap and column gap */
+	gap: 1rem 1.5rem; /* row gap and column gap */
 	align-items: center; /* vertical alignment */
-	margin-left: 8px;
+	margin-left: 10px;
 }
 
 .form-row {
@@ -60,7 +60,7 @@
 	align-items: center; /* vertical center */
 	white-space: pre-line; /* preserves line breaks like <br> or \n */
 	line-height: 1.5;
-	font-size: 18px;
+	font-size: 16px;
 }
 
 ::ng-deep .error-dialog .p-resizable-handle {
@@ -77,4 +77,12 @@
 	background-color: rgb(0, 0, 0) !important;
 	border-color: #000000 !important;
 	color: #fff !important;
+}
+
+.custom-font {
+	font-family: 'cf';
+}
+
+::ng-deep .dropdown-panel-font {
+	font-family: 'cf';
 }

@@ -24,7 +24,7 @@
 			[ngClass]="{
 				'selected-category': (selectedGenres$ | async)?.includes($any(genre.key))
 			}">
-			<span>{{ genre.key }}</span>
+			<span class="category-text">{{ genre.key }}</span>
 			<span
 				><p class="category-count">{{ genre.value }}</p>
 				<p class="hide-on-mobile">to watch</p></span

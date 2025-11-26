@@ -94,26 +94,26 @@
 	display: flex;
 	flex-direction: column;
 	letter-spacing: 3px;
-	row-gap: 3px;
+	row-gap: 10px;
 	margin: 10px;
 	border-radius: 10px;
 
 	background: transparent;
 	color: black;
 	transition: all 0.5s;
-
-	font-family: 'cf';
 }
 
 .title {
+	font-family: 'cf';
 	white-space: nowrap;
-	margin-top: 5px;
+	margin-top: 10px;
 	margin-bottom: 10px;
 	/* transform: translateY(15px); */
 	/* transition: all 0.7s; */
 }
 
 .text {
+	font-family: 'cf';
 	font-size: 17px;
 	display: flex;
 	flex-direction: row;
@@ -130,13 +130,12 @@
 	box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
 	border-radius: 5px;
 	color: white;
-	font-family: 'nlf';
 }
 
 .delete-button {
 	display: flex;
 	justify-content: center;
-	position: absolute; 
+	position: absolute;
 	top: 20px;
 	left: 360px;
 }
@@ -154,14 +153,14 @@
 }
 
 .category-header-title {
-	font-size: 25px;
+	font-size: 23px;
 	font-weight: bold;
-	padding: 10px;
+	padding-bottom: 10px;
+	margin: 10px;
 }
 
 /* Control Button */
 .control-button-label {
-	font-family: 'cf';
 	font-size: medium;
 	font-size: 17px;
 }
@@ -197,7 +196,8 @@
 	border: 1.5px solid black;
 	border-radius: 10px;
 	margin-right: 15px;
-	padding: 10px;
+	padding-top: 6px;
+	padding-left: 15px;
 	cursor: pointer;
 }
 
@@ -212,13 +212,16 @@
 	& p:nth-of-type(2) {
 		position: relative;
 		padding-left: 10px;
-		bottom: -2px;
 	}
+}
+
+.category-text {
+	font-family: 'cf';
+	font-size: 17px;
 }
 
 .category-count {
 	font-size: 15px;
-	font-family: 'nlf';
 	font-weight: bold;
 }
 
@@ -278,9 +281,4 @@
 		bottom: -6px;
 		padding-left: 15px;
 	}
-
-	/* .delete-button {
-		/* top: -130px; */
-	/* left: 140px; */
-	/* } */
 }

@@ -5,6 +5,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { IftaLabelModule } from 'primeng/iftalabel';
+import { AuthService } from '../service/authentication-service/auth.service';
 
 @Component({
 	selector: 'login',
@@ -24,7 +25,7 @@ export class LoginComponent {
 	exampleForm: FormGroup;
 	formSubmitted = false;
 
-	constructor(private fb: FormBuilder) {
+	constructor(private fb: FormBuilder, private authService: AuthService) {
 		this.exampleForm = this.fb.group({
 			username: ['', Validators.required],
 			password: ['', Validators.required]
@@ -42,5 +43,10 @@ export class LoginComponent {
 			// handle login
 			console.log(this.exampleForm.value);
 		}
+	}
+
+	googleLogin() {
+		this.authService.login();
+		localStorage.setItem('isLoggedIn', 'true');
 	}
 }

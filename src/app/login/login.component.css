@@ -2,6 +2,14 @@
 	font-family: 'nlf';
 }
 
+.container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center; /* horizontal center */
+	align-items: center; /* vertical center */
+	height: 75%; /* full page height */
+}
+
 .word-container {
 	display: flex;
 	flex-direction: column;
@@ -22,14 +30,6 @@
 
 .en-word {
 	text-align: center;
-}
-
-.form-container {
-	display: flex;
-	flex-direction: column;
-	justify-content: center; /* horizontal center */
-	align-items: center; /* vertical center */
-	height: 75%; /* full page height */
 }
 
 .input-field-container {
@@ -72,4 +72,20 @@
 ::ng-deep .input-field-container .p-inputtext {
 	box-shadow: none !important;
 	border-color: transparent !important; /* your neutral border */
+}
+
+.horizontal-line {
+	height: 5px;
+	border-radius: 10px;
+	background: rgb(252, 252, 252);
+	margin-top: 20px;
+}
+
+.google-login {
+	display: flex;
+	justify-content: center; /* horizontal center */
+}
+
+::ng-deep .google-login .p-button:active {
+	box-shadow: 0 1px 1px 1px black;
 }

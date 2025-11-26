@@ -1,4 +1,4 @@
-<div class="form-container">
+<div class="container">
 	<div class="word-container">
 		<div>
 			<h1 class="title">VISION CANVAS</h1>
@@ -42,5 +42,12 @@
 		<button class="login-button" pButton severity="secondary" type="submit">
 			<span pButtonLabel>Submit</span>
 		</button>
+		<hr class="horizontal-line" />
+		<p-button
+			(click)="googleLogin()"
+			icon="pi pi-google"
+			[rounded]="true"
+			severity="secondary"
+			class="google-login"></p-button>
 	</form>
 </div>

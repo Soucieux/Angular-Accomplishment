@@ -5,7 +5,6 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
 import { AuthService } from './service/authentication-service/auth.service';
-import { Router } from '@angular/router';
 import { LOG } from './log';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
@@ -32,9 +31,7 @@ export class AppComponent {
 	// courses$;
 	currentUser$ = this.authService.currentUser$;
 
-	constructor(private authService: AuthService, private router: Router) {
-		// this.courses$ = objectVal(ref(this.db, '/course/2'));
-	}
+	constructor(private authService: AuthService) {}
 
 	/**
 	 * Anything that needs to be done when the component is destroyed.
@@ -42,12 +39,6 @@ export class AppComponent {
 	ngOnDestroy() {
 		LOG.info(this.className, 'Component destroyed');
 	}
-
-	login() {
-		// this.authService.login();
-		localStorage.setItem('isLoggedIn', 'true');
-	}
-
 	logout() {
 		this.authService.logout();
 	}

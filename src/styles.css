@@ -4,6 +4,10 @@
 @import 'primeicons/primeicons.css';
 /* @import 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined'; */
 
+body {
+	font-family: 'nlf';
+}
+
 @font-face {
 	font-family: 'cf';
 	src: url('./assets/chinese-font.ttf');

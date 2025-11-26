@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { LOG } from './log';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
+import { ButtonModule } from 'primeng/button';
 @Component({
 	selector: 'root',
 	standalone: true,
@@ -20,7 +21,8 @@ import { ToastModule } from 'primeng/toast';
 		MatButtonModule,
 		MatRippleModule,
 		MatIconModule,
-		ToastModule
+		ToastModule,
+		ButtonModule
 	],
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
@@ -42,7 +44,8 @@ export class AppComponent {
 	}
 
 	login() {
-		this.authService.login();
+		// this.authService.login();
+		localStorage.setItem('isLoggedIn', 'true');
 	}
 
 	logout() {

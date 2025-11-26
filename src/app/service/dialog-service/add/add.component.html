@@ -9,7 +9,7 @@
 	(onHide)="onDialogClosed()"
 	styleClass="add-dialog">
 	<!-- #header -->
-	<span class="dialog-title">Enter either Name or ID to start</span>
+	<span class="dialog-title">Enter either Name or ID to start searching</span>
 	<div class="form-image-container">
 		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 			<div class="form-row">
@@ -21,6 +21,7 @@
 					[(ngModel)]="name"
 					[disabled]="id.trim() !== ''"
 					autocomplete="off"
+                    class="custom-font"
 					[required]="(name || year).trim() !== ''" />
 			</div>
 			<div class="form-row">
@@ -36,13 +37,13 @@
 					[options]="years"
 					name="years"
 					id="years"
-					ngModel
 					optionLabel="year"
 					optionValue="year"
 					[appendTo]="'body'"
 					[(ngModel)]="year"
 					[disabled]="id.trim() !== ''"
-					class="year-dropdown"
+					class="custom-font"
+                    panelStyleClass="dropdown-panel-font"
 					[required]="(name || year).trim() !== ''"></p-select>
 			</div>
 			<div class="form-row">
@@ -64,7 +65,8 @@
 					ngModel
 					optionLabel="genre"
 					[appendTo]="'body'"
-					class="genre-dropdown"
+					class="custom-font"
+                    panelStyleClass="dropdown-panel-font"
 					required></p-select>
 			</div>
 		</form>

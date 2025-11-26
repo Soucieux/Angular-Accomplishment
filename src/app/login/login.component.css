@@ -1,0 +1,75 @@
+:host {
+	font-family: 'nlf';
+}
+
+.word-container {
+	display: flex;
+	flex-direction: column;
+	gap: 30px;
+	margin-bottom: 50px;
+}
+
+.title {
+	text-align: center;
+	font-size: 60px;
+	margin-bottom: 130px;
+}
+
+.word {
+	font-family: 'cf';
+	text-align: center;
+}
+
+.en-word {
+	text-align: center;
+}
+
+.form-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center; /* horizontal center */
+	align-items: center; /* vertical center */
+	height: 75%; /* full page height */
+}
+
+.input-field-container {
+	margin-bottom: 15px;
+}
+
+.input-field {
+	padding-bottom: 10px;
+	border-radius: 10px;
+	height: 47px;
+	width: 250px;
+}
+
+::ng-deep .input-field:active {
+	outline: none !important;
+}
+
+.login-button {
+	border-radius: 10px;
+	width: 250px;
+	height: 45px;
+	outline: none;
+}
+
+/* Remove green focus outline & green label color from p-iftalabel */
+::ng-deep .input-field-container:focus-within .p-inputtext {
+	box-shadow: none !important;
+	border-color: black !important; /* your neutral border */
+}
+
+::ng-deep .input-field-container:focus-within label {
+	color: inherit !important;
+}
+
+::ng-deep .input-field-container:hover .p-inputtext {
+	box-shadow: none !important;
+	border-color: black !important; /* your neutral border */
+}
+
+::ng-deep .input-field-container .p-inputtext {
+	box-shadow: none !important;
+	border-color: transparent !important; /* your neutral border */
+}

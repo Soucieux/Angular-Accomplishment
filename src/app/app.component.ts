@@ -28,7 +28,6 @@ import { ButtonModule } from 'primeng/button';
 })
 export class AppComponent {
 	private readonly className = 'AppComponent';
-	// courses$;
 	currentUser$ = this.authService.currentUser$;
 
 	constructor(private authService: AuthService) {}

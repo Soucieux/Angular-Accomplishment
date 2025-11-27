@@ -46,7 +46,6 @@ export class LoginComponent {
 	}
 
 	googleLogin() {
-		this.authService.login();
-		localStorage.setItem('isLoggedIn', 'true');
+		this.authService.googleLogin();
 	}
 }

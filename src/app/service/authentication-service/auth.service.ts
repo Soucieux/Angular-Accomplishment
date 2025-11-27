@@ -6,9 +6,11 @@ import {
 	signOut,
 	User,
 	onAuthStateChanged,
-    signInWithRedirect
+	signInWithRedirect
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -16,7 +18,8 @@ export class AuthService {
 	currentUser$: Observable<User | null>;
 	constructor(
 		@Inject(Auth) private auth: Auth,
-		@Inject(EnvironmentInjector) private ei: EnvironmentInjector
+		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
+		private router: Router
 	) {
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
 		this.currentUser$ = new Observable((observer) => {
@@ -29,20 +32,19 @@ export class AuthService {
 		});
 	}
 
-	login() {
+	googleLogin() {
 		signInWithPopup(this.auth, new GoogleAuthProvider())
 			.then(() => {
 				localStorage.setItem('isLoggedIn', 'true');
-				window.location.reload();
+				this.router.navigate(['/']);
 			})
-			.catch(() => console.log('ERROR when signing in'));
+			.catch(() => console.log('ERROR when signing in through Google'));
 	}
 
 	logout() {
 		signOut(this.auth)
 			.then(() => {
-				window.location.reload();
-				localStorage.setItem('isLoggedIn', 'false');
+                localStorage.setItem('isLoggedIn', 'false');
 			})
 			.catch(() => console.log('ERROR when signing out current user'));
 	}

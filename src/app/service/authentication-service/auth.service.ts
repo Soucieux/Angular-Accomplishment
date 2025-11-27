@@ -5,8 +5,7 @@ import {
 	Auth,
 	signOut,
 	User,
-	onAuthStateChanged,
-	signInWithRedirect
+	onAuthStateChanged
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
@@ -35,7 +34,6 @@ export class AuthService {
 	googleLogin() {
 		signInWithPopup(this.auth, new GoogleAuthProvider())
 			.then(() => {
-				localStorage.setItem('isLoggedIn', 'true');
 				this.router.navigate(['/']);
 			})
 			.catch(() => console.log('ERROR when signing in through Google'));
@@ -43,9 +41,7 @@ export class AuthService {
 
 	logout() {
 		signOut(this.auth)
-			.then(() => {
-                localStorage.setItem('isLoggedIn', 'false');
-			})
+			.then(() => {})
 			.catch(() => console.log('ERROR when signing out current user'));
 	}
 }

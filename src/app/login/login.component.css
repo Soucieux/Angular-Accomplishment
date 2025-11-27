@@ -7,7 +7,7 @@
 	flex-direction: column;
 	justify-content: center; /* horizontal center */
 	align-items: center; /* vertical center */
-	height: 75%; /* full page height */
+	height: 85%; /* full page height */
 }
 
 .word-container {

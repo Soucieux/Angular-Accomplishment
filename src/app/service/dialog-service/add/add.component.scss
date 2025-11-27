@@ -32,8 +32,8 @@
 }
 
 .loading-overlay {
-	margin-top: 5px;
-	margin-bottom: -13px;
+	margin-top: 10px;
+	margin-bottom: -5px;
 }
 
 .form-image-container {
@@ -74,9 +74,9 @@
 }
 
 ::ng-deep .submit-button .p-button {
-	background-color: rgb(0, 0, 0) !important;
-	border-color: #000000 !important;
-	color: #fff !important;
+	background-color: black !important;
+	border-color: black !important;
+	color: white !important;
 }
 
 .custom-font {
@@ -85,4 +85,10 @@
 
 ::ng-deep .dropdown-panel-font {
 	font-family: 'cf';
+}
+
+::ng-deep .add-dialog .p-dialog-footer {
+	position: absolute;
+	left: 210px;
+	bottom: -5px;
 }

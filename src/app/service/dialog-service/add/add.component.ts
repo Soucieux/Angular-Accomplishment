@@ -11,6 +11,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CommonModule } from '@angular/common';
 import { MovieIdNotFoundError } from '../../../error/movie-id-not-found.error';
 import { MovieAlreadyExistsError } from '../../../error/movie-already-exists-error';
+import { LOG } from '../../../log';
 
 @Component({
 	selector: 'add-dialog',
@@ -30,6 +31,7 @@ import { MovieAlreadyExistsError } from '../../../error/movie-already-exists-err
 	providers: [ConfirmationService]
 })
 export class AddDialogComponent {
+	private readonly className = 'AddDialogComponent';
 	@Output() closed$ = new EventEmitter<void>();
 	private messageService = inject(MessageService);
 	private confirmationService = inject(ConfirmationService);
@@ -67,9 +69,12 @@ export class AddDialogComponent {
 	protected async searchCurrentMovie(newMovieData: NgForm['value']) {
 		this.isLoading = true;
 		try {
-			const movieItemVO = new MovieItemVO(newMovieData.movieName, Number(newMovieData.years.year));
-			if (newMovieData.id) {
-				movieItemVO.setMovieId(newMovieData.id);
+			const movieItemVO = new MovieItemVO();
+			if (this.name) {
+				movieItemVO.setMovieTitle(newMovieData.movieName);
+				movieItemVO.setMovieYear(Number(newMovieData.years.year));
+			} else if (newMovieData.id) {
+				movieItemVO.setMovieId(Number(this.id));
 			}
 			movieItemVO.setMovieGenre(newMovieData.genres.genre);
 			const movieImage = await this.searchCallback?.(movieItemVO);
@@ -83,6 +88,7 @@ export class AddDialogComponent {
 				errorMessage = 'Movie already exists';
 			} else {
 				errorMessage = 'No Movie was found';
+				LOG.error(this.className, 'Error while searching new movie from add dialog', error as Error);
 			}
 			this.confirmationService.confirm({
 				message: `<div class="error-dialog-message">${errorMessage}</div>`,

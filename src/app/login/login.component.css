@@ -5,8 +5,8 @@
 .container {
 	display: flex;
 	flex-direction: column;
-	justify-content: center; /* horizontal center */
-	align-items: center; /* vertical center */
+	/* justify-content: center; horizontal center */
+	/* align-items: center; vertical center */
 	height: 85%; /* full page height */
 }
 
@@ -20,6 +20,7 @@
 .title {
 	text-align: center;
 	font-size: 60px;
+	margin-top: 100px;
 	margin-bottom: 130px;
 }
 
@@ -34,6 +35,11 @@
 
 .input-field-container {
 	margin-bottom: 15px;
+}
+
+.field-container {
+	display: flex;
+	justify-content: center;
 }
 
 .input-field {
@@ -79,11 +85,7 @@
 	border-radius: 10px;
 	background: rgb(252, 252, 252);
 	margin-top: 20px;
-}
-
-.google-login {
-	display: flex;
-	justify-content: center; /* horizontal center */
+	width: 300px;
 }
 
 ::ng-deep .google-login .p-button:active {

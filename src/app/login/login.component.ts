@@ -1,3 +1,4 @@
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -22,26 +23,28 @@ import { AuthService } from '../service/authentication-service/auth.service';
 	styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-	exampleForm: FormGroup;
+	loginForm: FormGroup;
 	formSubmitted = false;
 
 	constructor(private fb: FormBuilder, private authService: AuthService) {
-		this.exampleForm = this.fb.group({
-			username: ['', Validators.required],
+		this.loginForm = this.fb.group({
+			email: ['', Validators.required],
 			password: ['', Validators.required]
 		});
 	}
 
 	isInvalid(controlName: string) {
-		const control = this.exampleForm.get(controlName);
+		const control = this.loginForm.get(controlName);
 		return control?.invalid && (control.touched || this.formSubmitted);
 	}
 
 	onSubmit() {
 		this.formSubmitted = true;
-		if (this.exampleForm.valid) {
-			// handle login
-			console.log(this.exampleForm.value);
+		if (this.loginForm.valid) {
+			this.authService.emailPasswordLogin(
+				this.loginForm.value['email'],
+				this.loginForm.value['password']
+			);
 		}
 	}
 

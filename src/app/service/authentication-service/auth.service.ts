@@ -32,16 +32,28 @@ export class AuthService {
 	}
 
 	googleLogin() {
+		// CurrentUser in this.auth is still null after signInWithPopup completes
+		// As the credentials are being returned after that and then firebase starts initializing
 		signInWithPopup(this.auth, new GoogleAuthProvider())
 			.then(() => {
-				this.router.navigate(['/']);
+				const unsub = onAuthStateChanged(this.auth, (user) => {
+					unsub();
+					if (user) {
+						this.router.navigate(['/']);
+						localStorage.setItem('permission', 'true');
+					}
+				});
 			})
 			.catch(() => console.log('ERROR when signing in through Google'));
 	}
 
 	logout() {
+		// CurrentUser in this.auth gets removed immediately after signOut
 		signOut(this.auth)
-			.then(() => {})
+			.then(() => {
+				localStorage.setItem('permission', 'false');
+				window.location.reload();
+			})
 			.catch(() => console.log('ERROR when signing out current user'));
 	}
 }

@@ -10,7 +10,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map } from 'rxjs';
+import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
 import { LOG } from '../log';
 import { DoubanService } from '../service/douban-service/douban.service';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
@@ -61,20 +61,24 @@ export class EntertainmentComponent {
 		if (isPlatformBrowser(this.platformId)) {
 			// TODO: If the user is not logged in, and you set the read access on firebase to any,
 			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
-			this.isLoggedIn = JSON.parse(localStorage.getItem('isLoggedIn') || 'null');
+			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'null');
 		}
 	}
 
 	/**
 	 * Anything that needs to be done when the component is initialized.
 	 */
-	ngOnInit() {
+	async ngOnInit() {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Get the movie list (Observable) and statistics (Observable) from firebase
-			this.movieList$ = this.firebaseService.getMovieList();
 			this.statistics$ = this.firebaseService.getStatistics();
+
+			// One-time pre-check to make sure user have permission to read data in the database
+			await firstValueFrom(this.statistics$.pipe(take(1)));
+			// Below part will be executed only if there is no error reading data in the database
+			this.movieList$ = this.firebaseService.getMovieList();
 			// Create a filter to listen for genre changes
 			this.filteredMovieList$ = combineLatest([this.movieList$, this.selectedGenres$]).pipe(
 				map(([movieList, selectedGenres]) => {
@@ -84,8 +88,6 @@ export class EntertainmentComponent {
 					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
 				})
 			);
-		} else {
-			LOG.error(this.className, 'User does not have permission to access the movie list');
 		}
 	}
 
@@ -357,11 +359,11 @@ export class EntertainmentComponent {
 	 * @param contentContainer - The page container to update the grid layout.
 	 */
 	private updateGridLayout(contentContainer: any) {
-		// Get item width from css
-		const itemsWidth = getComputedStyle(contentContainer).getPropertyValue('--individual-item-width');
-		const itemsGap = getComputedStyle(contentContainer).getPropertyValue('--individual-item-gap');
-
 		if (contentContainer) {
+			// Get item width from css
+			const itemsWidth = getComputedStyle(contentContainer).getPropertyValue('--individual-item-width');
+			const itemsGap = getComputedStyle(contentContainer).getPropertyValue('--individual-item-gap');
+
 			let componentWidth = (contentContainer as HTMLElement).clientWidth;
 			let itemsPerRow = Math.floor(
 				(componentWidth - parseInt(itemsGap)) / (parseInt(itemsWidth) + parseInt(itemsGap))

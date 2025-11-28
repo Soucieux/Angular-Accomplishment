@@ -1,11 +1,4 @@
-import {
-	EnvironmentInjector,
-	inject,
-	Inject,
-	Injectable,
-	Injector,
-	runInInjectionContext
-} from '@angular/core';
+import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
 import { LOG } from '../../log';
 import {
@@ -18,7 +11,7 @@ import {
 	remove,
 	get
 } from '@angular/fire/database';
-import { map, Observable } from 'rxjs';
+import { Observable, map, throwError } from 'rxjs';
 import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
 
 @Injectable({
@@ -84,7 +77,6 @@ export class FirebaseService {
 				})
 			)
 		);
-
 		// Sort movies by first release date
 		// Note: By using this method, make sure the first release date has the format of YYYY.MM.DD
 		return list$.pipe(

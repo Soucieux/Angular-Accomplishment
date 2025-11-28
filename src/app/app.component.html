@@ -20,10 +20,15 @@
 			<li style="flex: 1 1 273px"></li>
 			@if (currentUser$ | async; as user){
 			<li class="logout-button-container">
-				<button (click)="logout()" mat-mini-fab class="material-icons signin-page-button">
-					logout
-				</button>
-				<p class="hide-on-mobile" [ngStyle]="{ position: 'relative', top: '20px', fontSize: '18px' }">
+				<p-button
+					(click)="logout()"
+					icon="pi pi-user"
+					[rounded]="true"
+					severity="warn"
+					class="signin-page-button" />
+				<p
+					class="hide-on-mobile"
+					[ngStyle]="{ position: 'relative', left: '5px', top: '18px', fontSize: '16px' }">
 					{{ user.displayName }}
 				</p>
 			</li>

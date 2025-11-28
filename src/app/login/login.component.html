@@ -12,19 +12,19 @@
 			<h5 class="en-word">a mysterious place where you can go back in time</h5>
 		</div>
 	</div>
-	<form [formGroup]="exampleForm" (ngSubmit)="onSubmit()">
+	<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 		<div class="input-field-container field-container">
 			<p-iftalabel>
 				<input
 					class="input-field"
 					pInputText
 					type="text"
-					id="username"
-					formControlName="username"
-					[invalid]="isInvalid('username')" />
-				<label for="username">Username</label>
-				@if (isInvalid('username')) {
-				<p-message severity="error" size="small" variant="simple">Username is required.</p-message>
+					id="email"
+					formControlName="email"
+					[invalid]="isInvalid('email')" />
+				<label for="email">Email</label>
+				@if (isInvalid('email')) {
+				<p-message severity="error" size="small" variant="simple">Email is required.</p-message>
 				}
 			</p-iftalabel>
 		</div>
@@ -37,8 +37,8 @@
 					id="password"
 					formControlName="password"
 					[invalid]="isInvalid('password')" />
-				<label for="username">Password</label>
-				@if (isInvalid('password')) { @if (exampleForm.get('password')?.errors?.['required']) {
+				<label for="password">Password</label>
+				@if (isInvalid('password')) { @if (loginForm.get('password')?.errors?.['required']) {
 				<p-message severity="error" size="small" variant="simple">Password is required.</p-message>
 				} }
 			</p-iftalabel>

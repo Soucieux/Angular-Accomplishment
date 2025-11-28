@@ -1,6 +1,7 @@
-import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
+import { EnvironmentInjector, Inject, Injectable, PLATFORM_ID, runInInjectionContext } from '@angular/core';
 import {
 	GoogleAuthProvider,
+	signInWithEmailAndPassword,
 	signInWithPopup,
 	Auth,
 	signOut,
@@ -9,11 +10,13 @@ import {
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
+import { LOG } from '../../log';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class AuthService {
+	private readonly className = 'AuthService';
 	currentUser$: Observable<User | null>;
 	constructor(
 		@Inject(Auth) private auth: Auth,
@@ -31,6 +34,17 @@ export class AuthService {
 		});
 	}
 
+	async emailPasswordLogin(email: string, password: string) {
+		try {
+			await signInWithEmailAndPassword(this.auth, email, password).then(() => {
+				this.router.navigate(['/']);
+				localStorage.setItem('permission', 'true');
+			});
+		} catch (error: any) {
+			LOG.error(this.className, 'Error when signing in with email and password');
+		}
+	}
+
 	googleLogin() {
 		// CurrentUser in this.auth is still null after signInWithPopup completes
 		// As the credentials are being returned after that and then firebase starts initializing
@@ -44,7 +58,7 @@ export class AuthService {
 					}
 				});
 			})
-			.catch(() => console.log('ERROR when signing in through Google'));
+			.catch(() => LOG.error(this.className, 'ERROR when signing in through Google'));
 	}
 
 	logout() {
@@ -54,6 +68,6 @@ export class AuthService {
 				localStorage.setItem('permission', 'false');
 				window.location.reload();
 			})
-			.catch(() => console.log('ERROR when signing out current user'));
+			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}
 }

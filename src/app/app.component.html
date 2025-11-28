@@ -29,7 +29,7 @@
 				<p
 					class="hide-on-mobile"
 					[ngStyle]="{ position: 'relative', left: '5px', top: '18px', fontSize: '16px' }">
-					{{ user.displayName }}
+					{{ user.displayName ? user.displayName : '' }}
 				</p>
 			</li>
 			} @else {

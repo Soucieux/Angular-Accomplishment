@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
@@ -30,7 +30,14 @@ export class AppComponent {
 	private readonly className = 'AppComponent';
 	currentUser$ = this.authService.currentUser$;
 
-	constructor(private authService: AuthService) {}
+	constructor(private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object) {
+		if (isPlatformBrowser(this.platformId)) {
+			const permission = JSON.parse(localStorage.getItem('permission') || 'null');
+			if (permission == null) {
+				localStorage.setItem('permission', 'false');
+			}
+		}
+	}
 
 	/**
 	 * Anything that needs to be done when the component is destroyed.
@@ -38,6 +45,7 @@ export class AppComponent {
 	ngOnDestroy() {
 		LOG.info(this.className, 'Component destroyed');
 	}
+
 	logout() {
 		this.authService.logout();
 	}

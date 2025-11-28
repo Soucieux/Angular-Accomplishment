@@ -39,9 +39,9 @@ import { ButtonModule } from 'primeng/button';
 export class EntertainmentComponent {
 	private readonly className = 'EntertainmentComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
-	// This value is assigned to ViewContainerRef (a predefined keyword) automatically after view is initialized
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	// This value has to be true initially so that the page will not show access denied page on refresh
+	// TODO This value has to be true initially so that the page will not show access denied page on refresh
 	protected isLoggedIn!: boolean;
 	protected isSearching: boolean = false;
 	private contentContainer!: any;
@@ -59,8 +59,6 @@ export class EntertainmentComponent {
 		private dialogService: DialogService
 	) {
 		if (isPlatformBrowser(this.platformId)) {
-			// TODO: If the user is not logged in, and you set the read access on firebase to any,
-			// then this line has to commented out as isLoggedIn will never be stored when the user is not logged in.
 			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'null');
 		}
 	}

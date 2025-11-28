@@ -13,41 +13,47 @@
 		</div>
 	</div>
 	<form [formGroup]="exampleForm" (ngSubmit)="onSubmit()">
-		<p-iftalabel class="input-field-container">
-			<input
-				class="input-field"
-				pInputText
-				type="text"
-				id="username"
-				formControlName="username"
-				[invalid]="isInvalid('username')" />
-			<label for="username">Username</label>
-			@if (isInvalid('username')) {
-			<p-message severity="error" size="small" variant="simple">Username is required.</p-message>
-			}
-		</p-iftalabel>
-		<p-iftalabel class="input-field-container">
-			<input
-				class="input-field"
-				pInputText
-				type="password"
-				id="password"
-				formControlName="password"
-				[invalid]="isInvalid('password')" />
-			<label for="username">Password</label>
-			@if (isInvalid('password')) { @if (exampleForm.get('password')?.errors?.['required']) {
-			<p-message severity="error" size="small" variant="simple">Password is required.</p-message>
-			} }
-		</p-iftalabel>
-		<button class="login-button" pButton severity="secondary" type="submit">
-			<span pButtonLabel>Submit</span>
-		</button>
-		<hr class="horizontal-line" />
+		<div class="input-field-container field-container">
+			<p-iftalabel>
+				<input
+					class="input-field"
+					pInputText
+					type="text"
+					id="username"
+					formControlName="username"
+					[invalid]="isInvalid('username')" />
+				<label for="username">Username</label>
+				@if (isInvalid('username')) {
+				<p-message severity="error" size="small" variant="simple">Username is required.</p-message>
+				}
+			</p-iftalabel>
+		</div>
+		<div class="input-field-container field-container">
+			<p-iftalabel>
+				<input
+					class="input-field"
+					pInputText
+					type="password"
+					id="password"
+					formControlName="password"
+					[invalid]="isInvalid('password')" />
+				<label for="username">Password</label>
+				@if (isInvalid('password')) { @if (exampleForm.get('password')?.errors?.['required']) {
+				<p-message severity="error" size="small" variant="simple">Password is required.</p-message>
+				} }
+			</p-iftalabel>
+		</div>
+		<div class="field-container">
+			<button class="login-button" pButton severity="secondary" type="submit">
+				<span pButtonLabel>Submit</span>
+			</button>
+		</div>
+		<div class="field-container"><hr class="horizontal-line" /></div>
 		<p-button
 			(click)="googleLogin()"
 			icon="pi pi-google"
 			[rounded]="true"
 			severity="secondary"
-			class="google-login"></p-button>
+			class="field-container"></p-button>
 	</form>
 </div>

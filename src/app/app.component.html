@@ -19,27 +19,25 @@
 			<!-- This is a placeholder to move the signin page button to the bottom -->
 			<li style="flex: 1 1 291px"></li>
 			@if (currentUser$ | async; as user){
-			<li class="logout-button-container">
+			<li class="signin-signout-button-container">
 				<p-button
 					(click)="logout()"
 					icon="pi pi-user"
 					[rounded]="true"
 					severity="warn"
-					class="signin-page-button" />
-				<p
-					class="hide-on-mobile"
-					[ngStyle]="{ position: 'relative', left: '5px', top: '18px', fontSize: '16px' }">
+					class="signin-signout-button" />
+				<p class="hide-on-mobile username">
 					{{ user.displayName ? user.displayName : '' }}
 				</p>
 			</li>
 			} @else {
-			<li class="signin-page-button-container">
+			<li class="signin-signout-button-container">
 				<p-button
 					routerLink="/login"
 					icon="pi pi-user"
 					[rounded]="true"
 					severity="secondary"
-					class="signin-page-button" />
+					class="signin-signout-button" />
 			</li>
 			}
 		</ul>

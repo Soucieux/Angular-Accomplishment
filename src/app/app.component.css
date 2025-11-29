@@ -5,13 +5,14 @@
 }
 
 /* The max-width here is the **current** maximum width of the browser */
-@media (max-width: 430px) {
+@media (max-width: 580px) {
 	.hide-on-mobile {
 		display: none !important;
 	}
 
 	mat-drawer {
 		width: 36px !important;
+		height: 430px !important;
 	}
 
 	.nav-button {
@@ -23,7 +24,7 @@
 
 	.nav-icon {
 		position: relative !important;
-		left: 0 !important;
+		left: 2px !important;
 	}
 
 	.logout-button-container {
@@ -34,11 +35,13 @@
 		justify-content: center !important;
 	}
 
-	.signin-page-button {
-		margin: 0px !important;
-		width: 30px !important;
-		height: 30px !important;
-		font-size: 20px !important;
+	::ng-deep .signin-page-button .p-button {
+		height: 30px;
+		width: 30px;
+	}
+
+	.nav-button:hover {
+		box-shadow: none !important;
 	}
 }
 
@@ -55,11 +58,6 @@
 
 .nav-button:hover {
 	box-shadow: 0 1px 3px 1px black;
-}
-
-.nav-button:active {
-	background-color: transparent !important;
-	box-shadow: 0 1px 10px 1px black;
 }
 
 .nav-icon {
@@ -101,10 +99,6 @@ mat-drawer-container {
 	background-image: linear-gradient(90deg, #d53369 0%, #daae51 100%);
 }
 
-::ng-deep .signin-page-button .p-button {
-	margin: 10px;
-}
-
 ::ng-deep .signin-page-button .p-button:active {
 	box-shadow: 0 1px 1px 1px black;
 }
@@ -118,8 +112,6 @@ mat-drawer-container {
 }
 
 .signin-page-button-container {
-	position: absolute;
-	bottom: 4px;
-	left: 50%;
-	transform: translateX(-50%);
+	display: flex;
+	justify-content: center;
 }

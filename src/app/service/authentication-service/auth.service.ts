@@ -65,8 +65,8 @@ export class AuthService {
 		// CurrentUser in this.auth gets removed immediately after signOut
 		signOut(this.auth)
 			.then(() => {
+				this.router.navigate(['/']);
 				localStorage.setItem('permission', 'false');
-				window.location.reload();
 			})
 			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}

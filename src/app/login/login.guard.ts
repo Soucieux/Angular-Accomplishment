@@ -1,5 +1,12 @@
-import { CanActivateFn } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
 
 export const loginGuard: CanActivateFn = () => {
-	return localStorage.getItem('permission') === 'false';
+	const router = inject(Router);
+	if (localStorage.getItem('permission') === 'false') {
+		return true;
+	}
+
+	router.navigate(['/']);
+	return false;
 };

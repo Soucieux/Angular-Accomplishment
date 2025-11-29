@@ -1,5 +1,22 @@
-mat-radio-button {
-	margin-left: 16px;
-	--mdc-radio-unselected-icon-color: yellow !important;
-	--mdc-theme-text-primary-on-background: green !important;
+.word-container {
+	display: flex;
+	flex-direction: column;
+	gap: 30px;
+	margin-bottom: 50px;
+}
+
+.title {
+	text-align: center;
+	font-size: 60px;
+	margin-top: 100px;
+	margin-bottom: 130px;
+}
+
+.word {
+	font-family: 'cf';
+	text-align: center;
+}
+
+.en-word {
+	text-align: center;
 }

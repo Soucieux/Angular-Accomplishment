@@ -7,21 +7,20 @@
 	flex-direction: column;
 	/* justify-content: center; horizontal center */
 	/* align-items: center; vertical center */
-	height: 85%; /* full page height */
 }
 
 .word-container {
 	display: flex;
 	flex-direction: column;
 	gap: 30px;
-	margin-bottom: 50px;
+	margin-bottom: 10%;
 }
 
 .title {
 	text-align: center;
 	font-size: 60px;
-	margin-top: 100px;
-	margin-bottom: 130px;
+	margin-top: 20%;
+	margin-bottom: 20%;
 }
 
 .word {
@@ -90,4 +89,18 @@
 
 ::ng-deep .google-login .p-button:active {
 	box-shadow: 0 1px 1px 1px black;
+}
+
+@media (max-width: 580px) {
+	.title {
+		font-size: 37px;
+	}
+
+	.word {
+		font-size: 20px;
+	}
+
+	.en-word {
+		font-size: 17px;
+	}
 }

@@ -93,6 +93,9 @@ export class EntertainmentComponent {
 	 * Anything that needs to be done when the component is destroyed.
 	 */
 	ngOnDestroy() {
+		this.selectedGenres$.complete();
+		this.dialogComponentContainer?.clear();
+		this.isSearching = false;
 		LOG.info(this.className, 'Component destroyed');
 	}
 
@@ -104,6 +107,7 @@ export class EntertainmentComponent {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Always put DOM manipulation in ngOnInit or ngAfterViewInit as it requires an element reference
 			this.contentContainer = this.elRef.nativeElement.getElementsByClassName('content-container')[0];
+			console.log(this.contentContainer);
 			this.updateGridLayout(this.contentContainer);
 		}
 	}

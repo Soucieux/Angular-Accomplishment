@@ -1,7 +1,7 @@
 @if (isLoggedIn && (statistics$ | async)){ @let stats = statistics$ | async;
 <div class="category-container">
-	<div class="category-header-container">
-		<div class="category-header-title">Categories ({{ stats.totalNumber }})</div>
+	<div class="control-button-container">
+		<div class="control-button-title">Categories ({{ stats.totalNumber }})</div>
 		<button mat-fab extended (click)="updateAllMoviesRate()" class="control-button">
 			<span class="material-icons control-button-icon">search</span>
 		</button>

@@ -7,5 +7,5 @@ import { loginGuard } from './login/login.guard';
 export const routes: Routes = [
 	{ path: '', component: HomeComponent },
 	{ path: 'entertainment', component: EntertainmentComponent },
-	{ path: 'login', component: LoginComponent, canActivate: [loginGuard] }
+	{ path: 'login', component: LoginComponent, canMatch: [loginGuard] }
 ];

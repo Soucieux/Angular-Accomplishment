@@ -133,24 +133,24 @@
 }
 
 .delete-button {
-    position: absolute;
-    top: 250px;
-    right: 20px;
+	position: absolute;
+	top: 250px;
+	right: 20px;
 }
 
 ::ng-deep .delete-button .p-button-icon {
 	color: white;
 }
 
-/* Category Header Container */
-.category-header-container {
+/* Control Button Container */
+.control-button-container {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	gap: 10px;
 }
 
-.category-header-title {
+.control-button-title {
 	font-size: 23px;
 	font-weight: bold;
 	padding-bottom: 10px;
@@ -233,30 +233,27 @@
 /* The max-width here is the **current** maximum width of the browser */
 @media (max-width: 430px) {
 	.hide-on-mobile {
-		display: none !important;
-	}
-
-	.content-container {
-		gap: 3px;
+		display: none;
 	}
 
 	.individual-item {
-		width: 97.8% !important;
-		height: 210px !important;
+		width: 97.8%;
+		height: 210px;
+	}
+
+	.individual-item-content {
+		row-gap: 0.5px;
 	}
 
 	.image-container {
-		width: 130px !important;
-		height: 180px !important;
+		width: 130px;
+		height: 180px;
 	}
 
 	.control-button {
 		width: 20px;
 		height: 40px;
-	}
-
-	.control-button-icon {
-		left: 10px !important;
+		right: 8px;
 	}
 
 	.category-button {
@@ -276,7 +273,22 @@
 
 	.category-button span:nth-of-type(2) {
 		position: relative;
+		padding-left: 35px;
 		bottom: -6px;
-		padding-left: 15px;
+	}
+
+	.delete-button {
+		position: absolute;
+		top: 152px;
+		right: 10px;
+	}
+
+	::ng-deep .delete-button .p-button-danger {
+		background-color: transparent !important;
+		border-color: transparent !important;
+	}
+
+	::ng-deep .delete-button .pi {
+		color: red !important;
 	}
 }

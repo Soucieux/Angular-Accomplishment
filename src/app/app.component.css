@@ -27,17 +27,15 @@
 		left: 2px !important;
 	}
 
-	.logout-button-container {
-		padding-left: 0px !important;
-		min-width: 0px !important;
+	.signin-signout-button-container {
+        display: flex !important;
+		padding-left: 5px !important;
 		bottom: 10px !important;
-		width: 35px !important;
-		justify-content: center !important;
 	}
 
-	::ng-deep .signin-page-button .p-button {
-		height: 30px;
-		width: 30px;
+	::ng-deep .signin-signout-button .p-button {
+		height: 25px !important;
+		width: 25px;
 	}
 
 	.nav-button:hover {
@@ -99,19 +97,18 @@ mat-drawer-container {
 	background-image: linear-gradient(90deg, #d53369 0%, #daae51 100%);
 }
 
-::ng-deep .signin-page-button .p-button:active {
+::ng-deep .signin-signout-button .p-button:active {
 	box-shadow: 0 1px 1px 1px black;
 }
 
-.logout-button-container {
-	display: flex;
-	flex-direction: row;
-	position: absolute;
-	bottom: 4px;
-	padding-left: 15px;
+.signin-signout-button-container {
+	display: grid;
+	grid-template-columns: 45% 1fr 20px;
 }
 
-.signin-page-button-container {
-	display: flex;
-	justify-content: center;
+.username {
+	text-align: left;
+    position: relative;
+    left: -15px;
+    top: 8px;
 }

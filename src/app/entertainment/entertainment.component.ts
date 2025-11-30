@@ -1,3 +1,4 @@
+import { Utilities } from './../app.utilities';
 import { MovieIdNotFoundError } from './../error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
@@ -56,7 +57,8 @@ export class EntertainmentComponent {
 		private renderer: Renderer2,
 		private doubanService: DoubanService,
 		private firebaseService: FirebaseService,
-		private dialogService: DialogService
+		private dialogService: DialogService,
+		private Utilities: Utilities
 	) {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'null');
@@ -349,7 +351,7 @@ export class EntertainmentComponent {
 	 * @returns A string that represents the font size.
 	 */
 	protected calculateFontSize(length: number) {
-		if (this.isMobile()) {
+		if (this.Utilities.isMobile()) {
 			return length <= 8 ? '18px' : String(18 - (length - 8) * 2 + 'px');
 		}
 		return length <= 9 ? '20px' : String(20 - (length - 8.5) * 2 + 'px');
@@ -481,16 +483,6 @@ export class EntertainmentComponent {
 	}
 
 	////////////////////////////////Below are Helper Functions////////////////////////////////
-	/**
-	 * Check if the current device is a mobile device.
-	 * Note: This only works for iPhone 16 Pro or other devices with a width of 430px.
-	 *
-	 * @returns A boolean value that indicates if the current device is a mobile device.
-	 */
-	private isMobile() {
-		return window.innerWidth <= 430;
-	}
-
 	/**
 	 * Check if the movie item is valid.
 	 *

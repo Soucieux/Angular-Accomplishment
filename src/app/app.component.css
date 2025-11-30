@@ -5,7 +5,7 @@
 }
 
 /* The max-width here is the **current** maximum width of the browser */
-@media (max-width: 580px) {
+@media (max-width: 680px) {
 	.hide-on-mobile {
 		display: none !important;
 	}

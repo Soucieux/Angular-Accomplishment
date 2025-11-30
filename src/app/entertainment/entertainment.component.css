@@ -1,10 +1,10 @@
-/* Page Container */
-.content-container {
+:host {
 	--individual-item-width: 420px;
 	--individual-item-gap: 13px;
-	display: grid;
-	/* grid-auto-flow: dense; */
-	gap: var(--individual-item-gap);
+}
+
+.page-container {
+	margin-bottom: 10px;
 }
 
 .access-denied-container {
@@ -13,10 +13,97 @@
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+	text-align: center;
+}
+
+/* Control Button */
+.control-button-container {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 10px;
+}
+
+.control-button-title {
+	font-size: 23px;
+	font-weight: bold;
+	padding-bottom: 10px;
+	margin: 10px;
+}
+
+.control-button {
+	color: white !important;
+	backdrop-filter: blur(10px);
+	background: rgba(145, 89, 180, 0.5);
+	height: 38px;
+	bottom: 4px;
+	width: 100px;
+}
+
+.control-button-icon {
+	font-size: 30px;
+	position: relative;
+	left: 10px;
+}
+
+/* Category Button */
+.category-button-container {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+	gap: 10px;
+}
+
+.category-button {
+	height: 65px;
+	border: 1.5px solid black;
+	border-radius: 10px;
+	margin-right: 15px;
+	padding-top: 6px;
+	padding-left: 15px;
+	cursor: pointer;
+}
+
+.category-button span:nth-of-type(1) {
+	padding-left: 10px;
+}
+
+.category-button span:nth-of-type(2) {
+	display: flex;
+	align-items: center;
+	padding-left: 10px;
+	& p:nth-of-type(2) {
+		position: relative;
+		padding-left: 10px;
+	}
+}
+
+.selected-category {
+	background: rgba(255, 255, 255, 0.5);
+	border: 2px solid rgb(255, 255, 255);
+	box-shadow: 5px 5px 10px rgb(238, 240, 243);
+	backdrop-filter: blur(10px);
+}
+
+.category-text {
+	font-family: 'cf';
+	font-size: 17px;
+}
+
+.category-count {
+	font-size: 15px;
+	font-weight: bold;
+}
+
+/* Content Container */
+.content-container {
+	display: grid;
+	/* grid-auto-flow: dense; */
+	gap: var(--individual-item-gap);
 }
 
 .individual-item {
-	width: var(--individual-item-width);
+	min-width: var(--individual-item-width);
+	max-width: var(--individual-item-width);
 	background: rgba(255, 255, 255, 0.5);
 	border-radius: 20px;
 	border: 2px solid rgb(255, 255, 255);
@@ -142,103 +229,17 @@
 	color: white;
 }
 
-/* Control Button Container */
-.control-button-container {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 10px;
-}
-
-.control-button-title {
-	font-size: 23px;
-	font-weight: bold;
-	padding-bottom: 10px;
-	margin: 10px;
-}
-
-/* Control Button */
-.control-button-label {
-	font-size: medium;
-	font-size: 17px;
-}
-
-.control-button-icon {
-	font-size: 30px;
-	position: relative;
-	left: 10px;
-}
-
-.control-button {
-	color: white !important;
-	backdrop-filter: blur(10px);
-	background: rgba(145, 89, 180, 0.5);
-	height: 38px;
-	bottom: 4px;
-	width: 100px;
-}
-
-/* Category Button */
-.category-container {
-	margin-bottom: 10px;
-}
-
-.category-button-container {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-	gap: 10px;
-}
-
-.category-button {
-	height: 65px;
-	border: 1.5px solid black;
-	border-radius: 10px;
-	margin-right: 15px;
-	padding-top: 6px;
-	padding-left: 15px;
-	cursor: pointer;
-}
-
-.category-button span:nth-of-type(1) {
-	padding-left: 10px;
-}
-
-.category-button span:nth-of-type(2) {
-	display: flex;
-	align-items: center;
-	padding-left: 10px;
-	& p:nth-of-type(2) {
-		position: relative;
-		padding-left: 10px;
-	}
-}
-
-.category-text {
-	font-family: 'cf';
-	font-size: 17px;
-}
-
-.category-count {
-	font-size: 15px;
-	font-weight: bold;
-}
-
-.selected-category {
-	background: rgba(255, 255, 255, 0.5);
-	border: 2px solid rgb(255, 255, 255);
-	box-shadow: 5px 5px 10px rgb(238, 240, 243);
-	backdrop-filter: blur(10px);
-}
-
 /* The max-width here is the **current** maximum width of the browser */
-@media (max-width: 430px) {
+@media (max-width: 800px) {
 	.hide-on-mobile {
 		display: none;
 	}
 
 	.individual-item {
-		width: 97.8%;
-		height: 210px;
+		min-width: 97.8%;
+		max-width: 97.8%;
+		min-height: 210px;
+		max-height: 210px;
 	}
 
 	.individual-item-content {
@@ -259,14 +260,12 @@
 	.category-button {
 		display: flex;
 		flex-direction: row;
-		min-width: 110px;
 		height: 25px;
 		padding: 5px;
 		margin-right: 5px;
 	}
 
 	.category-button span:nth-of-type(1) {
-		min-width: 45px;
 		display: flex;
 		align-items: center;
 	}

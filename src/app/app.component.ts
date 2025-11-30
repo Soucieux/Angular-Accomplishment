@@ -1,4 +1,4 @@
-import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -9,6 +9,7 @@ import { LOG } from './log';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
+import { Utilities } from './app.utilities';
 @Component({
 	selector: 'root',
 	standalone: true,
@@ -28,6 +29,7 @@ import { ButtonModule } from 'primeng/button';
 })
 export class AppComponent {
 	private readonly className = 'AppComponent';
+	private utilities = inject(Utilities);
 	currentUser$ = this.authService.currentUser$;
 
 	constructor(private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object) {

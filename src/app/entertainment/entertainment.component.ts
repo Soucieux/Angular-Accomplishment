@@ -163,9 +163,10 @@ export class EntertainmentComponent {
 	 *
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - false
+	 * @param retrieveYearAndTitle - false
 	 */
 	private async getMovieRateOnly(movieItemVO: MovieItemVO) {
-		await this.getMovieData(movieItemVO, false);
+		await this.getMovieData(movieItemVO, false, false);
 	}
 
 	/**
@@ -173,9 +174,21 @@ export class EntertainmentComponent {
 	 *
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - true
+	 * @param retrieveYearAndTitle - false
 	 */
-	private async getNewMovieData(movieItemVO: MovieItemVO) {
-		await this.getMovieData(movieItemVO, true);
+	private async getNewMovieDataGivenYearAndTitle(movieItemVO: MovieItemVO) {
+		await this.getMovieData(movieItemVO, true, false);
+	}
+
+	/**
+	 * Get the latest movie rate, first release date, total episode number, and movie cover image link.
+	 *
+	 * @param movieItemVO - The movie item to search for.
+	 * @param retrieveOtherData - true
+	 * @param retrieveYearAndTitle - true
+	 */
+	private async getNewMovieDataGivenMovieId(movieItemVO: MovieItemVO) {
+		await this.getMovieData(movieItemVO, true, true);
 	}
 
 	/**
@@ -184,8 +197,13 @@ export class EntertainmentComponent {
 	 *
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - Whether to retrieve movie cover image, first release date, and total episode number.
+	 * @param retrieveYearAndTitle - Whether to retrieve movie year and title.
 	 */
-	private async getMovieData(movieItemVO: MovieItemVO, retrieveOtherData: boolean) {
+	private async getMovieData(
+		movieItemVO: MovieItemVO,
+		retrieveOtherData: boolean,
+		retrieveYearAndTitle: boolean
+	) {
 		try {
 			// Step 1: Get the movie webpage as text
 			const movieWebpageAsString = await firstValueFrom(
@@ -213,6 +231,15 @@ export class EntertainmentComponent {
 				);
 				let firstReleaseDate = movieWebpageAsString.match(regexForFirstReleaseDate)[1];
 				firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
+
+				// Step 4.1: Retrieve year and title if the flag is true
+				if (retrieveYearAndTitle) {
+					const year = firstReleaseDate.substring(0, 4);
+					movieItemVO.setMovieYear(Number(year));
+					const regexForTitle = new RegExp('<meta property="og:title" content="(.*?)" />', 'i');
+					const title = movieWebpageAsString.match(regexForTitle)[1];
+					movieItemVO.setMovieTitle(title);
+				}
 				movieItemVO.setMovieFirstReleaseDate(firstReleaseDate);
 				LOG.info(
 					this.className,
@@ -434,13 +461,19 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Helper functino to handle "Search" button on the "Add New Movie" dialog.
+	 * Helper function to handle "Search" button on the "Add New Movie" dialog.
 	 *
 	 * @param newMovieItemVO - New movie item to search for.
 	 * @returns The movie cover image.
 	 */
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob> {
-		if (await this.firebaseService.isMovieAlreadyAdded(newMovieItemVO.getMovieTitle())) {
+		if (
+			await this.firebaseService.isMovieAlreadyAdded(
+				newMovieItemVO.getMovieTitle(),
+				newMovieItemVO.getMovieYear(),
+				newMovieItemVO.getMovieId()
+			)
+		) {
 			throw new MovieAlreadyExistsError(newMovieItemVO.getMovieTitle());
 		}
 		await this.searchNewMovie(newMovieItemVO);
@@ -454,16 +487,29 @@ export class EntertainmentComponent {
 	 *
 	 * Only the "Search" button on the "Add New Movie" dialog can trigger this function.
 	 *
+	 * Either of the following conditions need to be met:
+	 *
+	 * 1. The movie ID is NOT given but title and year are given in the "Add New Movie" dialog.
+	 * In this case, the movie ID will be searched first, if no movie ID is found, an error will be thrown.
+	 * If the movie ID is found, then the movie details will be retrieved.
+	 *
+	 * 2. The movie ID is given but title and year are NOT given in the "Add New Movie" dialog.
+	 * In this case, the movie details will be retrieved directly.
+	 *
 	 * @param newMovieItemVO - New movie item to search for.
 	 */
 	private async searchNewMovie(newMovieItemVO: MovieItemVO) {
-		// Step 1: If the movie ID is not entered in the "Add New Movie" dialog, then search for the movie ID first.
+		// Condition 1
 		if (newMovieItemVO.getMovieId() === -1) {
 			LOG.info(this.className, `Movie ID not given, start searching for it.`);
 			await this.getMovieId(newMovieItemVO);
+			await this.getNewMovieDataGivenYearAndTitle(newMovieItemVO);
 		}
-		// Step 2 : After successful retrieval of movie ID or movie ID is already given, get all the movie details.
-		await this.getNewMovieData(newMovieItemVO);
+
+		// Condition 2
+		else {
+			await this.getNewMovieDataGivenMovieId(newMovieItemVO);
+		}
 	}
 
 	/**

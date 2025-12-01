@@ -2,6 +2,7 @@ import { Utilities } from './../app.utilities';
 import { MovieIdNotFoundError } from './../error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
+	AfterViewInit,
 	Component,
 	ElementRef,
 	HostListener,
@@ -45,7 +46,7 @@ export class EntertainmentComponent {
 	// TODO This value has to be true initially so that the page will not show access denied page on refresh
 	protected isLoggedIn!: boolean;
 	protected isSearching: boolean = false;
-	private contentContainer!: any;
+	private host = this.elRef.nativeElement;
 	protected movieList$!: Observable<MovieItemVO[]>;
 	protected selectedGenres$ = new BehaviorSubject<string>('');
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
@@ -53,7 +54,7 @@ export class EntertainmentComponent {
 	private tempMovieItemVO!: MovieItemVO;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
-		private elRef: ElementRef,
+		private elRef: ElementRef<HTMLElement>,
 		private renderer: Renderer2,
 		private doubanService: DoubanService,
 		private firebaseService: FirebaseService,
@@ -101,16 +102,9 @@ export class EntertainmentComponent {
 		LOG.info(this.className, 'Component destroyed');
 	}
 
-	/**
-	 * Anything that needs to be done after the view is initialized.
-	 */
-	protected ngAfterViewInit() {
-		//elRef is to get a collection, cannot modify the content directly.
+	public ngAfterViewChecked() {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
-			// Always put DOM manipulation in ngOnInit or ngAfterViewInit as it requires an element reference
-			this.contentContainer = this.elRef.nativeElement.getElementsByClassName('content-container')[0];
-			console.log(this.contentContainer);
-			this.updateGridLayout(this.contentContainer);
+			this.updateGridLayout();
 		}
 	}
 
@@ -120,7 +114,7 @@ export class EntertainmentComponent {
 	@HostListener('window:resize')
 	protected onResize() {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
-			this.updateGridLayout(this.contentContainer);
+			this.updateGridLayout();
 		}
 	}
 
@@ -359,23 +353,20 @@ export class EntertainmentComponent {
 
 	/**
 	 * Update the grid layout of the page container.
-	 *
-	 * @param contentContainer - The page container to update the grid layout.
 	 */
-	private updateGridLayout(contentContainer: any) {
-		if (contentContainer) {
-			// Get item width from css
-			const itemsWidth = getComputedStyle(contentContainer).getPropertyValue('--individual-item-width');
-			const itemsGap = getComputedStyle(contentContainer).getPropertyValue('--individual-item-gap');
+	private updateGridLayout() {
+		// Get item width and item gap from css
+		const itemsWidth = getComputedStyle(this.host).getPropertyValue('--individual-item-width').trim();
+		const itemsGap = getComputedStyle(this.host).getPropertyValue('--individual-item-gap').trim();
 
-			let componentWidth = (contentContainer as HTMLElement).clientWidth;
+		const contentContainer = this.host.querySelector('.content-container');
+		if (contentContainer) {
+			let componentWidth = contentContainer.clientWidth;
 			let itemsPerRow = Math.floor(
 				(componentWidth - parseInt(itemsGap)) / (parseInt(itemsWidth) + parseInt(itemsGap))
 			);
-
 			this.renderer.setStyle(
-				//document is to directly get HTML DOM which can be modified directly
-				document.getElementsByClassName('content-container')[0] as HTMLElement,
+				contentContainer,
 				'grid-template-columns',
 				`repeat(${itemsPerRow}, minmax(${parseInt(itemsWidth)}px, 1fr))`
 			);

@@ -19,7 +19,7 @@
 			<!-- This is a placeholder to move the signin page button to the bottom -->
 			<li style="flex: 1 1 291px"></li>
 			@if (currentUser$ | async; as user){
-			<li class="signin-signout-button-container">
+			<li class="signout-button-container">
 				<p-button
 					(click)="logout()"
 					icon="pi pi-user"
@@ -31,7 +31,7 @@
 				</p>
 			</li>
 			} @else {
-			<li class="signin-signout-button-container">
+			<li>
 				<p-button
 					routerLink="/login"
 					icon="pi pi-user"

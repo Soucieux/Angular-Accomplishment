@@ -95,6 +95,6 @@
 			type="submit"
 			class="submit-button"
 			[disabled]="!canSubmit"
-			[attr.form]="'addMovieForm'"></p-button>
+			(click)="addMovieForm.ngSubmit.emit()"></p-button>
 	</ng-template>
 </p-dialog>

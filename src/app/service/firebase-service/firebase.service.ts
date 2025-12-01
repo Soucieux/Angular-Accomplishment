@@ -264,15 +264,21 @@ export class FirebaseService {
 	 * Check if a given movie has already been added in the databse
 	 *
 	 * @param movieTitle Movie title to check
+	 * @param movieYear Movie year to check
+	 * @param movieId Movie ID to check
 	 * @returns true if the movie already exists, otherwise, false.
 	 */
-	public async isMovieAlreadyAdded(movieTitle: string): Promise<boolean> {
+	public async isMovieAlreadyAdded(
+		movieTitle: string,
+		movieYear: number,
+		movieId: number
+	): Promise<boolean> {
 		try {
 			const snapshot = await get(this.moviesRef);
 			const allMovies = snapshot.val();
 			for (const key of Object.keys(allMovies)) {
 				const movie = allMovies[key];
-				if (movie.title === movieTitle) {
+				if ((movie.title === movieTitle && movie.year === movieYear) || movie.id === movieId) {
 					return true;
 				}
 			}

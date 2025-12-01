@@ -72,7 +72,7 @@ export class AddDialogComponent {
 			const movieItemVO = new MovieItemVO();
 			if (this.name) {
 				movieItemVO.setMovieTitle(newMovieData.movieName);
-				movieItemVO.setMovieYear(Number(newMovieData.years.year));
+				movieItemVO.setMovieYear(Number(newMovieData.years));
 			} else if (newMovieData.id) {
 				movieItemVO.setMovieId(Number(this.id));
 			}
@@ -87,7 +87,7 @@ export class AddDialogComponent {
 			} else if (error instanceof MovieAlreadyExistsError) {
 				errorMessage = 'Movie already exists';
 			} else {
-				errorMessage = 'No Movie was found';
+				errorMessage = 'Error while searching movie';
 				LOG.error(this.className, 'Error while searching new movie from add dialog', error as Error);
 			}
 			this.confirmationService.confirm({

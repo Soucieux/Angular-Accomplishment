@@ -1,11 +1,5 @@
-::ng-deep .history-dialog {
-	width: 500px;
-	height: 475px;
-	user-select: none;
-}
-
 @media (max-width: 580px) {
-	::ng-deep .history-dialog {
+	::ng-deep .p-confirmdialog {
 		min-width: 100% !important;
 		min-height: 100% !important;
 		border-radius: 0px !important;

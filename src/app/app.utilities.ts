@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { MovieItemVO } from './entertainment/entertainment.movieitem.vo';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {
@@ -12,8 +13,19 @@ export class Utilities {
 	 */
 	public isMobile() {
 		if (isPlatformBrowser(this.platformId)) {
-			return globalThis.innerWidth <= 430;
+			return globalThis.innerWidth <= 580;
 		}
 		return false;
+	}
+
+	/**
+	 * Check if the movie item is valid.
+	 *
+	 * @param movieItemVO - The movie item to check.
+	 */
+	public static checkMovieItemVO(movieItemVO: MovieItemVO) {
+		if (movieItemVO.getMovieTitle() === '' || movieItemVO.getMovieYear() === -1) {
+			throw new Error('Movie item VO is invalid');
+		}
 	}
 }

@@ -9,5 +9,5 @@ export const routes: Routes = [
 	{ path: '', component: HomeComponent },
 	{ path: 'entertainment', component: EntertainmentComponent },
 	{ path: 'login', component: LoginComponent, canMatch: [loginGuard] },
-	{ path: 'patch', component: PatchComponent }
+	{ path: 'patch', component: PatchComponent, canMatch: [loginGuard] }
 ];

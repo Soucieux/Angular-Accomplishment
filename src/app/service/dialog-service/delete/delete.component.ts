@@ -1,10 +1,12 @@
 import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { Utilities } from '../../../app.utilities';
 
 @Component({
 	selector: 'delete-dialog',
 	template: ` <p-confirmdialog (onHide)="onDialogClosed()" /> `,
+	styleUrl: './delete.component.scss',
 	standalone: true,
 	imports: [ConfirmDialogModule],
 	providers: [ConfirmationService]
@@ -13,6 +15,8 @@ export class DeleteDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private confirmationService = inject(ConfirmationService);
 	private messageService = inject(MessageService);
+
+	constructor(private utilities: Utilities) {}
 
 	/**
 	 * Open the delete dialog
@@ -38,15 +42,23 @@ export class DeleteDialogComponent {
 			},
 
 			accept: () => {
-				this.messageService.add({ severity: 'info', summary: 'Confirmed', detail: 'Record deleted' });
+				if (!this.utilities.isMobile()) {
+					this.messageService.add({
+						severity: 'info',
+						summary: 'Confirmed',
+						detail: 'Record deleted'
+					});
+				}
 				acceptCallback();
 			},
 			reject: () => {
-				this.messageService.add({
-					severity: 'info',
-					summary: 'Cancelled',
-					detail: 'Operation cancelled'
-				});
+				if (!this.utilities.isMobile()) {
+					this.messageService.add({
+						severity: 'info',
+						summary: 'Cancelled',
+						detail: 'Operation cancelled'
+					});
+				}
 			}
 		});
 	}

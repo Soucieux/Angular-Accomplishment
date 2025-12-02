@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { MovieIdNotFoundError } from '../../../error/movie-id-not-found.error';
 import { MovieAlreadyExistsError } from '../../../error/movie-already-exists-error';
 import { LOG } from '../../../log';
+import { Utilities } from '../../../app.utilities';
 
 @Component({
 	selector: 'add-dialog',
@@ -46,6 +47,8 @@ export class AddDialogComponent {
 	name: string = '';
 	id: string = '';
 	year: string = '';
+
+	constructor(private utilities: Utilities) {}
 
 	protected ngOnInit() {
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (2025 - i).toString() }));
@@ -98,12 +101,19 @@ export class AddDialogComponent {
 				acceptButtonProps: {
 					label: 'OK',
 					severity: 'danger',
-					style: {
-						width: '100px',
-						'margin-right': '100px'
-					}
-				},
-				accept: () => {}
+					...(this.utilities.isMobile()
+						? {
+								style: {
+									width: '100px'
+								}
+						  }
+						: {
+								style: {
+									width: '100px',
+									'margin-right': '100px'
+								}
+						  })
+				}
 			});
 		} finally {
 			this.isLoading = false;

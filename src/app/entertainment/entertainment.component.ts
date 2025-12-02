@@ -278,7 +278,7 @@ export class EntertainmentComponent {
 	 * @param movieItemVO - The movie item to search for.
 	 */
 	private async getMovieId(movieItemVO: MovieItemVO) {
-		EntertainmentComponent.checkMovieItemVO(movieItemVO);
+		Utilities.checkMovieItemVO(movieItemVO);
 		// Step 1: searchMovie returns a Promise and wait for the retrieval to complete
 		const extractedData = await firstValueFrom(
 			this.doubanService.searchMovieJSON(movieItemVO.getMovieTitle())
@@ -517,17 +517,5 @@ export class EntertainmentComponent {
 	 */
 	protected openHistoryDialog() {
 		this.dialogService.openDialog(this.dialogComponentContainer, 'history', () => {});
-	}
-
-	////////////////////////////////Below are Helper Functions////////////////////////////////
-	/**
-	 * Check if the movie item is valid.
-	 *
-	 * @param movieItemVO - The movie item to check.
-	 */
-	private static checkMovieItemVO(movieItemVO: MovieItemVO) {
-		if (movieItemVO.getMovieTitle() === '' || movieItemVO.getMovieYear() === -1) {
-			throw new Error('Movie item VO is invalid');
-		}
 	}
 }

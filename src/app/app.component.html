@@ -16,8 +16,15 @@
 					<span class="nav-label hide-on-mobile">Entertainment</span>
 				</a>
 			</li>
+			<li style="padding-top: 5px">
+				<a mat-button class="nav-button" matRipple routerLink="/patch">
+					<span class="material-symbols-outlined nav-icon-mso">note_stack</span>
+					<span class="nav-label hide-on-mobile">Patch Notes</span>
+				</a>
+			</li>
+			<!-- Each new button is about 20px in height -->
 			<!-- This is a placeholder to move the signin page button to the bottom -->
-			<li style="flex: 1 1 291px"></li>
+			<li style="flex: 1 1 271px"></li>
 			@if (currentUser$ | async; as user){
 			<li class="signout-button-container">
 				<p-button

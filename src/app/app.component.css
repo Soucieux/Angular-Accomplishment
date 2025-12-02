@@ -1,7 +1,10 @@
-.drawer-container {
+mat-drawer-container {
+	background-image: linear-gradient(90deg, #d53369 0%, #daae51 100%);
 	position: absolute;
 	height: 100%;
 	width: 100%;
+	display: flex;
+	flex-direction: column;
 }
 
 /* The max-width here is the **current** maximum width of the browser */
@@ -10,9 +13,10 @@
 		display: none !important;
 	}
 
+	/* Add height by 20px whenever a new button is added */
 	mat-drawer {
 		width: 36px !important;
-		height: 430px !important;
+		height: 450px !important;
 	}
 
 	.nav-button {
@@ -23,7 +27,10 @@
 	}
 
 	.nav-icon {
-		position: relative !important;
+		left: 2px !important;
+	}
+
+	.nav-icon-mso {
 		left: 2px !important;
 	}
 
@@ -64,6 +71,13 @@
 	font-size: 20px;
 }
 
+.nav-icon-mso {
+	position: relative;
+	left: 30px;
+	top: 4px;
+	font-size: 20px;
+}
+
 .nav-label {
 	position: relative;
 	left: 65px;
@@ -80,8 +94,8 @@ mat-drawer {
 	border-radius: 10px;
 	width: 250px;
 	height: 500px;
-	margin: 10px;
-	margin-top: 15px;
+	top: 5px;
+	left: 5px;
 	backdrop-filter: blur(50px);
 	background-color: rgb(243, 227, 243);
 	border: 0.8px solid rgb(255, 255, 255);
@@ -89,12 +103,10 @@ mat-drawer {
 }
 
 mat-drawer-content {
-	padding-left: 20px;
-	padding-top: 15px;
-}
-
-mat-drawer-container {
-	background-image: linear-gradient(90deg, #d53369 0%, #daae51 100%);
+	padding-left: 15px;
+	padding-right: 5px;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
 ::ng-deep .signin-signout-button .p-button:active {

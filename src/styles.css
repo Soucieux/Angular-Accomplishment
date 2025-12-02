@@ -2,7 +2,7 @@
 @import 'bootstrap/dist/css/bootstrap.css';
 @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
 @import 'primeicons/primeicons.css';
-/* @import 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined'; */
+@import 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined';
 
 body {
 	font-family: 'nlf';

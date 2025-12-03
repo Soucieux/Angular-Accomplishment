@@ -419,6 +419,10 @@ export class EntertainmentComponent {
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
 	}
 
+	protected openSearchDialog() {
+		this.dialogService.openDialog(this.dialogComponentContainer, 'search', () => {});
+	}
+
 	/**
 	 * Triggered by the "Remove" button click event on the "Entertainment" page
 	 *

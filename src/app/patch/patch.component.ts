@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-patch',
+  selector: 'patch',
   imports: [],
   templateUrl: './patch.component.html',
   styleUrl: './patch.component.css',

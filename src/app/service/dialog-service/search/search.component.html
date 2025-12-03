@@ -1,0 +1,17 @@
+<p-dialog
+	header="Searching latest rate for each movie..."
+	[(visible)]="visible"
+	[modal]="true"
+	[appendTo]="'body'"
+	[resizable]="false"
+	[closable]="false"
+	styleClass="dialog"
+	(onHide)="onDialogClosed()"
+	><ng-template #footer>
+		<p-button
+			label="STOP"
+			type="button"
+			class="submit-button"
+			severity="danger"
+			(click)="onDialogClosed()"></p-button> </ng-template
+></p-dialog>

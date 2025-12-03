@@ -4,6 +4,7 @@ import { AddDialogComponent } from './add/add.component';
 import { LOG } from '../../log';
 import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
 import { HistoryDialogComponent } from './history/history.component';
+import { SearchDialogComponent } from './search/search.component';
 @Injectable({
 	providedIn: 'root'
 })
@@ -27,12 +28,16 @@ export class DialogService {
 				return AddDialogComponent;
 			case 'history':
 				return HistoryDialogComponent;
+			case 'search':
+				return SearchDialogComponent;
 			default:
 				throw new Error('Invalid dialog type');
 		}
 	}
 
 	// Overload methods to call correct dialog component
+	openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'search', acceptCallback: () => void): void;
+
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'delete',
@@ -85,7 +90,7 @@ export class DialogService {
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			// Open up corresponding dialog and pass callbacks
-			if (dialogType === 'history') {
+			if (dialogType === 'history' || dialogType === 'search') {
 				dialogComponentRef.instance.openDialog(callback);
 			} else {
 				dialogComponentRef.instance.openDialog(callback, callbackOrMessage);

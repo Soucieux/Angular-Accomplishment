@@ -29,7 +29,6 @@ import { Utilities } from './app.utilities';
 })
 export class AppComponent {
 	private readonly className = 'AppComponent';
-	private utilities = inject(Utilities);
 	currentUser$ = this.authService.currentUser$;
 
 	constructor(private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object) {

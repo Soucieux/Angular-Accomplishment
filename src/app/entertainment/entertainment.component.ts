@@ -128,7 +128,8 @@ export class EntertainmentComponent {
 	 */
 	protected async updateAllMoviesRate() {
 		// Step 1: Get the movie list (one-time retrieval) from current movieList$
-		let movieListVOs = await firstValueFrom(this.filteredMovieList$);
+        let movieListVOs = await firstValueFrom(this.filteredMovieList$);
+        await this.firebaseService.updateHistoryWithNewSearchActivity();
 		const currentSesstionId = ++this.sessionId;
 		this.isSearching = true;
 
@@ -219,24 +220,23 @@ export class EntertainmentComponent {
 		isAddingNewMovie: boolean
 	) {
 		try {
-			// Step 1: Get the movie webpage as text
-			const movieWebpageAsString = await firstValueFrom(
-				this.doubanService.searchMovieWebpage(movieItemVO.getMovieId())
-			);
-
-			// Step 2: Get the latest movie rate for the current movie
-			const regexForMovieRate = new RegExp(
-				'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
-				'i'
-			);
-
+			let movieWebpageAsString = null;
 			// Latest rate can be retrieved only if the searching is still executing and there is no concurrent processes
 			if ((this.isSearching && movieItemVO.getSessionId() === this.sessionId) || isAddingNewMovie) {
+				// Step 1: Get the movie webpage as text
+				movieWebpageAsString = await firstValueFrom(
+					this.doubanService.searchMovieWebpage(movieItemVO.getMovieId())
+				);
+			}
+
+			// Step 2: Get the latest movie rate for the current movie
+			if (movieWebpageAsString) {
+				const regexForMovieRate = new RegExp(
+					'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
+					'i'
+				);
 				const movieRate = movieWebpageAsString.match(regexForMovieRate)[1];
 				movieItemVO.setMovieRate(movieRate);
-				this.searchStreamService.addSearchLog(
-					`Movie rate retrieved for ${movieItemVO.getMovieTitle()} is ${movieRate}`
-				);
 			}
 
 			// Step 3: Retrieve other data if the flag is true

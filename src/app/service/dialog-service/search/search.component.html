@@ -6,12 +6,15 @@
 	[resizable]="false"
 	[closable]="false"
 	styleClass="dialog"
-	(onHide)="onDialogClosed()"
-	><ng-template #footer>
+	(onHide)="onDialogClosed()">
+	@for (searchLog of searchLogs; track $index) {
+	<div>{{ searchLog }}</div>
+	}
+	<ng-template #footer>
 		<p-button
 			label="STOP"
 			type="button"
 			class="submit-button"
 			severity="danger"
-			(click)="onDialogClosed()"></p-button> </ng-template
+			(click)="triggerStopSearching()"></p-button> </ng-template
 ></p-dialog>

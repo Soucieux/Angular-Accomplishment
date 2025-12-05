@@ -1,4 +1,4 @@
-import { LOG } from '../../log';
+import { LOG } from '../../app.logs';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, throwError } from 'rxjs';
@@ -77,7 +77,7 @@ export class DoubanService {
 	searchMovieWebpage(id: number): Observable<any> {
 		return this.http
 			.get(`${this.getFirebaseFunctionUrl()}?url=${this.doubanBaseUrl}/subject/${id}&type=json`, {
-				responseType: 'text'
+                responseType: 'text'
 			})
 			.pipe(
 				catchError((error) => {

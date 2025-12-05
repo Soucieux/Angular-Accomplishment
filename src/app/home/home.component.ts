@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { MatRadioModule } from '@angular/material/radio';
-import { LOG } from '../log';
+import { LOG } from '../app.logs';
 
 @Component({
 	selector: 'home',

@@ -12,7 +12,7 @@ import {
 	remove,
 	get
 } from '@angular/fire/database';
-import { Observable, map, throwError } from 'rxjs';
+import { Observable, catchError, map, throwError } from 'rxjs';
 import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
 
 @Injectable({
@@ -163,28 +163,15 @@ export class FirebaseService {
 				LOG.info(this.className, `Movie details for ${movieItemVO.getMovieTitle()} has been updated`);
 			});
 
-			// Get current time and customize the format
-			const now = new Date();
-			const formattedTime =
-				`${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now
-					.getDate()
-					.toString()
-					.padStart(2, '0')} ` +
-				`${now.getHours().toString().padStart(2, '0')}:${now
-					.getMinutes()
-					.toString()
-					.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-
 			// Get key for history
-			const snapshot = await get(dbRef(this.db, 'history'));
-			const historyKey = snapshot.exists() ? (Object.keys(snapshot.val()).length + 1).toString() : 0;
+			const historyKey = await this.getHistoryKey();
 
 			// Update history
 			await update(dbRef(this.db, `history/${historyKey}`), {
 				status: 'added',
-				message: `${movieItemVO.getMovieTitle()}/${movieItemVO.getMovieGenre()}(${
+				message: `${movieItemVO.getMovieTitle()} - ${movieItemVO.getMovieGenre()} (Rate: ${
 					movieItemVO.getMovieRate() == 0 ? '暂无评分' : movieItemVO.getMovieRate()
-				}) was added on ${formattedTime}`
+				}) was added on ${this.getCurrentFormattedTime()}`
 			}).then(() => {
 				LOG.info(this.className, 'Movie history has been updated');
 			});
@@ -228,6 +215,19 @@ export class FirebaseService {
 				return currentData;
 			}).then(() => {
 				LOG.info(this.className, `Movie statistics has been updated`);
+			});
+
+			// Get key for history
+			const historyKey = await this.getHistoryKey();
+
+			// Update history
+			await update(dbRef(this.db, `history/${historyKey}`), {
+				status: 'deleted',
+				message: `${movieItemVO.getMovieTitle()} - ${movieItemVO.getMovieGenre()} (Rate: ${
+					movieItemVO.getMovieRate() == 0 ? '暂无评分' : movieItemVO.getMovieRate()
+				}) was deleted on ${this.getCurrentFormattedTime()}`
+			}).then(() => {
+				LOG.info(this.className, 'Movie history has been updated');
 			});
 		} catch (error) {
 			LOG.error(
@@ -295,5 +295,35 @@ export class FirebaseService {
 			);
 			return false;
 		}
+	}
+
+	/**
+	 * Get the next available key for history
+	 *
+	 * @returns Return the next key
+	 */
+	private async getHistoryKey() {
+		const snapshot = await get(dbRef(this.db, 'history'));
+		const historyKey = snapshot.exists() ? (Object.keys(snapshot.val()).length + 1).toString() : 0;
+		return historyKey;
+	}
+
+	/**
+	 * Get current timestamp
+	 *
+	 * @returns Formatted time
+	 */
+	private getCurrentFormattedTime() {
+		const now = new Date();
+		const formattedTime =
+			`${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now
+				.getDate()
+				.toString()
+				.padStart(2, '0')} ` +
+			`${now.getHours().toString().padStart(2, '0')}:${now
+				.getMinutes()
+				.toString()
+				.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+		return formattedTime;
 	}
 }

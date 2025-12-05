@@ -178,7 +178,7 @@ export class EntertainmentComponent {
 	 * @param retrieveYearAndTitle - false
 	 */
 	private async getMovieRateOnly(movieItemVO: MovieItemVO) {
-		await this.getMovieData(movieItemVO, false, false);
+		await this.getMovieData(movieItemVO, false, false, false);
 	}
 
 	/**
@@ -189,7 +189,7 @@ export class EntertainmentComponent {
 	 * @param retrieveYearAndTitle - false
 	 */
 	private async getNewMovieDataGivenYearAndTitle(movieItemVO: MovieItemVO) {
-		await this.getMovieData(movieItemVO, true, false);
+		await this.getMovieData(movieItemVO, true, false, true);
 	}
 
 	/**
@@ -200,7 +200,7 @@ export class EntertainmentComponent {
 	 * @param retrieveYearAndTitle - true
 	 */
 	private async getNewMovieDataGivenMovieId(movieItemVO: MovieItemVO) {
-		await this.getMovieData(movieItemVO, true, true);
+		await this.getMovieData(movieItemVO, true, true, true);
 	}
 
 	/**
@@ -210,11 +210,13 @@ export class EntertainmentComponent {
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - Whether to retrieve movie cover image, first release date, and total episode number.
 	 * @param retrieveYearAndTitle - Whether to retrieve movie year and title.
+	 * @param isAddingNewMovie - Whether to continue retrieving movie rate
 	 */
 	private async getMovieData(
 		movieItemVO: MovieItemVO,
 		retrieveOtherData: boolean,
-		retrieveYearAndTitle: boolean
+		retrieveYearAndTitle: boolean,
+		isAddingNewMovie: boolean
 	) {
 		try {
 			// Step 1: Get the movie webpage as text
@@ -229,7 +231,7 @@ export class EntertainmentComponent {
 			);
 
 			// Latest rate can be retrieved only if the searching is still executing and there is no concurrent processes
-			if (this.isSearching && movieItemVO.getSessionId() === this.sessionId) {
+			if ((this.isSearching && movieItemVO.getSessionId() === this.sessionId) || isAddingNewMovie) {
 				const movieRate = movieWebpageAsString.match(regexForMovieRate)[1];
 				movieItemVO.setMovieRate(movieRate);
 				this.searchStreamService.addSearchLog(

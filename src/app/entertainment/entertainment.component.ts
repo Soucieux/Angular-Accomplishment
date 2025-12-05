@@ -1,8 +1,8 @@
+import { SearchStreamService } from './../service/dialog-service/search/search-stream.service';
 import { Utilities } from './../app.utilities';
 import { MovieIdNotFoundError } from './../error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
-	AfterViewInit,
 	Component,
 	ElementRef,
 	HostListener,
@@ -13,7 +13,7 @@ import {
 	ViewContainerRef
 } from '@angular/core';
 import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
-import { LOG } from '../log';
+import { LOG } from '../app.logs';
 import { DoubanService } from '../service/douban-service/douban.service';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
 import { MovieItemVO } from './entertainment.movieitem.vo';
@@ -46,6 +46,7 @@ export class EntertainmentComponent {
 	// TODO This value has to be true initially so that the page will not show access denied page on refresh
 	protected isLoggedIn!: boolean;
 	protected isSearching: boolean = false;
+	private sessionId: number = 0;
 	private host = this.elRef.nativeElement;
 	protected movieList$!: Observable<MovieItemVO[]>;
 	protected selectedGenres$ = new BehaviorSubject<string>('');
@@ -59,7 +60,8 @@ export class EntertainmentComponent {
 		private doubanService: DoubanService,
 		private firebaseService: FirebaseService,
 		private dialogService: DialogService,
-		private Utilities: Utilities
+		private Utilities: Utilities,
+		private searchStreamService: SearchStreamService
 	) {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'null');
@@ -127,26 +129,30 @@ export class EntertainmentComponent {
 	protected async updateAllMoviesRate() {
 		// Step 1: Get the movie list (one-time retrieval) from current movieList$
 		let movieListVOs = await firstValueFrom(this.filteredMovieList$);
+		const currentSesstionId = ++this.sessionId;
 		this.isSearching = true;
 
 		// Step 2: Loop through the movieList to get latest movie details
 		for (let movieItemVO of movieListVOs) {
-			// If the search is cancelled, then break the loop.
-			if (!this.isSearching) {
-				LOG.warn(this.className, 'Search cancelled');
-				break;
-			}
-
-			LOG.info(this.className, `Start searching for ${movieItemVO.getMovieTitle()}`);
-
-			// Step 3: Delay 2 seconds for every movie
-			await firstValueFrom(timer(2000));
+			this.searchStreamService.addSearchLog(`Start searching for ${movieItemVO.getMovieTitle()}`);
+			movieItemVO.setSessionId(currentSesstionId);
 
 			try {
+				// Step 3: Delay 2 seconds for every movie
+				await firstValueFrom(timer(1000));
+
 				// Step 4: Get movie rate
 				await this.getMovieRateOnly(movieItemVO);
+
 				// Step 5: Update movie rate
-				await this.firebaseService.updateMovieRateToFirebase(movieItemVO);
+				if (currentSesstionId === this.sessionId && this.isSearching) {
+					await this.firebaseService.updateMovieRateToFirebase(movieItemVO);
+				}
+
+				// If the search is cancelled, then break the loop.
+				if (currentSesstionId !== this.sessionId || !this.isSearching) {
+					break;
+				}
 			} catch (error) {
 				LOG.error(
 					this.className,
@@ -155,7 +161,13 @@ export class EntertainmentComponent {
 				);
 			}
 		}
-		LOG.info(this.className, 'Searching completes');
+
+		if (currentSesstionId === this.sessionId) {
+			if (this.isSearching) this.searchStreamService.addSearchLog('Searching completes');
+			else {
+				this.searchStreamService.addSearchLog('Search cancelled');
+			}
+		}
 	}
 
 	/**
@@ -215,12 +227,15 @@ export class EntertainmentComponent {
 				'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
 				'i'
 			);
-			const movieRate = movieWebpageAsString.match(regexForMovieRate)[1];
-			movieItemVO.setMovieRate(movieRate);
-			LOG.info(
-				this.className,
-				`Movie rate retrieved for ${movieItemVO.getMovieTitle()} is ${movieRate}`
-			);
+
+			// Latest rate can be retrieved only if the searching is still executing and there is no concurrent processes
+			if (this.isSearching && movieItemVO.getSessionId() === this.sessionId) {
+				const movieRate = movieWebpageAsString.match(regexForMovieRate)[1];
+				movieItemVO.setMovieRate(movieRate);
+				this.searchStreamService.addSearchLog(
+					`Movie rate retrieved for ${movieItemVO.getMovieTitle()} is ${movieRate}`
+				);
+			}
 
 			// Step 3: Retrieve other data if the flag is true
 			if (retrieveOtherData) {
@@ -402,14 +417,6 @@ export class EntertainmentComponent {
 
 	//////////////////////Below are Event Handlers triggered by user actions///////////////////////
 	/**
-	 * Triggered by the "Cancel Search" button click event on the "Entertainment" page
-	 */
-	protected cancelSearch() {
-		LOG.warn(this.className, 'Search cancel requested');
-		this.isSearching = false;
-	}
-
-	/**
 	 * Triggered by any genre button click event on the "Entertaiment" page
 	 *
 	 * @param genre genre to display
@@ -419,8 +426,20 @@ export class EntertainmentComponent {
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
 	}
 
+	/**
+	 * Triggered by the "Search" button click event on the "Entertainment" page
+	 */
 	protected openSearchDialog() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'search', () => {});
+		this.dialogService.openDialog(this.dialogComponentContainer, 'search', this.cancelSearch.bind(this));
+		this.updateAllMoviesRate();
+	}
+
+	/**
+	 * Triggered by the "Stop" button click event on the "Search Dialog"
+	 */
+	private cancelSearch() {
+		this.searchStreamService.addSearchLog('Search cancel requested');
+		this.isSearching = false;
 	}
 
 	/**

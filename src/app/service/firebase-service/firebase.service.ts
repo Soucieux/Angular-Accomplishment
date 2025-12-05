@@ -1,6 +1,7 @@
+import { SearchStreamService } from './../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
-import { LOG } from '../../log';
+import { LOG } from '../../app.logs';
 import {
 	Database,
 	ref as dbRef,
@@ -25,7 +26,8 @@ export class FirebaseService {
 	constructor(
 		@Inject(Storage) private storage: Storage,
 		@Inject(Database) private db: Database,
-		@Inject(EnvironmentInjector) private ei: EnvironmentInjector
+		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
+		private searchStreamService: SearchStreamService
 	) {
 		this.moviesRef = dbRef(this.db, 'movies');
 		this.statisticsRef = dbRef(this.db, 'statistics');
@@ -112,7 +114,9 @@ export class FirebaseService {
 		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
 			rate: movieItemVO.getMovieRate()
 		}).then(() => {
-			LOG.info(this.className, `Movie rate for ${movieItemVO.getMovieTitle()} has been updated`);
+			this.searchStreamService.addSearchLog(
+				`Movie rate for ${movieItemVO.getMovieTitle()} has been updated`
+			);
 		});
 	}
 

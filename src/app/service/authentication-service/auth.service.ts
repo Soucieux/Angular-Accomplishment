@@ -10,7 +10,7 @@ import {
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
-import { LOG } from '../../log';
+import { LOG } from '../../app.logs';
 
 @Injectable({
 	providedIn: 'root'

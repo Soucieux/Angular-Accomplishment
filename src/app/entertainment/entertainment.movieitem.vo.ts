@@ -7,6 +7,7 @@ export class MovieItemVO {
 	private episodeNumber: number = -1;
 	private coverImage: any = null;
 	private movieKey: string = '';
+	private sessionId: number = -1;
 
 	constructor();
 
@@ -58,6 +59,10 @@ export class MovieItemVO {
 		return this.coverImage;
 	}
 
+	getSessionId(): number {
+		return this.sessionId;
+	}
+
 	setMovieTitle(title: string) {
 		this.title = title;
 	}
@@ -96,5 +101,9 @@ export class MovieItemVO {
 
 	setMovieCoverImage(coverImage: any) {
 		this.coverImage = coverImage;
+	}
+
+	setSessionId(sessionId: number) {
+		this.sessionId = sessionId;
 	}
 }

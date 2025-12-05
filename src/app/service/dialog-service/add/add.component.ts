@@ -11,7 +11,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CommonModule } from '@angular/common';
 import { MovieIdNotFoundError } from '../../../error/movie-id-not-found.error';
 import { MovieAlreadyExistsError } from '../../../error/movie-already-exists-error';
-import { LOG } from '../../../log';
+import { LOG } from '../../../app.logs';
 import { Utilities } from '../../../app.utilities';
 
 @Component({

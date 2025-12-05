@@ -1,7 +1,7 @@
 import { ComponentRef, Injectable, Type, ViewContainerRef } from '@angular/core';
 import { DeleteDialogComponent } from './delete/delete.component';
 import { AddDialogComponent } from './add/add.component';
-import { LOG } from '../../log';
+import { LOG } from '../../app.logs';
 import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
 import { HistoryDialogComponent } from './history/history.component';
 import { SearchDialogComponent } from './search/search.component';

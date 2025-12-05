@@ -106,18 +106,40 @@ export class FirebaseService {
 	}
 
 	/**
+	 * Add new entry to history stating that a new search activity has been initialized
+	 */
+	public async updateHistoryWithNewSearchActivity() {
+		await this.updateHistory('search');
+	}
+
+	/**
 	 * Update the movie rate to firebase.
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
 	public async updateMovieRateToFirebase(movieItemVO: MovieItemVO) {
-		await update(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`), {
-			rate: movieItemVO.getMovieRate()
-		}).then(() => {
+		// Step 1 : Gather necessary info
+		const movieRef = dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`);
+		const snapshot = await get(movieRef);
+		const oldRate = snapshot.exists() ? snapshot.val().rate : undefined;
+
+		// Step 2 : Compare latest rate with the one stored in the database
+		if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
+			await update(movieRef, {
+				rate: movieItemVO.getMovieRate()
+			}).then(() => {
+				const rateDifference = movieItemVO.getMovieRate() - oldRate;
+				this.searchStreamService.addSearchLog(
+					`The rate of ${movieItemVO.getMovieTitle()} ${
+						rateDifference > 0 ? 'increased' : 'decreased'
+					} by ${rateDifference} to ${movieItemVO.getMovieRate()}`
+				);
+			});
+		} else {
 			this.searchStreamService.addSearchLog(
-				`Movie rate for ${movieItemVO.getMovieTitle()} has been updated`
+				`The rate of ${movieItemVO.getMovieTitle()} stays the same`
 			);
-		});
+		}
 	}
 
 	/**
@@ -163,18 +185,8 @@ export class FirebaseService {
 				LOG.info(this.className, `Movie details for ${movieItemVO.getMovieTitle()} has been updated`);
 			});
 
-			// Get key for history
-			const historyKey = await this.getHistoryKey();
-
-			// Update history
-			await update(dbRef(this.db, `history/${historyKey}`), {
-				status: 'added',
-				message: `${movieItemVO.getMovieTitle()} - ${movieItemVO.getMovieGenre()} (Rate: ${
-					movieItemVO.getMovieRate() == 0 ? '暂无评分' : movieItemVO.getMovieRate()
-				}) was added on ${this.getCurrentFormattedTime()}`
-			}).then(() => {
-				LOG.info(this.className, 'Movie history has been updated');
-			});
+			// Add new entry to history
+			await this.updateHistory('added', movieItemVO);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -217,18 +229,8 @@ export class FirebaseService {
 				LOG.info(this.className, `Movie statistics has been updated`);
 			});
 
-			// Get key for history
-			const historyKey = await this.getHistoryKey();
-
-			// Update history
-			await update(dbRef(this.db, `history/${historyKey}`), {
-				status: 'deleted',
-				message: `${movieItemVO.getMovieTitle()} - ${movieItemVO.getMovieGenre()} (Rate: ${
-					movieItemVO.getMovieRate() == 0 ? '暂无评分' : movieItemVO.getMovieRate()
-				}) was deleted on ${this.getCurrentFormattedTime()}`
-			}).then(() => {
-				LOG.info(this.className, 'Movie history has been updated');
-			});
+			// Add new entry to history
+			await this.updateHistory('deleted', movieItemVO);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -298,14 +300,29 @@ export class FirebaseService {
 	}
 
 	/**
-	 * Get the next available key for history
-	 *
-	 * @returns Return the next key
+	 * Update history with new activity
 	 */
-	private async getHistoryKey() {
+	private async updateHistory(status: string, movieItemVO?: MovieItemVO) {
 		const snapshot = await get(dbRef(this.db, 'history'));
 		const historyKey = snapshot.exists() ? (Object.keys(snapshot.val()).length + 1).toString() : 0;
-		return historyKey;
+
+		if (movieItemVO) {
+			await update(dbRef(this.db, `history/${historyKey}`), {
+				status: status,
+				message: `${movieItemVO.getMovieTitle()} - ${movieItemVO.getMovieGenre()} (Rate: ${
+					movieItemVO.getMovieRate() == 0 ? '暂无评分' : movieItemVO.getMovieRate()
+				}) was ${status} on ${this.getCurrentFormattedTime()}`
+			}).then(() => {
+				LOG.info(this.className, 'New history entry has been updated');
+			});
+		} else {
+			await update(dbRef(this.db, `history/${historyKey}`), {
+				status: status,
+				message: `New rate search was started on ${this.getCurrentFormattedTime()}`
+			}).then(() => {
+				LOG.info(this.className, 'New history entry has been updated');
+			});
+		}
 	}
 
 	/**

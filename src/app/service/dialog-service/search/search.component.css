@@ -4,10 +4,26 @@
 	user-select: none;
 }
 
+.logs {
+	height: 160px;
+	overflow: auto;
+	border: 1px solid black;
+}
+
+::ng-deep .dialog .p-dialog-footer {
+	position: absolute;
+	right: 0px;
+	bottom: 0px;
+}
+
 @media (max-width: 580px) {
 	::ng-deep .dialog {
 		min-width: 100% !important;
 		min-height: 100% !important;
 		border-radius: 0px !important;
+	}
+
+	.logs {
+		height: 66vh;
 	}
 }

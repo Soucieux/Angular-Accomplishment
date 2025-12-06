@@ -7,16 +7,18 @@
 	[closable]="false"
 	styleClass="dialog"
 	(onHide)="onDialogClosed()">
-	<div class="logs">
+	<div class="logs" #logContainer>
 		@for (searchLog of searchLogs; track $index) {
-		<div>{{ searchLog }}</div>
+		<div [innerHTML]="searchLog"></div>
 		}
 	</div>
 	<ng-template #footer>
 		<p-button
-			label="STOP"
+			[label]="searchingCompleteOrInterrupted ? 'DONE' : 'STOP'"
 			type="button"
 			class="submit-button"
-			severity="danger"
-			(click)="triggerStopSearching()"></p-button> </ng-template
+			[severity]="searchingCompleteOrInterrupted ? 'success' : 'danger'"
+			(click)="
+				searchingCompleteOrInterrupted ? onDialogClosed() : triggerStopSearching()
+			"></p-button> </ng-template
 ></p-dialog>

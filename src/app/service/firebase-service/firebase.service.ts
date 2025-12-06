@@ -128,11 +128,13 @@ export class FirebaseService {
 			await update(movieRef, {
 				rate: movieItemVO.getMovieRate()
 			}).then(() => {
-				const rateDifference = movieItemVO.getMovieRate() - oldRate;
+				const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
 				this.searchStreamService.addSearchLog(
-					`The rate of ${movieItemVO.getMovieTitle()} ${
+					`The rate of ${movieItemVO.getMovieTitle()} is <span ${
+						rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
+					}>${
 						rateDifference > 0 ? 'increased' : 'decreased'
-					} by ${rateDifference} to ${movieItemVO.getMovieRate()}`
+					} by ${Math.abs(rateDifference)}</span> to ${movieItemVO.getMovieRate()}`
 				);
 			});
 		} else {
@@ -161,16 +163,6 @@ export class FirebaseService {
 				movieKey = (Object.keys(snapshot.val()).length + 1).toString();
 			}
 
-			// Update the movie statistics
-			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
-				currentData.genre[movieItemVO.getMovieGenre()] =
-					(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
-				currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
-				return currentData;
-			}).then(() => {
-				LOG.info(this.className, `Movie statistics has been updated`);
-			});
-
 			// Add new movie data
 			await update(dbRef(this.db, `movies/${movieKey}`), {
 				title: movieItemVO.getMovieTitle(),
@@ -182,11 +174,21 @@ export class FirebaseService {
 				firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
 				episodeNumber: movieItemVO.getMovieEpisodeNumber()
 			}).then(() => {
-				LOG.info(this.className, `Movie details for ${movieItemVO.getMovieTitle()} has been updated`);
+				LOG.info(this.className, `${movieItemVO.getMovieTitle()} has been ADDED to the database`);
 			});
 
 			// Add new entry to history
 			await this.updateHistory('added', movieItemVO);
+
+			// Update the movie statistics
+			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+				currentData.genre[movieItemVO.getMovieGenre()] =
+					(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
+				currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
+				return currentData;
+			}).then(() => {
+				LOG.info(this.className, `Movie statistics has been updated`);
+			});
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -210,12 +212,15 @@ export class FirebaseService {
 			// Remove the movie info from the database
 			await remove(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`));
 
+			LOG.info(this.className, `${movieItemVO.getMovieTitle()} has been DELETED from the database`);
+
+			// Add new entry to history
+			await this.updateHistory('deleted', movieItemVO);
+
 			// Save the movie key to the reusable keys array for later use
 			const keys = await this.getReusableKeys();
 			keys.push(movieItemVO.getMovieKey());
 			await this.saveReusableKeys(keys);
-
-			LOG.info(this.className, `${movieItemVO.getMovieTitle()} has been DELETED from the database`);
 
 			// Update the movie statistics
 			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
@@ -228,9 +233,6 @@ export class FirebaseService {
 			}).then(() => {
 				LOG.info(this.className, `Movie statistics has been updated`);
 			});
-
-			// Add new entry to history
-			await this.updateHistory('deleted', movieItemVO);
 		} catch (error) {
 			LOG.error(
 				this.className,

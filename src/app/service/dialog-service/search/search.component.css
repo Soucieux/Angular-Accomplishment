@@ -8,12 +8,21 @@
 	height: 160px;
 	overflow: auto;
 	border: 1px solid black;
+	/* overflow-y: auto; */
 }
 
 ::ng-deep .dialog .p-dialog-footer {
 	position: absolute;
 	right: 0px;
 	bottom: 0px;
+}
+
+::ng-deep .rate-up {
+	color: red !important;
+}
+
+::ng-deep .rate-down {
+	color: green !important;
 }
 
 @media (max-width: 580px) {

@@ -164,7 +164,7 @@ export class EntertainmentComponent {
 		}
 
 		if (currentSesstionId === this.sessionId) {
-			if (this.isSearching) this.searchStreamService.addSearchLog('Searching completes');
+			if (this.isSearching) this.searchStreamService.addSearchLog('Search complete');
 			else {
 				this.searchStreamService.addSearchLog('Search cancelled');
 			}

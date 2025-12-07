@@ -13,7 +13,7 @@
 	text-align: center;
 	font-size: 60px;
 	margin-top: 20%;
-	margin-bottom: 20%;
+	margin-bottom: 15%;
 }
 
 .word {
@@ -30,11 +30,11 @@
 		font-size: 37px;
 	}
 
-	.word {
+	.en-word {
 		font-size: 20px;
 	}
 
-	.en-word {
+	.word {
 		font-size: 17px;
 	}
 }

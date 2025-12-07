@@ -1,5 +1,12 @@
 import { SearchStreamService } from './../service/dialog-service/search/search-stream.service';
-import { Utilities } from './../app.utilities';
+import {
+	COMPONENT_DESTROY,
+	RATE_DECREASED,
+	RATE_INCREASED,
+	SEARCH_CANCEL,
+	SEARCH_COMPELTE,
+	Utilities
+} from './../app.utilities';
 import { MovieIdNotFoundError } from './../error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
@@ -47,12 +54,12 @@ export class EntertainmentComponent {
 	protected isLoggedIn!: boolean;
 	protected isSearching: boolean = false;
 	private sessionId: number = 0;
-	private host = this.elRef.nativeElement;
 	protected movieList$!: Observable<MovieItemVO[]>;
 	protected selectedGenres$ = new BehaviorSubject<string>('');
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
 	protected statistics$!: Observable<any>;
 	private tempMovieItemVO!: MovieItemVO;
+	private searchSummary!: Map<string, string[]>;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef<HTMLElement>,
@@ -101,7 +108,7 @@ export class EntertainmentComponent {
 		this.selectedGenres$.complete();
 		this.dialogComponentContainer?.clear();
 		this.isSearching = false;
-		LOG.info(this.className, 'Component destroyed');
+		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	public ngAfterViewChecked() {
@@ -128,15 +135,24 @@ export class EntertainmentComponent {
 	 */
 	protected async updateAllMoviesRate() {
 		// Step 1: Get the movie list (one-time retrieval) from current movieList$
-        let movieListVOs = await firstValueFrom(this.filteredMovieList$);
-        await this.firebaseService.updateHistoryWithNewSearchActivity();
-		const currentSesstionId = ++this.sessionId;
+		let movieListVOs = await firstValueFrom(this.filteredMovieList$);
+		await this.firebaseService.updateHistoryWithNewSearchActivity();
+
+		// Initialize required data
 		this.isSearching = true;
+		this.searchSummary = new Map<string, string[]>([
+			[RATE_INCREASED, []],
+			[RATE_DECREASED, []]
+		]);
+		const rateIncreasedArray = this.searchSummary.get(RATE_INCREASED);
+		const rateDecreasedArray = this.searchSummary.get(RATE_DECREASED);
+		const currentSessionId: number = ++this.sessionId;
+		let searchCount = 0;
 
 		// Step 2: Loop through the movieList to get latest movie details
 		for (let movieItemVO of movieListVOs) {
-			this.searchStreamService.addSearchLog(`Start searching for ${movieItemVO.getMovieTitle()}`);
-			movieItemVO.setSessionId(currentSesstionId);
+			this.searchStreamService.addSearchLog(`Start searching for ${movieItemVO.getMovieName()}`);
+			movieItemVO.setSessionId(currentSessionId);
 
 			try {
 				// Step 3: Delay 2 seconds for every movie
@@ -146,28 +162,55 @@ export class EntertainmentComponent {
 				await this.getMovieRateOnly(movieItemVO);
 
 				// Step 5: Update movie rate
-				if (currentSesstionId === this.sessionId && this.isSearching) {
+				if (currentSessionId === this.sessionId && this.isSearching) {
 					await this.firebaseService.updateMovieRateToFirebase(movieItemVO);
 				}
 
 				// If the search is cancelled, then break the loop.
-				if (currentSesstionId !== this.sessionId || !this.isSearching) {
+				if (currentSessionId !== this.sessionId || !this.isSearching) {
 					break;
 				}
+				// Otherwise, save movie name to corresponding array if movie rate changes.
+				else if (this.searchStreamService.checkLastLogDecreasedOrIncreased() === RATE_DECREASED) {
+					rateDecreasedArray?.push(movieItemVO.getMovieName());
+				} else if (this.searchStreamService.checkLastLogDecreasedOrIncreased() === RATE_INCREASED) {
+					rateIncreasedArray?.push(movieItemVO.getMovieName());
+				}
+				searchCount++;
 			} catch (error) {
 				LOG.error(
 					this.className,
-					`Error while updating movie rate for ${movieItemVO.getMovieTitle()}`,
+					`Error while updating movie rate for ${movieItemVO.getMovieName()}`,
 					error as Error
 				);
 			}
 		}
 
-		if (currentSesstionId === this.sessionId) {
-			if (this.isSearching) this.searchStreamService.addSearchLog('Search complete');
+		// Prevent race condition
+		if (currentSessionId === this.sessionId) {
+			if (this.isSearching) this.searchStreamService.addSearchLog(SEARCH_COMPELTE);
 			else {
-				this.searchStreamService.addSearchLog('Search cancelled');
+				this.searchStreamService.addSearchLog(SEARCH_CANCEL);
 			}
+			// Summary
+			const rateIncreaseLength = rateIncreasedArray?.length ?? 0;
+			const rateDecreaseLength = rateDecreasedArray?.length ?? 0;
+			let summary = `---------------------------------\n📊 Search Summary (${searchCount})\n`;
+			summary += `⬆ Rate Increased (${rateIncreaseLength}): `;
+			if ((rateIncreasedArray?.length ?? 0) > 0) {
+				summary += rateIncreasedArray?.join(', ');
+				summary += '.\n';
+			} else {
+				summary += 'None\n';
+			}
+			summary += `⬇ Rate Decreased (${rateDecreaseLength}): `;
+			if ((rateDecreasedArray?.length ?? 0) > 0) {
+				summary += rateDecreasedArray?.join(', ');
+				summary += '.\n';
+			} else {
+				summary += 'None\n';
+			}
+			this.searchStreamService.addSearchLog(summary);
 		}
 	}
 
@@ -255,12 +298,12 @@ export class EntertainmentComponent {
 					movieItemVO.setMovieYear(Number(year));
 					const regexForTitle = new RegExp('<meta property="og:title" content="(.*?)" />', 'i');
 					const title = movieWebpageAsString.match(regexForTitle)[1];
-					movieItemVO.setMovieTitle(title);
+					movieItemVO.setMovieName(title);
 				}
 				movieItemVO.setMovieFirstReleaseDate(firstReleaseDate);
 				LOG.info(
 					this.className,
-					`First release date for ${movieItemVO.getMovieTitle()} is ${firstReleaseDate}`
+					`First release date for ${movieItemVO.getMovieName()} is ${firstReleaseDate}`
 				);
 
 				// Step 5: Get the total episode number for the current movie
@@ -269,7 +312,7 @@ export class EntertainmentComponent {
 				movieItemVO.setMovieEpisodeNumber(episodeNumber);
 				LOG.info(
 					this.className,
-					`Total episode number for ${movieItemVO.getMovieTitle()} is ${episodeNumber}`
+					`Total episode number for ${movieItemVO.getMovieName()} is ${episodeNumber}`
 				);
 
 				// Step 6: Get the movie cover for the current movie and upload it to firebase storage
@@ -280,7 +323,7 @@ export class EntertainmentComponent {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while retrieving movie webpage for movie ${movieItemVO.getMovieTitle()}`,
+				`Error while retrieving movie webpage for movie ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
 			throw error;
@@ -298,13 +341,13 @@ export class EntertainmentComponent {
 		Utilities.checkMovieItemVO(movieItemVO);
 		// Step 1: searchMovie returns a Promise and wait for the retrieval to complete
 		const extractedData = await firstValueFrom(
-			this.doubanService.searchMovieJSON(movieItemVO.getMovieTitle())
+			this.doubanService.searchMovieJSON(movieItemVO.getMovieName())
 		);
 		// Step 2: If empty data is received, it means the API is not responding due to too many requests.
 		if (extractedData == null || extractedData.length === 0) {
 			LOG.warn(this.className, 'API responded with empty data due to too many requests');
 			// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.
-			throw new MovieIdNotFoundError(movieItemVO.getMovieTitle());
+			throw new MovieIdNotFoundError(movieItemVO.getMovieName());
 		} else {
 			// Step 2: If data is received, then loop through the extracted data to get the correct movie ID
 			// as the result is retrieved by regex.
@@ -312,14 +355,14 @@ export class EntertainmentComponent {
 				//This means that NEW movie must have title and year
 				// Movie name and year must be exactly the same
 				if (
-					movieData.title === movieItemVO.getMovieTitle() &&
+					movieData.title === movieItemVO.getMovieName() &&
 					movieData.year == movieItemVO.getMovieYear()
 				) {
 					// Step 3: Set the movie ID to the movie item VO
 					movieItemVO.setMovieId(movieData.id);
 					LOG.info(
 						this.className,
-						`Movie ID retrieved for ${movieItemVO.getMovieTitle()} with ID ${movieData.id}`
+						`Movie ID retrieved for ${movieItemVO.getMovieName()} with ID ${movieData.id}`
 					);
 					return;
 				}
@@ -327,9 +370,9 @@ export class EntertainmentComponent {
 			// throw the error to let the calling method knows that no matching movie ID has been found.
 			LOG.warn(
 				this.className,
-				`Movie ID not found for ${movieItemVO.getMovieTitle()}. Possible wrong name and year combination.`
+				`Movie ID not found for ${movieItemVO.getMovieName()}. Possible wrong name and year combination.`
 			);
-			throw new MovieIdNotFoundError(movieItemVO.getMovieTitle());
+			throw new MovieIdNotFoundError(movieItemVO.getMovieName());
 		}
 	}
 
@@ -344,14 +387,14 @@ export class EntertainmentComponent {
 		try {
 			// searchMovieCover returns a Promise and we wait for the retrieval to complete
 			const movieCoverImage = await firstValueFrom(
-				this.doubanService.searchMovieCover(movieCoverImageLink, movieItemVO.getMovieTitle())
+				this.doubanService.searchMovieCover(movieCoverImageLink, movieItemVO.getMovieName())
 			);
 			movieItemVO.setMovieCoverImage(movieCoverImage);
-			LOG.info(this.className, `Movie cover retrieved for ${movieItemVO.getMovieTitle()}`);
+			LOG.info(this.className, `Movie cover retrieved for ${movieItemVO.getMovieName()}`);
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while retrieving movie cover for ${movieItemVO.getMovieTitle()} from Douban`,
+				`Error while retrieving movie cover for ${movieItemVO.getMovieName()} from Douban`,
 				error as Error
 			);
 			throw error;
@@ -367,14 +410,14 @@ export class EntertainmentComponent {
 		try {
 			const downloadableLink = await this.firebaseService.uploadImageAndGetDownloadLink(
 				movieItemVO.getMovieCoverImage(),
-				movieItemVO.getMovieTitle()
+				movieItemVO.getMovieName()
 			);
 			movieItemVO.setMovieCoverImageDownloadableLink(downloadableLink);
-			LOG.info(this.className, `Movie cover uploaded for ${movieItemVO.getMovieTitle()}`);
+			LOG.info(this.className, `Movie cover uploaded for ${movieItemVO.getMovieName()}`);
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while uploading image to firebase or getting download link for ${movieItemVO.getMovieTitle()}`,
+				`Error while uploading image to firebase or getting download link for ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
 			throw error;
@@ -383,9 +426,9 @@ export class EntertainmentComponent {
 
 	//////////////////////Below are Utilities Functions used by HTML template///////////////////////
 	/**
-	 * Calculate the font size of the movie title.
+	 * Calculate the font size of the movie name.
 	 *
-	 * @param length - The length of the movie title.
+	 * @param length - The length of the movie name.
 	 * @returns A string that represents the font size.
 	 */
 	protected calculateFontSize(length: number) {
@@ -400,10 +443,11 @@ export class EntertainmentComponent {
 	 */
 	private updateGridLayout() {
 		// Get item width and item gap from css
-		const itemsWidth = getComputedStyle(this.host).getPropertyValue('--individual-item-width').trim();
-		const itemsGap = getComputedStyle(this.host).getPropertyValue('--individual-item-gap').trim();
+		const host = this.elRef.nativeElement;
+		const itemsWidth = getComputedStyle(host).getPropertyValue('--individual-item-width').trim();
+		const itemsGap = getComputedStyle(host).getPropertyValue('--individual-item-gap').trim();
 
-		const contentContainer = this.host.querySelector('.content-container');
+		const contentContainer = host.querySelector('.content-container');
 		if (contentContainer) {
 			let componentWidth = contentContainer.clientWidth;
 			let itemsPerRow = Math.floor(
@@ -456,7 +500,7 @@ export class EntertainmentComponent {
 			() => {
 				this.firebaseService.removeMovieFromDatabase(movieItemVO);
 			},
-			`Are you sure you want to delete ${movieItemVO.getMovieTitle()}?`
+			`Are you sure you want to delete ${movieItemVO.getMovieName()}?`
 		);
 	}
 
@@ -494,12 +538,12 @@ export class EntertainmentComponent {
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob> {
 		if (
 			await this.firebaseService.isMovieAlreadyAdded(
-				newMovieItemVO.getMovieTitle(),
+				newMovieItemVO.getMovieName(),
 				newMovieItemVO.getMovieYear(),
 				newMovieItemVO.getMovieId()
 			)
 		) {
-			throw new MovieAlreadyExistsError(newMovieItemVO.getMovieTitle());
+			throw new MovieAlreadyExistsError(newMovieItemVO.getMovieName());
 		}
 		await this.searchNewMovie(newMovieItemVO);
 		this.tempMovieItemVO = newMovieItemVO;

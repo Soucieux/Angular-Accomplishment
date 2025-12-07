@@ -12,8 +12,9 @@ import {
 	remove,
 	get
 } from '@angular/fire/database';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
+import { RATE_DECREASED, RATE_INCREASED } from '../../app.utilities';
 
 @Injectable({
 	providedIn: 'root'
@@ -130,17 +131,15 @@ export class FirebaseService {
 			}).then(() => {
 				const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
 				this.searchStreamService.addSearchLog(
-					`The rate of ${movieItemVO.getMovieTitle()} is <span ${
+					`The rate of ${movieItemVO.getMovieName()} is <span ${
 						rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
-					}>${
-						rateDifference > 0 ? 'increased' : 'decreased'
-					} by ${Math.abs(rateDifference)}</span> to ${movieItemVO.getMovieRate()}`
+					}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
+						rateDifference
+					)}</span> to ${movieItemVO.getMovieRate()}`
 				);
 			});
 		} else {
-			this.searchStreamService.addSearchLog(
-				`The rate of ${movieItemVO.getMovieTitle()} stays the same`
-			);
+			this.searchStreamService.addSearchLog(`The rate of ${movieItemVO.getMovieName()} stays the same`);
 		}
 	}
 
@@ -165,7 +164,7 @@ export class FirebaseService {
 
 			// Add new movie data
 			await update(dbRef(this.db, `movies/${movieKey}`), {
-				title: movieItemVO.getMovieTitle(),
+				title: movieItemVO.getMovieName(),
 				year: movieItemVO.getMovieYear(),
 				genre: movieItemVO.getMovieGenre(),
 				rate: movieItemVO.getMovieRate(),
@@ -174,7 +173,7 @@ export class FirebaseService {
 				firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
 				episodeNumber: movieItemVO.getMovieEpisodeNumber()
 			}).then(() => {
-				LOG.info(this.className, `${movieItemVO.getMovieTitle()} has been ADDED to the database`);
+				LOG.info(this.className, `${movieItemVO.getMovieName()} has been ADDED to the database`);
 			});
 
 			// Add new entry to history
@@ -192,7 +191,7 @@ export class FirebaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while adding new movie data for ${movieItemVO.getMovieTitle()}`,
+				`Error while adding new movie data for ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
 		}
@@ -206,13 +205,13 @@ export class FirebaseService {
 	public async removeMovieFromDatabase(movieItemVO: MovieItemVO) {
 		try {
 			// Remove the movie cover from the storage
-			const storageRefer = storageRef(this.storage, `/movies/${movieItemVO.getMovieTitle()}`);
+			const storageRefer = storageRef(this.storage, `/movies/${movieItemVO.getMovieName()}`);
 			await deleteObject(storageRefer);
 
 			// Remove the movie info from the database
 			await remove(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`));
 
-			LOG.info(this.className, `${movieItemVO.getMovieTitle()} has been DELETED from the database`);
+			LOG.info(this.className, `${movieItemVO.getMovieName()} has been DELETED from the database`);
 
 			// Add new entry to history
 			await this.updateHistory('deleted', movieItemVO);
@@ -236,7 +235,7 @@ export class FirebaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while deleting movie from database for ${movieItemVO.getMovieTitle()}`,
+				`Error while deleting movie from database for ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
 		}
@@ -271,13 +270,13 @@ export class FirebaseService {
 	/**
 	 * Check if a given movie has already been added in the databse
 	 *
-	 * @param movieTitle Movie title to check
+	 * @param movieName Movie name to check
 	 * @param movieYear Movie year to check
 	 * @param movieId Movie ID to check
 	 * @returns true if the movie already exists, otherwise, false.
 	 */
 	public async isMovieAlreadyAdded(
-		movieTitle: string,
+		movieName: string,
 		movieYear: number,
 		movieId: number
 	): Promise<boolean> {
@@ -286,7 +285,7 @@ export class FirebaseService {
 			const allMovies = snapshot.val();
 			for (const key of Object.keys(allMovies)) {
 				const movie = allMovies[key];
-				if ((movie.title === movieTitle && movie.year === movieYear) || movie.id === movieId) {
+				if ((movie.title === movieName && movie.year === movieYear) || movie.id === movieId) {
 					return true;
 				}
 			}
@@ -294,7 +293,7 @@ export class FirebaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while checking if current movie exists in the database for movie ${movieTitle}`,
+				`Error while checking if current movie exists in the database for movie ${movieName}`,
 				error as Error
 			);
 			return false;
@@ -311,7 +310,7 @@ export class FirebaseService {
 		if (movieItemVO) {
 			await update(dbRef(this.db, `history/${historyKey}`), {
 				status: status,
-				message: `${movieItemVO.getMovieTitle()} - ${movieItemVO.getMovieGenre()} (Rate: ${
+				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
 					movieItemVO.getMovieRate() == 0 ? '暂无评分' : movieItemVO.getMovieRate()
 				}) was ${status} on ${this.getCurrentFormattedTime()}`
 			}).then(() => {

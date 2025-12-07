@@ -19,7 +19,7 @@ export class MovieItemVO {
 		}
 	}
 
-	getMovieTitle(): string {
+	getMovieName(): string {
 		return this.title ? this.title : '';
 	}
 
@@ -63,7 +63,7 @@ export class MovieItemVO {
 		return this.sessionId;
 	}
 
-	setMovieTitle(title: string) {
+	setMovieName(title: string) {
 		this.title = title;
 	}
 

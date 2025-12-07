@@ -74,7 +74,7 @@ export class AddDialogComponent {
 		try {
 			const movieItemVO = new MovieItemVO();
 			if (this.name) {
-				movieItemVO.setMovieTitle(newMovieData.movieName);
+				movieItemVO.setMovieName(newMovieData.movieName);
 				movieItemVO.setMovieYear(Number(newMovieData.years));
 			} else if (newMovieData.id) {
 				movieItemVO.setMovieId(Number(this.id));

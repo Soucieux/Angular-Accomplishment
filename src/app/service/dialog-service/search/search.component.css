@@ -1,13 +1,14 @@
 ::ng-deep .dialog {
-	width: 600px;
-	height: 300px;
+	width: 470px;
+	height: 350px;
 	user-select: none;
 }
 
 .logs {
-	height: 160px;
+	height: 210px;
 	overflow: auto;
-	border: 1px solid black;
+	border: 2px solid black;
+    white-space: pre-line;
 	/* overflow-y: auto; */
 }
 

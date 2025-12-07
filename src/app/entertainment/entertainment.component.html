@@ -44,8 +44,8 @@
 			class="image-container"
 			[ngStyle]="{ backgroundImage: 'url(' + movie.getMovieCoverImageDownloadableLink() + ')' }"></div>
 		<div class="individual-item-content">
-			<span class="title" [style.font-size]="calculateFontSize(movie.getMovieTitle().length)">
-				{{ movie.getMovieTitle() }}
+			<span class="title" [style.font-size]="calculateFontSize(movie.getMovieName().length)">
+				{{ movie.getMovieName() }}
 			</span>
 			<span class="text">类型：{{ movie.getMovieGenre() }} </span>
 			<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>

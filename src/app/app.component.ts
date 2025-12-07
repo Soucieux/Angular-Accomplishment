@@ -9,7 +9,7 @@ import { LOG } from './app.logs';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
-import { Utilities } from './app.utilities';
+import { COMPONENT_DESTROY, Utilities } from './app.utilities';
 @Component({
 	selector: 'root',
 	standalone: true,
@@ -44,7 +44,7 @@ export class AppComponent {
 	 * Anything that needs to be done when the component is destroyed.
 	 */
 	ngOnDestroy() {
-		LOG.info(this.className, 'Component destroyed');
+		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	logout() {

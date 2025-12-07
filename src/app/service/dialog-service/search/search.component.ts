@@ -3,6 +3,7 @@ import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
+import { SEARCH_CANCEL, SEARCH_COMPELTE } from '../../../app.utilities';
 
 @Component({
 	selector: 'search-dialog',
@@ -14,7 +15,7 @@ export class SearchDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	@ViewChild('logContainer') logContainer!: ElementRef<HTMLDivElement>;
 	protected visible: boolean = false;
-	protected searchingCompleteOrInterrupted: boolean = false;
+	protected searchCompleteOrInterrupted: boolean = false;
 	private stopCallback?: () => void;
 	searchLogs: string[] = [];
 	searchLogsSub!: Subscription;
@@ -29,8 +30,8 @@ export class SearchDialogComponent {
 			this.searchLogs = searchLogs;
 
 			const lastLog = searchLogs[searchLogs.length - 1];
-			if (lastLog === 'Search complete' || lastLog === 'Search cancelled') {
-				this.searchingCompleteOrInterrupted = true;
+			if (lastLog === SEARCH_COMPELTE || lastLog === SEARCH_CANCEL) {
+				this.searchCompleteOrInterrupted = true;
 			}
 		});
 	}
@@ -51,8 +52,8 @@ export class SearchDialogComponent {
 
 	protected onDialogClosed() {
 		this.closed$.emit();
-        this.visible = false;
-        this.searchingCompleteOrInterrupted = false;
+		this.visible = false;
+		this.searchCompleteOrInterrupted = false;
 		this.searchLogsSub.unsubscribe();
 		this.searchStreamService.clearSearchLogs();
 	}

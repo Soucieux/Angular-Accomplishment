@@ -14,11 +14,11 @@
 	</div>
 	<ng-template #footer>
 		<p-button
-			[label]="searchingCompleteOrInterrupted ? 'DONE' : 'STOP'"
+			[label]="searchCompleteOrInterrupted ? 'DONE' : 'STOP'"
 			type="button"
 			class="submit-button"
-			[severity]="searchingCompleteOrInterrupted ? 'success' : 'danger'"
+			[severity]="searchCompleteOrInterrupted ? 'success' : 'danger'"
 			(click)="
-				searchingCompleteOrInterrupted ? onDialogClosed() : triggerStopSearching()
+				searchCompleteOrInterrupted ? onDialogClosed() : triggerStopSearching()
 			"></p-button> </ng-template
 ></p-dialog>

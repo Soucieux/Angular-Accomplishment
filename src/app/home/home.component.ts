@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { MatRadioModule } from '@angular/material/radio';
 import { LOG } from '../app.logs';
+import { COMPONENT_DESTROY } from '../app.utilities';
 
 @Component({
 	selector: 'home',
@@ -15,6 +16,6 @@ export class HomeComponent {
 	 * Anything that needs to be done when the component is destroyed.
 	 */
 	ngOnDestroy() {
-		LOG.info(this.className, 'Component destroyed');
+		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 }

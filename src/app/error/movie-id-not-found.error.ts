@@ -1,5 +1,5 @@
 export class MovieIdNotFoundError extends Error {
-  constructor(movieTitle: string) {
-    super(`Movie ID for ${movieTitle} is not found`);
+  constructor(movieName: string) {
+    super(`Movie ID for ${movieName} is not found`);
   }
 }

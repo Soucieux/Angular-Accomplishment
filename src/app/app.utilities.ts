@@ -2,6 +2,12 @@ import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { MovieItemVO } from './entertainment/entertainment.movieitem.vo';
 
+export const RATE_DECREASED = 'decreased';
+export const RATE_INCREASED = 'increased';
+export const SEARCH_COMPELTE = 'Search complete';
+export const SEARCH_CANCEL = 'Search cancelled';
+export const COMPONENT_DESTROY = 'Component Destroyed';
+
 @Injectable({ providedIn: 'root' })
 export class Utilities {
 	constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
@@ -24,7 +30,7 @@ export class Utilities {
 	 * @param movieItemVO - The movie item to check.
 	 */
 	public static checkMovieItemVO(movieItemVO: MovieItemVO) {
-		if (movieItemVO.getMovieTitle() === '' || movieItemVO.getMovieYear() === -1) {
+		if (movieItemVO.getMovieName() === '' || movieItemVO.getMovieYear() === -1) {
 			throw new Error('Movie item VO is invalid');
 		}
 	}

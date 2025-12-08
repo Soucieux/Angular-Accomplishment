@@ -19,8 +19,8 @@
 .title {
 	text-align: center;
 	font-size: 60px;
-	margin-top: 15vh;
-	margin-bottom: 10vh;
+	margin-top: 12vh;
+	margin-bottom: 8vh;
 }
 
 .word {
@@ -91,9 +91,9 @@
 	box-shadow: 0 1px 1px 1px black;
 }
 
-@media (max-width: 580px) {
+@media (max-width: 680px) {
 	.title {
-		font-size: 37px;
+		font-size: 35px;
 	}
 
 	.word {

@@ -8,15 +8,36 @@
 	padding: 20px;
 }
 
+.table {
+	border-radius: 20px;
+	overflow: hidden;
+}
+
+.component {
+	width: 15vw;
+}
+
+.details {
+	width: 30vw;
+}
+
+.status {
+	width: 12vw;
+}
+
+.timestamp {
+	width: 12vw;
+}
+
 @media (max-width: 580px) {
+	.hide-on-mobile {
+		display: none;
+	}
 	.container {
 		font-size: 13px;
 	}
-	h1 {
-		font-size: 25px;
-	}
 
-	h5 {
-		font-size: 17px;
+	.status {
+		width: 24vw;
 	}
 }

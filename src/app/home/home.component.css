@@ -12,8 +12,8 @@
 .title {
 	text-align: center;
 	font-size: 60px;
-	margin-top: 15vh;
-	margin-bottom: 10vh;
+	margin-top: 12vh;
+	margin-bottom: 8vh;
 }
 
 .word {
@@ -27,7 +27,7 @@
 
 @media (max-width: 580px) {
 	.title {
-		font-size: 37px;
+		font-size: 35px;
 	}
 
 	.en-word {

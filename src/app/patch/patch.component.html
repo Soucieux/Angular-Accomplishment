@@ -44,7 +44,13 @@
 					<input pInputText type="text" placeholder="Details" class="details" />
 				</td>
 				<td>
-					<input pInputText type="text" placeholder="Status" class="status" />
+					<p-select
+						Button
+						optionLabel="severity"
+						[options]="severity"
+						class="status"
+						[appendTo]="'body'"
+						panelStyleClass="dropdown-panel-font" />
 				</td>
 				<td>
 					<p-button label="Add" icon="pi pi-plus" severity="secondary" class="timeStamp"></p-button>

@@ -23,14 +23,15 @@
 }
 
 .status {
-	width: 10vw;
+	width: 15vw;
+
 }
 
 .timestamp {
 	width: 10vw;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1052px) {
 	.hide-on-mobile {
 		display: none;
 	}

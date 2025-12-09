@@ -1,3 +1,4 @@
+import { NO_RATE, Utilities } from './../../app.utilities';
 import { SearchStreamService } from './../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
@@ -28,7 +29,8 @@ export class FirebaseService {
 		@Inject(Storage) private storage: Storage,
 		@Inject(Database) private db: Database,
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
-		private searchStreamService: SearchStreamService
+		private searchStreamService: SearchStreamService,
+		private Utilities: Utilities
 	) {
 		this.moviesRef = dbRef(this.db, 'movies');
 		this.statisticsRef = dbRef(this.db, 'statistics');
@@ -311,37 +313,18 @@ export class FirebaseService {
 			await update(dbRef(this.db, `history/${historyKey}`), {
 				status: status,
 				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
-					movieItemVO.getMovieRate() == 0 ? '暂无评分' : movieItemVO.getMovieRate()
-				}) was ${status} on ${this.getCurrentFormattedTime()}`
+					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
+				}) was ${status} on ${this.Utilities.getCurrentFormattedTime()}`
 			}).then(() => {
 				LOG.info(this.className, 'New history entry has been updated');
 			});
 		} else {
 			await update(dbRef(this.db, `history/${historyKey}`), {
 				status: status,
-				message: `New rate search was started on ${this.getCurrentFormattedTime()}`
+				message: `New rate search was started on ${this.Utilities.getCurrentFormattedTime()}`
 			}).then(() => {
 				LOG.info(this.className, 'New history entry has been updated');
 			});
 		}
-	}
-
-	/**
-	 * Get current timestamp
-	 *
-	 * @returns Formatted time
-	 */
-	private getCurrentFormattedTime() {
-		const now = new Date();
-		const formattedTime =
-			`${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now
-				.getDate()
-				.toString()
-				.padStart(2, '0')} ` +
-			`${now.getHours().toString().padStart(2, '0')}:${now
-				.getMinutes()
-				.toString()
-				.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-		return formattedTime;
 	}
 }

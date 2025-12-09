@@ -7,6 +7,7 @@ export const RATE_INCREASED = 'increased';
 export const SEARCH_COMPELTE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
 export const COMPONENT_DESTROY = 'Component Destroyed';
+export const NO_RATE = 'No rate';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {
@@ -22,6 +23,25 @@ export class Utilities {
 			return globalThis.innerWidth <= 580;
 		}
 		return false;
+	}
+
+	/**
+	 * Get current timestamp
+	 *
+	 * @returns Formatted time
+	 */
+	public getCurrentFormattedTime() {
+		const now = new Date();
+		const formattedTime =
+			`${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now
+				.getDate()
+				.toString()
+				.padStart(2, '0')} ` +
+			`${now.getHours().toString().padStart(2, '0')}:${now
+				.getMinutes()
+				.toString()
+				.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+		return formattedTime;
 	}
 
 	/**

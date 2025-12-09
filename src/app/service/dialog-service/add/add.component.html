@@ -13,19 +13,20 @@
 	<div class="form-image-container">
 		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 			<div class="form-row">
-				<label for="movieName">{{ (name || year).trim() === '' ? 'Name' : 'Name*' }}</label>
+				<label for="movieName">{{ movieName.value || year.value ? 'Name*' : 'Name' }}</label>
 				<input
 					pInputText
 					name="movieName"
 					id="movieName"
-					[(ngModel)]="name"
-					[disabled]="id.trim() !== ''"
+					ngModel
+					#movieName="ngModel"
+					[disabled]="id.value !== ''"
 					autocomplete="off"
 					class="custom-font"
-					[required]="(name || year).trim() !== ''" />
+					[required]="movieName.value || year.value" />
 			</div>
 			<div class="form-row">
-				<label for="years">{{ (name || year).trim() === '' ? 'Year' : 'Year*' }}</label>
+				<label for="years">{{ movieName.value || year.value ? 'Year*' : 'Year' }}</label>
 				<!-- name is used to register control inside ngForm, used to track its value, validation status, errors etc. -->
 				<!-- id is used to link a <label> to the input -->
 				<!-- for inside <label> uses id to focus on the input when clicked -->
@@ -33,6 +34,9 @@
 				<!-- ngModel is used to register the current field to the form -->
 				<!-- [ngModel]="movieName" is used to bind the value of the current field to a variable in the ts file -->
 				<!-- #movieName="ngModel" is used to create a local variable that references the ngModel directive so that we can access control state (value, validation status, errors etc.) for this specific control -->
+				<!-- When each field is first initialized, addMovieForm.value.movieName is undefined. Evaluates to false.-->
+				<!-- When each field is empty, addMovieForm.value.movieName is empty string. Evaluates to false.-->
+				<!-- If an input field has value in it and then being disabled, the value is still there but the field will be removed from ngForm, meaning accessing through ngForm will give become undefined -->
 				<p-select
 					[options]="years"
 					name="years"
@@ -40,20 +44,23 @@
 					optionLabel="year"
 					optionValue="year"
 					[appendTo]="'body'"
-					[(ngModel)]="year"
-					[disabled]="id.trim() !== ''"
+					ngModel
+					#year="ngModel"
+					[disabled]="id.value !== ''"
 					class="custom-font"
 					panelStyleClass="dropdown-panel-font"
-					[required]="(name || year).trim() !== ''"></p-select>
+					[required]="movieName.value || year.value"></p-select>
 			</div>
 			<div class="form-row">
-				<label for="id">{{ id.trim() === '' ? 'ID' : 'ID*' }}</label>
+				<label for="id">{{ id.value ? 'ID*' : 'ID' }}</label>
 				<input
 					pInputText
 					name="id"
 					id="id"
-					[(ngModel)]="id"
-					[disabled]="(name || year).trim() !== ''"
+					ngModel
+					#id="ngModel"
+					(ngModelChange)="onIdChange($event)"
+					[required]="!!id.value"
 					autocomplete="off" />
 			</div>
 			<div class="form-row">
@@ -85,9 +92,7 @@
 			type="button"
 			severity="primary"
 			[attr.form]="'addMovieForm'"
-			[disabled]="
-				(name.trim() === '' && year.trim() === '' && id.trim() === '') || addMovieForm.invalid
-			"
+			[disabled]="addMovieForm.invalid"
 			(click)="searchCurrentMovie(addMovieForm.value)" />
 		<p-button label="Cancel" type="button" severity="secondary" (click)="onDialogClosed()" />
 		<p-button

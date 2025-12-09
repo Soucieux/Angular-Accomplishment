@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Output, ViewChild } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
@@ -33,6 +33,7 @@ import { Utilities } from '../../../app.utilities';
 })
 export class AddDialogComponent {
 	private readonly className = 'AddDialogComponent';
+	@ViewChild('addMovieForm') addMovieForm!: NgForm;
 	@Output() closed$ = new EventEmitter<void>();
 	private messageService = inject(MessageService);
 	private confirmationService = inject(ConfirmationService);
@@ -44,9 +45,6 @@ export class AddDialogComponent {
 	years: { year: string }[] | undefined;
 	genres: { genre: string }[] | undefined;
 	movieImageUrl: string | null = null;
-	name: string = '';
-	id: string = '';
-	year: string = '';
 
 	constructor(private utilities: Utilities) {}
 
@@ -73,11 +71,11 @@ export class AddDialogComponent {
 		this.isLoading = true;
 		try {
 			const movieItemVO = new MovieItemVO();
-			if (this.name) {
+			if (newMovieData.movieName) {
 				movieItemVO.setMovieName(newMovieData.movieName);
 				movieItemVO.setMovieYear(Number(newMovieData.years));
 			} else if (newMovieData.id) {
-				movieItemVO.setMovieId(Number(this.id));
+				movieItemVO.setMovieId(Number(newMovieData.id));
 			}
 			movieItemVO.setMovieGenre(newMovieData.genres.genre);
 			const movieImage = await this.searchCallback?.(movieItemVO);
@@ -86,7 +84,7 @@ export class AddDialogComponent {
 		} catch (error) {
 			let errorMessage = '';
 			if (error instanceof MovieIdNotFoundError) {
-				errorMessage = 'Movie ID not found\n Please try again or enter manually';
+				errorMessage = 'Movie ID not found\nPlease try again or enter manually';
 			} else if (error instanceof MovieAlreadyExistsError) {
 				errorMessage = 'Movie already exists';
 			} else {
@@ -117,6 +115,13 @@ export class AddDialogComponent {
 			});
 		} finally {
 			this.isLoading = false;
+		}
+	}
+
+	protected onIdChange(value: string) {
+		if (value && value.trim() !== '') {
+			this.addMovieForm.controls['movieName']?.reset();
+			this.addMovieForm.controls['years']?.reset();
 		}
 	}
 

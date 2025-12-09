@@ -8,6 +8,11 @@ export const SEARCH_COMPELTE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
 export const COMPONENT_DESTROY = 'Component Destroyed';
 export const NO_RATE = 'No rate';
+export const STATUS_TODO = 'To Do';
+export const STATUS_IN_PROGRESS = 'In Progress';
+export const STATUS_COMPLETED = 'Completed';
+export const STATUS_DEBUG = 'Debug';
+export const STATUS_DRAFT = 'Draft';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {

@@ -5,6 +5,7 @@ import {
 	RATE_INCREASED,
 	SEARCH_CANCEL,
 	SEARCH_COMPELTE,
+	NO_RATE,
 	Utilities
 } from './../app.utilities';
 import { MovieIdNotFoundError } from './../error/movie-id-not-found.error';
@@ -51,6 +52,7 @@ export class EntertainmentComponent {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	// TODO This value has to be true initially so that the page will not show access denied page on refresh
+	protected readonly NO_RATE = NO_RATE;
 	protected isLoggedIn!: boolean;
 	protected isSearching: boolean = false;
 	private sessionId: number = 0;

@@ -1,4 +1,5 @@
 .container {
+	max-width: 100%;
 	height: 100%;
 	backdrop-filter: blur(50px);
 	background-color: rgb(243, 227, 243);
@@ -18,21 +19,26 @@
 }
 
 .details {
-	width: 30vw;
+	width: 20vw;
 }
 
 .status {
-	width: 12vw;
+	width: 10vw;
 }
 
 .timestamp {
-	width: 12vw;
+	width: 10vw;
 }
 
-@media (max-width: 580px) {
+@media (max-width: 900px) {
 	.hide-on-mobile {
 		display: none;
 	}
+
+    h1{
+        font-size: 25px;
+    }
+
 	.container {
 		font-size: 13px;
 	}

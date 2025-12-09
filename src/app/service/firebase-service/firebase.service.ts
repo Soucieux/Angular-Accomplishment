@@ -11,7 +11,8 @@ import {
 	runTransaction,
 	update,
 	remove,
-	get
+	get,
+	push
 } from '@angular/fire/database';
 import { Observable, map } from 'rxjs';
 import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
@@ -250,7 +251,7 @@ export class FirebaseService {
 	 */
 	private async getReusableKeys(): Promise<string[]> {
 		try {
-			const snapshot = await get(dbRef(this.db, 'reusableKeys'));
+			const snapshot = await get(dbRef(this.db, 'statistics/reusableKeys'));
 			return snapshot.exists() ? Object.values(snapshot.val()) : [];
 		} catch (error) {
 			LOG.error(this.className, `Error while getting reusable keys`, error as Error);
@@ -264,7 +265,7 @@ export class FirebaseService {
 	 * @param keys - The keys to save.
 	 */
 	private async saveReusableKeys(keys: string[]) {
-		await update(dbRef(this.db), { reusableKeys: keys }).then(() => {
+		await update(dbRef(this.db, 'statistics'), { reusableKeys: keys }).then(() => {
 			LOG.info(this.className, `Reusable keys have been updated`);
 		});
 	}
@@ -304,13 +305,15 @@ export class FirebaseService {
 
 	/**
 	 * Update history with new activity
+	 *
+	 * @param status - The status of the activity.
+	 * @param movieItemVO - The movie item to update.
 	 */
 	private async updateHistory(status: string, movieItemVO?: MovieItemVO) {
 		const snapshot = await get(dbRef(this.db, 'history'));
-		const historyKey = snapshot.exists() ? (Object.keys(snapshot.val()).length + 1).toString() : 0;
 
 		if (movieItemVO) {
-			await update(dbRef(this.db, `history/${historyKey}`), {
+			await push(dbRef(this.db, 'history'), {
 				status: status,
 				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
 					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
@@ -319,12 +322,16 @@ export class FirebaseService {
 				LOG.info(this.className, 'New history entry has been updated');
 			});
 		} else {
-			await update(dbRef(this.db, `history/${historyKey}`), {
+			await push(dbRef(this.db, 'history'), {
 				status: status,
 				message: `New rate search was started on ${this.Utilities.getCurrentFormattedTime(true)}`
 			}).then(() => {
 				LOG.info(this.className, 'New history entry has been updated');
 			});
 		}
+	}
+
+	public async updatePatchNotes() {
+		const snapshot = await get(dbRef(this.db, 'patch_notes'));
 	}
 }

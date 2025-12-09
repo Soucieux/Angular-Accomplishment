@@ -2,8 +2,8 @@ import { Component } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
-import { InputText } from "primeng/inputtext";
-import { Button } from "primeng/button";
+import { InputText } from 'primeng/inputtext';
+import { Button } from 'primeng/button';
 
 @Component({
 	selector: 'patch',
@@ -18,25 +18,25 @@ export class PatchComponent {
 			component: 'Entertainment',
 			details: 'History panel',
 			status: 'In Progress',
-			timeStamp: '123'
+			timeStamp: '2025.12.04'
 		},
 		{
 			component: 'Home',
 			details: 'Slogan',
 			status: 'Completed',
-			timeStamp: '123'
+			timeStamp: '2025.12.04'
 		},
 		{
 			component: 'Entertainment',
-			details: 'Search button dialog and display logs inside',
+			details: 'Search button dialog',
 			status: 'In Progress',
-			timeStamp: '123'
+			timeStamp: '2025.12.04'
 		},
 		{
 			component: 'login',
 			details: 'Slogan',
 			status: 'Completed',
-			timeStamp: '123'
+			timeStamp: '2025.12.04'
 		}
 	];
 	protected patchNotes: any[] = new Array(this.data.length);

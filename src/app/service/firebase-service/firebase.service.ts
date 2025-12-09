@@ -314,14 +314,14 @@ export class FirebaseService {
 				status: status,
 				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
 					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
-				}) was ${status} on ${this.Utilities.getCurrentFormattedTime()}`
+				}) was ${status} on ${this.Utilities.getCurrentFormattedTime(true)}`
 			}).then(() => {
 				LOG.info(this.className, 'New history entry has been updated');
 			});
 		} else {
 			await update(dbRef(this.db, `history/${historyKey}`), {
 				status: status,
-				message: `New rate search was started on ${this.Utilities.getCurrentFormattedTime()}`
+				message: `New rate search was started on ${this.Utilities.getCurrentFormattedTime(true)}`
 			}).then(() => {
 				LOG.info(this.className, 'New history entry has been updated');
 			});

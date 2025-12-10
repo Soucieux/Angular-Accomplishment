@@ -9,26 +9,58 @@
 	padding: 20px;
 }
 
-.table {
+@media (max-width: 1700px) {
+	::ng-deep .table table {
+		/* table-layout: fixed; */
+		max-width: inhert !important;
+	}
+
+	.component {
+		width: 10vw !important;
+	}
+
+	.element {
+		width: 10vw !important;
+	}
+
+	.details {
+		width: 20vw !important;
+	}
+
+	.status {
+		width: 10vw !important;
+	}
+
+	.timestamp {
+		width: 10vw !important;
+	}
+}
+
+::ng-deep .table table {
 	border-radius: 20px;
 	overflow: hidden;
+	max-width: 1300px;
 }
 
-.component {
-	width: 15vw;
+::ng-deep .p-datatable .component {
+	width: 170px;
 }
 
-.details {
-	width: 20vw;
+::ng-deep .p-datatable .element {
+	width: 170px;
+	margin-right: 20px !important;
 }
 
-.status {
-	width: 15vw;
-
+::ng-deep .p-datatable .details {
+	width: 340px;
 }
 
-.timestamp {
-	width: 10vw;
+::ng-deep .p-datatable .status {
+	width: 170px;
+}
+
+::ng-deep .p-datatable .timestamp {
+	width: 170px;
 }
 
 @media (max-width: 1052px) {
@@ -36,15 +68,15 @@
 		display: none;
 	}
 
-    h1{
-        font-size: 25px;
-    }
+	h1 {
+		font-size: 25px;
+	}
 
 	.container {
 		font-size: 13px;
 	}
 
-	.status {
-		width: 24vw;
+	::ng-deep .table table {
+		table-layout: auto !important;
 	}
 }

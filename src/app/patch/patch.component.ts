@@ -24,46 +24,53 @@ export class PatchComponent {
 	protected data = [
 		{
 			component: 'Entertainment',
-			details: 'History panel',
+			element: 'History dialog',
+			details: 'Display history entry with different colors',
 			status: 'To Do',
 			timeStamp: '2025.12.04'
 		},
 		{
 			component: 'Home',
+			element: 'Title',
 			details: 'Slogan',
 			status: 'Completed',
 			timeStamp: '2025.12.04'
 		},
 		{
 			component: 'Entertainment',
-			details: 'Search button dialog',
+			element: 'Search dialog',
+			details: 'Logs on each search and summary',
 			status: 'In Progress',
 			timeStamp: '2025.12.04'
 		},
 		{
 			component: 'Entertainment',
+			element: '-',
 			details: 'Page info not displayed correctly after refresh',
 			status: 'Debug',
 			timeStamp: '2025.12.04'
 		},
 		{
 			component: 'Login',
+			element: 'Title',
 			details: 'Slogan',
 			status: 'Completed',
 			timeStamp: '2025.12.04'
 		},
 		{
 			component: 'Login',
+			element: '-',
 			details: 'Local storage is not defined',
 			status: 'Debug',
 			timeStamp: '2025.12.09'
-        },
-        {
+		},
+		{
 			component: 'Entertainment',
-			details: 'Add dialog triggered "Web Inspector blocked http://localhost:4200/null from loading"',
+			element: 'Add dialog',
+			details: 'Triggered "Web Inspector blocked http://localhost:4200/null on initial load"',
 			status: 'Debug',
 			timeStamp: '2025.12.09'
-        }
+		}
 	];
 	protected patchNotes: any[] = new Array(this.data.length);
 	protected severity: { severity: string }[] | undefined;

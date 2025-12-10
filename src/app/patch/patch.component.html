@@ -10,6 +10,7 @@
 		<ng-template pTemplate="header">
 			<tr>
 				<th class="component">Component</th>
+				<th class="element">Element</th>
 				<th class="details">Details</th>
 				<th class="status">Status</th>
 				<th class="timestamp">TimeStamp</th>
@@ -21,6 +22,7 @@
 				<td><p-skeleton /></td>
 				<td><p-skeleton /></td>
 				<td><p-skeleton /></td>
+				<td><p-skeleton /></td>
 			</tr>
 		</ng-template>
 		<ng-template pTemplate="body" let-row let-rowgroup="rowgroup" let-rowspan="rowspan">
@@ -28,6 +30,7 @@
 				@if(rowgroup){
 				<td [attr.rowspan]="rowspan" class="component">{{ row.component }}</td>
 				}
+				<td class="element">{{ row.element }}</td>
 				<td class="details">{{ row.details }}</td>
 				<td class="status">
 					<p-tag [value]="row.status" [severity]="getSeverity(row.status)"></p-tag>
@@ -39,6 +42,9 @@
 			<tr class="hide-on-mobile">
 				<td>
 					<input pInputText type="text" placeholder="Component" class="component" />
+				</td>
+				<td>
+					<input pInputText type="text" placeholder="Element" class="element" />
 				</td>
 				<td>
 					<input pInputText type="text" placeholder="Details" class="details" />

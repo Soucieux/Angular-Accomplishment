@@ -175,12 +175,10 @@ export class FirebaseService {
 				coverImageLink: movieItemVO.getMovieCoverImageDownloadableLink(),
 				firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
 				episodeNumber: movieItemVO.getMovieEpisodeNumber()
-			}).then(() => {
-				LOG.info(this.className, `${movieItemVO.getMovieName()} has been ADDED to the database`);
+			}).then(async () => {
+				// Add new entry to history
+				await this.updateHistory('added', movieItemVO);
 			});
-
-			// Add new entry to history
-			await this.updateHistory('added', movieItemVO);
 
 			// Update the movie statistics
 			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
@@ -213,8 +211,6 @@ export class FirebaseService {
 
 			// Remove the movie info from the database
 			await remove(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`));
-
-			LOG.info(this.className, `${movieItemVO.getMovieName()} has been DELETED from the database`);
 
 			// Add new entry to history
 			await this.updateHistory('deleted', movieItemVO);
@@ -319,14 +315,14 @@ export class FirebaseService {
 					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
 				}) was ${status} on ${this.Utilities.getCurrentFormattedTime(true)}`
 			}).then(() => {
-				LOG.info(this.className, 'New history entry has been updated');
+				LOG.info(this.className, 'New history entry has been added');
 			});
 		} else {
 			await push(dbRef(this.db, 'history'), {
 				status: status,
 				message: `New rate search was started on ${this.Utilities.getCurrentFormattedTime(true)}`
 			}).then(() => {
-				LOG.info(this.className, 'New history entry has been updated');
+				LOG.info(this.className, 'New history entry has been added');
 			});
 		}
 	}

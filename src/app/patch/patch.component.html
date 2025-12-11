@@ -14,11 +14,13 @@
 				<th class="details">Details</th>
 				<th class="status">Status</th>
 				<th class="timestamp">TimeStamp</th>
+				<th class="edit-button hide-on-mobile">Edit</th>
 			</tr>
 		</ng-template>
 		<ng-template pTemplate="loadingbody">
 			@for(_ of skeletonRows;track $index){
 			<tr>
+				<td><p-skeleton /></td>
 				<td><p-skeleton /></td>
 				<td><p-skeleton /></td>
 				<td><p-skeleton /></td>
@@ -35,59 +37,60 @@
 				<td class="element">{{ row.element }}</td>
 				<td class="details">{{ row.details }}</td>
 				<td class="status">
-					<p-tag [value]="row.status" [severity]="getSeverity(row.status)"></p-tag>
+					<p-tag [value]="row.status" [severity]="getSeverity(row.status)" class="tag"></p-tag>
 				</td>
 				<td class="timestamp">{{ row.timestamp }}</td>
+				<td class="edit-button hide-on-mobile"><p-button severity="secondary">Edit</p-button></td>
 			</tr>
 		</ng-template>
 		<ng-template pTemplate="footer">
 			<tr class="hide-on-mobile">
-				<td>
+				<td class="component">
 					<input
 						pInputText
 						type="text"
 						placeholder="Component"
-						class="component"
-						[(ngModel)]="newRecord.component" />
+						[(ngModel)]="newRecord.component"
+						class="input" />
 				</td>
-				<td>
+				<td class="element">
 					<input
 						pInputText
 						type="text"
 						placeholder="Element"
-						class="element"
-						[(ngModel)]="newRecord.element" />
+						[(ngModel)]="newRecord.element"
+						class="input" />
 				</td>
-				<td>
+				<td class="details">
 					<input
 						pInputText
 						type="text"
 						placeholder="Details"
-						class="details"
-						[(ngModel)]="newRecord.details" />
+						[(ngModel)]="newRecord.details"
+						class="input" />
 				</td>
-				<td>
+				<td class="status">
 					<p-select
 						optionLabel="severity"
 						[options]="severity"
-						class="status"
 						[appendTo]="'body'"
 						panelStyleClass="dropdown-panel-font"
-						[(ngModel)]="newRecord.status" />
+						[(ngModel)]="newRecord.status"
+						class="input" />
 				</td>
-				<td>
+				<td class="timeStamp" colspan="2">
 					<p-button
 						label="Add"
 						icon="pi pi-plus"
 						severity="secondary"
-						class="timeStamp"
 						[disabled]="
 							!newRecord.component.trim() ||
 							!newRecord.details.trim() ||
 							!newRecord.element.trim() ||
 							!newRecord.status
 						"
-						(onClick)="submitNewRecord()"></p-button>
+						(onClick)="submitNewRecord()"
+						styleClass="input"></p-button>
 				</td>
 			</tr>
 		</ng-template>

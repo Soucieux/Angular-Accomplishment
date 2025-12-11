@@ -1,6 +1,6 @@
 .container {
-	max-width: 100%;
-	height: 100%;
+	min-width: 100%;
+	min-height: 100%;
 	backdrop-filter: blur(50px);
 	background-color: rgb(243, 227, 243);
 	border: 0.8px solid rgb(255, 255, 255);
@@ -9,60 +9,97 @@
 	padding: 20px;
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 1500px) {
 	::ng-deep .table table {
 		/* table-layout: fixed; */
-		max-width: inherit !important;
+		max-width: 100% !important;
 	}
 
 	.component {
-		width: 10vw !important;
+		width: 13vw !important;
 	}
 
 	.element {
-		width: 10vw !important;
+		width: 13vw !important;
 	}
 
 	.details {
-		width: 20vw !important;
+		width: 13vw !important;
 	}
 
 	.status {
-		width: 13vw !important;
+		width: 10vw !important;
 	}
 
 	.timestamp {
 		width: 10vw !important;
+	}
+
+	.edit-button {
+		width: 5vw !important;
 	}
 }
 
 ::ng-deep .table table {
 	border-radius: 20px;
 	overflow: hidden;
-	max-width: 1400px;
+	max-width: 1500px;
+	margin-top: 10px;
 }
 
 ::ng-deep .p-datatable .component {
-	width: 170px;
+	/* border: 1px solid black; */
+	width: 130px;
+	max-width: 130px;
+	text-align: center;
 }
 
 ::ng-deep .p-datatable .element {
-	width: 170px;
+	/* border: 1px solid black; */
+	width: 130px;
+	max-width: 130px;
+	text-align: center;
 }
 
-::ng-deep .p-datatable .details {
-	width: 340px;
+::ng-deep .p-datatable th.details {
+	/* border: 1px solid black; */
+	text-align: center;
+}
+
+::ng-deep .input {
+	width: 100%;
+}
+
+::ng-deep .p-datatable td.details {
+	/* border: 1px solid black; */
+	width: 130px;
+	max-width: 130px;
+	overflow: hidden;
 }
 
 ::ng-deep .p-datatable .status {
-	width: 170px;
+	/* border: 1px solid black; */
+	text-align: center;
+	width: 100px;
+	max-width: 100px;
 }
 
 ::ng-deep .p-datatable .timestamp {
-	width: 170px;
+	/* border: 1px solid black; */
+	text-align: center;
+	width: 100px;
+	max-width: 100px;
 }
 
-@media (max-width: 1052px) {
+::ng-deep .p-datatable .edit-button {
+	/* border: 1px solid black; */
+	text-align: center;
+	width: 50px;
+	max-width: 50px;
+	padding: 10px;
+}
+
+@media (max-width: 1200px) {
 	.hide-on-mobile {
 		display: none;
 	}
@@ -75,7 +112,7 @@
 		font-size: 13px;
 	}
 
-	::ng-deep .table table {
-		table-layout: auto !important;
+	.tag {
+		font-size: 12px;
 	}
 }

@@ -28,7 +28,7 @@
 	}
 
 	.status {
-		width: 10vw !important;
+		width: 12vw !important;
 	}
 
 	.timestamp {
@@ -94,9 +94,30 @@
 ::ng-deep .p-datatable .edit-button {
 	/* border: 1px solid black; */
 	text-align: center;
-	width: 50px;
-	max-width: 50px;
-	padding: 10px;
+	width: 45px;
+	max-width: 45px;
+}
+
+::ng-deep .p-datatable .edit-button .p-button .p-button-icon {
+	font-size: 17px !important;
+	border: none;
+}
+
+::ng-deep .p-datatable .edit-button .p-button {
+	background-color: transparent;
+	transition: none; /* Prevent flash on border color change*/
+	border: none;
+	width: 40px;
+	height: 40px;
+}
+
+::ng-deep .p-datatable .edit-button .p-button {
+	box-shadow: 1px 1px 0px 1px black;
+	border: 0.5px solid black;
+}
+
+::ng-deep .p-datatable .edit-button .p-button:hover {
+	background-color: rgb(222, 222, 222);
 }
 
 @media (max-width: 1200px) {

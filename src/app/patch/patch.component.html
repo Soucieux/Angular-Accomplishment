@@ -40,7 +40,9 @@
 					<p-tag [value]="row.status" [severity]="getSeverity(row.status)" class="tag"></p-tag>
 				</td>
 				<td class="timestamp">{{ row.timestamp }}</td>
-				<td class="edit-button hide-on-mobile"><p-button severity="secondary">Edit</p-button></td>
+				<td class="edit-button hide-on-mobile">
+					<p-button severity="secondary" icon="pi pi-pen-to-square" rounded="true"></p-button>
+				</td>
 			</tr>
 		</ng-template>
 		<ng-template pTemplate="footer">

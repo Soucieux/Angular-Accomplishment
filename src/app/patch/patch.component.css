@@ -9,10 +9,10 @@
 	padding: 20px;
 }
 
-@media (max-width: 1700px) {
+@media (max-width: 1400px) {
 	::ng-deep .table table {
 		/* table-layout: fixed; */
-		max-width: inhert !important;
+		max-width: inherit !important;
 	}
 
 	.component {
@@ -28,7 +28,7 @@
 	}
 
 	.status {
-		width: 10vw !important;
+		width: 13vw !important;
 	}
 
 	.timestamp {
@@ -39,7 +39,7 @@
 ::ng-deep .table table {
 	border-radius: 20px;
 	overflow: hidden;
-	max-width: 1300px;
+	max-width: 1400px;
 }
 
 ::ng-deep .p-datatable .component {
@@ -48,7 +48,6 @@
 
 ::ng-deep .p-datatable .element {
 	width: 170px;
-	margin-right: 20px !important;
 }
 
 ::ng-deep .p-datatable .details {

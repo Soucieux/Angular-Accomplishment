@@ -23,8 +23,8 @@ import { RATE_DECREASED, RATE_INCREASED } from '../../app.utilities';
 })
 export class FirebaseService {
 	private readonly className = 'FirebaseService';
-	private moviesRef!: any;
-	private statisticsRef!: any;
+	private moviesRef: any;
+	private statisticsRef: any;
 
 	constructor(
 		@Inject(Storage) private storage: Storage,
@@ -306,8 +306,6 @@ export class FirebaseService {
 	 * @param movieItemVO - The movie item to update.
 	 */
 	private async updateHistory(status: string, movieItemVO?: MovieItemVO) {
-		const snapshot = await get(dbRef(this.db, 'history'));
-
 		if (movieItemVO) {
 			await push(dbRef(this.db, 'history'), {
 				status: status,
@@ -327,7 +325,37 @@ export class FirebaseService {
 		}
 	}
 
-	public async updatePatchNotes() {
-		const snapshot = await get(dbRef(this.db, 'patch_notes'));
+	/**
+	 * Add new record to patch notes
+	 *
+	 * @param newRecord - The record to add.
+	 */
+	public async addNewRecordToPatchNotes(newRecord: any) {
+		await push(dbRef(this.db, 'patch_notes'), {
+			...newRecord
+		}).then(() => {
+			LOG.info(this.className, 'New patch notes entry has been added');
+		});
+	}
+
+	/**
+	 * Get patch notes
+	 *
+	 * @returns Patch notes
+	 */
+	public getPatchNotes(): Observable<any[]> {
+		return list(dbRef(this.db, 'patch_notes')).pipe(
+			map((snapshots: any[]) =>
+				snapshots.map((snapshot: any) => {
+					return snapshot.snapshot.val() as {
+						component: string;
+						element: string;
+						details: string;
+						status: string;
+						timestamp: string;
+					};
+				})
+			)
+		);
 	}
 }

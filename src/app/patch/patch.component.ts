@@ -5,77 +5,47 @@ import { Tag } from 'primeng/tag';
 import { InputText } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
+import { FormsModule } from '@angular/forms';
 import {
 	STATUS_COMPLETED,
 	STATUS_DEBUG,
 	STATUS_DRAFT,
 	STATUS_IN_PROGRESS,
-	STATUS_TODO
+	STATUS_TODO,
+	Utilities
 } from '../app.utilities';
+import { FirebaseService } from '../service/firebase-service/firebase.service';
+import { Observable, Subscription, take } from 'rxjs';
+import { CommonModule } from '@angular/common';
 
 @Component({
 	selector: 'patch',
-	imports: [TableModule, SkeletonModule, Tag, InputText, Button, Select],
+	imports: [TableModule, SkeletonModule, Tag, InputText, Button, Select, FormsModule, CommonModule],
 	templateUrl: './patch.component.html',
 	styleUrl: './patch.component.css'
 })
 export class PatchComponent {
 	protected loading = true;
-	protected data = [
-		{
-			component: 'Entertainment',
-			element: 'History dialog',
-			details: 'Display history entry with different colors',
-			status: 'To Do',
-			timeStamp: '2025.12.04'
-		},
-		{
-			component: 'Home',
-			element: 'Title',
-			details: 'Slogan',
-			status: 'Completed',
-			timeStamp: '2025.12.04'
-		},
-		{
-			component: 'Entertainment',
-			element: 'Search dialog',
-			details: 'Logs on each search and summary',
-			status: 'In Progress',
-			timeStamp: '2025.12.04'
-		},
-		{
-			component: 'Entertainment',
-			element: '-',
-			details: 'Page info not displayed correctly after refresh',
-			status: 'Debug',
-			timeStamp: '2025.12.04'
-		},
-		{
-			component: 'Login',
-			element: 'Title',
-			details: 'Slogan',
-			status: 'Completed',
-			timeStamp: '2025.12.04'
-		},
-		{
-			component: 'Login',
-			element: '-',
-			details: 'Local storage is not defined',
-			status: 'Debug',
-			timeStamp: '2025.12.09'
-		},
-		{
-			component: 'Entertainment',
-			element: 'Add dialog',
-			details: 'Triggered "Web Inspector blocked http://localhost:4200/null on initial load"',
-			status: 'Debug',
-			timeStamp: '2025.12.09'
-		}
-	];
-	protected patchNotes: any[] = new Array(this.data.length);
 	protected severity: { severity: string }[] | undefined;
+	protected patchNotes$!: Observable<any[]>;
+	protected patchNotesCount$!: Subscription;
+	protected skeletonRows = Array.from({ length: 10 });
+	protected newRecord = {
+		component: '',
+		element: '',
+		details: '',
+		status: undefined,
+		timestamp: ''
+	};
+	constructor(private firebaseSservice: FirebaseService, private utilities: Utilities) {}
 
 	ngOnInit() {
+		this.patchNotes$ = this.firebaseSservice.getPatchNotes();
+
+		this.patchNotesCount$ = this.patchNotes$.pipe(take(1)).subscribe(() => {
+			this.loading = false;
+		});
+
 		this.severity = [
 			{ severity: STATUS_TODO },
 			{ severity: STATUS_IN_PROGRESS },
@@ -83,10 +53,19 @@ export class PatchComponent {
 			{ severity: STATUS_DEBUG },
 			{ severity: STATUS_DRAFT }
 		];
-		setTimeout(() => {
-			this.loading = false;
-			this.patchNotes = this.data;
-		}, 500);
+	}
+
+	submitNewRecord() {
+		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
+		this.newRecord.status = this.newRecord.status?.['severity'];
+		this.firebaseSservice.addNewRecordToPatchNotes(this.newRecord);
+		this.newRecord = {
+			component: '',
+			element: '',
+			details: '',
+			status: undefined,
+			timestamp: ''
+		};
 	}
 
 	getSeverity(status: string) {

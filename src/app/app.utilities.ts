@@ -36,7 +36,7 @@ export class Utilities {
 	 * @param isTimeIncluded - Whether to include time in the formatted time.
 	 * @returns Formatted time
 	 */
-	public getCurrentFormattedTime(isTimeIncluded: boolean) {
+	public getCurrentFormattedTime(isTimeIncluded: boolean): string {
 		const now = new Date();
 
 		let formattedTime = '';

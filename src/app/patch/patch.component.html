@@ -34,14 +34,66 @@
 				@if(rowgroup){
 				<td [attr.rowspan]="rowspan" class="component">{{ row.component }}</td>
 				}
-				<td class="element">{{ row.element }}</td>
-				<td class="details">{{ row.details }}</td>
-				<td class="status">
-					<p-tag [value]="row.status" [severity]="getSeverity(row.status)" class="tag"></p-tag>
+
+				<td class="element">
+					@if(editedRows.has(row.key)){
+					<input
+						pInputText
+						[(ngModel)]="editedRows.get(row.key).updated.element"
+						class="input"
+						(keyup.enter)="completeEdit(row)" />
+					} @else{
+					{{ row.element }}
+					}
 				</td>
+
+				<td class="details">
+					@if(editedRows.has(row.key)){
+					<textarea
+						pTextarea
+						variant="filled"
+						rows="3"
+						fluid
+						[(ngModel)]="editedRows.get(row.key).updated.details"
+						class="input"
+						(keyup.enter)="completeEdit(row)"></textarea>
+					} @else{
+					{{ row.details }}
+					}
+				</td>
+
+				<td class="status">
+					@if(editedRows.has(row.key)){
+					<p-select
+						optionLabel="severity"
+						optionValue="severity"
+						[options]="severity"
+						[appendTo]="'body'"
+						panelStyleClass="dropdown-panel-font"
+						[(ngModel)]="editedRows.get(row.key).updated.status"
+						class="input"
+						(keyup.enter)="completeEdit(row)" />
+					} @else {
+					<p-tag [value]="row.status" [severity]="getSeverity(row.status)" class="tag"></p-tag>
+					}
+				</td>
+
 				<td class="timestamp">{{ row.timestamp }}</td>
+
 				<td class="edit-button hide-on-mobile">
-					<p-button severity="secondary" icon="pi pi-pen-to-square" rounded="true"></p-button>
+					@if(editedRows.has(row.key)){
+					<p-button
+						severity="secondary"
+						icon="pi pi-check"
+						rounded="true"
+						(click)="completeEdit(row)"></p-button>
+					} @else {
+					<p-button
+						severity="secondary"
+						icon="pi pi-pen-to-square"
+						rounded="true"
+						(click)="startEdit(row)"></p-button>
+					}
 				</td>
 			</tr>
 		</ng-template>

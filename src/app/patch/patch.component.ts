@@ -30,7 +30,9 @@ export class PatchComponent {
 	protected patchNotes$!: Observable<any[]>;
 	protected patchNotesCount$!: Subscription;
 	protected skeletonRows = Array.from({ length: 10 });
+	protected editedRows = new Map<string, any>();
 	protected newRecord = {
+		key: '',
 		component: '',
 		element: '',
 		details: '',
@@ -55,11 +57,36 @@ export class PatchComponent {
 		];
 	}
 
+	startEdit(row: any) {
+		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
+	}
+
+	async completeEdit(row: any) {
+		const record = this.editedRows.get(row.key);
+		const changes: any = {};
+		if (record.original.element !== record.updated.element.trim()) {
+			changes.element = record.updated.element.trim();
+		}
+		if (record.original.details !== record.updated.details.trim()) {
+			changes.details = record.updated.details.trim();
+		}
+		if (record.original.status !== record.updated.status) {
+			changes.status = record.updated.status;
+		}
+
+		if (Object.keys(changes).length > 0) {
+			await this.firebaseSservice.updateNewRecordToPatchNotes(row.key, changes);
+		}
+
+		this.editedRows.delete(row.key);
+	}
+
 	submitNewRecord() {
 		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
 		this.firebaseSservice.addNewRecordToPatchNotes(this.newRecord);
 		this.newRecord = {
+			key: '',
 			component: '',
 			element: '',
 			details: '',

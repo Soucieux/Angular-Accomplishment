@@ -30,7 +30,8 @@
 				<!-- name is used to register control inside ngForm, used to track its value, validation status, errors etc. -->
 				<!-- id is used to link a <label> to the input -->
 				<!-- for inside <label> uses id to focus on the input when clicked -->
-				<!-- optionLabel tells which property(element) in [options] to display in the dropdown -->
+				<!-- optionLabel tells which property(element) in [options] to display when user selects an option -->
+				<!-- optionValue tells which property(element) in [options] to store when user selects an option -->
 				<!-- ngModel is used to register the current field to the form -->
 				<!-- [ngModel]="movieName" is used to bind the value of the current field to a variable in the ts file -->
 				<!-- #movieName="ngModel" is used to create a local variable that references the ngModel directive so that we can access control state (value, validation status, errors etc.) for this specific control -->

@@ -332,9 +332,27 @@ export class FirebaseService {
 	 */
 	public async addNewRecordToPatchNotes(newRecord: any) {
 		await push(dbRef(this.db, 'patch_notes'), {
-			...newRecord
+			component: newRecord.component.trim(),
+			element: newRecord.element.trim(),
+			details: newRecord.details.trim(),
+			status: newRecord.status,
+			timestamp: newRecord.timestamp
 		}).then(() => {
 			LOG.info(this.className, 'New patch notes entry has been added');
+		});
+	}
+
+	/**
+	 * Update existing record to patch notes
+	 *
+	 * @param key - The key associated with the record
+	 * @param updatedRecord - The record to update.
+	 */
+	public async updateNewRecordToPatchNotes(key: string, updatedRecord: any) {
+		await update(dbRef(this.db, `patch_notes/${key}`), {
+			...updatedRecord
+		}).then(() => {
+			LOG.info(this.className, 'Patch notes record has been updated');
 		});
 	}
 
@@ -347,7 +365,11 @@ export class FirebaseService {
 		return list(dbRef(this.db, 'patch_notes')).pipe(
 			map((snapshots: any[]) =>
 				snapshots.map((snapshot: any) => {
-					return snapshot.snapshot.val() as {
+					return {
+						key: snapshot.snapshot.key,
+						...snapshot.snapshot.val()
+					} as {
+						key: string;
 						component: string;
 						element: string;
 						details: string;

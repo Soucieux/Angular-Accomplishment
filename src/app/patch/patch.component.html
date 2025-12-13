@@ -20,12 +20,12 @@
 		<ng-template pTemplate="loadingbody">
 			@for(_ of skeletonRows;track $index){
 			<tr>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
+				<td height="9vh"><p-skeleton /></td>
+				<td height="9vh"><p-skeleton /></td>
+				<td height="9vh"><p-skeleton /></td>
+				<td height="9vh"><p-skeleton /></td>
+				<td height="9vh"><p-skeleton /></td>
+				<td height="9vh"><p-skeleton /></td>
 			</tr>
 			}
 		</ng-template>
@@ -52,10 +52,9 @@
 					<textarea
 						pTextarea
 						variant="filled"
-						rows="3"
 						fluid
 						[(ngModel)]="editedRows.get(row.key).updated.details"
-						class="input"
+						class="input textarea-input"
 						(keyup.enter)="completeEdit(row)"></textarea>
 					} @else{
 					{{ row.details }}
@@ -82,11 +81,18 @@
 
 				<td class="edit-button hide-on-mobile">
 					@if(editedRows.has(row.key)){
-					<p-button
-						severity="secondary"
-						icon="pi pi-check"
-						rounded="true"
-						(click)="completeEdit(row)"></p-button>
+					<div class="edit-button-group">
+						<p-button
+							severity="secondary"
+							icon="pi pi-check"
+							rounded="true"
+							(click)="completeEdit(row)"></p-button>
+						<p-button
+							severity="secondary"
+							icon="pi pi-trash"
+							rounded="true"
+							(click)="removeRecord(row.key)"></p-button>
+					</div>
 					} @else {
 					<p-button
 						severity="secondary"
@@ -105,7 +111,8 @@
 						type="text"
 						placeholder="Component"
 						[(ngModel)]="newRecord.component"
-						class="input" />
+						class="input"
+						(keyup.enter)="submitNewRecord()" />
 				</td>
 				<td class="element">
 					<input
@@ -113,15 +120,19 @@
 						type="text"
 						placeholder="Element"
 						[(ngModel)]="newRecord.element"
-						class="input" />
+						class="input"
+						(keyup.enter)="submitNewRecord()" />
 				</td>
 				<td class="details">
-					<input
-						pInputText
-						type="text"
+					<textarea
+						pTextarea
+						variant="filled"
+						fluid
 						placeholder="Details"
 						[(ngModel)]="newRecord.details"
-						class="input" />
+						class="input textarea-input"
+						(keyup.enter)="submitNewRecord()">
+					</textarea>
 				</td>
 				<td class="status">
 					<p-select
@@ -130,7 +141,8 @@
 						[appendTo]="'body'"
 						panelStyleClass="dropdown-panel-font"
 						[(ngModel)]="newRecord.status"
-						class="input" />
+						class="input"
+						(keyup.enter)="submitNewRecord()" />
 				</td>
 				<td class="timeStamp" colspan="2">
 					<p-button

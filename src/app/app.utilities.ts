@@ -57,6 +57,18 @@ export class Utilities {
 	}
 
 	/**
+	 * Capitalize the first letter of the string.
+	 *
+	 * @param string - The string to capitalize.
+	 * @returns The string with the first letter capitalized.
+	 */
+	public capitalizeFirstLetter(string: string | null | undefined) {
+		return string ? string.trim().charAt(0).toUpperCase() + string.slice(1).toLowerCase() : '';
+	}
+
+	////////////////////////////// Below are static methods //////////////////////////////
+
+	/**
 	 * Check if the movie item is valid.
 	 *
 	 * @param movieItemVO - The movie item to check.

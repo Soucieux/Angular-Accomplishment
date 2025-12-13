@@ -95,6 +95,10 @@ export class PatchComponent {
 		};
 	}
 
+	removeRecord(key: string) {
+		this.firebaseSservice.removePatchNotes(key);
+	}
+
 	getSeverity(status: string) {
 		switch (status) {
 			case STATUS_TODO:

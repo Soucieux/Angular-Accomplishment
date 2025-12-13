@@ -332,7 +332,7 @@ export class FirebaseService {
 	 */
 	public async addNewRecordToPatchNotes(newRecord: any) {
 		await push(dbRef(this.db, 'patch_notes'), {
-			component: newRecord.component.trim(),
+			component: this.Utilities.capitalizeFirstLetter(newRecord.component),
 			element: newRecord.element.trim(),
 			details: newRecord.details.trim(),
 			status: newRecord.status,
@@ -379,5 +379,16 @@ export class FirebaseService {
 				})
 			)
 		);
+	}
+
+	/**
+	 * Remove record from patch notes
+	 *
+	 * @param key - The key associated with the record
+	 */
+	public removePatchNotes(key: string) {
+		return remove(dbRef(this.db, `patch_notes/${key}`)).then(() => {
+			LOG.info(this.className, 'Patch notes record has been removed');
+		});
 	}
 }

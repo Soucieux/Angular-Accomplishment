@@ -502,7 +502,8 @@ export class EntertainmentComponent {
 			() => {
 				this.firebaseService.removeMovieFromDatabase(movieItemVO);
 			},
-			`Are you sure you want to delete ${movieItemVO.getMovieName()}?`
+			`Are you sure you want to delete ${movieItemVO.getMovieName()}?`,
+			`Delete Movie`
 		);
 	}
 

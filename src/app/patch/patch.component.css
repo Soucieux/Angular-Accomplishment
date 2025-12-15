@@ -45,6 +45,11 @@
 	overflow: hidden;
 	max-width: 1500px;
 	margin-top: 10px;
+	font-size: 17px;
+}
+
+.tag {
+	font-size: 15px;
 }
 
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td,
@@ -138,12 +143,24 @@
 		font-size: 25px;
 	}
 
+	::ng-deep .table table {
+		font-size: 15px;
+	}
+
 	.container {
 		font-size: 13px;
 	}
 
 	.tag {
-		font-size: 12px;
+		font-size: 13px;
+	}
+
+	.details {
+		min-width: 30vw !important;
+	}
+
+	.timestamp {
+		min-width: 15vw !important;
 	}
 }
 

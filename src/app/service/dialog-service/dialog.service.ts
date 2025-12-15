@@ -42,7 +42,8 @@ export class DialogService {
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'delete',
 		acceptCallback: () => void,
-		message: string
+		message: string,
+		header: string
 	): void;
 
 	openDialog(
@@ -64,13 +65,15 @@ export class DialogService {
 	 * @param dialogContainerRef - The container where dialogs should be attached
 	 * @param dialogType - The type of dialog to open
 	 * @param callback - The callback to call
-	 * @param callbackOrMessage - Second callback to call or message
+	 * @param message - Second callback to call or message
+	 * @param header - Header of the dialog
 	 */
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
 		callback: any,
-		callbackOrMessage?: any
+		message?: any,
+		header?: string
 	): void {
 		if (!dialogContainerRef) {
 			const error = new Error('Dialog container not found');
@@ -92,8 +95,8 @@ export class DialogService {
 			// Open up corresponding dialog and pass callbacks
 			if (dialogType === 'history' || dialogType === 'search') {
 				dialogComponentRef.instance.openDialog(callback);
-			} else {
-				dialogComponentRef.instance.openDialog(callback, callbackOrMessage);
+			} else if (dialogType === 'delete') {
+				dialogComponentRef.instance.openDialog(callback, message, header);
 			}
 
 			// Subscribe to dialog closed event

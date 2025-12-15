@@ -61,7 +61,14 @@
 	/* border: 1px solid black; */
 	width: 130px;
 	max-width: 130px;
-	text-align: center;
+    text-align: center;
+}
+
+::ng-deep .component-content {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
 }
 
 ::ng-deep .p-datatable .element {

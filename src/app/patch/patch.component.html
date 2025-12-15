@@ -91,7 +91,7 @@
 							severity="secondary"
 							icon="pi pi-trash"
 							rounded="true"
-							(click)="removeRecord(row.key)"></p-button>
+							(click)="openDeleteConfirmationDialog(row.key)"></p-button>
 					</div>
 					} @else {
 					<p-button
@@ -162,3 +162,4 @@
 		</ng-template>
 	</p-table>
 </div>
+<ng-container #dialogComponentContainer></ng-container>

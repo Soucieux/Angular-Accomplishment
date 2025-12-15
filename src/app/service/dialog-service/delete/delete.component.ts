@@ -23,11 +23,12 @@ export class DeleteDialogComponent {
 	 *
 	 * @param acceptCallback - The callback to call when the dialog is accepted
 	 * @param message - The message to display in the dialog
+	 * @param header - The header to display in the dialog
 	 */
-	openDialog(acceptCallback: () => void, message: string) {
+	openDialog(acceptCallback: () => void, message: string, header: string) {
 		this.confirmationService.confirm({
 			message: message,
-			header: 'Delete Movie',
+			header: header,
 			closable: true,
 			closeOnEscape: true,
 			icon: 'pi pi-info-circle',

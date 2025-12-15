@@ -32,7 +32,20 @@
 		<ng-template pTemplate="body" let-row let-rowgroup="rowgroup" let-rowspan="rowspan">
 			<tr>
 				@if(rowgroup){
-				<td [attr.rowspan]="rowspan" class="component">{{ row.component }}</td>
+				<td [attr.rowspan]="rowspan" class="component">
+					<div class="component-content">
+						@if(row.component === 'Entertainment'){
+						<span class="material-icons hide-on-mobile">tv</span>
+						} @else if(row.component ==='Home'){
+						<span class="material-icons hide-on-mobile">home</span>
+						} @else if(row.component ==='Patch Notes'){
+						<span class="material-symbols-outlined hide-on-mobile">note_stack</span>
+						} @else if(row.component ==='Login'){
+						<span class="pi pi-user hide-on-mobile"></span>
+						}
+						<span>{{ row.component }} </span>
+					</div>
+				</td>
 				}
 
 				<td class="element">

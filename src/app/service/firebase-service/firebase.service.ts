@@ -336,7 +336,8 @@ export class FirebaseService {
 			element: newRecord.element.trim(),
 			details: newRecord.details.trim(),
 			status: newRecord.status,
-			timestamp: newRecord.timestamp
+			timestamp: newRecord.timestamp,
+			isBug: newRecord.isBug
 		}).then(() => {
 			LOG.info(this.className, 'New patch notes entry has been added');
 		});
@@ -375,6 +376,7 @@ export class FirebaseService {
 						details: string;
 						status: string;
 						timestamp: string;
+						isBug: boolean;
 					};
 				})
 			)
@@ -386,7 +388,7 @@ export class FirebaseService {
 	 *
 	 * @param key - The key associated with the record
 	 */
-	public removePatchNotes(key: string) {
+	public async removePatchNotes(key: string) {
 		return remove(dbRef(this.db, `patch_notes/${key}`)).then(() => {
 			LOG.info(this.className, 'Patch notes record has been removed');
 		});

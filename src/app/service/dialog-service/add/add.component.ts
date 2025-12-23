@@ -57,7 +57,7 @@ export class AddDialogComponent {
 			{ genre: '校园' },
 			{ genre: '现代' },
 			{ genre: '谍战' },
-			{ genre: '其他' }
+			{ genre: '特别关注' }
 		];
 	}
 

@@ -13,6 +13,7 @@ export const STATUS_IN_PROGRESS = 'In Progress';
 export const STATUS_COMPLETED = 'Completed';
 export const STATUS_DEBUG = 'Debug';
 export const STATUS_DRAFT = 'Draft';
+export const STATUS_RESOLVED = 'Resolved';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {

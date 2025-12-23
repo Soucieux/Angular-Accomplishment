@@ -7,11 +7,16 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 ### Release 1.0
 February 5, 2024 -> Project initialization
 
-February 21, 2025 -> Entertainment page
+September 23, 2024 -> User Login initialized
+
+February 21, 2025 -> Entertainment page initialized
+
+November 28, 2025 -> User Login completed
+
+December 2, 2025 -> Patch Notes page initialized
 
 ## Access Link
-[my-own-website-2024.web.app](my-own-website-2024.web.app)
-[my-own-website-2024.firebaseapp.com](my-own-website-2024.firebaseapp.com)
+[Vision Canvas](www.visioncanvas.net)
 
 ## Required Dependencies
 - Firebase

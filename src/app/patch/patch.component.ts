@@ -12,18 +12,30 @@ import {
 	STATUS_DEBUG,
 	STATUS_DRAFT,
 	STATUS_IN_PROGRESS,
+	STATUS_RESOLVED,
 	STATUS_TODO,
 	Utilities
 } from '../app.utilities';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
-import { Observable, Subscription, take } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { LOG } from '../app.logs';
 import { DialogService } from '../service/dialog-service/dialog.service';
+import { CheckboxModule } from 'primeng/checkbox';
 
 @Component({
 	selector: 'patch',
-	imports: [TableModule, SkeletonModule, Tag, InputText, Button, Select, FormsModule, CommonModule],
+	imports: [
+		TableModule,
+		SkeletonModule,
+		Tag,
+		InputText,
+		Button,
+		Select,
+		FormsModule,
+		CommonModule,
+		CheckboxModule
+	],
 	templateUrl: './patch.component.html',
 	styleUrl: './patch.component.css'
 })
@@ -34,6 +46,7 @@ export class PatchComponent {
 	private dialogComponentContainer!: ViewContainerRef;
 	protected loading = true;
 	protected severity: { severity: string }[] | undefined;
+	protected bugSeverity: { severity: string }[] | undefined;
 	protected patchNotes$!: Observable<any[]>;
 	protected skeletonRows = Array.from({ length: 10 });
 	protected editedRows = new Map<string, any>();
@@ -43,7 +56,8 @@ export class PatchComponent {
 		element: '',
 		details: '',
 		status: undefined,
-		timestamp: ''
+		timestamp: '',
+		isBug: false
 	};
 	constructor(
 		private firebaseService: FirebaseService,
@@ -62,9 +76,10 @@ export class PatchComponent {
 			{ severity: STATUS_TODO },
 			{ severity: STATUS_IN_PROGRESS },
 			{ severity: STATUS_COMPLETED },
-			{ severity: STATUS_DEBUG },
 			{ severity: STATUS_DRAFT }
 		];
+
+		this.bugSeverity = [{ severity: STATUS_DEBUG }, { severity: STATUS_RESOLVED }];
 	}
 
 	ngOnDestroy() {
@@ -96,6 +111,10 @@ export class PatchComponent {
 		this.editedRows.delete(row.key);
 	}
 
+	clearStatusField() {
+		this.newRecord.status = undefined;
+	}
+
 	submitNewRecord() {
 		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
@@ -106,7 +125,8 @@ export class PatchComponent {
 			element: '',
 			details: '',
 			status: undefined,
-			timestamp: ''
+			timestamp: '',
+			isBug: false
 		};
 	}
 
@@ -134,6 +154,7 @@ export class PatchComponent {
 			case STATUS_IN_PROGRESS:
 				return 'warn';
 			case STATUS_COMPLETED:
+			case STATUS_RESOLVED:
 				return 'success';
 			case STATUS_DEBUG:
 				return 'danger';

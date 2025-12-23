@@ -97,6 +97,8 @@ export class DialogService {
 				dialogComponentRef.instance.openDialog(callback);
 			} else if (dialogType === 'delete') {
 				dialogComponentRef.instance.openDialog(callback, message, header);
+			} else if (dialogType === 'add') {
+				dialogComponentRef.instance.openDialog(callback, callback);
 			}
 
 			// Subscribe to dialog closed event

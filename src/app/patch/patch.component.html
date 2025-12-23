@@ -79,7 +79,7 @@
 					<p-select
 						optionLabel="severity"
 						optionValue="severity"
-						[options]="severity"
+						[options]="editedRows.get(row.key).original.isBug ? bugSeverity : severity"
 						[appendTo]="'body'"
 						panelStyleClass="dropdown-panel-font"
 						[(ngModel)]="editedRows.get(row.key).updated.status"
@@ -150,14 +150,14 @@
 				<td class="status">
 					<p-select
 						optionLabel="severity"
-						[options]="severity"
+						[options]="newRecord.isBug ? bugSeverity : severity"
 						[appendTo]="'body'"
 						panelStyleClass="dropdown-panel-font"
 						[(ngModel)]="newRecord.status"
 						class="input"
 						(keyup.enter)="submitNewRecord()" />
 				</td>
-				<td class="timeStamp" colspan="2">
+				<td class="timeStamp">
 					<p-button
 						label="Add"
 						icon="pi pi-plus"
@@ -170,6 +170,12 @@
 						"
 						(onClick)="submitNewRecord()"
 						styleClass="input"></p-button>
+				</td>
+				<td class="edit-button">
+					<p-check-box
+						[(ngModel)]="newRecord.isBug"
+						[binary]="true"
+						(onChange)="clearStatusField()"></p-check-box>
 				</td>
 			</tr>
 		</ng-template>

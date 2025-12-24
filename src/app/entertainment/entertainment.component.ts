@@ -73,7 +73,7 @@ export class EntertainmentComponent {
 		private searchStreamService: SearchStreamService
 	) {
 		if (isPlatformBrowser(this.platformId)) {
-			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'null');
+			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
 		}
 	}
 

@@ -1,4 +1,4 @@
-import { Component, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
@@ -18,7 +18,7 @@ import {
 } from '../app.utilities';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
 import { Observable, take } from 'rxjs';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../app.logs';
 import { DialogService } from '../service/dialog-service/dialog.service';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -44,6 +44,7 @@ export class PatchComponent {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
+	protected isLoggedIn!: boolean;
 	protected loading = true;
 	protected severity: { severity: string }[] | undefined;
 	protected bugSeverity: { severity: string }[] | undefined;
@@ -60,17 +61,24 @@ export class PatchComponent {
 		isBug: false
 	};
 	constructor(
+		@Inject(PLATFORM_ID) private platformId: Object,
 		private firebaseService: FirebaseService,
 		private dialogService: DialogService,
 		private utilities: Utilities
-	) {}
+	) {
+		if (isPlatformBrowser(this.platformId)) {
+			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
+		}
+	}
 
-	ngOnInit() {
-		this.patchNotes$ = this.firebaseService.getPatchNotes();
+	async ngOnInit() {
+		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
+			this.patchNotes$ = this.firebaseService.getPatchNotes();
 
-		this.patchNotes$.pipe(take(1)).subscribe(() => {
-			this.loading = false;
-		});
+			this.patchNotes$.pipe(take(1)).subscribe(() => {
+				this.loading = false;
+			});
+		}
 
 		this.severity = [
 			{ severity: STATUS_TODO },

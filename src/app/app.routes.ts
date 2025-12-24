@@ -8,6 +8,6 @@ import { PatchComponent } from './patch/patch.component';
 export const routes: Routes = [
 	{ path: '', component: HomeComponent },
 	{ path: 'entertainment', component: EntertainmentComponent },
-	{ path: 'login', component: LoginComponent, canMatch: [loginGuard(false)] },
-	{ path: 'patch', component: PatchComponent, canMatch: [loginGuard(true)] }
+	{ path: 'login', component: LoginComponent, canMatch: [loginGuard] },
+	{ path: 'patch', component: PatchComponent }
 ];

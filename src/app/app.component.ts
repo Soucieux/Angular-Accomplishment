@@ -33,7 +33,7 @@ export class AppComponent {
 
 	constructor(private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object) {
 		if (isPlatformBrowser(this.platformId)) {
-			const permission = JSON.parse(localStorage.getItem('permission') || 'null');
+			const permission = JSON.parse(localStorage.getItem('permission') || 'false');
 			if (permission == null) {
 				localStorage.setItem('permission', 'false');
 			}

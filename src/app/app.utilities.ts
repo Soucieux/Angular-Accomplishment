@@ -14,6 +14,7 @@ export const STATUS_COMPLETED = 'Completed';
 export const STATUS_DEBUG = 'Debug';
 export const STATUS_DRAFT = 'Draft';
 export const STATUS_RESOLVED = 'Resolved';
+export const GENRE_FAVOURITE = '特别关注';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {

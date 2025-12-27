@@ -8,6 +8,7 @@ export class MovieItemVO {
 	private coverImage: any = null;
 	private movieKey: string = '';
 	private sessionId: number = -1;
+	private isFavourite: boolean = false;
 
 	constructor();
 
@@ -59,6 +60,10 @@ export class MovieItemVO {
 		return this.coverImage;
 	}
 
+	getIsFavourite(): boolean {
+		return this.isFavourite;
+	}
+
 	getSessionId(): number {
 		return this.sessionId;
 	}
@@ -105,5 +110,9 @@ export class MovieItemVO {
 
 	setSessionId(sessionId: number) {
 		this.sessionId = sessionId;
+	}
+
+	setIsFavourite(isFavourite: boolean) {
+		this.isFavourite = isFavourite;
 	}
 }

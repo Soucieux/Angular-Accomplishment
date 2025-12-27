@@ -1,4 +1,4 @@
-import { NO_RATE, Utilities } from './../../app.utilities';
+import { GENRE_FAVOURITE, NO_RATE, Utilities } from './../../app.utilities';
 import { SearchStreamService } from './../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
@@ -79,6 +79,7 @@ export class FirebaseService {
 					movieItemVO.setMovieCoverImageDownloadableLink(movie.coverImageLink);
 					movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
 					movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
+					movieItemVO.setIsFavourite(movie.isFavourite);
 					return movieItemVO;
 				})
 			)
@@ -174,7 +175,8 @@ export class FirebaseService {
 				id: movieItemVO.getMovieId(),
 				coverImageLink: movieItemVO.getMovieCoverImageDownloadableLink(),
 				firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
-				episodeNumber: movieItemVO.getMovieEpisodeNumber()
+				episodeNumber: movieItemVO.getMovieEpisodeNumber(),
+				isFavourite: movieItemVO.getIsFavourite()
 			}).then(async () => {
 				// Add new entry to history
 				await this.updateHistory('added', movieItemVO);
@@ -184,6 +186,10 @@ export class FirebaseService {
 			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
 				currentData.genre[movieItemVO.getMovieGenre()] =
 					(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
+				if (movieItemVO.getIsFavourite()) {
+					currentData.genre[GENRE_FAVOURITE] = (currentData.genre[GENRE_FAVOURITE] ?? 0) + 1;
+				}
+
 				currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
 				return currentData;
 			}).then(() => {
@@ -226,6 +232,12 @@ export class FirebaseService {
 					currentData.genre[movieItemVO.getMovieGenre()] - 1 > 0
 						? currentData.genre[movieItemVO.getMovieGenre()] - 1
 						: 0;
+				if (movieItemVO.getIsFavourite()) {
+					currentData.genre[GENRE_FAVOURITE] =
+						currentData.genre[GENRE_FAVOURITE] - 1 > 0
+							? currentData.genre[GENRE_FAVOURITE] - 1
+							: 0;
+				}
 				currentData.totalNumber = currentData.totalNumber - 1 > 0 ? currentData.totalNumber - 1 : 0;
 				return currentData;
 			}).then(() => {

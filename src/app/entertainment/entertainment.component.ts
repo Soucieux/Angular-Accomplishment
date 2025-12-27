@@ -6,7 +6,8 @@ import {
 	SEARCH_CANCEL,
 	SEARCH_COMPELTE,
 	NO_RATE,
-	Utilities
+	Utilities,
+	GENRE_FAVOURITE
 } from './../app.utilities';
 import { MovieIdNotFoundError } from './../error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -53,6 +54,7 @@ export class EntertainmentComponent {
 	private dialogComponentContainer!: ViewContainerRef;
 	// TODO This value has to be true initially so that the page will not show access denied page on refresh
 	protected readonly NO_RATE = NO_RATE;
+	protected readonly GENRE_FAVOURITE = GENRE_FAVOURITE;
 	protected isLoggedIn!: boolean;
 	protected isSearching: boolean = false;
 	private sessionId: number = 0;
@@ -96,6 +98,9 @@ export class EntertainmentComponent {
 				map(([movieList, selectedGenres]) => {
 					if (selectedGenres === '') {
 						return movieList;
+					}
+					if (selectedGenres === GENRE_FAVOURITE) {
+						return movieList.filter((movie) => movie.getIsFavourite());
 					}
 					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
 				})

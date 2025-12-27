@@ -88,6 +88,10 @@
 	}
 	<!-- #footer -->
 	<ng-template #footer>
+		<div class="favourite">
+			<p-checkBox inputId="favourite" [(ngModel)]="isFavourite" [binary]="true"></p-checkBox>
+			<label for="favourite">Favourite</label>
+		</div>
 		<p-button
 			label="Search"
 			type="button"

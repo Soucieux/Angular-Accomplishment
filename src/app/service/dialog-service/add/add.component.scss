@@ -24,6 +24,12 @@
 	text-align: center;
 }
 
+.favourite {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
 .dialog-title {
 	display: flex;
 	justify-content: center;
@@ -89,7 +95,7 @@
 
 ::ng-deep .add-dialog .p-dialog-footer {
 	position: absolute;
-	left: 210px;
+	left: 110px;
 	bottom: -5px;
 }
 

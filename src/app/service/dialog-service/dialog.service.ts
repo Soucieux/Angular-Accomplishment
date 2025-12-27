@@ -65,14 +65,14 @@ export class DialogService {
 	 * @param dialogContainerRef - The container where dialogs should be attached
 	 * @param dialogType - The type of dialog to open
 	 * @param callback - The callback to call
-	 * @param message - Second callback to call or message
+	 * @param messageOrCallback - Second callback to call or message
 	 * @param header - Header of the dialog
 	 */
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
 		callback: any,
-		message?: any,
+		messageOrCallback?: any,
 		header?: string
 	): void {
 		if (!dialogContainerRef) {
@@ -96,9 +96,9 @@ export class DialogService {
 			if (dialogType === 'history' || dialogType === 'search') {
 				dialogComponentRef.instance.openDialog(callback);
 			} else if (dialogType === 'delete') {
-				dialogComponentRef.instance.openDialog(callback, message, header);
+				dialogComponentRef.instance.openDialog(callback, messageOrCallback, header);
 			} else if (dialogType === 'add') {
-				dialogComponentRef.instance.openDialog(callback, callback);
+				dialogComponentRef.instance.openDialog(callback, messageOrCallback);
 			}
 
 			// Subscribe to dialog closed event

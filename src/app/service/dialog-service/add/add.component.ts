@@ -13,6 +13,7 @@ import { MovieIdNotFoundError } from '../../../error/movie-id-not-found.error';
 import { MovieAlreadyExistsError } from '../../../error/movie-already-exists-error';
 import { LOG } from '../../../app.logs';
 import { Utilities } from '../../../app.utilities';
+import { Checkbox } from 'primeng/checkbox';
 
 @Component({
 	selector: 'add-dialog',
@@ -25,7 +26,8 @@ import { Utilities } from '../../../app.utilities';
 		SelectModule,
 		ProgressBarModule,
 		ConfirmDialogModule,
-		CommonModule
+		CommonModule,
+		Checkbox
 	],
 	templateUrl: './add.component.html',
 	styleUrl: './add.component.scss',
@@ -44,6 +46,7 @@ export class AddDialogComponent {
 	canSubmit: boolean = false;
 	years: { year: string }[] | undefined;
 	genres: { genre: string }[] | undefined;
+	isFavourite: boolean = false;
 	movieImageUrl: string | null = null;
 
 	constructor(private utilities: Utilities) {}
@@ -56,12 +59,11 @@ export class AddDialogComponent {
 			{ genre: '悬疑' },
 			{ genre: '校园' },
 			{ genre: '现代' },
-			{ genre: '谍战' },
-			{ genre: '特别关注' }
+			{ genre: '谍战' }
 		];
 	}
 
-	protected openDialog(submitCallback?: () => void, searchCallback?: (movie: MovieItemVO) => Blob) {
+	protected openDialog(submitCallback: () => void, searchCallback: (movie: MovieItemVO) => Blob) {
 		this.visible = true;
 		this.submitCallback = submitCallback;
 		this.searchCallback = searchCallback;
@@ -77,7 +79,8 @@ export class AddDialogComponent {
 			} else if (newMovieData.id) {
 				movieItemVO.setMovieId(Number(newMovieData.id));
 			}
-			movieItemVO.setMovieGenre(newMovieData.genres.genre);
+            movieItemVO.setMovieGenre(newMovieData.genres.genre);
+            movieItemVO.setIsFavourite(this.isFavourite);
 			const movieImage = await this.searchCallback?.(movieItemVO);
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 			this.canSubmit = true;

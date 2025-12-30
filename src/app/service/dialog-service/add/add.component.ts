@@ -42,7 +42,7 @@ export class AddDialogComponent {
 	private submitCallback?: () => void;
 	private searchCallback?: (movie: MovieItemVO) => Blob;
 	visible: boolean = false;
-	isLoading: boolean = false;
+    isLoading: boolean = false;
 	canSubmit: boolean = false;
 	years: { year: string }[] | undefined;
 	genres: { genre: string }[] | undefined;
@@ -79,8 +79,8 @@ export class AddDialogComponent {
 			} else if (newMovieData.id) {
 				movieItemVO.setMovieId(Number(newMovieData.id));
 			}
-            movieItemVO.setMovieGenre(newMovieData.genres.genre);
-            movieItemVO.setIsFavourite(this.isFavourite);
+			movieItemVO.setMovieGenre(newMovieData.genres.genre);
+			movieItemVO.setIsFavourite(this.isFavourite);
 			const movieImage = await this.searchCallback?.(movieItemVO);
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 			this.canSubmit = true;
@@ -125,7 +125,12 @@ export class AddDialogComponent {
 		if (value && value.trim() !== '') {
 			this.addMovieForm.controls['movieName']?.reset();
 			this.addMovieForm.controls['years']?.reset();
-		}
+        }
+        this.canSubmit = false;
+	}
+
+	protected onNameAndYearChange() {
+		this.canSubmit = false;
 	}
 
 	protected onSubmit() {

@@ -1,0 +1,36 @@
+<div class="container">
+	<p-table [value]="rows" class="no-gap-table">
+		<ng-template pTemplate="header">
+			<tr>
+				<th class="header">First</th>
+				<th class="header">Second</th>
+				<th class="header">Third</th>
+				<th class="header">Fourth</th>
+			</tr>
+		</ng-template>
+		<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+			<tr>
+				<td class="data">
+					<input pInputText type="number" [(ngModel)]="row.first" class="input" />
+				</td>
+				<td class="data">
+					<input pInputText type="number" [(ngModel)]="row.second" class="input" />
+				</td>
+				<td class="data">
+					<input pInputText type="number" [(ngModel)]="row.third" class="input" />
+				</td>
+				<td class="data">
+					<input pInputText type="number" [(ngModel)]="row.fourth" class="input" />
+				</td>
+			</tr>
+		</ng-template>
+		<ng-template pTemplate="footer">
+			<tr>
+				<td colspan="4" class="reset">
+					<p-button styleClass="button" label="Reset" icon="pi pi-undo" [severity]="'secondary'">
+					</p-button>
+				</td>
+			</tr>
+		</ng-template>
+	</p-table>
+</div>

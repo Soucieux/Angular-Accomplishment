@@ -1,0 +1,49 @@
+.container {
+	min-width: 100%;
+	min-height: 100%;
+	backdrop-filter: blur(50px);
+	background-color: rgb(243, 227, 243);
+	border: 0.8px solid rgb(255, 255, 255);
+	box-shadow: 0 0 15px rgb(238, 240, 243);
+	border-radius: 10px;
+	padding: 20px;
+}
+
+.header {
+	text-align: center;
+}
+
+.input {
+	min-width: 50px;
+	max-width: 150px;
+}
+
+::ng-deep .p-datatable .data {
+	text-align: center;
+}
+
+/* remove td/th padding */
+.no-gap-table th,
+.no-gap-table td {
+	padding: 5px !important;
+}
+
+::ng-deep .button {
+  width: 100%;
+}
+
+@media (max-width: 680px) {
+	.header {
+		font-size: 14px;
+	}
+
+	::ng-deep .p-datatable .input {
+		width: 50px;
+	}
+
+	/* remove td/th padding */
+	.no-gap-table th,
+	.no-gap-table td {
+		margin: 0 !important;
+	}
+}

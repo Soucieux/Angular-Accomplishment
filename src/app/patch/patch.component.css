@@ -9,6 +9,10 @@
 	padding: 20px;
 }
 
+h1 {
+    font-size: 35px;
+}
+
 @media (max-width: 1500px) {
 	::ng-deep .table table {
 		/* table-layout: fixed; */

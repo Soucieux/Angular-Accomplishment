@@ -11,16 +11,44 @@
 		<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
 			<tr>
 				<td class="data">
-					<input pInputText type="number" [(ngModel)]="row.first" class="input" />
+					<input
+						pInputText
+						type="text"
+						inputmode="numeric"
+						[(ngModel)]="row.first"
+						class="input"
+						(keydown)="onNumberChange(rowIndex, 'first', $event)"
+						(ngModelChange)="onValueChange(rowIndex, 'first')" />
 				</td>
 				<td class="data">
-					<input pInputText type="number" [(ngModel)]="row.second" class="input" />
+					<input
+						pInputText
+						type="text"
+						inputmode="numeric"
+						[(ngModel)]="row.second"
+						class="input"
+						(keydown)="onNumberChange(rowIndex, 'second', $event)"
+						(ngModelChange)="onValueChange(rowIndex, 'second')" />
 				</td>
 				<td class="data">
-					<input pInputText type="number" [(ngModel)]="row.third" class="input" />
+					<input
+						pInputText
+						type="text"
+						inputmode="numeric"
+						[(ngModel)]="row.third"
+						class="input"
+						(keydown)="onNumberChange(rowIndex, 'third', $event)"
+						(ngModelChange)="onValueChange(rowIndex, 'third')" />
 				</td>
 				<td class="data">
-					<input pInputText type="number" [(ngModel)]="row.fourth" class="input" />
+					<input
+						pInputText
+						type="text"
+						inputmode="numeric"
+						[(ngModel)]="row.fourth"
+						class="input"
+						(keydown)="onNumberChange(rowIndex, 'fourth', $event)"
+						(ngModelChange)="onValueChange(rowIndex, 'fourth')" />
 				</td>
 			</tr>
 		</ng-template>

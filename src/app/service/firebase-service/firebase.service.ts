@@ -405,4 +405,15 @@ export class FirebaseService {
 			LOG.info(this.className, 'Patch notes record has been removed');
 		});
 	}
+
+	public getRemainderTableDetails(): Observable<any[]> {
+		return new Observable((observer) => {
+			runInInjectionContext(this.ei, () => {
+				onValue(dbRef(this.db, 'remainder/table'), (snapshot) => {
+					const data = snapshot.val();
+					observer.next(data ? Object.values(data) : []);
+				});
+			});
+		});
+	}
 }

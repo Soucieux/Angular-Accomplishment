@@ -1,5 +1,5 @@
 <div class="container">
-	<p-table [value]="rows" class="no-gap-table">
+	<p-table [value]="updatedRows" class="no-gap-table">
 		<ng-template pTemplate="header">
 			<tr>
 				<th class="header">First</th>
@@ -18,7 +18,8 @@
 						[(ngModel)]="row.first"
 						class="input"
 						(keydown)="onNumberChange(rowIndex, 'first', $event)"
-						(ngModelChange)="onValueChange(rowIndex, 'first')" />
+						(blur)="onValueChange(rowIndex, 'first')"
+						(keyup.enter)="onValueChange(rowIndex, 'first')" />
 				</td>
 				<td class="data">
 					<input
@@ -28,7 +29,8 @@
 						[(ngModel)]="row.second"
 						class="input"
 						(keydown)="onNumberChange(rowIndex, 'second', $event)"
-						(ngModelChange)="onValueChange(rowIndex, 'second')" />
+						(blur)="onValueChange(rowIndex, 'second')"
+						(keyup.enter)="onValueChange(rowIndex, 'second')" />
 				</td>
 				<td class="data">
 					<input
@@ -38,7 +40,8 @@
 						[(ngModel)]="row.third"
 						class="input"
 						(keydown)="onNumberChange(rowIndex, 'third', $event)"
-						(ngModelChange)="onValueChange(rowIndex, 'third')" />
+						(blur)="onValueChange(rowIndex, 'third')"
+						(keyup.enter)="onValueChange(rowIndex, 'third')" />
 				</td>
 				<td class="data">
 					<input
@@ -48,7 +51,8 @@
 						[(ngModel)]="row.fourth"
 						class="input"
 						(keydown)="onNumberChange(rowIndex, 'fourth', $event)"
-						(ngModelChange)="onValueChange(rowIndex, 'fourth')" />
+						(blur)="onValueChange(rowIndex, 'fourth')"
+						(keyup.enter)="onValueChange(rowIndex, 'fourth')" />
 				</td>
 			</tr>
 		</ng-template>

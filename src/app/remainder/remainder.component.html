@@ -16,8 +16,10 @@
 						type="text"
 						inputmode="numeric"
 						[(ngModel)]="row.first"
+						[disabled]="isDisabled(rowIndex, 'first')"
+						[class.disabled-cell]="isDisabled(rowIndex, 'first')"
 						class="input"
-						(keydown)="onNumberChange(rowIndex, 'first', $event)"
+						(keydown)="onNumberChange($event)"
 						(blur)="onValueChange(rowIndex, 'first')"
 						(keyup.enter)="onValueChange(rowIndex, 'first')" />
 				</td>
@@ -27,8 +29,10 @@
 						type="text"
 						inputmode="numeric"
 						[(ngModel)]="row.second"
+						[disabled]="isDisabled(rowIndex, 'second')"
+						[class.disabled-cell]="isDisabled(rowIndex, 'second')"
 						class="input"
-						(keydown)="onNumberChange(rowIndex, 'second', $event)"
+						(keydown)="onNumberChange($event)"
 						(blur)="onValueChange(rowIndex, 'second')"
 						(keyup.enter)="onValueChange(rowIndex, 'second')" />
 				</td>
@@ -38,8 +42,10 @@
 						type="text"
 						inputmode="numeric"
 						[(ngModel)]="row.third"
+						[disabled]="isDisabled(rowIndex, 'third')"
+						[class.disabled-cell]="isDisabled(rowIndex, 'third')"
 						class="input"
-						(keydown)="onNumberChange(rowIndex, 'third', $event)"
+						(keydown)="onNumberChange($event)"
 						(blur)="onValueChange(rowIndex, 'third')"
 						(keyup.enter)="onValueChange(rowIndex, 'third')" />
 				</td>
@@ -49,8 +55,10 @@
 						type="text"
 						inputmode="numeric"
 						[(ngModel)]="row.fourth"
+						[disabled]="isDisabled(rowIndex, 'fourth')"
+						[class.disabled-cell]="isDisabled(rowIndex, 'fourth')"
 						class="input"
-						(keydown)="onNumberChange(rowIndex, 'fourth', $event)"
+						(keydown)="onNumberChange($event)"
 						(blur)="onValueChange(rowIndex, 'fourth')"
 						(keyup.enter)="onValueChange(rowIndex, 'fourth')" />
 				</td>

@@ -406,6 +406,11 @@ export class FirebaseService {
 		});
 	}
 
+	/**
+	 * Get remainder table details
+	 *
+	 * @returns Remainder table details
+	 */
 	public getRemainderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
@@ -417,6 +422,11 @@ export class FirebaseService {
 		});
 	}
 
+	/**
+	 * Update remainder table details
+	 *
+	 * @param updatedTable - The table to update.
+	 */
 	public async updateRemainderTableDetails(updatedTable: any) {
 		await update(dbRef(this.db, 'remainder/table'), {
 			...updatedTable

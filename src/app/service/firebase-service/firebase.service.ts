@@ -416,4 +416,12 @@ export class FirebaseService {
 			});
 		});
 	}
+
+	public async updateRemainderTableDetails(updatedTable: any) {
+		await update(dbRef(this.db, 'remainder/table'), {
+			...updatedTable
+		}).then(() => {
+			LOG.info(this.className, 'Remainder table has been updated');
+		});
+	}
 }

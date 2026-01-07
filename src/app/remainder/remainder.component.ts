@@ -18,7 +18,7 @@ export class RemainderComponent {
 	protected originalRows!: any[];
 	protected updatedRows!: any[];
 	protected currentDay!: number;
-	fields: Array<'first' | 'second' | 'third' | 'fourth'> = ['first', 'second', 'third', 'fourth'];
+	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
 
 	constructor(@Inject(PLATFORM_ID) private platformId: Object, private firebaseService: FirebaseService) {
 		if (isPlatformBrowser(this.platformId)) {
@@ -56,7 +56,7 @@ export class RemainderComponent {
 		}
 	}
 
-	onValueChange(rowIndex: number, field: 'first' | 'second' | 'third' | 'fourth') {
+	onValueChange(rowIndex: number, field: string) {
 		// Reset value if it reaches threshold
 		let currentValue = this.updatedRows[rowIndex][field];
 		if (Number(currentValue) > 31) {
@@ -89,12 +89,12 @@ export class RemainderComponent {
 		this.firebaseService.updateRemainderTableDetails(this.updatedRows);
 	}
 
-	isDisabled(rowIndex: number, field: 'first' | 'second' | 'third' | 'fourth'): boolean {
+	isDisabled(rowIndex: number, field: string): boolean {
 		return this.finalizedCells.has(`${rowIndex}-${field}`);
 	}
 
 	// 1 -> 2 && 3 -> 4
-	private sixDaysDiff(rowIndex: number, field: 'first' | 'second' | 'third' | 'fourth') {
+	private sixDaysDiff(rowIndex: number, field: string) {
 		this.updatedRows[rowIndex + 1][field] = Number(this.updatedRows[rowIndex][field]) + 6;
 
 		this.updatedRows[rowIndex + 1][field] =
@@ -102,7 +102,7 @@ export class RemainderComponent {
 	}
 
 	// 0 -> 1 && 2 -> 3
-	private twoDayDiff(rowIndex: number, field: 'first' | 'second' | 'third' | 'fourth') {
+	private twoDayDiff(rowIndex: number, field: string) {
 		this.updatedRows[rowIndex + 1][field] = Number(this.updatedRows[rowIndex][field]) + 2;
 
 		this.updatedRows[rowIndex + 1][field] =

@@ -16,12 +16,12 @@
 						type="text"
 						inputmode="numeric"
 						[(ngModel)]="row.first"
-						[disabled]="isDisabled(rowIndex, 'first')"
-						[class.disabled-cell]="isDisabled(rowIndex, 'first')"
+						[disabled]="isDisabled(rowIndex, this.fields[0])"
+						[class.disabled-cell]="isDisabled(rowIndex, this.fields[0])"
 						class="input"
 						(keydown)="onNumberChange($event)"
-						(blur)="onValueChange(rowIndex, 'first')"
-						(keyup.enter)="onValueChange(rowIndex, 'first')" />
+						(blur)="onValueChange(rowIndex, this.fields[0])"
+						(keyup.enter)="onValueChange(rowIndex, this.fields[0])" />
 				</td>
 				<td class="data">
 					<input
@@ -29,12 +29,12 @@
 						type="text"
 						inputmode="numeric"
 						[(ngModel)]="row.second"
-						[disabled]="isDisabled(rowIndex, 'second')"
-						[class.disabled-cell]="isDisabled(rowIndex, 'second')"
+						[disabled]="isDisabled(rowIndex, this.fields[1])"
+						[class.disabled-cell]="isDisabled(rowIndex, this.fields[1])"
 						class="input"
 						(keydown)="onNumberChange($event)"
-						(blur)="onValueChange(rowIndex, 'second')"
-						(keyup.enter)="onValueChange(rowIndex, 'second')" />
+						(blur)="onValueChange(rowIndex, this.fields[1])"
+						(keyup.enter)="onValueChange(rowIndex, this.fields[1])" />
 				</td>
 				<td class="data">
 					<input
@@ -42,12 +42,12 @@
 						type="text"
 						inputmode="numeric"
 						[(ngModel)]="row.third"
-						[disabled]="isDisabled(rowIndex, 'third')"
-						[class.disabled-cell]="isDisabled(rowIndex, 'third')"
+						[disabled]="isDisabled(rowIndex, this.fields[2])"
+						[class.disabled-cell]="isDisabled(rowIndex, this.fields[2])"
 						class="input"
 						(keydown)="onNumberChange($event)"
-						(blur)="onValueChange(rowIndex, 'third')"
-						(keyup.enter)="onValueChange(rowIndex, 'third')" />
+						(blur)="onValueChange(rowIndex, this.fields[2])"
+						(keyup.enter)="onValueChange(rowIndex, this.fields[2])" />
 				</td>
 				<td class="data">
 					<input
@@ -55,12 +55,12 @@
 						type="text"
 						inputmode="numeric"
 						[(ngModel)]="row.fourth"
-						[disabled]="isDisabled(rowIndex, 'fourth')"
-						[class.disabled-cell]="isDisabled(rowIndex, 'fourth')"
+						[disabled]="isDisabled(rowIndex, this.fields[3])"
+						[class.disabled-cell]="isDisabled(rowIndex, this.fields[3])"
 						class="input"
 						(keydown)="onNumberChange($event)"
-						(blur)="onValueChange(rowIndex, 'fourth')"
-						(keyup.enter)="onValueChange(rowIndex, 'fourth')" />
+						(blur)="onValueChange(rowIndex, this.fields[3])"
+						(keyup.enter)="onValueChange(rowIndex, this.fields[3])" />
 				</td>
 			</tr>
 		</ng-template>

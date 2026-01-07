@@ -29,7 +29,12 @@
 }
 
 ::ng-deep .button {
-  width: 100%;
+	width: 100%;
+}
+
+.disabled-cell {
+	border: 3px solid #09d825;
+    background-color:  #f3f4f6;
 }
 
 @media (max-width: 680px) {

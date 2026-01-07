@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { isPlatformBrowser } from '@angular/common';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
-import { Observable } from 'rxjs';
 
 @Component({
 	selector: 'remainder',
@@ -15,7 +14,8 @@ import { Observable } from 'rxjs';
 })
 export class RemainderComponent {
 	private isLoggedIn!: boolean;
-	protected rows!: any[];
+	protected originalRows!: any[];
+	protected updatedRows!: any[];
 
 	constructor(@Inject(PLATFORM_ID) private platformId: Object, private firebaseService: FirebaseService) {
 		if (isPlatformBrowser(this.platformId)) {
@@ -26,7 +26,9 @@ export class RemainderComponent {
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			this.firebaseService.getRemainderTableDetails().subscribe((rows) => {
-				this.rows = rows;
+				// Need deep copy here so that we are not copying references
+				this.originalRows = structuredClone(rows);
+				this.updatedRows = structuredClone(rows);
 			});
 		}
 	}
@@ -38,35 +40,47 @@ export class RemainderComponent {
 		if (!/^[0-9]$/.test(event.key)) {
 			event.preventDefault();
 		}
-
-		if (Number(this.rows[rowIndex][field].toString() + event.key) > 31) {
-			event.preventDefault();
-		}
 	}
 
 	onValueChange(rowIndex: number, field: 'first' | 'second' | 'third' | 'fourth') {
-		for (let index = rowIndex; index < this.rows.length; index++) {
+		let currentValue = this.updatedRows[rowIndex][field];
+		if (Number(currentValue) > 31) {
+			this.updatedRows[rowIndex][field] = this.originalRows[rowIndex][field];
+			return;
+		} else if (rowIndex !== 0) {
+			const previousValue = this.updatedRows[rowIndex - 1][field];
+			if ((rowIndex == 1 || rowIndex == 3) && Number(currentValue) - Number(previousValue) < 2) {
+				this.updatedRows[rowIndex][field] = this.originalRows[rowIndex][field];
+			} else if ((rowIndex == 2 || rowIndex == 4) && Number(currentValue) - Number(previousValue) < 6) {
+				this.updatedRows[rowIndex][field] = this.originalRows[rowIndex][field];
+			}
+			return;
+		}
+
+		for (let index = rowIndex; index < this.updatedRows.length; index++) {
 			if (index == 0 || index == 2) {
 				this.twoDayDiff(index, field);
 			} else if (index == 1 || index == 3) {
 				this.sixDaysDiff(index, field);
 			}
-		}
+        }
+        
+        this.firebaseService.updateRemainderTableDetails(this.updatedRows);
 	}
 
 	// 1 -> 2 && 3 -> 4
 	private sixDaysDiff(rowIndex: number, field: 'first' | 'second' | 'third' | 'fourth') {
-		this.rows[rowIndex + 1][field] = Number(this.rows[rowIndex][field]) + 6;
+		this.updatedRows[rowIndex + 1][field] = Number(this.updatedRows[rowIndex][field]) + 6;
 
-		this.rows[rowIndex + 1][field] =
-			this.rows[rowIndex + 1][field] > 31 ? 31 : this.rows[rowIndex + 1][field];
+		this.updatedRows[rowIndex + 1][field] =
+			this.updatedRows[rowIndex + 1][field] > 31 ? 31 : this.updatedRows[rowIndex + 1][field];
 	}
 
 	// 0 -> 1 && 2 -> 3
 	private twoDayDiff(rowIndex: number, field: 'first' | 'second' | 'third' | 'fourth') {
-		this.rows[rowIndex + 1][field] = Number(this.rows[rowIndex][field]) + 2;
+		this.updatedRows[rowIndex + 1][field] = Number(this.updatedRows[rowIndex][field]) + 2;
 
-		this.rows[rowIndex + 1][field] =
-			this.rows[rowIndex + 1][field] > 31 ? 31 : this.rows[rowIndex + 1][field];
+		this.updatedRows[rowIndex + 1][field] =
+			this.updatedRows[rowIndex + 1][field] > 31 ? 31 : this.updatedRows[rowIndex + 1][field];
 	}
 }

@@ -5,15 +5,22 @@ import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { isPlatformBrowser } from '@angular/common';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
+import { SkeletonModule } from 'primeng/skeleton';
+import { Subscription } from 'rxjs';
+import { LOG } from '../app.logs';
+import { COMPONENT_DESTROY } from '../app.utilities';
 
 @Component({
 	selector: 'remainder',
-	imports: [TableModule, InputTextModule, FormsModule, Button],
+	imports: [TableModule, InputTextModule, FormsModule, Button, SkeletonModule],
 	templateUrl: './remainder.component.html',
 	styleUrl: './remainder.component.css'
 })
 export class RemainderComponent {
+	private readonly className = 'RemainderComponent';
 	private isLoggedIn!: boolean;
+	protected remainderSub?: Subscription;
+	protected loading = true;
 	private finalizedCells = new Set<string>();
 	protected originalRows!: any[];
 	protected updatedRows!: any[];
@@ -30,21 +37,28 @@ export class RemainderComponent {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			this.currentDay = new Date().getDate();
 
-			this.firebaseService.getRemainderTableDetails().subscribe((rows) => {
+			this.remainderSub = this.firebaseService.getRemainderTableDetails().subscribe((rows) => {
 				// Need deep copy here so that we are not copying references
 				this.originalRows = structuredClone(rows);
 				this.updatedRows = structuredClone(rows);
 
+				this.loading = false;
+
 				// Loop through to determine disabled fields
 				for (let index = 0; index < this.updatedRows.length; index++) {
 					for (const field of this.fields) {
-						if (this.updatedRows[index][field] <= this.currentDay) {
+						if (this.updatedRows[index][field] < this.currentDay) {
 							this.finalizedCells.add(`${index}-${field}`);
 						}
 					}
 				}
 			});
 		}
+	}
+
+	ngOnDestroy() {
+		this.remainderSub?.unsubscribe();
+		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	onNumberChange(event: KeyboardEvent) {

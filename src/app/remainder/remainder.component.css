@@ -9,6 +9,15 @@
 	padding: 20px;
 }
 
+::ng-deep .table table {
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+.skeleton-row {
+	height: 57px; /*↑ increases row height*/
+}
+
 .header {
 	text-align: center;
 }
@@ -23,8 +32,8 @@
 }
 
 /* remove td/th padding */
-.no-gap-table th,
-.no-gap-table td {
+.table th,
+.table td {
 	padding: 5px !important;
 }
 
@@ -34,7 +43,7 @@
 
 .disabled-cell {
 	border: 3px solid #09d825;
-    background-color:  #f3f4f6;
+	background-color: #f3f4f6;
 }
 
 @media (max-width: 680px) {
@@ -47,8 +56,8 @@
 	}
 
 	/* remove td/th padding */
-	.no-gap-table th,
-	.no-gap-table td {
+	.table th,
+	.table td {
 		margin: 0 !important;
 	}
 }

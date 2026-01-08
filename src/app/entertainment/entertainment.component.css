@@ -238,8 +238,8 @@
 	.individual-item {
 		min-width: 97.8%;
 		max-width: 97.8%;
-		min-height: 210px;
-		max-height: 210px;
+		/* min-height: 210px;
+		max-height: 210px; */
 	}
 
 	.individual-item-content {

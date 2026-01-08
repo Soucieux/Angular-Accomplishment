@@ -1,5 +1,5 @@
 <div class="container">
-	<p-table [value]="updatedRows" class="no-gap-table">
+	<p-table [value]="updatedRows" [loading]="loading" [showLoader]="false" class="table">
 		<ng-template pTemplate="header">
 			<tr>
 				<th class="header">First</th>
@@ -7,6 +7,16 @@
 				<th class="header">Third</th>
 				<th class="header">Fourth</th>
 			</tr>
+		</ng-template>
+		<ng-template pTemplate="loadingbody">
+			@for(_ of [0,1,2,3,4];track $index){
+			<tr>
+				<td class="skeleton-row"><p-skeleton /></td>
+				<td class="skeleton-row"><p-skeleton /></td>
+				<td class="skeleton-row"><p-skeleton /></td>
+				<td class="skeleton-row"><p-skeleton /></td>
+			</tr>
+			}
 		</ng-template>
 		<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
 			<tr>

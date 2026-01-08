@@ -254,7 +254,7 @@
 	.control-button {
 		width: 20px;
 		height: 40px;
-		right: 8px;
+		right: 50px;
 	}
 
 	.category-button {
@@ -268,18 +268,24 @@
 	.category-button span:nth-of-type(1) {
 		display: flex;
 		align-items: center;
+        position: relative;
+        bottom: -1px;
 	}
 
 	.category-button span:nth-of-type(2) {
 		position: relative;
 		padding-left: 35px;
-		bottom: -6px;
+		bottom: -7px;
 	}
 
 	.delete-button {
 		position: absolute;
-		top: 152px;
+		top: 150px;
 		right: 10px;
+	}
+
+	.text {
+		font-size: 16px;
 	}
 
 	::ng-deep .delete-button .p-button-danger {

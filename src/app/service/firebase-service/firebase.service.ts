@@ -409,12 +409,13 @@ export class FirebaseService {
 	/**
 	 * Get remainder table details
 	 *
+	 * @param tableName - The name of the table to update.
 	 * @returns Remainder table details
 	 */
-	public getRemainderTableDetails(): Observable<any[]> {
+	public getRemainderTableDetails(tableName: string): Observable<any[]> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
-				onValue(dbRef(this.db, 'remainder/table'), (snapshot) => {
+				onValue(dbRef(this.db, `remainder/${tableName}`), (snapshot) => {
 					const data = snapshot.val();
 					observer.next(data ? Object.values(data) : []);
 				});
@@ -426,9 +427,11 @@ export class FirebaseService {
 	 * Update remainder table details
 	 *
 	 * @param updatedTable - The table to update.
+	 * @param tableName - The name of the table to update.
 	 */
-	public async updateRemainderTableDetails(updatedTable: any) {
-		await update(dbRef(this.db, 'remainder/table'), {
+	public async updateRemainderTable(updatedTable: any, tableName: string) {
+		console.log(typeof tableName);
+		await update(dbRef(this.db, `remainder/${tableName}`), {
 			...updatedTable
 		}).then(() => {
 			LOG.info(this.className, 'Remainder table has been updated');

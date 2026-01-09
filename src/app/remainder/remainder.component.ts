@@ -1,34 +1,36 @@
 import { Component, Inject, PLATFORM_ID } from '@angular/core';
-import { TableModule } from 'primeng/table';
-import { InputTextModule } from 'primeng/inputtext';
-import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
 import { isPlatformBrowser } from '@angular/common';
-import { FirebaseService } from '../service/firebase-service/firebase.service';
-import { SkeletonModule } from 'primeng/skeleton';
-import { Subscription } from 'rxjs';
-import { LOG } from '../app.logs';
-import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE } from '../app.utilities';
+import { FormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
+import { Button } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { InputTextModule } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
-import { Checkbox } from "primeng/checkbox";
+import { Checkbox } from 'primeng/checkbox';
+import { Tooltip } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
+import { FirebaseService } from '../service/firebase-service/firebase.service';
+import { Subscription } from 'rxjs';
+import { LOG } from '../app.logs';
+import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE } from '../app.utilities';
 
 @Component({
 	selector: 'remainder',
 	imports: [
-    TableModule,
-    InputTextModule,
-    FormsModule,
-    Button,
-    SkeletonModule,
-    DatePickerModule,
-    InputGroupModule,
-    InputGroupAddonModule,
-    InputNumber,
-    Checkbox
-],
+		TableModule,
+		InputTextModule,
+		FormsModule,
+		Button,
+		SkeletonModule,
+		DatePickerModule,
+		InputGroupModule,
+		InputGroupAddonModule,
+		InputNumber,
+		Checkbox,
+		Tooltip
+	],
 	templateUrl: './remainder.component.html',
 	styleUrl: './remainder.component.css'
 })
@@ -41,7 +43,8 @@ export class RemainderComponent {
 	protected updatedFirstTable!: any[];
 	protected currentDay!: number;
 	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
-	protected secondTable!: any[];
+	protected originalSecondTable!: any[];
+	protected updatedSecondTable!: any[];
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
 
@@ -74,7 +77,8 @@ export class RemainderComponent {
 
 			// Get the data of the second table
 			this.secondSub = this.firebaseService.getRemainderTableDetails(SECOND_TABLE).subscribe((rows) => {
-				this.secondTable = structuredClone(rows);
+				this.originalSecondTable = structuredClone(rows);
+				this.updatedSecondTable = structuredClone(rows);
 			});
 		}
 	}
@@ -90,7 +94,7 @@ export class RemainderComponent {
 		if (allowedKeys.includes(event.key)) return;
 
 		if (!/^[0-9]$/.test(event.key)) {
-			event.preventDefault();
+			this.preventKeyin(event);
 		}
 	}
 
@@ -124,10 +128,10 @@ export class RemainderComponent {
 		}
 
 		// Update table to firebase
-		this.firebaseService.updateRemainderTable(this.updatedFirstTable, FIRST_TABLE);
+		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 	}
 
-	isDisabled(rowIndex: number, field: string): boolean {
+	protected isDisabled(rowIndex: number, field: string): boolean {
 		return this.finalizedCells.has(`${rowIndex}-${field}`);
 	}
 
@@ -151,16 +155,26 @@ export class RemainderComponent {
 				: this.updatedFirstTable[rowIndex + 1][field];
 	}
 
-	protected updateSecondTable() {
-		this.firebaseService.updateRemainderTable(this.secondTable, SECOND_TABLE);
+	protected updateSecondTable(rowIndex: number, key: string) {
+		const newValue = this.updatedSecondTable[rowIndex].value[key];
+
+		if (newValue !== this.originalSecondTable[rowIndex].value[key]) {
+			this.firebaseService.updateSecondRemainderTable(SECOND_TABLE, rowIndex, key, newValue);
+		}
 	}
 
-	protected updateSecondTableWithDate(date: Date, item: any) {
+	protected updateSecondTableWithNewDate(rowIndex: number, date: Date, item: any) {
 		item.value.date = date.toISOString().slice(0, 10);
-		this.updateSecondTable();
+		this.updateSecondTable(rowIndex, 'date');
 	}
 
 	protected preventKeyin(event: KeyboardEvent) {
 		event.preventDefault();
+	}
+
+	protected updateDebt(index: number) {
+		this.updatedSecondTable[index].value.debt =
+			Math.round((this.updatedSecondTable[index].value.debt - 998.05) * 100) / 100;
+		this.updateSecondTable(index, 'debt');
 	}
 }

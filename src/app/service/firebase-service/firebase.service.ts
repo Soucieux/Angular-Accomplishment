@@ -426,10 +426,26 @@ export class FirebaseService {
 	/**
 	 * Update remainder table details
 	 *
-	 * @param updatedTable - The table to update.
+	 * @param index - The row index of the table
+	 * @param key - The key associated with the new value.
+	 * @param newValue - The new value to be stored.
 	 * @param tableName - The name of the table to update.
 	 */
-	public async updateRemainderTable(updatedTable: any, tableName: string) {
+	public async updateSecondRemainderTable(tableName: string, index: number, key: string, newValue: any) {
+		await update(dbRef(this.db, `remainder/${tableName}/${index}/value`), {
+			[key]: newValue
+		}).then(() => {
+			LOG.info(this.className, 'Remainder table has been updated');
+		});
+	}
+
+	/**
+	 * Update remainder table details
+	 *
+	 * @param tableName - The name of the table to update.
+	 * @param updatedTable - The table to update
+	 */
+	public async updateFirstRemainderTable(tableName: string, updatedTable: any) {
 		await update(dbRef(this.db, `remainder/${tableName}`), {
 			...updatedTable
 		}).then(() => {

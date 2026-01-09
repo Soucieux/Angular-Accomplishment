@@ -84,13 +84,13 @@
 		</ng-template>
 	</p-table>
 	<div class="second-table">
-		@for(item of secondTable; track item.key){
+		@for(item of updatedSecondTable; let index = $index; track item.key){
 		<div class="second-table-cell">
 			<div class="second-table-header">{{ item.key }}</div>
 			<p-inputgroup>
-				<p-inputGroupAddon>
+				<p-inputgroup-addon>
 					<i class="pi pi-dollar" style="color: black; font-weight: bold"></i
-				></p-inputGroupAddon>
+				></p-inputgroup-addon>
 				<p-inputnumber
 					mode="decimal"
 					locale="en-US"
@@ -98,8 +98,16 @@
 					[maxFractionDigits]="2"
 					[step]="0.01"
 					[(ngModel)]="item.value.debt"
-					(onBlur)="updateSecondTable()"
-					(keyup.enter)="updateSecondTable()" />
+					(onBlur)="updateSecondTable(index, 'debt')"
+					(keyup.enter)="updateSecondTable(index, 'debt')" />
+				<p-inputgroup-addon
+					><p-button
+						icon="pi pi-minus"
+						severity="secondary"
+						(onClick)="updateDebt(index)"
+						pTooltip="Decrement by 998.05"
+						tooltipPosition="bottom"></p-button
+				></p-inputgroup-addon>
 			</p-inputgroup>
 			<p-datepicker
 				class="second-table-date"
@@ -107,13 +115,13 @@
 				dateFormat="yy-mm-dd"
 				[(ngModel)]="item.value.date"
 				(keydown)="preventKeyin($event)"
-				(onSelect)="updateSecondTableWithDate($event, item)" />
+				(onSelect)="updateSecondTableWithNewDate(index, $event, item)" />
 			<div class="second-table-checkbox">
 				<p-checkbox
 					[inputId]="item.key"
 					[(ngModel)]="item.value.paid"
 					[binary]="true"
-					(onChange)="updateSecondTable()" />
+					(onChange)="updateSecondTable(index, 'paid')" />
 				<label [for]="item.key" [style]="item.value.paid ? 'color:green' : 'color:red'">{{
 					item.value.paid ? 'Paid' : 'Not yet paid'
 				}}</label>

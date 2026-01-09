@@ -430,7 +430,6 @@ export class FirebaseService {
 	 * @param tableName - The name of the table to update.
 	 */
 	public async updateRemainderTable(updatedTable: any, tableName: string) {
-		console.log(typeof tableName);
 		await update(dbRef(this.db, `remainder/${tableName}`), {
 			...updatedTable
 		}).then(() => {

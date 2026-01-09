@@ -88,7 +88,9 @@
 		<div class="second-table-cell">
 			<div class="second-table-header">{{ item.key }}</div>
 			<p-inputgroup>
-				<p-inputGroupAddon> <i class="pi pi-dollar"></i></p-inputGroupAddon>
+				<p-inputGroupAddon>
+					<i class="pi pi-dollar" style="color: black; font-weight: bold"></i
+				></p-inputGroupAddon>
 				<p-inputnumber
 					mode="decimal"
 					locale="en-US"
@@ -96,13 +98,26 @@
 					[maxFractionDigits]="2"
 					[step]="0.01"
 					[(ngModel)]="item.value.debt"
+					(onBlur)="updateSecondTable()"
 					(keyup.enter)="updateSecondTable()" />
 			</p-inputgroup>
 			<p-datepicker
 				class="second-table-date"
 				[appendTo]="'body'"
 				dateFormat="yy-mm-dd"
-				[(ngModel)]="item.value.date" />
+				[(ngModel)]="item.value.date"
+				(keydown)="preventKeyin($event)"
+				(onSelect)="updateSecondTableWithDate($event, item)" />
+			<div class="second-table-checkbox">
+				<p-checkbox
+					[inputId]="item.key"
+					[(ngModel)]="item.value.paid"
+					[binary]="true"
+					(onChange)="updateSecondTable()" />
+				<label [for]="item.key" [style]="item.value.paid ? 'color:green' : 'color:red'">{{
+					item.value.paid ? 'Paid' : 'Not yet paid'
+				}}</label>
+			</div>
 		</div>
 		}
 	</div>

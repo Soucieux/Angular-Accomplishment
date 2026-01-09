@@ -1,5 +1,5 @@
 <div class="container">
-	<p-table [value]="updatedFirstRows" [loading]="loading" [showLoader]="false" class="first-table">
+	<p-table [value]="updatedFirstTable" [loading]="loading" [showLoader]="false" class="first-table">
 		<ng-template pTemplate="header">
 			<tr>
 				<th class="header">First</th>
@@ -84,7 +84,7 @@
 		</ng-template>
 	</p-table>
 	<div class="second-table">
-		@for(item of secondRows; track item.key){
+		@for(item of secondTable; track item.key){
 		<div class="second-table-cell">
 			<div class="second-table-header">{{ item.key }}</div>
 			<p-inputgroup>
@@ -95,7 +95,8 @@
 					[minFractionDigits]="2"
 					[maxFractionDigits]="2"
 					[step]="0.01"
-					[(ngModel)]="item.value.debt" />
+					[(ngModel)]="item.value.debt"
+					(keyup.enter)="updateSecondTable()" />
 			</p-inputgroup>
 			<p-datepicker
 				class="second-table-date"

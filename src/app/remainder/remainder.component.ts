@@ -13,20 +13,22 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { InputNumber } from 'primeng/inputnumber';
+import { Checkbox } from "primeng/checkbox";
 
 @Component({
 	selector: 'remainder',
 	imports: [
-		TableModule,
-		InputTextModule,
-		FormsModule,
-		Button,
-		SkeletonModule,
-		DatePickerModule,
-		InputGroupModule,
-		InputGroupAddonModule,
-		InputNumber
-	],
+    TableModule,
+    InputTextModule,
+    FormsModule,
+    Button,
+    SkeletonModule,
+    DatePickerModule,
+    InputGroupModule,
+    InputGroupAddonModule,
+    InputNumber,
+    Checkbox
+],
 	templateUrl: './remainder.component.html',
 	styleUrl: './remainder.component.css'
 })
@@ -79,6 +81,7 @@ export class RemainderComponent {
 
 	ngOnDestroy() {
 		this.firstSub?.unsubscribe();
+		this.secondSub?.unsubscribe();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
@@ -150,5 +153,14 @@ export class RemainderComponent {
 
 	protected updateSecondTable() {
 		this.firebaseService.updateRemainderTable(this.secondTable, SECOND_TABLE);
+	}
+
+	protected updateSecondTableWithDate(date: Date, item: any) {
+		item.value.date = date.toISOString().slice(0, 10);
+		this.updateSecondTable();
+	}
+
+	protected preventKeyin(event: KeyboardEvent) {
+		event.preventDefault();
 	}
 }

@@ -432,11 +432,19 @@ export class FirebaseService {
 	 * @param tableName - The name of the table to update.
 	 */
 	public async updateSecondRemainderTable(tableName: string, index: number, key: string, newValue: any) {
-		await update(dbRef(this.db, `remainder/${tableName}/${index}/value`), {
-			[key]: newValue
-		}).then(() => {
-			LOG.info(this.className, 'Remainder table has been updated');
-		});
+		if (key === 'value') {
+			await update(dbRef(this.db, `remainder/${tableName}/${index}/value`), {
+				...newValue
+			}).then(() => {
+				LOG.info(this.className, 'Remainder table has been updated');
+			});
+		} else {
+			await update(dbRef(this.db, `remainder/${tableName}/${index}/value`), {
+				[key]: newValue
+			}).then(() => {
+				LOG.info(this.className, 'Remainder table has been updated');
+			});
+		}
 	}
 
 	/**

@@ -106,16 +106,27 @@
 						severity="secondary"
 						(onClick)="updateDebt(index)"
 						pTooltip="Decrement by 998.05"
-						tooltipPosition="bottom"></p-button
+						tooltipPosition="top"></p-button
 				></p-inputgroup-addon>
 			</p-inputgroup>
-			<p-datepicker
-				class="second-table-date"
-				[appendTo]="'body'"
-				dateFormat="yy-mm-dd"
-				[(ngModel)]="item.value.date"
-				(keydown)="preventKeyin($event)"
-				(onSelect)="updateSecondTableWithNewDate(index, $event, item)" />
+			<p-inputgroup>
+				<p-datepicker
+					class="second-table-date"
+					[appendTo]="'body'"
+					dateFormat="yy-mm-dd"
+					[(ngModel)]="item.value.date"
+					(keydown)="preventKeyin($event)"
+					[disabled]="!item.value.paid"
+					(onSelect)="updateSecondTableWithNewDate(index, $event, item)" />
+				<p-inputgroup-addon
+					><p-button
+						[icon]="item.value.paid ? 'pi pi-check' : 'pi pi-replay'"
+						severity="secondary"
+						[pTooltip]="item.value.paid ? 'Set default debt' : 'Reset default debt'"
+						tooltipPosition="top"
+						(onClick)="setDefaultDebt(index)"></p-button
+				></p-inputgroup-addon>
+			</p-inputgroup>
 			<div class="second-table-checkbox">
 				<p-checkbox
 					[inputId]="item.key"
@@ -123,7 +134,7 @@
 					[binary]="true"
 					(onChange)="updateSecondTable(index, 'paid')" />
 				<label [for]="item.key" [style]="item.value.paid ? 'color:green' : 'color:red'">{{
-					item.value.paid ? 'Paid' : 'Not yet paid'
+					item.value.paid ? 'Paid' : 'Not yet paid ($' + item.value.original + ')'
 				}}</label>
 			</div>
 		</div>

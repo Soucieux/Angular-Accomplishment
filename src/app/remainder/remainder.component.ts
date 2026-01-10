@@ -177,4 +177,20 @@ export class RemainderComponent {
 			Math.round((this.updatedSecondTable[index].value.debt - 998.05) * 100) / 100;
 		this.updateSecondTable(index, 'debt');
 	}
+
+	protected setDefaultDebt(rowIndex: number) {
+		if (this.updatedSecondTable[rowIndex].value.paid) {
+			this.updatedSecondTable[rowIndex].value.original = this.updatedSecondTable[rowIndex].value.debt;
+			this.updatedSecondTable[rowIndex].value.paid = false;
+			this.firebaseService.updateSecondRemainderTable(
+				SECOND_TABLE,
+				rowIndex,
+				'value',
+				this.updatedSecondTable[rowIndex].value
+			);
+		} else {
+			this.updatedSecondTable[rowIndex].value.debt = this.updatedSecondTable[rowIndex].value.original;
+			this.updateSecondTable(rowIndex, 'debt');
+		}
+	}
 }

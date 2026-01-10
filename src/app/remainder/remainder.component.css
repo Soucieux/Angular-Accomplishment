@@ -7,14 +7,16 @@
 	box-shadow: 0 0 15px rgb(238, 240, 243);
 	border-radius: 10px;
 	padding: 20px;
-	display: flex;
-	flex-direction: column;
-	gap: 20px;
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 10px;
+	grid-auto-rows: min-content;
 }
 
 ::ng-deep .first-table table {
 	border-radius: 10px;
 	overflow: hidden;
+	height: 373px;
 }
 
 .skeleton-row {
@@ -53,6 +55,12 @@
 	background-color: #f3f4f6;
 }
 
+@media (max-width: 2000px) {
+	.container {
+		grid-template-columns: repeat(1, 1fr) !important;
+	}
+}
+
 @media (max-width: 1200px) {
 	.second-table {
 		grid-template-columns: repeat(2, 1fr) !important;
@@ -86,6 +94,7 @@
 	padding: 10px;
 	border-radius: 10px;
 	overflow: hidden;
+	height: fit-content;
 }
 
 .second-table-header {
@@ -94,6 +103,7 @@
 }
 
 .second-table-cell {
+	height: fit-content;
 	padding: 5px;
 	display: flex;
 	flex-direction: column;

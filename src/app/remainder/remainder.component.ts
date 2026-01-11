@@ -155,6 +155,18 @@ export class RemainderComponent {
 				: this.updatedFirstTable[rowIndex + 1][field];
 	}
 
+	protected resetFirstTable() {
+		this.updatedFirstTable = [
+			{ first: 1, second: 1, third: 1, fourth: 1 },
+			{ first: 3, second: 3, third: 3, fourth: 3 },
+			{ first: 9, second: 9, third: 9, fourth: 9 },
+			{ first: 11, second: 11, third: 11, fourth: 11 },
+			{ first: 17, second: 17, third: 17, fourth: 17 }
+		];
+		// Update table to firebase
+		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+	}
+
 	protected updateSecondTable(rowIndex: number, key: string) {
 		const newValue = this.updatedSecondTable[rowIndex].value[key];
 

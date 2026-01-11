@@ -77,7 +77,7 @@
 		<ng-template pTemplate="footer">
 			<tr>
 				<td colspan="4" class="reset">
-					<p-button styleClass="button" label="Reset" icon="pi pi-undo" [severity]="'secondary'">
+					<p-button styleClass="button" label="Reset" icon="pi pi-undo" [severity]="'secondary'" (onClick)="resetFirstTable()">
 					</p-button>
 				</td>
 			</tr>
@@ -122,7 +122,7 @@
 					><p-button
 						[icon]="item.value.paid ? 'pi pi-check' : 'pi pi-replay'"
 						severity="secondary"
-						[pTooltip]="item.value.paid ? 'Set default debt' : 'Reset default debt'"
+						[pTooltip]="item.value.paid ? 'Set default debt' : 'Reset debt to default'"
 						tooltipPosition="top"
 						(onClick)="setDefaultDebt(index)"></p-button
 				></p-inputgroup-addon>

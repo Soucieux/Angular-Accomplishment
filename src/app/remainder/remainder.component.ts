@@ -45,12 +45,28 @@ export class RemainderComponent {
 	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
 	protected originalSecondTable!: any[];
 	protected updatedSecondTable!: any[];
+	protected originalThirdTable!: any[];
+	protected updatedThirdTable!: any[];
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
 
 	constructor(@Inject(PLATFORM_ID) private platformId: Object, private firebaseService: FirebaseService) {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
+			this.updatedThirdTable = [
+				{ date: '26-01-01', link: 'www.google.ca', content: 'Amazon return stuff' },
+				{ date: '26-01-01', content: 'Amazon return stuff' },
+				{ date: '26-01-01', content: 'Amazon return stuff' },
+				{ content: 'Amazon return stuff' },
+				{ content: 'Amazon return stuff' },
+				{ date: '26-01-01', link: 'www.google.ca', content: 'Amazon return stuff' },
+				{ date: '26-01-01', content: 'Amazon return stuff' },
+				{ date: '26-01-01', content: 'Amazon return stuff' },
+				{ date: '26-01-01', link: 'www.google.ca', content: 'Amazon return stuff' },
+				{ date: '26-01-01', content: 'Amazon return stuff' },
+				{ date: '26-01-01', content: 'Amazon return stuff' },
+				{ date: '26-01-01', content: 'Amazon return stuff' }
+			];
 		}
 	}
 	async ngOnInit() {
@@ -139,6 +155,10 @@ export class RemainderComponent {
 	private sixDaysDiff(rowIndex: number, field: string) {
 		this.updatedFirstTable[rowIndex + 1][field] = Number(this.updatedFirstTable[rowIndex][field]) + 6;
 
+		this.isValueGreaterThan31(rowIndex, field);
+	}
+
+	private isValueGreaterThan31(rowIndex: number, field: string) {
 		this.updatedFirstTable[rowIndex + 1][field] =
 			this.updatedFirstTable[rowIndex + 1][field] > 31
 				? 31
@@ -148,11 +168,7 @@ export class RemainderComponent {
 	// 0 -> 1 && 2 -> 3
 	private twoDayDiff(rowIndex: number, field: string) {
 		this.updatedFirstTable[rowIndex + 1][field] = Number(this.updatedFirstTable[rowIndex][field]) + 2;
-
-		this.updatedFirstTable[rowIndex + 1][field] =
-			this.updatedFirstTable[rowIndex + 1][field] > 31
-				? 31
-				: this.updatedFirstTable[rowIndex + 1][field];
+		this.isValueGreaterThan31(rowIndex, field);
 	}
 
 	protected resetFirstTable() {

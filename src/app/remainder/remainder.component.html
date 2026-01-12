@@ -77,7 +77,12 @@
 		<ng-template pTemplate="footer">
 			<tr>
 				<td colspan="4" class="reset">
-					<p-button styleClass="button" label="Reset" icon="pi pi-undo" [severity]="'secondary'" (onClick)="resetFirstTable()">
+					<p-button
+						styleClass="button"
+						label="Reset"
+						icon="pi pi-undo"
+						[severity]="'secondary'"
+						(onClick)="resetFirstTable()">
 					</p-button>
 				</td>
 			</tr>
@@ -138,6 +143,22 @@
 				}}</label>
 			</div>
 		</div>
+		}
+	</div>
+	<div class="third-table">
+		@for(item of updatedThirdTable; let index = $index; track index){
+		<p-inputgroup class="third-table-cell">
+			<input type="text" pInputText [(ngModel)]="item.content" fluid />
+			@if(item.date){
+			<p-inputgroup-addon
+				><i class="pi pi-clock" style="color: black" [pTooltip]="item.date" tooltipPosition="top"></i
+			></p-inputgroup-addon>
+			} @if(item.link){
+			<p-inputgroup-addon
+				><p-button icon="pi pi-external-link" severity="secondary"></p-button
+			></p-inputgroup-addon>
+			}
+		</p-inputgroup>
 		}
 	</div>
 </div>

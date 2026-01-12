@@ -85,16 +85,28 @@
 	.second-table {
 		grid-template-columns: repeat(1, 1fr) !important;
 	}
+
+	.third-table {
+		grid-template-columns: repeat(1, 1fr) !important;
+	}
 }
 
-.second-table {
+.second-table,
+.third-table {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
 	background-color: white;
 	padding: 10px;
 	border-radius: 10px;
 	overflow: hidden;
 	height: fit-content;
+}
+
+.second-table {
+	grid-template-columns: repeat(4, 1fr);
+}
+
+.third-table {
+	grid-template-columns: repeat(2, 1fr);
 }
 
 .second-table-header {
@@ -108,6 +120,10 @@
 	display: flex;
 	flex-direction: column;
 	gap: 5px;
+}
+
+.third-table-cell {
+	padding: 5px;
 }
 
 :host ::ng-deep .p-datepicker input {

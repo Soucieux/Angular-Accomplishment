@@ -27,15 +27,6 @@
 	text-align: center;
 }
 
-.input {
-	min-width: 50px;
-	max-width: 150px;
-}
-
-::ng-deep .p-datatable .data {
-	text-align: center;
-}
-
 /* remove td/th padding */
 .first-table th,
 .first-table td {
@@ -46,12 +37,11 @@
 	padding-top: 12px !important;
 }
 
-::ng-deep .button {
+::ng-deep .reset-button {
 	width: 100%;
 }
 
 .disabled-cell {
-	border: 3px solid #09d825;
 	background-color: #f3f4f6;
 }
 
@@ -72,14 +62,19 @@
 		font-size: 14px;
 	}
 
-	::ng-deep .p-datatable .input {
-		width: 50px;
-	}
-
 	/* remove td/th padding */
 	.first-table th,
 	.first-table td {
 		margin: 0 !important;
+	}
+
+	::ng-deep .first-table-button {
+		flex: 0 0 25px !important;
+		min-width: 25px !important;
+	}
+
+	::ng-deep .first-table-button .p-button .p-button-icon {
+		font-size: 14px; /* 👈 control icon size here */
 	}
 
 	.second-table {

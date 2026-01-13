@@ -20,65 +20,36 @@
 		</ng-template>
 		<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
 			<tr>
-				<td class="data">
-					<input
-						pInputText
-						type="text"
-						inputmode="numeric"
-						[(ngModel)]="row.first"
-						[disabled]="isDisabled(rowIndex, this.fields[0])"
-						[class.disabled-cell]="isDisabled(rowIndex, this.fields[0])"
-						class="input"
-						(keydown)="onNumberChange($event)"
-						(blur)="onValueChange(rowIndex, this.fields[0])"
-						(keyup.enter)="onValueChange(rowIndex, this.fields[0])" />
+				@for(field of fields; let index = $index; track field){
+				<td>
+					<p-inputgroup>
+						<input
+							pInputText
+							type="text"
+							inputmode="numeric"
+							[(ngModel)]="row[field]"
+							[disabled]="isDisabled(rowIndex, field)"
+							[class.disabled-cell]="isDisabled(rowIndex, field)"
+							class="input"
+							(keydown)="onNumberChange($event)"
+							(blur)="onValueChange(rowIndex, field)"
+							(keyup.enter)="onValueChange(rowIndex, field)" />
+						<p-inputgroup-addon class="first-table-button"
+							><p-button
+								icon="pi pi-check"
+								severity="secondary"
+								(onClick)="setDefaultDebt(index)"></p-button
+						></p-inputgroup-addon>
+					</p-inputgroup>
 				</td>
-				<td class="data">
-					<input
-						pInputText
-						type="text"
-						inputmode="numeric"
-						[(ngModel)]="row.second"
-						[disabled]="isDisabled(rowIndex, this.fields[1])"
-						[class.disabled-cell]="isDisabled(rowIndex, this.fields[1])"
-						class="input"
-						(keydown)="onNumberChange($event)"
-						(blur)="onValueChange(rowIndex, this.fields[1])"
-						(keyup.enter)="onValueChange(rowIndex, this.fields[1])" />
-				</td>
-				<td class="data">
-					<input
-						pInputText
-						type="text"
-						inputmode="numeric"
-						[(ngModel)]="row.third"
-						[disabled]="isDisabled(rowIndex, this.fields[2])"
-						[class.disabled-cell]="isDisabled(rowIndex, this.fields[2])"
-						class="input"
-						(keydown)="onNumberChange($event)"
-						(blur)="onValueChange(rowIndex, this.fields[2])"
-						(keyup.enter)="onValueChange(rowIndex, this.fields[2])" />
-				</td>
-				<td class="data">
-					<input
-						pInputText
-						type="text"
-						inputmode="numeric"
-						[(ngModel)]="row.fourth"
-						[disabled]="isDisabled(rowIndex, this.fields[3])"
-						[class.disabled-cell]="isDisabled(rowIndex, this.fields[3])"
-						class="input"
-						(keydown)="onNumberChange($event)"
-						(blur)="onValueChange(rowIndex, this.fields[3])"
-						(keyup.enter)="onValueChange(rowIndex, this.fields[3])" />
-				</td>
+				}
 			</tr>
 		</ng-template>
 		<ng-template pTemplate="footer">
 			<tr>
 				<td colspan="4" class="reset">
 					<p-button
-						styleClass="button"
+						styleClass="reset-button"
 						label="Reset"
 						icon="pi pi-undo"
 						[severity]="'secondary'"

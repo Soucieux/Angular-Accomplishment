@@ -1,5 +1,5 @@
 import { Component, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
@@ -54,15 +54,15 @@ export class RemainderComponent {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
 			this.updatedThirdTable = [
-				{ date: '26-01-01', link: 'www.google.ca', content: 'Amazon return stuff' },
+				{ date: '26-01-01', link: 'https://www.google.ca', content: 'Amazon return stuff' },
 				{ date: '26-01-01', content: 'Amazon return stuff' },
 				{ date: '26-01-01', content: 'Amazon return stuff' },
 				{ content: 'Amazon return stuff' },
 				{ content: 'Amazon return stuff' },
-				{ date: '26-01-01', link: 'www.google.ca', content: 'Amazon return stuff' },
+				{ date: '26-01-01', link: 'https://www.google.ca', content: 'Amazon return stuff' },
 				{ date: '26-01-01', content: 'Amazon return stuff' },
 				{ date: '26-01-01', content: 'Amazon return stuff' },
-				{ date: '26-01-01', link: 'www.google.ca', content: 'Amazon return stuff' },
+				{ date: '26-01-01', link: 'https://www.google.ca', content: 'Amazon return stuff' },
 				{ date: '26-01-01', content: 'Amazon return stuff' },
 				{ date: '26-01-01', content: 'Amazon return stuff' },
 				{ date: '26-01-01', content: 'Amazon return stuff' }
@@ -220,5 +220,13 @@ export class RemainderComponent {
 			this.updatedSecondTable[rowIndex].value.debt = this.updatedSecondTable[rowIndex].value.original;
 			this.updateSecondTable(rowIndex, 'debt');
 		}
+	}
+
+	protected showDatepickerOnIconClick(dp: any) {
+		dp.toggle();
+	}
+
+	protected updateThirdTableWithNewDate(date: Date, item: any) {
+		item.date = date.toISOString().slice(0, 10);
 	}
 }

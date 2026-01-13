@@ -149,13 +149,31 @@
 		@for(item of updatedThirdTable; let index = $index; track index){
 		<p-inputgroup class="third-table-cell">
 			<input type="text" pInputText [(ngModel)]="item.content" fluid />
-			@if(item.date){
+			<div class="show-only-icon-wrapper">
+				<p-datepicker
+					#datepicker
+					[appendTo]="'body'"
+					dateFormat="yy-mm-dd"
+					[(ngModel)]="item.date"
+					class="show-only-icon"
+					(onSelect)="updateThirdTableWithNewDate($event, item)">
+				</p-datepicker>
+				@if(item.date){
+				<p-inputgroup-addon>
+					<p-button
+						icon="pi pi-clock"
+						(click)="datepicker.toggle()"
+						severity="secondary"
+						[pTooltip]="item.date"
+						tooltipPosition="top"></p-button>
+				</p-inputgroup-addon>
+				}
+			</div>
+
+			@if(item.link){
 			<p-inputgroup-addon
-				><i class="pi pi-clock" style="color: black" [pTooltip]="item.date" tooltipPosition="top"></i
-			></p-inputgroup-addon>
-			} @if(item.link){
-			<p-inputgroup-addon
-				><p-button icon="pi pi-external-link" severity="secondary"></p-button
+				><a [href]="item.link" target="_blank" rel="noopener noreferrer"
+					><i class="pi pi-external-link" style="color: black"></i></a
 			></p-inputgroup-addon>
 			}
 		</p-inputgroup>

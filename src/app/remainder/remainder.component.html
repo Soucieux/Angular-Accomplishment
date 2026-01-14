@@ -22,15 +22,17 @@
 			<tr>
 				@for(field of fields; let index = $index; track field){
 				<td>
+                    	<!-- [disabled]="isDisabled(rowIndex, field)" -->
 					<p-inputgroup>
 						<input
 							pInputText
 							type="text"
 							inputmode="numeric"
-							[(ngModel)]="row[field]"
-							[disabled]="isDisabled(rowIndex, field)"
+							[(ngModel)]="row[field].value"
+						
 							[class.disabled-cell]="isDisabled(rowIndex, field)"
-							class="input"
+							class="first-table-input"
+							[style]="row[field].isCharged ? 'color: green; ' : ''"
 							(keydown)="onNumberChange($event)"
 							(blur)="onValueChange(rowIndex, field)"
 							(keyup.enter)="onValueChange(rowIndex, field)" />
@@ -38,7 +40,8 @@
 							><p-button
 								icon="pi pi-check"
 								severity="secondary"
-								(onClick)="setDefaultDebt(index)"></p-button
+								[disabled]="isDisabled(rowIndex, field)"
+								(onClick)="setIsCharged(rowIndex, field)"></p-button
 						></p-inputgroup-addon>
 					</p-inputgroup>
 				</td>

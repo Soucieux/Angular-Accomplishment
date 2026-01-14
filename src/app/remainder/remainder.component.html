@@ -56,7 +56,7 @@
 						label="Reset"
 						icon="pi pi-undo"
 						[severity]="'secondary'"
-						(onClick)="resetFirstTable()">
+						(onClick)="openConfirmationDialog()">
 					</p-button>
 				</td>
 			</tr>
@@ -154,3 +154,4 @@
 		}
 	</div>
 </div>
+<ng-container #dialogComponentContainer></ng-container>

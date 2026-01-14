@@ -124,26 +124,39 @@ export class RemainderComponent {
 	}
 
 	onValueChange(rowIndex: number, field: string) {
+		let originalValue = this.originalFirstTable[rowIndex][field].value;
+
+		// Do nothing if the value does not change
+		if (this.updatedFirstTable[rowIndex][field].value == originalValue) return;
+
 		// Reset value if it reaches threshold
-		let currentValue = this.updatedFirstTable[rowIndex][field].value;
-		if (Number(currentValue) > 31) {
-			this.updatedFirstTable[rowIndex][field].value = this.originalFirstTable[rowIndex][field].value;
+		if (Number(this.updatedFirstTable[rowIndex][field].value) > 31) {
+			this.updatedFirstTable[rowIndex][field].value = originalValue;
 			return;
 		} else if (rowIndex !== 0) {
 			const previousValue = this.updatedFirstTable[rowIndex - 1][field].value;
-			if ((rowIndex == 1 || rowIndex == 3) && Number(currentValue) - Number(previousValue) < 2) {
-				this.updatedFirstTable[rowIndex][field].value =
-					this.originalFirstTable[rowIndex][field].value;
-				return;
-			} else if ((rowIndex == 2 || rowIndex == 4) && Number(currentValue) - Number(previousValue) < 6) {
-				this.updatedFirstTable[rowIndex][field].value =
-					this.originalFirstTable[rowIndex][field].value;
+
+			// Get the difference
+			let requiredDiff: number | null = null;
+			if (rowIndex === 1 || rowIndex === 3) {
+				requiredDiff = 2;
+			} else if (rowIndex === 2 || rowIndex === 4) {
+				requiredDiff = 6;
+			}
+
+			if (
+				requiredDiff !== null &&
+				Number(this.updatedFirstTable[rowIndex][field].value) - Number(previousValue) < requiredDiff
+			) {
+				this.updatedFirstTable[rowIndex][field].value = originalValue;
 				return;
 			}
 		}
 
 		// Convert it to number
 		this.updatedFirstTable[rowIndex][field].value = Number(this.updatedFirstTable[rowIndex][field].value);
+
+		// Mark it as unCharged
 		this.updatedFirstTable[rowIndex][field].isCharged = false;
 
 		// Update other values in the same column
@@ -188,9 +201,12 @@ export class RemainderComponent {
 	}
 
 	protected setIsCharged(rowIndex: number, field: string) {
-		this.updatedFirstTable[rowIndex][field].isCharged = true;
-		// Update table to firebase
-		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+		if (!this.updatedFirstTable[rowIndex][field].isCharged) {
+			this.updatedFirstTable[rowIndex][field].isCharged = true;
+
+			// Update table to firebase
+			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+		}
 	}
 
 	protected openConfirmationDialog() {

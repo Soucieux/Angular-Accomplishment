@@ -4,14 +4,14 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Utilities } from '../../../app.utilities';
 
 @Component({
-	selector: 'delete-dialog',
+	selector: 'confirm-dialog',
 	template: ` <p-confirmdialog (onHide)="onDialogClosed()" /> `,
-	styleUrl: './delete.component.scss',
+	styleUrl: './confirm.component.scss',
 	standalone: true,
 	imports: [ConfirmDialogModule],
 	providers: [ConfirmationService]
 })
-export class DeleteDialogComponent {
+export class ConfirmDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private confirmationService = inject(ConfirmationService);
 	private messageService = inject(MessageService);
@@ -38,7 +38,7 @@ export class DeleteDialogComponent {
 				outlined: true
 			},
 			acceptButtonProps: {
-				label: 'Delete',
+				label: message === 'Delete' ? 'Delete' : 'Reset',
 				severity: 'danger'
 			},
 
@@ -47,7 +47,7 @@ export class DeleteDialogComponent {
 					this.messageService.add({
 						severity: 'info',
 						summary: 'Confirmed',
-						detail: 'Record deleted'
+						detail: message === 'Delete' ? 'Record deleted' : 'Data reset'
 					});
 				}
 				acceptCallback();

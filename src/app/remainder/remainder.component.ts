@@ -1,4 +1,4 @@
-import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { isPlatformBrowser, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -15,6 +15,7 @@ import { FirebaseService } from '../service/firebase-service/firebase.service';
 import { Subscription } from 'rxjs';
 import { LOG } from '../app.logs';
 import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE } from '../app.utilities';
+import { DialogService } from '../service/dialog-service/dialog.service';
 
 @Component({
 	selector: 'remainder',
@@ -36,6 +37,9 @@ import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE } from '../app.utilities';
 })
 export class RemainderComponent {
 	private readonly className = 'RemainderComponent';
+	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
+	private dialogComponentContainer!: ViewContainerRef;
 	private isLoggedIn!: boolean;
 	protected loading = true;
 	private finalizedCells = new Set<string>();
@@ -50,7 +54,11 @@ export class RemainderComponent {
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
 
-	constructor(@Inject(PLATFORM_ID) private platformId: Object, private firebaseService: FirebaseService) {
+	constructor(
+		@Inject(PLATFORM_ID) private platformId: Object,
+		private dialogService: DialogService,
+		private firebaseService: FirebaseService
+	) {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
 			this.updatedThirdTable = [
@@ -183,7 +191,19 @@ export class RemainderComponent {
 		this.updatedFirstTable[rowIndex][field].isCharged = true;
 	}
 
-	protected resetFirstTable() {
+	protected openConfirmationDialog() {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'reset',
+			() => {
+				this.resetFirstTable();
+			},
+			`Are you sure you want to reset the dates?`,
+			`Reset`
+		);
+	}
+
+	private resetFirstTable() {
 		this.updatedFirstTable = [
 			{
 				first: { value: 1, isCharged: false },

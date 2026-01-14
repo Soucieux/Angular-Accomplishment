@@ -1,5 +1,5 @@
 import { ComponentRef, Injectable, Type, ViewContainerRef } from '@angular/core';
-import { DeleteDialogComponent } from './delete/delete.component';
+import { ConfirmDialogComponent } from './confirm/confirm.component';
 import { AddDialogComponent } from './add/add.component';
 import { LOG } from '../../app.logs';
 import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
@@ -23,7 +23,8 @@ export class DialogService {
 	getDialogComponent(dialogType: string): Type<any> {
 		switch (dialogType) {
 			case 'delete':
-				return DeleteDialogComponent;
+			case 'reset':
+				return ConfirmDialogComponent;
 			case 'add':
 				return AddDialogComponent;
 			case 'history':
@@ -40,7 +41,7 @@ export class DialogService {
 
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
-		dialogType: 'delete',
+		dialogType: 'delete' | 'reset',
 		acceptCallback: () => void,
 		message: string,
 		header: string
@@ -95,7 +96,7 @@ export class DialogService {
 			// Open up corresponding dialog and pass callbacks
 			if (dialogType === 'history' || dialogType === 'search') {
 				dialogComponentRef.instance.openDialog(callback);
-			} else if (dialogType === 'delete') {
+			} else if (dialogType === 'delete' || dialogType === 'reset') {
 				dialogComponentRef.instance.openDialog(callback, messageOrCallback, header);
 			} else if (dialogType === 'add') {
 				dialogComponentRef.instance.openDialog(callback, messageOrCallback);

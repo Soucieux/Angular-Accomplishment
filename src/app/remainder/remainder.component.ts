@@ -189,6 +189,8 @@ export class RemainderComponent {
 
 	protected setIsCharged(rowIndex: number, field: string) {
 		this.updatedFirstTable[rowIndex][field].isCharged = true;
+		// Update table to firebase
+		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 	}
 
 	protected openConfirmationDialog() {

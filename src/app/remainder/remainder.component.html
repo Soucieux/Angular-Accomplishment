@@ -62,7 +62,14 @@
 		</ng-template>
 	</p-table>
 	<div class="second-table">
-		@for(item of updatedSecondTable; let index = $index; track item.key){
+		@if(loading){ @for (_ of [0,1,2,3,4,5,6,7]; track $index) {
+		<div class="second-table-cell">
+			<p-skeleton height="25px" />
+			<p-skeleton height="50px" />
+			<p-skeleton height="50px" />
+			<p-skeleton height="25px" />
+		</div>
+		} } @else { @for(item of updatedSecondTable; let index = $index; track item.key){
 		<div class="second-table-cell">
 			<div class="second-table-header">{{ item.key }}</div>
 			<p-inputgroup>
@@ -116,7 +123,7 @@
 				}}</label>
 			</div>
 		</div>
-		}
+		} }
 	</div>
 	<div class="third-table">
 		@for(item of updatedThirdTable; let index = $index; track index){

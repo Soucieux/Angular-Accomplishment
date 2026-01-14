@@ -84,7 +84,8 @@ export class RemainderComponent {
 				// Loop through to determine disabled fields
 				for (let index = 0; index < this.updatedFirstTable.length; index++) {
 					for (const field of this.fields) {
-						if (this.updatedFirstTable[index][field] < this.currentDay) {
+						if (this.updatedFirstTable[index][field].value < this.currentDay) {
+							this.updatedFirstTable[index][field].isCharged = true;
 							this.finalizedCells.add(`${index}-${field}`);
 						}
 					}
@@ -116,23 +117,26 @@ export class RemainderComponent {
 
 	onValueChange(rowIndex: number, field: string) {
 		// Reset value if it reaches threshold
-		let currentValue = this.updatedFirstTable[rowIndex][field];
+		let currentValue = this.updatedFirstTable[rowIndex][field].value;
 		if (Number(currentValue) > 31) {
-			this.updatedFirstTable[rowIndex][field] = this.originalFirstTable[rowIndex][field];
+			this.updatedFirstTable[rowIndex][field].value = this.originalFirstTable[rowIndex][field].value;
 			return;
 		} else if (rowIndex !== 0) {
-			const previousValue = this.updatedFirstTable[rowIndex - 1][field];
+			const previousValue = this.updatedFirstTable[rowIndex - 1][field].value;
 			if ((rowIndex == 1 || rowIndex == 3) && Number(currentValue) - Number(previousValue) < 2) {
-				this.updatedFirstTable[rowIndex][field] = this.originalFirstTable[rowIndex][field];
+				this.updatedFirstTable[rowIndex][field].value =
+					this.originalFirstTable[rowIndex][field].value;
 				return;
 			} else if ((rowIndex == 2 || rowIndex == 4) && Number(currentValue) - Number(previousValue) < 6) {
-				this.updatedFirstTable[rowIndex][field] = this.originalFirstTable[rowIndex][field];
+				this.updatedFirstTable[rowIndex][field].value =
+					this.originalFirstTable[rowIndex][field].value;
 				return;
 			}
 		}
 
 		// Convert it to number
-		this.updatedFirstTable[rowIndex][field] = Number(this.updatedFirstTable[rowIndex][field]);
+		this.updatedFirstTable[rowIndex][field].value = Number(this.updatedFirstTable[rowIndex][field].value);
+		this.updatedFirstTable[rowIndex][field].isCharged = false;
 
 		// Update other values in the same column
 		for (let index = rowIndex; index < this.updatedFirstTable.length; index++) {
@@ -153,31 +157,64 @@ export class RemainderComponent {
 
 	// 1 -> 2 && 3 -> 4
 	private sixDaysDiff(rowIndex: number, field: string) {
-		this.updatedFirstTable[rowIndex + 1][field] = Number(this.updatedFirstTable[rowIndex][field]) + 6;
+		this.updatedFirstTable[rowIndex + 1][field].value =
+			Number(this.updatedFirstTable[rowIndex][field].value) + 6;
+		this.updatedFirstTable[rowIndex + 1][field].isCharged = false;
 
 		this.isValueGreaterThan31(rowIndex, field);
-	}
-
-	private isValueGreaterThan31(rowIndex: number, field: string) {
-		this.updatedFirstTable[rowIndex + 1][field] =
-			this.updatedFirstTable[rowIndex + 1][field] > 31
-				? 31
-				: this.updatedFirstTable[rowIndex + 1][field];
 	}
 
 	// 0 -> 1 && 2 -> 3
 	private twoDayDiff(rowIndex: number, field: string) {
-		this.updatedFirstTable[rowIndex + 1][field] = Number(this.updatedFirstTable[rowIndex][field]) + 2;
+		this.updatedFirstTable[rowIndex + 1][field].value =
+			Number(this.updatedFirstTable[rowIndex][field].value) + 2;
+		this.updatedFirstTable[rowIndex + 1][field].isCharged = false;
 		this.isValueGreaterThan31(rowIndex, field);
+	}
+
+	private isValueGreaterThan31(rowIndex: number, field: string) {
+		this.updatedFirstTable[rowIndex + 1][field].value =
+			this.updatedFirstTable[rowIndex + 1][field].value > 31
+				? 31
+				: this.updatedFirstTable[rowIndex + 1][field].value;
+	}
+
+	protected setIsCharged(rowIndex: number, field: string) {
+		this.updatedFirstTable[rowIndex][field].isCharged = true;
 	}
 
 	protected resetFirstTable() {
 		this.updatedFirstTable = [
-			{ first: 1, second: 1, third: 1, fourth: 1 },
-			{ first: 3, second: 3, third: 3, fourth: 3 },
-			{ first: 9, second: 9, third: 9, fourth: 9 },
-			{ first: 11, second: 11, third: 11, fourth: 11 },
-			{ first: 17, second: 17, third: 17, fourth: 17 }
+			{
+				first: { value: 1, isCharged: false },
+				second: { value: 1, isCharged: false },
+				third: { value: 1, isCharged: false },
+				fourth: { value: 1, isCharged: false }
+			},
+			{
+				first: { value: 3, isCharged: false },
+				second: { value: 3, isCharged: false },
+				third: { value: 3, isCharged: false },
+				fourth: { value: 3, isCharged: false }
+			},
+			{
+				first: { value: 9, isCharged: false },
+				second: { value: 9, isCharged: false },
+				third: { value: 9, isCharged: false },
+				fourth: { value: 9, isCharged: false }
+			},
+			{
+				first: { value: 11, isCharged: false },
+				second: { value: 11, isCharged: false },
+				third: { value: 11, isCharged: false },
+				fourth: { value: 11, isCharged: false }
+			},
+			{
+				first: { value: 17, isCharged: false },
+				second: { value: 17, isCharged: false },
+				third: { value: 17, isCharged: false },
+				fourth: { value: 17, isCharged: false }
+			}
 		];
 		// Update table to firebase
 		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);

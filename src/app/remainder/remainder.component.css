@@ -37,6 +37,10 @@
 	padding-top: 12px !important;
 }
 
+.first-table-input {
+	font-weight: bold;
+}
+
 ::ng-deep .reset-button {
 	width: 100%;
 }

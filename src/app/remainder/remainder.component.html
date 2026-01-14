@@ -22,17 +22,16 @@
 			<tr>
 				@for(field of fields; let index = $index; track field){
 				<td>
-                    	<!-- [disabled]="isDisabled(rowIndex, field)" -->
 					<p-inputgroup>
 						<input
 							pInputText
 							type="text"
 							inputmode="numeric"
 							[(ngModel)]="row[field].value"
-						
+							[disabled]="isDisabled(rowIndex, field)"
 							[class.disabled-cell]="isDisabled(rowIndex, field)"
 							class="first-table-input"
-							[style]="row[field].isCharged ? 'color: green; ' : ''"
+							[style]="row[field].isCharged ? 'color: orange; ' : ''"
 							(keydown)="onNumberChange($event)"
 							(blur)="onValueChange(rowIndex, field)"
 							(keyup.enter)="onValueChange(rowIndex, field)" />

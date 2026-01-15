@@ -344,9 +344,9 @@ export class FirebaseService {
 	 */
 	public async addNewRecordToPatchNotes(newRecord: any) {
 		await push(dbRef(this.db, 'patch_notes'), {
-			component: this.Utilities.capitalizeFirstLetter(newRecord.component),
-			element: newRecord.element.trim(),
-			details: newRecord.details.trim(),
+			component: this.Utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
+			element: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
+			details: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
 			status: newRecord.status,
 			timestamp: newRecord.timestamp,
 			isBug: newRecord.isBug

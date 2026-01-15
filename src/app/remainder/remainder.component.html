@@ -135,40 +135,44 @@
 				fluid
 				(blur)="updateTable(THIRD_TABLE, index, 'content')"
 				(keyup.enter)="updateTable(THIRD_TABLE, index, 'content')" />
-			<div class="show-only-icon-wrapper">
-				<p-datepicker
-					#datepicker
-					[appendTo]="'body'"
-					dateFormat="yy-mm-dd"
-					[(ngModel)]="item.date"
-					class="show-only-icon"
-					(onSelect)="updateTableWithNewDate(THIRD_TABLE, index, $event, item)">
-				</p-datepicker>
-
-				@if(item.date){
-				<p-inputgroup-addon>
-					<p-button
-						icon="pi pi-clock"
-						(click)="datepicker.toggle()"
-						[style]="{
-							'background-color': 'transparent',
-							'border-color': 'transparent',
-						}"
-						[pTooltip]="item.date"
-						tooltipPosition="top"></p-button>
-				</p-inputgroup-addon>
-				}
-			</div>
-
-			@if(item.link){
+			@if(item.date){
+			<p-inputgroup-addon>
+				<i
+					class="pi pi-clock"
+					[style]="{
+						'color': 'black'
+					}"
+					[pTooltip]="item.date"
+					tooltipPosition="top"></i>
+			</p-inputgroup-addon>
+			} @if(item.link){
 			<p-inputgroup-addon
 				><a [href]="item.link" target="_blank" rel="noopener noreferrer"
-					><i class="pi pi-external-link" style="color: black"></i></a
+					><i class="pi pi-link" style="color: black"></i></a
 			></p-inputgroup-addon>
 			}
 
 			<p-inputgroup-addon>
-				<p-button icon="pi pi-pencil" severity="secondary"> </p-button>
+				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="op.toggle($event)"> </p-button>
+				<p-popover #op>
+					<p-inputgroup>
+						<input type="text" pInputText [(ngModel)]="item.link" />
+						<p-inputgroup-addon>
+							<p-button icon="pi pi-check" severity="secondary" (onClick)="op.toggle($event)">
+							</p-button>
+						</p-inputgroup-addon>
+					</p-inputgroup>
+					<p-inputgroup>
+						<p-datepicker
+							#datepicker
+							[appendTo]="'body'"
+							dateFormat="yy-mm-dd"
+							[(ngModel)]="item.date"
+							class="show-only-icon"
+							(onSelect)="updateTableWithNewDate(THIRD_TABLE, index, $event, item)">
+						</p-datepicker>
+					</p-inputgroup>
+				</p-popover>
 			</p-inputgroup-addon>
 		</p-inputgroup>
 		}

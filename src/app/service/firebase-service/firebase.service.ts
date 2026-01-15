@@ -1,4 +1,4 @@
-import { GENRE_FAVOURITE, NO_RATE, Utilities } from './../../app.utilities';
+import { GENRE_FAVOURITE, NO_RATE, SECOND_TABLE, THIRD_TABLE, Utilities } from './../../app.utilities';
 import { SearchStreamService } from './../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
@@ -431,15 +431,17 @@ export class FirebaseService {
 	 * @param newValue - The new value to be stored.
 	 * @param tableName - The name of the table to update.
 	 */
-	public async updateSecondRemainderTable(tableName: string, index: number, key: string, newValue: any) {
-		if (key === 'value') {
-			await update(dbRef(this.db, `remainder/${tableName}/${index}/value`), {
-				...newValue
+	public async updateRemainderTable(tableName: string, index: number, key: string, newValue: any) {
+		if (tableName === SECOND_TABLE) {
+			const valueToUpdate = key === 'content' ? { ...newValue } : { [key]: newValue };
+
+			await update(dbRef(this.db, `remainder/${tableName}/${index}/content`), {
+				...valueToUpdate
 			}).then(() => {
 				LOG.info(this.className, 'Remainder table has been updated');
 			});
-		} else {
-			await update(dbRef(this.db, `remainder/${tableName}/${index}/value`), {
+		} else if (tableName === THIRD_TABLE) {
+			await update(dbRef(this.db, `remainder/${tableName}/${index}`), {
 				[key]: newValue
 			}).then(() => {
 				LOG.info(this.className, 'Remainder table has been updated');

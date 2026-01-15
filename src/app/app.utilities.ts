@@ -17,6 +17,7 @@ export const STATUS_RESOLVED = 'Resolved';
 export const GENRE_FAVOURITE = '特别关注';
 export const FIRST_TABLE = 'first_table';
 export const SECOND_TABLE = 'second_table';
+export const THIRD_TABLE = 'third_table';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {

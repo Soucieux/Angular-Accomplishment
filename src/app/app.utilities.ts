@@ -62,13 +62,23 @@ export class Utilities {
 	}
 
 	/**
-	 * Capitalize the first letter of the string.
+	 * Capitalize the first letter of the string on each word
 	 *
 	 * @param string - The string to capitalize.
 	 * @returns The string with the first letter capitalized.
 	 */
-	public capitalizeFirstLetter(string: string | null | undefined) {
-		return string ? string.trim().charAt(0).toUpperCase() + string.slice(1).toLowerCase() : '';
+	public capitalizeFirstLetterOnEachWord(string: string | null | undefined) {
+		return string ? string.replace(/\b\w/g, (char) => char.toUpperCase()) : '';
+	}
+
+	/**
+	 * Capitalize the first letter of the string with others unchanged.
+	 *
+	 * @param string - The string to capitalize.
+	 * @returns The string with the first letter capitalized.
+	 */
+	public capitalizeFirstLetterWithOthersUnchanged(string: string | null | undefined) {
+		return string ? string.trim().charAt(0).toUpperCase() + string.slice(1) : '';
 	}
 
 	////////////////////////////// Below are static methods //////////////////////////////

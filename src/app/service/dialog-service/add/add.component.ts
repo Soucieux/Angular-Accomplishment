@@ -52,7 +52,7 @@ export class AddDialogComponent {
 	constructor(private utilities: Utilities) {}
 
 	protected ngOnInit() {
-		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (2025 - i).toString() }));
+		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (2026 - i).toString() }));
 		this.genres = [
 			{ genre: '刑侦' },
 			{ genre: '古装' },

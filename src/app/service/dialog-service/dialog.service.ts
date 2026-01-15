@@ -97,7 +97,7 @@ export class DialogService {
 			if (dialogType === 'history' || dialogType === 'search') {
 				dialogComponentRef.instance.openDialog(callback);
 			} else if (dialogType === 'delete' || dialogType === 'reset') {
-				dialogComponentRef.instance.openDialog(callback, messageOrCallback, header);
+				dialogComponentRef.instance.openDialog(dialogType, callback, messageOrCallback, header);
 			} else if (dialogType === 'add') {
 				dialogComponentRef.instance.openDialog(callback, messageOrCallback);
 			}

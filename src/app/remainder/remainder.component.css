@@ -134,19 +134,3 @@
 	display: flex;
 	gap: 10px;
 }
-
-::ng-deep .show-only-icon .p-inputtext {
-	width: 0 !important;
-	height: 0 !important;
-	padding: 0 !important;
-}
-
-::ng-deep .show-only-icon {
-	width: 0 !important;
-	height: 0 !important;
-	opacity: 0; /* Makes it transparent but keeps it interactive */
-}
-
-.show-only-icon-wrapper {
-	display: inline-flex; /* Keeps button and 'ghost' anchor together */
-}

@@ -11,6 +11,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { Checkbox } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { PopoverModule } from 'primeng/popover';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
 import { Subscription } from 'rxjs';
 import { LOG } from '../app.logs';
@@ -30,7 +31,8 @@ import { DialogService } from '../service/dialog-service/dialog.service';
 		InputGroupAddonModule,
 		InputNumber,
 		Checkbox,
-		Tooltip
+		Tooltip,
+		PopoverModule
 	],
 	templateUrl: './remainder.component.html',
 	styleUrl: './remainder.component.css'

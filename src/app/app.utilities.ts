@@ -93,4 +93,8 @@ export class Utilities {
 			throw new Error('Movie item VO is invalid');
 		}
 	}
+
+	public static checkIfHoverCapable() {
+		return window.matchMedia('(hover: hover)').matches;
+	}
 }

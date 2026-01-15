@@ -91,8 +91,8 @@
 						severity="secondary"
 						(onClick)="updateDebt(index)"
 						pTooltip="Decrement by 998.05"
-						tooltipPosition="top"></p-button
-				></p-inputgroup-addon>
+						tooltipPosition="top"></p-button>
+				</p-inputgroup-addon>
 			</p-inputgroup>
 			<p-inputgroup>
 				<p-datepicker
@@ -140,10 +140,12 @@
 				<i
 					class="pi pi-clock"
 					[style]="{
-						'color': 'black'
+						color: 'black'
 					}"
-					[pTooltip]="item.date"
+					[pTooltip]="isHoverCapable ? item.date : ''"
+					(click)="!isHoverCapable && op.toggle($event)"
 					tooltipPosition="top"></i>
+				<p-popover #op>{{ item.date }}</p-popover>
 			</p-inputgroup-addon>
 			} @if(item.link){
 			<p-inputgroup-addon
@@ -153,12 +155,12 @@
 			}
 
 			<p-inputgroup-addon>
-				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="op.toggle($event)"> </p-button>
-				<p-popover #op>
+				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="op2.toggle($event)"> </p-button>
+				<p-popover #op2>
 					<p-inputgroup>
 						<input type="text" pInputText [(ngModel)]="item.link" />
 						<p-inputgroup-addon>
-							<p-button icon="pi pi-check" severity="secondary" (onClick)="op.toggle($event)">
+							<p-button icon="pi pi-check" severity="secondary" (onClick)="op2.toggle($event)">
 							</p-button>
 						</p-inputgroup-addon>
 					</p-inputgroup>

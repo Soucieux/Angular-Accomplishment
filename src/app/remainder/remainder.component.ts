@@ -15,7 +15,7 @@ import { PopoverModule } from 'primeng/popover';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
 import { Subscription } from 'rxjs';
 import { LOG } from '../app.logs';
-import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE, THIRD_TABLE } from '../app.utilities';
+import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE, THIRD_TABLE, Utilities } from '../app.utilities';
 import { DialogService } from '../service/dialog-service/dialog.service';
 
 @Component({
@@ -44,6 +44,7 @@ export class RemainderComponent {
 	private dialogComponentContainer!: ViewContainerRef;
 	private isLoggedIn!: boolean;
 	protected loading = true;
+	protected isHoverCapable = Utilities.checkIfHoverCapable();
 	private finalizedCells = new Set<string>();
 	protected originalFirstTable!: any[];
 	protected updatedFirstTable!: any[];
@@ -262,7 +263,8 @@ export class RemainderComponent {
 		event.preventDefault();
 	}
 
-	protected updateDebt(index: number) {
+    protected updateDebt(index: number) {
+        if(this.isHoverCapable)
 		this.updatedSecondTable[index].content.debt =
 			Math.round((this.updatedSecondTable[index].content.debt - 998.05) * 100) / 100;
 		this.updateTable(SECOND_TABLE, index, 'debt');

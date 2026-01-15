@@ -82,9 +82,9 @@
 					[minFractionDigits]="2"
 					[maxFractionDigits]="2"
 					[step]="0.01"
-					[(ngModel)]="item.value.debt"
-					(onBlur)="updateSecondTable(index, 'debt')"
-					(keyup.enter)="updateSecondTable(index, 'debt')" />
+					[(ngModel)]="item.content.debt"
+					(onBlur)="updateTable(SECOND_TABLE, index, 'debt')"
+					(keyup.enter)="updateTable(SECOND_TABLE, index, 'debt')" />
 				<p-inputgroup-addon
 					><p-button
 						icon="pi pi-minus"
@@ -99,15 +99,15 @@
 					class="second-table-date"
 					[appendTo]="'body'"
 					dateFormat="yy-mm-dd"
-					[(ngModel)]="item.value.date"
+					[(ngModel)]="item.content.date"
 					(keydown)="preventKeyin($event)"
-					[disabled]="!item.value.paid"
-					(onSelect)="updateSecondTableWithNewDate(index, $event, item)" />
+					[disabled]="!item.content.paid"
+					(onSelect)="updateTableWithNewDate(SECOND_TABLE, index, $event, item)" />
 				<p-inputgroup-addon
 					><p-button
-						[icon]="item.value.paid ? 'pi pi-check' : 'pi pi-replay'"
+						[icon]="item.content.paid ? 'pi pi-check' : 'pi pi-replay'"
 						severity="secondary"
-						[pTooltip]="item.value.paid ? 'Set default debt' : 'Reset debt to default'"
+						[pTooltip]="item.content.paid ? 'Set default debt' : 'Reset debt to default'"
 						tooltipPosition="top"
 						(onClick)="setDefaultDebt(index)"></p-button
 				></p-inputgroup-addon>
@@ -115,11 +115,11 @@
 			<div class="second-table-checkbox">
 				<p-checkbox
 					[inputId]="item.key"
-					[(ngModel)]="item.value.paid"
+					[(ngModel)]="item.content.paid"
 					[binary]="true"
-					(onChange)="updateSecondTable(index, 'paid')" />
-				<label [for]="item.key" [style]="item.value.paid ? 'color:green' : 'color:red'">{{
-					item.value.paid ? 'Paid' : 'Not yet paid ($' + item.value.original + ')'
+					(onChange)="updateTable(SECOND_TABLE, index, 'paid')" />
+				<label [for]="item.key" [style]="item.content.paid ? 'color:green' : 'color:red'">{{
+					item.content.paid ? 'Paid' : 'Not yet paid ($' + item.content.original + ')'
 				}}</label>
 			</div>
 		</div>
@@ -128,7 +128,13 @@
 	<div class="third-table">
 		@for(item of updatedThirdTable; let index = $index; track index){
 		<p-inputgroup class="third-table-cell">
-			<input type="text" pInputText [(ngModel)]="item.content" fluid />
+			<input
+				type="text"
+				pInputText
+				[(ngModel)]="item.content"
+				fluid
+				(blur)="updateTable(THIRD_TABLE, index, 'content')"
+				(keyup.enter)="updateTable(THIRD_TABLE, index, 'content')" />
 			<div class="show-only-icon-wrapper">
 				<p-datepicker
 					#datepicker
@@ -136,14 +142,18 @@
 					dateFormat="yy-mm-dd"
 					[(ngModel)]="item.date"
 					class="show-only-icon"
-					(onSelect)="updateThirdTableWithNewDate($event, item)">
+					(onSelect)="updateTableWithNewDate(THIRD_TABLE, index, $event, item)">
 				</p-datepicker>
+
 				@if(item.date){
 				<p-inputgroup-addon>
 					<p-button
 						icon="pi pi-clock"
 						(click)="datepicker.toggle()"
-						severity="secondary"
+						[style]="{
+							'background-color': 'transparent',
+							'border-color': 'transparent'
+						}"
 						[pTooltip]="item.date"
 						tooltipPosition="top"></p-button>
 				</p-inputgroup-addon>
@@ -156,6 +166,10 @@
 					><i class="pi pi-external-link" style="color: black"></i></a
 			></p-inputgroup-addon>
 			}
+
+			<p-inputgroup-addon>
+				<p-button icon="pi pi-pencil" severity="secondary"> </p-button>
+			</p-inputgroup-addon>
 		</p-inputgroup>
 		}
 	</div>

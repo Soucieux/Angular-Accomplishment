@@ -14,7 +14,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
 import { Subscription } from 'rxjs';
 import { LOG } from '../app.logs';
-import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE } from '../app.utilities';
+import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE, THIRD_TABLE } from '../app.utilities';
 import { DialogService } from '../service/dialog-service/dialog.service';
 
 @Component({
@@ -53,6 +53,9 @@ export class RemainderComponent {
 	protected updatedThirdTable!: any[];
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
+	protected thirdSub?: Subscription;
+	protected SECOND_TABLE: string = SECOND_TABLE;
+	protected THIRD_TABLE: string = THIRD_TABLE;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -61,20 +64,6 @@ export class RemainderComponent {
 	) {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
-			this.updatedThirdTable = [
-				{ date: '26-01-01', link: 'https://www.google.ca', content: 'Amazon return stuff' },
-				{ date: '26-01-01', content: 'Amazon return stuff' },
-				{ date: '26-01-01', content: 'Amazon return stuff' },
-				{ content: 'Amazon return stuff' },
-				{ content: 'Amazon return stuff' },
-				{ date: '26-01-01', link: 'https://www.google.ca', content: 'Amazon return stuff' },
-				{ date: '26-01-01', content: 'Amazon return stuff' },
-				{ date: '26-01-01', content: 'Amazon return stuff' },
-				{ date: '26-01-01', link: 'https://www.google.ca', content: 'Amazon return stuff' },
-				{ date: '26-01-01', content: 'Amazon return stuff' },
-				{ date: '26-01-01', content: 'Amazon return stuff' },
-				{ date: '26-01-01', content: 'Amazon return stuff' }
-			];
 		}
 	}
 	async ngOnInit() {
@@ -105,15 +94,23 @@ export class RemainderComponent {
 				this.originalSecondTable = structuredClone(rows);
 				this.updatedSecondTable = structuredClone(rows);
 			});
+
+			// Get the data of the third table
+			this.thirdSub = this.firebaseService.getRemainderTableDetails(THIRD_TABLE).subscribe((rows) => {
+				this.originalThirdTable = structuredClone(rows);
+				this.updatedThirdTable = structuredClone(rows);
+			});
 		}
 	}
 
 	ngOnDestroy() {
 		this.firstSub?.unsubscribe();
 		this.secondSub?.unsubscribe();
+		this.thirdSub?.unsubscribe();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
+	///////////////////////////////////FIRST TABLE///////////////////////////////////
 	onNumberChange(event: KeyboardEvent) {
 		const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
 		if (allowedKeys.includes(event.key)) return;
@@ -258,50 +255,66 @@ export class RemainderComponent {
 		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 	}
 
-	protected updateSecondTable(rowIndex: number, key: string) {
-		const newValue = this.updatedSecondTable[rowIndex].value[key];
-
-		if (newValue !== this.originalSecondTable[rowIndex].value[key]) {
-			this.firebaseService.updateSecondRemainderTable(SECOND_TABLE, rowIndex, key, newValue);
-		}
-	}
-
-	protected updateSecondTableWithNewDate(rowIndex: number, date: Date, item: any) {
-		item.value.date = date.toISOString().slice(0, 10);
-		this.updateSecondTable(rowIndex, 'date');
-	}
-
+	///////////////////////////////////SECOND TABLE///////////////////////////////////
 	protected preventKeyin(event: KeyboardEvent) {
 		event.preventDefault();
 	}
 
 	protected updateDebt(index: number) {
-		this.updatedSecondTable[index].value.debt =
-			Math.round((this.updatedSecondTable[index].value.debt - 998.05) * 100) / 100;
-		this.updateSecondTable(index, 'debt');
+		this.updatedSecondTable[index].content.debt =
+			Math.round((this.updatedSecondTable[index].content.debt - 998.05) * 100) / 100;
+		this.updateTable(SECOND_TABLE, index, 'debt');
 	}
 
 	protected setDefaultDebt(rowIndex: number) {
-		if (this.updatedSecondTable[rowIndex].value.paid) {
-			this.updatedSecondTable[rowIndex].value.original = this.updatedSecondTable[rowIndex].value.debt;
-			this.updatedSecondTable[rowIndex].value.paid = false;
-			this.firebaseService.updateSecondRemainderTable(
+		if (this.updatedSecondTable[rowIndex].content.paid) {
+			this.updatedSecondTable[rowIndex].content.original =
+				this.updatedSecondTable[rowIndex].content.debt;
+			this.updatedSecondTable[rowIndex].content.paid = false;
+			this.firebaseService.updateRemainderTable(
 				SECOND_TABLE,
 				rowIndex,
-				'value',
-				this.updatedSecondTable[rowIndex].value
+				'content',
+				this.updatedSecondTable[rowIndex].content
 			);
 		} else {
-			this.updatedSecondTable[rowIndex].value.debt = this.updatedSecondTable[rowIndex].value.original;
-			this.updateSecondTable(rowIndex, 'debt');
+			this.updatedSecondTable[rowIndex].content.debt =
+				this.updatedSecondTable[rowIndex].content.original;
+			this.updateTable(SECOND_TABLE, rowIndex, 'debt');
 		}
 	}
 
+	///////////////////////////////////THIRD TABLE///////////////////////////////////
 	protected showDatepickerOnIconClick(dp: any) {
 		dp.toggle();
 	}
 
 	protected updateThirdTableWithNewDate(date: Date, item: any) {
 		item.date = date.toISOString().slice(0, 10);
+	}
+
+	////////////////////////////////COMMON METHODS////////////////////////////////
+
+	protected updateTable(tableName: string, rowIndex: number, key: string) {
+		const newValue =
+			tableName === SECOND_TABLE
+				? this.updatedSecondTable[rowIndex].content[key]
+				: this.updatedThirdTable[rowIndex][key];
+
+		if (
+			newValue !== this.originalSecondTable[rowIndex].content[key] ||
+			newValue !== this.originalThirdTable[rowIndex][key]
+		) {
+			this.firebaseService.updateRemainderTable(tableName, rowIndex, key, newValue);
+		}
+	}
+
+	protected updateTableWithNewDate(tableName: string, rowIndex: number, date: Date, item: any) {
+		if (tableName == SECOND_TABLE) {
+			item.content.date = date.toISOString().slice(0, 10);
+		} else if (tableName == THIRD_TABLE) {
+			item.date = date.toISOString().slice(0, 10);
+		}
+		this.updateTable(tableName, rowIndex, 'date');
 	}
 }

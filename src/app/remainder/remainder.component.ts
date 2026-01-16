@@ -210,7 +210,7 @@ export class RemainderComponent {
 		}
 	}
 
-	protected openConfirmationDialog() {
+	protected openResetConfirmationDialog() {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'reset',
@@ -304,8 +304,18 @@ export class RemainderComponent {
 		this.updateTable(THIRD_TABLE, index, 'link');
 	}
 
+	protected openDeleteConfirmationDialog(index: number) {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'delete',
+			() => {
+				this.firebaseService.removeRecordFromRemainderTable(THIRD_TABLE, index);
+			},
+			`Are you sure you want to delete this entry?`,
+			`Delete`
+		);
+	}
 
-    
 	////////////////////////////////COMMON METHODS////////////////////////////////
 
 	protected updateTable(tableName: string, index: number, key: string) {

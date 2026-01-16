@@ -44,7 +44,7 @@ export class RemainderComponent {
 	private dialogComponentContainer!: ViewContainerRef;
 	private isLoggedIn!: boolean;
 	protected loading = true;
-	protected isHoverCapable = Utilities.checkIfHoverCapable();
+	protected isHoverCapable!: boolean;
 	private finalizedCells = new Set<string>();
 	protected originalFirstTable!: any[];
 	protected updatedFirstTable!: any[];
@@ -71,6 +71,7 @@ export class RemainderComponent {
 	}
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
+			this.isHoverCapable = Utilities.checkIfHoverCapable();
 			this.currentDay = new Date().getDate();
 
 			// Get the data of the first table
@@ -263,8 +264,7 @@ export class RemainderComponent {
 		event.preventDefault();
 	}
 
-    protected updateDebt(index: number) {
-        if(this.isHoverCapable)
+	protected updateDebt(index: number) {
 		this.updatedSecondTable[index].content.debt =
 			Math.round((this.updatedSecondTable[index].content.debt - 998.05) * 100) / 100;
 		this.updateTable(SECOND_TABLE, index, 'debt');
@@ -289,36 +289,44 @@ export class RemainderComponent {
 	}
 
 	///////////////////////////////////THIRD TABLE///////////////////////////////////
-	protected showDatepickerOnIconClick(dp: any) {
-		dp.toggle();
+	protected updateLink(index: number) {
+		let linkLower = this.updatedThirdTable[index].link.toLowerCase();
+		if (linkLower.startsWith('www.')) {
+			linkLower = 'https://' + linkLower;
+		} else if (linkLower.startsWith('http://')) {
+			linkLower = linkLower;
+		} else {
+			linkLower = 'https://www.' + linkLower;
+		}
+
+		this.updatedThirdTable[index].link = linkLower;
+
+		this.updateTable(THIRD_TABLE, index, 'link');
 	}
 
-	protected updateThirdTableWithNewDate(date: Date, item: any) {
-		item.date = date.toISOString().slice(0, 10);
-	}
 
+    
 	////////////////////////////////COMMON METHODS////////////////////////////////
 
-	protected updateTable(tableName: string, rowIndex: number, key: string) {
+	protected updateTable(tableName: string, index: number, key: string) {
 		const newValue =
 			tableName === SECOND_TABLE
-				? this.updatedSecondTable[rowIndex].content[key]
-				: this.updatedThirdTable[rowIndex][key];
-
+				? this.updatedSecondTable[index].content[key]
+				: this.updatedThirdTable[index][key];
 		if (
-			newValue !== this.originalSecondTable[rowIndex].content[key] ||
-			newValue !== this.originalThirdTable[rowIndex][key]
+			(tableName === SECOND_TABLE && newValue !== this.originalSecondTable[index].content[key]) ||
+			(tableName === THIRD_TABLE && newValue !== this.originalThirdTable[index][key])
 		) {
-			this.firebaseService.updateRemainderTable(tableName, rowIndex, key, newValue);
+			this.firebaseService.updateRemainderTable(tableName, index, key, newValue);
 		}
 	}
 
-	protected updateTableWithNewDate(tableName: string, rowIndex: number, date: Date, item: any) {
+	protected updateTableWithNewDate(tableName: string, index: number, date: Date, item: any) {
 		if (tableName == SECOND_TABLE) {
 			item.content.date = date.toISOString().slice(0, 10);
 		} else if (tableName == THIRD_TABLE) {
 			item.date = date.toISOString().slice(0, 10);
 		}
-		this.updateTable(tableName, rowIndex, 'date');
+		this.updateTable(tableName, index, 'date');
 	}
 }

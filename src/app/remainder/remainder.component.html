@@ -55,7 +55,7 @@
 						label="Reset"
 						icon="pi pi-undo"
 						[severity]="'secondary'"
-						(onClick)="openConfirmationDialog()">
+						(onClick)="openResetConfirmationDialog()">
 					</p-button>
 				</td>
 			</tr>
@@ -161,11 +161,7 @@
 						<p-inputgroup-addon>
 							<i class="pi pi-link" style="color: black"></i>
 						</p-inputgroup-addon>
-						<input
-							type="text"
-							pInputText
-							[(ngModel)]="item.link"
-							(blur)="updateLink(index)"/>
+						<input type="text" pInputText [(ngModel)]="item.link" (blur)="updateLink(index)" />
 					</p-inputgroup>
 					<span>Date</span>
 					<p-inputgroup>
@@ -179,7 +175,10 @@
 							(onSelect)="updateTableWithNewDate(THIRD_TABLE, index, $event, item)">
 						</p-datepicker>
 					</p-inputgroup>
-					<p-button icon="pi pi-times" severity="danger"></p-button>
+					<p-button
+						icon="pi pi-times"
+						severity="danger"
+						(onClick)="openDeleteConfirmationDialog(index)"></p-button>
 				</p-popover>
 			</p-inputgroup-addon>
 		</p-inputgroup>

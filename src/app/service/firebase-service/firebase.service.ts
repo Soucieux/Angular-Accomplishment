@@ -461,5 +461,18 @@ export class FirebaseService {
 		}).then(() => {
 			LOG.info(this.className, 'Remainder table has been updated');
 		});
+    }
+    
+	/**
+	 * Remove record from remainder table
+	 *
+	 * @param tableName - The name of the table
+	 * @param index - The index of the record to remove
+	 */
+	public async removeRecordFromRemainderTable(tableName: string, index: number) {
+		return remove(dbRef(this.db, `remainder/${tableName}/${index}`)).then(() => {
+			LOG.info(this.className, 'Remainder table record has been removed');
+		});
 	}
+
 }

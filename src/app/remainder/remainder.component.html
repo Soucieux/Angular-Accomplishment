@@ -153,27 +153,33 @@
 					><i class="pi pi-link" style="color: black"></i></a
 			></p-inputgroup-addon>
 			}
-
 			<p-inputgroup-addon>
 				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="op2.toggle($event)"> </p-button>
-				<p-popover #op2>
+				<p-popover [focusOnShow]="false" #op2>
+					<span>Link</span>
 					<p-inputgroup>
-						<input type="text" pInputText [(ngModel)]="item.link" />
 						<p-inputgroup-addon>
-							<p-button icon="pi pi-check" severity="secondary" (onClick)="op2.toggle($event)">
-							</p-button>
+							<i class="pi pi-link" style="color: black"></i>
 						</p-inputgroup-addon>
+						<input
+							type="text"
+							pInputText
+							[(ngModel)]="item.link"
+							(blur)="updateLink(index)"/>
 					</p-inputgroup>
+					<span>Date</span>
 					<p-inputgroup>
+						<p-inputgroup-addon>
+							<i class="pi pi-calendar" style="color: black"></i>
+						</p-inputgroup-addon>
 						<p-datepicker
-							#datepicker
 							[appendTo]="'body'"
 							dateFormat="yy-mm-dd"
 							[(ngModel)]="item.date"
-							class="show-only-icon"
 							(onSelect)="updateTableWithNewDate(THIRD_TABLE, index, $event, item)">
 						</p-datepicker>
 					</p-inputgroup>
+					<p-button icon="pi pi-times" severity="danger"></p-button>
 				</p-popover>
 			</p-inputgroup-addon>
 		</p-inputgroup>

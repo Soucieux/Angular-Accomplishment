@@ -1,4 +1,11 @@
-import { GENRE_FAVOURITE, NO_RATE, SECOND_TABLE, THIRD_TABLE, Utilities } from './../../app.utilities';
+import {
+	FIRST_TABLE,
+	GENRE_FAVOURITE,
+	NO_RATE,
+	SECOND_TABLE,
+	THIRD_TABLE,
+	Utilities
+} from './../../app.utilities';
 import { SearchStreamService } from './../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
@@ -409,13 +416,12 @@ export class FirebaseService {
 	/**
 	 * Get remainder table details
 	 *
-	 * @param tableName - The name of the table to update.
 	 * @returns Remainder table details
 	 */
-	public getRemainderTableDetails(tableName: string): Observable<any[]> {
+	public getFirstRemainderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
-				onValue(dbRef(this.db, `remainder/${tableName}`), (snapshot) => {
+				onValue(dbRef(this.db, `remainder/${FIRST_TABLE}`), (snapshot) => {
 					const data = snapshot.val();
 					observer.next(data ? Object.values(data) : []);
 				});
@@ -424,25 +430,74 @@ export class FirebaseService {
 	}
 
 	/**
+	 * Get third remainder table details
+	 *
+	 * @returns Third remainder table details
+	 */
+	public getSecondRemainderTableDetails(): Observable<any[]> {
+		return list(dbRef(this.db, `remainder/${SECOND_TABLE}`)).pipe(
+			map((snapshots: any[]) =>
+				snapshots.map((snapshot: any) => {
+					return {
+						key: snapshot.snapshot.key,
+						...snapshot.snapshot.val()
+					} as {
+						key: string;
+						name: string;
+						content: {
+							date: string;
+							debt: number;
+							original: number;
+							paid: boolean;
+						};
+					};
+				})
+			)
+		);
+	}
+
+	/**
+	 * Get third remainder table details
+	 *
+	 * @returns Third remainder table details
+	 */
+	public getThirdRemainderTableDetails(): Observable<any[]> {
+		return list(dbRef(this.db, `remainder/${THIRD_TABLE}`)).pipe(
+			map((snapshots: any[]) =>
+				snapshots.map((snapshot: any) => {
+					return {
+						key: snapshot.snapshot.key,
+						...snapshot.snapshot.val()
+					} as {
+						key: string;
+						content: string;
+						date: string;
+					};
+				})
+			)
+		);
+	}
+
+	/**
 	 * Update remainder table details
 	 *
-	 * @param index - The row index of the table
-	 * @param key - The key associated with the new value.
-	 * @param newValue - The new value to be stored.
+	 * @param entryKey - The key of the entire entry
+	 * @param valueKey - The key associated with the new value.
+	 * @param value - The new value to be stored.
 	 * @param tableName - The name of the table to update.
 	 */
-	public async updateRemainderTable(tableName: string, index: number, key: string, newValue: any) {
+	public async updateRemainderTable(tableName: string, entryKey: string, valueKey: string, value: any) {
 		if (tableName === SECOND_TABLE) {
-			const valueToUpdate = key === 'content' ? { ...newValue } : { [key]: newValue };
+			const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
 
-			await update(dbRef(this.db, `remainder/${tableName}/${index}/content`), {
+			await update(dbRef(this.db, `remainder/${tableName}/${entryKey}/content`), {
 				...valueToUpdate
 			}).then(() => {
 				LOG.info(this.className, 'Remainder table has been updated');
 			});
 		} else if (tableName === THIRD_TABLE) {
-			await update(dbRef(this.db, `remainder/${tableName}/${index}`), {
-				[key]: newValue
+			await update(dbRef(this.db, `remainder/${tableName}/${entryKey}`), {
+				[valueKey]: value
 			}).then(() => {
 				LOG.info(this.className, 'Remainder table has been updated');
 			});
@@ -461,18 +516,17 @@ export class FirebaseService {
 		}).then(() => {
 			LOG.info(this.className, 'Remainder table has been updated');
 		});
-    }
-    
+	}
+
 	/**
 	 * Remove record from remainder table
 	 *
 	 * @param tableName - The name of the table
 	 * @param index - The index of the record to remove
 	 */
-	public async removeRecordFromRemainderTable(tableName: string, index: number) {
-		return remove(dbRef(this.db, `remainder/${tableName}/${index}`)).then(() => {
+	public async removeRecordFromRemainderTable(tableName: string, key: string) {
+		return remove(dbRef(this.db, `remainder/${tableName}/${key}`)).then(() => {
 			LOG.info(this.className, 'Remainder table record has been removed');
 		});
 	}
-
 }

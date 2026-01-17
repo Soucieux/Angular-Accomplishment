@@ -154,50 +154,52 @@
 			></p-inputgroup-addon>
 			}
 			<p-inputgroup-addon>
-				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="op2.toggle($event)"> </p-button>
-				<p-popover [focusOnShow]="false" #op2>
-					<div class="popover-item">
-						<span class="popover-label">Website Link</span>
-						<p-inputgroup class="popover-inputgroup">
-							<p-inputgroup-addon>
-								<i class="pi pi-link" style="color: black"></i>
-							</p-inputgroup-addon>
-							<input
-								type="text"
-								pInputText
-								[(ngModel)]="item.link"
-								style="font-size: 15px"
-								(blur)="updateLink(item.key, item.link)"
-								(keyup.enter)="updateLink(item.key, item.link)" />
-						</p-inputgroup>
-					</div>
-					<div class="popover-item">
-						<span class="popover-label">Due Date</span>
-						<p-inputgroup class="popover-inputgroup">
-							<p-inputgroup-addon>
-								<i class="pi pi-calendar" style="color: black"></i>
-							</p-inputgroup-addon>
-							<p-datepicker
-								[appendTo]="'body'"
-								dateFormat="yy-mm-dd"
-								[(ngModel)]="item.date"
-								class="datapicker"
-								(onSelect)="updateTableWithNewDate(THIRD_TABLE, item.key, $event)">
-							</p-datepicker>
-						</p-inputgroup>
-					</div>
-					<div class="popover-item">
-						<p-button
-							label="Remove Entry"
-							icon="pi pi-times"
-							severity="danger"
-							class="delete-button"
-							(onClick)="openDeleteConfirmationDialog(item.key)"></p-button>
-					</div>
-				</p-popover>
+				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="openPopover($event, item)"> </p-button>
 			</p-inputgroup-addon>
 		</p-inputgroup>
-		}
+    }
+    <p-popover [focusOnShow]="false" #op2>
+        @if(activeItem){
+        <div class="popover-item">
+            <span class="popover-label">Website Link</span>
+            <p-inputgroup class="popover-inputgroup">
+                <p-inputgroup-addon>
+                    <i class="pi pi-link" style="color: black"></i>
+                </p-inputgroup-addon>
+                <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="activeItem.link"
+                    style="font-size: 15px"
+                    (blur)="updateLink(activeItem.key, activeItem.link)"
+                    (keyup.enter)="updateLink(activeItem.key, activeItem.link)" />
+            </p-inputgroup>
+        </div>
+        <div class="popover-item">
+            <span class="popover-label">Due Date</span>
+            <p-inputgroup class="popover-inputgroup">
+                <p-inputgroup-addon>
+                    <i class="pi pi-calendar" style="color: black"></i>
+                </p-inputgroup-addon>
+                <p-datepicker
+                    [appendTo]="'body'"
+                    dateFormat="yy-mm-dd"
+                    [(ngModel)]="activeItem.date"
+                    class="datapicker"
+                    (onSelect)="updateTableWithNewDate(THIRD_TABLE, activeItem.key, $event)">
+                </p-datepicker>
+            </p-inputgroup>
+        </div>
+        <div class="popover-item">
+            <p-button
+                label="Remove Entry"
+                icon="pi pi-times"
+                severity="danger"
+                class="delete-button"
+                (onClick)="openDeleteConfirmationDialog(activeItem.key)"></p-button>
+        </div>
+    }
+    </p-popover>
 	</div>
 </div>
 <ng-container #dialogComponentContainer></ng-container>

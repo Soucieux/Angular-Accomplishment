@@ -166,8 +166,9 @@
 								type="text"
 								pInputText
 								[(ngModel)]="item.link"
+								style="font-size: 15px"
 								(blur)="updateLink(item.key, item.link)"
-                                (keyup.enter)="updateLink(item.key, item.link)" />
+								(keyup.enter)="updateLink(item.key, item.link)" />
 						</p-inputgroup>
 					</div>
 					<div class="popover-item">
@@ -180,14 +181,19 @@
 								[appendTo]="'body'"
 								dateFormat="yy-mm-dd"
 								[(ngModel)]="item.date"
+								class="datapicker"
 								(onSelect)="updateTableWithNewDate(THIRD_TABLE, item.key, $event)">
 							</p-datepicker>
 						</p-inputgroup>
 					</div>
-					<p-button
-						icon="pi pi-times"
-						severity="danger"
-						(onClick)="openDeleteConfirmationDialog(item.key)"></p-button>
+					<div class="popover-item">
+						<p-button
+							label="Remove Entry"
+							icon="pi pi-times"
+							severity="danger"
+							class="delete-button"
+							(onClick)="openDeleteConfirmationDialog(item.key)"></p-button>
+					</div>
 				</p-popover>
 			</p-inputgroup-addon>
 		</p-inputgroup>

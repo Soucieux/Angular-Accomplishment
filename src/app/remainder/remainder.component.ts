@@ -41,7 +41,8 @@ export class RemainderComponent {
 	private readonly className = 'RemainderComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
-	private dialogComponentContainer!: ViewContainerRef;
+    private dialogComponentContainer!: ViewContainerRef;
+    @ViewChild('op2') op2!: any;
 	private isLoggedIn!: boolean;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
@@ -53,7 +54,8 @@ export class RemainderComponent {
 	protected updatedSecondTable!: any[];
 	protected originalSecondTable!: any[];
 	protected updatedThirdTable!: any[];
-	protected originalThirdTable!: any[];
+    protected originalThirdTable!: any[];
+    protected activeItem!: any;
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
 	protected thirdSub?: Subscription;
@@ -307,7 +309,13 @@ export class RemainderComponent {
 			`Are you sure you want to delete this entry?`,
 			`Delete`
 		);
-	}
+    }
+    
+    protected openPopover(event: Event, item: any) {
+        this.activeItem = item;
+        this.op2.toggle(event);
+        
+    }
 
 	////////////////////////////////COMMON METHODS////////////////////////////////
 

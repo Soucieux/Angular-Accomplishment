@@ -50,10 +50,10 @@ export class RemainderComponent {
 	protected updatedFirstTable!: any[];
 	protected currentDay!: number;
 	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
-	protected originalSecondTable!: any[];
 	protected updatedSecondTable!: any[];
-	protected originalThirdTable!: any[];
+	protected originalSecondTable!: any[];
 	protected updatedThirdTable!: any[];
+	protected originalThirdTable!: any[];
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
 	protected thirdSub?: Subscription;
@@ -75,7 +75,7 @@ export class RemainderComponent {
 			this.currentDay = new Date().getDate();
 
 			// Get the data of the first table
-			this.firstSub = this.firebaseService.getRemainderTableDetails(FIRST_TABLE).subscribe((rows) => {
+			this.firstSub = this.firebaseService.getFirstRemainderTableDetails().subscribe((rows) => {
 				// Need deep copy here so that we are not copying references
 				this.originalFirstTable = structuredClone(rows);
 				this.updatedFirstTable = structuredClone(rows);
@@ -94,15 +94,15 @@ export class RemainderComponent {
 			});
 
 			// Get the data of the second table
-			this.secondSub = this.firebaseService.getRemainderTableDetails(SECOND_TABLE).subscribe((rows) => {
-				this.originalSecondTable = structuredClone(rows);
+			this.secondSub = this.firebaseService.getSecondRemainderTableDetails().subscribe((rows) => {
 				this.updatedSecondTable = structuredClone(rows);
+				this.originalSecondTable = structuredClone(rows);
 			});
 
 			// Get the data of the third table
-			this.thirdSub = this.firebaseService.getRemainderTableDetails(THIRD_TABLE).subscribe((rows) => {
-				this.originalThirdTable = structuredClone(rows);
+			this.thirdSub = this.firebaseService.getThirdRemainderTableDetails().subscribe((rows) => {
 				this.updatedThirdTable = structuredClone(rows);
+				this.originalThirdTable = structuredClone(rows);
 			});
 		}
 	}
@@ -264,52 +264,45 @@ export class RemainderComponent {
 		event.preventDefault();
 	}
 
-	protected updateDebt(index: number) {
-		this.updatedSecondTable[index].content.debt =
-			Math.round((this.updatedSecondTable[index].content.debt - 998.05) * 100) / 100;
-		this.updateTable(SECOND_TABLE, index, 'debt');
+	protected updateDebt(entryKey: string, currentDebt: number) {
+		this.findUpdatedObject(SECOND_TABLE, entryKey).debt = Math.round((currentDebt - 998.05) * 100) / 100;
+		this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
 	}
 
-	protected setDefaultDebt(rowIndex: number) {
-		if (this.updatedSecondTable[rowIndex].content.paid) {
-			this.updatedSecondTable[rowIndex].content.original =
-				this.updatedSecondTable[rowIndex].content.debt;
-			this.updatedSecondTable[rowIndex].content.paid = false;
-			this.firebaseService.updateRemainderTable(
-				SECOND_TABLE,
-				rowIndex,
-				'content',
-				this.updatedSecondTable[rowIndex].content
-			);
+	protected setDefaultDebt(entryKey: string, isPaid: boolean) {
+		const existingRecord = this.findUpdatedObject(SECOND_TABLE, entryKey);
+		if (isPaid) {
+			const newRecord = {
+				original: existingRecord.debt,
+				paid: false
+			};
+			this.firebaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
 		} else {
-			this.updatedSecondTable[rowIndex].content.debt =
-				this.updatedSecondTable[rowIndex].content.original;
-			this.updateTable(SECOND_TABLE, rowIndex, 'debt');
+			existingRecord.debt = existingRecord.original;
+			this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
 		}
 	}
 
 	///////////////////////////////////THIRD TABLE///////////////////////////////////
-	protected updateLink(index: number) {
-		let linkLower = this.updatedThirdTable[index].link.toLowerCase();
-		if (linkLower.startsWith('www.')) {
-			linkLower = 'https://' + linkLower;
-		} else if (linkLower.startsWith('http://')) {
-			linkLower = linkLower;
+	protected updateLink(entryKey: string, link: string) {
+		let linkInLowerCase = link.toLowerCase();
+		if (linkInLowerCase.startsWith('www.')) {
+			linkInLowerCase = 'https://' + linkInLowerCase;
+		} else if (linkInLowerCase.startsWith('https://') || linkInLowerCase.startsWith('http://')) {
+			linkInLowerCase = linkInLowerCase;
 		} else {
-			linkLower = 'https://www.' + linkLower;
+			linkInLowerCase = 'https://www.' + linkInLowerCase;
 		}
-
-		this.updatedThirdTable[index].link = linkLower;
-
-		this.updateTable(THIRD_TABLE, index, 'link');
+		this.findUpdatedObject(THIRD_TABLE, entryKey).link = linkInLowerCase;
+		this.updateTableSingleValue(THIRD_TABLE, entryKey, 'link');
 	}
 
-	protected openDeleteConfirmationDialog(index: number) {
+	protected openDeleteConfirmationDialog(key: string) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'delete',
 			() => {
-				this.firebaseService.removeRecordFromRemainderTable(THIRD_TABLE, index);
+				this.firebaseService.removeRecordFromRemainderTable(THIRD_TABLE, key);
 			},
 			`Are you sure you want to delete this entry?`,
 			`Delete`
@@ -318,25 +311,31 @@ export class RemainderComponent {
 
 	////////////////////////////////COMMON METHODS////////////////////////////////
 
-	protected updateTable(tableName: string, index: number, key: string) {
-		const newValue =
-			tableName === SECOND_TABLE
-				? this.updatedSecondTable[index].content[key]
-				: this.updatedThirdTable[index][key];
-		if (
-			(tableName === SECOND_TABLE && newValue !== this.originalSecondTable[index].content[key]) ||
-			(tableName === THIRD_TABLE && newValue !== this.originalThirdTable[index][key])
-		) {
-			this.firebaseService.updateRemainderTable(tableName, index, key, newValue);
+	protected updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
+		const newValue = this.findUpdatedObject(tableName, entryKey)[valueKey];
+		if (newValue !== this.findOriginalObject(tableName, entryKey)[valueKey]) {
+			this.firebaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue);
 		}
 	}
 
-	protected updateTableWithNewDate(tableName: string, index: number, date: Date, item: any) {
-		if (tableName == SECOND_TABLE) {
-			item.content.date = date.toISOString().slice(0, 10);
-		} else if (tableName == THIRD_TABLE) {
-			item.date = date.toISOString().slice(0, 10);
+	protected updateTableWithNewDate(tableName: string, entryKey: string, date: Date) {
+		this.findUpdatedObject(tableName, entryKey).date = date.toISOString().slice(0, 10);
+		this.updateTableSingleValue(tableName, entryKey, 'date');
+	}
+
+	private findUpdatedObject(tableName: string, entryKey: string) {
+		if (tableName === SECOND_TABLE) {
+			return this.updatedSecondTable.find((item) => item.key === entryKey).content;
+		} else if (tableName === THIRD_TABLE) {
+			return this.updatedThirdTable.find((item) => item.key === entryKey);
 		}
-		this.updateTable(tableName, index, 'date');
+	}
+
+	private findOriginalObject(tableName: string, entryKey: string) {
+		if (tableName === SECOND_TABLE) {
+			return this.originalSecondTable.find((item) => item.key === entryKey).content;
+		} else if (tableName === THIRD_TABLE) {
+			return this.originalThirdTable.find((item) => item.key === entryKey);
+		}
 	}
 }

@@ -69,9 +69,9 @@
 			<p-skeleton height="50px" />
 			<p-skeleton height="25px" />
 		</div>
-		} } @else { @for(item of updatedSecondTable; let index = $index; track item.key){
+		} } @else { @for(item of updatedSecondTable; let index = $index; track item.name){
 		<div class="second-table-cell">
-			<div class="second-table-header">{{ item.key }}</div>
+			<div class="second-table-header">{{ item.name }}</div>
 			<p-inputgroup>
 				<p-inputgroup-addon>
 					<i class="pi pi-dollar" style="color: black; font-weight: bold"></i
@@ -83,13 +83,13 @@
 					[maxFractionDigits]="2"
 					[step]="0.01"
 					[(ngModel)]="item.content.debt"
-					(onBlur)="updateTable(SECOND_TABLE, index, 'debt')"
-					(keyup.enter)="updateTable(SECOND_TABLE, index, 'debt')" />
+					(onBlur)="updateTableSingleValue(SECOND_TABLE, item.key, 'debt')"
+					(keyup.enter)="updateTableSingleValue(SECOND_TABLE, item.key, 'debt')" />
 				<p-inputgroup-addon
 					><p-button
 						icon="pi pi-minus"
 						severity="secondary"
-						(onClick)="updateDebt(index)"
+						(onClick)="updateDebt(item.key, item.content.debt)"
 						pTooltip="Decrement by 998.05"
 						tooltipPosition="top"></p-button>
 				</p-inputgroup-addon>
@@ -102,14 +102,14 @@
 					[(ngModel)]="item.content.date"
 					(keydown)="preventKeyin($event)"
 					[disabled]="!item.content.paid"
-					(onSelect)="updateTableWithNewDate(SECOND_TABLE, index, $event, item)" />
+					(onSelect)="updateTableWithNewDate(SECOND_TABLE, item.key, $event)" />
 				<p-inputgroup-addon
 					><p-button
 						[icon]="item.content.paid ? 'pi pi-check' : 'pi pi-replay'"
 						severity="secondary"
 						[pTooltip]="item.content.paid ? 'Set default debt' : 'Reset debt to default'"
 						tooltipPosition="top"
-						(onClick)="setDefaultDebt(index)"></p-button
+						(onClick)="setDefaultDebt(item.key, item.content.paid)"></p-button
 				></p-inputgroup-addon>
 			</p-inputgroup>
 			<div class="second-table-checkbox">
@@ -117,7 +117,7 @@
 					[inputId]="item.key"
 					[(ngModel)]="item.content.paid"
 					[binary]="true"
-					(onChange)="updateTable(SECOND_TABLE, index, 'paid')" />
+					(onChange)="updateTableSingleValue(SECOND_TABLE, item.key, 'paid')" />
 				<label [for]="item.key" [style]="item.content.paid ? 'color:green' : 'color:red'">{{
 					item.content.paid ? 'Paid' : 'Not yet paid ($' + item.content.original + ')'
 				}}</label>
@@ -126,15 +126,15 @@
 		} }
 	</div>
 	<div class="third-table">
-		@for(item of updatedThirdTable; let index = $index; track index){
+		@for(item of updatedThirdTable; track item.key){
 		<p-inputgroup class="third-table-cell">
 			<input
 				type="text"
 				pInputText
 				[(ngModel)]="item.content"
 				fluid
-				(blur)="updateTable(THIRD_TABLE, index, 'content')"
-				(keyup.enter)="updateTable(THIRD_TABLE, index, 'content')" />
+				(blur)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')"
+				(keyup.enter)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')" />
 			@if(item.date){
 			<p-inputgroup-addon>
 				<i
@@ -156,29 +156,38 @@
 			<p-inputgroup-addon>
 				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="op2.toggle($event)"> </p-button>
 				<p-popover [focusOnShow]="false" #op2>
-					<span>Link</span>
-					<p-inputgroup>
-						<p-inputgroup-addon>
-							<i class="pi pi-link" style="color: black"></i>
-						</p-inputgroup-addon>
-						<input type="text" pInputText [(ngModel)]="item.link" (blur)="updateLink(index)" />
-					</p-inputgroup>
-					<span>Date</span>
-					<p-inputgroup>
-						<p-inputgroup-addon>
-							<i class="pi pi-calendar" style="color: black"></i>
-						</p-inputgroup-addon>
-						<p-datepicker
-							[appendTo]="'body'"
-							dateFormat="yy-mm-dd"
-							[(ngModel)]="item.date"
-							(onSelect)="updateTableWithNewDate(THIRD_TABLE, index, $event, item)">
-						</p-datepicker>
-					</p-inputgroup>
+					<div class="popover-item">
+						<span class="popover-label">Website Link</span>
+						<p-inputgroup class="popover-inputgroup">
+							<p-inputgroup-addon>
+								<i class="pi pi-link" style="color: black"></i>
+							</p-inputgroup-addon>
+							<input
+								type="text"
+								pInputText
+								[(ngModel)]="item.link"
+								(blur)="updateLink(item.key, item.link)"
+                                (keyup.enter)="updateLink(item.key, item.link)" />
+						</p-inputgroup>
+					</div>
+					<div class="popover-item">
+						<span class="popover-label">Due Date</span>
+						<p-inputgroup class="popover-inputgroup">
+							<p-inputgroup-addon>
+								<i class="pi pi-calendar" style="color: black"></i>
+							</p-inputgroup-addon>
+							<p-datepicker
+								[appendTo]="'body'"
+								dateFormat="yy-mm-dd"
+								[(ngModel)]="item.date"
+								(onSelect)="updateTableWithNewDate(THIRD_TABLE, item.key, $event)">
+							</p-datepicker>
+						</p-inputgroup>
+					</div>
 					<p-button
 						icon="pi pi-times"
 						severity="danger"
-						(onClick)="openDeleteConfirmationDialog(index)"></p-button>
+						(onClick)="openDeleteConfirmationDialog(item.key)"></p-button>
 				</p-popover>
 			</p-inputgroup-addon>
 		</p-inputgroup>

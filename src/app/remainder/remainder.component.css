@@ -121,16 +121,33 @@
 	gap: 5px;
 }
 
-.third-table-cell {
-	padding: 5px;
-}
-
-:host ::ng-deep .p-datepicker input {
-	width: 100%;
-}
-
 .second-table-checkbox {
 	padding-top: 5px;
 	display: flex;
 	gap: 10px;
+}
+
+.third-table-cell {
+	padding: 5px;
+}
+
+::ng-deep .p-popover-content {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.popover-item {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.popover-inputgroup {
+	height: 30px;
+	width: 300px;
+}
+
+.popover-label {
+	font-size: 14px;
 }

@@ -154,52 +154,69 @@
 			></p-inputgroup-addon>
 			}
 			<p-inputgroup-addon>
-				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="openPopover($event, item)"> </p-button>
+				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="openPopover($event, item)">
+				</p-button>
 			</p-inputgroup-addon>
 		</p-inputgroup>
-    }
-    <p-popover [focusOnShow]="false" #op2>
-        @if(activeItem){
-        <div class="popover-item">
-            <span class="popover-label">Website Link</span>
-            <p-inputgroup class="popover-inputgroup">
-                <p-inputgroup-addon>
-                    <i class="pi pi-link" style="color: black"></i>
-                </p-inputgroup-addon>
-                <input
-                    type="text"
-                    pInputText
-                    [(ngModel)]="activeItem.link"
-                    style="font-size: 15px"
-                    (blur)="updateLink(activeItem.key, activeItem.link)"
-                    (keyup.enter)="updateLink(activeItem.key, activeItem.link)" />
-            </p-inputgroup>
-        </div>
-        <div class="popover-item">
-            <span class="popover-label">Due Date</span>
-            <p-inputgroup class="popover-inputgroup">
-                <p-inputgroup-addon>
-                    <i class="pi pi-calendar" style="color: black"></i>
-                </p-inputgroup-addon>
-                <p-datepicker
-                    [appendTo]="'body'"
-                    dateFormat="yy-mm-dd"
-                    [(ngModel)]="activeItem.date"
-                    class="datapicker"
-                    (onSelect)="updateTableWithNewDate(THIRD_TABLE, activeItem.key, $event)">
-                </p-datepicker>
-            </p-inputgroup>
-        </div>
-        <div class="popover-item">
-            <p-button
-                label="Remove Entry"
-                icon="pi pi-times"
-                severity="danger"
-                class="delete-button"
-                (onClick)="openDeleteConfirmationDialog(activeItem.key)"></p-button>
-        </div>
-    }
-    </p-popover>
+		}
+
+		<!-- Extra input group for entry creation -->
+		<p-inputgroup class="third-table-cell">
+			<input type="text" pInputText fluid placeholder="New entry" [(ngModel)]="newContent" />
+			<p-inputgroup-addon>
+				<p-button
+					icon="pi pi-plus"
+					severity="secondary"
+					(onClick)="openPopover($event, null)"></p-button>
+			</p-inputgroup-addon>
+		</p-inputgroup>
+		<!-- Reusable popover -->
+		<p-popover [focusOnShow]="false" #op2>
+			@if(activeItem){
+			<div class="popover-item">
+				<span class="popover-label">Website Link</span>
+				<p-inputgroup class="popover-inputgroup">
+					<p-inputgroup-addon>
+						<i class="pi pi-link" style="color: black"></i>
+					</p-inputgroup-addon>
+					<input
+						type="text"
+						pInputText
+						[(ngModel)]="activeItem.link"
+						style="font-size: 15px"
+						(blur)="activeItem.key ? updateLink(activeItem.key, activeItem.link) : ''"
+						(keyup.enter)="activeItem.key ? updateLink(activeItem.key, activeItem.link) : ''" />
+				</p-inputgroup>
+			</div>
+			<div class="popover-item">
+				<span class="popover-label">Due Date</span>
+				<p-inputgroup class="popover-inputgroup">
+					<p-inputgroup-addon>
+						<i class="pi pi-calendar" style="color: black"></i>
+					</p-inputgroup-addon>
+					<p-datepicker
+						[appendTo]="'body'"
+						dateFormat="yy-mm-dd"
+						[(ngModel)]="activeItem.date"
+						class="datapicker"
+						(onSelect)="
+							activeItem.key ? updateTableWithNewDate(THIRD_TABLE, activeItem.key, $event) : ''
+						">
+					</p-datepicker>
+				</p-inputgroup>
+			</div>
+			<div class="popover-item">
+				<p-button
+					[label]="activeItem.key ? 'Remove Entry' : 'Add Entry'"
+					[icon]="activeItem.key ? 'pi pi-times' : 'pi pi-plus'"
+					[severity]="activeItem.key ? 'danger' : 'success'"
+					class="submit-button"
+					(onClick)="
+						activeItem.key ? openDeleteConfirmationDialog(activeItem.key) : addNewEntry()
+					"></p-button>
+			</div>
+			}
+		</p-popover>
 	</div>
 </div>
 <ng-container #dialogComponentContainer></ng-container>

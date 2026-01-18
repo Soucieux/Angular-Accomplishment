@@ -41,8 +41,8 @@ export class RemainderComponent {
 	private readonly className = 'RemainderComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
-    private dialogComponentContainer!: ViewContainerRef;
-    @ViewChild('op2') op2!: any;
+	private dialogComponentContainer!: ViewContainerRef;
+	@ViewChild('op2') op2!: any;
 	private isLoggedIn!: boolean;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
@@ -54,13 +54,14 @@ export class RemainderComponent {
 	protected updatedSecondTable!: any[];
 	protected originalSecondTable!: any[];
 	protected updatedThirdTable!: any[];
-    protected originalThirdTable!: any[];
-    protected activeItem!: any;
+	protected originalThirdTable!: any[];
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
 	protected thirdSub?: Subscription;
 	protected SECOND_TABLE: string = SECOND_TABLE;
 	protected THIRD_TABLE: string = THIRD_TABLE;
+	protected activeItem: any;
+	protected newContent: string = '';
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -309,13 +310,36 @@ export class RemainderComponent {
 			`Are you sure you want to delete this entry?`,
 			`Delete`
 		);
-    }
-    
-    protected openPopover(event: Event, item: any) {
-        this.activeItem = item;
-        this.op2.toggle(event);
-        
-    }
+	}
+
+	protected addNewEntry() {
+		if (this.newContent.trim() !== '') {
+			let newValues = Object.fromEntries(
+				Object.entries(this.activeItem).filter(([_, value]) => value !== '')
+			);
+			newValues['content'] = this.newContent;
+			this.firebaseService.addNewRecordForRemainderTable(THIRD_TABLE, newValues);
+			this.newContent = '';
+			this.op2.hide();
+		}
+	}
+
+	protected openPopover(event: Event, item: any) {
+		if (item == null) {
+			this.activeItem = {
+				link: '',
+				date: ''
+			};
+		} else {
+			this.activeItem = item;
+		}
+
+		this.op2.hide();
+
+		setTimeout(() => {
+			this.op2.show(event);
+		}, 140);
+	}
 
 	////////////////////////////////COMMON METHODS////////////////////////////////
 

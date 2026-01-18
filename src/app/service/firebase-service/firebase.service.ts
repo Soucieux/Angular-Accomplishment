@@ -472,6 +472,7 @@ export class FirebaseService {
 						key: string;
 						content: string;
 						date: string;
+						link: string;
 					};
 				})
 			)
@@ -527,6 +528,14 @@ export class FirebaseService {
 	public async removeRecordFromRemainderTable(tableName: string, key: string) {
 		return remove(dbRef(this.db, `remainder/${tableName}/${key}`)).then(() => {
 			LOG.info(this.className, 'Remainder table record has been removed');
+		});
+	}
+
+	public async addNewRecordForRemainderTable(tableName: string, newRecord: any) {
+		await push(dbRef(this.db, `remainder/${tableName}`), {
+			...newRecord
+		}).then(() => {
+			LOG.info(this.className, 'Remainder table has been updated');
 		});
 	}
 }

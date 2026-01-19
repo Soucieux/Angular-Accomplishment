@@ -91,11 +91,15 @@
 }
 
 .second-table,
+.third-table-wrapper {
+	background-color: white;
+	border-radius: 10px;
+}
+
+.second-table,
 .third-table {
 	display: grid;
-	background-color: white;
 	padding: 10px;
-	border-radius: 10px;
 	overflow: hidden;
 	height: fit-content;
 }

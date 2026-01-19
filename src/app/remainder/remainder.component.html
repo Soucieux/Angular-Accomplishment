@@ -125,98 +125,129 @@
 		</div>
 		} }
 	</div>
-	<div class="third-table">
-		@for(item of updatedThirdTable; track item.key){
-		<p-inputgroup class="third-table-cell">
-			<input
-				type="text"
-				pInputText
-				[(ngModel)]="item.content"
-				fluid
-				(blur)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')"
-				(keyup.enter)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')" />
-			@if(item.date){
-			<p-inputgroup-addon>
-				<i
-					class="pi pi-clock"
-					[style]="{
-						color: 'black'
-					}"
-					[pTooltip]="isHoverCapable ? item.date : ''"
-					(click)="!isHoverCapable && op.toggle($event)"
-					tooltipPosition="top"></i>
-				<p-popover #op>{{ item.date }}</p-popover>
-			</p-inputgroup-addon>
-			} @if(item.link){
-			<p-inputgroup-addon
-				><a [href]="item.link" target="_blank" rel="noopener noreferrer"
-					><i class="pi pi-link" style="color: black"></i></a
-			></p-inputgroup-addon>
+	<div class="third-table-wrapper">
+		<div class="third-table">
+			@for(item of pagedThirdTable; track item.key){
+			<p-inputgroup class="third-table-cell">
+				<input
+					type="text"
+					pInputText
+					[(ngModel)]="item.content"
+					fluid
+					(blur)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')"
+					(keyup.enter)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')" />
+				@if(item.date){
+				<p-inputgroup-addon>
+					<i
+						class="pi pi-clock"
+						[style]="{
+							color: 'black'
+						}"
+						[pTooltip]="isHoverCapable ? item.date : ''"
+						(click)="!isHoverCapable && op.toggle($event)"
+						tooltipPosition="top"></i>
+					<p-popover #op>{{ item.date }}</p-popover>
+				</p-inputgroup-addon>
+				} @if(item.link){
+				<p-inputgroup-addon
+					><a [href]="item.link" target="_blank" rel="noopener noreferrer"
+						><i class="pi pi-link" style="color: black"></i></a
+				></p-inputgroup-addon>
+				}
+				<p-inputgroup-addon>
+					<p-button icon="pi pi-pencil" severity="secondary" (onClick)="openPopover($event, item)">
+					</p-button>
+				</p-inputgroup-addon>
+			</p-inputgroup>
 			}
-			<p-inputgroup-addon>
-				<p-button icon="pi pi-pencil" severity="secondary" (onClick)="openPopover($event, item)">
-				</p-button>
-			</p-inputgroup-addon>
-		</p-inputgroup>
-		}
 
-		<!-- Extra input group for entry creation -->
-		<p-inputgroup class="third-table-cell">
-			<input type="text" pInputText fluid placeholder="New entry" [(ngModel)]="newContent" />
-			<p-inputgroup-addon>
-				<p-button
-					icon="pi pi-plus"
-					severity="secondary"
-					(onClick)="openPopover($event, null)"></p-button>
-			</p-inputgroup-addon>
-		</p-inputgroup>
-		<!-- Reusable popover -->
-		<p-popover [focusOnShow]="false" #op2>
-			@if(activeItem){
-			<div class="popover-item">
-				<span class="popover-label">Website Link</span>
-				<p-inputgroup class="popover-inputgroup">
-					<p-inputgroup-addon>
-						<i class="pi pi-link" style="color: black"></i>
-					</p-inputgroup-addon>
-					<input
-						type="text"
-						pInputText
-						[(ngModel)]="activeItem.link"
-						style="font-size: 15px"
-						(blur)="activeItem.key ? updateLink(activeItem.key, activeItem.link) : ''"
-						(keyup.enter)="activeItem.key ? updateLink(activeItem.key, activeItem.link) : ''" />
-				</p-inputgroup>
-			</div>
-			<div class="popover-item">
-				<span class="popover-label">Due Date</span>
-				<p-inputgroup class="popover-inputgroup">
-					<p-inputgroup-addon>
-						<i class="pi pi-calendar" style="color: black"></i>
-					</p-inputgroup-addon>
-					<p-datepicker
-						[appendTo]="'body'"
-						dateFormat="yy-mm-dd"
-						[(ngModel)]="activeItem.date"
-						class="datapicker"
-						(onSelect)="
-							activeItem.key ? updateTableWithNewDate(THIRD_TABLE, activeItem.key, $event) : ''
-						">
-					</p-datepicker>
-				</p-inputgroup>
-			</div>
-			<div class="popover-item">
-				<p-button
-					[label]="activeItem.key ? 'Remove Entry' : 'Add Entry'"
-					[icon]="activeItem.key ? 'pi pi-times' : 'pi pi-plus'"
-					[severity]="activeItem.key ? 'danger' : 'success'"
-					class="submit-button"
-					(onClick)="
-						activeItem.key ? openDeleteConfirmationDialog(activeItem.key) : addNewEntry()
-					"></p-button>
-			</div>
-			}
-		</p-popover>
+			<!-- Extra input group for entry creation -->
+			<p-inputgroup class="third-table-cell">
+				<input
+					type="text"
+					pInputText
+					fluid
+					placeholder="New entry"
+					[(ngModel)]="thirdTableNewContent" />
+				<p-inputgroup-addon>
+					<p-button
+						icon="pi pi-plus"
+						severity="secondary"
+						(onClick)="openPopover($event, null)"></p-button>
+				</p-inputgroup-addon>
+			</p-inputgroup>
+		</div>
+
+		<!-- Paginator -->
+		@if(originalThirdTable){
+		<p-paginator
+			[first]="thirdTableIndexOfFirstItem"
+			[rows]="thirdTableItemsPerPage"
+			[totalRecords]="originalThirdTable.length"
+			[showPageLinks]="true"
+			(onPageChange)="thirdTablePageChange($event)">
+		</p-paginator>
+		}
 	</div>
+
+	<!-- Reusable popover -->
+	<p-popover [focusOnShow]="false" #op2>
+		@if(thirdTableActiveItem){
+		<div class="popover-item">
+			<span class="popover-label">Website Link</span>
+			<p-inputgroup class="popover-inputgroup">
+				<p-inputgroup-addon>
+					<i class="pi pi-link" style="color: black"></i>
+				</p-inputgroup-addon>
+				<input
+					type="text"
+					pInputText
+					[(ngModel)]="thirdTableActiveItem.link"
+					style="font-size: 15px"
+					(blur)="
+						thirdTableActiveItem.key
+							? updateLink(thirdTableActiveItem.key, thirdTableActiveItem.link)
+							: ''
+					"
+					(keyup.enter)="
+						thirdTableActiveItem.key
+							? updateLink(thirdTableActiveItem.key, thirdTableActiveItem.link)
+							: ''
+					" />
+			</p-inputgroup>
+		</div>
+		<div class="popover-item">
+			<span class="popover-label">Due Date</span>
+			<p-inputgroup class="popover-inputgroup">
+				<p-inputgroup-addon>
+					<i class="pi pi-calendar" style="color: black"></i>
+				</p-inputgroup-addon>
+				<p-datepicker
+					[appendTo]="'body'"
+					dateFormat="yy-mm-dd"
+					[(ngModel)]="thirdTableActiveItem.date"
+					class="datapicker"
+					(onSelect)="
+						thirdTableActiveItem.key
+							? updateTableWithNewDate(THIRD_TABLE, thirdTableActiveItem.key, $event)
+							: ''
+					">
+				</p-datepicker>
+			</p-inputgroup>
+		</div>
+		<div class="popover-item">
+			<p-button
+				[label]="thirdTableActiveItem.key ? 'Remove Entry' : 'Add Entry'"
+				[icon]="thirdTableActiveItem.key ? 'pi pi-times' : 'pi pi-plus'"
+				[severity]="thirdTableActiveItem.key ? 'danger' : 'success'"
+				class="submit-button"
+				(onClick)="
+					thirdTableActiveItem.key
+						? openDeleteConfirmationDialog(thirdTableActiveItem.key)
+						: addNewEntry()
+				"></p-button>
+		</div>
+		}
+	</p-popover>
 </div>
 <ng-container #dialogComponentContainer></ng-container>

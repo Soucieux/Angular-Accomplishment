@@ -12,6 +12,7 @@ import { Checkbox } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { PopoverModule } from 'primeng/popover';
+import { PaginatorModule } from 'primeng/paginator';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
 import { Subscription } from 'rxjs';
 import { LOG } from '../app.logs';
@@ -32,6 +33,7 @@ import { DialogService } from '../service/dialog-service/dialog.service';
 		InputNumber,
 		Checkbox,
 		Tooltip,
+		PaginatorModule,
 		PopoverModule
 	],
 	templateUrl: './remainder.component.html',
@@ -53,15 +55,17 @@ export class RemainderComponent {
 	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
 	protected updatedSecondTable!: any[];
 	protected originalSecondTable!: any[];
-	protected updatedThirdTable!: any[];
+	protected pagedThirdTable!: any[];
 	protected originalThirdTable!: any[];
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
 	protected thirdSub?: Subscription;
 	protected SECOND_TABLE: string = SECOND_TABLE;
 	protected THIRD_TABLE: string = THIRD_TABLE;
-	protected activeItem: any;
-	protected newContent: string = '';
+	protected thirdTableActiveItem: any;
+	protected thirdTableNewContent: string = '';
+	protected thirdTableIndexOfFirstItem: number = 0;
+	protected thirdTableItemsPerPage: number = 9;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -104,8 +108,8 @@ export class RemainderComponent {
 
 			// Get the data of the third table
 			this.thirdSub = this.firebaseService.getThirdRemainderTableDetails().subscribe((rows) => {
-				this.updatedThirdTable = structuredClone(rows);
 				this.originalThirdTable = structuredClone(rows);
+				this.pagedThirdTable = this.updatePagedThirdTable();
 			});
 		}
 	}
@@ -287,6 +291,14 @@ export class RemainderComponent {
 	}
 
 	///////////////////////////////////THIRD TABLE///////////////////////////////////
+	protected updatePagedThirdTable() {
+		return structuredClone(
+			this.originalThirdTable.slice(
+				this.thirdTableIndexOfFirstItem,
+				this.thirdTableIndexOfFirstItem + this.thirdTableItemsPerPage
+			)
+		);
+	}
 	protected updateLink(entryKey: string, link: string) {
 		let linkInLowerCase = link.toLowerCase();
 		if (linkInLowerCase.startsWith('www.')) {
@@ -313,25 +325,25 @@ export class RemainderComponent {
 	}
 
 	protected addNewEntry() {
-		if (this.newContent.trim() !== '') {
+		if (this.thirdTableNewContent.trim() !== '') {
 			let newValues = Object.fromEntries(
-				Object.entries(this.activeItem).filter(([_, value]) => value !== '')
+				Object.entries(this.thirdTableActiveItem).filter(([_, value]) => value !== '')
 			);
-			newValues['content'] = this.newContent;
+			newValues['content'] = this.thirdTableNewContent;
 			this.firebaseService.addNewRecordForRemainderTable(THIRD_TABLE, newValues);
-			this.newContent = '';
+			this.thirdTableNewContent = '';
 			this.op2.hide();
 		}
 	}
 
 	protected openPopover(event: Event, item: any) {
 		if (item == null) {
-			this.activeItem = {
+			this.thirdTableActiveItem = {
 				link: '',
 				date: ''
 			};
 		} else {
-			this.activeItem = item;
+			this.thirdTableActiveItem = item;
 		}
 
 		this.op2.hide();
@@ -339,6 +351,12 @@ export class RemainderComponent {
 		setTimeout(() => {
 			this.op2.show(event);
 		}, 140);
+	}
+
+	thirdTablePageChange(event: any) {
+		this.thirdTableIndexOfFirstItem = event.first;
+		this.thirdTableItemsPerPage = event.rows;
+		this.pagedThirdTable = this.updatePagedThirdTable();
 	}
 
 	////////////////////////////////COMMON METHODS////////////////////////////////
@@ -359,7 +377,7 @@ export class RemainderComponent {
 		if (tableName === SECOND_TABLE) {
 			return this.updatedSecondTable.find((item) => item.key === entryKey).content;
 		} else if (tableName === THIRD_TABLE) {
-			return this.updatedThirdTable.find((item) => item.key === entryKey);
+			return this.pagedThirdTable.find((item) => item.key === entryKey);
 		}
 	}
 

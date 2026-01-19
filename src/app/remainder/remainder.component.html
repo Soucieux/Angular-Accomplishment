@@ -126,6 +126,11 @@
 		} }
 	</div>
 	<div class="third-table-wrapper">
+		@if(loading){ @for (_ of [0,1,2,3,4,5]; track $index) {
+		<div class="second-table-cell">
+			<p-skeleton height="45px" />
+		</div>
+		} }@else{
 		<div class="third-table">
 			@for(item of pagedThirdTable; track item.key){
 			<p-inputgroup class="third-table-cell">
@@ -187,7 +192,7 @@
 			[showPageLinks]="true"
 			(onPageChange)="thirdTablePageChange($event)">
 		</p-paginator>
-		}
+		} }
 	</div>
 
 	<!-- Reusable popover -->

@@ -87,8 +87,6 @@ export class RemainderComponent {
 				this.originalFirstTable = structuredClone(rows);
 				this.updatedFirstTable = structuredClone(rows);
 
-				this.loading = false;
-
 				// Loop through to determine disabled fields
 				for (let index = 0; index < this.updatedFirstTable.length; index++) {
 					for (const field of this.fields) {
@@ -110,6 +108,7 @@ export class RemainderComponent {
 			this.thirdSub = this.firebaseService.getThirdRemainderTableDetails().subscribe((rows) => {
 				this.originalThirdTable = structuredClone(rows);
 				this.pagedThirdTable = this.updatePagedThirdTable();
+				this.loading = false;
 			});
 		}
 	}
@@ -355,7 +354,6 @@ export class RemainderComponent {
 
 	thirdTablePageChange(event: any) {
 		this.thirdTableIndexOfFirstItem = event.first;
-		this.thirdTableItemsPerPage = event.rows;
 		this.pagedThirdTable = this.updatePagedThirdTable();
 	}
 

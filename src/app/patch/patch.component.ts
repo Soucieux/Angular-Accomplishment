@@ -17,11 +17,12 @@ import {
 	Utilities
 } from '../app.utilities';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
-import { Observable, take } from 'rxjs';
+import { map, Observable, shareReplay, take, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../app.logs';
 import { DialogService } from '../service/dialog-service/dialog.service';
 import { CheckboxModule } from 'primeng/checkbox';
+import { PaginatorModule } from 'primeng/paginator';
 
 @Component({
 	selector: 'patch',
@@ -34,6 +35,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 		Select,
 		FormsModule,
 		CommonModule,
+		PaginatorModule,
 		CheckboxModule
 	],
 	templateUrl: './patch.component.html',
@@ -49,7 +51,11 @@ export class PatchComponent {
 	protected severity: { severity: string }[] | undefined;
 	protected bugSeverity: { severity: string }[] | undefined;
 	protected patchNotes$!: Observable<any[]>;
-	protected skeletonRows = Array.from({ length: 10 });
+	protected pagedPatchNotes$!: Observable<any[]>;
+	protected patchNotesLength$!: Observable<number>;
+	protected indexOfFirstItem = 0;
+	protected itemsPerPage = 8;
+	protected skeletonRows = Array.from({ length: this.itemsPerPage });
 	protected editedRows = new Map<string, any>();
 	protected newRecord = {
 		key: '',
@@ -73,11 +79,16 @@ export class PatchComponent {
 
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
-			this.patchNotes$ = this.firebaseService.getPatchNotes();
+			this.patchNotes$ = this.firebaseService.getPatchNotes().pipe(
+				tap(() => (this.loading = false)),
+				shareReplay(1)
+			);
 
-			this.patchNotes$.pipe(take(1)).subscribe(() => {
-				this.loading = false;
-			});
+			this.patchNotesLength$ = this.patchNotes$.pipe(map((notes) => notes.length));
+
+			this.pagedPatchNotes$ = this.patchNotes$.pipe(
+				map((notes) => notes.slice(this.indexOfFirstItem, this.indexOfFirstItem + this.itemsPerPage))
+			);
 		}
 
 		this.severity = [
@@ -112,8 +123,8 @@ export class PatchComponent {
 			changes.status = record.updated.status;
 		}
 
-        if (Object.keys(changes).length > 0) {
-            changes.timestamp = this.utilities.getCurrentFormattedTime(false);
+		if (Object.keys(changes).length > 0) {
+			changes.timestamp = this.utilities.getCurrentFormattedTime(false);
 			await this.firebaseService.updateNewRecordToPatchNotes(row.key, changes);
 		}
 
@@ -153,6 +164,13 @@ export class PatchComponent {
 			},
 			`Are you sure you want to delete this note?`,
 			`Delete Note`
+		);
+	}
+
+	protected pageChange(event: any) {
+		this.indexOfFirstItem = event.first;
+		this.pagedPatchNotes$ = this.patchNotes$.pipe(
+			map((notes) => notes.slice(this.indexOfFirstItem, this.indexOfFirstItem + this.itemsPerPage))
 		);
 	}
 

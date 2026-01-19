@@ -112,7 +112,8 @@ export class PatchComponent {
 			changes.status = record.updated.status;
 		}
 
-		if (Object.keys(changes).length > 0) {
+        if (Object.keys(changes).length > 0) {
+            changes.timestamp = this.utilities.getCurrentFormattedTime(false);
 			await this.firebaseService.updateNewRecordToPatchNotes(row.key, changes);
 		}
 

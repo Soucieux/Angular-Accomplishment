@@ -1,185 +1,197 @@
 <div class="container">
 	<h1>PATCH NOTES</h1>
-	<p-table
-		[value]="(patchNotes$ | async) ?? []"
-		[loading]="loading"
-		[showLoader]="false"
-		rowGroupMode="rowspan"
-		groupRowsBy="component"
-		class="table">
-		<ng-template pTemplate="header">
-			<tr>
-				<th class="component">Component</th>
-				<th class="element">Element</th>
-				<th class="details">Details</th>
-				<th class="status">Status</th>
-				<th class="timestamp">TimeStamp</th>
-				<th class="edit-button hide-on-mobile">Edit</th>
-			</tr>
-		</ng-template>
-		<ng-template pTemplate="loadingbody">
-			@for(_ of skeletonRows;track $index){
-			<tr>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
-				<td><p-skeleton /></td>
-			</tr>
-			}
-		</ng-template>
-		<ng-template pTemplate="body" let-row let-rowgroup="rowgroup" let-rowspan="rowspan">
-			<tr>
-				@if(rowgroup){
-				<td [attr.rowspan]="rowspan" class="component">
-					<div class="component-content">
-						@if(row.component === 'Entertainment'){
-						<span class="material-icons hide-on-mobile">tv</span>
-						} @else if(row.component ==='Home'){
-						<span class="material-icons hide-on-mobile">home</span>
-						} @else if(row.component ==='Patch Notes'){
-						<span class="material-symbols-outlined hide-on-mobile">note_stack</span>
-						} @else if(row.component ==='Login'){
-						<span class="pi pi-user hide-on-mobile"></span>
-						} @else if(row.component === 'Remainder'){
-						<span class="material-symbols-outlined nav-icon-mso">priority</span>
-						}
-						<span>{{ row.component }} </span>
-					</div>
-				</td>
+	<div class="wrapper">
+		<p-table
+			[value]="(pagedPatchNotes$ | async) ?? []"
+			[loading]="loading"
+			[showLoader]="false"
+			rowGroupMode="rowspan"
+			groupRowsBy="component"
+			class="table">
+			<ng-template pTemplate="header">
+				<tr>
+					<th class="component">Component</th>
+					<th class="element">Element</th>
+					<th class="details">Details</th>
+					<th class="status">Status</th>
+					<th class="timestamp">TimeStamp</th>
+					<th class="edit-button hide-on-mobile">Edit</th>
+				</tr>
+			</ng-template>
+			<ng-template pTemplate="loadingbody">
+				@for(_ of skeletonRows;track $index){
+				<tr>
+					<td><p-skeleton /></td>
+					<td><p-skeleton /></td>
+					<td><p-skeleton /></td>
+					<td><p-skeleton /></td>
+					<td><p-skeleton /></td>
+					<td><p-skeleton /></td>
+				</tr>
 				}
-
-				<td class="element">
-					@if(editedRows.has(row.key)){
-					<input
-						pInputText
-						[(ngModel)]="editedRows.get(row.key).updated.element"
-						class="input"
-						(keyup.enter)="completeEdit(row)" />
-					} @else{
-					{{ row.element }}
+			</ng-template>
+			<ng-template pTemplate="body" let-row let-rowgroup="rowgroup" let-rowspan="rowspan">
+				<tr>
+					@if(rowgroup){
+					<td [attr.rowspan]="rowspan" class="component">
+						<div class="component-content">
+							@if(row.component === 'Entertainment'){
+							<span class="material-icons hide-on-mobile">tv</span>
+							} @else if(row.component ==='Home'){
+							<span class="material-icons hide-on-mobile">home</span>
+							} @else if(row.component ==='Patch Notes'){
+							<span class="material-symbols-outlined hide-on-mobile">note_stack</span>
+							} @else if(row.component ==='Login'){
+							<span class="pi pi-user hide-on-mobile"></span>
+							} @else if(row.component === 'Remainder'){
+							<span class="material-symbols-outlined nav-icon-mso">priority</span>
+							}
+							<span>{{ row.component }} </span>
+						</div>
+					</td>
 					}
-				</td>
 
-				<td class="details">
-					@if(editedRows.has(row.key)){
-					<textarea
-						pTextarea
-						variant="filled"
-						fluid
-						[(ngModel)]="editedRows.get(row.key).updated.details"
-						class="input textarea-input"
-						(keyup.enter)="completeEdit(row)"></textarea>
-					} @else{
-					{{ row.details }}
-					}
-				</td>
+					<td class="element">
+						@if(editedRows.has(row.key)){
+						<input
+							pInputText
+							[(ngModel)]="editedRows.get(row.key).updated.element"
+							class="input"
+							(keyup.enter)="completeEdit(row)" />
+						} @else{
+						{{ row.element }}
+						}
+					</td>
 
-				<td class="status">
-					@if(editedRows.has(row.key)){
-					<p-select
-						optionLabel="severity"
-						optionValue="severity"
-						[options]="editedRows.get(row.key).original.isBug ? bugSeverity : severity"
-						[appendTo]="'body'"
-						panelStyleClass="dropdown-panel-font"
-						[(ngModel)]="editedRows.get(row.key).updated.status"
-						class="input"
-						(keyup.enter)="completeEdit(row)" />
-					} @else {
-					<p-tag [value]="row.status" [severity]="getSeverity(row.status)" class="tag"></p-tag>
-					}
-				</td>
+					<td class="details">
+						@if(editedRows.has(row.key)){
+						<textarea
+							pTextarea
+							variant="filled"
+							fluid
+							[(ngModel)]="editedRows.get(row.key).updated.details"
+							class="input textarea-input"
+							(keyup.enter)="completeEdit(row)"></textarea>
+						} @else{
+						{{ row.details }}
+						}
+					</td>
 
-				<td class="timestamp">{{ row.timestamp }}</td>
+					<td class="status">
+						@if(editedRows.has(row.key)){
+						<p-select
+							optionLabel="severity"
+							optionValue="severity"
+							[options]="editedRows.get(row.key).original.isBug ? bugSeverity : severity"
+							[appendTo]="'body'"
+							panelStyleClass="dropdown-panel-font"
+							[(ngModel)]="editedRows.get(row.key).updated.status"
+							class="input"
+							(keyup.enter)="completeEdit(row)" />
+						} @else {
+						<p-tag [value]="row.status" [severity]="getSeverity(row.status)" class="tag"></p-tag>
+						}
+					</td>
 
-				<td class="edit-button hide-on-mobile">
-					@if(editedRows.has(row.key)){
-					<div class="edit-button-group">
+					<td class="timestamp">{{ row.timestamp }}</td>
+
+					<td class="edit-button hide-on-mobile">
+						@if(editedRows.has(row.key)){
+						<div class="edit-button-group">
+							<p-button
+								severity="secondary"
+								icon="pi pi-check"
+								rounded="true"
+								(click)="completeEdit(row)"></p-button>
+							<p-button
+								severity="secondary"
+								icon="pi pi-trash"
+								rounded="true"
+								(click)="openDeleteConfirmationDialog(row.key)"></p-button>
+						</div>
+						} @else {
 						<p-button
 							severity="secondary"
-							icon="pi pi-check"
+							icon="pi pi-pen-to-square"
 							rounded="true"
-							(click)="completeEdit(row)"></p-button>
+							(click)="startEdit(row)"></p-button>
+						}
+					</td>
+				</tr>
+			</ng-template>
+			<ng-template pTemplate="footer">
+				<tr class="hide-on-mobile">
+					<td class="component">
+						<input
+							pInputText
+							type="text"
+							placeholder="Component"
+							[(ngModel)]="newRecord.component"
+							class="input"
+							(keyup.enter)="submitNewRecord()" />
+					</td>
+					<td class="element">
+						<input
+							pInputText
+							type="text"
+							placeholder="Element"
+							[(ngModel)]="newRecord.element"
+							class="input"
+							(keyup.enter)="submitNewRecord()" />
+					</td>
+					<td class="details">
+						<textarea
+							pTextarea
+							variant="filled"
+							fluid
+							placeholder="Details"
+							[(ngModel)]="newRecord.details"
+							class="input textarea-input"
+							(keyup.enter)="submitNewRecord()"></textarea>
+					</td>
+					<td class="status">
+						<p-select
+							optionLabel="severity"
+							[options]="newRecord.isBug ? bugSeverity : severity"
+							[appendTo]="'body'"
+							panelStyleClass="dropdown-panel-font"
+							[(ngModel)]="newRecord.status"
+							class="input"
+							(keyup.enter)="submitNewRecord()" />
+					</td>
+					<td class="timeStamp">
 						<p-button
+							label="Add"
+							icon="pi pi-plus"
 							severity="secondary"
-							icon="pi pi-trash"
-							rounded="true"
-							(click)="openDeleteConfirmationDialog(row.key)"></p-button>
-					</div>
-					} @else {
-					<p-button
-						severity="secondary"
-						icon="pi pi-pen-to-square"
-						rounded="true"
-						(click)="startEdit(row)"></p-button>
-					}
-				</td>
-			</tr>
-		</ng-template>
-		<ng-template pTemplate="footer">
-			<tr class="hide-on-mobile">
-				<td class="component">
-					<input
-						pInputText
-						type="text"
-						placeholder="Component"
-						[(ngModel)]="newRecord.component"
-						class="input"
-						(keyup.enter)="submitNewRecord()" />
-				</td>
-				<td class="element">
-					<input
-						pInputText
-						type="text"
-						placeholder="Element"
-						[(ngModel)]="newRecord.element"
-						class="input"
-						(keyup.enter)="submitNewRecord()" />
-				</td>
-				<td class="details">
-					<textarea
-						pTextarea
-						variant="filled"
-						fluid
-						placeholder="Details"
-						[(ngModel)]="newRecord.details"
-						class="input textarea-input"
-						(keyup.enter)="submitNewRecord()"></textarea>
-				</td>
-				<td class="status">
-					<p-select
-						optionLabel="severity"
-						[options]="newRecord.isBug ? bugSeverity : severity"
-						[appendTo]="'body'"
-						panelStyleClass="dropdown-panel-font"
-						[(ngModel)]="newRecord.status"
-						class="input"
-						(keyup.enter)="submitNewRecord()" />
-				</td>
-				<td class="timeStamp">
-					<p-button
-						label="Add"
-						icon="pi pi-plus"
-						severity="secondary"
-						[disabled]="
-							!newRecord.component.trim() ||
-							!newRecord.details.trim() ||
-							!newRecord.element.trim() ||
-							!newRecord.status
-						"
-						(onClick)="submitNewRecord()"
-						styleClass="input"></p-button>
-				</td>
-				<td class="edit-button">
-					<p-check-box
-						[(ngModel)]="newRecord.isBug"
-						[binary]="true"
-						(onChange)="clearStatusField()"></p-check-box>
-				</td>
-			</tr>
-		</ng-template>
-	</p-table>
+							[disabled]="
+								!newRecord.component.trim() ||
+								!newRecord.details.trim() ||
+								!newRecord.element.trim() ||
+								!newRecord.status
+							"
+							(onClick)="submitNewRecord()"
+							styleClass="input"></p-button>
+					</td>
+					<td class="edit-button">
+						<p-check-box
+							[(ngModel)]="newRecord.isBug"
+							[binary]="true"
+							(onChange)="clearStatusField()"></p-check-box>
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+
+		<!-- Paginator -->
+		<p-paginator
+			[first]="indexOfFirstItem"
+			[rows]="itemsPerPage"
+			[totalRecords]="patchNotesLength$ | async"
+			[showFirstLastIcon]="false"
+			[showPageLinks]="true"
+			(onPageChange)="pageChange($event)">
+		</p-paginator>
+	</div>
 </div>
 <ng-container #dialogComponentContainer></ng-container>

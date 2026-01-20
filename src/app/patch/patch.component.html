@@ -26,7 +26,9 @@
 					<td><p-skeleton /></td>
 					<td><p-skeleton /></td>
 					<td><p-skeleton /></td>
+					@if(!isMobile){
 					<td><p-skeleton /></td>
+					}
 				</tr>
 				}
 			</ng-template>
@@ -120,6 +122,8 @@
 				</tr>
 			</ng-template>
 			<ng-template pTemplate="footer">
+				@if(patchNotesLength$ | async; as totalRecords){ @if( indexOfFirstItem + itemsPerPage >
+				totalRecords){
 				<tr class="hide-on-mobile">
 					<td class="component">
 						<input
@@ -180,6 +184,7 @@
 							(onChange)="clearStatusField()"></p-check-box>
 					</td>
 				</tr>
+				} }
 			</ng-template>
 		</p-table>
 
@@ -187,7 +192,7 @@
 		<p-paginator
 			[first]="indexOfFirstItem"
 			[rows]="itemsPerPage"
-			[totalRecords]="patchNotesLength$ | async"
+			[totalRecords]="((patchNotesLength$ | async) ?? 0) + 1"
 			[showFirstLastIcon]="false"
 			[showPageLinks]="true"
 			(onPageChange)="pageChange($event)">

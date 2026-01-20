@@ -31,7 +31,7 @@
 							[disabled]="isDisabled(rowIndex, field)"
 							[class.disabled-cell]="isDisabled(rowIndex, field)"
 							class="first-table-input"
-							[style]="row[field].isCharged ? 'color: orange; ' : ''"
+							[style]="setStyle(row[field].isCharged, row[field].value)"
 							(keydown)="onNumberChange($event)"
 							(blur)="onValueChange(rowIndex, field)"
 							(keyup.enter)="onValueChange(rowIndex, field)" />
@@ -167,13 +167,15 @@
 			}
 
 			<!-- Extra input group for entry creation -->
+			@if(thirdTableIndexOfFirstItem + thirdTableItemsPerPage > originalThirdTable.length){
 			<p-inputgroup class="third-table-cell">
 				<input
 					type="text"
 					pInputText
 					fluid
 					placeholder="New entry"
-					[(ngModel)]="thirdTableNewContent" />
+					[(ngModel)]="thirdTableNewContent"
+					(keyup.enter)="addNewContentOnly()" />
 				<p-inputgroup-addon>
 					<p-button
 						icon="pi pi-plus"
@@ -181,6 +183,7 @@
 						(onClick)="openPopover($event, null)"></p-button>
 				</p-inputgroup-addon>
 			</p-inputgroup>
+			}
 		</div>
 
 		<!-- Paginator -->
@@ -188,8 +191,8 @@
 		<p-paginator
 			[first]="thirdTableIndexOfFirstItem"
 			[rows]="thirdTableItemsPerPage"
-			[totalRecords]="originalThirdTable.length"
-            [showFirstLastIcon]="false"
+			[totalRecords]="originalThirdTable.length + 1"
+			[showFirstLastIcon]="false"
 			[showPageLinks]="true"
 			(onPageChange)="thirdTablePageChange($event)">
 		</p-paginator>

@@ -65,7 +65,8 @@ export class RemainderComponent {
 	protected thirdTableActiveItem: any;
 	protected thirdTableNewContent: string = '';
 	protected thirdTableIndexOfFirstItem: number = 0;
-	protected thirdTableItemsPerPage: number = 9;
+	protected thirdTableItemsPerPage: number = 10;
+	protected savedIndicator: boolean = false;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -228,6 +229,16 @@ export class RemainderComponent {
 		);
 	}
 
+	protected setStyle(isCharged: boolean, value: number) {
+		if (value === this.currentDay) {
+			return 'color: red';
+		} else if (isCharged) {
+			return 'color: orange';
+		} else {
+			return '';
+		}
+	}
+
 	private resetFirstTable() {
 		this.updatedFirstTable = [
 			{
@@ -323,6 +334,15 @@ export class RemainderComponent {
 		);
 	}
 
+	protected addNewContentOnly() {
+		if (this.thirdTableNewContent.trim() !== '') {
+			this.firebaseService.addNewRecordForRemainderTable(THIRD_TABLE, {
+				content: this.thirdTableNewContent
+			});
+			this.thirdTableNewContent = '';
+		}
+	}
+
 	protected addNewEntry() {
 		if (this.thirdTableNewContent.trim() !== '') {
 			let newValues = Object.fromEntries(
@@ -362,7 +382,9 @@ export class RemainderComponent {
 	protected updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
 		const newValue = this.findUpdatedObject(tableName, entryKey)[valueKey];
 		if (newValue !== this.findOriginalObject(tableName, entryKey)[valueKey]) {
-			this.firebaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue);
+			this.firebaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue).then(() => {
+				this.savedIndicator = true;
+			});
 		}
 	}
 

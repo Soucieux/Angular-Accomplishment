@@ -1,4 +1,4 @@
-import { Component, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, HostListener, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
@@ -54,7 +54,8 @@ export class PatchComponent {
 	protected pagedPatchNotes$!: Observable<any[]>;
 	protected patchNotesLength$!: Observable<number>;
 	protected indexOfFirstItem = 0;
-	protected itemsPerPage = 8;
+	protected itemsPerPage = 9;
+	protected isMobile!: boolean;
 	protected skeletonRows = Array.from({ length: this.itemsPerPage });
 	protected editedRows = new Map<string, any>();
 	protected newRecord = {
@@ -79,6 +80,8 @@ export class PatchComponent {
 
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
+			this.isMobile = this.utilities.isMobile();
+
 			this.patchNotes$ = this.firebaseService.getPatchNotes().pipe(
 				tap(() => (this.loading = false)),
 				shareReplay(1)
@@ -99,6 +102,16 @@ export class PatchComponent {
 		];
 
 		this.bugSeverity = [{ severity: STATUS_DEBUG }, { severity: STATUS_RESOLVED }];
+	}
+
+	/**
+	 * Update the grid layout of the page container when the window is resized.
+	 */
+	@HostListener('window:resize')
+	protected onResize() {
+		if (isPlatformBrowser(this.platformId)) {
+			this.isMobile = this.utilities.isMobile();
+		}
 	}
 
 	ngOnDestroy() {
@@ -169,6 +182,7 @@ export class PatchComponent {
 
 	protected pageChange(event: any) {
 		this.indexOfFirstItem = event.first;
+		console.log(this.indexOfFirstItem);
 		this.pagedPatchNotes$ = this.patchNotes$.pipe(
 			map((notes) => notes.slice(this.indexOfFirstItem, this.indexOfFirstItem + this.itemsPerPage))
 		);

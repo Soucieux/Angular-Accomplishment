@@ -1,13 +1,8 @@
 <div class="container">
 	<h1>PATCH NOTES</h1>
 	<div class="wrapper">
-		<p-table
-			[value]="(pagedPatchNotes$ | async) ?? []"
-			[loading]="loading"
-			[showLoader]="false"
-			rowGroupMode="rowspan"
-			groupRowsBy="component"
-			class="table">
+		@if(pagedPatchNotes$ | async; as rows){
+		<p-table [value]="rows" [loading]="loading" [showLoader]="false" class="table">
 			<ng-template pTemplate="header">
 				<tr>
 					<th class="component">Component</th>
@@ -32,10 +27,10 @@
 				</tr>
 				}
 			</ng-template>
-			<ng-template pTemplate="body" let-row let-rowgroup="rowgroup" let-rowspan="rowspan">
+			<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
 				<tr>
-					@if(rowgroup){
-					<td [attr.rowspan]="rowspan" class="component">
+					@if(shouldShowComponent(rows, rowIndex)){
+					<td [attr.rowspan]="getRowSpan(rows, rowIndex)" class="component">
 						<div class="component-content">
 							@if(row.component === 'Entertainment'){
 							<span class="material-icons hide-on-mobile">tv</span>
@@ -187,6 +182,7 @@
 				} }
 			</ng-template>
 		</p-table>
+		}
 
 		<!-- Paginator -->
 		<p-paginator

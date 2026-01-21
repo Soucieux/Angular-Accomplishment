@@ -384,20 +384,23 @@ export class FirebaseService {
 	public getPatchNotes(): Observable<any[]> {
 		return list(dbRef(this.db, 'patch_notes')).pipe(
 			map((snapshots: any[]) =>
-				snapshots.map((snapshot: any) => {
-					return {
-						key: snapshot.snapshot.key,
-						...snapshot.snapshot.val()
-					} as {
-						key: string;
-						component: string;
-						element: string;
-						details: string;
-						status: string;
-						timestamp: string;
-						isBug: boolean;
-					};
-				})
+				snapshots
+					.map(
+						(snapshot: any) =>
+							({
+								key: snapshot.snapshot.key,
+								...snapshot.snapshot.val()
+							} as {
+								key: string;
+								component: string;
+								element: string;
+								details: string;
+								status: string;
+								timestamp: string;
+								isBug: boolean;
+							})
+					)
+					.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
 			)
 		);
 	}

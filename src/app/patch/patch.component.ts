@@ -197,13 +197,22 @@ export class PatchComponent {
 			} else {
 				break;
 			}
-        }
-        
-        return span;
+		}
+
+		return span;
 	}
 
-    shouldShowComponent(data: any[], rowIndex: number) {
+	shouldShowComponent(data: any[], rowIndex: number) {
 		return rowIndex === 0 || data[rowIndex].component !== data[rowIndex - 1].component;
+	}
+
+	getSeverityClass(status: string) {
+		switch (status) {
+			case STATUS_RESOLVED:
+				return 'tag-debug-success';
+			default:
+				return '';
+		}
 	}
 
 	getSeverity(status: string) {
@@ -218,7 +227,25 @@ export class PatchComponent {
 			case STATUS_DEBUG:
 				return 'danger';
 			case STATUS_DRAFT:
-				return null;
+				return 'secondary';
+			default:
+				return undefined;
+		}
+	}
+
+	getSeverityIcon(status: string) {
+		switch (status) {
+			case STATUS_TODO:
+				return 'pi pi-hourglass';
+			case STATUS_IN_PROGRESS:
+				return 'pi pi-play';
+			case STATUS_COMPLETED:
+			case STATUS_RESOLVED:
+				return 'pi pi-verified';
+			case STATUS_DEBUG:
+				return 'pi pi-exclamation-triangle';
+			case STATUS_DRAFT:
+				return 'pi pi-pencil';
 			default:
 				return undefined;
 		}

@@ -182,10 +182,28 @@ export class PatchComponent {
 
 	protected pageChange(event: any) {
 		this.indexOfFirstItem = event.first;
-		console.log(this.indexOfFirstItem);
 		this.pagedPatchNotes$ = this.patchNotes$.pipe(
 			map((notes) => notes.slice(this.indexOfFirstItem, this.indexOfFirstItem + this.itemsPerPage))
 		);
+	}
+
+	getRowSpan(data: any[], rowIndex: number) {
+		const currentComponent = data[rowIndex].component;
+		let span = 1;
+
+		for (let index = rowIndex + 1; index < data.length; index++) {
+			if (data[index].component === currentComponent) {
+				span++;
+			} else {
+				break;
+			}
+        }
+        
+        return span;
+	}
+
+    shouldShowComponent(data: any[], rowIndex: number) {
+		return rowIndex === 0 || data[rowIndex].component !== data[rowIndex - 1].component;
 	}
 
 	getSeverity(status: string) {

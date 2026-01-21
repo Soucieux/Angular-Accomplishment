@@ -86,7 +86,12 @@
 							class="input"
 							(keyup.enter)="completeEdit(row)" />
 						} @else {
-						<p-tag [value]="row.status" [severity]="getSeverity(row.status)" class="tag"></p-tag>
+						<p-tag
+							[value]="row.status"
+							[icon]="getSeverityIcon(row.status)"
+							[severity]="getSeverity(row.status)"
+                            [class]="getSeverityClass(row.status)"
+							class="tag"></p-tag>
 						}
 					</td>
 

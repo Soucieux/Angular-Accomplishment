@@ -368,7 +368,7 @@ export class FirebaseService {
 	 * @param key - The key associated with the record
 	 * @param updatedRecord - The record to update.
 	 */
-	public async updateNewRecordToPatchNotes(key: string, updatedRecord: any) {
+	public async updateExistingRecordToPatchNotes(key: string, updatedRecord: any) {
 		await update(dbRef(this.db, `patch_notes/${key}`), {
 			...updatedRecord
 		}).then(() => {

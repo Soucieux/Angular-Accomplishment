@@ -189,7 +189,9 @@
 			[first]="indexOfFirstItem"
 			[rows]="itemsPerPage"
 			[totalRecords]="((patchNotesLength$ | async) ?? 0) + 1"
-			[showFirstLastIcon]="false"
+			[showCurrentPageReport]="true"
+			[currentPageReportTemplate]="'Showing {first} to {last} of {totalRecords}'"
+			[showFirstLastIcon]="true"
 			[showPageLinks]="true"
 			(onPageChange)="pageChange($event)">
 		</p-paginator>

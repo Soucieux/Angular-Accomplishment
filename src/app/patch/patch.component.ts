@@ -138,7 +138,7 @@ export class PatchComponent {
 
 		if (Object.keys(changes).length > 0) {
 			changes.timestamp = this.utilities.getCurrentFormattedTime(false);
-			await this.firebaseService.updateNewRecordToPatchNotes(row.key, changes);
+			await this.firebaseService.updateExistingRecordToPatchNotes(row.key, changes);
 		}
 
 		this.editedRows.delete(row.key);

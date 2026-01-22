@@ -13,6 +13,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { PopoverModule } from 'primeng/popover';
 import { PaginatorModule } from 'primeng/paginator';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
 import { Subscription } from 'rxjs';
 import { LOG } from '../app.logs';
@@ -34,7 +35,8 @@ import { DialogService } from '../service/dialog-service/dialog.service';
 		Checkbox,
 		Tooltip,
 		PaginatorModule,
-		PopoverModule
+		PopoverModule,
+		ToggleSwitchModule
 	],
 	templateUrl: './remainder.component.html',
 	styleUrl: './remainder.component.css'
@@ -67,6 +69,8 @@ export class RemainderComponent {
 	protected thirdTableIndexOfFirstItem: number = 0;
 	protected thirdTableItemsPerPage: number = 10;
 	protected savedIndicator: boolean = false;
+	private finalizedCellsInitialized = false;
+	protected isNextMonth!: boolean;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -86,16 +90,13 @@ export class RemainderComponent {
 			this.firstSub = this.firebaseService.getFirstRemainderTableDetails().subscribe((rows) => {
 				// Need deep copy here so that we are not copying references
 				this.originalFirstTable = structuredClone(rows);
-				this.updatedFirstTable = structuredClone(rows);
+				this.updatedFirstTable = structuredClone(rows).slice(0, -1);
+				this.isNextMonth = this.originalFirstTable[5]['isNextMonth'];
 
-				// Loop through to determine disabled fields
-				for (let index = 0; index < this.updatedFirstTable.length; index++) {
-					for (const field of this.fields) {
-						if (this.updatedFirstTable[index][field].value < this.currentDay) {
-							this.updatedFirstTable[index][field].isCharged = true;
-							this.finalizedCells.add(`${index}-${field}`);
-						}
-					}
+				if (!this.finalizedCellsInitialized) {
+					// Loop through to determine disabled fields
+					this.updatefinalizedCells();
+					this.finalizedCellsInitialized = true;
 				}
 			});
 
@@ -111,6 +112,28 @@ export class RemainderComponent {
 				this.pagedThirdTable = this.updatePagedThirdTable();
 				this.loading = false;
 			});
+		}
+	}
+
+	protected updatefinalizedCells() {
+		if (this.isNextMonth) {
+			this.finalizedCells.clear();
+        }
+        
+		if (this.finalizedCellsInitialized) {
+			for (let index = 0; index < this.updatedFirstTable.length; index++) {
+				for (const field of this.fields) {
+					if (this.isNextMonth) {
+						this.updatedFirstTable[index][field].isCharged = false;
+					} else if (this.updatedFirstTable[index][field].value < this.currentDay) {
+						this.updatedFirstTable[index][field].isCharged = true;
+						this.finalizedCells.add(`${index}-${field}`);
+					}
+				}
+			}
+
+			this.updatedFirstTable.push({ isNextMonth: this.isNextMonth });
+			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 		}
 	}
 
@@ -234,9 +257,8 @@ export class RemainderComponent {
 			return 'color: red';
 		} else if (isCharged) {
 			return 'color: orange';
-		} else {
-			return '';
 		}
+		return '';
 	}
 
 	private resetFirstTable() {

@@ -14,8 +14,6 @@
 }
 
 ::ng-deep .first-table table {
-	border-radius: 10px;
-	overflow: hidden;
 	height: 373px;
 }
 
@@ -23,8 +21,37 @@
 	height: 50px; /*↑ increases row height*/
 }
 
+.table-wrapper {
+	border-radius: 10px;
+	overflow: hidden;
+}
+
 .header {
 	text-align: center;
+}
+
+.toggle-wrapper {
+	display: flex;
+	align-items: center;
+	padding-left: 20px;
+}
+
+.toggle-label {
+	font-size: 14px;
+}
+
+::ng-deep .toggle.p-toggleswitch {
+	margin-top: 2px;
+	transform: scale(0.65); /* 1 = default */
+}
+
+.header-wrapper {
+	padding-top: 15px;
+	padding-left: 15px;
+	padding-bottom: 5px;
+	background-color: white;
+	display: flex;
+	flex-direction: row;
 }
 
 /* remove td/th padding */
@@ -34,6 +61,7 @@
 }
 
 .first-table th {
+	border-top: 1px solid #dee2e6 !important;
 	padding-top: 12px !important;
 }
 

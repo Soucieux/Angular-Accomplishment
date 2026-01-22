@@ -11,7 +11,7 @@
 					[(ngModel)]="isNextMonth"
 					(onChange)="updatefinalizedCells()"></p-toggleswitch>
 			</div>
-			@if(saveIndicator){
+			@if(saveIndicators[FIRST_TABLE]){
 			<div class="save-indicator">
 				<i class="pi pi-spin pi-spinner" style="font-size: 18px"></i>
 				<span style="font-size: 19px; margin-left: 5px">Saving</span>
@@ -85,6 +85,12 @@
 	<div class="table-wrapper">
 		<div class="header-wrapper">
 			<h4>Account Expenses</h4>
+			@if(saveIndicators[SECOND_TABLE]){
+			<div class="save-indicator">
+				<i class="pi pi-spin pi-spinner" style="font-size: 18px"></i>
+				<span style="font-size: 19px; margin-left: 5px">Saving</span>
+			</div>
+			}
 		</div>
 		<div class="second-table">
 			@if(loading){ @for (_ of [0,1,2,3,4,5,6,7]; track $index) {
@@ -155,6 +161,12 @@
 	<div class="table-wrapper">
 		<div class="header-wrapper">
 			<h4>Messages</h4>
+			@if(saveIndicators[THIRD_TABLE]){
+			<div class="save-indicator">
+				<i class="pi pi-spin pi-spinner" style="font-size: 18px"></i>
+				<span style="font-size: 19px; margin-left: 5px">Saving</span>
+			</div>
+			}
 		</div>
 		<div class="third-table-wrapper">
 			@if(loading){ @for (_ of [0,1,2,3,4,5]; track $index) {

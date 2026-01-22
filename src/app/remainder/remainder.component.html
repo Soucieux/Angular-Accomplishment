@@ -88,9 +88,7 @@
 				<p-skeleton height="50px" />
 				<p-skeleton height="25px" />
 			</div>
-			} 
-        } @else { 
-                @for(item of updatedSecondTable; let index = $index; track item.name){
+			} } @else { @for(item of updatedSecondTable; let index = $index; track item.name){
 			<div class="second-table-cell">
 				<div class="second-table-cell-header">{{ item.name }}</div>
 				<p-inputgroup>
@@ -148,78 +146,87 @@
 		</div>
 	</div>
 	<!-- THIRD TABLE -->
-	<div class="third-table-wrapper">
-		@if(loading){ @for (_ of [0,1,2,3,4,5]; track $index) {
-		<div class="second-table-cell">
-			<p-skeleton height="45px" />
+	<div class="table-wrapper">
+		<div class="header-wrapper">
+			<h4>Messages</h4>
 		</div>
-		} }@else{
-		<div class="third-table">
-			@for(item of pagedThirdTable; track item.key){
-			<p-inputgroup class="third-table-cell">
-				<input
-					type="text"
-					pInputText
-					[(ngModel)]="item.content"
-					fluid
-					(blur)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')"
-					(keyup.enter)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')" />
-				@if(item.date){
-				<p-inputgroup-addon>
-					<i
-						class="pi pi-clock"
-						[style]="{
-							color: 'black'
-						}"
-						[pTooltip]="isHoverCapable ? item.date : ''"
-						(click)="!isHoverCapable && op.toggle($event)"
-						tooltipPosition="top"></i>
-					<p-popover #op>{{ item.date }}</p-popover>
-				</p-inputgroup-addon>
-				} @if(item.link){
-				<p-inputgroup-addon
-					><a [href]="item.link" target="_blank" rel="noopener noreferrer"
-						><i class="pi pi-link" style="color: black"></i></a
-				></p-inputgroup-addon>
+		<div class="third-table-wrapper">
+			@if(loading){ @for (_ of [0,1,2,3,4,5]; track $index) {
+			<div class="second-table-cell">
+				<p-skeleton height="35px" />
+			</div>
+			} }@else{
+			<div class="third-table">
+				@for(item of pagedThirdTable; track item.key){
+				<p-inputgroup class="third-table-cell">
+					<input
+						type="text"
+						pInputText
+						[(ngModel)]="item.content"
+						fluid
+						(blur)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')"
+						(keyup.enter)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')" />
+					@if(item.date){
+					<p-inputgroup-addon>
+						<i
+							class="pi pi-clock"
+							[style]="{
+								color: 'black'
+							}"
+							[pTooltip]="isHoverCapable ? item.date : ''"
+							(click)="!isHoverCapable && op.toggle($event)"
+							tooltipPosition="top"></i>
+						<p-popover #op>{{ item.date }}</p-popover>
+					</p-inputgroup-addon>
+					} @if(item.link){
+					<p-inputgroup-addon
+						><a [href]="item.link" target="_blank" rel="noopener noreferrer"
+							><i class="pi pi-link" style="color: black"></i></a
+					></p-inputgroup-addon>
+					}
+					<p-inputgroup-addon>
+						<p-button
+							icon="pi pi-pencil"
+							severity="secondary"
+							(onClick)="openPopover($event, item)">
+						</p-button>
+					</p-inputgroup-addon>
+				</p-inputgroup>
 				}
-				<p-inputgroup-addon>
-					<p-button icon="pi pi-pencil" severity="secondary" (onClick)="openPopover($event, item)">
-					</p-button>
-				</p-inputgroup-addon>
-			</p-inputgroup>
-			}
 
-			<!-- Extra input group for entry creation -->
-			@if(thirdTableIndexOfFirstItem + thirdTableItemsPerPage > originalThirdTable.length){
-			<p-inputgroup class="third-table-cell">
-				<input
-					type="text"
-					pInputText
-					fluid
-					placeholder="New entry"
-					[(ngModel)]="thirdTableNewContent"
-					(keyup.enter)="addNewContentOnly()" />
-				<p-inputgroup-addon>
-					<p-button
-						icon="pi pi-plus"
-						severity="secondary"
-						(onClick)="openPopover($event, null)"></p-button>
-				</p-inputgroup-addon>
-			</p-inputgroup>
-			}
+				<!-- Extra input group for entry creation -->
+				@if(thirdTableIndexOfFirstItem + thirdTableItemsPerPage > originalThirdTable.length){
+				<p-inputgroup class="third-table-cell">
+					<input
+						type="text"
+						pInputText
+						fluid
+						placeholder="New entry"
+						[(ngModel)]="thirdTableNewContent"
+						(keyup.enter)="addNewContentOnly()" />
+					<p-inputgroup-addon>
+						<p-button
+							icon="pi pi-plus"
+							severity="secondary"
+							(onClick)="openPopover($event, null)"></p-button>
+					</p-inputgroup-addon>
+				</p-inputgroup>
+				}
+			</div>
+
+			<!-- Paginator -->
+			@if(originalThirdTable){
+			<p-paginator
+				class="paginator"
+				[first]="thirdTableIndexOfFirstItem"
+				[rows]="thirdTableItemsPerPage"
+				[totalRecords]="originalThirdTable.length + 1"
+				[showFirstLastIcon]="false"
+				[showPageLinks]="true"
+				(onPageChange)="thirdTablePageChange($event)">
+			</p-paginator>
+			} }
 		</div>
-
-		<!-- Paginator -->
-		@if(originalThirdTable){
-		<p-paginator
-			[first]="thirdTableIndexOfFirstItem"
-			[rows]="thirdTableItemsPerPage"
-			[totalRecords]="originalThirdTable.length + 1"
-			[showFirstLastIcon]="false"
-			[showPageLinks]="true"
-			(onPageChange)="thirdTablePageChange($event)">
-		</p-paginator>
-		} }
 	</div>
 
 	<!-- Reusable popover -->

@@ -1,6 +1,6 @@
 .container {
-	min-width: 100%;
-	min-height: 100%;
+	width: 100%;
+	height: 100%;
 	backdrop-filter: blur(50px);
 	background-color: rgb(243, 227, 243);
 	border: 0.8px solid rgb(255, 255, 255);
@@ -60,7 +60,7 @@
 }
 
 .first-table th {
-	border-top: 1px solid #dee2e6 !important;
+	border-top: 1px solid #dee2e6;
 	padding-top: 12px !important;
 }
 
@@ -119,13 +119,15 @@
 
 .second-table,
 .third-table-wrapper {
+	border-top: 1px solid #dee2e6;
 	background-color: white;
 }
 
 .second-table,
 .third-table {
+	padding-left: 5px;
+	padding-right: 5px;
 	display: grid;
-	padding: 10px;
 	overflow: hidden;
 	height: fit-content;
 }
@@ -140,14 +142,13 @@
 }
 
 .second-table-cell-header {
-	border-top: 1px solid #dee2e6 !important;
 	text-align: center;
 	padding-top: 10px;
 }
 
 .second-table-cell {
 	height: fit-content;
-	padding: 5px;
+	padding: 5px 5px 14px 5px;
 	display: flex;
 	flex-direction: column;
 	gap: 5px;
@@ -197,4 +198,8 @@
 
 ::ng-deep .submit-button .p-button .p-button-icon {
 	font-size: 14px;
+}
+
+.paginator {
+	padding: 5px;
 }

@@ -68,7 +68,8 @@ export class RemainderComponent {
 	protected thirdTableNewContent: string = '';
 	protected thirdTableIndexOfFirstItem: number = 0;
 	protected thirdTableItemsPerPage: number = 10;
-	protected savedIndicator: boolean = false;
+	protected saveIndicator: boolean = false;
+	private saveIndicatorTimeout?: any;
 	private finalizedCellsInitialized = false;
 	protected isNextMonth!: boolean;
 
@@ -118,8 +119,8 @@ export class RemainderComponent {
 	protected updatefinalizedCells() {
 		if (this.isNextMonth) {
 			this.finalizedCells.clear();
-        }
-        
+		}
+
 		if (this.finalizedCellsInitialized) {
 			for (let index = 0; index < this.updatedFirstTable.length; index++) {
 				for (const field of this.fields) {
@@ -134,6 +135,8 @@ export class RemainderComponent {
 
 			this.updatedFirstTable.push({ isNextMonth: this.isNextMonth });
 			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+
+			this.triggerSaveIndicator();
 		}
 	}
 
@@ -201,6 +204,8 @@ export class RemainderComponent {
 
 		// Update table to firebase
 		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+
+		this.triggerSaveIndicator();
 	}
 
 	protected isDisabled(rowIndex: number, field: string): boolean {
@@ -237,6 +242,8 @@ export class RemainderComponent {
 
 			// Update table to firebase
 			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+
+			this.triggerSaveIndicator();
 		}
 	}
 
@@ -296,6 +303,8 @@ export class RemainderComponent {
 		];
 		// Update table to firebase
 		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+
+		this.triggerSaveIndicator();
 	}
 
 	///////////////////////////////////SECOND TABLE///////////////////////////////////
@@ -405,7 +414,7 @@ export class RemainderComponent {
 		const newValue = this.findUpdatedObject(tableName, entryKey)[valueKey];
 		if (newValue !== this.findOriginalObject(tableName, entryKey)[valueKey]) {
 			this.firebaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue).then(() => {
-				this.savedIndicator = true;
+				this.saveIndicator = true;
 			});
 		}
 	}
@@ -429,5 +438,17 @@ export class RemainderComponent {
 		} else if (tableName === THIRD_TABLE) {
 			return this.originalThirdTable.find((item) => item.key === entryKey);
 		}
+	}
+
+	private triggerSaveIndicator() {
+		this.saveIndicator = true;
+
+		if (this.saveIndicatorTimeout) {
+			clearTimeout(this.saveIndicatorTimeout);
+		}
+
+		this.saveIndicatorTimeout = setTimeout(() => {
+			this.saveIndicator = false;
+		}, 1000);
 	}
 }

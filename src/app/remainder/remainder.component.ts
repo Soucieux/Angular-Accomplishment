@@ -62,14 +62,19 @@ export class RemainderComponent {
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
 	protected thirdSub?: Subscription;
+	protected FIRST_TABLE: string = FIRST_TABLE;
 	protected SECOND_TABLE: string = SECOND_TABLE;
 	protected THIRD_TABLE: string = THIRD_TABLE;
 	protected thirdTableActiveItem: any;
 	protected thirdTableNewContent: string = '';
 	protected thirdTableIndexOfFirstItem: number = 0;
 	protected thirdTableItemsPerPage: number = 10;
-	protected saveIndicator: boolean = false;
-	private saveIndicatorTimeout?: any;
+	protected saveIndicators: Record<string, boolean> = {
+		FIRST_TABLE: false,
+		SECOND_TABLE: false,
+		THIRD_TABLE: false
+	};
+	private saveIndicatorTimeouts: Record<string, any> = {};
 	private finalizedCellsInitialized = false;
 	protected isNextMonth!: boolean;
 
@@ -136,7 +141,7 @@ export class RemainderComponent {
 			this.updatedFirstTable.push({ isNextMonth: this.isNextMonth });
 			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
-			this.triggerSaveIndicator();
+			this.triggerSaveIndicator(FIRST_TABLE);
 		}
 	}
 
@@ -205,7 +210,7 @@ export class RemainderComponent {
 		// Update table to firebase
 		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
-		this.triggerSaveIndicator();
+		this.triggerSaveIndicator(FIRST_TABLE);
 	}
 
 	protected isDisabled(rowIndex: number, field: string): boolean {
@@ -243,7 +248,7 @@ export class RemainderComponent {
 			// Update table to firebase
 			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
-			this.triggerSaveIndicator();
+			this.triggerSaveIndicator(FIRST_TABLE);
 		}
 	}
 
@@ -304,7 +309,7 @@ export class RemainderComponent {
 		// Update table to firebase
 		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
-		this.triggerSaveIndicator();
+		this.triggerSaveIndicator(FIRST_TABLE);
 	}
 
 	///////////////////////////////////SECOND TABLE///////////////////////////////////
@@ -325,6 +330,8 @@ export class RemainderComponent {
 				paid: false
 			};
 			this.firebaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
+
+			this.triggerSaveIndicator(SECOND_TABLE);
 		} else {
 			existingRecord.debt = existingRecord.original;
 			this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
@@ -359,6 +366,7 @@ export class RemainderComponent {
 			'delete',
 			() => {
 				this.firebaseService.removeRecordFromRemainderTable(THIRD_TABLE, key);
+				this.triggerSaveIndicator(THIRD_TABLE);
 			},
 			`Are you sure you want to delete this entry?`,
 			`Delete`
@@ -370,6 +378,7 @@ export class RemainderComponent {
 			this.firebaseService.addNewRecordForRemainderTable(THIRD_TABLE, {
 				content: this.thirdTableNewContent
 			});
+			this.triggerSaveIndicator(THIRD_TABLE);
 			this.thirdTableNewContent = '';
 		}
 	}
@@ -381,6 +390,7 @@ export class RemainderComponent {
 			);
 			newValues['content'] = this.thirdTableNewContent;
 			this.firebaseService.addNewRecordForRemainderTable(THIRD_TABLE, newValues);
+			this.triggerSaveIndicator(THIRD_TABLE);
 			this.thirdTableNewContent = '';
 			this.op2.hide();
 		}
@@ -413,9 +423,8 @@ export class RemainderComponent {
 	protected updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
 		const newValue = this.findUpdatedObject(tableName, entryKey)[valueKey];
 		if (newValue !== this.findOriginalObject(tableName, entryKey)[valueKey]) {
-			this.firebaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue).then(() => {
-				this.saveIndicator = true;
-			});
+			this.firebaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue).then(() => {});
+			this.triggerSaveIndicator(tableName);
 		}
 	}
 
@@ -440,15 +449,15 @@ export class RemainderComponent {
 		}
 	}
 
-	private triggerSaveIndicator() {
-		this.saveIndicator = true;
+	private triggerSaveIndicator(tableName: string) {
+		this.saveIndicators[tableName] = true;
 
-		if (this.saveIndicatorTimeout) {
-			clearTimeout(this.saveIndicatorTimeout);
+		if (this.saveIndicatorTimeouts[tableName]) {
+			clearTimeout(this.saveIndicatorTimeouts[tableName]);
 		}
 
-		this.saveIndicatorTimeout = setTimeout(() => {
-			this.saveIndicator = false;
+		this.saveIndicatorTimeouts[tableName] = setTimeout(() => {
+			this.saveIndicators[tableName] = false;
 		}, 1000);
 	}
 }

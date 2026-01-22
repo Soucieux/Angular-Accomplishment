@@ -46,9 +46,8 @@
 }
 
 .header-wrapper {
-	padding-top: 15px;
+	padding-top: 20px;
 	padding-left: 15px;
-	padding-bottom: 5px;
 	background-color: white;
 	display: flex;
 	flex-direction: row;
@@ -121,7 +120,6 @@
 .second-table,
 .third-table-wrapper {
 	background-color: white;
-	border-radius: 10px;
 }
 
 .second-table,
@@ -134,13 +132,15 @@
 
 .second-table {
 	grid-template-columns: repeat(4, 1fr);
+	padding-top: 0px;
 }
 
 .third-table {
 	grid-template-columns: repeat(2, 1fr);
 }
 
-.second-table-header {
+.second-table-cell-header {
+	border-top: 1px solid #dee2e6 !important;
 	text-align: center;
 	padding-top: 10px;
 }

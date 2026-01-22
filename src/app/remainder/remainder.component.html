@@ -1,66 +1,79 @@
 <div class="container">
-	<p-table [value]="updatedFirstTable" [loading]="loading" [showLoader]="false" class="first-table">
-		<ng-template pTemplate="header">
-			<tr>
-				<th class="header">First</th>
-				<th class="header">Second</th>
-				<th class="header">Third</th>
-				<th class="header">Fourth</th>
-			</tr>
-		</ng-template>
-		<ng-template pTemplate="loadingbody">
-			@for(_ of [0,1,2,3,4];track $index){
-			<tr>
-				<td class="skeleton-row"><p-skeleton /></td>
-				<td class="skeleton-row"><p-skeleton /></td>
-				<td class="skeleton-row"><p-skeleton /></td>
-				<td class="skeleton-row"><p-skeleton /></td>
-			</tr>
-			}
-		</ng-template>
-		<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
-			<tr>
-				@for(field of fields; let index = $index; track field){
-				<td>
-					<p-inputgroup>
-						<input
-							pInputText
-							type="text"
-							inputmode="numeric"
-							[(ngModel)]="row[field].value"
-							[disabled]="isDisabled(rowIndex, field)"
-							[class.disabled-cell]="isDisabled(rowIndex, field)"
-							class="first-table-input"
-							[style]="setStyle(row[field].isCharged, row[field].value)"
-							(keydown)="onNumberChange($event)"
-							(blur)="onValueChange(rowIndex, field)"
-							(keyup.enter)="onValueChange(rowIndex, field)" />
-						<p-inputgroup-addon class="first-table-button"
-							><p-button
-								icon="pi pi-check"
-								severity="secondary"
-								[disabled]="isDisabled(rowIndex, field)"
-								(onClick)="setIsCharged(rowIndex, field)"></p-button
-						></p-inputgroup-addon>
-					</p-inputgroup>
-				</td>
+	<div class="table-wrapper">
+		<div class="header-wrapper">
+			<h4>Date Calculator</h4>
+			<div class="toggle-wrapper">
+				<label for="switch" class="toggle-label">Next Month</label>
+				<p-toggleswitch
+					inputId="switch"
+					class="toggle"
+					[(ngModel)]="isNextMonth"
+					(onChange)="updatefinalizedCells()"></p-toggleswitch>
+			</div>
+		</div>
+		<p-table [value]="updatedFirstTable" [loading]="loading" [showLoader]="false" class="first-table">
+			<ng-template pTemplate="header">
+				<tr>
+					<th class="header">First</th>
+					<th class="header">Second</th>
+					<th class="header">Third</th>
+					<th class="header">Fourth</th>
+				</tr>
+			</ng-template>
+			<ng-template pTemplate="loadingbody">
+				@for(_ of [0,1,2,3,4];track $index){
+				<tr>
+					<td class="skeleton-row"><p-skeleton /></td>
+					<td class="skeleton-row"><p-skeleton /></td>
+					<td class="skeleton-row"><p-skeleton /></td>
+					<td class="skeleton-row"><p-skeleton /></td>
+				</tr>
 				}
-			</tr>
-		</ng-template>
-		<ng-template pTemplate="footer">
-			<tr>
-				<td colspan="4" class="reset">
-					<p-button
-						styleClass="reset-button"
-						label="Reset"
-						icon="pi pi-undo"
-						[severity]="'secondary'"
-						(onClick)="openResetConfirmationDialog()">
-					</p-button>
-				</td>
-			</tr>
-		</ng-template>
-	</p-table>
+			</ng-template>
+			<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+				<tr>
+					@for(field of fields; let index = $index; track field){
+					<td>
+						<p-inputgroup>
+							<input
+								pInputText
+								type="text"
+								inputmode="numeric"
+								[(ngModel)]="row[field].value"
+								[disabled]="!isNextMonth && isDisabled(rowIndex, field)"
+								[class.disabled-cell]="!isNextMonth && isDisabled(rowIndex, field)"
+								class="first-table-input"
+								[style]="setStyle(row[field].isCharged, row[field].value)"
+								(keydown)="onNumberChange($event)"
+								(blur)="onValueChange(rowIndex, field)"
+								(keyup.enter)="onValueChange(rowIndex, field)" />
+							<p-inputgroup-addon class="first-table-button"
+								><p-button
+									icon="pi pi-check"
+									severity="secondary"
+									[disabled]="!isNextMonth && isDisabled(rowIndex, field)"
+									(onClick)="setIsCharged(rowIndex, field)"></p-button
+							></p-inputgroup-addon>
+						</p-inputgroup>
+					</td>
+					}
+				</tr>
+			</ng-template>
+			<ng-template pTemplate="footer">
+				<tr>
+					<td colspan="4" class="reset">
+						<p-button
+							styleClass="reset-button"
+							label="Reset"
+							icon="pi pi-undo"
+							[severity]="'secondary'"
+							(onClick)="openResetConfirmationDialog()">
+						</p-button>
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+	</div>
 	<div class="second-table">
 		@if(loading){ @for (_ of [0,1,2,3,4,5,6,7]; track $index) {
 		<div class="second-table-cell">

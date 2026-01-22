@@ -11,6 +11,12 @@
 					[(ngModel)]="isNextMonth"
 					(onChange)="updatefinalizedCells()"></p-toggleswitch>
 			</div>
+			@if(saveIndicator){
+			<div class="save-indicator">
+				<i class="pi pi-spin pi-spinner" style="font-size: 18px"></i>
+				<span style="font-size: 19px; margin-left: 5px">Saving</span>
+			</div>
+			}
 		</div>
 		<p-table [value]="updatedFirstTable" [loading]="loading" [showLoader]="false" class="first-table">
 			<ng-template pTemplate="header">

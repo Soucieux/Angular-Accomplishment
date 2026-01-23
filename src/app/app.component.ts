@@ -31,10 +31,12 @@ export class AppComponent {
 	private readonly className = 'AppComponent';
 	currentUser$ = this.authService.currentUser$;
 
-	constructor(private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object) {
+	constructor(private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object) {}
+
+	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
-			const permission = JSON.parse(localStorage.getItem('permission') || 'false');
-			if (permission == null) {
+			const permission = JSON.parse(localStorage.getItem('permission') || 'null');
+			if (permission === null) {
 				localStorage.setItem('permission', 'false');
 			}
 		}

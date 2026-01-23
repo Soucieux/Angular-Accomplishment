@@ -6,7 +6,6 @@ export const loginGuard: CanMatchFn = () => {
 	if (localStorage != null && localStorage.getItem('permission') === 'false') {
 		return true;
 	}
-
-	// Ensures no history entry of login
+	// Navigates to the Home page and ensures no history entry of login
 	return router.parseUrl('/');
 };

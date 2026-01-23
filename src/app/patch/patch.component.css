@@ -1,216 +1,256 @@
 .container {
-	min-width: 100%;
-	min-height: 100%;
-	backdrop-filter: blur(50px);
-	background-color: rgb(243, 227, 243);
-	border: 0.8px solid rgb(255, 255, 255);
-	box-shadow: 0 0 15px rgb(238, 240, 243);
-	border-radius: 10px;
-	padding: 20px;
+  min-width: 100%;
+  min-height: 100%;
+  backdrop-filter: blur(50px);
+  background-color: rgb(243, 227, 243);
+  border: 0.8px solid rgb(255, 255, 255);
+  box-shadow: 0 0 15px rgb(238, 240, 243);
+  border-radius: 10px;
+  padding: 20px;
 }
 
 h1 {
-	font-size: 35px;
+  font-size: 35px;
 }
 
 @media (max-width: 1500px) {
-	::ng-deep .table table {
-		/* table-layout: fixed; */
-		max-width: 100% !important;
-	}
+  ::ng-deep .table table {
+    /* table-layout: fixed; */
+    max-width: 100% !important;
+  }
 
-	.component {
-		width: 13vw !important;
-	}
+  .component {
+    width: 13vw !important;
+  }
 
-	.element {
-		width: 13vw !important;
-	}
+  .element {
+    width: 13vw !important;
+  }
 
-	.details {
-		width: 13vw !important;
-	}
+  .details {
+    width: 13vw !important;
+  }
 
-	.status {
-		width: 12vw !important;
-	}
+  .status {
+    width: 12vw !important;
+  }
 
-	.timestamp {
-		width: 10vw !important;
-	}
+  .timestamp {
+    width: 10vw !important;
+  }
 
-	.edit-button {
-		width: 5vw !important;
-	}
+  .edit-button {
+    width: 5vw !important;
+  }
 }
 
 .wrapper {
-	border-radius: 20px;
-	background-color: white;
-	max-width: 1350px;
+  border-radius: 20px;
+  background-color: white;
+  max-width: 1350px;
 }
 
 ::ng-deep .table table {
-	border-radius: 20px;
-	overflow: hidden;
-	max-width: 1350px;
-	margin-top: 10px;
-	font-size: 17px;
+  border-radius: 20px;
+  overflow: hidden;
+  max-width: 1350px;
+  margin-top: 10px;
+  font-size: 17px;
 }
 
 .tag {
-	font-size: 15px;
+  font-size: 15px;
 }
 
 ::ng-deep .p-tag .pi {
-	padding-right: 15px !important;
-	font-size: 14px;
+  padding-right: 15px !important;
+  font-size: 14px;
 }
 
 ::ng-deep .input {
-	width: 100%;
+  width: 100%;
 }
 
 ::ng-deep .textarea-input {
-	height: 100%;
+  height: 100%;
 }
 
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr > td,
 :host ::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
-	height: 9vh; /*↑ increases row height*/
+  height: 9vh; /*↑ increases row height*/
 }
 
 ::ng-deep .p-datatable th.component,
 ::ng-deep .p-datatable td.component {
-	/* border: 1px solid black; */
-	width: 100px;
-	max-width: 100px;
-	text-align: center;
+  /* border: 1px solid black; */
+  width: 100px;
+  max-width: 100px;
+  text-align: center;
 }
 
 ::ng-deep .component-content {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 
 ::ng-deep .p-datatable .element {
-	/* border: 1px solid black; */
-	width: 100px;
-	max-width: 100px;
-	text-align: center;
+  /* border: 1px solid black; */
+  width: 100px;
+  max-width: 100px;
+  text-align: center;
 }
 
 ::ng-deep .p-datatable th.details {
-	/* border: 1px solid black; */
-	text-align: center;
-	width: 150px;
-	max-width: 150px;
+  /* border: 1px solid black; */
+  text-align: center;
+  width: 150px;
+  max-width: 150px;
 }
 
 ::ng-deep .p-datatable td.details {
-	/* border: 1px solid black; */
-	width: 150px;
-	max-width: 150px;
-	overflow-wrap: anywhere;
+  /* border: 1px solid black; */
+  width: 150px;
+  max-width: 150px;
+  overflow-wrap: anywhere;
 }
 
 ::ng-deep .p-datatable .status {
-	/* border: 1px solid black; */
-	text-align: center;
-	width: 80px;
-	max-width: 80px;
+  /* border: 1px solid black; */
+  text-align: center;
+  width: 80px;
+  max-width: 80px;
 }
 
 ::ng-deep .p-datatable .timestamp {
-	/* border: 1px solid black; */
-	text-align: center;
-	width: 80px;
-	max-width: 80px;
+  /* border: 1px solid black; */
+  text-align: center;
+  width: 80px;
+  max-width: 80px;
 }
 
 ::ng-deep .p-datatable .edit-button {
-	/* border: 1px solid black; */
-	text-align: center;
-	width: 45px;
-	max-width: 45px;
+  /* border: 1px solid black; */
+  text-align: center;
+  width: 45px;
+  max-width: 45px;
 }
 
 ::ng-deep .p-datatable .edit-button .p-button .p-button-icon {
-	font-size: 17px !important;
-	border: none;
+  font-size: 17px !important;
+  border: none;
 }
 
 ::ng-deep .p-datatable .edit-button .p-button {
-	background-color: transparent;
-	transition: none; /* Prevent flash on border color change*/
-	width: 40px;
-	height: 40px;
-	box-shadow: 1px 1px 0px 1px black;
-	border: 0.5px solid black;
+  background-color: transparent;
+  transition: none; /* Prevent flash on border color change*/
+  width: 40px;
+  height: 40px;
+  box-shadow: 1px 1px 0px 1px black;
+  border: 0.5px solid black;
 }
 
 ::ng-deep .p-datatable .edit-button .p-button:hover {
-	background-color: rgb(222, 222, 222);
+  background-color: rgb(222, 222, 222);
 }
 
 @media (max-width: 1200px) {
-	.hide-on-mobile {
-		display: none;
-	}
+  .hide-on-mobile {
+    display: none;
+  }
 
-	h1 {
-		font-size: 25px;
-	}
+  h1 {
+    font-size: 25px;
+  }
 
-	::ng-deep .table table {
-		font-size: 15px;
-	}
+  ::ng-deep .table table {
+    font-size: 15px;
+  }
 
-	.container {
-		font-size: 13px;
-	}
+  .container {
+    font-size: 13px;
+  }
 
-	.tag {
-		font-size: 13px;
-	}
+  .tag {
+    font-size: 13px;
+  }
 
-	.details {
-		min-width: 15vw !important;
-	}
+  .details {
+    min-width: 15vw !important;
+  }
 
-	.status {
-		min-width: 15vw !important;
-	}
+  .status {
+    min-width: 15vw !important;
+  }
 
-	.timestamp {
-		min-width: 15vw !important;
-	}
+  .timestamp {
+    min-width: 15vw !important;
+  }
 }
 
 @media (max-width: 680px) {
-	.details {
-		min-width: 20vw !important;
-	}
+  .component {
+    min-width: 150px !important;
+  }
 
-	.status {
-		min-width: 22vw !important;
-	}
+  .element {
+    min-width: 140px !important;
+  }
 
-	.timestamp {
-		min-width: 20vw !important;
-	}
+  .details {
+    min-width: 160px !important;
+  }
+
+  .status {
+    min-width: 110px !important;
+  }
+
+  .timestamp {
+    min-width: 140px !important;
+  }
+
+  .tag {
+    font-size: 11px;
+  }
+
+  ::ng-deep .p-tag .pi {
+    padding: 0 !important;
+    font-size: 12px;
+  }
+
+  .paginator {
+    font-size: 13px;
+    padding: 0px 5px 10px 5px;
+  }
+
+  :host ::ng-deep .paginator .p-paginator-first,
+  :host ::ng-deep .paginator .p-paginator-prev,
+  :host ::ng-deep .paginator .p-paginator-next,
+  :host ::ng-deep .paginator .p-paginator-last {
+    margin: 0px 0px !important; /* Forces a specific physical margin around every button ↔️ */
+    min-width: 30px !important;
+    height: 30px !important;
+  }
+
+  /* Target the SVG or icon inside the buttons we already identified */
+  ::ng-deep .paginator .p-paginator-first .p-icon,
+  ::ng-deep .paginator .p-paginator-prev .p-icon,
+  ::ng-deep .paginator .p-paginator-next .p-icon,
+  ::ng-deep .paginator .p-paginator-last .p-icon {
+    width: 13px !important; /* Try a larger value to see the change 📏 */
+    height: 13px !important;
+  }
 }
 
 .edit-button-group {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 ::ng-deep .tag-debug-success {
-	padding-left: 10px;
-	padding-right: 10px;
-	border: 1.5px solid red;
+  padding-left: 10px;
+  padding-right: 10px;
+  border: 1.5px solid red;
 }

@@ -115,11 +115,11 @@ mat-drawer-content {
 
 .signout-button-container {
 	display: grid;
-	grid-template-columns: 45% 1fr 20px;
+	grid-template-columns: 55% 1fr 40px;
 }
 
 .username {
-	text-align: left;
+	text-align: center;
 	position: relative;
 	left: -15px;
 	top: 8px;

@@ -69,6 +69,7 @@
 ::ng-deep .first-table-input {
 	font-weight: bold;
 	padding-right: 3px;
+	padding-left: 10px;
 }
 
 ::ng-deep .reset-button {

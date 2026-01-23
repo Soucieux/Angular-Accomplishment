@@ -231,6 +231,15 @@
 
 /* The max-width here is the **current** maximum width of the browser */
 @media (max-width: 840px) {
+	.control-button-title {
+		font-size: 22px;
+	}
+
+	.control-button {
+		position: relative;
+		right: 5px !important;
+	}
+
 	.hide-on-mobile {
 		display: none;
 	}

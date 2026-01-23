@@ -12,9 +12,9 @@
 					(onChange)="updatefinalizedCells()"></p-toggleswitch>
 			</div>
 			@if(saveIndicators[FIRST_TABLE]){
-			<div class="save-indicator">
-				<i class="pi pi-spin pi-spinner" style="font-size: 18px"></i>
-				<span style="font-size: 19px; margin-left: 5px">Saving</span>
+			<div class="save-indicator-first-table">
+				<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+				<span class="save-indicator-text">Saving</span>
 			</div>
 			}
 		</div>
@@ -87,8 +87,8 @@
 			<h4>Account Expenses</h4>
 			@if(saveIndicators[SECOND_TABLE]){
 			<div class="save-indicator">
-				<i class="pi pi-spin pi-spinner" style="font-size: 18px"></i>
-				<span style="font-size: 19px; margin-left: 5px">Saving</span>
+				<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+				<span class="save-indicator-text">Saving</span>
 			</div>
 			}
 		</div>
@@ -103,7 +103,7 @@
 			} } @else { @for(item of updatedSecondTable; let index = $index; track item.name){
 			<div class="second-table-cell">
 				<div class="second-table-cell-header">{{ item.name }}</div>
-				<p-inputgroup>
+				<p-inputgroup style="height: 40px">
 					<p-inputgroup-addon>
 						<i class="pi pi-dollar" style="color: black; font-weight: bold"></i
 					></p-inputgroup-addon>
@@ -125,7 +125,7 @@
 							tooltipPosition="top"></p-button>
 					</p-inputgroup-addon>
 				</p-inputgroup>
-				<p-inputgroup>
+				<p-inputgroup style="height: 40px">
 					<p-datepicker
 						class="second-table-date"
 						[appendTo]="'body'"
@@ -163,8 +163,8 @@
 			<h4>Messages</h4>
 			@if(saveIndicators[THIRD_TABLE]){
 			<div class="save-indicator">
-				<i class="pi pi-spin pi-spinner" style="font-size: 18px"></i>
-				<span style="font-size: 19px; margin-left: 5px">Saving</span>
+				<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+				<span class="save-indicator-text">Saving</span>
 			</div>
 			}
 		</div>

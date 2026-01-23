@@ -83,10 +83,14 @@ h1 {
 
 ::ng-deep .p-datatable th.component,
 ::ng-deep .p-datatable td.component {
-	/* border: 1px solid black; */
 	width: 100px;
 	max-width: 100px;
 	text-align: center;
+}
+
+::ng-deep .p-datatable td.component,
+::ng-deep .p-datatable td.element {
+	border-right: 1px solid #dee2e6;
 }
 
 ::ng-deep .component-content {

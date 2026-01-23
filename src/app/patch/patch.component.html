@@ -45,9 +45,9 @@
 							} @else if(row.component ==='Login'){
 							<span class="pi pi-user hide-on-mobile"></span>
 							} @else if(row.component === 'Remainder'){
-							<span class="material-symbols-outlined nav-icon-mso hide-on-mobile"
-								>priority</span
-							>
+							<span class="material-symbols-outlined hide-on-mobile">priority</span>
+							} @else if(row.component === 'About'){
+							<span class="material-symbols-outlined hide-on-mobile">info</span>
 							}
 							<span>{{ row.component }} </span>
 						</div>
@@ -201,7 +201,9 @@
 			class="paginator"
 			[first]="indexOfFirstItem"
 			[rows]="itemsPerPage"
-			[totalRecords]="isMobile ? ((patchNotesLength$ | async) ?? 0) : ((patchNotesLength$ | async) ?? 0) + 1"
+			[totalRecords]="
+				isMobile ? (patchNotesLength$ | async) ?? 0 : ((patchNotesLength$ | async) ?? 0) + 1
+			"
 			[showCurrentPageReport]="true"
 			[currentPageReportTemplate]="'Showing {first} to {last} of {totalRecords}'"
 			[showFirstLastIcon]="true"

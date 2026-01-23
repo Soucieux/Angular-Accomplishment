@@ -29,7 +29,7 @@ export class Utilities {
 	 */
 	public isMobile() {
 		if (isPlatformBrowser(this.platformId)) {
-			return globalThis.innerWidth <= 1200;
+			return globalThis.innerWidth <= 680;
 		}
 		return false;
 	}

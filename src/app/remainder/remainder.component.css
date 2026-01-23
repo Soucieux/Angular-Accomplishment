@@ -66,7 +66,7 @@
 	padding-top: 12px !important;
 }
 
-::ng-deep .first-table-input {
+.first-table-input {
 	font-weight: bold;
 	padding-right: 3px;
 	padding-left: 10px;
@@ -97,7 +97,7 @@
 		font-size: 18px;
 	}
 
-	::ng-deep .toggle.p-toggleswitch {
+	.toggle.p-toggleswitch {
 		transform: scale(0.55); /* 1 = default */
 	}
 
@@ -115,7 +115,7 @@
 		margin: 0 !important;
 	}
 
-	::ng-deep .first-table-button {
+	.first-table-button {
 		flex: 0 0 21px !important;
 		min-width: 25px !important;
 	}

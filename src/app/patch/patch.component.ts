@@ -126,9 +126,15 @@ export class PatchComponent {
 	async completeEdit(row: any) {
 		const record = this.editedRows.get(row.key);
 		const changes: any = {};
-		if (record.original.element !== record.updated.element.trim()) {
-			changes.element = record.updated.element.trim();
-		}
+
+		/* 
+        This one is not needed as we are not updating the element name
+        
+        if (record.original.element !== record.updated.element.trim()) {
+		 	changes.element = record.updated.element.trim();
+         }
+         */
+
 		if (record.original.details !== record.updated.details.trim()) {
 			changes.details = record.updated.details.trim();
 		}
@@ -187,7 +193,7 @@ export class PatchComponent {
 		);
 	}
 
-	getRowSpan(data: any[], rowIndex: number) {
+	getComponentRowSpan(data: any[], rowIndex: number) {
 		const currentComponent = data[rowIndex].component;
 		let span = 1;
 
@@ -202,8 +208,28 @@ export class PatchComponent {
 		return span;
 	}
 
+	getElementRowSpan(data: any[], rowIndex: number) {
+		const currentElement = data[rowIndex].element;
+		const currentComponent = data[rowIndex].component;
+		let span = 1;
+
+		for (let index = rowIndex + 1; index < data.length; index++) {
+			if (data[index].element === currentElement && data[index].component === currentComponent) span++;
+			else break;
+		}
+		return span;
+	}
+
 	shouldShowComponent(data: any[], rowIndex: number) {
 		return rowIndex === 0 || data[rowIndex].component !== data[rowIndex - 1].component;
+	}
+
+	shouldShowElement(data: any[], rowIndex: number) {
+		if (rowIndex === 0) return true;
+		return (
+			data[rowIndex].element !== data[rowIndex - 1].element ||
+			data[rowIndex].component !== data[rowIndex - 1].component
+		);
 	}
 
 	getSeverityClass(status: string) {

@@ -1,8 +1,12 @@
 <div class="container">
 	<h1>PATCH NOTES</h1>
 	<div class="wrapper">
-		@if(pagedPatchNotes$ | async; as rows){
-		<p-table [value]="rows" [loading]="loading" [showLoader]="false" class="table">
+		<p-table
+			#t
+			[value]="(pagedPatchNotes$ | async) ?? []"
+			[loading]="loading"
+			[showLoader]="false"
+			class="table">
 			<ng-template pTemplate="header">
 				<tr>
 					<th class="component">Component</th>
@@ -29,8 +33,8 @@
 			</ng-template>
 			<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
 				<tr>
-					@if(shouldShowComponent(rows, rowIndex)){
-					<td [attr.rowspan]="getRowSpan(rows, rowIndex)" class="component">
+					@if(shouldShowComponent(t.value, rowIndex)){
+					<td [attr.rowspan]="getComponentRowSpan(t.value, rowIndex)" class="component">
 						<div class="component-content">
 							@if(row.component === 'Entertainment'){
 							<span class="material-icons hide-on-mobile">tv</span>
@@ -41,24 +45,28 @@
 							} @else if(row.component ==='Login'){
 							<span class="pi pi-user hide-on-mobile"></span>
 							} @else if(row.component === 'Remainder'){
-							<span class="material-symbols-outlined nav-icon-mso">priority</span>
+							<span class="material-symbols-outlined nav-icon-mso hide-on-mobile"
+								>priority</span
+							>
 							}
 							<span>{{ row.component }} </span>
 						</div>
 					</td>
-					}
-
-					<td class="element">
-						@if(editedRows.has(row.key)){
-						<input
-							pInputText
-							[(ngModel)]="editedRows.get(row.key).updated.element"
-							class="input"
-							(keyup.enter)="completeEdit(row)" />
-						} @else{
+					} @if(shouldShowElement(t.value, rowIndex)){
+					<td [attr.rowspan]="getElementRowSpan(t.value, rowIndex)" class="element">
+						<!-- This one is not needed as we are not updating the element name -->
+						<!-- @if(editedRows.has(row.key)){
+                            <input
+                                pInputText
+                                [(ngModel)]="editedRows.get(row.key).updated.element"
+                                class="input"
+                                (keyup.enter)="completeEdit(row)" />
+                            } @else{ -->
 						{{ row.element }}
-						}
+
+						<!-- } -->
 					</td>
+					}
 
 					<td class="details">
 						@if(editedRows.has(row.key)){
@@ -90,7 +98,7 @@
 							[value]="row.status"
 							[icon]="getSeverityIcon(row.status)"
 							[severity]="getSeverity(row.status)"
-                            [class]="getSeverityClass(row.status)"
+							[class]="getSeverityClass(row.status)"
 							class="tag"></p-tag>
 						}
 					</td>
@@ -187,17 +195,17 @@
 				} }
 			</ng-template>
 		</p-table>
-		}
 
 		<!-- Paginator -->
 		<p-paginator
+			class="paginator"
 			[first]="indexOfFirstItem"
 			[rows]="itemsPerPage"
 			[totalRecords]="((patchNotesLength$ | async) ?? 0) + 1"
 			[showCurrentPageReport]="true"
 			[currentPageReportTemplate]="'Showing {first} to {last} of {totalRecords}'"
 			[showFirstLastIcon]="true"
-			[showPageLinks]="true"
+			[showPageLinks]="!isMobile"
 			(onPageChange)="pageChange($event)">
 		</p-paginator>
 	</div>

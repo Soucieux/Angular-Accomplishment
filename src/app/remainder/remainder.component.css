@@ -1,6 +1,6 @@
 .container {
 	width: 100%;
-	height: 100%;
+	min-height: 100%;
 	backdrop-filter: blur(50px);
 	background-color: rgb(243, 227, 243);
 	border: 0.8px solid rgb(255, 255, 255);
@@ -66,8 +66,9 @@
 	padding-top: 12px !important;
 }
 
-.first-table-input {
+::ng-deep .first-table-input {
 	font-weight: bold;
+	padding-right: 3px;
 }
 
 ::ng-deep .reset-button {
@@ -90,7 +91,19 @@
 	}
 }
 
-@media (max-width: 680px) {
+@media (max-width: 840px) {
+	h4 {
+		font-size: 18px;
+	}
+
+	::ng-deep .toggle.p-toggleswitch {
+		transform: scale(0.55); /* 1 = default */
+	}
+
+	.toggle-label {
+		font-size: 13px !important;
+	}
+
 	.header {
 		font-size: 14px;
 	}
@@ -103,7 +116,7 @@
 
 	::ng-deep .first-table-button {
 		flex: 0 0 21px !important;
-		min-width: 21px !important;
+		min-width: 25px !important;
 	}
 
 	::ng-deep .first-table-button .p-button .p-button-icon {
@@ -116,6 +129,28 @@
 
 	.third-table {
 		grid-template-columns: repeat(1, 1fr) !important;
+	}
+
+	.save-indicator-first-table {
+		bottom: 20px;
+		left: 60px !important;
+	}
+
+	.save-indicator {
+		bottom: 2px;
+	}
+
+	.save-indicator-icon {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 10px !important;
+		height: 10px !important;
+		font-size: 13px !important;
+	}
+
+	.save-indicator-text {
+		font-size: 15px !important;
 	}
 }
 
@@ -164,6 +199,7 @@
 
 .third-table-cell {
 	padding: 5px;
+	height: 53px;
 }
 
 ::ng-deep .p-popover-content {
@@ -206,9 +242,19 @@
 	padding: 5px;
 }
 
+.save-indicator-first-table,
 .save-indicator {
 	position: relative;
 	left: 10px;
 	display: flex;
 	align-items: center;
+}
+
+.save-indicator-icon {
+	font-size: 18px;
+}
+
+.save-indicator-text {
+	font-size: 19px;
+	margin-left: 5px;
 }

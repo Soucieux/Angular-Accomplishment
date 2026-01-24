@@ -223,29 +223,23 @@ h1 {
 		padding: 0 !important;
 		font-size: 12px;
 	}
+}
 
-	.paginator {
-		font-size: 15px;
-		padding: 0px 5px 10px 5px;
-	}
+::ng-deep .p-paginator-next-icon,
+::ng-deep .p-paginator-last-icon,
+::ng-deep .p-paginator-prev-icon,
+::ng-deep .p-paginator-first-icon {
+	/* Allow the contents to be seen even if they are 'outside' the box */
+	overflow: visible !important;
+}
 
-	:host ::ng-deep .paginator .p-paginator-first,
-	:host ::ng-deep .paginator .p-paginator-prev,
-	:host ::ng-deep .paginator .p-paginator-next,
-	:host ::ng-deep .paginator .p-paginator-last {
-		margin: 0px 0px !important; /* Forces a specific physical margin around every button ↔️ */
-		min-width: 30px !important;
-		height: 30px !important;
-	}
-
-	/* Target the SVG or icon inside the buttons we already identified */
-	::ng-deep .paginator .p-paginator-first .p-icon,
-	::ng-deep .paginator .p-paginator-prev .p-icon,
-	::ng-deep .paginator .p-paginator-next .p-icon,
-	::ng-deep .paginator .p-paginator-last .p-icon {
-		width: 13px !important; /* Try a larger value to see the change 📏 */
-		height: 13px !important;
-	}
+::ng-deep .p-paginator-next-icon path,
+::ng-deep .p-paginator-last-icon path,
+::ng-deep .p-paginator-prev-icon path,
+::ng-deep .p-paginator-first-icon path {
+	/* Move the path to the left or right to see if it slides into view */
+	transform: scale(1.2) translate(-7px, -6px) !important;
+	size: 124px !important;
 }
 
 .edit-button-group {
@@ -258,4 +252,49 @@ h1 {
 	padding-left: 10px;
 	padding-right: 10px;
 	border: 1.5px solid red;
+}
+
+/* Target the very bottom container inside p-columnFilter */
+::ng-deep .p-datatable-filter-buttonbar {
+	display: none !important;
+	padding: 0 !important;
+	border: none !important;
+	height: 0 !important;
+	margin: 0 !important;
+}
+
+/* Eliminate space from any trailing empty containers inside the rule */
+::ng-deep .p-datatable-filter-rule > div:last-child {
+	display: none !important;
+}
+
+.status-filter {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.status-filter .p-tag {
+	cursor: pointer;
+	opacity: 1;
+}
+
+.status-filter .p-tag:hover {
+	box-shadow: 0 0 0 1px currentColor;
+}
+
+.status-filter .p-tag.selected {
+	box-shadow: 0 0 2px 2px currentColor;
+}
+
+.clear-tag {
+	width: 100%;
+	margin: 15px 0 0 0;
+	cursor: pointer;
+}
+
+.clear-tag:hover {
+	box-shadow: 0 0 0 1px currentColor;
+	background-color: rgb(220, 218, 218);
 }

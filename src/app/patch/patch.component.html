@@ -3,7 +3,13 @@
 	<div class="wrapper">
 		<p-table
 			#t
-			[value]="(pagedPatchNotes$ | async) ?? []"
+			[value]="(patchNotes$ | async) ?? []"
+			[paginator]="true"
+			[rows]="itemsPerPage"
+			[showCurrentPageReport]="true"
+			[currentPageReportTemplate]="'Showing {first} to {last} of {totalRecords}'"
+			[showFirstLastIcon]="true"
+			[showPageLinks]="!isMobile"
 			[loading]="loading"
 			[showLoader]="false"
 			class="table">
@@ -12,20 +18,54 @@
 					<th class="component">Component</th>
 					<th class="element">Element</th>
 					<th class="details">Details</th>
-					<th class="status">Status</th>
+					<th class="status">
+						Status
+						<p-columnFilter
+							#columnFilter
+							display="menu"
+							field="status"
+							matchMode="equals"
+							[showOperator]="false"
+							[showMatchModes]="false"
+							[showAddButton]="false"
+							[showApplyButton]="false"
+							[showClearButton]="false">
+							<ng-template #filter let-value let-filter="filterCallback">
+								<div class="status-filter">
+									@for (s of allSeverity; track s.severity) {
+									<p-tag
+										[value]="s.severity"
+										[icon]="getSeverityIcon(s.severity)"
+										[severity]="getSeverity(s.severity)"
+										[class.selected]="value === s.severity"
+										(click)="filter(s.severity)">
+									</p-tag>
+									}
+								</div>
+								<!-- Custom clear -->
+								<p-tag
+									value="Clear Filter"
+									icon="pi pi-times"
+									severity="secondary"
+									class="clear-tag"
+									(click)="filter(null); columnFilter.hide()">
+								</p-tag>
+							</ng-template>
+						</p-columnFilter>
+					</th>
 					<th class="timestamp">TimeStamp</th>
 					<th class="edit-button hide-on-mobile">Edit</th>
 				</tr>
 			</ng-template>
 			<ng-template pTemplate="loadingbody">
-				@for(_ of skeletonRows;track $index){
+				@for (_ of skeletonRows; track $index) {
 				<tr>
 					<td><p-skeleton /></td>
 					<td><p-skeleton /></td>
 					<td><p-skeleton /></td>
 					<td><p-skeleton /></td>
 					<td><p-skeleton /></td>
-					@if(!isMobile){
+					@if (!isMobile) {
 					<td><p-skeleton /></td>
 					}
 				</tr>
@@ -33,26 +73,26 @@
 			</ng-template>
 			<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
 				<tr>
-					@if(shouldShowComponent(t.value, rowIndex)){
+					@if (shouldShowComponent(t.value, rowIndex)) {
 					<td [attr.rowspan]="getComponentRowSpan(t.value, rowIndex)" class="component">
 						<div class="component-content">
-							@if(row.component === 'Entertainment'){
+							@if (row.component === 'Entertainment') {
 							<span class="material-icons hide-on-mobile">tv</span>
-							} @else if(row.component ==='Home'){
+							} @else if (row.component === 'Home') {
 							<span class="material-icons hide-on-mobile">home</span>
-							} @else if(row.component ==='Patch Notes'){
+							} @else if (row.component === 'Patch Notes') {
 							<span class="material-symbols-outlined hide-on-mobile">note_stack</span>
-							} @else if(row.component ==='Login'){
+							} @else if (row.component === 'Login') {
 							<span class="pi pi-user hide-on-mobile"></span>
-							} @else if(row.component === 'Remainder'){
+							} @else if (row.component === 'Remainder') {
 							<span class="material-symbols-outlined hide-on-mobile">priority</span>
-							} @else if(row.component === 'About'){
+							} @else if (row.component === 'About') {
 							<span class="material-symbols-outlined hide-on-mobile">info</span>
 							}
 							<span>{{ row.component }} </span>
 						</div>
 					</td>
-					} @if(shouldShowElement(t.value, rowIndex)){
+					} @if (shouldShowElement(t.value, rowIndex)) {
 					<td [attr.rowspan]="getElementRowSpan(t.value, rowIndex)" class="element">
 						<!-- This one is not needed as we are not updating the element name -->
 						<!-- @if(editedRows.has(row.key)){
@@ -69,7 +109,7 @@
 					}
 
 					<td class="details">
-						@if(editedRows.has(row.key)){
+						@if (editedRows.has(row.key)) {
 						<textarea
 							pTextarea
 							variant="filled"
@@ -77,13 +117,13 @@
 							[(ngModel)]="editedRows.get(row.key).updated.details"
 							class="input textarea-input"
 							(keyup.enter)="completeEdit(row)"></textarea>
-						} @else{
+						} @else {
 						{{ row.details }}
 						}
 					</td>
 
 					<td class="status">
-						@if(editedRows.has(row.key)){
+						@if (editedRows.has(row.key)) {
 						<p-select
 							optionLabel="severity"
 							optionValue="severity"
@@ -106,7 +146,7 @@
 					<td class="timestamp">{{ row.timestamp }}</td>
 
 					<td class="edit-button hide-on-mobile">
-						@if(editedRows.has(row.key)){
+						@if (editedRows.has(row.key)) {
 						<div class="edit-button-group">
 							<p-button
 								severity="secondary"
@@ -130,8 +170,7 @@
 				</tr>
 			</ng-template>
 			<ng-template pTemplate="footer">
-				@if(patchNotesLength$ | async; as totalRecords){ @if( indexOfFirstItem + itemsPerPage >
-				totalRecords){
+				@if (indexOfFirstItem + itemsPerPage > t.totalRecords) {
 				<tr class="hide-on-mobile">
 					<td class="component">
 						<input
@@ -192,24 +231,9 @@
 							(onChange)="clearStatusField()"></p-check-box>
 					</td>
 				</tr>
-				} }
+				}
 			</ng-template>
 		</p-table>
-
-		<!-- Paginator -->
-		<p-paginator
-			class="paginator"
-			[first]="indexOfFirstItem"
-			[rows]="itemsPerPage"
-			[totalRecords]="
-				isMobile ? (patchNotesLength$ | async) ?? 0 : ((patchNotesLength$ | async) ?? 0) + 1
-			"
-			[showCurrentPageReport]="true"
-			[currentPageReportTemplate]="'Showing {first} to {last} of {totalRecords}'"
-			[showFirstLastIcon]="true"
-			[showPageLinks]="!isMobile"
-			(onPageChange)="pageChange($event)">
-		</p-paginator>
 	</div>
 </div>
 <ng-container #dialogComponentContainer></ng-container>

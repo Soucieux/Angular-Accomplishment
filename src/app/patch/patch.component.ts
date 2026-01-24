@@ -50,6 +50,7 @@ export class PatchComponent {
 	protected loading = true;
 	protected severity: { severity: string }[] | undefined;
 	protected bugSeverity: { severity: string }[] | undefined;
+	protected allSeverity: { severity: string }[] | undefined;
 	protected patchNotes$!: Observable<any[]>;
 	protected pagedPatchNotes$!: Observable<any[]>;
 	protected patchNotesLength$!: Observable<number>;
@@ -102,11 +103,10 @@ export class PatchComponent {
 		];
 
 		this.bugSeverity = [{ severity: STATUS_DEBUG }, { severity: STATUS_RESOLVED }];
+
+		this.allSeverity = [...this.severity, ...this.bugSeverity];
 	}
 
-	/**
-	 * Update the grid layout of the page container when the window is resized.
-	 */
 	@HostListener('window:resize')
 	protected onResize() {
 		if (isPlatformBrowser(this.platformId)) {
@@ -232,6 +232,7 @@ export class PatchComponent {
 		);
 	}
 
+	// This is only used to add a border outline for ressolved bug
 	getSeverityClass(status: string) {
 		switch (status) {
 			case STATUS_RESOLVED:

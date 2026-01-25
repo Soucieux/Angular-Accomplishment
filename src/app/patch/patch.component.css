@@ -14,7 +14,7 @@ h1 {
 }
 
 @media (max-width: 1500px) {
-	::ng-deep .table table {
+	::ng-deep table {
 		/* table-layout: fixed; */
 		max-width: 100% !important;
 	}
@@ -44,14 +44,7 @@ h1 {
 	}
 }
 
-.wrapper {
-	border-radius: 20px;
-	overflow: hidden;
-	background-color: white;
-	max-width: 1350px;
-}
-
-::ng-deep .table table {
+.p-datatable {
 	border-radius: 20px;
 	overflow: hidden;
 	max-width: 1350px;
@@ -89,7 +82,9 @@ h1 {
 }
 
 ::ng-deep .p-datatable td.component,
-::ng-deep .p-datatable td.element {
+::ng-deep .p-datatable td.element,
+::ng-deep .p-datatable td.details,
+::ng-deep .p-datatable td.status {
 	border-right: 1px solid #dee2e6;
 }
 
@@ -169,7 +164,7 @@ h1 {
 		font-size: 25px;
 	}
 
-	::ng-deep .table table {
+	::ng-deep table {
 		font-size: 15px;
 	}
 
@@ -208,7 +203,7 @@ h1 {
 	}
 
 	.status {
-		min-width: 110px !important;
+		min-width: 130px !important;
 	}
 
 	.timestamp {
@@ -220,26 +215,13 @@ h1 {
 	}
 
 	::ng-deep .p-tag .pi {
-		padding: 0 !important;
 		font-size: 12px;
 	}
-}
 
-::ng-deep .p-paginator-next-icon,
-::ng-deep .p-paginator-last-icon,
-::ng-deep .p-paginator-prev-icon,
-::ng-deep .p-paginator-first-icon {
-	/* Allow the contents to be seen even if they are 'outside' the box */
-	overflow: visible !important;
-}
-
-::ng-deep .p-paginator-next-icon path,
-::ng-deep .p-paginator-last-icon path,
-::ng-deep .p-paginator-prev-icon path,
-::ng-deep .p-paginator-first-icon path {
-	/* Move the path to the left or right to see if it slides into view */
-	transform: scale(1.2) translate(-7px, -6px) !important;
-	size: 124px !important;
+	/* Change font size of "Showing x to y of z" */
+	::ng-deep .p-datatable .p-paginator .p-paginator-current {
+		font-size: 14px !important; /* adjust as needed */
+	}
 }
 
 .edit-button-group {
@@ -254,18 +236,9 @@ h1 {
 	border: 1.5px solid red;
 }
 
-/* Target the very bottom container inside p-columnFilter */
-::ng-deep .p-datatable-filter-buttonbar {
-	display: none !important;
-	padding: 0 !important;
-	border: none !important;
-	height: 0 !important;
-	margin: 0 !important;
-}
-
-/* Eliminate space from any trailing empty containers inside the rule */
-::ng-deep .p-datatable-filter-rule > div:last-child {
-	display: none !important;
+/* Change font size of "Showing x to y of z" */
+::ng-deep .p-datatable .p-paginator .p-paginator-current {
+	font-size: 16px; /* adjust as needed */
 }
 
 .status-filter {

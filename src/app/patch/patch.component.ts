@@ -1,5 +1,5 @@
 import { Component, HostListener, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { InputText } from 'primeng/inputtext';
@@ -17,7 +17,7 @@ import {
 	Utilities
 } from '../app.utilities';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
-import { map, Observable, shareReplay, take, tap } from 'rxjs';
+import { map, Observable, shareReplay, Subscription, take, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../app.logs';
 import { DialogService } from '../service/dialog-service/dialog.service';
@@ -52,8 +52,6 @@ export class PatchComponent {
 	protected bugSeverity: { severity: string }[] | undefined;
 	protected allSeverity: { severity: string }[] | undefined;
 	protected patchNotes$!: Observable<any[]>;
-	protected pagedPatchNotes$!: Observable<any[]>;
-	protected patchNotesLength$!: Observable<number>;
 	protected indexOfFirstItem = 0;
 	protected itemsPerPage = 9;
 	protected isMobile!: boolean;
@@ -84,14 +82,26 @@ export class PatchComponent {
 			this.isMobile = this.utilities.isMobile();
 
 			this.patchNotes$ = this.firebaseService.getPatchNotes().pipe(
-				tap(() => (this.loading = false)),
+				map((data) => {
+					return this.isMobile ? data : [...data, { __dummy: true }];
+				}),
+				tap((data) => {
+					this.loading = false;
+
+					let targetIndex = this.indexOfFirstItem;
+					if (targetIndex >= data.length && targetIndex > 0) {
+						targetIndex = Math.max(0, targetIndex - 9);
+					}
+
+					this.indexOfFirstItem = -1;
+
+					setTimeout(() => {
+						this.indexOfFirstItem = targetIndex;
+					});
+				}),
+				// ShareReply should be removed as it was used to share the subscription between multiple callers
+				// Leave it here for later references
 				shareReplay(1)
-			);
-
-			this.patchNotesLength$ = this.patchNotes$.pipe(map((notes) => notes.length));
-
-			this.pagedPatchNotes$ = this.patchNotes$.pipe(
-				map((notes) => notes.slice(this.indexOfFirstItem, this.indexOfFirstItem + this.itemsPerPage))
 			);
 		}
 
@@ -188,9 +198,6 @@ export class PatchComponent {
 
 	protected pageChange(event: any) {
 		this.indexOfFirstItem = event.first;
-		this.pagedPatchNotes$ = this.patchNotes$.pipe(
-			map((notes) => notes.slice(this.indexOfFirstItem, this.indexOfFirstItem + this.itemsPerPage))
-		);
 	}
 
 	getComponentRowSpan(data: any[], rowIndex: number) {
@@ -221,11 +228,12 @@ export class PatchComponent {
 	}
 
 	shouldShowComponent(data: any[], rowIndex: number) {
-		return rowIndex === 0 || data[rowIndex].component !== data[rowIndex - 1].component;
+		if (rowIndex === 0 || rowIndex === this.indexOfFirstItem) return true;
+		return data[rowIndex].component !== data[rowIndex - 1].component;
 	}
 
 	shouldShowElement(data: any[], rowIndex: number) {
-		if (rowIndex === 0) return true;
+		if (rowIndex === 0 || rowIndex === this.indexOfFirstItem) return true;
 		return (
 			data[rowIndex].element !== data[rowIndex - 1].element ||
 			data[rowIndex].component !== data[rowIndex - 1].component

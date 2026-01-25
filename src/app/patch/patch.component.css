@@ -61,76 +61,75 @@ h1 {
 	font-size: 14px;
 }
 
-::ng-deep .input {
+.input {
 	width: 100%;
 }
 
-::ng-deep .textarea-input {
+.textarea-input {
 	height: 100%;
 }
 
-:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td,
-:host ::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
+::ng-deep .p-datatable .p-datatable-tbody > tr > td,
+::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
 	height: 9vh; /*↑ increases row height*/
 }
 
-::ng-deep .p-datatable th.component,
-::ng-deep .p-datatable td.component {
+.p-datatable th.component,
+.p-datatable td.component {
 	width: 100px;
 	max-width: 100px;
 	text-align: center;
 }
 
-::ng-deep .p-datatable td.component,
-::ng-deep .p-datatable td.element,
-::ng-deep .p-datatable td.details,
-::ng-deep .p-datatable td.status {
+.p-datatable td.component,
+.p-datatable td.element,
+.p-datatable td.details,
+.p-datatable td.status {
 	border-right: 1px solid #dee2e6;
 }
 
-::ng-deep .component-content {
+.component-content {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 5px;
 }
 
-::ng-deep .p-datatable .element {
+.p-datatable .element {
 	/* border: 1px solid black; */
 	width: 100px;
 	max-width: 100px;
 	text-align: center;
 }
 
-::ng-deep .p-datatable th.details {
+.p-datatable th.details {
 	/* border: 1px solid black; */
 	text-align: center;
 	width: 150px;
 	max-width: 150px;
 }
 
-::ng-deep .p-datatable td.details {
-	/* border: 1px solid black; */
+.p-datatable td.details {
 	width: 150px;
 	max-width: 150px;
 	overflow-wrap: anywhere;
 }
 
-::ng-deep .p-datatable .status {
+.p-datatable .status {
 	/* border: 1px solid black; */
 	text-align: center;
 	width: 80px;
 	max-width: 80px;
 }
 
-::ng-deep .p-datatable .timestamp {
+.p-datatable .timestamp {
 	/* border: 1px solid black; */
 	text-align: center;
 	width: 80px;
 	max-width: 80px;
 }
 
-::ng-deep .p-datatable .edit-button {
+.p-datatable .edit-button {
 	/* border: 1px solid black; */
 	text-align: center;
 	width: 45px;
@@ -206,6 +205,14 @@ h1 {
 		min-width: 130px !important;
 	}
 
+	.p-datatable th.status {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		padding-right: 0px !important;
+	}
+
 	.timestamp {
 		min-width: 140px !important;
 	}
@@ -217,11 +224,6 @@ h1 {
 	::ng-deep .p-tag .pi {
 		font-size: 12px;
 	}
-
-	/* Change font size of "Showing x to y of z" */
-	::ng-deep .p-datatable .p-paginator .p-paginator-current {
-		font-size: 14px !important; /* adjust as needed */
-	}
 }
 
 .edit-button-group {
@@ -230,7 +232,7 @@ h1 {
 	gap: 6px;
 }
 
-::ng-deep .tag-debug-success {
+.tag-debug-success {
 	padding-left: 10px;
 	padding-right: 10px;
 	border: 1.5px solid red;

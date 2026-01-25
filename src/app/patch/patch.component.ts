@@ -240,6 +240,10 @@ export class PatchComponent {
 		);
 	}
 
+    getRenderedData(data: any) {
+		return data.filteredValue ?? data.value ?? [];
+	}
+
 	// This is only used to add a border outline for ressolved bug
 	getSeverityClass(status: string) {
 		switch (status) {

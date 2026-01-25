@@ -21,7 +21,7 @@
 				<th class="status">
 					Status
 					<p-columnFilter
-                        class="column-filter"
+						class="column-filter"
 						#columnFilter
 						display="menu"
 						field="status"
@@ -75,8 +75,10 @@
 		<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
 			@if (!row.__dummy) {
 				<tr>
-					@if (shouldShowComponent(t.value, rowIndex)) {
-						<td [attr.rowspan]="getComponentRowSpan(t.value, rowIndex)" class="component">
+					@if (shouldShowComponent(getRenderedData(t), rowIndex)) {
+						<td
+							[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
+							class="component">
 							<div class="component-content">
 								@if (row.component === 'Entertainment') {
 									<span class="material-icons hide-on-mobile">tv</span>
@@ -95,8 +97,8 @@
 							</div>
 						</td>
 					}
-					@if (shouldShowElement(t.value, rowIndex)) {
-						<td [attr.rowspan]="getElementRowSpan(t.value, rowIndex)" class="element">
+					@if (shouldShowElement(getRenderedData(t), rowIndex)) {
+						<td [attr.rowspan]="getElementRowSpan(getRenderedData(t), rowIndex)" class="element">
 							<!-- This one is not needed as we are not updating the element name -->
 							<!-- @if(editedRows.has(row.key)){
                             <input

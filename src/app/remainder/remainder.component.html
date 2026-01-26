@@ -11,11 +11,11 @@
 					[(ngModel)]="isNextMonth"
 					(onChange)="updatefinalizedCells()"></p-toggleswitch>
 			</div>
-			@if(saveIndicators[FIRST_TABLE]){
-			<div class="save-indicator-first-table">
-				<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
-				<span class="save-indicator-text">Saving</span>
-			</div>
+			@if (saveIndicators[FIRST_TABLE]) {
+				<div class="save-indicator-first-table">
+					<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+					<span class="save-indicator-text">Saving</span>
+				</div>
 			}
 		</div>
 		<p-table [value]="updatedFirstTable" [loading]="loading" [showLoader]="false" class="first-table">
@@ -28,41 +28,41 @@
 				</tr>
 			</ng-template>
 			<ng-template pTemplate="loadingbody">
-				@for(_ of [0,1,2,3,4];track $index){
-				<tr>
-					<td class="skeleton-row"><p-skeleton /></td>
-					<td class="skeleton-row"><p-skeleton /></td>
-					<td class="skeleton-row"><p-skeleton /></td>
-					<td class="skeleton-row"><p-skeleton /></td>
-				</tr>
+				@for (_ of [0, 1, 2, 3, 4]; track $index) {
+					<tr>
+						<td class="skeleton-row"><p-skeleton /></td>
+						<td class="skeleton-row"><p-skeleton /></td>
+						<td class="skeleton-row"><p-skeleton /></td>
+						<td class="skeleton-row"><p-skeleton /></td>
+					</tr>
 				}
 			</ng-template>
 			<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
 				<tr>
-					@for(field of fields; let index = $index; track field){
-					<td>
-						<p-inputgroup>
-							<input
-								pInputText
-								type="text"
-								inputmode="numeric"
-								[(ngModel)]="row[field].value"
-								[disabled]="!isNextMonth && isDisabled(rowIndex, field)"
-								[class.disabled-cell]="!isNextMonth && isDisabled(rowIndex, field)"
-								class="first-table-input"
-								[style]="setStyle(row[field].isCharged, row[field].value)"
-								(keydown)="onNumberChange($event)"
-								(blur)="onValueChange(rowIndex, field)"
-								(keyup.enter)="onValueChange(rowIndex, field)" />
-							<p-inputgroup-addon class="first-table-button"
-								><p-button
-									icon="pi pi-check"
-									severity="secondary"
+					@for (field of fields; let index = $index; track field) {
+						<td>
+							<p-inputgroup>
+								<input
+									pInputText
+									type="text"
+									inputmode="numeric"
+									[(ngModel)]="row[field].value"
 									[disabled]="!isNextMonth && isDisabled(rowIndex, field)"
-									(onClick)="setIsCharged(rowIndex, field)"></p-button
-							></p-inputgroup-addon>
-						</p-inputgroup>
-					</td>
+									[class.disabled-cell]="!isNextMonth && isDisabled(rowIndex, field)"
+									class="first-table-input"
+									[style]="setStyle(row[field].isCharged, row[field].value)"
+									(keydown)="onNumberChange($event)"
+									(blur)="onValueChange(rowIndex, field)"
+									(keyup.enter)="onValueChange(rowIndex, field)" />
+								<p-inputgroup-addon class="first-table-button"
+									><p-button
+										icon="pi pi-check"
+										severity="secondary"
+										[disabled]="!isNextMonth && isDisabled(rowIndex, field)"
+										(onClick)="setIsCharged(rowIndex, field)"></p-button
+								></p-inputgroup-addon>
+							</p-inputgroup>
+						</td>
 					}
 				</tr>
 			</ng-template>
@@ -85,225 +85,242 @@
 	<div class="table-wrapper">
 		<div class="header-wrapper">
 			<h4>Account Expenses</h4>
-			@if(saveIndicators[SECOND_TABLE]){
-			<div class="save-indicator">
-				<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
-				<span class="save-indicator-text">Saving</span>
-			</div>
+			@if (saveIndicators[SECOND_TABLE]) {
+				<div class="save-indicator">
+					<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+					<span class="save-indicator-text">Saving</span>
+				</div>
 			}
 		</div>
 		<div class="second-table">
-			@if(loading){ @for (_ of [0,1,2,3,4,5,6,7]; track $index) {
-			<div class="second-table-cell">
-				<p-skeleton height="25px" />
-				<p-skeleton height="50px" />
-				<p-skeleton height="50px" />
-				<p-skeleton height="25px" />
-			</div>
-			} } @else { @for(item of updatedSecondTable; let index = $index; track item.name){
-			<div class="second-table-cell">
-				<div class="second-table-cell-header">{{ item.name }}</div>
-				<p-inputgroup style="height: 40px">
-					<p-inputgroup-addon>
-						<i class="pi pi-dollar" style="color: black; font-weight: bold"></i
-					></p-inputgroup-addon>
-					<p-inputnumber
-						mode="decimal"
-						locale="en-US"
-						[minFractionDigits]="2"
-						[maxFractionDigits]="2"
-						[step]="0.01"
-						[(ngModel)]="item.content.debt"
-						(onBlur)="updateTableSingleValue(SECOND_TABLE, item.key, 'debt')"
-						(keyup.enter)="updateTableSingleValue(SECOND_TABLE, item.key, 'debt')" />
-					<p-inputgroup-addon
-						><p-button
-							icon="pi pi-minus"
-							severity="secondary"
-							(onClick)="updateDebt(item.key, item.content.debt)"
-							pTooltip="Decrement by 998.05"
-							tooltipPosition="top"></p-button>
-					</p-inputgroup-addon>
-				</p-inputgroup>
-				<p-inputgroup style="height: 40px">
-					<p-datepicker
-						class="second-table-date"
-						[appendTo]="'body'"
-						dateFormat="yy-mm-dd"
-						[(ngModel)]="item.content.date"
-						(keydown)="preventKeyin($event)"
-						[disabled]="!item.content.paid"
-						(onSelect)="updateTableWithNewDate(SECOND_TABLE, item.key, $event)" />
-					<p-inputgroup-addon
-						><p-button
-							[icon]="item.content.paid ? 'pi pi-check' : 'pi pi-replay'"
-							severity="secondary"
-							[pTooltip]="item.content.paid ? 'Set default debt' : 'Reset debt to default'"
-							tooltipPosition="top"
-							(onClick)="setDefaultDebt(item.key, item.content.paid)"></p-button
-					></p-inputgroup-addon>
-				</p-inputgroup>
-				<div class="second-table-checkbox">
-					<p-checkbox
-						[inputId]="item.key"
-						[(ngModel)]="item.content.paid"
-						[binary]="true"
-						(onChange)="updateTableSingleValue(SECOND_TABLE, item.key, 'paid')" />
-					<label [for]="item.key" [style]="item.content.paid ? 'color:green' : 'color:red'">{{
-						item.content.paid ? 'Paid' : 'Not yet paid ($' + item.content.original + ')'
-					}}</label>
-				</div>
-			</div>
-			} }
+			@if (loading) {
+				@for (_ of [0, 1, 2, 3, 4, 5, 6, 7]; track $index) {
+					<div class="second-table-cell">
+						<p-skeleton height="25px" />
+						<p-skeleton height="50px" />
+						<p-skeleton height="50px" />
+						<p-skeleton height="25px" />
+					</div>
+				}
+			} @else {
+				@for (item of updatedSecondTable; let index = $index; track item.name) {
+					<div class="second-table-cell">
+						<div class="second-table-cell-header">{{ item.name }}</div>
+						<p-inputgroup style="height: 40px">
+							<p-inputgroup-addon>
+								<i class="pi pi-dollar" style="color: black; font-weight: bold"></i
+							></p-inputgroup-addon>
+							<p-inputnumber
+								mode="decimal"
+								locale="en-US"
+								[minFractionDigits]="2"
+								[maxFractionDigits]="2"
+								[step]="0.01"
+								[(ngModel)]="item.content.debt"
+								(onBlur)="updateTableSingleValue(SECOND_TABLE, item.key, 'debt')"
+								(keyup.enter)="updateTableSingleValue(SECOND_TABLE, item.key, 'debt')" />
+							<p-inputgroup-addon
+								><p-button
+									icon="pi pi-minus"
+									severity="secondary"
+									(onClick)="updateDebt(item.key, item.content.debt)"
+									pTooltip="Decrement by 998.05"
+									tooltipPosition="top"></p-button>
+							</p-inputgroup-addon>
+						</p-inputgroup>
+						<p-inputgroup style="height: 40px">
+							<p-datepicker
+								class="second-table-date"
+								[appendTo]="'body'"
+								dateFormat="yy-mm-dd"
+								[(ngModel)]="item.content.date"
+								(keydown)="preventKeyin($event)"
+								[disabled]="!item.content.paid"
+								(onSelect)="updateTableWithNewDate(SECOND_TABLE, item.key, $event)" />
+							<p-inputgroup-addon
+								><p-button
+									[icon]="item.content.paid ? 'pi pi-check' : 'pi pi-replay'"
+									severity="secondary"
+									[pTooltip]="
+										item.content.paid ? 'Set default debt' : 'Reset debt to default'
+									"
+									tooltipPosition="top"
+									(onClick)="setDefaultDebt(item.key, item.content.paid)"></p-button
+							></p-inputgroup-addon>
+						</p-inputgroup>
+						<div class="second-table-checkbox">
+							<p-checkbox
+								[inputId]="item.key"
+								[(ngModel)]="item.content.paid"
+								[binary]="true"
+								(onChange)="updateTableSingleValue(SECOND_TABLE, item.key, 'paid')" />
+							<label
+								[for]="item.key"
+								style="font-size: 15px"
+								[style]="item.content.paid ? 'color:green' : 'color:red'"
+								>{{
+									item.content.paid
+										? 'Paid'
+										: 'Not yet paid ($' + item.content.original + ')'
+								}}</label
+							>
+						</div>
+					</div>
+				}
+			}
 		</div>
 	</div>
 	<!-- THIRD TABLE -->
 	<div class="table-wrapper">
 		<div class="header-wrapper">
 			<h4>Messages</h4>
-			@if(saveIndicators[THIRD_TABLE]){
-			<div class="save-indicator">
-				<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
-				<span class="save-indicator-text">Saving</span>
-			</div>
+			@if (saveIndicators[THIRD_TABLE]) {
+				<div class="save-indicator">
+					<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+					<span class="save-indicator-text">Saving</span>
+				</div>
 			}
 		</div>
 		<div class="third-table-wrapper">
-			@if(loading){ @for (_ of [0,1,2,3,4,5]; track $index) {
-			<div class="second-table-cell">
-				<p-skeleton height="35px" />
-			</div>
-			} }@else{
-			<div class="third-table">
-				@for(item of pagedThirdTable; track item.key){
-				<p-inputgroup class="third-table-cell">
-					<input
-						type="text"
-						pInputText
-						[(ngModel)]="item.content"
-						fluid
-						(blur)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')"
-						(keyup.enter)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')" />
-					@if(item.date){
-					<p-inputgroup-addon>
-						<i
-							class="pi pi-clock"
-							[style]="{
-								color: 'black'
-							}"
-							[pTooltip]="isHoverCapable ? item.date : ''"
-							(click)="!isHoverCapable && op.toggle($event)"
-							tooltipPosition="top"></i>
-						<p-popover #op>{{ item.date }}</p-popover>
-					</p-inputgroup-addon>
-					} @if(item.link){
-					<p-inputgroup-addon
-						><a [href]="item.link" target="_blank" rel="noopener noreferrer"
-							><i class="pi pi-link" style="color: black"></i></a
-					></p-inputgroup-addon>
+			@if (loading) {
+				@for (_ of [0, 1, 2, 3, 4, 5]; track $index) {
+					<div class="second-table-cell">
+						<p-skeleton height="35px" />
+					</div>
+				}
+			} @else {
+				<div class="third-table">
+					@for (item of pagedThirdTable; track item.key) {
+						<p-inputgroup class="third-table-cell">
+							<input
+								type="text"
+								pInputText
+								[(ngModel)]="item.content"
+								fluid
+								(blur)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')"
+								(keyup.enter)="updateTableSingleValue(THIRD_TABLE, item.key, 'content')" />
+							@if (item.date) {
+								<p-inputgroup-addon>
+									<i
+										class="pi pi-clock"
+										[style]="{
+											color: 'black'
+										}"
+										[pTooltip]="isHoverCapable ? item.date : ''"
+										(click)="!isHoverCapable && op.toggle($event)"
+										tooltipPosition="top"></i>
+									<p-popover #op>{{ item.date }}</p-popover>
+								</p-inputgroup-addon>
+							}
+							@if (item.link) {
+								<p-inputgroup-addon
+									><a [href]="item.link" target="_blank" rel="noopener noreferrer"
+										><i class="pi pi-link" style="color: black"></i></a
+								></p-inputgroup-addon>
+							}
+							<p-inputgroup-addon>
+								<p-button
+									icon="pi pi-pencil"
+									severity="secondary"
+									(onClick)="openPopover($event, item)">
+								</p-button>
+							</p-inputgroup-addon>
+						</p-inputgroup>
 					}
-					<p-inputgroup-addon>
-						<p-button
-							icon="pi pi-pencil"
-							severity="secondary"
-							(onClick)="openPopover($event, item)">
-						</p-button>
-					</p-inputgroup-addon>
-				</p-inputgroup>
-				}
 
-				<!-- Extra input group for entry creation -->
-				@if(thirdTableIndexOfFirstItem + thirdTableItemsPerPage > originalThirdTable.length){
-				<p-inputgroup class="third-table-cell">
-					<input
-						type="text"
-						pInputText
-						fluid
-						placeholder="New entry"
-						[(ngModel)]="thirdTableNewContent"
-						(keyup.enter)="addNewContentOnly()" />
-					<p-inputgroup-addon>
-						<p-button
-							icon="pi pi-plus"
-							severity="secondary"
-							(onClick)="openPopover($event, null)"></p-button>
-					</p-inputgroup-addon>
-				</p-inputgroup>
-				}
-			</div>
+					<!-- Extra input group for entry creation -->
+					@if (thirdTableIndexOfFirstItem + thirdTableItemsPerPage > originalThirdTable.length) {
+						<p-inputgroup class="third-table-cell">
+							<input
+								type="text"
+								pInputText
+								fluid
+								placeholder="New entry"
+								[(ngModel)]="thirdTableNewContent"
+								(keyup.enter)="addNewContentOnly()" />
+							<p-inputgroup-addon>
+								<p-button
+									icon="pi pi-plus"
+									severity="secondary"
+									(onClick)="openPopover($event, null)"></p-button>
+							</p-inputgroup-addon>
+						</p-inputgroup>
+					}
+				</div>
 
-			<!-- Paginator -->
-			@if(originalThirdTable){
-			<p-paginator
-				class="paginator"
-				[first]="thirdTableIndexOfFirstItem"
-				[rows]="thirdTableItemsPerPage"
-				[totalRecords]="originalThirdTable.length + 1"
-				[showFirstLastIcon]="false"
-				[showPageLinks]="true"
-				(onPageChange)="thirdTablePageChange($event)">
-			</p-paginator>
-			} }
+				<!-- Paginator -->
+				@if (originalThirdTable) {
+					<p-paginator
+						class="paginator"
+						[first]="thirdTableIndexOfFirstItem"
+						[rows]="thirdTableItemsPerPage"
+						[totalRecords]="originalThirdTable.length + 1"
+						[showFirstLastIcon]="false"
+						[showPageLinks]="true"
+						(onPageChange)="thirdTablePageChange($event)">
+					</p-paginator>
+				}
+			}
 		</div>
 	</div>
 
 	<!-- Reusable popover -->
 	<p-popover [focusOnShow]="false" #op2>
-		@if(thirdTableActiveItem){
-		<div class="popover-item">
-			<span class="popover-label">Website Link</span>
-			<p-inputgroup class="popover-inputgroup">
-				<p-inputgroup-addon>
-					<i class="pi pi-link" style="color: black"></i>
-				</p-inputgroup-addon>
-				<input
-					type="text"
-					pInputText
-					[(ngModel)]="thirdTableActiveItem.link"
-					style="font-size: 15px"
-					(blur)="
+		@if (thirdTableActiveItem) {
+			<div class="popover-item">
+				<span class="popover-label">Website Link</span>
+				<p-inputgroup class="popover-inputgroup">
+					<p-inputgroup-addon>
+						<i class="pi pi-link" style="color: black"></i>
+					</p-inputgroup-addon>
+					<input
+						type="text"
+						pInputText
+						[(ngModel)]="thirdTableActiveItem.link"
+						style="font-size: 15px"
+						(blur)="
+							thirdTableActiveItem.key
+								? updateLink(thirdTableActiveItem.key, thirdTableActiveItem.link)
+								: ''
+						"
+						(keyup.enter)="
+							thirdTableActiveItem.key
+								? updateLink(thirdTableActiveItem.key, thirdTableActiveItem.link)
+								: ''
+						" />
+				</p-inputgroup>
+			</div>
+			<div class="popover-item">
+				<span class="popover-label">Due Date</span>
+				<p-inputgroup class="popover-inputgroup">
+					<p-inputgroup-addon>
+						<i class="pi pi-calendar" style="color: black"></i>
+					</p-inputgroup-addon>
+					<p-datepicker
+						[appendTo]="'body'"
+						dateFormat="yy-mm-dd"
+						[(ngModel)]="thirdTableActiveItem.date"
+						class="datapicker"
+						(onSelect)="
+							thirdTableActiveItem.key
+								? updateTableWithNewDate(THIRD_TABLE, thirdTableActiveItem.key, $event)
+								: ''
+						">
+					</p-datepicker>
+				</p-inputgroup>
+			</div>
+			<div class="popover-item">
+				<p-button
+					[label]="thirdTableActiveItem.key ? 'Remove Entry' : 'Add Entry'"
+					[icon]="thirdTableActiveItem.key ? 'pi pi-times' : 'pi pi-plus'"
+					[severity]="thirdTableActiveItem.key ? 'danger' : 'success'"
+					class="submit-button"
+					(onClick)="
 						thirdTableActiveItem.key
-							? updateLink(thirdTableActiveItem.key, thirdTableActiveItem.link)
-							: ''
-					"
-					(keyup.enter)="
-						thirdTableActiveItem.key
-							? updateLink(thirdTableActiveItem.key, thirdTableActiveItem.link)
-							: ''
-					" />
-			</p-inputgroup>
-		</div>
-		<div class="popover-item">
-			<span class="popover-label">Due Date</span>
-			<p-inputgroup class="popover-inputgroup">
-				<p-inputgroup-addon>
-					<i class="pi pi-calendar" style="color: black"></i>
-				</p-inputgroup-addon>
-				<p-datepicker
-					[appendTo]="'body'"
-					dateFormat="yy-mm-dd"
-					[(ngModel)]="thirdTableActiveItem.date"
-					class="datapicker"
-					(onSelect)="
-						thirdTableActiveItem.key
-							? updateTableWithNewDate(THIRD_TABLE, thirdTableActiveItem.key, $event)
-							: ''
-					">
-				</p-datepicker>
-			</p-inputgroup>
-		</div>
-		<div class="popover-item">
-			<p-button
-				[label]="thirdTableActiveItem.key ? 'Remove Entry' : 'Add Entry'"
-				[icon]="thirdTableActiveItem.key ? 'pi pi-times' : 'pi pi-plus'"
-				[severity]="thirdTableActiveItem.key ? 'danger' : 'success'"
-				class="submit-button"
-				(onClick)="
-					thirdTableActiveItem.key
-						? openDeleteConfirmationDialog(thirdTableActiveItem.key)
-						: addNewEntry()
-				"></p-button>
-		</div>
+							? openDeleteConfirmationDialog(thirdTableActiveItem.key)
+							: addNewEntry()
+					"></p-button>
+			</div>
 		}
 	</p-popover>
 </div>

@@ -7,7 +7,7 @@
 		[rows]="itemsPerPage"
 		[first]="indexOfFirstItem"
 		[showCurrentPageReport]="!isMobile"
-		[currentPageReportTemplate]="isMobile ? '' : 'Showing {first} to {last} of {totalRecords}'"
+		currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
 		[showFirstLastIcon]="true"
 		[showPageLinks]="!isMobile"
 		[loading]="loading"

@@ -224,6 +224,10 @@ h1 {
 	::ng-deep .p-tag .pi {
 		font-size: 12px;
 	}
+
+	::ng-deep .p-paginator-current {
+		display: none !important;
+	}
 }
 
 .edit-button-group {

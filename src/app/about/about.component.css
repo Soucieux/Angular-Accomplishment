@@ -1,0 +1,58 @@
+.container {
+	max-width: 1350px;
+}
+
+.header {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	margin-top: 30px;
+	padding: 10px;
+	gap: 25px;
+}
+
+::ng-deep .h5 {
+	padding: 20px;
+	border: 2px dotted black;
+	line-height: 1.6;
+	white-space: pre-line !important;
+}
+
+.icon {
+	display: flex;
+	width: 40px;
+	height: 40px;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	border-radius: 50%;
+	box-shadow: 3px 3px 10px white;
+}
+
+.date {
+	position: relative;
+	top: 5px;
+	font-size: 20px;
+	color: white;
+}
+
+.text {
+	white-space: pre-line;
+	text-align: justify;
+}
+
+.card {
+	max-width: 500px;
+}
+
+::ng-deep .p-timeline-event:nth-child(even) .p-timeline-event-content {
+	display: flex;
+	justify-content: flex-end;
+}
+
+::ng-deep .p-timeline-event:nth-child(odd) .p-timeline-event-content,
+::ng-deep .p-timeline-event:nth-child(even) .p-timeline-event-content {
+	margin-bottom: 20px;
+}

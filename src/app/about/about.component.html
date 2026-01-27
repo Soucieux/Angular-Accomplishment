@@ -1,6 +1,6 @@
 <div class="container">
 	<div class="header">
-		<h2>More Than Just Code and Calendars</h2>
+		<h2 class="h2">More Than Just Code and Calendars</h2>
 		<h5 class="h5">
 			Welcome to my personal corner of the web. This space serves as my second brain: a repository for
 			the films that stay with me, a compass for my most important dates, my life task-engine, and a
@@ -8,16 +8,18 @@
 		</h5>
 	</div>
 
-	<p-timeline [value]="events" align="alternate" class="body">
+	<p-timeline [value]="events" [align]="isMobile ? 'left' : 'alternate'">
 		<ng-template #marker let-event>
 			<span class="material-symbols-outlined icon" [style]="{ 'background-color': event.color }">
 				{{ event.icon }}
 			</span>
 		</ng-template>
 		<ng-template #opposite let-event>
-			<div class="date">
-				<span >{{ event.date }}</span>
-			</div>
+			@if (!isMobile) {
+				<div class="date">
+					<span>{{ event.date }}</span>
+				</div>
+			}
 		</ng-template>
 		<ng-template #content let-event>
 			<p-card [header]="event.header" [subheader]="event.subheader" class="card">

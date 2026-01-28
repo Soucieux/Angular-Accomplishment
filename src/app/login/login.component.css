@@ -91,7 +91,7 @@
 	box-shadow: 0 1px 1px 1px black;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 840px) {
 	.title {
 		font-size: 35px;
 	}

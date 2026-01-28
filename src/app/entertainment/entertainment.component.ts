@@ -229,7 +229,10 @@ export class EntertainmentComponent {
 	 * @param retrieveYearAndTitle - false
 	 */
 	private async getMovieRateOnly(movieItemVO: MovieItemVO) {
-		await this.getMovieData(movieItemVO, false, false, false);
+		// Latest rate can be retrieved only if the searching is still executing and there is no concurrent processes
+		if (this.isSearching && movieItemVO.getSessionId() === this.sessionId) {
+			await this.getMovieData(movieItemVO, false, false);
+		}
 	}
 
 	/**
@@ -240,7 +243,7 @@ export class EntertainmentComponent {
 	 * @param retrieveYearAndTitle - false
 	 */
 	private async getNewMovieDataGivenYearAndTitle(movieItemVO: MovieItemVO) {
-		await this.getMovieData(movieItemVO, true, false, true);
+		await this.getMovieData(movieItemVO, true, false);
 	}
 
 	/**
@@ -251,7 +254,26 @@ export class EntertainmentComponent {
 	 * @param retrieveYearAndTitle - true
 	 */
 	private async getNewMovieDataGivenMovieId(movieItemVO: MovieItemVO) {
-		await this.getMovieData(movieItemVO, true, true, true);
+		await this.getMovieData(movieItemVO, true, true);
+	}
+
+	/**
+	 * Invoke retrieve movie API to get required data
+	 *
+	 * @param movieId The movie Id to search for
+	 * @returns A JSON object containing the required data & A boolean value whether it is from third-part API
+	 */
+	private async invokeRetrieveMovieApi(movieId: number) {
+		let movieData = null;
+		let movieDataWebpage = null;
+
+		movieData = await firstValueFrom(this.doubanService.searchMovieByThirdPartyApi(movieId));
+		if (!movieData) {
+			movieDataWebpage = await firstValueFrom(this.doubanService.searchMovieByWebpage(movieId));
+			return { movieWebpageAsData: movieData, thirdPartyApi: false };
+		}
+		movieData = JSON.parse(movieData);
+		return { movieWebpageAsData: movieData, thirdPartyApi: true };
 	}
 
 	/**
@@ -261,61 +283,75 @@ export class EntertainmentComponent {
 	 * @param movieItemVO - The movie item to search for.
 	 * @param retrieveOtherData - Whether to retrieve movie cover image, first release date, and total episode number.
 	 * @param retrieveYearAndTitle - Whether to retrieve movie year and title.
-	 * @param isAddingNewMovie - Whether to continue retrieving movie rate
 	 */
 	private async getMovieData(
 		movieItemVO: MovieItemVO,
 		retrieveOtherData: boolean,
-		retrieveYearAndTitle: boolean,
-		isAddingNewMovie: boolean
+		retrieveYearAndTitle: boolean
 	) {
 		try {
-			let movieWebpageAsString = null;
-			// Latest rate can be retrieved only if the searching is still executing and there is no concurrent processes
-			if ((this.isSearching && movieItemVO.getSessionId() === this.sessionId) || isAddingNewMovie) {
-				// Step 1: Get the movie webpage as text
-				movieWebpageAsString = await firstValueFrom(
-					this.doubanService.searchMovieWebpage(movieItemVO.getMovieId())
-				);
-			}
+			// Step 1: Get the movie webpage as text
+			const { movieWebpageAsData, thirdPartyApi } = await this.invokeRetrieveMovieApi(
+				movieItemVO.getMovieId()
+			);
 
 			// Step 2: Get the latest movie rate for the current movie
-			if (movieWebpageAsString) {
+			if (thirdPartyApi) {
+				movieItemVO.setMovieRate(movieWebpageAsData['doubanRating']);
+			} else {
 				const regexForMovieRate = new RegExp(
 					'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
 					'i'
 				);
-				const movieRate = movieWebpageAsString.match(regexForMovieRate)[1];
+				const movieRate = movieWebpageAsData.match(regexForMovieRate)[1];
 				movieItemVO.setMovieRate(movieRate);
 			}
 
 			// Step 3: Retrieve other data if the flag is true
 			if (retrieveOtherData) {
 				// Step 4: Get the first release date for the current movie
-				const regexForFirstReleaseDate = new RegExp(
-					'<span class="pl">首播:</span> <span property="v:initialReleaseDate" content="(.*?)">(.*?)</span><br/>',
-					'i'
-				);
-				let firstReleaseDate = movieWebpageAsString.match(regexForFirstReleaseDate)[1];
-				firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
-
-				// Step 4.1: Retrieve year and title if the flag is true
-				if (retrieveYearAndTitle) {
-					const year = firstReleaseDate.substring(0, 4);
-					movieItemVO.setMovieYear(Number(year));
-					const regexForTitle = new RegExp('<meta property="og:title" content="(.*?)" />', 'i');
-					const title = movieWebpageAsString.match(regexForTitle)[1];
-					movieItemVO.setMovieName(title);
+				let firstReleaseDate = '';
+				if (thirdPartyApi) {
+					firstReleaseDate = movieWebpageAsData['dateReleased'];
+				} else {
+					const regexForFirstReleaseDate = new RegExp(
+						'<span class="pl">首播:</span> <span property="v:initialReleaseDate" content="(.*?)">(.*?)</span><br/>',
+						'i'
+					);
+					firstReleaseDate = movieWebpageAsData.match(regexForFirstReleaseDate)[1];
 				}
+
+				firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
 				movieItemVO.setMovieFirstReleaseDate(firstReleaseDate);
 				LOG.info(
 					this.className,
 					`First release date for ${movieItemVO.getMovieName()} is ${firstReleaseDate}`
 				);
 
+				// Step 4.1: Retrieve year and title if the flag is true
+				if (retrieveYearAndTitle) {
+					const year = firstReleaseDate.substring(0, 4);
+					movieItemVO.setMovieYear(Number(year));
+
+					let title = '';
+					if (thirdPartyApi) {
+						title = movieWebpageAsData['originalName'];
+					} else {
+						const regexForTitle = new RegExp('<meta property="og:title" content="(.*?)" />', 'i');
+						title = movieWebpageAsData.match(regexForTitle)[1];
+					}
+					movieItemVO.setMovieName(title);
+				}
+
 				// Step 5: Get the total episode number for the current movie
-				const regexForEpisodeNumber = new RegExp('<span class="pl">集数:</span> (.*?)<br/>', 'i');
-				const episodeNumber = movieWebpageAsString.match(regexForEpisodeNumber)[1];
+				let episodeNumber = 0;
+				if (thirdPartyApi) {
+					episodeNumber = movieWebpageAsData['episodes'];
+				} else {
+					const regexForEpisodeNumber = new RegExp('<span class="pl">集数:</span> (.*?)<br/>', 'i');
+					episodeNumber = movieWebpageAsData.match(regexForEpisodeNumber)[1];
+				}
+
 				movieItemVO.setMovieEpisodeNumber(episodeNumber);
 				LOG.info(
 					this.className,
@@ -323,8 +359,14 @@ export class EntertainmentComponent {
 				);
 
 				// Step 6: Get the movie cover for the current movie and upload it to firebase storage
-				const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
-				const movieCoverImageLink = movieWebpageAsString.match(regexForCoverImageLink)[1];
+				let movieCoverImageLink;
+
+				if (thirdPartyApi) {
+					movieCoverImageLink = movieWebpageAsData['data'][0]['poster'];
+				} else {
+					const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
+					movieCoverImageLink = movieWebpageAsData.match(regexForCoverImageLink)[1];
+				}
 				await this.getMovieCoverImageByLink(movieCoverImageLink, movieItemVO);
 			}
 		} catch (error) {

@@ -74,10 +74,27 @@ export class DoubanService {
 			);
 	}
 
-	searchMovieWebpage(id: number): Observable<any> {
+	searchMovieByWebpage(id: number): Observable<any> {
 		return this.http
 			.get(`${this.getFirebaseFunctionUrl()}?url=${this.doubanBaseUrl}/subject/${id}&type=json`, {
-                responseType: 'text'
+				responseType: 'text'
+			})
+			.pipe(
+				catchError((error) => {
+					LOG.error(
+						this.className,
+						'Error while retrieving movie webpage for ID ' + id,
+						error as Error
+					);
+					return throwError(() => error);
+				})
+			);
+	}
+
+	searchMovieByThirdPartyApi(id: number): Observable<any> {
+		return this.http
+			.get(`${this.getFirebaseFunctionUrl()}?url=https://api.wmdb.tv/movie/api?id=${id}&type=json`, {
+				responseType: 'text'
 			})
 			.pipe(
 				catchError((error) => {

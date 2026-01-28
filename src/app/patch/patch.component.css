@@ -188,7 +188,7 @@ h1 {
 	}
 }
 
-@media (max-width: 680px) {
+@media (max-width: 840px) {
 	.component {
 		min-width: 150px !important;
 	}

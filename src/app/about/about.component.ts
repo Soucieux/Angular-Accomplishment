@@ -1,4 +1,4 @@
-import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { TimelineModule } from 'primeng/timeline';
 import { CardModule } from 'primeng/card';
 import { isPlatformBrowser } from '@angular/common';
@@ -79,6 +79,13 @@ export class AboutComponent {
 					color: '#FF9800'
 				}
 			];
+		}
+	}
+
+	@HostListener('window:resize')
+	protected onResize() {
+		if (isPlatformBrowser(this.platformId)) {
+			this.isMobile = this.utilities.isMobile();
 		}
 	}
 }

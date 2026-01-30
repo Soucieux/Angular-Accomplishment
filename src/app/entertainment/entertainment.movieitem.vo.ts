@@ -9,6 +9,8 @@ export class MovieItemVO {
 	private movieKey: string = '';
 	private sessionId: number = -1;
 	private isFavourite: boolean = false;
+	private description: string = '';
+	private actors: string = '';
 
 	constructor();
 
@@ -68,6 +70,14 @@ export class MovieItemVO {
 		return this.sessionId;
 	}
 
+	getDescription() {
+		return this.description;
+	}
+
+	getActors() {
+		return this.actors;
+	}
+
 	setMovieName(title: string) {
 		this.title = title;
 	}
@@ -113,6 +123,14 @@ export class MovieItemVO {
 	}
 
 	setIsFavourite(isFavourite: boolean) {
-		this.isFavourite = isFavourite;
+		this.isFavourite = isFavourite ?? false;
+	}
+
+	setDescription(description: string) {
+		this.description = description;
+	}
+
+	setActors(actors: string) {
+		this.actors = actors;
 	}
 }

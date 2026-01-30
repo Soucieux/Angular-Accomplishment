@@ -163,7 +163,7 @@ export class EntertainmentComponent {
 
 			try {
 				// Step 3: Delay 2 seconds for every movie
-				await firstValueFrom(timer(1000));
+				await firstValueFrom(timer(2000));
 
 				// Step 4: Get movie rate
 				await this.getMovieRateOnly(movieItemVO);
@@ -270,7 +270,7 @@ export class EntertainmentComponent {
 		movieData = await firstValueFrom(this.doubanService.searchMovieByThirdPartyApi(movieId));
 		if (!movieData) {
 			movieDataWebpage = await firstValueFrom(this.doubanService.searchMovieByWebpage(movieId));
-			return { movieWebpageAsData: movieData, thirdPartyApi: false };
+			return { movieWebpageAsData: movieDataWebpage, thirdPartyApi: false };
 		}
 		movieData = JSON.parse(movieData);
 		return { movieWebpageAsData: movieData, thirdPartyApi: true };
@@ -358,7 +358,24 @@ export class EntertainmentComponent {
 					`Total episode number for ${movieItemVO.getMovieName()} is ${episodeNumber}`
 				);
 
-				// Step 6: Get the movie cover for the current movie and upload it to firebase storage
+				// Step 6: Get movie actors and movie description
+				if (thirdPartyApi) {
+					movieItemVO.setDescription(movieWebpageAsData['data'][0]['description']);
+					let actors = movieWebpageAsData['actor'];
+
+					const allActors = actors
+						.map((actor: any) => actor.data.find((d: any) => d.lang === 'Cn')?.name)
+						.filter(Boolean);
+
+					const actorRetrieved =
+						allActors.length > 10
+							? allActors.slice(0, 10).join(', ') + ' 等'
+							: allActors.join(', ');
+
+					movieItemVO.setActors(actorRetrieved);
+				}
+
+				// Step 7: Get the movie cover for the current movie and upload it to firebase storage
 				let movieCoverImageLink;
 
 				if (thirdPartyApi) {

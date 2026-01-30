@@ -111,7 +111,7 @@
 	backdrop-filter: blur(10px);
 	margin-bottom: 10px;
 	display: flex;
-	overflow: hidden;
+	overflow: visible;
 }
 
 .individual-item:hover {
@@ -121,7 +121,6 @@
 	& .rate {
 		background: white;
 		color: black;
-		backdrop-filter: blur(10px);
 	}
 }
 
@@ -172,6 +171,58 @@
 
 	/* -webkit-box-shadow: 0 0 5px #000; */
 	box-shadow: 0 0 8px black;
+
+	/* Make sure only image gets blurred */
+	position: relative;
+}
+
+.image-container::before {
+	content: '';
+	position: absolute;
+	inset: 0; /* top:0; bottom:0; left:0; right:0 */
+	background-image: inherit; /* 👈 THIS IS THE KEY */
+	background-size: 100% 100%;
+	background-position: center;
+	filter: blur(10px);
+	opacity: 0; /* hidden by default */
+	transition: opacity 0.3s ease;
+	z-index: 1; /* behind the text */
+}
+
+/* Optional: dark overlay */
+.image-container::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.723);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	border-radius: 10px;
+	z-index: 2;
+}
+
+.text-on-image {
+	font-family: 'cf';
+	position: absolute; /* 🔑 REQUIRED */
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	color: white;
+	z-index: 3; /* above blur */
+	opacity: 0; /* hidden by default */
+	transition: opacity 0.3s ease;
+	pointer-events: none;
+	word-break: break-word;
+	font-size: 15px;
+	padding: 5px;
+}
+
+.image-container:hover::before,
+.image-container:hover::after,
+.image-container:hover .text-on-image {
+	opacity: 1;
+	inset: -20px; /* extend 30px in all directions */
 }
 
 .individual-item-content {
@@ -309,5 +360,9 @@
 
 	::ng-deep .delete-button .pi {
 		color: red !important;
+	}
+
+	.text-on-image {
+		font-size: 10px;
 	}
 }

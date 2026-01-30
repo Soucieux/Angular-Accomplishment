@@ -1,4 +1,4 @@
-@if (isLoggedIn && (statistics$ | async)){ @let stats = statistics$ | async;
+@if (isLoggedIn && (statistics$ | async)) { @let stats = statistics$ | async;
 <div class="page-container">
 	<div class="control-button-container">
 		<div class="control-button-title">Categories ({{ stats.totalNumber }})</div>
@@ -13,7 +13,7 @@
 		</button>
 	</div>
 	<div class="category-button-container">
-		@for (genre of stats.genre | keyvalue; track genre.key){
+		@for (genre of stats.genre | keyvalue; track genre.key) {
 		<div
 			matRipple
 			class="category-button"
@@ -31,7 +31,7 @@
 	</div>
 </div>
 <div class="content-container">
-	@for (movie of filteredMovieList$ | async; track movie.getMovieId()){
+	@for (movie of filteredMovieList$ | async; track movie.getMovieId()) {
 	<div
 		class="individual-item"
 		[ngClass]="{
@@ -42,7 +42,14 @@
 		}">
 		<div
 			class="image-container"
-			[ngStyle]="{ backgroundImage: 'url(' + movie.getMovieCoverImageDownloadableLink() + ')' }"></div>
+			[ngStyle]="{
+				backgroundImage: 'url(' + movie.getMovieCoverImageDownloadableLink() + ')'
+			}">
+			<div class="text-on-image">
+				<span class="description">简介：{{ movie.getDescription() }} </span>
+				<span>演员：{{ movie.getActors() }}</span>
+			</div>
+		</div>
 		<div class="individual-item-content">
 			<span class="title" [style.font-size]="calculateFontSize(movie.getMovieName().length)">
 				{{ movie.getMovieName() }}
@@ -50,7 +57,7 @@
 			<span class="text">类型：{{ movie.getMovieGenre() }} </span>
 			<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
 			<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
-			@if (movie.getMovieRate()){
+			@if (movie.getMovieRate()) {
 			<span class="rate">
 				{{ movie.getMovieRate().toFixed(1) }}
 			</span>

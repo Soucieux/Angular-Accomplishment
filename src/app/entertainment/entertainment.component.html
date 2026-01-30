@@ -64,6 +64,15 @@
 			} @else {
 			<span class="rate">{{ NO_RATE }}</span>
 			}
+			<a
+				class="douban-button"
+				severity="danger"
+				[href]="'https://movie.douban.com/subject/' + movie.getMovieId()"
+				target="_blank"
+				rel="noopener noreferrer"
+				aria-label="Open on Douban">
+				<img src="./assets/douban.png" class="douban-icon" />
+			</a>
 			<p-button
 				icon="pi pi-times"
 				class="delete-button"

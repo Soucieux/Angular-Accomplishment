@@ -280,6 +280,18 @@
 	color: white;
 }
 
+.douban-button {
+	position: absolute;
+	top: 255px;
+	right: 170px;
+}
+
+.douban-icon {
+	width: 30px; /* 👈 control size here */
+	height: 30px;
+	border-radius: 20%;
+}
+
 /* The max-width here is the **current** maximum width of the browser */
 @media (max-width: 840px) {
 	.control-button-title {
@@ -364,5 +376,15 @@
 
 	.text-on-image {
 		font-size: 10px;
+	}
+
+	.douban-button {
+		top: 170px; /* move into view vertically */
+		right: 18px; /* adjust horizontal so it doesn’t wrap */
+	}
+
+	.douban-icon {
+		width: 20px; /* 👈 control size here */
+		height: 20px;
 	}
 }

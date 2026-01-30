@@ -87,6 +87,8 @@ export class FirebaseService {
 					movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
 					movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
 					movieItemVO.setIsFavourite(movie.isFavourite);
+					movieItemVO.setDescription(movie.description);
+					movieItemVO.setActors(movie.actors);
 					return movieItemVO;
 				})
 			)
@@ -183,7 +185,9 @@ export class FirebaseService {
 				coverImageLink: movieItemVO.getMovieCoverImageDownloadableLink(),
 				firstReleaseDate: movieItemVO.getMovieFirstReleaseDate(),
 				episodeNumber: movieItemVO.getMovieEpisodeNumber(),
-				isFavourite: movieItemVO.getIsFavourite()
+				isFavourite: movieItemVO.getIsFavourite(),
+				description: movieItemVO.getDescription(),
+				actors: movieItemVO.getActors()
 			}).then(async () => {
 				// Add new entry to history
 				await this.updateHistory('added', movieItemVO);

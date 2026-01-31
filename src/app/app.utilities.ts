@@ -45,7 +45,7 @@ export class Utilities {
 
 		let formattedTime = '';
 		if (isTimeIncluded) {
-			formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now
+			formattedTime = ` ${now.getHours().toString().padStart(2, '0')}:${now
 				.getMinutes()
 				.toString()
 				.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;

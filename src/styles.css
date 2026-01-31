@@ -7,6 +7,7 @@
 /* All words are default to use English font */
 body {
 	font-family: 'nlf';
+	user-select: none;
 }
 
 @font-face {

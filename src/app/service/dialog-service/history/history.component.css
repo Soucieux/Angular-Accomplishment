@@ -1,7 +1,45 @@
 ::ng-deep .history-dialog {
-	width: 500px;
-	height: 475px;
+	width: 650px;
+	height: 550px;
 	user-select: none;
+}
+
+::ng-deep .p-dialog .p-dialog-content {
+	padding-left: 0px;
+	padding-right: 0px;
+}
+
+::ng-deep .p-dialog .p-dialog-header {
+	padding-top: 20px;
+	padding-bottom: 15px;
+}
+
+.container {
+	padding: 10px 13px 10px 13px;
+}
+
+.container:hover {
+	background-color: rgb(243, 238, 238);
+}
+
+.message-container {
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	border-width: 5px;
+	padding-top: 8px;
+	padding-bottom: 8px;
+	padding-right: 5px;
+	border-radius: 10px;
+}
+
+.message {
+	font-size: 17px;
+	margin: 0px;
+}
+
+.icon {
+	height: fit-content;
 }
 
 @media (max-width: 580px) {

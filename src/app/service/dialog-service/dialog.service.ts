@@ -6,6 +6,7 @@ import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
 import { HistoryDialogComponent } from './history/history.component';
 import { SearchDialogComponent } from './search/search.component';
 import { Observable } from 'rxjs';
+import { ErrorDialogComponent } from './error/error.component';
 @Injectable({
 	providedIn: 'root'
 })
@@ -31,6 +32,8 @@ export class DialogService {
 				return HistoryDialogComponent;
 			case 'search':
 				return SearchDialogComponent;
+			case 'error':
+				return ErrorDialogComponent;
 			default:
 				throw new Error('Invalid dialog type');
 		}
@@ -39,11 +42,13 @@ export class DialogService {
 	// Overload methods to call correct dialog component
 	openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'search', acceptCallback: () => void): void;
 
+	openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'error', errorMessage: string): void;
+
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'confirm',
 		acceptCallback: () => void,
-		data: string[],
+		data: any[]
 	): void;
 
 	openDialog(
@@ -56,7 +61,7 @@ export class DialogService {
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'history',
-		revertDataCallback: () => void,
+		revertDataCallback: (movie: MovieItemVO) => void,
 		data: Observable<any>
 	): void;
 
@@ -65,14 +70,14 @@ export class DialogService {
 	 *
 	 * @param dialogContainerRef - The container where dialogs should be attached
 	 * @param dialogType - The type of dialog to open
-	 * @param callback - The callback to call
-	 * @param dataOrCallback - Second callback to call or any data to pass
+	 * @param dataOrCallback1 - First callback to call or any data to pass
+	 * @param dataOrCallback2 - Second callback to call or any data to pass
 	 */
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
-		callback: any,
-		dataOrCallback?: any
+		dataOrCallback1: any,
+		dataOrCallback2?: any
 	): void {
 		if (!dialogContainerRef) {
 			const error = new Error('Dialog container not found');
@@ -92,11 +97,11 @@ export class DialogService {
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			// Open up corresponding dialog and pass callbacks
-			if (dialogType === 'search') {
-				dialogComponentRef.instance.openDialog(callback);
-			} else{
-				dialogComponentRef.instance.openDialog(callback, dataOrCallback);
-			} 
+			if (dialogType === 'search' || dialogType === 'error') {
+				dialogComponentRef.instance.openDialog(dataOrCallback1);
+			} else {
+				dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
+			}
 
 			// Subscribe to dialog closed event
 			dialogComponentRef.instance.closed$.subscribe(() => {

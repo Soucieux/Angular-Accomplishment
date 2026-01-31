@@ -57,28 +57,6 @@
 	background-repeat: no-repeat;
 }
 
-::ng-deep .error-dialog-message {
-	width: 260px;
-	height: 50px;
-	text-align: center;
-	display: flex; /* enables flexbox */
-	justify-content: center; /* horizontal center */
-	align-items: center; /* vertical center */
-	white-space: pre-line; /* preserves line breaks like <br> or \n */
-	line-height: 1.5;
-	font-size: 16px;
-}
-
-::ng-deep .error-dialog .p-resizable-handle {
-	display: none !important;
-}
-
-::ng-deep .error-dialog {
-	width: 350px;
-	height: 210px;
-	user-select: none; /* standard */
-}
-
 ::ng-deep .submit-button .p-button {
 	background-color: black !important;
 	border-color: black !important;
@@ -100,17 +78,6 @@
 }
 
 @media (max-width: 580px) {
-	::ng-deep .error-dialog {
-		min-width: 100% !important;
-		min-height: 100% !important;
-		border-radius: 0px !important;
-	}
-
-	::ng-deep .error-dialog-message {
-		width: 100% !important;
-		white-space: normal !important;
-	}
-
 	::ng-deep .add-dialog {
 		min-width: 100% !important;
 		min-height: 100% !important;

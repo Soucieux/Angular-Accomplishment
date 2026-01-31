@@ -6,7 +6,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { Table, TableModule } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { InputText } from 'primeng/inputtext';
@@ -24,7 +24,7 @@ import {
 	Utilities
 } from '../app.utilities';
 import { FirebaseService } from '../service/firebase-service/firebase.service';
-import { map, Observable, shareReplay, Subscription, take, tap } from 'rxjs';
+import { map, Observable, shareReplay, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../app.logs';
 import { DialogService } from '../service/dialog-service/dialog.service';
@@ -198,7 +198,7 @@ export class PatchComponent {
 			() => {
 				this.firebaseService.removePatchNotes(key);
 			},
-			['Are you sure you want to delete this note?', 'Confirm', 'Delete', 'Record deleted']
+			['Are you sure you want to delete this note?', 'Confirm', 'Delete', 'Record deleted', true]
 		);
 	}
 

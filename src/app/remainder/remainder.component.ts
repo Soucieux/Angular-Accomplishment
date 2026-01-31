@@ -274,7 +274,7 @@ export class RemainderComponent {
 			() => {
 				this.resetFirstTable();
 			},
-			['Are you sure you want to reset the dates?', 'Reset', 'Confirm', 'Dates reset']
+			['Are you sure you want to reset the dates?', 'Reset', 'Confirm', 'Dates reset', true]
 		);
 	}
 
@@ -386,7 +386,7 @@ export class RemainderComponent {
 				this.firebaseService.removeRecordFromRemainderTable(THIRD_TABLE, key);
 				this.triggerSaveIndicator(THIRD_TABLE);
 			},
-			['Are you sure you want to delete this entry?', 'Delete', 'Confirm', 'Entry deleted']
+			['Are you sure you want to delete this entry?', 'Delete', 'Confirm', 'Entry deleted', true]
 		);
 	}
 

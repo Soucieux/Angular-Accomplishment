@@ -652,6 +652,11 @@ export class EntertainmentComponent {
 	 * Triggered by the "History" button click event on the "Entertainment" page
 	 */
 	protected openHistoryDialog() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'history', () => {});
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'history',
+			() => {},
+			this.firebaseService.getHistory()
+		);
 	}
 }

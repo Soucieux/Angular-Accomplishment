@@ -57,6 +57,7 @@ export class FirebaseService {
 			await uploadBytes(storageRefer, coverImage, {
 				contentType: 'image/jpeg'
 			});
+			LOG.info(this.className, `Movie cover image uploaded`);
 			return await getDownloadURL(storageRefer);
 		} catch (error) {
 			LOG.error(
@@ -74,31 +75,31 @@ export class FirebaseService {
 	 * @returns An observable that emits the movie list.
 	 */
 	public getMovieList(): Observable<MovieItemVO[]> {
-		const list$ = list(this.moviesRef).pipe(
-			map((snapshots: any[]) =>
-				snapshots.map((snapshot: any) => {
-					const movie = snapshot.snapshot.val();
-					const movieItemVO = new MovieItemVO(movie.title, Number(movie.year));
-					movieItemVO.setMovieKey(snapshot.snapshot.key);
-					movieItemVO.setMovieId(movie.id);
-					movieItemVO.setMovieGenre(movie.genre);
-					movieItemVO.setMovieRate(movie.rate);
-					movieItemVO.setMovieCoverImageDownloadableLink(movie.coverImageLink);
-					movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
-					movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
-					movieItemVO.setIsFavourite(movie.isFavourite);
-					movieItemVO.setDescription(movie.description);
-					movieItemVO.setActors(movie.actors);
-					return movieItemVO;
-				})
-			)
-		);
-		// Sort movies by first release date
-		// Note: By using this method, make sure the first release date has the format of YYYY.MM.DD
-		return list$.pipe(
-			map((movies) =>
-				movies.sort((a, b) =>
-					a.getMovieFirstReleaseDate().localeCompare(b.getMovieFirstReleaseDate())
+		return runInInjectionContext(this.ei, () =>
+			list(this.moviesRef).pipe(
+				map((snapshots: any[]) =>
+					snapshots.map((snapshot: any) => {
+						const movie = snapshot.snapshot.val();
+						const movieItemVO = new MovieItemVO(movie.title, Number(movie.year));
+						movieItemVO.setMovieKey(snapshot.snapshot.key);
+						movieItemVO.setMovieId(movie.id);
+						movieItemVO.setMovieGenre(movie.genre);
+						movieItemVO.setMovieRate(movie.rate);
+						movieItemVO.setMovieCoverImageDownloadableLink(movie.coverImageLink);
+						movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
+						movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
+						movieItemVO.setIsFavourite(movie.isFavourite);
+						movieItemVO.setDescription(movie.description);
+						movieItemVO.setActors(movie.actors);
+						return movieItemVO;
+					})
+				),
+				map((movies) =>
+					// Sort movies by first release date
+					// Note: By using this method, make sure the first release date has the format of YYYY.MM.DD
+					movies.sort((a, b) =>
+						a.getMovieFirstReleaseDate().localeCompare(b.getMovieFirstReleaseDate())
+					)
 				)
 			)
 		);
@@ -204,7 +205,7 @@ export class FirebaseService {
 				currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
 				return currentData;
 			}).then(() => {
-				LOG.info(this.className, `Movie statistics has been updated`);
+				LOG.info(this.className, `Movie added and statistics have been updated`);
 			});
 		} catch (error) {
 			LOG.error(
@@ -252,7 +253,7 @@ export class FirebaseService {
 				currentData.totalNumber = currentData.totalNumber - 1 > 0 ? currentData.totalNumber - 1 : 0;
 				return currentData;
 			}).then(() => {
-				LOG.info(this.className, `Movie statistics has been updated`);
+				LOG.info(this.className, `Movie removed and statistics have been updated`);
 			});
 		} catch (error) {
 			LOG.error(
@@ -271,6 +272,7 @@ export class FirebaseService {
 	private async getReusableKeys(): Promise<string[]> {
 		try {
 			const snapshot = await get(dbRef(this.db, 'statistics/reusableKeys'));
+			LOG.info(this.className, `Reusable keys retrieved`);
 			return snapshot.exists() ? Object.values(snapshot.val()) : [];
 		} catch (error) {
 			LOG.error(this.className, `Error while getting reusable keys`, error as Error);
@@ -349,6 +351,26 @@ export class FirebaseService {
 	}
 
 	/**
+	 * Retrieve history list
+	 *
+	 * @returns The history list
+	 */
+	public getHistory(): Observable<any[]> {
+		return runInInjectionContext(this.ei, () =>
+			list(dbRef(this.db, 'history')).pipe(
+				map((snapshots: any[]) =>
+					snapshots
+						.map((snapshot: any) => ({
+							key: snapshot.snapshot.key,
+							...snapshot.snapshot.val()
+						}))
+						.reverse()
+				)
+			)
+		);
+	}
+
+	/**
 	 * Add new record to patch notes
 	 *
 	 * @param newRecord - The record to add.
@@ -362,7 +384,7 @@ export class FirebaseService {
 			timestamp: newRecord.timestamp,
 			isBug: newRecord.isBug
 		}).then(() => {
-			LOG.info(this.className, 'New patch notes entry has been added');
+			LOG.info(this.className, 'New patch notes record has been added');
 		});
 	}
 
@@ -386,25 +408,27 @@ export class FirebaseService {
 	 * @returns Patch notes
 	 */
 	public getPatchNotes(): Observable<any[]> {
-		return list(dbRef(this.db, 'patch_notes')).pipe(
-			map((snapshots: any[]) =>
-				snapshots
-					.map(
-						(snapshot: any) =>
-							({
-								key: snapshot.snapshot.key,
-								...snapshot.snapshot.val()
-							} as {
-								key: string;
-								component: string;
-								element: string;
-								details: string;
-								status: string;
-								timestamp: string;
-								isBug: boolean;
-							})
-					)
-					.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+		return runInInjectionContext(this.ei, () =>
+			list(dbRef(this.db, 'patch_notes')).pipe(
+				map((snapshots: any[]) =>
+					snapshots
+						.map(
+							(snapshot: any) =>
+								({
+									key: snapshot.snapshot.key,
+									...snapshot.snapshot.val()
+								} as {
+									key: string;
+									component: string;
+									element: string;
+									details: string;
+									status: string;
+									timestamp: string;
+									isBug: boolean;
+								})
+						)
+						.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+				)
 			)
 		);
 	}
@@ -442,23 +466,25 @@ export class FirebaseService {
 	 * @returns Third remainder table details
 	 */
 	public getSecondRemainderTableDetails(): Observable<any[]> {
-		return list(dbRef(this.db, `remainder/${SECOND_TABLE}`)).pipe(
-			map((snapshots: any[]) =>
-				snapshots.map((snapshot: any) => {
-					return {
-						key: snapshot.snapshot.key,
-						...snapshot.snapshot.val()
-					} as {
-						key: string;
-						name: string;
-						content: {
-							date: string;
-							debt: number;
-							original: number;
-							paid: boolean;
+		return runInInjectionContext(this.ei, () =>
+			list(dbRef(this.db, `remainder/${SECOND_TABLE}`)).pipe(
+				map((snapshots: any[]) =>
+					snapshots.map((snapshot: any) => {
+						return {
+							key: snapshot.snapshot.key,
+							...snapshot.snapshot.val()
+						} as {
+							key: string;
+							name: string;
+							content: {
+								date: string;
+								debt: number;
+								original: number;
+								paid: boolean;
+							};
 						};
-					};
-				})
+					})
+				)
 			)
 		);
 	}
@@ -469,19 +495,21 @@ export class FirebaseService {
 	 * @returns Third remainder table details
 	 */
 	public getThirdRemainderTableDetails(): Observable<any[]> {
-		return list(dbRef(this.db, `remainder/${THIRD_TABLE}`)).pipe(
-			map((snapshots: any[]) =>
-				snapshots.map((snapshot: any) => {
-					return {
-						key: snapshot.snapshot.key,
-						...snapshot.snapshot.val()
-					} as {
-						key: string;
-						content: string;
-						date: string;
-						link: string;
-					};
-				})
+		return runInInjectionContext(this.ei, () =>
+			list(dbRef(this.db, `remainder/${THIRD_TABLE}`)).pipe(
+				map((snapshots: any[]) =>
+					snapshots.map((snapshot: any) => {
+						return {
+							key: snapshot.snapshot.key,
+							...snapshot.snapshot.val()
+						} as {
+							key: string;
+							content: string;
+							date: string;
+							link: string;
+						};
+					})
+				)
 			)
 		);
 	}

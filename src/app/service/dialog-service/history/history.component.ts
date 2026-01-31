@@ -1,9 +1,11 @@
 import { Component, Output, EventEmitter, ViewChild, ViewContainerRef } from '@angular/core';
+import { MovieItemVO } from '../../../entertainment/entertainment.movieitem.vo';
 import { DialogModule } from 'primeng/dialog';
 import { CommonModule } from '@angular/common';
 import { DividerModule } from 'primeng/divider';
 import { Observable } from 'rxjs';
 import { DialogService } from '../dialog.service';
+import { MovieAlreadyExistsError } from '../../../error/movie-already-exists-error';
 
 @Component({
 	selector: 'history-dialog',
@@ -18,14 +20,14 @@ export class HistoryDialogComponent {
 	private dialogComponentContainer!: ViewContainerRef;
 	protected visible: boolean = false;
 	protected entries$!: Observable<any>;
-	private acceptCallback!: () => void;
+	private revertDataCallback!: (movie: MovieItemVO) => void;
 
 	constructor(private dialogService: DialogService) {}
 
-	protected openDialog(acceptCallback: () => void, entries: Observable<any>) {
+	protected openDialog(revertDataCallback: (movie: MovieItemVO) => void, entries: Observable<any>) {
 		this.visible = true;
 		this.entries$ = entries;
-		this.acceptCallback = acceptCallback;
+		this.revertDataCallback = revertDataCallback;
 	}
 
 	protected setBackgroundColor(status: string) {
@@ -37,14 +39,29 @@ export class HistoryDialogComponent {
 		return '';
 	}
 
-	protected onMessageClick(entry: any) {
-		console.log(entry);
-		this.dialogService.openDialog(this.dialogComponentContainer, 'confirm', () => {}, [
-			'Undo this deletion?',
-			'Undo',
-			'Confirm',
-			'Movie recovered'
-		]);
+	protected async onMessageClick(entry: any) {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'confirm',
+			async () => {
+				try {
+					let movieToRestore = new MovieItemVO();
+					movieToRestore.setMovieId(entry.id);
+					const genre = entry.message.split(' - ')[1].split(' ')[0].trim();
+					movieToRestore.setMovieGenre(genre);
+					await this.revertDataCallback?.(movieToRestore);
+				} catch (error) {
+					if (error instanceof MovieAlreadyExistsError) {
+						this.dialogService.openDialog(
+							this.dialogComponentContainer,
+							'error',
+							'Movie already exists'
+						);
+					}
+				}
+			},
+			['Undo this deletion?', 'Undo', 'Confirm', 'Movie recovered', false]
+		);
 	}
 
 	protected onDialogClosed() {

@@ -1,5 +1,3 @@
-<!-- Error dialog when searching-->
-<p-confirmdialog styleClass="error-dialog" [closable]="false"></p-confirmdialog>
 <p-dialog
 	[(visible)]="visible"
 	[modal]="true"
@@ -63,7 +61,7 @@
 					ngModel
 					#id="ngModel"
 					(ngModelChange)="onIdChange($event)"
-                    [disabled]="isLoading"
+					[disabled]="isLoading"
 					[required]="!!id.value"
 					autocomplete="off"
 					(ngModelChange)="onNameAndYearChange()" />
@@ -112,3 +110,4 @@
 			(click)="addMovieForm.ngSubmit.emit()"></p-button>
 	</ng-template>
 </p-dialog>
+<ng-container #dialogComponentContainer></ng-container>

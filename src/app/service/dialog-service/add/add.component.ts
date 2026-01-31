@@ -1,5 +1,5 @@
-import { Component, EventEmitter, inject, Output, ViewChild } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { Component, EventEmitter, inject, Output, ViewChild, ViewContainerRef } from '@angular/core';
+import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
@@ -7,13 +7,12 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { FormsModule, NgForm } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
 import { MovieItemVO } from '../../../entertainment/entertainment.movieitem.vo';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CommonModule } from '@angular/common';
 import { MovieIdNotFoundError } from '../../../error/movie-id-not-found.error';
 import { MovieAlreadyExistsError } from '../../../error/movie-already-exists-error';
 import { LOG } from '../../../app.logs';
-import { Utilities } from '../../../app.utilities';
 import { Checkbox } from 'primeng/checkbox';
+import { DialogService } from '../dialog.service';
 
 @Component({
 	selector: 'add-dialog',
@@ -25,31 +24,32 @@ import { Checkbox } from 'primeng/checkbox';
 		FormsModule,
 		SelectModule,
 		ProgressBarModule,
-		ConfirmDialogModule,
 		CommonModule,
 		Checkbox
 	],
 	templateUrl: './add.component.html',
 	styleUrl: './add.component.scss',
-	providers: [ConfirmationService]
+	providers: []
 })
 export class AddDialogComponent {
 	private readonly className = 'AddDialogComponent';
+	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
+	private dialogComponentContainer!: ViewContainerRef;
 	@ViewChild('addMovieForm') addMovieForm!: NgForm;
 	@Output() closed$ = new EventEmitter<void>();
 	private messageService = inject(MessageService);
-	private confirmationService = inject(ConfirmationService);
 	private submitCallback?: () => void;
 	private searchCallback?: (movie: MovieItemVO) => Blob;
 	visible: boolean = false;
-    isLoading: boolean = false;
+	isLoading: boolean = false;
 	canSubmit: boolean = false;
 	years: { year: string }[] | undefined;
 	genres: { genre: string }[] | undefined;
 	isFavourite: boolean = false;
 	movieImageUrl: string | null = null;
 
-	constructor(private utilities: Utilities) {}
+	constructor(private dialogService: DialogService) {}
 
 	protected ngOnInit() {
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (2026 - i).toString() }));
@@ -61,6 +61,10 @@ export class AddDialogComponent {
 			{ genre: '现代' },
 			{ genre: '谍战' }
 		];
+	}
+
+	protected ngOnDestroy() {
+		this.dialogComponentContainer?.clear();
 	}
 
 	protected openDialog(submitCallback: () => void, searchCallback: (movie: MovieItemVO) => Blob) {
@@ -94,28 +98,7 @@ export class AddDialogComponent {
 				errorMessage = 'Error while searching movie';
 				LOG.error(this.className, 'Error while searching new movie from add dialog', error as Error);
 			}
-			this.confirmationService.confirm({
-				message: `<div class="error-dialog-message">${errorMessage}</div>`,
-				header: 'Error',
-				icon: 'pi pi-times-circle text-red-500',
-				rejectVisible: false,
-				acceptButtonProps: {
-					label: 'OK',
-					severity: 'danger',
-					...(this.utilities.isMobile()
-						? {
-								style: {
-									width: '100px'
-								}
-						  }
-						: {
-								style: {
-									width: '100px',
-									'margin-right': '100px'
-								}
-						  })
-				}
-			});
+			this.dialogService.openDialog(this.dialogComponentContainer, 'error', errorMessage);
 		} finally {
 			this.isLoading = false;
 		}
@@ -125,8 +108,8 @@ export class AddDialogComponent {
 		if (value && value.trim() !== '') {
 			this.addMovieForm.controls['movieName']?.reset();
 			this.addMovieForm.controls['years']?.reset();
-        }
-        this.canSubmit = false;
+		}
+		this.canSubmit = false;
 	}
 
 	protected onNameAndYearChange() {

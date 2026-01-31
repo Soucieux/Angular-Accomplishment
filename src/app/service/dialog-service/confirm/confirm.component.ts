@@ -5,7 +5,7 @@ import { Utilities } from '../../../app.utilities';
 
 @Component({
 	selector: 'confirm-dialog',
-	template: ` <p-confirmdialog (onHide)="onDialogClosed()" /> `,
+	template: ` <p-confirmdialog (onHide)="onDialogClosed()" />`,
 	styleUrl: './confirm.component.scss',
 	standalone: true,
 	imports: [ConfirmDialogModule],
@@ -28,7 +28,7 @@ export class ConfirmDialogComponent {
 	 * @param data[2] - The accept button label to display in the dialog
 	 * @param data[3] - The message to display after accepting the dialog
 	 */
-	openDialog(acceptCallback: () => void, data: string[]) {
+	openDialog(acceptCallback: () => Promise<void>, data: any[]) {
 		this.confirmationService.confirm({
 			message: data[0],
 			header: data[1],
@@ -45,18 +45,23 @@ export class ConfirmDialogComponent {
 				severity: 'danger'
 			},
 
-			accept: () => {
-				if (!this.utilities.isMobile()) {
-					this.messageService.add({
-						severity: 'info',
-						summary: 'Confirmed',
-						detail: data[3]
-					});
+			accept: async () => {
+				try {
+					await acceptCallback();
+
+					if (!this.utilities.isMobile() && data[4]) {
+						this.messageService.add({
+							severity: 'info',
+							summary: 'Confirmed',
+							detail: data[3]
+						});
+					}
+				} catch (error) {
+					throw error;
 				}
-				acceptCallback();
 			},
 			reject: () => {
-				if (!this.utilities.isMobile()) {
+				if (!this.utilities.isMobile() && data[4]) {
 					this.messageService.add({
 						severity: 'info',
 						summary: 'Cancelled',

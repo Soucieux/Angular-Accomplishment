@@ -5,6 +5,7 @@ import { LOG } from '../../app.logs';
 import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
 import { HistoryDialogComponent } from './history/history.component';
 import { SearchDialogComponent } from './search/search.component';
+import { Observable } from 'rxjs';
 @Injectable({
 	providedIn: 'root'
 })
@@ -57,7 +58,8 @@ export class DialogService {
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'history',
-		displayDataCallback: () => void
+		revertDataCallback: () => void,
+		data: Observable<any>
 	): void;
 
 	/**
@@ -66,14 +68,14 @@ export class DialogService {
 	 * @param dialogContainerRef - The container where dialogs should be attached
 	 * @param dialogType - The type of dialog to open
 	 * @param callback - The callback to call
-	 * @param messageOrCallback - Second callback to call or message
+	 * @param dataOrCallback - Second callback to call or any data to pass
 	 * @param header - Header of the dialog
 	 */
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
 		callback: any,
-		messageOrCallback?: any,
+		dataOrCallback?: any,
 		header?: string
 	): void {
 		if (!dialogContainerRef) {
@@ -94,12 +96,12 @@ export class DialogService {
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			// Open up corresponding dialog and pass callbacks
-			if (dialogType === 'history' || dialogType === 'search') {
+			if (dialogType === 'search') {
 				dialogComponentRef.instance.openDialog(callback);
 			} else if (dialogType === 'delete' || dialogType === 'reset') {
-				dialogComponentRef.instance.openDialog(dialogType, callback, messageOrCallback, header);
-			} else if (dialogType === 'add') {
-				dialogComponentRef.instance.openDialog(callback, messageOrCallback);
+				dialogComponentRef.instance.openDialog(dialogType, callback, dataOrCallback, header);
+			} else if (dialogType === 'history' || dialogType === 'add') {
+				dialogComponentRef.instance.openDialog(callback, dataOrCallback);
 			}
 
 			// Subscribe to dialog closed event

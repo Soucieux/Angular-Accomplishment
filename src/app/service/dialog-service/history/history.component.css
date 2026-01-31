@@ -4,7 +4,7 @@
 	user-select: none;
 }
 
-::ng-deep .p-dialog .p-dialog-content {
+::ng-deep .history-dialog .p-dialog-content {
 	padding-left: 0px;
 	padding-right: 0px;
 }

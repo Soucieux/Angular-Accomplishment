@@ -1,4 +1,11 @@
-import { Component, HostListener, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
+import {
+	Component,
+	HostListener,
+	Inject,
+	PLATFORM_ID,
+	ViewChild,
+	ViewContainerRef
+} from '@angular/core';
 import { Table, TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
@@ -187,12 +194,11 @@ export class PatchComponent {
 	protected openDeleteConfirmationDialog(key: string) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'delete',
+			'confirm',
 			() => {
 				this.firebaseService.removePatchNotes(key);
 			},
-			`Are you sure you want to delete this note?`,
-			`Delete Note`
+			['Are you sure you want to delete this note?', 'Confirm', 'Delete', 'Record deleted']
 		);
 	}
 
@@ -221,7 +227,11 @@ export class PatchComponent {
 		let span = 1;
 
 		for (let index = rowIndex + 1; index < data.length; index++) {
-			if (data[index].element === currentElement && data[index].component === currentComponent) span++;
+			if (
+				data[index].element === currentElement &&
+				data[index].component === currentComponent
+			)
+				span++;
 			else break;
 		}
 		return span;
@@ -240,7 +250,7 @@ export class PatchComponent {
 		);
 	}
 
-    getRenderedData(data: any) {
+	getRenderedData(data: any) {
 		return data.filteredValue ?? data.value ?? [];
 	}
 

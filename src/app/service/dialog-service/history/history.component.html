@@ -1,5 +1,5 @@
 <p-dialog
-	header="Opertaion Activities"
+	header="Operation Activities"
 	[(visible)]="visible"
 	[modal]="true"
 	[appendTo]="'body'"
@@ -16,13 +16,18 @@
 				[style.cursor]="entry.status === 'deleted' ? 'pointer' : ''"
 				[style.padding-left]="entry.status === 'search' ? '8px' : '5px'">
 				<span class="material-icons icon">
-					@if(entry.status === 'search'){ search } @else if(entry.status === 'added'){ add
-					} @else if(entry.status === 'deleted'){ cancel }
+					@if(entry.status === 'search'){ search } @else if(entry.status === 'added'){
+					add} @else if(entry.status === 'deleted'){ cancel }
 				</span>
-				<p class="message">{{ entry.message }}</p>
+				<p
+					class="message"
+					(click)="entry.status === 'deleted' ? onMessageClick(entry) : null">
+					{{ entry.message }}
+				</p>
 			</div>
 		</div>
 		<p-divider style="margin: 0px" />
 		}
 	</div>
 </p-dialog>
+<ng-container #dialogComponentContainer></ng-container>

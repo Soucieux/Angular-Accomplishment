@@ -23,8 +23,7 @@ export class DialogService {
 	 */
 	getDialogComponent(dialogType: string): Type<any> {
 		switch (dialogType) {
-			case 'delete':
-			case 'reset':
+			case 'confirm':
 				return ConfirmDialogComponent;
 			case 'add':
 				return AddDialogComponent;
@@ -42,10 +41,9 @@ export class DialogService {
 
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
-		dialogType: 'delete' | 'reset',
+		dialogType: 'confirm',
 		acceptCallback: () => void,
-		message: string,
-		header: string
+		data: string[],
 	): void;
 
 	openDialog(
@@ -69,14 +67,12 @@ export class DialogService {
 	 * @param dialogType - The type of dialog to open
 	 * @param callback - The callback to call
 	 * @param dataOrCallback - Second callback to call or any data to pass
-	 * @param header - Header of the dialog
 	 */
 	openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
 		callback: any,
-		dataOrCallback?: any,
-		header?: string
+		dataOrCallback?: any
 	): void {
 		if (!dialogContainerRef) {
 			const error = new Error('Dialog container not found');
@@ -98,11 +94,9 @@ export class DialogService {
 			// Open up corresponding dialog and pass callbacks
 			if (dialogType === 'search') {
 				dialogComponentRef.instance.openDialog(callback);
-			} else if (dialogType === 'delete' || dialogType === 'reset') {
-				dialogComponentRef.instance.openDialog(dialogType, callback, dataOrCallback, header);
-			} else if (dialogType === 'history' || dialogType === 'add') {
+			} else{
 				dialogComponentRef.instance.openDialog(callback, dataOrCallback);
-			}
+			} 
 
 			// Subscribe to dialog closed event
 			dialogComponentRef.instance.closed$.subscribe(() => {

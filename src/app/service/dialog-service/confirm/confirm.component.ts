@@ -21,15 +21,17 @@ export class ConfirmDialogComponent {
 	/**
 	 * Open the delete dialog
 	 *
-	 * @param dialogType - The type of dialog to open
 	 * @param acceptCallback - The callback to call when the dialog is accepted
-	 * @param message - The message to display in the dialog
-	 * @param header - The header to display in the dialog
+	 * @param data - The data required to display in the dialog
+	 * @param data[0] - The message to display in the dialog
+	 * @param data[1] - The header to display in the dialog
+	 * @param data[2] - The accept button label to display in the dialog
+	 * @param data[3] - The message to display after accepting the dialog
 	 */
-	openDialog(dialogType: string, acceptCallback: () => void, message: string, header: string) {
+	openDialog(acceptCallback: () => void, data: string[]) {
 		this.confirmationService.confirm({
-			message: message,
-			header: header,
+			message: data[0],
+			header: data[1],
 			closable: true,
 			closeOnEscape: true,
 			icon: 'pi pi-info-circle',
@@ -39,7 +41,7 @@ export class ConfirmDialogComponent {
 				outlined: true
 			},
 			acceptButtonProps: {
-				label: dialogType === 'delete' ? 'Delete' : 'Reset',
+				label: data[2],
 				severity: 'danger'
 			},
 
@@ -48,7 +50,7 @@ export class ConfirmDialogComponent {
 					this.messageService.add({
 						severity: 'info',
 						summary: 'Confirmed',
-						detail: dialogType === 'delete' ? 'Record deleted' : 'Data reset'
+						detail: data[3]
 					});
 				}
 				acceptCallback();

@@ -102,7 +102,9 @@ export class EntertainmentComponent {
 					if (selectedGenres === GENRE_FAVOURITE) {
 						return movieList.filter((movie) => movie.getIsFavourite());
 					}
-					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
+					return movieList.filter((movie) =>
+						movie.getMovieGenre().includes(selectedGenres)
+					);
 				})
 			);
 		}
@@ -158,7 +160,9 @@ export class EntertainmentComponent {
 
 		// Step 2: Loop through the movieList to get latest movie details
 		for (let movieItemVO of movieListVOs) {
-			this.searchStreamService.addSearchLog(`Start searching for ${movieItemVO.getMovieName()}`);
+			this.searchStreamService.addSearchLog(
+				`Start searching for ${movieItemVO.getMovieName()}`
+			);
 			movieItemVO.setSessionId(currentSessionId);
 
 			try {
@@ -178,9 +182,13 @@ export class EntertainmentComponent {
 					break;
 				}
 				// Otherwise, save movie name to corresponding array if movie rate changes.
-				else if (this.searchStreamService.checkLastLogDecreasedOrIncreased() === RATE_DECREASED) {
+				else if (
+					this.searchStreamService.checkLastLogDecreasedOrIncreased() === RATE_DECREASED
+				) {
 					rateDecreasedArray?.push(movieItemVO.getMovieName());
-				} else if (this.searchStreamService.checkLastLogDecreasedOrIncreased() === RATE_INCREASED) {
+				} else if (
+					this.searchStreamService.checkLastLogDecreasedOrIncreased() === RATE_INCREASED
+				) {
 					rateIncreasedArray?.push(movieItemVO.getMovieName());
 				}
 				searchCount++;
@@ -269,7 +277,9 @@ export class EntertainmentComponent {
 
 		movieData = await firstValueFrom(this.doubanService.searchMovieByThirdPartyApi(movieId));
 		if (!movieData) {
-			movieDataWebpage = await firstValueFrom(this.doubanService.searchMovieByWebpage(movieId));
+			movieDataWebpage = await firstValueFrom(
+				this.doubanService.searchMovieByWebpage(movieId)
+			);
 			return { movieWebpageAsData: movieDataWebpage, thirdPartyApi: false };
 		}
 		movieData = JSON.parse(movieData);
@@ -337,7 +347,10 @@ export class EntertainmentComponent {
 					if (thirdPartyApi) {
 						title = movieWebpageAsData['originalName'];
 					} else {
-						const regexForTitle = new RegExp('<meta property="og:title" content="(.*?)" />', 'i');
+						const regexForTitle = new RegExp(
+							'<meta property="og:title" content="(.*?)" />',
+							'i'
+						);
 						title = movieWebpageAsData.match(regexForTitle)[1];
 					}
 					movieItemVO.setMovieName(title);
@@ -348,7 +361,10 @@ export class EntertainmentComponent {
 				if (thirdPartyApi) {
 					episodeNumber = movieWebpageAsData['episodes'];
 				} else {
-					const regexForEpisodeNumber = new RegExp('<span class="pl">集数:</span> (.*?)<br/>', 'i');
+					const regexForEpisodeNumber = new RegExp(
+						'<span class="pl">集数:</span> (.*?)<br/>',
+						'i'
+					);
 					episodeNumber = movieWebpageAsData.match(regexForEpisodeNumber)[1];
 				}
 
@@ -381,7 +397,10 @@ export class EntertainmentComponent {
 				if (thirdPartyApi) {
 					movieCoverImageLink = movieWebpageAsData['data'][0]['poster'];
 				} else {
-					const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
+					const regexForCoverImageLink = new RegExp(
+						'<img class="media" src="(.*?)" />',
+						'i'
+					);
 					movieCoverImageLink = movieWebpageAsData.match(regexForCoverImageLink)[1];
 				}
 				await this.getMovieCoverImageByLink(movieCoverImageLink, movieItemVO);
@@ -428,7 +447,9 @@ export class EntertainmentComponent {
 					movieItemVO.setMovieId(movieData.id);
 					LOG.info(
 						this.className,
-						`Movie ID retrieved for ${movieItemVO.getMovieName()} with ID ${movieData.id}`
+						`Movie ID retrieved for ${movieItemVO.getMovieName()} with ID ${
+							movieData.id
+						}`
 					);
 					return;
 				}
@@ -449,7 +470,10 @@ export class EntertainmentComponent {
 	 * @param movieItemVO - The movie item to search for.
 	 */
 	private async getMovieCoverImageByLink(movieCoverImageLink: string, movieItemVO: MovieItemVO) {
-		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
+		LOG.info(
+			this.className,
+			`${(this.platformId as string).toUpperCase()} is searching movie cover`
+		);
 		try {
 			// searchMovieCover returns a Promise and we wait for the retrieval to complete
 			const movieCoverImage = await firstValueFrom(
@@ -510,7 +534,9 @@ export class EntertainmentComponent {
 	private updateGridLayout() {
 		// Get item width and item gap from css
 		const host = this.elRef.nativeElement;
-		const itemsWidth = getComputedStyle(host).getPropertyValue('--individual-item-width').trim();
+		const itemsWidth = getComputedStyle(host)
+			.getPropertyValue('--individual-item-width')
+			.trim();
 		const itemsGap = getComputedStyle(host).getPropertyValue('--individual-item-gap').trim();
 
 		const contentContainer = host.querySelector('.content-container');
@@ -542,7 +568,11 @@ export class EntertainmentComponent {
 	 * Triggered by the "Search" button click event on the "Entertainment" page
 	 */
 	protected openSearchDialog() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'search', this.cancelSearch.bind(this));
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'search',
+			this.cancelSearch.bind(this)
+		);
 		this.updateAllMoviesRate();
 	}
 
@@ -562,12 +592,16 @@ export class EntertainmentComponent {
 	protected openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'delete',
+			'confirm',
 			() => {
 				this.firebaseService.removeMovieFromDatabase(movieItemVO);
 			},
-			`Are you sure you want to delete ${movieItemVO.getMovieName()}?`,
-			`Delete Movie`
+			[
+				`Are you sure you want to delete ${movieItemVO.getMovieName()}?`,
+				'Delete Movie',
+				'Delete',
+				'Movie deleted'
+			]
 		);
 	}
 

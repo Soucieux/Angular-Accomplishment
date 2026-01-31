@@ -8,7 +8,13 @@ import {
 } from './../../app.utilities';
 import { SearchStreamService } from './../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
-import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
+import {
+	Storage,
+	ref as storageRef,
+	getDownloadURL,
+	uploadBytes,
+	deleteObject
+} from '@angular/fire/storage';
 import { LOG } from '../../app.logs';
 import {
 	Database,
@@ -51,7 +57,10 @@ export class FirebaseService {
 	 * @param movieName - The name of the movie to upload.
 	 * @returns A string that represents the downloadable link of the movie cover.
 	 */
-	public async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
+	public async uploadImageAndGetDownloadLink(
+		coverImage: Blob,
+		movieName: string
+	): Promise<string> {
 		try {
 			const storageRefer = storageRef(this.storage, `/movies/${movieName}`);
 			await uploadBytes(storageRefer, coverImage, {
@@ -153,7 +162,9 @@ export class FirebaseService {
 				);
 			});
 		} else {
-			this.searchStreamService.addSearchLog(`The rate of ${movieItemVO.getMovieName()} stays the same`);
+			this.searchStreamService.addSearchLog(
+				`The rate of ${movieItemVO.getMovieName()} stays the same`
+			);
 		}
 	}
 
@@ -199,7 +210,8 @@ export class FirebaseService {
 				currentData.genre[movieItemVO.getMovieGenre()] =
 					(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
 				if (movieItemVO.getIsFavourite()) {
-					currentData.genre[GENRE_FAVOURITE] = (currentData.genre[GENRE_FAVOURITE] ?? 0) + 1;
+					currentData.genre[GENRE_FAVOURITE] =
+						(currentData.genre[GENRE_FAVOURITE] ?? 0) + 1;
 				}
 
 				currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
@@ -250,7 +262,8 @@ export class FirebaseService {
 							? currentData.genre[GENRE_FAVOURITE] - 1
 							: 0;
 				}
-				currentData.totalNumber = currentData.totalNumber - 1 > 0 ? currentData.totalNumber - 1 : 0;
+				currentData.totalNumber =
+					currentData.totalNumber - 1 > 0 ? currentData.totalNumber - 1 : 0;
 				return currentData;
 			}).then(() => {
 				LOG.info(this.className, `Movie removed and statistics have been updated`);
@@ -309,7 +322,10 @@ export class FirebaseService {
 			const allMovies = snapshot.val();
 			for (const key of Object.keys(allMovies)) {
 				const movie = allMovies[key];
-				if ((movie.title === movieName && movie.year === movieYear) || movie.id === movieId) {
+				if (
+					(movie.title === movieName && movie.year === movieYear) ||
+					movie.id === movieId
+				) {
 					return true;
 				}
 			}
@@ -333,6 +349,7 @@ export class FirebaseService {
 	private async updateHistory(status: string, movieItemVO?: MovieItemVO) {
 		if (movieItemVO) {
 			await push(dbRef(this.db, 'history'), {
+				id: movieItemVO.getMovieId(),
 				status: status,
 				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
 					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
@@ -343,7 +360,9 @@ export class FirebaseService {
 		} else {
 			await push(dbRef(this.db, 'history'), {
 				status: status,
-				message: `New rate search was started on ${this.Utilities.getCurrentFormattedTime(true)}`
+				message: `New rate search was started on ${this.Utilities.getCurrentFormattedTime(
+					true
+				)}`
 			}).then(() => {
 				LOG.info(this.className, 'New history entry has been added');
 			});
@@ -378,8 +397,12 @@ export class FirebaseService {
 	public async addNewRecordToPatchNotes(newRecord: any) {
 		await push(dbRef(this.db, 'patch_notes'), {
 			component: this.Utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
-			element: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
-			details: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
+			element: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(
+				newRecord.element.trim()
+			),
+			details: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(
+				newRecord.details.trim()
+			),
 			status: newRecord.status,
 			timestamp: newRecord.timestamp,
 			isBug: newRecord.isBug
@@ -522,7 +545,12 @@ export class FirebaseService {
 	 * @param value - The new value to be stored.
 	 * @param tableName - The name of the table to update.
 	 */
-	public async updateRemainderTable(tableName: string, entryKey: string, valueKey: string, value: any) {
+	public async updateRemainderTable(
+		tableName: string,
+		entryKey: string,
+		valueKey: string,
+		value: any
+	) {
 		if (tableName === SECOND_TABLE) {
 			const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
 

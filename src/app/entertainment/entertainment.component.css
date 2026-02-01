@@ -393,13 +393,13 @@
 	}
 
 	.delete-button {
-		top: 130px;
+		top: 133px;
 		right: 10px;
 	}
 
 	.edit-button {
-		top: 95px; /* move into view vertically */
-		right: 10px; /* adjust horizontal so it doesn’t wrap */
+		top: 165px; /* move into view vertically */
+		right: 50px; /* adjust horizontal so it doesn’t wrap */
 	}
 
 	.edit-button-icon {
@@ -444,5 +444,20 @@
 	.douban-icon {
 		width: 20px; /* 👈 control size here */
 		height: 20px;
+	}
+
+	::ng-deep .dropdown-panel .p-select-option {
+		font-size: 14px;
+		padding: 3px 8px !important;
+	}
+
+	.dropdown {
+		height: 23px;
+		width: 100px;
+	}
+
+	::ng-deep .dropdown .p-select-label {
+		font-size: 14px;
+		padding: 3px 8px;
 	}
 }

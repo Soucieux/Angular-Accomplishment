@@ -21,6 +21,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
 import { LOG } from '../app.logs';
 import { DoubanService } from '../service/douban-service/douban.service';
@@ -33,16 +34,19 @@ import { MatRippleModule } from '@angular/material/core';
 import { DialogService } from '../service/dialog-service/dialog.service';
 import { MovieAlreadyExistsError } from '../error/movie-already-exists-error';
 import { ButtonModule } from 'primeng/button';
+import { SelectModule } from 'primeng/select';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
 	imports: [
 		CommonModule,
+		FormsModule,
 		MatIconModule,
 		MatButtonModule,
 		MatButtonToggleModule,
 		MatRippleModule,
-		ButtonModule
+		ButtonModule,
+		SelectModule
 	],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'
@@ -64,6 +68,15 @@ export class EntertainmentComponent {
 	protected statistics$!: Observable<any>;
 	private tempMovieItemVO!: MovieItemVO;
 	private searchSummary!: Map<string, string[]>;
+	protected editedItems = new Map<string, { original: string; genre: string }>();
+	protected genres: { genre: string }[] = [
+		{ genre: '刑侦' },
+		{ genre: '古装' },
+		{ genre: '悬疑' },
+		{ genre: '校园' },
+		{ genre: '现代' },
+		{ genre: '谍战' }
+	];
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef<HTMLElement>,
@@ -570,8 +583,8 @@ export class EntertainmentComponent {
 				`Are you sure you want to delete ${movieItemVO.getMovieName()}?`,
 				'Delete Movie',
 				'Delete',
-                'Movie deleted',
-                true
+				'Movie deleted',
+				true
 			]
 		);
 	}
@@ -668,5 +681,36 @@ export class EntertainmentComponent {
 
 			this.firebaseService.getHistory()
 		);
+	}
+
+	/**
+	 * Start editing a movie
+	 *
+	 * @param movie The selected movie
+	 */
+	protected startEdit(movie: MovieItemVO) {
+		this.editedItems.set(movie.getMovieKey(), {
+			original: movie.getMovieGenre(),
+			genre: movie.getMovieGenre()
+		});
+	}
+
+	/**
+	 * Complete editing a movie
+	 *
+	 * @param movie The selected movie
+	 */
+	protected completeEdit(movie: MovieItemVO) {
+		const genreData = this.editedItems.get(movie.getMovieKey());
+		if (genreData) {
+			if (genreData.original !== genreData.genre) {
+				this.firebaseService.updateMovieGenreToFirebase(
+					movie.getMovieKey(),
+					genreData.original,
+					genreData.genre
+				);
+			}
+			this.editedItems.delete(movie.getMovieKey());
+		}
 	}
 }

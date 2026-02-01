@@ -71,7 +71,7 @@ export class EntertainmentComponent {
 		private doubanService: DoubanService,
 		private firebaseService: FirebaseService,
 		private dialogService: DialogService,
-		private Utilities: Utilities,
+		protected utilities: Utilities,
 		private searchStreamService: SearchStreamService
 	) {
 		if (isPlatformBrowser(this.platformId)) {
@@ -498,7 +498,7 @@ export class EntertainmentComponent {
 	 * @returns A string that represents the font size.
 	 */
 	protected calculateFontSize(length: number) {
-		if (this.Utilities.isMobile()) {
+		if (this.utilities.isMobile()) {
 			return length <= 8 ? '18px' : String(18 - (length - 8) * 2 + 'px');
 		}
 		return length <= 9 ? '20px' : String(20 - (length - 8.5) * 2 + 'px');

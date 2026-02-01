@@ -157,6 +157,26 @@ export class FirebaseService {
 		}
 	}
 
+	public async updateMovieGenreToFirebase(movieKey: string, oldGenre: string, newGenre: string) {
+		const movieRef = dbRef(this.db, `movies/${movieKey}`);
+
+		// Step 1 : Update movie genre
+		await update(movieRef, {
+			genre: newGenre
+		}).then(() => {
+			LOG.info(this.className, `Movie genre has been updated`);
+		});
+
+		// Step 2 : Update movie statistics
+		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+			currentData.genre[oldGenre] = currentData.genre[oldGenre] - 1;
+			currentData.genre[newGenre] = (currentData.genre[newGenre] ?? 0) + 1;;
+			return currentData;
+		}).then(() => {
+			LOG.info(this.className, `Movie statistics have been updated`);
+		});
+	}
+
 	/**
 	 * Update all movie data and statistics to firebase.
 	 *

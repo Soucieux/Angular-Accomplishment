@@ -314,6 +314,26 @@
 	border-radius: 20%;
 }
 
+::ng-deep .dropdown-panel {
+	font-family: 'cf';
+}
+
+::ng-deep .dropdown-panel .p-select-option {
+	padding: 5px 10px !important;
+}
+
+.dropdown {
+	position: relative;
+	bottom: 5px;
+	left: 5px;
+	height: 30px;
+	width: 100px;
+}
+
+::ng-deep .dropdown .p-select-label {
+	padding: 5px 10px; /* Adjust these values as needed */
+}
+
 /* The max-width here is the **current** maximum width of the browser */
 @media (max-width: 840px) {
 	.control-button-title {

@@ -54,7 +54,20 @@
 			<span class="title" [style.font-size]="calculateFontSize(movie.getMovieName().length)">
 				{{ movie.getMovieName() }}
 			</span>
-			<span class="text">类型：{{ movie.getMovieGenre() }} </span>
+			<span class="text"
+				>类型:@if(editedItems.has(movie.getMovieKey())){
+				<p-select
+					[options]="genres"
+					optionLabel="genre"
+					optionValue="genre"
+					[appendTo]="'body'"
+					class="dropdown"
+					panelStyleClass="dropdown-panel"
+					[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
+				}@else {
+				{{ movie.getMovieGenre() }}
+				}
+			</span>
 			<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
 			<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
 			@if (movie.getMovieRate()) {
@@ -73,9 +86,15 @@
 				aria-label="Open on Douban">
 				<img src="./assets/douban.png" class="douban-icon" />
 			</a>
-			<p-button class="edit-button" [rounded]="true" [text]="true">
+			@if(editedItems.has(movie.getMovieKey())){
+			<p-button class="edit-button" [rounded]="true" [text]="true" (onClick)="completeEdit(movie)">
+				<span class="material-icons edit-button-icon" style="color: white">check</span>
+			</p-button>
+			}@else {
+			<p-button class="edit-button" [rounded]="true" [text]="true" (onClick)="startEdit(movie)">
 				<span class="material-icons edit-button-icon" style="color: white">edit</span>
 			</p-button>
+			}
 			<p-button
 				icon="pi pi-times"
 				class="delete-button"

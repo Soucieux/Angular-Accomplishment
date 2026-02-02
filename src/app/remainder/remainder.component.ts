@@ -56,7 +56,7 @@ export class RemainderComponent {
 	private isLoggedIn!: boolean;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
-	private finalizedCells = new Set<string>();
+	private chargedCells = new Set<string>();
 	protected originalFirstTable!: any[];
 	protected updatedFirstTable!: any[];
 	protected currentDay!: number;
@@ -81,7 +81,7 @@ export class RemainderComponent {
 		THIRD_TABLE: false
 	};
 	private saveIndicatorTimeouts: Record<string, any> = {};
-	private finalizedCellsInitialized = false;
+	private chargedCellsInitialized = false;
 	protected isNextMonth!: boolean;
 
 	constructor(
@@ -107,10 +107,10 @@ export class RemainderComponent {
 					this.updatedFirstTable = structuredClone(rows).slice(0, -1);
 					this.isNextMonth = this.originalFirstTable[5]['isNextMonth'];
 
-					if (!this.finalizedCellsInitialized) {
+					if (!this.chargedCellsInitialized) {
 						// Loop through to determine disabled fields
-						this.updatefinalizedCells();
-						this.finalizedCellsInitialized = true;
+						this.updateChargedCells();
+						this.chargedCellsInitialized = true;
 					}
 				});
 
@@ -133,23 +133,23 @@ export class RemainderComponent {
 		}
 	}
 
-	protected updatefinalizedCells() {
+	protected updateChargedCells() {
 		if (this.isNextMonth) {
-			this.finalizedCells.clear();
+			this.chargedCells.clear();
 		}
 
-		if (this.finalizedCellsInitialized) {
-			for (let index = 0; index < this.updatedFirstTable.length; index++) {
-				for (const field of this.fields) {
-					if (this.isNextMonth) {
-						this.updatedFirstTable[index][field].isCharged = false;
-					} else if (this.updatedFirstTable[index][field].value < this.currentDay) {
-						this.updatedFirstTable[index][field].isCharged = true;
-						this.finalizedCells.add(`${index}-${field}`);
-					}
-				}
-			}
-
+        for (let index = 0; index < this.updatedFirstTable.length; index++) {
+            for (const field of this.fields) {
+                if (this.isNextMonth && this.chargedCellsInitialized) {
+                    this.updatedFirstTable[index][field].isCharged = false;
+                } else if (!this.isNextMonth && this.updatedFirstTable[index][field].value < this.currentDay) {
+                    this.updatedFirstTable[index][field].isCharged = true;
+                    this.chargedCells.add(`${index}-${field}`);
+                }
+            }
+        }
+        
+        if (this.chargedCellsInitialized) {
 			this.updatedFirstTable.push({ isNextMonth: this.isNextMonth });
 			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
@@ -229,7 +229,7 @@ export class RemainderComponent {
 	}
 
 	protected isDisabled(rowIndex: number, field: string): boolean {
-		return this.finalizedCells.has(`${rowIndex}-${field}`);
+		return this.chargedCells.has(`${rowIndex}-${field}`);
 	}
 
 	// 1 -> 2 && 3 -> 4

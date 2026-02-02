@@ -330,6 +330,21 @@
 	width: 100px;
 }
 
+.favourite {
+	position: absolute;
+	top: 245px;
+	right: 120px;
+}
+
+::ng-deep .favourite .p-button.p-button-text:hover {
+	background-color: transparent;
+}
+
+::ng-deep .favourite .p-button-icon {
+	font-size: 30px;
+	color: yellow;
+}
+
 ::ng-deep .dropdown .p-select-label {
 	padding: 5px 10px; /* Adjust these values as needed */
 }
@@ -398,8 +413,8 @@
 	}
 
 	.edit-button {
-		top: 165px; /* move into view vertically */
-		right: 50px; /* adjust horizontal so it doesn’t wrap */
+		top: 164px; /* move into view vertically */
+		right: 45px; /* adjust horizontal so it doesn’t wrap */
 	}
 
 	.edit-button-icon {
@@ -434,6 +449,15 @@
 
 	.text-on-image {
 		font-size: 10px;
+	}
+
+	.favourite {
+		top: 162px;
+		right: 80px;
+	}
+
+	::ng-deep .favourite .p-button-icon {
+		font-size: 20px;
 	}
 
 	.douban-button {

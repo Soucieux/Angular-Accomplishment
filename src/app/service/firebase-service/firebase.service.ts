@@ -157,6 +157,13 @@ export class FirebaseService {
 		}
 	}
 
+	/**
+	 * Update the movie genre to firebase
+	 *
+	 * @param movieKey The given movie key
+	 * @param oldGenre The old genre
+	 * @param newGenre The new genre
+	 */
 	public async updateMovieGenreToFirebase(movieKey: string, oldGenre: string, newGenre: string) {
 		const movieRef = dbRef(this.db, `movies/${movieKey}`);
 
@@ -170,7 +177,36 @@ export class FirebaseService {
 		// Step 2 : Update movie statistics
 		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
 			currentData.genre[oldGenre] = currentData.genre[oldGenre] - 1;
-			currentData.genre[newGenre] = (currentData.genre[newGenre] ?? 0) + 1;;
+			currentData.genre[newGenre] = (currentData.genre[newGenre] ?? 0) + 1;
+			return currentData;
+		}).then(() => {
+			LOG.info(this.className, `Movie statistics have been updated`);
+		});
+	}
+
+	/**
+	 * Update isFavourite for the given movie to firebase
+	 *
+	 * @param movieKey The given movie key
+	 * @param isFavourite The boolean value set
+	 */
+	public async updateMovieFavouriteToFirebase(movieKey: string, isFavourite: boolean) {
+		const movieRef = dbRef(this.db, `movies/${movieKey}`);
+
+		// Step 1 : Update movie favourite
+		await update(movieRef, {
+			isFavourite: isFavourite
+		}).then(() => {
+			LOG.info(this.className, `Movie favourite tag has been updated`);
+		});
+
+		// Step 2 : Update movie statistics
+		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+			if (isFavourite) {
+				currentData.genre[GENRE_FAVOURITE] = (currentData.genre[GENRE_FAVOURITE] ?? 0) + 1;
+			} else {
+				currentData.genre[GENRE_FAVOURITE] = currentData.genre[GENRE_FAVOURITE] - 1;
+			}
 			return currentData;
 		}).then(() => {
 			LOG.info(this.className, `Movie statistics have been updated`);
@@ -587,6 +623,13 @@ export class FirebaseService {
 		});
 	}
 
+	/**
+	 * Add a new entry to a given table
+	 * Note: This is used by third table only
+	 *
+	 * @param tableName The table name
+	 * @param newRecord The new entry
+	 */
 	public async addNewRecordForRemainderTable(tableName: string, newRecord: any) {
 		await push(dbRef(this.db, `remainder/${tableName}`), {
 			...newRecord

@@ -31,11 +31,9 @@
 }
 
 .toggle-wrapper {
-	position: absolute;
-	right: 20px;
 	display: flex;
 	align-items: center;
-	padding-left: 20px;
+	padding-top: 15px;
 }
 
 .toggle-label {
@@ -47,12 +45,20 @@
 	transform: scale(0.65); /* 1 = default */
 }
 
-.header-wrapper {
+.header-main {
 	padding-top: 20px;
 	padding-left: 15px;
+	display: flex;
+	flex-direction: row;
+	gap: 5px;
+}
+
+.header-wrapper {
+	position: relative;
 	background-color: white;
 	display: flex;
 	flex-direction: row;
+	justify-content: space-between;
 }
 
 /* remove td/th padding */
@@ -136,22 +142,18 @@
 		grid-template-columns: repeat(1, 1fr) !important;
 	}
 
-	.save-indicator-first-table {
-		bottom: 20px;
-		left: 60px !important;
-	}
-
+	.save-indicator-first-table,
 	.save-indicator {
-		bottom: 2px;
+		display: flex;
 	}
 
 	.save-indicator-icon {
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		width: 10px !important;
-		height: 10px !important;
 		font-size: 13px !important;
+        position: relative;
+		bottom: 2px;
 	}
 
 	.save-indicator-text {
@@ -249,10 +251,8 @@
 
 .save-indicator-first-table,
 .save-indicator {
-	position: relative;
-	left: 10px;
-	display: flex;
-	align-items: center;
+	padding-top: 3px;
+	padding-left: 5px;
 }
 
 .save-indicator-icon {

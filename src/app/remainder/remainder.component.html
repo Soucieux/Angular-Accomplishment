@@ -2,22 +2,25 @@
 	<!-- FIRST TABLE -->
 	<div class="table-wrapper">
 		<div class="header-wrapper">
-			<h4>Date Calculator</h4>
-			<div class="toggle-wrapper">
-				<label for="switch" class="toggle-label">Next Month</label>
-				<p-toggleswitch
-					inputId="switch"
-					class="toggle"
-					[(ngModel)]="isNextMonth"
-					(onChange)="updatefinalizedCells()"></p-toggleswitch>
-			</div>
-			@if (saveIndicators[FIRST_TABLE]) {
-				<div class="save-indicator-first-table">
-					<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
-					<span class="save-indicator-text">Saving</span>
-				</div>
-			}
-		</div>
+            <div class="header-main">
+                <h4>Date Calculator</h4>
+                @if (saveIndicators[FIRST_TABLE]) {
+                    <div class="save-indicator-first-table">
+                        <i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+                        <span class="save-indicator-text">Saving</span>
+                    </div>
+			    }
+            </div>
+                <div class="toggle-wrapper">
+                    <label for="switch" class="toggle-label">Next Month</label>
+                    <p-toggleswitch
+                        inputId="switch"
+                        class="toggle"
+                        [(ngModel)]="isNextMonth"
+                        (onChange)="updateChargedCells()"></p-toggleswitch>
+                </div>
+
+        </div>
 		<p-table [value]="updatedFirstTable" [loading]="loading" [showLoader]="false" class="first-table">
 			<ng-template pTemplate="header">
 				<tr>
@@ -84,13 +87,15 @@
 	<!-- SECOND TABLE -->
 	<div class="table-wrapper">
 		<div class="header-wrapper">
-			<h4>Account Expenses</h4>
-			@if (saveIndicators[SECOND_TABLE]) {
-				<div class="save-indicator">
-					<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
-					<span class="save-indicator-text">Saving</span>
-				</div>
-			}
+            <div class="header-main">
+			    <h4>Account Expenses</h4>
+                @if (saveIndicators[SECOND_TABLE]) {
+                    <div class="save-indicator">
+                        <i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+                        <span class="save-indicator-text">Saving</span>
+                    </div>
+                }
+            </div>
 		</div>
 		<div class="second-table">
 			@if (loading) {
@@ -173,18 +178,20 @@
 	<!-- THIRD TABLE -->
 	<div class="table-wrapper">
 		<div class="header-wrapper">
-			<h4>Messages</h4>
-			@if (saveIndicators[THIRD_TABLE]) {
-				<div class="save-indicator">
-					<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
-					<span class="save-indicator-text">Saving</span>
-				</div>
-			}
+            <div class="header-main">
+			    <h4>Messages</h4>
+                @if (saveIndicators[THIRD_TABLE]) {
+                    <div class="save-indicator">
+                        <i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+                        <span class="save-indicator-text">Saving</span>
+                    </div>
+                }
+            </div>
 		</div>
 		<div class="third-table-wrapper">
 			@if (loading) {
 				@for (_ of [0, 1, 2, 3, 4, 5]; track $index) {
-					<div class="second-table-cell">
+					<div class="third-table-cell">
 						<p-skeleton height="34px" />
 					</div>
 				}

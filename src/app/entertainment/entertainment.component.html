@@ -94,6 +94,16 @@
 			<p-button class="edit-button" [rounded]="true" [text]="true" (onClick)="startEdit(movie)">
 				<span class="material-icons edit-button-icon" style="color: white">edit</span>
 			</p-button>
+			} @if(movie.getIsFavourite()){
+			<p-button
+				icon="pi pi-star-fill"
+				class="favourite"
+				[text]="true"
+				(onClick)="setIsFavourite(movie)">
+			</p-button>
+			}@else {
+			<p-button icon="pi pi-star" class="favourite" [text]="true" (onClick)="setIsFavourite(movie)">
+			</p-button>
 			}
 			<p-button
 				icon="pi pi-times"

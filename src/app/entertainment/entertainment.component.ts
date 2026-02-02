@@ -713,4 +713,13 @@ export class EntertainmentComponent {
 			this.editedItems.delete(movie.getMovieKey());
 		}
 	}
+
+	/**
+	 * Set favourite
+	 *
+	 * @param movie The movie to set
+	 */
+	protected setIsFavourite(movie: MovieItemVO) {
+		this.firebaseService.updateMovieFavouriteToFirebase(movie.getMovieKey(), !movie.getIsFavourite());
+	}
 }

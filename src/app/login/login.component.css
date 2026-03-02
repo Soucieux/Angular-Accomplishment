@@ -39,6 +39,9 @@
 .field-container {
 	display: flex;
 	justify-content: center;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
 }
 
 .input-field {

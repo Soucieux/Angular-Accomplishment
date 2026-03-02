@@ -20,6 +20,7 @@
 					pInputText
 					type="text"
 					id="email"
+					name="email"
 					formControlName="email"
 					[invalid]="isInvalid('email')" />
 				<label for="email">Email</label>
@@ -44,6 +45,17 @@
 			</p-iftalabel>
 		</div>
 		<div class="field-container">
+			<p-inputgroup style="height: 45px; width: 250px">
+				<input pInputText type="text" inputmode="numeric" formControlName="verificationCode" />
+				<p-inputgroup-addon>
+					<p-button
+						(click)="getVerificationCodeEmail()"
+						severity="secondary"
+						[disabled]="loginForm.get('email')?.value === ''">
+						<span pButtonLabel>Get Code</span>
+					</p-button>
+				</p-inputgroup-addon>
+			</p-inputgroup>
 			<button class="login-button" pButton severity="secondary" type="submit">
 				<span pButtonLabel>Submit</span>
 			</button>

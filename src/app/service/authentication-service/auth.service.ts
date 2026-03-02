@@ -1,4 +1,4 @@
-import { EnvironmentInjector, Inject, Injectable, PLATFORM_ID, runInInjectionContext } from '@angular/core';
+import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import {
 	GoogleAuthProvider,
 	signInWithEmailAndPassword,
@@ -8,35 +8,46 @@ import {
 	User,
 	onAuthStateChanged
 } from '@angular/fire/auth';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { LOG } from '../../app.logs';
+import { CloudbaseService } from '../cloudbase-service/cloudbase.service';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class AuthService {
 	private readonly className = 'AuthService';
-	currentUser$: Observable<User | null>;
+	private verification: any;
+	private cloudbaseAuth: any;
+	private cloudbaseCurrentUserSubject = new BehaviorSubject<any | null>(null);
+	public cloudbaseCurrentUser$ = this.cloudbaseCurrentUserSubject.asObservable();
+	public firebaseCurrentUser$: Observable<User | null>;
 	constructor(
-		@Inject(Auth) private auth: Auth,
+		@Inject(Auth) private firebaseAuth: Auth,
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
-		private router: Router
+		private router: Router,
+		private cloudbaseService: CloudbaseService
 	) {
+		// TODO
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
-		this.currentUser$ = new Observable((observer) => {
+		this.firebaseCurrentUser$ = new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
 				// onAuthStateChanged emits the user continuously
-				onAuthStateChanged(this.auth, (user) => {
+				onAuthStateChanged(this.firebaseAuth, (user) => {
 					observer.next(user);
 				});
 			});
 		});
+
+		if (this.cloudbaseService.cloudbase) {
+			this.cloudbaseAuth = this.cloudbaseService.cloudbase.auth();
+		}
 	}
 
 	async emailPasswordLogin(email: string, password: string) {
 		try {
-			await signInWithEmailAndPassword(this.auth, email, password).then(() => {
+			await signInWithEmailAndPassword(this.firebaseAuth, email, password).then(() => {
 				this.router.navigate(['/']);
 				localStorage.setItem('permission', 'true');
 			});
@@ -48,9 +59,9 @@ export class AuthService {
 	googleLogin() {
 		// CurrentUser in this.auth is still null after signInWithPopup completes
 		// As the credentials are being returned after that and then firebase starts initializing
-		signInWithPopup(this.auth, new GoogleAuthProvider())
+		signInWithPopup(this.firebaseAuth, new GoogleAuthProvider())
 			.then(() => {
-				const unsub = onAuthStateChanged(this.auth, (user) => {
+				const unsub = onAuthStateChanged(this.firebaseAuth, (user) => {
 					unsub();
 					if (user) {
 						this.router.navigate(['/']);
@@ -63,8 +74,54 @@ export class AuthService {
 
 	logout() {
 		// CurrentUser in this.auth gets removed immediately after signOut
-		signOut(this.auth)
+		signOut(this.firebaseAuth)
 			.then(() => {
+				this.router.navigate(['/']);
+				localStorage.setItem('permission', 'false');
+			})
+			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
+	}
+
+	//////////////////////////////////// Below is for cloudbase /////////////////////////////////
+
+	async getVerificationCodeEmail(email: string) {
+		this.verification = await this.cloudbaseAuth.getVerification({ email });
+	}
+
+	async signUp(email: string, password: string, verificationCode: number) {
+		const verificationTokenRes = await this.cloudbaseAuth.verify({
+			verification_id: this.verification?.verification_id,
+			verification_code: verificationCode
+		});
+		await this.cloudbaseAuth.signUp({
+			email: email,
+			verification_code: verificationCode,
+			verification_token: verificationTokenRes.verification_token,
+			password: password
+		});
+	}
+
+	async signIn(username: string, password: string) {
+		try {
+			await this.cloudbaseAuth.signIn({ username: username, password: password });
+			this.getCurrentUser();
+			this.router.navigate(['/']);
+			localStorage.setItem('permission', 'true');
+		} catch (error: any) {
+			LOG.error(this.className, 'Error when signing in with username and password with Cloudbase');
+		}
+	}
+
+	async getCurrentUser() {
+		const { data, error } = await this.cloudbaseAuth.getUser();
+		this.cloudbaseCurrentUserSubject.next(data.user);
+	}
+
+	async signOut() {
+		await this.cloudbaseAuth
+			.signOut()
+            .then(() => {
+                this.cloudbaseCurrentUserSubject.next(null);
 				this.router.navigate(['/']);
 				localStorage.setItem('permission', 'false');
 			})

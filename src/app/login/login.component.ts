@@ -6,6 +6,8 @@ import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { IftaLabelModule } from 'primeng/iftalabel';
 import { AuthService } from '../service/authentication-service/auth.service';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 
 @Component({
 	selector: 'login',
@@ -16,7 +18,9 @@ import { AuthService } from '../service/authentication-service/auth.service';
 		InputTextModule,
 		ButtonModule,
 		MessageModule,
-		IftaLabelModule
+		IftaLabelModule,
+		InputGroupModule,
+		InputGroupAddonModule
 	],
 	templateUrl: './login.component.html',
 	styleUrls: ['./login.component.css']
@@ -28,7 +32,8 @@ export class LoginComponent {
 	constructor(private fb: FormBuilder, private authService: AuthService) {
 		this.loginForm = this.fb.group({
 			email: ['', Validators.required],
-			password: ['', Validators.required]
+			password: ['', Validators.required],
+			verificationCode: ['']
 		});
 	}
 
@@ -37,15 +42,30 @@ export class LoginComponent {
 		return control?.invalid && (control.touched || this.formSubmitted);
 	}
 
+	async getVerificationCodeEmail() {
+		await this.authService.getVerificationCodeEmail(this.loginForm.value['email']);
+	}
+
+	// Below is for cloudbase
 	onSubmit() {
 		this.formSubmitted = true;
 		if (this.loginForm.valid) {
-			this.authService.emailPasswordLogin(
+			this.authService.signIn(this.loginForm.value['email'], this.loginForm.value['password']);
+		}
+	}
+
+	//TODO
+	// Below is for firebase
+	/* onSubmit() {
+		this.formSubmitted = true;
+		if (this.loginForm.valid) {
+			this.firebaseAuthService.emailPasswordLogin(
 				this.loginForm.value['email'],
 				this.loginForm.value['password']
 			);
-		}
-	}
+        }
+    }
+    */
 
 	googleLogin() {
 		this.authService.googleLogin();

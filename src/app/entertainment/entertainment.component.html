@@ -1,124 +1,139 @@
-@if (isLoggedIn && (statistics$ | async)) { @let stats = statistics$ | async;
-<div class="page-container">
-	<div class="control-button-container">
-		<div class="control-button-title">Categories ({{ stats.totalNumber }})</div>
-		<button mat-fab extended (click)="openSearchDialog()" class="control-button">
-			<span class="material-icons control-button-icon">search</span>
-		</button>
-		<button mat-fab extended (click)="openAddNewMovieDialog()" class="control-button">
-			<span class="material-icons control-button-icon">add</span>
-		</button>
-		<button mat-fab extended (click)="openHistoryDialog()" class="control-button">
-			<span class="material-icons control-button-icon">browse_gallery</span>
-		</button>
-	</div>
-	<div class="category-button-container">
-		@for (genre of stats.genre | keyvalue; track genre.key) {
-		<div
-			matRipple
-			class="category-button"
-			(click)="filterByGenre($any(genre.key))"
-			[ngClass]="{
-				'selected-category': (selectedGenres$ | async)?.includes($any(genre.key))
-			}">
-			<span class="category-text">{{ genre.key }}</span>
-			<span
-				><p class="category-count">{{ genre.value }}</p>
-				<p class="hide-on-mobile">to watch</p></span
-			>
+@if (isLoggedIn && (statistics$ | async)) {
+	@let stats = statistics$ | async;
+	<div class="page-container">
+		<div class="control-button-container">
+			<div class="control-button-title">Categories ({{ stats.totalNumber }})</div>
+			<button mat-fab extended (click)="openSearchDialog()" class="control-button">
+				<span class="material-icons control-button-icon">search</span>
+			</button>
+			<button mat-fab extended (click)="openAddNewMovieDialog()" class="control-button">
+				<span class="material-icons control-button-icon">add</span>
+			</button>
+			<button mat-fab extended (click)="openHistoryDialog()" class="control-button">
+				<span class="material-icons control-button-icon">browse_gallery</span>
+			</button>
 		</div>
+		<div class="category-button-container">
+			@for (genre of stats.genre | keyvalue; track genre.key) {
+				<div
+					matRipple
+					class="category-button"
+					(click)="filterByGenre($any(genre.key))"
+					[ngClass]="{
+						'selected-category': (selectedGenres$ | async)?.includes($any(genre.key))
+					}">
+					<span class="category-text">{{ genre.key }}</span>
+					<span
+						><p class="category-count">{{ genre.value }}</p>
+						<p class="hide-on-mobile">to watch</p></span
+					>
+				</div>
+			}
+		</div>
+	</div>
+	<div class="content-container">
+		@for (movie of filteredMovieList$ | async; track movie.getMovieId()) {
+			<div
+				class="individual-item"
+				[ngClass]="{
+					'very-high-rate': movie.getMovieRate() >= 9,
+					'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,
+					'medium-rate': movie.getMovieRate() >= 7 && movie.getMovieRate() < 7.9,
+					'low-rate': movie.getMovieRate() < 7
+				}">
+				<div
+					class="image-container"
+					[ngStyle]="{
+						backgroundImage: 'url(' + movie.getMovieCoverImageDownloadableLink() + ')'
+					}">
+					<div class="text-on-image">
+						<span class="description">简介：{{ movie.getDescription() }} </span>
+						<span>演员：{{ movie.getActors() }}</span>
+					</div>
+				</div>
+				<div class="individual-item-content">
+					<span class="title" [style.font-size]="calculateFontSize(movie.getMovieName().length)">
+						{{ movie.getMovieName() }}
+					</span>
+					<span class="text"
+						>类型:
+						@if (editedItems.has(movie.getMovieKey())) {
+							<p-select
+								[options]="genres"
+								optionLabel="genre"
+								optionValue="genre"
+								[appendTo]="'body'"
+								class="dropdown"
+								panelStyleClass="dropdown-panel"
+								[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
+						} @else {
+							{{ movie.getMovieGenre() }}
+						}
+					</span>
+					<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
+					<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
+					@if (movie.getMovieRate()) {
+						<span class="rate">
+							{{ movie.getMovieRate().toFixed(1) }}
+						</span>
+					} @else {
+						<span class="rate">{{ NO_RATE }}</span>
+					}
+					<a
+						class="douban-button"
+						severity="danger"
+						[href]="'https://movie.douban.com/subject/' + movie.getMovieId()"
+						target="_blank"
+						rel="noopener noreferrer"
+						aria-label="Open on Douban">
+						<img src="./assets/douban.png" class="douban-icon" />
+					</a>
+					@if (editedItems.has(movie.getMovieKey())) {
+						<p-button
+							class="edit-button"
+							[rounded]="true"
+							[text]="true"
+							(onClick)="completeEdit(movie)">
+							<span class="material-icons edit-button-icon" style="color: white">check</span>
+						</p-button>
+					} @else {
+						<p-button
+							class="edit-button"
+							[rounded]="true"
+							[text]="true"
+							(onClick)="startEdit(movie)">
+							<span class="material-icons edit-button-icon" style="color: white">edit</span>
+						</p-button>
+					}
+					@if (movie.getIsFavourite()) {
+						<p-button
+							icon="pi pi-star-fill"
+							class="favourite"
+							[text]="true"
+							(onClick)="setIsFavourite(movie)">
+						</p-button>
+					} @else {
+						<p-button
+							icon="pi pi-star"
+							class="favourite"
+							[text]="true"
+							(onClick)="setIsFavourite(movie)">
+						</p-button>
+					}
+					<p-button
+						icon="pi pi-times"
+						class="delete-button"
+						[rounded]="true"
+						severity="danger"
+						(click)="openDeleteConfirmationDialog(movie)" />
+				</div>
+			</div>
 		}
 	</div>
-</div>
-<div class="content-container">
-	@for (movie of filteredMovieList$ | async; track movie.getMovieId()) {
-	<div
-		class="individual-item"
-		[ngClass]="{
-			'very-high-rate': movie.getMovieRate() >= 9,
-			'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,
-			'medium-rate': movie.getMovieRate() >= 7 && movie.getMovieRate() < 7.9,
-			'low-rate': movie.getMovieRate() < 7
-		}">
-		<div
-			class="image-container"
-			[ngStyle]="{
-				backgroundImage: 'url(' + movie.getMovieCoverImageDownloadableLink() + ')'
-			}">
-			<div class="text-on-image">
-				<span class="description">简介：{{ movie.getDescription() }} </span>
-				<span>演员：{{ movie.getActors() }}</span>
-			</div>
-		</div>
-		<div class="individual-item-content">
-			<span class="title" [style.font-size]="calculateFontSize(movie.getMovieName().length)">
-				{{ movie.getMovieName() }}
-			</span>
-			<span class="text"
-				>类型:@if(editedItems.has(movie.getMovieKey())){
-				<p-select
-					[options]="genres"
-					optionLabel="genre"
-					optionValue="genre"
-					[appendTo]="'body'"
-					class="dropdown"
-					panelStyleClass="dropdown-panel"
-					[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
-				}@else {
-				{{ movie.getMovieGenre() }}
-				}
-			</span>
-			<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
-			<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
-			@if (movie.getMovieRate()) {
-			<span class="rate">
-				{{ movie.getMovieRate().toFixed(1) }}
-			</span>
-			} @else {
-			<span class="rate">{{ NO_RATE }}</span>
-			}
-			<a
-				class="douban-button"
-				severity="danger"
-				[href]="'https://movie.douban.com/subject/' + movie.getMovieId()"
-				target="_blank"
-				rel="noopener noreferrer"
-				aria-label="Open on Douban">
-				<img src="./assets/douban.png" class="douban-icon" />
-			</a>
-			@if(editedItems.has(movie.getMovieKey())){
-			<p-button class="edit-button" [rounded]="true" [text]="true" (onClick)="completeEdit(movie)">
-				<span class="material-icons edit-button-icon" style="color: white">check</span>
-			</p-button>
-			}@else {
-			<p-button class="edit-button" [rounded]="true" [text]="true" (onClick)="startEdit(movie)">
-				<span class="material-icons edit-button-icon" style="color: white">edit</span>
-			</p-button>
-			} @if(movie.getIsFavourite()){
-			<p-button
-				icon="pi pi-star-fill"
-				class="favourite"
-				[text]="true"
-				(onClick)="setIsFavourite(movie)">
-			</p-button>
-			}@else {
-			<p-button icon="pi pi-star" class="favourite" [text]="true" (onClick)="setIsFavourite(movie)">
-			</p-button>
-			}
-			<p-button
-				icon="pi pi-times"
-				class="delete-button"
-				[rounded]="true"
-				severity="danger"
-				(click)="openDeleteConfirmationDialog(movie)" />
-		</div>
-	</div>
-	}
-</div>
-<ng-container #dialogComponentContainer></ng-container>
+	<ng-container #dialogComponentContainer></ng-container>
 } @else {
-<div class="access-denied-container">
-	<h1>Access Denied</h1>
-	<p>You do not have permission to access this page</p>
-</div>
+	<div class="access-denied-container">
+		<h1>Access Denied</h1>
+		<p>You do not have permission to access this page</p>
+	</div>
 }

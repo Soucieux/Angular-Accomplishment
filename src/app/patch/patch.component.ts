@@ -1,11 +1,4 @@
-import {
-	Component,
-	HostListener,
-	Inject,
-	PLATFORM_ID,
-	ViewChild,
-	ViewContainerRef
-} from '@angular/core';
+import { Component, HostListener, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
@@ -23,7 +16,7 @@ import {
 	STATUS_TODO,
 	Utilities
 } from '../app.utilities';
-import { FirebaseService } from '../service/firebase-service/firebase.service';
+import { FirebaseService } from '../service/cloud-service/firebase/firebase.service';
 import { map, Observable, shareReplay, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../app.logs';
@@ -227,11 +220,7 @@ export class PatchComponent {
 		let span = 1;
 
 		for (let index = rowIndex + 1; index < data.length; index++) {
-			if (
-				data[index].element === currentElement &&
-				data[index].component === currentComponent
-			)
-				span++;
+			if (data[index].element === currentElement && data[index].component === currentComponent) span++;
 			else break;
 		}
 		return span;

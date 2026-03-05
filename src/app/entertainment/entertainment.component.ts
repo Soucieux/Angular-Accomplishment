@@ -1,3 +1,4 @@
+import { CloudbaseService } from '../service/cloud-service/cloudbase/cloudbase.service';
 import { SearchStreamService } from './../service/dialog-service/search/search-stream.service';
 import {
 	COMPONENT_DESTROY,
@@ -7,7 +8,8 @@ import {
 	SEARCH_COMPELTE,
 	NO_RATE,
 	Utilities,
-	GENRE_FAVOURITE
+	GENRE_FAVOURITE,
+	CN
 } from './../app.utilities';
 import { MovieIdNotFoundError } from './../error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -25,7 +27,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
 import { LOG } from '../app.logs';
 import { DoubanService } from '../service/douban-service/douban.service';
-import { FirebaseService } from '../service/firebase-service/firebase.service';
+import { FirebaseService } from '../service/cloud-service/firebase/firebase.service';
 import { MovieItemVO } from './entertainment.movieitem.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -83,6 +85,7 @@ export class EntertainmentComponent {
 		private renderer: Renderer2,
 		private doubanService: DoubanService,
 		private firebaseService: FirebaseService,
+		private cloudbaseService: CloudbaseService,
 		private dialogService: DialogService,
 		protected utilities: Utilities,
 		private searchStreamService: SearchStreamService
@@ -99,13 +102,21 @@ export class EntertainmentComponent {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
-			// Get the movie list (Observable) and statistics (Observable) from firebase
-			this.statistics$ = this.firebaseService.getStatistics();
+			// Get the movie list (Observable) and statistics (Observable) from firebase or cloudbase
+            if (this.utilities.getCurrentRegion() === CN) {
+                this.statistics$ = this.cloudbaseService.getStatistics();
+			} else {
+				this.statistics$ = this.firebaseService.getStatistics();
+			}
 
 			// One-time pre-check to make sure user have permission to read data in the database
 			await firstValueFrom(this.statistics$.pipe(take(1)));
 			// Below part will be executed only if there is no error reading data in the database
-			this.movieList$ = this.firebaseService.getMovieList();
+			if (this.utilities.getCurrentRegion() === CN) {
+				this.movieList$ = this.cloudbaseService.getMovieList();
+			} else {
+				this.movieList$ = this.firebaseService.getMovieList();
+			}
 			// Create a filter to listen for genre changes
 			this.filteredMovieList$ = combineLatest([this.movieList$, this.selectedGenres$]).pipe(
 				map(([movieList, selectedGenres]) => {

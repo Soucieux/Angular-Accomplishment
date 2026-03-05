@@ -8,6 +8,8 @@ import { IftaLabelModule } from 'primeng/iftalabel';
 import { AuthService } from '../service/authentication-service/auth.service';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { CN, COMPONENT_DESTROY, Utilities } from '../app.utilities';
+import { LOG } from '../app.logs';
 
 @Component({
 	selector: 'login',
@@ -26,15 +28,24 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 	styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
+	private readonly classname = 'LoginComponent';
 	loginForm: FormGroup;
 	formSubmitted = false;
 
-	constructor(private fb: FormBuilder, private authService: AuthService) {
+	constructor(
+		private fb: FormBuilder,
+		private authService: AuthService,
+		private utilities: Utilities
+	) {
 		this.loginForm = this.fb.group({
 			email: ['', Validators.required],
 			password: ['', Validators.required],
 			verificationCode: ['']
 		});
+	}
+
+	ngOnDestroy() {
+		LOG.info(this.classname, COMPONENT_DESTROY);
 	}
 
 	isInvalid(controlName: string) {
@@ -50,22 +61,16 @@ export class LoginComponent {
 	onSubmit() {
 		this.formSubmitted = true;
 		if (this.loginForm.valid) {
-			this.authService.signIn(this.loginForm.value['email'], this.loginForm.value['password']);
+			if (this.utilities.getCurrentRegion() === CN) {
+				this.authService.signIn(this.loginForm.value['email'], this.loginForm.value['password']);
+			} else {
+				this.authService.emailPasswordLogin(
+					this.loginForm.value['email'],
+					this.loginForm.value['password']
+				);
+			}
 		}
 	}
-
-	//TODO
-	// Below is for firebase
-	/* onSubmit() {
-		this.formSubmitted = true;
-		if (this.loginForm.valid) {
-			this.firebaseAuthService.emailPasswordLogin(
-				this.loginForm.value['email'],
-				this.loginForm.value['password']
-			);
-        }
-    }
-    */
 
 	googleLogin() {
 		this.authService.googleLogin();

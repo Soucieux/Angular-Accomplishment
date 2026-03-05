@@ -37,29 +37,31 @@
 			<!-- Each new button is about 40px in height -->
 			<!-- This is a placeholder to move the signin page button to the bottom -->
 			<li style="flex: 1 1 190px"></li>
-			@if (currentUser$ | async; as user){
-			<li class="signout-button-container">
-				<p-button
-					(click)="logout()"
-					icon="pi pi-user"
-					[rounded]="true"
-					severity="warn"
-					class="signin-signout-button" />
-				<p class="hide-on-mobile username">
-					<!-- TODO -->
-					<!-- {{ user.displayName ? user.displayName : '' }} -->
-                      {{user.user_metadata.username}}
-				</p>
-			</li>
+			@if (currentUser$ | async; as user) {
+				<li class="signout-button-container">
+					<p-button
+						(click)="logout()"
+						icon="pi pi-user"
+						[rounded]="true"
+						severity="warn"
+						class="signin-signout-button" />
+					<p class="hide-on-mobile username">
+						@if (currentRegion === CN) {
+							{{ user.user_metadata.username }}
+						} @else {
+							{{ user.displayName ? user.displayName : '' }}
+						}
+					</p>
+				</li>
 			} @else {
-			<li>
-				<p-button
-					routerLink="/login"
-					icon="pi pi-user"
-					[rounded]="true"
-					severity="secondary"
-					class="signin-signout-button" />
-			</li>
+				<li>
+					<p-button
+						routerLink="/login"
+						icon="pi pi-user"
+						[rounded]="true"
+						severity="secondary"
+						class="signin-signout-button" />
+				</li>
 			}
 		</ul>
 	</mat-drawer>

@@ -14,16 +14,10 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { PopoverModule } from 'primeng/popover';
 import { PaginatorModule } from 'primeng/paginator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { FirebaseService } from '../service/firebase-service/firebase.service';
+import { FirebaseService } from '../service/cloud-service/firebase/firebase.service';
 import { Subscription } from 'rxjs';
 import { LOG } from '../app.logs';
-import {
-	COMPONENT_DESTROY,
-	FIRST_TABLE,
-	SECOND_TABLE,
-	THIRD_TABLE,
-	Utilities
-} from '../app.utilities';
+import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE, THIRD_TABLE, Utilities } from '../app.utilities';
 import { DialogService } from '../service/dialog-service/dialog.service';
 
 @Component({
@@ -99,37 +93,31 @@ export class RemainderComponent {
 			this.currentDay = new Date().getDate();
 
 			// Get the data of the first table
-			this.firstSub = this.firebaseService
-				.getFirstRemainderTableDetails()
-				.subscribe((rows) => {
-					// Need deep copy here so that we are not copying references
-					this.originalFirstTable = structuredClone(rows);
-					this.updatedFirstTable = structuredClone(rows).slice(0, -1);
-					this.isNextMonth = this.originalFirstTable[5]['isNextMonth'];
+			this.firstSub = this.firebaseService.getFirstRemainderTableDetails().subscribe((rows) => {
+				// Need deep copy here so that we are not copying references
+				this.originalFirstTable = structuredClone(rows);
+				this.updatedFirstTable = structuredClone(rows).slice(0, -1);
+				this.isNextMonth = this.originalFirstTable[5]['isNextMonth'];
 
-					if (!this.chargedCellsInitialized) {
-						// Loop through to determine disabled fields
-						this.updateChargedCells();
-						this.chargedCellsInitialized = true;
-					}
-				});
+				if (!this.chargedCellsInitialized) {
+					// Loop through to determine disabled fields
+					this.updateChargedCells();
+					this.chargedCellsInitialized = true;
+				}
+			});
 
 			// Get the data of the second table
-			this.secondSub = this.firebaseService
-				.getSecondRemainderTableDetails()
-				.subscribe((rows) => {
-					this.updatedSecondTable = structuredClone(rows);
-					this.originalSecondTable = structuredClone(rows);
-				});
+			this.secondSub = this.firebaseService.getSecondRemainderTableDetails().subscribe((rows) => {
+				this.updatedSecondTable = structuredClone(rows);
+				this.originalSecondTable = structuredClone(rows);
+			});
 
 			// Get the data of the third table
-			this.thirdSub = this.firebaseService
-				.getThirdRemainderTableDetails()
-				.subscribe((rows) => {
-					this.originalThirdTable = structuredClone(rows);
-					this.pagedThirdTable = this.updatePagedThirdTable();
-					this.loading = false;
-				});
+			this.thirdSub = this.firebaseService.getThirdRemainderTableDetails().subscribe((rows) => {
+				this.originalThirdTable = structuredClone(rows);
+				this.pagedThirdTable = this.updatePagedThirdTable();
+				this.loading = false;
+			});
 		}
 	}
 
@@ -138,18 +126,21 @@ export class RemainderComponent {
 			this.chargedCells.clear();
 		}
 
-        for (let index = 0; index < this.updatedFirstTable.length; index++) {
-            for (const field of this.fields) {
-                if (this.isNextMonth && this.chargedCellsInitialized) {
-                    this.updatedFirstTable[index][field].isCharged = false;
-                } else if (!this.isNextMonth && this.updatedFirstTable[index][field].value < this.currentDay) {
-                    this.updatedFirstTable[index][field].isCharged = true;
-                    this.chargedCells.add(`${index}-${field}`);
-                }
-            }
-        }
-        
-        if (this.chargedCellsInitialized) {
+		for (let index = 0; index < this.updatedFirstTable.length; index++) {
+			for (const field of this.fields) {
+				if (this.isNextMonth && this.chargedCellsInitialized) {
+					this.updatedFirstTable[index][field].isCharged = false;
+				} else if (
+					!this.isNextMonth &&
+					this.updatedFirstTable[index][field].value < this.currentDay
+				) {
+					this.updatedFirstTable[index][field].isCharged = true;
+					this.chargedCells.add(`${index}-${field}`);
+				}
+			}
+		}
+
+		if (this.chargedCellsInitialized) {
 			this.updatedFirstTable.push({ isNextMonth: this.isNextMonth });
 			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
@@ -197,8 +188,7 @@ export class RemainderComponent {
 
 			if (
 				requiredDiff !== null &&
-				Number(this.updatedFirstTable[rowIndex][field].value) - Number(previousValue) <
-					requiredDiff
+				Number(this.updatedFirstTable[rowIndex][field].value) - Number(previousValue) < requiredDiff
 			) {
 				this.updatedFirstTable[rowIndex][field].value = originalValue;
 				return;
@@ -206,9 +196,7 @@ export class RemainderComponent {
 		}
 
 		// Convert it to number
-		this.updatedFirstTable[rowIndex][field].value = Number(
-			this.updatedFirstTable[rowIndex][field].value
-		);
+		this.updatedFirstTable[rowIndex][field].value = Number(this.updatedFirstTable[rowIndex][field].value);
 
 		// Mark it as unCharged
 		this.updatedFirstTable[rowIndex][field].isCharged = false;
@@ -332,8 +320,7 @@ export class RemainderComponent {
 	}
 
 	protected updateDebt(entryKey: string, currentDebt: number) {
-		this.findUpdatedObject(SECOND_TABLE, entryKey).debt =
-			Math.round((currentDebt - 998.05) * 100) / 100;
+		this.findUpdatedObject(SECOND_TABLE, entryKey).debt = Math.round((currentDebt - 998.05) * 100) / 100;
 		this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
 	}
 
@@ -366,10 +353,7 @@ export class RemainderComponent {
 		let linkInLowerCase = link.toLowerCase();
 		if (linkInLowerCase.startsWith('www.')) {
 			linkInLowerCase = 'https://' + linkInLowerCase;
-		} else if (
-			linkInLowerCase.startsWith('https://') ||
-			linkInLowerCase.startsWith('http://')
-		) {
+		} else if (linkInLowerCase.startsWith('https://') || linkInLowerCase.startsWith('http://')) {
 			linkInLowerCase = linkInLowerCase;
 		} else {
 			linkInLowerCase = 'https://www.' + linkInLowerCase;
@@ -440,9 +424,7 @@ export class RemainderComponent {
 	protected updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
 		const newValue = this.findUpdatedObject(tableName, entryKey)[valueKey];
 		if (newValue !== this.findOriginalObject(tableName, entryKey)[valueKey]) {
-			this.firebaseService
-				.updateRemainderTable(tableName, entryKey, valueKey, newValue)
-				.then(() => {});
+			this.firebaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue).then(() => {});
 			this.triggerSaveIndicator(tableName);
 		}
 	}

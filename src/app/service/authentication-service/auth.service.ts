@@ -11,7 +11,7 @@ import {
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { LOG } from '../../app.logs';
-import { CloudbaseService } from '../cloudbase-service/cloudbase.service';
+import { CloudbaseService } from '../cloud-service/cloudbase/cloudbase.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -29,7 +29,6 @@ export class AuthService {
 		private router: Router,
 		private cloudbaseService: CloudbaseService
 	) {
-		// TODO
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
 		this.firebaseCurrentUser$ = new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
@@ -39,10 +38,6 @@ export class AuthService {
 				});
 			});
 		});
-
-		if (this.cloudbaseService.cloudbase) {
-			this.cloudbaseAuth = this.cloudbaseService.cloudbase.auth();
-		}
 	}
 
 	async emailPasswordLogin(email: string, password: string) {
@@ -113,15 +108,20 @@ export class AuthService {
 	}
 
 	async getCurrentUser() {
-		const { data, error } = await this.cloudbaseAuth.getUser();
-		this.cloudbaseCurrentUserSubject.next(data.user);
+		try {
+			this.cloudbaseAuth = this.cloudbaseService.getCloudbaseRef().auth();
+			const { data, error } = await this.cloudbaseAuth.getUser();
+			this.cloudbaseCurrentUserSubject.next(data.user);
+		} catch (error) {
+			LOG.error(this.className, 'Cloudbase is not initialized');
+		}
 	}
 
 	async signOut() {
 		await this.cloudbaseAuth
 			.signOut()
-            .then(() => {
-                this.cloudbaseCurrentUserSubject.next(null);
+			.then(() => {
+				this.cloudbaseCurrentUserSubject.next(null);
 				this.router.navigate(['/']);
 				localStorage.setItem('permission', 'false');
 			})

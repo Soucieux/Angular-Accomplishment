@@ -5,11 +5,11 @@ import {
 	SECOND_TABLE,
 	THIRD_TABLE,
 	Utilities
-} from './../../app.utilities';
-import { SearchStreamService } from './../dialog-service/search/search-stream.service';
+} from '../../../app.utilities';
+import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
-import { LOG } from '../../app.logs';
+import { LOG } from '../../../app.logs';
 import {
 	Database,
 	ref as dbRef,
@@ -22,13 +22,14 @@ import {
 	push
 } from '@angular/fire/database';
 import { Observable, map } from 'rxjs';
-import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
-import { RATE_DECREASED, RATE_INCREASED } from '../../app.utilities';
+import { MovieItemVO } from '../../../entertainment/entertainment.movieitem.vo';
+import { RATE_DECREASED, RATE_INCREASED } from '../../../app.utilities';
+import { cloudService } from '../cloud.service';
 
 @Injectable({
 	providedIn: 'root'
 })
-export class FirebaseService {
+export class FirebaseService extends cloudService {
 	private readonly className = 'FirebaseService';
 	private moviesRef: any;
 	private statisticsRef: any;
@@ -40,6 +41,7 @@ export class FirebaseService {
 		private searchStreamService: SearchStreamService,
 		private Utilities: Utilities
 	) {
+		super();
 		this.moviesRef = dbRef(this.db, 'movies');
 		this.statisticsRef = dbRef(this.db, 'statistics');
 	}
@@ -474,7 +476,7 @@ export class FirebaseService {
 								({
 									key: snapshot.snapshot.key,
 									...snapshot.snapshot.val()
-								} as {
+								}) as {
 									key: string;
 									component: string;
 									element: string;
@@ -482,7 +484,7 @@ export class FirebaseService {
 									status: string;
 									timestamp: string;
 									isBug: boolean;
-								})
+								}
 						)
 						.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
 				)

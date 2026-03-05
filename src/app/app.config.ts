@@ -1,4 +1,4 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, inject, provideAppInitializer } from '@angular/core';
 import { environment } from '../environment/environment';
 import { provideRouter } from '@angular/router';
 
@@ -16,6 +16,7 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import Aura from '@primeng/themes/aura';
+import { Utilities } from './app.utilities';
 export const appConfig: ApplicationConfig = {
 	providers: [
 		provideRouter(routes),
@@ -31,6 +32,10 @@ export const appConfig: ApplicationConfig = {
 			theme: {
 				preset: Aura
 			}
+		}),
+		provideAppInitializer(() => {
+			const utilities = inject(Utilities);
+			return utilities.checkCurrentCountry();
 		}),
 		MessageService
 	]

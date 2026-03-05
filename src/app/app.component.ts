@@ -9,7 +9,7 @@ import { LOG } from './app.logs';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
-import { COMPONENT_DESTROY } from './app.utilities';
+import { CN, COMPONENT_DESTROY, Utilities } from './app.utilities';
 import { Observable } from 'rxjs';
 @Component({
 	selector: 'root',
@@ -31,15 +31,26 @@ import { Observable } from 'rxjs';
 export class AppComponent {
 	private readonly className = 'AppComponent';
 	currentUser$!: Observable<any>;
+	currentRegion: string = '';
+	CN = CN;
 
-	constructor(private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object) {}
+	constructor(
+		private authService: AuthService,
+		private utilities: Utilities,
+		@Inject(PLATFORM_ID) private platformId: Object
+	) {}
 
-	async ngOnInit() {
+	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
-			this.authService.getCurrentUser();
-			this.currentUser$ = this.authService.cloudbaseCurrentUser$;
-			//TODO
-			// this.currentUser$ = this.authService.firebaseCurrentUser$;
+			this.currentRegion = this.utilities.getCurrentRegion();
+
+			if (this.currentRegion === CN) {
+				this.authService.getCurrentUser();
+				this.currentUser$ = this.authService.cloudbaseCurrentUser$;
+			} else {
+				this.currentUser$ = this.authService.firebaseCurrentUser$;
+            }
+            
 			const permission = JSON.parse(localStorage.getItem('permission') || 'null');
 			if (permission === null) {
 				localStorage.setItem('permission', 'false');
@@ -55,8 +66,10 @@ export class AppComponent {
 	}
 
 	async logout() {
-		//TODO
-		// this.authService.logout();
-		await this.authService.signOut();
+		if (this.currentRegion === CN) {
+			await this.authService.signOut();
+		} else {
+			this.authService.logout();
+		}
 	}
 }

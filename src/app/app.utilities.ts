@@ -1,6 +1,9 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { MovieItemVO } from './entertainment/entertainment.movieitem.vo';
+import { HttpClient } from '@angular/common/http';
+import { LOG } from './app.logs';
+import { firstValueFrom } from 'rxjs';
 
 export const RATE_DECREASED = 'decreased';
 export const RATE_INCREASED = 'increased';
@@ -18,10 +21,16 @@ export const GENRE_FAVOURITE = '特别关注';
 export const FIRST_TABLE = 'first_table';
 export const SECOND_TABLE = 'second_table';
 export const THIRD_TABLE = 'third_table';
+export const CN = 'CN';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {
-	constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+	private readonly className = 'Utilities';
+	private currentCountry!: string;
+	constructor(
+		@Inject(PLATFORM_ID) private platformId: Object,
+		private http: HttpClient
+	) {}
 	/**
 	 * Check if the current device is a mobile device.
 	 *
@@ -78,6 +87,63 @@ export class Utilities {
 	 */
 	public capitalizeFirstLetterWithOthersUnchanged(string: string | null | undefined) {
 		return string ? string.trim().charAt(0).toUpperCase() + string.slice(1) : '';
+	}
+
+	/**
+	 * Check the current country code
+	 * Note: This method can only be called by bootstraps
+	 *
+	 * @returns Current country code
+	 */
+	public async checkCurrentCountry() {
+		if (!isPlatformBrowser(this.platformId)) return;
+
+		const cachedLocation = localStorage.getItem('region');
+
+		if (cachedLocation) {
+			const parsed = JSON.parse(cachedLocation);
+			const now = Date.now();
+			const ONE_DAY = 24 * 60 * 60 * 1000;
+
+			// Check whether the last session is over 24 hours or not
+			if (now - parsed.timestamp < ONE_DAY) {
+				this.currentCountry = parsed.region;
+				LOG.warn(
+					this.className,
+					'Reusing last session. Current IP: ' + parsed.ip + ', Current country: ' + parsed.country
+				);
+				return;
+			}
+		}
+
+		const currentLocation = await firstValueFrom(
+			this.http.get<any>('https://ipinfo.io/json?token=581131c84dc255')
+		);
+
+		this.currentCountry = currentLocation.country;
+
+		localStorage.setItem(
+			'location',
+			JSON.stringify({
+				country: this.currentCountry,
+				ip: currentLocation.ip,
+				timestamp: Date.now()
+			})
+		);
+
+		LOG.warn(
+			this.className,
+			'Current IP: ' + currentLocation.ip + ', Current country: ' + currentLocation.country
+		);
+	}
+
+	/**
+	 * get the current country code
+	 *
+	 * @returns Current country code
+	 */
+	public getCurrentRegion() {
+		return this.currentCountry;
 	}
 
 	////////////////////////////// Below are static methods //////////////////////////////

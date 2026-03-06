@@ -1,3 +1,4 @@
+import { CloudbaseService } from './../service/cloud-service/cloudbase/cloudbase.service';
 import { Component, HostListener, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -7,6 +8,7 @@ import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import {
+	CN,
 	COMPONENT_DESTROY,
 	STATUS_COMPLETED,
 	STATUS_DEBUG,
@@ -69,6 +71,7 @@ export class PatchComponent {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private firebaseService: FirebaseService,
+		private cloudbaseService: CloudbaseService,
 		private dialogService: DialogService,
 		private utilities: Utilities
 	) {
@@ -81,7 +84,12 @@ export class PatchComponent {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			this.isMobile = this.utilities.isMobile();
 
-			this.patchNotes$ = this.firebaseService.getPatchNotes().pipe(
+			 const getObservable$ =
+				this.utilities.getCurrentRegion() === CN
+					? this.cloudbaseService.getPatchNotes()
+					: this.firebaseService.getPatchNotes();
+
+			this.patchNotes$ = getObservable$.pipe(
 				map((data) => {
 					return this.isMobile ? data : [...data, { __dummy: true }];
 				}),

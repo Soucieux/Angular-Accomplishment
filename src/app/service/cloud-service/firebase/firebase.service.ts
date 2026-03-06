@@ -504,7 +504,7 @@ export class FirebaseService extends cloudService {
 	}
 
 	/**
-	 * Get remainder table details
+	 * Get first remainder table details
 	 *
 	 * @returns Remainder table details
 	 */
@@ -520,9 +520,9 @@ export class FirebaseService extends cloudService {
 	}
 
 	/**
-	 * Get third remainder table details
+	 * Get second remainder table details
 	 *
-	 * @returns Third remainder table details
+	 * @returns Second remainder table details
 	 */
 	public getSecondRemainderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>

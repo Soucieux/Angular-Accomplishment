@@ -98,7 +98,7 @@ export class Utilities {
 	public async checkCurrentCountry() {
 		if (!isPlatformBrowser(this.platformId)) return;
 
-		const cachedLocation = localStorage.getItem('region');
+		const cachedLocation = localStorage.getItem('location');
 
 		if (cachedLocation) {
 			const parsed = JSON.parse(cachedLocation);
@@ -107,7 +107,7 @@ export class Utilities {
 
 			// Check whether the last session is over 24 hours or not
 			if (now - parsed.timestamp < ONE_DAY) {
-				this.currentCountry = parsed.region;
+				this.currentCountry = parsed.country;
 				LOG.warn(
 					this.className,
 					'Reusing last session. Current IP: ' + parsed.ip + ', Current country: ' + parsed.country
@@ -138,12 +138,19 @@ export class Utilities {
 	}
 
 	/**
-	 * get the current country code
+	 * Get the current country code
 	 *
 	 * @returns Current country code
 	 */
 	public getCurrentRegion() {
 		return this.currentCountry;
+	}
+
+	/**
+	 * Note: This is only intended by startup errors
+	 */
+	public setCurrentRegion(country: string) {
+		this.currentCountry = country;
 	}
 
 	////////////////////////////// Below are static methods //////////////////////////////

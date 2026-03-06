@@ -1,5 +1,14 @@
-import { Component, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
-import { isPlatformBrowser, NgStyle } from '@angular/common';
+import { CloudbaseService } from './../service/cloud-service/cloudbase/cloudbase.service';
+import { CN } from './../app.utilities';
+import {
+	ChangeDetectorRef,
+	Component,
+	Inject,
+	PLATFORM_ID,
+	ViewChild,
+	ViewContainerRef
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
@@ -81,7 +90,10 @@ export class RemainderComponent {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private dialogService: DialogService,
-		private firebaseService: FirebaseService
+		private firebaseService: FirebaseService,
+		private cloudbaseService: CloudbaseService,
+		private cdr: ChangeDetectorRef,
+		private utilities: Utilities
 	) {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
@@ -93,7 +105,11 @@ export class RemainderComponent {
 			this.currentDay = new Date().getDate();
 
 			// Get the data of the first table
-			this.firstSub = this.firebaseService.getFirstRemainderTableDetails().subscribe((rows) => {
+			const getFirstObservable =
+				this.utilities.getCurrentRegion() === CN
+					? this.cloudbaseService.getFirstRemainderTableDetails()
+					: this.firebaseService.getFirstRemainderTableDetails();
+			this.firstSub = getFirstObservable.subscribe((rows) => {
 				// Need deep copy here so that we are not copying references
 				this.originalFirstTable = structuredClone(rows);
 				this.updatedFirstTable = structuredClone(rows).slice(0, -1);
@@ -104,19 +120,30 @@ export class RemainderComponent {
 					this.updateChargedCells();
 					this.chargedCellsInitialized = true;
 				}
+				this.cdr.detectChanges();
 			});
 
 			// Get the data of the second table
-			this.secondSub = this.firebaseService.getSecondRemainderTableDetails().subscribe((rows) => {
+			const getSecondObservable =
+				this.utilities.getCurrentRegion() === CN
+					? this.cloudbaseService.getSecondRemainderTableDetails()
+					: this.firebaseService.getSecondRemainderTableDetails();
+			this.secondSub = getSecondObservable.subscribe((rows) => {
 				this.updatedSecondTable = structuredClone(rows);
 				this.originalSecondTable = structuredClone(rows);
+				this.cdr.detectChanges();
 			});
 
 			// Get the data of the third table
-			this.thirdSub = this.firebaseService.getThirdRemainderTableDetails().subscribe((rows) => {
+			const getThirdObservable =
+				this.utilities.getCurrentRegion() === CN
+					? this.cloudbaseService.getThirdRemainderTableDetails()
+					: this.firebaseService.getThirdRemainderTableDetails();
+			this.thirdSub = getThirdObservable.subscribe((rows) => {
 				this.originalThirdTable = structuredClone(rows);
 				this.pagedThirdTable = this.updatePagedThirdTable();
 				this.loading = false;
+				this.cdr.detectChanges();
 			});
 		}
 	}

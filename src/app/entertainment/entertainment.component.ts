@@ -58,9 +58,9 @@ export class EntertainmentComponent {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	// TODO This value has to be true initially so that the page will not show access denied page on refresh
 	protected readonly NO_RATE = NO_RATE;
 	protected readonly GENRE_FAVOURITE = GENRE_FAVOURITE;
+	// TODO This value has to be true initially so that the page will not show access denied page on refresh
 	protected isLoggedIn!: boolean;
 	protected isSearching: boolean = false;
 	private sessionId: number = 0;
@@ -103,8 +103,8 @@ export class EntertainmentComponent {
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Get the movie list (Observable) and statistics (Observable) from firebase or cloudbase
-            if (this.utilities.getCurrentRegion() === CN) {
-                this.statistics$ = this.cloudbaseService.getStatistics();
+			if (this.utilities.getCurrentRegion() === CN) {
+				this.statistics$ = this.cloudbaseService.getStatistics();
 			} else {
 				this.statistics$ = this.firebaseService.getStatistics();
 			}
@@ -689,8 +689,9 @@ export class EntertainmentComponent {
 				await this.handleAddDialogSearch(movieToRestore);
 				await this.handleAddDialogSubmit();
 			},
-
-			this.firebaseService.getHistory()
+			this.utilities.getCurrentRegion() === CN
+				? this.cloudbaseService.getHistory()
+				: this.firebaseService.getHistory()
 		);
 	}
 

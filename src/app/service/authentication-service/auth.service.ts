@@ -98,10 +98,10 @@ export class AuthService {
 
 	async signIn(username: string, password: string) {
 		try {
-			await this.cloudbaseAuth.signIn({ username: username, password: password });
+			await this.cloudbaseAuth.signInWithPassword({ username: username, password: password });
+			localStorage.setItem('permission', 'true');
 			this.getCurrentUser();
 			this.router.navigate(['/']);
-			localStorage.setItem('permission', 'true');
 		} catch (error: any) {
 			LOG.error(this.className, 'Error when signing in with username and password with Cloudbase');
 		}
@@ -111,9 +111,10 @@ export class AuthService {
 		try {
 			this.cloudbaseAuth = this.cloudbaseService.getCloudbaseRef().auth();
 			const { data, error } = await this.cloudbaseAuth.getUser();
-			this.cloudbaseCurrentUserSubject.next(data.user);
+            this.cloudbaseCurrentUserSubject.next(data.user);
+			if (!data.user) localStorage.setItem('permission', 'false');
 		} catch (error) {
-			LOG.error(this.className, 'Cloudbase is not initialized');
+			LOG.error(this.className, error as string);
 		}
 	}
 

@@ -40,17 +40,17 @@ export class AppComponent {
 		@Inject(PLATFORM_ID) private platformId: Object
 	) {}
 
-	ngOnInit() {
+	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.currentRegion = this.utilities.getCurrentRegion();
 
 			if (this.currentRegion === CN) {
-				this.authService.getCurrentUser();
+				await this.authService.getCurrentUser();
 				this.currentUser$ = this.authService.cloudbaseCurrentUser$;
 			} else {
 				this.currentUser$ = this.authService.firebaseCurrentUser$;
-            }
-            
+			}
+
 			const permission = JSON.parse(localStorage.getItem('permission') || 'null');
 			if (permission === null) {
 				localStorage.setItem('permission', 'false');

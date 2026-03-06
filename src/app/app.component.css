@@ -15,8 +15,8 @@ mat-drawer-container {
 
 	/* Add height by 20px whenever a new button is added */
 	mat-drawer {
-		width: 36px !important;
-		height: 450px !important;
+		width: 37px !important;
+		height: 438px !important;
 	}
 
 	.nav-button {

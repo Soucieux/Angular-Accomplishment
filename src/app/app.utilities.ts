@@ -112,6 +112,9 @@ export class Utilities {
 					this.className,
 					'Reusing last session. Current IP: ' + parsed.ip + ', Current country: ' + parsed.country
 				);
+
+				//TODO set the location to CN for now
+				this.currentCountry = CN;
 				return;
 			}
 		}

@@ -98,7 +98,7 @@ export class AuthService {
 
 	async signIn(username: string, password: string) {
 		try {
-			await this.cloudbaseAuth.signInWithPassword({ username: username, password: password });
+			await this.cloudbaseAuth.signIn({ username: username, password: password });
 			localStorage.setItem('permission', 'true');
 			this.getCurrentUser();
 			this.router.navigate(['/']);

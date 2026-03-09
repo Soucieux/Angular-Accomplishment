@@ -25,12 +25,12 @@ import {
 } from '@angular/fire/database';
 import { Observable, map } from 'rxjs';
 import { MovieItemVO } from '../../../common/movieitem.vo';
-import { backendService } from '../database.service';
+import { DatabaseService } from '../database.service';
 
 @Injectable({
 	providedIn: 'root'
 })
-export class FirebaseService extends backendService {
+export class FirebaseService extends DatabaseService {
 	private readonly className = 'FirebaseService';
 	private moviesRef: any;
 	private statisticsRef: any;

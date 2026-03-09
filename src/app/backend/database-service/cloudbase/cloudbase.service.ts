@@ -1,27 +1,22 @@
 import { isPlatformBrowser } from '@angular/common';
 // cloudbase-init.service.ts
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import cloudbase from '@cloudbase/js-sdk';
-import { environment } from '../../../../environment/environment';
 import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../../common/movieitem.vo';
-import { backendService } from '../database.service';
+import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
 import { LOG } from '../../../common/app.logs';
 
 @Injectable({ providedIn: 'root' })
-export class CloudbaseService extends backendService {
+export class CloudbaseService extends DatabaseService {
 	private readonly className = 'CloudbaseService';
-	private cloudbase: any;
 	private database: any;
 
-	constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+	constructor(
+		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(CLOUDBASE) private cloudbase: CloudbaseApp
+	) {
 		super();
 		if (isPlatformBrowser(this.platformId)) {
-			this.cloudbase = cloudbase.init({
-				env: environment.cloudbase.envId,
-				region: environment.cloudbase.region
-			});
-
 			this.database = this.cloudbase.database();
 		}
 	}

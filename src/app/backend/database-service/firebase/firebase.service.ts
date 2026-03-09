@@ -25,7 +25,11 @@ import {
 } from '@angular/fire/database';
 import { Observable, map } from 'rxjs';
 import { MovieItemVO } from '../../../common/movieitem.vo';
+<<<<<<< HEAD
 import { DatabaseService } from '../database.service';
+=======
+import { backendService } from '../database.service';
+>>>>>>> origin/cloudbase
 
 @Injectable({
 	providedIn: 'root'

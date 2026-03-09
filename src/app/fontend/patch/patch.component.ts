@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
+>>>>>>> origin/cloudbase
 import { Component, HostListener, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -16,6 +20,10 @@ import {
 	STATUS_TODO,
 	Utilities
 } from '../../common/app.utilities';
+<<<<<<< HEAD
+=======
+import { FirebaseService } from '../../backend/database-service/firebase/firebase.service';
+>>>>>>> origin/cloudbase
 import { map, Observable, shareReplay, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';

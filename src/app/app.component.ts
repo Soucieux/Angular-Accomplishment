@@ -31,28 +31,22 @@ import { Observable } from 'rxjs';
 export class AppComponent {
 	private readonly className = 'AppComponent';
 	currentUser$!: Observable<any>;
-	currentRegion: string = '';
-	CN = CN;
 
 	constructor(
 		private authService: AuthService,
-		private utilities: Utilities,
 		@Inject(PLATFORM_ID) private platformId: Object
 	) {}
 
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
-			this.currentRegion = this.utilities.getCurrentRegion();
-
-			if (this.currentRegion === CN) {
-				await this.authService.getCurrentUser();
-				this.currentUser$ = this.authService.cloudbaseCurrentUser$;
+			if (Utilities.getCurrentCountry() === CN) {
+				this.currentUser$ = this.authService.cloudbaseGetCurrentUser();
 			} else {
-				this.currentUser$ = this.authService.firebaseCurrentUser$;
+				this.currentUser$ = this.authService.firebaseGetCurrentUser();
 			}
 
 			const permission = JSON.parse(localStorage.getItem('permission') || 'null');
-			if (permission === null) {
+			if (!permission) {
 				localStorage.setItem('permission', 'false');
 			}
 		}
@@ -66,10 +60,14 @@ export class AppComponent {
 	}
 
 	async logout() {
-		if (this.currentRegion === CN) {
+		if (Utilities.getCurrentCountry() === CN) {
 			await this.authService.signOut();
 		} else {
 			this.authService.logout();
 		}
+	}
+
+	protected isCN() {
+		return Utilities.getCurrentCountry() === CN;
 	}
 }

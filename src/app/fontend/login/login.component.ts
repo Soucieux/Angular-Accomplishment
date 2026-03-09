@@ -34,8 +34,7 @@ export class LoginComponent {
 
 	constructor(
 		private fb: FormBuilder,
-		private authService: AuthService,
-		private utilities: Utilities
+		private authService: AuthService
 	) {
 		this.loginForm = this.fb.group({
 			email: ['', Validators.required],
@@ -61,7 +60,7 @@ export class LoginComponent {
 	onSubmit() {
 		this.formSubmitted = true;
 		if (this.loginForm.valid) {
-			if (this.utilities.getCurrentRegion() === CN) {
+			if (Utilities.getCurrentCountry() === CN) {
 				this.authService.signIn(this.loginForm.value['email'], this.loginForm.value['password']);
 			} else {
 				this.authService.emailPasswordLogin(

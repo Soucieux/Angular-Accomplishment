@@ -1,4 +1,4 @@
-import { CloudbaseService } from './../service/cloud-service/cloudbase/cloudbase.service';
+import { CloudbaseService } from '../service/backend-service/cloudbase/cloudbase.service';
 import { Component, HostListener, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -18,7 +18,7 @@ import {
 	STATUS_TODO,
 	Utilities
 } from '../app.utilities';
-import { FirebaseService } from '../service/cloud-service/firebase/firebase.service';
+import { FirebaseService } from '../service/backend-service/firebase/firebase.service';
 import { map, Observable, shareReplay, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../app.logs';
@@ -84,7 +84,7 @@ export class PatchComponent {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			this.isMobile = this.utilities.isMobile();
 
-			 const getObservable$ =
+			const getObservable$ =
 				this.utilities.getCurrentRegion() === CN
 					? this.cloudbaseService.getPatchNotes()
 					: this.firebaseService.getPatchNotes();

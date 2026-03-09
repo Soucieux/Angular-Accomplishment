@@ -3,11 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../../common/movieitem.vo';
-<<<<<<< HEAD
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
-=======
-import { backendService } from '../database.service';
->>>>>>> origin/cloudbase
 import { LOG } from '../../../common/app.logs';
 
 @Injectable({ providedIn: 'root' })

@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-=======
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
-import { CN } from '../../common/app.utilities';
->>>>>>> origin/cloudbase
 import {
 	ChangeDetectorRef,
 	Component,
@@ -26,10 +21,6 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { PopoverModule } from 'primeng/popover';
 import { PaginatorModule } from 'primeng/paginator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-<<<<<<< HEAD
-=======
-import { FirebaseService } from '../../backend/database-service/firebase/firebase.service';
->>>>>>> origin/cloudbase
 import { Subscription } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import {
@@ -40,10 +31,7 @@ import {
 	Utilities
 } from '../../common/app.utilities';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-<<<<<<< HEAD
 import { DatabaseService } from '../../backend/database-service/database.service';
-=======
->>>>>>> origin/cloudbase
 
 @Component({
 	selector: 'remainder',

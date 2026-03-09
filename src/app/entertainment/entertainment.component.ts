@@ -1,4 +1,4 @@
-import { CloudbaseService } from '../service/cloud-service/cloudbase/cloudbase.service';
+import { CloudbaseService } from '../service/backend-service/cloudbase/cloudbase.service';
 import { SearchStreamService } from './../service/dialog-service/search/search-stream.service';
 import {
 	COMPONENT_DESTROY,
@@ -27,7 +27,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
 import { LOG } from '../app.logs';
 import { DoubanService } from '../service/douban-service/douban.service';
-import { FirebaseService } from '../service/cloud-service/firebase/firebase.service';
+import { FirebaseService } from '../service/backend-service/firebase/firebase.service';
 import { MovieItemVO } from './entertainment.movieitem.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';

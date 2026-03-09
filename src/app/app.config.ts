@@ -17,7 +17,7 @@ import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import Aura from '@primeng/themes/aura';
 import { Utilities } from './app.utilities';
-import { CloudbaseService } from './service/cloud-service/cloudbase/cloudbase.service';
+import { CloudbaseService } from './service/backend-service/cloudbase/cloudbase.service';
 import { LOG } from './app.logs';
 export const appConfig: ApplicationConfig = {
 	providers: [
@@ -37,16 +37,6 @@ export const appConfig: ApplicationConfig = {
 		}),
 		provideAppInitializer(() => {
 			inject(CloudbaseService);
-			const utilities = inject(Utilities);
-			return utilities
-				.checkCurrentCountry()
-				.then(() => LOG.info('Configuration', 'All startup tasks complete'))
-				.catch(() => {
-					LOG.warn('Confirguation', 'Unable to acquire country code from current API');
-					utilities.setCurrentRegion('CN');
-					// Return resolved promise so that the project is not being blocked
-					return Promise.resolve();
-				});
 		}),
 		MessageService
 	]

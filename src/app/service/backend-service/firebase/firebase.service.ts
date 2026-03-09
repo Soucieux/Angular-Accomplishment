@@ -24,12 +24,12 @@ import {
 import { Observable, map } from 'rxjs';
 import { MovieItemVO } from '../../../entertainment/entertainment.movieitem.vo';
 import { RATE_DECREASED, RATE_INCREASED } from '../../../app.utilities';
-import { cloudService } from '../cloud.service';
+import { backendService } from '../backend.service';
 
 @Injectable({
 	providedIn: 'root'
 })
-export class FirebaseService extends cloudService {
+export class FirebaseService extends backendService {
 	private readonly className = 'FirebaseService';
 	private moviesRef: any;
 	private statisticsRef: any;
@@ -327,7 +327,7 @@ export class FirebaseService extends cloudService {
 	 *
 	 * @returns An array of reusable keys.
 	 */
-	private async getReusableKeys(): Promise<string[]> {
+	protected async getReusableKeys(): Promise<string[]> {
 		try {
 			const snapshot = await get(dbRef(this.db, 'statistics/reusableKeys'));
 			LOG.info(this.className, `Reusable keys retrieved`);
@@ -343,7 +343,7 @@ export class FirebaseService extends cloudService {
 	 *
 	 * @param keys - The keys to save.
 	 */
-	private async saveReusableKeys(keys: string[]) {
+	protected async saveReusableKeys(keys: string[]) {
 		await update(dbRef(this.db, 'statistics'), { reusableKeys: keys }).then(() => {
 			LOG.info(this.className, `Reusable keys have been updated`);
 		});
@@ -388,7 +388,7 @@ export class FirebaseService extends cloudService {
 	 * @param status - The status of the activity.
 	 * @param movieItemVO - The movie item to update.
 	 */
-	private async updateHistory(status: string, movieItemVO?: MovieItemVO) {
+	protected async updateHistory(status: string, movieItemVO?: MovieItemVO) {
 		if (movieItemVO) {
 			await push(dbRef(this.db, 'history'), {
 				id: movieItemVO.getMovieId(),

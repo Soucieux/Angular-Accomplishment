@@ -16,6 +16,8 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import Aura from '@primeng/themes/aura';
+import { Utilities } from './app.utilities';
+import { LOG } from './app.logs';
 export const appConfig: ApplicationConfig = {
 	providers: [
 		provideRouter(routes),
@@ -31,6 +33,19 @@ export const appConfig: ApplicationConfig = {
 			theme: {
 				preset: Aura
 			}
+		}),
+		provideAppInitializer(() => {
+			inject(CloudbaseService);
+			const utilities = inject(Utilities);
+			return utilities
+				.checkCurrentCountry()
+				.then(() => LOG.info('Configuration', 'All startup tasks complete'))
+				.catch(() => {
+					LOG.warn('Confirguation', 'Unable to acquire country code from current API');
+					utilities.setCurrentRegion('CN');
+					// Return resolved promise so that the project is not being blocked
+					return Promise.resolve();
+				});
 		}),
 		MessageService
 	]

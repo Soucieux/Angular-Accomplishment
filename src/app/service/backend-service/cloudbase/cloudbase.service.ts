@@ -5,11 +5,11 @@ import cloudbase from '@cloudbase/js-sdk';
 import { environment } from '../../../../environment/environment';
 import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../../entertainment/entertainment.movieitem.vo';
-import { cloudService } from '../cloud.service';
+import { backendService } from '../backend.service';
 import { LOG } from '../../../app.logs';
 
 @Injectable({ providedIn: 'root' })
-export class CloudbaseService extends cloudService {
+export class CloudbaseService extends backendService {
 	private readonly className = 'CloudbaseService';
 	private cloudbase: any;
 	private database: any;
@@ -217,5 +217,60 @@ export class CloudbaseService extends cloudService {
 			});
 			return () => watcher.close();
 		});
+	}
+
+	uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
+		throw new Error('Method not implemented.');
+	}
+	updateHistoryWithNewSearchActivity(): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	updateMovieRateToFirebase(movieItemVO: MovieItemVO): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	updateMovieGenreToFirebase(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	updateMovieFavouriteToFirebase(movieKey: string, isFavourite: boolean): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	protected getReusableKeys(): Promise<string[]> {
+		throw new Error('Method not implemented.');
+	}
+	protected saveReusableKeys(keys: string[]): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean> {
+		throw new Error('Method not implemented.');
+	}
+	protected updateHistory(status: string, movieItemVO?: MovieItemVO): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	addNewRecordToPatchNotes(newRecord: any): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	removePatchNotes(key: string): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	updateRemainderTable(tableName: string, entryKey: string, valueKey: string, value: any): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	removeRecordFromRemainderTable(tableName: string, key: string): Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
+		throw new Error('Method not implemented.');
 	}
 }

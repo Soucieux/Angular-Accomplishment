@@ -1,16 +1,16 @@
-import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
+import { EnvironmentInjector, inject, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import {
 	GoogleAuthProvider,
 	signInWithEmailAndPassword,
 	signInWithPopup,
 	Auth,
 	signOut,
-	User,
 	onAuthStateChanged
 } from '@angular/fire/auth';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { LOG } from '../../common/app.logs';
+import { DatabaseService } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 
 @Injectable({
@@ -20,23 +20,25 @@ export class AuthService {
 	private readonly className = 'AuthService';
 	private verification: any;
 	private cloudbaseAuth: any;
+	private firebaseAuth: any;
 	private cloudbaseCurrentUserSubject = new BehaviorSubject<any | null>(null);
-	public cloudbaseCurrentUser$ = this.cloudbaseCurrentUserSubject.asObservable();
-	public firebaseCurrentUser$: Observable<User | null>;
 	constructor(
-		@Inject(Auth) private firebaseAuth: Auth,
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
 		private router: Router,
-		private cloudbaseService: CloudbaseService
-	) {
+		private databaseService: DatabaseService
+	) {}
+
+	firebaseGetCurrentUser(): Observable<any> {
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
-		this.firebaseCurrentUser$ = new Observable((observer) => {
-			runInInjectionContext(this.ei, () => {
-				// onAuthStateChanged emits the user continuously
-				onAuthStateChanged(this.firebaseAuth, (user) => {
-					observer.next(user);
-				});
+		return new Observable((observer) => {
+			this.firebaseAuth = runInInjectionContext(this.ei, () => inject(Auth));
+
+			// onAuthStateChanged emits the user continuously
+			const unsubscribe = onAuthStateChanged(this.firebaseAuth, (user) => {
+				observer.next(user);
 			});
+
+			return () => unsubscribe();
 		});
 	}
 
@@ -100,22 +102,28 @@ export class AuthService {
 		try {
 			await this.cloudbaseAuth.signInWithPassword({ username: username, password: password });
 			localStorage.setItem('permission', 'true');
-			this.getCurrentUser();
+			this.cloudbaseGetCurrentUser();
 			this.router.navigate(['/']);
 		} catch (error: any) {
 			LOG.error(this.className, 'Error when signing in with username and password with Cloudbase');
 		}
 	}
 
-	async getCurrentUser() {
+	cloudbaseGetCurrentUser(): Observable<any> {
 		try {
-			this.cloudbaseAuth = this.cloudbaseService.getCloudbaseRef().auth();
-			const { data, error } = await this.cloudbaseAuth.getUser();
-			this.cloudbaseCurrentUserSubject.next(data.user);
-			if (!data.user) localStorage.setItem('permission', 'false');
+			if (!this.cloudbaseAuth) {
+				const cloudbaseService = this.databaseService as CloudbaseService;
+				this.cloudbaseAuth = cloudbaseService.getCloudbaseRef().auth();
+			}
+			this.cloudbaseAuth.getUser().then((response: { data: { user: any } }) => {
+				const { data } = response;
+				this.cloudbaseCurrentUserSubject.next(data.user ?? null);
+			});
 		} catch (error) {
 			LOG.error(this.className, error as string);
 		}
+
+		return this.cloudbaseCurrentUserSubject.asObservable();
 	}
 
 	async signOut() {

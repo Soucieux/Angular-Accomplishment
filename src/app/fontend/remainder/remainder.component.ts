@@ -1,5 +1,3 @@
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
-import { CN } from '../../common/app.utilities';
 import {
 	ChangeDetectorRef,
 	Component,
@@ -23,7 +21,6 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { PopoverModule } from 'primeng/popover';
 import { PaginatorModule } from 'primeng/paginator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { FirebaseService } from '../../backend/database-service/firebase/firebase.service';
 import { Subscription } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import {
@@ -34,6 +31,7 @@ import {
 	Utilities
 } from '../../common/app.utilities';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { DatabaseService } from '../../backend/database-service/database.service';
 
 @Component({
 	selector: 'remainder',
@@ -96,8 +94,7 @@ export class RemainderComponent {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private dialogService: DialogService,
-		private firebaseService: FirebaseService,
-		private cloudbaseService: CloudbaseService,
+		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,
 		private utilities: Utilities
 	) {
@@ -111,10 +108,7 @@ export class RemainderComponent {
 			this.currentDay = new Date().getDate();
 
 			// Get the data of the first table
-			const getFirstObservable =
-				this.utilities.getCurrentRegion() === CN
-					? this.cloudbaseService.getFirstRemainderTableDetails()
-					: this.firebaseService.getFirstRemainderTableDetails();
+			const getFirstObservable = this.databaseService.getFirstRemainderTableDetails();
 			this.firstSub = getFirstObservable.subscribe((rows) => {
 				// Need deep copy here so that we are not copying references
 				this.originalFirstTable = structuredClone(rows);
@@ -130,10 +124,7 @@ export class RemainderComponent {
 			});
 
 			// Get the data of the second table
-			const getSecondObservable =
-				this.utilities.getCurrentRegion() === CN
-					? this.cloudbaseService.getSecondRemainderTableDetails()
-					: this.firebaseService.getSecondRemainderTableDetails();
+			const getSecondObservable = this.databaseService.getSecondRemainderTableDetails();
 			this.secondSub = getSecondObservable.subscribe((rows) => {
 				this.updatedSecondTable = structuredClone(rows);
 				this.originalSecondTable = structuredClone(rows);
@@ -141,10 +132,7 @@ export class RemainderComponent {
 			});
 
 			// Get the data of the third table
-			const getThirdObservable =
-				this.utilities.getCurrentRegion() === CN
-					? this.cloudbaseService.getThirdRemainderTableDetails()
-					: this.firebaseService.getThirdRemainderTableDetails();
+			const getThirdObservable = this.databaseService.getThirdRemainderTableDetails();
 			this.thirdSub = getThirdObservable.subscribe((rows) => {
 				this.originalThirdTable = structuredClone(rows);
 				this.pagedThirdTable = this.updatePagedThirdTable();
@@ -175,7 +163,7 @@ export class RemainderComponent {
 
 		if (this.chargedCellsInitialized) {
 			this.updatedFirstTable.push({ isNextMonth: this.isNextMonth });
-			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+			this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
 			this.triggerSaveIndicator(FIRST_TABLE);
 		}
@@ -244,7 +232,7 @@ export class RemainderComponent {
 		}
 
 		// Update table to firebase
-		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+		this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
 		this.triggerSaveIndicator(FIRST_TABLE);
 	}
@@ -281,8 +269,8 @@ export class RemainderComponent {
 		if (!this.updatedFirstTable[rowIndex][field].isCharged) {
 			this.updatedFirstTable[rowIndex][field].isCharged = true;
 
-			// Update table to firebase
-			this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+			// Update table to database
+			this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
 			this.triggerSaveIndicator(FIRST_TABLE);
 		}
@@ -341,8 +329,8 @@ export class RemainderComponent {
 				fourth: { value: 17, isCharged: false }
 			}
 		];
-		// Update table to firebase
-		this.firebaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+		// Update table to database
+		this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
 		this.triggerSaveIndicator(FIRST_TABLE);
 	}
@@ -364,7 +352,7 @@ export class RemainderComponent {
 				original: existingRecord.debt,
 				paid: false
 			};
-			this.firebaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
+			this.databaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
 
 			this.triggerSaveIndicator(SECOND_TABLE);
 		} else {
@@ -400,7 +388,7 @@ export class RemainderComponent {
 			this.dialogComponentContainer,
 			'confirm',
 			() => {
-				this.firebaseService.removeRecordFromRemainderTable(THIRD_TABLE, key);
+				this.databaseService.removeRecordFromRemainderTable(THIRD_TABLE, key);
 				this.triggerSaveIndicator(THIRD_TABLE);
 			},
 			['Are you sure you want to delete this entry?', 'Delete', 'Confirm', 'Entry deleted', true]
@@ -409,7 +397,7 @@ export class RemainderComponent {
 
 	protected addNewContentOnly() {
 		if (this.thirdTableNewContent.trim() !== '') {
-			this.firebaseService.addNewRecordForRemainderTable(THIRD_TABLE, {
+			this.databaseService.addNewRecordForRemainderTable(THIRD_TABLE, {
 				content: this.thirdTableNewContent
 			});
 			this.triggerSaveIndicator(THIRD_TABLE);
@@ -423,7 +411,7 @@ export class RemainderComponent {
 				Object.entries(this.thirdTableActiveItem).filter(([_, value]) => value !== '')
 			);
 			newValues['content'] = this.thirdTableNewContent;
-			this.firebaseService.addNewRecordForRemainderTable(THIRD_TABLE, newValues);
+			this.databaseService.addNewRecordForRemainderTable(THIRD_TABLE, newValues);
 			this.triggerSaveIndicator(THIRD_TABLE);
 			this.thirdTableNewContent = '';
 			this.op2.hide();
@@ -457,7 +445,7 @@ export class RemainderComponent {
 	protected updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
 		const newValue = this.findUpdatedObject(tableName, entryKey)[valueKey];
 		if (newValue !== this.findOriginalObject(tableName, entryKey)[valueKey]) {
-			this.firebaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue).then(() => {});
+			this.databaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue).then(() => {});
 			this.triggerSaveIndicator(tableName);
 		}
 	}

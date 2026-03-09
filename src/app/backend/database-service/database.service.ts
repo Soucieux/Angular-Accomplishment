@@ -1,9 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { MovieItemVO } from '../../entertainment/entertainment.movieitem.vo';
+import { MovieItemVO } from '../../common/movieitem.vo';
+import { InjectionToken } from '@angular/core';
+import type cloudbase from '@cloudbase/js-sdk';
+export type CloudbaseApp = ReturnType<typeof cloudbase.init>;
+export const CLOUDBASE = new InjectionToken<CloudbaseApp>('CLOUDBASE');
 
 @Injectable({ providedIn: 'root' })
-export abstract class backendService {
+export abstract class DatabaseService {
 	protected constructor() {}
 	abstract uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string>;
 	abstract getMovieList(): Observable<MovieItemVO[]>;

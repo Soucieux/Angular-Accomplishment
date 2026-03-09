@@ -1,4 +1,3 @@
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Component, HostListener, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -8,7 +7,6 @@ import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import {
-	CN,
 	COMPONENT_DESTROY,
 	STATUS_COMPLETED,
 	STATUS_DEBUG,
@@ -18,13 +16,13 @@ import {
 	STATUS_TODO,
 	Utilities
 } from '../../common/app.utilities';
-import { FirebaseService } from '../../backend/database-service/firebase/firebase.service';
 import { map, Observable, shareReplay, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PaginatorModule } from 'primeng/paginator';
+import { DatabaseService } from '../../backend/database-service/database.service';
 
 @Component({
 	selector: 'patch',
@@ -70,8 +68,7 @@ export class PatchComponent {
 	};
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
-		private firebaseService: FirebaseService,
-		private cloudbaseService: CloudbaseService,
+		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		private utilities: Utilities
 	) {
@@ -84,11 +81,7 @@ export class PatchComponent {
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			this.isMobile = this.utilities.isMobile();
 
-			const getObservable$ =
-				this.utilities.getCurrentRegion() === CN
-					? this.cloudbaseService.getPatchNotes()
-					: this.firebaseService.getPatchNotes();
-
+			const getObservable$ = this.databaseService.getPatchNotes();
 			this.patchNotes$ = getObservable$.pipe(
 				map((data) => {
 					return this.isMobile ? data : [...data, { __dummy: true }];
@@ -162,7 +155,7 @@ export class PatchComponent {
 
 		if (Object.keys(changes).length > 0) {
 			changes.timestamp = this.utilities.getCurrentFormattedTime(false);
-			await this.firebaseService.updateExistingRecordToPatchNotes(row.key, changes);
+			await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
 		}
 
 		this.editedRows.delete(row.key);
@@ -175,7 +168,7 @@ export class PatchComponent {
 	submitNewRecord() {
 		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
-		this.firebaseService.addNewRecordToPatchNotes(this.newRecord);
+		this.databaseService.addNewRecordToPatchNotes(this.newRecord);
 		this.newRecord = {
 			key: '',
 			component: '',
@@ -197,7 +190,7 @@ export class PatchComponent {
 			this.dialogComponentContainer,
 			'confirm',
 			() => {
-				this.firebaseService.removePatchNotes(key);
+				this.databaseService.removePatchNotes(key);
 			},
 			['Are you sure you want to delete this note?', 'Confirm', 'Delete', 'Record deleted', true]
 		);

@@ -1,4 +1,3 @@
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { SearchStreamService } from '../../backend/dialog-service/search/search-stream.service';
 import {
 	COMPONENT_DESTROY,
@@ -8,8 +7,7 @@ import {
 	SEARCH_COMPELTE,
 	NO_RATE,
 	Utilities,
-	GENRE_FAVOURITE,
-	CN
+	GENRE_FAVOURITE
 } from '../../common/app.utilities';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -27,7 +25,6 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { DoubanService } from '../../backend/douban-service/douban.service';
-import { FirebaseService } from '../../backend/database-service/firebase/firebase.service';
 import { MovieItemVO } from '../../common/movieitem.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -37,6 +34,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { MovieAlreadyExistsError } from '../../common/error/movie-already-exists-error';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
+import { DatabaseService } from '../../backend/database-service/database.service';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -84,8 +82,7 @@ export class EntertainmentComponent {
 		private elRef: ElementRef<HTMLElement>,
 		private renderer: Renderer2,
 		private doubanService: DoubanService,
-		private firebaseService: FirebaseService,
-		private cloudbaseService: CloudbaseService,
+		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		protected utilities: Utilities,
 		private searchStreamService: SearchStreamService
@@ -103,20 +100,13 @@ export class EntertainmentComponent {
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
 			// Get the movie list (Observable) and statistics (Observable) from firebase or cloudbase
-			if (this.utilities.getCurrentRegion() === CN) {
-				this.statistics$ = this.cloudbaseService.getStatistics();
-			} else {
-				this.statistics$ = this.firebaseService.getStatistics();
-			}
+			this.statistics$ = this.databaseService.getStatistics();
 
 			// One-time pre-check to make sure user have permission to read data in the database
 			await firstValueFrom(this.statistics$.pipe(take(1)));
 			// Below part will be executed only if there is no error reading data in the database
-			if (this.utilities.getCurrentRegion() === CN) {
-				this.movieList$ = this.cloudbaseService.getMovieList();
-			} else {
-				this.movieList$ = this.firebaseService.getMovieList();
-			}
+			this.movieList$ = this.databaseService.getMovieList();
+
 			// Create a filter to listen for genre changes
 			this.filteredMovieList$ = combineLatest([this.movieList$, this.selectedGenres$]).pipe(
 				map(([movieList, selectedGenres]) => {
@@ -167,7 +157,7 @@ export class EntertainmentComponent {
 	protected async updateAllMoviesRate() {
 		// Step 1: Get the movie list (one-time retrieval) from current movieList$
 		let movieListVOs = await firstValueFrom(this.filteredMovieList$);
-		await this.firebaseService.updateHistoryWithNewSearchActivity();
+		await this.databaseService.updateHistoryWithNewSearchActivity();
 
 		// Initialize required data
 		this.isSearching = true;
@@ -194,7 +184,7 @@ export class EntertainmentComponent {
 
 				// Step 5: Update movie rate
 				if (currentSessionId === this.sessionId && this.isSearching) {
-					await this.firebaseService.updateMovieRateToFirebase(movieItemVO);
+					await this.databaseService.updateMovieRateToFirebase(movieItemVO);
 				}
 
 				// If the search is cancelled, then break the loop.
@@ -498,7 +488,7 @@ export class EntertainmentComponent {
 	 */
 	private async uploadMovieImageAndGetDownloadableLink(movieItemVO: MovieItemVO) {
 		try {
-			const downloadableLink = await this.firebaseService.uploadImageAndGetDownloadLink(
+			const downloadableLink = await this.databaseService.uploadImageAndGetDownloadLink(
 				movieItemVO.getMovieCoverImage(),
 				movieItemVO.getMovieName()
 			);
@@ -588,7 +578,7 @@ export class EntertainmentComponent {
 			this.dialogComponentContainer,
 			'confirm',
 			() => {
-				this.firebaseService.removeMovieFromDatabase(movieItemVO);
+				this.databaseService.removeMovieFromDatabase(movieItemVO);
 			},
 			[
 				`Are you sure you want to delete ${movieItemVO.getMovieName()}?`,
@@ -622,7 +612,7 @@ export class EntertainmentComponent {
 		// The downloadable link needs to be acquired first and it will be uploaded to firebase in the next step
 		await this.uploadMovieImageAndGetDownloadableLink(this.tempMovieItemVO);
 		// Save new movie data to firebase and update movie statistics
-		await this.firebaseService.addNewMovieDataAndUpdateStatistics(this.tempMovieItemVO);
+		await this.databaseService.addNewMovieDataAndUpdateStatistics(this.tempMovieItemVO);
 		this.tempMovieItemVO = new MovieItemVO();
 	}
 
@@ -634,7 +624,7 @@ export class EntertainmentComponent {
 	 */
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob> {
 		if (
-			await this.firebaseService.isMovieAlreadyAdded(
+			await this.databaseService.isMovieAlreadyAdded(
 				newMovieItemVO.getMovieName(),
 				newMovieItemVO.getMovieYear(),
 				newMovieItemVO.getMovieId()
@@ -689,9 +679,7 @@ export class EntertainmentComponent {
 				await this.handleAddDialogSearch(movieToRestore);
 				await this.handleAddDialogSubmit();
 			},
-			this.utilities.getCurrentRegion() === CN
-				? this.cloudbaseService.getHistory()
-				: this.firebaseService.getHistory()
+			this.databaseService.getHistory()
 		);
 	}
 
@@ -716,7 +704,7 @@ export class EntertainmentComponent {
 		const genreData = this.editedItems.get(movie.getMovieKey());
 		if (genreData) {
 			if (genreData.original !== genreData.genre) {
-				this.firebaseService.updateMovieGenreToFirebase(
+				this.databaseService.updateMovieGenreToFirebase(
 					movie.getMovieKey(),
 					genreData.original,
 					genreData.genre
@@ -732,6 +720,6 @@ export class EntertainmentComponent {
 	 * @param movie The movie to set
 	 */
 	protected setIsFavourite(movie: MovieItemVO) {
-		this.firebaseService.updateMovieFavouriteToFirebase(movie.getMovieKey(), !movie.getIsFavourite());
+		this.databaseService.updateMovieFavouriteToFirebase(movie.getMovieKey(), !movie.getIsFavourite());
 	}
 }

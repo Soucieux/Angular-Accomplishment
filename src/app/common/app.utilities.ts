@@ -1,9 +1,8 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { MovieItemVO } from './entertainment/entertainment.movieitem.vo';
+import { MovieItemVO } from './movieitem.vo';
 import { HttpClient } from '@angular/common/http';
 import { LOG } from './app.logs';
-import { firstValueFrom } from 'rxjs';
 
 export const RATE_DECREASED = 'decreased';
 export const RATE_INCREASED = 'increased';
@@ -25,8 +24,8 @@ export const CN = 'CN';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {
-	private readonly className = 'Utilities';
-	private currentCountry!: string;
+	private static readonly className = 'Utilities';
+	private static currentCountry: string = '';
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private http: HttpClient
@@ -90,70 +89,12 @@ export class Utilities {
 	}
 
 	/**
-	 * Check the current country code
-	 * Note: This method can only be called by bootstraps
-	 *
-	 * @returns Current country code
-	 */
-	public async checkCurrentCountry() {
-		if (!isPlatformBrowser(this.platformId)) return;
-
-		const cachedLocation = localStorage.getItem('location');
-
-		if (cachedLocation) {
-			const parsed = JSON.parse(cachedLocation);
-			const now = Date.now();
-			const ONE_DAY = 24 * 60 * 60 * 1000;
-
-			// Check whether the last session is over 24 hours or not
-			if (now - parsed.timestamp < ONE_DAY) {
-				this.currentCountry = parsed.country;
-				LOG.warn(
-					this.className,
-					'Reusing last session. Current IP: ' + parsed.ip + ', Current country: ' + parsed.country
-				);
-
-				//TODO set the location to CN for now
-				this.currentCountry = CN;
-				return;
-			}
-		}
-
-		const currentLocation = await firstValueFrom(
-			this.http.get<any>('https://ipinfo.io/json?token=581131c84dc255')
-		);
-
-		this.currentCountry = currentLocation.country;
-
-		localStorage.setItem(
-			'location',
-			JSON.stringify({
-				country: this.currentCountry,
-				ip: currentLocation.ip,
-				timestamp: Date.now()
-			})
-		);
-
-		LOG.warn(
-			this.className,
-			'Current IP: ' + currentLocation.ip + ', Current country: ' + currentLocation.country
-		);
-	}
-
-	/**
 	 * Get the current country code
 	 *
 	 * @returns Current country code
 	 */
-	public getCurrentRegion() {
+	public static getCurrentCountry() {
 		return this.currentCountry;
-	}
-
-	/**
-	 * Note: This is only intended by startup errors
-	 */
-	public setCurrentRegion(country: string) {
-		this.currentCountry = country;
 	}
 
 	////////////////////////////// Below are static methods //////////////////////////////
@@ -171,5 +112,52 @@ export class Utilities {
 
 	public static checkIfHoverCapable() {
 		return window.matchMedia('(hover: hover)').matches;
+	}
+
+	/**
+	 * Check the current country code
+	 * Note: This method can only be called by bootstraps
+	 *
+	 * @returns Current country code
+	 */
+	public static async checkCurrentCountry() {
+		// const cachedLocation = localStorage.getItem('location');
+
+		// if (cachedLocation) {
+		// 	const parsed = JSON.parse(cachedLocation);
+		// 	const now = Date.now();
+		// 	const ONE_DAY = 24 * 60 * 60 * 1000;
+
+		// 	// Check whether the last session is over 24 hours or not
+		// 	if (now - parsed.timestamp < ONE_DAY) {
+		// 		this.currentCountry = parsed.country;
+		// 		LOG.info(
+		// 			this.className,
+		// 			'Reusing last session. Current IP: ' + parsed.ip + ', Current country: ' + parsed.country
+		// 		);
+		// 		return;
+		// 	}
+		// }
+
+		const response = await fetch('https://ipinfo.io/json?token=581131c84dc255');
+		const currentLocation = await response.json();
+
+		this.currentCountry = currentLocation.country;
+
+		localStorage.setItem(
+			'location',
+			JSON.stringify({
+				country: this.currentCountry,
+				ip: currentLocation.ip,
+				timestamp: Date.now()
+			})
+		);
+
+		localStorage.setItem('permission', 'false');
+
+		LOG.info(
+			this.className,
+			'Current IP: ' + currentLocation.ip + ', Current country: ' + this.currentCountry
+		);
 	}
 }

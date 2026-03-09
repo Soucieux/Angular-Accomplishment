@@ -1,4 +1,4 @@
-import { CloudbaseService } from './../service/cloud-service/cloudbase/cloudbase.service';
+import { CloudbaseService } from '../service/backend-service/cloudbase/cloudbase.service';
 import { CN } from './../app.utilities';
 import {
 	ChangeDetectorRef,
@@ -23,7 +23,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { PopoverModule } from 'primeng/popover';
 import { PaginatorModule } from 'primeng/paginator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { FirebaseService } from '../service/cloud-service/firebase/firebase.service';
+import { FirebaseService } from '../service/backend-service/firebase/firebase.service';
 import { Subscription } from 'rxjs';
 import { LOG } from '../app.logs';
 import { COMPONENT_DESTROY, FIRST_TABLE, SECOND_TABLE, THIRD_TABLE, Utilities } from '../app.utilities';

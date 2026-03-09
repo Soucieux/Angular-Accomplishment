@@ -11,7 +11,7 @@ import {
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { LOG } from '../../app.logs';
-import { CloudbaseService } from '../cloud-service/cloudbase/cloudbase.service';
+import { CloudbaseService } from '../backend-service/cloudbase/cloudbase.service';
 
 @Injectable({
 	providedIn: 'root'

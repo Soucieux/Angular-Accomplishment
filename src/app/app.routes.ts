@@ -1,11 +1,11 @@
 import { Routes } from '@angular/router';
-import { EntertainmentComponent } from './entertainment/entertainment.component';
-import { HomeComponent } from './home/home.component';
-import { LoginComponent } from './login/login.component';
-import { loginGuard } from './login/login.guard';
-import { PatchComponent } from './patch/patch.component';
-import { RemainderComponent } from './remainder/remainder.component';
-import { AboutComponent } from './about/about.component';
+import { EntertainmentComponent } from './fontend/entertainment/entertainment.component';
+import { HomeComponent } from './fontend/home/home.component';
+import { LoginComponent } from './fontend/login/login.component';
+import { loginGuard } from './fontend/login/login.guard';
+import { PatchComponent } from './fontend/patch/patch.component';
+import { RemainderComponent } from './fontend/remainder/remainder.component';
+import { AboutComponent } from './fontend/about/about.component';
 
 export const routes: Routes = [
 	{ path: '', component: HomeComponent },

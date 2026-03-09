@@ -4,12 +4,12 @@ import { RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
-import { AuthService } from './service/authentication-service/auth.service';
-import { LOG } from './app.logs';
+import { AuthService } from './backend/authentication-service/auth.service';
+import { LOG } from './common/app.logs';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
-import { CN, COMPONENT_DESTROY, Utilities } from './app.utilities';
+import { CN, COMPONENT_DESTROY, Utilities } from './common/app.utilities';
 import { Observable } from 'rxjs';
 @Component({
 	selector: 'root',

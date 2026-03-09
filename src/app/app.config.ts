@@ -16,9 +16,6 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import Aura from '@primeng/themes/aura';
-import { Utilities } from './app.utilities';
-import { CloudbaseService } from './service/backend-service/cloudbase/cloudbase.service';
-import { LOG } from './app.logs';
 export const appConfig: ApplicationConfig = {
 	providers: [
 		provideRouter(routes),
@@ -34,9 +31,6 @@ export const appConfig: ApplicationConfig = {
 			theme: {
 				preset: Aura
 			}
-		}),
-		provideAppInitializer(() => {
-			inject(CloudbaseService);
 		}),
 		MessageService
 	]

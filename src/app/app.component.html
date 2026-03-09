@@ -46,7 +46,7 @@
 						severity="warn"
 						class="signin-signout-button" />
 					<p class="hide-on-mobile username">
-						@if (currentRegion === CN) {
+						@if (isCN()) {
 							{{ user.user_metadata.username }}
 						} @else {
 							{{ user.displayName ? user.displayName : '' }}

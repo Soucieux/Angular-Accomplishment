@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
->>>>>>> origin/cloudbase
 import { SearchStreamService } from '../../backend/dialog-service/search/search-stream.service';
 import {
 	COMPONENT_DESTROY,
@@ -11,12 +7,7 @@ import {
 	SEARCH_COMPELTE,
 	NO_RATE,
 	Utilities,
-<<<<<<< HEAD
 	GENRE_FAVOURITE
-=======
-	GENRE_FAVOURITE,
-	CN
->>>>>>> origin/cloudbase
 } from '../../common/app.utilities';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -34,10 +25,6 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { DoubanService } from '../../backend/douban-service/douban.service';
-<<<<<<< HEAD
-=======
-import { FirebaseService } from '../../backend/database-service/firebase/firebase.service';
->>>>>>> origin/cloudbase
 import { MovieItemVO } from '../../common/movieitem.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';

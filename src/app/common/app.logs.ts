@@ -7,16 +7,16 @@ export class LOG {
 	}
 
 	static info(className: string, message: string) {
-		console.info(LOG.getTimestamp() + '[INFO]' + className + '-' + message);
+		console.info(LOG.getTimestamp() + '[INFO] ' + className + '-' + message);
 	}
 
 	static warn(className: string, message: string) {
-		console.warn(LOG.getTimestamp() + '[WARNING]' + className + '-' + message);
+		console.warn(LOG.getTimestamp() + '[WARNING] ' + className + '-' + message);
 	}
 
 	static error(className: string, message: string, error?: Error) {
 		if (error) {
-			console.error(LOG.getTimestamp() + '[ERROR]' + className + '-' + message + ': ' + error.message);
+			console.error(LOG.getTimestamp() + '[ERROR] ' + className + '-' + message + ': ' + error.message);
 		} else {
 			console.error(LOG.getTimestamp() + '[ERROR] ' + className + '-' + message);
 		}

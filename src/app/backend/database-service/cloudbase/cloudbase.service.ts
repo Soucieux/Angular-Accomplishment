@@ -21,8 +21,8 @@ export class CloudbaseService extends DatabaseService {
 		}
 	}
 
-	public getCloudbaseRef() {
-		return this.cloudbase;
+	public getCloudbaseAuth() {
+		return this.cloudbase.auth();
 	}
 
 	/**
@@ -32,7 +32,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	getMovieList(): Observable<MovieItemVO[]> {
 		return new Observable((observer) => {
-			this.database.collection('movies').watch({
+			const watcher = this.database.collection('movies').watch({
 				onChange: (snapshot: any) => {
 					const movies = snapshot.docs.map((doc: any) => {
 						const movieItemVO = new MovieItemVO(doc.title, Number(doc.year));
@@ -55,9 +55,10 @@ export class CloudbaseService extends DatabaseService {
 					observer.next(movies);
 				},
 				onError: (err: any) => {
-					LOG.error(this.className, 'Error while retrieving movie list' + err);
+					LOG.error(this.className, 'Error while retrieving movie list', err);
 				}
 			});
+			return () => watcher.close();
 		});
 	}
 
@@ -68,14 +69,15 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getStatistics(): Observable<any> {
 		return new Observable((observer) => {
-			this.database.collection('statistics').watch({
+			const watcher = this.database.collection('statistics').watch({
 				onChange: (snapshot: any) => {
 					observer.next(snapshot.docs[0]);
 				},
 				onError: (err: any) => {
-					LOG.error(this.className, 'Error while retrieving statistics' + err);
+					LOG.error(this.className, 'Error while retrieving statistics', err);
 				}
 			});
+			return () => watcher.close();
 		});
 	}
 
@@ -86,7 +88,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getHistory(): Observable<any[]> {
 		return new Observable((observer) => {
-			this.database.collection('history').watch({
+			const watcher = this.database.collection('history').watch({
 				onChange: (snapshot: any) => {
 					const history = snapshot.docs
 						.map((doc: any) => {
@@ -101,6 +103,7 @@ export class CloudbaseService extends DatabaseService {
 					observer.next(history);
 				}
 			});
+			return () => watcher.close();
 		});
 	}
 
@@ -111,7 +114,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getPatchNotes(): Observable<any[]> {
 		return new Observable((observer) => {
-			this.database.collection('patch_notes').watch({
+			const watcher = this.database.collection('patch_notes').watch({
 				onChange: (snapshot: any) => {
 					const patchNotes = snapshot.docs.map((doc: any) => {
 						const { _id, ...rest } = doc;
@@ -134,6 +137,7 @@ export class CloudbaseService extends DatabaseService {
 					observer.next(patchNotes);
 				}
 			});
+			return () => watcher.close();
 		});
 	}
 

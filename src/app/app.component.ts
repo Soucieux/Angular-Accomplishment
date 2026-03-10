@@ -44,11 +44,6 @@ export class AppComponent {
 			} else {
 				this.currentUser$ = this.authService.firebaseGetCurrentUser();
 			}
-
-			const permission = JSON.parse(localStorage.getItem('permission') || 'null');
-			if (!permission) {
-				localStorage.setItem('permission', 'false');
-			}
 		}
 	}
 

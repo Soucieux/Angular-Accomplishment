@@ -1,5 +1,5 @@
 @let stats = statistics$ | async;
-@if (isLoggedIn && stats !== null) {
+@if (utilities.getIsUserAlive() && stats !== null) {
 	<div class="page-container">
 		<div class="control-button-container">
 			<div class="control-button-title">Categories ({{ stats.totalNumber }})</div>

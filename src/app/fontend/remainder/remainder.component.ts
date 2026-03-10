@@ -97,13 +97,9 @@ export class RemainderComponent {
 		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,
 		private utilities: Utilities
-	) {
-		if (isPlatformBrowser(this.platformId)) {
-			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
-		}
-	}
+	) {}
 	async ngOnInit() {
-		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
+		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
 			this.isHoverCapable = Utilities.checkIfHoverCapable();
 			this.currentDay = new Date().getDate();
 

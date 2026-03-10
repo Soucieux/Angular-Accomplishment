@@ -9,13 +9,12 @@ import { LOG } from './app/common/app.logs';
 import { environment } from './environment/environment';
 
 (async () => {
-    try {
-        const className = 'Utilities';
-            
+	const className = 'Main';
+	try {
 		await Utilities.checkCurrentCountry();
 		const country = Utilities.getCurrentCountry();
-        if (country == '') {
-            LOG.error(className, 'Country not set');
+		if (country == '') {
+			LOG.error(className, 'Country not set');
 		}
 
 		let providers = [...appConfig.providers];
@@ -49,7 +48,9 @@ import { environment } from './environment/environment';
 				provideDatabase(() => getDatabase())
 			);
 		}
-        LOG.info(className, 'All startup completed')
+		LOG.info(className, 'All startup completed');
 		await bootstrapApplication(AppComponent, { providers: providers });
-	} catch (error) {}
+	} catch (error) {
+		LOG.error(className, 'Startup failed: ' + error);
+	}
 })();

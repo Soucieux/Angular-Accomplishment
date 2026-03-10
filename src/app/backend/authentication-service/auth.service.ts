@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { LOG } from '../../common/app.logs';
 import { DatabaseService } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
+import { CN, Utilities } from '../../common/app.utilities';
 
 @Injectable({
 	providedIn: 'root'
@@ -25,8 +26,14 @@ export class AuthService {
 	constructor(
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
 		private router: Router,
-		private databaseService: DatabaseService
-	) {}
+		private databaseService: DatabaseService,
+		private utilities: Utilities
+	) {
+		if (Utilities.getCurrentCountry() === CN) {
+			const cloudbaseService = this.databaseService as CloudbaseService;
+			this.cloudbaseAuth = cloudbaseService.getCloudbaseAuth();
+		}
+	}
 
 	firebaseGetCurrentUser(): Observable<any> {
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
@@ -35,6 +42,7 @@ export class AuthService {
 
 			// onAuthStateChanged emits the user continuously
 			const unsubscribe = onAuthStateChanged(this.firebaseAuth, (user) => {
+				if (user) this.utilities.setIsUserAlive(true);
 				observer.next(user);
 			});
 
@@ -46,7 +54,7 @@ export class AuthService {
 		try {
 			await signInWithEmailAndPassword(this.firebaseAuth, email, password).then(() => {
 				this.router.navigate(['/']);
-				localStorage.setItem('permission', 'true');
+				this.utilities.setIsUserAlive(true);
 			});
 		} catch (error: any) {
 			LOG.error(this.className, 'Error when signing in with email and password');
@@ -62,7 +70,7 @@ export class AuthService {
 					unsub();
 					if (user) {
 						this.router.navigate(['/']);
-						localStorage.setItem('permission', 'true');
+						this.utilities.setIsUserAlive(true);
 					}
 				});
 			})
@@ -74,7 +82,7 @@ export class AuthService {
 		signOut(this.firebaseAuth)
 			.then(() => {
 				this.router.navigate(['/']);
-				localStorage.setItem('permission', 'false');
+				this.utilities.setIsUserAlive(false);
 			})
 			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}
@@ -101,7 +109,6 @@ export class AuthService {
 	async signIn(username: string, password: string) {
 		try {
 			await this.cloudbaseAuth.signInWithPassword({ username: username, password: password });
-			localStorage.setItem('permission', 'true');
 			this.cloudbaseGetCurrentUser();
 			this.router.navigate(['/']);
 		} catch (error: any) {
@@ -110,20 +117,19 @@ export class AuthService {
 	}
 
 	cloudbaseGetCurrentUser(): Observable<any> {
-		try {
-			if (!this.cloudbaseAuth) {
-				const cloudbaseService = this.databaseService as CloudbaseService;
-				this.cloudbaseAuth = cloudbaseService.getCloudbaseRef().auth();
-			}
-			this.cloudbaseAuth.getUser().then((response: { data: { user: any } }) => {
-				const { data } = response;
-				this.cloudbaseCurrentUserSubject.next(data.user ?? null);
-			});
-		} catch (error) {
-			LOG.error(this.className, error as string);
-		}
+		return new Observable((observer) => {
+			this.cloudbaseAuth
+				.getUser()
+				.then((response: { data: { user: any } }) => {
+					const { data } = response;
 
-		return this.cloudbaseCurrentUserSubject.asObservable();
+					if (data.user) this.utilities.setIsUserAlive(true);
+
+					observer.next(data.user ?? null);
+					observer.complete();
+				})
+				.catch((error: any) => observer.error(error));
+		});
 	}
 
 	async signOut() {
@@ -132,7 +138,7 @@ export class AuthService {
 			.then(() => {
 				this.cloudbaseCurrentUserSubject.next(null);
 				this.router.navigate(['/']);
-				localStorage.setItem('permission', 'false');
+				this.utilities.setIsUserAlive(false);
 			})
 			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}

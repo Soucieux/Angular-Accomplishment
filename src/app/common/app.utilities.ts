@@ -26,6 +26,8 @@ export const CN = 'CN';
 export class Utilities {
 	private static readonly className = 'Utilities';
 	private static currentCountry: string = '';
+	private isUserAlive: boolean = false;
+
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private http: HttpClient
@@ -88,6 +90,7 @@ export class Utilities {
 		return string ? string.trim().charAt(0).toUpperCase() + string.slice(1) : '';
 	}
 
+	////////////////////////////// Below are static methods //////////////////////////////
 	/**
 	 * Get the current country code
 	 *
@@ -97,7 +100,13 @@ export class Utilities {
 		return this.currentCountry;
 	}
 
-	////////////////////////////// Below are static methods //////////////////////////////
+	public getIsUserAlive() {
+		return this.isUserAlive;
+	}
+
+	public setIsUserAlive(isUserAlive: boolean) {
+		this.isUserAlive = isUserAlive;
+	}
 
 	/**
 	 * Check if the movie item is valid.
@@ -138,26 +147,31 @@ export class Utilities {
 		// 		return;
 		// 	}
 		// }
+		try {
+			const response = await fetch('https://ipinfo.io/json?token=581131c84dc255');
+			if (!response.ok) throw new Error('IP lookup failed');
 
-		const response = await fetch('https://ipinfo.io/json?token=581131c84dc255');
-		const currentLocation = await response.json();
+			const currentLocation = await response.json();
 
-		this.currentCountry = currentLocation.country;
+			this.currentCountry = currentLocation.country;
 
-		localStorage.setItem(
-			'location',
-			JSON.stringify({
-				country: this.currentCountry,
-				ip: currentLocation.ip,
-				timestamp: Date.now()
-			})
-		);
+			localStorage.setItem(
+				'location',
+				JSON.stringify({
+					country: this.currentCountry,
+					ip: currentLocation.ip,
+					timestamp: Date.now()
+				})
+			);
 
-		localStorage.setItem('permission', 'false');
-
-		LOG.info(
-			this.className,
-			'Current IP: ' + currentLocation.ip + ', Current country: ' + this.currentCountry
-		);
+			LOG.info(
+				this.className,
+				'Current IP: ' + currentLocation.ip + ', Current country: ' + this.currentCountry
+			);
+		} catch (error: any) {
+			LOG.error(this.className, 'Country detection failed: ', error);
+			this.currentCountry = CN;
+			LOG.info(this.className, 'Use default country: ' + this.currentCountry);
+		}
 	}
 }

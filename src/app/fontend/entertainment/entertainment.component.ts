@@ -86,11 +86,7 @@ export class EntertainmentComponent {
 		private dialogService: DialogService,
 		protected utilities: Utilities,
 		private searchStreamService: SearchStreamService
-	) {
-		if (isPlatformBrowser(this.platformId)) {
-			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
-		}
-	}
+	) {}
 
 	/**
 	 * Anything that needs to be done when the component is initialized.
@@ -98,7 +94,7 @@ export class EntertainmentComponent {
 	async ngOnInit() {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
-		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
+		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
 			// Get the movie list (Observable) and statistics (Observable) from firebase or cloudbase
 			this.statistics$ = this.databaseService.getStatistics();
 

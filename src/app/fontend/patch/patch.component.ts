@@ -46,7 +46,6 @@ export class PatchComponent {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	protected isLoggedIn!: boolean;
 	protected loading = true;
 	protected severity: { severity: string }[] | undefined;
 	protected bugSeverity: { severity: string }[] | undefined;
@@ -71,14 +70,10 @@ export class PatchComponent {
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		private utilities: Utilities
-	) {
-		if (isPlatformBrowser(this.platformId)) {
-			this.isLoggedIn = JSON.parse(localStorage.getItem('permission') || 'false');
-		}
-	}
+	) {}
 
 	async ngOnInit() {
-		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
+		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
 			this.isMobile = this.utilities.isMobile();
 
 			const getObservable$ = this.databaseService.getPatchNotes();

@@ -22,7 +22,7 @@ export class AuthService {
 	private verification: any;
 	private cloudbaseAuth: any;
 	private firebaseAuth: any;
-	private cloudbaseCurrentUserSubject = new BehaviorSubject<any | null>(null);
+	private cloudbaseUserSubject = new BehaviorSubject<any>(null);
 	constructor(
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
 		private router: Router,
@@ -117,26 +117,21 @@ export class AuthService {
 	}
 
 	cloudbaseGetCurrentUser(): Observable<any> {
-		return new Observable((observer) => {
-			this.cloudbaseAuth
-				.getUser()
-				.then((response: { data: { user: any } }) => {
-					const { data } = response;
+		this.cloudbaseAuth.getUser().then((response: { data: { user: any } }) => {
+			const { data } = response;
 
-					if (data.user) this.utilities.setIsUserAlive(true);
+			if (data.user) this.utilities.setIsUserAlive(true);
 
-					observer.next(data.user ?? null);
-					observer.complete();
-				})
-				.catch((error: any) => observer.error(error));
+			this.cloudbaseUserSubject.next(data.user);
 		});
+		return this.cloudbaseUserSubject.asObservable();
 	}
 
 	async signOut() {
 		await this.cloudbaseAuth
 			.signOut()
 			.then(() => {
-				this.cloudbaseCurrentUserSubject.next(null);
+				this.cloudbaseUserSubject.next(null);
 				this.router.navigate(['/']);
 				this.utilities.setIsUserAlive(false);
 			})

@@ -58,8 +58,6 @@ export class EntertainmentComponent {
 	private dialogComponentContainer!: ViewContainerRef;
 	protected readonly NO_RATE = NO_RATE;
 	protected readonly GENRE_FAVOURITE = GENRE_FAVOURITE;
-	// TODO This value has to be true initially so that the page will not show access denied page on refresh
-	protected isLoggedIn!: boolean;
 	protected isSearching: boolean = false;
 	private sessionId: number = 0;
 	protected movieList$!: Observable<MovieItemVO[]>;
@@ -102,7 +100,7 @@ export class EntertainmentComponent {
 			await firstValueFrom(this.statistics$.pipe(take(1)));
 			// Below part will be executed only if there is no error reading data in the database
 			this.movieList$ = this.databaseService.getMovieList();
-
+      
 			// Create a filter to listen for genre changes
 			this.filteredMovieList$ = combineLatest([this.movieList$, this.selectedGenres$]).pipe(
 				map(([movieList, selectedGenres]) => {
@@ -112,9 +110,11 @@ export class EntertainmentComponent {
 					if (selectedGenres === GENRE_FAVOURITE) {
 						return movieList.filter((movie) => movie.getIsFavourite());
 					}
+					
 					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
 				})
-			);
+            );
+            console.log(this.filteredMovieList$);
 		}
 	}
 
@@ -129,7 +129,7 @@ export class EntertainmentComponent {
 	}
 
 	public ngAfterViewChecked() {
-		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
+		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
 			this.updateGridLayout();
 		}
 	}
@@ -139,7 +139,7 @@ export class EntertainmentComponent {
 	 */
 	@HostListener('window:resize')
 	protected onResize() {
-		if (isPlatformBrowser(this.platformId) && this.isLoggedIn) {
+		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
 			this.updateGridLayout();
 		}
 	}

@@ -60,7 +60,6 @@ export class RemainderComponent {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	@ViewChild('op2') op2!: any;
-	private isLoggedIn!: boolean;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
 	private chargedCells = new Set<string>();

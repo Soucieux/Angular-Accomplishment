@@ -40,7 +40,7 @@ export class FirebaseService extends DatabaseService {
 		@Inject(Database) private db: Database,
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
 		private searchStreamService: SearchStreamService,
-		private Utilities: Utilities
+		private utilities: Utilities
 	) {
 		super();
 		this.moviesRef = dbRef(this.db, 'movies');
@@ -136,7 +136,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public async updateMovieRateToFirebase(movieItemVO: MovieItemVO):Promise<void> {
+	public async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
 		// Step 1 : Gather necessary info
 		const movieRef = dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`);
 		const snapshot = await get(movieRef);
@@ -167,7 +167,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param oldGenre The old genre
 	 * @param newGenre The new genre
 	 */
-	public updateMovieGenreToFirebase(movieKey: string, oldGenre: string, newGenre: string):Promise<void> {
+	public updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
 		const movieRef = dbRef(this.db, `movies/${movieKey}`);
 
 		// Step 1 : Update movie genre
@@ -196,7 +196,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param movieKey The given movie key
 	 * @param isFavourite The boolean value set
 	 */
-	public updateMovieFavouriteToFirebase(movieKey: string, isFavourite: boolean):Promise<void> {
+	public updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
 		const movieRef = dbRef(this.db, `movies/${movieKey}`);
 
 		// Step 1 : Update movie favourite
@@ -227,7 +227,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO):Promise<void> {
+	public async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Get reusable keys for movies
 			const keys = await this.getReusableKeys();
@@ -254,10 +254,10 @@ export class FirebaseService extends DatabaseService {
 				isFavourite: movieItemVO.getIsFavourite(),
 				description: movieItemVO.getDescription(),
 				actors: movieItemVO.getActors()
-			}).then(async () => {
-				// Add new entry to history
-				await this.updateHistory('added', movieItemVO);
 			});
+
+			// Add new entry to history
+			await this.updateHistory('added', movieItemVO);
 
 			// Update the movie statistics
 			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
@@ -285,7 +285,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to remove.
 	 */
-	public async removeMovieFromDatabase(movieItemVO: MovieItemVO):Promise<void> {
+	public async removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Remove the movie cover from the storage
 			const storageRefer = storageRef(this.storage, `/movies/${movieItemVO.getMovieName()}`);
@@ -332,11 +332,11 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @returns An array of reusable keys.
 	 */
-	protected async getReusableKeys(): Promise<string[]> {
+	private async getReusableKeys(): Promise<string[]> {
 		try {
 			const snapshot = await get(dbRef(this.db, 'statistics/reusableKeys'));
 			LOG.info(this.className, `Reusable keys retrieved`);
-			return snapshot.exists() ? Object.values(snapshot.val()) as string[] : [];
+			return snapshot.exists() ? (Object.values(snapshot.val()) as string[]) : [];
 		} catch (error) {
 			LOG.error(this.className, `Error while getting reusable keys`, error as Error);
 			return [];
@@ -348,7 +348,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param keys - The keys to save.
 	 */
-	protected saveReusableKeys(keys: string[]):Promise<void> {
+	private saveReusableKeys(keys: string[]): Promise<void> {
 		return update(dbRef(this.db, 'statistics'), { reusableKeys: keys }).then(() => {
 			LOG.info(this.className, `Reusable keys have been updated`);
 		});
@@ -396,20 +396,20 @@ export class FirebaseService extends DatabaseService {
 	 * @param status - The status of the activity.
 	 * @param movieItemVO - The movie item to update.
 	 */
-	protected async updateHistory(status: string, movieItemVO?: MovieItemVO):Promise<void> {
+	protected async updateHistory(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		if (movieItemVO) {
 			await push(dbRef(this.db, 'history'), {
 				id: movieItemVO.getMovieId(),
 				status: status,
 				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
 					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
-				}) was ${status} on ${this.Utilities.getCurrentFormattedTime(true)}`
+				}) was ${status} on ${this.utilities.getCurrentFormattedTime(true)}`
 			});
 			LOG.info(this.className, 'New history entry has been added');
 		} else {
 			await push(dbRef(this.db, 'history'), {
 				status: status,
-				message: `New rate search was started on ${this.Utilities.getCurrentFormattedTime(true)}`
+				message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
 			});
 			LOG.info(this.className, 'New history entry has been added');
 		}
@@ -440,11 +440,11 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param newRecord - The record to add.
 	 */
-	public addNewRecordToPatchNotes(newRecord: any):Promise<void> {
+	public addNewRecordToPatchNotes(newRecord: any): Promise<void> {
 		return push(dbRef(this.db, 'patch_notes'), {
-			component: this.Utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
-			element: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
-			details: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
+			component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
+			element: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
+			details: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
 			status: newRecord.status,
 			timestamp: newRecord.timestamp,
 			isBug: newRecord.isBug
@@ -459,7 +459,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key associated with the record
 	 * @param updatedRecord - The record to update.
 	 */
-	public updateExistingRecordToPatchNotes(key: string, updatedRecord: any):Promise<void> {
+	public updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
 		return update(dbRef(this.db, `patch_notes/${key}`), {
 			...updatedRecord
 		}).then(() => {
@@ -503,7 +503,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key associated with the record
 	 */
-	public removePatchNotes(key: string):Promise<void> {
+	public removePatchNotes(key: string): Promise<void> {
 		return remove(dbRef(this.db, `patch_notes/${key}`)).then(() => {
 			LOG.info(this.className, 'Patch notes record has been removed');
 		});
@@ -588,7 +588,12 @@ export class FirebaseService extends DatabaseService {
 	 * @param value - The new value to be stored.
 	 * @param tableName - The name of the table to update.
 	 */
-	public async updateRemainderTable(tableName: string, entryKey: string, valueKey: string, value: any):Promise<void> {
+	public async updateRemainderTable(
+		tableName: string,
+		entryKey: string,
+		valueKey: string,
+		value: any
+	): Promise<void> {
 		if (tableName === SECOND_TABLE) {
 			const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
 
@@ -610,7 +615,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The table to update
 	 */
-	public updateFirstRemainderTable(tableName: string, updatedTable: any):Promise<void> {
+	public updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void> {
 		return update(dbRef(this.db, `remainder/${tableName}`), {
 			...updatedTable
 		}).then(() => {
@@ -624,7 +629,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName - The name of the table
 	 * @param index - The index of the record to remove
 	 */
-	public removeRecordFromRemainderTable(tableName: string, key: string):Promise<void> {
+	public removeRecordFromRemainderTable(tableName: string, key: string): Promise<void> {
 		return remove(dbRef(this.db, `remainder/${tableName}/${key}`)).then(() => {
 			LOG.info(this.className, 'Remainder table record has been removed');
 		});
@@ -637,7 +642,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName The table name
 	 * @param newRecord The new entry
 	 */
-	public addNewRecordForRemainderTable(tableName: string, newRecord: any):Promise<void> {
+	public addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
 		return push(dbRef(this.db, `remainder/${tableName}`), {
 			...newRecord
 		}).then(() => {

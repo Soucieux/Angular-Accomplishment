@@ -13,13 +13,11 @@ export abstract class DatabaseService {
 	abstract getMovieList(): Observable<MovieItemVO[]>;
 	abstract getStatistics(): Observable<any>;
 	abstract updateHistoryWithNewSearchActivity(): Promise<void>;
-	abstract updateMovieRateToFirebase(movieItemVO: MovieItemVO): Promise<void>;
-	abstract updateMovieGenreToFirebase(movieKey: string, oldGenre: string, newGenre: string): Promise<void>;
-	abstract updateMovieFavouriteToFirebase(movieKey: string, isFavourite: boolean): Promise<void>;
+	abstract updateMovieRate(movieItemVO: MovieItemVO): Promise<void>;
+	abstract updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void>;
+	abstract updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void>;
 	abstract addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void>;
 	abstract removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void>;
-	protected abstract getReusableKeys(): Promise<string[]>;
-	protected abstract saveReusableKeys(keys: string[]): Promise<void>;
 	abstract isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean>;
 	protected abstract updateHistory(status: string, movieItemVO?: MovieItemVO): Promise<void>;
 	abstract getHistory(): Observable<any[]>;

@@ -100,7 +100,7 @@ export class EntertainmentComponent {
 			await firstValueFrom(this.statistics$.pipe(take(1)));
 			// Below part will be executed only if there is no error reading data in the database
 			this.movieList$ = this.databaseService.getMovieList();
-      
+
 			// Create a filter to listen for genre changes
 			this.filteredMovieList$ = combineLatest([this.movieList$, this.selectedGenres$]).pipe(
 				map(([movieList, selectedGenres]) => {
@@ -110,11 +110,11 @@ export class EntertainmentComponent {
 					if (selectedGenres === GENRE_FAVOURITE) {
 						return movieList.filter((movie) => movie.getIsFavourite());
 					}
-					
+
 					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
 				})
-            );
-            console.log(this.filteredMovieList$);
+			);
+			console.log(this.filteredMovieList$);
 		}
 	}
 
@@ -180,7 +180,7 @@ export class EntertainmentComponent {
 
 				// Step 5: Update movie rate
 				if (currentSessionId === this.sessionId && this.isSearching) {
-					await this.databaseService.updateMovieRateToFirebase(movieItemVO);
+					await this.databaseService.updateMovieRate(movieItemVO);
 				}
 
 				// If the search is cancelled, then break the loop.
@@ -700,7 +700,7 @@ export class EntertainmentComponent {
 		const genreData = this.editedItems.get(movie.getMovieKey());
 		if (genreData) {
 			if (genreData.original !== genreData.genre) {
-				this.databaseService.updateMovieGenreToFirebase(
+				this.databaseService.updateMovieGenre(
 					movie.getMovieKey(),
 					genreData.original,
 					genreData.genre
@@ -716,6 +716,6 @@ export class EntertainmentComponent {
 	 * @param movie The movie to set
 	 */
 	protected setIsFavourite(movie: MovieItemVO) {
-		this.databaseService.updateMovieFavouriteToFirebase(movie.getMovieKey(), !movie.getIsFavourite());
+		this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
 	}
 }

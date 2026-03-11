@@ -52,10 +52,9 @@ export class AuthService {
 
 	async emailPasswordLogin(email: string, password: string) {
 		try {
-			await signInWithEmailAndPassword(this.firebaseAuth, email, password).then(() => {
-				this.router.navigate(['/']);
-				this.utilities.setIsUserAlive(true);
-			});
+			await signInWithEmailAndPassword(this.firebaseAuth, email, password);
+			this.router.navigate(['/']);
+			this.utilities.setIsUserAlive(true);
 		} catch (error: any) {
 			LOG.error(this.className, 'Error when signing in with email and password');
 		}

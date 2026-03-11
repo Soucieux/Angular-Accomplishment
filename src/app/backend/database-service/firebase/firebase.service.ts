@@ -116,9 +116,10 @@ export class FirebaseService extends DatabaseService {
 	public getStatistics(): Observable<any> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
-				onValue(this.statisticsRef, (snapshot) => {
+				const unsub = onValue(this.statisticsRef, (snapshot) => {
 					observer.next(snapshot.val());
 				});
+				return () => unsub();
 			});
 		});
 	}
@@ -135,7 +136,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public async updateMovieRateToFirebase(movieItemVO: MovieItemVO) {
+	public async updateMovieRateToFirebase(movieItemVO: MovieItemVO):Promise<void> {
 		// Step 1 : Gather necessary info
 		const movieRef = dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`);
 		const snapshot = await get(movieRef);
@@ -145,16 +146,15 @@ export class FirebaseService extends DatabaseService {
 		if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
 			await update(movieRef, {
 				rate: movieItemVO.getMovieRate()
-			}).then(() => {
-				const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
-				this.searchStreamService.addSearchLog(
-					`The rate of ${movieItemVO.getMovieName()} is <span ${
-						rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
-					}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
-						rateDifference
-					)}</span> to ${movieItemVO.getMovieRate()}`
-				);
 			});
+			const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
+			this.searchStreamService.addSearchLog(
+				`The rate of ${movieItemVO.getMovieName()} is <span ${
+					rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
+				}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
+					rateDifference
+				)}</span> to ${movieItemVO.getMovieRate()}`
+			);
 		} else {
 			this.searchStreamService.addSearchLog(`The rate of ${movieItemVO.getMovieName()} stays the same`);
 		}
@@ -167,24 +167,27 @@ export class FirebaseService extends DatabaseService {
 	 * @param oldGenre The old genre
 	 * @param newGenre The new genre
 	 */
-	public async updateMovieGenreToFirebase(movieKey: string, oldGenre: string, newGenre: string) {
+	public updateMovieGenreToFirebase(movieKey: string, oldGenre: string, newGenre: string):Promise<void> {
 		const movieRef = dbRef(this.db, `movies/${movieKey}`);
 
 		// Step 1 : Update movie genre
-		await update(movieRef, {
+		return update(movieRef, {
 			genre: newGenre
-		}).then(() => {
-			LOG.info(this.className, `Movie genre has been updated`);
-		});
+		})
+			.then(() => {
+				LOG.info(this.className, `Movie genre has been updated`);
 
-		// Step 2 : Update movie statistics
-		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
-			currentData.genre[oldGenre] = currentData.genre[oldGenre] - 1;
-			currentData.genre[newGenre] = (currentData.genre[newGenre] ?? 0) + 1;
-			return currentData;
-		}).then(() => {
-			LOG.info(this.className, `Movie statistics have been updated`);
-		});
+				// Step 2 : Update movie statistics
+				return runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+					currentData.genre[oldGenre] = currentData.genre[oldGenre] - 1;
+					currentData.genre[newGenre] = (currentData.genre[newGenre] ?? 0) + 1;
+					return currentData;
+				});
+			})
+			.then(() => {
+				LOG.info(this.className, `Movie statistics have been updated`);
+				return;
+			});
 	}
 
 	/**
@@ -193,27 +196,30 @@ export class FirebaseService extends DatabaseService {
 	 * @param movieKey The given movie key
 	 * @param isFavourite The boolean value set
 	 */
-	public async updateMovieFavouriteToFirebase(movieKey: string, isFavourite: boolean) {
+	public updateMovieFavouriteToFirebase(movieKey: string, isFavourite: boolean):Promise<void> {
 		const movieRef = dbRef(this.db, `movies/${movieKey}`);
 
 		// Step 1 : Update movie favourite
-		await update(movieRef, {
+		return update(movieRef, {
 			isFavourite: isFavourite
-		}).then(() => {
-			LOG.info(this.className, `Movie favourite tag has been updated`);
-		});
+		})
+			.then(() => {
+				LOG.info(this.className, `Movie favourite tag has been updated`);
 
-		// Step 2 : Update movie statistics
-		await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
-			if (isFavourite) {
-				currentData.genre[GENRE_FAVOURITE] = (currentData.genre[GENRE_FAVOURITE] ?? 0) + 1;
-			} else {
-				currentData.genre[GENRE_FAVOURITE] = currentData.genre[GENRE_FAVOURITE] - 1;
-			}
-			return currentData;
-		}).then(() => {
-			LOG.info(this.className, `Movie statistics have been updated`);
-		});
+				// Step 2 : Update movie statistics
+				return runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+					if (isFavourite) {
+						currentData.genre[GENRE_FAVOURITE] = (currentData.genre[GENRE_FAVOURITE] ?? 0) + 1;
+					} else {
+						currentData.genre[GENRE_FAVOURITE] = currentData.genre[GENRE_FAVOURITE] - 1;
+					}
+					return currentData;
+				});
+			})
+			.then(() => {
+				LOG.info(this.className, `Movie statistics have been updated`);
+				return;
+			});
 	}
 
 	/**
@@ -221,7 +227,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO) {
+	public async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO):Promise<void> {
 		try {
 			// Get reusable keys for movies
 			const keys = await this.getReusableKeys();
@@ -263,9 +269,8 @@ export class FirebaseService extends DatabaseService {
 
 				currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
 				return currentData;
-			}).then(() => {
-				LOG.info(this.className, `Movie added and statistics have been updated`);
 			});
+			LOG.info(this.className, `Movie added and statistics have been updated`);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -280,7 +285,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to remove.
 	 */
-	public async removeMovieFromDatabase(movieItemVO: MovieItemVO) {
+	public async removeMovieFromDatabase(movieItemVO: MovieItemVO):Promise<void> {
 		try {
 			// Remove the movie cover from the storage
 			const storageRefer = storageRef(this.storage, `/movies/${movieItemVO.getMovieName()}`);
@@ -311,9 +316,8 @@ export class FirebaseService extends DatabaseService {
 				}
 				currentData.totalNumber = currentData.totalNumber - 1 > 0 ? currentData.totalNumber - 1 : 0;
 				return currentData;
-			}).then(() => {
-				LOG.info(this.className, `Movie removed and statistics have been updated`);
 			});
+			LOG.info(this.className, `Movie removed and statistics have been updated`);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -332,7 +336,7 @@ export class FirebaseService extends DatabaseService {
 		try {
 			const snapshot = await get(dbRef(this.db, 'statistics/reusableKeys'));
 			LOG.info(this.className, `Reusable keys retrieved`);
-			return snapshot.exists() ? Object.values(snapshot.val()) : [];
+			return snapshot.exists() ? Object.values(snapshot.val()) as string[] : [];
 		} catch (error) {
 			LOG.error(this.className, `Error while getting reusable keys`, error as Error);
 			return [];
@@ -344,8 +348,8 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param keys - The keys to save.
 	 */
-	protected async saveReusableKeys(keys: string[]) {
-		await update(dbRef(this.db, 'statistics'), { reusableKeys: keys }).then(() => {
+	protected saveReusableKeys(keys: string[]):Promise<void> {
+		return update(dbRef(this.db, 'statistics'), { reusableKeys: keys }).then(() => {
 			LOG.info(this.className, `Reusable keys have been updated`);
 		});
 	}
@@ -366,6 +370,9 @@ export class FirebaseService extends DatabaseService {
 		try {
 			const snapshot = await runInInjectionContext(this.ei, () => get(this.moviesRef));
 			const allMovies = snapshot.val();
+
+			if (!allMovies) throw 'Movie list empty';
+
 			for (const key of Object.keys(allMovies)) {
 				const movie = allMovies[key];
 				if ((movie.title === movieName && movie.year === movieYear) || movie.id === movieId) {
@@ -389,7 +396,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param status - The status of the activity.
 	 * @param movieItemVO - The movie item to update.
 	 */
-	protected async updateHistory(status: string, movieItemVO?: MovieItemVO) {
+	protected async updateHistory(status: string, movieItemVO?: MovieItemVO):Promise<void> {
 		if (movieItemVO) {
 			await push(dbRef(this.db, 'history'), {
 				id: movieItemVO.getMovieId(),
@@ -397,16 +404,14 @@ export class FirebaseService extends DatabaseService {
 				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
 					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
 				}) was ${status} on ${this.Utilities.getCurrentFormattedTime(true)}`
-			}).then(() => {
-				LOG.info(this.className, 'New history entry has been added');
 			});
+			LOG.info(this.className, 'New history entry has been added');
 		} else {
 			await push(dbRef(this.db, 'history'), {
 				status: status,
 				message: `New rate search was started on ${this.Utilities.getCurrentFormattedTime(true)}`
-			}).then(() => {
-				LOG.info(this.className, 'New history entry has been added');
 			});
+			LOG.info(this.className, 'New history entry has been added');
 		}
 	}
 
@@ -435,8 +440,8 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param newRecord - The record to add.
 	 */
-	public async addNewRecordToPatchNotes(newRecord: any) {
-		await push(dbRef(this.db, 'patch_notes'), {
+	public addNewRecordToPatchNotes(newRecord: any):Promise<void> {
+		return push(dbRef(this.db, 'patch_notes'), {
 			component: this.Utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
 			element: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
 			details: this.Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
@@ -454,8 +459,8 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key associated with the record
 	 * @param updatedRecord - The record to update.
 	 */
-	public async updateExistingRecordToPatchNotes(key: string, updatedRecord: any) {
-		await update(dbRef(this.db, `patch_notes/${key}`), {
+	public updateExistingRecordToPatchNotes(key: string, updatedRecord: any):Promise<void> {
+		return update(dbRef(this.db, `patch_notes/${key}`), {
 			...updatedRecord
 		}).then(() => {
 			LOG.info(this.className, 'Patch notes record has been updated');
@@ -498,7 +503,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key associated with the record
 	 */
-	public async removePatchNotes(key: string) {
+	public removePatchNotes(key: string):Promise<void> {
 		return remove(dbRef(this.db, `patch_notes/${key}`)).then(() => {
 			LOG.info(this.className, 'Patch notes record has been removed');
 		});
@@ -512,10 +517,11 @@ export class FirebaseService extends DatabaseService {
 	public getFirstRemainderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
-				onValue(dbRef(this.db, `remainder/${FIRST_TABLE}`), (snapshot) => {
+				const unsub = onValue(dbRef(this.db, `remainder/${FIRST_TABLE}`), (snapshot) => {
 					const data = snapshot.val();
 					observer.next(data ? Object.values(data) : []);
 				});
+				return () => unsub();
 			});
 		});
 	}
@@ -582,21 +588,19 @@ export class FirebaseService extends DatabaseService {
 	 * @param value - The new value to be stored.
 	 * @param tableName - The name of the table to update.
 	 */
-	public async updateRemainderTable(tableName: string, entryKey: string, valueKey: string, value: any) {
+	public async updateRemainderTable(tableName: string, entryKey: string, valueKey: string, value: any):Promise<void> {
 		if (tableName === SECOND_TABLE) {
 			const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
 
 			await update(dbRef(this.db, `remainder/${tableName}/${entryKey}/content`), {
 				...valueToUpdate
-			}).then(() => {
-				LOG.info(this.className, 'Remainder table has been updated');
 			});
+			LOG.info(this.className, 'Remainder table has been updated');
 		} else if (tableName === THIRD_TABLE) {
 			await update(dbRef(this.db, `remainder/${tableName}/${entryKey}`), {
 				[valueKey]: value
-			}).then(() => {
-				LOG.info(this.className, 'Remainder table has been updated');
 			});
+			LOG.info(this.className, 'Remainder table has been updated');
 		}
 	}
 
@@ -606,8 +610,8 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The table to update
 	 */
-	public async updateFirstRemainderTable(tableName: string, updatedTable: any) {
-		await update(dbRef(this.db, `remainder/${tableName}`), {
+	public updateFirstRemainderTable(tableName: string, updatedTable: any):Promise<void> {
+		return update(dbRef(this.db, `remainder/${tableName}`), {
 			...updatedTable
 		}).then(() => {
 			LOG.info(this.className, 'Remainder table has been updated');
@@ -620,7 +624,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName - The name of the table
 	 * @param index - The index of the record to remove
 	 */
-	public async removeRecordFromRemainderTable(tableName: string, key: string) {
+	public removeRecordFromRemainderTable(tableName: string, key: string):Promise<void> {
 		return remove(dbRef(this.db, `remainder/${tableName}/${key}`)).then(() => {
 			LOG.info(this.className, 'Remainder table record has been removed');
 		});
@@ -633,8 +637,8 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName The table name
 	 * @param newRecord The new entry
 	 */
-	public async addNewRecordForRemainderTable(tableName: string, newRecord: any) {
-		await push(dbRef(this.db, `remainder/${tableName}`), {
+	public addNewRecordForRemainderTable(tableName: string, newRecord: any):Promise<void> {
+		return push(dbRef(this.db, `remainder/${tableName}`), {
 			...newRecord
 		}).then(() => {
 			LOG.info(this.className, 'Remainder table has been updated');

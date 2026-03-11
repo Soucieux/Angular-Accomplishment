@@ -153,9 +153,7 @@ export class Utilities {
 
 			const currentLocation = await response.json();
 
-			//TODO
 			this.currentCountry = currentLocation.country;
-			this.currentCountry = CN;
 
 			localStorage.setItem(
 				'location',

@@ -5,11 +5,13 @@ import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../../common/movieitem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
 import { LOG } from '../../../common/app.logs';
+import { RATE_DECREASED, RATE_INCREASED } from '../../../common/app.utilities';
 
 @Injectable({ providedIn: 'root' })
 export class CloudbaseService extends DatabaseService {
 	private readonly className = 'CloudbaseService';
 	private database: any;
+	searchStreamService: any;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -224,8 +226,33 @@ export class CloudbaseService extends DatabaseService {
 	updateHistoryWithNewSearchActivity(): Promise<void> {
 		throw new Error('Method not implemented.');
 	}
-	updateMovieRateToFirebase(movieItemVO: MovieItemVO): Promise<void> {
-		throw new Error('Method not implemented.');
+
+	/**
+	 * Update the movie rate to cloudbase.
+	 *
+	 * @param movieItemVO - The movie item to update.
+	 */
+	async updateMovieRateToFirebase(movieItemVO: MovieItemVO): Promise<void> {
+		// Step 1 : Gather necessary info
+		const movieRef = this.database.collection('movies').doc(movieItemVO.getMovieKey());
+		const oldRate = movieRef.exists() ? movieRef.get().rate : undefined;
+
+		// Step 2 : Compare latest rate with the one stored in the database
+		if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
+			await movieRef.update({
+				rate: movieItemVO.getMovieRate()
+			});
+			const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
+			this.searchStreamService.addSearchLog(
+				`The rate of ${movieItemVO.getMovieName()} is <span ${
+					rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
+				}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
+					rateDifference
+				)}</span> to ${movieItemVO.getMovieRate()}`
+			);
+		} else {
+			this.searchStreamService.addSearchLog(`The rate of ${movieItemVO.getMovieName()} stays the same`);
+		}
 	}
 	updateMovieGenreToFirebase(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
 		throw new Error('Method not implemented.');

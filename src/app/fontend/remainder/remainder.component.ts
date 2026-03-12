@@ -188,7 +188,10 @@ export class RemainderComponent {
 		if (this.updatedFirstTable[rowIndex][field].value == originalValue) return;
 
 		// Reset value if it reaches threshold
-		if (Number(this.updatedFirstTable[rowIndex][field].value) > 31) {
+		if (
+			Number(this.updatedFirstTable[rowIndex][field].value) > 31 ||
+			Number(this.updatedFirstTable[rowIndex][field].value) <= this.currentDay
+		) {
 			this.updatedFirstTable[rowIndex][field].value = originalValue;
 			return;
 		} else if (rowIndex !== 0) {

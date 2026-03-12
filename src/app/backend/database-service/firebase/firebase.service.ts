@@ -128,7 +128,7 @@ export class FirebaseService extends DatabaseService {
 	 * Add new entry to history stating that a new search activity has been initialized
 	 */
 	public async updateHistoryWithNewSearchActivity() {
-		await this.updateHistory('search');
+		await this.addNewHistoryEntry('search');
 	}
 
 	/**
@@ -257,7 +257,7 @@ export class FirebaseService extends DatabaseService {
 			});
 
 			// Add new entry to history
-			await this.updateHistory('added', movieItemVO);
+			await this.addNewHistoryEntry('added', movieItemVO);
 
 			// Update the movie statistics
 			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
@@ -295,7 +295,7 @@ export class FirebaseService extends DatabaseService {
 			await remove(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`));
 
 			// Add new entry to history
-			await this.updateHistory('deleted', movieItemVO);
+			await this.addNewHistoryEntry('deleted', movieItemVO);
 
 			// Save the movie key to the reusable keys array for later use
 			const keys = await this.getReusableKeys();
@@ -396,7 +396,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param status - The status of the activity.
 	 * @param movieItemVO - The movie item to update.
 	 */
-	protected async updateHistory(status: string, movieItemVO?: MovieItemVO): Promise<void> {
+	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		if (movieItemVO) {
 			await push(dbRef(this.db, 'history'), {
 				id: movieItemVO.getMovieId(),

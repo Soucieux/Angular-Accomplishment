@@ -19,7 +19,7 @@ export abstract class DatabaseService {
 	abstract addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void>;
 	abstract removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void>;
 	abstract isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean>;
-	protected abstract updateHistory(status: string, movieItemVO?: MovieItemVO): Promise<void>;
+	protected abstract addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void>;
 	abstract getHistory(): Observable<any[]>;
 	abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
 	abstract updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void>;

@@ -43,3 +43,5 @@ Thumbs.db
 
 # firebase
 .firebase
+# Environment variables
+.env.local

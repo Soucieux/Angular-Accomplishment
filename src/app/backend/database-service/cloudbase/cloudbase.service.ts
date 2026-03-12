@@ -21,6 +21,7 @@ export class CloudbaseService extends DatabaseService {
 	private readonly className = 'CloudbaseService';
 	private database: any;
 	private statId: any;
+	private static userId: string;
 	private _!: any;
 	searchStreamService: any;
 
@@ -41,11 +42,30 @@ export class CloudbaseService extends DatabaseService {
 				.then((response: any) => {
 					return (this.statId = response.data[0]._id);
 				});
+
+			// this.test();
 		}
 	}
 
 	public getCloudbaseAuth() {
 		return this.cloudbase.auth();
+	}
+
+	public static setUseId(userId: string) {
+		this.userId = userId;
+	}
+
+	public async test() {
+		// for (const value of data.data) {
+		// 	this.database.collection('movies').doc(value._id).update({});
+		// }
+		const notes = await this.database.collection('remainder_table_first').get();
+		for (const data of notes.data) {
+			await this.database
+				.collection('remainder_table_first')
+				.doc(data._id)
+				.update({ _openid: CloudbaseService.userId });
+		}
 	}
 
 	/**
@@ -256,7 +276,7 @@ export class CloudbaseService extends DatabaseService {
 	 * Add new entry to history stating that a new search activity has been initialized
 	 */
 	async updateHistoryWithNewSearchActivity(): Promise<void> {
-		await this.updateHistory('search');
+		await this.addNewHistoryEntry('search');
 	}
 
 	/**
@@ -363,6 +383,7 @@ export class CloudbaseService extends DatabaseService {
 		try {
 			// Add new movie data
 			await this.database.collection('movies').add({
+				_openid: CloudbaseService.userId,
 				title: movieItemVO.getMovieName(),
 				year: movieItemVO.getMovieYear(),
 				genre: movieItemVO.getMovieGenre(),
@@ -377,7 +398,7 @@ export class CloudbaseService extends DatabaseService {
 			});
 
 			// Add new entry to history
-			await this.updateHistory('added', movieItemVO);
+			await this.addNewHistoryEntry('added', movieItemVO);
 
 			const updatedData: any = {};
 			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(1);
@@ -440,14 +461,15 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update history with new activity
+	 * Add history with new activity
 	 *
 	 * @param status - The status of the activity.
 	 * @param movieItemVO - The movie item to update.
 	 */
-	protected async updateHistory(status: string, movieItemVO?: MovieItemVO): Promise<void> {
+	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		if (movieItemVO) {
 			await this.database.collection('history').add({
+				_openid: CloudbaseService.userId,
 				id: movieItemVO.getMovieId(),
 				status: status,
 				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
@@ -457,6 +479,7 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, 'New history entry has been added');
 		} else {
 			await this.database.collection('history').add({
+				_openid: CloudbaseService.userId,
 				status: status,
 				message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
 			});
@@ -473,6 +496,7 @@ export class CloudbaseService extends DatabaseService {
 		return this.database
 			.collection('patch_notes')
 			.add({
+				_openid: CloudbaseService.userId,
 				component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
 				element: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
 				details: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
@@ -556,20 +580,13 @@ export class CloudbaseService extends DatabaseService {
 	 * @param updatedTable - The table to update
 	 */
 	async updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void> {
-		const tableRef = this.database.collection('remainder_table_third');
+		const tableRef = this.database.collection('remainder_table_first');
 		try {
-			const snapshot = await tableRef.get();
-			const batchCommand = this._.batch();
-
-			snapshot.docs.forEach((doc: any) => {
-				batchCommand.delete(doc.ref);
-			});
-
-			for (const [docId, docData] of Object.entries(updatedTable)) {
-				batchCommand.set(tableRef.doc(docId), docData);
+			for (const [index, item] of updatedTable.entries()) {
+				const { _id, ...dataToUpdate } = item;
+				const docId = index === 5 ? '5' : _id;
+				await tableRef.doc(docId).update(dataToUpdate);
 			}
-
-			await batchCommand.commit();
 			LOG.info(this.className, 'Remainder table has been updated');
 		} catch (error) {
 			LOG.error(this.className, 'Error while updaing first remainder table');
@@ -578,6 +595,7 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Remove record from remainder table
+	 * Note: This is used by third table only
 	 *
 	 * @param tableName - The name of the table
 	 * @param index - The index of the record to remove
@@ -602,9 +620,13 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
+		console.log(CloudbaseService.userId);
 		return this.database
 			.collection(collectionName)
-			.add(newRecord)
+			.add({
+				_openid: CloudbaseService.userId,
+				...newRecord
+			})
 			.then(() => {
 				LOG.info(this.className, 'Remainder table has been updated');
 			});

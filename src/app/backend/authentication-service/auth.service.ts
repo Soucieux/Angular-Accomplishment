@@ -107,10 +107,14 @@ export class AuthService {
 
 	async signIn(username: string, password: string) {
 		try {
-			await this.cloudbaseAuth.signInWithPassword({ username: username, password: password });
+			await this.cloudbaseAuth.signInWithPassword({
+				username: username,
+				password: password
+			});
 			this.cloudbaseGetCurrentUser();
 			this.router.navigate(['/']);
 		} catch (error: any) {
+			console.log(error);
 			LOG.error(this.className, 'Error when signing in with username and password with Cloudbase');
 		}
 	}

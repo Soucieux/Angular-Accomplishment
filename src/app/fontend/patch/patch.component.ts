@@ -6,6 +6,7 @@ import { InputText } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
+import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
 	STATUS_COMPLETED,
@@ -13,9 +14,8 @@ import {
 	STATUS_DRAFT,
 	STATUS_IN_PROGRESS,
 	STATUS_RESOLVED,
-	STATUS_TODO,
-	Utilities
-} from '../../common/app.utilities';
+	STATUS_TODO
+} from '../../common/app.constant';
 import { map, Observable, shareReplay, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';

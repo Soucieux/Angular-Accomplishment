@@ -8,7 +8,8 @@ import { IftaLabelModule } from 'primeng/iftalabel';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { CN, COMPONENT_DESTROY, Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/app.utilities';
+import { CN, COMPONENT_DESTROY } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 
 @Component({

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { RATE_DECREASED, RATE_INCREASED } from '../../../common/app.utilities';
+import { RATE_DECREASED, RATE_INCREASED } from '../../../common/app.constant';
 
 @Injectable({ providedIn: 'root' })
 export class SearchStreamService {

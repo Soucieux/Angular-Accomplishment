@@ -1,4 +1,5 @@
 import { SearchStreamService } from '../../backend/dialog-service/search/search-stream.service';
+import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
 	RATE_DECREASED,
@@ -6,9 +7,10 @@ import {
 	SEARCH_CANCEL,
 	SEARCH_COMPELTE,
 	NO_RATE,
-	Utilities,
-	GENRE_FAVOURITE
-} from '../../common/app.utilities';
+	GENRE_FAVOURITE,
+	SEARCH,
+	ERROR_PERMISSION_DENIED
+} from '../../common/app.constant';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
@@ -114,7 +116,6 @@ export class EntertainmentComponent {
 					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
 				})
 			);
-			console.log(this.filteredMovieList$);
 		}
 	}
 
@@ -195,11 +196,15 @@ export class EntertainmentComponent {
 				}
 				searchCount++;
 			} catch (error) {
-				LOG.error(
-					this.className,
-					`Error while updating movie rate for ${movieItemVO.getMovieName()}`,
-					error as Error
-				);
+				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+					this.openErrorDialog();
+				} else {
+					LOG.error(
+						this.className,
+						`Error while updating movie rate for ${movieItemVO.getMovieName()}`,
+						error as Error
+					);
+				}
 			}
 		}
 
@@ -552,7 +557,7 @@ export class EntertainmentComponent {
 	 * Triggered by the "Search" button click event on the "Entertainment" page
 	 */
 	protected openSearchDialog() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'search', this.cancelSearch.bind(this));
+		this.dialogService.openDialog(this.dialogComponentContainer, SEARCH, this.cancelSearch.bind(this));
 		this.updateAllMoviesRate();
 	}
 
@@ -717,5 +722,16 @@ export class EntertainmentComponent {
 	 */
 	protected setIsFavourite(movie: MovieItemVO) {
 		this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
+	}
+
+	/**
+	 * Open error confirmation dialog
+	 */
+	private openErrorDialog() {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'error',
+			'User does not have permission'
+		);
 	}
 }

@@ -23,13 +23,14 @@ import { PaginatorModule } from 'primeng/paginator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { Subscription } from 'rxjs';
 import { LOG } from '../../common/app.logs';
+import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
+	ERROR_PERMISSION_DENIED,
 	FIRST_TABLE,
 	SECOND_TABLE,
-	THIRD_TABLE,
-	Utilities
-} from '../../common/app.utilities';
+	THIRD_TABLE
+} from '../../common/app.constant';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 
@@ -60,7 +61,7 @@ export class RemainderComponent {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	@ViewChild('op2') op2!: any;
-	protected loading = true;
+    protected loading = true;
 	protected isHoverCapable!: boolean;
 	private chargedCells = new Set<string>();
 	protected originalFirstTable!: any[];
@@ -188,10 +189,7 @@ export class RemainderComponent {
 		if (this.updatedFirstTable[rowIndex][field].value == originalValue) return;
 
 		// Reset value if it reaches threshold
-		if (
-			Number(this.updatedFirstTable[rowIndex][field].value) > 31 ||
-			Number(this.updatedFirstTable[rowIndex][field].value) <= this.currentDay
-		) {
+		if (Number(this.updatedFirstTable[rowIndex][field].value) > 31) {
 			this.updatedFirstTable[rowIndex][field].value = originalValue;
 			return;
 		} else if (rowIndex !== 0) {
@@ -343,19 +341,25 @@ export class RemainderComponent {
 		this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
 	}
 
-	protected setDefaultDebt(entryKey: string, isPaid: boolean) {
-		const existingRecord = this.findUpdatedObject(SECOND_TABLE, entryKey);
-		if (isPaid) {
-			const newRecord = {
-				original: existingRecord.debt,
-				paid: false
-			};
-			this.databaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
+	protected async setDefaultDebt(entryKey: string, isPaid: boolean) {
+		try {
+			const existingRecord = this.findUpdatedObject(SECOND_TABLE, entryKey);
+			if (isPaid) {
+				const newRecord = {
+					original: existingRecord.debt,
+					paid: false
+				};
+				await this.databaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
 
-			this.triggerSaveIndicator(SECOND_TABLE);
-		} else {
-			existingRecord.debt = existingRecord.original;
-			this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
+				this.triggerSaveIndicator(SECOND_TABLE);
+			} else {
+				existingRecord.debt = existingRecord.original;
+				this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
+			}
+		} catch (error) {
+			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+				this.openErrorDialog();
+			}
 		}
 	}
 
@@ -440,11 +444,17 @@ export class RemainderComponent {
 
 	////////////////////////////////COMMON METHODS////////////////////////////////
 
-	protected updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
+	protected async updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
 		const newValue = this.findUpdatedObject(tableName, entryKey)[valueKey];
 		if (newValue !== this.findOriginalObject(tableName, entryKey)[valueKey]) {
-			this.databaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue).then(() => {});
-			this.triggerSaveIndicator(tableName);
+			try {
+				await this.databaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue);
+				this.triggerSaveIndicator(tableName);
+			} catch (error) {
+				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+					this.openErrorDialog();
+				}
+			}
 		}
 	}
 
@@ -479,5 +489,16 @@ export class RemainderComponent {
 		this.saveIndicatorTimeouts[tableName] = setTimeout(() => {
 			this.saveIndicators[tableName] = false;
 		}, 1000);
+	}
+
+	/**
+	 * Open error confirmation dialog
+	 */
+	private openErrorDialog() {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'error',
+			'User does not have permission'
+		);
 	}
 }

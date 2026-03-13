@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
+	ERROR_PERMISSION_DENIED,
 	STATUS_COMPLETED,
 	STATUS_DEBUG,
 	STATUS_DRAFT,
@@ -148,9 +149,15 @@ export class PatchComponent {
 			changes.status = record.updated.status;
 		}
 
-		if (Object.keys(changes).length > 0) {
-			changes.timestamp = this.utilities.getCurrentFormattedTime(false);
-			await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
+		try {
+			if (Object.keys(changes).length > 0) {
+				changes.timestamp = this.utilities.getCurrentFormattedTime(false);
+				await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
+			}
+		} catch (error) {
+			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+				this.openErrorDialog();
+			}
 		}
 
 		this.editedRows.delete(row.key);
@@ -232,6 +239,17 @@ export class PatchComponent {
 		return (
 			data[rowIndex].element !== data[rowIndex - 1].element ||
 			data[rowIndex].component !== data[rowIndex - 1].component
+		);
+	}
+
+	/**
+	 * Open error confirmation dialog
+	 */
+	private openErrorDialog() {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'error',
+			'User does not have permission'
 		);
 	}
 

@@ -61,7 +61,7 @@ export class RemainderComponent {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	@ViewChild('op2') op2!: any;
-    protected loading = true;
+	protected loading = true;
 	protected isHoverCapable!: boolean;
 	private chargedCells = new Set<string>();
 	protected originalFirstTable!: any[];
@@ -98,14 +98,14 @@ export class RemainderComponent {
 		private cdr: ChangeDetectorRef,
 		private utilities: Utilities
 	) {}
-	async ngOnInit() {
+	ngOnInit() {
 		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
 			this.isHoverCapable = Utilities.checkIfHoverCapable();
 			this.currentDay = new Date().getDate();
 
 			// Get the data of the first table
 			const getFirstObservable = this.databaseService.getFirstRemainderTableDetails();
-			this.firstSub = getFirstObservable.subscribe((rows) => {
+			this.firstSub = getFirstObservable.subscribe(async (rows) => {
 				// Need deep copy here so that we are not copying references
 				this.originalFirstTable = structuredClone(rows);
 				this.updatedFirstTable = structuredClone(rows).slice(0, -1);
@@ -113,7 +113,7 @@ export class RemainderComponent {
 
 				if (!this.chargedCellsInitialized) {
 					// Loop through to determine disabled fields
-					this.updateChargedCells();
+					await this.updateChargedCells();
 					this.chargedCellsInitialized = true;
 				}
 				this.cdr.detectChanges();
@@ -138,7 +138,7 @@ export class RemainderComponent {
 		}
 	}
 
-	protected updateChargedCells() {
+	protected async updateChargedCells() {
 		if (this.isNextMonth) {
 			this.chargedCells.clear();
 		}
@@ -159,9 +159,7 @@ export class RemainderComponent {
 
 		if (this.chargedCellsInitialized) {
 			this.updatedFirstTable.push({ isNextMonth: this.isNextMonth });
-			this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
-
-			this.triggerSaveIndicator(FIRST_TABLE);
+			await this.callDatabaseAndTriggerSaveIndicator();
 		}
 	}
 
@@ -182,7 +180,7 @@ export class RemainderComponent {
 		}
 	}
 
-	onValueChange(rowIndex: number, field: string) {
+	async onValueChange(rowIndex: number, field: string) {
 		let originalValue = this.originalFirstTable[rowIndex][field].value;
 
 		// Do nothing if the value does not change
@@ -226,11 +224,7 @@ export class RemainderComponent {
 				this.sixDaysDiff(index, field);
 			}
 		}
-
-		// Update table to firebase
-		this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
-
-		this.triggerSaveIndicator(FIRST_TABLE);
+		await this.callDatabaseAndTriggerSaveIndicator();
 	}
 
 	protected isDisabled(rowIndex: number, field: string): boolean {
@@ -261,14 +255,12 @@ export class RemainderComponent {
 				: this.updatedFirstTable[rowIndex + 1][field].value;
 	}
 
-	protected setIsCharged(rowIndex: number, field: string) {
+	protected async setIsCharged(rowIndex: number, field: string) {
 		if (!this.updatedFirstTable[rowIndex][field].isCharged) {
 			this.updatedFirstTable[rowIndex][field].isCharged = true;
 
 			// Update table to database
-			this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
-
-			this.triggerSaveIndicator(FIRST_TABLE);
+			await this.callDatabaseAndTriggerSaveIndicator();
 		}
 	}
 
@@ -292,7 +284,7 @@ export class RemainderComponent {
 		return '';
 	}
 
-	private resetFirstTable() {
+	private async resetFirstTable() {
 		this.updatedFirstTable = [
 			{
 				first: { value: 1, isCharged: false },
@@ -325,10 +317,8 @@ export class RemainderComponent {
 				fourth: { value: 17, isCharged: false }
 			}
 		];
-		// Update table to database
-		this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
 
-		this.triggerSaveIndicator(FIRST_TABLE);
+		await this.callDatabaseAndTriggerSaveIndicator();
 	}
 
 	///////////////////////////////////SECOND TABLE///////////////////////////////////
@@ -342,24 +332,24 @@ export class RemainderComponent {
 	}
 
 	protected async setDefaultDebt(entryKey: string, isPaid: boolean) {
-		try {
-			const existingRecord = this.findUpdatedObject(SECOND_TABLE, entryKey);
-			if (isPaid) {
-				const newRecord = {
-					original: existingRecord.debt,
-					paid: false
-				};
-				await this.databaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
+		const existingRecord = this.findUpdatedObject(SECOND_TABLE, entryKey);
+		if (isPaid) {
+			const newRecord = {
+				original: existingRecord.debt,
+				paid: false
+			};
 
+			try {
+				await this.databaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
 				this.triggerSaveIndicator(SECOND_TABLE);
-			} else {
-				existingRecord.debt = existingRecord.original;
-				this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
+			} catch (error) {
+				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+					this.openErrorDialog();
+				}
 			}
-		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
-			}
+		} else {
+			existingRecord.debt = existingRecord.original;
+			this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
 		}
 	}
 
@@ -489,6 +479,17 @@ export class RemainderComponent {
 		this.saveIndicatorTimeouts[tableName] = setTimeout(() => {
 			this.saveIndicators[tableName] = false;
 		}, 1000);
+	}
+
+	private async callDatabaseAndTriggerSaveIndicator() {
+		try {
+			await this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+			this.triggerSaveIndicator(FIRST_TABLE);
+		} catch (error) {
+			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+				this.openErrorDialog();
+			}
+		}
 	}
 
 	/**

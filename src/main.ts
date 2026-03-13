@@ -1,7 +1,8 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
-import { CN, Utilities } from './app/common/app.utilities';
+import { Utilities } from './app/common/app.utilities';
+import { CN } from './app/common/app.constant';
 import { CLOUDBASE, DatabaseService } from './app/backend/database-service/database.service';
 import { CloudbaseService } from './app/backend/database-service/cloudbase/cloudbase.service';
 import { FirebaseService } from './app/backend/database-service/firebase/firebase.service';
@@ -29,11 +30,10 @@ import { environment } from './environment/environment';
 			env: environment.cloudbase.envId,
 			region: environment.cloudbase.region
 		});
-        
-        providers.push({ provide: CLOUDBASE, useValue: app });
-        
-        CloudbaseService.setUseId((await app.auth().getUser()).data.user?.id);
-        
+
+		providers.push({ provide: CLOUDBASE, useValue: app });
+
+		CloudbaseService.setUseId((await app.auth().getUser()).data.user?.id);
 	} else {
 		const { provideFirebaseApp, initializeApp } = await import('@angular/fire/app');
 		const { provideAuth, getAuth } = await import('@angular/fire/auth');

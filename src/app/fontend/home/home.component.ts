@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { MatRadioModule } from '@angular/material/radio';
 import { LOG } from '../../common/app.logs';
-import { COMPONENT_DESTROY } from '../../common/app.utilities';
+import { COMPONENT_DESTROY } from '../../common/app.constant';
 
 @Component({
 	selector: 'home',

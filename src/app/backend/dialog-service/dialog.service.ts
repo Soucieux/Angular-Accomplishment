@@ -7,6 +7,7 @@ import { HistoryDialogComponent } from './history/history.component';
 import { SearchDialogComponent } from './search/search.component';
 import { Observable } from 'rxjs';
 import { ErrorDialogComponent } from './error/error.component';
+import { SEARCH } from '../../common/app.constant';
 @Injectable({
 	providedIn: 'root'
 })
@@ -30,7 +31,7 @@ export class DialogService {
 				return AddDialogComponent;
 			case 'history':
 				return HistoryDialogComponent;
-			case 'search':
+			case SEARCH:
 				return SearchDialogComponent;
 			case 'error':
 				return ErrorDialogComponent;
@@ -86,6 +87,7 @@ export class DialogService {
 		}
 
 		if (this.openedDialogs.has(dialogType)) {
+			if (dialogType === 'error') return;
 			const error = new Error('Dialog already opened');
 			LOG.error(this.className, error.message);
 			throw error;
@@ -97,7 +99,7 @@ export class DialogService {
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			// Open up corresponding dialog and pass callbacks
-			if (dialogType === 'search' || dialogType === 'error') {
+			if (dialogType === SEARCH || dialogType === 'error') {
 				dialogComponentRef.instance.openDialog(dataOrCallback1);
 			} else {
 				dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);

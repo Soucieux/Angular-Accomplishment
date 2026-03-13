@@ -9,7 +9,8 @@ import { LOG } from './common/app.logs';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
-import { CN, COMPONENT_DESTROY, Utilities } from './common/app.utilities';
+import { Utilities } from './common/app.utilities';
+import { CN, COMPONENT_DESTROY } from './common/app.constant';
 import { Observable } from 'rxjs';
 @Component({
 	selector: 'root',

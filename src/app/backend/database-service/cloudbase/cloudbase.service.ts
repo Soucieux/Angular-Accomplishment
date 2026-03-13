@@ -1,20 +1,28 @@
 import { isPlatformBrowser } from '@angular/common';
-// cloudbase-init.service.ts
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError } from 'rxjs';
 import { MovieItemVO } from '../../../common/movieitem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
 import { LOG } from '../../../common/app.logs';
+import { Utilities } from '../../../common/app.utilities';
 import {
+	DATABASE_HISTORY,
+	DATABASE_MOVIES,
+	DATABASE_PATCH_NOTES,
+	DATABASE_REMAINDER_FIRST,
+	DATABASE_REMAINDER_SECOND,
+	DATABASE_REMAINDER_THIRD,
+	DATABASE_STATISTICS,
+	ERROR_PERMISSION_DENIED,
 	FIRST_TABLE,
 	GENRE_FAVOURITE,
 	NO_RATE,
 	RATE_DECREASED,
 	RATE_INCREASED,
+	SEARCH,
 	SECOND_TABLE,
-	THIRD_TABLE,
-	Utilities
-} from '../../../common/app.utilities';
+	THIRD_TABLE
+} from '../../../common/app.constant';
 
 @Injectable({ providedIn: 'root' })
 export class CloudbaseService extends DatabaseService {
@@ -36,7 +44,7 @@ export class CloudbaseService extends DatabaseService {
 			this._ = this.database.command;
 
 			this.database
-				.collection('statistics')
+				.collection(DATABASE_STATISTICS)
 				.limit(1)
 				.get()
 				.then((response: any) => {
@@ -57,12 +65,12 @@ export class CloudbaseService extends DatabaseService {
 
 	public async test() {
 		// for (const value of data.data) {
-		// 	this.database.collection('movies').doc(value._id).update({});
+		// 	this.database.collection(DATABASE_MOVIES).doc(value._id).update({});
 		// }
-		const notes = await this.database.collection('remainder_table_first').get();
+		const notes = await this.database.collection(DATABASE_REMAINDER_FIRST).get();
 		for (const data of notes.data) {
 			await this.database
-				.collection('remainder_table_first')
+				.collection(DATABASE_REMAINDER_FIRST)
 				.doc(data._id)
 				.update({ _openid: CloudbaseService.userId });
 		}
@@ -75,7 +83,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	getMovieList(): Observable<MovieItemVO[]> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection('movies').watch({
+			const watcher = this.database.collection(DATABASE_MOVIES).watch({
 				onChange: (snapshot: any) => {
 					const movies = snapshot.docs.map((doc: any) => {
 						const movieItemVO = new MovieItemVO(doc.title, Number(doc.year));
@@ -112,7 +120,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getStatistics(): Observable<any> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection('statistics').watch({
+			const watcher = this.database.collection(DATABASE_STATISTICS).watch({
 				onChange: (snapshot: any) => {
 					observer.next(snapshot.docs[0]);
 				},
@@ -131,7 +139,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getHistory(): Observable<any[]> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection('history').watch({
+			const watcher = this.database.collection(DATABASE_HISTORY).watch({
 				onChange: (snapshot: any) => {
 					const history = snapshot.docs
 						.map((doc: any) => {
@@ -157,7 +165,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getPatchNotes(): Observable<any[]> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection('patch_notes').watch({
+			const watcher = this.database.collection(DATABASE_PATCH_NOTES).watch({
 				onChange: (snapshot: any) => {
 					const patchNotes = snapshot.docs.map((doc: any) => {
 						const { _id, ...rest } = doc;
@@ -191,7 +199,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getFirstRemainderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection('remainder_table_first').watch({
+			const watcher = this.database.collection(DATABASE_REMAINDER_FIRST).watch({
 				onChange: (snapshot: any) => {
 					const data = snapshot.docs;
 					observer.next(data ? data : []);
@@ -208,7 +216,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getSecondRemainderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection('remainder_table_second').watch({
+			const watcher = this.database.collection(DATABASE_REMAINDER_SECOND).watch({
 				onChange: (snapshot: any) => {
 					const secondTable = snapshot.docs.map((doc: any) => {
 						const { _id, ...rest } = doc;
@@ -240,7 +248,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getThirdRemainderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection('remainder_table_third').watch({
+			const watcher = this.database.collection(DATABASE_REMAINDER_THIRD).watch({
 				onChange: (snapshot: any) => {
 					const thirdTable = snapshot.docs.map((doc: any) => {
 						const { _id, ...rest } = doc;
@@ -276,7 +284,7 @@ export class CloudbaseService extends DatabaseService {
 	 * Add new entry to history stating that a new search activity has been initialized
 	 */
 	async updateHistoryWithNewSearchActivity(): Promise<void> {
-		await this.addNewHistoryEntry('search');
+		await this.addNewHistoryEntry(SEARCH);
 	}
 
 	/**
@@ -286,14 +294,19 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
 		// Step 1 : Gather necessary info
-		const movieRef = this.database.collection('movies').doc(movieItemVO.getMovieKey());
+		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieItemVO.getMovieKey());
 		const oldRate = movieRef.exists() ? movieRef.get().rate : undefined;
 
 		// Step 2 : Compare latest rate with the one stored in the database
 		if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
-			await movieRef.update({
+			const result = await movieRef.update({
 				rate: movieItemVO.getMovieRate()
 			});
+
+			if (result.code === ERROR_PERMISSION_DENIED) {
+				throw new Error(ERROR_PERMISSION_DENIED);
+			}
+
 			const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
 			this.searchStreamService.addSearchLog(
 				`The rate of ${movieItemVO.getMovieName()} is <span ${
@@ -315,29 +328,34 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newGenre The new genre
 	 */
 	updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
-		const movieRef = this.database.collection('movies').doc(movieKey);
+		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
+		try {
+			// Step 1 : Update movie genre
+			return movieRef
+				.update({
+					genre: newGenre
+				})
+				.then((result: any) => {
+					if (result.code === ERROR_PERMISSION_DENIED) {
+						throw new Error(ERROR_PERMISSION_DENIED);
+					}
+					LOG.info(this.className, `Movie genre has been updated`);
 
-		// Step 1 : Update movie genre
-		return movieRef
-			.update({
-				genre: newGenre
-			})
-			.then(() => {
-				LOG.info(this.className, `Movie genre has been updated`);
-
-				// Step 2 : Update movie statistics
-				return this.database
-					.collection('statistics')
-					.doc(this.statId)
-					.update({
-						[`genre.${oldGenre}`]: this._.inc(-1),
-						[`genre.${newGenre}`]: this._.inc(1)
-					});
-			})
-			.then(() => {
-				LOG.info(this.className, `Movie statistics have been updated`);
-				return;
-			});
+					// Step 2 : Update movie statistics
+					return this.database
+						.collection(DATABASE_STATISTICS)
+						.doc(this.statId)
+						.update({
+							[`genre.${oldGenre}`]: this._.inc(-1),
+							[`genre.${newGenre}`]: this._.inc(1)
+						});
+				})
+				.then(() => {
+					LOG.info(this.className, `Movie statistics have been updated`);
+				});
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	/**
@@ -347,31 +365,37 @@ export class CloudbaseService extends DatabaseService {
 	 * @param isFavourite The boolean value set
 	 */
 	updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
-		const movieRef = this.database.collection('movies').doc(movieKey);
+		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
+		try {
+			// Step 1 : Update movie favourite
+			return movieRef
+				.update({
+					isFavourite: isFavourite
+				})
+				.then((result: any) => {
+					if (result.code === ERROR_PERMISSION_DENIED) {
+						throw new Error(ERROR_PERMISSION_DENIED);
+					}
 
-		// Step 1 : Update movie favourite
-		return movieRef
-			.update({
-				isFavourite: isFavourite
-			})
-			.then(() => {
-				LOG.info(this.className, `Movie favourite tag has been updated`);
+					LOG.info(this.className, `Movie favourite tag has been updated`);
 
-				// Step 2 : Update movie statistics
-				const updatedData: any = {};
+					// Step 2 : Update movie statistics
+					const updatedData: any = {};
 
-				if (isFavourite) {
-					updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(1);
-				} else {
-					updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
-				}
+					if (isFavourite) {
+						updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(1);
+					} else {
+						updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
+					}
 
-				return this.database.collection('statistics').doc(this.statId).update(updatedData);
-			})
-			.then(() => {
-				LOG.info(this.className, `Movie statistics have been updated`);
-				return;
-			});
+					return this.database.collection(DATABASE_STATISTICS).doc(this.statId).update(updatedData);
+				})
+				.then(() => {
+					LOG.info(this.className, `Movie statistics have been updated`);
+				});
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	/**
@@ -382,7 +406,7 @@ export class CloudbaseService extends DatabaseService {
 	async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Add new movie data
-			await this.database.collection('movies').add({
+			await this.database.collection(DATABASE_MOVIES).add({
 				_openid: CloudbaseService.userId,
 				title: movieItemVO.getMovieName(),
 				year: movieItemVO.getMovieYear(),
@@ -409,7 +433,7 @@ export class CloudbaseService extends DatabaseService {
 			}
 
 			// Update the movie statistics
-			await this.database.collection('statistics').doc(this.statId).udpate(updatedData);
+			await this.database.collection(DATABASE_STATISTICS).doc(this.statId).udpate(updatedData);
 			LOG.info(this.className, `Movie added and statistics have been updated`);
 		} catch (error) {
 			LOG.error(
@@ -439,10 +463,10 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	async isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean> {
 		try {
-			const snapshot = await this.database.collection('movies').get();
+			const snapshot = await this.database.collection(DATABASE_MOVIES).get();
 			const allMovies = snapshot.data;
 
-			if (!allMovies) throw 'Movie list empty';
+			if (!allMovies) throw new Error('Movie list empty');
 
 			for (const movie of allMovies) {
 				if ((movie.title === movieName && movie.year === movieYear) || movie.id === movieId) {
@@ -468,7 +492,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		if (movieItemVO) {
-			await this.database.collection('history').add({
+			await this.database.collection(DATABASE_HISTORY).add({
 				_openid: CloudbaseService.userId,
 				id: movieItemVO.getMovieId(),
 				status: status,
@@ -478,7 +502,7 @@ export class CloudbaseService extends DatabaseService {
 			});
 			LOG.info(this.className, 'New history entry has been added');
 		} else {
-			await this.database.collection('history').add({
+			await this.database.collection(DATABASE_HISTORY).add({
 				_openid: CloudbaseService.userId,
 				status: status,
 				message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
@@ -494,7 +518,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	addNewRecordToPatchNotes(newRecord: any): Promise<void> {
 		return this.database
-			.collection('patch_notes')
+			.collection(DATABASE_PATCH_NOTES)
 			.add({
 				_openid: CloudbaseService.userId,
 				component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
@@ -516,15 +540,22 @@ export class CloudbaseService extends DatabaseService {
 	 * @param updatedRecord - The record to update.
 	 */
 	updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
-		return this.database
-			.collection('patch_notes')
-			.doc(key)
-			.update({
-				...updatedRecord
-			})
-			.then(() => {
-				LOG.info(this.className, 'Patch notes record has been updated');
-			});
+		try {
+			return this.database
+				.collection(DATABASE_PATCH_NOTES)
+				.doc(key)
+				.update({
+					...updatedRecord
+				})
+				.then((result: any) => {
+					if (result.code === ERROR_PERMISSION_DENIED) {
+						throw new Error(ERROR_PERMISSION_DENIED);
+					}
+					LOG.info(this.className, 'Patch notes record has been updated');
+				});
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	/**
@@ -534,7 +565,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	removePatchNotes(key: string): Promise<void> {
 		return this.database
-			.collection('patch_notes')
+			.collection(DATABASE_PATCH_NOTES)
 			.doc(key)
 			.remove()
 			.then(() => {
@@ -556,21 +587,22 @@ export class CloudbaseService extends DatabaseService {
 		valueKey: string,
 		value: any
 	): Promise<void> {
+		let valueToUpdate;
 		if (tableName === SECOND_TABLE) {
-			const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
-			await this.database.collection('remainder_table_second').doc(entryKey).update({
-				content: valueToUpdate
-			});
-			LOG.info(this.className, 'Remainder table has been updated');
+			valueToUpdate =
+				valueKey === 'content' ? { content: { ...value } } : { content: { [valueKey]: value } };
 		} else if (tableName === THIRD_TABLE) {
-			await this.database
-				.collection('remainder_table_third')
-				.doc(entryKey)
-				.update({
-					[valueKey]: value
-				});
-			LOG.info(this.className, 'Remainder table has been updated');
+			valueToUpdate = { [valueKey]: value };
 		}
+
+		const result = await this.database
+			.collection(this.convertTableNameToCollectionName(tableName))
+			.doc(entryKey)
+			.update(valueToUpdate);
+		if (result.code === ERROR_PERMISSION_DENIED) {
+			throw new Error(ERROR_PERMISSION_DENIED);
+		}
+		LOG.info(this.className, 'Remainder table has been updated');
 	}
 
 	/**
@@ -580,12 +612,16 @@ export class CloudbaseService extends DatabaseService {
 	 * @param updatedTable - The table to update
 	 */
 	async updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void> {
-		const tableRef = this.database.collection('remainder_table_first');
+		const tableRef = this.database.collection(DATABASE_REMAINDER_FIRST);
 		try {
 			for (const [index, item] of updatedTable.entries()) {
 				const { _id, ...dataToUpdate } = item;
 				const docId = index === 5 ? '5' : _id;
-				await tableRef.doc(docId).update(dataToUpdate);
+				const result = await tableRef.doc(docId).update(dataToUpdate);
+
+				if (result.code === ERROR_PERMISSION_DENIED) {
+					throw new Error(ERROR_PERMISSION_DENIED);
+				}
 			}
 			LOG.info(this.className, 'Remainder table has been updated');
 		} catch (error) {
@@ -620,7 +656,6 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
-		console.log(CloudbaseService.userId);
 		return this.database
 			.collection(collectionName)
 			.add({
@@ -640,11 +675,11 @@ export class CloudbaseService extends DatabaseService {
 	private convertTableNameToCollectionName(tableName: string): string {
 		switch (tableName) {
 			case FIRST_TABLE:
-				return 'remainder_table_first';
+				return DATABASE_REMAINDER_FIRST;
 			case SECOND_TABLE:
-				return 'remainder_table_second';
+				return DATABASE_REMAINDER_SECOND;
 			case THIRD_TABLE:
-				return 'remainder_table_third';
+				return DATABASE_REMAINDER_THIRD;
 			default:
 				return '';
 		}

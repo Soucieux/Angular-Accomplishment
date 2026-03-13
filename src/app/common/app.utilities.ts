@@ -1,26 +1,8 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Inject, Injectable, PLATFORM_ID, ViewContainerRef } from '@angular/core';
 import { MovieItemVO } from './movieitem.vo';
-import { HttpClient } from '@angular/common/http';
 import { LOG } from './app.logs';
-
-export const RATE_DECREASED = 'decreased';
-export const RATE_INCREASED = 'increased';
-export const SEARCH_COMPELTE = 'Search complete';
-export const SEARCH_CANCEL = 'Search cancelled';
-export const COMPONENT_DESTROY = 'Component Destroyed';
-export const NO_RATE = 'No rate';
-export const STATUS_TODO = 'To Do';
-export const STATUS_IN_PROGRESS = 'In Progress';
-export const STATUS_COMPLETED = 'Completed';
-export const STATUS_DEBUG = 'Debug';
-export const STATUS_DRAFT = 'Draft';
-export const STATUS_RESOLVED = 'Resolved';
-export const GENRE_FAVOURITE = '特别关注';
-export const FIRST_TABLE = 'first_table';
-export const SECOND_TABLE = 'second_table';
-export const THIRD_TABLE = 'third_table';
-export const CN = 'CN';
+import { CN } from './app.constant';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {
@@ -28,10 +10,7 @@ export class Utilities {
 	private static currentCountry: string = '';
 	private isUserAlive: boolean = false;
 
-	constructor(
-		@Inject(PLATFORM_ID) private platformId: Object,
-		private http: HttpClient
-	) {}
+	constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 	/**
 	 * Check if the current device is a mobile device.
 	 *

@@ -12,7 +12,8 @@ import { Router } from '@angular/router';
 import { LOG } from '../../common/app.logs';
 import { DatabaseService } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
-import { CN, Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/app.utilities';
+import { CN } from '../../common/app.constant';
 
 @Injectable({
 	providedIn: 'root'
@@ -114,7 +115,6 @@ export class AuthService {
 			this.cloudbaseGetCurrentUser();
 			this.router.navigate(['/']);
 		} catch (error: any) {
-			console.log(error);
 			LOG.error(this.className, 'Error when signing in with username and password with Cloudbase');
 		}
 	}

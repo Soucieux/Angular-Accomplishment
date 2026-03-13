@@ -1,13 +1,16 @@
+import { Utilities } from '../../../common/app.utilities';
 import {
 	FIRST_TABLE,
 	GENRE_FAVOURITE,
 	NO_RATE,
 	SECOND_TABLE,
 	THIRD_TABLE,
-	Utilities,
 	RATE_DECREASED,
-	RATE_INCREASED
-} from '../../../common/app.utilities';
+	RATE_INCREASED,
+	SEARCH,
+    DATABASE_HISTORY,
+    DATABASE_PATCH_NOTES
+} from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
 import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
@@ -128,7 +131,7 @@ export class FirebaseService extends DatabaseService {
 	 * Add new entry to history stating that a new search activity has been initialized
 	 */
 	public async updateHistoryWithNewSearchActivity() {
-		await this.addNewHistoryEntry('search');
+		await this.addNewHistoryEntry(SEARCH);
 	}
 
 	/**
@@ -371,7 +374,7 @@ export class FirebaseService extends DatabaseService {
 			const snapshot = await runInInjectionContext(this.ei, () => get(this.moviesRef));
 			const allMovies = snapshot.val();
 
-			if (!allMovies) throw 'Movie list empty';
+			if (!allMovies) throw new Error('Movie list empty');
 
 			for (const key of Object.keys(allMovies)) {
 				const movie = allMovies[key];
@@ -398,7 +401,7 @@ export class FirebaseService extends DatabaseService {
 	 */
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		if (movieItemVO) {
-			await push(dbRef(this.db, 'history'), {
+			await push(dbRef(this.db, DATABASE_HISTORY), {
 				id: movieItemVO.getMovieId(),
 				status: status,
 				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
@@ -407,7 +410,7 @@ export class FirebaseService extends DatabaseService {
 			});
 			LOG.info(this.className, 'New history entry has been added');
 		} else {
-			await push(dbRef(this.db, 'history'), {
+			await push(dbRef(this.db, DATABASE_HISTORY), {
 				status: status,
 				message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
 			});
@@ -422,7 +425,7 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getHistory(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
-			list(dbRef(this.db, 'history')).pipe(
+			list(dbRef(this.db, DATABASE_HISTORY)).pipe(
 				map((snapshots: any[]) =>
 					snapshots
 						.map((snapshot: any) => ({
@@ -441,7 +444,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param newRecord - The record to add.
 	 */
 	public addNewRecordToPatchNotes(newRecord: any): Promise<void> {
-		return push(dbRef(this.db, 'patch_notes'), {
+		return push(dbRef(this.db, DATABASE_PATCH_NOTES), {
 			component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
 			element: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
 			details: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
@@ -460,7 +463,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param updatedRecord - The record to update.
 	 */
 	public updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
-		return update(dbRef(this.db, `patch_notes/${key}`), {
+		return update(dbRef(this.db, `${DATABASE_PATCH_NOTES}/${key}`), {
 			...updatedRecord
 		}).then(() => {
 			LOG.info(this.className, 'Patch notes record has been updated');
@@ -474,7 +477,7 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getPatchNotes(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
-			list(dbRef(this.db, 'patch_notes')).pipe(
+			list(dbRef(this.db, DATABASE_PATCH_NOTES)).pipe(
 				map((snapshots: any[]) =>
 					snapshots
 						.map(
@@ -504,7 +507,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key associated with the record
 	 */
 	public removePatchNotes(key: string): Promise<void> {
-		return remove(dbRef(this.db, `patch_notes/${key}`)).then(() => {
+		return remove(dbRef(this.db, `${DATABASE_PATCH_NOTES}/${key}`)).then(() => {
 			LOG.info(this.className, 'Patch notes record has been removed');
 		});
 	}

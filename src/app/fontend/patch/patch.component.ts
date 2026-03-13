@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
+	DATABASE_PATCH_NOTES,
 	ERROR_PERMISSION_DENIED,
 	STATUS_COMPLETED,
 	STATUS_DEBUG,
@@ -191,8 +192,14 @@ export class PatchComponent {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'confirm',
-			() => {
-				this.databaseService.removePatchNotes(key);
+			async () => {
+				try {
+					await this.databaseService.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
+				} catch (error) {
+					if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+						this.openErrorDialog();
+					}
+				}
 			},
 			['Are you sure you want to delete this note?', 'Confirm', 'Delete', 'Record deleted', true]
 		);

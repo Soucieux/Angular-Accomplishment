@@ -24,7 +24,7 @@ export abstract class DatabaseService {
 	abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
 	abstract updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void>;
 	abstract getPatchNotes(): Observable<any[]>;
-	abstract removePatchNotes(key: string): Promise<void>;
+	abstract removeSingleItemFromDatabase(name: string, key: string): Promise<void>;
 	abstract getFirstRemainderTableDetails(): Observable<any[]>;
 	abstract getSecondRemainderTableDetails(): Observable<any[]>;
 	abstract getThirdRemainderTableDetails(): Observable<any[]>;

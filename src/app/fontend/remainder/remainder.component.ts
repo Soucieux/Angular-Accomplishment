@@ -379,9 +379,15 @@ export class RemainderComponent {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'confirm',
-			() => {
-				this.databaseService.removeRecordFromRemainderTable(THIRD_TABLE, key);
-				this.triggerSaveIndicator(THIRD_TABLE);
+			async () => {
+				try {
+					await this.databaseService.removeRecordFromRemainderTable(THIRD_TABLE, key);
+					this.triggerSaveIndicator(THIRD_TABLE);
+				} catch (error) {
+					if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+						this.openErrorDialog();
+					}
+				}
 			},
 			['Are you sure you want to delete this entry?', 'Delete', 'Confirm', 'Entry deleted', true]
 		);

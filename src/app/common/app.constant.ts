@@ -18,6 +18,7 @@ export const DATABASE_HISTORY = 'history';
 export const DATABASE_STATISTICS = 'statistics';
 export const DATABASE_MOVIES = 'movies';
 export const DATABASE_PATCH_NOTES = 'patch_notes';
+export const DATABASE_REMAINDER = 'remainder';
 export const DATABASE_REMAINDER_FIRST = 'remainder_table_first';
 export const DATABASE_REMAINDER_SECOND = 'remainder_table_second';
 export const DATABASE_REMAINDER_THIRD = 'remainder_table_third';

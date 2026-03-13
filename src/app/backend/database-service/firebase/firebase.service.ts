@@ -8,8 +8,9 @@ import {
 	RATE_DECREASED,
 	RATE_INCREASED,
 	SEARCH,
-    DATABASE_HISTORY,
-    DATABASE_PATCH_NOTES
+	DATABASE_HISTORY,
+	DATABASE_PATCH_NOTES,
+	DATABASE_REMAINDER
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
@@ -408,14 +409,13 @@ export class FirebaseService extends DatabaseService {
 					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
 				}) was ${status} on ${this.utilities.getCurrentFormattedTime(true)}`
 			});
-			LOG.info(this.className, 'New history entry has been added');
 		} else {
 			await push(dbRef(this.db, DATABASE_HISTORY), {
 				status: status,
 				message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
 			});
-			LOG.info(this.className, 'New history entry has been added');
 		}
+		LOG.info(this.className, 'New history entry has been added');
 	}
 
 	/**
@@ -502,12 +502,22 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Remove record from remainder table
+	 *
+	 * @param tableName - The name of the table
+	 * @param index - The index of the record to remove
+	 */
+	public removeRecordFromRemainderTable(tableName: string, key: string): Promise<void> {
+		return this.removeSingleItemFromDatabase(`${DATABASE_REMAINDER}/${tableName}`, key);
+	}
+
+	/**
 	 * Remove record from patch notes
 	 *
 	 * @param key - The key associated with the record
 	 */
-	public removePatchNotes(key: string): Promise<void> {
-		return remove(dbRef(this.db, `${DATABASE_PATCH_NOTES}/${key}`)).then(() => {
+	public removeSingleItemFromDatabase(tablePath: string, key: string): Promise<void> {
+		return remove(dbRef(this.db, `${tablePath}/${key}`)).then(() => {
 			LOG.info(this.className, 'Patch notes record has been removed');
 		});
 	}
@@ -520,7 +530,7 @@ export class FirebaseService extends DatabaseService {
 	public getFirstRemainderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
-				const unsub = onValue(dbRef(this.db, `remainder/${FIRST_TABLE}`), (snapshot) => {
+				const unsub = onValue(dbRef(this.db, `${DATABASE_REMAINDER}/${FIRST_TABLE}`), (snapshot) => {
 					const data = snapshot.val();
 					observer.next(data ? Object.values(data) : []);
 				});
@@ -536,7 +546,7 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getSecondRemainderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
-			list(dbRef(this.db, `remainder/${SECOND_TABLE}`)).pipe(
+			list(dbRef(this.db, `${DATABASE_REMAINDER}/${SECOND_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -565,7 +575,7 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getThirdRemainderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
-			list(dbRef(this.db, `remainder/${THIRD_TABLE}`)).pipe(
+			list(dbRef(this.db, `${DATABASE_REMAINDER}/${THIRD_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -600,12 +610,12 @@ export class FirebaseService extends DatabaseService {
 		if (tableName === SECOND_TABLE) {
 			const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
 
-			await update(dbRef(this.db, `remainder/${tableName}/${entryKey}/content`), {
+			await update(dbRef(this.db, `${DATABASE_REMAINDER}/${tableName}/${entryKey}/content`), {
 				...valueToUpdate
 			});
 			LOG.info(this.className, 'Remainder table has been updated');
 		} else if (tableName === THIRD_TABLE) {
-			await update(dbRef(this.db, `remainder/${tableName}/${entryKey}`), {
+			await update(dbRef(this.db, `${DATABASE_REMAINDER}/${tableName}/${entryKey}`), {
 				[valueKey]: value
 			});
 			LOG.info(this.className, 'Remainder table has been updated');
@@ -619,22 +629,10 @@ export class FirebaseService extends DatabaseService {
 	 * @param updatedTable - The table to update
 	 */
 	public updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void> {
-		return update(dbRef(this.db, `remainder/${tableName}`), {
+		return update(dbRef(this.db, `${DATABASE_REMAINDER}/${tableName}`), {
 			...updatedTable
 		}).then(() => {
 			LOG.info(this.className, 'Remainder table has been updated');
-		});
-	}
-
-	/**
-	 * Remove record from remainder table
-	 *
-	 * @param tableName - The name of the table
-	 * @param index - The index of the record to remove
-	 */
-	public removeRecordFromRemainderTable(tableName: string, key: string): Promise<void> {
-		return remove(dbRef(this.db, `remainder/${tableName}/${key}`)).then(() => {
-			LOG.info(this.className, 'Remainder table record has been removed');
 		});
 	}
 
@@ -646,7 +644,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param newRecord The new entry
 	 */
 	public addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
-		return push(dbRef(this.db, `remainder/${tableName}`), {
+		return push(dbRef(this.db, `${DATABASE_REMAINDER}/${tableName}`), {
 			...newRecord
 		}).then(() => {
 			LOG.info(this.className, 'Remainder table has been updated');

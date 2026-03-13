@@ -701,17 +701,23 @@ export class EntertainmentComponent {
 	 *
 	 * @param movie The selected movie
 	 */
-	protected completeEdit(movie: MovieItemVO) {
+	protected async completeEdit(movie: MovieItemVO) {
 		const genreData = this.editedItems.get(movie.getMovieKey());
-		if (genreData) {
-			if (genreData.original !== genreData.genre) {
-				this.databaseService.updateMovieGenre(
-					movie.getMovieKey(),
-					genreData.original,
-					genreData.genre
-				);
+		try {
+			if (genreData) {
+				if (genreData.original !== genreData.genre) {
+					await this.databaseService.updateMovieGenre(
+						movie.getMovieKey(),
+						genreData.original,
+						genreData.genre
+					);
+				}
+				this.editedItems.delete(movie.getMovieKey());
 			}
-			this.editedItems.delete(movie.getMovieKey());
+		} catch (error) {
+			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+				this.openErrorDialog();
+			}
 		}
 	}
 
@@ -720,8 +726,14 @@ export class EntertainmentComponent {
 	 *
 	 * @param movie The movie to set
 	 */
-	protected setIsFavourite(movie: MovieItemVO) {
-		this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
+	protected async setIsFavourite(movie: MovieItemVO) {
+		try {
+			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
+		} catch (error) {
+			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+				this.openErrorDialog();
+			}
+		}
 	}
 
 	/**

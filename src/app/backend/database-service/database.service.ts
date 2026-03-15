@@ -37,4 +37,5 @@ export abstract class DatabaseService {
 	abstract updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void>;
 	abstract removeRecordFromRemainderTable(tableName: string, key: string): Promise<void>;
 	abstract addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void>;
+	abstract checkPermission(name: string, entryKey: string): Promise<string>;
 }

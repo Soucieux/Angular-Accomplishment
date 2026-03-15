@@ -14,14 +14,12 @@ import {
 	DATABASE_REMAINDER_THIRD,
 	DATABASE_STATISTICS,
 	ERROR_PERMISSION_DENIED,
-	FIRST_TABLE,
 	GENRE_FAVOURITE,
 	NO_RATE,
 	RATE_DECREASED,
 	RATE_INCREASED,
 	SEARCH,
-	SECOND_TABLE,
-	THIRD_TABLE
+	SUCCESS
 } from '../../../common/app.constant';
 
 @Injectable({ providedIn: 'root' })
@@ -257,9 +255,11 @@ export class CloudbaseService extends DatabaseService {
 							...rest
 						} as {
 							key: string;
-							content: string;
-							date: string;
-							link: string;
+							content: {
+								text: string;
+								date: string;
+								link: string;
+							};
 						};
 					});
 					observer.next(thirdTable);
@@ -299,13 +299,9 @@ export class CloudbaseService extends DatabaseService {
 
 		// Step 2 : Compare latest rate with the one stored in the database
 		if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
-			const result = await movieRef.update({
+			await movieRef.update({
 				rate: movieItemVO.getMovieRate()
 			});
-
-			if (result.code === ERROR_PERMISSION_DENIED) {
-				throw new Error(ERROR_PERMISSION_DENIED);
-			}
 
 			const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
 			this.searchStreamService.addSearchLog(
@@ -334,10 +330,7 @@ export class CloudbaseService extends DatabaseService {
 			.update({
 				genre: newGenre
 			})
-			.then((result: any) => {
-				if (result.code === ERROR_PERMISSION_DENIED) {
-					throw new Error(ERROR_PERMISSION_DENIED);
-				}
+			.then(() => {
 				LOG.info(this.className, `Movie genre has been updated`);
 
 				// Step 2 : Update movie statistics
@@ -367,11 +360,7 @@ export class CloudbaseService extends DatabaseService {
 			.update({
 				isFavourite: isFavourite
 			})
-			.then((result: any) => {
-				if (result.code === ERROR_PERMISSION_DENIED) {
-					throw new Error(ERROR_PERMISSION_DENIED);
-				}
-
+			.then(() => {
 				LOG.info(this.className, `Movie favourite tag has been updated`);
 
 				// Step 2 : Update movie statistics
@@ -499,7 +488,7 @@ export class CloudbaseService extends DatabaseService {
 				message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
 			});
 		}
-        LOG.info(this.className, 'New history entry has been added');
+		LOG.info(this.className, 'New history entry has been added');
 	}
 
 	/**
@@ -537,10 +526,7 @@ export class CloudbaseService extends DatabaseService {
 			.update({
 				...updatedRecord
 			})
-			.then((result: any) => {
-				if (result.code === ERROR_PERMISSION_DENIED) {
-					throw new Error(ERROR_PERMISSION_DENIED);
-				}
+			.then(() => {
 				LOG.info(this.className, 'Patch notes record has been updated');
 			});
 	}
@@ -548,28 +534,30 @@ export class CloudbaseService extends DatabaseService {
 	/**
 	 * Update remainder table details
 	 *
+	 * @param collectionName - Corresponding collection name
 	 * @param entryKey - The key of the entire entry
 	 * @param valueKey - The key associated with the new value.
 	 * @param value - The new value to be stored.
-	 * @param tableName - The name of the table to update.
 	 */
-	updateRemainderTable(tableName: string, entryKey: string, valueKey: string, value: any): Promise<void> {
+	updateRemainderTable(
+		collectionName: string,
+		entryKey: string,
+		valueKey: string,
+		value: any
+	): Promise<void> {
 		let valueToUpdate;
-		if (tableName === SECOND_TABLE) {
+		if (collectionName === DATABASE_REMAINDER_SECOND) {
 			valueToUpdate =
 				valueKey === 'content' ? { content: { ...value } } : { content: { [valueKey]: value } };
-		} else if (tableName === THIRD_TABLE) {
+		} else if (collectionName === DATABASE_REMAINDER_THIRD) {
 			valueToUpdate = { [valueKey]: value };
 		}
 
 		return this.database
-			.collection(this.convertTableNameToCollectionName(tableName))
+			.collection(collectionName)
 			.doc(entryKey)
 			.update(valueToUpdate)
-			.then((result: any) => {
-				if (result.code === ERROR_PERMISSION_DENIED) {
-					throw new Error(ERROR_PERMISSION_DENIED);
-				}
+			.then(() => {
 				LOG.info(this.className, 'Remainder table has been updated');
 			});
 	}
@@ -582,32 +570,21 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	async updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void> {
 		const tableRef = this.database.collection(DATABASE_REMAINDER_FIRST);
-		try {
-			for (const [index, item] of updatedTable.entries()) {
-				const { _id, ...dataToUpdate } = item;
-				const docId = index === 5 ? '5' : _id;
-				const result = await tableRef.doc(docId).update(dataToUpdate);
-
-				if (result.code === ERROR_PERMISSION_DENIED) {
-					throw new Error(ERROR_PERMISSION_DENIED);
-				}
-			}
-			LOG.info(this.className, 'Remainder table has been updated');
-		} catch (error) {
-			LOG.error(this.className, 'Error while updaing first remainder table');
+		for (const [index, item] of updatedTable.entries()) {
+			await tableRef.doc(index).update(item);
 		}
+		LOG.info(this.className, 'Remainder table has been updated');
 	}
 
 	/**
 	 * Remove record from remainder table
 	 * Note: This is used by third table only
 	 *
-	 * @param tableName - The name of the table
+	 * @param collectionName - Corresponding collection name
 	 * @param index - The index of the record to remove
 	 */
-	removeRecordFromRemainderTable(tableName: string, key: string): Promise<void> {
+	removeRecordFromRemainderTable(collectionName: string, key: string): Promise<void> {
 		try {
-			const collectionName = this.convertTableNameToCollectionName(tableName);
 			return this.removeSingleItemFromDatabase(collectionName, key);
 		} catch (error) {
 			throw error;
@@ -617,7 +594,7 @@ export class CloudbaseService extends DatabaseService {
 	/**
 	 * Remove an item from cloudbase
 	 *
-     * @param collectionName - The collection name in cloudbase
+	 * @param collectionName - The collection name in cloudbase
 	 * @param key - The key associated with the record
 	 */
 	removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
@@ -625,10 +602,7 @@ export class CloudbaseService extends DatabaseService {
 			.collection(collectionName)
 			.doc(key)
 			.remove()
-			.then((result: any) => {
-				if (result.code === ERROR_PERMISSION_DENIED) {
-					throw new Error(ERROR_PERMISSION_DENIED);
-				}
+			.then(() => {
 				LOG.info(this.className, `Record has been removed from ${collectionName}`);
 			});
 	}
@@ -637,16 +611,15 @@ export class CloudbaseService extends DatabaseService {
 	 * Add a new entry to a given table
 	 * Note: This is used by third table only
 	 *
-	 * @param tableName The table name
+	 * @param collectionName Correpsonding collection name
 	 * @param newRecord The new entry
 	 */
-	addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
-		const collectionName = this.convertTableNameToCollectionName(tableName);
+	addNewRecordForRemainderTable(collectionName: string, newRecord: any): Promise<void> {
 		return this.database
 			.collection(collectionName)
 			.add({
 				_openid: CloudbaseService.userId,
-				...newRecord
+				content: { ...newRecord }
 			})
 			.then(() => {
 				LOG.info(this.className, 'Remainder table has been updated');
@@ -654,20 +627,11 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get corresponding table name in the database
-	 *
-	 * @param tableName table name
+	 * Check if current has permisson to edit data
 	 */
-	private convertTableNameToCollectionName(tableName: string): string {
-		switch (tableName) {
-			case FIRST_TABLE:
-				return DATABASE_REMAINDER_FIRST;
-			case SECOND_TABLE:
-				return DATABASE_REMAINDER_SECOND;
-			case THIRD_TABLE:
-				return DATABASE_REMAINDER_THIRD;
-			default:
-				return '';
-		}
+	async checkPermission(collectionName: string, entryKey: string): Promise<string> {
+		const data = await this.database.collection(collectionName).doc(entryKey).get();
+		if (data.data[0]._openid === CloudbaseService.userId) return SUCCESS;
+		else throw new Error(ERROR_PERMISSION_DENIED);
 	}
 }

@@ -25,3 +25,5 @@ export const DATABASE_REMAINDER_THIRD = 'remainder_table_third';
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';
 export const CN = 'CN';
 export const SEARCH = 'search';
+export const SUCCESS = 'success';
+export const FAILURE = 'failure';

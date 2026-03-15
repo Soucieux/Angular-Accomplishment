@@ -10,7 +10,8 @@ import {
 	SEARCH,
 	DATABASE_HISTORY,
 	DATABASE_PATCH_NOTES,
-	DATABASE_REMAINDER
+	DATABASE_REMAINDER,
+	SUCCESS
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
@@ -645,9 +646,13 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
 		return push(dbRef(this.db, `${DATABASE_REMAINDER}/${tableName}`), {
-			...newRecord
+			content: { ...newRecord }
 		}).then(() => {
 			LOG.info(this.className, 'Remainder table has been updated');
 		});
+	}
+
+	public async checkPermission(name: string, entryKey: string): Promise<string> {
+		return SUCCESS;
 	}
 }

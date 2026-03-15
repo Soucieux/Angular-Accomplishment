@@ -26,13 +26,19 @@ import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
+	DATABASE_REMAINDER_FIRST,
+	DATABASE_REMAINDER_SECOND,
+	DATABASE_REMAINDER_THIRD,
 	ERROR_PERMISSION_DENIED,
+	FAILURE,
 	FIRST_TABLE,
 	SECOND_TABLE,
+	SUCCESS,
 	THIRD_TABLE
 } from '../../common/app.constant';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { format } from 'date-fns';
 
 @Component({
 	selector: 'remainder',
@@ -79,7 +85,7 @@ export class RemainderComponent {
 	protected SECOND_TABLE: string = SECOND_TABLE;
 	protected THIRD_TABLE: string = THIRD_TABLE;
 	protected thirdTableActiveItem: any;
-	protected thirdTableNewContent: string = '';
+	protected thirdTableNewText: string = '';
 	protected thirdTableIndexOfFirstItem: number = 0;
 	protected thirdTableItemsPerPage: number = 10;
 	protected saveIndicators: Record<string, boolean> = {
@@ -98,6 +104,7 @@ export class RemainderComponent {
 		private cdr: ChangeDetectorRef,
 		private utilities: Utilities
 	) {}
+
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
 			this.isHoverCapable = Utilities.checkIfHoverCapable();
@@ -139,6 +146,15 @@ export class RemainderComponent {
 	}
 
 	protected async updateChargedCells() {
+		if (this.chargedCellsInitialized) {
+			const returnCode = await this.checkPermissionForFirstTable();
+			// Rollback
+			if (returnCode === FAILURE) {
+				this.isNextMonth = !this.isNextMonth;
+				return;
+			}
+		}
+
 		if (this.isNextMonth) {
 			this.chargedCells.clear();
 		}
@@ -159,7 +175,7 @@ export class RemainderComponent {
 
 		if (this.chargedCellsInitialized) {
 			this.updatedFirstTable.push({ isNextMonth: this.isNextMonth });
-			await this.callDatabaseAndTriggerSaveIndicator();
+			await this.callDatabaseForFirstTable();
 		}
 	}
 
@@ -186,11 +202,14 @@ export class RemainderComponent {
 		// Do nothing if the value does not change
 		if (this.updatedFirstTable[rowIndex][field].value == originalValue) return;
 
-		// Reset value if it reaches threshold
-		if (Number(this.updatedFirstTable[rowIndex][field].value) > 31) {
+		const returnCode = await this.checkPermissionForFirstTable();
+		// Rollback OR reset value if it reaches threshold
+		if (returnCode === FAILURE || Number(this.updatedFirstTable[rowIndex][field].value) > 31) {
 			this.updatedFirstTable[rowIndex][field].value = originalValue;
 			return;
-		} else if (rowIndex !== 0) {
+		}
+
+		if (rowIndex !== 0) {
 			const previousValue = this.updatedFirstTable[rowIndex - 1][field].value;
 
 			// Get the difference
@@ -217,14 +236,14 @@ export class RemainderComponent {
 		this.updatedFirstTable[rowIndex][field].isCharged = false;
 
 		// Update other values in the same column
-		for (let index = rowIndex; index < this.updatedFirstTable.length; index++) {
+		for (let index = rowIndex; index < this.updatedFirstTable.length - 1; index++) {
 			if (index == 0 || index == 2) {
 				this.twoDayDiff(index, field);
 			} else if (index == 1 || index == 3) {
 				this.sixDaysDiff(index, field);
 			}
 		}
-		await this.callDatabaseAndTriggerSaveIndicator();
+		await this.callDatabaseForFirstTable();
 	}
 
 	protected isDisabled(rowIndex: number, field: string): boolean {
@@ -256,15 +275,23 @@ export class RemainderComponent {
 	}
 
 	protected async setIsCharged(rowIndex: number, field: string) {
+		const returnCode = await this.checkPermissionForFirstTable();
+		// Rollback
+		if (returnCode === FAILURE) return;
+
 		if (!this.updatedFirstTable[rowIndex][field].isCharged) {
 			this.updatedFirstTable[rowIndex][field].isCharged = true;
 
 			// Update table to database
-			await this.callDatabaseAndTriggerSaveIndicator();
+			await this.callDatabaseForFirstTable();
 		}
 	}
 
-	protected openResetConfirmationDialog() {
+	protected async openResetConfirmationDialog() {
+		const returnCode = await this.checkPermissionForFirstTable();
+		// Rollback
+		if (returnCode === FAILURE) return;
+
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'confirm',
@@ -318,7 +345,7 @@ export class RemainderComponent {
 			}
 		];
 
-		await this.callDatabaseAndTriggerSaveIndicator();
+		await this.callDatabaseForFirstTable();
 	}
 
 	///////////////////////////////////SECOND TABLE///////////////////////////////////
@@ -326,28 +353,33 @@ export class RemainderComponent {
 		event.preventDefault();
 	}
 
-	protected updateDebt(entryKey: string, currentDebt: number) {
-		this.findUpdatedObject(SECOND_TABLE, entryKey).debt = Math.round((currentDebt - 998.05) * 100) / 100;
+	protected async updateDebt(tableName: string, entryKey: string, currentDebt: number) {
+		const collectionName = this.convertTableNameToCollectionName(tableName);
+		const returnCode = await this.checkPermission(collectionName, entryKey);
+		if (returnCode === FAILURE) return;
+
+		this.findUpdatedItem(SECOND_TABLE, entryKey).content.debt =
+			Math.round((currentDebt - 998.05) * 100) / 100;
 		this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
 	}
 
 	protected async setDefaultDebt(entryKey: string, isPaid: boolean) {
-		const existingRecord = this.findUpdatedObject(SECOND_TABLE, entryKey);
+		const collectionName = this.convertTableNameToCollectionName(SECOND_TABLE);
+		const returnCode = await this.checkPermission(collectionName, entryKey);
+		if (returnCode === FAILURE) return;
+
+		const existingRecord = this.findUpdatedItem(SECOND_TABLE, entryKey).content;
 		if (isPaid) {
+			// Set default value
 			const newRecord = {
 				original: existingRecord.debt,
 				paid: false
 			};
 
-			try {
-				await this.databaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
-				this.triggerSaveIndicator(SECOND_TABLE);
-			} catch (error) {
-				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-					this.openErrorDialog();
-				}
-			}
+			await this.databaseService.updateRemainderTable(collectionName, entryKey, 'content', newRecord);
+			this.triggerSaveIndicator(SECOND_TABLE);
 		} else {
+			// Reset value
 			existingRecord.debt = existingRecord.original;
 			this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
 		}
@@ -362,65 +394,83 @@ export class RemainderComponent {
 			)
 		);
 	}
-	protected updateLink(entryKey: string, link: string) {
+	protected async updateLink(tableName: string, entryKey: string, link: string) {
+		const updatedItem = this.findUpdatedItem(THIRD_TABLE, entryKey);
+		const oldItem = this.findOriginalItem(THIRD_TABLE, entryKey);
+		if (JSON.stringify(updatedItem) === JSON.stringify(oldItem)) return;
+
+		const collectionName = this.convertTableNameToCollectionName(tableName);
+		const returnCode = await this.checkPermission(collectionName, entryKey);
+		if (returnCode === FAILURE) {
+			updatedItem.content = structuredClone(oldItem.content);
+			return;
+		}
+
 		let linkInLowerCase = link.toLowerCase();
 		if (linkInLowerCase.startsWith('www.')) {
 			linkInLowerCase = 'https://' + linkInLowerCase;
 		} else if (linkInLowerCase.startsWith('https://') || linkInLowerCase.startsWith('http://')) {
-			linkInLowerCase = linkInLowerCase;
+			// do nothing
 		} else {
 			linkInLowerCase = 'https://www.' + linkInLowerCase;
 		}
-		this.findUpdatedObject(THIRD_TABLE, entryKey).link = linkInLowerCase;
+		updatedItem.content.link = linkInLowerCase;
 		this.updateTableSingleValue(THIRD_TABLE, entryKey, 'link');
 	}
 
-	protected openDeleteConfirmationDialog(key: string) {
+	protected async openDeleteConfirmationDialog(entryKey: string) {
+		const collectionName = this.convertTableNameToCollectionName(THIRD_TABLE);
+		const returnCode = await this.checkPermission(collectionName, entryKey);
+		//Rollback
+		if (returnCode === FAILURE) return;
+
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'confirm',
-			async () => {
-				try {
-					await this.databaseService.removeRecordFromRemainderTable(THIRD_TABLE, key);
-					this.triggerSaveIndicator(THIRD_TABLE);
-				} catch (error) {
-					if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-						this.openErrorDialog();
-					}
-				}
+			() => {
+				this.databaseService.removeRecordFromRemainderTable(
+					this.convertTableNameToCollectionName(THIRD_TABLE),
+					entryKey
+				);
+				this.triggerSaveIndicator(THIRD_TABLE);
 			},
 			['Are you sure you want to delete this entry?', 'Delete', 'Confirm', 'Entry deleted', true]
 		);
 	}
 
-	protected addNewContentOnly() {
-		if (this.thirdTableNewContent.trim() !== '') {
-			this.databaseService.addNewRecordForRemainderTable(THIRD_TABLE, {
-				content: this.thirdTableNewContent
-			});
+	protected addNewTextOnly() {
+		if (this.thirdTableNewText.trim() !== '') {
+			this.databaseService.addNewRecordForRemainderTable(
+				this.convertTableNameToCollectionName(THIRD_TABLE),
+				{
+					text: this.thirdTableNewText
+				}
+			);
 			this.triggerSaveIndicator(THIRD_TABLE);
-			this.thirdTableNewContent = '';
+			this.thirdTableNewText = '';
 		}
 	}
 
 	protected addNewEntry() {
-		if (this.thirdTableNewContent.trim() !== '') {
-			let newValues = Object.fromEntries(
-				Object.entries(this.thirdTableActiveItem).filter(([_, value]) => value !== '')
+		if (this.thirdTableNewText.trim() !== '') {
+			let newContent = Object.fromEntries(
+				Object.entries(this.thirdTableActiveItem.content).filter(([_, value]) => value !== '')
 			);
-			newValues['content'] = this.thirdTableNewContent;
-			this.databaseService.addNewRecordForRemainderTable(THIRD_TABLE, newValues);
+			newContent['text'] = this.thirdTableNewText;
+			this.databaseService.addNewRecordForRemainderTable(
+				this.convertTableNameToCollectionName(THIRD_TABLE),
+				newContent
+			);
 			this.triggerSaveIndicator(THIRD_TABLE);
-			this.thirdTableNewContent = '';
+			this.thirdTableNewText = '';
 			this.op2.hide();
 		}
 	}
 
 	protected openPopover(event: Event, item: any) {
-		if (item == null) {
+		if (!item) {
 			this.thirdTableActiveItem = {
-				link: '',
-				date: ''
+				content: { link: '', date: '' }
 			};
 		} else {
 			this.thirdTableActiveItem = item;
@@ -441,37 +491,89 @@ export class RemainderComponent {
 	////////////////////////////////COMMON METHODS////////////////////////////////
 
 	protected async updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
-		const newValue = this.findUpdatedObject(tableName, entryKey)[valueKey];
-		if (newValue !== this.findOriginalObject(tableName, entryKey)[valueKey]) {
-			try {
-				await this.databaseService.updateRemainderTable(tableName, entryKey, valueKey, newValue);
-				this.triggerSaveIndicator(tableName);
-			} catch (error) {
-				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-					this.openErrorDialog();
-				}
-			}
+		const updatedItem = this.findUpdatedItem(tableName, entryKey).content[valueKey];
+		const oldItem = this.findOriginalItem(tableName, entryKey).content[valueKey];
+
+		if (JSON.stringify(updatedItem) !== JSON.stringify(oldItem)) {
+			const collectionName = this.convertTableNameToCollectionName(tableName);
+			await this.databaseService.updateRemainderTable(collectionName, entryKey, valueKey, updatedItem);
+			this.triggerSaveIndicator(tableName);
 		}
 	}
 
-	protected updateTableWithNewDate(tableName: string, entryKey: string, date: Date) {
-		this.findUpdatedObject(tableName, entryKey).date = date.toISOString().slice(0, 10);
+	protected async checkAndUpdateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
+		const updatedItem = this.findUpdatedItem(tableName, entryKey);
+		const oldItem = this.findOriginalItem(tableName, entryKey);
+		if (JSON.stringify(updatedItem) === JSON.stringify(oldItem)) return;
+
+		const collectionName = this.convertTableNameToCollectionName(tableName);
+		const returnCode = await this.checkPermission(collectionName, entryKey);
+		if (returnCode === FAILURE) {
+			// Rollback
+			updatedItem.content = structuredClone(oldItem.content);
+			return;
+		}
+		this.updateTableSingleValue(tableName, entryKey, valueKey);
+	}
+
+	protected async updateTableWithNewDate(tableName: string, entryKey: string, date: Date) {
+		const updatedItem = this.findUpdatedItem(tableName, entryKey);
+		const oldItem = this.findOriginalItem(tableName, entryKey);
+		if (JSON.stringify(updatedItem) === JSON.stringify(oldItem)) return;
+
+		const collectionName = this.convertTableNameToCollectionName(tableName);
+		const returnCode = await this.checkPermission(collectionName, entryKey);
+		if (returnCode === FAILURE) {
+			if (oldItem.content.date) updatedItem.content.date = oldItem.content.date;
+			else this.thirdTableActiveItem.content.date = '';
+			return;
+		}
+
+		updatedItem.content.date = format(date, 'yyyy-MM-dd');
 		this.updateTableSingleValue(tableName, entryKey, 'date');
 	}
 
-	private findUpdatedObject(tableName: string, entryKey: string) {
+	private findUpdatedItem(tableName: string, entryKey: string) {
 		if (tableName === SECOND_TABLE) {
-			return this.updatedSecondTable.find((item) => item.key === entryKey).content;
+			return this.updatedSecondTable.find((item) => item.key === entryKey);
 		} else if (tableName === THIRD_TABLE) {
 			return this.pagedThirdTable.find((item) => item.key === entryKey);
 		}
 	}
 
-	private findOriginalObject(tableName: string, entryKey: string) {
+	private findOriginalItem(tableName: string, entryKey: string) {
 		if (tableName === SECOND_TABLE) {
-			return this.originalSecondTable.find((item) => item.key === entryKey).content;
+			return this.originalSecondTable.find((item) => item.key === entryKey);
 		} else if (tableName === THIRD_TABLE) {
 			return this.originalThirdTable.find((item) => item.key === entryKey);
+		}
+	}
+
+	private async checkPermission(collectionName: string, entryKey: string) {
+		try {
+			await this.databaseService.checkPermission(collectionName, entryKey);
+			return SUCCESS;
+		} catch (error) {
+			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+				this.openErrorDialog();
+			}
+			return FAILURE;
+		}
+	}
+
+	private async checkPermissionForFirstTable() {
+		return await this.checkPermission(
+			this.convertTableNameToCollectionName(FIRST_TABLE),
+			this.updatedFirstTable[0]._id
+		);
+	}
+
+	private async callDatabaseForFirstTable() {
+		try {
+			await this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+			this.triggerSaveIndicator(FIRST_TABLE);
+		} catch (error) {
+			LOG.error(this.className, 'Unexpected error occurred', error as Error);
 		}
 	}
 
@@ -487,17 +589,6 @@ export class RemainderComponent {
 		}, 1000);
 	}
 
-	private async callDatabaseAndTriggerSaveIndicator() {
-		try {
-			await this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
-			this.triggerSaveIndicator(FIRST_TABLE);
-		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
-			}
-		}
-	}
-
 	/**
 	 * Open error confirmation dialog
 	 */
@@ -507,5 +598,23 @@ export class RemainderComponent {
 			'error',
 			'User does not have permission'
 		);
+	}
+
+	/**
+	 * Get corresponding table name in the database
+	 *
+	 * @param tableName table name
+	 */
+	private convertTableNameToCollectionName(tableName: string): string {
+		switch (tableName) {
+			case FIRST_TABLE:
+				return DATABASE_REMAINDER_FIRST;
+			case SECOND_TABLE:
+				return DATABASE_REMAINDER_SECOND;
+			case THIRD_TABLE:
+				return DATABASE_REMAINDER_THIRD;
+			default:
+				return '';
+		}
 	}
 }

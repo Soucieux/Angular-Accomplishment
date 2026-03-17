@@ -25,6 +25,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PaginatorModule } from 'primeng/paginator';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 
 @Component({
 	selector: 'patch',
@@ -75,7 +76,7 @@ export class PatchComponent {
 	) {}
 
 	async ngOnInit() {
-		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
+		if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
 			this.isMobile = this.utilities.isMobile();
 
 			const getObservable$ = this.databaseService.getPatchNotes();
@@ -127,7 +128,15 @@ export class PatchComponent {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	startEdit(row: any) {
+	async startEdit(row: any) {
+		try {
+			// await this.databaseService.checkPermission(DATABASE_PATCH_NOTES, row.key);
+		} catch (error) {
+			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+				this.openErrorDialog();
+				return;
+			}
+		}
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
 
@@ -150,15 +159,9 @@ export class PatchComponent {
 			changes.status = record.updated.status;
 		}
 
-		try {
-			if (Object.keys(changes).length > 0) {
-				changes.timestamp = this.utilities.getCurrentFormattedTime(false);
-				await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
-			}
-		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
-			}
+		if (Object.keys(changes).length > 0) {
+			changes.timestamp = this.utilities.getCurrentFormattedTime(false);
+			await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
 		}
 
 		this.editedRows.delete(row.key);
@@ -196,9 +199,7 @@ export class PatchComponent {
 				try {
 					await this.databaseService.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
 				} catch (error) {
-					if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-						this.openErrorDialog();
-					}
+					this.openUnexpectedErrorDialog();
 				}
 			},
 			['Are you sure you want to delete this note?', 'Confirm', 'Delete', 'Record deleted', true]
@@ -258,6 +259,13 @@ export class PatchComponent {
 			'error',
 			'User does not have permission'
 		);
+	}
+
+	/**
+	 * Open unexpected error dialog
+	 */
+	private openUnexpectedErrorDialog() {
+		this.dialogService.openDialog(this.dialogComponentContainer, 'error', 'Unexpected error occurred');
 	}
 
 	getRenderedData(data: any) {

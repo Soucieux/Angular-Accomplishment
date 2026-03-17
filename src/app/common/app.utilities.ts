@@ -79,6 +79,7 @@ export class Utilities {
 		return this.currentCountry;
 	}
 
+    // This is used by html files
 	public getIsUserAlive() {
 		return this.isUserAlive;
 	}
@@ -132,7 +133,8 @@ export class Utilities {
 
 			const currentLocation = await response.json();
 
-			this.currentCountry = currentLocation.country;
+			// this.currentCountry = currentLocation.country;
+			this.currentCountry = CN;
 
 			localStorage.setItem(
 				'location',

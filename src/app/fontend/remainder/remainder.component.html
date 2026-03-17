@@ -121,10 +121,8 @@
 								[maxFractionDigits]="2"
 								[step]="0.01"
 								[(ngModel)]="item.content.debt"
-								(onBlur)="checkAndUpdateTableSingleValue(SECOND_TABLE, item.key, 'debt')"
-								(keyup.enter)="
-									checkAndUpdateTableSingleValue(SECOND_TABLE, item.key, 'debt')
-								" />
+								(onBlur)="updateTableSingleValue(SECOND_TABLE, item.key, 'debt')"
+								(keyup.enter)="updateTableSingleValue(SECOND_TABLE, item.key, 'debt')" />
 							<p-inputgroup-addon
 								><p-button
 									icon="pi pi-minus"
@@ -159,7 +157,7 @@
 								[inputId]="item.key"
 								[(ngModel)]="item.content.paid"
 								[binary]="true"
-								(onChange)="checkAndUpdateTableSingleValue(SECOND_TABLE, item.key, 'paid')" />
+								(onChange)="updateTableSingleValue(SECOND_TABLE, item.key, 'paid')" />
 							<label
 								[for]="item.key"
 								style="font-size: 15px"
@@ -205,21 +203,19 @@
 								pInputText
 								[(ngModel)]="item.content.text"
 								fluid
-								(blur)="checkAndUpdateTableSingleValue(THIRD_TABLE, item.key, 'content')"
-								(keyup.enter)="
-									checkAndUpdateTableSingleValue(THIRD_TABLE, item.key, 'content')
-								" />
-							@if (item.date) {
+								(blur)="updateTableSingleValue(THIRD_TABLE, item.key, 'text')"
+								(keyup.enter)="updateTableSingleValue(THIRD_TABLE, item.key, 'text')" />
+							@if (item.content.date) {
 								<p-inputgroup-addon>
 									<i
 										class="pi pi-clock"
 										[style]="{
 											color: 'black'
 										}"
-										[pTooltip]="isHoverCapable ? item.date : ''"
+										[pTooltip]="isHoverCapable ? item.content.date : ''"
 										(click)="!isHoverCapable && op.toggle($event)"
 										tooltipPosition="top"></i>
-									<p-popover #op>{{ item.date }}</p-popover>
+									<p-popover #op>{{ item.content.date }}</p-popover>
 								</p-inputgroup-addon>
 							}
 							@if (item.content.link) {
@@ -290,12 +286,20 @@
 						style="font-size: 15px"
 						(blur)="
 							thirdTableActiveItem.key
-								? updateLink(THIRD_TABLE, thirdTableActiveItem.key, thirdTableActiveItem.link)
+								? updateLink(
+										THIRD_TABLE,
+										thirdTableActiveItem.key,
+										thirdTableActiveItem.content.link
+									)
 								: ''
 						"
 						(keyup.enter)="
 							thirdTableActiveItem.key
-								? updateLink(THIRD_TABLE, thirdTableActiveItem.key, thirdTableActiveItem.link)
+								? updateLink(
+										THIRD_TABLE,
+										thirdTableActiveItem.key,
+										thirdTableActiveItem.content.link
+									)
 								: ''
 						" />
 				</p-inputgroup>

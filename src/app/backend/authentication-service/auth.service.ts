@@ -123,8 +123,11 @@ export class AuthService {
 		this.cloudbaseAuth.getUser().then((response: { data: { user: any } }) => {
 			const { data } = response;
 
-			if (data.user) this.utilities.setIsUserAlive(true);
-
+			if (data.user) {
+				this.utilities.setIsUserAlive(true);
+				CloudbaseService.setUseId(data.user.id);
+				CloudbaseService.setUserRole(data.user.user_metadata?.name);
+			}
 			this.cloudbaseUserSubject.next(data.user);
 		});
 		return this.cloudbaseUserSubject.asObservable();
@@ -137,6 +140,7 @@ export class AuthService {
 				this.cloudbaseUserSubject.next(null);
 				this.router.navigate(['/']);
 				this.utilities.setIsUserAlive(false);
+				CloudbaseService.setUseId('');
 			})
 			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}

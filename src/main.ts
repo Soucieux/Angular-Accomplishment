@@ -32,8 +32,6 @@ import { environment } from './environment/environment';
 		});
 
 		providers.push({ provide: CLOUDBASE, useValue: app });
-
-		CloudbaseService.setUseId((await app.auth().getUser()).data.user?.id);
 	} else {
 		const { provideFirebaseApp, initializeApp } = await import('@angular/fire/app');
 		const { provideAuth, getAuth } = await import('@angular/fire/auth');

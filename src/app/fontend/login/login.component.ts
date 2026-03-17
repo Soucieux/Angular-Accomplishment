@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
@@ -58,7 +58,7 @@ export class LoginComponent {
 	}
 
 	// Below is for cloudbase
-	onSubmit() {
+	async onSubmit() {
 		this.formSubmitted = true;
 		if (this.loginForm.valid) {
 			if (Utilities.getCurrentCountry() === CN) {

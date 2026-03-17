@@ -651,8 +651,4 @@ export class FirebaseService extends DatabaseService {
 			LOG.info(this.className, 'Remainder table has been updated');
 		});
 	}
-
-	public async checkPermission(name: string, entryKey: string): Promise<string> {
-		return SUCCESS;
-	}
 }

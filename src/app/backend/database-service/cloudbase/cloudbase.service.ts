@@ -1,6 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { Observable, catchError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../../common/movieitem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
 import { LOG } from '../../../common/app.logs';
@@ -14,12 +14,14 @@ import {
 	DATABASE_REMAINDER_THIRD,
 	DATABASE_STATISTICS,
 	ERROR_PERMISSION_DENIED,
+	FIRST_TABLE,
 	GENRE_FAVOURITE,
 	NO_RATE,
 	RATE_DECREASED,
 	RATE_INCREASED,
 	SEARCH,
-	SUCCESS
+	SECOND_TABLE,
+	THIRD_TABLE
 } from '../../../common/app.constant';
 
 @Injectable({ providedIn: 'root' })
@@ -28,6 +30,7 @@ export class CloudbaseService extends DatabaseService {
 	private database: any;
 	private statId: any;
 	private static userId: string;
+	public static userRole: string;
 	private _!: any;
 	searchStreamService: any;
 
@@ -59,6 +62,18 @@ export class CloudbaseService extends DatabaseService {
 
 	public static setUseId(userId: string) {
 		this.userId = userId;
+	}
+
+	public static getUseId() {
+		return this.userId;
+	}
+
+	public static setUserRole(userRole: string) {
+		this.userRole = userRole;
+	}
+
+	public static getUserRole() {
+		return this.userRole;
 	}
 
 	public async test() {
@@ -297,22 +312,31 @@ export class CloudbaseService extends DatabaseService {
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieItemVO.getMovieKey());
 		const oldRate = movieRef.exists() ? movieRef.get().rate : undefined;
 
-		// Step 2 : Compare latest rate with the one stored in the database
-		if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
-			await movieRef.update({
-				rate: movieItemVO.getMovieRate()
-			});
+		try {
+			// Step 2 : Compare latest rate with the one stored in the database
+			if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
+				const result = await movieRef.update({
+					rate: movieItemVO.getMovieRate()
+				});
 
-			const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
-			this.searchStreamService.addSearchLog(
-				`The rate of ${movieItemVO.getMovieName()} is <span ${
-					rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
-				}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
-					rateDifference
-				)}</span> to ${movieItemVO.getMovieRate()}`
-			);
-		} else {
-			this.searchStreamService.addSearchLog(`The rate of ${movieItemVO.getMovieName()} stays the same`);
+				if (result.code) throw new Error(result.message);
+
+				const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
+				this.searchStreamService.addSearchLog(
+					`The rate of ${movieItemVO.getMovieName()} is <span ${
+						rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
+					}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
+						rateDifference
+					)}</span> to ${movieItemVO.getMovieRate()}`
+				);
+			} else {
+				this.searchStreamService.addSearchLog(
+					`The rate of ${movieItemVO.getMovieName()} stays the same`
+				);
+			}
+		} catch (error) {
+			LOG.error(this.className, 'Error while updaing movie rate', error as Error);
+			throw error;
 		}
 	}
 
@@ -330,7 +354,9 @@ export class CloudbaseService extends DatabaseService {
 			.update({
 				genre: newGenre
 			})
-			.then(() => {
+			.then((result: any) => {
+				if (result.code) throw new Error(result.message);
+
 				LOG.info(this.className, `Movie genre has been updated`);
 
 				// Step 2 : Update movie statistics
@@ -342,7 +368,9 @@ export class CloudbaseService extends DatabaseService {
 						[`genre.${newGenre}`]: this._.inc(1)
 					});
 			})
-			.then(() => {
+			.then((result: any) => {
+				if (result.code) throw new Error(result.message);
+
 				LOG.info(this.className, `Movie statistics have been updated`);
 			});
 	}
@@ -360,7 +388,9 @@ export class CloudbaseService extends DatabaseService {
 			.update({
 				isFavourite: isFavourite
 			})
-			.then(() => {
+			.then((result: any) => {
+				if (result.code) throw new Error(result.message);
+
 				LOG.info(this.className, `Movie favourite tag has been updated`);
 
 				// Step 2 : Update movie statistics
@@ -374,7 +404,9 @@ export class CloudbaseService extends DatabaseService {
 
 				return this.database.collection(DATABASE_STATISTICS).doc(this.statId).update(updatedData);
 			})
-			.then(() => {
+			.then((result: any) => {
+				if (result.code) throw new Error(result.message);
+
 				LOG.info(this.className, `Movie statistics have been updated`);
 			});
 	}
@@ -387,7 +419,7 @@ export class CloudbaseService extends DatabaseService {
 	async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Add new movie data
-			await this.database.collection(DATABASE_MOVIES).add({
+			const addMovieRes = await this.database.collection(DATABASE_MOVIES).add({
 				_openid: CloudbaseService.userId,
 				title: movieItemVO.getMovieName(),
 				year: movieItemVO.getMovieYear(),
@@ -401,6 +433,9 @@ export class CloudbaseService extends DatabaseService {
 				description: movieItemVO.getDescription(),
 				actors: movieItemVO.getActors()
 			});
+			if (addMovieRes.code) {
+				throw new Error(addMovieRes.message);
+			}
 
 			// Add new entry to history
 			await this.addNewHistoryEntry('added', movieItemVO);
@@ -414,7 +449,12 @@ export class CloudbaseService extends DatabaseService {
 			}
 
 			// Update the movie statistics
-			await this.database.collection(DATABASE_STATISTICS).doc(this.statId).udpate(updatedData);
+			const statRes = await this.database
+				.collection(DATABASE_STATISTICS)
+				.doc(this.statId)
+				.udpate(updatedData);
+			if (statRes.code) throw new Error(statRes.message);
+
 			LOG.info(this.className, `Movie added and statistics have been updated`);
 		} catch (error) {
 			LOG.error(
@@ -422,6 +462,7 @@ export class CloudbaseService extends DatabaseService {
 				`Error while adding new movie data for ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
+			throw error;
 		}
 	}
 
@@ -472,23 +513,30 @@ export class CloudbaseService extends DatabaseService {
 	 * @param movieItemVO - The movie item to update.
 	 */
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
-		if (movieItemVO) {
-			await this.database.collection(DATABASE_HISTORY).add({
-				_openid: CloudbaseService.userId,
-				id: movieItemVO.getMovieId(),
-				status: status,
-				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
-					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
-				}) was ${status} on ${this.utilities.getCurrentFormattedTime(true)}`
-			});
-		} else {
-			await this.database.collection(DATABASE_HISTORY).add({
-				_openid: CloudbaseService.userId,
-				status: status,
-				message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
-			});
+		try {
+			if (movieItemVO) {
+				const result = await this.database.collection(DATABASE_HISTORY).add({
+					_openid: CloudbaseService.userId,
+					id: movieItemVO.getMovieId(),
+					status: status,
+					message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
+						movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
+					}) was ${status} on ${this.utilities.getCurrentFormattedTime(true)}`
+				});
+				if (result.code) throw new Error(result.message);
+			} else {
+				const result = await this.database.collection(DATABASE_HISTORY).add({
+					_openid: CloudbaseService.userId,
+					status: status,
+					message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
+				});
+				if (result.code) throw new Error(result.message);
+			}
+			LOG.info(this.className, 'New history entry has been added');
+		} catch (error) {
+			LOG.error(this.className, 'Error while adding new history entry', error as Error);
+			throw error;
 		}
-		LOG.info(this.className, 'New history entry has been added');
 	}
 
 	/**
@@ -508,7 +556,15 @@ export class CloudbaseService extends DatabaseService {
 				timestamp: newRecord.timestamp,
 				isBug: newRecord.isBug
 			})
-			.then(() => {
+			.then((result: any) => {
+				if (result.code) {
+					LOG.error(
+						this.className,
+						'Error while adding new patch notes',
+						new Error(result.message)
+					);
+					throw new Error(result.message);
+				}
 				LOG.info(this.className, 'New patch notes record has been added');
 			});
 	}
@@ -526,38 +582,39 @@ export class CloudbaseService extends DatabaseService {
 			.update({
 				...updatedRecord
 			})
-			.then(() => {
+			.then((result: any) => {
+				if (result.code) throw new Error(result.message);
+
 				LOG.info(this.className, 'Patch notes record has been updated');
 			});
 	}
 
 	/**
 	 * Update remainder table details
+	 * Note: This method is used by second table and third table
 	 *
-	 * @param collectionName - Corresponding collection name
+	 * @param tableName - Corresponding collection name
 	 * @param entryKey - The key of the entire entry
 	 * @param valueKey - The key associated with the new value.
 	 * @param value - The new value to be stored.
 	 */
-	updateRemainderTable(
-		collectionName: string,
-		entryKey: string,
-		valueKey: string,
-		value: any
-	): Promise<void> {
-		let valueToUpdate;
-		if (collectionName === DATABASE_REMAINDER_SECOND) {
-			valueToUpdate =
-				valueKey === 'content' ? { content: { ...value } } : { content: { [valueKey]: value } };
-		} else if (collectionName === DATABASE_REMAINDER_THIRD) {
-			valueToUpdate = { [valueKey]: value };
-		}
+	updateRemainderTable(tableName: string, entryKey: string, valueKey: string, value: any): Promise<void> {
+		const collectionName = this.convertTableNameToCollectionName(tableName);
 
+		let valueToUpdate;
+		if (valueKey === 'content') {
+			valueToUpdate = { content: { ...value } };
+		} else {
+			valueToUpdate = { content: { [valueKey]: value } };
+		}
 		return this.database
 			.collection(collectionName)
 			.doc(entryKey)
 			.update(valueToUpdate)
-			.then(() => {
+			.then((result: any) => {
+				if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
+				else if (result.code) throw new Error(result.message);
+
 				LOG.info(this.className, 'Remainder table has been updated');
 			});
 	}
@@ -569,10 +626,18 @@ export class CloudbaseService extends DatabaseService {
 	 * @param updatedTable - The table to update
 	 */
 	async updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void> {
-		const tableRef = this.database.collection(DATABASE_REMAINDER_FIRST);
-		for (const [index, item] of updatedTable.entries()) {
-			await tableRef.doc(index).update(item);
+		const collectionName = this.convertTableNameToCollectionName(tableName);
+		const tableRef = this.database.collection(collectionName);
+
+		for (const data of updatedTable) {
+			const { _id, _openid, ...rest } = data;
+			const result = await this.database
+				.collection(collectionName)
+				.doc(_id)
+				.update(rest);
+			if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
 		}
+
 		LOG.info(this.className, 'Remainder table has been updated');
 	}
 
@@ -580,13 +645,15 @@ export class CloudbaseService extends DatabaseService {
 	 * Remove record from remainder table
 	 * Note: This is used by third table only
 	 *
-	 * @param collectionName - Corresponding collection name
+	 * @param tableName - Corresponding collection name
 	 * @param index - The index of the record to remove
 	 */
-	removeRecordFromRemainderTable(collectionName: string, key: string): Promise<void> {
+	async removeRecordFromRemainderTable(tableName: string, key: string): Promise<void> {
 		try {
-			return this.removeSingleItemFromDatabase(collectionName, key);
+			const collectionName = this.convertTableNameToCollectionName(tableName);
+			return await this.removeSingleItemFromDatabase(collectionName, key);
 		} catch (error) {
+			LOG.error(this.className, 'Error while removing a record from remainder table');
 			throw error;
 		}
 	}
@@ -597,41 +664,51 @@ export class CloudbaseService extends DatabaseService {
 	 * @param collectionName - The collection name in cloudbase
 	 * @param key - The key associated with the record
 	 */
-	removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
-		return this.database
-			.collection(collectionName)
-			.doc(key)
-			.remove()
-			.then(() => {
-				LOG.info(this.className, `Record has been removed from ${collectionName}`);
-			});
+	async removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
+		const result = await this.database.collection(collectionName).doc(key).remove();
+		if (result.code) throw new Error(result.message);
+		LOG.info(this.className, `Record has been removed from ${collectionName}`);
 	}
 
 	/**
 	 * Add a new entry to a given table
 	 * Note: This is used by third table only
 	 *
-	 * @param collectionName Correpsonding collection name
+	 * @param tableName Correpsonding collection name
 	 * @param newRecord The new entry
 	 */
-	addNewRecordForRemainderTable(collectionName: string, newRecord: any): Promise<void> {
+	addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
+		const collectionName = this.convertTableNameToCollectionName(tableName);
 		return this.database
 			.collection(collectionName)
 			.add({
 				_openid: CloudbaseService.userId,
 				content: { ...newRecord }
 			})
-			.then(() => {
+			.then((result: any) => {
+				if (result.code) {
+					LOG.error(this.className, 'Error while adding new record for remainder table');
+					throw new Error(result.message);
+				}
 				LOG.info(this.className, 'Remainder table has been updated');
 			});
 	}
 
 	/**
-	 * Check if current has permisson to edit data
+	 * Get corresponding table name in the database
+	 *
+	 * @param tableName table name
 	 */
-	async checkPermission(collectionName: string, entryKey: string): Promise<string> {
-		const data = await this.database.collection(collectionName).doc(entryKey).get();
-		if (data.data[0]._openid === CloudbaseService.userId) return SUCCESS;
-		else throw new Error(ERROR_PERMISSION_DENIED);
+	private convertTableNameToCollectionName(tableName: string): string {
+		switch (tableName) {
+			case FIRST_TABLE:
+				return DATABASE_REMAINDER_FIRST;
+			case SECOND_TABLE:
+				return DATABASE_REMAINDER_SECOND;
+			case THIRD_TABLE:
+				return DATABASE_REMAINDER_THIRD;
+			default:
+				return '';
+		}
 	}
 }

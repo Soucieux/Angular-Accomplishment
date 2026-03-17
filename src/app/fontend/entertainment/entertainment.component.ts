@@ -37,6 +37,7 @@ import { MovieAlreadyExistsError } from '../../common/error/movie-already-exists
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -94,7 +95,7 @@ export class EntertainmentComponent {
 	async ngOnInit() {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
-		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
+		if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
 			// Get the movie list (Observable) and statistics (Observable) from firebase or cloudbase
 			this.statistics$ = this.databaseService.getStatistics();
 
@@ -130,7 +131,7 @@ export class EntertainmentComponent {
 	}
 
 	public ngAfterViewChecked() {
-		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
+		if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
 			this.updateGridLayout();
 		}
 	}
@@ -140,7 +141,7 @@ export class EntertainmentComponent {
 	 */
 	@HostListener('window:resize')
 	protected onResize() {
-		if (isPlatformBrowser(this.platformId) && this.utilities.getIsUserAlive()) {
+		if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
 			this.updateGridLayout();
 		}
 	}
@@ -199,10 +200,10 @@ export class EntertainmentComponent {
 				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 					this.openErrorDialog();
 				} else {
+					this.openUnexpectedErrorDialog();
 					LOG.error(
 						this.className,
-						`Error while updating movie rate for ${movieItemVO.getMovieName()}`,
-						error as Error
+						`Error while updating movie rate for ${movieItemVO.getMovieName()}`
 					);
 				}
 			}
@@ -717,6 +718,9 @@ export class EntertainmentComponent {
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 				this.openErrorDialog();
+			} else {
+				this.openUnexpectedErrorDialog();
+				LOG.error(this.className, 'Error while updaing genre');
 			}
 		}
 	}
@@ -732,6 +736,9 @@ export class EntertainmentComponent {
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 				this.openErrorDialog();
+			} else {
+				this.openUnexpectedErrorDialog();
+				LOG.error(this.className, 'Error while set favourite');
 			}
 		}
 	}
@@ -745,5 +752,12 @@ export class EntertainmentComponent {
 			'error',
 			'User does not have permission'
 		);
+	}
+
+	/**
+	 * Open unexpected error dialog
+	 */
+	private openUnexpectedErrorDialog() {
+		this.dialogService.openDialog(this.dialogComponentContainer, 'error', 'Unexpected error occurred');
 	}
 }

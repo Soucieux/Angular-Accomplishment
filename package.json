@@ -22,7 +22,7 @@
     "@angular/platform-browser-dynamic": "^21.1.4",
     "@angular/platform-server": "^21.1.4",
     "@angular/router": "^21.1.4",
-    "@angular/ssr": "^21.1.4",
+    "@angular/ssr": "^21.2.3",
     "@cloudbase/js-sdk": "^2.25.7",
     "@cloudbase/types": "^2.25.9",
     "@primeng/themes": "^20.2.0",

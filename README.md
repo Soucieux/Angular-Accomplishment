@@ -2,9 +2,9 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 20.
 
-# Timeflow
+## Timeflow
 
-## Release 1.0
+### Release 1.0
 
 Project initialization -> 2024.02.05
 
@@ -24,7 +24,7 @@ About -> 2026.01.27
 
 Cloudbase ->2026.03.07 ~ Present
 
-## Required Dependencies
+### Required Dependencies
 
 - Firebase / Clouebase
 - Angular Material

@@ -510,7 +510,7 @@ export class RemainderComponent {
 	}
 	protected async updateTableWithNewDate(tableName: string, entryKey: string, date: Date) {
 		const updatedItem = this.findUpdatedItem(tableName, entryKey);
-		updatedItem.content.date = format(date, 'yyyy-MM-dd');
+		if (updatedItem.content.date) updatedItem.content.date = format(date, 'yyyy-MM-dd');
 		await this.updateTableSingleValue(tableName, entryKey, 'date');
 	}
 
@@ -561,7 +561,7 @@ export class RemainderComponent {
 		}
 	}
 
-	private triggerSaveIndicator(tableName: string) {
+    private triggerSaveIndicator(tableName: string) {
 		this.saveIndicators[tableName] = true;
 
 		if (this.saveIndicatorTimeouts[tableName]) {

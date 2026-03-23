@@ -419,8 +419,10 @@ export class CloudbaseService extends DatabaseService {
 	async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Add new movie data
+			const userId =
+				CloudbaseService.getUserRole() === '管理员' ? { _openid: CloudbaseService.userId } : {};
 			const addMovieRes = await this.database.collection(DATABASE_MOVIES).add({
-				_openid: CloudbaseService.userId,
+				...userId,
 				title: movieItemVO.getMovieName(),
 				year: movieItemVO.getMovieYear(),
 				genre: movieItemVO.getMovieGenre(),
@@ -514,9 +516,11 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		try {
+			const userId =
+				CloudbaseService.getUserRole() === '管理员' ? { _openid: CloudbaseService.userId } : {};
 			if (movieItemVO) {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
-					_openid: CloudbaseService.userId,
+					...userId,
 					id: movieItemVO.getMovieId(),
 					status: status,
 					message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
@@ -526,7 +530,7 @@ export class CloudbaseService extends DatabaseService {
 				if (result.code) throw new Error(result.message);
 			} else {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
-					_openid: CloudbaseService.userId,
+					...userId,
 					status: status,
 					message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
 				});
@@ -545,10 +549,12 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The record to add.
 	 */
 	addNewRecordToPatchNotes(newRecord: any): Promise<void> {
+		const userId =
+			CloudbaseService.getUserRole() === '管理员' ? { _openid: CloudbaseService.userId } : {};
 		return this.database
 			.collection(DATABASE_PATCH_NOTES)
 			.add({
-				_openid: CloudbaseService.userId,
+				...userId,
 				component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
 				element: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
 				details: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
@@ -631,10 +637,7 @@ export class CloudbaseService extends DatabaseService {
 
 		for (const data of updatedTable) {
 			const { _id, _openid, ...rest } = data;
-			const result = await this.database
-				.collection(collectionName)
-				.doc(_id)
-				.update(rest);
+			const result = await this.database.collection(collectionName).doc(_id).update(rest);
 			if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
 		}
 
@@ -679,10 +682,12 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
+		const userId =
+			CloudbaseService.getUserRole() === '管理员' ? { _openid: CloudbaseService.userId } : {};
 		return this.database
 			.collection(collectionName)
 			.add({
-				_openid: CloudbaseService.userId,
+				...userId,
 				content: { ...newRecord }
 			})
 			.then((result: any) => {

@@ -315,7 +315,7 @@
 						dateFormat="yy-mm-dd"
 						[(ngModel)]="thirdTableActiveItem.content.date"
 						class="datapicker"
-						(onSelect)="
+						(ngModelChange)="
 							thirdTableActiveItem.key
 								? updateTableWithNewDate(THIRD_TABLE, thirdTableActiveItem.key, $event)
 								: ''

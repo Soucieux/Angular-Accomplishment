@@ -30,7 +30,7 @@ export class CloudbaseService extends DatabaseService {
 	private database: any;
 	private statId: any;
 	private static userId: string;
-	public static userRole: string;
+	private static userRole: string;
 	private _!: any;
 	searchStreamService: any;
 
@@ -72,8 +72,8 @@ export class CloudbaseService extends DatabaseService {
 		this.userRole = userRole;
 	}
 
-	public static getUserRole() {
-		return this.userRole;
+	public static userHasAllRights() {
+		return this.userRole === '管理员';
 	}
 
 	public async test() {
@@ -419,8 +419,7 @@ export class CloudbaseService extends DatabaseService {
 	async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Add new movie data
-			const userId =
-				CloudbaseService.getUserRole() === '管理员' ? { _openid: CloudbaseService.userId } : {};
+			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 			const addMovieRes = await this.database.collection(DATABASE_MOVIES).add({
 				...userId,
 				title: movieItemVO.getMovieName(),
@@ -516,8 +515,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		try {
-			const userId =
-				CloudbaseService.getUserRole() === '管理员' ? { _openid: CloudbaseService.userId } : {};
+			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 			if (movieItemVO) {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
 					...userId,
@@ -549,8 +547,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The record to add.
 	 */
 	addNewRecordToPatchNotes(newRecord: any): Promise<void> {
-		const userId =
-			CloudbaseService.getUserRole() === '管理员' ? { _openid: CloudbaseService.userId } : {};
+		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 		return this.database
 			.collection(DATABASE_PATCH_NOTES)
 			.add({
@@ -682,8 +679,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
-		const userId =
-			CloudbaseService.getUserRole() === '管理员' ? { _openid: CloudbaseService.userId } : {};
+		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 		return this.database
 			.collection(collectionName)
 			.add({

@@ -11,12 +11,14 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_PATCH_NOTES,
 	ERROR_PERMISSION_DENIED,
+	FAILURE,
 	STATUS_COMPLETED,
 	STATUS_DEBUG,
 	STATUS_DRAFT,
 	STATUS_IN_PROGRESS,
 	STATUS_RESOLVED,
-	STATUS_TODO
+	STATUS_TODO,
+	SUCCESS
 } from '../../common/app.constant';
 import { map, Observable, shareReplay, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -129,14 +131,9 @@ export class PatchComponent {
 	}
 
 	async startEdit(row: any) {
-		try {
-			// await this.databaseService.checkPermission(DATABASE_PATCH_NOTES, row.key);
-		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
-				return;
-			}
-		}
+		const result = this.checkPermission(row._openid);
+		if (result === FAILURE) return;
+
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
 
@@ -248,6 +245,21 @@ export class PatchComponent {
 			data[rowIndex].element !== data[rowIndex - 1].element ||
 			data[rowIndex].component !== data[rowIndex - 1].component
 		);
+	}
+
+	private checkPermission(openid: string) {
+		if (CloudbaseService.userHasAllRights()) return;
+		try {
+			if (openid !== CloudbaseService.getUseId()) throw new Error(ERROR_PERMISSION_DENIED);
+			return SUCCESS;
+		} catch (error) {
+			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+				this.openErrorDialog();
+			} else {
+				this.openUnexpectedErrorDialog();
+			}
+			return FAILURE;
+		}
 	}
 
 	/**

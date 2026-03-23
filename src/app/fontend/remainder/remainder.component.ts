@@ -541,7 +541,7 @@ export class RemainderComponent {
 	 * {@link openDeleteConfirmationDialog} - Button to open delete dialog for third table
 	 */
 	private checkPermission(tableName: string, entryKey: string) {
-		if (CloudbaseService.getUserRole() === '管理员') return;
+		if (CloudbaseService.userHasAllRights()) return;
 		try {
 			if (tableName == FIRST_TABLE && this.updatedFirstTable[0]._openid !== CloudbaseService.getUseId())
 				throw new Error(ERROR_PERMISSION_DENIED);

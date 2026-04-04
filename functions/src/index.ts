@@ -35,8 +35,42 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 		return;
 	}
 
+	// Validate and restrict the target URL to prevent SSRF
+	let validatedUrl: string;
 	try {
-		const response = await fetch(url, {
+		const parsed = new URL(url);
+
+		// Only allow http/https
+		if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+			res.status(400).json({ error: 'Invalid URL protocol' });
+			return;
+		}
+
+		// Allow-list of hostnames or domains we proxy for (adjust as needed)
+		const hostname = parsed.hostname.toLowerCase();
+		const allowedHostnames = [
+			'movie.douban.com'
+		];
+		const allowedSuffixes = [
+			'.doubanio.com'
+		];
+
+		const isExactAllowed = allowedHostnames.includes(hostname);
+		const isSuffixAllowed = allowedSuffixes.some(suffix => hostname.endsWith(suffix));
+
+		if (!isExactAllowed && !isSuffixAllowed) {
+			res.status(400).json({ error: 'Target host is not allowed' });
+			return;
+		}
+
+		validatedUrl = parsed.toString();
+	} catch (e) {
+		res.status(400).json({ error: 'Invalid URL format' });
+		return;
+	}
+
+	try {
+		const response = await fetch(validatedUrl, {
 			headers: {
 				'X-Requested-With': 'XMLHttpRequest',
 				Referer: 'https://movie.douban.com/',

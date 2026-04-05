@@ -112,8 +112,14 @@
 						<div class="second-table-cell-header">{{ item.name }}</div>
 						<p-inputgroup style="height: 40px">
 							<p-inputgroup-addon>
-								<i class="pi pi-dollar" style="color: black; font-weight: bold"></i
-							></p-inputgroup-addon>
+								@if (checkIfChinese(item.name)) {
+									<i
+										class="material-symbols-outlined"
+										style="color: black">currency_yen</i>
+								} @else {
+									<i class="pi pi-dollar" style="color: black; font-weight: bold"></i>
+								}
+							</p-inputgroup-addon>
 							<p-inputnumber
 								mode="decimal"
 								locale="en-US"

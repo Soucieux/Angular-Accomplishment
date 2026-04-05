@@ -166,7 +166,8 @@ export class RemainderComponent {
 					!this.isNextMonth &&
 					this.updatedFirstTable[index][field].value < this.currentDay
 				) {
-					this.updatedFirstTable[index][field].isCharged = true;
+					// Fieldes are no longer being set as charged so that its color is only changed on user input
+					// this.updatedFirstTable[index][field].isCharged = true;
 					this.chargedCells.add(`${index}-${field}`);
 				}
 			}

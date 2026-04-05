@@ -79,7 +79,7 @@ export class Utilities {
 		return this.currentCountry;
 	}
 
-    // This is used by html files
+	// This is used by html files
 	public getIsUserAlive() {
 		return this.isUserAlive;
 	}
@@ -128,10 +128,10 @@ export class Utilities {
 		// 	}
 		// }
 		try {
-			const response = await fetch('https://ipinfo.io/json?token=581131c84dc255');
-			if (!response.ok) throw new Error('IP lookup failed');
+			// const response = await fetch('https://ipinfo.io/json?token=581131c84dc255');
+			// if (!response.ok) throw new Error('IP lookup failed');
 
-			const currentLocation = await response.json();
+			// const currentLocation = await response.json();
 
 			// this.currentCountry = currentLocation.country;
 			this.currentCountry = CN;
@@ -140,15 +140,13 @@ export class Utilities {
 				'location',
 				JSON.stringify({
 					country: this.currentCountry,
-					ip: currentLocation.ip,
+					// ip: currentLocation.ip,
+					ip: 'null',
 					timestamp: Date.now()
 				})
 			);
 
-			LOG.info(
-				this.className,
-				'Current IP: ' + currentLocation.ip + ', Current country: ' + this.currentCountry
-			);
+			LOG.info(this.className, 'Current IP: ' + 'null' + ', Current country: ' + this.currentCountry);
 		} catch (error: any) {
 			LOG.error(this.className, 'Country detection failed: ', error);
 			this.currentCountry = CN;

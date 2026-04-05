@@ -99,8 +99,7 @@ export class RemainderComponent {
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private dialogService: DialogService,
 		private databaseService: DatabaseService,
-		private cdr: ChangeDetectorRef,
-		private utilities: Utilities
+		private cdr: ChangeDetectorRef
 	) {}
 
 	ngOnInit() {
@@ -561,7 +560,7 @@ export class RemainderComponent {
 		}
 	}
 
-    private triggerSaveIndicator(tableName: string) {
+	private triggerSaveIndicator(tableName: string) {
 		this.saveIndicators[tableName] = true;
 
 		if (this.saveIndicatorTimeouts[tableName]) {
@@ -589,5 +588,9 @@ export class RemainderComponent {
 	 */
 	private openUnexpectedErrorDialog() {
 		this.dialogService.openDialog(this.dialogComponentContainer, 'error', 'Unexpected error occurred');
+	}
+
+	protected checkIfChinese(text: string) {
+		return /[\u4e00-\u9fa5]/.test(text);
 	}
 }

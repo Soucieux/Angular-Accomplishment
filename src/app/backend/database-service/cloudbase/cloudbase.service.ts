@@ -77,16 +77,10 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	public async test() {
+		// const data = await this.database.collection(DATABASE_MOVIES).get();
 		// for (const value of data.data) {
 		// 	this.database.collection(DATABASE_MOVIES).doc(value._id).update({});
 		// }
-		const notes = await this.database.collection(DATABASE_REMAINDER_FIRST).get();
-		for (const data of notes.data) {
-			await this.database
-				.collection(DATABASE_REMAINDER_FIRST)
-				.doc(data._id)
-				.update({ _openid: CloudbaseService.userId });
-		}
 	}
 
 	/**

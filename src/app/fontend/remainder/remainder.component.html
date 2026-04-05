@@ -43,13 +43,13 @@
 				<tr>
 					@for (field of fields; let index = $index; track field) {
 						<td>
+							<!-- [disabled]="!isNextMonth && isDisabled(rowIndex, field)" -->
 							<p-inputgroup>
 								<input
 									pInputText
 									type="text"
 									inputmode="numeric"
 									[(ngModel)]="row[field].value"
-									[disabled]="!isNextMonth && isDisabled(rowIndex, field)"
 									[class.disabled-cell]="!isNextMonth && isDisabled(rowIndex, field)"
 									class="first-table-input"
 									[style]="setStyle(row[field].isCharged, row[field].value)"
@@ -60,7 +60,6 @@
 									><p-button
 										icon="pi pi-check"
 										severity="secondary"
-										[disabled]="!isNextMonth && isDisabled(rowIndex, field)"
 										(onClick)="setIsCharged(rowIndex, field)"></p-button
 								></p-inputgroup-addon>
 							</p-inputgroup>
@@ -113,9 +112,7 @@
 						<p-inputgroup style="height: 40px">
 							<p-inputgroup-addon>
 								@if (checkIfChinese(item.name)) {
-									<i
-										class="material-symbols-outlined"
-										style="color: black">currency_yen</i>
+									<i class="material-symbols-outlined" style="color: black">currency_yen</i>
 								} @else {
 									<i class="pi pi-dollar" style="color: black; font-weight: bold"></i>
 								}

@@ -1,3 +1,4 @@
+import { getDownloadURL } from '@angular/fire/storage';
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -5,6 +6,7 @@ import { MovieItemVO } from '../../../common/movieitem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
 import { LOG } from '../../../common/app.logs';
 import { Utilities } from '../../../common/app.utilities';
+import { environment } from '../../../../environment/environment';
 import {
 	DATABASE_HISTORY,
 	DATABASE_MOVIES,
@@ -33,6 +35,7 @@ export class CloudbaseService extends DatabaseService {
 	private static userRole: string;
 	private _!: any;
 	searchStreamService: any;
+	private tempUrlCache = new Map<string, string>();
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -52,7 +55,7 @@ export class CloudbaseService extends DatabaseService {
 					return (this.statId = response.data[0]._id);
 				});
 
-			// this.test();
+			// this.tempHelpFunction();
 		}
 	}
 
@@ -76,11 +79,31 @@ export class CloudbaseService extends DatabaseService {
 		return this.userRole === '管理员';
 	}
 
-	public async test() {
-		// const data = await this.database.collection(DATABASE_MOVIES).get();
-		// for (const value of data.data) {
-		// 	this.database.collection(DATABASE_MOVIES).doc(value._id).update({});
-		// }
+	public async tempHelpFunction() {
+		// Step 1: Fetch all movie documents
+		const data = await this.database.collection(DATABASE_MOVIES).get();
+		const movies: any[] = data.data;
+		LOG.info(this.className, `Fetched ${movies.length} movies from database`);
+
+		// Step 2: Update each movie's coverImageLink to the cloud:// file ID.
+		// The format mirrors what the uploadCoverImage cloud function returns:
+		//   cloud://[envId].[bucket]/movies/[title].jpeg
+		// The files are already in CloudBase Storage — no re-upload is needed.
+		let updated = 0;
+
+		for (const movie of movies) {
+			const fileID = `cloud://${environment.cloudbase.envId}.${environment.cloudbase.bucket}/movies/${movie.title}.jpeg`;
+			await this.database.collection(DATABASE_MOVIES).doc(movie._id).update({
+				coverImageLink: fileID
+			});
+			updated++;
+			LOG.info(this.className, `[${updated}/${movies.length}] ${movie.title} → ${fileID}`);
+		}
+
+		LOG.info(
+			this.className,
+			`Migration complete: updated ${updated} movie cover links to cloud:// file IDs`
+		);
 	}
 
 	/**
@@ -98,7 +121,7 @@ export class CloudbaseService extends DatabaseService {
 						movieItemVO.setMovieId(doc.id);
 						movieItemVO.setMovieGenre(doc.genre);
 						movieItemVO.setMovieRate(doc.rate);
-						movieItemVO.setMovieCoverImageDownloadableLink(doc.coverImageLink);
+						movieItemVO.setMovieCoverImageDownloadableLink(doc.coverImageLink ?? '');
 						movieItemVO.setMovieFirstReleaseDate(doc.firstReleaseDate);
 						movieItemVO.setMovieEpisodeNumber(doc.episodeNumber);
 						movieItemVO.setIsFavourite(doc.isFavourite);
@@ -110,7 +133,14 @@ export class CloudbaseService extends DatabaseService {
 					movies.sort((a: MovieItemVO, b: MovieItemVO) =>
 						a.getMovieFirstReleaseDate().localeCompare(b.getMovieFirstReleaseDate())
 					);
-					observer.next(movies);
+
+					// Resolve any Cloud IDs to signed temp URLs before emitting to the component
+					this.resolveMovieCoverUrls(movies)
+						.then((resolvedMovies) => observer.next(resolvedMovies))
+						.catch((err) => {
+							LOG.error(this.className, 'Error resolving cover image URLs', err);
+							observer.next(movies); // emit with unresolved links rather than nothing
+						});
 				},
 				onError: (err: any) => {
 					LOG.error(this.className, 'Error while retrieving movie list', err);
@@ -118,6 +148,60 @@ export class CloudbaseService extends DatabaseService {
 			});
 			return () => watcher.close();
 		});
+	}
+
+	/**
+	 * Resolve CloudBase file IDs (cloud://…) in a movie list to signed temporary URLs.
+	 * Results are cached in-memory so repeated watch emissions only resolve new / unseen file IDs.
+	 * Any link that is not a valid cloud:// ID (e.g. null, empty, stale value) resolves to empty string.
+	 *
+	 * @param movies - The movie list to resolve in-place.
+	 * @returns The same array with cloud:// IDs replaced by displayable temp URLs.
+	 */
+	private async resolveMovieCoverUrls(movies: MovieItemVO[]): Promise<MovieItemVO[]> {
+		// Collect unique cloud:// IDs not yet in cache
+		const toResolve = [
+			...new Set(
+				movies
+					.map((m) => m.getMovieCoverImageDownloadableLink())
+					.filter((link) => link?.startsWith('cloud://') && !this.tempUrlCache.has(link))
+			)
+		];
+
+		if (toResolve.length > 0) {
+			// CloudBase allows at most 50 file IDs per call
+			for (let i = 0; i < toResolve.length; i += 50) {
+				const batch = toResolve.slice(i, i + 50);
+				try {
+					const result: any = await this.cloudbase.getTempFileURL({ fileList: batch });
+					console.log(result);
+					for (const file of result.fileList) {
+						// CloudBase SDK (CLOUD_API mode) returns each item with:
+						//   { fileid, download_url }            on success
+						//   { fileid, code: '<ERROR_CODE>' }   on failure (e.g. STORAGE_FILE_NONEXIST)
+						if (file.download_url) {
+							this.tempUrlCache.set(file.fileid, file.download_url);
+						} else {
+							LOG.warn(
+								this.className,
+								`No temp URL for ${file.fileid} (code: ${file.code ?? 'unknown'})`
+							);
+						}
+					}
+				} catch (error) {
+					LOG.error(this.className, 'Error while getting temp file URLs', error as Error);
+				}
+			}
+		}
+		// Apply resolved URLs in-place; anything that isn't a resolved "cloud://" ID becomes empty string
+		for (const movie of movies) {
+			const link = movie.getMovieCoverImageDownloadableLink();
+			movie.setMovieCoverImageDownloadableLink(
+				link?.startsWith('cloud://') ? (this.tempUrlCache.get(link) ?? '') : ''
+			);
+		}
+
+		return movies;
 	}
 
 	/**
@@ -279,14 +363,66 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Upload the movie cover to cloudbase storage and return the downloadable link.
+	 * Upload the movie cover to CloudBase Storage via a cloud function and return the cloud:// file ID.
+	 * The upload is done server-side (cloud function → COS) to avoid browser CORS restrictions on COS.
+	 * The returned file ID is later resolved to a signed temp URL by resolveMovieCoverUrls().
 	 *
-	 * @param coverImage - The movie cover to upload.
-	 * @param movieName - The name of the movie to upload.
-	 * @returns A string that represents the downloadable link of the movie cover.
+	 * @param coverImage - The movie cover blob to upload.
+	 * @param movieName - The name of the movie (used as the filename in storage).
+	 * @returns The cloud:// file ID on success, or an empty string on failure.
 	 */
-	uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
-		throw new Error('Method not implemented.');
+	async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
+		try {
+			// Convert Blob to a raw base64 string (no data-URL prefix) for the function payload
+			const base64 = await this.blobToBase64(coverImage);
+
+			const result: any = await this.cloudbase.callFunction({
+				name: 'uploadCoverImage',
+				data: {
+					accessToken: environment.cloudbase.accessToken,
+					image: base64,
+					movieName
+				}
+			});
+
+			if (!result?.result?.success || !result?.result?.fileID) {
+				throw new Error(result?.result?.error ?? 'uploadCoverImage did not return a fileID');
+			}
+
+			LOG.info(this.className, `Movie cover image uploaded successfully for ${movieName}`);
+
+			// Return the cloud:// file ID; the display layer resolves it to a temp URL
+			return result.result.fileID;
+		} catch (error: any) {
+			LOG.error(
+				this.className,
+				`Error while uploading image to CloudBase for ${movieName}: ${error?.message}`,
+				error as Error
+			);
+			return '';
+		}
+	}
+
+	/**
+	 * Convert a Blob to a raw base64 string (without the data-URL prefix).
+	 * Uses FileReader which handles large blobs without blowing the call stack.
+	 */
+	private blobToBase64(blob: Blob): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = () => {
+				const dataUrl = reader.result as string;
+				// dataUrl format: "data:image/jpeg;base64,<base64data>"
+				const base64 = dataUrl.split(',')[1];
+				if (!base64) {
+					reject(new Error('FileReader produced an unexpected data URL'));
+				} else {
+					resolve(base64);
+				}
+			};
+			reader.onerror = () => reject(new Error('FileReader failed to read blob'));
+			reader.readAsDataURL(blob);
+		});
 	}
 
 	/**
@@ -447,7 +583,7 @@ export class CloudbaseService extends DatabaseService {
 			const statRes = await this.database
 				.collection(DATABASE_STATISTICS)
 				.doc(this.statId)
-				.udpate(updatedData);
+				.update(updatedData);
 			if (statRes.code) throw new Error(statRes.message);
 
 			LOG.info(this.className, `Movie added and statistics have been updated`);

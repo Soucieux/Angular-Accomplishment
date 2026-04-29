@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, inject, Output, ViewChild, ViewContainerRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
@@ -49,7 +49,7 @@ export class AddDialogComponent {
 	isFavourite: boolean = false;
 	movieImageUrl: string | null = null;
 
-	constructor(private dialogService: DialogService) {}
+	constructor(private dialogService: DialogService, private cdr: ChangeDetectorRef) {}
 
 	protected ngOnInit() {
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (2026 - i).toString() }));
@@ -101,6 +101,7 @@ export class AddDialogComponent {
 			this.dialogService.openDialog(this.dialogComponentContainer, 'error', errorMessage);
 		} finally {
 			this.isLoading = false;
+			this.cdr.detectChanges();
 		}
 	}
 

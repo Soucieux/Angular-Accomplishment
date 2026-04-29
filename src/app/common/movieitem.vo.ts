@@ -91,6 +91,7 @@ export class MovieItemVO {
 	}
 
 	setMovieRate(rate: number) {
+		if (rate === null || rate === undefined) return;
 		this.rate = typeof rate === 'string' ? Number(rate) : rate;
 	}
 

@@ -10,8 +10,7 @@ import {
 	SEARCH,
 	DATABASE_HISTORY,
 	DATABASE_PATCH_NOTES,
-	DATABASE_REMAINDER,
-	SUCCESS
+	DATABASE_REMAINDER
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';

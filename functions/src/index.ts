@@ -49,7 +49,9 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 		// Allow-list of hostnames or domains we proxy for (adjust as needed)
 		const hostname = parsed.hostname.toLowerCase();
 		const allowedHostnames = [
-			'movie.douban.com'
+			'movie.douban.com',
+			'api.wmdb.tv',
+			'img.wmdb.tv'
 		];
 		const allowedSuffixes = [
 			'.doubanio.com'
@@ -59,6 +61,7 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 		const isSuffixAllowed = allowedSuffixes.some(suffix => hostname.endsWith(suffix));
 
 		if (!isExactAllowed && !isSuffixAllowed) {
+			res.set('Access-Control-Allow-Origin', '*');
 			res.status(400).json({ error: 'Target host is not allowed' });
 			return;
 		}
@@ -86,7 +89,8 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 		}
 
 		if (type === 'image') {
-			res.setHeader('Content-Type', 'image/jpeg');
+			const contentType = response.headers.get('content-type') ?? 'image/jpeg';
+			res.setHeader('Content-Type', contentType);
 		} else if (type === 'json') {
 			res.setHeader('Content-Type', 'application/json; charset=utf-8');
 		} else {

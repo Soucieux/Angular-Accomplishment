@@ -1,4 +1,5 @@
 <p-dialog
+	header="Add New Movie"
 	[(visible)]="visible"
 	[modal]="true"
 	[appendTo]="'body'"
@@ -6,8 +7,7 @@
 	[closable]="false"
 	(onHide)="onDialogClosed()"
 	styleClass="add-dialog">
-	<!-- #header -->
-	<span class="dialog-title">Enter either Name or ID to start searching</span>
+	<p class="dialog-subtitle">Enter either Name or ID to start searching</p>
 	<div class="form-image-container">
 		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 			<div class="form-row">

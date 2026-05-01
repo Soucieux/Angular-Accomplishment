@@ -117,7 +117,7 @@ export class CloudbaseService extends DatabaseService {
 				onChange: (snapshot: any) => {
 					const movies = snapshot.docs.map((doc: any) => {
 						const movieItemVO = new MovieItemVO(doc.title, Number(doc.year));
-						movieItemVO.setMovieKey(doc.id);
+						movieItemVO.setMovieKey(doc._id);
 						movieItemVO.setMovieId(doc.id);
 						movieItemVO.setMovieGenre(doc.genre);
 						movieItemVO.setMovieRate(doc.rate);
@@ -174,7 +174,6 @@ export class CloudbaseService extends DatabaseService {
 				const batch = toResolve.slice(i, i + 50);
 				try {
 					const result: any = await this.cloudbase.getTempFileURL({ fileList: batch });
-					console.log(result);
 					for (const file of result.fileList) {
 						// CloudBase SDK (CLOUD_API mode) returns each item with:
 						//   { fileid, download_url }            on success
@@ -598,12 +597,67 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove the movie from the database.
+	 * Remove a movie from the database, its cover image from CloudBase Storage,
+	 * and update the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to remove.
 	 */
-	removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
-		throw new Error('Method not implemented.');
+	async removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
+		try {
+			// Step 1: Remove the movie document from the database
+			const removeRes = await this.database
+				.collection(DATABASE_MOVIES)
+				.doc(movieItemVO.getMovieKey())
+				.remove();
+			if (removeRes.code) throw new Error(removeRes.message);
+
+			LOG.info(this.className, `Movie document removed for ${movieItemVO.getMovieName()}`);
+
+			// Step 2: Remove the cover image from CloudBase Storage
+			const coverRes: any = await this.cloudbase.callFunction({
+				name: 'removeMovieCover',
+				data: {
+					accessToken: environment.cloudbase.accessToken,
+					movieName: movieItemVO.getMovieName()
+				}
+			});
+			if (!coverRes?.result?.success) {
+				// Log but do not throw — a missing cover should not block the removal
+				LOG.warn(
+					this.className,
+					`Cover image removal failed for ${movieItemVO.getMovieName()}: ${coverRes?.result?.error ?? 'unknown error'}`
+				);
+			} else {
+				LOG.info(this.className, `Cover image removed for ${movieItemVO.getMovieName()}`);
+			}
+
+			// Step 3: Add a history entry
+			await this.addNewHistoryEntry('deleted', movieItemVO);
+
+			// Step 4: Decrement statistics
+			const updatedData: any = {};
+			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(-1);
+			updatedData[`totalNumber`] = this._.inc(-1);
+
+			if (movieItemVO.getIsFavourite()) {
+				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
+			}
+
+			const statRes = await this.database
+				.collection(DATABASE_STATISTICS)
+				.doc(this.statId)
+				.update(updatedData);
+			if (statRes.code) throw new Error(statRes.message);
+
+			LOG.info(this.className, `Statistics updated after removing ${movieItemVO.getMovieName()}`);
+		} catch (error) {
+			LOG.error(
+				this.className,
+				`Error while removing movie ${movieItemVO.getMovieName()}`,
+				error as Error
+			);
+			throw error;
+		}
 	}
 
 	/**

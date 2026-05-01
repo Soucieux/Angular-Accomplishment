@@ -1,51 +1,122 @@
 ::ng-deep .history-dialog {
-	width: 650px;
-	height: 550px;
+	width: 620px;
+	border-radius: 20px !important;
+	overflow: hidden !important;
+	background: rgba(255, 255, 255, 0.96) !important;
+	backdrop-filter: blur(24px);
+	border: 1px solid rgba(255, 255, 255, 0.7) !important;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24) !important;
 	user-select: none;
 }
 
+::ng-deep .history-dialog .p-dialog-header {
+	background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%) !important;
+	padding: 20px 24px 16px !important;
+	border-radius: 20px 20px 0 0 !important;
+}
+
+::ng-deep .history-dialog .p-dialog-title {
+	font-size: 18px !important;
+	font-weight: 700 !important;
+	color: rgba(60, 30, 0, 0.88) !important;
+	letter-spacing: 0.2px;
+}
+
+::ng-deep .history-dialog .p-dialog-header-icons .p-dialog-header-icon {
+	color: rgba(60, 30, 0, 0.6) !important;
+}
+
+::ng-deep .history-dialog .p-dialog-header-icons .p-dialog-header-icon:hover {
+	color: rgba(60, 30, 0, 0.9) !important;
+	background: rgba(0, 0, 0, 0.08) !important;
+}
+
 ::ng-deep .history-dialog .p-dialog-content {
-	padding-left: 0px;
-	padding-right: 0px;
+	padding: 16px 20px 20px !important;
+	background: transparent !important;
+	max-height: 460px;
+	overflow-y: auto;
 }
 
-::ng-deep .p-dialog .p-dialog-header {
-	padding-top: 20px;
-	padding-bottom: 15px;
+.history-subtitle {
+	font-size: 13px;
+	color: rgba(40, 15, 35, 0.45);
+	margin: 0 0 14px 0;
+	text-align: center;
 }
 
-.container {
-	padding: 10px 13px 10px 13px;
+.dialog-content {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 }
 
-.container:hover {
-	background-color: rgb(243, 238, 238);
-}
-
-.message-container {
+.entry-row {
 	display: flex;
 	flex-direction: row;
-	gap: 10px;
-	border-width: 5px;
-	padding-top: 8px;
-	padding-bottom: 8px;
-	padding-right: 5px;
+	align-items: center;
+	gap: 14px;
+	padding: 10px 14px;
+	border-radius: 12px;
+	transition: background 0.15s ease;
+}
+
+.entry-row:hover {
+	background: rgba(247, 151, 30, 0.07);
+}
+
+.icon-badge {
+	width: 36px;
+	height: 36px;
 	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.badge-search {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.badge-added {
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.badge-deleted {
+	background: linear-gradient(135deg, #d53369 0%, #ef5350 100%);
+}
+
+.badge-icon {
+	font-size: 18px;
+	color: white;
 }
 
 .message {
-	font-size: 17px;
-	margin: 0px;
+	font-size: 15px;
+	margin: 0;
+	color: rgba(40, 15, 35, 0.82);
+	flex: 1;
+	line-height: 1.4;
 }
 
-.icon {
-	height: fit-content;
+.message-deleted {
+	cursor: pointer;
+	color: rgba(213, 51, 105, 0.85);
+}
+
+.message-deleted:hover {
+	text-decoration: underline;
 }
 
 @media (max-width: 580px) {
 	::ng-deep .history-dialog {
 		min-width: 100% !important;
 		min-height: 100% !important;
-		border-radius: 0px !important;
+		border-radius: 0 !important;
+	}
+
+	::ng-deep .history-dialog .p-dialog-header {
+		border-radius: 0 !important;
 	}
 }

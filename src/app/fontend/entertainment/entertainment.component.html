@@ -2,11 +2,20 @@
 @if (utilities.getIsUserAlive() && stats !== null) {
 	<div class="page-container">
 		<div class="control-button-container">
-			<div class="control-button-title">Categories ({{ stats.totalNumber }})</div>
+			<div class="control-button-title" style="margin-right: auto">Categories ({{ stats.totalNumber }})</div>
+			<div class="search-input-wrapper  hide-on-mobile">
+				<span class="material-symbols-outlined search-icon-input">search</span>
+				<input
+					type="text"
+					class="search-input"
+					placeholder="Search movies..."
+					[(ngModel)]="searchText"
+					(input)="updateSearchQuery(searchText)" />
+			</div>
 			<button mat-mini-fab
 				(click)="openSearchDialog()"
 				class="control-button search-button"
-				matTooltip="Search"
+				matTooltip="Refresh Rates"
 				matTooltipPosition="below">
 				<span class="material-symbols-outlined control-button-icon">cached</span>
 			</button>

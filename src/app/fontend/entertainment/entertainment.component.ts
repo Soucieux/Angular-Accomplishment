@@ -32,6 +32,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRippleModule } from '@angular/material/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { MovieAlreadyExistsError } from '../../common/error/movie-already-exists-error';
 import { ButtonModule } from 'primeng/button';
@@ -48,6 +49,7 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 		MatButtonModule,
 		MatButtonToggleModule,
 		MatRippleModule,
+		MatTooltipModule,
 		ButtonModule,
 		SelectModule
 	],
@@ -65,6 +67,8 @@ export class EntertainmentComponent {
 	private sessionId: number = 0;
 	protected movieList$!: Observable<MovieItemVO[]>;
 	protected selectedGenres$ = new BehaviorSubject<string>('');
+	protected searchQuery$ = new BehaviorSubject<string>('');
+	protected searchText: string = '';
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
 	protected statistics$!: Observable<any>;
 	private searchSummary!: Map<string, string[]>;
@@ -103,17 +107,33 @@ export class EntertainmentComponent {
 			// Below part will be executed only if there is no error reading data in the database
 			this.movieList$ = this.databaseService.getMovieList();
 
-			// Create a filter to listen for genre changes
-			this.filteredMovieList$ = combineLatest([this.movieList$, this.selectedGenres$]).pipe(
-				map(([movieList, selectedGenres]) => {
-					if (selectedGenres === '') {
-						return movieList;
-					}
+			// Create a filter that reacts to genre selection and text search simultaneously
+			this.filteredMovieList$ = combineLatest([
+				this.movieList$,
+				this.selectedGenres$,
+				this.searchQuery$
+			]).pipe(
+				map(([movieList, selectedGenres, searchQuery]) => {
+					let filtered = movieList;
+
+					// Genre filter
 					if (selectedGenres === GENRE_FAVOURITE) {
-						return movieList.filter((movie) => movie.getIsFavourite());
+						filtered = filtered.filter((movie) => movie.getIsFavourite());
+					} else if (selectedGenres !== '') {
+						filtered = filtered.filter((movie) =>
+							movie.getMovieGenre().includes(selectedGenres)
+						);
 					}
 
-					return movieList.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
+					// Text search filter
+					const query = searchQuery.trim();
+					if (query !== '') {
+						filtered = filtered.filter((movie) =>
+							movie.getMovieName().includes(query)
+						);
+					}
+
+					return filtered;
 				})
 			);
 		}
@@ -124,6 +144,7 @@ export class EntertainmentComponent {
 	 */
 	ngOnDestroy() {
 		this.selectedGenres$.complete();
+		this.searchQuery$.complete();
 		this.dialogComponentContainer?.clear();
 		this.isSearching = false;
 		LOG.info(this.className, COMPONENT_DESTROY);
@@ -543,6 +564,14 @@ export class EntertainmentComponent {
 				`repeat(${itemsPerRow}, minmax(${parseInt(itemsWidth)}px, 1fr))`
 			);
 		}
+	}
+
+	/**
+	 * Triggered when the user types in the search input.
+	 * Pushes the current text into searchQuery$ which re-filters filteredMovieList$.
+	 */
+	protected updateSearchQuery(value: string) {
+		this.searchQuery$.next(value);
 	}
 
 	//////////////////////Below are Event Handlers triggered by user actions///////////////////////

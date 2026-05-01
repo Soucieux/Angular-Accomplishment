@@ -7,6 +7,12 @@ mat-drawer-container {
 	flex-direction: column;
 }
 
+.full-height-drawer {
+	height: 99%;
+	display: flex;
+	flex-direction: column;
+}
+
 /* The max-width here is the **current** maximum width of the browser */
 @media (max-width: 840px) {
 	.hide-on-mobile {
@@ -16,28 +22,19 @@ mat-drawer-container {
 	/* Add height by 20px whenever a new button is added */
 	mat-drawer {
 		width: 37px !important;
-		height: 438px !important;
 	}
 
 	.nav-button {
-		width: 35px !important;
+		width: 33px !important;
 		min-width: 0px !important;
-		padding: 5px !important;
-		justify-content: left !important;
+		padding: 0 !important;
+		margin: 2px auto !important;
+		justify-content: center !important;
+		border-radius: 8px !important;
 	}
 
 	.nav-icon {
-		left: 2px !important;
-	}
-
-	.nav-icon-mso {
-		left: 2px !important;
-	}
-
-	.signout-button-container {
-		display: flex !important;
-		padding-left: 5px !important;
-		bottom: 10px !important;
+		font-size: 22px !important;
 	}
 
 	::ng-deep .signin-signout-button .p-button {
@@ -51,36 +48,47 @@ mat-drawer-container {
 }
 
 .nav-button {
-	width: 100%;
 	overflow: hidden;
 	background-color: transparent !important;
-	transition: box-shadow 0.3s ease;
+	transition: background-color 0.2s ease;
 	font-family: inherit;
-	display: flex;
+	display: flex !important;
+	align-items: center !important;
 	flex-direction: row;
-	justify-content: left;
+	height: 46px;
+	padding: 0 14px;
+	margin: 2px 8px;
+	border-radius: 12px;
+	width: calc(100% - 16px);
+	box-sizing: border-box;
 }
 
 .nav-button:hover {
 	box-shadow: 0 1px 3px 1px black;
+	background-color: rgba(213, 51, 105, 0.12) !important;
 }
 
 .nav-icon {
-	position: relative;
-	left: 30px;
-	font-size: 20px;
-}
-
-.nav-icon-mso {
-	position: relative;
-	left: 30px;
-	top: 4px;
-	font-size: 22px;
+	font-size: 28px;
+	margin-left: 25px;
+	line-height: 1;
+	flex-shrink: 0;
 }
 
 .nav-label {
-	position: relative;
-	left: 65px;
+	font-size: 15px;
+	line-height: 1;
+}
+
+/* Angular Material's mat-button wraps projected content in span.mdc-button__label.
+   Our icon + label live inside that span, so gap/align-items on .nav-button don't
+   reach them. We must make the label container itself a flex row. */
+::ng-deep .nav-button .mdc-button__label {
+	display: flex !important;
+	flex-direction: row !important;
+	align-items: center !important;
+	gap: 25px;
+	width: 100%;
 }
 
 .nav-title {
@@ -114,8 +122,19 @@ mat-drawer-content {
 }
 
 .signout-button-container {
+	position: absolute;
+	bottom: 0px;
+	padding-bottom: 10px;
 	display: grid;
 	grid-template-columns: 55% 1fr 40px;
+}
+
+.signin-button-container {
+	position: absolute;
+	bottom: 0px;
+	width: 100%;
+	padding-bottom: 10px;
+	text-align: center;
 }
 
 .username {
@@ -123,4 +142,44 @@ mat-drawer-content {
 	position: relative;
 	left: -15px;
 	top: 8px;
+}
+
+/* Home — orange → gold */
+li:nth-child(2) .nav-icon {
+	background: linear-gradient(135deg, #ff6b35, #ffd700);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+/* Entertainment — hot pink → red */
+li:nth-child(3) .nav-icon {
+	background: linear-gradient(135deg, #e91e8c, #07db19);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+/* Remainder — royal blue → violet */
+li:nth-child(4) .nav-icon {
+	background: linear-gradient(135deg, #4776e6, #8e54e9);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+/* Patch Notes — amber → lime */
+li:nth-child(5) .nav-icon {
+	background: linear-gradient(135deg, #f7971e, #78d000);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+/* About — teal → sky blue */
+li:nth-child(6) .nav-icon {
+	background: linear-gradient(135deg, #11998e, #38ef7d);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
 }

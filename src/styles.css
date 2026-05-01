@@ -21,7 +21,6 @@ body {
 }
 
 button,
-.mat-button,
-.mat-icon {
+.mat-button {
 	color: black !important;
 }

@@ -10,7 +10,7 @@
 					class="search-input"
 					placeholder="Search movies..."
 					[(ngModel)]="searchText"
-					(input)="updateSearchQuery(searchText)" />
+					(ngModelChange)="updateSearchQuery($event)" />
 			</div>
 			<button mat-mini-fab
 				(click)="openSearchDialog()"

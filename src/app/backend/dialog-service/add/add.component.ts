@@ -1,4 +1,12 @@
-import { ChangeDetectorRef, Component, EventEmitter, inject, Output, ViewChild, ViewContainerRef } from '@angular/core';
+import {
+	ChangeDetectorRef,
+	Component,
+	EventEmitter,
+	inject,
+	Output,
+	ViewChild,
+	ViewContainerRef
+} from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
@@ -39,8 +47,9 @@ export class AddDialogComponent {
 	@ViewChild('addMovieForm') addMovieForm!: NgForm;
 	@Output() closed$ = new EventEmitter<void>();
 	private messageService = inject(MessageService);
-	private submitCallback?: () => void;
+	private submitCallback?: (movie: MovieItemVO) => void;
 	private searchCallback?: (movie: MovieItemVO) => Blob;
+	private movieItemVO: MovieItemVO = new MovieItemVO();
 	visible: boolean = false;
 	isLoading: boolean = false;
 	canSubmit: boolean = false;
@@ -49,7 +58,10 @@ export class AddDialogComponent {
 	isFavourite: boolean = false;
 	movieImageUrl: string | null = null;
 
-	constructor(private dialogService: DialogService, private cdr: ChangeDetectorRef) {}
+	constructor(
+		private dialogService: DialogService,
+		private cdr: ChangeDetectorRef
+	) {}
 
 	protected ngOnInit() {
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (2026 - i).toString() }));
@@ -67,7 +79,10 @@ export class AddDialogComponent {
 		this.dialogComponentContainer?.clear();
 	}
 
-	protected openDialog(submitCallback: () => void, searchCallback: (movie: MovieItemVO) => Blob) {
+	protected openDialog(
+		submitCallback: (movie: MovieItemVO) => void,
+		searchCallback: (movie: MovieItemVO) => Blob
+	) {
 		this.visible = true;
 		this.submitCallback = submitCallback;
 		this.searchCallback = searchCallback;
@@ -76,16 +91,15 @@ export class AddDialogComponent {
 	protected async searchCurrentMovie(newMovieData: NgForm['value']) {
 		this.isLoading = true;
 		try {
-			const movieItemVO = new MovieItemVO();
 			if (newMovieData.movieName) {
-				movieItemVO.setMovieName(newMovieData.movieName);
-				movieItemVO.setMovieYear(Number(newMovieData.years));
+				this.movieItemVO.setMovieName(newMovieData.movieName);
+				this.movieItemVO.setMovieYear(Number(newMovieData.years));
 			} else if (newMovieData.id) {
-				movieItemVO.setMovieId(Number(newMovieData.id));
+				this.movieItemVO.setMovieId(Number(newMovieData.id));
 			}
-			movieItemVO.setMovieGenre(newMovieData.genres.genre);
-			movieItemVO.setIsFavourite(this.isFavourite);
-			const movieImage = await this.searchCallback?.(movieItemVO);
+			this.movieItemVO.setMovieGenre(newMovieData.genres.genre);
+
+			const movieImage = await this.searchCallback?.(this.movieItemVO);
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 			this.canSubmit = true;
 		} catch (error) {
@@ -119,12 +133,14 @@ export class AddDialogComponent {
 
 	protected onSubmit() {
 		this.onDialogClosed();
-		this.submitCallback?.();
+		this.movieItemVO.setIsFavourite(this.isFavourite);
+		this.submitCallback?.(this.movieItemVO);
 		this.messageService.add({
 			severity: 'info',
 			summary: 'Movie added',
 			detail: 'Movie added to the list'
 		});
+		this.movieItemVO = new MovieItemVO();
 	}
 
 	protected onDialogClosed() {

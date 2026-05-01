@@ -67,7 +67,6 @@ export class EntertainmentComponent {
 	protected selectedGenres$ = new BehaviorSubject<string>('');
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
 	protected statistics$!: Observable<any>;
-	private tempMovieItemVO!: MovieItemVO;
 	private searchSummary!: Map<string, string[]>;
 	protected editedItems = new Map<string, { original: string; genre: string }>();
 	protected genres: { genre: string }[] = [
@@ -346,16 +345,19 @@ export class EntertainmentComponent {
 
 				// Step 4.1: Retrieve year and title if the flag is true
 				if (retrieveYearAndTitle) {
-					const year = firstReleaseDate.substring(0, 4);
-					movieItemVO.setMovieYear(Number(year));
-
 					let title = '';
+					let year = '';
 					if (thirdPartyApi) {
 						title = movieWebpageAsData['originalName'];
+						year = movieWebpageAsData['year'];
 					} else {
+						year = firstReleaseDate.substring(0, 4);
+
 						const regexForTitle = new RegExp('<meta property="og:title" content="(.*?)" />', 'i');
 						title = movieWebpageAsData.match(regexForTitle)[1];
 					}
+
+					movieItemVO.setMovieYear(Number(year));
 					movieItemVO.setMovieName(title);
 				}
 
@@ -609,13 +611,12 @@ export class EntertainmentComponent {
 	/**
 	 * Helper function to handle "Submit" button on the "Add New Movie" dialog.
 	 */
-	private async handleAddDialogSubmit() {
+	private async handleAddDialogSubmit(newMovieItemVO: MovieItemVO) {
 		// Upload movie cover image to firebase storage and generate downloadable link
 		// The downloadable link needs to be acquired first and it will be uploaded to firebase in the next step
-		await this.uploadMovieImageAndGetDownloadableLink(this.tempMovieItemVO);
+		await this.uploadMovieImageAndGetDownloadableLink(newMovieItemVO);
 		// Save new movie data to firebase and update movie statistics
-		await this.databaseService.addNewMovieDataAndUpdateStatistics(this.tempMovieItemVO);
-		this.tempMovieItemVO = new MovieItemVO();
+		await this.databaseService.addNewMovieDataAndUpdateStatistics(newMovieItemVO);
 	}
 
 	/**
@@ -635,7 +636,6 @@ export class EntertainmentComponent {
 			throw new MovieAlreadyExistsError(newMovieItemVO.getMovieName());
 		}
 		await this.searchNewMovie(newMovieItemVO);
-		this.tempMovieItemVO = newMovieItemVO;
 		LOG.info(this.className, 'New movie details retrieved.');
 		return newMovieItemVO.getMovieCoverImage();
 	}
@@ -679,7 +679,7 @@ export class EntertainmentComponent {
 			'history',
 			async (movieToRestore: MovieItemVO) => {
 				await this.handleAddDialogSearch(movieToRestore);
-				await this.handleAddDialogSubmit();
+				await this.handleAddDialogSubmit(movieToRestore);
 			},
 			this.databaseService.getHistory()
 		);

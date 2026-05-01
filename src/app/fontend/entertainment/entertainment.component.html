@@ -3,14 +3,26 @@
 	<div class="page-container">
 		<div class="control-button-container">
 			<div class="control-button-title">Categories ({{ stats.totalNumber }})</div>
-			<button mat-fab extended (click)="openSearchDialog()" class="control-button">
-				<span class="material-icons control-button-icon">search</span>
+			<button mat-mini-fab
+				(click)="openSearchDialog()"
+				class="control-button search-button"
+				matTooltip="Search"
+				matTooltipPosition="below">
+				<span class="material-symbols-outlined control-button-icon">cached</span>
 			</button>
-			<button mat-fab extended (click)="openAddNewMovieDialog()" class="control-button">
-				<span class="material-icons control-button-icon">add</span>
+			<button mat-mini-fab
+				(click)="openAddNewMovieDialog()"
+				class="control-button add-button"
+				matTooltip="Add Movie"
+				matTooltipPosition="below">
+				<span class="material-symbols-outlined control-button-icon">add</span>
 			</button>
-			<button mat-fab extended (click)="openHistoryDialog()" class="control-button">
-				<span class="material-icons control-button-icon">browse_gallery</span>
+			<button mat-mini-fab
+				(click)="openHistoryDialog()"
+				class="control-button history-button"
+				matTooltip="History"
+				matTooltipPosition="below">
+				<span class="material-symbols-outlined control-button-icon">history</span>
 			</button>
 		</div>
 		<div class="category-button-container">
@@ -52,9 +64,18 @@
 					</div>
 				</div>
 				<div class="individual-item-content">
-					<span class="title" [style.font-size]="calculateFontSize(movie.getMovieName().length)">
-						{{ movie.getMovieName() }}
-					</span>
+					<div class="title-rate-row">
+						<span class="title" [style.font-size]="calculateFontSize(movie.getMovieName().length)">
+							{{ movie.getMovieName() }}
+						</span>
+						@if (movie.getMovieRate()) {
+							<span class="rate">
+								{{ movie.getMovieRate().toFixed(1) }}
+							</span>
+						} @else {
+							<span class="rate">{{ NO_RATE }}</span>
+						}
+					</div>
 					<span class="text"
 						>类型:
 						@if (editedItems.has(movie.getMovieKey())) {
@@ -72,13 +93,6 @@
 					</span>
 					<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
 					<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
-					@if (movie.getMovieRate()) {
-						<span class="rate">
-							{{ movie.getMovieRate().toFixed(1) }}
-						</span>
-					} @else {
-						<span class="rate">{{ NO_RATE }}</span>
-					}
 					<a
 						class="douban-button"
 						severity="danger"

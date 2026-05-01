@@ -47,7 +47,11 @@ export class HistoryDialogComponent {
 				try {
 					let movieToRestore = new MovieItemVO();
 					movieToRestore.setMovieId(entry.id);
+					const movieName = entry.message.split(' - ')[0];
 					const genre = entry.message.split(' - ')[1].split(' ')[0].trim();
+					const year = entry.message.split(' ')[7].split('.');
+					movieToRestore.setMovieName(movieName);
+					movieToRestore.setMovieYear(year);
 					movieToRestore.setMovieGenre(genre);
 					await this.revertDataCallback?.(movieToRestore);
 				} catch (error) {
@@ -57,6 +61,8 @@ export class HistoryDialogComponent {
 							'error',
 							'Movie already exists'
 						);
+					} else {
+						throw error;
 					}
 				}
 			},

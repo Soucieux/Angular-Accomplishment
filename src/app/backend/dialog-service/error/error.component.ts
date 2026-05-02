@@ -17,7 +17,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 export class ErrorDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private confirmationService = inject(ConfirmationService);
-	constructor(private utilities: Utilities) {}
+	constructor() {}
 	openDialog(errorMessage: string) {
 		this.confirmationService.confirm({
 			message: `<div class="error-dialog-message">${errorMessage}</div>`,
@@ -27,18 +27,7 @@ export class ErrorDialogComponent {
 			acceptButtonProps: {
 				label: 'OK',
 				severity: 'danger',
-				...(this.utilities.isMobile()
-					? {
-							style: {
-								width: '100px'
-							}
-					  }
-					: {
-							style: {
-								width: '100px',
-								'margin-right': '100px'
-							}
-					  })
+				style: { width: '100px' }
 			}
 		});
     }

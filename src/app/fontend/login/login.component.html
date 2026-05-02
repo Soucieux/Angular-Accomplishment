@@ -3,11 +3,11 @@
 		<div>
 			<h1 class="title">VISION CANVAS</h1>
 		</div>
-		<div>
+		<div class="quote-row">
 			<h2 class="word">恭喜你找到了非常隐秘的小树洞</h2>
 			<h5 class="en-word">Welcome to the very hidden kingdom</h5>
 		</div>
-		<div>
+		<div class="quote-row">
 			<h2 class="word">一个可以回到过去的神秘领域</h2>
 			<h5 class="en-word">a mysterious place where you can go back in time</h5>
 		</div>
@@ -25,7 +25,7 @@
 					[invalid]="isInvalid('email')" />
 				<label for="email">Email</label>
 				@if (isInvalid('email')) {
-				<p-message severity="error" size="small" variant="simple">Email is required.</p-message>
+					<p-message severity="error" size="small" variant="simple">Email is required.</p-message>
 				}
 			</p-iftalabel>
 		</div>
@@ -39,12 +39,16 @@
 					formControlName="password"
 					[invalid]="isInvalid('password')" />
 				<label for="password">Password</label>
-				@if (isInvalid('password')) { @if (loginForm.get('password')?.errors?.['required']) {
-				<p-message severity="error" size="small" variant="simple">Password is required.</p-message>
-				} }
+				@if (isInvalid('password')) {
+					@if (loginForm.get('password')?.errors?.['required']) {
+						<p-message severity="error" size="small" variant="simple"
+							>Password is required.</p-message
+						>
+					}
+				}
 			</p-iftalabel>
 		</div>
-		<div class="field-container">
+		<div class="field-container verification-row">
 			<p-inputgroup style="height: 45px; width: 250px">
 				<input pInputText type="text" inputmode="numeric" formControlName="verificationCode" />
 				<p-inputgroup-addon>
@@ -56,16 +60,18 @@
 					</p-button>
 				</p-inputgroup-addon>
 			</p-inputgroup>
-			<button class="login-button" pButton severity="secondary" type="submit">
-				<span pButtonLabel>Submit</span>
+			<button class="login-button" pButton type="submit">
+				<span pButtonLabel>Sign In</span>
 			</button>
 		</div>
-		<div class="field-container"><hr class="horizontal-line" /></div>
+		<div class="field-container divider-row">
+			<hr class="horizontal-line" />
+		</div>
 		<p-button
 			(click)="googleLogin()"
 			icon="pi pi-google"
 			[rounded]="true"
 			severity="secondary"
-			class="field-container"></p-button>
+			class="field-container google-btn"></p-button>
 	</form>
 </div>

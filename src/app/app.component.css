@@ -120,6 +120,7 @@ mat-drawer-content {
 	box-shadow: 0 1px 1px 1px black;
 }
 
+/* ── Sign Out ── */
 .signout-button-container {
 	position: absolute;
 	bottom: 0px;
@@ -128,6 +129,16 @@ mat-drawer-content {
 	grid-template-columns: 55% 1fr 40px;
 }
 
+.username {
+	text-align: center;
+	position: relative;
+	left: -10px;
+	top: 8px;
+	font-size: 17px;
+	color: rgba(40, 15, 35, 0.75);
+}
+
+/* ── Sign In ── */
 .signin-button-container {
 	position: absolute;
 	bottom: 0px;
@@ -136,11 +147,29 @@ mat-drawer-content {
 	text-align: center;
 }
 
-.username {
-	text-align: center;
-	position: relative;
-	left: -15px;
-	top: 8px;
+/* ── Button styles ── */
+::ng-deep .signin-btn .p-button {
+	background: linear-gradient(135deg, #d53369, #daae51) !important;
+	border: none !important;
+	color: white !important;
+	box-shadow: 0 3px 12px rgba(213, 51, 105, 0.3) !important;
+	transition: box-shadow 0.2s !important;
+}
+
+::ng-deep .signin-btn .p-button:hover {
+	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.5) !important;
+}
+
+::ng-deep .signout-btn .p-button {
+	background: linear-gradient(135deg, #ef5350, #d53369) !important;
+	border: none !important;
+	color: white !important;
+	box-shadow: 0 3px 12px rgba(213, 51, 105, 0.3) !important;
+	transition: box-shadow 0.2s !important;
+}
+
+::ng-deep .signout-btn .p-button:hover {
+	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.5) !important;
 }
 
 /* Home — orange → gold */

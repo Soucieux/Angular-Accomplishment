@@ -5,7 +5,7 @@ import { Utilities } from '../../../common/app.utilities';
 
 @Component({
 	selector: 'confirm-dialog',
-	template: ` <p-confirmdialog (onHide)="onDialogClosed()" />`,
+	template: ` <p-confirmdialog styleClass="confirm-dialog" (onHide)="onDialogClosed()" />`,
 	styleUrl: './confirm.component.scss',
 	standalone: true,
 	imports: [ConfirmDialogModule],
@@ -33,7 +33,7 @@ export class ConfirmDialogComponent {
 		this.confirmationService.confirm({
 			message: data[0],
 			header: data[1],
-			closable: true,
+			closable: false,
 			closeOnEscape: true,
 			icon: 'pi pi-info-circle',
 			rejectButtonProps: {

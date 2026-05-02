@@ -40,8 +40,7 @@
 						(click)="logout()"
 						icon="pi pi-user"
 						[rounded]="true"
-						severity="warn"
-						class="signin-signout-button" />
+						class="signin-signout-button signout-btn" />
 					<p class="hide-on-mobile username">
 						@if (isCN()) {
 							{{ user.user_metadata.username }}
@@ -56,8 +55,7 @@
 						routerLink="/login"
 						icon="pi pi-user"
 						[rounded]="true"
-						severity="secondary"
-						class="signin-signout-button" />
+						class="signin-signout-button signin-btn" />
 				</li>
 			}
 		</ul>

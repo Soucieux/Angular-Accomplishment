@@ -5,37 +5,51 @@
 .container {
 	display: flex;
 	flex-direction: column;
-	/* justify-content: center; horizontal center */
-	/* align-items: center; vertical center */
+	align-items: center;
 }
 
+/* ── Header quotes ── */
 .word-container {
 	display: flex;
 	flex-direction: column;
-	gap: 30px;
-	margin-bottom: 10%;
+	gap: 24px;
+	margin-bottom: 8%;
 }
 
 .title {
 	text-align: center;
-	font-size: 60px;
-	margin-top: 12vh;
-	margin-bottom: 8vh;
+	font-size: 58px;
+	margin-top: 10vh;
+	margin-bottom: 6vh;
+	letter-spacing: 8px;
+	font-weight: 900;
+	background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.72) 100%);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.quote-row {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
 }
 
 .word {
 	font-family: 'cf';
 	text-align: center;
+	color: rgba(255, 255, 255, 0.88);
+	margin: 0;
 }
 
 .en-word {
 	text-align: center;
+	color: rgba(255, 255, 255, 0.6);
+	margin: 0;
+	font-weight: 400;
 }
 
-.input-field-container {
-	margin-bottom: 15px;
-}
-
+/* ── Form ── */
 .field-container {
 	display: flex;
 	justify-content: center;
@@ -44,59 +58,124 @@
 	gap: 10px;
 }
 
+.input-field-container {
+	margin-bottom: 15px;
+}
+
 .input-field {
-	padding-bottom: 10px;
-	border-radius: 10px;
+	border-radius: 12px !important;
 	height: 47px;
 	width: 250px;
 }
 
-::ng-deep .input-field:active {
-	outline: none !important;
-}
-
-.login-button {
-	border-radius: 10px;
-	width: 250px;
-	height: 45px;
-	outline: none;
-}
-
-/* Remove green focus outline & green label color from p-iftalabel */
-::ng-deep .input-field-container:focus-within .p-inputtext {
+::ng-deep .input-field-container .p-inputtext {
+	background: rgba(255, 255, 255, 0.78) !important;
+	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+	border-radius: 12px !important;
 	box-shadow: none !important;
-	border-color: black !important; /* your neutral border */
-}
-
-::ng-deep .input-field-container:focus-within label {
-	color: inherit !important;
+	transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 ::ng-deep .input-field-container:hover .p-inputtext {
+	border-color: rgba(213, 51, 105, 0.35) !important;
 	box-shadow: none !important;
-	border-color: black !important; /* your neutral border */
 }
 
-::ng-deep .input-field-container .p-inputtext {
+::ng-deep .input-field-container:focus-within .p-inputtext {
+	border-color: rgba(213, 51, 105, 0.6) !important;
+	box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.12) !important;
+	background: rgba(255, 255, 255, 0.92) !important;
+}
+
+::ng-deep .input-field-container:focus-within label {
+	color: rgba(213, 51, 105, 0.85) !important;
+}
+
+/* ── Verification code ── */
+.verification-row {
+	margin-bottom: 4px;
+}
+
+::ng-deep .verification-row .p-inputgroup .p-inputtext {
+	background: rgba(255, 255, 255, 0.78) !important;
+	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+	border-right: none !important;
+	border-radius: 12px 0 0 12px !important;
 	box-shadow: none !important;
-	border-color: transparent !important; /* your neutral border */
+}
+
+::ng-deep .verification-row .p-inputgroup-addon {
+	padding: 0 !important;
+	border: none !important;
+	background: transparent !important;
+}
+
+::ng-deep .verification-row .p-inputgroup-addon .p-button {
+	background: rgba(255, 255, 255, 0.6) !important;
+	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+	border-left: none !important;
+	border-radius: 0 12px 12px 0 !important;
+	color: rgba(40, 15, 35, 0.75) !important;
+	font-size: 13px !important;
+	height: 100% !important;
+	box-shadow: none !important;
+}
+
+::ng-deep .verification-row .p-inputgroup-addon .p-button:not(:disabled):hover {
+	background: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* ── Submit button ── */
+.login-button {
+	border-radius: 12px !important;
+	width: 250px;
+	height: 45px;
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
+	border: none !important;
+	color: white !important;
+	font-size: 16px !important;
+	font-weight: 600 !important;
+	cursor: pointer;
+	letter-spacing: 0.5px;
+	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.35);
+	transition: opacity 0.2s, box-shadow 0.2s;
+}
+
+.login-button:hover {
+	opacity: 0.92;
+	box-shadow: 0 6px 20px rgba(213, 51, 105, 0.45);
+}
+
+/* ── Divider ── */
+.divider-row {
+	margin: 12px 0 4px;
 }
 
 .horizontal-line {
-	height: 5px;
-	border-radius: 10px;
-	background: rgb(252, 252, 252);
-	margin-top: 20px;
-	width: 300px;
+	height: 1px;
+	border: none;
+	background: rgba(255, 255, 255, 0.35);
+	margin-top: 8px;
+	width: 280px;
 }
 
-::ng-deep .google-login .p-button:active {
-	box-shadow: 0 1px 1px 1px black;
+/* ── Google button ── */
+::ng-deep .google-btn .p-button {
+	background: rgba(255, 255, 255, 0.72) !important;
+	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+	color: rgba(40, 15, 35, 0.78) !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
+::ng-deep .google-btn .p-button:hover {
+	background: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* ── Mobile ── */
 @media (max-width: 840px) {
 	.title {
 		font-size: 35px;
+		letter-spacing: 5px;
 	}
 
 	.word {

@@ -159,7 +159,7 @@
 ───────────────────────────────────────── */
 .final-quote {
 	width: fit-content;
-	max-width: min(680px, 86%);
+	max-width: min(850px, 95%);
 	margin: 0 auto;
 	padding: 14px 24px 14px 28px;
 	border-left: 3px solid rgba(255, 255, 255, 0.42);

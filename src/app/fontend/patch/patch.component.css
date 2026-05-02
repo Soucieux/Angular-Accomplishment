@@ -1,21 +1,48 @@
+/* ─────────────────────────────────────────
+   Container — mostly-opaque white card
+───────────────────────────────────────── */
 .container {
 	min-width: 100%;
 	min-height: 100%;
-	backdrop-filter: blur(50px);
-	background-color: rgb(243, 227, 243);
-	border: 0.8px solid rgb(255, 255, 255);
-	box-shadow: 0 0 15px rgb(238, 240, 243);
-	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.8);
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+	border-radius: 18px;
 	padding: 20px;
+	animation: containerReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes containerReveal {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* ─────────────────────────────────────────
+   Title
+───────────────────────────────────────── */
 h1 {
 	font-size: 35px;
+	letter-spacing: 3px;
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	filter: drop-shadow(0 1px 4px rgba(213, 51, 105, 0.15));
 }
 
+/* ─────────────────────────────────────────
+   Responsive column widths (≤ 1500 px)
+───────────────────────────────────────── */
 @media (max-width: 1500px) {
 	::ng-deep table {
-		/* table-layout: fixed; */
 		max-width: 100% !important;
 	}
 
@@ -44,14 +71,254 @@ h1 {
 	}
 }
 
+/* ─────────────────────────────────────────
+   Table wrapper
+───────────────────────────────────────── */
 .p-datatable {
-	border-radius: 20px;
+	border-radius: 14px;
 	overflow: hidden;
 	max-width: 1350px;
-	margin-top: 10px;
+	margin-top: 12px;
 	font-size: 17px;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
 }
 
+/* ─────────────────────────────────────────
+   Table header — purple (Entertainment search-button colour)
+───────────────────────────────────────── */
+::ng-deep .p-datatable .p-datatable-thead > tr > th {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	color: rgba(255, 255, 255, 0.95) !important;
+	font-weight: 600 !important;
+	font-size: 15px !important;
+	border: none !important;
+	border-right: 1px solid rgba(255, 255, 255, 0.14) !important;
+	padding: 14px 16px !important;
+}
+
+::ng-deep .p-datatable .p-datatable-thead > tr > th:last-child {
+	border-right: none !important;
+}
+
+::ng-deep .p-datatable .p-datatable-thead > tr > th .p-column-header-content {
+	color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* ─────────────────────────────────────────
+   Table body rows — clean white base
+───────────────────────────────────────── */
+::ng-deep .p-datatable .p-datatable-tbody > tr {
+	background: #ffffff !important;
+	color: rgba(30, 15, 35, 0.88) !important;
+	transition: none !important;
+}
+
+/* Hover — only the non-spanning cells (Details, Status, Timestamp, Edit) */
+::ng-deep .p-datatable .p-datatable-tbody > tr:hover > td:not(.component):not(.element) {
+	background: rgba(102, 126, 234, 0.09) !important;
+}
+
+/* ─────────────────────────────────────────
+   Group hover — spanning cells
+   Works because Component td exists only in the FIRST tr of a group;
+   adding the class to ALL rows in that group and targeting td.component
+   as a direct child naturally selects only the row that has it.
+───────────────────────────────────────── */
+::ng-deep .p-datatable .p-datatable-tbody > tr.component-group-hovered > td.component {
+	background: rgba(102, 126, 234, 0.09) !important;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr.element-group-hovered > td.element {
+	background: rgba(102, 126, 234, 0.09) !important;
+}
+
+/* ─────────────────────────────────────────
+   Cell height & borders
+───────────────────────────────────────── */
+::ng-deep .p-datatable .p-datatable-tbody > tr > td,
+::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
+	height: 9vh;
+	border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.p-datatable td.component,
+.p-datatable td.element,
+.p-datatable td.details,
+.p-datatable td.status {
+	border-right: 1px solid rgba(0, 0, 0, 0.07) !important;
+}
+
+/* ─────────────────────────────────────────
+   Footer row (add new record)
+───────────────────────────────────────── */
+::ng-deep .p-datatable .p-datatable-tfoot > tr {
+	background: #f3f4f6 !important;
+	border-top: 2px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Add button — green (Entertainment "Add Movie" colour) */
+::ng-deep .p-datatable .p-datatable-tfoot .p-button {
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+	border: none !important;
+	border-radius: 10px !important;
+	color: rgba(0, 40, 20, 0.9) !important;
+	font-weight: 700 !important;
+	height: 40px !important;
+	padding: 0 20px !important;
+	box-shadow: 0 3px 10px rgba(17, 153, 142, 0.28) !important;
+	transition:
+		transform 0.2s,
+		box-shadow 0.2s !important;
+}
+
+::ng-deep .p-datatable .p-datatable-tfoot .p-button:not(:disabled):hover {
+	transform: translateY(-2px) !important;
+	box-shadow: 0 6px 18px rgba(17, 153, 142, 0.38) !important;
+}
+
+/* ─────────────────────────────────────────
+   Input fields
+───────────────────────────────────────── */
+::ng-deep .input {
+	width: 100%;
+}
+
+::ng-deep .p-datatable .p-inputtext {
+	border-radius: 8px !important;
+	border: 1.5px solid rgba(0, 0, 0, 0.14) !important;
+	background: #ffffff !important;
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s !important;
+}
+
+::ng-deep .p-datatable .p-inputtext:focus {
+	border-color: #667eea !important;
+	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12) !important;
+	outline: none !important;
+}
+
+.textarea-input {
+	height: 100%;
+}
+
+/* ─────────────────────────────────────────
+   Select dropdown
+───────────────────────────────────────── */
+::ng-deep .p-datatable .p-select {
+	border-radius: 8px !important;
+	border: 1.5px solid rgba(0, 0, 0, 0.14) !important;
+	background: #ffffff !important;
+}
+
+::ng-deep .p-datatable .p-select:not(.p-disabled):hover {
+	border-color: #667eea !important;
+}
+
+::ng-deep .p-datatable .p-select.p-focus {
+	border-color: #667eea !important;
+	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12) !important;
+}
+
+/* ─────────────────────────────────────────
+   Edit buttons — neutral ghost
+───────────────────────────────────────── */
+::ng-deep .p-datatable .edit-button .p-button .p-button-icon {
+	font-size: 17px !important;
+	border: none;
+}
+
+::ng-deep .p-datatable .edit-button .p-button {
+	background: transparent !important;
+	border: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+	color: rgba(30, 15, 35, 0.6) !important;
+	width: 40px;
+	height: 40px;
+	box-shadow: none !important;
+	transition: none !important; /* prevent flash on border-color change */
+}
+
+::ng-deep .p-datatable .edit-button .p-button:hover {
+	background: rgba(0, 0, 0, 0.04) !important;
+	border-color: rgba(0, 0, 0, 0.32) !important;
+	color: rgba(30, 15, 35, 0.85) !important;
+}
+
+.edit-button-group {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+/* ─────────────────────────────────────────
+   Paginator
+───────────────────────────────────────── */
+::ng-deep .p-datatable .p-paginator {
+	background: #f9f9fb !important;
+	border: none !important;
+	border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
+	padding: 8px 16px !important;
+}
+
+::ng-deep .p-datatable .p-paginator .p-paginator-page,
+::ng-deep .p-datatable .p-paginator .p-paginator-next,
+::ng-deep .p-datatable .p-paginator .p-paginator-prev,
+::ng-deep .p-datatable .p-paginator .p-paginator-first,
+::ng-deep .p-datatable .p-paginator .p-paginator-last {
+	background: #ffffff !important;
+	border-radius: 8px !important;
+	color: rgba(30, 15, 35, 0.72) !important;
+	border: 1px solid rgba(0, 0, 0, 0.1) !important;
+	min-width: 36px !important;
+	height: 36px !important;
+	margin: 0 2px !important;
+	transition: background 0.15s !important;
+}
+
+::ng-deep .p-datatable .p-paginator .p-paginator-page:hover,
+::ng-deep .p-datatable .p-paginator .p-paginator-next:hover,
+::ng-deep .p-datatable .p-paginator .p-paginator-prev:hover,
+::ng-deep .p-datatable .p-paginator .p-paginator-first:hover,
+::ng-deep .p-datatable .p-paginator .p-paginator-last:hover {
+	background: #eeeef4 !important;
+}
+
+::ng-deep .p-datatable .p-paginator .p-highlight {
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
+	color: white !important;
+	border-color: transparent !important;
+	box-shadow: 0 2px 8px rgba(213, 51, 105, 0.28) !important;
+}
+
+::ng-deep .p-datatable .p-paginator .p-paginator-current {
+	font-size: 16px;
+	color: rgba(30, 15, 35, 0.6) !important;
+}
+
+/* ─────────────────────────────────────────
+   Skeleton loading rows
+───────────────────────────────────────── */
+::ng-deep .p-datatable .p-skeleton {
+	background: #e8e8f0 !important;
+	border-radius: 6px !important;
+}
+
+/* ─────────────────────────────────────────
+   Column-filter overlay popup
+───────────────────────────────────────── */
+::ng-deep .p-columnfilter-overlay {
+	background: rgba(255, 255, 255, 0.98) !important;
+	backdrop-filter: blur(12px) !important;
+	border-radius: 12px !important;
+	border: 1px solid rgba(0, 0, 0, 0.08) !important;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+	overflow: hidden !important;
+}
+
+/* ─────────────────────────────────────────
+   Tags (status badges)
+───────────────────────────────────────── */
 .tag {
 	font-size: 15px;
 }
@@ -61,33 +328,59 @@ h1 {
 	font-size: 14px;
 }
 
-::ng-deep .input {
+/* ─────────────────────────────────────────
+   Status filter panel
+───────────────────────────────────────── */
+.status-filter {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.status-filter .p-tag {
+	cursor: pointer;
+	opacity: 1;
+}
+
+.status-filter .p-tag:hover {
+	box-shadow: 0 0 0 1px currentColor;
+}
+
+.status-filter .p-tag.selected {
+	box-shadow: 0 0 2px 2px currentColor;
+}
+
+.clear-tag {
 	width: 100%;
+	margin: 15px 0 0 0;
+	cursor: pointer;
 }
 
-.textarea-input {
-	height: 100%;
+.clear-tag:hover {
+	box-shadow: 0 0 0 1px currentColor;
+	background-color: rgb(220, 218, 218);
 }
 
-::ng-deep .p-datatable .p-datatable-tbody > tr > td,
-::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
-	height: 9vh; /*↑ increases row height*/
+/* ─────────────────────────────────────────
+   Resolved-bug outline tag
+───────────────────────────────────────── */
+.tag-debug-success {
+	padding-left: 10px;
+	padding-right: 10px;
+	border: 1.5px solid red;
 }
 
-.p-datatable th.component,
-.p-datatable td.component {
-	width: 100px;
-	max-width: 100px;
-	text-align: center;
+/* ─────────────────────────────────────────
+   Dropdown font override
+───────────────────────────────────────── */
+::ng-deep .dropdown-panel-font {
+	font-family: 'cf';
 }
 
-.p-datatable td.component,
-.p-datatable td.element,
-.p-datatable td.details,
-.p-datatable td.status {
-	border-right: 1px solid #dee2e6;
-}
-
+/* ─────────────────────────────────────────
+   Component icon + label
+───────────────────────────────────────── */
 .component-content {
 	display: flex;
 	align-items: center;
@@ -95,15 +388,23 @@ h1 {
 	gap: 5px;
 }
 
+/* ─────────────────────────────────────────
+   Column dimensions
+───────────────────────────────────────── */
+.p-datatable th.component,
+.p-datatable td.component {
+	width: 100px;
+	max-width: 100px;
+	text-align: center;
+}
+
 .p-datatable .element {
-	/* border: 1px solid black; */
 	width: 100px;
 	max-width: 100px;
 	text-align: center;
 }
 
 .p-datatable th.details {
-	/* border: 1px solid black; */
 	text-align: center;
 	width: 150px;
 	max-width: 150px;
@@ -116,44 +417,26 @@ h1 {
 }
 
 .p-datatable .status {
-	/* border: 1px solid black; */
 	text-align: center;
 	width: 80px;
 	max-width: 80px;
 }
 
 ::ng-deep .p-datatable .timestamp {
-	/* border: 1px solid black; */
 	text-align: center;
 	width: 80px;
 	max-width: 80px;
 }
 
 .p-datatable .edit-button {
-	/* border: 1px solid black; */
 	text-align: center;
 	width: 45px;
 	max-width: 45px;
 }
 
-::ng-deep .p-datatable .edit-button .p-button .p-button-icon {
-	font-size: 17px !important;
-	border: none;
-}
-
-::ng-deep .p-datatable .edit-button .p-button {
-	background-color: transparent;
-	transition: none; /* Prevent flash on border color change*/
-	width: 40px;
-	height: 40px;
-	box-shadow: 1px 1px 0px 1px black;
-	border: 0.5px solid black;
-}
-
-::ng-deep .p-datatable .edit-button .p-button:hover {
-	background-color: rgb(222, 222, 222);
-}
-
+/* ─────────────────────────────────────────
+   Mobile: ≤ 1200 px
+───────────────────────────────────────── */
 @media (max-width: 1200px) {
 	.hide-on-mobile {
 		display: none;
@@ -188,6 +471,9 @@ h1 {
 	}
 }
 
+/* ─────────────────────────────────────────
+   Mobile: ≤ 840 px
+───────────────────────────────────────── */
 @media (max-width: 840px) {
 	.component {
 		min-width: 150px !important;
@@ -228,52 +514,4 @@ h1 {
 	::ng-deep .p-paginator-current {
 		display: none !important;
 	}
-}
-
-.edit-button-group {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
-
-.tag-debug-success {
-	padding-left: 10px;
-	padding-right: 10px;
-	border: 1.5px solid red;
-}
-
-/* Change font size of "Showing x to y of z" */
-::ng-deep .p-datatable .p-paginator .p-paginator-current {
-	font-size: 16px; /* adjust as needed */
-}
-
-.status-filter {
-	display: flex;
-	flex-direction: column;
-	flex-wrap: wrap;
-	gap: 0.4rem;
-}
-
-.status-filter .p-tag {
-	cursor: pointer;
-	opacity: 1;
-}
-
-.status-filter .p-tag:hover {
-	box-shadow: 0 0 0 1px currentColor;
-}
-
-.status-filter .p-tag.selected {
-	box-shadow: 0 0 2px 2px currentColor;
-}
-
-.clear-tag {
-	width: 100%;
-	margin: 15px 0 0 0;
-	cursor: pointer;
-}
-
-.clear-tag:hover {
-	box-shadow: 0 0 0 1px currentColor;
-	background-color: rgb(220, 218, 218);
 }

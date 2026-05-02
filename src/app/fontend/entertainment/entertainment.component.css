@@ -649,3 +649,9 @@
 		padding: 3px 8px;
 	}
 }
+
+@media (max-width: 1200px) {
+	.hide-on-small-screen {
+		display: none;
+	}
+}

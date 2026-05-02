@@ -1,30 +1,86 @@
-::ng-deep .error-dialog-message {
-	width: 260px;
-	height: 50px;
-	text-align: center;
-	display: flex; /* enables flexbox */
-	justify-content: center; /* horizontal center */
-	align-items: center; /* vertical center */
-	white-space: pre-line; /* preserves line breaks like <br> or \n */
-	line-height: 1.5;
-	font-size: 16px;
+::ng-deep .error-dialog {
+	width: 380px;
+	border-radius: 20px !important;
+	overflow: hidden !important;
+	background: rgba(255, 255, 255, 0.96) !important;
+	backdrop-filter: blur(24px);
+	border: 1px solid rgba(255, 255, 255, 0.7) !important;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24) !important;
+	user-select: none;
+}
+
+::ng-deep .error-dialog .p-dialog-header {
+	background: linear-gradient(135deg, #d53369 0%, #ef5350 100%) !important;
+	padding: 18px 24px 15px !important;
+	border-radius: 20px 20px 0 0 !important;
+}
+
+::ng-deep .error-dialog .p-dialog-title {
+	font-size: 17px !important;
+	font-weight: 700 !important;
+	color: white !important;
+}
+
+::ng-deep .error-dialog .p-confirmdialog-icon {
+	color: rgba(253, 0, 0, 0.85) !important;
+	font-size: 30px !important;
+	flex-shrink: 0;
+}
+
+::ng-deep .error-dialog .p-dialog-content {
+	padding: 24px 24px 16px !important;
+	background: transparent !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 12px !important;
+}
+
+::ng-deep .error-dialog .p-dialog-footer {
+	padding: 0 24px !important;
+	height: 50px !important;
+	background: rgba(248, 245, 252, 0.9) !important;
+	border-top: 1px solid rgba(213, 51, 105, 0.1) !important;
+	border-radius: 0 0 20px 20px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+::ng-deep .error-dialog .p-dialog-footer .p-button {
+	background: linear-gradient(135deg, #d53369 0%, #ef5350 100%) !important;
+	border: none !important;
+	border-radius: 9px !important;
+	height: 32px !important;
+	padding: 0 28px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
 }
 
 ::ng-deep .error-dialog .p-resizable-handle {
 	display: none !important;
 }
 
-::ng-deep .error-dialog {
-	width: 350px;
-	height: 210px;
-	user-select: none; /* standard */
+::ng-deep .error-dialog-message {
+	text-align: center;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	white-space: pre-line;
+	line-height: 1.6;
+	font-size: 15px;
+	color: rgba(40, 15, 35, 0.8);
 }
 
 @media (max-width: 580px) {
 	::ng-deep .error-dialog {
 		min-width: 100% !important;
 		min-height: 100% !important;
-		border-radius: 0px !important;
+		border-radius: 0 !important;
+	}
+
+	::ng-deep .error-dialog .p-dialog-header {
+		border-radius: 0 !important;
 	}
 
 	::ng-deep .error-dialog-message {

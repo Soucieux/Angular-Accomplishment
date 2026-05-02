@@ -2,8 +2,10 @@
 @if (utilities.getIsUserAlive() && stats !== null) {
 	<div class="page-container">
 		<div class="control-button-container">
-			<div class="control-button-title" style="margin-right: auto">Categories ({{ stats.totalNumber }})</div>
-			<div class="search-input-wrapper  hide-on-mobile">
+			<div class="control-button-title" style="margin-right: auto">
+				Categories ({{ stats.totalNumber }})
+			</div>
+			<div class="search-input-wrapper hide-on-mobile hide-on-small-screen">
 				<span class="material-symbols-outlined search-icon-input">search</span>
 				<input
 					type="text"
@@ -12,21 +14,24 @@
 					[(ngModel)]="searchText"
 					(ngModelChange)="updateSearchQuery($event)" />
 			</div>
-			<button mat-mini-fab
+			<button
+				mat-mini-fab
 				(click)="openSearchDialog()"
 				class="control-button search-button"
 				matTooltip="Refresh Rates"
 				matTooltipPosition="below">
 				<span class="material-symbols-outlined control-button-icon">cached</span>
 			</button>
-			<button mat-mini-fab
+			<button
+				mat-mini-fab
 				(click)="openAddNewMovieDialog()"
 				class="control-button add-button"
 				matTooltip="Add Movie"
 				matTooltipPosition="below">
 				<span class="material-symbols-outlined control-button-icon">add</span>
 			</button>
-			<button mat-mini-fab
+			<button
+				mat-mini-fab
 				(click)="openHistoryDialog()"
 				class="control-button history-button"
 				matTooltip="History"
@@ -74,7 +79,9 @@
 				</div>
 				<div class="individual-item-content">
 					<div class="title-rate-row">
-						<span class="title" [style.font-size]="calculateFontSize(movie.getMovieName().length)">
+						<span
+							class="title"
+							[style.font-size]="calculateFontSize(movie.getMovieName().length)">
 							{{ movie.getMovieName() }}
 						</span>
 						@if (movie.getMovieRate()) {

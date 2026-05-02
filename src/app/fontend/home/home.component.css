@@ -1,30 +1,201 @@
+/* ─────────────────────────────────────────
+   Layout
+───────────────────────────────────────── */
 .container {
 	display: flex;
 	flex-direction: column;
+	position: relative;
+	overflow: hidden;
+	border-radius: 4%;
+	min-height: calc(100dvh - 10px);
+	width: calc(100% + 20px);
+	margin-left: -15px;
+	margin-right: -5px;
 }
 
+/* Floating luminous orb — top-right */
+.container::before {
+	content: '';
+	position: absolute;
+	width: 560px;
+	height: 560px;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, transparent 68%);
+	border-radius: 50%;
+	top: -140px;
+	right: -180px;
+	animation: drift 14s ease-in-out infinite;
+	pointer-events: none;
+	z-index: 0;
+}
+
+/* Floating luminous orb — bottom-left */
+.container::after {
+	content: '';
+	position: absolute;
+	width: 440px;
+	height: 440px;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.09) 0%, transparent 65%);
+	border-radius: 50%;
+	bottom: 6%;
+	left: -160px;
+	animation: drift 19s ease-in-out infinite reverse;
+	pointer-events: none;
+	z-index: 0;
+}
+
+@keyframes drift {
+	0%,
+	100% {
+		transform: translateY(0) scale(1);
+	}
+	50% {
+		transform: translateY(-38px) scale(1.05);
+	}
+}
+
+/* ─────────────────────────────────────────
+   Glass panel behind quotes
+───────────────────────────────────────── */
 .word-container {
 	display: flex;
 	flex-direction: column;
 	gap: 30px;
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	min-height: inherit;
+	box-sizing: border-box;
 }
 
+.word-container::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: rgba(255, 255, 255, 0.07);
+	backdrop-filter: blur(28px);
+	-webkit-backdrop-filter: blur(28px);
+	z-index: 0;
+	pointer-events: none;
+}
+
+.word-container > * {
+	position: relative;
+	z-index: 1;
+}
+
+/* ─────────────────────────────────────────
+   Title
+───────────────────────────────────────── */
 .title {
 	text-align: center;
 	font-size: 60px;
 	margin-top: 12vh;
 	margin-bottom: 8vh;
+	background: linear-gradient(135deg, #ffffff 20%, rgba(255, 218, 120, 0.88) 100%);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	filter: drop-shadow(0 2px 22px rgba(255, 255, 255, 0.38));
+	animation: titleReveal 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes titleReveal {
+	from {
+		opacity: 0;
+		transform: translateY(-16px);
+		filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+		filter: drop-shadow(0 2px 22px rgba(255, 255, 255, 0.38));
+	}
+}
+
+/* ─────────────────────────────────────────
+   Quote text
+───────────────────────────────────────── */
 .word {
 	font-family: 'cf';
 	text-align: center;
+	color: rgba(255, 255, 255, 0.92);
 }
 
 .en-word {
 	text-align: center;
+	color: rgba(255, 255, 255, 0.58);
 }
 
+/* ─────────────────────────────────────────
+   Individual quote blocks — staggered entrance
+───────────────────────────────────────── */
+.quote-block {
+	animation: fadeSlideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.quote-block:nth-child(2) {
+	animation-delay: 0.12s;
+}
+.quote-block:nth-child(3) {
+	animation-delay: 0.26s;
+}
+.quote-block:nth-child(4) {
+	animation-delay: 0.4s;
+}
+
+@keyframes fadeSlideUp {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* ─────────────────────────────────────────
+   Final closing quote
+───────────────────────────────────────── */
+.final-quote {
+	width: fit-content;
+	max-width: min(680px, 86%);
+	margin: 0 auto;
+	padding: 14px 24px 14px 28px;
+	border-left: 3px solid rgba(255, 255, 255, 0.42);
+	border-radius: 0 14px 14px 0;
+	background: rgba(255, 255, 255, 0.08);
+	animation: fadeSlideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.54s both;
+}
+
+.final-quote .word {
+	color: rgba(255, 255, 255, 0.74);
+	font-style: italic;
+	line-height: 1.8;
+	text-shadow: 0 2px 14px rgba(0, 0, 0, 0.12);
+}
+
+.final-quote::before,
+.final-quote::after {
+	color: rgba(255, 255, 255, 0.34);
+	font-family: Georgia, serif;
+	font-size: 30px;
+	line-height: 0;
+}
+
+.final-quote::before {
+	content: '“';
+	margin-right: 6px;
+}
+
+.final-quote::after {
+	content: '”';
+	margin-left: 6px;
+}
+
+/* ─────────────────────────────────────────
+   Mobile
+───────────────────────────────────────── */
 @media (max-width: 840px) {
 	.title {
 		font-size: 35px;

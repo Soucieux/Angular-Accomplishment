@@ -74,7 +74,11 @@
 		</ng-template>
 		<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
 			@if (!row.__dummy) {
-				<tr>
+				<tr
+					(mouseenter)="hoveredRowIndex = rowIndex"
+					(mouseleave)="hoveredRowIndex = null"
+					[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
+					[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
 					@if (shouldShowComponent(getRenderedData(t), rowIndex)) {
 						<td
 							[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"

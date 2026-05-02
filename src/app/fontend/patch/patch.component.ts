@@ -61,6 +61,7 @@ export class PatchComponent {
 	protected isMobile!: boolean;
 	protected skeletonRows = Array.from({ length: this.itemsPerPage });
 	protected editedRows = new Map<string, any>();
+	protected hoveredRowIndex: number | null = null;
 	protected newRecord = {
 		key: '',
 		component: '',
@@ -282,6 +283,18 @@ export class PatchComponent {
 
 	getRenderedData(data: any) {
 		return data.filteredValue ?? data.value ?? [];
+	}
+
+	isInSameComponentGroup(data: any[], rowIndex: number): boolean {
+		if (this.hoveredRowIndex === null) return false;
+		return data[rowIndex]?.component === data[this.hoveredRowIndex]?.component;
+	}
+
+	isInSameElementGroup(data: any[], rowIndex: number): boolean {
+		if (this.hoveredRowIndex === null) return false;
+		const thisRow = data[rowIndex];
+		const hoveredRow = data[this.hoveredRowIndex];
+		return thisRow?.component === hoveredRow?.component && thisRow?.element === hoveredRow?.element;
 	}
 
 	// This is only used to add a border outline for ressolved bug

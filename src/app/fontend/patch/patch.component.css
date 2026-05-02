@@ -305,19 +305,97 @@ h1 {
 }
 
 /* ─────────────────────────────────────────
-   Column-filter overlay popup
+   Filter icon button (inside Status th)
 ───────────────────────────────────────── */
-::ng-deep .p-columnfilter-overlay {
-	background: rgba(255, 255, 255, 0.98) !important;
-	backdrop-filter: blur(12px) !important;
-	border-radius: 12px !important;
-	border: 1px solid rgba(0, 0, 0, 0.08) !important;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-	overflow: hidden !important;
+::ng-deep .p-datatable .p-column-filter-menu-button {
+	color: rgba(255, 255, 255, 0.65) !important;
+	background: transparent !important;
+	border-radius: 6px !important;
+	transition:
+		color 0.18s,
+		background 0.18s !important;
+}
+
+::ng-deep .p-datatable .p-column-filter-menu-button:hover {
+	color: #ffffff !important;
+	background: rgba(255, 255, 255, 0.18) !important;
+}
+
+::ng-deep .p-datatable .p-column-filter-menu-button.p-column-filter-menu-button-active {
+	color: #ffd860 !important;
+	background: rgba(255, 216, 96, 0.18) !important;
 }
 
 /* ─────────────────────────────────────────
-   Tags (status badges)
+   Column-filter overlay popup
+───────────────────────────────────────── */
+::ng-deep .p-columnfilter-overlay {
+	background: #ffffff !important;
+	border-radius: 16px !important;
+	border: 1px solid rgba(102, 126, 234, 0.18) !important;
+	box-shadow:
+		0 4px 8px rgba(0, 0, 0, 0.06),
+		0 16px 48px rgba(102, 126, 234, 0.18) !important;
+	overflow: hidden !important;
+	min-width: 190px !important;
+	padding: 0 !important;
+}
+
+/* Purple gradient header strip */
+::ng-deep .p-columnfilter-overlay .p-columnfilter-overlay-header {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	padding: 10px 14px !important;
+	border-bottom: none !important;
+}
+
+::ng-deep .p-columnfilter-overlay .p-columnfilter-overlay-header .p-columnfilter-title {
+	color: rgba(255, 255, 255, 0.92) !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	letter-spacing: 0.6px !important;
+	text-transform: uppercase !important;
+}
+
+::ng-deep .p-columnfilter-overlay .p-columnfilter-overlay-header button {
+	color: rgba(255, 255, 255, 0.7) !important;
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	transition: color 0.15s !important;
+}
+
+::ng-deep .p-columnfilter-overlay .p-columnfilter-overlay-header button:hover {
+	color: #ffffff !important;
+	background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Content area */
+::ng-deep .p-columnfilter-overlay .p-columnfilter-constraints {
+	padding: 12px !important;
+}
+
+/* Hide PrimeNG's empty operator / footer / buttonbar sections that add dead space */
+::ng-deep .p-columnfilter-overlay .p-columnfilter-operator,
+::ng-deep .p-columnfilter-overlay .p-columnfilter-overlay-footer,
+::ng-deep .p-columnfilter-overlay .p-columnfilter-add-rule {
+	display: none !important;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+::ng-deep .p-datatable-filter-buttonbar {
+	display: none !important;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+/* PrimeNG renders a duplicate filter rule — hide every rule after the first */
+::ng-deep .p-datatable-filter-rule ~ .p-datatable-filter-rule {
+	display: none !important;
+}
+
+/* ─────────────────────────────────────────
+   Tags (status badges in table)
 ───────────────────────────────────────── */
 .tag {
 	font-size: 15px;
@@ -334,32 +412,60 @@ h1 {
 .status-filter {
 	display: flex;
 	flex-direction: column;
-	flex-wrap: wrap;
-	gap: 0.4rem;
+	gap: 6px;
 }
 
 .status-filter .p-tag {
 	cursor: pointer;
-	opacity: 1;
+	justify-content: center;
+	width: 100%;
+	padding: 7px 12px !important;
+	border-radius: 9px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	border: 1.5px solid transparent !important;
+	transition:
+		transform 0.15s,
+		box-shadow 0.15s,
+		border-color 0.15s !important;
 }
 
 .status-filter .p-tag:hover {
-	box-shadow: 0 0 0 1px currentColor;
+	transform: translateX(2px);
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
 }
 
 .status-filter .p-tag.selected {
-	box-shadow: 0 0 2px 2px currentColor;
+	border-color: currentColor !important;
+	box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent) !important;
+	transform: translateX(2px);
 }
 
+/* ─────────────────────────────────────────
+   Clear filter button
+───────────────────────────────────────── */
 .clear-tag {
 	width: 100%;
-	margin: 15px 0 0 0;
+	margin: 8px 0 0 0;
+	padding: 7px 12px !important;
+	border-radius: 9px !important;
 	cursor: pointer;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	background: rgba(0, 0, 0, 0.04) !important;
+	border: 1.5px dashed rgba(0, 0, 0, 0.2) !important;
+	color: rgba(30, 15, 35, 0.55) !important;
+	transition:
+		background 0.15s,
+		border-color 0.15s,
+		color 0.15s !important;
 }
 
 .clear-tag:hover {
-	box-shadow: 0 0 0 1px currentColor;
-	background-color: rgb(220, 218, 218);
+	background: rgba(0, 0, 0, 0.08) !important;
+	border-color: rgba(0, 0, 0, 0.35) !important;
+	color: rgba(30, 15, 35, 0.75) !important;
+	box-shadow: none !important;
 }
 
 /* ─────────────────────────────────────────

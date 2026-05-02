@@ -1,48 +1,67 @@
+/* ─────────────────────────────────────────
+   Container — mostly-opaque white card
+───────────────────────────────────────── */
 .container {
 	min-width: 100%;
 	min-height: 100%;
-	backdrop-filter: blur(50px);
-	background-color: rgb(243, 227, 243);
-	border: 0.8px solid rgb(255, 255, 255);
-	box-shadow: 0 0 15px rgb(238, 240, 243);
-	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.8);
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+	border-radius: 18px;
 	padding: 20px;
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
-	gap: 10px;
+	gap: 14px;
 	grid-auto-rows: min-content;
+	animation: containerReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-::ng-deep .first-table table {
-	height: 373px;
+@keyframes containerReveal {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
-.skeleton-row {
-	height: 50px; /*↑ increases row height*/
-}
-
+/* ─────────────────────────────────────────
+   Table wrapper — section card
+───────────────────────────────────────── */
 .table-wrapper {
-	border-radius: 10px;
+	border-radius: 14px;
 	overflow: hidden;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
 }
 
-.header {
-	text-align: center;
-}
-
-.toggle-wrapper {
+/* ─────────────────────────────────────────
+   Header bar — gradient per section
+   1: Date Calculator   → indigo-purple
+   2: Account Expenses  → teal-emerald
+   3: Messages          → amber-orange
+───────────────────────────────────────── */
+.header-wrapper {
+	position: relative;
 	display: flex;
-	align-items: center;
-	padding-top: 15px;
+	flex-direction: row;
+	justify-content: space-between;
 }
 
-.toggle-label {
-	font-size: 14px;
+.table-wrapper:nth-child(1) .header-wrapper {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-::ng-deep .toggle.p-toggleswitch {
-	margin-top: 2px;
-	transform: scale(0.65); /* 1 = default */
+.table-wrapper:nth-child(2) .header-wrapper {
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.table-wrapper:nth-child(3) .header-wrapper {
+	background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
 }
 
 .header-main {
@@ -53,62 +72,546 @@
 	gap: 5px;
 }
 
-.header-wrapper {
-	position: relative;
-	background-color: white;
-	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
+.header-main h4 {
+	color: rgba(255, 255, 255, 0.96);
+	font-weight: 600;
+	letter-spacing: 0.3px;
 }
 
-/* remove td/th padding */
+/* ─────────────────────────────────────────
+   Save indicator
+───────────────────────────────────────── */
+.save-indicator-first-table,
+.save-indicator {
+	padding-top: 3px;
+	padding-left: 5px;
+	display: flex;
+	align-items: center;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.save-indicator-icon {
+	font-size: 18px;
+}
+
+.save-indicator-text {
+	font-size: 19px;
+	margin-left: 5px;
+}
+
+/* ─────────────────────────────────────────
+   Toggle (Next Month switch)
+───────────────────────────────────────── */
+.toggle-wrapper {
+	display: flex;
+	align-items: center;
+	padding-top: 15px;
+	padding-right: 14px;
+}
+
+.toggle-label {
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.88);
+	font-weight: 500;
+}
+
+::ng-deep .toggle.p-toggleswitch {
+	margin-top: 2px;
+	transform: scale(0.65);
+}
+
+/* ─────────────────────────────────────────
+   ① DATE CALCULATOR
+───────────────────────────────────────── */
+::ng-deep .first-table table {
+	height: 373px;
+}
+
+.skeleton-row {
+	height: 50px;
+}
+
 .first-table th,
 .first-table td {
 	padding: 5px !important;
 }
 
 .first-table th {
-	border-top: 1px solid #dee2e6;
 	padding-top: 12px !important;
 }
 
+.header {
+	text-align: center;
+}
+
+/* Column header row */
+::ng-deep .first-table .p-datatable-thead > tr > th {
+	background: rgba(102, 126, 234, 0.07) !important;
+	color: rgba(30, 15, 35, 0.78) !important;
+	border-top: none !important;
+	border-color: rgba(0, 0, 0, 0.08) !important;
+	font-weight: 700 !important;
+	font-size: 15px !important;
+	letter-spacing: 0.3px !important;
+}
+
+/* Body rows */
+::ng-deep .first-table .p-datatable-tbody > tr {
+	background: #ffffff !important;
+}
+
+::ng-deep .first-table .p-datatable-tbody > tr > td {
+	border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Footer row (Reset button row) */
+::ng-deep .first-table .p-datatable-tfoot > tr > td {
+	background: rgba(102, 126, 234, 0.04) !important;
+	border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+	padding: 6px !important;
+}
+
+/* Skeleton */
+::ng-deep .p-skeleton {
+	border-radius: 6px !important;
+	background: #e8e8f0 !important;
+}
+
+/* Date input */
 .first-table-input {
-	font-weight: bold;
+	font-weight: 700;
 	padding-right: 3px;
 	padding-left: 10px;
+	font-size: 16px !important;
+	border: none !important;
+	border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	transition: background 0.15s !important;
 }
 
+.first-table-input:focus {
+	background: rgba(102, 126, 234, 0.05) !important;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+/* Disabled cell (past dates when not next-month mode) */
+.disabled-cell {
+	background-color: #f5f5f8 !important;
+	color: rgba(30, 15, 35, 0.35) !important;
+}
+
+/* Check button — marks a cell as charged */
+::ng-deep .first-table-button {
+	background: rgba(17, 153, 142, 0.07) !important;
+	border: none !important;
+	border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
+	padding: 0 !important;
+}
+
+::ng-deep .first-table-button .p-button {
+	background: transparent !important;
+	border: none !important;
+	color: #11998e !important;
+	box-shadow: none !important;
+	transition:
+		background 0.18s,
+		color 0.18s !important;
+	width: 100% !important;
+	height: 100% !important;
+}
+
+::ng-deep .first-table-button .p-button:hover {
+	background: rgba(17, 153, 142, 0.16) !important;
+	color: #0d7a72 !important;
+}
+
+::ng-deep .first-table-button .p-button .p-button-icon {
+	font-size: 15px !important;
+}
+
+/* Reset button */
 ::ng-deep .reset-button {
 	width: 100%;
+	background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
+	border: none !important;
+	color: #ffffff !important;
+	font-weight: 600 !important;
+	border-radius: 8px !important;
+	box-shadow: 0 3px 10px rgba(238, 90, 111, 0.28) !important;
+	transition:
+		transform 0.18s,
+		box-shadow 0.18s !important;
 }
 
-.disabled-cell {
-	background-color: #f3f4f6;
+::ng-deep .reset-button:not(:disabled):hover {
+	transform: translateY(-2px) !important;
+	box-shadow: 0 6px 18px rgba(238, 90, 111, 0.42) !important;
 }
 
-@media (max-width: 2040px) {
+/* ─────────────────────────────────────────
+   ② ACCOUNT EXPENSES
+───────────────────────────────────────── */
+.second-table,
+.third-table-wrapper {
+	border-top: 1px solid rgba(0, 0, 0, 0.07);
+	background-color: #ffffff;
+}
+
+.second-table,
+.third-table {
+	padding-left: 5px;
+	padding-right: 5px;
+	display: grid;
+	overflow: hidden;
+	height: fit-content;
+}
+
+.second-table {
+	grid-template-columns: repeat(4, 1fr);
+	padding-top: 0;
+}
+
+/* Cell card hover */
+.second-table-cell {
+	height: fit-content;
+	padding: 10px 5px 20px 5px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	border-radius: 10px;
+	transition: background 0.18s;
+}
+
+.second-table-cell:hover {
+	background: rgba(17, 153, 142, 0.05);
+}
+
+/* Cell title */
+.second-table-cell-header {
+	text-align: center;
+	padding-top: 10px;
+	font-weight: 700;
+	font-size: 15px;
+	color: rgba(30, 15, 35, 0.7);
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+}
+
+/* Currency / yen icon addon */
+::ng-deep .second-table .p-inputgroup-addon:first-child {
+	background: rgba(17, 153, 142, 0.08) !important;
+	border-color: rgba(0, 0, 0, 0.1) !important;
+	color: #11998e !important;
+	font-weight: 700 !important;
+}
+
+/* Debt number input */
+::ng-deep .second-table .p-inputnumber-input {
+	font-weight: 600 !important;
+	font-size: 15px !important;
+	border-color: rgba(0, 0, 0, 0.1) !important;
+	background: #ffffff !important;
+	transition:
+		border-color 0.18s,
+		box-shadow 0.18s !important;
+}
+
+::ng-deep .second-table .p-inputnumber-input:focus {
+	border-color: #11998e !important;
+	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.12) !important;
+	outline: none !important;
+}
+
+/* Minus (-) decrement button */
+::ng-deep .second-table .p-inputgroup .p-button {
+	background: rgba(0, 0, 0, 0.03) !important;
+	border: none !important;
+	border-left: 1px solid rgba(0, 0, 0, 0.1) !important;
+	color: rgba(30, 15, 35, 0.55) !important;
+	box-shadow: none !important;
+	transition:
+		background 0.15s,
+		color 0.15s !important;
+}
+
+::ng-deep .second-table .p-inputgroup .p-button:hover {
+	background: rgba(17, 153, 142, 0.12) !important;
+	color: #11998e !important;
+}
+
+/* Date picker input */
+::ng-deep .second-table .p-datepicker-input {
+	font-size: 15px !important;
+	border-color: rgba(0, 0, 0, 0.1) !important;
+	background: #ffffff !important;
+	transition:
+		border-color 0.18s,
+		box-shadow 0.18s !important;
+}
+
+::ng-deep .second-table .p-datepicker-input:focus {
+	border-color: #11998e !important;
+	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.12) !important;
+	outline: none !important;
+}
+
+/* Paid/unpaid checkbox row */
+.second-table-checkbox {
+	padding-top: 5px;
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
+/* ─────────────────────────────────────────
+   ③ MESSAGES
+───────────────────────────────────────── */
+.third-table {
+	grid-template-columns: repeat(2, 1fr);
+}
+
+.third-table-cell {
+	padding: 5px;
+	height: 53px;
+}
+
+/* Text inputs */
+::ng-deep .third-table .p-inputtext {
+	border: 1.5px solid rgba(0, 0, 0, 0.1) !important;
+	border-radius: 0 !important;
+	background: #ffffff !important;
+	font-size: 15px !important;
+	transition:
+		border-color 0.18s,
+		box-shadow 0.18s !important;
+}
+
+::ng-deep .third-table .p-inputtext:focus {
+	border-color: #f7971e !important;
+	box-shadow: 0 0 0 3px rgba(247, 151, 30, 0.12) !important;
+	outline: none !important;
+	z-index: 1 !important;
+}
+
+/* Addon buttons (clock, link, pencil) */
+::ng-deep .third-table .p-inputgroup-addon,
+::ng-deep .third-table .p-inputgroup .p-button {
+	background: rgba(0, 0, 0, 0.02) !important;
+	border: 1.5px solid rgba(0, 0, 0, 0.1) !important;
+	border-left: none !important;
+	color: rgba(30, 15, 35, 0.5) !important;
+	box-shadow: none !important;
+	transition:
+		background 0.15s,
+		color 0.15s !important;
+}
+
+::ng-deep .third-table .p-inputgroup .p-button:hover {
+	background: rgba(247, 151, 30, 0.1) !important;
+	color: #e08900 !important;
+}
+
+/* Clock icon — amber (due date indicator) */
+::ng-deep .third-table .pi-clock {
+	color: #e08900 !important;
+	font-size: 15px;
+}
+
+/* Link icon — blue */
+::ng-deep .third-table .pi-link {
+	color: #4776e6 !important;
+	font-size: 15px;
+}
+
+/* Pencil / edit button icon */
+::ng-deep .third-table .pi-pencil {
+	font-size: 15px;
+}
+
+/* "New entry" input — visually distinct */
+::ng-deep .third-table .p-inputgroup:last-of-type .p-inputtext {
+	border-style: dashed !important;
+	border-color: rgba(247, 151, 30, 0.4) !important;
+	background: rgba(247, 151, 30, 0.03) !important;
+}
+
+::ng-deep .third-table .p-inputgroup:last-of-type .p-inputtext::placeholder {
+	color: rgba(30, 15, 35, 0.38) !important;
+	font-style: italic !important;
+}
+
+/* Plus button on new entry row */
+::ng-deep .third-table .p-inputgroup:last-of-type .p-button {
+	background: rgba(247, 151, 30, 0.1) !important;
+	border-style: dashed !important;
+	border-color: rgba(247, 151, 30, 0.4) !important;
+	color: #e08900 !important;
+}
+
+::ng-deep .third-table .p-inputgroup:last-of-type .p-button:hover {
+	background: rgba(247, 151, 30, 0.22) !important;
+	color: #b86e00 !important;
+}
+
+/* Paginator */
+.paginator {
+	padding: 5px;
+}
+
+::ng-deep .third-table-wrapper .p-paginator {
+	background: #f9f9fb !important;
+	border: none !important;
+	border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
+}
+
+::ng-deep .third-table-wrapper .p-paginator .p-paginator-page,
+::ng-deep .third-table-wrapper .p-paginator .p-paginator-next,
+::ng-deep .third-table-wrapper .p-paginator .p-paginator-prev {
+	background: #ffffff !important;
+	border-radius: 8px !important;
+	border: 1px solid rgba(0, 0, 0, 0.1) !important;
+	color: rgba(30, 15, 35, 0.72) !important;
+	min-width: 34px !important;
+	height: 34px !important;
+	margin: 0 2px !important;
+	transition: background 0.15s !important;
+}
+
+::ng-deep .third-table-wrapper .p-paginator .p-paginator-page:hover,
+::ng-deep .third-table-wrapper .p-paginator .p-paginator-next:hover,
+::ng-deep .third-table-wrapper .p-paginator .p-paginator-prev:hover {
+	background: #f0f0f5 !important;
+}
+
+::ng-deep .third-table-wrapper .p-paginator .p-highlight {
+	background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%) !important;
+	color: rgba(50, 25, 0, 0.85) !important;
+	border-color: transparent !important;
+	box-shadow: 0 2px 8px rgba(247, 151, 30, 0.32) !important;
+}
+
+/* ─────────────────────────────────────────
+   POPOVER — entry detail editor
+───────────────────────────────────────── */
+::ng-deep .p-popover {
+	border-radius: 14px !important;
+	border: 1px solid rgba(247, 151, 30, 0.2) !important;
+	box-shadow:
+		0 4px 8px rgba(0, 0, 0, 0.06),
+		0 16px 40px rgba(247, 151, 30, 0.16) !important;
+	overflow: hidden !important;
+}
+
+/* Amber top accent strip */
+::ng-deep .p-popover::before {
+	content: '';
+	display: block;
+	height: 4px;
+	background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
+}
+
+::ng-deep .p-popover-content {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px !important;
+}
+
+.popover-item {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.popover-inputgroup {
+	height: 30px;
+	width: 300px;
+}
+
+.popover-label {
+	font-size: 14px;
+	font-weight: 600;
+	color: rgba(30, 15, 35, 0.6);
+	text-transform: uppercase;
+	letter-spacing: 0.4px;
+}
+
+::ng-deep .datapicker input {
+	font-size: 15px;
+}
+
+/* Popover input addons */
+::ng-deep .p-popover .p-inputgroup-addon {
+	background: #f8f9fa !important;
+	border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+::ng-deep .p-popover .pi-link {
+	color: #4776e6 !important;
+}
+
+::ng-deep .p-popover .pi-calendar {
+	color: #f7971e !important;
+}
+
+/* Remove Entry / Add Entry buttons */
+::ng-deep .submit-button .p-button {
+	font-size: 14px;
+	margin-top: 10px;
+	width: 100%;
+	height: 30px;
+	border-radius: 8px !important;
+	font-weight: 600 !important;
+	border: none !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+	transition:
+		transform 0.16s,
+		box-shadow 0.16s !important;
+}
+
+::ng-deep .submit-button .p-button:not(:disabled):hover {
+	transform: translateY(-2px) !important;
+	box-shadow: 0 5px 16px rgba(0, 0, 0, 0.18) !important;
+}
+
+::ng-deep .submit-button .p-button .p-button-icon {
+	font-size: 14px;
+}
+
+/* ─────────────────────────────────────────
+   Responsive — ≤ 2100 px (single column)
+───────────────────────────────────────── */
+@media (max-width: 2100px) {
 	.container {
 		grid-template-columns: repeat(1, 1fr) !important;
 	}
 
 	.second-table-cell {
-		padding: 5px 5px 14px 5px !important;
+		padding: 5px 5px 5px 5px !important;
 	}
 }
 
+/* ─────────────────────────────────────────
+   Responsive — ≤ 1200 px
+───────────────────────────────────────── */
 @media (max-width: 1200px) {
 	.second-table {
 		grid-template-columns: repeat(2, 1fr) !important;
 	}
 }
 
+/* ─────────────────────────────────────────
+   Responsive — ≤ 840 px (mobile)
+───────────────────────────────────────── */
 @media (max-width: 840px) {
 	h4 {
 		font-size: 18px;
 	}
 
-	.toggle.p-toggleswitch {
-		transform: scale(0.55); /* 1 = default */
+	::ng-deep .toggle.p-toggleswitch {
+		transform: scale(0.55);
 	}
 
 	.toggle-label {
@@ -119,7 +622,6 @@
 		font-size: 14px;
 	}
 
-	/* remove td/th padding */
 	.first-table th,
 	.first-table td {
 		margin: 0 !important;
@@ -131,7 +633,7 @@
 	}
 
 	::ng-deep .first-table-button .p-button .p-button-icon {
-		font-size: 14px; /* 👈 control icon size here */
+		font-size: 14px;
 	}
 
 	.second-table {
@@ -151,115 +653,12 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		font-size: 13px !important;
-        position: relative;
+		font-size: 14px !important;
+		position: relative;
 		bottom: 2px;
 	}
 
 	.save-indicator-text {
 		font-size: 15px !important;
 	}
-}
-
-.second-table,
-.third-table-wrapper {
-	border-top: 1px solid #dee2e6;
-	background-color: white;
-}
-
-.second-table,
-.third-table {
-	padding-left: 5px;
-	padding-right: 5px;
-	display: grid;
-	overflow: hidden;
-	height: fit-content;
-}
-
-.second-table {
-	grid-template-columns: repeat(4, 1fr);
-	padding-top: 0px;
-}
-
-.third-table {
-	grid-template-columns: repeat(2, 1fr);
-}
-
-.second-table-cell-header {
-	text-align: center;
-	padding-top: 10px;
-}
-
-.second-table-cell {
-	height: fit-content;
-	padding: 10px 5px 20px 5px;
-	display: flex;
-	flex-direction: column;
-	gap: 5px;
-}
-
-.second-table-checkbox {
-	padding-top: 5px;
-	display: flex;
-	gap: 10px;
-}
-
-.third-table-cell {
-	padding: 5px;
-	height: 53px;
-}
-
-::ng-deep .p-popover-content {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-}
-
-.popover-item {
-	display: flex;
-	flex-direction: column;
-	gap: 5px;
-}
-
-.popover-inputgroup {
-	height: 30px;
-	width: 300px;
-}
-
-.popover-label {
-	font-size: 14px;
-}
-
-::ng-deep .datapicker input {
-	font-size: 14px;
-}
-
-::ng-deep .submit-button .p-button {
-	font-size: 14px;
-	margin-top: 10px;
-	width: 100%;
-	height: 30px;
-}
-
-::ng-deep .submit-button .p-button .p-button-icon {
-	font-size: 14px;
-}
-
-.paginator {
-	padding: 5px;
-}
-
-.save-indicator-first-table,
-.save-indicator {
-	padding-top: 3px;
-	padding-left: 5px;
-}
-
-.save-indicator-icon {
-	font-size: 18px;
-}
-
-.save-indicator-text {
-	font-size: 19px;
-	margin-left: 5px;
 }

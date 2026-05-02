@@ -4,6 +4,13 @@
 @import 'primeicons/primeicons.css';
 @import 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined';
 
+/* Lock the viewport — no page-level scroll */
+html,
+body {
+	height: 100%;
+	overflow: hidden;
+}
+
 /* All words are default to use English font */
 body {
 	font-family: 'nlf';

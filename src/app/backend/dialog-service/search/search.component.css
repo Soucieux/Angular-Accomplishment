@@ -1,36 +1,95 @@
 ::ng-deep .dialog {
-	width: 470px;
-	height: 350px;
+	width: 500px;
+	border-radius: 20px !important;
+	overflow: hidden !important;
+	background: rgba(255, 255, 255, 0.96) !important;
+	backdrop-filter: blur(24px);
+	border: 1px solid rgba(255, 255, 255, 0.7) !important;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24) !important;
 	user-select: none;
 }
 
-.logs {
-	height: 210px;
-	overflow: auto;
-	border: 2px solid black;
-    white-space: pre-line;
-	/* overflow-y: auto; */
+::ng-deep .dialog .p-dialog-header {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	padding: 18px 24px 15px !important;
+	border-radius: 20px 20px 0 0 !important;
+}
+
+::ng-deep .dialog .p-dialog-title {
+	font-size: 15px !important;
+	font-weight: 700 !important;
+	color: white !important;
+}
+
+::ng-deep .dialog .p-dialog-content {
+	padding: 20px 20px 16px !important;
+	background: transparent !important;
 }
 
 ::ng-deep .dialog .p-dialog-footer {
-	position: absolute;
-	right: 0px;
-	bottom: 0px;
+	padding: 14px 20px !important;
+	background: rgba(248, 245, 252, 0.9) !important;
+	border-top: 1px solid rgba(102, 126, 234, 0.12) !important;
+	border-radius: 0 0 20px 20px !important;
+	display: flex !important;
+	justify-content: flex-end !important;
+	position: relative !important;
+	right: 0 !important;
+	bottom: 0 !important;
+}
+
+/* DONE button */
+::ng-deep .dialog .p-dialog-footer .submit-button .p-button[severity='success'] {
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+	border: none !important;
+	border-radius: 10px !important;
+	color: rgba(0, 40, 20, 0.9) !important;
+	font-weight: 700 !important;
+	padding: 8px 28px !important;
+}
+
+/* STOP button */
+::ng-deep .dialog .p-dialog-footer .submit-button .p-button[severity='danger'] {
+	background: linear-gradient(135deg, #d53369 0%, #ef5350 100%) !important;
+	border: none !important;
+	border-radius: 10px !important;
+	font-weight: 700 !important;
+	padding: 8px 28px !important;
+}
+
+.logs {
+	height: 230px;
+	overflow-y: auto;
+	border-radius: 12px;
+	background: #ffffff;
+	padding: 14px 16px;
+	white-space: pre-line;
+	font-size: 13px;
+	color: rgba(20, 20, 20, 0.9);
+	line-height: 1.7;
+	border: 1px solid rgba(102, 126, 234, 0.25);
+	box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 ::ng-deep .rate-up {
-	color: red !important;
+	color: #d32f2f !important;
+	font-weight: 600;
 }
 
 ::ng-deep .rate-down {
-	color: green !important;
+	color: #2e7d32 !important;
+	font-weight: 600;
 }
 
 @media (max-width: 580px) {
 	::ng-deep .dialog {
 		min-width: 100% !important;
 		min-height: 100% !important;
-		border-radius: 0px !important;
+		border-radius: 0 !important;
+	}
+
+	::ng-deep .dialog .p-dialog-header {
+		border-radius: 0 !important;
 	}
 
 	.logs {

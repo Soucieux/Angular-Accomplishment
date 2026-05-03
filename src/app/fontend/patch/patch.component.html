@@ -235,10 +235,13 @@
 							styleClass="input"></p-button>
 					</td>
 					<td class="edit-button">
-						<p-check-box
-							[(ngModel)]="newRecord.isBug"
-							[binary]="true"
-							(onChange)="clearStatusField()"></p-check-box>
+						<label class="bug-toggle" [class.bug-active]="newRecord.isBug">
+							<span class="pi pi-exclamation-triangle bug-toggle-icon"></span>
+							<p-check-box
+								[(ngModel)]="newRecord.isBug"
+								[binary]="true"
+								(onChange)="clearStatusField()"></p-check-box>
+						</label>
 					</td>
 				</tr>
 			}

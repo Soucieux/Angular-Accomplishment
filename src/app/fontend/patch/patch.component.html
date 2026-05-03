@@ -5,14 +5,15 @@
 		[value]="(patchNotes$ | async) ?? []"
 		[paginator]="true"
 		[rows]="itemsPerPage"
-		[first]="indexOfFirstItem"
+		[(first)]="indexOfFirstItem"
 		[showCurrentPageReport]="!isMobile"
 		currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
 		[showFirstLastIcon]="true"
 		[showPageLinks]="!isMobile"
 		[loading]="loading"
 		[showLoader]="false"
-		(onPage)="pageChange($event)">
+		(onPage)="pageChange($event)"
+		(onFilter)="onTableFilter()">
 		<ng-template pTemplate="header">
 			<tr>
 				<th class="component">Component</th>

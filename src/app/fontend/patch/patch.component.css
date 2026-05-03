@@ -343,25 +343,58 @@ h1 {
 }
 
 /* ─────────────────────────────────────────
-   Filter icon button (inside Status th)
+   Filter icon button (own custom icon instead of the default icon)
 ───────────────────────────────────────── */
-::ng-deep .p-datatable .p-column-filter-menu-button {
-	color: rgba(255, 255, 255, 0.65) !important;
-	background: transparent !important;
-	border-radius: 6px !important;
+.custom-filter-icon {
+	color: rgba(255, 255, 255, 0.65);
+	padding: 6px;
+	border-radius: 6px;
+	transition: all 0.2s;
+	cursor: pointer;
 	transition:
 		color 0.18s,
 		background 0.18s !important;
 }
 
-::ng-deep .p-datatable .p-column-filter-menu-button:hover {
-	color: #ffffff !important;
-	background: rgba(255, 255, 255, 0.18) !important;
+.custom-filter-icon:hover {
+	color: #0c0b0b;
 }
 
-::ng-deep .p-datatable .p-column-filter-menu-button.p-column-filter-menu-button-active {
+/* ─────────────────────────────────────────
+  Neutralize PrimeNG's theme to override the filter button's style
+───────────────────────────────────────── */
+/* 1. Neutralize the PrimeNG Button Container */
+:host ::ng-deep .column-filter p-button button {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	/* Reset the specific Aura hover token */
+	--p-button-text-secondary-hover-background: transparent !important;
+}
+
+/* 2. Hide the Ripple animation (The white 'flash' on click) */
+:host ::ng-deep .column-filter .p-ink {
+	display: none !important;
+}
+
+/* 3. Style the Icon (The only part you actually see) */
+.custom-filter-icon {
+	color: rgba(255, 255, 255, 0.65);
+	padding: 6px;
+	border-radius: 6px;
+	transition: all 0.2s ease;
+}
+
+/* 4. Hover State: Glow the icon when the button is hovered */
+:host ::ng-deep .column-filter button:hover .custom-filter-icon {
+	color: #ffffff !important;
+	background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* 5. Open State: Highlight yellow when dialog is visible */
+:host ::ng-deep .column-filter p-button[aria-expanded='true'] .custom-filter-icon {
 	color: #ffd860 !important;
-	background: rgba(255, 216, 96, 0.18) !important;
+	background-color: rgba(255, 216, 96, 0.18) !important;
 }
 
 /* ─────────────────────────────────────────

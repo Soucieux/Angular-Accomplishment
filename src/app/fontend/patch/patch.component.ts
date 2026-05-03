@@ -1,5 +1,13 @@
-import { Component, HostListener, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
-import { TableModule } from 'primeng/table';
+import {
+	Component,
+	HostListener,
+	Inject,
+	NgZone,
+	PLATFORM_ID,
+	ViewChild,
+	ViewContainerRef
+} from '@angular/core';
+import { Table, TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { InputText } from 'primeng/inputtext';
@@ -48,6 +56,7 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 })
 export class PatchComponent {
 	private readonly className = 'PatchComponent';
+	@ViewChild('t') table!: Table; // This is the reference for the table in html
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
@@ -62,20 +71,22 @@ export class PatchComponent {
 	protected skeletonRows = Array.from({ length: this.itemsPerPage });
 	protected editedRows = new Map<string, any>();
 	protected hoveredRowIndex: number | null = null;
-	protected newRecord = {
-		key: '',
-		component: '',
-		element: '',
-		details: '',
-		status: undefined,
-		timestamp: '',
-		isBug: false
-	};
+	private previousDataLength: number | null = null;
+	/** The page (first-item index) the user intends to be on. Updated by user navigation and add/delete logic. */
+	private _savedFirst = 0;
+	/**
+	 * Set to true inside the tap whenever CloudBase pushes fresh data.
+	 * onTableFilter() checks this to distinguish a data-driven _filter() reset
+	 * (where we must restore the page) from a user-initiated filter interaction
+	 * (where PrimeNG's default page-1 reset is the correct behaviour).
+	 */
+	private _isDataUpdate = false;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
-		private utilities: Utilities
+		private utilities: Utilities,
+		private ngZone: NgZone
 	) {}
 
 	async ngOnInit() {
@@ -88,17 +99,30 @@ export class PatchComponent {
 					return this.isMobile ? data : [...data, { __dummy: true }];
 				}),
 				tap((data) => {
-					this.loading = false;
+					this.ngZone.run(() => {
+						this.loading = false;
+						const prevLength = this.previousDataLength;
+						this.previousDataLength = data.length;
 
-					let targetIndex = this.indexOfFirstItem;
-					if (targetIndex >= data.length && targetIndex > 0) {
-						targetIndex = Math.max(0, targetIndex - 9);
-					}
+						// 1. Determine the "Source of Truth" for the page index
+						if (prevLength !== null && data.length > prevLength) {
+							this._savedFirst = Math.max(
+								0,
+								Math.floor((data.length - 1) / this.itemsPerPage) * this.itemsPerPage
+							);
+						} else if (
+							prevLength !== null &&
+							data.length < prevLength &&
+							this._savedFirst >= data.length &&
+							this._savedFirst > 0
+						) {
+							this._savedFirst = Math.max(0, this._savedFirst - this.itemsPerPage);
+						}
 
-					this.indexOfFirstItem = -1;
-
-					setTimeout(() => {
-						this.indexOfFirstItem = targetIndex;
+						// 2. Arm the "Firewall"
+						// This tells onTableFilter that the next page-reset is data-driven
+						// and should be ignored/overridden.
+						this._isDataUpdate = true;
 					});
 				}),
 				// ShareReply should be removed as it was used to share the subscription between multiple callers
@@ -142,9 +166,9 @@ export class PatchComponent {
 		const record = this.editedRows.get(row.key);
 		const changes: any = {};
 
-		/* 
+		/*
         This one is not needed as we are not updating the element name
-        
+
         if (record.original.element !== record.updated.element.trim()) {
 		 	changes.element = record.updated.element.trim();
          }
@@ -204,8 +228,41 @@ export class PatchComponent {
 		);
 	}
 
+	/**
+	 * Called by p-table's (onPage).
+	 * This is the ONLY place where _savedFirst should be updated via UI interaction.
+	 * It ensures that when a user manually clicks a page, we remember it as the
+	 * new "Safe Zone" to return to during background data updates.
+	 */
 	protected pageChange(event: any) {
+		this._savedFirst = event.first;
 		this.indexOfFirstItem = event.first;
+	}
+
+	/**
+	 * Called by p-table's (onFilter) every time PrimeNG's internal _filter() runs.
+	 *
+	 * WHY THIS EXISTS
+	 * ───────────────
+	 * When data is pushed via CloudBase, PrimeNG triggers _filter(). Even with no
+	 * active user filters, it resets internal 'first' to 0.
+	 * * This method performs a "Synchronous Hijack":
+	 * If _isDataUpdate is true, it immediately overwrites the table's 'first'
+	 * property with our _savedFirst value before the function returns. This
+	 * prevents the UI from ever rendering Page 1, eliminating the "flicker"
+	 * or "clip" entirely.
+	 */
+	protected onTableFilter() {
+		if (!this._isDataUpdate) return;
+
+		// Force the table instance AND the local index to match our source of truth
+		if (this.table) {
+			this.table.first = this._savedFirst;
+			this.indexOfFirstItem = this._savedFirst;
+		}
+
+		// Reset the flag so manual user filtering works as intended
+		this._isDataUpdate = false;
 	}
 
 	getComponentRowSpan(data: any[], rowIndex: number) {
@@ -342,4 +399,14 @@ export class PatchComponent {
 				return undefined;
 		}
 	}
+
+	protected newRecord = {
+		key: '',
+		component: '',
+		element: '',
+		details: '',
+		status: undefined,
+		timestamp: '',
+		isBug: false
+	};
 }

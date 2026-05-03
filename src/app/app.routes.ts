@@ -4,7 +4,7 @@ import { HomeComponent } from './fontend/home/home.component';
 import { LoginComponent } from './fontend/login/login.component';
 import { loginGuard } from './fontend/login/login.guard';
 import { PatchComponent } from './fontend/patch/patch.component';
-import { RemainderComponent } from './fontend/remainder/remainder.component';
+import { ReminderComponent } from './fontend/reminder/reminder.component';
 import { AboutComponent } from './fontend/about/about.component';
 
 export const routes: Routes = [
@@ -12,6 +12,6 @@ export const routes: Routes = [
 	{ path: 'entertainment', component: EntertainmentComponent },
 	{ path: 'login', component: LoginComponent, canMatch: [loginGuard] },
 	{ path: 'patch', component: PatchComponent },
-	{ path: 'remainder', component: RemainderComponent },
+	{ path: 'reminder', component: ReminderComponent },
 	{ path: 'about', component: AboutComponent }
 ];

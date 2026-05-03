@@ -81,9 +81,8 @@
 /* ─────────────────────────────────────────
    Save indicator
 ───────────────────────────────────────── */
-.save-indicator-first-table,
 .save-indicator {
-	padding-top: 3px;
+	padding-bottom: 5px;
 	padding-left: 5px;
 	display: flex;
 	align-items: center;
@@ -208,6 +207,8 @@
 	border: none !important;
 	border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
 	padding: 0 !important;
+	display: flex !important;
+	align-items: stretch !important;
 }
 
 ::ng-deep .first-table-button .p-button {
@@ -218,8 +219,11 @@
 	transition:
 		background 0.18s,
 		color 0.18s !important;
-	width: 100% !important;
-	height: 100% !important;
+	flex: 1 !important;
+	align-self: stretch !important;
+	border-radius: 0 !important;
+	padding: 0 !important;
+	justify-content: center !important;
 }
 
 ::ng-deep .first-table-button .p-button:hover {
@@ -270,13 +274,14 @@
 
 .second-table {
 	grid-template-columns: repeat(4, 1fr);
-	padding-top: 0;
+	padding-top: 10px;
+	padding-bottom: 10px;
 }
 
 /* Cell card hover */
 .second-table-cell {
 	height: fit-content;
-	padding: 10px 5px 20px 5px;
+	padding: 15px 5px 12px 5px;
 	display: flex;
 	flex-direction: column;
 	gap: 5px;
@@ -285,13 +290,14 @@
 }
 
 .second-table-cell:hover {
+	transform: translateY(-2px) !important;
 	background: rgba(17, 153, 142, 0.05);
 }
 
 /* Cell title */
 .second-table-cell-header {
 	text-align: center;
-	padding-top: 10px;
+	padding-top: 5px;
 	font-weight: 700;
 	font-size: 15px;
 	color: rgba(30, 15, 35, 0.7);
@@ -644,18 +650,12 @@
 		grid-template-columns: repeat(1, 1fr) !important;
 	}
 
-	.save-indicator-first-table,
-	.save-indicator {
-		display: flex;
-	}
-
 	.save-indicator-icon {
 		display: flex;
 		justify-content: center;
 		align-items: center;
 		font-size: 14px !important;
 		position: relative;
-		bottom: 2px;
 	}
 
 	.save-indicator-text {

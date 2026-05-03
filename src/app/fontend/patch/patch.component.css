@@ -252,6 +252,44 @@ h1 {
 }
 
 /* ─────────────────────────────────────────
+   Bug toggle pill (footer row checkbox)
+───────────────────────────────────────── */
+.bug-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 7px 10px;
+	border-radius: 20px;
+	border: 1.5px solid rgba(0, 0, 0, 0.15);
+	background: transparent;
+	cursor: pointer;
+	transition:
+		border-color 0.2s,
+		background 0.2s;
+	white-space: nowrap;
+}
+
+.bug-toggle.bug-active {
+	border-color: #ee5a6f;
+	background: rgba(238, 90, 111, 0.08);
+}
+
+.bug-toggle-icon {
+	font-size: 20px;
+	color: rgba(30, 15, 35, 0.4);
+	transition: color 0.2s;
+}
+
+.bug-toggle.bug-active .bug-toggle-icon {
+	color: #ee5a6f;
+}
+
+/* Hide the PrimeNG checkbox visual — the pill IS the affordance */
+.bug-toggle ::ng-deep .p-checkbox {
+	display: none !important;
+}
+
+/* ─────────────────────────────────────────
    Paginator
 ───────────────────────────────────────── */
 ::ng-deep .p-datatable .p-paginator {
@@ -481,7 +519,7 @@ h1 {
    Dropdown font override
 ───────────────────────────────────────── */
 ::ng-deep .dropdown-panel-font {
-	font-family: 'cf';
+	font-family: 'nlf';
 }
 
 /* ─────────────────────────────────────────

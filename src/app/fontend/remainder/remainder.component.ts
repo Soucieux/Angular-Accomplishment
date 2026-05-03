@@ -326,12 +326,15 @@ export class RemainderComponent {
 
 	private async updateFirstTableSingleValue() {
 		try {
-			this.updatedFirstTable.push({
-				_id: this.originalFirstTable[5]._id,
-				_openid: this.originalFirstTable[5]._openid,
-				isNextMonth: this.isNextMonth
-			});
-			await this.databaseService.updateFirstRemainderTable(FIRST_TABLE, this.updatedFirstTable);
+			const payload = [
+				...this.updatedFirstTable,
+				{
+					_id: this.originalFirstTable[5]._id,
+					_openid: this.originalFirstTable[5]._openid,
+					isNextMonth: this.isNextMonth
+				}
+			];
+			await this.databaseService.updateFirstRemainderTable(FIRST_TABLE, payload);
 			this.triggerSaveIndicator(FIRST_TABLE);
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
@@ -570,6 +573,7 @@ export class RemainderComponent {
 
 		this.saveIndicatorTimeouts[tableName] = setTimeout(() => {
 			this.saveIndicators[tableName] = false;
+			this.cdr.detectChanges();
 		}, 1000);
 	}
 

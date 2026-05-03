@@ -10,7 +10,7 @@ import {
 	SEARCH,
 	DATABASE_HISTORY,
 	DATABASE_PATCH_NOTES,
-	DATABASE_REMAINDER
+	DATABASE_REMINDER
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
@@ -502,13 +502,13 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove record from remainder table
+	 * Remove record from reminder table
 	 *
 	 * @param tableName - The name of the table
 	 * @param index - The index of the record to remove
 	 */
-	public removeRecordFromRemainderTable(tableName: string, key: string): Promise<void> {
-		return this.removeSingleItemFromDatabase(`${DATABASE_REMAINDER}/${tableName}`, key);
+	public removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
+		return this.removeSingleItemFromDatabase(`${DATABASE_REMINDER}/${tableName}`, key);
 	}
 
 	/**
@@ -523,14 +523,14 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get first remainder table details
+	 * Get first reminder table details
 	 *
-	 * @returns Remainder table details
+	 * @returns Reminder table details
 	 */
-	public getFirstRemainderTableDetails(): Observable<any[]> {
+	public getFirstReminderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
-				const unsub = onValue(dbRef(this.db, `${DATABASE_REMAINDER}/${FIRST_TABLE}`), (snapshot) => {
+				const unsub = onValue(dbRef(this.db, `${DATABASE_REMINDER}/${FIRST_TABLE}`), (snapshot) => {
 					const data = snapshot.val();
 					observer.next(data ? Object.values(data) : []);
 				});
@@ -540,13 +540,13 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get second remainder table details
+	 * Get second reminder table details
 	 *
-	 * @returns Second remainder table details
+	 * @returns Second reminder table details
 	 */
-	public getSecondRemainderTableDetails(): Observable<any[]> {
+	public getSecondReminderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
-			list(dbRef(this.db, `${DATABASE_REMAINDER}/${SECOND_TABLE}`)).pipe(
+			list(dbRef(this.db, `${DATABASE_REMINDER}/${SECOND_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -569,13 +569,13 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get third remainder table details
+	 * Get third reminder table details
 	 *
-	 * @returns Third remainder table details
+	 * @returns Third reminder table details
 	 */
-	public getThirdRemainderTableDetails(): Observable<any[]> {
+	public getThirdReminderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
-			list(dbRef(this.db, `${DATABASE_REMAINDER}/${THIRD_TABLE}`)).pipe(
+			list(dbRef(this.db, `${DATABASE_REMINDER}/${THIRD_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -594,14 +594,14 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update remainder table details
+	 * Update reminder table details
 	 *
 	 * @param entryKey - The key of the entire entry
 	 * @param valueKey - The key associated with the new value.
 	 * @param value - The new value to be stored.
 	 * @param tableName - The name of the table to update.
 	 */
-	public async updateRemainderTable(
+	public async updateReminderTable(
 		tableName: string,
 		entryKey: string,
 		valueKey: string,
@@ -610,29 +610,29 @@ export class FirebaseService extends DatabaseService {
 		if (tableName === SECOND_TABLE) {
 			const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
 
-			await update(dbRef(this.db, `${DATABASE_REMAINDER}/${tableName}/${entryKey}/content`), {
+			await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}/content`), {
 				...valueToUpdate
 			});
-			LOG.info(this.className, 'Remainder table has been updated');
+			LOG.info(this.className, 'Reminder table has been updated');
 		} else if (tableName === THIRD_TABLE) {
-			await update(dbRef(this.db, `${DATABASE_REMAINDER}/${tableName}/${entryKey}`), {
+			await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}`), {
 				[valueKey]: value
 			});
-			LOG.info(this.className, 'Remainder table has been updated');
+			LOG.info(this.className, 'Reminder table has been updated');
 		}
 	}
 
 	/**
-	 * Update remainder table details
+	 * Update reminder table details
 	 *
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The table to update
 	 */
-	public updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void> {
-		return update(dbRef(this.db, `${DATABASE_REMAINDER}/${tableName}`), {
+	public updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
+		return update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), {
 			...updatedTable
 		}).then(() => {
-			LOG.info(this.className, 'Remainder table has been updated');
+			LOG.info(this.className, 'Reminder table has been updated');
 		});
 	}
 
@@ -643,11 +643,11 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName The table name
 	 * @param newRecord The new entry
 	 */
-	public addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
-		return push(dbRef(this.db, `${DATABASE_REMAINDER}/${tableName}`), {
+	public addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
+		return push(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), {
 			content: { ...newRecord }
 		}).then(() => {
-			LOG.info(this.className, 'Remainder table has been updated');
+			LOG.info(this.className, 'Reminder table has been updated');
 		});
 	}
 }

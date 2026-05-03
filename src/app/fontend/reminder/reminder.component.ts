@@ -39,7 +39,7 @@ import { format } from 'date-fns';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 
 @Component({
-	selector: 'remainder',
+	selector: 'reminder',
 	imports: [
 		TableModule,
 		InputTextModule,
@@ -56,11 +56,11 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 		PopoverModule,
 		ToggleSwitchModule
 	],
-	templateUrl: './remainder.component.html',
-	styleUrl: './remainder.component.css'
+	templateUrl: './reminder.component.html',
+	styleUrl: './reminder.component.css'
 })
-export class RemainderComponent {
-	private readonly className = 'RemainderComponent';
+export class ReminderComponent {
+	private readonly className = 'ReminderComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
@@ -108,7 +108,7 @@ export class RemainderComponent {
 			this.currentDay = new Date().getDate();
 
 			// Get the data of the first table
-			const getFirstObservable = this.databaseService.getFirstRemainderTableDetails();
+			const getFirstObservable = this.databaseService.getFirstReminderTableDetails();
 			this.firstSub = getFirstObservable.subscribe(async (rows) => {
 				// Need deep copy here so that we are not copying references
 				this.originalFirstTable = structuredClone(rows);
@@ -124,7 +124,7 @@ export class RemainderComponent {
 			});
 
 			// Get the data of the second table
-			const getSecondObservable = this.databaseService.getSecondRemainderTableDetails();
+			const getSecondObservable = this.databaseService.getSecondReminderTableDetails();
 			this.secondSub = getSecondObservable.subscribe((rows) => {
 				this.updatedSecondTable = structuredClone(rows);
 				this.originalSecondTable = structuredClone(rows);
@@ -132,7 +132,7 @@ export class RemainderComponent {
 			});
 
 			// Get the data of the third table
-			const getThirdObservable = this.databaseService.getThirdRemainderTableDetails();
+			const getThirdObservable = this.databaseService.getThirdReminderTableDetails();
 			this.thirdSub = getThirdObservable.subscribe((rows) => {
 				this.originalThirdTable = structuredClone(rows);
 				this.pagedThirdTable = this.updatePagedThirdTable();
@@ -334,7 +334,7 @@ export class RemainderComponent {
 					isNextMonth: this.isNextMonth
 				}
 			];
-			await this.databaseService.updateFirstRemainderTable(FIRST_TABLE, payload);
+			await this.databaseService.updateFirstReminderTable(FIRST_TABLE, payload);
 			this.triggerSaveIndicator(FIRST_TABLE);
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
@@ -366,7 +366,7 @@ export class RemainderComponent {
 					original: existingRecord.debt,
 					paid: false
 				};
-				await this.databaseService.updateRemainderTable(SECOND_TABLE, entryKey, 'content', newRecord);
+				await this.databaseService.updateReminderTable(SECOND_TABLE, entryKey, 'content', newRecord);
 				this.triggerSaveIndicator(SECOND_TABLE);
 			} catch (error) {
 				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
@@ -426,7 +426,7 @@ export class RemainderComponent {
 
 	private async removeRecordFromDatabase(entryKey: string) {
 		try {
-			await this.databaseService.removeRecordFromRemainderTable(THIRD_TABLE, entryKey);
+			await this.databaseService.removeRecordFromReminderTable(THIRD_TABLE, entryKey);
 			this.triggerSaveIndicator(THIRD_TABLE);
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
@@ -439,7 +439,7 @@ export class RemainderComponent {
 
 	protected addNewTextOnly() {
 		if (this.thirdTableNewText.trim() !== '') {
-			this.databaseService.addNewRecordForRemainderTable(THIRD_TABLE, {
+			this.databaseService.addNewRecordForReminderTable(THIRD_TABLE, {
 				text: this.thirdTableNewText
 			});
 			this.triggerSaveIndicator(THIRD_TABLE);
@@ -453,7 +453,7 @@ export class RemainderComponent {
 				Object.entries(this.thirdTableActiveItem.content).filter(([_, value]) => value !== '')
 			);
 			newContent['text'] = this.thirdTableNewText;
-			this.databaseService.addNewRecordForRemainderTable(THIRD_TABLE, newContent);
+			this.databaseService.addNewRecordForReminderTable(THIRD_TABLE, newContent);
 			this.triggerSaveIndicator(THIRD_TABLE);
 			this.thirdTableNewText = '';
 			this.op2.hide();
@@ -495,7 +495,7 @@ export class RemainderComponent {
 		const oldValue = this.findOriginalItem(tableName, entryKey).content[valueKey];
 		try {
 			if (updatedValue !== oldValue) {
-				await this.databaseService.updateRemainderTable(tableName, entryKey, valueKey, updatedValue);
+				await this.databaseService.updateReminderTable(tableName, entryKey, valueKey, updatedValue);
 				this.triggerSaveIndicator(tableName);
 			}
 		} catch (error) {

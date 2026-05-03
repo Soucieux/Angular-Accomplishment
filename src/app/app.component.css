@@ -198,7 +198,7 @@ li:nth-child(3) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Remainder — royal blue → violet */
+/* Reminder — royal blue → violet */
 li:nth-child(4) .nav-icon {
 	background: linear-gradient(135deg, #4776e6, #8e54e9);
 	background-clip: text;

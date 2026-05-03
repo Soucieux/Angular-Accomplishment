@@ -11,9 +11,9 @@ import {
 	DATABASE_HISTORY,
 	DATABASE_MOVIES,
 	DATABASE_PATCH_NOTES,
-	DATABASE_REMAINDER_FIRST,
-	DATABASE_REMAINDER_SECOND,
-	DATABASE_REMAINDER_THIRD,
+	DATABASE_REMINDER_FIRST,
+	DATABASE_REMINDER_SECOND,
+	DATABASE_REMINDER_THIRD,
 	DATABASE_STATISTICS,
 	ERROR_PERMISSION_DENIED,
 	FIRST_TABLE,
@@ -283,13 +283,13 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get remainder table details
+	 * Get reminder table details
 	 *
-	 * @returns Remainder table details
+	 * @returns Reminder table details
 	 */
-	public getFirstRemainderTableDetails(): Observable<any[]> {
+	public getFirstReminderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection(DATABASE_REMAINDER_FIRST).watch({
+			const watcher = this.database.collection(DATABASE_REMINDER_FIRST).watch({
 				onChange: (snapshot: any) => {
 					const data = snapshot.docs;
 					observer.next(data ? data : []);
@@ -300,13 +300,13 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get second remainder table details
+	 * Get second reminder table details
 	 *
-	 * @returns Second remainder table details
+	 * @returns Second reminder table details
 	 */
-	public getSecondRemainderTableDetails(): Observable<any[]> {
+	public getSecondReminderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection(DATABASE_REMAINDER_SECOND).watch({
+			const watcher = this.database.collection(DATABASE_REMINDER_SECOND).watch({
 				onChange: (snapshot: any) => {
 					const secondTable = snapshot.docs.map((doc: any) => {
 						const { _id, ...rest } = doc;
@@ -332,13 +332,13 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get third remainder table details
+	 * Get third reminder table details
 	 *
-	 * @returns Third remainder table details
+	 * @returns Third reminder table details
 	 */
-	public getThirdRemainderTableDetails(): Observable<any[]> {
+	public getThirdReminderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
-			const watcher = this.database.collection(DATABASE_REMAINDER_THIRD).watch({
+			const watcher = this.database.collection(DATABASE_REMINDER_THIRD).watch({
 				onChange: (snapshot: any) => {
 					const thirdTable = snapshot.docs.map((doc: any) => {
 						const { _id, ...rest } = doc;
@@ -777,7 +777,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update remainder table details
+	 * Update reminder table details
 	 * Note: This method is used by second table and third table
 	 *
 	 * @param tableName - Corresponding collection name
@@ -785,7 +785,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param valueKey - The key associated with the new value.
 	 * @param value - The new value to be stored.
 	 */
-	updateRemainderTable(tableName: string, entryKey: string, valueKey: string, value: any): Promise<void> {
+	updateReminderTable(tableName: string, entryKey: string, valueKey: string, value: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 
 		let valueToUpdate;
@@ -802,17 +802,17 @@ export class CloudbaseService extends DatabaseService {
 				if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
 				else if (result.code) throw new Error(result.message);
 
-				LOG.info(this.className, 'Remainder table has been updated');
+				LOG.info(this.className, 'Reminder table has been updated');
 			});
 	}
 
 	/**
-	 * Update remainder table details
+	 * Update reminder table details
 	 *
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The table to update
 	 */
-	async updateFirstRemainderTable(tableName: string, updatedTable: any): Promise<void> {
+	async updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 		const tableRef = this.database.collection(collectionName);
 
@@ -822,22 +822,22 @@ export class CloudbaseService extends DatabaseService {
 			if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
 		}
 
-		LOG.info(this.className, 'Remainder table has been updated');
+		LOG.info(this.className, 'Reminder table has been updated');
 	}
 
 	/**
-	 * Remove record from remainder table
+	 * Remove record from reminder table
 	 * Note: This is used by third table only
 	 *
 	 * @param tableName - Corresponding collection name
 	 * @param index - The index of the record to remove
 	 */
-	async removeRecordFromRemainderTable(tableName: string, key: string): Promise<void> {
+	async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
 		try {
 			const collectionName = this.convertTableNameToCollectionName(tableName);
 			return await this.removeSingleItemFromDatabase(collectionName, key);
 		} catch (error) {
-			LOG.error(this.className, 'Error while removing a record from remainder table');
+			LOG.error(this.className, 'Error while removing a record from reminder table');
 			throw error;
 		}
 	}
@@ -861,7 +861,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param tableName Correpsonding collection name
 	 * @param newRecord The new entry
 	 */
-	addNewRecordForRemainderTable(tableName: string, newRecord: any): Promise<void> {
+	addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 		return this.database
@@ -872,10 +872,10 @@ export class CloudbaseService extends DatabaseService {
 			})
 			.then((result: any) => {
 				if (result.code) {
-					LOG.error(this.className, 'Error while adding new record for remainder table');
+					LOG.error(this.className, 'Error while adding new record for reminder table');
 					throw new Error(result.message);
 				}
-				LOG.info(this.className, 'Remainder table has been updated');
+				LOG.info(this.className, 'Reminder table has been updated');
 			});
 	}
 
@@ -887,11 +887,11 @@ export class CloudbaseService extends DatabaseService {
 	private convertTableNameToCollectionName(tableName: string): string {
 		switch (tableName) {
 			case FIRST_TABLE:
-				return DATABASE_REMAINDER_FIRST;
+				return DATABASE_REMINDER_FIRST;
 			case SECOND_TABLE:
-				return DATABASE_REMAINDER_SECOND;
+				return DATABASE_REMINDER_SECOND;
 			case THIRD_TABLE:
-				return DATABASE_REMAINDER_THIRD;
+				return DATABASE_REMINDER_THIRD;
 			default:
 				return '';
 		}

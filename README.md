@@ -7,7 +7,7 @@ A personal Angular web application for organizing everyday life, entertainment r
 ### Release 1.0
 
 | Date / Range | Page / Area | Work Completed |
-| --- | --- | --- |
+| ------ | ------ | ------ |
 | 2024.02.05 | Project | Initialized the Angular project and created the first version of the app. |
 | 2024.09.23 | Login | Started the first user login work. |
 | 2025.02.21 - 2026.02.01 | Entertainment | Built the main entertainment collection page for tracking movies and dramas. Added category filtering, movie cards, rating display, cover image display, favourite records, search, edit, add, delete, history restore, Douban lookup, and rating refresh work. |

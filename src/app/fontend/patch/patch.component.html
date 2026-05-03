@@ -31,6 +31,9 @@
 						[showAddButton]="false"
 						[showApplyButton]="false"
 						[showClearButton]="false">
+						<ng-template pTemplate="filtericon">
+							<i class="pi pi-filter custom-filter-icon"></i>
+						</ng-template>
 						<ng-template #filter let-value let-filter="filterCallback">
 							<div class="status-filter">
 								@for (s of allSeverity; track s.severity) {

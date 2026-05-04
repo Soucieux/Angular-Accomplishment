@@ -12,66 +12,161 @@
 			<h5 class="en-word">a mysterious place where you can go back in time</h5>
 		</div>
 	</div>
-	<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-		<div class="input-field-container field-container">
-			<p-iftalabel>
-				<input
-					class="input-field"
-					pInputText
-					type="text"
-					id="email"
-					name="email"
-					formControlName="email"
-					[invalid]="isInvalid('email')" />
-				<label for="email">Email</label>
-				@if (isInvalid('email')) {
-					<p-message severity="error" size="small" variant="simple">Email is required.</p-message>
-				}
-			</p-iftalabel>
-		</div>
-		<div class="input-field-container field-container">
-			<p-iftalabel>
-				<input
-					class="input-field"
-					pInputText
-					type="password"
-					id="password"
-					formControlName="password"
-					[invalid]="isInvalid('password')" />
-				<label for="password">Password</label>
-				@if (isInvalid('password')) {
-					@if (loginForm.get('password')?.errors?.['required']) {
-						<p-message severity="error" size="small" variant="simple"
-							>Password is required.</p-message
-						>
+
+	<div class="form-wrapper" [class.slide-out-left]="animating === 'out'" [class.slide-in-right]="animating === 'in'">
+		<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+			<!-- Sign In: Username -->
+			@if (!isSignUp) {
+				<div class="input-field-container field-container">
+					<p-iftalabel>
+						<input
+							class="input-field"
+							pInputText
+							type="text"
+							id="username"
+							name="username"
+							formControlName="username"
+							[invalid]="isInvalid('username')" />
+						<label for="username">Username</label>
+						@if (isInvalid('username')) {
+							<p-message severity="error" size="small" variant="simple">Username is required.</p-message>
+						}
+					</p-iftalabel>
+				</div>
+			}
+
+			<!-- Sign Up: Email -->
+			@if (isSignUp) {
+				<div class="input-field-container field-container">
+					<p-iftalabel>
+						<input
+							class="input-field"
+							pInputText
+							type="text"
+							id="email"
+							name="email"
+							formControlName="email"
+							[invalid]="isInvalid('email')" />
+						<label for="email">Email</label>
+						@if (isInvalid('email')) {
+							<p-message severity="error" size="small" variant="simple">Email is required.</p-message>
+						}
+					</p-iftalabel>
+				</div>
+			}
+
+			<!-- Password (Sign In) -->
+			@if (!isSignUp) {
+				<div class="input-field-container field-container">
+					<p-iftalabel>
+						<input
+							class="input-field"
+							pInputText
+							type="password"
+							id="password"
+							formControlName="password"
+							[invalid]="isInvalid('password')" />
+						<label for="password">Password</label>
+						@if (isInvalid('password')) {
+							<p-message severity="error" size="small" variant="simple">Password is required.</p-message>
+						}
+					</p-iftalabel>
+				</div>
+			}
+
+			<!-- Sign Up fields -->
+			@if (isSignUp) {
+				<!-- Verification Code -->
+				<div class="field-container code-row">
+					<p-inputgroup style="height: 45px; width: 250px">
+						<input
+							pInputText
+							type="text"
+							inputmode="numeric"
+							formControlName="verificationCode"
+							[invalid]="isInvalid('verificationCode')" />
+						<p-inputgroup-addon>
+							<p-button
+								(click)="getVerificationCodeEmail()"
+								severity="secondary"
+								[disabled]="loginForm.get('email')?.value === ''">
+								<span pButtonLabel>Get Code</span>
+							</p-button>
+						</p-inputgroup-addon>
+					</p-inputgroup>
+					@if (isInvalid('verificationCode')) {
+						<p-message severity="error" size="small" variant="simple">Verification code is required.</p-message>
 					}
+				</div>
+
+				<!-- Code sent message -->
+				@if (codeSent) {
+					<div class="field-container code-sent-row">
+						<span class="code-sent-message">Code sent! Please check your email.</span>
+					</div>
 				}
-			</p-iftalabel>
-		</div>
-		<div class="field-container verification-row">
-			<p-inputgroup style="height: 45px; width: 250px">
-				<input pInputText type="text" inputmode="numeric" formControlName="verificationCode" />
-				<p-inputgroup-addon>
-					<p-button
-						(click)="getVerificationCodeEmail()"
-						severity="secondary"
-						[disabled]="loginForm.get('email')?.value === ''">
-						<span pButtonLabel>Get Code</span>
-					</p-button>
-				</p-inputgroup-addon>
-			</p-inputgroup>
-			<button class="login-button" pButton type="submit">
-				<span pButtonLabel>Sign In</span>
-			</button>
-		</div>
-		<div class="field-container divider-row">
-			<hr class="horizontal-line" />
-		</div>
-		<p-button
-			(click)="googleLogin()"
-			icon="pi pi-google"
-			[rounded]="true"
-			severity="secondary"
-			class="field-container google-btn"></p-button>
-	</form>
+
+				<!-- Username -->
+				<div class="input-field-container field-container">
+					<p-iftalabel>
+						<input
+							class="input-field"
+							pInputText
+							type="text"
+							id="signup-username"
+							formControlName="username"
+							[invalid]="isInvalid('username')" />
+						<label for="signup-username">Username</label>
+						@if (isInvalid('username')) {
+							<p-message severity="error" size="small" variant="simple">Username is required.</p-message>
+						}
+					</p-iftalabel>
+				</div>
+
+				<!-- Password -->
+				<div class="input-field-container field-container">
+					<p-iftalabel>
+						<input
+							class="input-field"
+							pInputText
+							type="password"
+							id="signup-password"
+							formControlName="password"
+							[invalid]="isInvalid('password')" />
+						<label for="signup-password">Password</label>
+						@if (isInvalid('password')) {
+							<p-message severity="error" size="small" variant="simple">Password is required.</p-message>
+						}
+					</p-iftalabel>
+				</div>
+			}
+
+			<!-- Toggle mode link -->
+			<div class="field-container toggle-row">
+				<span class="toggle-link" (click)="toggleMode()" (keydown.enter)="toggleMode()" tabindex="0">
+					{{ isSignUp ? 'Already have an account?' : 'No account? Sign up now!' }}
+				</span>
+			</div>
+
+			<!-- Submit button -->
+			<div class="field-container">
+				<button class="login-button" pButton type="submit">
+					<span pButtonLabel>{{ isSignUp ? 'Sign Up' : 'Sign In' }}</span>
+				</button>
+			</div>
+
+			<!-- Divider + Google (Sign In only) -->
+			@if (!isSignUp) {
+				<div class="field-container divider-row">
+					<hr class="horizontal-line" />
+				</div>
+				<p-button
+					(click)="googleLogin()"
+					icon="pi pi-google"
+					[rounded]="true"
+					severity="secondary"
+					class="field-container google-btn"></p-button>
+			}
+		</form>
+	</div>
 </div>

@@ -1,4 +1,4 @@
-import { Component} from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
@@ -32,13 +32,18 @@ export class LoginComponent {
 	private readonly classname = 'LoginComponent';
 	loginForm: FormGroup;
 	formSubmitted = false;
+	isSignUp = false;
+	animating: 'out' | 'in' | '' = '';
+	codeSent = false;
+	private codeSentTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
 		private fb: FormBuilder,
 		private authService: AuthService
 	) {
 		this.loginForm = this.fb.group({
-			email: ['', Validators.required],
+			username: ['', Validators.required],
+			email: [''],
 			password: ['', Validators.required],
 			verificationCode: ['']
 		});
@@ -53,19 +58,75 @@ export class LoginComponent {
 		return control?.invalid && (control.touched || this.formSubmitted);
 	}
 
-	async getVerificationCodeEmail() {
-		await this.authService.getVerificationCodeEmail(this.loginForm.value['email']);
+	toggleMode() {
+		this.animating = 'out';
+
+		setTimeout(() => {
+			this.isSignUp = !this.isSignUp;
+			this.formSubmitted = false;
+			this.codeSent = false;
+			if (this.codeSentTimeout) {
+				clearTimeout(this.codeSentTimeout);
+				this.codeSentTimeout = null;
+			}
+
+			this.loginForm.reset();
+
+			const usernameControl = this.loginForm.get('username');
+			const emailControl = this.loginForm.get('email');
+			const passwordControl = this.loginForm.get('password');
+			const codeControl = this.loginForm.get('verificationCode');
+
+			if (this.isSignUp) {
+				emailControl?.setValidators(Validators.required);
+				codeControl?.setValidators(Validators.required);
+			} else {
+				emailControl?.clearValidators();
+				codeControl?.clearValidators();
+			}
+
+			usernameControl?.updateValueAndValidity();
+			emailControl?.updateValueAndValidity();
+			passwordControl?.updateValueAndValidity();
+			codeControl?.updateValueAndValidity();
+
+			this.animating = 'in';
+		}, 280);
 	}
 
-	// Below is for cloudbase
+	async getVerificationCodeEmail() {
+		await this.authService.getVerificationCodeEmail(this.loginForm.value['email']);
+		this.codeSent = true;
+		if (this.codeSentTimeout) {
+			clearTimeout(this.codeSentTimeout);
+		}
+		this.codeSentTimeout = setTimeout(() => {
+			this.codeSent = false;
+			this.codeSentTimeout = null;
+		}, 4000);
+	}
+
 	async onSubmit() {
 		this.formSubmitted = true;
-		if (this.loginForm.valid) {
+		if (!this.loginForm.valid) return;
+
+		if (this.isSignUp) {
+			await this.authService.signUp(
+				this.loginForm.value['email'],
+				this.loginForm.value['password'],
+				this.loginForm.value['username'],
+				Number(this.loginForm.value['verificationCode'])
+			);
+			await this.authService.signIn(
+				this.loginForm.value['username'],
+				this.loginForm.value['password']
+			);
+		} else {
 			if (Utilities.getCurrentCountry() === CN) {
-				this.authService.signIn(this.loginForm.value['email'], this.loginForm.value['password']);
+				this.authService.signIn(this.loginForm.value['username'], this.loginForm.value['password']);
 			} else {
 				this.authService.emailPasswordLogin(
-					this.loginForm.value['email'],
+					this.loginForm.value['username'],
 					this.loginForm.value['password']
 				);
 			}

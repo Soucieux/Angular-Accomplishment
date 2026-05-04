@@ -49,6 +49,11 @@
 	font-weight: 400;
 }
 
+/* ── Form wrapper (animation target) ── */
+.form-wrapper {
+	overflow: hidden;
+}
+
 /* ── Form ── */
 .field-container {
 	display: flex;
@@ -73,7 +78,9 @@
 	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
 	border-radius: 12px !important;
 	box-shadow: none !important;
-	transition: border-color 0.2s, box-shadow 0.2s;
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s;
 }
 
 ::ng-deep .input-field-container:hover .p-inputtext {
@@ -92,11 +99,11 @@
 }
 
 /* ── Verification code ── */
-.verification-row {
-	margin-bottom: 4px;
+.code-row {
+	margin-bottom: 15px;
 }
 
-::ng-deep .verification-row .p-inputgroup .p-inputtext {
+::ng-deep .code-row .p-inputgroup .p-inputtext {
 	background: rgba(255, 255, 255, 0.78) !important;
 	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
 	border-right: none !important;
@@ -104,13 +111,13 @@
 	box-shadow: none !important;
 }
 
-::ng-deep .verification-row .p-inputgroup-addon {
+::ng-deep .code-row .p-inputgroup-addon {
 	padding: 0 !important;
 	border: none !important;
 	background: transparent !important;
 }
 
-::ng-deep .verification-row .p-inputgroup-addon .p-button {
+::ng-deep .code-row .p-inputgroup-addon .p-button {
 	background: rgba(255, 255, 255, 0.6) !important;
 	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
 	border-left: none !important;
@@ -121,8 +128,44 @@
 	box-shadow: none !important;
 }
 
-::ng-deep .verification-row .p-inputgroup-addon .p-button:not(:disabled):hover {
+::ng-deep .code-row .p-inputgroup-addon .p-button:not(:disabled):hover {
 	background: rgba(255, 255, 255, 0.85) !important;
+}
+
+::ng-deep .code-row .p-inputgroup .p-inputtext.ng-invalid.ng-dirty,
+::ng-deep .code-row .p-inputgroup .p-inputtext.ng-invalid.ng-touched {
+	border-color: rgba(239, 68, 68, 0.7) !important;
+}
+
+::ng-deep .code-row .p-message {
+	margin-top: 0;
+}
+
+.code-sent-row {
+	margin-bottom: 8px;
+}
+
+.code-sent-message {
+	color: rgba(255, 255, 255, 0.72);
+	font-size: 13px;
+}
+
+/* ── Toggle link ── */
+.toggle-row {
+	margin-bottom: 4px;
+}
+
+.toggle-link {
+	color: rgba(255, 255, 255, 0.7);
+	font-size: 14px;
+	cursor: pointer;
+	user-select: none;
+	transition: color 0.2s;
+	padding-bottom: 10px;
+}
+
+.toggle-link:hover {
+	color: rgba(255, 255, 255, 0.95);
 }
 
 /* ── Submit button ── */
@@ -144,6 +187,12 @@
 .login-button:hover {
 	opacity: 0.92;
 	box-shadow: 0 6px 20px rgba(213, 51, 105, 0.45);
+}
+
+.login-button:active {
+	opacity: 0.85;
+	box-shadow: 0 2px 8px rgba(213, 51, 105, 0.25);
+	transform: scale(0.98);
 }
 
 /* ── Divider ── */
@@ -169,6 +218,42 @@
 
 ::ng-deep .google-btn .p-button:hover {
 	background: rgba(255, 255, 255, 0.92) !important;
+}
+
+::ng-deep .google-btn .p-button:active {
+	background: rgba(255, 255, 255, 0.78) !important;
+	transform: scale(0.98);
+}
+
+/* ── Toggle animations ── */
+@keyframes slideOutLeft {
+	from {
+		transform: translateX(0);
+		opacity: 1;
+	}
+	to {
+		transform: translateX(-60px);
+		opacity: 0;
+	}
+}
+
+@keyframes slideInRight {
+	from {
+		transform: translateX(60px);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+.slide-out-left {
+	animation: slideOutLeft 0.28s ease-in forwards;
+}
+
+.slide-in-right {
+	animation: slideInRight 0.3s ease-out forwards;
 }
 
 /* ── Mobile ── */

@@ -93,15 +93,17 @@ export class AuthService {
 		this.verification = await this.cloudbaseAuth.getVerification({ email });
 	}
 
-	async signUp(email: string, password: string, verificationCode: number) {
+	async signUp(email: string, password: string, username: string, verificationCode: number) {
 		const verificationTokenRes = await this.cloudbaseAuth.verify({
 			verification_id: this.verification?.verification_id,
 			verification_code: verificationCode
-		});
+        });
+        
 		await this.cloudbaseAuth.signUp({
 			email: email,
 			verification_code: verificationCode,
-			verification_token: verificationTokenRes.verification_token,
+            verification_token: verificationTokenRes.verification_token,
+            name: name,
 			password: password
 		});
 	}

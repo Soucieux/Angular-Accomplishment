@@ -6,6 +6,8 @@ import { DividerModule } from 'primeng/divider';
 import { Observable } from 'rxjs';
 import { DialogService } from '../dialog.service';
 import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exists-error';
+import { LOG } from '../../../common/app.logs';
+import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';
 
 @Component({
 	selector: 'history-dialog',
@@ -14,6 +16,7 @@ import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exi
 	styleUrl: './history.component.css'
 })
 export class HistoryDialogComponent {
+	private readonly className = 'HistoryDialogComponent';
 	@Output() closed$ = new EventEmitter<void>();
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
@@ -55,15 +58,20 @@ export class HistoryDialogComponent {
 					movieToRestore.setMovieGenre(genre);
 					await this.revertDataCallback?.(movieToRestore);
 				} catch (error) {
-					if (error instanceof MovieAlreadyExistsError) {
-						this.dialogService.openDialog(
-							this.dialogComponentContainer,
-							'error',
-							'Movie already exists'
-						);
+					let errorMessage = '';
+					if (error instanceof MovieIdNotFoundError) {
+						errorMessage = 'Movie ID not found\nPlease try again or enter manually';
+					} else if (error instanceof MovieAlreadyExistsError) {
+						errorMessage = 'Movie already exists';
 					} else {
-						throw error;
+						errorMessage = 'Error while searching movie';
+						LOG.error(
+							this.className,
+							'Error while searching new movie from add dialog',
+							error as Error
+						);
 					}
+					this.dialogService.openDialog(this.dialogComponentContainer, 'error', errorMessage);
 				}
 			},
 			['Undo this deletion?', 'Undo', 'Confirm', 'Movie recovered', false]

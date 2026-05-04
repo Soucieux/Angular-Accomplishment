@@ -7,7 +7,6 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
@@ -46,7 +45,6 @@ export class AddDialogComponent {
 	private dialogComponentContainer!: ViewContainerRef;
 	@ViewChild('addMovieForm') addMovieForm!: NgForm;
 	@Output() closed$ = new EventEmitter<void>();
-	private messageService = inject(MessageService);
 	private submitCallback?: (movie: MovieItemVO) => void;
 	private searchCallback?: (movie: MovieItemVO) => Blob;
 	private movieItemVO: MovieItemVO = new MovieItemVO();
@@ -135,11 +133,6 @@ export class AddDialogComponent {
 		this.onDialogClosed();
 		this.movieItemVO.setIsFavourite(this.isFavourite);
 		this.submitCallback?.(this.movieItemVO);
-		this.messageService.add({
-			severity: 'info',
-			summary: 'Movie added',
-			detail: 'Movie added to the list'
-		});
 		this.movieItemVO = new MovieItemVO();
 	}
 

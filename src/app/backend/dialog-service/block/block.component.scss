@@ -1,0 +1,60 @@
+::ng-deep .blocking-dialog {
+	width: 380px;
+	border-radius: 20px !important;
+	overflow: hidden !important;
+	background: rgba(255, 255, 255, 0.96) !important;
+	backdrop-filter: blur(24px);
+	border: 1px solid rgba(255, 255, 255, 0.7) !important;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24) !important;
+	user-select: none;
+}
+
+::ng-deep .blocking-dialog .p-dialog-header {
+	padding: 0 !important;
+	height: 0 !important;
+	min-height: 0 !important;
+	border: none !important;
+}
+
+::ng-deep .blocking-dialog .p-dialog-content {
+	padding: 36px 24px !important;
+	background: transparent !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+::ng-deep .blocking-dialog .p-dialog-footer {
+	display: none !important;
+}
+
+::ng-deep .blocking-dialog .p-resizable-handle {
+	display: none !important;
+}
+
+.blocking-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+}
+
+.blocking-spinner {
+	font-size: 36px;
+	color: #667eea;
+}
+
+.blocking-message {
+	font-size: 15px;
+	color: rgba(40, 15, 35, 0.8);
+	text-align: center;
+	line-height: 1.6;
+}
+
+@media (max-width: 580px) {
+	::ng-deep .blocking-dialog {
+		min-width: 100% !important;
+		min-height: 100% !important;
+		border-radius: 0 !important;
+	}
+}

@@ -120,17 +120,13 @@ export class EntertainmentComponent {
 					if (selectedGenres === GENRE_FAVOURITE) {
 						filtered = filtered.filter((movie) => movie.getIsFavourite());
 					} else if (selectedGenres !== '') {
-						filtered = filtered.filter((movie) =>
-							movie.getMovieGenre().includes(selectedGenres)
-						);
+						filtered = filtered.filter((movie) => movie.getMovieGenre().includes(selectedGenres));
 					}
 
 					// Text search filter
 					const query = searchQuery.trim();
 					if (query !== '') {
-						filtered = filtered.filter((movie) =>
-							movie.getMovieName().includes(query)
-						);
+						filtered = filtered.filter((movie) => movie.getMovieName().includes(query));
 					}
 
 					return filtered;
@@ -631,7 +627,14 @@ export class EntertainmentComponent {
 			this.dialogComponentContainer,
 			'add',
 			// "Submit" button in the "Add New Movie" dialog
-			this.handleAddDialogSubmit.bind(this),
+			async (movie: MovieItemVO) => {
+				this.dialogService.openDialog(
+					this.dialogComponentContainer,
+					'block',
+					async () => await this.handleAddDialogSubmit(movie),
+					'Adding movie...'
+				);
+			},
 			// "Search" button in the "Add New Movie" dialog
 			this.handleAddDialogSearch.bind(this)
 		);
@@ -707,8 +710,15 @@ export class EntertainmentComponent {
 			this.dialogComponentContainer,
 			'history',
 			async (movieToRestore: MovieItemVO) => {
-				await this.handleAddDialogSearch(movieToRestore);
-				await this.handleAddDialogSubmit(movieToRestore);
+				await this.dialogService.openDialog(
+					this.dialogComponentContainer,
+					'block',
+					async () => {
+						await this.handleAddDialogSearch(movieToRestore);
+						await this.handleAddDialogSubmit(movieToRestore);
+					},
+					'Restoring movie...'
+				);
 			},
 			this.databaseService.getHistory()
 		);

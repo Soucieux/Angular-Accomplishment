@@ -302,10 +302,10 @@ export class ReminderComponent {
 	}
 
 	protected setStyle(isCharged: boolean, value: number) {
-		if (value === this.currentDay) {
-			return 'color: red';
-		} else if (isCharged) {
+		if (isCharged) {
 			return 'color: orange';
+		} else if (value === this.currentDay) {
+			return 'color: red';
 		}
 		return '';
 	}
@@ -566,6 +566,7 @@ export class ReminderComponent {
 
 	private triggerSaveIndicator(tableName: string) {
 		this.saveIndicators[tableName] = true;
+		this.cdr.detectChanges();
 
 		if (this.saveIndicatorTimeouts[tableName]) {
 			clearTimeout(this.saveIndicatorTimeouts[tableName]);

@@ -1,6 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Observable } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { MovieItemVO } from '../../../common/movieitem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
 import { LOG } from '../../../common/app.logs';
@@ -167,7 +168,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the movie list.
 	 */
 	getMovieList(): Observable<MovieItemVO[]> {
-		return new Observable((observer) => {
+		return new Observable<MovieItemVO[]>((observer) => {
 			const watcher = this.database.collection(DATABASE_MOVIES).watch({
 				onChange: (snapshot: any) => {
 					const movies = snapshot.docs.map((doc: any) => {
@@ -202,7 +203,7 @@ export class CloudbaseService extends DatabaseService {
 				}
 			});
 			return () => watcher.close();
-		});
+		}).pipe(shareReplay(1));
 	}
 
 	/**
@@ -264,7 +265,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the statistics.
 	 */
 	public getStatistics(): Observable<any> {
-		return new Observable((observer) => {
+		return new Observable<any>((observer) => {
 			const watcher = this.database.collection(DATABASE_STATISTICS).watch({
 				onChange: (snapshot: any) => {
 					observer.next(snapshot.docs[0]);
@@ -274,7 +275,7 @@ export class CloudbaseService extends DatabaseService {
 				}
 			});
 			return () => watcher.close();
-		});
+		}).pipe(shareReplay(1));
 	}
 
 	/**
@@ -283,7 +284,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns The history list
 	 */
 	public getHistory(): Observable<any[]> {
-		return new Observable((observer) => {
+		return new Observable<any[]>((observer) => {
 			const watcher = this.database.collection(DATABASE_HISTORY).watch({
 				onChange: (snapshot: any) => {
 					const history = snapshot.docs
@@ -300,7 +301,7 @@ export class CloudbaseService extends DatabaseService {
 				}
 			});
 			return () => watcher.close();
-		});
+		}).pipe(shareReplay(1));
 	}
 
 	/**
@@ -309,7 +310,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Patch notes
 	 */
 	public getPatchNotes(): Observable<any[]> {
-		return new Observable((observer) => {
+		return new Observable<any[]>((observer) => {
 			const watcher = this.database.collection(DATABASE_PATCH_NOTES).watch({
 				onChange: (snapshot: any) => {
 					const patchNotes = snapshot.docs.map((doc: any) => {
@@ -335,7 +336,7 @@ export class CloudbaseService extends DatabaseService {
 				}
 			});
 			return () => watcher.close();
-		});
+		}).pipe(shareReplay(1));
 	}
 
 	/**
@@ -344,7 +345,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Reminder table details
 	 */
 	public getFirstReminderTableDetails(): Observable<any[]> {
-		return new Observable((observer) => {
+		return new Observable<any[]>((observer) => {
 			const watcher = this.database.collection(DATABASE_REMINDER_FIRST).watch({
 				onChange: (snapshot: any) => {
 					// First table rows are flat — emit as-is. Fallback to [] prevents
@@ -354,7 +355,7 @@ export class CloudbaseService extends DatabaseService {
 				}
 			});
 			return () => watcher.close();
-		});
+		}).pipe(shareReplay(1));
 	}
 
 	/**
@@ -363,7 +364,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Second reminder table details
 	 */
 	public getSecondReminderTableDetails(): Observable<any[]> {
-		return new Observable((observer) => {
+		return new Observable<any[]>((observer) => {
 			const watcher = this.database.collection(DATABASE_REMINDER_SECOND).watch({
 				onChange: (snapshot: any) => {
 					// Map CloudBase _id → key so Angular *ngFor can trackBy it;
@@ -388,7 +389,7 @@ export class CloudbaseService extends DatabaseService {
 				}
 			});
 			return () => watcher.close();
-		});
+		}).pipe(shareReplay(1));
 	}
 
 	/**
@@ -397,7 +398,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Third reminder table details
 	 */
 	public getThirdReminderTableDetails(): Observable<any[]> {
-		return new Observable((observer) => {
+		return new Observable<any[]>((observer) => {
 			const watcher = this.database.collection(DATABASE_REMINDER_THIRD).watch({
 				onChange: (snapshot: any) => {
 					// Same watch→map→emit pattern as second table, but third table
@@ -420,7 +421,7 @@ export class CloudbaseService extends DatabaseService {
 				}
 			});
 			return () => watcher.close();
-		});
+		}).pipe(shareReplay(1));
 	}
 
 	/**
@@ -971,7 +972,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the quotes list.
 	 */
 	getQuotes(): Observable<any[]> {
-		return new Observable((observer) => {
+		return new Observable<any[]>((observer) => {
 			const watcher = this.database.collection(DATABASE_QUOTES).watch({
 				onChange: (snapshot: any) => {
 					const quotes = snapshot.docs.map((doc: any) => {
@@ -987,7 +988,7 @@ export class CloudbaseService extends DatabaseService {
 				}
 			});
 			return () => watcher.close();
-		});
+		}).pipe(shareReplay(1));
 	}
 
 	/**

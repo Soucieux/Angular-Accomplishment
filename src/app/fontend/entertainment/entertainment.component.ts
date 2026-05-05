@@ -145,7 +145,8 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Update the grid layout of the page container when the window is resized.
+	 * Handles the window resize event by recalculating the CSS grid layout
+	 * so that the content container always displays the optimal number of columns.
 	 */
 	@HostListener('window:resize')
 	protected onResize() {
@@ -155,10 +156,13 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Update all movies' rate in the database.
+	 * Iterates through every movie in the currently filtered movie list, fetches
+	 * the latest rating for each from the Douban API with a delay between requests,
+	 * and updates the database with any changed ratings. Tracks which movies had
+	 * their ratings increase or decrease and logs a summary when complete.
 	 *
-	 * Only "Search" button can trigger this function.
-	 * Only currently filtered movie will be updated.
+	 * Only the "Search" button triggers this function. The process can be cancelled
+	 * mid-flight by calling cancelSearch, which sets isSearching to false.
 	 */
 	protected async updateAllMoviesRate() {
 		// Step 1: Get the movie list (one-time retrieval) from current movieList$
@@ -249,11 +253,12 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Get the latest movie rate from Douban API with a given movie ID.
+	 * Retrieves only the latest rating for a given movie from the Douban API
+	 * without fetching any additional metadata (release date, episodes, cover image, etc.).
 	 *
-	 * @param movieItemVO - The movie item to search for.
-	 * @param retrieveOtherData - false
-	 * @param retrieveYearAndTitle - false
+	 * Only proceeds if the search is still active and no concurrent session has started.
+	 *
+	 * @param movieItemVO - The movie item whose rate should be updated.
 	 */
 	private async getMovieRateOnly(movieItemVO: MovieItemVO) {
 		// Latest rate can be retrieved only if the searching is still executing and there is no concurrent processes
@@ -263,32 +268,35 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Get the latest movie rate, first release date, total episode number, and movie cover image link.
+	 * Retrieves the latest rating, first release date, total episode count,
+	 * and cover image for a movie from the Douban API. Uses the movie's existing
+	 * name and year to locate the correct Douban page, but does not overwrite
+	 * the name or year on the movie item.
 	 *
-	 * @param movieItemVO - The movie item to search for.
-	 * @param retrieveOtherData - true
-	 * @param retrieveYearAndTitle - false
+	 * @param movieItemVO - The movie item to populate with retrieved data.
 	 */
 	private async getNewMovieDataGivenYearAndTitle(movieItemVO: MovieItemVO) {
 		await this.getMovieData(movieItemVO, true, false);
 	}
 
 	/**
-	 * Get the latest movie rate, first release date, total episode number, and movie cover image link.
+	 * Retrieves full movie data (rating, release date, episode count, cover image,
+	 * name, and year) from the Douban API using the movie's existing ID. Also
+	 * overwrites the movie name and year with the values returned by the API.
 	 *
-	 * @param movieItemVO - The movie item to search for.
-	 * @param retrieveOtherData - true
-	 * @param retrieveYearAndTitle - true
+	 * @param movieItemVO - The movie item to populate with retrieved data.
 	 */
 	private async getNewMovieDataGivenMovieId(movieItemVO: MovieItemVO) {
 		await this.getMovieData(movieItemVO, true, true);
 	}
 
 	/**
-	 * Invoke retrieve movie API to get required data
+	 * Calls the Douban third-party API to retrieve movie data. If that fails or
+	 * returns no data, falls back to scraping the Douban movie webpage directly.
 	 *
-	 * @param movieId The movie Id to search for
-	 * @returns A JSON object containing the required data & A boolean value whether it is from third-part API
+	 * @param movieId - The Douban movie ID to look up.
+	 * @returns An object containing the movie data (movieWebpageAsData) and a flag
+	 *          (thirdPartyApi) indicating whether the data came from the third-party API.
 	 */
 	private async invokeRetrieveMovieApi(movieId: number) {
 		let movieData = null;
@@ -304,12 +312,16 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Get the movie webpage from Douban API with a given movie ID.
-	 * Then, get the movie rate, first release date, and total episode number, if the corresponding flag is true.
+	 * Core data retrieval method. Fetches the movie webpage or API response from
+	 * Douban for the given movie, extracts the rating, and optionally extracts
+	 * additional metadata (release date, episode count, cover image, actors,
+	 * description, year, and title) based on the provided flags.
 	 *
-	 * @param movieItemVO - The movie item to search for.
-	 * @param retrieveOtherData - Whether to retrieve movie cover image, first release date, and total episode number.
-	 * @param retrieveYearAndTitle - Whether to retrieve movie year and title.
+	 * @param movieItemVO - The movie item to populate with retrieved data.
+	 * @param retrieveOtherData - If true, also retrieves release date, episode count,
+	 *                            cover image, actors, and description.
+	 * @param retrieveYearAndTitle - If true, also retrieves and overwrites the movie's
+	 *                               year and title.
 	 */
 	private async getMovieData(
 		movieItemVO: MovieItemVO,
@@ -427,11 +439,14 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Search for the movie ID from the Douban API with a given movie name.
-	 * If the API responds with empty data, then it is due to too many requests.
-	 * If the API responds with data, then extracts the movie ID from the JSON object.
+	 * Searches the Douban API for a movie ID matching the given movie's name and year.
+	 * If the API returns empty data (usually due to rate limiting), a MovieIdNotFoundError
+	 * is thrown. If data is returned, iterates through results to find an exact match
+	 * on both title and year, then sets the movie ID on the provided movie item.
 	 *
-	 * @param movieItemVO - The movie item to search for.
+	 * @param movieItemVO - The movie item whose name and year are used to look up
+	 *                      the Douban ID. The ID is set directly on this object on success.
+	 * @throws MovieIdNotFoundError if the API returns no data or no matching movie is found.
 	 */
 	private async getMovieId(movieItemVO: MovieItemVO) {
 		Utilities.checkMovieItemVO(movieItemVO);
@@ -473,10 +488,13 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Get and upload the movie cover obtained to firebase storage.
+	 * Downloads the movie cover image from the given Douban URL and stores the
+	 * resulting Blob on the provided movie item. The image is not yet uploaded
+	 * to storage at this stage -- that happens separately via
+	 * uploadMovieImageAndGetDownloadableLink.
 	 *
-	 * @param movieCoverImageLink - The link of the movie cover.
-	 * @param movieItemVO - The movie item to search for.
+	 * @param movieCoverImageLink - The URL of the cover image on Douban's servers.
+	 * @param movieItemVO - The movie item on which to store the downloaded cover image.
 	 */
 	private async getMovieCoverImageByLink(movieCoverImageLink: string, movieItemVO: MovieItemVO) {
 		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
@@ -498,9 +516,11 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Upload the movie cover to firebase and get the downloadable link.
+	 * Uploads the movie cover image (stored as a Blob on the movie item) to
+	 * cloud storage and sets the resulting downloadable URL back on the movie item.
 	 *
-	 * @param movieItemVO - The movie item to search for.
+	 * @param movieItemVO - The movie item containing the cover image blob to upload.
+	 *                      The downloadable link is set on this object on success.
 	 */
 	private async uploadMovieImageAndGetDownloadableLink(movieItemVO: MovieItemVO) {
 		try {
@@ -522,10 +542,12 @@ export class EntertainmentComponent {
 
 	//////////////////////Below are Utilities Functions used by HTML template///////////////////////
 	/**
-	 * Calculate the font size of the movie name.
+	 * Calculates a responsive font size for displaying a movie name, shrinking the
+	 * text as the name gets longer to prevent overflow. Uses different base sizes
+	 * for mobile and desktop viewports.
 	 *
-	 * @param length - The length of the movie name.
-	 * @returns A string that represents the font size.
+	 * @param length - The character length of the movie name.
+	 * @returns A CSS font-size string (e.g., "18px").
 	 */
 	protected calculateFontSize(length: number) {
 		if (this.utilities.isMobile()) {
@@ -535,7 +557,10 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Update the grid layout of the page container.
+	 * Recalculates the CSS grid column count for the content container based on
+	 * the current container width and the item dimensions defined in CSS custom
+	 * properties (--individual-item-width and --individual-item-gap). Ensures
+	 * the grid always fits as many columns as possible without overflow.
 	 */
 	private updateGridLayout() {
 		// Get item width and item gap from css
@@ -558,8 +583,11 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Triggered when the user types in the search input.
-	 * Pushes the current text into searchQuery$ which re-filters filteredMovieList$.
+	 * Pushes the current search input text into the searchQuery$ stream, which
+	 * triggers a re-filter of the filteredMovieList$ observable to only show
+	 * movies whose name contains the search text.
+	 *
+	 * @param value - The current text value from the search input field.
 	 */
 	protected updateSearchQuery(value: string) {
 		this.searchQuery$.next(value);
@@ -567,9 +595,11 @@ export class EntertainmentComponent {
 
 	//////////////////////Below are Event Handlers triggered by user actions///////////////////////
 	/**
-	 * Triggered by any genre button click event on the "Entertaiment" page
+	 * Toggles the genre filter. If the given genre is already selected, it deselects
+	 * it (showing all movies). Otherwise, it selects the given genre, filtering the
+	 * movie list to only show movies matching that genre.
 	 *
-	 * @param genre genre to display
+	 * @param genre - The genre to toggle as the active filter.
 	 */
 	public filterByGenre(genre: string) {
 		const currentGenre = this.selectedGenres$.getValue();
@@ -577,7 +607,9 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Triggered by the "Search" button click event on the "Entertainment" page
+	 * Opens the search progress dialog and starts the process of updating all
+	 * movie ratings by fetching the latest data from the Douban API for every
+	 * movie currently visible in the filtered list.
 	 */
 	protected openSearchDialog() {
 		this.dialogService.openDialog(this.dialogComponentContainer, SEARCH, this.cancelSearch.bind(this));
@@ -585,7 +617,9 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Triggered by the "Stop" button click event on the "Search Dialog"
+	 * Cancels an ongoing search by setting the isSearching flag to false.
+	 * This causes the search loop in updateAllMoviesRate to stop at the next
+	 * iteration and prevents any further movie data from being fetched.
 	 */
 	private cancelSearch() {
 		this.searchStreamService.addSearchLog('Search cancel requested');
@@ -593,9 +627,10 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Triggered by the "Remove" button click event on the "Entertainment" page
+	 * Opens a confirmation dialog asking the user to confirm deletion of the
+	 * specified movie. If confirmed, the movie is removed from the database.
 	 *
-	 * @param movieItemVO movie to be removed
+	 * @param movieItemVO - The movie item to be deleted upon confirmation.
 	 */
 	protected openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
 		this.dialogService.openDialog(
@@ -615,7 +650,9 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Triggered by the "Add" button click event on the "Entertainment" page
+	 * Opens the "Add New Movie" dialog. The dialog provides two actions:
+	 * "Search" which looks up the movie on Douban and retrieves its data, and
+	 * "Submit" which uploads the cover image and saves the new movie to the database.
 	 */
 	protected openAddNewMovieDialog() {
 		this.dialogService.openDialog(
@@ -636,7 +673,12 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Helper function to handle "Submit" button on the "Add New Movie" dialog.
+	 * Handles the submission of a new movie from the "Add New Movie" dialog.
+	 * First uploads the movie's cover image to cloud storage and obtains a
+	 * downloadable link, then saves the complete movie data to the database
+	 * and updates the statistics.
+	 *
+	 * @param newMovieItemVO - The new movie item to save to the database.
 	 */
 	private async handleAddDialogSubmit(newMovieItemVO: MovieItemVO) {
 		// Upload movie cover image to firebase storage and generate downloadable link
@@ -647,10 +689,13 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Helper function to handle "Search" button on the "Add New Movie" dialog.
+	 * Handles the "Search" action on the "Add New Movie" dialog. Checks if the
+	 * movie already exists in the database (throwing MovieAlreadyExistsError if so),
+	 * then searches for the movie on Douban to retrieve its full data and cover image.
 	 *
-	 * @param newMovieItemVO - New movie item to search for.
-	 * @returns The movie cover image.
+	 * @param newMovieItemVO - The new movie item to search for and populate.
+	 * @returns The movie cover image as a Blob.
+	 * @throws MovieAlreadyExistsError if the movie is already in the database.
 	 */
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob> {
 		if (
@@ -668,20 +713,17 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Search movie data for a new movie, store it to firebase, and update the movie statistics.
+	 * Routes new movie search to the appropriate strategy based on what data is available.
 	 *
-	 * Only the "Search" button on the "Add New Movie" dialog can trigger this function.
+	 * If the movie ID is not provided (equals -1), the movie name and year are used to
+	 * first look up the Douban ID via getMovieId, then fetch full data via
+	 * getNewMovieDataGivenYearAndTitle. If the movie ID is already provided, data is
+	 * fetched directly via getNewMovieDataGivenMovieId.
 	 *
-	 * Either of the following conditions need to be met:
+	 * Only the "Search" button on the "Add New Movie" dialog triggers this function.
 	 *
-	 * 1. The movie ID is NOT given but title and year are given in the "Add New Movie" dialog.
-	 * In this case, the movie ID will be searched first, if no movie ID is found, an error will be thrown.
-	 * If the movie ID is found, then the movie details will be retrieved.
-	 *
-	 * 2. The movie ID is given but title and year are NOT given in the "Add New Movie" dialog.
-	 * In this case, the movie details will be retrieved directly.
-	 *
-	 * @param newMovieItemVO - New movie item to search for.
+	 * @param newMovieItemVO - The new movie item containing either a movie ID or a
+	 *                         name and year to search with.
 	 */
 	private async searchNewMovie(newMovieItemVO: MovieItemVO) {
 		// Condition 1
@@ -698,7 +740,9 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Triggered by the "History" button click event on the "Entertainment" page
+	 * Opens the history dialog showing previously deleted or modified movies.
+	 * The user can restore a movie from history, which re-searches its data
+	 * on Douban and re-adds it to the database.
 	 */
 	protected openHistoryDialog() {
 		this.dialogService.openDialog(
@@ -720,9 +764,11 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Start editing a movie
+	 * Begins editing a movie's genre by storing a snapshot of the current genre
+	 * value in the editedItems map. The original value is preserved so that
+	 * completeEdit can detect whether a change was actually made.
 	 *
-	 * @param movie The selected movie
+	 * @param movie - The movie whose genre is being edited.
 	 */
 	protected startEdit(movie: MovieItemVO) {
 		this.editedItems.set(movie.getMovieKey(), {
@@ -732,9 +778,11 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Complete editing a movie
+	 * Finalizes editing of a movie's genre. If the genre value has changed from
+	 * the original snapshot stored by startEdit, the new genre is persisted to the
+	 * database. If no change was made, the edit entry is simply discarded.
 	 *
-	 * @param movie The selected movie
+	 * @param movie - The movie whose genre edit is being completed.
 	 */
 	protected async completeEdit(movie: MovieItemVO) {
 		const genreData = this.editedItems.get(movie.getMovieKey());
@@ -760,9 +808,10 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Set favourite
+	 * Toggles the favourite status of a movie in the database. The new status
+	 * is the inverse of the current isFavourite value on the movie item.
 	 *
-	 * @param movie The movie to set
+	 * @param movie - The movie whose favourite status should be toggled.
 	 */
 	protected async setIsFavourite(movie: MovieItemVO) {
 		try {
@@ -778,12 +827,18 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Open error confirmation dialog
+	 * Opens a dialog informing the user that a permission error has occurred,
+	 * typically when the user lacks read/write access to the database.
 	 */
 	private openErrorDialog() {
 		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 
+	/**
+	 * Opens a dialog informing the user that an unexpected error has occurred.
+	 * Used as a generic fallback for errors that are not specifically handled
+	 * (e.g., errors other than permission denied).
+	 */
 	private openUnexpectedErrorDialog() {
 		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}

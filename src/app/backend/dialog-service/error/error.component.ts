@@ -18,6 +18,11 @@ export class ErrorDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private confirmationService = inject(ConfirmationService);
 	constructor() {}
+	/**
+	 * Open an error dialog displaying the given error message.
+	 *
+	 * @param errorMessage - The error message to display.
+	 */
 	openDialog(errorMessage: string) {
 		this.confirmationService.confirm({
 			message: `<div class="error-dialog-message">${errorMessage}</div>`,

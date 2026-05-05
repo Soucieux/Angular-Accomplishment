@@ -22,6 +22,12 @@ export class SearchDialogComponent {
 
 	constructor(private searchStreamService: SearchStreamService) {}
 
+	/**
+	 * Open the search dialog and subscribe to the search log stream.
+	 * Automatically scrolls the log container to the bottom on each new entry.
+	 *
+	 * @param stopCallback - The callback to call when the user interrupts the search.
+	 */
 	protected openDialog(stopCallback: () => void) {
 		this.visible = true;
 		this.stopCallback = stopCallback;
@@ -43,10 +49,17 @@ export class SearchDialogComponent {
 		});
 	}
 
+	/**
+	 * Trigger the stop callback to interrupt the ongoing search.
+	 */
 	protected triggerStopSearching() {
 		this.stopCallback?.();
 	}
 
+	/**
+	 * Handle the dialog closed event by emitting the closed event,
+	 * unsubscribing from search logs, and clearing the log state.
+	 */
 	protected onDialogClosed() {
 		this.closed$.emit();
 		this.visible = false;

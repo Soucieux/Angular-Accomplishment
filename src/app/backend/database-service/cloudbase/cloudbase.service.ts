@@ -69,22 +69,47 @@ export class CloudbaseService extends DatabaseService {
 		}
 	}
 
+	/**
+	 * Get the CloudBase authentication instance.
+	 *
+	 * @returns The CloudBase auth object.
+	 */
 	public getCloudbaseAuth() {
 		return this.cloudbase.auth();
 	}
 
+	/**
+	 * Set the current user ID statically.
+	 *
+	 * @param userId - The user ID to set.
+	 */
 	public static setUseId(userId: string) {
 		this.userId = userId;
 	}
 
+	/**
+	 * Get the current user ID.
+	 *
+	 * @returns The current user ID.
+	 */
 	public static getUseId() {
 		return this.userId;
 	}
 
+	/**
+	 * Set the current user role statically.
+	 *
+	 * @param userRole - The user role to set.
+	 */
 	public static setUserRole(userRole: string) {
 		this.userRole = userRole;
 	}
-    
+
+	/**
+	 * Set the current user name statically.
+	 *
+	 * @param userName - The user name to set.
+	 */
 	public static setUserName(userName: string) {
 		this.userName = userName;
 	}
@@ -93,14 +118,28 @@ export class CloudbaseService extends DatabaseService {
 		return this.database.collection(DATABASE_STATISTICS).doc(this.statId);
 	}
 
+	/**
+	 * Get the current user name.
+	 *
+	 * @returns The current user name.
+	 */
 	public static getUserName() {
 		return this.userName;
 	}
 
+	/**
+	 * Check if the current user has administrator rights.
+	 *
+	 * @returns true if the user is an administrator, otherwise false.
+	 */
 	public static userHasAllRights() {
 		return this.userRole === '管理员';
 	}
 
+	/**
+	 * Temporary helper function to migrate movie cover image links to cloud:// file IDs.
+	 * Fetches all movie documents and updates their coverImageLink to the cloud:// format.
+	 */
 	public async tempHelpFunction() {
 		// Step 1: Fetch all movie documents
 		const data = await this.database.collection(DATABASE_MOVIES).get();
@@ -427,6 +466,9 @@ export class CloudbaseService extends DatabaseService {
 	/**
 	 * Convert a Blob to a raw base64 string (without the data-URL prefix).
 	 * Uses FileReader which handles large blobs without blowing the call stack.
+	 *
+	 * @param blob - The Blob to convert.
+	 * @returns A promise that resolves to the raw base64 string.
 	 */
 	private blobToBase64(blob: Blob): Promise<string> {
 		return new Promise((resolve, reject) => {
@@ -492,11 +534,11 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update the movie genre to cloudbase
+	 * Update the movie genre to cloudbase.
 	 *
-	 * @param movieKey The given movie key
-	 * @param oldGenre The old genre
-	 * @param newGenre The new genre
+	 * @param movieKey - The key of the movie to update.
+	 * @param oldGenre - The old genre value.
+	 * @param newGenre - The new genre value.
 	 */
 	updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
@@ -525,10 +567,10 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update isFavourite for the given movie to cloudbase
+	 * Update isFavourite for the given movie to cloudbase.
 	 *
-	 * @param movieKey The given movie key
-	 * @param isFavourite The boolean value set
+	 * @param movieKey - The key of the movie to update.
+	 * @param isFavourite - The boolean value to set.
 	 */
 	updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
@@ -846,7 +888,7 @@ export class CloudbaseService extends DatabaseService {
 	 * Note: This is used by third table only
 	 *
 	 * @param tableName - Corresponding collection name
-	 * @param index - The index of the record to remove
+	 * @param key - The key of the record to remove
 	 */
 	async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
 		try {
@@ -871,11 +913,11 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new entry to a given table
-	 * Note: This is used by third table only
+	 * Add a new entry to a given reminder table.
+	 * Note: This is used by third table only.
 	 *
-	 * @param tableName Correpsonding collection name
-	 * @param newRecord The new entry
+	 * @param tableName - The corresponding collection name.
+	 * @param newRecord - The new entry to add.
 	 */
 	addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
@@ -896,9 +938,9 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get corresponding table name in the database
+	 * Get the quotes from the database.
 	 *
-	 * @param tableName table name
+	 * @returns An observable that emits the quotes list.
 	 */
 	getQuotes(): Observable<any[]> {
 		return new Observable((observer) => {
@@ -920,6 +962,13 @@ export class CloudbaseService extends DatabaseService {
 		});
 	}
 
+	/**
+	 * Add a new quote to the database.
+	 *
+	 * @param text - The quote text.
+	 * @param author - The author of the quote.
+	 * @param timestamp - The timestamp of the quote.
+	 */
 	async addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 		const result = await this.database.collection(DATABASE_QUOTES).add({
@@ -932,10 +981,21 @@ export class CloudbaseService extends DatabaseService {
 		LOG.info(this.className, 'New quote has been added');
 	}
 
+	/**
+	 * Remove a quote from the database.
+	 *
+	 * @param key - The key of the quote to remove.
+	 */
 	async removeQuote(key: string): Promise<void> {
 		return this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
 	}
 
+	/**
+	 * Convert a table name to its corresponding CloudBase collection name.
+	 *
+	 * @param tableName - The table name to convert.
+	 * @returns The corresponding collection name.
+	 */
 	private convertTableNameToCollectionName(tableName: string): string {
 		switch (tableName) {
 			case FIRST_TABLE:

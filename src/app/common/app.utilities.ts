@@ -49,6 +49,12 @@ export class Utilities {
 		return formattedDate;
 	}
 
+	/**
+	 * Get a relative time string from a timestamp (e.g. "just now", "5m ago", "2d ago").
+	 *
+	 * @param timestamp - The timestamp string in "YYYY.MM.DD HH:mm:ss" format.
+	 * @returns A human-readable relative time string.
+	 */
 	public static getRelativeTime(timestamp: string): string {
 		if (!timestamp) return '';
 		const [datePart, timePart] = timestamp.split(' ');
@@ -98,11 +104,20 @@ export class Utilities {
 		return this.currentCountry;
 	}
 
-	// This is used by html files
+	/**
+	 * Check if the current user is alive (has a valid session).
+	 *
+	 * @returns Whether the user is alive.
+	 */
 	public getIsUserAlive() {
 		return this.isUserAlive;
 	}
 
+	/**
+	 * Set the user alive state.
+	 *
+	 * @param isUserAlive - Whether the user is alive.
+	 */
 	public setIsUserAlive(isUserAlive: boolean) {
 		this.isUserAlive = isUserAlive;
 	}
@@ -118,6 +133,11 @@ export class Utilities {
 		}
 	}
 
+	/**
+	 * Check if the current device is hover capable (has a pointing device like a mouse).
+	 *
+	 * @returns true if the device supports hover, otherwise false.
+	 */
 	public static checkIfHoverCapable() {
 		return window.matchMedia('(hover: hover)').matches;
 	}

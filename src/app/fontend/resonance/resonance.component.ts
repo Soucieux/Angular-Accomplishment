@@ -82,36 +82,81 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		LOG.info(this.classname, COMPONENT_DESTROY);
 	}
 
+	/**
+	 * Get the gradient colors for a quote card based on its index.
+	 *
+	 * @param index - The index of the quote in the list.
+	 * @returns An object with from and to gradient colors.
+	 */
 	getGradient(index: number) {
 		return this.gradients[index % this.gradients.length];
 	}
 
+	/**
+	 * Get a human-readable relative time string from a timestamp.
+	 *
+	 * @param timestamp - The timestamp string in "YYYY.MM.DD HH:mm:ss" format.
+	 * @returns A relative time string (e.g. "just now", "5m ago", "2d ago").
+	 */
 	getRelativeTime(timestamp: string): string {
 		return Utilities.getRelativeTime(timestamp);
 	}
 
+	/**
+	 * Get the display name of a quote's author, falling back to 'Anonymous'.
+	 *
+	 * @param quote - The quote object.
+	 * @returns The author name or 'Anonymous'.
+	 */
 	getAuthorName(quote: any): string {
 		return quote.author || 'Anonymous';
 	}
 
+	/**
+	 * Get the uppercase first initial of a quote's author.
+	 *
+	 * @param quote - The quote object.
+	 * @returns The uppercase first character of the author's name.
+	 */
 	getAuthorInitial(quote: any): string {
 		const name = this.getAuthorName(quote);
 		return name.charAt(0).toUpperCase();
 	}
 
+	/**
+	 * Check whether the current user has permission to delete the given quote.
+	 *
+	 * @param quote - The quote object to check.
+	 * @returns true if the user can delete the quote, otherwise false.
+	 */
 	canDelete(quote: any): boolean {
 		if (CloudbaseService.userHasAllRights()) return true;
 		return quote._openid === CloudbaseService.getUseId();
 	}
 
+	/**
+	 * Check whether the current user is signed in.
+	 *
+	 * @returns true if a user ID is present, otherwise false.
+	 */
 	get isSignedIn(): boolean {
 		return !!CloudbaseService.getUseId();
 	}
 
+	/**
+	 * Check whether the new quote text exceeds the maximum character limit.
+	 *
+	 * @returns true if the text length exceeds maxQuoteLength, otherwise false.
+	 */
 	get isOverLimit(): boolean {
 		return this.newQuoteText.length > this.maxQuoteLength;
 	}
 
+	/**
+	 * Submit a new quote to the database. Uses the signed-in user's name if
+	 * available, otherwise falls back to the manually entered author name or
+	 * 'Anonymous'.
+	 */
 	async submitQuote() {
 		const text = this.newQuoteText.trim();
 		if (!text) return;
@@ -137,6 +182,12 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	/**
+	 * Open a confirmation dialog to delete the given quote after checking
+	 * that the current user has permission to do so.
+	 *
+	 * @param quote - The quote object to delete.
+	 */
 	confirmDelete(quote: any) {
 		if (!this.canDelete(quote)) {
 			this.openPermissionError();
@@ -157,10 +208,17 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		);
 	}
 
+	/**
+	 * Open a dialog informing the user that they lack permission to perform
+	 * the requested action.
+	 */
 	private openPermissionError() {
 		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 
+	/**
+	 * Open a dialog informing the user that an unexpected error has occurred.
+	 */
 	private openUnexpectedError() {
 		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}

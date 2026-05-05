@@ -16,6 +16,14 @@ export class BlockDialogComponent {
 
 	constructor() {}
 
+	/**
+	 * Open the blocking dialog and execute the given task. The dialog
+	 * stays visible until the task completes or fails, then closes automatically.
+	 *
+	 * @param task - The async task to execute while the dialog is visible.
+	 * @param message - The message to display in the dialog.
+	 * @returns The promise from the task.
+	 */
 	async openDialog(task: () => Promise<void>, message: string) {
 		this.message = message;
 		this.visible = true;
@@ -29,6 +37,9 @@ export class BlockDialogComponent {
 		}
 	}
 
+	/**
+	 * Handle the dialog closed event by emitting the closed event.
+	 */
 	onDialogClosed() {
 		this.closed$.emit();
 		this.visible = false;

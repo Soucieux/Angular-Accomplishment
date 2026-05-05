@@ -310,8 +310,13 @@ export class ReminderComponent {
 		return '';
 	}
 
-	private async resetFirstTable() {
-		const values = [1, 3, 9, 11, 17];
+		/**
+		 * Resets all values in the first table to their default sequence
+		 * (1, 3, 9, 11, 17), sets all cells to uncharged, and persists the reset
+		 * state to the database.
+		 */
+		private async resetFirstTable() {
+			const values = [1, 3, 9, 11, 17];
 		this.updatedFirstTable = this.originalFirstTable.slice(0, 5).map((original, index) => ({
 			_id: original._id,
 			_openid: original._openid,
@@ -324,8 +329,13 @@ export class ReminderComponent {
 		await this.updateFirstTableSingleValue();
 	}
 
-	private async updateFirstTableSingleValue() {
-		try {
+		/**
+		 * Persists the current state of the first table (including the isNextMonth
+		 * flag) to the database. Shows a save indicator on success or an error
+		 * dialog on failure.
+		 */
+		private async updateFirstTableSingleValue() {
+			try {
 			const payload = [
 				...this.updatedFirstTable,
 				{
@@ -347,10 +357,25 @@ export class ReminderComponent {
 	}
 
 	///////////////////////////////////SECOND TABLE///////////////////////////////////
-	protected preventKeyin(event: KeyboardEvent) {
-		event.preventDefault();
+		/**
+		 * Prevents the default action of a keyboard event, effectively blocking the
+		 * keystroke from being entered into an input field.
+		 *
+		 * @param event - The keyboard event whose default action should be blocked.
+		 */
+		protected preventKeyin(event: KeyboardEvent) {
+			event.preventDefault();
 	}
 
+	/**
+	 * Calculates and updates the debt value for a given second-table entry by
+	 * subtracting a constant base amount (998.05) from the provided current debt,
+	 * then persists the change to the database.
+	 *
+	 * @param tableName - The name of the table containing the entry.
+	 * @param entryKey - The unique key identifying the entry to update.
+	 * @param currentDebt - The current debt value from which to calculate the new debt.
+	 */
 	protected async updateDebt(tableName: string, entryKey: string, currentDebt: number) {
 		const item = this.findUpdatedItem(tableName, entryKey);
 		if (!item) return;
@@ -358,6 +383,14 @@ export class ReminderComponent {
 		await this.updateTableSingleValue(tableName, entryKey, 'debt');
 	}
 
+	/**
+	 * Sets or resets a default debt record for a second-table entry. When marking
+	 * as paid, stores the original debt value and persists a new unpaid record.
+	 * When unmarking, restores the original debt value and persists the change.
+	 *
+	 * @param entryKey - The unique key identifying the entry in the second table.
+	 * @param isPaid - Whether the entry is being marked as paid.
+	 */
 	protected async setDefaultDebt(entryKey: string, isPaid: boolean) {
 		const item = this.findUpdatedItem(SECOND_TABLE, entryKey);
 		if (!item) return;
@@ -386,6 +419,13 @@ export class ReminderComponent {
 	}
 
 	///////////////////////////////////THIRD TABLE///////////////////////////////////
+	/**
+	 * Clones and returns a subset of the original third table data based on the
+	 * current pagination window, defined by thirdTableIndexOfFirstItem and
+	 * thirdTableItemsPerPage.
+	 *
+	 * @returns A deep-cloned array of rows for the current page of the third table.
+	 */
 	protected updatePagedThirdTable() {
 		return structuredClone(
 			this.originalThirdTable.slice(
@@ -394,6 +434,15 @@ export class ReminderComponent {
 			)
 		);
 	}
+	/**
+	 * Normalizes and updates the link value for a third-table entry. Prepends
+	 * "https://" or "https://www." as needed to ensure the link is a valid URL,
+	 * then persists the change if it differs from the original.
+	 *
+	 * @param tableName - The name of the table containing the entry.
+	 * @param entryKey - The unique key identifying the entry to update.
+	 * @param link - The raw link text to normalize and store.
+	 */
 	protected async updateLink(tableName: string, entryKey: string, link: string) {
 		const updatedItem = this.findUpdatedItem(THIRD_TABLE, entryKey);
 		const oldItem = this.findOriginalItem(THIRD_TABLE, entryKey);
@@ -427,6 +476,13 @@ export class ReminderComponent {
 		);
 	}
 
+	/**
+	 * Removes a single record from the third reminder table in the database and
+	 * shows a save indicator on success. Handles permission-denied and unexpected
+	 * errors by showing the appropriate dialog.
+	 *
+	 * @param entryKey - The unique key identifying the record to remove.
+	 */
 	private async removeRecordFromDatabase(entryKey: string) {
 		try {
 			await this.databaseService.removeRecordFromReminderTable(THIRD_TABLE, entryKey);
@@ -518,22 +574,47 @@ export class ReminderComponent {
 			}
 		}
 	}
+	/**
+	 * Formats a Date object to a "yyyy-MM-dd" string and updates the date field
+	 * for the specified table entry, then persists the change to the database.
+	 *
+	 * @param tableName - The name of the table containing the entry.
+	 * @param entryKey - The unique key identifying the entry to update.
+	 * @param date - The Date value to format and store.
+	 */
 	protected async updateTableWithNewDate(tableName: string, entryKey: string, date: Date) {
 		const updatedItem = this.findUpdatedItem(tableName, entryKey);
 		if (updatedItem.content.date) updatedItem.content.date = format(date, 'yyyy-MM-dd');
 		await this.updateTableSingleValue(tableName, entryKey, 'date');
 	}
 
-	private findUpdatedItem(tableName: string, entryKey: string) {
-		if (tableName === SECOND_TABLE) {
+		/**
+		 * Finds an item in the updated (working) copy of either the second or third
+		 * table by its entry key.
+		 *
+		 * @param tableName - The name of the table to search (SECOND_TABLE or THIRD_TABLE).
+		 * @param entryKey - The unique key identifying the item to find.
+		 * @returns The matching item from the updated table, or undefined if not found.
+		 */
+		private findUpdatedItem(tableName: string, entryKey: string) {
+			if (tableName === SECOND_TABLE) {
 			return this.updatedSecondTable.find((item) => item.key === entryKey);
 		} else if (tableName === THIRD_TABLE) {
 			return this.pagedThirdTable.find((item) => item.key === entryKey);
 		}
 	}
 
-	private findOriginalItem(tableName: string, entryKey: string) {
-		if (tableName === SECOND_TABLE) {
+		/**
+		 * Finds an item in the original (server-state) copy of either the second or
+		 * third table by its entry key. Used for comparing current edits against the
+		 * original data.
+		 *
+		 * @param tableName - The name of the table to search (SECOND_TABLE or THIRD_TABLE).
+		 * @param entryKey - The unique key identifying the item to find.
+		 * @returns The matching item from the original table, or undefined if not found.
+		 */
+		private findOriginalItem(tableName: string, entryKey: string) {
+			if (tableName === SECOND_TABLE) {
 			return this.originalSecondTable.find((item) => item.key === entryKey);
 		} else if (tableName === THIRD_TABLE) {
 			return this.originalThirdTable.find((item) => item.key === entryKey);
@@ -571,8 +652,15 @@ export class ReminderComponent {
 		}
 	}
 
-	private triggerSaveIndicator(tableName: string) {
-		this.saveIndicators[tableName] = true;
+		/**
+		 * Shows a save-confirmation indicator for the given table and automatically
+		 * hides it after one second. If a previous timeout for the same table is
+		 * still active, it is cleared and restarted to avoid overlapping triggers.
+		 *
+		 * @param tableName - The name of the table for which to show the indicator.
+		 */
+		private triggerSaveIndicator(tableName: string) {
+			this.saveIndicators[tableName] = true;
 		this.cdr.detectChanges();
 
 		if (this.saveIndicatorTimeouts[tableName]) {
@@ -592,11 +680,21 @@ export class ReminderComponent {
 		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 
-	private openUnexpectedErrorDialog() {
-		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+		/**
+		 * Opens a dialog informing the user that an unexpected error has occurred.
+		 */
+		private openUnexpectedErrorDialog() {
+			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}
 
-	protected checkIfChinese(text: string) {
-		return /[\u4e00-\u9fa5]/.test(text);
+		/**
+		 * Checks whether the given text contains any Chinese characters within the
+		 * CJK Unified Ideographs range (U+4E00 to U+9FA5).
+		 *
+		 * @param text - The text string to check.
+		 * @returns True if the text contains at least one Chinese character.
+		 */
+		protected checkIfChinese(text: string) {
+			return /[\u4e00-\u9fa5]/.test(text);
 	}
 }

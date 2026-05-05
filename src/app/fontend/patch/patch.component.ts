@@ -140,6 +140,9 @@ export class PatchComponent {
 		this.allSeverity = [...this.severity, ...this.bugSeverity];
 	}
 
+	/**
+	 * Update the isMobile flag when the window is resized.
+	 */
 	@HostListener('window:resize')
 	protected onResize() {
 		if (isPlatformBrowser(this.platformId)) {
@@ -152,6 +155,11 @@ export class PatchComponent {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
+	/**
+	 * Save a snapshot of the original row data and begin editing the row.
+	 *
+	 * @param row - The row to start editing.
+	 */
 	async startEdit(row: any) {
 		const result = this.checkPermission(row._openid);
 		if (result === FAILURE) return;
@@ -159,6 +167,12 @@ export class PatchComponent {
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
 
+	/**
+	 * Compare the edited row against its snapshot and persist any changes
+	 * to the database, then remove the row from the editing state.
+	 *
+	 * @param row - The row to complete editing.
+	 */
 	async completeEdit(row: any) {
 		const record = this.editedRows.get(row.key);
 		const changes: any = {};
@@ -186,10 +200,16 @@ export class PatchComponent {
 		this.editedRows.delete(row.key);
 	}
 
+	/**
+	 * Clear the status field of the new record form.
+	 */
 	clearStatusField() {
 		this.newRecord.status = undefined;
 	}
 
+	/**
+	 * Submit the new record form data to the database and reset the form.
+	 */
 	submitNewRecord() {
 		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
@@ -262,6 +282,14 @@ export class PatchComponent {
 		this._isDataUpdate = false;
 	}
 
+	/**
+	 * Calculate the rowspan for a component cell by counting consecutive rows
+	 * that share the same component value.
+	 *
+	 * @param data - The table data array.
+	 * @param rowIndex - The starting row index.
+	 * @returns The number of consecutive rows with the same component.
+	 */
 	getComponentRowSpan(data: any[], rowIndex: number) {
 		const currentComponent = data[rowIndex].component;
 		let span = 1;
@@ -277,6 +305,14 @@ export class PatchComponent {
 		return span;
 	}
 
+	/**
+	 * Calculate the rowspan for an element cell by counting consecutive rows
+	 * that share the same element and component values.
+	 *
+	 * @param data - The table data array.
+	 * @param rowIndex - The starting row index.
+	 * @returns The number of consecutive rows with the same element.
+	 */
 	getElementRowSpan(data: any[], rowIndex: number) {
 		const currentElement = data[rowIndex].element;
 		const currentComponent = data[rowIndex].component;
@@ -289,11 +325,27 @@ export class PatchComponent {
 		return span;
 	}
 
+	/**
+	 * Determine whether to show the component column for a given row.
+	 * Returns true for the first row of each new component group.
+	 *
+	 * @param data - The table data array.
+	 * @param rowIndex - The row index to check.
+	 * @returns true if the component column should be displayed.
+	 */
 	shouldShowComponent(data: any[], rowIndex: number) {
 		if (rowIndex === 0 || rowIndex === this.indexOfFirstItem) return true;
 		return data[rowIndex].component !== data[rowIndex - 1].component;
 	}
 
+	/**
+	 * Determine whether to show the element column for a given row.
+	 * Returns true for the first row of each new element group.
+	 *
+	 * @param data - The table data array.
+	 * @param rowIndex - The row index to check.
+	 * @returns true if the element column should be displayed.
+	 */
 	shouldShowElement(data: any[], rowIndex: number) {
 		if (rowIndex === 0 || rowIndex === this.indexOfFirstItem) return true;
 		return (
@@ -302,6 +354,14 @@ export class PatchComponent {
 		);
 	}
 
+	/**
+	 * Check whether the current user has permission to modify the given row
+	 * by comparing the row owner ID against the signed-in user's ID.
+	 * Users with all rights bypass this check.
+	 *
+	 * @param openid - The owner ID of the row to check.
+	 * @returns SUCCESS if permitted, FAILURE otherwise (after showing an error dialog).
+	 */
 	private checkPermission(openid: string) {
 		if (CloudbaseService.userHasAllRights()) return;
 		try {
@@ -324,19 +384,45 @@ export class PatchComponent {
 		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 
+	/**
+	 * Open a dialog informing the user that an unexpected error has occurred.
+	 */
 	private openUnexpectedErrorDialog() {
 		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}
 
+	/**
+	 * Get the currently rendered data array from a PrimeNG table data object,
+	 * falling back from filtered value to raw value to an empty array.
+	 *
+	 * @param data - The PrimeNG table data object.
+	 * @returns The rendered data array.
+	 */
 	getRenderedData(data: any) {
 		return data.filteredValue ?? data.value ?? [];
 	}
 
+	/**
+	 * Check whether the given row belongs to the same component group as
+	 * the currently hovered row.
+	 *
+	 * @param data - The table data array.
+	 * @param rowIndex - The row index to check.
+	 * @returns true if the row shares the same component as the hovered row.
+	 */
 	isInSameComponentGroup(data: any[], rowIndex: number): boolean {
 		if (this.hoveredRowIndex === null) return false;
 		return data[rowIndex]?.component === data[this.hoveredRowIndex]?.component;
 	}
 
+	/**
+	 * Check whether the given row belongs to the same element group as
+	 * the currently hovered row (same component and same element).
+	 *
+	 * @param data - The table data array.
+	 * @param rowIndex - The row index to check.
+	 * @returns true if the row shares the same component and element as the hovered row.
+	 */
 	isInSameElementGroup(data: any[], rowIndex: number): boolean {
 		if (this.hoveredRowIndex === null) return false;
 		const thisRow = data[rowIndex];
@@ -345,6 +431,12 @@ export class PatchComponent {
 	}
 
 	// This is only used to add a border outline for ressolved bug
+	/**
+	 * Get the CSS class for a severity tag based on its status.
+	 *
+	 * @param status - The status value.
+	 * @returns The CSS class name for the severity tag.
+	 */
 	getSeverityClass(status: string) {
 		switch (status) {
 			case STATUS_RESOLVED:
@@ -354,6 +446,12 @@ export class PatchComponent {
 		}
 	}
 
+	/**
+	 * Get the PrimeNG severity level for a tag based on the patch note status.
+	 *
+	 * @param status - The patch note status.
+	 * @returns The PrimeNG tag severity value.
+	 */
 	getSeverity(status: string) {
 		switch (status) {
 			case STATUS_TODO:
@@ -372,6 +470,12 @@ export class PatchComponent {
 		}
 	}
 
+	/**
+	 * Get the PrimeNG icon class for a tag based on the patch note status.
+	 *
+	 * @param status - The patch note status.
+	 * @returns The PrimeNG icon CSS class.
+	 */
 	getSeverityIcon(status: string) {
 		switch (status) {
 			case STATUS_TODO:

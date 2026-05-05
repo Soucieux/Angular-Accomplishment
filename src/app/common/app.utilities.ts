@@ -10,7 +10,8 @@ export class Utilities {
 	private static currentCountry: string = '';
 	private isUserAlive: boolean = false;
 
-	constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+    constructor(@Inject(PLATFORM_ID) private platformId: Object) { }
+    
 	/**
 	 * Check if the current device is a mobile device.
 	 *
@@ -33,6 +34,8 @@ export class Utilities {
 		const now = new Date();
 
 		let formattedTime = '';
+		// Leading space separates date from time when time is included;
+		// when isTimeIncluded=false, formattedTime stays empty → no separator needed.
 		if (isTimeIncluded) {
 			formattedTime = ` ${now.getHours().toString().padStart(2, '0')}:${now
 				.getMinutes()
@@ -57,6 +60,8 @@ export class Utilities {
 	 */
 	public static getRelativeTime(timestamp: string): string {
 		if (!timestamp) return '';
+		// Manually parse the "YYYY.MM.DD HH:mm:ss" format into a Date object,
+		// then compute the chain of differences (seconds→minutes→hours→days).
 		const [datePart, timePart] = timestamp.split(' ');
 		const [year, month, day] = datePart.split('.');
 		const [hours, minutes, seconds] = (timePart || '00:00:00').split(':');

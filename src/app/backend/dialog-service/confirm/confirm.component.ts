@@ -50,6 +50,8 @@ export class ConfirmDialogComponent {
 				try {
 					await acceptCallback();
 
+					// data[4] is a flag controlling toast notifications;
+					// only show toasts on desktop — mobile screens are too small.
 					if (!this.utilities.isMobile() && data[4]) {
 						this.messageService.add({
 							severity: 'info',
@@ -62,7 +64,9 @@ export class ConfirmDialogComponent {
 				}
 			},
 			reject: () => {
-				if (!this.utilities.isMobile() && data[4]) {
+				// data[4] is a flag controlling toast notifications;
+					// only show toasts on desktop — mobile screens are too small.
+					if (!this.utilities.isMobile() && data[4]) {
 					this.messageService.add({
 						severity: 'info',
 						summary: 'Cancelled',

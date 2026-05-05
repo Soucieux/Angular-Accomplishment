@@ -163,6 +163,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 
 		this.submitting = true;
 		try {
+			// Name resolution chain: signed-in user → CloudBase username;
+			// not signed in → manually entered name; fallback → 'Anonymous'.
 			const name = this.isSignedIn
 				? CloudbaseService.getUserName() || 'Anonymous'
 				: this.authorName.trim() || 'Anonymous';
@@ -189,6 +191,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object to delete.
 	 */
 	confirmDelete(quote: any) {
+		// Permission guard: unauthorized users see the error dialog immediately
+		// without ever being shown the confirm dialog.
 		if (!this.canDelete(quote)) {
 			this.openPermissionError();
 			return;

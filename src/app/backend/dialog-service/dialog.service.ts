@@ -90,12 +90,15 @@ export class DialogService {
 		dataOrCallback1: any,
 		dataOrCallback2?: any
 	): any {
+		// Guard: a null container means the component host is not initialized yet
 		if (!dialogContainerRef) {
 			const error = new Error('Dialog container not found');
 			LOG.error(this.className, error.message);
 			throw error;
 		}
 
+		// Block and error dialogs are allowed to stack (multiple can be open at once);
+		// all other dialog types enforce a single-instance rule to prevent duplicates.
 		if (this.openedDialogs.has(dialogType)) {
 			if (dialogType === 'error' || dialogType === 'block') return;
 			const error = new Error('Dialog already opened');
@@ -105,11 +108,15 @@ export class DialogService {
 
 		try {
 			const dialogComponent = this.getDialogComponent(dialogType);
+			// Dynamically instantiate the dialog component inside the provided container,
+			// giving it access to the container's injector and change detection.
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			let blockPromise: Promise<void> | undefined;
 
-			// Open up corresponding dialog and pass callbacks
+			// SEARCH and error dialogs only need one callback/data argument;
+			// block dialogs return a promise so callers can await task completion;
+			// all other dialogs receive two callbacks.
 			if (dialogType === SEARCH || dialogType === 'error') {
 				dialogComponentRef.instance.openDialog(dataOrCallback1);
 			} else if (dialogType === 'block') {
@@ -118,6 +125,8 @@ export class DialogService {
 				dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
 			}
 
+			// When the dialog emits its closed event, remove it from the tracking map
+			// and destroy the component to prevent memory leaks.
 			dialogComponentRef.instance.closed$.subscribe(() => {
 				this.openedDialogs.delete(dialogType);
 				dialogComponentRef.destroy();
@@ -125,7 +134,8 @@ export class DialogService {
 
 			this.openedDialogs.set(dialogType, dialogComponentRef);
 
-			// Return the promise for block dialogs so callers can await errors
+			// Return the promise for block dialogs so callers can await the task
+			// and handle any errors that occur during execution.
 			if (blockPromise) {
 				return blockPromise;
 			}

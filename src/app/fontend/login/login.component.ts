@@ -76,6 +76,8 @@ export class LoginComponent {
 	 * verification code fields depending on the selected mode.
 	 */
 	toggleMode() {
+		// Start fade-out animation; after 280ms (matching CSS transition duration),
+		// swap the form mode, reset validators, and trigger fade-in.
 		this.animating = 'out';
 
 		setTimeout(() => {
@@ -117,6 +119,8 @@ export class LoginComponent {
 	 * The code-sent indicator auto-clears after 4 seconds.
 	 */
 	async getVerificationCodeEmail() {
+		// Prevent duplicate requests; codeSent is set optimistically before the API
+		// call so the user sees immediate feedback, then auto-clears after 4 seconds.
 		if (this.sendingCode) return;
 		this.sendingCode = true;
 		this.codeSent = true;
@@ -158,6 +162,8 @@ export class LoginComponent {
 				this.loginForm.value['password']
 			);
 		} else {
+			// CN (China) users authenticate via CloudBase phone sign-in;
+			// other countries use Firebase email/password authentication.
 			if (Utilities.getCurrentCountry() === CN) {
 				await this.authService.signIn(this.loginForm.value['username'], this.loginForm.value['password']);
 			} else {

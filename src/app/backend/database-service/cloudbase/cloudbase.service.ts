@@ -334,6 +334,7 @@ export class CloudbaseService extends DatabaseService {
 						};
 					});
 
+						// CloudBase watch order is insertion order, not timestamp order — explicit sort needed.
 					patchNotes.sort((a: any, b: any) => a.timestamp.localeCompare(b.timestamp));
 
 					observer.next(patchNotes);
@@ -352,6 +353,8 @@ export class CloudbaseService extends DatabaseService {
 		return new Observable((observer) => {
 			const watcher = this.database.collection(DATABASE_REMINDER_FIRST).watch({
 				onChange: (snapshot: any) => {
+							// First table rows are flat — emit as-is. Fallback to [] prevents
+							// downstream .length errors when the collection is empty.
 					const data = snapshot.docs;
 					observer.next(data ? data : []);
 				}
@@ -369,6 +372,8 @@ export class CloudbaseService extends DatabaseService {
 		return new Observable((observer) => {
 			const watcher = this.database.collection(DATABASE_REMINDER_SECOND).watch({
 				onChange: (snapshot: any) => {
+							// Map CloudBase _id → key so Angular *ngFor can trackBy it;
+							// name and content fields pass through as-is.
 					const secondTable = snapshot.docs.map((doc: any) => {
 						const { _id, ...rest } = doc;
 						return {
@@ -401,6 +406,8 @@ export class CloudbaseService extends DatabaseService {
 		return new Observable((observer) => {
 			const watcher = this.database.collection(DATABASE_REMINDER_THIRD).watch({
 				onChange: (snapshot: any) => {
+							// Same watch→map→emit pattern as second table, but third table
+							// content shape is {text, date, link} so mapping differs accordingly.
 					const thirdTable = snapshot.docs.map((doc: any) => {
 						const { _id, ...rest } = doc;
 						return {
@@ -512,6 +519,8 @@ export class CloudbaseService extends DatabaseService {
 					rate: movieItemVO.getMovieRate()
 				});
 
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
 
 				const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
@@ -548,6 +557,8 @@ export class CloudbaseService extends DatabaseService {
 				genre: newGenre
 			})
 			.then((result: any) => {
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
 
 				LOG.info(this.className, `Movie genre has been updated`);
@@ -560,6 +571,8 @@ export class CloudbaseService extends DatabaseService {
 					});
 			})
 			.then((result: any) => {
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
 
 				LOG.info(this.className, `Movie statistics have been updated`);
@@ -580,6 +593,8 @@ export class CloudbaseService extends DatabaseService {
 				isFavourite: isFavourite
 			})
 			.then((result: any) => {
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
 
 				LOG.info(this.className, `Movie favourite tag has been updated`);
@@ -596,6 +611,8 @@ export class CloudbaseService extends DatabaseService {
 				return this.statisticsRef.update(updatedData);
 			})
 			.then((result: any) => {
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
 
 				LOG.info(this.className, `Movie statistics have been updated`);
@@ -733,6 +750,8 @@ export class CloudbaseService extends DatabaseService {
 				.get();
 			if (result.data?.length) return true;
 
+				// Fallback: id-based query may miss entries where the external API returned
+				// a different id for the same movie. A title+year query catches edge cases.
 			const nameResult = await this.database
 				.collection(DATABASE_MOVIES)
 				.where({ title: movieName, year: movieYear })
@@ -767,6 +786,8 @@ export class CloudbaseService extends DatabaseService {
 						movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
 					}) was ${status} on ${this.utilities.getCurrentFormattedTime(true)}`
 				});
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
 			} else {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
@@ -774,6 +795,8 @@ export class CloudbaseService extends DatabaseService {
 					status: status,
 					message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
 				});
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
 			}
 			LOG.info(this.className, 'New history entry has been added');
@@ -828,6 +851,8 @@ export class CloudbaseService extends DatabaseService {
 				...updatedRecord
 			})
 			.then((result: any) => {
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
 
 				LOG.info(this.className, 'Patch notes record has been updated');
@@ -846,6 +871,8 @@ export class CloudbaseService extends DatabaseService {
 	updateReminderTable(tableName: string, entryKey: string, valueKey: string, value: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 
+			// Branch on valueKey: "content" replaces entire content object (bulk edit);
+			// any other key updates a single nested field inside content (e.g. toggling paid).
 		let valueToUpdate;
 		if (valueKey === 'content') {
 			valueToUpdate = { content: { ...value } };
@@ -858,6 +885,8 @@ export class CloudbaseService extends DatabaseService {
 			.update(valueToUpdate)
 			.then((result: any) => {
 				if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 				else if (result.code) throw new Error(result.message);
 
 				LOG.info(this.className, 'Reminder table has been updated');
@@ -874,6 +903,8 @@ export class CloudbaseService extends DatabaseService {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 		const tableRef = this.database.collection(collectionName);
 
+		// CloudBase has no batch document update API — each row must be updated
+		// individually. _id and _openid are stripped since they are CloudBase metadata.
 		for (const data of updatedTable) {
 			const { _id, _openid, ...rest } = data;
 			const result = await this.database.collection(collectionName).doc(_id).update(rest);
@@ -893,6 +924,8 @@ export class CloudbaseService extends DatabaseService {
 	async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
 		try {
 			const collectionName = this.convertTableNameToCollectionName(tableName);
+				// Delegate to the shared helper so error handling (result.code check)
+				// and logging stay consistent across all collections.
 			return await this.removeSingleItemFromDatabase(collectionName, key);
 		} catch (error) {
 			LOG.error(this.className, 'Error while removing a record from reminder table');
@@ -908,6 +941,8 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	async removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
 		const result = await this.database.collection(collectionName).doc(key).remove();
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 		if (result.code) throw new Error(result.message);
 		LOG.info(this.className, `Record has been removed from ${collectionName}`);
 	}
@@ -977,6 +1012,8 @@ export class CloudbaseService extends DatabaseService {
 			author,
 			timestamp
 		});
+			// CloudBase returns a non-empty result.code when the operation failed
+			// (e.g. permission denied, document not found).
 		if (result.code) throw new Error(result.message);
 		LOG.info(this.className, 'New quote has been added');
 	}

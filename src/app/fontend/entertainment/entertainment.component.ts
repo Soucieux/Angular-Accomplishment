@@ -9,7 +9,8 @@ import {
 	NO_RATE,
 	GENRE_FAVOURITE,
 	SEARCH,
-	ERROR_PERMISSION_DENIED
+	ERROR_PERMISSION_DENIED,
+	MOVIE_GENRES
 } from '../../common/app.constant';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -73,14 +74,7 @@ export class EntertainmentComponent {
 	protected statistics$!: Observable<any>;
 	private searchSummary!: Map<string, string[]>;
 	protected editedItems = new Map<string, { original: string; genre: string }>();
-	protected genres: { genre: string }[] = [
-		{ genre: '刑侦' },
-		{ genre: '古装' },
-		{ genre: '悬疑' },
-		{ genre: '校园' },
-		{ genre: '现代' },
-		{ genre: '谍战' }
-	];
+	protected genres = MOVIE_GENRES;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private elRef: ElementRef<HTMLElement>,
@@ -132,24 +126,22 @@ export class EntertainmentComponent {
 					return filtered;
 				})
 			);
+
+			if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
+				this.updateGridLayout();
+			}
 		}
 	}
 
 	/**
 	 * Anything that needs to be done when the component is destroyed.
-	 */
-	ngOnDestroy() {
-		this.selectedGenres$.complete();
-		this.searchQuery$.complete();
-		this.dialogComponentContainer?.clear();
-		this.isSearching = false;
-		LOG.info(this.className, COMPONENT_DESTROY);
-	}
 
-	public ngAfterViewChecked() {
-		if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
-			this.updateGridLayout();
-		}
+	ngOnDestroy() {
+			this.selectedGenres$.complete();
+			this.searchQuery$.complete();
+			this.dialogComponentContainer?.clear();
+			this.isSearching = false;
+			LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
@@ -206,10 +198,13 @@ export class EntertainmentComponent {
 					break;
 				}
 				// Otherwise, save movie name to corresponding array if movie rate changes.
-				else if (this.searchStreamService.checkLastLogDecreasedOrIncreased() === RATE_DECREASED) {
-					rateDecreasedArray?.push(movieItemVO.getMovieName());
-				} else if (this.searchStreamService.checkLastLogDecreasedOrIncreased() === RATE_INCREASED) {
-					rateIncreasedArray?.push(movieItemVO.getMovieName());
+				else {
+					const rateChange = this.searchStreamService.checkLastLogDecreasedOrIncreased();
+					if (rateChange === RATE_DECREASED) {
+						rateDecreasedArray?.push(movieItemVO.getMovieName());
+					} else if (rateChange === RATE_INCREASED) {
+						rateIncreasedArray?.push(movieItemVO.getMovieName());
+					}
 				}
 				searchCount++;
 			} catch (error) {
@@ -335,7 +330,7 @@ export class EntertainmentComponent {
 					'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
 					'i'
 				);
-				const movieRate = movieWebpageAsData.match(regexForMovieRate)[1];
+				const movieRate = movieWebpageAsData.match(regexForMovieRate)?.[1];
 				movieItemVO.setMovieRate(movieRate);
 			}
 
@@ -350,7 +345,7 @@ export class EntertainmentComponent {
 						'<span class="pl">首播:</span> <span property="v:initialReleaseDate" content="(.*?)">(.*?)</span><br/>',
 						'i'
 					);
-					firstReleaseDate = movieWebpageAsData.match(regexForFirstReleaseDate)[1];
+					firstReleaseDate = movieWebpageAsData.match(regexForFirstReleaseDate)?.[1];
 				}
 
 				firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
@@ -371,7 +366,7 @@ export class EntertainmentComponent {
 						year = firstReleaseDate.substring(0, 4);
 
 						const regexForTitle = new RegExp('<meta property="og:title" content="(.*?)" />', 'i');
-						title = movieWebpageAsData.match(regexForTitle)[1];
+						title = movieWebpageAsData.match(regexForTitle)?.[1];
 					}
 
 					movieItemVO.setMovieYear(Number(year));
@@ -384,7 +379,7 @@ export class EntertainmentComponent {
 					episodeNumber = movieWebpageAsData['episodes'];
 				} else {
 					const regexForEpisodeNumber = new RegExp('<span class="pl">集数:</span> (.*?)<br/>', 'i');
-					episodeNumber = movieWebpageAsData.match(regexForEpisodeNumber)[1];
+					episodeNumber = movieWebpageAsData.match(regexForEpisodeNumber)?.[1];
 				}
 
 				movieItemVO.setMovieEpisodeNumber(episodeNumber);
@@ -417,7 +412,7 @@ export class EntertainmentComponent {
 					movieCoverImageLink = movieWebpageAsData['data'][0]['poster'];
 				} else {
 					const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
-					movieCoverImageLink = movieWebpageAsData.match(regexForCoverImageLink)[1];
+					movieCoverImageLink = movieWebpageAsData.match(regexForCoverImageLink)?.[1];
 				}
 				await this.getMovieCoverImageByLink(movieCoverImageLink, movieItemVO);
 			}
@@ -786,17 +781,10 @@ export class EntertainmentComponent {
 	 * Open error confirmation dialog
 	 */
 	private openErrorDialog() {
-		this.dialogService.openDialog(
-			this.dialogComponentContainer,
-			'error',
-			'User does not have permission'
-		);
+		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 
-	/**
-	 * Open unexpected error dialog
-	 */
 	private openUnexpectedErrorDialog() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'error', 'Unexpected error occurred');
+		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}
 }

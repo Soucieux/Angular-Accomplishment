@@ -89,6 +89,10 @@ export class CloudbaseService extends DatabaseService {
 		this.userName = userName;
 	}
 
+	private get statisticsRef() {
+		return this.database.collection(DATABASE_STATISTICS).doc(this.statId);
+	}
+
 	public static getUserName() {
 		return this.userName;
 	}
@@ -507,9 +511,7 @@ export class CloudbaseService extends DatabaseService {
 				LOG.info(this.className, `Movie genre has been updated`);
 
 				// Step 2 : Update movie statistics
-				return this.database
-					.collection(DATABASE_STATISTICS)
-					.doc(this.statId)
+				return this.statisticsRef
 					.update({
 						[`genre.${oldGenre}`]: this._.inc(-1),
 						[`genre.${newGenre}`]: this._.inc(1)
@@ -549,7 +551,7 @@ export class CloudbaseService extends DatabaseService {
 					updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
 				}
 
-				return this.database.collection(DATABASE_STATISTICS).doc(this.statId).update(updatedData);
+				return this.statisticsRef.update(updatedData);
 			})
 			.then((result: any) => {
 				if (result.code) throw new Error(result.message);
@@ -597,10 +599,7 @@ export class CloudbaseService extends DatabaseService {
 			}
 
 			// Update the movie statistics
-			const statRes = await this.database
-				.collection(DATABASE_STATISTICS)
-				.doc(this.statId)
-				.update(updatedData);
+			const statRes = await this.statisticsRef.update(updatedData);
 			if (statRes.code) throw new Error(statRes.message);
 
 			LOG.info(this.className, `Movie added and statistics have been updated`);
@@ -661,10 +660,7 @@ export class CloudbaseService extends DatabaseService {
 				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
 			}
 
-			const statRes = await this.database
-				.collection(DATABASE_STATISTICS)
-				.doc(this.statId)
-				.update(updatedData);
+			const statRes = await this.statisticsRef.update(updatedData);
 			if (statRes.code) throw new Error(statRes.message);
 
 			LOG.info(this.className, `Statistics updated after removing ${movieItemVO.getMovieName()}`);
@@ -688,17 +684,19 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	async isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean> {
 		try {
-			const snapshot = await this.database.collection(DATABASE_MOVIES).get();
-			const allMovies = snapshot.data;
+			const result = await this.database
+				.collection(DATABASE_MOVIES)
+				.where({ id: movieId })
+				.limit(1)
+				.get();
+			if (result.data?.length) return true;
 
-			if (!allMovies) throw new Error('Movie list empty');
-
-			for (const movie of allMovies) {
-				if ((movie.title === movieName && movie.year === movieYear) || movie.id === movieId) {
-					return true;
-				}
-			}
-			return false;
+			const nameResult = await this.database
+				.collection(DATABASE_MOVIES)
+				.where({ title: movieName, year: movieYear })
+				.limit(1)
+				.get();
+			return !!nameResult.data?.length;
 		} catch (error) {
 			LOG.error(
 				this.className,

@@ -28,7 +28,7 @@ import {
 	STATUS_TODO,
 	SUCCESS
 } from '../../common/app.constant';
-import { map, Observable, shareReplay, tap } from 'rxjs';
+import { map, Observable, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
@@ -125,10 +125,7 @@ export class PatchComponent {
 						this._isDataUpdate = true;
 					});
 				}),
-				// ShareReply should be removed as it was used to share the subscription between multiple callers
-				// Leave it here for later references
-				shareReplay(1)
-			);
+				);
 		}
 
 		this.severity = [
@@ -196,7 +193,7 @@ export class PatchComponent {
 	submitNewRecord() {
 		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
-		this.databaseService.addNewRecordToPatchNotes(this.newRecord);
+		this.databaseService.addNewRecordToPatchNotes(this.newRecord).catch(() => this.openUnexpectedErrorDialog());
 		this.newRecord = {
 			key: '',
 			component: '',
@@ -324,18 +321,11 @@ export class PatchComponent {
 	 * Open error confirmation dialog
 	 */
 	private openErrorDialog() {
-		this.dialogService.openDialog(
-			this.dialogComponentContainer,
-			'error',
-			'User does not have permission'
-		);
+		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 
-	/**
-	 * Open unexpected error dialog
-	 */
 	private openUnexpectedErrorDialog() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'error', 'Unexpected error occurred');
+		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}
 
 	getRenderedData(data: any) {

@@ -125,9 +125,9 @@ export class AuthService {
 		this.cloudbaseAuth
 			.getUser()
 			.then((response: { data: { user: any } }) => {
-				const { data } = response;
+				const data = response?.data;
 
-				if (data.user?.user_metadata?.username) {
+				if (data?.user?.user_metadata?.username) {
 					this.utilities.setIsUserAlive(true);
 					CloudbaseService.setUseId(data.user.id);
 					CloudbaseService.setUserRole(data.user.user_metadata?.name);

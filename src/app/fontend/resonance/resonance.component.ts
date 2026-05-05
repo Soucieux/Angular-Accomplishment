@@ -208,7 +208,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 					this.openUnexpectedError();
 				}
 			},
-			['Are you sure you want to delete this quote?', 'Delete Quote', 'Delete', 'Quote deleted', true]
+			['Are you sure you want to delete this quote?', 'Delete Quote', 'Delete']
 		);
 	}
 

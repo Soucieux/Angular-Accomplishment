@@ -297,7 +297,7 @@ export class ReminderComponent {
 			() => {
 				this.resetFirstTable();
 			},
-			['Are you sure you want to reset the dates?', 'Reset', 'Confirm', 'Dates reset', true]
+			['Are you sure you want to reset the dates?', 'Reset', 'Confirm']
 		);
 	}
 
@@ -472,7 +472,7 @@ export class ReminderComponent {
 			async () => {
 				await this.removeRecordFromDatabase(entryKey);
 			},
-			['Are you sure you want to delete this entry?', 'Delete', 'Confirm', 'Entry deleted', true]
+			['Are you sure you want to delete this entry?', 'Delete', 'Confirm']
 		);
 	}
 

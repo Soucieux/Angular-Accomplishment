@@ -243,7 +243,7 @@ export class PatchComponent {
 					this.openUnexpectedErrorDialog();
 				}
 			},
-			['Are you sure you want to delete this note?', 'Confirm', 'Delete', 'Record deleted', true]
+			['Are you sure you want to delete this note?', 'Confirm', 'Delete']
 		);
 	}
 

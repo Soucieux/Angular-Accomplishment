@@ -303,9 +303,9 @@ export class EntertainmentComponent {
 		let movieDataWebpage = null;
 
 		// Try the third-party API first; if it returns nothing (rate-limited or down),
-			// fall back to parsing the Douban webpage HTML directly. The webpage parse
-			// is more brittle but works when the API is unavailable.
-			movieData = await firstValueFrom(this.doubanService.searchMovieByThirdPartyApi(movieId));
+		// fall back to parsing the Douban webpage HTML directly. The webpage parse
+		// is more brittle but works when the API is unavailable.
+		movieData = await firstValueFrom(this.doubanService.searchMovieByThirdPartyApi(movieId));
 		if (!movieData) {
 			movieDataWebpage = await firstValueFrom(this.doubanService.searchMovieByWebpage(movieId));
 			return { movieWebpageAsData: movieDataWebpage, thirdPartyApi: false };
@@ -527,9 +527,9 @@ export class EntertainmentComponent {
 	 */
 	private async uploadMovieImageAndGetDownloadableLink(movieItemVO: MovieItemVO) {
 		try {
-// Upload the cover image Blob to cloud storage, then get the resultant
-				// downloadable URL. These are separate operations in Firebase/CloudBase.
-							const downloadableLink = await this.databaseService.uploadImageAndGetDownloadLink(
+			// Upload the cover image Blob to cloud storage, then get the resultant
+			// downloadable URL. These are separate operations in Firebase/CloudBase.
+			const downloadableLink = await this.databaseService.uploadImageAndGetDownloadLink(
 				movieItemVO.getMovieCoverImage(),
 				movieItemVO.getMovieName()
 			);
@@ -644,13 +644,7 @@ export class EntertainmentComponent {
 			() => {
 				this.databaseService.removeMovieFromDatabase(movieItemVO);
 			},
-			[
-				`Are you sure you want to delete ${movieItemVO.getMovieName()}?`,
-				'Delete Movie',
-				'Delete',
-				'Movie deleted',
-				true
-			]
+			[`Are you sure you want to delete ${movieItemVO.getMovieName()}?`, 'Delete Movie', 'Delete']
 		);
 	}
 
@@ -704,8 +698,8 @@ export class EntertainmentComponent {
 	 */
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob> {
 		// Check for duplicates BEFORE searching — avoids unnecessary API calls
-			// for movies already in the database.
-			if (
+		// for movies already in the database.
+		if (
 			await this.databaseService.isMovieAlreadyAdded(
 				newMovieItemVO.getMovieName(),
 				newMovieItemVO.getMovieYear(),
@@ -756,8 +750,8 @@ export class EntertainmentComponent {
 			this.dialogComponentContainer,
 			'history',
 			// Restore flow: re-search the movie on Douban, then re-add to database.
-					// The inner block dialog keeps the UI locked during the restore.
-					async (movieToRestore: MovieItemVO) => {
+			// The inner block dialog keeps the UI locked during the restore.
+			async (movieToRestore: MovieItemVO) => {
 				await this.dialogService.openDialog(
 					this.dialogComponentContainer,
 					'block',
@@ -825,8 +819,8 @@ export class EntertainmentComponent {
 	protected async setIsFavourite(movie: MovieItemVO) {
 		try {
 			// Toggle: pass the inverse of the current state. If currently true, set false;
-				// if currently false, set true. The database only stores the final boolean.
-				await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
+			// if currently false, set true. The database only stores the final boolean.
+			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 				this.openErrorDialog();

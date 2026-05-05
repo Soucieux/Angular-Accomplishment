@@ -632,7 +632,9 @@ export class ReminderComponent {
 	 * {@link openDeleteConfirmationDialog} - Button to open delete dialog for third table
 	 */
 	private checkPermission(tableName: string, entryKey: string) {
-		if (CloudbaseService.userHasAllRights()) return;
+		// Three-tier check: admins bypass all checks; first table checks row[0]._openid;
+			// second/third tables use findUpdatedItem() to get the specific entry's owner.
+			if (CloudbaseService.userHasAllRights()) return;
 		try {
 			if (tableName == FIRST_TABLE && this.updatedFirstTable[0]._openid !== CloudbaseService.getUseId())
 				throw new Error(ERROR_PERMISSION_DENIED);
@@ -663,7 +665,9 @@ export class ReminderComponent {
 			this.saveIndicators[tableName] = true;
 		this.cdr.detectChanges();
 
-		if (this.saveIndicatorTimeouts[tableName]) {
+		// Clear any previous timeout before setting a new one — rapid successive
+			// saves should restart the indicator timer rather than flash on/off.
+			if (this.saveIndicatorTimeouts[tableName]) {
 			clearTimeout(this.saveIndicatorTimeouts[tableName]);
 		}
 

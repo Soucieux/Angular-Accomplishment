@@ -68,6 +68,9 @@ export class HistoryDialogComponent {
 				try {
 					let movieToRestore = new MovieItemVO();
 					movieToRestore.setMovieId(entry.id);
+					// Reconstruct MovieItemVO from the history message string.
+					// Format: "MovieName - Genre (Rate: X) was status on YYYY.MM.DD HH:mm:ss"
+					// This string-based reconstruction is brittle but avoids storing full movie data in history.
 					const movieName = entry.message.split(' - ')[0];
 					const genre = entry.message.split(' - ')[1].split(' ')[0].trim();
 					const year = entry.message.split(' ')[7].split('.');

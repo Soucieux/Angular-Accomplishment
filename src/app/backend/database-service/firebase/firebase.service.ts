@@ -62,6 +62,8 @@ export class FirebaseService extends DatabaseService {
 	public async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
 		try {
 			const storageRefer = storageRef(this.storage, `/movies/${movieName}`);
+			// Firebase Storage separates upload from URL generation:
+			// first upload the Blob, then get a downloadable link.
 			await uploadBytes(storageRefer, coverImage, {
 				contentType: 'image/jpeg'
 			});
@@ -374,7 +376,9 @@ export class FirebaseService extends DatabaseService {
 	): Promise<boolean> {
 		try {
 			const snapshot = await runInInjectionContext(this.ei, () => get(this.moviesRef));
-			const allMovies = snapshot.val();
+			// Firebase Realtime DB does not support server-side .where() queries
+				// like CloudBase, so we must iterate all movies to check for duplicates.
+				const allMovies = snapshot.val();
 
 			if (!allMovies) throw new Error('Movie list empty');
 
@@ -446,7 +450,9 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public addNewRecordToPatchNotes(newRecord: any): Promise<void> {
 		return push(dbRef(this.db, DATABASE_PATCH_NOTES), {
-			component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
+			// Normalize text casing so patch note entries have consistent formatting
+				// regardless of how the user typed them.
+				component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
 			element: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
 			details: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
 			status: newRecord.status,
@@ -496,7 +502,9 @@ export class FirebaseService extends DatabaseService {
 									isBug: boolean;
 								}
 						)
-						.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+// Sort by timestamp ascending — list() returns insertion order,
+						// not timestamp order, so an explicit sort is needed.
+												.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
 				)
 			)
 		);
@@ -533,7 +541,9 @@ export class FirebaseService extends DatabaseService {
 			runInInjectionContext(this.ei, () => {
 				const unsub = onValue(dbRef(this.db, `${DATABASE_REMINDER}/${FIRST_TABLE}`), (snapshot) => {
 					const data = snapshot.val();
-					observer.next(data ? Object.values(data) : []);
+					// Firebase stores the collection as an object keyed by push ID;
+						// Object.values() converts it to an array for PrimeNG table binding.
+						observer.next(data ? Object.values(data) : []);
 				});
 				return () => unsub();
 			});
@@ -547,7 +557,9 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getSecondReminderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
-			list(dbRef(this.db, `${DATABASE_REMINDER}/${SECOND_TABLE}`)).pipe(
+			// list() reads once + subscribes to changes; pipe+map transforms
+				// each snapshot into {key, ...fields} for the table component.
+				list(dbRef(this.db, `${DATABASE_REMINDER}/${SECOND_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -576,7 +588,9 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getThirdReminderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
-			list(dbRef(this.db, `${DATABASE_REMINDER}/${THIRD_TABLE}`)).pipe(
+			// Same list()+pipe+map pipeline as second table, but third table
+				// content shape is {text, date, link} so mapping differs accordingly.
+				list(dbRef(this.db, `${DATABASE_REMINDER}/${THIRD_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {

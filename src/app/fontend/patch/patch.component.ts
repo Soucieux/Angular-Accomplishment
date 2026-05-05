@@ -211,6 +211,8 @@ export class PatchComponent {
 	 * Submit the new record form data to the database and reset the form.
 	 */
 	submitNewRecord() {
+		// Inject the current timestamp before submit; status is unwrapped from
+		// the PrimeNG select object via ['severity'] to get the raw string value.
 		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
 		this.databaseService.addNewRecordToPatchNotes(this.newRecord).catch(() => this.openUnexpectedErrorDialog());
@@ -362,7 +364,9 @@ export class PatchComponent {
 	 * @param openid - The owner ID of the row to check.
 	 * @returns SUCCESS if permitted, FAILURE otherwise (after showing an error dialog).
 	 */
-	private checkPermission(openid: string) {
+// Admins bypass all permission checks; for others, compare the entry's _openid
+		// against the current user's ID. Permission denied shows the error dialog directly.
+			private checkPermission(openid: string) {
 		if (CloudbaseService.userHasAllRights()) return;
 		try {
 			if (openid !== CloudbaseService.getUseId()) throw new Error(ERROR_PERMISSION_DENIED);

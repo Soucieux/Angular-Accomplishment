@@ -101,7 +101,9 @@ export class AddDialogComponent {
 	protected async searchCurrentMovie(newMovieData: NgForm['value']) {
 		this.isLoading = true;
 		try {
-			if (newMovieData.movieName) {
+			// Two input strategies: if movieName is provided, search by name+year;
+				// if id is provided instead, search by numeric Douban ID.
+				if (newMovieData.movieName) {
 				this.movieItemVO.setMovieName(newMovieData.movieName);
 				this.movieItemVO.setMovieYear(Number(newMovieData.years));
 			} else if (newMovieData.id) {
@@ -114,7 +116,9 @@ export class AddDialogComponent {
 			this.canSubmit = true;
 		} catch (error) {
 			let errorMessage = '';
-			if (error instanceof MovieIdNotFoundError) {
+			// Each error type maps to a specific user-facing message;
+				// the dialog is shown in-place (not thrown) because this is a search flow.
+				if (error instanceof MovieIdNotFoundError) {
 				errorMessage = 'Movie ID not found\nPlease try again or enter manually';
 			} else if (error instanceof MovieAlreadyExistsError) {
 				errorMessage = 'Movie already exists';

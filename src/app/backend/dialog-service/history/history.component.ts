@@ -95,7 +95,7 @@ export class HistoryDialogComponent {
 					this.dialogService.openDialog(this.dialogComponentContainer, 'error', errorMessage);
 				}
 			},
-			['Undo this deletion?', 'Undo', 'Confirm', 'Movie recovered', false]
+			['Undo this deletion?', 'Undo', 'Confirm']
 		);
 	}
 

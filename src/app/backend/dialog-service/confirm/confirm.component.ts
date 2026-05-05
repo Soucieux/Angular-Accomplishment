@@ -1,7 +1,6 @@
 import { Component, EventEmitter, inject, Output } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { Utilities } from '../../../common/app.utilities';
 
 @Component({
 	selector: 'confirm-dialog',
@@ -14,20 +13,17 @@ import { Utilities } from '../../../common/app.utilities';
 export class ConfirmDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private confirmationService = inject(ConfirmationService);
-	private messageService = inject(MessageService);
 
-	constructor(private utilities: Utilities) {}
+	constructor() {}
 
 	/**
-	 * Open the delete dialog
+	 * Open the confirm dialog.
 	 *
-	 * @param acceptCallback - The callback to call when the dialog is accepted
-	 * @param data - The data required to display in the dialog
-	 * @param data[0] - The message to display in the dialog
-	 * @param data[1] - The header to display in the dialog
-	 * @param data[2] - The accept button label to display in the dialog
-	 * @param data[3] - The message to display after accepting the dialog
-	 * @param data[4] - Whether to display the message on the top right corner
+	 * @param acceptCallback - The callback to call when the dialog is accepted.
+	 * @param data - The data required to display in the dialog.
+	 * @param data[0] - The message to display in the dialog.
+	 * @param data[1] - The header to display in the dialog.
+	 * @param data[2] - The accept button label to display in the dialog.
 	 */
 	openDialog(acceptCallback: () => Promise<void>, data: any[]) {
 		this.confirmationService.confirm({
@@ -47,33 +43,9 @@ export class ConfirmDialogComponent {
 			},
 
 			accept: async () => {
-				try {
-					await acceptCallback();
-
-					// data[4] is a flag controlling toast notifications;
-					// only show toasts on desktop — mobile screens are too small.
-					if (!this.utilities.isMobile() && data[4]) {
-						this.messageService.add({
-							severity: 'info',
-							summary: 'Confirmed',
-							detail: data[3]
-						});
-					}
-				} catch (error) {
-					throw error;
-				}
+				await acceptCallback();
 			},
-			reject: () => {
-				// data[4] is a flag controlling toast notifications;
-					// only show toasts on desktop — mobile screens are too small.
-					if (!this.utilities.isMobile() && data[4]) {
-					this.messageService.add({
-						severity: 'info',
-						summary: 'Cancelled',
-						detail: 'Operation cancelled'
-					});
-				}
-			}
+			reject: () => {}
 		});
 	}
 

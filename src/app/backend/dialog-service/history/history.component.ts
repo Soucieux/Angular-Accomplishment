@@ -27,12 +27,24 @@ export class HistoryDialogComponent {
 
 	constructor(private dialogService: DialogService) {}
 
+	/**
+	 * Open the history dialog and store the revert callback and entries observable.
+	 *
+	 * @param revertDataCallback - The callback to call to restore a deleted movie.
+	 * @param entries - The observable that emits the history entries.
+	 */
 	protected openDialog(revertDataCallback: (movie: MovieItemVO) => void, entries: Observable<any>) {
 		this.visible = true;
 		this.entries$ = entries;
 		this.revertDataCallback = revertDataCallback;
 	}
 
+	/**
+	 * Get the background color for a history entry based on its status.
+	 *
+	 * @param status - The status of the history entry.
+	 * @returns A CSS color string, or empty string if the status is unrecognized.
+	 */
 	protected setBackgroundColor(status: string) {
 		if (status === 'added') {
 			return 'solid green';
@@ -42,6 +54,12 @@ export class HistoryDialogComponent {
 		return '';
 	}
 
+	/**
+	 * Handle a click on a history entry by opening a confirmation dialog
+	 * to restore (undo) the associated movie deletion.
+	 *
+	 * @param entry - The history entry to potentially restore.
+	 */
 	protected async onMessageClick(entry: any) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -78,6 +96,9 @@ export class HistoryDialogComponent {
 		);
 	}
 
+	/**
+	 * Handle the dialog closed event by emitting the closed event.
+	 */
 	protected onDialogClosed() {
 		this.closed$.emit();
 		this.visible = false;

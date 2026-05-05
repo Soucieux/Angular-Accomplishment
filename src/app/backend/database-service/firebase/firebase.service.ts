@@ -638,11 +638,9 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new entry to a given table
-	 * Note: This is used by third table only
+	 * Get the quotes from the database.
 	 *
-	 * @param tableName The table name
-	 * @param newRecord The new entry
+	 * @returns An observable that emits the quotes list.
 	 */
 	public getQuotes(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
@@ -659,6 +657,13 @@ export class FirebaseService extends DatabaseService {
 		);
 	}
 
+	/**
+	 * Add a new quote to the database.
+	 *
+	 * @param text - The quote text.
+	 * @param author - The author of the quote.
+	 * @param timestamp - The timestamp of the quote.
+	 */
 	public addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		return push(dbRef(this.db, DATABASE_QUOTES), {
 			text,
@@ -669,10 +674,22 @@ export class FirebaseService extends DatabaseService {
 		});
 	}
 
+	/**
+	 * Remove a quote from the database.
+	 *
+	 * @param key - The key of the quote to remove.
+	 */
 	public removeQuote(key: string): Promise<void> {
 		return this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
 	}
 
+	/**
+	 * Add a new entry to a given reminder table.
+	 * Note: This is used by third table only.
+	 *
+	 * @param tableName - The name of the table.
+	 * @param newRecord - The new entry to add.
+	 */
 	public addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
 		return push(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), {
 			content: { ...newRecord }

@@ -77,6 +77,12 @@ export class AddDialogComponent {
 		this.dialogComponentContainer?.clear();
 	}
 
+	/**
+	 * Open the add dialog and store the submit and search callbacks.
+	 *
+	 * @param submitCallback - The callback to call when the form is submitted.
+	 * @param searchCallback - The callback to call to search for a movie and return its cover image blob.
+	 */
 	protected openDialog(
 		submitCallback: (movie: MovieItemVO) => void,
 		searchCallback: (movie: MovieItemVO) => Blob
@@ -86,6 +92,12 @@ export class AddDialogComponent {
 		this.searchCallback = searchCallback;
 	}
 
+	/**
+	 * Search for the current movie using the form data, populate the movie
+	 * item VO, and fetch the cover image via the search callback.
+	 *
+	 * @param newMovieData - The form values from the add movie form.
+	 */
 	protected async searchCurrentMovie(newMovieData: NgForm['value']) {
 		this.isLoading = true;
 		try {
@@ -117,6 +129,12 @@ export class AddDialogComponent {
 		}
 	}
 
+	/**
+	 * Handle changes to the movie ID input field. Resets the name and year
+	 * fields if a value is entered.
+	 *
+	 * @param value - The new value of the ID input.
+	 */
 	protected onIdChange(value: string) {
 		if (value && value.trim() !== '') {
 			this.addMovieForm.controls['movieName']?.reset();
@@ -125,10 +143,18 @@ export class AddDialogComponent {
 		this.canSubmit = false;
 	}
 
+	/**
+	 * Handle changes to the movie name or year input fields by resetting
+	 * the submit state.
+	 */
 	protected onNameAndYearChange() {
 		this.canSubmit = false;
 	}
 
+	/**
+	 * Submit the add movie form, close the dialog, and call the submit
+	 * callback with the populated movie item VO.
+	 */
 	protected onSubmit() {
 		this.onDialogClosed();
 		this.movieItemVO.setIsFavourite(this.isFavourite);
@@ -136,6 +162,9 @@ export class AddDialogComponent {
 		this.movieItemVO = new MovieItemVO();
 	}
 
+	/**
+	 * Handle the dialog closed event by emitting the closed event.
+	 */
 	protected onDialogClosed() {
 		this.closed$.emit();
 		this.visible = false;

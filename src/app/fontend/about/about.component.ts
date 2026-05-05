@@ -47,7 +47,7 @@ export class AboutComponent {
 					subheader: 'Concordia University',
 					date: '2022.01 ~ 2023.12',
 					content:
-						'Pursued a full-time Master’s degree in Applied Computer Science, focusing on advanced software engineering concepts, system design, and applied research. Balanced academic responsibilities with part-time professional work at CRA, strengthening time management and practical problem-solving skills.',
+						'Pursued a full-time Master\'s degree in Applied Computer Science, focusing on advanced software engineering concepts, system design, and applied research. Balanced academic responsibilities with part-time professional work at CRA, strengthening time management and practical problem-solving skills.',
 					icon: 'auto_stories',
 					color: '#FF9800'
 				},
@@ -74,7 +74,7 @@ export class AboutComponent {
 					subheader: 'Carleton University',
 					date: '2014.09 ~ 2018.12',
 					content:
-						'Completed a full-time Bachelor’s degree in Computer Science, building a strong foundation in programming, algorithms, data structures, and software development principles through coursework, projects, and collaborative assignments.',
+						'Completed a full-time Bachelor\'s degree in Computer Science, building a strong foundation in programming, algorithms, data structures, and software development principles through coursework, projects, and collaborative assignments.',
 					icon: 'auto_stories',
 					color: '#FF9800'
 				}
@@ -82,6 +82,9 @@ export class AboutComponent {
 		}
 	}
 
+	/**
+	 * Update the isMobile flag when the window is resized.
+	 */
 	@HostListener('window:resize')
 	protected onResize() {
 		if (isPlatformBrowser(this.platformId)) {

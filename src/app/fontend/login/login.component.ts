@@ -58,11 +58,23 @@ export class LoginComponent {
 		LOG.info(this.classname, COMPONENT_DESTROY);
 	}
 
+	/**
+	 * Check whether the given form control is invalid after the form has been
+	 * submitted.
+	 *
+	 * @param controlName - The name of the form control to check.
+	 * @returns true if the control is invalid and the form has been submitted.
+	 */
 	isInvalid(controlName: string) {
 		const control = this.loginForm.get(controlName);
 		return control?.invalid && this.formSubmitted;
 	}
 
+	/**
+	 * Toggle between sign-in and sign-up mode with a fade animation.
+	 * Resets the form and updates validators for the email and
+	 * verification code fields depending on the selected mode.
+	 */
 	toggleMode() {
 		this.animating = 'out';
 
@@ -99,6 +111,11 @@ export class LoginComponent {
 		}, 280);
 	}
 
+	/**
+	 * Send a verification code to the email address entered in the form.
+	 * Prevents duplicate requests while a code is already being sent.
+	 * The code-sent indicator auto-clears after 4 seconds.
+	 */
 	async getVerificationCodeEmail() {
 		if (this.sendingCode) return;
 		this.sendingCode = true;
@@ -120,6 +137,11 @@ export class LoginComponent {
 		}
 	}
 
+	/**
+	 * Submit the login or sign-up form. Validates the form first; if invalid,
+	 * marks the form as submitted to show validation errors. Routes to the
+	 * appropriate auth service method based on the current mode.
+	 */
 	async onSubmit() {
 		this.formSubmitted = true;
 		if (!this.loginForm.valid) return;
@@ -147,6 +169,9 @@ export class LoginComponent {
 		}
 	}
 
+	/**
+	 * Initiate Google sign-in flow.
+	 */
 	googleLogin() {
 		this.authService.googleLogin();
 	}

@@ -102,8 +102,8 @@ export class AddDialogComponent {
 		this.isLoading = true;
 		try {
 			// Two input strategies: if movieName is provided, search by name+year;
-				// if id is provided instead, search by numeric Douban ID.
-				if (newMovieData.movieName) {
+			// if id is provided instead, search by numeric Douban ID.
+			if (newMovieData.movieName) {
 				this.movieItemVO.setMovieName(newMovieData.movieName);
 				this.movieItemVO.setMovieYear(Number(newMovieData.years));
 			} else if (newMovieData.id) {
@@ -117,11 +117,9 @@ export class AddDialogComponent {
 		} catch (error) {
 			let errorMessage = '';
 			// Each error type maps to a specific user-facing message;
-				// the dialog is shown in-place (not thrown) because this is a search flow.
-				if (error instanceof MovieIdNotFoundError) {
-				errorMessage = 'Movie ID not found\nPlease try again or enter manually';
-			} else if (error instanceof MovieAlreadyExistsError) {
-				errorMessage = 'Movie already exists';
+			// the dialog is shown in-place (not thrown) because this is a search flow.
+			if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
+				errorMessage = error.message;
 			} else {
 				errorMessage = 'Error while searching movie';
 				LOG.error(this.className, 'Error while searching new movie from add dialog', error as Error);

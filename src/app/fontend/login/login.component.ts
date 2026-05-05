@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ViewContainerRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
@@ -6,11 +6,14 @@ import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { IftaLabelModule } from 'primeng/iftalabel';
 import { AuthService } from '../../backend/authentication-service/auth.service';
+import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { Utilities } from '../../common/app.utilities';
 import { CN, COMPONENT_DESTROY } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
+import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
+import { WrongParametersError } from '../../common/error/wrong-parameters.error';
 
 @Component({
 	selector: 'login',
@@ -30,6 +33,8 @@ import { LOG } from '../../common/app.logs';
 })
 export class LoginComponent {
 	private readonly classname = 'LoginComponent';
+	@ViewChild('dialogContainer', { read: ViewContainerRef })
+	private dialogContainer!: ViewContainerRef;
 	loginForm: FormGroup;
 	formSubmitted = false;
 	isSignUp = false;
@@ -40,7 +45,8 @@ export class LoginComponent {
 
 	constructor(
 		private fb: FormBuilder,
-		private authService: AuthService
+		private authService: AuthService,
+		private dialogService: DialogService
 	) {
 		this.loginForm = this.fb.group({
 			username: ['', Validators.required],
@@ -150,27 +156,39 @@ export class LoginComponent {
 		this.formSubmitted = true;
 		if (!this.loginForm.valid) return;
 
-		if (this.isSignUp) {
-			await this.authService.signUp(
-				this.loginForm.value['email'],
-				this.loginForm.value['password'],
-				this.loginForm.value['username'],
-				Number(this.loginForm.value['verificationCode'])
-			);
-			await this.authService.signIn(
-				this.loginForm.value['username'],
-				this.loginForm.value['password']
-			);
-		} else {
-			// CN (China) users authenticate via CloudBase phone sign-in;
-			// other countries use Firebase email/password authentication.
-			if (Utilities.getCurrentCountry() === CN) {
-				await this.authService.signIn(this.loginForm.value['username'], this.loginForm.value['password']);
-			} else {
-				await this.authService.emailPasswordLogin(
+		try {
+			if (this.isSignUp) {
+				// Cloudbase sign up and automatically sign in after registration
+				await this.authService.signUp(
+					this.loginForm.value['email'],
+					this.loginForm.value['password'],
+					this.loginForm.value['username'],
+					Number(this.loginForm.value['verificationCode'])
+				);
+				await this.authService.signIn(
 					this.loginForm.value['username'],
 					this.loginForm.value['password']
 				);
+			} else {
+				if (Utilities.getCurrentCountry() === CN) {
+					// Cloudbase sign in
+					await this.authService.signIn(
+						this.loginForm.value['username'],
+						this.loginForm.value['password']
+					);
+				} else {
+					// Firebase sign in
+					await this.authService.emailPasswordLogin(
+						this.loginForm.value['username'],
+						this.loginForm.value['password']
+					);
+				}
+			}
+		} catch (error) {
+			if (error instanceof WrongCredentialsError || error instanceof WrongParametersError) {
+				this.dialogService.openDialog(this.dialogContainer, 'error', error.message);
+			} else {
+				this.dialogService.showUnexpectedError(this.dialogContainer);
 			}
 		}
 	}

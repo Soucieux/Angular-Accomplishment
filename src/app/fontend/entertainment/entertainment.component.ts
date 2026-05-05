@@ -40,6 +40,7 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
+import { MovieFetchFailedError } from '../../common/error/movie-fetch-failed-error';
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -302,16 +303,20 @@ export class EntertainmentComponent {
 		let movieData = null;
 		let movieDataWebpage = null;
 
-		// Try the third-party API first; if it returns nothing (rate-limited or down),
-		// fall back to parsing the Douban webpage HTML directly. The webpage parse
-		// is more brittle but works when the API is unavailable.
-		movieData = await firstValueFrom(this.doubanService.searchMovieByThirdPartyApi(movieId));
-		if (!movieData) {
-			movieDataWebpage = await firstValueFrom(this.doubanService.searchMovieByWebpage(movieId));
-			return { movieWebpageAsData: movieDataWebpage, thirdPartyApi: false };
+		try {
+			// Try the third-party API first; if it returns nothing (rate-limited or down),
+			// fall back to parsing the Douban webpage HTML directly. The webpage parse
+			// is more brittle but works when the API is unavailable.
+			movieData = await firstValueFrom(this.doubanService.searchMovieByThirdPartyApi(movieId));
+			if (!movieData) {
+				movieDataWebpage = await firstValueFrom(this.doubanService.searchMovieByWebpage(movieId));
+				return { movieWebpageAsData: movieDataWebpage, thirdPartyApi: false };
+			}
+			movieData = JSON.parse(movieData);
+			return { movieWebpageAsData: movieData, thirdPartyApi: true };
+		} catch (error) {
+			throw new MovieFetchFailedError(movieId);
 		}
-		movieData = JSON.parse(movieData);
-		return { movieWebpageAsData: movieData, thirdPartyApi: true };
 	}
 
 	/**
@@ -432,6 +437,9 @@ export class EntertainmentComponent {
 				await this.getMovieCoverImageByLink(movieCoverImageLink, movieItemVO);
 			}
 		} catch (error) {
+			if (error instanceof MovieFetchFailedError) {
+				this.dialogService.openDialog(this.dialogComponentContainer, 'error', error.message);
+			}
 			LOG.error(
 				this.className,
 				`Error while retrieving movie webpage for movie ${movieItemVO.getMovieName()}`,

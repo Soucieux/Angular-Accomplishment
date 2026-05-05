@@ -351,7 +351,6 @@ export class ReminderComponent {
 				this.openErrorDialog();
 			} else {
 				this.openUnexpectedErrorDialog();
-				LOG.error(this.className, 'Unexpected error occurred', error as Error);
 			}
 		}
 	}

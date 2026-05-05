@@ -124,8 +124,8 @@ export class PatchComponent {
 						// and should be ignored/overridden.
 						this._isDataUpdate = true;
 					});
-				}),
-				);
+				})
+			);
 		}
 
 		this.severity = [
@@ -215,7 +215,9 @@ export class PatchComponent {
 		// the PrimeNG select object via ['severity'] to get the raw string value.
 		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
-		this.databaseService.addNewRecordToPatchNotes(this.newRecord).catch(() => this.openUnexpectedErrorDialog());
+		this.databaseService
+			.addNewRecordToPatchNotes(this.newRecord)
+			.catch(() => this.openUnexpectedErrorDialog());
 		this.newRecord = {
 			key: '',
 			component: '',
@@ -364,9 +366,9 @@ export class PatchComponent {
 	 * @param openid - The owner ID of the row to check.
 	 * @returns SUCCESS if permitted, FAILURE otherwise (after showing an error dialog).
 	 */
-// Admins bypass all permission checks; for others, compare the entry's _openid
-		// against the current user's ID. Permission denied shows the error dialog directly.
-			private checkPermission(openid: string) {
+	// Admins bypass all permission checks; for others, compare the entry's _openid
+	// against the current user's ID. Permission denied shows the error dialog directly.
+	private checkPermission(openid: string) {
 		if (CloudbaseService.userHasAllRights()) return;
 		try {
 			if (openid !== CloudbaseService.getUseId()) throw new Error(ERROR_PERMISSION_DENIED);

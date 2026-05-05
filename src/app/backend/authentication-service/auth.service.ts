@@ -14,6 +14,8 @@ import { DatabaseService } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
 import { CN } from '../../common/app.constant';
+import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
+import { WrongParametersError } from '../../common/error/wrong-parameters.error';
 
 @Injectable({
 	providedIn: 'root'
@@ -89,6 +91,10 @@ export class AuthService {
 
 	//////////////////////////////////// Below is for cloudbase /////////////////////////////////
 
+	async signInAnonymously() {
+		await this.cloudbaseAuth.signInAnonymously();
+	}
+
 	async getVerificationCodeEmail(email: string) {
 		this.verification = await this.cloudbaseAuth.getVerification({ email });
 	}
@@ -99,28 +105,31 @@ export class AuthService {
 		const verificationTokenRes = await this.cloudbaseAuth.verify({
 			verification_id: this.verification?.verification_id,
 			verification_code: verificationCode
-        });
-        
+		});
+
 		await this.cloudbaseAuth.signUp({
 			email: email,
 			verification_code: verificationCode,
-            verification_token: verificationTokenRes.verification_token,
-            name: username,
+			verification_token: verificationTokenRes.verification_token,
+			name: username,
 			password: password
 		});
 	}
 
 	async signIn(username: string, password: string) {
-		try {
-			await this.cloudbaseAuth.signInWithPassword({
-				username: username,
-				password: password
-			});
-			this.cloudbaseGetCurrentUser();
-			this.router.navigate(['/']);
-		} catch (error: any) {
-			LOG.error(this.className, 'Error when signing in with username and password with Cloudbase');
+		const { _, error } = await this.cloudbaseAuth.signInWithPassword({
+			username: username,
+			password: password
+		});
+
+		if (error && error.category === 'INVALID_CREDENTIALS') {
+			throw new WrongCredentialsError();
+		} else if (error) {
+			throw new WrongParametersError();
 		}
+
+		this.cloudbaseGetCurrentUser();
+		this.router.navigate(['/']);
 	}
 
 	cloudbaseGetCurrentUser(): Observable<any> {
@@ -147,12 +156,12 @@ export class AuthService {
 		return this.cloudbaseUserSubject.asObservable();
 	}
 
-	async signOut() {
+	async signOut(isAnonymous: boolean) {
 		await this.cloudbaseAuth
 			.signOut()
 			.then(() => {
 				this.cloudbaseUserSubject.next(null);
-				this.router.navigate(['/']);
+				if (!isAnonymous) this.router.navigate(['/']);
 				this.utilities.setIsUserAlive(false);
 				CloudbaseService.setUseId('');
 			})

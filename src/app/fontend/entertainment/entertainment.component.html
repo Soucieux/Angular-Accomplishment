@@ -72,10 +72,6 @@
 					[ngStyle]="{
 						backgroundImage: 'url(' + movie.getMovieCoverImageDownloadableLink() + ')'
 					}">
-					<div class="text-on-image">
-						<span class="description">简介：{{ movie.getDescription() }} </span>
-						<span>演员：{{ movie.getActors() }}</span>
-					</div>
 				</div>
 				<div class="individual-item-content">
 					<div class="title-rate-row">
@@ -92,23 +88,33 @@
 							<span class="rate">{{ NO_RATE }}</span>
 						}
 					</div>
-					<span class="text"
-						>类型:
-						@if (editedItems.has(movie.getMovieKey())) {
-							<p-select
-								[options]="genres"
-								optionLabel="genre"
-								optionValue="genre"
-								[appendTo]="'body'"
-								class="dropdown"
-								panelStyleClass="dropdown-panel"
-								[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
-						} @else {
-							{{ movie.getMovieGenre() }}
+					<div class="info-default">
+						<span class="text"
+							>类型:
+							@if (editedItems.has(movie.getMovieKey())) {
+								<p-select
+									[options]="genres"
+									optionLabel="genre"
+									optionValue="genre"
+									[appendTo]="'body'"
+									class="dropdown"
+									panelStyleClass="dropdown-panel"
+									[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
+							} @else {
+								{{ movie.getMovieGenre() }}
+							}
+						</span>
+						<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
+						<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
+					</div>
+					<div class="info-hover">
+						@if (movie.getDescription()) {
+							<p class="hover-desc">简介：{{ movie.getDescription() }}</p>
 						}
-					</span>
-					<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
-					<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
+						@if (movie.getActors()) {
+							<p class="hover-actors">演员：{{ movie.getActors() }}</p>
+						}
+					</div>
 					<a
 						class="douban-button"
 						severity="danger"

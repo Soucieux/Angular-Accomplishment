@@ -4,6 +4,11 @@ import { CanMatchFn, Router } from '@angular/router';
 import { Utilities } from '../../common/app.utilities';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 
+/**
+ * Route guard that prevents authenticated users from accessing the login page.
+ * If the user is already signed in (has a CloudBase user ID), redirects to
+ * the home page. Unauthenticated users are allowed through.
+ */
 export const loginGuard: CanMatchFn = () => {
 	const platformId = inject(PLATFORM_ID);
 

@@ -38,6 +38,14 @@ export class AuthService {
 		}
 	}
 
+	//////////////////////////////////// Below is for firebase /////////////////////////////////
+
+	/**
+	 * Get the current Firebase user as an observable. Wraps onAuthStateChanged
+	 * so subscribers receive continuous user updates (including null on sign-out).
+	 *
+	 * @returns An observable that emits the current Firebase user or null.
+	 */
 	firebaseGetCurrentUser(): Observable<any> {
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
 		return new Observable((observer) => {
@@ -53,6 +61,12 @@ export class AuthService {
 		});
 	}
 
+	/**
+	 * Sign in with email and password via Firebase authentication.
+	 *
+	 * @param email - The user's email address.
+	 * @param password - The user's password.
+	 */
 	async emailPasswordLogin(email: string, password: string) {
 		try {
 			await signInWithEmailAndPassword(this.firebaseAuth, email, password);
@@ -63,6 +77,11 @@ export class AuthService {
 		}
 	}
 
+	/**
+	 * Initiate Google sign-in via Firebase popup. After the popup completes,
+	 * listens for the auth state change to confirm the user is signed in
+	 * before navigating to the home page.
+	 */
 	googleLogin() {
 		// CurrentUser in this.auth is still null after signInWithPopup completes
 		// As the credentials are being returned after that and then firebase starts initializing
@@ -79,6 +98,9 @@ export class AuthService {
 			.catch(() => LOG.error(this.className, 'ERROR when signing in through Google'));
 	}
 
+	/**
+	 * Sign out the current Firebase user and navigate to the home page.
+	 */
 	logout() {
 		// CurrentUser in this.auth gets removed immediately after signOut
 		signOut(this.firebaseAuth)
@@ -91,14 +113,33 @@ export class AuthService {
 
 	//////////////////////////////////// Below is for cloudbase /////////////////////////////////
 
+	/**
+	 * Sign in anonymously via CloudBase. Grants read-only access to public
+	 * database collections without requiring a registered account.
+	 */
 	async signInAnonymously() {
 		await this.cloudbaseAuth.signInAnonymously();
 	}
 
+	/**
+	 * Request a verification code to be sent to the given email address.
+	 * The code is required when signing up a new CloudBase account.
+	 *
+	 * @param email - The email address to send the verification code to.
+	 */
 	async getVerificationCodeEmail(email: string) {
 		this.verification = await this.cloudbaseAuth.getVerification({ email });
 	}
 
+	/**
+	 * Create a new CloudBase account. Verifies the email code first,
+	 * then calls signUp with the verification token and user details.
+	 *
+	 * @param email - The user's email address.
+	 * @param password - The chosen password.
+	 * @param username - The desired username.
+	 * @param verificationCode - The numeric code sent to the email.
+	 */
 	async signUp(email: string, password: string, username: string, verificationCode: number) {
 		// Two-step flow: first get the verification token from the code,
 		// then call signUp with the token to create the account.
@@ -116,6 +157,16 @@ export class AuthService {
 		});
 	}
 
+	/**
+	 * Sign in with username and password via CloudBase. If the credentials
+	 * are invalid, throws WrongCredentialsError. On success, fetches the
+	 * current user profile and navigates to the home page.
+	 *
+	 * @param username - The user's username.
+	 * @param password - The user's password.
+	 * @throws WrongCredentialsError if the username or password is incorrect.
+	 * @throws WrongParametersError if a different authentication error occurs.
+	 */
 	async signIn(username: string, password: string) {
 		const { _, error } = await this.cloudbaseAuth.signInWithPassword({
 			username: username,
@@ -132,6 +183,12 @@ export class AuthService {
 		this.router.navigate(['/']);
 	}
 
+	/**
+	 * Get the current CloudBase user as an observable. Emits null for
+	 * anonymous users (no username in metadata) and errors.
+	 *
+	 * @returns An observable that emits the current CloudBase user or null.
+	 */
 	cloudbaseGetCurrentUser(): Observable<any> {
 		this.cloudbaseAuth
 			.getUser()
@@ -156,6 +213,12 @@ export class AuthService {
 		return this.cloudbaseUserSubject.asObservable();
 	}
 
+	/**
+	 * Sign out the current CloudBase user. Clears user state and navigates
+	 * to the home page unless the sign-out is for an anonymous session.
+	 *
+	 * @param isAnonymous - If true, skips navigation (anonymous sign-out on page leave).
+	 */
 	async signOut(isAnonymous: boolean) {
 		await this.cloudbaseAuth
 			.signOut()

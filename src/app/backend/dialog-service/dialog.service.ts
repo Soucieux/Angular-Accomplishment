@@ -145,10 +145,20 @@ export class DialogService {
 		}
 	}
 
+	/**
+	 * Show a permission-denied error dialog.
+	 *
+	 * @param container - The ViewContainerRef to attach the dialog to.
+	 */
 	showPermissionError(container: ViewContainerRef) {
 		this.openDialog(container, 'error', 'User does not have permission');
 	}
 
+	/**
+	 * Show a generic unexpected-error dialog.
+	 *
+	 * @param container - The ViewContainerRef to attach the dialog to.
+	 */
 	showUnexpectedError(container: ViewContainerRef) {
 		this.openDialog(container, 'error', 'Unexpected error occurred');
 	}

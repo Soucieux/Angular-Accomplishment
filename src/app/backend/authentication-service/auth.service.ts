@@ -103,7 +103,7 @@ export class AuthService {
 			email: email,
 			verification_code: verificationCode,
             verification_token: verificationTokenRes.verification_token,
-            name: name,
+            name: username,
 			password: password
 		});
 	}
@@ -122,16 +122,24 @@ export class AuthService {
 	}
 
 	cloudbaseGetCurrentUser(): Observable<any> {
-		this.cloudbaseAuth.getUser().then((response: { data: { user: any } }) => {
-			const { data } = response;
+		this.cloudbaseAuth
+			.getUser()
+			.then((response: { data: { user: any } }) => {
+				const { data } = response;
 
-			if (data.user) {
-				this.utilities.setIsUserAlive(true);
-				CloudbaseService.setUseId(data.user.id);
-				CloudbaseService.setUserRole(data.user.user_metadata?.name);
-			}
-			this.cloudbaseUserSubject.next(data.user);
-		});
+				if (data.user?.user_metadata?.username) {
+					this.utilities.setIsUserAlive(true);
+					CloudbaseService.setUseId(data.user.id);
+					CloudbaseService.setUserRole(data.user.user_metadata?.name);
+					CloudbaseService.setUserName(data.user.user_metadata?.username);
+					this.cloudbaseUserSubject.next(data.user);
+				} else {
+					this.cloudbaseUserSubject.next(null);
+				}
+			})
+			.catch(() => {
+				this.cloudbaseUserSubject.next(null);
+			});
 		return this.cloudbaseUserSubject.asObservable();
 	}
 

@@ -37,4 +37,7 @@ export abstract class DatabaseService {
 	abstract updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void>;
 	abstract removeRecordFromReminderTable(tableName: string, key: string): Promise<void>;
 	abstract addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void>;
+	abstract getQuotes(): Observable<any[]>;
+	abstract addQuote(text: string, author: string, timestamp: string): Promise<void>;
+	abstract removeQuote(key: string): Promise<void>;
 }

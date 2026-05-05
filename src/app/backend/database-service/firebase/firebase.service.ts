@@ -10,6 +10,7 @@ import {
 	SEARCH,
 	DATABASE_HISTORY,
 	DATABASE_PATCH_NOTES,
+	DATABASE_QUOTES,
 	DATABASE_REMINDER
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
@@ -643,6 +644,35 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName The table name
 	 * @param newRecord The new entry
 	 */
+	public getQuotes(): Observable<any[]> {
+		return runInInjectionContext(this.ei, () =>
+			list(dbRef(this.db, DATABASE_QUOTES)).pipe(
+				map((snapshots: any[]) =>
+					snapshots
+						.map((snapshot: any) => ({
+							key: snapshot.snapshot.key,
+							...snapshot.snapshot.val()
+						}))
+						.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp))
+				)
+			)
+		);
+	}
+
+	public addQuote(text: string, author: string, timestamp: string): Promise<void> {
+		return push(dbRef(this.db, DATABASE_QUOTES), {
+			text,
+			author,
+			timestamp
+		}).then(() => {
+			LOG.info(this.className, 'New quote has been added');
+		});
+	}
+
+	public removeQuote(key: string): Promise<void> {
+		return this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+	}
+
 	public addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
 		return push(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), {
 			content: { ...newRecord }

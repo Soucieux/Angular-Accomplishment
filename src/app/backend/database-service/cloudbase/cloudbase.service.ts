@@ -10,6 +10,7 @@ import {
 	DATABASE_HISTORY,
 	DATABASE_MOVIES,
 	DATABASE_PATCH_NOTES,
+	DATABASE_QUOTES,
 	DATABASE_REMINDER_FIRST,
 	DATABASE_REMINDER_SECOND,
 	DATABASE_REMINDER_THIRD,
@@ -32,6 +33,7 @@ export class CloudbaseService extends DatabaseService {
 	private statId: any;
 	private static userId: string;
 	private static userRole: string;
+	private static userName: string;
 	private _!: any;
 	searchStreamService: any;
 	private tempUrlCache = new Map<string, string>();
@@ -46,12 +48,21 @@ export class CloudbaseService extends DatabaseService {
 			this.database = this.cloudbase.database();
 			this._ = this.database.command;
 
+			this.cloudbase
+				.auth()
+				.anonymousAuthProvider()
+				.signIn()
+				.catch(() => {});
+
 			this.database
 				.collection(DATABASE_STATISTICS)
 				.limit(1)
 				.get()
 				.then((response: any) => {
-					return (this.statId = response.data[0]._id);
+					return (this.statId = response.data[0]?._id);
+				})
+				.catch(() => {
+					// No valid credentials yet — query will succeed once user logs in
 				});
 
 			// this.tempHelpFunction();
@@ -72,6 +83,14 @@ export class CloudbaseService extends DatabaseService {
 
 	public static setUserRole(userRole: string) {
 		this.userRole = userRole;
+	}
+    
+	public static setUserName(userName: string) {
+		this.userName = userName;
+	}
+
+	public static getUserName() {
+		return this.userName;
 	}
 
 	public static userHasAllRights() {
@@ -883,6 +902,42 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param tableName table name
 	 */
+	getQuotes(): Observable<any[]> {
+		return new Observable((observer) => {
+			const watcher = this.database.collection(DATABASE_QUOTES).watch({
+				onChange: (snapshot: any) => {
+					const quotes = snapshot.docs.map((doc: any) => {
+						const { _id, ...rest } = doc;
+						return { key: _id, ...rest };
+					});
+					quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
+					observer.next(quotes);
+				},
+				onError: (err: any) => {
+					LOG.error(this.className, 'Error while retrieving quotes', err);
+					observer.error(err);
+				}
+			});
+			return () => watcher.close();
+		});
+	}
+
+	async addQuote(text: string, author: string, timestamp: string): Promise<void> {
+		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
+		const result = await this.database.collection(DATABASE_QUOTES).add({
+			...userId,
+			text,
+			author,
+			timestamp
+		});
+		if (result.code) throw new Error(result.message);
+		LOG.info(this.className, 'New quote has been added');
+	}
+
+	async removeQuote(key: string): Promise<void> {
+		return this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+	}
+
 	private convertTableNameToCollectionName(tableName: string): string {
 		switch (tableName) {
 			case FIRST_TABLE:

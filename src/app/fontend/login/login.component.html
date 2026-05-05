@@ -89,7 +89,8 @@
 							<p-button
 								(click)="getVerificationCodeEmail()"
 								severity="secondary"
-								[disabled]="loginForm.get('email')?.value === ''">
+								[disabled]="loginForm.get('email')?.value === '' || sendingCode"
+								[loading]="sendingCode">
 								<span pButtonLabel>Get Code</span>
 							</p-button>
 						</p-inputgroup-addon>

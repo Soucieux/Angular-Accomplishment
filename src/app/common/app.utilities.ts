@@ -49,6 +49,25 @@ export class Utilities {
 		return formattedDate;
 	}
 
+	public static getRelativeTime(timestamp: string): string {
+		if (!timestamp) return '';
+		const [datePart, timePart] = timestamp.split(' ');
+		const [year, month, day] = datePart.split('.');
+		const [hours, minutes, seconds] = (timePart || '00:00:00').split(':');
+		const date = new Date(+year, +month - 1, +day, +hours, +minutes, +seconds);
+		const now = new Date();
+		const diffSecs = Math.floor((now.getTime() - date.getTime()) / 1000);
+		const diffMins = Math.floor(diffSecs / 60);
+		const diffHours = Math.floor(diffMins / 60);
+		const diffDays = Math.floor(diffHours / 24);
+
+		if (diffSecs < 60) return 'just now';
+		if (diffMins < 60) return `${diffMins}m ago`;
+		if (diffHours < 24) return `${diffHours}h ago`;
+		if (diffDays < 7) return `${diffDays}d ago`;
+		return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+	}
+
 	/**
 	 * Capitalize the first letter of the string on each word
 	 *

@@ -35,6 +35,7 @@ export class LoginComponent {
 	isSignUp = false;
 	animating: 'out' | 'in' | '' = '';
 	codeSent = false;
+	sendingCode = false;
 	private codeSentTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
@@ -50,12 +51,16 @@ export class LoginComponent {
 	}
 
 	ngOnDestroy() {
+		if (this.codeSentTimeout) {
+			clearTimeout(this.codeSentTimeout);
+			this.codeSentTimeout = null;
+		}
 		LOG.info(this.classname, COMPONENT_DESTROY);
 	}
 
 	isInvalid(controlName: string) {
 		const control = this.loginForm.get(controlName);
-		return control?.invalid && (control.touched || this.formSubmitted);
+		return control?.invalid && this.formSubmitted;
 	}
 
 	toggleMode() {
@@ -95,15 +100,24 @@ export class LoginComponent {
 	}
 
 	async getVerificationCodeEmail() {
-		await this.authService.getVerificationCodeEmail(this.loginForm.value['email']);
+		if (this.sendingCode) return;
+		this.sendingCode = true;
 		this.codeSent = true;
-		if (this.codeSentTimeout) {
-			clearTimeout(this.codeSentTimeout);
-		}
-		this.codeSentTimeout = setTimeout(() => {
+		try {
+			await this.authService.getVerificationCodeEmail(this.loginForm.value['email']);
+			if (this.codeSentTimeout) {
+				clearTimeout(this.codeSentTimeout);
+			}
+			this.codeSentTimeout = setTimeout(() => {
+				this.codeSent = false;
+				this.codeSentTimeout = null;
+			}, 4000);
+		} catch (error) {
 			this.codeSent = false;
-			this.codeSentTimeout = null;
-		}, 4000);
+			LOG.error(this.classname, 'Failed to send verification code', error as Error);
+		} finally {
+			this.sendingCode = false;
+		}
 	}
 
 	async onSubmit() {

@@ -101,6 +101,11 @@
 /* ── Verification code ── */
 .code-row {
 	margin-bottom: 15px;
+	gap: 0;
+}
+
+.code-row .p-message {
+	margin-top: 4px;
 }
 
 ::ng-deep .code-row .p-inputgroup .p-inputtext {
@@ -132,13 +137,8 @@
 	background: rgba(255, 255, 255, 0.85) !important;
 }
 
-::ng-deep .code-row .p-inputgroup .p-inputtext.ng-invalid.ng-dirty,
-::ng-deep .code-row .p-inputgroup .p-inputtext.ng-invalid.ng-touched {
-	border-color: rgba(239, 68, 68, 0.7) !important;
-}
-
-::ng-deep .code-row .p-message {
-	margin-top: 0;
+::ng-deep .field-container .p-message {
+	margin-top: 4px;
 }
 
 .code-sent-row {

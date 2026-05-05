@@ -23,6 +23,7 @@ export const DATABASE_REMINDER_FIRST = 'reminder_table_first';
 export const DATABASE_REMINDER_SECOND = 'reminder_table_second';
 export const DATABASE_REMINDER_THIRD = 'reminder_table_third';
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';
+export const DATABASE_QUOTES = 'quotes';
 export const CN = 'CN';
 export const SEARCH = 'search';
 export const SUCCESS = 'success';

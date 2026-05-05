@@ -1,0 +1,441 @@
+:host {
+	font-family: 'nlf';
+	display: block;
+	padding: 40px 24px 80px;
+}
+
+.container {
+	max-width: 1100px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* ── Header ── */
+.page-header {
+	text-align: center;
+	margin-bottom: 40px;
+}
+
+.page-title {
+	font-size: 48px;
+	font-weight: 400;
+	letter-spacing: 1px;
+	margin: 0 0 8px;
+	background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.88) 100%);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.page-subtitle {
+	color: rgba(255, 255, 255, 0.72);
+	font-size: 16px;
+	margin: 0;
+	font-weight: 400;
+}
+
+.header-ornament {
+	width: 60px;
+	height: 2px;
+	margin: 18px auto 0;
+	background: linear-gradient(90deg, #d53369, #daae51);
+	border-radius: 1px;
+	opacity: 0.6;
+}
+
+/* ── Submit card ── */
+.submit-card {
+	width: 100%;
+	max-width: 620px;
+	background: rgba(255, 255, 255, 0.06);
+	backdrop-filter: blur(28px);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 20px;
+	padding: 24px;
+	margin-bottom: 44px;
+	transition:
+		border-color 0.3s,
+		box-shadow 0.3s;
+}
+
+.submit-card:focus-within {
+	border-color: rgba(213, 51, 105, 0.4);
+	box-shadow: 0 0 0 4px rgba(213, 51, 105, 0.08);
+}
+
+.quote-input {
+	width: 100%;
+	resize: none;
+}
+
+::ng-deep .submit-card .p-inputtextarea {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	color: rgba(255, 255, 255, 0.92) !important;
+	font-size: 16px !important;
+	font-family: 'nlf' !important;
+	padding: 0 !important;
+}
+
+::ng-deep .submit-card .p-inputtextarea::placeholder {
+	color: rgba(255, 255, 255, 0.35);
+}
+
+::ng-deep .submit-card .p-inputtextarea:focus {
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.name-row {
+	margin-top: 14px;
+}
+
+.name-input {
+	width: 100%;
+}
+
+::ng-deep .name-row .p-inputtext {
+	background: rgba(255, 255, 255, 0.1) !important;
+	border: 1px solid rgba(255, 255, 255, 0.15) !important;
+	border-radius: 12px !important;
+	color: rgba(255, 255, 255, 0.85) !important;
+	font-size: 14px !important;
+	font-family: 'nlf' !important;
+	padding: 10px 14px !important;
+	box-shadow: none !important;
+	transition: border-color 0.2s;
+}
+
+::ng-deep .name-row .p-inputtext::placeholder {
+	color: rgba(255, 255, 255, 0.35);
+}
+
+::ng-deep .name-row .p-inputtext:focus {
+	border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.submit-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 16px;
+}
+
+.char-count {
+	color: rgba(255, 255, 255, 0.6);
+	font-size: 13px;
+	transition: color 0.2s;
+}
+
+.char-count.over-limit {
+	color: #ef5350;
+	font-weight: 600;
+}
+
+.char-warning {
+	color: #ef5350;
+	font-size: 13px;
+	font-weight: 500;
+	margin: 10px 0 0 0;
+}
+
+/* ── Submit button ── */
+::ng-deep .submit-btn.p-button {
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
+	border: none !important;
+	border-radius: 12px !important;
+	color: white !important;
+	font-weight: 600 !important;
+	font-size: 14px !important;
+	padding: 8px 24px !important;
+	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.3);
+	transition:
+		opacity 0.2s,
+		box-shadow 0.2s;
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+}
+
+::ng-deep .submit-btn.p-button:not(:disabled):hover {
+	opacity: 0.92;
+	box-shadow: 0 6px 20px rgba(213, 51, 105, 0.4);
+}
+
+::ng-deep .submit-btn.p-button:not(:disabled):active {
+	opacity: 0.85;
+	box-shadow: 0 2px 8px rgba(213, 51, 105, 0.2);
+	transform: scale(0.98);
+}
+
+::ng-deep .submit-btn.p-button:disabled {
+	opacity: 0.5;
+	box-shadow: none !important;
+}
+
+::ng-deep .submit-btn .p-button-loading-icon {
+	font-size: 15px !important;
+	line-height: 1 !important;
+}
+
+::ng-deep .submit-btn .p-button-label {
+	line-height: 1 !important;
+}
+
+/* ── Skeleton grid ── */
+.skeleton-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 20px;
+	width: 100%;
+}
+
+.skeleton-card-wrapper {
+	border-radius: 16px;
+	overflow: hidden;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.skeleton-card-wrapper.tilt-left {
+	transform: rotate(-0.6deg);
+}
+
+.skeleton-card-wrapper.tilt-right {
+	transform: rotate(0.6deg);
+}
+
+::ng-deep .skeleton-card-wrapper .p-skeleton {
+	background: rgba(255, 255, 255, 0.06) !important;
+	border-radius: 16px !important;
+}
+
+/* ── Empty state ── */
+.empty-state {
+	text-align: center;
+	padding: 80px 20px;
+}
+
+.empty-icon {
+	font-size: 64px;
+	color: rgba(255, 255, 255, 0.3);
+	display: block;
+	margin-bottom: 16px;
+	animation: iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+	0%, 100% { opacity: 0.25; transform: scale(1); }
+	50% { opacity: 0.45; transform: scale(1.06); }
+}
+
+.empty-text {
+	color: rgba(255, 255, 255, 0.65);
+	font-size: 16px;
+	margin: 0;
+}
+
+/* ── Quote grid ── */
+.quote-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 20px;
+	width: 100%;
+}
+
+/* ── Staggered card entrance ── */
+.card-enter {
+	animation: cardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cardEnter {
+	from {
+		opacity: 0;
+		transform: translateY(24px) scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* ── Quote card ── */
+.quote-card {
+	border-radius: 16px;
+	position: relative;
+	transition:
+		transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+		box-shadow 0.25s ease,
+		filter 0.25s ease;
+	cursor: default;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+	overflow: hidden;
+}
+
+.quote-card::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.04);
+	border-radius: inherit;
+	pointer-events: none;
+}
+
+.quote-card::after {
+	content: '';
+	position: absolute;
+	inset: -1px;
+	border-radius: inherit;
+	opacity: 0;
+	transition: opacity 0.25s ease;
+	pointer-events: none;
+	box-shadow: 0 0 24px 4px rgba(255, 255, 255, 0.12);
+}
+
+.quote-card:hover {
+	transform: translateY(-6px) scale(1.02);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.quote-card:hover::after {
+	opacity: 1;
+}
+
+.quote-card.tilt-left {
+	transform: rotate(-0.6deg);
+}
+
+.quote-card.tilt-left:hover {
+	transform: rotate(-0.6deg) translateY(-6px) scale(1.02);
+}
+
+.quote-card.tilt-right {
+	transform: rotate(0.6deg);
+}
+
+.quote-card.tilt-right:hover {
+	transform: rotate(0.6deg) translateY(-6px) scale(1.02);
+}
+
+.card-inner {
+	padding: 24px;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	min-height: 140px;
+	position: relative;
+	z-index: 1;
+}
+
+/* ── Quote metadata ── */
+.quote-meta {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 16px;
+}
+
+.quote-author {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.author-avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.08);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	font-weight: 700;
+	color: rgba(0, 0, 0, 0.55);
+}
+
+.author-name {
+	font-size: 13px;
+	font-weight: 600;
+	color: rgba(0, 0, 0, 0.65);
+	letter-spacing: 0.3px;
+}
+
+.quote-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+
+.quote-time {
+	font-size: 11px;
+	color: rgba(0, 0, 0, 0.45);
+	white-space: nowrap;
+}
+
+::ng-deep .delete-btn.p-button.p-button-text {
+	color: rgba(0, 0, 0, 0.35) !important;
+	width: 28px !important;
+	height: 28px !important;
+	padding: 0 !important;
+}
+
+::ng-deep .delete-btn.p-button.p-button-text:hover {
+	color: rgba(0, 0, 0, 0.65) !important;
+	background: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ── Quote text ── */
+.quote-text {
+	font-size: 17px;
+	line-height: 1.6;
+	color: rgba(0, 0, 0, 0.78);
+	margin: 0;
+	font-weight: 500;
+	letter-spacing: 0.2px;
+	word-break: break-word;
+	flex: 1;
+	display: flex;
+	align-items: center;
+}
+
+/* ── Mobile ── */
+@media (max-width: 840px) {
+	:host {
+		padding: 24px 16px 60px;
+	}
+
+	.page-title {
+		font-size: 32px;
+		letter-spacing: 4px;
+	}
+
+	.submit-card {
+		padding: 18px;
+	}
+
+	.skeleton-grid,
+	.quote-grid {
+		grid-template-columns: 1fr;
+		gap: 16px;
+	}
+
+	.skeleton-card-wrapper.tilt-left,
+	.skeleton-card-wrapper.tilt-right {
+		transform: none;
+	}
+
+	.quote-card.tilt-left,
+	.quote-card.tilt-right {
+		transform: none;
+	}
+
+	.quote-card.tilt-left:hover,
+	.quote-card.tilt-right:hover {
+		transform: translateY(-4px) scale(1.01);
+	}
+}

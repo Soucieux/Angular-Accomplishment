@@ -19,6 +19,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
 import { COMPONENT_DESTROY } from '../../common/app.constant';
@@ -50,6 +51,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	newQuoteText = '';
 	authorName = '';
 	submitting = false;
+	private signedInAnonymously = false;
 
 	gradients = [
 		{ from: '#fdf2f4', to: '#fce4ec' },
@@ -66,19 +68,34 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
+		private authService: AuthService,
 		private utilities: Utilities,
 		private cdr: ChangeDetectorRef
 	) {}
 
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
-			this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
+			if (!CloudbaseService.getUseId()) {
+				// Wait for anonymous sign-in before starting the watcher —
+				// the CloudBase WebSocket needs valid credentials to connect.
+				this.authService.signInAnonymously().then(() => {
+					this.signedInAnonymously = true;
+					this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
+					this.cdr.detectChanges();
+				});
+			} else {
+				this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
+			}
 		} else {
 			this.quotes$ = of([]);
 		}
 	}
 
 	ngOnDestroy() {
+		if (this.signedInAnonymously) {
+			this.authService.signOut(true);
+		}
+		this.signedInAnonymously = false;
 		LOG.info(this.classname, COMPONENT_DESTROY);
 	}
 
@@ -153,9 +170,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Submit a new quote to the database. Uses the signed-in user's name if
-	 * available, otherwise falls back to the manually entered author name or
-	 * 'Anonymous'.
+	 * Submit a new quote to the database. Uses the signed-in user's name if available
+	 * otherwise falls back to the manually entered author name or'Anonymous'.
 	 */
 	async submitQuote() {
 		const text = this.newQuoteText.trim();

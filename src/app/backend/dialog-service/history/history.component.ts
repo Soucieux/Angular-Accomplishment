@@ -80,10 +80,8 @@ export class HistoryDialogComponent {
 					await this.revertDataCallback?.(movieToRestore);
 				} catch (error) {
 					let errorMessage = '';
-					if (error instanceof MovieIdNotFoundError) {
-						errorMessage = 'Movie ID not found\nPlease try again or enter manually';
-					} else if (error instanceof MovieAlreadyExistsError) {
-						errorMessage = 'Movie already exists';
+					if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
+						errorMessage = error.message;
 					} else {
 						errorMessage = 'Error while searching movie';
 						LOG.error(

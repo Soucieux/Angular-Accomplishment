@@ -142,6 +142,11 @@ export class ReminderComponent {
 		}
 	}
 
+	/**
+	 * Update the charged/unCharged state of first-table cells based on
+	 * the current month direction and the current day of the month.
+	 * Persists the change to the database when called after initialization.
+	 */
 	protected async updateChargedCells() {
 		if (this.chargedCellsInitialized) {
 			const returnCode = this.checkPermission(FIRST_TABLE, '0');
@@ -186,7 +191,13 @@ export class ReminderComponent {
 	}
 
 	///////////////////////////////////FIRST TABLE///////////////////////////////////
-	onNumberChange(event: KeyboardEvent) {
+	/**
+	 * Prevent non-numeric input in first-table number fields. Allows
+	 * navigation and deletion keys to pass through.
+	 *
+	 * @param event - The keyboard event to validate.
+	 */
+    onNumberChange(event: KeyboardEvent) {
 		const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
 		if (allowedKeys.includes(event.key)) return;
 
@@ -195,6 +206,14 @@ export class ReminderComponent {
 		}
 	}
 
+	/**
+	 * Validate and propagate a date value change in the first table.
+	 * Enforces minimum day gaps between rows (2-day and 6-day), caps values
+	 * at 31, and cascades the change to downstream rows via twoDayDiff/sixDaysDiff.
+	 *
+	 * @param rowIndex - The index of the row being changed.
+	 * @param field - The column key (first, second, third, fourth) being changed.
+	 */
 	async onValueChange(rowIndex: number, field: string) {
 		let originalValue = this.originalFirstTable[rowIndex][field].value;
 
@@ -245,11 +264,26 @@ export class ReminderComponent {
 		await this.updateFirstTableSingleValue();
 	}
 
+	/**
+	 * Check whether a first-table cell is in the charged set and should
+	 * be displayed as disabled.
+	 *
+	 * @param rowIndex - The row index of the cell.
+	 * @param field - The column key of the cell.
+	 * @returns true if the cell is charged (disabled).
+	 */
 	protected isDisabled(rowIndex: number, field: string): boolean {
 		return this.chargedCells.has(`${rowIndex}-${field}`);
 	}
 
 	// 1 -> 2 && 3 -> 4
+	/**
+	 * Cascade a 6-day difference from the current row to the next row
+	 * (row 1 → row 2, row 3 → row 4). Caps the result at 31.
+	 *
+	 * @param rowIndex - The source row index (1 or 3).
+	 * @param field - The column key to cascade.
+	 */
 	private sixDaysDiff(rowIndex: number, field: string) {
 		this.updatedFirstTable[rowIndex + 1][field].value =
 			Number(this.updatedFirstTable[rowIndex][field].value) + 6;
@@ -259,6 +293,13 @@ export class ReminderComponent {
 	}
 
 	// 0 -> 1 && 2 -> 3
+	/**
+	 * Cascade a 2-day difference from the current row to the next row
+	 * (row 0 → row 1, row 2 → row 3). Caps the result at 31.
+	 *
+	 * @param rowIndex - The source row index (0 or 2).
+	 * @param field - The column key to cascade.
+	 */
 	private twoDayDiff(rowIndex: number, field: string) {
 		this.updatedFirstTable[rowIndex + 1][field].value =
 			Number(this.updatedFirstTable[rowIndex][field].value) + 2;
@@ -266,6 +307,12 @@ export class ReminderComponent {
 		this.isValueGreaterThan31(rowIndex, field);
 	}
 
+	/**
+	 * Clamp the cascaded value at 31 — days cannot exceed 31.
+	 *
+	 * @param rowIndex - The row index being cascaded to.
+	 * @param field - The column key.
+	 */
 	private isValueGreaterThan31(rowIndex: number, field: string) {
 		this.updatedFirstTable[rowIndex + 1][field].value =
 			this.updatedFirstTable[rowIndex + 1][field].value > 31
@@ -273,6 +320,13 @@ export class ReminderComponent {
 				: this.updatedFirstTable[rowIndex + 1][field].value;
 	}
 
+	/**
+	 * Toggle a first-table cell to the charged state and persist to the database.
+	 * No-ops if the cell is already charged or the user lacks permission.
+	 *
+	 * @param rowIndex - The row index of the cell.
+	 * @param field - The column key of the cell.
+	 */
 	protected async setIsCharged(rowIndex: number, field: string) {
 		const returnCode = this.checkPermission(FIRST_TABLE, '0');
 		// Rollback
@@ -286,6 +340,10 @@ export class ReminderComponent {
 		}
 	}
 
+	/**
+	 * Open a confirmation dialog before resetting the first table dates
+	 * to their default sequence (1, 3, 9, 11, 17).
+	 */
 	protected openResetConfirmationDialog() {
 		const returnCode = this.checkPermission(FIRST_TABLE, '0');
 		// Rollback
@@ -301,6 +359,13 @@ export class ReminderComponent {
 		);
 	}
 
+	/**
+	 * Get the inline CSS color for a first-table cell based on its state.
+	 *
+	 * @param isCharged - Whether the cell is marked as charged (orange).
+	 * @param value - The cell's numeric value (red if it matches today's date).
+	 * @returns A CSS color style string, or empty string for default styling.
+	 */
 	protected setStyle(isCharged: boolean, value: number) {
 		if (isCharged) {
 			return 'color: orange';
@@ -460,6 +525,12 @@ export class ReminderComponent {
 		await this.updateTableSingleValue(tableName, entryKey, 'link');
 	}
 
+	/**
+	 * Open a confirmation dialog before deleting a third-table entry.
+	 * Guards with a permission check before showing the dialog.
+	 *
+	 * @param entryKey - The key of the entry to delete.
+	 */
 	protected openDeleteConfirmationDialog(entryKey: string) {
 		const returnCode = this.checkPermission(THIRD_TABLE, entryKey);
 		//Rollback
@@ -495,6 +566,9 @@ export class ReminderComponent {
 		}
 	}
 
+	/**
+	 * Add a plain-text entry to the third reminder table.
+	 */
 	protected addNewTextOnly() {
 		if (this.thirdTableNewText.trim() !== '') {
 			this.databaseService.addNewRecordForReminderTable(THIRD_TABLE, {
@@ -505,6 +579,10 @@ export class ReminderComponent {
 		}
 	}
 
+	/**
+	 * Add a new entry to the third reminder table using the active popover
+	 * item as a template. Filters out empty fields before saving.
+	 */
 	protected addNewEntry() {
 		if (this.thirdTableNewText.trim() !== '') {
 			let newContent = Object.fromEntries(
@@ -518,6 +596,13 @@ export class ReminderComponent {
 		}
 	}
 
+	/**
+	 * Open the popover for adding or editing a third-table entry.
+	 * If no item is provided, initializes an empty template.
+	 *
+	 * @param event - The triggering DOM event (used for popover positioning).
+	 * @param item - The existing entry to edit, or undefined for a new entry.
+	 */
 	protected openPopover(event: Event, item: any) {
 		if (!item) {
 			this.thirdTableActiveItem = {

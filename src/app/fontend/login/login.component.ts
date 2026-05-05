@@ -137,9 +137,9 @@ export class LoginComponent {
 			);
 		} else {
 			if (Utilities.getCurrentCountry() === CN) {
-				this.authService.signIn(this.loginForm.value['username'], this.loginForm.value['password']);
+				await this.authService.signIn(this.loginForm.value['username'], this.loginForm.value['password']);
 			} else {
-				this.authService.emailPasswordLogin(
+				await this.authService.emailPasswordLogin(
 					this.loginForm.value['username'],
 					this.loginForm.value['password']
 				);

@@ -158,10 +158,10 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	private openPermissionError() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'error', 'User does not have permission');
+		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 
 	private openUnexpectedError() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'error', 'Unexpected error occurred');
+		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}
 }

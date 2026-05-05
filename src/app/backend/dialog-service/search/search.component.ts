@@ -33,17 +33,14 @@ export class SearchDialogComponent {
 			if (lastLog === SEARCH_COMPELTE || lastLog === SEARCH_CANCEL) {
 				this.searchCompleteOrInterrupted = true;
 			}
-		});
-	}
 
-	ngAfterViewChecked() {
-		const element = this.logContainer?.nativeElement;
-		if (element) {
-			element.scrollTo({
-				top: element.scrollHeight,
-				behavior: 'smooth'
+			setTimeout(() => {
+				const element = this.logContainer?.nativeElement;
+				if (element) {
+					element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' });
+				}
 			});
-		}
+		});
 	}
 
 	protected triggerStopSearching() {

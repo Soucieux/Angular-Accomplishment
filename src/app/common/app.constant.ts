@@ -28,3 +28,11 @@ export const CN = 'CN';
 export const SEARCH = 'search';
 export const SUCCESS = 'success';
 export const FAILURE = 'failure';
+export const MOVIE_GENRES = [
+	{ genre: '刑侦' },
+	{ genre: '古装' },
+	{ genre: '悬疑' },
+	{ genre: '校园' },
+	{ genre: '现代' },
+	{ genre: '谍战' }
+];

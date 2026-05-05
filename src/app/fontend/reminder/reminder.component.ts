@@ -352,13 +352,16 @@ export class ReminderComponent {
 	}
 
 	protected async updateDebt(tableName: string, entryKey: string, currentDebt: number) {
-		this.findUpdatedItem(tableName, entryKey).content.debt =
-			Math.round((currentDebt - 998.05) * 100) / 100;
+		const item = this.findUpdatedItem(tableName, entryKey);
+		if (!item) return;
+		item.content.debt = Math.round((currentDebt - 998.05) * 100) / 100;
 		await this.updateTableSingleValue(tableName, entryKey, 'debt');
 	}
 
 	protected async setDefaultDebt(entryKey: string, isPaid: boolean) {
-		const existingRecord = this.findUpdatedItem(SECOND_TABLE, entryKey).content;
+		const item = this.findUpdatedItem(SECOND_TABLE, entryKey);
+		if (!item) return;
+		const existingRecord = item.content;
 		if (isPaid) {
 			try {
 				// Set default value
@@ -491,8 +494,11 @@ export class ReminderComponent {
 	 * {@link updateTableWithNewDate} - Update date for both second table and third table
 	 */
 	protected async updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
-		let updatedValue = this.findUpdatedItem(tableName, entryKey).content[valueKey];
-		const oldValue = this.findOriginalItem(tableName, entryKey).content[valueKey];
+		const updatedItem = this.findUpdatedItem(tableName, entryKey);
+		const originalItem = this.findOriginalItem(tableName, entryKey);
+		if (!updatedItem || !originalItem) return;
+		let updatedValue = updatedItem.content[valueKey];
+		const oldValue = originalItem.content[valueKey];
 		try {
 			if (updatedValue !== oldValue) {
 				await this.databaseService.updateReminderTable(tableName, entryKey, valueKey, updatedValue);
@@ -501,10 +507,11 @@ export class ReminderComponent {
 		} catch (error) {
 			// Rollback
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.findUpdatedItem(tableName, entryKey).content[valueKey] = this.findOriginalItem(
-					tableName,
-					entryKey
-				).content[valueKey];
+				const rollbackUpdated = this.findUpdatedItem(tableName, entryKey);
+				const rollbackOriginal = this.findOriginalItem(tableName, entryKey);
+				if (rollbackUpdated && rollbackOriginal) {
+					rollbackUpdated.content[valueKey] = rollbackOriginal.content[valueKey];
+				}
 				this.openErrorDialog();
 			} else {
 				this.openUnexpectedErrorDialog();
@@ -550,7 +557,7 @@ export class ReminderComponent {
 				throw new Error(ERROR_PERMISSION_DENIED);
 			else if (
 				(tableName == SECOND_TABLE || tableName == THIRD_TABLE) &&
-				this.findUpdatedItem(tableName, entryKey)._openid !== CloudbaseService.getUseId()
+				this.findUpdatedItem(tableName, entryKey)?._openid !== CloudbaseService.getUseId()
 			)
 				throw new Error(ERROR_PERMISSION_DENIED);
 			return SUCCESS;
@@ -582,18 +589,11 @@ export class ReminderComponent {
 	 * Open error confirmation dialog
 	 */
 	private openErrorDialog() {
-		this.dialogService.openDialog(
-			this.dialogComponentContainer,
-			'error',
-			'User does not have permission'
-		);
+		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 
-	/**
-	 * Open unexpected error dialog
-	 */
 	private openUnexpectedErrorDialog() {
-		this.dialogService.openDialog(this.dialogComponentContainer, 'error', 'Unexpected error occurred');
+		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}
 
 	protected checkIfChinese(text: string) {

@@ -134,4 +134,12 @@ export class DialogService {
 			throw error;
 		}
 	}
+
+	showPermissionError(container: ViewContainerRef) {
+		this.openDialog(container, 'error', 'User does not have permission');
+	}
+
+	showUnexpectedError(container: ViewContainerRef) {
+		this.openDialog(container, 'error', 'Unexpected error occurred');
+	}
 }

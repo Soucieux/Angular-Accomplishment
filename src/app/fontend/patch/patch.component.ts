@@ -90,7 +90,7 @@ export class PatchComponent {
 	) {}
 
 	async ngOnInit() {
-		if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
+		if (isPlatformBrowser(this.platformId)) {
 			this.isMobile = this.utilities.isMobile();
 
 			const getObservable$ = this.databaseService.getPatchNotes();

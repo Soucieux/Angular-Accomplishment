@@ -215,12 +215,14 @@ export class AuthService {
 					CloudbaseService.setUserRole(data.user.user_metadata?.name);
 					CloudbaseService.setUserName(data.user.user_metadata?.username);
 					this.cloudbaseUserSubject.next(data.user);
+					CloudbaseService.markAuthReady();
 				} else {
 					this.cloudbaseUserSubject.next(null);
 				}
 			})
 			.catch(() => {
 				this.cloudbaseUserSubject.next(null);
+				CloudbaseService.markAuthReady();
 			});
 		return this.cloudbaseUserSubject.asObservable();
 	}

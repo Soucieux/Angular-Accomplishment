@@ -375,7 +375,7 @@ export class PatchComponent {
 			return SUCCESS;
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
+				this.openPermissionErrorDialog();
 			} else {
 				this.openUnexpectedErrorDialog();
 			}
@@ -384,9 +384,9 @@ export class PatchComponent {
 	}
 
 	/**
-	 * Open error confirmation dialog
+	 * Open permission error confirmation dialog
 	 */
-	private openErrorDialog() {
+	private openPermissionErrorDialog() {
 		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 

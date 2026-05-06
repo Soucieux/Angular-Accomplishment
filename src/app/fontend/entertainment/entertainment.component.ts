@@ -214,7 +214,7 @@ export class EntertainmentComponent {
 				searchCount++;
 			} catch (error) {
 				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-					this.openErrorDialog();
+					this.openPermissionErrorDialog();
 				} else {
 					this.openUnexpectedErrorDialog();
 					LOG.error(
@@ -810,7 +810,7 @@ export class EntertainmentComponent {
 			}
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
+				this.openPermissionErrorDialog();
 			} else {
 				this.openUnexpectedErrorDialog();
 				LOG.error(this.className, 'Error while updaing genre');
@@ -831,7 +831,7 @@ export class EntertainmentComponent {
 			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
+				this.openPermissionErrorDialog();
 			} else {
 				this.openUnexpectedErrorDialog();
 				LOG.error(this.className, 'Error while set favourite');
@@ -843,7 +843,7 @@ export class EntertainmentComponent {
 	 * Opens a dialog informing the user that a permission error has occurred,
 	 * typically when the user lacks read/write access to the database.
 	 */
-	private openErrorDialog() {
+	private openPermissionErrorDialog() {
 		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 

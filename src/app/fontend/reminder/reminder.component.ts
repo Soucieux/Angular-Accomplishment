@@ -413,7 +413,7 @@ export class ReminderComponent {
 			this.triggerSaveIndicator(FIRST_TABLE);
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
+				this.openPermissionErrorDialog();
 			} else {
 				this.openUnexpectedErrorDialog();
 			}
@@ -470,7 +470,7 @@ export class ReminderComponent {
 				this.triggerSaveIndicator(SECOND_TABLE);
 			} catch (error) {
 				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-					this.openErrorDialog();
+					this.openPermissionErrorDialog();
 				} else {
 					this.openUnexpectedErrorDialog();
 				}
@@ -559,7 +559,7 @@ export class ReminderComponent {
 			this.triggerSaveIndicator(THIRD_TABLE);
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
+				this.openPermissionErrorDialog();
 			} else {
 				this.openUnexpectedErrorDialog();
 			}
@@ -652,7 +652,7 @@ export class ReminderComponent {
 				if (rollbackUpdated && rollbackOriginal) {
 					rollbackUpdated.content[valueKey] = rollbackOriginal.content[valueKey];
 				}
-				this.openErrorDialog();
+				this.openPermissionErrorDialog();
 			} else {
 				this.openUnexpectedErrorDialog();
 			}
@@ -730,7 +730,7 @@ export class ReminderComponent {
 			return SUCCESS;
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openErrorDialog();
+				this.openPermissionErrorDialog();
 			} else {
 				this.openUnexpectedErrorDialog();
 			}
@@ -762,9 +762,9 @@ export class ReminderComponent {
 	}
 
 	/**
-	 * Open error confirmation dialog
+	 * Open permission error confirmation dialog
 	 */
-	private openErrorDialog() {
+	private openPermissionErrorDialog() {
 		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 

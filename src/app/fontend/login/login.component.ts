@@ -1,4 +1,4 @@
-import { Component, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild, ViewContainerRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
@@ -14,6 +14,7 @@ import { CN, COMPONENT_DESTROY } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { WrongParametersError } from '../../common/error/wrong-parameters.error';
+import { wrongVerificationCodeError } from '../../common/error/wrong-verification-code';
 
 @Component({
 	selector: 'login',
@@ -46,7 +47,8 @@ export class LoginComponent {
 	constructor(
 		private fb: FormBuilder,
 		private authService: AuthService,
-		private dialogService: DialogService
+		private dialogService: DialogService,
+		private cdr: ChangeDetectorRef
 	) {
 		this.loginForm = this.fb.group({
 			username: ['', Validators.required],
@@ -116,6 +118,7 @@ export class LoginComponent {
 			codeControl?.updateValueAndValidity();
 
 			this.animating = 'in';
+			this.cdr.detectChanges();
 		}, 280);
 	}
 
@@ -159,15 +162,11 @@ export class LoginComponent {
 		try {
 			if (this.isSignUp) {
 				// Cloudbase sign up and automatically sign in after registration
-				await this.authService.signUp(
+               await this.authService.signUp(
 					this.loginForm.value['email'],
 					this.loginForm.value['password'],
 					this.loginForm.value['username'],
-					Number(this.loginForm.value['verificationCode'])
-				);
-				await this.authService.signIn(
-					this.loginForm.value['username'],
-					this.loginForm.value['password']
+					this.loginForm.value['verificationCode']
 				);
 			} else {
 				if (Utilities.getCurrentCountry() === CN) {
@@ -185,7 +184,11 @@ export class LoginComponent {
 				}
 			}
 		} catch (error) {
-			if (error instanceof WrongCredentialsError || error instanceof WrongParametersError) {
+			if (
+				error instanceof WrongCredentialsError ||
+				error instanceof WrongParametersError ||
+				error instanceof wrongVerificationCodeError
+			) {
 				this.dialogService.openDialog(this.dialogContainer, 'error', error.message);
 			} else {
 				this.dialogService.showUnexpectedError(this.dialogContainer);

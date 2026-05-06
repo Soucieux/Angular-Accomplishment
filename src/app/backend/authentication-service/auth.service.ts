@@ -16,6 +16,7 @@ import { Utilities } from '../../common/app.utilities';
 import { CN } from '../../common/app.constant';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { WrongParametersError } from '../../common/error/wrong-parameters.error';
+import { wrongVerificationCodeError } from '../../common/error/wrong-verification-code';
 
 @Injectable({
 	providedIn: 'root'
@@ -141,20 +142,31 @@ export class AuthService {
 	 * @param verificationCode - The numeric code sent to the email.
 	 */
 	async signUp(email: string, password: string, username: string, verificationCode: number) {
-		// Two-step flow: first get the verification token from the code,
-		// then call signUp with the token to create the account.
-		const verificationTokenRes = await this.cloudbaseAuth.verify({
-			verification_id: this.verification?.verification_id,
-			verification_code: verificationCode
-		});
+		try {
+			// Two-step flow: first get the verification token from the code,
+			// then call signUp with the token to create the account.
+			const verificationTokenRes = await this.cloudbaseAuth.verify({
+				verification_id: this.verification?.verification_id,
+				verification_code: verificationCode
+			});
 
-		await this.cloudbaseAuth.signUp({
-			email: email,
-			verification_code: verificationCode,
-			verification_token: verificationTokenRes.verification_token,
-			name: username,
-			password: password
-		});
+			await this.cloudbaseAuth.signUp({
+				email: email,
+				verification_code: verificationCode,
+				verification_token: verificationTokenRes.verification_token,
+				username: username,
+				password: password
+			});
+
+			this.cloudbaseGetCurrentUser();
+			this.router.navigate(['/']);
+		} catch (error: any) {
+			if (error && error.code === 'INVALID_ARGUMENT') {
+				throw new wrongVerificationCodeError();
+			} else {
+				throw new Error('Unexpected error occurred');
+			}
+		}
 	}
 
 	/**
@@ -165,7 +177,7 @@ export class AuthService {
 	 * @param username - The user's username.
 	 * @param password - The user's password.
 	 * @throws WrongCredentialsError if the username or password is incorrect.
-	 * @throws WrongParametersError if a different authentication error occurs.
+	 * @throws UnexpectedError if a different authentication error occurs.
 	 */
 	async signIn(username: string, password: string) {
 		const { _, error } = await this.cloudbaseAuth.signInWithPassword({
@@ -176,7 +188,7 @@ export class AuthService {
 		if (error && error.category === 'INVALID_CREDENTIALS') {
 			throw new WrongCredentialsError();
 		} else if (error) {
-			throw new WrongParametersError();
+			throw new Error('Unexpected error occurred');
 		}
 
 		this.cloudbaseGetCurrentUser();

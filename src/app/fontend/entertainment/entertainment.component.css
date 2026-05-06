@@ -358,7 +358,7 @@
 /* Content Container */
 .content-container {
 	display: grid;
-	/* grid-auto-flow: dense; */
+	grid-template-columns: repeat(auto-fill, minmax(var(--individual-item-width), 1fr));
 	gap: var(--individual-item-gap);
 }
 
@@ -437,57 +437,58 @@
 	position: relative;
 }
 
-/* Default info: genre, episodes, year — slides out to the right */
+/* Swap wrapper — stacks default info and hover info in the same grid cell
+   so they occupy the exact same position under the title */
+.info-swap {
+	display: grid;
+	height: 100%;
+}
+
+.info-swap > * {
+	grid-area: 1 / 1;
+}
+
+/* Default info: genre, episodes, year, 4 buttons — fades out to the right on image hover */
 .info-default {
+	position: relative;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
+	gap: 5px;
 	transition:
 		transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
 		opacity 0.35s ease;
 }
 
-/* Hover info: fills entire right side, slides in from left */
+/* Hover info: description + actors. Sits in the same spot as info-default,
+   hidden by default, fades in from the right when the image is hovered */
 .info-hover {
-	position: absolute;
-	inset: 0;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	padding: 10px 0;
+	gap: 26px;
+	padding: 4px 4px 4px 0px;
 	opacity: 0;
 	transform: translateX(-24px);
 	transition:
-		transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.06s,
-		opacity 0.35s ease 0.06s;
+		transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+		opacity 0.35s ease;
 	pointer-events: none;
-	z-index: 5;
 }
 
-/* Image hover triggers swap */
+/* ── Image hover triggers ── */
+
+/* Info slides out to the right + fades */
 .image-container:hover + .individual-item-content .info-default,
 .individual-item:has(.image-container:hover) .info-default {
 	transform: translateX(24px);
 	opacity: 0;
 }
 
+/* Hover info slides in from center to its natural position + fades in */
 .image-container:hover + .individual-item-content .info-hover,
 .individual-item:has(.image-container:hover) .info-hover {
 	transform: translateX(0);
 	opacity: 1;
-}
-
-/* Buttons also fade out to the right on image hover */
-.image-container:hover + .individual-item-content .douban-button,
-.image-container:hover + .individual-item-content .edit-button,
-.image-container:hover + .individual-item-content .favourite,
-.image-container:hover + .individual-item-content .delete-button,
-.individual-item:has(.image-container:hover) .douban-button,
-.individual-item:has(.image-container:hover) .edit-button,
-.individual-item:has(.image-container:hover) .favourite,
-.individual-item:has(.image-container:hover) .delete-button {
-	transform: translateX(24px);
-	opacity: 0;
-	transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
 }
 
 .hover-desc {
@@ -499,32 +500,36 @@
 	color: rgba(0, 0, 0, 0.82);
 	display: -webkit-box;
 	-webkit-line-clamp: 6;
+	line-clamp: 6;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
+	transform: translateZ(0);
 }
 
 .hover-actors {
 	margin: 0;
 	font-family: 'cf';
-	font-size: 13px;
+	font-size: 14px;
 	line-height: 1.5;
 	letter-spacing: 0.3px;
-	color: rgba(0, 0, 0, 0.65);
+	color: black;
 	display: -webkit-box;
 	-webkit-line-clamp: 2;
+	line-clamp: 2;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
+	transform: translateZ(0);
 }
 
 .individual-item-content {
-	width: 200px;
+	width: 230px;
 	height: 100%;
 
 	display: flex;
 	flex-direction: column;
 	letter-spacing: 3px;
 	row-gap: 10px;
-	margin: 10px;
+	padding: 10px 0px 10px 10px;
 	border-radius: 10px;
 
 	background: transparent;
@@ -534,12 +539,14 @@
 
 /* Title + rate sit in a shared row at the top of the card content */
 .title-rate-row {
+	position: relative;
+	width: 100%;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	gap: 8px;
 	margin-top: 10px;
 	margin-bottom: 4px;
+	padding-right: 10px;
 }
 
 .title {
@@ -580,10 +587,20 @@
 	/* background is still set by .very-high-rate .rate / .high-rate .rate etc. */
 }
 
-.edit-button {
+.buttons-group {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-direction: row;
+	gap: 12px;
+
 	position: absolute;
-	top: 250px;
-	right: 70px;
+	bottom: 0px;
+}
+
+.edit-button {
+	display: flex;
+	align-items: center;
 }
 
 ::ng-deep .edit-button .p-button.p-button-text {
@@ -597,9 +614,8 @@
 }
 
 .delete-button {
-	position: absolute;
-	top: 250px;
-	right: 20px;
+	display: flex;
+	align-items: center;
 }
 
 ::ng-deep .delete-button .p-button-icon {
@@ -613,9 +629,8 @@
 }
 
 .douban-button {
-	position: absolute;
-	top: 253px;
-	right: 170px;
+	display: flex;
+	align-items: center;
 }
 
 .douban-icon {
@@ -638,12 +653,6 @@
 	left: 5px;
 	height: 30px;
 	width: 100px;
-}
-
-.favourite {
-	position: absolute;
-	top: 245px;
-	right: 120px;
 }
 
 ::ng-deep .favourite .p-button.p-button-text:hover {
@@ -724,8 +733,7 @@
 	}
 
 	.delete-button {
-		top: 133px;
-		right: 10px;
+		position: relative;
 	}
 
 	.edit-button {

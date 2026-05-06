@@ -93,7 +93,7 @@ export class EntertainmentComponent {
 	async ngOnInit() {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
-		if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
+		if (isPlatformBrowser(this.platformId)) {
 			// Get the movie list (Observable) and statistics (Observable) from firebase or cloudbase
 			this.statistics$ = this.databaseService.getStatistics();
 
@@ -128,7 +128,7 @@ export class EntertainmentComponent {
 				})
 			);
 
-			if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
+			if (isPlatformBrowser(this.platformId)) {
 				this.updateGridLayout();
 			}
 		}
@@ -151,7 +151,7 @@ export class EntertainmentComponent {
 	 */
 	@HostListener('window:resize')
 	protected onResize() {
-		if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
+		if (isPlatformBrowser(this.platformId)) {
 			this.updateGridLayout();
 		}
 	}

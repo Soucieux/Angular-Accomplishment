@@ -103,7 +103,7 @@ export class ReminderComponent {
 	) {}
 
 	ngOnInit() {
-		if (isPlatformBrowser(this.platformId) && CloudbaseService.getUseId()) {
+		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = Utilities.checkIfHoverCapable();
 			this.currentDay = new Date().getDate();
 

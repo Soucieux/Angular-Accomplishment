@@ -80,6 +80,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 				// the CloudBase WebSocket needs valid credentials to connect.
 				this.authService.signInAnonymously().then(() => {
 					this.signedInAnonymously = true;
+					// Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
+					CloudbaseService.markAuthReady();
 					this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
 					this.cdr.detectChanges();
 				});

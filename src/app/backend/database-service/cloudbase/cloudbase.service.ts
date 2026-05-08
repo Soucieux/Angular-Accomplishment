@@ -877,7 +877,7 @@ export class CloudbaseService extends DatabaseService {
 			.collection(DATABASE_PATCH_NOTES)
 			.add({
 				...userId,
-				component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
+				component: newRecord.component,
 				element: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
 				details: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
 				status: newRecord.status,

@@ -518,6 +518,39 @@ export class PatchComponent {
 		}
 	}
 
+	/**
+	 * All available components that can be selected in the add-entry dropdown.
+	 *
+	 * `icon` holds the ligature name used as text content for Material Icons /
+	 * Material Symbols (e.g. `'tv'`, `'home'`). PrimeIcons render purely via
+	 * CSS pseudo-elements and require no text content, so their `icon` value is
+	 * intentionally an empty string — the full icon definition lives in
+	 * `iconClass` (e.g. `'pi pi-user'`).
+	 */
+	protected readonly components: { label: string; icon: string; iconClass: string }[] = [
+		{ label: 'Entertainment', icon: 'tv', iconClass: 'material-icons' },
+		{ label: 'Home', icon: 'home', iconClass: 'material-icons' },
+		{ label: 'Patch Notes', icon: 'note_stack', iconClass: 'material-symbols-outlined' },
+		{ label: 'Login', icon: '', iconClass: 'pi pi-user' }, // pi icon — CSS only, no ligature text
+		{ label: 'Reminder', icon: 'priority', iconClass: 'material-symbols-outlined' },
+		{ label: 'About', icon: 'info', iconClass: 'material-symbols-outlined' },
+		{ label: 'All Pages', icon: 'web', iconClass: 'material-icons' },
+	];
+
+	/**
+	 * Looks up a component option object by its label string.
+	 *
+	 * Needed in templates where PrimeNG's `optionValue="label"` binding passes
+	 * only the raw string value into the `#selectedItem` slot, so the full
+	 * option object (containing icon metadata) must be retrieved separately.
+	 *
+	 * @param label - The component label to look up (e.g. `'Home'`).
+	 * @returns The matching option object, or `null` if the label is not found.
+	 */
+	protected getComponentOption(label: string) {
+		return this.components.find((c) => c.label === label) ?? null;
+	}
+
 	protected newRecord = {
 		key: '',
 		component: '',

@@ -556,13 +556,54 @@ h1 {
 }
 
 /* ─────────────────────────────────────────
-   Component icon + label
+   Component icon + label (table cell display)
 ───────────────────────────────────────── */
 .component-content {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 5px;
+}
+
+/* ─────────────────────────────────────────
+   Component dropdown — selected + option rows
+───────────────────────────────────────── */
+
+/* Selected value shown inside the trigger */
+::ng-deep .p-datatable .p-select .component-option {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 13px;
+}
+
+::ng-deep .p-datatable .p-select .component-option .material-icons,
+::ng-deep .p-datatable .p-select .component-option .material-symbols-outlined {
+	font-size: 15px;
+	color: #667eea;
+}
+
+::ng-deep .p-datatable .p-select .component-option .pi {
+	font-size: 13px;
+	color: #667eea;
+}
+
+/* Options inside the panel (appended to body) */
+::ng-deep .component-dropdown-panel .component-option {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+::ng-deep .component-dropdown-panel .component-option .material-icons,
+::ng-deep .component-dropdown-panel .component-option .material-symbols-outlined {
+	font-size: 17px;
+	color: #667eea;
+}
+
+::ng-deep .component-dropdown-panel .component-option .pi {
+	font-size: 15px;
+	color: #667eea;
 }
 
 /* ─────────────────────────────────────────

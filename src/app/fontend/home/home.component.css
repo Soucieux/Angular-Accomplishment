@@ -1466,6 +1466,9 @@
    Responsive ≤ 840 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 840px) {
+	.container {
+		min-height: calc(100vh - 92px);
+	}
 	.title {
 		font-size: 32px !important;
 		margin-bottom: 3px;

@@ -1470,6 +1470,9 @@
 	.wday-num {
 		font-size: 14px;
 	}
+	.hide-on-mobile {
+		display: none;
+	}
 }
 
 /* ── Wide (≥ 1280 px) ── */
@@ -1492,10 +1495,10 @@
 	}
 	.genre-label {
 		width: 90px;
-		font-size: 12px;
+		font-size: 15px;
 	}
 	.genre-count {
-		font-size: 13px;
+		font-size: 16px;
 	}
 	.genre-bar-track {
 		height: 10px;

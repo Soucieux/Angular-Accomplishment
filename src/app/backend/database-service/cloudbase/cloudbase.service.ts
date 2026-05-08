@@ -688,15 +688,21 @@ export class CloudbaseService extends DatabaseService {
 			// Add new entry to history
 			await this.addNewHistoryEntry('added', movieItemVO);
 
+			const timestamp = this.utilities.getCurrentFormattedTime(true);
 			const updatedData: any = {};
 			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(1);
 			updatedData[`totalNumber`] = this._.inc(1);
+			updatedData['lastAdded'] = {
+				title: movieItemVO.getMovieName(),
+				genre: movieItemVO.getMovieGenre(),
+				timestamp
+			};
 
 			if (movieItemVO.getIsFavourite()) {
 				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(1);
 			}
 
-			// Update the movie statistics
+			// Update the movie statistics (single call — no race condition with watcher)
 			const statRes = await this.statisticsRef.update(updatedData);
 			if (statRes.code) throw new Error(statRes.message);
 
@@ -749,10 +755,16 @@ export class CloudbaseService extends DatabaseService {
 			// Step 3: Add a history entry
 			await this.addNewHistoryEntry('deleted', movieItemVO);
 
-			// Step 4: Decrement statistics
+			// Step 4: Decrement statistics (single call — no race condition with watcher)
+			const timestamp = this.utilities.getCurrentFormattedTime(true);
 			const updatedData: any = {};
 			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(-1);
 			updatedData[`totalNumber`] = this._.inc(-1);
+			updatedData['lastDeleted'] = {
+				title: movieItemVO.getMovieName(),
+				genre: movieItemVO.getMovieGenre(),
+				timestamp
+			};
 
 			if (movieItemVO.getIsFavourite()) {
 				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
@@ -831,18 +843,9 @@ export class CloudbaseService extends DatabaseService {
 				// CloudBase returns a non-empty result.code when the operation failed
 				// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
-
-				// Keep statistics in sync: record the most recently added movie.
-				if (status === 'added') {
-					await this.statisticsRef.update({
-						lastAdded: {
-							title: movieItemVO.getMovieName(),
-							genre: movieItemVO.getMovieGenre(),
-							rate: movieItemVO.getMovieRate(),
-							timestamp
-						}
-					});
-				}
+				// lastAdded / lastDeleted are updated together with genre/totalNumber
+				// in the calling function (single statisticsRef.update call) to avoid
+				// triggering the CloudBase watcher twice per operation.
 			} else {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
 					...userId,
@@ -1093,9 +1096,20 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	async removeQuote(key: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
-		// Update statistics: decrement total quote count.
-		// latestQuote is intentionally left as-is; it refreshes on the next submission.
-		await this.statisticsRef.update({ totalQuotes: this._.inc(-1) });
+
+		// Re-query remaining quotes so that latestQuote always reflects
+		// the most recently added quote still in the collection.
+		const remaining = await this.database.collection(DATABASE_QUOTES).limit(1000).get();
+		const quotes: any[] = remaining.data ?? [];
+		quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
+		const latest = quotes[0];
+
+		await this.statisticsRef.update({
+			totalQuotes: this._.inc(-1),
+			latestQuote: latest
+				? { text: latest.text, author: latest.author, timestamp: latest.timestamp }
+				: null
+		});
 	}
 
 	/**

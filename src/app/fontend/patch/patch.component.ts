@@ -105,7 +105,14 @@ export class PatchComponent {
 						this.previousDataLength = data.length;
 
 						// 1. Determine the "Source of Truth" for the page index
-						if (prevLength !== null && data.length > prevLength) {
+						// On first load (prevLength === null): if navigated via "Log Bug",
+						// jump straight to the last page using the same formula as new-entry logic.
+						if (prevLength === null && history.state?.goToLastPage) {
+							this._savedFirst = Math.max(
+								0,
+								Math.floor((data.length - 1) / this.itemsPerPage) * this.itemsPerPage
+							);
+						} else if (prevLength !== null && data.length > prevLength) {
 							this._savedFirst = Math.max(
 								0,
 								Math.floor((data.length - 1) / this.itemsPerPage) * this.itemsPerPage

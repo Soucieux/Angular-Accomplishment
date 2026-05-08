@@ -95,7 +95,7 @@
 
 			<!-- ── Quick Actions row (outside bento grid) ────────────────── -->
 			<div class="quick-actions-row">
-				<a class="qa-btn qa-movie" routerLink="/entertainment">
+				<a class="qa-btn qa-movie" (click)="navigateQA('/entertainment', { openAddDialog: true })">
 					<span class="material-symbols-outlined qa-icon">movie</span>
 					<span class="qa-label">Add Movie</span>
 				</a>
@@ -111,11 +111,14 @@
 					<span class="material-symbols-outlined qa-icon">payments</span>
 					<span class="qa-label">Add Expense</span>
 				</a>
-				<a class="qa-btn qa-search" routerLink="/entertainment">
+				<a
+					class="qa-btn qa-search"
+					(click)="navigateQA('/entertainment', { openSearchDialog: true })">
 					<span class="material-symbols-outlined qa-icon">manage_search</span>
 					<span class="qa-label">Rate Search</span>
 				</a>
-				<a class="qa-btn qa-patch" routerLink="/patch">
+				<a class="qa-btn qa-patch"
+					(click)="navigateQA('/patch', { goToLastPage: true })">
 					<span class="material-symbols-outlined qa-icon">bug_report</span>
 					<span class="qa-label">Log Bug</span>
 				</a>
@@ -162,13 +165,15 @@
 									</div>
 								}
 							</div>
-							@if (stats?.lastAdded) {
-								<div class="last-added-row">
-									<span class="material-symbols-outlined la-icon">add_circle</span>
-									<span class="la-title">{{ truncate(stats.lastAdded.title, 30) }}</span>
-									<span class="la-time">{{
-										getRelativeTime(stats.lastAdded.timestamp)
-									}}</span>
+							@if (getLastMovieActivity(); as activity) {
+								<div class="last-added-row"
+									[class.last-deleted-row]="activity.type === 'deleted'">
+									<span class="material-symbols-outlined la-icon"
+										[class.la-icon-deleted]="activity.type === 'deleted'">
+										{{ activity.type === 'added' ? 'add_circle' : 'remove_circle' }}
+									</span>
+									<span class="la-title">{{ truncate(activity.title, 30) }}</span>
+									<span class="la-time">{{ getRelativeTime(activity.timestamp) }}</span>
 								</div>
 							}
 						}
@@ -189,6 +194,7 @@
 						</div>
 						<div class="clock-display">{{ clockTime }}</div>
 						<div class="clock-date-str">{{ clockDate }}</div>
+						<!-- Year -->
 						<div class="year-progress-block">
 							<div class="year-progress-header">
 								<span class="year-label-text">{{ currentYear }} Progress</span>
@@ -198,6 +204,41 @@
 								<div class="year-bar-fill" [style.width.%]="yearProgress"></div>
 							</div>
 							<div class="year-days-label">Day {{ dayOfYear }} of {{ daysInYear }}</div>
+						</div>
+
+						<!-- Month -->
+						<div class="mini-progress-block">
+							<div class="mini-progress-header">
+								<span class="mini-label">This Month</span>
+								<span class="mini-pct mini-pct-month">{{ monthProgress }}%</span>
+							</div>
+							<div class="mini-bar-track">
+								<div class="mini-bar-fill mini-bar-month" [style.width.%]="monthProgress"></div>
+							</div>
+							<div class="mini-sub-label">Day {{ currentDayOfMonth }} of {{ daysInMonth }}</div>
+						</div>
+
+						<!-- Week -->
+						<div class="mini-progress-block">
+							<div class="mini-progress-header">
+								<span class="mini-label">This Week</span>
+								<span class="mini-pct mini-pct-week">{{ weekProgress }}%</span>
+							</div>
+							<div class="mini-bar-track">
+								<div class="mini-bar-fill mini-bar-week" [style.width.%]="weekProgress"></div>
+							</div>
+							<div class="mini-sub-label">Day {{ dayOfWeekNum }} of 7</div>
+						</div>
+
+						<!-- Day -->
+						<div class="mini-progress-block">
+							<div class="mini-progress-header">
+								<span class="mini-label">Today</span>
+								<span class="mini-pct mini-pct-day">{{ dayProgress }}%</span>
+							</div>
+							<div class="mini-bar-track">
+								<div class="mini-bar-fill mini-bar-day" [style.width.%]="dayProgress"></div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -258,13 +299,13 @@
 							</div>
 						} @else {
 							<div class="scrollable-list">
-								@for (item of getPatchInProgress(); track item.component + item.element) {
+								@for (item of getPatchInProgress(); track item.component + item.details) {
 									<div class="patch-item">
 										<span class="patch-dot" [class.bug-dot]="item.isBug"></span>
 										<div class="patch-info">
 											<span class="patch-component">{{ item.component }}</span>
 											<span class="patch-element">{{
-												truncate(item.element, 26)
+												truncate(item.details, 45)
 											}}</span>
 										</div>
 										@if (item.isBug) {

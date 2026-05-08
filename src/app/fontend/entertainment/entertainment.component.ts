@@ -24,6 +24,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
 import { LOG } from '../../common/app.logs';
@@ -84,7 +85,8 @@ export class EntertainmentComponent {
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		protected utilities: Utilities,
-		private searchStreamService: SearchStreamService
+		private searchStreamService: SearchStreamService,
+		private router: Router
 	) {}
 
 	/**
@@ -130,6 +132,17 @@ export class EntertainmentComponent {
 
 			if (isPlatformBrowser(this.platformId)) {
 				this.updateGridLayout();
+			}
+
+			// If navigated from the home quick-action buttons, auto-open the relevant dialog.
+			// history.state retains the router state passed via Router.navigate({ state: ... }).
+			// By this point all awaits have completed, so ngAfterViewInit has run and
+			// dialogComponentContainer is available.
+			const navState = history.state;
+			if (navState?.openAddDialog) {
+				setTimeout(() => this.openAddNewMovieDialog(), 0);
+			} else if (navState?.openSearchDialog) {
+				setTimeout(() => this.openSearchDialog(), 0);
 			}
 		}
 	}

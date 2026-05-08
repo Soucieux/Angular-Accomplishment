@@ -569,13 +569,19 @@
 	letter-spacing: 0.2px;
 }
 
+/* Entertainment card body fills the full card height */
+.card-entertainment .card-body {
+	flex: 1;
+}
+
 /* ─────────────────────────────────────────
    Entertainment — genre bars
 ───────────────────────────────────────── */
 .genre-bars {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	flex: 1;
+	justify-content: space-evenly;
 }
 
 .genre-row {
@@ -598,15 +604,15 @@
 
 .genre-bar-track {
 	flex: 1;
-	height: 8px;
+	height: 11px;
 	background: #f1f5f9;
-	border-radius: 4px;
+	border-radius: 6px;
 	overflow: hidden;
 }
 
 .genre-bar-fill {
 	height: 100%;
-	border-radius: 4px;
+	border-radius: 6px;
 	transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -623,17 +629,24 @@
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	padding: 5px 8px;
+	padding: 7px 10px;
 	background: #f8fafc;
 	border-radius: 8px;
 	flex-shrink: 0;
-	margin-top: 2px;
+}
+
+.last-deleted-row {
+	background: #fff1f2;
 }
 
 .la-icon {
 	font-size: 14px;
 	color: #22c55e;
 	flex-shrink: 0;
+}
+
+.la-icon-deleted {
+	color: #f43f5e;
 }
 
 .la-title {
@@ -682,14 +695,14 @@
 }
 
 .year-progress-block {
-	margin-top: 8px;
+	margin-top: 5px;
 }
 
 .year-progress-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 4px;
+	margin-bottom: 3px;
 }
 
 .year-label-text {
@@ -707,7 +720,7 @@
 }
 
 .year-bar-track {
-	height: 6px;
+	height: 5px;
 	background: rgba(255, 255, 255, 0.12);
 	border-radius: 3px;
 	overflow: hidden;
@@ -721,6 +734,73 @@
 }
 
 .year-days-label {
+	font-size: 10px;
+	color: #64748b;
+	margin-top: 3px;
+	text-align: right;
+}
+
+/* ─────────────────────────────────────────
+   Mini progress bars (month / week / day)
+───────────────────────────────────────── */
+.mini-progress-block {
+	margin-top: 3px;
+}
+
+.mini-progress-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2px;
+}
+
+.mini-label {
+	font-size: 9px;
+	font-weight: 600;
+	color: #64748b;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.mini-pct {
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.mini-pct-month {
+	color: #f97316;
+}
+.mini-pct-week {
+	color: #22c55e;
+}
+.mini-pct-day {
+	color: #a78bfa;
+}
+
+.mini-bar-track {
+	height: 3px;
+	background: rgba(255, 255, 255, 0.12);
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.mini-bar-fill {
+	height: 100%;
+	border-radius: 2px;
+	transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mini-bar-month {
+	background: linear-gradient(90deg, #f97316, #fbbf24);
+}
+.mini-bar-week {
+	background: linear-gradient(90deg, #22c55e, #059669);
+}
+.mini-bar-day {
+	background: linear-gradient(90deg, #a78bfa, #ec4899);
+}
+
+.mini-sub-label {
 	font-size: 10px;
 	color: #64748b;
 	margin-top: 3px;
@@ -1387,7 +1467,7 @@
 ───────────────────────────────────────── */
 @media (max-width: 840px) {
 	.title {
-		font-size: 22px;
+		font-size: 32px !important;
 		margin-bottom: 3px;
 	}
 	.title-signed-in {
@@ -1501,7 +1581,7 @@
 		font-size: 16px;
 	}
 	.genre-bar-track {
-		height: 10px;
+		height: 13px;
 	}
 
 	.qa-btn {

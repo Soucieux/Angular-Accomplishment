@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
@@ -39,6 +39,12 @@ export class HomeComponent implements OnInit, OnDestroy {
 	protected dayOfYear = 0;
 	protected daysInYear = 365;
 	protected yearProgress = 0;
+	protected monthProgress = 0;
+	protected weekProgress = 0;
+	protected dayProgress = 0;
+	protected daysInMonth = 30;
+	protected currentDayOfMonth = 1;
+	protected dayOfWeekNum = 1; // Mon = 1 … Sun = 7
 
 	// Quick Note
 	protected noteText = '';
@@ -62,8 +68,13 @@ export class HomeComponent implements OnInit, OnDestroy {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private databaseService: DatabaseService,
-		private cdr: ChangeDetectorRef
+		private cdr: ChangeDetectorRef,
+		private router: Router
 	) {}
+
+	protected navigateQA(path: string, state?: object): void {
+		this.router.navigate([path], state ? { state } : undefined);
+	}
 
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
@@ -142,6 +153,28 @@ export class HomeComponent implements OnInit, OnDestroy {
 		this.yearProgress = parseFloat(
 			((elapsed / (this.daysInYear * 24 * 60 * 60 * 1000)) * 100).toFixed(1)
 		);
+
+		// Day progress — seconds elapsed today out of 86 400
+		const secondsToday = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+		this.dayProgress = parseFloat(((secondsToday / 86400) * 100).toFixed(1));
+
+		// Week progress — Mon 00:00 = 0 %, Sun 23:59:59 ≈ 100 %
+		const dow = now.getDay(); // 0 = Sun … 6 = Sat
+		const daysSinceMon = dow === 0 ? 6 : dow - 1; // Mon = 0 … Sun = 6
+		this.weekProgress = parseFloat(
+			(((daysSinceMon * 86400 + secondsToday) / (7 * 86400)) * 100).toFixed(1)
+		);
+
+		// Month progress — 1st 00:00 = 0 %, last-day 23:59:59 ≈ 100 %
+		this.daysInMonth = new Date(y, now.getMonth() + 1, 0).getDate();
+		this.currentDayOfMonth = now.getDate();
+		this.monthProgress = parseFloat(
+			((((this.currentDayOfMonth - 1) * 86400 + secondsToday) / (this.daysInMonth * 86400)) * 100).toFixed(1)
+		);
+
+		// Day of week label (Mon = 1 … Sun = 7)
+		this.dayOfWeekNum = dow === 0 ? 7 : dow;
+
 		this.cdr.detectChanges();
 	}
 
@@ -243,6 +276,18 @@ export class HomeComponent implements OnInit, OnDestroy {
 	}
 
 	// ── Data accessors ────────────────────────────────────────────────────
+
+	/** Returns whichever of lastAdded / lastDeleted is more recent, or null if neither exists. */
+	protected getLastMovieActivity(): { type: 'added' | 'deleted'; title: string; timestamp: string } | null {
+		const added = this.stats?.lastAdded;
+		const deleted = this.stats?.lastDeleted;
+		if (!added && !deleted) return null;
+		if (added && !deleted) return { type: 'added', ...added };
+		if (!added && deleted) return { type: 'deleted', ...deleted };
+		return added.timestamp >= deleted.timestamp
+			? { type: 'added', ...added }
+			: { type: 'deleted', ...deleted };
+	}
 
 	protected getAllReminderItems(): any[] {
 		const raw = this.stats?.reminderUpcoming;

@@ -339,4 +339,10 @@
 	.en-word {
 		font-size: 17px;
 	}
+
+	.word-container {
+		gap: 14px;
+		margin-top: 4%;
+		margin-bottom: 4%;
+	}
 }

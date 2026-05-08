@@ -123,7 +123,6 @@
 
 			<!-- ── Bento grid ─────────────────────────────────────────────── -->
 			<div class="bento-grid">
-
 				<!-- ── Row 1 ─────────────────────────────────────────────── -->
 
 				<!-- Entertainment -->
@@ -131,9 +130,13 @@
 					<div class="card-accent accent-entertainment"></div>
 					<div class="card-body">
 						<div class="card-header">
-							<span class="material-symbols-outlined card-icon icon-entertainment">live_tv</span>
+							<span class="material-symbols-outlined card-icon icon-entertainment"
+								>live_tv</span
+							>
 							<span class="card-title">Entertainment</span>
-							<span class="header-badge badge-entertainment">{{ stats?.totalNumber ?? 0 }} movies</span>
+							<span class="header-badge badge-entertainment"
+								>{{ stats?.totalNumber ?? 0 }} movies</span
+							>
 							<span class="card-arrow">↗</span>
 						</div>
 
@@ -148,10 +151,12 @@
 									<div class="genre-row">
 										<span class="genre-label">{{ genre.label }}</span>
 										<div class="genre-bar-track">
-											<div class="genre-bar-fill"
+											<div
+												class="genre-bar-fill"
 												[style.width.%]="genre.pct"
-												[style.background]="genreColors[i % genreColors.length]">
-											</div>
+												[style.background]="
+													genreColors[i % genreColors.length]
+												"></div>
 										</div>
 										<span class="genre-count">{{ genre.count }}</span>
 									</div>
@@ -161,7 +166,9 @@
 								<div class="last-added-row">
 									<span class="material-symbols-outlined la-icon">add_circle</span>
 									<span class="la-title">{{ truncate(stats.lastAdded.title, 30) }}</span>
-									<span class="la-time">{{ getRelativeTime(stats.lastAdded.timestamp) }}</span>
+									<span class="la-time">{{
+										getRelativeTime(stats.lastAdded.timestamp)
+									}}</span>
 								</div>
 							}
 						}
@@ -173,7 +180,11 @@
 					<div class="card-accent accent-clock"></div>
 					<div class="card-body">
 						<div class="card-header">
-							<span class="material-symbols-outlined card-icon icon-clock">timer</span>
+							<span
+								class="material-symbols-outlined card-icon icon-clock"
+								style="color: white !important"
+								>timer</span
+							>
 							<span class="card-title clock-card-title">Life Clock</span>
 						</div>
 						<div class="clock-display">{{ clockTime }}</div>
@@ -252,7 +263,9 @@
 										<span class="patch-dot" [class.bug-dot]="item.isBug"></span>
 										<div class="patch-info">
 											<span class="patch-component">{{ item.component }}</span>
-											<span class="patch-element">{{ truncate(item.element, 26) }}</span>
+											<span class="patch-element">{{
+												truncate(item.element, 26)
+											}}</span>
 										</div>
 										@if (item.isBug) {
 											<span class="bug-badge">bug</span>
@@ -269,7 +282,9 @@
 					<div class="card-accent accent-resonance"></div>
 					<div class="card-body">
 						<div class="card-header">
-							<span class="material-symbols-outlined card-icon icon-resonance">format_quote</span>
+							<span class="material-symbols-outlined card-icon icon-resonance"
+								>format_quote</span
+							>
 							<span class="card-title">Resonance</span>
 							<span class="resonance-total">{{ stats?.totalQuotes ?? 0 }} voices</span>
 							<span class="card-arrow">↗</span>
@@ -283,7 +298,9 @@
 						} @else {
 							<div class="resonance-quote">"{{ truncate(stats.latestQuote.text, 160) }}"</div>
 							<div class="resonance-author">— {{ stats.latestQuote.author }}</div>
-							<div class="resonance-time">{{ getRelativeTime(stats.latestQuote.timestamp) }}</div>
+							<div class="resonance-time">
+								{{ getRelativeTime(stats.latestQuote.timestamp) }}
+							</div>
 						}
 					</div>
 				</a>
@@ -308,8 +325,12 @@
 							<div class="activity-list">
 								@for (event of getRecentActivity(); track event.label) {
 									<div class="activity-item">
-										<div class="activity-icon-wrap" [style.background]="event.color + '18'">
-											<span class="material-symbols-outlined activity-icon" [style.color]="event.color">
+										<div
+											class="activity-icon-wrap"
+											[style.background]="event.color + '18'">
+											<span
+												class="material-symbols-outlined activity-icon"
+												[style.color]="event.color">
 												{{ event.icon }}
 											</span>
 										</div>
@@ -340,7 +361,8 @@
 								<span class="note-hint">clears when tab closes</span>
 							}
 						</div>
-						<textarea class="note-textarea"
+						<textarea
+							class="note-textarea"
 							[value]="noteText"
 							(input)="onNoteInput($event)"
 							placeholder="Jot something down…"></textarea>
@@ -348,15 +370,18 @@
 				</div>
 
 				<!-- Pomodoro Timer -->
-				<div class="bento-card card-pomodoro"
+				<div
+					class="bento-card card-pomodoro"
 					[class.pomo-work]="pomodoroMode === 'work'"
 					[class.pomo-break]="pomodoroMode === 'break'">
-					<div class="card-accent"
+					<div
+						class="card-accent"
 						[class.accent-pomo-work]="pomodoroMode === 'work'"
 						[class.accent-pomo-break]="pomodoroMode === 'break'"></div>
 					<div class="card-body pomo-body">
 						<div class="card-header">
-							<span class="material-symbols-outlined card-icon"
+							<span
+								class="material-symbols-outlined card-icon"
 								[class.icon-pomo-work]="pomodoroMode === 'work'"
 								[class.icon-pomo-break]="pomodoroMode === 'break'">
 								{{ pomodoroMode === 'work' ? 'self_improvement' : 'coffee' }}
@@ -373,7 +398,8 @@
 							</div>
 						</div>
 						<div class="pomo-controls">
-							<button class="pomo-btn pomo-btn-main"
+							<button
+								class="pomo-btn pomo-btn-main"
 								[class.pomo-btn-work]="pomodoroMode === 'work'"
 								[class.pomo-btn-break]="pomodoroMode === 'break'"
 								(click)="togglePomodoro()">
@@ -383,8 +409,11 @@
 						</div>
 						<div class="pomo-presets">
 							@for (preset of pomodoroPresets; track preset) {
-								<button class="pomo-preset-btn"
-									[class.pomo-preset-active]="pomodoroSelectedPreset === preset && !pomodoroRunning"
+								<button
+									class="pomo-preset-btn"
+									[class.pomo-preset-active]="
+										pomodoroSelectedPreset === preset && !pomodoroRunning
+									"
 									[disabled]="pomodoroRunning"
 									(click)="selectPomodoroPreset(preset)">
 									{{ preset }}m
@@ -401,22 +430,26 @@
 					<div class="card-accent accent-calendar"></div>
 					<div class="card-body">
 						<div class="card-header">
-							<span class="material-symbols-outlined card-icon icon-calendar">calendar_month</span>
+							<span class="material-symbols-outlined card-icon icon-calendar"
+								>calendar_month</span
+							>
 							<span class="card-title">This Week</span>
 						</div>
 						<div class="week-strip">
 							@for (day of getWeekDays(); track day.dateStr) {
-								<div class="week-day"
+								<div
+									class="week-day"
 									[class.week-day-today]="day.isToday"
 									[class.week-day-past]="day.isPast">
 									<span class="wday-label">{{ day.label }}</span>
 									<span class="wday-num">{{ day.dayNum }}</span>
 									<div class="wday-tasks">
 										@for (item of day.items.slice(0, 3); track item.name) {
-											<span class="wday-task"
+											<span
+												class="wday-task"
 												[class]="'witem-' + item.type"
 												[title]="item.name">
-												{{ truncate(item.name, 11) }}
+												{{ truncate(item.name, 20) }}
 											</span>
 										}
 										@if (day.items.length > 3) {
@@ -431,14 +464,18 @@
 						</div>
 					</div>
 				</div>
-
 			</div>
 
 			<!-- ── Bottom quote strip ────────────────────────────────────── -->
 			<div class="dashboard-footer">
 				<div class="footer-quotes">
-					<span class="footer-en">Yesterday is a history &nbsp;·&nbsp; Tomorrow is a mystery &nbsp;·&nbsp; Only today is a present 🎁</span>
-					<span class="footer-cn word">昨天发生的已然发生，明日可能发生的还未可知，唯有今日才是自己决定的实时演出。</span>
+					<span class="footer-en"
+						>Yesterday is a history &nbsp;·&nbsp; Tomorrow is a mystery &nbsp;·&nbsp; Only today
+						is a present 🎁</span
+					>
+					<span class="footer-cn word"
+						>昨天发生的已然发生，明日可能发生的还未可知，唯有今日才是自己决定的实时演出。</span
+					>
 				</div>
 			</div>
 		}

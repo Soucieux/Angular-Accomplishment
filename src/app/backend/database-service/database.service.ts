@@ -213,4 +213,14 @@ export abstract class DatabaseService {
 	 * @param key - The key of the quote to remove.
 	 */
 	abstract removeQuote(key: string): Promise<void>;
+
+	/**
+	 * Update specific fields in the statistics document.
+	 * Used by page components to sync their data into the shared statistics collection
+	 * while the page is active. The call is naturally lifecycle-scoped — components
+	 * unsubscribe (or lose their subscription) on destroy, stopping further updates.
+	 *
+	 * @param fields - A flat or nested record of fields to merge into the statistics document.
+	 */
+	abstract updateStatisticsFields(fields: Record<string, any>): Promise<void>;
 }

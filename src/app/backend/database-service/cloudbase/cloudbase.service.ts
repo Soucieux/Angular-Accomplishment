@@ -39,7 +39,22 @@ export class CloudbaseService extends DatabaseService {
 	searchStreamService: any;
 	private tempUrlCache = new Map<string, string>();
 	private static _authReady$ = new ReplaySubject<boolean>(1);
-	static get authReady$() { return CloudbaseService._authReady$.asObservable(); }
+
+	/**
+	 * Emits only true — watchers must never receive false, or they would start
+	 * a CloudBase .watch() with anonymous credentials after sign-out.
+	 */
+	static get authReady$() {
+		return CloudbaseService._authReady$.asObservable().pipe(filter(v => v === true));
+	}
+
+	/**
+	 * Emits every auth-state change (true / false) — for components that need
+	 * to react to sign-out by hiding data or switching views.
+	 */
+	static get loginState$() {
+		return CloudbaseService._authReady$.asObservable();
+	}
 
 	/** Signal auth state confirmed — unblocks all watchers waiting for credentials. */
 	static markAuthReady() {
@@ -56,16 +71,17 @@ export class CloudbaseService extends DatabaseService {
 			this.database = this.cloudbase.database();
 			this._ = this.database.command;
 
-			this.database
-				.collection(DATABASE_STATISTICS)
-				.limit(1)
-				.get()
-				.then((response: any) => {
-					return (this.statId = response.data[0]?._id);
-				})
-				.catch(() => {
-					// No valid credentials yet — query will succeed once user logs in
-				});
+			const fetchStatId = () =>
+				this.database
+					.collection(DATABASE_STATISTICS)
+					.limit(1)
+					.get()
+					.then((response: any) => { this.statId = response.data[0]?._id; })
+					.catch(() => {});
+
+			fetchStatId();
+			// Retry after auth confirms so statId is set before addQuote/removeQuote are called
+			CloudbaseService.authReady$.pipe(take(1)).subscribe(() => fetchStatId());
 
 			// this.tempHelpFunction();
 		}
@@ -87,6 +103,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public static setUseId(userId: string) {
 		this.userId = userId;
+		this._authReady$.next(!!userId);
 	}
 
 	/**
@@ -799,6 +816,9 @@ export class CloudbaseService extends DatabaseService {
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		try {
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
+			// Capture timestamp once so the same value is used in the history message
+			// and in the statistics update below (no need to parse it back from the string).
+			const timestamp = this.utilities.getCurrentFormattedTime(true);
 			if (movieItemVO) {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
 					...userId,
@@ -806,20 +826,35 @@ export class CloudbaseService extends DatabaseService {
 					status: status,
 					message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
 						movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
-					}) was ${status} on ${this.utilities.getCurrentFormattedTime(true)}`
+					}) was ${status} on ${timestamp}`
 				});
 				// CloudBase returns a non-empty result.code when the operation failed
 				// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
+
+				// Keep statistics in sync: record the most recently added movie.
+				if (status === 'added') {
+					await this.statisticsRef.update({
+						lastAdded: {
+							title: movieItemVO.getMovieName(),
+							genre: movieItemVO.getMovieGenre(),
+							rate: movieItemVO.getMovieRate(),
+							timestamp
+						}
+					});
+				}
 			} else {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
 					...userId,
 					status: status,
-					message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
+					message: `New rate search was started on ${timestamp}`
 				});
 				// CloudBase returns a non-empty result.code when the operation failed
 				// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
+
+				// Keep statistics in sync: record the most recent rate-search timestamp.
+				await this.statisticsRef.update({ lastRateSearch: { timestamp } });
 			}
 			LOG.info(this.className, 'New history entry has been added');
 		} catch (error) {
@@ -1043,6 +1078,12 @@ export class CloudbaseService extends DatabaseService {
 		// (e.g. permission denied, document not found).
 		if (result.code) throw new Error(result.message);
 		LOG.info(this.className, 'New quote has been added');
+
+		// Update statistics: record latest quote and increment total count.
+		await this.statisticsRef.update({
+			latestQuote: { text, author, timestamp },
+			totalQuotes: this._.inc(1)
+		});
 	}
 
 	/**
@@ -1051,7 +1092,27 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key of the quote to remove.
 	 */
 	async removeQuote(key: string): Promise<void> {
-		return this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+		await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+		// Update statistics: decrement total quote count.
+		// latestQuote is intentionally left as-is; it refreshes on the next submission.
+		await this.statisticsRef.update({ totalQuotes: this._.inc(-1) });
+	}
+
+	/**
+	 * Update specific fields in the statistics document.
+	 * Called by page components (Reminder, Patch) while they are active to sync
+	 * live data into the shared statistics collection. The call stops naturally
+	 * when the component is destroyed and its subscriptions are torn down.
+	 *
+	 * @param fields - Fields to merge into the statistics document.
+	 */
+	async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
+		try {
+			const result = await this.statisticsRef.update(fields);
+			if (result.code) throw new Error(result.message);
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating statistics fields', error as Error);
+		}
 	}
 
 	/**

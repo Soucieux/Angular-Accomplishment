@@ -123,7 +123,7 @@
    ① DATE CALCULATOR
 ───────────────────────────────────────── */
 ::ng-deep .first-table table {
-	height: 373px;
+	height: 373px !important;
 }
 
 .skeleton-row {
@@ -235,8 +235,9 @@
 	font-size: 15px !important;
 }
 
-/* Reset button */
-::ng-deep .reset-button {
+/* Reset button — two-class selector gives (0,2,0) specificity, beating any
+   PrimeNG (0,1,0) .p-button rule regardless of style-injection order */
+::ng-deep .p-button.reset-button {
 	width: 100%;
 	background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
 	border: none !important;
@@ -249,7 +250,7 @@
 		box-shadow 0.18s !important;
 }
 
-::ng-deep .reset-button:not(:disabled):hover {
+::ng-deep .p-button.reset-button:not(:disabled):hover {
 	transform: translateY(-2px) !important;
 	box-shadow: 0 6px 18px rgba(238, 90, 111, 0.42) !important;
 }

@@ -1,23 +1,446 @@
 <div class="container">
-	<div class="word-container">
-		<div>
-			<h1 class="title">VISION CANVAS</h1>
+	<!-- ── Not logged in → original quote page ─────────────────────────── -->
+	@if (!showDashboard) {
+		<div class="word-container" [class.fade-out]="transitioning">
+			<div>
+				<h1 class="title">VISION CANVAS</h1>
+			</div>
+			<div class="quote-block">
+				<h2 class="en-word">Yesterday is a history</h2>
+				<h2 class="word">往日已成历史</h2>
+			</div>
+			<div class="quote-block">
+				<h2 class="en-word">Tomorrow is a mystery</h2>
+				<h2 class="word">未来犹未可知</h2>
+			</div>
+			<div class="quote-block">
+				<h2 class="en-word">Only today is a present</h2>
+				<h2 class="word">唯有今日是最珍贵的礼物🎁</h2>
+			</div>
+			<div></div>
+			<div class="final-quote">
+				<h5 class="word">
+					昨天发生的已然发生，明日可能发生的还未可知，唯有今日才是自己决定的实时演出。
+				</h5>
+			</div>
 		</div>
-		<div class="quote-block">
-			<h2 class="en-word">Yesterday is a history</h2>
-			<h2 class="word">往日已成历史</h2>
+	}
+
+	<!-- ── Logged in → dashboard ────────────────────────────────────────── -->
+	@if (showDashboard) {
+		<div class="header-section">
+			<h1 class="title title-signed-in">VISION CANVAS</h1>
 		</div>
-		<div class="quote-block">
-			<h2 class="en-word">Tomorrow is a mystery</h2>
-			<h2 class="word">未来犹未可知</h2>
-		</div>
-		<div class="quote-block">
-			<h2 class="en-word">Only today is a present</h2>
-			<h2 class="word">唯有今日是最珍贵的礼物🎁</h2>
-		</div>
-		<div></div>
-		<div class="final-quote">
-			<h5 class="word">昨天发生的已然发生，明日可能发生的还未可知，唯有今日才是自己决定的实时演出。</h5>
-		</div>
-	</div>
+
+		@if (loading) {
+			<!-- Skeleton state -->
+			<div class="stat-chips">
+				@for (i of [1, 2, 3, 4]; track i) {
+					<div class="stat-chip skeleton-chip"></div>
+				}
+			</div>
+			<div class="quick-actions-row">
+				@for (i of [1, 2, 3, 4, 5, 6]; track i) {
+					<div class="skeleton-qa"></div>
+				}
+			</div>
+			<div class="bento-grid">
+				<div class="bento-card skeleton card-entertainment"></div>
+				<div class="bento-card skeleton card-clock"></div>
+				<div class="bento-card skeleton card-reminder"></div>
+				<div class="bento-card skeleton card-patch"></div>
+				<div class="bento-card skeleton card-resonance"></div>
+				<div class="bento-card skeleton card-activity"></div>
+				<div class="bento-card skeleton card-note"></div>
+				<div class="bento-card skeleton card-pomodoro"></div>
+				<div class="bento-card skeleton card-calendar"></div>
+			</div>
+		} @else {
+			<!-- ── Stat chips ─────────────────────────────────────────────── -->
+			<div class="stat-chips">
+				<div class="stat-chip chip-movies">
+					<span class="material-symbols-outlined chip-icon">live_tv</span>
+					<div class="chip-info">
+						<span class="chip-value">{{ stats?.totalNumber ?? 0 }}</span>
+						<span class="chip-label">Movies</span>
+					</div>
+				</div>
+				<div class="stat-chip chip-reminders">
+					<span class="material-symbols-outlined chip-icon">schedule</span>
+					<div class="chip-info">
+						<span class="chip-value">{{ getAllReminderItems().length }}</span>
+						<span class="chip-label">
+							Reminders
+							@if (getOverdueCount() > 0) {
+								· <span class="chip-overdue">{{ getOverdueCount() }} overdue</span>
+							}
+						</span>
+					</div>
+				</div>
+				<div class="stat-chip chip-quotes">
+					<span class="material-symbols-outlined chip-icon">format_quote</span>
+					<div class="chip-info">
+						<span class="chip-value">{{ stats?.totalQuotes ?? 0 }}</span>
+						<span class="chip-label">Voices</span>
+					</div>
+				</div>
+				<div class="stat-chip chip-patch">
+					<span class="material-symbols-outlined chip-icon">add_task</span>
+					<div class="chip-info">
+						<span class="chip-value">{{ getPatchInProgress().length }}</span>
+						<span class="chip-label">In Progress</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- ── Quick Actions row (outside bento grid) ────────────────── -->
+			<div class="quick-actions-row">
+				<a class="qa-btn qa-movie" routerLink="/entertainment">
+					<span class="material-symbols-outlined qa-icon">movie</span>
+					<span class="qa-label">Add Movie</span>
+				</a>
+				<a class="qa-btn qa-quote" routerLink="/resonance">
+					<span class="material-symbols-outlined qa-icon">format_quote</span>
+					<span class="qa-label">Add Quote</span>
+				</a>
+				<a class="qa-btn qa-note" routerLink="/reminder">
+					<span class="material-symbols-outlined qa-icon">note_add</span>
+					<span class="qa-label">Add Note</span>
+				</a>
+				<a class="qa-btn qa-expense" routerLink="/reminder">
+					<span class="material-symbols-outlined qa-icon">payments</span>
+					<span class="qa-label">Add Expense</span>
+				</a>
+				<a class="qa-btn qa-search" routerLink="/entertainment">
+					<span class="material-symbols-outlined qa-icon">manage_search</span>
+					<span class="qa-label">Rate Search</span>
+				</a>
+				<a class="qa-btn qa-patch" routerLink="/patch">
+					<span class="material-symbols-outlined qa-icon">bug_report</span>
+					<span class="qa-label">Log Bug</span>
+				</a>
+			</div>
+
+			<!-- ── Bento grid ─────────────────────────────────────────────── -->
+			<div class="bento-grid">
+
+				<!-- ── Row 1 ─────────────────────────────────────────────── -->
+
+				<!-- Entertainment -->
+				<a class="bento-card card-entertainment" routerLink="/entertainment">
+					<div class="card-accent accent-entertainment"></div>
+					<div class="card-body">
+						<div class="card-header">
+							<span class="material-symbols-outlined card-icon icon-entertainment">live_tv</span>
+							<span class="card-title">Entertainment</span>
+							<span class="header-badge badge-entertainment">{{ stats?.totalNumber ?? 0 }} movies</span>
+							<span class="card-arrow">↗</span>
+						</div>
+
+						@if (getGenreData().length === 0) {
+							<div class="empty-state">
+								<span class="empty-emoji">🎬</span>
+								<span class="empty-text">No movies yet</span>
+							</div>
+						} @else {
+							<div class="genre-bars">
+								@for (genre of getGenreData(); track genre.label; let i = $index) {
+									<div class="genre-row">
+										<span class="genre-label">{{ genre.label }}</span>
+										<div class="genre-bar-track">
+											<div class="genre-bar-fill"
+												[style.width.%]="genre.pct"
+												[style.background]="genreColors[i % genreColors.length]">
+											</div>
+										</div>
+										<span class="genre-count">{{ genre.count }}</span>
+									</div>
+								}
+							</div>
+							@if (stats?.lastAdded) {
+								<div class="last-added-row">
+									<span class="material-symbols-outlined la-icon">add_circle</span>
+									<span class="la-title">{{ truncate(stats.lastAdded.title, 30) }}</span>
+									<span class="la-time">{{ getRelativeTime(stats.lastAdded.timestamp) }}</span>
+								</div>
+							}
+						}
+					</div>
+				</a>
+
+				<!-- Life Clock -->
+				<div class="bento-card card-clock">
+					<div class="card-accent accent-clock"></div>
+					<div class="card-body">
+						<div class="card-header">
+							<span class="material-symbols-outlined card-icon icon-clock">timer</span>
+							<span class="card-title clock-card-title">Life Clock</span>
+						</div>
+						<div class="clock-display">{{ clockTime }}</div>
+						<div class="clock-date-str">{{ clockDate }}</div>
+						<div class="year-progress-block">
+							<div class="year-progress-header">
+								<span class="year-label-text">{{ currentYear }} Progress</span>
+								<span class="year-pct">{{ yearProgress }}%</span>
+							</div>
+							<div class="year-bar-track">
+								<div class="year-bar-fill" [style.width.%]="yearProgress"></div>
+							</div>
+							<div class="year-days-label">Day {{ dayOfYear }} of {{ daysInYear }}</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- ── Row 2 ─────────────────────────────────────────────── -->
+
+				<!-- Reminder -->
+				<a class="bento-card card-reminder" routerLink="/reminder">
+					<div class="card-accent accent-reminder"></div>
+					<div class="card-body">
+						<div class="card-header">
+							<span class="material-symbols-outlined card-icon icon-reminder">schedule</span>
+							<span class="card-title">Reminder</span>
+							@if (getOverdueCount() > 0) {
+								<span class="overdue-chip">{{ getOverdueCount() }} overdue</span>
+							}
+							<span class="card-arrow">↗</span>
+						</div>
+
+						@if (getAllReminderItems().length === 0) {
+							<div class="empty-state">
+								<span class="empty-emoji">✅</span>
+								<span class="empty-text">All done!</span>
+							</div>
+						} @else {
+							<div class="scrollable-list">
+								@for (item of getAllReminderItems(); track item.name + item.date) {
+									<div class="reminder-item" [class.item-overdue]="isOverdue(item.date)">
+										<span class="reminder-dot" [class]="'rdot-' + item.type"></span>
+										<span class="reminder-name">{{ item.name }}</span>
+										<span class="reminder-due" [class.due-overdue]="isOverdue(item.date)">
+											{{ getDaysUntil(item.date) }}
+										</span>
+									</div>
+								}
+							</div>
+						}
+					</div>
+				</a>
+
+				<!-- Patch Notes -->
+				<a class="bento-card card-patch" routerLink="/patch">
+					<div class="card-accent accent-patch"></div>
+					<div class="card-body">
+						<div class="card-header">
+							<span class="material-symbols-outlined card-icon icon-patch">add_task</span>
+							<span class="card-title">Patch Notes</span>
+							@if (getPatchInProgress().length > 0) {
+								<span class="patch-count-chip">{{ getPatchInProgress().length }} active</span>
+							}
+							<span class="card-arrow">↗</span>
+						</div>
+
+						@if (getPatchInProgress().length === 0) {
+							<div class="empty-state">
+								<span class="empty-emoji">🎉</span>
+								<span class="empty-text">All good!</span>
+							</div>
+						} @else {
+							<div class="scrollable-list">
+								@for (item of getPatchInProgress(); track item.component + item.element) {
+									<div class="patch-item">
+										<span class="patch-dot" [class.bug-dot]="item.isBug"></span>
+										<div class="patch-info">
+											<span class="patch-component">{{ item.component }}</span>
+											<span class="patch-element">{{ truncate(item.element, 26) }}</span>
+										</div>
+										@if (item.isBug) {
+											<span class="bug-badge">bug</span>
+										}
+									</div>
+								}
+							</div>
+						}
+					</div>
+				</a>
+
+				<!-- Resonance -->
+				<a class="bento-card card-resonance" routerLink="/resonance">
+					<div class="card-accent accent-resonance"></div>
+					<div class="card-body">
+						<div class="card-header">
+							<span class="material-symbols-outlined card-icon icon-resonance">format_quote</span>
+							<span class="card-title">Resonance</span>
+							<span class="resonance-total">{{ stats?.totalQuotes ?? 0 }} voices</span>
+							<span class="card-arrow">↗</span>
+						</div>
+
+						@if (!stats?.latestQuote) {
+							<div class="empty-state">
+								<span class="empty-emoji">💬</span>
+								<span class="empty-text">No quotes yet</span>
+							</div>
+						} @else {
+							<div class="resonance-quote">"{{ truncate(stats.latestQuote.text, 160) }}"</div>
+							<div class="resonance-author">— {{ stats.latestQuote.author }}</div>
+							<div class="resonance-time">{{ getRelativeTime(stats.latestQuote.timestamp) }}</div>
+						}
+					</div>
+				</a>
+
+				<!-- ── Row 3 ─────────────────────────────────────────────── -->
+
+				<!-- Recent Activity -->
+				<div class="bento-card card-activity">
+					<div class="card-accent accent-activity"></div>
+					<div class="card-body">
+						<div class="card-header">
+							<span class="material-symbols-outlined card-icon icon-activity">history</span>
+							<span class="card-title">Recent Activity</span>
+						</div>
+
+						@if (getRecentActivity().length === 0) {
+							<div class="empty-state">
+								<span class="empty-emoji">📭</span>
+								<span class="empty-text">Nothing to show</span>
+							</div>
+						} @else {
+							<div class="activity-list">
+								@for (event of getRecentActivity(); track event.label) {
+									<div class="activity-item">
+										<div class="activity-icon-wrap" [style.background]="event.color + '18'">
+											<span class="material-symbols-outlined activity-icon" [style.color]="event.color">
+												{{ event.icon }}
+											</span>
+										</div>
+										<div class="activity-text">
+											<span class="activity-label">{{ event.label }}</span>
+											@if (event.detail) {
+												<span class="activity-detail">{{ event.detail }}</span>
+											}
+										</div>
+										<span class="activity-time">{{ event.time }}</span>
+									</div>
+								}
+							</div>
+						}
+					</div>
+				</div>
+
+				<!-- Quick Note -->
+				<div class="bento-card card-note">
+					<div class="card-accent accent-note"></div>
+					<div class="card-body note-body">
+						<div class="card-header">
+							<span class="material-symbols-outlined card-icon icon-note">edit_note</span>
+							<span class="card-title">Quick Note</span>
+							@if (noteSavedTime) {
+								<span class="note-saved-time">saved {{ noteSavedTime }}</span>
+							} @else {
+								<span class="note-hint">clears when tab closes</span>
+							}
+						</div>
+						<textarea class="note-textarea"
+							[value]="noteText"
+							(input)="onNoteInput($event)"
+							placeholder="Jot something down…"></textarea>
+					</div>
+				</div>
+
+				<!-- Pomodoro Timer -->
+				<div class="bento-card card-pomodoro"
+					[class.pomo-work]="pomodoroMode === 'work'"
+					[class.pomo-break]="pomodoroMode === 'break'">
+					<div class="card-accent"
+						[class.accent-pomo-work]="pomodoroMode === 'work'"
+						[class.accent-pomo-break]="pomodoroMode === 'break'"></div>
+					<div class="card-body pomo-body">
+						<div class="card-header">
+							<span class="material-symbols-outlined card-icon"
+								[class.icon-pomo-work]="pomodoroMode === 'work'"
+								[class.icon-pomo-break]="pomodoroMode === 'break'">
+								{{ pomodoroMode === 'work' ? 'self_improvement' : 'coffee' }}
+							</span>
+							<span class="card-title pomo-mode-label">
+								{{ pomodoroMode === 'work' ? 'Focus Time' : 'Break Time' }}
+							</span>
+						</div>
+						<div class="pomo-ring-wrap">
+							<div class="pomo-ring" [style.background]="getPomodoroRingStyle()">
+								<div class="pomo-ring-inner">
+									<div class="pomo-time">{{ pomodoroDisplay }}</div>
+								</div>
+							</div>
+						</div>
+						<div class="pomo-controls">
+							<button class="pomo-btn pomo-btn-main"
+								[class.pomo-btn-work]="pomodoroMode === 'work'"
+								[class.pomo-btn-break]="pomodoroMode === 'break'"
+								(click)="togglePomodoro()">
+								{{ pomodoroRunning ? 'Pause' : 'Start' }}
+							</button>
+							<button class="pomo-btn pomo-btn-reset" (click)="resetPomodoro()">Reset</button>
+						</div>
+						<div class="pomo-presets">
+							@for (preset of pomodoroPresets; track preset) {
+								<button class="pomo-preset-btn"
+									[class.pomo-preset-active]="pomodoroSelectedPreset === preset && !pomodoroRunning"
+									[disabled]="pomodoroRunning"
+									(click)="selectPomodoroPreset(preset)">
+									{{ preset }}m
+								</button>
+							}
+						</div>
+					</div>
+				</div>
+
+				<!-- ── Row 4 ─────────────────────────────────────────────── -->
+
+				<!-- Week Calendar -->
+				<div class="bento-card card-calendar">
+					<div class="card-accent accent-calendar"></div>
+					<div class="card-body">
+						<div class="card-header">
+							<span class="material-symbols-outlined card-icon icon-calendar">calendar_month</span>
+							<span class="card-title">This Week</span>
+						</div>
+						<div class="week-strip">
+							@for (day of getWeekDays(); track day.dateStr) {
+								<div class="week-day"
+									[class.week-day-today]="day.isToday"
+									[class.week-day-past]="day.isPast">
+									<span class="wday-label">{{ day.label }}</span>
+									<span class="wday-num">{{ day.dayNum }}</span>
+									<div class="wday-tasks">
+										@for (item of day.items.slice(0, 3); track item.name) {
+											<span class="wday-task"
+												[class]="'witem-' + item.type"
+												[title]="item.name">
+												{{ truncate(item.name, 11) }}
+											</span>
+										}
+										@if (day.items.length > 3) {
+											<span class="wday-more">+{{ day.items.length - 3 }}</span>
+										}
+										@if (day.items.length === 0) {
+											<span class="wday-free">—</span>
+										}
+									</div>
+								</div>
+							}
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+			<!-- ── Bottom quote strip ────────────────────────────────────── -->
+			<div class="dashboard-footer">
+				<div class="footer-quotes">
+					<span class="footer-en">Yesterday is a history &nbsp;·&nbsp; Tomorrow is a mystery &nbsp;·&nbsp; Only today is a present 🎁</span>
+					<span class="footer-cn word">昨天发生的已然发生，明日可能发生的还未可知，唯有今日才是自己决定的实时演出。</span>
+				</div>
+			</div>
+		}
+	}
 </div>

@@ -79,6 +79,9 @@ export class ReminderComponent {
 	protected firstSub?: Subscription;
 	protected secondSub?: Subscription;
 	protected thirdSub?: Subscription;
+	/** Cached items per table — merged before each statistics write. */
+	private upcomingExpenses: any[] = [];
+	private upcomingMessages: any[] = [];
 	protected FIRST_TABLE: string = FIRST_TABLE;
 	protected SECOND_TABLE: string = SECOND_TABLE;
 	protected THIRD_TABLE: string = THIRD_TABLE;
@@ -129,6 +132,13 @@ export class ReminderComponent {
 				this.updatedSecondTable = structuredClone(rows);
 				this.originalSecondTable = structuredClone(rows);
 				this.cdr.detectChanges();
+
+				// Sync unpaid expenses that have a due date into statistics (fire-and-forget).
+				// Stopped automatically when secondSub is unsubscribed in ngOnDestroy.
+				this.upcomingExpenses = rows
+					.filter((item: any) => item.content?.date && !item.content?.paid)
+					.map((item: any) => ({ type: 'expense', name: item.name, date: item.content.date }));
+				this.syncReminderStatistics();
 			});
 
 			// Get the data of the third table
@@ -138,6 +148,18 @@ export class ReminderComponent {
 				this.pagedThirdTable = this.updatePagedThirdTable();
 				this.loading = false;
 				this.cdr.detectChanges();
+
+				// Sync messages that have a due date into statistics (fire-and-forget).
+				// Stopped automatically when thirdSub is unsubscribed in ngOnDestroy.
+				this.upcomingMessages = rows
+					.filter((item: any) => item.content?.date)
+					.map((item: any) => ({
+						type: 'message',
+						name: item.content.text ?? '',
+						date: item.content.date,
+						link: item.content.link ?? ''
+					}));
+				this.syncReminderStatistics();
 			});
 		}
 	}
@@ -261,6 +283,18 @@ export class ReminderComponent {
 				this.sixDaysDiff(index, field);
 			}
 		}
+
+		// Re-evaluate grey background for every cell in this column —
+		// cascading may have shifted values above or below currentDay.
+		for (let i = 0; i < this.updatedFirstTable.length; i++) {
+			const key = `${i}-${field}`;
+			if (!this.isNextMonth && this.updatedFirstTable[i][field].value < this.currentDay) {
+				this.chargedCells.add(key);
+			} else {
+				this.chargedCells.delete(key);
+			}
+		}
+
 		await this.updateFirstTableSingleValue();
 	}
 
@@ -703,6 +737,18 @@ export class ReminderComponent {
 		} else if (tableName === THIRD_TABLE) {
 			return this.originalThirdTable.find((item) => item.key === entryKey);
 		}
+	}
+
+	/**
+	 * Merge the latest expense and message arrays into a single reminderUpcoming
+	 * array and write it to the statistics collection.
+	 * Called after either secondSub or thirdSub emits so the merged list is always
+	 * current. Fire-and-forget — errors are swallowed inside updateStatisticsFields.
+	 */
+	private syncReminderStatistics(): void {
+		this.databaseService.updateStatisticsFields({
+			reminderUpcoming: [...this.upcomingExpenses, ...this.upcomingMessages]
+		});
 	}
 
 	////////////////////////////////COMMON METHODS////////////////////////////////

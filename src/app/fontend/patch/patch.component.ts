@@ -123,6 +123,17 @@ export class PatchComponent {
 						// This tells onTableFilter that the next page-reset is data-driven
 						// and should be ignored/overridden.
 						this._isDataUpdate = true;
+
+						// 3. Sync in-progress items to statistics while this page is active.
+						// Stopped automatically when the async pipe unsubscribes on destroy.
+						const inProgress = data
+							.filter((note: any) => !note.__dummy && note.status === STATUS_IN_PROGRESS)
+							.map((note: any) => ({
+								component: note.component,
+								element: note.element,
+								details: note.details
+							}));
+						this.databaseService.updateStatisticsFields({ patchInProgress: inProgress });
 					});
 				})
 			);

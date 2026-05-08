@@ -406,19 +406,37 @@ export class FirebaseService extends DatabaseService {
 	 * @param movieItemVO - The movie item to update.
 	 */
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
+		// Capture timestamp once so the same value is used in the history message
+		// and in the statistics update below.
+		const timestamp = this.utilities.getCurrentFormattedTime(true);
 		if (movieItemVO) {
 			await push(dbRef(this.db, DATABASE_HISTORY), {
 				id: movieItemVO.getMovieId(),
 				status: status,
 				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
 					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
-				}) was ${status} on ${this.utilities.getCurrentFormattedTime(true)}`
+				}) was ${status} on ${timestamp}`
 			});
+
+			// Keep statistics in sync: record the most recently added movie.
+			if (status === 'added') {
+				await update(this.statisticsRef, {
+					lastAdded: {
+						title: movieItemVO.getMovieName(),
+						genre: movieItemVO.getMovieGenre(),
+						rate: movieItemVO.getMovieRate(),
+						timestamp
+					}
+				});
+			}
 		} else {
 			await push(dbRef(this.db, DATABASE_HISTORY), {
 				status: status,
-				message: `New rate search was started on ${this.utilities.getCurrentFormattedTime(true)}`
+				message: `New rate search was started on ${timestamp}`
 			});
+
+			// Keep statistics in sync: record the most recent rate-search timestamp.
+			await update(this.statisticsRef, { lastRateSearch: { timestamp } });
 		}
 		LOG.info(this.className, 'New history entry has been added');
 	}
@@ -678,13 +696,16 @@ export class FirebaseService extends DatabaseService {
 	 * @param author - The author of the quote.
 	 * @param timestamp - The timestamp of the quote.
 	 */
-	public addQuote(text: string, author: string, timestamp: string): Promise<void> {
-		return push(dbRef(this.db, DATABASE_QUOTES), {
-			text,
-			author,
-			timestamp
-		}).then(() => {
-			LOG.info(this.className, 'New quote has been added');
+	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
+		await push(dbRef(this.db, DATABASE_QUOTES), { text, author, timestamp });
+		LOG.info(this.className, 'New quote has been added');
+
+		// Update statistics: record latest quote and increment total count.
+		await runTransaction(this.statisticsRef, (currentData) => {
+			currentData = currentData ?? {};
+			currentData.latestQuote = { text, author, timestamp };
+			currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
+			return currentData;
 		});
 	}
 
@@ -693,8 +714,31 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the quote to remove.
 	 */
-	public removeQuote(key: string): Promise<void> {
-		return this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+	public async removeQuote(key: string): Promise<void> {
+		await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+		// Update statistics: decrement total quote count.
+		// latestQuote is intentionally left as-is; it refreshes on the next submission.
+		await runTransaction(this.statisticsRef, (currentData) => {
+			currentData = currentData ?? {};
+			currentData.totalQuotes = Math.max(0, (currentData.totalQuotes ?? 1) - 1);
+			return currentData;
+		});
+	}
+
+	/**
+	 * Update specific fields in the statistics document.
+	 * Called by page components (Reminder, Patch) while they are active to sync
+	 * live data into the shared statistics collection. The call stops naturally
+	 * when the component is destroyed and its subscriptions are torn down.
+	 *
+	 * @param fields - Fields to merge into the statistics document.
+	 */
+	public async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
+		try {
+			await update(this.statisticsRef, fields);
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating statistics fields', error as Error);
+		}
 	}
 
 	/**

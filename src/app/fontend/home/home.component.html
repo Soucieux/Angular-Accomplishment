@@ -258,14 +258,14 @@
 							<span class="card-arrow">↗</span>
 						</div>
 
-						@if (getAllReminderItems().length === 0) {
+						@if (getReminderWidgetItems().length === 0) {
 							<div class="empty-state">
 								<span class="empty-emoji">✅</span>
 								<span class="empty-text">All done!</span>
 							</div>
 						} @else {
 							<div class="scrollable-list">
-								@for (item of getAllReminderItems(); track item.name + item.date) {
+								@for (item of getReminderWidgetItems(); track item.name + item.date) {
 									<div class="reminder-item" [class.item-overdue]="isOverdue(item.date)">
 										<span class="reminder-dot" [class]="'rdot-' + item.type"></span>
 										<span class="reminder-name">{{ item.name }}</span>

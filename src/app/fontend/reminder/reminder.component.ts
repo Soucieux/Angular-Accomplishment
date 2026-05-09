@@ -616,6 +616,8 @@ export class ReminderComponent {
 	/**
 	 * Add a new entry to the third reminder table using the active popover
 	 * item as a template. Filters out empty fields before saving.
+	 * If the new entry includes a due date, the home-page reminder widget is
+	 * updated immediately without waiting for the subscription to fire.
 	 */
 	protected addNewEntry() {
 		if (this.thirdTableNewText.trim() !== '') {
@@ -625,6 +627,17 @@ export class ReminderComponent {
 			newContent['text'] = this.thirdTableNewText;
 			this.databaseService.addNewRecordForReminderTable(THIRD_TABLE, newContent);
 			this.triggerSaveIndicator(THIRD_TABLE);
+			// If the new entry has a due date, push it into the local messages cache
+			// so the reminder widget reflects it before the CloudBase round-trip ends.
+			if (newContent['date']) {
+				this.upcomingMessages.push({
+					type: 'message',
+					name: String(newContent['text'] ?? ''),
+					date: String(newContent['date']),
+					link: String(newContent['link'] ?? '')
+				});
+				this.syncReminderStatistics();
+			}
 			this.thirdTableNewText = '';
 			this.op2.hide();
 		}
@@ -704,6 +717,9 @@ export class ReminderComponent {
 		const updatedItem = this.findUpdatedItem(tableName, entryKey);
 		if (updatedItem.content.date) updatedItem.content.date = format(date, 'yyyy-MM-dd');
 		await this.updateTableSingleValue(tableName, entryKey, 'date');
+		// Immediately reflect the date change (or removal) in the home-page reminder
+		// widget without waiting for the CloudBase subscription to fire.
+		this.resyncUpcomingFromLocalData();
 	}
 
 		/**
@@ -749,6 +765,46 @@ export class ReminderComponent {
 		this.databaseService.updateStatisticsFields({
 			reminderUpcoming: [...this.upcomingExpenses, ...this.upcomingMessages]
 		});
+	}
+
+	/**
+	 * Immediately recomputes both `upcomingExpenses` and `upcomingMessages` from
+	 * the current local data and writes the merged result to the statistics
+	 * collection without waiting for a CloudBase subscription callback.
+	 *
+	 * For the second table, expenses are derived from `updatedSecondTable` (the
+	 * working copy kept in sync with every date edit).  For the third table,
+	 * `pagedThirdTable` edits are merged on top of `originalThirdTable` so that
+	 * any change on the current page is visible before the server round-trip
+	 * completes.
+	 *
+	 * Used to reflect date mutations and date removals in the home-page reminder
+	 * widget immediately after the user interacts.
+	 */
+	private resyncUpcomingFromLocalData(): void {
+		// Recompute expenses from the working copy of the second table.
+		this.upcomingExpenses = this.updatedSecondTable
+			.filter((item: any) => item.content?.date && !item.content?.paid)
+			.map((item: any) => ({ type: 'expense', name: item.name, date: item.content.date }));
+
+		// Merge pagedThirdTable edits into a full view of the third table so that
+		// in-progress changes on the current page are visible before the subscription fires.
+		const pagedKeys = new Set(this.pagedThirdTable.map((i: any) => i.key));
+		const mergedThird = [
+			...this.originalThirdTable.filter((i: any) => !pagedKeys.has(i.key)),
+			...this.pagedThirdTable
+		];
+
+		this.upcomingMessages = mergedThird
+			.filter((item: any) => item.content?.date)
+			.map((item: any) => ({
+				type: 'message',
+				name: item.content.text ?? '',
+				date: item.content.date,
+				link: item.content.link ?? ''
+			}));
+
+		this.syncReminderStatistics();
 	}
 
 	////////////////////////////////COMMON METHODS////////////////////////////////

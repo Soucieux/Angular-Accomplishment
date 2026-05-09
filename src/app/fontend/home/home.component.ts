@@ -299,16 +299,32 @@ export class HomeComponent implements OnInit, OnDestroy {
 		return this.getAllReminderItems().filter((item) => this.isOverdue(item?.date)).length;
 	}
 
-	protected getUpcomingItems(): any[] {
+	/**
+	 * Returns the items shown in the reminder dashboard widget:
+	 * every overdue item plus every item due within the next 7 days,
+	 * sorted ascending by days-until-due (most overdue first → today → 7 days out),
+	 * capped at 5 entries.
+	 */
+	protected getReminderWidgetItems(): any[] {
 		const today = new Date();
 		today.setHours(0, 0, 0, 0);
-		return this.getAllReminderItems().filter((item: any) => {
-			if (!item?.date) return false;
-			const [y, m, d] = item.date.split('-').map(Number);
-			const target = new Date(y, m - 1, d);
-			const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-			return diff >= 0 && diff <= 7;
-		});
+		return this.getAllReminderItems()
+			.filter((item: any) => {
+				if (!item?.date) return false;
+				const [y, m, d] = item.date.split('-').map(Number);
+				const target = new Date(y, m - 1, d);
+				const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+				// Include overdue (diff < 0) and anything due within 7 days (0–7)
+				return diff <= 7;
+			})
+			.sort((a: any, b: any) => {
+				const parse = (dateStr: string) => {
+					const [y, m, d] = dateStr.split('-').map(Number);
+					return new Date(y, m - 1, d).getTime();
+				};
+				return parse(a.date) - parse(b.date); // ascending: most overdue → soonest due
+			})
+			.slice(0, 5);
 	}
 
 	protected getPatchInProgress(): any[] {

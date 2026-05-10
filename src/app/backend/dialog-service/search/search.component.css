@@ -84,7 +84,7 @@
 @media (max-width: 580px) {
 	::ng-deep .dialog {
 		min-width: 100% !important;
-		min-height: 100% !important;
+		min-height: 100dvh !important;
 		border-radius: 0 !important;
 	}
 
@@ -92,7 +92,18 @@
 		border-radius: 0 !important;
 	}
 
+	::ng-deep .dialog .p-dialog-content {
+		flex: 1 !important;
+		display: flex !important;
+		flex-direction: column !important;
+	}
+
+	::ng-deep .dialog .p-dialog-footer {
+		border-radius: 0 !important;
+	}
+
 	.logs {
-		height: 66vh;
+		flex: 1;
+		height: auto;
 	}
 }

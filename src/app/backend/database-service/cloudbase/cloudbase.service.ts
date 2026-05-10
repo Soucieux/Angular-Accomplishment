@@ -19,11 +19,14 @@ import {
 	ERROR_PERMISSION_DENIED,
 	FIRST_TABLE,
 	GENRE_FAVOURITE,
+	HISTORY_STATUS_ADDED,
+	HISTORY_STATUS_DELETED,
 	NO_RATE,
 	RATE_DECREASED,
 	RATE_INCREASED,
 	SEARCH,
 	SECOND_TABLE,
+	STATUS_IN_PROGRESS,
 	THIRD_TABLE
 } from '../../../common/app.constant';
 
@@ -133,6 +136,11 @@ export class CloudbaseService extends DatabaseService {
 		this.userName = userName;
 	}
 
+	/**
+	 * Shorthand reference to the single statistics document.
+	 * All stat reads and writes should go through this getter so the collection
+	 * name and document ID never need to be repeated across methods.
+	 */
 	private get statisticsRef() {
 		return this.database.collection(DATABASE_STATISTICS).doc(this.statId);
 	}
@@ -563,6 +571,24 @@ export class CloudbaseService extends DatabaseService {
 				// (e.g. permission denied, document not found).
 				if (result.code) throw new Error(result.message);
 
+				// Fire-and-forget: record this rate update in stats for Recent Activity.
+				const updatedTimestamp = this.utilities.getCurrentFormattedTime(true);
+				this.statisticsRef
+					.update({
+						lastMovieUpdated: {
+							title: movieItemVO.getMovieName(),
+							timestamp: updatedTimestamp
+						}
+					})
+					.catch((err: any) =>
+						LOG.error(this.className, 'Failed to update lastMovieUpdated stat', err)
+					);
+				this.appendToActivityLog('recentMovieActivities', {
+					type: 'updated',
+					title: movieItemVO.getMovieName(),
+					timestamp: updatedTimestamp
+				}).catch(() => {});
+
 				const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
 				this.searchStreamService.addSearchLog(
 					`The rate of ${movieItemVO.getMovieName()} is <span ${
@@ -686,7 +712,7 @@ export class CloudbaseService extends DatabaseService {
 			}
 
 			// Add new entry to history
-			await this.addNewHistoryEntry('added', movieItemVO);
+			await this.addNewHistoryEntry(HISTORY_STATUS_ADDED, movieItemVO);
 
 			const timestamp = this.utilities.getCurrentFormattedTime(true);
 			const updatedData: any = {};
@@ -705,6 +731,14 @@ export class CloudbaseService extends DatabaseService {
 			// Update the movie statistics (single call — no race condition with watcher)
 			const statRes = await this.statisticsRef.update(updatedData);
 			if (statRes.code) throw new Error(statRes.message);
+
+			// Append to activity log so multiple adds are all visible in Recent Activity
+			this.appendToActivityLog('recentMovieActivities', {
+				type: 'added',
+				title: movieItemVO.getMovieName(),
+				genre: movieItemVO.getMovieGenre(),
+				timestamp
+			}).catch(() => {});
 
 			LOG.info(this.className, `Movie added and statistics have been updated`);
 		} catch (error) {
@@ -753,7 +787,7 @@ export class CloudbaseService extends DatabaseService {
 			}
 
 			// Step 3: Add a history entry
-			await this.addNewHistoryEntry('deleted', movieItemVO);
+			await this.addNewHistoryEntry(HISTORY_STATUS_DELETED, movieItemVO);
 
 			// Step 4: Decrement statistics (single call — no race condition with watcher)
 			const timestamp = this.utilities.getCurrentFormattedTime(true);
@@ -772,6 +806,14 @@ export class CloudbaseService extends DatabaseService {
 
 			const statRes = await this.statisticsRef.update(updatedData);
 			if (statRes.code) throw new Error(statRes.message);
+
+			// Append to activity log so multiple deletes are all visible in Recent Activity
+			this.appendToActivityLog('recentMovieActivities', {
+				type: 'deleted',
+				title: movieItemVO.getMovieName(),
+				genre: movieItemVO.getMovieGenre(),
+				timestamp
+			}).catch(() => {});
 
 			LOG.info(this.className, `Statistics updated after removing ${movieItemVO.getMovieName()}`);
 		} catch (error) {
@@ -858,6 +900,7 @@ export class CloudbaseService extends DatabaseService {
 
 				// Keep statistics in sync: record the most recent rate-search timestamp.
 				await this.statisticsRef.update({ lastRateSearch: { timestamp } });
+				this.appendToActivityLog('recentMovieActivities', { type: 'search', timestamp }).catch(() => {});
 			}
 			LOG.info(this.className, 'New history entry has been added');
 		} catch (error) {
@@ -894,7 +937,10 @@ export class CloudbaseService extends DatabaseService {
 					throw new Error(result.message);
 				}
 				LOG.info(this.className, 'New patch notes record has been added');
-			});
+			// Sync patchInProgress so the home-page widget reflects the new note
+			// immediately without waiting for the subscription tap to run.
+			this.syncPatchInProgressStat();
+		});
 	}
 
 	/**
@@ -916,7 +962,48 @@ export class CloudbaseService extends DatabaseService {
 				if (result.code) throw new Error(result.message);
 
 				LOG.info(this.className, 'Patch notes record has been updated');
+				// Sync patchInProgress so status-change edits reflect on the home-page
+				// widget without waiting for the subscription tap.
+				this.syncPatchInProgressStat();
 			});
+	}
+
+	/**
+	 * Remove a patch note by key and resync the patchInProgress statistics field
+	 * so the home-page widget is up to date without waiting for the subscription tap.
+	 *
+	 * @param key - The document key of the patch note to remove.
+	 */
+	async removePatchNote(key: string): Promise<void> {
+		await this.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
+		this.syncPatchInProgressStat();
+	}
+
+	/**
+	 * Queries all patch notes and rewrites the patchInProgress statistics field.
+	 * Called after any mutation (add, update, delete) so the home-page widget
+	 * always shows current data even when the Patch Notes page is not open.
+	 */
+	private syncPatchInProgressStat(): void {
+		this.database
+			.collection(DATABASE_PATCH_NOTES)
+			.limit(1000)
+			.get()
+			.then((result: any) => {
+				const allNotes: any[] = result.data ?? [];
+				const inProgress = allNotes
+					.filter((note: any) => note.status === STATUS_IN_PROGRESS)
+					.map((note: any) => ({
+						component: note.component,
+						element: note.element,
+						details: note.details,
+						isBug: !!note.isBug
+					}));
+				return this.statisticsRef.update({ patchInProgress: inProgress });
+			})
+			.catch((err: any) =>
+				LOG.error(this.className, 'Failed to sync patchInProgress stat', err)
+			);
 	}
 
 	/**
@@ -1029,6 +1116,16 @@ export class CloudbaseService extends DatabaseService {
 					throw new Error(result.message);
 				}
 				LOG.info(this.className, 'Reminder table has been updated');
+				// Fire-and-forget: record third-table additions in stats so the
+				// home-page Recent Activity widget can surface them immediately.
+				if (tableName === THIRD_TABLE) {
+					this.appendToActivityLog('recentReminderActivities', {
+						type: 'added',
+						table: THIRD_TABLE,
+						text: newRecord.text ?? '',
+						timestamp: this.utilities.getCurrentFormattedTime(true)
+					}).catch(() => {});
+				}
 			});
 	}
 
@@ -1087,14 +1184,17 @@ export class CloudbaseService extends DatabaseService {
 			latestQuote: { text, author, timestamp },
 			totalQuotes: this._.inc(1)
 		});
+		this.appendToActivityLog('recentResonanceActivities', { type: 'added', author, timestamp }).catch(() => {});
 	}
 
 	/**
-	 * Remove a quote from the database.
+	 * Remove a quote from the database and update statistics.
 	 *
 	 * @param key - The key of the quote to remove.
+	 * @param text - The text of the deleted quote (written to lastQuoteDeleted stat).
+	 * @param author - The author of the deleted quote (written to lastQuoteDeleted stat).
 	 */
-	async removeQuote(key: string): Promise<void> {
+	async removeQuote(key: string, text: string, author: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
 
 		// Re-query remaining quotes so that latestQuote always reflects
@@ -1104,12 +1204,19 @@ export class CloudbaseService extends DatabaseService {
 		quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
 		const latest = quotes[0];
 
+		const deletedTimestamp = this.utilities.getCurrentFormattedTime(true);
 		await this.statisticsRef.update({
 			totalQuotes: this._.inc(-1),
 			latestQuote: latest
 				? { text: latest.text, author: latest.author, timestamp: latest.timestamp }
-				: null
+				: null,
+			lastQuoteDeleted: {
+				text,
+				author,
+				timestamp: deletedTimestamp
+			}
 		});
+		this.appendToActivityLog('recentResonanceActivities', { type: 'deleted', author, timestamp: deletedTimestamp }).catch(() => {});
 	}
 
 	/**
@@ -1127,6 +1234,23 @@ export class CloudbaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating statistics fields', error as Error);
 		}
+	}
+
+	async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
+		try {
+			const doc = await this.database.collection(DATABASE_STATISTICS).doc(this.statId).get();
+			const raw = doc.data?.[0]?.[fieldName];
+			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
+			const updated = [activity, ...existing].slice(0, 5);
+			const result = await this.statisticsRef.update({ [fieldName]: updated });
+			if (result.code) throw new Error(result.message);
+		} catch (error) {
+			LOG.error(this.className, 'Error while appending activity log', error as Error);
+		}
+	}
+
+	async appendToPatchActivityLog(activity: any): Promise<void> {
+		return this.appendToActivityLog('recentPatchActivities', activity);
 	}
 
 	/**

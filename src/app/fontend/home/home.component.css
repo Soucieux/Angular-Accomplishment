@@ -11,6 +11,11 @@
 	min-width: 100%;
 }
 
+/* Dashboard-state override: definite height prevents mat-drawer-content from scrolling */
+.container-dashboard {
+	height: calc(100vh - 10px);
+}
+
 /* Floating orb top-right */
 .container::before {
 	content: '';
@@ -300,41 +305,46 @@
 	flex: 1;
 	min-height: 0;
 	grid-template-columns: repeat(3, 1fr);
-	grid-template-rows: auto auto auto 1fr;
+	/* 4-row layout:
+	   Row 1 — Entertainment (col 1) | Resonance (col 2) | Clock (col 3) — 1.5fr
+	   Row 2 — Reminder (col 1) | Patch (col 2) | Quick Note (col 3)    — 1.5fr
+	   Row 3 — Activity (cols 1-2) | Focus Time (col 3)                  — 2fr
+	   Row 4 — Calendar (full width)                                      — 1.2fr */
+	grid-template-rows: 1.5fr 1.5fr 1.5fr 1fr;
 	gap: 8px;
 }
 
 .card-entertainment {
-	grid-column: 1 / 3;
+	grid-column: 1;
 	grid-row: 1;
+}
+.card-resonance {
+	grid-column: 3;
+	grid-row: 3;
 }
 .card-clock {
 	grid-column: 3;
 	grid-row: 1;
 }
 .card-reminder {
-	grid-column: 1;
-	grid-row: 2;
+	grid-column: 2;
+	grid-row: 1;
 }
 .card-patch {
 	grid-column: 2;
 	grid-row: 2;
 }
-.card-resonance {
-	grid-column: 3;
+.card-note {
+	grid-column: 1;
 	grid-row: 2;
 }
 .card-activity {
-	grid-column: 1;
-	grid-row: 3;
-}
-.card-note {
-	grid-column: 2;
+	grid-column: 1 / 3;
 	grid-row: 3;
 }
 .card-pomodoro {
 	grid-column: 3;
-	grid-row: 3;
+	grid-row: 2;
 }
 .card-calendar {
 	grid-column: 1 / 4;
@@ -470,6 +480,7 @@
 .card-body {
 	display: flex;
 	flex-direction: column;
+	flex: 1;
 	padding: 10px 12px 12px;
 	gap: 6px;
 }
@@ -550,11 +561,11 @@
 ───────────────────────────────────────── */
 .empty-state {
 	display: flex;
+	flex: 1;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 6px;
-	padding: 18px 0;
 }
 
 .empty-emoji {
@@ -572,6 +583,27 @@
 /* Entertainment card body fills the full card height */
 .card-entertainment .card-body {
 	flex: 1;
+}
+
+/* Clock card — compact vertical spacing so Today bar is never clipped */
+.card-clock .card-body {
+	gap: 3px;
+}
+
+.card-clock .year-progress-block {
+	margin-top: 2px;
+}
+
+.card-clock .year-days-label {
+	margin-top: 2px;
+}
+
+.card-clock .mini-progress-block {
+	margin-top: 1px;
+}
+
+.card-clock .mini-sub-label {
+	margin-top: 1px;
 }
 
 /* ─────────────────────────────────────────
@@ -689,7 +721,7 @@
 
 .clock-date-str {
 	font-size: 11px;
-	color: #94a3b8;
+	color: #e2e8f0;
 	font-weight: 500;
 	flex-shrink: 0;
 }
@@ -708,7 +740,7 @@
 .year-label-text {
 	font-size: 10px;
 	font-weight: 600;
-	color: #64748b;
+	color: #94a3b8;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 }
@@ -735,7 +767,7 @@
 
 .year-days-label {
 	font-size: 10px;
-	color: #64748b;
+	color: #94a3b8;
 	margin-top: 3px;
 	text-align: right;
 }
@@ -757,7 +789,7 @@
 .mini-label {
 	font-size: 9px;
 	font-weight: 600;
-	color: #64748b;
+	color: #94a3b8;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 }
@@ -802,7 +834,7 @@
 
 .mini-sub-label {
 	font-size: 10px;
-	color: #64748b;
+	color: #94a3b8;
 	margin-top: 3px;
 	text-align: right;
 }
@@ -977,8 +1009,8 @@
 	color: #334155;
 	overflow: hidden;
 	display: -webkit-box;
-	line-clamp: 6;
-	-webkit-line-clamp: 6;
+	line-clamp: 3;
+	-webkit-line-clamp: 3;
 	-webkit-box-orient: vertical;
 }
 
@@ -1031,7 +1063,7 @@
 	line-height: 1.5;
 	width: 100%;
 	padding: 0;
-	min-height: 80px;
+	min-height: 50px;
 }
 
 .note-textarea::placeholder {
@@ -1042,9 +1074,10 @@
    Recent Activity
 ───────────────────────────────────────── */
 .activity-list {
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
 	gap: 6px;
+	align-content: start;
 }
 
 .activity-item {
@@ -1120,17 +1153,19 @@
 }
 
 .pomo-body {
-	align-items: center;
-	padding: 10px 16px 14px;
+	/* Header stays at the top-left (default flex-start alignment).
+	   Only the inner widgets — ring, controls, presets — are centred via align-self. */
+	padding: 6px 12px 8px;
 }
 
 .pomo-ring-wrap {
-	margin: 6px 0 10px;
+	align-self: center;
+	margin: 4px 0 6px;
 }
 
 .pomo-ring {
-	width: 100px;
-	height: 100px;
+	width: 90px;
+	height: 90px;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
@@ -1150,7 +1185,7 @@
 }
 
 .pomo-time {
-	font-size: 22px;
+	font-size: 21px;
 	font-weight: 800;
 	color: #1e293b;
 	font-variant-numeric: tabular-nums;
@@ -1160,14 +1195,15 @@
 .pomo-controls {
 	display: flex;
 	gap: 8px;
-	margin-bottom: 8px;
+	margin-bottom: 6px;
+	align-self: center;
 }
 
 .pomo-btn {
-	padding: 6px 14px;
+	padding: 7px 18px;
 	border-radius: 20px;
 	border: none;
-	font-size: 12px;
+	font-size: 13px;
 	font-weight: 700;
 	cursor: pointer;
 	transition:
@@ -1204,18 +1240,19 @@
 /* Preset time buttons */
 .pomo-presets {
 	display: flex;
-	gap: 4px;
+	gap: 5px;
 	flex-wrap: wrap;
 	justify-content: center;
 	margin-top: 2px;
+	align-self: center;
 }
 
 .pomo-preset-btn {
-	padding: 4px 10px;
+	padding: 4px 12px;
 	border-radius: 20px;
 	border: 1.5px solid #e2e8f0;
 	background: transparent;
-	font-size: 11px;
+	font-size: 12px;
 	font-weight: 700;
 	color: #64748b;
 	cursor: pointer;
@@ -1463,11 +1500,18 @@
 }
 
 /* ─────────────────────────────────────────
-   Responsive ≤ 840 px (mobile)
+   Responsive ≤ 950 px (mobile)
 ───────────────────────────────────────── */
-@media (max-width: 840px) {
+@media (max-width: 950px) {
+	.card-minimum-height {
+		min-height: 150px;
+	}
+
 	.container {
 		min-height: calc(100vh - 92px);
+	}
+	.container-dashboard {
+		height: auto;
 	}
 	.title {
 		font-size: 32px !important;
@@ -1497,45 +1541,48 @@
 	}
 
 	.bento-grid {
-		grid-template-columns: repeat(2, 1fr);
-		grid-template-rows: auto auto auto auto auto auto;
+		grid-template-columns: repeat(1, 1fr);
+		grid-template-rows: auto auto auto auto auto auto auto auto auto;
 	}
-
-	.card-entertainment {
+	.card-clock {
 		grid-column: 1 / 3;
 		grid-row: 1;
 	}
-	.card-clock {
-		grid-column: 1;
-		grid-row: 2;
-	}
 	.card-reminder {
-		grid-column: 2;
+		grid-column: 1 / 3;
 		grid-row: 2;
 	}
-	.card-patch {
-		grid-column: 1;
-		grid-row: 3;
+	.card-entertainment {
+		grid-column: 1/3;
+		grid-row: 4;
 	}
 	.card-resonance {
-		grid-column: 2;
+		grid-column: 1 / 3;
 		grid-row: 3;
 	}
-	.card-activity {
-		grid-column: 1;
-		grid-row: 4;
-	}
-	.card-note {
-		grid-column: 2;
-		grid-row: 4;
-	}
-	.card-pomodoro {
+	.card-patch {
 		grid-column: 1 / 3;
 		grid-row: 5;
 	}
-	.card-calendar {
+	.card-note {
 		grid-column: 1 / 3;
 		grid-row: 6;
+	}
+	.card-activity {
+		grid-column: 1 / 3;
+		grid-row: 8;
+	}
+	.card-pomodoro {
+		grid-column: 1 / 3;
+		grid-row: 7;
+	}
+	.card-calendar {
+		grid-column: 1 / 3;
+		grid-row: 9;
+	}
+
+	.activity-list {
+		grid-template-columns: 1fr;
 	}
 
 	.clock-display {
@@ -1556,10 +1603,39 @@
 	.hide-on-mobile {
 		display: none;
 	}
+
+	.header-badge {
+		display: none;
+	}
+
+	.card-title {
+		font-size: 11px;
+		letter-spacing: 0.2px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.reminder-name {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		word-break: normal;
+	}
+
+	.pomo-preset-btn {
+		padding: 3px 8px;
+		font-size: 11px;
+	}
+
+	.pomo-btn {
+		padding: 6px 12px;
+		font-size: 12px;
+	}
 }
 
-/* ── Wide (≥ 1280 px) ── */
-@media (min-width: 1280px) {
+/* ── Wide (≥ 1500 px) ── */
+@media (min-width: 1500px) {
 	.chip-value {
 		font-size: 36px;
 	}

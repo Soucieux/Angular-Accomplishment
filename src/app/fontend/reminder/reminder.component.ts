@@ -25,10 +25,15 @@ import { Subscription } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
+	ACCOUNT_DEBT_DECREMENT,
 	COMPONENT_DESTROY,
+	DIALOG_CONFIRM,
 	ERROR_PERMISSION_DENIED,
 	FAILURE,
 	FIRST_TABLE,
+	REMINDER_TABLE_ACCOUNT_EXPENSES,
+	REMINDER_TABLE_DATE_CALCULATOR,
+	REMINDER_TABLE_MESSAGES,
 	SECOND_TABLE,
 	SUCCESS,
 	THIRD_TABLE
@@ -102,9 +107,16 @@ export class ReminderComponent {
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private dialogService: DialogService,
 		private databaseService: DatabaseService,
-		private cdr: ChangeDetectorRef
+		private cdr: ChangeDetectorRef,
+		private utilities: Utilities
 	) {}
 
+	/**
+	 * Initialises the component: checks hover capability, determines the current
+	 * day, and subscribes to all three reminder table observables. Each subscription
+	 * populates its respective data arrays and immediately syncs upcoming items to
+	 * the statistics collection so the home-page reminder widget stays current.
+	 */
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = Utilities.checkIfHoverCapable();
@@ -205,6 +217,11 @@ export class ReminderComponent {
 		}
 	}
 
+	/**
+	 * Unsubscribes from all three reminder table subscriptions and logs the
+	 * component destruction event. Unsubscribing also stops the periodic
+	 * statistics syncs that are driven by those subscriptions.
+	 */
 	ngOnDestroy() {
 		this.firstSub?.unsubscribe();
 		this.secondSub?.unsubscribe();
@@ -385,7 +402,7 @@ export class ReminderComponent {
 
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'confirm',
+			DIALOG_CONFIRM,
 			() => {
 				this.resetFirstTable();
 			},
@@ -445,6 +462,15 @@ export class ReminderComponent {
 			];
 			await this.databaseService.updateFirstReminderTable(FIRST_TABLE, payload);
 			this.triggerSaveIndicator(FIRST_TABLE);
+			// Fire-and-forget: surface this change in the Recent Activity widget.
+			this.databaseService
+				.appendToActivityLog('recentReminderActivities', {
+					type: 'updated',
+					table: REMINDER_TABLE_DATE_CALCULATOR,
+					text: '',
+					timestamp: this.utilities.getCurrentFormattedTime(true)
+				})
+				.catch(() => {});
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 				this.openPermissionErrorDialog();
@@ -477,7 +503,7 @@ export class ReminderComponent {
 	protected async updateDebt(tableName: string, entryKey: string, currentDebt: number) {
 		const item = this.findUpdatedItem(tableName, entryKey);
 		if (!item) return;
-		item.content.debt = Math.round((currentDebt - 998.05) * 100) / 100;
+		item.content.debt = Math.round((currentDebt - ACCOUNT_DEBT_DECREMENT) * 100) / 100;
 		await this.updateTableSingleValue(tableName, entryKey, 'debt');
 	}
 
@@ -572,7 +598,7 @@ export class ReminderComponent {
 
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'confirm',
+			DIALOG_CONFIRM,
 			async () => {
 				await this.removeRecordFromDatabase(entryKey);
 			},
@@ -588,9 +614,23 @@ export class ReminderComponent {
 	 * @param entryKey - The unique key identifying the record to remove.
 	 */
 	private async removeRecordFromDatabase(entryKey: string) {
+		// Capture the item text before the delete so the stat can describe what was removed.
+		const itemText =
+			this.findUpdatedItem(THIRD_TABLE, entryKey)?.content?.text ??
+			this.originalThirdTable.find((i: any) => i.key === entryKey)?.content?.text ??
+			'';
 		try {
 			await this.databaseService.removeRecordFromReminderTable(THIRD_TABLE, entryKey);
 			this.triggerSaveIndicator(THIRD_TABLE);
+			// Fire-and-forget: surface the deletion in the Recent Activity widget.
+			this.databaseService
+				.appendToActivityLog('recentReminderActivities', {
+					type: 'deleted',
+					table: THIRD_TABLE,
+					text: itemText,
+					timestamp: this.utilities.getCurrentFormattedTime(true)
+				})
+				.catch(() => {});
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 				this.openPermissionErrorDialog();
@@ -666,6 +706,12 @@ export class ReminderComponent {
 		}, 140);
 	}
 
+	/**
+	 * Handle a page-change event from the third-table paginator. Updates the
+	 * first-item index and refreshes the paged data slice.
+	 *
+	 * @param event - The PrimeNG paginator event containing the new `first` index.
+	 */
 	thirdTablePageChange(event: any) {
 		this.thirdTableIndexOfFirstItem = event.first;
 		this.pagedThirdTable = this.updatePagedThirdTable();
@@ -690,6 +736,25 @@ export class ReminderComponent {
 			if (updatedValue !== oldValue) {
 				await this.databaseService.updateReminderTable(tableName, entryKey, valueKey, updatedValue);
 				this.triggerSaveIndicator(tableName);
+				// Fire-and-forget: surface this change in the Recent Activity widget.
+				const tableLabel =
+					tableName === SECOND_TABLE ? REMINDER_TABLE_ACCOUNT_EXPENSES : REMINDER_TABLE_MESSAGES;
+				// For the second table the human-readable identifier is the account `name` field;
+				// for the third table it is the message text inside `content.text`.
+				const itemText =
+					tableName === SECOND_TABLE
+						? (this.findUpdatedItem(SECOND_TABLE, entryKey)?.name ?? '')
+						: tableName === THIRD_TABLE
+						? (this.findUpdatedItem(THIRD_TABLE, entryKey)?.content?.text ?? '')
+						: '';
+				this.databaseService
+					.appendToActivityLog('recentReminderActivities', {
+						type: 'updated',
+						table: tableLabel,
+						text: itemText,
+						timestamp: this.utilities.getCurrentFormattedTime(true)
+					})
+					.catch(() => {});
 			}
 		} catch (error) {
 			// Rollback
@@ -715,7 +780,10 @@ export class ReminderComponent {
 	 */
 	protected async updateTableWithNewDate(tableName: string, entryKey: string, date: Date) {
 		const updatedItem = this.findUpdatedItem(tableName, entryKey);
-		if (updatedItem.content.date) updatedItem.content.date = format(date, 'yyyy-MM-dd');
+		// Always format to 'YYYY-MM-DD' string — never store a raw Date object.
+		// The previous guard `if (updatedItem.content.date)` caused first-time date
+		// saves to bypass formatting, persisting a Date/Timestamp object to CloudBase.
+		updatedItem.content.date = format(date, 'yyyy-MM-dd');
 		await this.updateTableSingleValue(tableName, entryKey, 'date');
 		// Immediately reflect the date change (or removal) in the home-page reminder
 		// widget without waiting for the CloudBase subscription to fire.

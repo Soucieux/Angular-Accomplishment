@@ -377,8 +377,8 @@ export class FirebaseService extends DatabaseService {
 		try {
 			const snapshot = await runInInjectionContext(this.ei, () => get(this.moviesRef));
 			// Firebase Realtime DB does not support server-side .where() queries
-				// like CloudBase, so we must iterate all movies to check for duplicates.
-				const allMovies = snapshot.val();
+			// like CloudBase, so we must iterate all movies to check for duplicates.
+			const allMovies = snapshot.val();
 
 			if (!allMovies) throw new Error('Movie list empty');
 
@@ -428,6 +428,12 @@ export class FirebaseService extends DatabaseService {
 						timestamp
 					}
 				});
+				this.appendToActivityLog('recentMovieActivities', {
+					type: 'added',
+					title: movieItemVO.getMovieName(),
+					genre: movieItemVO.getMovieGenre(),
+					timestamp
+				}).catch(() => {});
 			}
 		} else {
 			await push(dbRef(this.db, DATABASE_HISTORY), {
@@ -437,6 +443,7 @@ export class FirebaseService extends DatabaseService {
 
 			// Keep statistics in sync: record the most recent rate-search timestamp.
 			await update(this.statisticsRef, { lastRateSearch: { timestamp } });
+			this.appendToActivityLog('recentMovieActivities', { type: 'search', timestamp }).catch(() => {});
 		}
 		LOG.info(this.className, 'New history entry has been added');
 	}
@@ -469,8 +476,8 @@ export class FirebaseService extends DatabaseService {
 	public addNewRecordToPatchNotes(newRecord: any): Promise<void> {
 		return push(dbRef(this.db, DATABASE_PATCH_NOTES), {
 			// Normalize text casing so patch note entries have consistent formatting
-				// regardless of how the user typed them.
-				component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
+			// regardless of how the user typed them.
+			component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
 			element: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
 			details: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
 			status: newRecord.status,
@@ -520,9 +527,9 @@ export class FirebaseService extends DatabaseService {
 									isBug: boolean;
 								}
 						)
-// Sort by timestamp ascending — list() returns insertion order,
+						// Sort by timestamp ascending — list() returns insertion order,
 						// not timestamp order, so an explicit sort is needed.
-												.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+						.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
 				)
 			)
 		);
@@ -560,8 +567,8 @@ export class FirebaseService extends DatabaseService {
 				const unsub = onValue(dbRef(this.db, `${DATABASE_REMINDER}/${FIRST_TABLE}`), (snapshot) => {
 					const data = snapshot.val();
 					// Firebase stores the collection as an object keyed by push ID;
-						// Object.values() converts it to an array for PrimeNG table binding.
-						observer.next(data ? Object.values(data) : []);
+					// Object.values() converts it to an array for PrimeNG table binding.
+					observer.next(data ? Object.values(data) : []);
 				});
 				return () => unsub();
 			});
@@ -576,8 +583,8 @@ export class FirebaseService extends DatabaseService {
 	public getSecondReminderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
 			// list() reads once + subscribes to changes; pipe+map transforms
-				// each snapshot into {key, ...fields} for the table component.
-				list(dbRef(this.db, `${DATABASE_REMINDER}/${SECOND_TABLE}`)).pipe(
+			// each snapshot into {key, ...fields} for the table component.
+			list(dbRef(this.db, `${DATABASE_REMINDER}/${SECOND_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -607,8 +614,8 @@ export class FirebaseService extends DatabaseService {
 	public getThirdReminderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
 			// Same list()+pipe+map pipeline as second table, but third table
-				// content shape is {text, date, link} so mapping differs accordingly.
-				list(dbRef(this.db, `${DATABASE_REMINDER}/${THIRD_TABLE}`)).pipe(
+			// content shape is {text, date, link} so mapping differs accordingly.
+			list(dbRef(this.db, `${DATABASE_REMINDER}/${THIRD_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -707,6 +714,7 @@ export class FirebaseService extends DatabaseService {
 			currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
 			return currentData;
 		});
+		this.appendToActivityLog('recentResonanceActivities', { type: 'added', author, timestamp }).catch(() => {});
 	}
 
 	/**
@@ -714,15 +722,17 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the quote to remove.
 	 */
-	public async removeQuote(key: string): Promise<void> {
+	public async removeQuote(key: string, _text: string, author: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
 		// Update statistics: decrement total quote count.
 		// latestQuote is intentionally left as-is; it refreshes on the next submission.
+		const deletedTimestamp = this.utilities.getCurrentFormattedTime(true);
 		await runTransaction(this.statisticsRef, (currentData) => {
 			currentData = currentData ?? {};
 			currentData.totalQuotes = Math.max(0, (currentData.totalQuotes ?? 1) - 1);
 			return currentData;
 		});
+		this.appendToActivityLog('recentResonanceActivities', { type: 'deleted', author, timestamp: deletedTimestamp }).catch(() => {});
 	}
 
 	/**
@@ -741,6 +751,25 @@ export class FirebaseService extends DatabaseService {
 		}
 	}
 
+	public async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
+		try {
+			await runTransaction(this.statisticsRef, (currentData) => {
+				currentData = currentData ?? {};
+				const existing: any[] = Array.isArray(currentData[fieldName])
+					? currentData[fieldName]
+					: [];
+				currentData[fieldName] = [activity, ...existing].slice(0, 5);
+				return currentData;
+			});
+		} catch (error) {
+			LOG.error(this.className, 'Error while appending activity log', error as Error);
+		}
+	}
+
+	public async appendToPatchActivityLog(activity: any): Promise<void> {
+		return this.appendToActivityLog('recentPatchActivities', activity);
+	}
+
 	/**
 	 * Add a new entry to a given reminder table.
 	 * Note: This is used by third table only.
@@ -753,6 +782,18 @@ export class FirebaseService extends DatabaseService {
 			content: { ...newRecord }
 		}).then(() => {
 			LOG.info(this.className, 'Reminder table has been updated');
+			if (tableName === THIRD_TABLE) {
+				this.appendToActivityLog('recentReminderActivities', {
+					type: 'added',
+					table: THIRD_TABLE,
+					text: newRecord.text ?? '',
+					timestamp: this.utilities.getCurrentFormattedTime(true)
+				}).catch(() => {});
+			}
 		});
+	}
+
+	public removePatchNote(key: string): Promise<void> {
+		return this.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
 	}
 }

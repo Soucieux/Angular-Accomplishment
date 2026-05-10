@@ -17,7 +17,7 @@ import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
-	DATABASE_PATCH_NOTES,
+	DIALOG_CONFIRM,
 	ERROR_PERMISSION_DENIED,
 	FAILURE,
 	STATUS_COMPLETED,
@@ -72,6 +72,8 @@ export class PatchComponent {
 	protected editedRows = new Map<string, any>();
 	protected hoveredRowIndex: number | null = null;
 	private previousDataLength: number | null = null;
+	/** Full ordered list of patch notes (no dummy row), kept in sync by the subscription tap. */
+	private patchNotesList: any[] = [];
 	/** The page (first-item index) the user intends to be on. Updated by user navigation and add/delete logic. */
 	private _savedFirst = 0;
 	/**
@@ -89,6 +91,13 @@ export class PatchComponent {
 		private ngZone: NgZone
 	) {}
 
+	/**
+	 * Initialises the component: detects mobile layout, builds the patch-notes
+	 * observable (with a dummy-row appended for desktop to keep the add-entry row
+	 * visible), populates the severity option lists, and sets up the subscription
+	 * tap that keeps `patchNotesList`, page-index state, and the `patchInProgress`
+	 * statistic in sync whenever CloudBase pushes fresh data.
+	 */
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isMobile = this.utilities.isMobile();
@@ -131,10 +140,13 @@ export class PatchComponent {
 						// and should be ignored/overridden.
 						this._isDataUpdate = true;
 
-						// 3. Sync in-progress items to statistics while this page is active.
+						// 3. Keep a local ordered copy for look-ups in edit/delete stats writes.
+						this.patchNotesList = data.filter((note: any) => !note.__dummy);
+
+						// 4. Sync in-progress items to statistics while this page is active.
 						// Stopped automatically when the async pipe unsubscribes on destroy.
-						const inProgress = data
-							.filter((note: any) => !note.__dummy && note.status === STATUS_IN_PROGRESS)
+						const inProgress = this.patchNotesList
+							.filter((note: any) => note.status === STATUS_IN_PROGRESS)
 							.map((note: any) => ({
 								component: note.component,
 								element: note.element,
@@ -168,6 +180,11 @@ export class PatchComponent {
 		}
 	}
 
+	/**
+	 * Clears any open dialog from the view container and logs the component
+	 * destruction event. The async pipe on `patchNotes$` tears down the
+	 * CloudBase watcher automatically when the view is destroyed.
+	 */
 	ngOnDestroy() {
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
@@ -213,6 +230,33 @@ export class PatchComponent {
 		if (Object.keys(changes).length > 0) {
 			changes.timestamp = this.utilities.getCurrentFormattedTime(false);
 			await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
+
+			// Fire-and-forget: record the edit type in stats for the Recent Activity widget.
+			const noteIndex = this.patchNotesList.findIndex((n) => n.key === row.key) + 1;
+			const ts = this.utilities.getCurrentFormattedTime(true);
+			if (changes.status) {
+				this.databaseService
+					.appendToPatchActivityLog({
+						type: 'statusChanged',
+						component: row.component,
+						element: record.original.element,
+						fromStatus: record.original.status,
+						toStatus: changes.status,
+						noteIndex,
+						timestamp: ts
+					})
+					.catch(() => {});
+			} else if (changes.details) {
+				this.databaseService
+					.appendToPatchActivityLog({
+						type: 'edited',
+						component: row.component,
+						element: record.original.element,
+						noteIndex,
+						timestamp: ts
+					})
+					.catch(() => {});
+			}
 		}
 
 		this.editedRows.delete(row.key);
@@ -227,14 +271,32 @@ export class PatchComponent {
 
 	/**
 	 * Submit the new record form data to the database and reset the form.
+	 * Captures a snapshot of the record before resetting so the stats update
+	 * can include the correct noteIndex and metadata after the async add.
 	 */
 	submitNewRecord() {
 		// Inject the current timestamp before submit; status is unwrapped from
 		// the PrimeNG select object via ['severity'] to get the raw string value.
 		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
+		const snapshot = { ...this.newRecord };
+		const noteIndex = this.patchNotesList.length + 1;
 		this.databaseService
-			.addNewRecordToPatchNotes(this.newRecord)
+			.addNewRecordToPatchNotes(snapshot)
+			.then(() => {
+				// Fire-and-forget: write the Recent Activity stat with the correct
+				// 1-based index (patchNotesList doesn't include the new note yet).
+				this.databaseService
+					.appendToPatchActivityLog({
+						type: !!snapshot.isBug ? 'bugLogged' : 'added',
+						component: snapshot.component,
+						element: snapshot.element,
+						isBug: !!snapshot.isBug,
+						noteIndex,
+						timestamp: this.utilities.getCurrentFormattedTime(true)
+					})
+					.catch(() => {});
+			})
 			.catch(() => this.openUnexpectedErrorDialog());
 		this.newRecord = {
 			key: '',
@@ -253,12 +315,27 @@ export class PatchComponent {
 	 * @param key key of the patch note to be removed
 	 */
 	protected openDeleteConfirmationDialog(key: string) {
+		// Capture note identity before the dialog opens — the list may have changed by
+		// the time the user confirms.
+		const noteToDelete = this.patchNotesList.find((n) => n.key === key);
+		const noteIndex = this.patchNotesList.findIndex((n) => n.key === key) + 1;
+
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'confirm',
+			DIALOG_CONFIRM,
 			async () => {
 				try {
-					await this.databaseService.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
+					await this.databaseService.removePatchNote(key);
+					// Fire-and-forget: record the deletion in stats for the Recent Activity widget.
+					this.databaseService
+						.appendToPatchActivityLog({
+							type: 'deleted',
+							component: noteToDelete?.component ?? '',
+							element: noteToDelete?.element ?? '',
+							noteIndex,
+							timestamp: this.utilities.getCurrentFormattedTime(true)
+						})
+						.catch(() => {});
 				} catch (error) {
 					this.openUnexpectedErrorDialog();
 				}
@@ -538,17 +615,20 @@ export class PatchComponent {
 	];
 
 	/**
-	 * Looks up a component option object by its label string.
+	 * Looks up a component option object by label string.
 	 *
-	 * Needed in templates where PrimeNG's `optionValue="label"` binding passes
-	 * only the raw string value into the `#selectedItem` slot, so the full
-	 * option object (containing icon metadata) must be retrieved separately.
+	 * Accepts both a plain string and a full option object because PrimeNG's
+	 * `p-select` passes the full option object into the `#selectedItem` template
+	 * even when `optionValue="label"` is set (the binding affects the `ngModel`
+	 * value, not what the template slot receives).
 	 *
-	 * @param label - The component label to look up (e.g. `'Home'`).
-	 * @returns The matching option object, or `null` if the label is not found.
+	 * @param label - The component label string, or a full option object with a
+	 *   `label` property (e.g. from the PrimeNG selectedItem template context).
+	 * @returns The matching option object, or `null` if not found.
 	 */
-	protected getComponentOption(label: string) {
-		return this.components.find((c) => c.label === label) ?? null;
+	protected getComponentOption(label: string | { label: string } | any) {
+		const key = typeof label === 'string' ? label : (label?.label ?? '');
+		return this.components.find((c) => c.label === key) ?? null;
 	}
 
 	protected newRecord = {

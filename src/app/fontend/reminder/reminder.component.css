@@ -437,27 +437,28 @@
 	font-size: 15px;
 }
 
-/* "New entry" input — visually distinct */
-::ng-deep .third-table .p-inputgroup:last-of-type .p-inputtext {
+/* "New entry" input — visually distinct (scoped to .new-entry-group class,
+   not :last-of-type, so regular rows on the last page are never mis-styled) */
+::ng-deep .third-table .new-entry-group .p-inputtext {
 	border-style: dashed !important;
 	border-color: rgba(247, 151, 30, 0.4) !important;
 	background: rgba(247, 151, 30, 0.03) !important;
 }
 
-::ng-deep .third-table .p-inputgroup:last-of-type .p-inputtext::placeholder {
+::ng-deep .third-table .new-entry-group .p-inputtext::placeholder {
 	color: rgba(30, 15, 35, 0.38) !important;
 	font-style: italic !important;
 }
 
 /* Plus button on new entry row */
-::ng-deep .third-table .p-inputgroup:last-of-type .p-button {
+::ng-deep .third-table .new-entry-group .p-button {
 	background: rgba(247, 151, 30, 0.1) !important;
 	border-style: dashed !important;
 	border-color: rgba(247, 151, 30, 0.4) !important;
 	color: #e08900 !important;
 }
 
-::ng-deep .third-table .p-inputgroup:last-of-type .p-button:hover {
+::ng-deep .third-table .new-entry-group .p-button:hover {
 	background: rgba(247, 151, 30, 0.22) !important;
 	color: #b86e00 !important;
 }

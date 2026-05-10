@@ -24,10 +24,31 @@ export const DATABASE_REMINDER_SECOND = 'reminder_table_second';
 export const DATABASE_REMINDER_THIRD = 'reminder_table_third';
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';
 export const DATABASE_QUOTES = 'quotes';
+/** Display name for the first reminder table — used in stat writes and the Recent Activity widget. */
+export const REMINDER_TABLE_DATE_CALCULATOR = 'Date Calculator';
+/** Display name for the second reminder table — used in stat writes and the Recent Activity widget. */
+export const REMINDER_TABLE_ACCOUNT_EXPENSES = 'Account Expenses';
+/** Display name for the third reminder table — used in stat writes and the Recent Activity widget. */
+export const REMINDER_TABLE_MESSAGES = 'Messages';
+
 export const CN = 'CN';
 export const SEARCH = 'search';
 export const SUCCESS = 'success';
 export const FAILURE = 'failure';
+
+/** Dialog type string for a yes/no confirmation dialog. Used across multiple components. */
+export const DIALOG_CONFIRM = 'confirm';
+
+/** History-entry status when a movie is added — appears in the history message text. */
+export const HISTORY_STATUS_ADDED = 'added';
+/** History-entry status when a movie is deleted — appears in the history message text. */
+export const HISTORY_STATUS_DELETED = 'deleted';
+
+/**
+ * Fixed amount deducted from a second-table debt entry per payment cycle.
+ * Defined as a constant so a business-rule change only requires one edit here.
+ */
+export const ACCOUNT_DEBT_DECREMENT = 998.05;
 export const MOVIE_GENRES = [
 	{ genre: '刑侦' },
 	{ genre: '古装' },

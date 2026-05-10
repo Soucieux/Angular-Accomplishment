@@ -1,5 +1,5 @@
 ::ng-deep .blocking-dialog {
-	width: 380px;
+	width: min(380px, calc(100dvw - 2rem));
 	border-radius: 20px !important;
 	overflow: hidden !important;
 	background: rgba(255, 255, 255, 0.96) !important;
@@ -51,10 +51,3 @@
 	line-height: 1.6;
 }
 
-@media (max-width: 580px) {
-	::ng-deep .blocking-dialog {
-		min-width: 100% !important;
-		min-height: 100% !important;
-		border-radius: 0 !important;
-	}
-}

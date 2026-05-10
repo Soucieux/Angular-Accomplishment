@@ -221,7 +221,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			'confirm',
 			async () => {
 				try {
-					await this.databaseService.removeQuote(quote.key);
+					await this.databaseService.removeQuote(quote.key, quote.text, quote.author);
 				} catch {
 					this.openUnexpectedError();
 				}

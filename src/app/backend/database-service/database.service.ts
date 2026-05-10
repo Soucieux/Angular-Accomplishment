@@ -132,6 +132,13 @@ export abstract class DatabaseService {
 	abstract removeSingleItemFromDatabase(name: string, key: string): Promise<void>;
 
 	/**
+	 * Remove a patch note and keep the patchInProgress statistics field in sync.
+	 *
+	 * @param key - The document key of the patch note to remove.
+	 */
+	abstract removePatchNote(key: string): Promise<void>;
+
+	/**
 	 * Get the first reminder table details from the database.
 	 *
 	 * @returns An observable that emits the first reminder table details.
@@ -212,7 +219,7 @@ export abstract class DatabaseService {
 	 *
 	 * @param key - The key of the quote to remove.
 	 */
-	abstract removeQuote(key: string): Promise<void>;
+	abstract removeQuote(key: string, text: string, author: string): Promise<void>;
 
 	/**
 	 * Update specific fields in the statistics document.
@@ -223,4 +230,22 @@ export abstract class DatabaseService {
 	 * @param fields - A flat or nested record of fields to merge into the statistics document.
 	 */
 	abstract updateStatisticsFields(fields: Record<string, any>): Promise<void>;
+
+	/**
+	 * Prepend a new entry to the `recentPatchActivities` list in the statistics
+	 * document, keeping at most 5 entries (newest first).
+	 *
+	 * @param activity - The activity object to record.
+	 */
+	abstract appendToPatchActivityLog(activity: any): Promise<void>;
+
+	/**
+	 * Prepend a new entry to a named activity-log array in the statistics
+	 * document, keeping at most 5 entries (newest first).
+	 * Used for movie, reminder and resonance activity feeds.
+	 *
+	 * @param fieldName - The statistics field that holds the array (e.g. 'recentMovieActivities').
+	 * @param activity - The activity object to record.
+	 */
+	abstract appendToActivityLog(fieldName: string, activity: any): Promise<void>;
 }

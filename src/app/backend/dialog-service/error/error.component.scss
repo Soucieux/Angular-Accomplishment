@@ -75,7 +75,7 @@
 @media (max-width: 580px) {
 	::ng-deep .error-dialog {
 		min-width: 100% !important;
-		min-height: 100% !important;
+		min-height: 100dvh !important;
 		border-radius: 0 !important;
 	}
 
@@ -83,8 +83,16 @@
 		border-radius: 0 !important;
 	}
 
+	/* Stretch middle content so the footer button lands at the bottom */
+	::ng-deep .error-dialog .p-dialog-content {
+		flex: 1 !important;
+	}
+
+	::ng-deep .error-dialog .p-dialog-footer {
+		border-radius: 0 !important;
+	}
+
 	::ng-deep .error-dialog-message {
-		width: 100% !important;
 		white-space: normal !important;
 	}
 }

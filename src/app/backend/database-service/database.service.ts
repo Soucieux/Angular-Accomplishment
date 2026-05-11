@@ -17,33 +17,33 @@ export abstract class DatabaseService {
 	 * @param movieName - The name of the movie (used as the filename in storage).
 	 * @returns A string that represents the downloadable link of the movie cover.
 	 */
-	abstract uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string>;
+	public abstract uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string>;
 
 	/**
 	 * Get the movie list from the database.
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
-	abstract getMovieList(): Observable<MovieItemVO[]>;
+	public abstract getMovieList(): Observable<MovieItemVO[]>;
 
 	/**
 	 * Get the statistics from the database.
 	 *
 	 * @returns An observable that emits the statistics.
 	 */
-	abstract getStatistics(): Observable<any>;
+	public abstract getStatistics(): Observable<any>;
 
 	/**
 	 * Add a new entry to history stating that a new search activity has been initialized.
 	 */
-	abstract updateHistoryWithNewSearchActivity(): Promise<void>;
+	public abstract updateHistoryWithNewSearchActivity(): Promise<void>;
 
 	/**
 	 * Update the movie rate in the database.
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	abstract updateMovieRate(movieItemVO: MovieItemVO): Promise<void>;
+	public abstract updateMovieRate(movieItemVO: MovieItemVO): Promise<void>;
 
 	/**
 	 * Update the movie genre in the database.
@@ -52,7 +52,7 @@ export abstract class DatabaseService {
 	 * @param oldGenre - The old genre value.
 	 * @param newGenre - The new genre value.
 	 */
-	abstract updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void>;
+	public abstract updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void>;
 
 	/**
 	 * Update the isFavourite flag for the given movie in the database.
@@ -60,21 +60,21 @@ export abstract class DatabaseService {
 	 * @param movieKey - The key of the movie to update.
 	 * @param isFavourite - The boolean value to set.
 	 */
-	abstract updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void>;
+	public abstract updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void>;
 
 	/**
 	 * Add a new movie to the database and update the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to add.
 	 */
-	abstract addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void>;
+	public abstract addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void>;
 
 	/**
 	 * Remove a movie from the database and update the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to remove.
 	 */
-	abstract removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void>;
+	public abstract removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void>;
 
 	/**
 	 * Check if a given movie has already been added in the database.
@@ -84,7 +84,7 @@ export abstract class DatabaseService {
 	 * @param movieId - The ID of the movie to check.
 	 * @returns true if the movie already exists, otherwise false.
 	 */
-	abstract isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean>;
+	public abstract isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean>;
 
 	/**
 	 * Add a new history entry with the given status and optional movie data.
@@ -99,14 +99,14 @@ export abstract class DatabaseService {
 	 *
 	 * @returns An observable that emits the history list.
 	 */
-	abstract getHistory(): Observable<any[]>;
+	public abstract getHistory(): Observable<any[]>;
 
 	/**
 	 * Add a new record to the patch notes collection.
 	 *
 	 * @param newRecord - The record to add.
 	 */
-	abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
+	public abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
 
 	/**
 	 * Update an existing record in the patch notes collection.
@@ -114,14 +114,14 @@ export abstract class DatabaseService {
 	 * @param key - The key of the record to update.
 	 * @param updatedRecord - The updated record data.
 	 */
-	abstract updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void>;
+	public abstract updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void>;
 
 	/**
 	 * Get the patch notes from the database.
 	 *
 	 * @returns An observable that emits the patch notes.
 	 */
-	abstract getPatchNotes(): Observable<any[]>;
+	public abstract getPatchNotes(): Observable<any[]>;
 
 	/**
 	 * Remove a single item from the given collection in the database.
@@ -129,35 +129,35 @@ export abstract class DatabaseService {
 	 * @param name - The collection name.
 	 * @param key - The key of the record to remove.
 	 */
-	abstract removeSingleItemFromDatabase(name: string, key: string): Promise<void>;
+	public abstract removeSingleItemFromDatabase(name: string, key: string): Promise<void>;
 
 	/**
 	 * Remove a patch note and keep the patchInProgress statistics field in sync.
 	 *
 	 * @param key - The document key of the patch note to remove.
 	 */
-	abstract removePatchNote(key: string): Promise<void>;
+	public abstract removePatchNote(key: string): Promise<void>;
 
 	/**
 	 * Get the first reminder table details from the database.
 	 *
 	 * @returns An observable that emits the first reminder table details.
 	 */
-	abstract getFirstReminderTableDetails(): Observable<any[]>;
+	public abstract getFirstReminderTableDetails(): Observable<any[]>;
 
 	/**
 	 * Get the second reminder table details from the database.
 	 *
 	 * @returns An observable that emits the second reminder table details.
 	 */
-	abstract getSecondReminderTableDetails(): Observable<any[]>;
+	public abstract getSecondReminderTableDetails(): Observable<any[]>;
 
 	/**
 	 * Get the third reminder table details from the database.
 	 *
 	 * @returns An observable that emits the third reminder table details.
 	 */
-	abstract getThirdReminderTableDetails(): Observable<any[]>;
+	public abstract getThirdReminderTableDetails(): Observable<any[]>;
 
 	/**
 	 * Update a value in the reminder table.
@@ -167,7 +167,7 @@ export abstract class DatabaseService {
 	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to store.
 	 */
-	abstract updateReminderTable(
+	public abstract updateReminderTable(
 		tableName: string,
 		entryKey: string,
 		valueKey: string,
@@ -180,7 +180,7 @@ export abstract class DatabaseService {
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The updated table data.
 	 */
-	abstract updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void>;
+	public abstract updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void>;
 
 	/**
 	 * Remove a record from the reminder table.
@@ -188,7 +188,7 @@ export abstract class DatabaseService {
 	 * @param tableName - The name of the table.
 	 * @param key - The key of the record to remove.
 	 */
-	abstract removeRecordFromReminderTable(tableName: string, key: string): Promise<void>;
+	public abstract removeRecordFromReminderTable(tableName: string, key: string): Promise<void>;
 
 	/**
 	 * Add a new record to the reminder table.
@@ -196,14 +196,14 @@ export abstract class DatabaseService {
 	 * @param tableName - The name of the table.
 	 * @param newRecord - The new record to add.
 	 */
-	abstract addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void>;
+	public abstract addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void>;
 
 	/**
 	 * Get the quotes from the database.
 	 *
 	 * @returns An observable that emits the quotes list.
 	 */
-	abstract getQuotes(): Observable<any[]>;
+	public abstract getQuotes(): Observable<any[]>;
 
 	/**
 	 * Add a new quote to the database.
@@ -212,14 +212,14 @@ export abstract class DatabaseService {
 	 * @param author - The author of the quote.
 	 * @param timestamp - The timestamp of the quote.
 	 */
-	abstract addQuote(text: string, author: string, timestamp: string): Promise<void>;
+	public abstract addQuote(text: string, author: string, timestamp: string): Promise<void>;
 
 	/**
 	 * Remove a quote from the database.
 	 *
 	 * @param key - The key of the quote to remove.
 	 */
-	abstract removeQuote(key: string, text: string, author: string): Promise<void>;
+	public abstract removeQuote(key: string, text: string, author: string): Promise<void>;
 
 	/**
 	 * Update specific fields in the statistics document.
@@ -229,23 +229,23 @@ export abstract class DatabaseService {
 	 *
 	 * @param fields - A flat or nested record of fields to merge into the statistics document.
 	 */
-	abstract updateStatisticsFields(fields: Record<string, any>): Promise<void>;
+	public abstract updateStatisticsFields(fields: Record<string, any>): Promise<void>;
 
 	/**
 	 * Prepend a new entry to the `recentPatchActivities` list in the statistics
-	 * document, keeping at most 5 entries (newest first).
+	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
 	 *
 	 * @param activity - The activity object to record.
 	 */
-	abstract appendToPatchActivityLog(activity: any): Promise<void>;
+	public abstract appendToPatchActivityLog(activity: any): Promise<void>;
 
 	/**
 	 * Prepend a new entry to a named activity-log array in the statistics
-	 * document, keeping at most 5 entries (newest first).
-	 * Used for movie, reminder and resonance activity feeds.
+	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
+	 * Used for movie, patch, reminder and resonance activity feeds.
 	 *
-	 * @param fieldName - The statistics field that holds the array (e.g. 'recentMovieActivities').
+	 * @param fieldName - The statistics field that holds the array — use a STATS_FIELD_* constant.
 	 * @param activity - The activity object to record.
 	 */
-	abstract appendToActivityLog(fieldName: string, activity: any): Promise<void>;
+	public abstract appendToActivityLog(fieldName: string, activity: any): Promise<void>;
 }

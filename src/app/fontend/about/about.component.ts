@@ -1,4 +1,4 @@
-import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, HostListener, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { TimelineModule } from 'primeng/timeline';
 import { CardModule } from 'primeng/card';
 import { isPlatformBrowser } from '@angular/common';
@@ -11,7 +11,7 @@ import { Utilities } from '../../common/app.utilities';
 	templateUrl: './about.component.html',
 	styleUrl: './about.component.css'
 })
-export class AboutComponent {
+export class AboutComponent implements OnInit {
 	protected events!: any[];
 	protected isMobile!: boolean;
 
@@ -19,7 +19,11 @@ export class AboutComponent {
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private utilities: Utilities
 	) {}
-	ngOnInit() {
+	/**
+	 * Initialises the component: detects the mobile viewport and populates
+	 * the timeline events array for the career history section.
+	 */
+	public ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isMobile = this.utilities.isMobile();
 

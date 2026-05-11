@@ -23,7 +23,7 @@ export class ErrorDialogComponent {
 	 *
 	 * @param errorMessage - The error message to display.
 	 */
-	openDialog(errorMessage: string) {
+	public openDialog(errorMessage: string) {
 		this.confirmationService.confirm({
 			message: `<div class="error-dialog-message">${errorMessage}</div>`,
 			header: 'Error',
@@ -40,7 +40,7 @@ export class ErrorDialogComponent {
 	/**
 	 * Handle the dialog closed event
 	 */
-	onDialogClosed() {
+	protected onDialogClosed() {
 		this.closed$.emit();
 	}
 }

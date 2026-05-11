@@ -8,6 +8,7 @@ import { LOG } from '../../../common/app.logs';
 import { Utilities } from '../../../common/app.utilities';
 import { environment } from '../../../../environment/environment';
 import {
+	DATABASE_FIRST_TABLE,
 	DATABASE_HISTORY,
 	DATABASE_MOVIES,
 	DATABASE_PATCH_NOTES,
@@ -15,20 +16,25 @@ import {
 	DATABASE_REMINDER_FIRST,
 	DATABASE_REMINDER_SECOND,
 	DATABASE_REMINDER_THIRD,
+	DATABASE_SECOND_TABLE,
 	DATABASE_STATISTICS,
+	DATABASE_THIRD_TABLE,
 	ERROR_PERMISSION_DENIED,
-	DATABASE_FIRST_TABLE,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
 	NO_RATE,
 	RATE_DECREASED,
 	RATE_INCREASED,
+	REMINDER_TABLE_MESSAGES,
 	SEARCH,
-	DATABASE_SECOND_TABLE,
-	STATUS_IN_PROGRESS,
-	DATABASE_THIRD_TABLE,
-    REMINDER_TABLE_MESSAGES
+	STATS_CAP_ACTIVITY_LOG,
+	STATS_FIELD_PATCH_IN_PROGRESS,
+	STATS_FIELD_RECENT_MOVIE,
+	STATS_FIELD_RECENT_PATCH,
+	STATS_FIELD_RECENT_REMINDER,
+	STATS_FIELD_RECENT_RESONANCE,
+	STATUS_IN_PROGRESS
 } from '../../../common/app.constant';
 
 @Injectable({ providedIn: 'root' })
@@ -40,7 +46,7 @@ export class CloudbaseService extends DatabaseService {
 	private static userRole: string;
 	private static userName: string;
 	private _!: any;
-	searchStreamService: any;
+	private searchStreamService: any;
 	private tempUrlCache = new Map<string, string>();
 	private static _authReady$ = new ReplaySubject<boolean>(1);
 
@@ -209,7 +215,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
-	getMovieList(): Observable<MovieItemVO[]> {
+	public override getMovieList(): Observable<MovieItemVO[]> {
 		return CloudbaseService.authReady$
 			.pipe(
 				take(1),
@@ -541,7 +547,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param movieName - The name of the movie (used as the filename in storage).
 	 * @returns The cloud:// file ID on success, or an empty string on failure.
 	 */
-	async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
+	public override async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
 		try {
 			// Convert Blob to a raw base64 string (no data-URL prefix) for the function payload
 			const base64 = await this.blobToBase64(coverImage);
@@ -601,7 +607,7 @@ export class CloudbaseService extends DatabaseService {
 	/**
 	 * Add new entry to history stating that a new search activity has been initialized
 	 */
-	async updateHistoryWithNewSearchActivity(): Promise<void> {
+	public override async updateHistoryWithNewSearchActivity(): Promise<void> {
 		await this.addNewHistoryEntry(SEARCH);
 	}
 
@@ -610,7 +616,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
+	public override async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
 		// Step 1 : Gather necessary info
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieItemVO.getMovieKey());
 		const oldRate = movieRef.exists() ? movieRef.get().rate : undefined;
@@ -638,7 +644,7 @@ export class CloudbaseService extends DatabaseService {
 					.catch((err: any) =>
 						LOG.error(this.className, 'Failed to update lastMovieUpdated stat', err)
 					);
-				this.appendToActivityLog('recentMovieActivities', {
+				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
 					type: 'updated',
 					title: movieItemVO.getMovieName(),
 					timestamp: updatedTimestamp
@@ -670,7 +676,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param oldGenre - The old genre value.
 	 * @param newGenre - The new genre value.
 	 */
-	updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
+	public override updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
 		// Step 1 : Update movie genre
 		return movieRef
@@ -705,7 +711,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param movieKey - The key of the movie to update.
 	 * @param isFavourite - The boolean value to set.
 	 */
-	updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
+	public override updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
 		// Step 1 : Update movie favourite
 		return movieRef
@@ -744,7 +750,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
+	public override async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Add new movie data
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
@@ -788,7 +794,7 @@ export class CloudbaseService extends DatabaseService {
 			if (statRes.code) throw new Error(statRes.message);
 
 			// Append to activity log so multiple adds are all visible in Recent Activity
-			this.appendToActivityLog('recentMovieActivities', {
+			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
 				type: 'added',
 				title: movieItemVO.getMovieName(),
 				genre: movieItemVO.getMovieGenre(),
@@ -812,7 +818,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to remove.
 	 */
-	async removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
+	public override async removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Step 1: Remove the movie document from the database
 			const removeRes = await this.database
@@ -863,7 +869,7 @@ export class CloudbaseService extends DatabaseService {
 			if (statRes.code) throw new Error(statRes.message);
 
 			// Append to activity log so multiple deletes are all visible in Recent Activity
-			this.appendToActivityLog('recentMovieActivities', {
+			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
 				type: 'deleted',
 				title: movieItemVO.getMovieName(),
 				genre: movieItemVO.getMovieGenre(),
@@ -889,7 +895,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param movieId Movie ID to check
 	 * @returns true if the movie already exists, otherwise, false.
 	 */
-	async isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean> {
+	public override async isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean> {
 		try {
 			const result = await this.database
 				.collection(DATABASE_MOVIES)
@@ -955,7 +961,7 @@ export class CloudbaseService extends DatabaseService {
 
 				// Keep statistics in sync: record the most recent rate-search timestamp.
 				await this.statisticsRef.update({ lastRateSearch: { timestamp } });
-				this.appendToActivityLog('recentMovieActivities', { type: 'search', timestamp }).catch(
+				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: 'search', timestamp }).catch(
 					() => {}
 				);
 			}
@@ -971,7 +977,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param newRecord - The record to add.
 	 */
-	addNewRecordToPatchNotes(newRecord: any): Promise<void> {
+	public override addNewRecordToPatchNotes(newRecord: any): Promise<void> {
 		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 		return this.database
 			.collection(DATABASE_PATCH_NOTES)
@@ -1006,7 +1012,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key associated with the record
 	 * @param updatedRecord - The record to update.
 	 */
-	updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
+	public override updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
 		return this.database
 			.collection(DATABASE_PATCH_NOTES)
 			.where({
@@ -1059,7 +1065,7 @@ export class CloudbaseService extends DatabaseService {
 						details: note.details,
 						isBug: !!note.isBug
 					}));
-				return this.statisticsRef.update({ patchInProgress: inProgress });
+				return this.statisticsRef.update({ [STATS_FIELD_PATCH_IN_PROGRESS]: inProgress });
 			})
 			.catch((err: any) => LOG.error(this.className, 'Failed to sync patchInProgress stat', err));
 	}
@@ -1073,7 +1079,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param valueKey - The key associated with the new value.
 	 * @param value - The new value to be stored.
 	 */
-	updateReminderTable(tableName: string, entryKey: string, valueKey: string, value: any): Promise<void> {
+	public override updateReminderTable(tableName: string, entryKey: string, valueKey: string, value: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 
 		// Branch on valueKey: "content" replaces entire content object (bulk edit);
@@ -1107,7 +1113,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The table to update
 	 */
-	async updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
+	public override async updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 		const tableRef = this.database.collection(collectionName);
 
@@ -1135,7 +1141,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param tableName - Corresponding collection name
 	 * @param key - The key of the record to remove
 	 */
-	async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
+	public override async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
 		try {
 			const collectionName = this.convertTableNameToCollectionName(tableName);
 			// Delegate to the shared helper so error handling (result.code check)
@@ -1153,7 +1159,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param collectionName - The collection name in cloudbase
 	 * @param key - The key associated with the record
 	 */
-	async removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
+	public override async removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
 		const result = await this.database
 			.collection(collectionName)
 			.where({ _id: key, _openid: CloudbaseService.getUseId() })
@@ -1171,7 +1177,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param tableName - The corresponding collection name.
 	 * @param newRecord - The new entry to add.
 	 */
-	addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
+	public override addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 		return this.database
@@ -1189,7 +1195,7 @@ export class CloudbaseService extends DatabaseService {
 				// Fire-and-forget: record third-table additions in stats so the
 				// home-page Recent Activity widget can surface them immediately.
 				if (tableName === DATABASE_THIRD_TABLE) {
-					this.appendToActivityLog('recentReminderActivities', {
+					this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 						type: 'added',
 						table: REMINDER_TABLE_MESSAGES,
 						text: newRecord.text ?? '',
@@ -1204,7 +1210,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @returns An observable that emits the quotes list.
 	 */
-	getQuotes(): Observable<any[]> {
+	public override getQuotes(): Observable<any[]> {
 		return CloudbaseService.authReady$
 			.pipe(
 				take(1),
@@ -1239,7 +1245,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param author - The author of the quote.
 	 * @param timestamp - The timestamp of the quote.
 	 */
-	async addQuote(text: string, author: string, timestamp: string): Promise<void> {
+	public override async addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		// Attach _openid whenever a user is authenticated so they can later delete their own quotes.
 		// Falls back to empty object for anonymous users (no delete permission).
 		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
@@ -1259,7 +1265,7 @@ export class CloudbaseService extends DatabaseService {
 			latestQuote: { text, author, timestamp },
 			totalQuotes: this._.inc(1)
 		});
-		this.appendToActivityLog('recentResonanceActivities', { type: 'added', author, timestamp }).catch(
+		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, { type: 'added', author, timestamp }).catch(
 			() => {}
 		);
 	}
@@ -1271,7 +1277,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param text - The text of the deleted quote (written to lastQuoteDeleted stat).
 	 * @param author - The author of the deleted quote (written to lastQuoteDeleted stat).
 	 */
-	async removeQuote(key: string, text: string, author: string): Promise<void> {
+	public override async removeQuote(key: string, text: string, author: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
 
 		// Re-query remaining quotes so that latestQuote always reflects
@@ -1293,7 +1299,7 @@ export class CloudbaseService extends DatabaseService {
 				timestamp: deletedTimestamp
 			}
 		});
-		this.appendToActivityLog('recentResonanceActivities', {
+		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
 			type: 'deleted',
 			author,
 			timestamp: deletedTimestamp
@@ -1308,7 +1314,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param fields - Fields to merge into the statistics document.
 	 */
-	async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
+	public override async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
 		try {
 			const result = await this.statisticsRef.update(fields);
 			if (result.code || result.updated === 0)
@@ -1321,12 +1327,21 @@ export class CloudbaseService extends DatabaseService {
 		}
 	}
 
-	async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
+	/**
+	 * Prepend a new entry to a named activity-log array in the statistics
+	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
+	 * Used for movie, patch, reminder and resonance activity feeds.
+	 *
+	 * @param fieldName - The statistics field that holds the array — use a STATS_FIELD_* constant.
+	 * @param activity - The activity object to record.
+	 */
+	public override async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
 		try {
 			const doc = await this.database.collection(DATABASE_STATISTICS).doc(this.statId).get();
 			const raw = doc.data?.[0]?.[fieldName];
 			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
-			const updated = [activity, ...existing];
+			// Prepend the new item and trim to the cap so CloudBase storage stays bounded.
+			const updated = [activity, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
 			const result = await this.statisticsRef.update({ [fieldName]: updated });
 			if (result.code || result.updated === 0)
 				throw new Error(
@@ -1338,8 +1353,14 @@ export class CloudbaseService extends DatabaseService {
 		}
 	}
 
-	async appendToPatchActivityLog(activity: any): Promise<void> {
-		return this.appendToActivityLog('recentPatchActivities', activity);
+	/**
+	 * Prepend a new entry to the `recentPatchActivities` list in the statistics
+	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
+	 *
+	 * @param activity - The activity object to record.
+	 */
+	public override async appendToPatchActivityLog(activity: any): Promise<void> {
+		return this.appendToActivityLog(STATS_FIELD_RECENT_PATCH, activity);
 	}
 
 	/**

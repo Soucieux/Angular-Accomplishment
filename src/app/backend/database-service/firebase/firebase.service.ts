@@ -1,17 +1,22 @@
 import { Utilities } from '../../../common/app.utilities';
 import {
 	DATABASE_FIRST_TABLE,
-	GENRE_FAVOURITE,
-	NO_RATE,
-	DATABASE_SECOND_TABLE,
-	DATABASE_THIRD_TABLE,
-	RATE_DECREASED,
-	RATE_INCREASED,
-	SEARCH,
 	DATABASE_HISTORY,
 	DATABASE_PATCH_NOTES,
 	DATABASE_QUOTES,
-	DATABASE_REMINDER
+	DATABASE_REMINDER,
+	DATABASE_SECOND_TABLE,
+	DATABASE_THIRD_TABLE,
+	GENRE_FAVOURITE,
+	NO_RATE,
+	RATE_DECREASED,
+	RATE_INCREASED,
+	SEARCH,
+	STATS_CAP_ACTIVITY_LOG,
+	STATS_FIELD_RECENT_MOVIE,
+	STATS_FIELD_RECENT_PATCH,
+	STATS_FIELD_RECENT_REMINDER,
+	STATS_FIELD_RECENT_RESONANCE
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
@@ -37,7 +42,7 @@ import { DatabaseService } from '../database.service';
 })
 
 /*
-    NOTE: This class is no longer being maintenanced. No need to edit this class anymore.
+    NOTE: This class is no longer being maintained. No need to edit this class anymore.
     We have transformed to use cloudbase from now on.
     */
 export class FirebaseService extends DatabaseService {
@@ -433,7 +438,7 @@ export class FirebaseService extends DatabaseService {
 						timestamp
 					}
 				});
-				this.appendToActivityLog('recentMovieActivities', {
+				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
 					type: 'added',
 					title: movieItemVO.getMovieName(),
 					genre: movieItemVO.getMovieGenre(),
@@ -448,7 +453,7 @@ export class FirebaseService extends DatabaseService {
 
 			// Keep statistics in sync: record the most recent rate-search timestamp.
 			await update(this.statisticsRef, { lastRateSearch: { timestamp } });
-			this.appendToActivityLog('recentMovieActivities', { type: 'search', timestamp }).catch(() => {});
+			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: 'search', timestamp }).catch(() => {});
 		}
 		LOG.info(this.className, 'New history entry has been added');
 	}
@@ -722,7 +727,7 @@ export class FirebaseService extends DatabaseService {
 			currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
 			return currentData;
 		});
-		this.appendToActivityLog('recentResonanceActivities', { type: 'added', author, timestamp }).catch(
+		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, { type: 'added', author, timestamp }).catch(
 			() => {}
 		);
 	}
@@ -742,7 +747,7 @@ export class FirebaseService extends DatabaseService {
 			currentData.totalQuotes = Math.max(0, (currentData.totalQuotes ?? 1) - 1);
 			return currentData;
 		});
-		this.appendToActivityLog('recentResonanceActivities', {
+		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
 			type: 'deleted',
 			author,
 			timestamp: deletedTimestamp
@@ -765,12 +770,20 @@ export class FirebaseService extends DatabaseService {
 		}
 	}
 
-	public async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
+	/**
+	 * Prepend a new entry to a named activity-log array in the statistics
+	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
+	 * Used for movie, patch, reminder and resonance activity feeds.
+	 *
+	 * @param fieldName - The statistics field that holds the array — use a STATS_FIELD_* constant.
+	 * @param activity - The activity object to record.
+	 */
+	public override async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
 		try {
 			await runTransaction(this.statisticsRef, (currentData) => {
 				currentData = currentData ?? {};
 				const existing: any[] = Array.isArray(currentData[fieldName]) ? currentData[fieldName] : [];
-				currentData[fieldName] = [activity, ...existing].slice(0, 5);
+				currentData[fieldName] = [activity, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
 				return currentData;
 			});
 		} catch (error) {
@@ -778,8 +791,14 @@ export class FirebaseService extends DatabaseService {
 		}
 	}
 
-	public async appendToPatchActivityLog(activity: any): Promise<void> {
-		return this.appendToActivityLog('recentPatchActivities', activity);
+	/**
+	 * Prepend a new entry to the `recentPatchActivities` list in the statistics
+	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
+	 *
+	 * @param activity - The activity object to record.
+	 */
+	public override async appendToPatchActivityLog(activity: any): Promise<void> {
+		return this.appendToActivityLog(STATS_FIELD_RECENT_PATCH, activity);
 	}
 
 	/**
@@ -795,7 +814,7 @@ export class FirebaseService extends DatabaseService {
 		}).then(() => {
 			LOG.info(this.className, 'Reminder table has been updated');
 			if (tableName === DATABASE_THIRD_TABLE) {
-				this.appendToActivityLog('recentReminderActivities', {
+				this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 					type: 'added',
 					table: DATABASE_THIRD_TABLE,
 					text: newRecord.text ?? '',
@@ -805,7 +824,12 @@ export class FirebaseService extends DatabaseService {
 		});
 	}
 
-	public removePatchNote(key: string): Promise<void> {
+	/**
+	 * Remove a patch note by key from the Firebase database.
+	 *
+	 * @param key - The document key of the patch note to remove.
+	 */
+	public override removePatchNote(key: string): Promise<void> {
 		return this.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
 	}
 }

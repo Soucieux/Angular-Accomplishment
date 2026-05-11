@@ -3,6 +3,8 @@ import {
 	Component,
 	EventEmitter,
 	inject,
+	OnDestroy,
+	OnInit,
 	Output,
 	ViewChild,
 	ViewContainerRef
@@ -38,7 +40,7 @@ import { DialogService } from '../dialog.service';
 	styleUrl: './add.component.scss',
 	providers: []
 })
-export class AddDialogComponent {
+export class AddDialogComponent implements OnInit, OnDestroy {
 	private readonly className = 'AddDialogComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
@@ -48,20 +50,23 @@ export class AddDialogComponent {
 	private submitCallback?: (movie: MovieItemVO) => void;
 	private searchCallback?: (movie: MovieItemVO) => Blob;
 	private movieItemVO: MovieItemVO = new MovieItemVO();
-	visible: boolean = false;
-	isLoading: boolean = false;
-	canSubmit: boolean = false;
-	years: { year: string }[] | undefined;
-	genres: { genre: string }[] | undefined;
-	isFavourite: boolean = false;
-	movieImageUrl: string | null = null;
+	protected visible: boolean = false;
+	protected isLoading: boolean = false;
+	protected canSubmit: boolean = false;
+	protected years: { year: string }[] | undefined;
+	protected genres: { genre: string }[] | undefined;
+	protected isFavourite: boolean = false;
+	protected movieImageUrl: string | null = null;
 
 	constructor(
 		private dialogService: DialogService,
 		private cdr: ChangeDetectorRef
 	) {}
 
-	protected ngOnInit() {
+	/**
+	 * Initialises the year and genre selection dropdown options used in the add-movie form.
+	 */
+	public ngOnInit() {
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (2026 - i).toString() }));
 		this.genres = [
 			{ genre: '刑侦' },
@@ -73,7 +78,11 @@ export class AddDialogComponent {
 		];
 	}
 
-	protected ngOnDestroy() {
+	/**
+	 * Clears any dynamically attached dialog components from the container
+	 * to prevent memory leaks when this dialog is destroyed.
+	 */
+	public ngOnDestroy() {
 		this.dialogComponentContainer?.clear();
 	}
 
@@ -83,7 +92,7 @@ export class AddDialogComponent {
 	 * @param submitCallback - The callback to call when the form is submitted.
 	 * @param searchCallback - The callback to call to search for a movie and return its cover image blob.
 	 */
-	protected openDialog(
+	public openDialog(
 		submitCallback: (movie: MovieItemVO) => void,
 		searchCallback: (movie: MovieItemVO) => Blob
 	) {

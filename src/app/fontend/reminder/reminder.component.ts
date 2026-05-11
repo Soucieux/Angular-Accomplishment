@@ -2,6 +2,8 @@ import {
 	ChangeDetectorRef,
 	Component,
 	Inject,
+	OnDestroy,
+	OnInit,
 	PLATFORM_ID,
 	ViewChild,
 	ViewContainerRef
@@ -27,16 +29,18 @@ import { Utilities } from '../../common/app.utilities';
 import {
 	ACCOUNT_DEBT_DECREMENT,
 	COMPONENT_DESTROY,
+	DATABASE_FIRST_TABLE,
+	DATABASE_SECOND_TABLE,
+	DATABASE_THIRD_TABLE,
 	DIALOG_CONFIRM,
 	ERROR_PERMISSION_DENIED,
 	FAILURE,
-	DATABASE_FIRST_TABLE,
 	REMINDER_TABLE_ACCOUNT_EXPENSES,
 	REMINDER_TABLE_DATE_CALCULATOR,
 	REMINDER_TABLE_MESSAGES,
-	DATABASE_SECOND_TABLE,
-	SUCCESS,
-	DATABASE_THIRD_TABLE
+	STATS_FIELD_RECENT_REMINDER,
+	STATS_FIELD_REMINDER_UPCOMING,
+	SUCCESS
 } from '../../common/app.constant';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
@@ -64,12 +68,12 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 	templateUrl: './reminder.component.html',
 	styleUrl: './reminder.component.css'
 })
-export class ReminderComponent {
+export class ReminderComponent implements OnInit, OnDestroy {
 	private readonly className = 'ReminderComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	@ViewChild('op2') op2!: any;
+	@ViewChild('op2') protected op2!: any;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
 	private chargedCells = new Set<string>();
@@ -81,9 +85,9 @@ export class ReminderComponent {
 	protected originalSecondTable!: any[];
 	protected pagedThirdTable!: any[];
 	protected originalThirdTable!: any[];
-	protected firstSub?: Subscription;
-	protected secondSub?: Subscription;
-	protected thirdSub?: Subscription;
+	private firstSub?: Subscription;
+	private secondSub?: Subscription;
+	private thirdSub?: Subscription;
 	/** Cached items per table — merged before each statistics write. */
 	private upcomingExpenses: any[] = [];
 	private upcomingMessages: any[] = [];
@@ -117,7 +121,7 @@ export class ReminderComponent {
 	 * populates its respective data arrays and immediately syncs upcoming items to
 	 * the statistics collection so the home-page reminder widget stays current.
 	 */
-	ngOnInit() {
+	public ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = Utilities.checkIfHoverCapable();
 			this.currentDay = new Date().getDate();
@@ -222,7 +226,7 @@ export class ReminderComponent {
 	 * component destruction event. Unsubscribing also stops the periodic
 	 * statistics syncs that are driven by those subscriptions.
 	 */
-	ngOnDestroy() {
+	public ngOnDestroy() {
 		this.firstSub?.unsubscribe();
 		this.secondSub?.unsubscribe();
 		this.thirdSub?.unsubscribe();
@@ -236,7 +240,7 @@ export class ReminderComponent {
 	 *
 	 * @param event - The keyboard event to validate.
 	 */
-	onNumberChange(event: KeyboardEvent) {
+	protected onNumberChange(event: KeyboardEvent) {
 		const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
 		if (allowedKeys.includes(event.key)) return;
 
@@ -253,7 +257,7 @@ export class ReminderComponent {
 	 * @param rowIndex - The index of the row being changed.
 	 * @param field - The column key (first, second, third, fourth) being changed.
 	 */
-	async onValueChange(rowIndex: number, field: string) {
+	protected async onValueChange(rowIndex: number, field: string) {
 		let originalValue = this.originalFirstTable[rowIndex][field].value;
 
 		// Do nothing if the value does not change
@@ -464,7 +468,7 @@ export class ReminderComponent {
 			this.triggerSaveIndicator(DATABASE_FIRST_TABLE);
 			// Fire-and-forget: surface this change in the Recent Activity widget.
 			this.databaseService
-				.appendToActivityLog('recentReminderActivities', {
+				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 					type: 'updated',
 					table: REMINDER_TABLE_DATE_CALCULATOR,
 					text: '',
@@ -629,7 +633,7 @@ export class ReminderComponent {
 			this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
 			// Fire-and-forget: surface the deletion in the Recent Activity widget.
 			this.databaseService
-				.appendToActivityLog('recentReminderActivities', {
+				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 					type: 'deleted',
 					table: REMINDER_TABLE_MESSAGES,
 					text: itemText,
@@ -717,7 +721,7 @@ export class ReminderComponent {
 	 *
 	 * @param event - The PrimeNG paginator event containing the new `first` index.
 	 */
-	thirdTablePageChange(event: any) {
+	protected thirdTablePageChange(event: any) {
 		this.thirdTableIndexOfFirstItem = event.first;
 		this.pagedThirdTable = this.updatePagedThirdTable();
 	}
@@ -755,7 +759,7 @@ export class ReminderComponent {
 							? (this.findUpdatedItem(DATABASE_THIRD_TABLE, entryKey)?.content?.text ?? '')
 							: '';
 				this.databaseService
-					.appendToActivityLog('recentReminderActivities', {
+					.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 						type: 'updated',
 						table: tableLabel,
 						text: itemText,
@@ -838,7 +842,7 @@ export class ReminderComponent {
 	 */
 	private syncReminderStatistics(): void {
 		this.databaseService.updateStatisticsFields({
-			reminderUpcoming: [...this.upcomingExpenses, ...this.upcomingMessages]
+			[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses, ...this.upcomingMessages]
 		});
 	}
 
@@ -884,13 +888,16 @@ export class ReminderComponent {
 
 	////////////////////////////////COMMON METHODS////////////////////////////////
 	/**
-	 * Use this method ONLY for buttons and dialogs to avoid multiple database calls
+	 * Check whether the current user has permission to modify an entry in the
+	 * given table. Admins bypass the check; all other users must be the owner
+	 * of the row (first table: row[0]._openid; second/third: the entry's _openid).
+	 * Shows an appropriate error dialog on failure.
 	 *
-	 * {@link updateChargedCells} - Button to set isNextMonth for first table
-	 * {@link onValueChange} - Value change for every field for first table
-	 * {@link setIsCharged} - Button to set the current field to charged for first table
-	 * {@link openResetConfirmationDialog} - Button to open reset dialog for first table
-	 * {@link openDeleteConfirmationDialog} - Button to open delete dialog for third table
+	 * Use this method ONLY for buttons and dialogs to avoid multiple database calls.
+	 *
+	 * @param tableName - The table whose write permission is being checked.
+	 * @param entryKey - The key of the specific entry (unused for the first table — pass '0').
+	 * @returns SUCCESS if permitted, FAILURE otherwise.
 	 */
 	private checkPermission(tableName: string, entryKey: string) {
 		// Three-tier check: admins bypass all checks; first table checks row[0]._openid;

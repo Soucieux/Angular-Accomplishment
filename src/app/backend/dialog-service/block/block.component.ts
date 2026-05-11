@@ -11,8 +11,8 @@ import { CommonModule } from '@angular/common';
 })
 export class BlockDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
-	visible: boolean = false;
-	message: string = '';
+	protected visible: boolean = false;
+	protected message: string = '';
 
 	constructor() {}
 
@@ -24,7 +24,7 @@ export class BlockDialogComponent {
 	 * @param message - The message to display in the dialog.
 	 * @returns The promise from the task.
 	 */
-	async openDialog(task: () => Promise<void>, message: string) {
+	public async openDialog(task: () => Promise<void>, message: string) {
 		this.message = message;
 		this.visible = true;
 		try {
@@ -40,7 +40,7 @@ export class BlockDialogComponent {
 	/**
 	 * Handle the dialog closed event by emitting the closed event.
 	 */
-	onDialogClosed() {
+	protected onDialogClosed() {
 		this.closed$.emit();
 		this.visible = false;
 	}

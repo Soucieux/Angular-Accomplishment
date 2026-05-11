@@ -24,7 +24,7 @@ export class DialogService {
 	 * @param dialogType - The type of dialog to get
 	 * @returns The dialog component
 	 */
-	getDialogComponent(dialogType: string): Type<any> {
+	private getDialogComponent(dialogType: string): Type<any> {
 		switch (dialogType) {
 			case 'confirm':
 				return ConfirmDialogComponent;
@@ -44,32 +44,32 @@ export class DialogService {
 	}
 
 	// Overload methods to call correct dialog component
-	openDialog(
+	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'block',
 		task: () => Promise<void>,
 		message: string
 	): Promise<void>;
 
-	openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'search', acceptCallback: () => void): void;
+	public openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'search', acceptCallback: () => void): void;
 
-	openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'error', errorMessage: string): void;
+	public openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'error', errorMessage: string): void;
 
-	openDialog(
+	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'confirm',
 		acceptCallback: () => void,
 		data: any[]
 	): void;
 
-	openDialog(
+	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'add',
 		submitCallback: (movie: MovieItemVO) => void,
 		searchCallback: (movie: MovieItemVO) => void
 	): void;
 
-	openDialog(
+	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'history',
 		revertDataCallback: (movie: MovieItemVO) => void,
@@ -84,7 +84,7 @@ export class DialogService {
 	 * @param dataOrCallback1 - First callback to call or any data to pass
 	 * @param dataOrCallback2 - Second callback to call or any data to pass
 	 */
-	openDialog(
+	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: string,
 		dataOrCallback1: any,
@@ -150,7 +150,7 @@ export class DialogService {
 	 *
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
-	showPermissionError(container: ViewContainerRef) {
+	public showPermissionError(container: ViewContainerRef) {
 		this.openDialog(container, 'error', 'User does not have permission');
 	}
 
@@ -159,7 +159,7 @@ export class DialogService {
 	 *
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
-	showUnexpectedError(container: ViewContainerRef) {
+	public showUnexpectedError(container: ViewContainerRef) {
 		this.openDialog(container, 'error', 'Unexpected error occurred');
 	}
 }

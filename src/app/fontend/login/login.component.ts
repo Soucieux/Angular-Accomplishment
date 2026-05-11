@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, ViewChild, ViewContainerRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
@@ -32,16 +32,16 @@ import { wrongVerificationCodeError } from '../../common/error/wrong-verificatio
 	templateUrl: './login.component.html',
 	styleUrls: ['./login.component.css']
 })
-export class LoginComponent {
+export class LoginComponent implements OnDestroy {
 	private readonly classname = 'LoginComponent';
 	@ViewChild('dialogContainer', { read: ViewContainerRef })
 	private dialogContainer!: ViewContainerRef;
-	loginForm: FormGroup;
-	formSubmitted = false;
-	isSignUp = false;
-	animating: 'out' | 'in' | '' = '';
-	codeSent = false;
-	sendingCode = false;
+	protected loginForm: FormGroup;
+	protected formSubmitted = false;
+	protected isSignUp = false;
+	protected animating: 'out' | 'in' | '' = '';
+	protected codeSent = false;
+	protected sendingCode = false;
 	private codeSentTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
@@ -58,7 +58,11 @@ export class LoginComponent {
 		});
 	}
 
-	ngOnDestroy() {
+	/**
+	 * Clears the code-sent auto-clear timer if active and logs the component
+	 * destruction event.
+	 */
+	public ngOnDestroy() {
 		if (this.codeSentTimeout) {
 			clearTimeout(this.codeSentTimeout);
 			this.codeSentTimeout = null;
@@ -73,7 +77,7 @@ export class LoginComponent {
 	 * @param controlName - The name of the form control to check.
 	 * @returns true if the control is invalid and the form has been submitted.
 	 */
-	isInvalid(controlName: string) {
+	protected isInvalid(controlName: string) {
 		const control = this.loginForm.get(controlName);
 		return control?.invalid && this.formSubmitted;
 	}
@@ -83,7 +87,7 @@ export class LoginComponent {
 	 * Resets the form and updates validators for the email and
 	 * verification code fields depending on the selected mode.
 	 */
-	toggleMode() {
+	protected toggleMode() {
 		// Start fade-out animation; after 280ms (matching CSS transition duration),
 		// swap the form mode, reset validators, and trigger fade-in.
 		this.animating = 'out';
@@ -127,7 +131,7 @@ export class LoginComponent {
 	 * Prevents duplicate requests while a code is already being sent.
 	 * The code-sent indicator auto-clears after 4 seconds.
 	 */
-	async getVerificationCodeEmail() {
+	protected async getVerificationCodeEmail() {
 		// Prevent duplicate requests; codeSent is set optimistically before the API
 		// call so the user sees immediate feedback, then auto-clears after 4 seconds.
 		if (this.sendingCode) return;
@@ -155,7 +159,7 @@ export class LoginComponent {
 	 * marks the form as submitted to show validation errors. Routes to the
 	 * appropriate auth service method based on the current mode.
 	 */
-	async onSubmit() {
+	protected async onSubmit() {
 		this.formSubmitted = true;
 		if (!this.loginForm.valid) return;
 
@@ -199,7 +203,7 @@ export class LoginComponent {
 	/**
 	 * Initiate Google sign-in flow.
 	 */
-	googleLogin() {
+	protected googleLogin() {
 		this.authService.googleLogin();
 	}
 }

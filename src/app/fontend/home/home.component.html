@@ -360,14 +360,15 @@
 							<span class="card-title">Recent Activity</span>
 						</div>
 
-						@if (getRecentActivity().length === 0) {
+						@let recentActivity = getRecentActivity();
+						@if (recentActivity.length === 0) {
 							<div class="empty-state">
 								<span class="empty-emoji">📭</span>
 								<span class="empty-text">Nothing to show</span>
 							</div>
 						} @else {
-							<div class="activity-list">
-								@for (event of getRecentActivity(); track event.label) {
+							<div class="activity-list activity-list-scroll">
+								@for (event of recentActivity; track $index) {
 									<div class="activity-item">
 										<div
 											class="activity-icon-wrap"

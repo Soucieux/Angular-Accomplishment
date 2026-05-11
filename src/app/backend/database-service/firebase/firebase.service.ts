@@ -1,10 +1,10 @@
 import { Utilities } from '../../../common/app.utilities';
 import {
-	FIRST_TABLE,
+	DATABASE_FIRST_TABLE,
 	GENRE_FAVOURITE,
 	NO_RATE,
-	SECOND_TABLE,
-	THIRD_TABLE,
+	DATABASE_SECOND_TABLE,
+	DATABASE_THIRD_TABLE,
 	RATE_DECREASED,
 	RATE_INCREASED,
 	SEARCH,
@@ -35,6 +35,11 @@ import { DatabaseService } from '../database.service';
 @Injectable({
 	providedIn: 'root'
 })
+
+/*
+    NOTE: This class is no longer being maintenanced. No need to edit this class anymore.
+    We have transformed to use cloudbase from now on.
+    */
 export class FirebaseService extends DatabaseService {
 	private readonly className = 'FirebaseService';
 	private moviesRef: any;
@@ -564,12 +569,15 @@ export class FirebaseService extends DatabaseService {
 	public getFirstReminderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
-				const unsub = onValue(dbRef(this.db, `${DATABASE_REMINDER}/${FIRST_TABLE}`), (snapshot) => {
-					const data = snapshot.val();
-					// Firebase stores the collection as an object keyed by push ID;
-					// Object.values() converts it to an array for PrimeNG table binding.
-					observer.next(data ? Object.values(data) : []);
-				});
+				const unsub = onValue(
+					dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_FIRST_TABLE}`),
+					(snapshot) => {
+						const data = snapshot.val();
+						// Firebase stores the collection as an object keyed by push ID;
+						// Object.values() converts it to an array for PrimeNG table binding.
+						observer.next(data ? Object.values(data) : []);
+					}
+				);
 				return () => unsub();
 			});
 		});
@@ -584,7 +592,7 @@ export class FirebaseService extends DatabaseService {
 		return runInInjectionContext(this.ei, () =>
 			// list() reads once + subscribes to changes; pipe+map transforms
 			// each snapshot into {key, ...fields} for the table component.
-			list(dbRef(this.db, `${DATABASE_REMINDER}/${SECOND_TABLE}`)).pipe(
+			list(dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_SECOND_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -615,7 +623,7 @@ export class FirebaseService extends DatabaseService {
 		return runInInjectionContext(this.ei, () =>
 			// Same list()+pipe+map pipeline as second table, but third table
 			// content shape is {text, date, link} so mapping differs accordingly.
-			list(dbRef(this.db, `${DATABASE_REMINDER}/${THIRD_TABLE}`)).pipe(
+			list(dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_THIRD_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -647,14 +655,14 @@ export class FirebaseService extends DatabaseService {
 		valueKey: string,
 		value: any
 	): Promise<void> {
-		if (tableName === SECOND_TABLE) {
+		if (tableName === DATABASE_SECOND_TABLE) {
 			const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
 
 			await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}/content`), {
 				...valueToUpdate
 			});
 			LOG.info(this.className, 'Reminder table has been updated');
-		} else if (tableName === THIRD_TABLE) {
+		} else if (tableName === DATABASE_THIRD_TABLE) {
 			await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}`), {
 				[valueKey]: value
 			});
@@ -714,7 +722,9 @@ export class FirebaseService extends DatabaseService {
 			currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
 			return currentData;
 		});
-		this.appendToActivityLog('recentResonanceActivities', { type: 'added', author, timestamp }).catch(() => {});
+		this.appendToActivityLog('recentResonanceActivities', { type: 'added', author, timestamp }).catch(
+			() => {}
+		);
 	}
 
 	/**
@@ -732,7 +742,11 @@ export class FirebaseService extends DatabaseService {
 			currentData.totalQuotes = Math.max(0, (currentData.totalQuotes ?? 1) - 1);
 			return currentData;
 		});
-		this.appendToActivityLog('recentResonanceActivities', { type: 'deleted', author, timestamp: deletedTimestamp }).catch(() => {});
+		this.appendToActivityLog('recentResonanceActivities', {
+			type: 'deleted',
+			author,
+			timestamp: deletedTimestamp
+		}).catch(() => {});
 	}
 
 	/**
@@ -755,9 +769,7 @@ export class FirebaseService extends DatabaseService {
 		try {
 			await runTransaction(this.statisticsRef, (currentData) => {
 				currentData = currentData ?? {};
-				const existing: any[] = Array.isArray(currentData[fieldName])
-					? currentData[fieldName]
-					: [];
+				const existing: any[] = Array.isArray(currentData[fieldName]) ? currentData[fieldName] : [];
 				currentData[fieldName] = [activity, ...existing].slice(0, 5);
 				return currentData;
 			});
@@ -782,10 +794,10 @@ export class FirebaseService extends DatabaseService {
 			content: { ...newRecord }
 		}).then(() => {
 			LOG.info(this.className, 'Reminder table has been updated');
-			if (tableName === THIRD_TABLE) {
+			if (tableName === DATABASE_THIRD_TABLE) {
 				this.appendToActivityLog('recentReminderActivities', {
 					type: 'added',
-					table: THIRD_TABLE,
+					table: DATABASE_THIRD_TABLE,
 					text: newRecord.text ?? '',
 					timestamp: this.utilities.getCurrentFormattedTime(true)
 				}).catch(() => {});

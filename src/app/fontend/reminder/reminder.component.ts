@@ -30,13 +30,13 @@ import {
 	DIALOG_CONFIRM,
 	ERROR_PERMISSION_DENIED,
 	FAILURE,
-	FIRST_TABLE,
+	DATABASE_FIRST_TABLE,
 	REMINDER_TABLE_ACCOUNT_EXPENSES,
 	REMINDER_TABLE_DATE_CALCULATOR,
 	REMINDER_TABLE_MESSAGES,
-	SECOND_TABLE,
+	DATABASE_SECOND_TABLE,
 	SUCCESS,
-	THIRD_TABLE
+	DATABASE_THIRD_TABLE
 } from '../../common/app.constant';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
@@ -87,9 +87,9 @@ export class ReminderComponent {
 	/** Cached items per table — merged before each statistics write. */
 	private upcomingExpenses: any[] = [];
 	private upcomingMessages: any[] = [];
-	protected FIRST_TABLE: string = FIRST_TABLE;
-	protected SECOND_TABLE: string = SECOND_TABLE;
-	protected THIRD_TABLE: string = THIRD_TABLE;
+	protected FIRST_TABLE: string = DATABASE_FIRST_TABLE;
+	protected SECOND_TABLE: string = DATABASE_SECOND_TABLE;
+	protected THIRD_TABLE: string = DATABASE_THIRD_TABLE;
 	protected thirdTableActiveItem: any;
 	protected thirdTableNewText: string = '';
 	protected thirdTableIndexOfFirstItem: number = 0;
@@ -183,7 +183,7 @@ export class ReminderComponent {
 	 */
 	protected async updateChargedCells() {
 		if (this.chargedCellsInitialized) {
-			const returnCode = this.checkPermission(FIRST_TABLE, '0');
+			const returnCode = this.checkPermission(DATABASE_FIRST_TABLE, '0');
 			// Rollback
 			if (returnCode === FAILURE) {
 				setTimeout(() => {
@@ -236,7 +236,7 @@ export class ReminderComponent {
 	 *
 	 * @param event - The keyboard event to validate.
 	 */
-    onNumberChange(event: KeyboardEvent) {
+	onNumberChange(event: KeyboardEvent) {
 		const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
 		if (allowedKeys.includes(event.key)) return;
 
@@ -259,7 +259,7 @@ export class ReminderComponent {
 		// Do nothing if the value does not change
 		if (this.updatedFirstTable[rowIndex][field].value == originalValue) return;
 
-		const returnCode = this.checkPermission(FIRST_TABLE, '0');
+		const returnCode = this.checkPermission(DATABASE_FIRST_TABLE, '0');
 		// Rollback OR reset value if it reaches threshold
 		if (returnCode === FAILURE || Number(this.updatedFirstTable[rowIndex][field].value) > 31) {
 			this.updatedFirstTable[rowIndex][field].value = originalValue;
@@ -379,7 +379,7 @@ export class ReminderComponent {
 	 * @param field - The column key of the cell.
 	 */
 	protected async setIsCharged(rowIndex: number, field: string) {
-		const returnCode = this.checkPermission(FIRST_TABLE, '0');
+		const returnCode = this.checkPermission(DATABASE_FIRST_TABLE, '0');
 		// Rollback
 		if (returnCode === FAILURE) return;
 
@@ -396,7 +396,7 @@ export class ReminderComponent {
 	 * to their default sequence (1, 3, 9, 11, 17).
 	 */
 	protected openResetConfirmationDialog() {
-		const returnCode = this.checkPermission(FIRST_TABLE, '0');
+		const returnCode = this.checkPermission(DATABASE_FIRST_TABLE, '0');
 		// Rollback
 		if (returnCode === FAILURE) return;
 
@@ -426,13 +426,13 @@ export class ReminderComponent {
 		return '';
 	}
 
-		/**
-		 * Resets all values in the first table to their default sequence
-		 * (1, 3, 9, 11, 17), sets all cells to uncharged, and persists the reset
-		 * state to the database.
-		 */
-		private async resetFirstTable() {
-			const values = [1, 3, 9, 11, 17];
+	/**
+	 * Resets all values in the first table to their default sequence
+	 * (1, 3, 9, 11, 17), sets all cells to uncharged, and persists the reset
+	 * state to the database.
+	 */
+	private async resetFirstTable() {
+		const values = [1, 3, 9, 11, 17];
 		this.updatedFirstTable = this.originalFirstTable.slice(0, 5).map((original, index) => ({
 			_id: original._id,
 			_openid: original._openid,
@@ -445,13 +445,13 @@ export class ReminderComponent {
 		await this.updateFirstTableSingleValue();
 	}
 
-		/**
-		 * Persists the current state of the first table (including the isNextMonth
-		 * flag) to the database. Shows a save indicator on success or an error
-		 * dialog on failure.
-		 */
-		private async updateFirstTableSingleValue() {
-			try {
+	/**
+	 * Persists the current state of the first table (including the isNextMonth
+	 * flag) to the database. Shows a save indicator on success or an error
+	 * dialog on failure.
+	 */
+	private async updateFirstTableSingleValue() {
+		try {
 			const payload = [
 				...this.updatedFirstTable,
 				{
@@ -460,8 +460,8 @@ export class ReminderComponent {
 					isNextMonth: this.isNextMonth
 				}
 			];
-			await this.databaseService.updateFirstReminderTable(FIRST_TABLE, payload);
-			this.triggerSaveIndicator(FIRST_TABLE);
+			await this.databaseService.updateFirstReminderTable(DATABASE_FIRST_TABLE, payload);
+			this.triggerSaveIndicator(DATABASE_FIRST_TABLE);
 			// Fire-and-forget: surface this change in the Recent Activity widget.
 			this.databaseService
 				.appendToActivityLog('recentReminderActivities', {
@@ -481,14 +481,14 @@ export class ReminderComponent {
 	}
 
 	///////////////////////////////////SECOND TABLE///////////////////////////////////
-		/**
-		 * Prevents the default action of a keyboard event, effectively blocking the
-		 * keystroke from being entered into an input field.
-		 *
-		 * @param event - The keyboard event whose default action should be blocked.
-		 */
-		protected preventKeyin(event: KeyboardEvent) {
-			event.preventDefault();
+	/**
+	 * Prevents the default action of a keyboard event, effectively blocking the
+	 * keystroke from being entered into an input field.
+	 *
+	 * @param event - The keyboard event whose default action should be blocked.
+	 */
+	protected preventKeyin(event: KeyboardEvent) {
+		event.preventDefault();
 	}
 
 	/**
@@ -516,7 +516,7 @@ export class ReminderComponent {
 	 * @param isPaid - Whether the entry is being marked as paid.
 	 */
 	protected async setDefaultDebt(entryKey: string, isPaid: boolean) {
-		const item = this.findUpdatedItem(SECOND_TABLE, entryKey);
+		const item = this.findUpdatedItem(DATABASE_SECOND_TABLE, entryKey);
 		if (!item) return;
 		const existingRecord = item.content;
 		if (isPaid) {
@@ -526,8 +526,13 @@ export class ReminderComponent {
 					original: existingRecord.debt,
 					paid: false
 				};
-				await this.databaseService.updateReminderTable(SECOND_TABLE, entryKey, 'content', newRecord);
-				this.triggerSaveIndicator(SECOND_TABLE);
+				await this.databaseService.updateReminderTable(
+					DATABASE_SECOND_TABLE,
+					entryKey,
+					'content',
+					newRecord
+				);
+				this.triggerSaveIndicator(DATABASE_SECOND_TABLE);
 			} catch (error) {
 				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 					this.openPermissionErrorDialog();
@@ -538,7 +543,7 @@ export class ReminderComponent {
 		} else {
 			// Reset value
 			existingRecord.debt = existingRecord.original;
-			await this.updateTableSingleValue(SECOND_TABLE, entryKey, 'debt');
+			await this.updateTableSingleValue(DATABASE_SECOND_TABLE, entryKey, 'debt');
 		}
 	}
 
@@ -568,8 +573,8 @@ export class ReminderComponent {
 	 * @param link - The raw link text to normalize and store.
 	 */
 	protected async updateLink(tableName: string, entryKey: string, link: string) {
-		const updatedItem = this.findUpdatedItem(THIRD_TABLE, entryKey);
-		const oldItem = this.findOriginalItem(THIRD_TABLE, entryKey);
+		const updatedItem = this.findUpdatedItem(DATABASE_THIRD_TABLE, entryKey);
+		const oldItem = this.findOriginalItem(DATABASE_THIRD_TABLE, entryKey);
 		if (JSON.stringify(updatedItem) === JSON.stringify(oldItem)) return;
 
 		let linkInLowerCase = link.toLowerCase();
@@ -592,7 +597,7 @@ export class ReminderComponent {
 	 * @param entryKey - The key of the entry to delete.
 	 */
 	protected openDeleteConfirmationDialog(entryKey: string) {
-		const returnCode = this.checkPermission(THIRD_TABLE, entryKey);
+		const returnCode = this.checkPermission(DATABASE_THIRD_TABLE, entryKey);
 		//Rollback
 		if (returnCode === FAILURE) return;
 
@@ -616,17 +621,17 @@ export class ReminderComponent {
 	private async removeRecordFromDatabase(entryKey: string) {
 		// Capture the item text before the delete so the stat can describe what was removed.
 		const itemText =
-			this.findUpdatedItem(THIRD_TABLE, entryKey)?.content?.text ??
+			this.findUpdatedItem(DATABASE_THIRD_TABLE, entryKey)?.content?.text ??
 			this.originalThirdTable.find((i: any) => i.key === entryKey)?.content?.text ??
 			'';
 		try {
-			await this.databaseService.removeRecordFromReminderTable(THIRD_TABLE, entryKey);
-			this.triggerSaveIndicator(THIRD_TABLE);
+			await this.databaseService.removeRecordFromReminderTable(DATABASE_THIRD_TABLE, entryKey);
+			this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
 			// Fire-and-forget: surface the deletion in the Recent Activity widget.
 			this.databaseService
 				.appendToActivityLog('recentReminderActivities', {
 					type: 'deleted',
-					table: THIRD_TABLE,
+					table: REMINDER_TABLE_MESSAGES,
 					text: itemText,
 					timestamp: this.utilities.getCurrentFormattedTime(true)
 				})
@@ -645,10 +650,10 @@ export class ReminderComponent {
 	 */
 	protected addNewTextOnly() {
 		if (this.thirdTableNewText.trim() !== '') {
-			this.databaseService.addNewRecordForReminderTable(THIRD_TABLE, {
+			this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, {
 				text: this.thirdTableNewText
 			});
-			this.triggerSaveIndicator(THIRD_TABLE);
+			this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
 			this.thirdTableNewText = '';
 		}
 	}
@@ -665,8 +670,8 @@ export class ReminderComponent {
 				Object.entries(this.thirdTableActiveItem.content).filter(([_, value]) => value !== '')
 			);
 			newContent['text'] = this.thirdTableNewText;
-			this.databaseService.addNewRecordForReminderTable(THIRD_TABLE, newContent);
-			this.triggerSaveIndicator(THIRD_TABLE);
+			this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, newContent);
+			this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
 			// If the new entry has a due date, push it into the local messages cache
 			// so the reminder widget reflects it before the CloudBase round-trip ends.
 			if (newContent['date']) {
@@ -738,15 +743,17 @@ export class ReminderComponent {
 				this.triggerSaveIndicator(tableName);
 				// Fire-and-forget: surface this change in the Recent Activity widget.
 				const tableLabel =
-					tableName === SECOND_TABLE ? REMINDER_TABLE_ACCOUNT_EXPENSES : REMINDER_TABLE_MESSAGES;
+					tableName === DATABASE_SECOND_TABLE
+						? REMINDER_TABLE_ACCOUNT_EXPENSES
+						: REMINDER_TABLE_MESSAGES;
 				// For the second table the human-readable identifier is the account `name` field;
 				// for the third table it is the message text inside `content.text`.
 				const itemText =
-					tableName === SECOND_TABLE
-						? (this.findUpdatedItem(SECOND_TABLE, entryKey)?.name ?? '')
-						: tableName === THIRD_TABLE
-						? (this.findUpdatedItem(THIRD_TABLE, entryKey)?.content?.text ?? '')
-						: '';
+					tableName === DATABASE_SECOND_TABLE
+						? (this.findUpdatedItem(DATABASE_SECOND_TABLE, entryKey)?.name ?? '')
+						: tableName === DATABASE_THIRD_TABLE
+							? (this.findUpdatedItem(DATABASE_THIRD_TABLE, entryKey)?.content?.text ?? '')
+							: '';
 				this.databaseService
 					.appendToActivityLog('recentReminderActivities', {
 						type: 'updated',
@@ -790,35 +797,35 @@ export class ReminderComponent {
 		this.resyncUpcomingFromLocalData();
 	}
 
-		/**
-		 * Finds an item in the updated (working) copy of either the second or third
-		 * table by its entry key.
-		 *
-		 * @param tableName - The name of the table to search (SECOND_TABLE or THIRD_TABLE).
-		 * @param entryKey - The unique key identifying the item to find.
-		 * @returns The matching item from the updated table, or undefined if not found.
-		 */
-		private findUpdatedItem(tableName: string, entryKey: string) {
-			if (tableName === SECOND_TABLE) {
+	/**
+	 * Finds an item in the updated (working) copy of either the second or third
+	 * table by its entry key.
+	 *
+	 * @param tableName - The name of the table to search (SECOND_TABLE or THIRD_TABLE).
+	 * @param entryKey - The unique key identifying the item to find.
+	 * @returns The matching item from the updated table, or undefined if not found.
+	 */
+	private findUpdatedItem(tableName: string, entryKey: string) {
+		if (tableName === DATABASE_SECOND_TABLE) {
 			return this.updatedSecondTable.find((item) => item.key === entryKey);
-		} else if (tableName === THIRD_TABLE) {
+		} else if (tableName === DATABASE_THIRD_TABLE) {
 			return this.pagedThirdTable.find((item) => item.key === entryKey);
 		}
 	}
 
-		/**
-		 * Finds an item in the original (server-state) copy of either the second or
-		 * third table by its entry key. Used for comparing current edits against the
-		 * original data.
-		 *
-		 * @param tableName - The name of the table to search (SECOND_TABLE or THIRD_TABLE).
-		 * @param entryKey - The unique key identifying the item to find.
-		 * @returns The matching item from the original table, or undefined if not found.
-		 */
-		private findOriginalItem(tableName: string, entryKey: string) {
-			if (tableName === SECOND_TABLE) {
+	/**
+	 * Finds an item in the original (server-state) copy of either the second or
+	 * third table by its entry key. Used for comparing current edits against the
+	 * original data.
+	 *
+	 * @param tableName - The name of the table to search (SECOND_TABLE or THIRD_TABLE).
+	 * @param entryKey - The unique key identifying the item to find.
+	 * @returns The matching item from the original table, or undefined if not found.
+	 */
+	private findOriginalItem(tableName: string, entryKey: string) {
+		if (tableName === DATABASE_SECOND_TABLE) {
 			return this.originalSecondTable.find((item) => item.key === entryKey);
-		} else if (tableName === THIRD_TABLE) {
+		} else if (tableName === DATABASE_THIRD_TABLE) {
 			return this.originalThirdTable.find((item) => item.key === entryKey);
 		}
 	}
@@ -887,13 +894,16 @@ export class ReminderComponent {
 	 */
 	private checkPermission(tableName: string, entryKey: string) {
 		// Three-tier check: admins bypass all checks; first table checks row[0]._openid;
-			// second/third tables use findUpdatedItem() to get the specific entry's owner.
-			if (CloudbaseService.userHasAllRights()) return;
+		// second/third tables use findUpdatedItem() to get the specific entry's owner.
+		if (CloudbaseService.userHasAllRights()) return;
 		try {
-			if (tableName == FIRST_TABLE && this.updatedFirstTable[0]._openid !== CloudbaseService.getUseId())
+			if (
+				tableName == DATABASE_FIRST_TABLE &&
+				this.updatedFirstTable[0]._openid !== CloudbaseService.getUseId()
+			)
 				throw new Error(ERROR_PERMISSION_DENIED);
 			else if (
-				(tableName == SECOND_TABLE || tableName == THIRD_TABLE) &&
+				(tableName == DATABASE_SECOND_TABLE || tableName == DATABASE_THIRD_TABLE) &&
 				this.findUpdatedItem(tableName, entryKey)?._openid !== CloudbaseService.getUseId()
 			)
 				throw new Error(ERROR_PERMISSION_DENIED);
@@ -908,20 +918,20 @@ export class ReminderComponent {
 		}
 	}
 
-		/**
-		 * Shows a save-confirmation indicator for the given table and automatically
-		 * hides it after one second. If a previous timeout for the same table is
-		 * still active, it is cleared and restarted to avoid overlapping triggers.
-		 *
-		 * @param tableName - The name of the table for which to show the indicator.
-		 */
-		private triggerSaveIndicator(tableName: string) {
-			this.saveIndicators[tableName] = true;
+	/**
+	 * Shows a save-confirmation indicator for the given table and automatically
+	 * hides it after one second. If a previous timeout for the same table is
+	 * still active, it is cleared and restarted to avoid overlapping triggers.
+	 *
+	 * @param tableName - The name of the table for which to show the indicator.
+	 */
+	private triggerSaveIndicator(tableName: string) {
+		this.saveIndicators[tableName] = true;
 		this.cdr.detectChanges();
 
 		// Clear any previous timeout before setting a new one — rapid successive
-			// saves should restart the indicator timer rather than flash on/off.
-			if (this.saveIndicatorTimeouts[tableName]) {
+		// saves should restart the indicator timer rather than flash on/off.
+		if (this.saveIndicatorTimeouts[tableName]) {
 			clearTimeout(this.saveIndicatorTimeouts[tableName]);
 		}
 
@@ -938,21 +948,43 @@ export class ReminderComponent {
 		this.dialogService.showPermissionError(this.dialogComponentContainer);
 	}
 
-		/**
-		 * Opens a dialog informing the user that an unexpected error has occurred.
-		 */
-		private openUnexpectedErrorDialog() {
-			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+	/**
+	 * Opens a dialog informing the user that an unexpected error has occurred.
+	 */
+	private openUnexpectedErrorDialog() {
+		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}
 
-		/**
-		 * Checks whether the given text contains any Chinese characters within the
-		 * CJK Unified Ideographs range (U+4E00 to U+9FA5).
-		 *
-		 * @param text - The text string to check.
-		 * @returns True if the text contains at least one Chinese character.
-		 */
-		protected checkIfChinese(text: string) {
-			return /[\u4e00-\u9fa5]/.test(text);
+	/**
+	 * Checks whether the given text contains any Chinese characters within the
+	 * CJK Unified Ideographs range (U+4E00 to U+9FA5).
+	 *
+	 * @param text - The text string to check.
+	 * @returns True if the text contains at least one Chinese character.
+	 */
+	protected checkIfChinese(text: string) {
+		return /[\u4e00-\u9fa5]/.test(text);
+	}
+
+	/**
+	 * Safely coerces any date value to a 'yyyy-MM-dd' display string.
+	 * Handles strings (returned as-is), JavaScript Date objects, and CloudBase
+	 * timestamp objects ({$date: ms}) that may have been persisted before the
+	 * format guard was added to updateTableWithNewDate.
+	 *
+	 * @param date - Any date representation (string, Date, CloudBase timestamp, or falsy).
+	 * @returns A 'yyyy-MM-dd' string, or empty string if the value is falsy or unparseable.
+	 */
+	protected formatDate(date: any): string {
+		if (!date) return '';
+		if (typeof date === 'string') return date;
+		try {
+			if (date instanceof Date) return format(date, 'yyyy-MM-dd');
+			// CloudBase timestamp objects store the epoch in a $date property
+			if (typeof date === 'object' && date.$date) return format(new Date(date.$date), 'yyyy-MM-dd');
+			return format(new Date(date), 'yyyy-MM-dd');
+		} catch {
+			return String(date);
+		}
 	}
 }

@@ -17,7 +17,7 @@ import {
 	DATABASE_REMINDER_THIRD,
 	DATABASE_STATISTICS,
 	ERROR_PERMISSION_DENIED,
-	FIRST_TABLE,
+	DATABASE_FIRST_TABLE,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
@@ -25,9 +25,10 @@ import {
 	RATE_DECREASED,
 	RATE_INCREASED,
 	SEARCH,
-	SECOND_TABLE,
+	DATABASE_SECOND_TABLE,
 	STATUS_IN_PROGRESS,
-	THIRD_TABLE
+	DATABASE_THIRD_TABLE,
+    REMINDER_TABLE_MESSAGES
 } from '../../../common/app.constant';
 
 @Injectable({ providedIn: 'root' })
@@ -48,7 +49,7 @@ export class CloudbaseService extends DatabaseService {
 	 * a CloudBase .watch() with anonymous credentials after sign-out.
 	 */
 	static get authReady$() {
-		return CloudbaseService._authReady$.asObservable().pipe(filter(v => v === true));
+		return CloudbaseService._authReady$.asObservable().pipe(filter((v) => v === true));
 	}
 
 	/**
@@ -79,7 +80,10 @@ export class CloudbaseService extends DatabaseService {
 					.collection(DATABASE_STATISTICS)
 					.limit(1)
 					.get()
-					.then((response: any) => { this.statId = response.data[0]?._id; })
+					.then((response: any) => {
+						const id = response.data?.[0]?._id;
+						if (id) this.statId = id;
+					})
 					.catch(() => {});
 
 			fetchStatId();
@@ -181,9 +185,15 @@ export class CloudbaseService extends DatabaseService {
 
 		for (const movie of movies) {
 			const fileID = `cloud://${environment.cloudbase.envId}.${environment.cloudbase.bucket}/movies/${movie.title}.jpeg`;
-			await this.database.collection(DATABASE_MOVIES).doc(movie._id).update({
-				coverImageLink: fileID
-			});
+			await this.database
+				.collection(DATABASE_MOVIES)
+				.where({
+					_id: movie._id,
+					_openid: CloudbaseService.getUseId()
+				})
+				.update({
+					coverImageLink: fileID
+				});
 			updated++;
 			LOG.info(this.className, `[${updated}/${movies.length}] ${movie.title} → ${fileID}`);
 		}
@@ -200,45 +210,58 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the movie list.
 	 */
 	getMovieList(): Observable<MovieItemVO[]> {
-		return CloudbaseService.authReady$.pipe(
-			take(1),
-			switchMap(() => new Observable<MovieItemVO[]>((observer) => {
-			const watcher = this.database.collection(DATABASE_MOVIES).watch({
-				onChange: (snapshot: any) => {
-					const movies = snapshot.docs.map((doc: any) => {
-						const movieItemVO = new MovieItemVO(doc.title, Number(doc.year));
-						movieItemVO.setMovieKey(doc._id);
-						movieItemVO.setMovieId(doc.id);
-						movieItemVO.setMovieGenre(doc.genre);
-						movieItemVO.setMovieRate(doc.rate);
-						movieItemVO.setMovieCoverImageDownloadableLink(doc.coverImageLink ?? '');
-						movieItemVO.setMovieFirstReleaseDate(doc.firstReleaseDate);
-						movieItemVO.setMovieEpisodeNumber(doc.episodeNumber);
-						movieItemVO.setIsFavourite(doc.isFavourite);
-						movieItemVO.setDescription(doc.description);
-						movieItemVO.setActors(doc.actors);
-						return movieItemVO;
-					});
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<MovieItemVO[]>((observer) => {
+							const watcher = this.database.collection(DATABASE_MOVIES).watch({
+								onChange: (snapshot: any) => {
+									const movies = snapshot.docs.map((doc: any) => {
+										const movieItemVO = new MovieItemVO(doc.title, Number(doc.year));
+										movieItemVO.setMovieKey(doc._id);
+										movieItemVO.setMovieId(doc.id);
+										movieItemVO.setMovieGenre(doc.genre);
+										movieItemVO.setMovieRate(doc.rate);
+										movieItemVO.setMovieCoverImageDownloadableLink(
+											doc.coverImageLink ?? ''
+										);
+										movieItemVO.setMovieFirstReleaseDate(doc.firstReleaseDate);
+										movieItemVO.setMovieEpisodeNumber(doc.episodeNumber);
+										movieItemVO.setIsFavourite(doc.isFavourite);
+										movieItemVO.setDescription(doc.description);
+										movieItemVO.setActors(doc.actors);
+										return movieItemVO;
+									});
 
-					movies.sort((a: MovieItemVO, b: MovieItemVO) =>
-						a.getMovieFirstReleaseDate().localeCompare(b.getMovieFirstReleaseDate())
-					);
+									movies.sort((a: MovieItemVO, b: MovieItemVO) =>
+										a
+											.getMovieFirstReleaseDate()
+											.localeCompare(b.getMovieFirstReleaseDate())
+									);
 
-					// Resolve any Cloud IDs to signed temp URLs before emitting to the component
-					this.resolveMovieCoverUrls(movies)
-						.then((resolvedMovies) => observer.next(resolvedMovies))
-						.catch((err) => {
-							LOG.error(this.className, 'Error resolving cover image URLs', err);
-							observer.next(movies); // emit with unresolved links rather than nothing
-						});
-				},
-				onError: (err: any) => {
-					LOG.error(this.className, 'Error while retrieving movie list', err);
-				}
-			});
-			return () => watcher.close();
-		}))
-		).pipe(shareReplay(1));
+									// Resolve any Cloud IDs to signed temp URLs before emitting to the component
+									this.resolveMovieCoverUrls(movies)
+										.then((resolvedMovies) => observer.next(resolvedMovies))
+										.catch((err) => {
+											LOG.error(
+												this.className,
+												'Error resolving cover image URLs',
+												err
+											);
+											observer.next(movies); // emit with unresolved links rather than nothing
+										});
+								},
+								onError: (err: any) => {
+									LOG.error(this.className, 'Error while retrieving movie list', err);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -300,20 +323,25 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the statistics.
 	 */
 	public getStatistics(): Observable<any> {
-		return CloudbaseService.authReady$.pipe(
-			take(1),
-			switchMap(() => new Observable<any>((observer) => {
-			const watcher = this.database.collection(DATABASE_STATISTICS).watch({
-				onChange: (snapshot: any) => {
-					observer.next(snapshot.docs[0]);
-				},
-				onError: (err: any) => {
-					LOG.error(this.className, 'Error while retrieving statistics', err);
-				}
-			});
-			return () => watcher.close();
-		}))
-		).pipe(shareReplay(1));
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<any>((observer) => {
+							const watcher = this.database.collection(DATABASE_STATISTICS).watch({
+								onChange: (snapshot: any) => {
+									observer.next(snapshot.docs[0]);
+								},
+								onError: (err: any) => {
+									LOG.error(this.className, 'Error while retrieving statistics', err);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -322,27 +350,32 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns The history list
 	 */
 	public getHistory(): Observable<any[]> {
-		return CloudbaseService.authReady$.pipe(
-			take(1),
-			switchMap(() => new Observable<any[]>((observer) => {
-			const watcher = this.database.collection(DATABASE_HISTORY).watch({
-				onChange: (snapshot: any) => {
-					const history = snapshot.docs
-						.map((doc: any) => {
-							const { _id, ...rest } = doc;
-							return {
-								key: _id,
-								...rest
-							};
-						})
-						.reverse();
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<any[]>((observer) => {
+							const watcher = this.database.collection(DATABASE_HISTORY).watch({
+								onChange: (snapshot: any) => {
+									const history = snapshot.docs
+										.map((doc: any) => {
+											const { _id, ...rest } = doc;
+											return {
+												key: _id,
+												...rest
+											};
+										})
+										.reverse();
 
-					observer.next(history);
-				}
-			});
-			return () => watcher.close();
-		}))
-		).pipe(shareReplay(1));
+									observer.next(history);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -351,36 +384,43 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Patch notes
 	 */
 	public getPatchNotes(): Observable<any[]> {
-		return CloudbaseService.authReady$.pipe(
-			take(1),
-			switchMap(() => new Observable<any[]>((observer) => {
-			const watcher = this.database.collection(DATABASE_PATCH_NOTES).watch({
-				onChange: (snapshot: any) => {
-					const patchNotes = snapshot.docs.map((doc: any) => {
-						const { _id, ...rest } = doc;
-						return {
-							key: _id,
-							...rest
-						} as {
-							key: string;
-							component: string;
-							element: string;
-							details: string;
-							status: string;
-							timestamp: string;
-							isBug: boolean;
-						};
-					});
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<any[]>((observer) => {
+							const watcher = this.database.collection(DATABASE_PATCH_NOTES).watch({
+								onChange: (snapshot: any) => {
+									const patchNotes = snapshot.docs.map((doc: any) => {
+										const { _id, ...rest } = doc;
+										return {
+											key: _id,
+											...rest
+										} as {
+											key: string;
+											component: string;
+											element: string;
+											details: string;
+											status: string;
+											timestamp: string;
+											isBug: boolean;
+										};
+									});
 
-					// CloudBase watch order is insertion order, not timestamp order — explicit sort needed.
-					patchNotes.sort((a: any, b: any) => a.timestamp.localeCompare(b.timestamp));
+									// CloudBase watch order is insertion order, not timestamp order — explicit sort needed.
+									patchNotes.sort((a: any, b: any) =>
+										a.timestamp.localeCompare(b.timestamp)
+									);
 
-					observer.next(patchNotes);
-				}
-			});
-			return () => watcher.close();
-		}))
-		).pipe(shareReplay(1));
+									observer.next(patchNotes);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -389,20 +429,25 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Reminder table details
 	 */
 	public getFirstReminderTableDetails(): Observable<any[]> {
-		return CloudbaseService.authReady$.pipe(
-			take(1),
-			switchMap(() => new Observable<any[]>((observer) => {
-			const watcher = this.database.collection(DATABASE_REMINDER_FIRST).watch({
-				onChange: (snapshot: any) => {
-					// First table rows are flat — emit as-is. Fallback to [] prevents
-					// downstream .length errors when the collection is empty.
-					const data = snapshot.docs;
-					observer.next(data ? data : []);
-				}
-			});
-			return () => watcher.close();
-		}))
-		).pipe(shareReplay(1));
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<any[]>((observer) => {
+							const watcher = this.database.collection(DATABASE_REMINDER_FIRST).watch({
+								onChange: (snapshot: any) => {
+									// First table rows are flat — emit as-is. Fallback to [] prevents
+									// downstream .length errors when the collection is empty.
+									const data = snapshot.docs;
+									observer.next(data ? data : []);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -411,35 +456,40 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Second reminder table details
 	 */
 	public getSecondReminderTableDetails(): Observable<any[]> {
-		return CloudbaseService.authReady$.pipe(
-			take(1),
-			switchMap(() => new Observable<any[]>((observer) => {
-			const watcher = this.database.collection(DATABASE_REMINDER_SECOND).watch({
-				onChange: (snapshot: any) => {
-					// Map CloudBase _id → key so Angular *ngFor can trackBy it;
-					// name and content fields pass through as-is.
-					const secondTable = snapshot.docs.map((doc: any) => {
-						const { _id, ...rest } = doc;
-						return {
-							key: _id,
-							...rest
-						} as {
-							key: string;
-							name: string;
-							content: {
-								date: string;
-								debt: number;
-								original: number;
-								paid: boolean;
-							};
-						};
-					});
-					observer.next(secondTable);
-				}
-			});
-			return () => watcher.close();
-		}))
-		).pipe(shareReplay(1));
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<any[]>((observer) => {
+							const watcher = this.database.collection(DATABASE_REMINDER_SECOND).watch({
+								onChange: (snapshot: any) => {
+									// Map CloudBase _id → key so Angular *ngFor can trackBy it;
+									// name and content fields pass through as-is.
+									const secondTable = snapshot.docs.map((doc: any) => {
+										const { _id, ...rest } = doc;
+										return {
+											key: _id,
+											...rest
+										} as {
+											key: string;
+											name: string;
+											content: {
+												date: string;
+												debt: number;
+												original: number;
+												paid: boolean;
+											};
+										};
+									});
+									observer.next(secondTable);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -448,33 +498,38 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Third reminder table details
 	 */
 	public getThirdReminderTableDetails(): Observable<any[]> {
-		return CloudbaseService.authReady$.pipe(
-			take(1),
-			switchMap(() => new Observable<any[]>((observer) => {
-			const watcher = this.database.collection(DATABASE_REMINDER_THIRD).watch({
-				onChange: (snapshot: any) => {
-					// Same watch→map→emit pattern as second table, but third table
-					// content shape is {text, date, link} so mapping differs accordingly.
-					const thirdTable = snapshot.docs.map((doc: any) => {
-						const { _id, ...rest } = doc;
-						return {
-							key: _id,
-							...rest
-						} as {
-							key: string;
-							content: {
-								text: string;
-								date: string;
-								link: string;
-							};
-						};
-					});
-					observer.next(thirdTable);
-				}
-			});
-			return () => watcher.close();
-		}))
-		).pipe(shareReplay(1));
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<any[]>((observer) => {
+							const watcher = this.database.collection(DATABASE_REMINDER_THIRD).watch({
+								onChange: (snapshot: any) => {
+									// Same watch→map→emit pattern as second table, but third table
+									// content shape is {text, date, link} so mapping differs accordingly.
+									const thirdTable = snapshot.docs.map((doc: any) => {
+										const { _id, ...rest } = doc;
+										return {
+											key: _id,
+											...rest
+										} as {
+											key: string;
+											content: {
+												text: string;
+												date: string;
+												link: string;
+											};
+										};
+									});
+									observer.next(thirdTable);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -762,7 +817,7 @@ export class CloudbaseService extends DatabaseService {
 			// Step 1: Remove the movie document from the database
 			const removeRes = await this.database
 				.collection(DATABASE_MOVIES)
-				.doc(movieItemVO.getMovieKey())
+				.where({ _id: movieItemVO.getMovieKey(), _openid: CloudbaseService.getUseId() })
 				.remove();
 			if (removeRes.code) throw new Error(removeRes.message);
 
@@ -900,7 +955,9 @@ export class CloudbaseService extends DatabaseService {
 
 				// Keep statistics in sync: record the most recent rate-search timestamp.
 				await this.statisticsRef.update({ lastRateSearch: { timestamp } });
-				this.appendToActivityLog('recentMovieActivities', { type: 'search', timestamp }).catch(() => {});
+				this.appendToActivityLog('recentMovieActivities', { type: 'search', timestamp }).catch(
+					() => {}
+				);
 			}
 			LOG.info(this.className, 'New history entry has been added');
 		} catch (error) {
@@ -937,10 +994,10 @@ export class CloudbaseService extends DatabaseService {
 					throw new Error(result.message);
 				}
 				LOG.info(this.className, 'New patch notes record has been added');
-			// Sync patchInProgress so the home-page widget reflects the new note
-			// immediately without waiting for the subscription tap to run.
-			this.syncPatchInProgressStat();
-		});
+				// Sync patchInProgress so the home-page widget reflects the new note
+				// immediately without waiting for the subscription tap to run.
+				this.syncPatchInProgressStat();
+			});
 	}
 
 	/**
@@ -952,7 +1009,10 @@ export class CloudbaseService extends DatabaseService {
 	updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
 		return this.database
 			.collection(DATABASE_PATCH_NOTES)
-			.doc(key)
+			.where({
+				_id: key,
+				_openid: CloudbaseService.getUseId()
+			})
 			.update({
 				...updatedRecord
 			})
@@ -1001,9 +1061,7 @@ export class CloudbaseService extends DatabaseService {
 					}));
 				return this.statisticsRef.update({ patchInProgress: inProgress });
 			})
-			.catch((err: any) =>
-				LOG.error(this.className, 'Failed to sync patchInProgress stat', err)
-			);
+			.catch((err: any) => LOG.error(this.className, 'Failed to sync patchInProgress stat', err));
 	}
 
 	/**
@@ -1028,7 +1086,10 @@ export class CloudbaseService extends DatabaseService {
 		}
 		return this.database
 			.collection(collectionName)
-			.doc(entryKey)
+			.where({
+				_id: entryKey,
+				_openid: CloudbaseService.getUseId()
+			})
 			.update(valueToUpdate)
 			.then((result: any) => {
 				if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
@@ -1054,7 +1115,13 @@ export class CloudbaseService extends DatabaseService {
 		// individually. _id and _openid are stripped since they are CloudBase metadata.
 		for (const data of updatedTable) {
 			const { _id, _openid, ...rest } = data;
-			const result = await this.database.collection(collectionName).doc(_id).update(rest);
+			const result = await this.database
+				.collection(collectionName)
+				.where({
+					_id: _id,
+					_openid: CloudbaseService.getUseId()
+				})
+				.update(rest);
 			if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
 		}
 
@@ -1087,7 +1154,10 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key associated with the record
 	 */
 	async removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
-		const result = await this.database.collection(collectionName).doc(key).remove();
+		const result = await this.database
+			.collection(collectionName)
+			.where({ _id: key, _openid: CloudbaseService.getUseId() })
+			.remove();
 		// CloudBase returns a non-empty result.code when the operation failed
 		// (e.g. permission denied, document not found).
 		if (result.code) throw new Error(result.message);
@@ -1118,10 +1188,10 @@ export class CloudbaseService extends DatabaseService {
 				LOG.info(this.className, 'Reminder table has been updated');
 				// Fire-and-forget: record third-table additions in stats so the
 				// home-page Recent Activity widget can surface them immediately.
-				if (tableName === THIRD_TABLE) {
+				if (tableName === DATABASE_THIRD_TABLE) {
 					this.appendToActivityLog('recentReminderActivities', {
 						type: 'added',
-						table: THIRD_TABLE,
+						table: REMINDER_TABLE_MESSAGES,
 						text: newRecord.text ?? '',
 						timestamp: this.utilities.getCurrentFormattedTime(true)
 					}).catch(() => {});
@@ -1135,26 +1205,31 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the quotes list.
 	 */
 	getQuotes(): Observable<any[]> {
-		return CloudbaseService.authReady$.pipe(
-			take(1),
-			switchMap(() => new Observable<any[]>((observer) => {
-			const watcher = this.database.collection(DATABASE_QUOTES).watch({
-				onChange: (snapshot: any) => {
-					const quotes = snapshot.docs.map((doc: any) => {
-						const { _id, ...rest } = doc;
-						return { key: _id, ...rest };
-					});
-					quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
-					observer.next(quotes);
-				},
-				onError: (err: any) => {
-					LOG.error(this.className, 'Error while retrieving quotes', err);
-					observer.error(err);
-				}
-			});
-			return () => watcher.close();
-		}))
-		).pipe(shareReplay(1));
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<any[]>((observer) => {
+							const watcher = this.database.collection(DATABASE_QUOTES).watch({
+								onChange: (snapshot: any) => {
+									const quotes = snapshot.docs.map((doc: any) => {
+										const { _id, ...rest } = doc;
+										return { key: _id, ...rest };
+									});
+									quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
+									observer.next(quotes);
+								},
+								onError: (err: any) => {
+									LOG.error(this.className, 'Error while retrieving quotes', err);
+									observer.error(err);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -1184,7 +1259,9 @@ export class CloudbaseService extends DatabaseService {
 			latestQuote: { text, author, timestamp },
 			totalQuotes: this._.inc(1)
 		});
-		this.appendToActivityLog('recentResonanceActivities', { type: 'added', author, timestamp }).catch(() => {});
+		this.appendToActivityLog('recentResonanceActivities', { type: 'added', author, timestamp }).catch(
+			() => {}
+		);
 	}
 
 	/**
@@ -1216,7 +1293,11 @@ export class CloudbaseService extends DatabaseService {
 				timestamp: deletedTimestamp
 			}
 		});
-		this.appendToActivityLog('recentResonanceActivities', { type: 'deleted', author, timestamp: deletedTimestamp }).catch(() => {});
+		this.appendToActivityLog('recentResonanceActivities', {
+			type: 'deleted',
+			author,
+			timestamp: deletedTimestamp
+		}).catch(() => {});
 	}
 
 	/**
@@ -1230,7 +1311,11 @@ export class CloudbaseService extends DatabaseService {
 	async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
 		try {
 			const result = await this.statisticsRef.update(fields);
-			if (result.code) throw new Error(result.message);
+			if (result.code || result.updated === 0)
+				throw new Error(
+					result.message ??
+						'No document updated — check CloudBase write permissions on statistics collection'
+				);
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating statistics fields', error as Error);
 		}
@@ -1241,9 +1326,13 @@ export class CloudbaseService extends DatabaseService {
 			const doc = await this.database.collection(DATABASE_STATISTICS).doc(this.statId).get();
 			const raw = doc.data?.[0]?.[fieldName];
 			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
-			const updated = [activity, ...existing].slice(0, 5);
+			const updated = [activity, ...existing];
 			const result = await this.statisticsRef.update({ [fieldName]: updated });
-			if (result.code) throw new Error(result.message);
+			if (result.code || result.updated === 0)
+				throw new Error(
+					result.message ??
+						`No document updated for field "${fieldName}" — check CloudBase write permissions on statistics collection`
+				);
 		} catch (error) {
 			LOG.error(this.className, 'Error while appending activity log', error as Error);
 		}
@@ -1261,11 +1350,11 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	private convertTableNameToCollectionName(tableName: string): string {
 		switch (tableName) {
-			case FIRST_TABLE:
+			case DATABASE_FIRST_TABLE:
 				return DATABASE_REMINDER_FIRST;
-			case SECOND_TABLE:
+			case DATABASE_SECOND_TABLE:
 				return DATABASE_REMINDER_SECOND;
-			case THIRD_TABLE:
+			case DATABASE_THIRD_TABLE:
 				return DATABASE_REMINDER_THIRD;
 			default:
 				return '';

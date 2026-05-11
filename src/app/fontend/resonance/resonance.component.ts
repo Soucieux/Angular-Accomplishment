@@ -42,18 +42,18 @@ import { LOG } from '../../common/app.logs';
 })
 export class ResonanceComponent implements OnInit, OnDestroy {
 	private readonly classname = 'ResonanceComponent';
-	readonly maxQuoteLength = 500;
+	protected readonly maxQuoteLength = 500;
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
-	dialogComponentContainer!: ViewContainerRef;
+	protected dialogComponentContainer!: ViewContainerRef;
 
-	quotes$!: Observable<any[]>;
-	newQuoteText = '';
-	authorName = '';
-	submitting = false;
+	protected quotes$!: Observable<any[]>;
+	protected newQuoteText = '';
+	protected authorName = '';
+	protected submitting = false;
 	private signedInAnonymously = false;
 
-	gradients = [
+	protected gradients = [
 		{ from: '#fdf2f4', to: '#fce4ec' },
 		{ from: '#e8f4f8', to: '#dceefb' },
 		{ from: '#fef9e7', to: '#fdebd0' },
@@ -73,7 +73,11 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		private cdr: ChangeDetectorRef
 	) {}
 
-	ngOnInit() {
+	/**
+	 * Initialises the component: signs in anonymously if no user is authenticated
+	 * so the CloudBase watcher can connect, then subscribes to the quotes collection.
+	 */
+	public ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			if (!CloudbaseService.getUseId()) {
 				// Wait for anonymous sign-in before starting the watcher —
@@ -93,7 +97,11 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	ngOnDestroy() {
+	/**
+	 * Signs out the anonymous session if one was started by this component,
+	 * resets the flag, and logs the component destruction event.
+	 */
+	public ngOnDestroy() {
 		if (this.signedInAnonymously) {
 			this.authService.signOut(true);
 		}
@@ -107,7 +115,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param index - The index of the quote in the list.
 	 * @returns An object with from and to gradient colors.
 	 */
-	getGradient(index: number) {
+	protected getGradient(index: number) {
 		return this.gradients[index % this.gradients.length];
 	}
 
@@ -117,7 +125,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param timestamp - The timestamp string in "YYYY.MM.DD HH:mm:ss" format.
 	 * @returns A relative time string (e.g. "just now", "5m ago", "2d ago").
 	 */
-	getRelativeTime(timestamp: string): string {
+	protected getRelativeTime(timestamp: string): string {
 		return Utilities.getRelativeTime(timestamp);
 	}
 
@@ -127,7 +135,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object.
 	 * @returns The author name or 'Anonymous'.
 	 */
-	getAuthorName(quote: any): string {
+	protected getAuthorName(quote: any): string {
 		return quote.author || 'Anonymous';
 	}
 
@@ -137,7 +145,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object.
 	 * @returns The uppercase first character of the author's name.
 	 */
-	getAuthorInitial(quote: any): string {
+	protected getAuthorInitial(quote: any): string {
 		const name = this.getAuthorName(quote);
 		return name.charAt(0).toUpperCase();
 	}
@@ -148,7 +156,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object to check.
 	 * @returns true if the user can delete the quote, otherwise false.
 	 */
-	canDelete(quote: any): boolean {
+	protected canDelete(quote: any): boolean {
 		if (CloudbaseService.userHasAllRights()) return true;
 		return quote._openid === CloudbaseService.getUseId();
 	}
@@ -158,7 +166,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 *
 	 * @returns true if a user ID is present, otherwise false.
 	 */
-	get isSignedIn(): boolean {
+	protected get isSignedIn(): boolean {
 		return !!CloudbaseService.getUseId();
 	}
 
@@ -167,7 +175,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 *
 	 * @returns true if the text length exceeds maxQuoteLength, otherwise false.
 	 */
-	get isOverLimit(): boolean {
+	protected get isOverLimit(): boolean {
 		return this.newQuoteText.length > this.maxQuoteLength;
 	}
 
@@ -175,7 +183,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * Submit a new quote to the database. Uses the signed-in user's name if available
 	 * otherwise falls back to the manually entered author name or'Anonymous'.
 	 */
-	async submitQuote() {
+	protected async submitQuote() {
 		const text = this.newQuoteText.trim();
 		if (!text) return;
 
@@ -208,7 +216,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 *
 	 * @param quote - The quote object to delete.
 	 */
-	confirmDelete(quote: any) {
+	protected confirmDelete(quote: any) {
 		// Permission guard: unauthorized users see the error dialog immediately
 		// without ever being shown the confirm dialog.
 		if (!this.canDelete(quote)) {

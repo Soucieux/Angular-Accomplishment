@@ -19,6 +19,8 @@ import {
 	ElementRef,
 	HostListener,
 	Inject,
+	OnDestroy,
+	OnInit,
 	PLATFORM_ID,
 	Renderer2,
 	ViewChild,
@@ -59,7 +61,7 @@ import { MovieFetchFailedError } from '../../common/error/movie-fetch-failed-err
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'
 })
-export class EntertainmentComponent {
+export class EntertainmentComponent implements OnInit, OnDestroy {
 	private readonly className = 'EntertainmentComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
@@ -92,7 +94,7 @@ export class EntertainmentComponent {
 	/**
 	 * Anything that needs to be done when the component is initialized.
 	 */
-	async ngOnInit() {
+	public async ngOnInit() {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId)) {
@@ -148,14 +150,15 @@ export class EntertainmentComponent {
 	}
 
 	/**
-	 * Anything that needs to be done when the component is destroyed.
-
-	ngOnDestroy() {
-			this.selectedGenres$.complete();
-			this.searchQuery$.complete();
-			this.dialogComponentContainer?.clear();
-			this.isSearching = false;
-			LOG.info(this.className, COMPONENT_DESTROY);
+	 * Completes the genre and search query subjects, clears any open dialogs,
+	 * resets the searching flag, and logs the component destruction event.
+	 */
+	public ngOnDestroy() {
+		this.selectedGenres$.complete();
+		this.searchQuery$.complete();
+		this.dialogComponentContainer?.clear();
+		this.isSearching = false;
+		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
@@ -627,7 +630,7 @@ export class EntertainmentComponent {
 	 *
 	 * @param genre - The genre to toggle as the active filter.
 	 */
-	public filterByGenre(genre: string) {
+	protected filterByGenre(genre: string) {
 		const currentGenre = this.selectedGenres$.getValue();
 		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
 	}

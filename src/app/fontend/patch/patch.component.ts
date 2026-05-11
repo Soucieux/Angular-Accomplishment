@@ -3,6 +3,8 @@ import {
 	HostListener,
 	Inject,
 	NgZone,
+	OnDestroy,
+	OnInit,
 	PLATFORM_ID,
 	ViewChild,
 	ViewContainerRef
@@ -54,9 +56,9 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 	templateUrl: './patch.component.html',
 	styleUrl: './patch.component.css'
 })
-export class PatchComponent {
+export class PatchComponent implements OnInit, OnDestroy {
 	private readonly className = 'PatchComponent';
-	@ViewChild('t') table!: Table; // This is the reference for the table in html
+	@ViewChild('t') private table!: Table; // This is the reference for the table in html
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
@@ -98,7 +100,7 @@ export class PatchComponent {
 	 * tap that keeps `patchNotesList`, page-index state, and the `patchInProgress`
 	 * statistic in sync whenever CloudBase pushes fresh data.
 	 */
-	async ngOnInit() {
+	public async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isMobile = this.utilities.isMobile();
 
@@ -185,7 +187,7 @@ export class PatchComponent {
 	 * destruction event. The async pipe on `patchNotes$` tears down the
 	 * CloudBase watcher automatically when the view is destroyed.
 	 */
-	ngOnDestroy() {
+	public ngOnDestroy() {
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
@@ -195,7 +197,7 @@ export class PatchComponent {
 	 *
 	 * @param row - The row to start editing.
 	 */
-	async startEdit(row: any) {
+	public async startEdit(row: any) {
 		const result = this.checkPermission(row._openid);
 		if (result === FAILURE) return;
 
@@ -208,7 +210,7 @@ export class PatchComponent {
 	 *
 	 * @param row - The row to complete editing.
 	 */
-	async completeEdit(row: any) {
+	public async completeEdit(row: any) {
 		const record = this.editedRows.get(row.key);
 		const changes: any = {};
 
@@ -265,7 +267,7 @@ export class PatchComponent {
 	/**
 	 * Clear the status field of the new record form.
 	 */
-	clearStatusField() {
+	protected clearStatusField() {
 		this.newRecord.status = undefined;
 	}
 
@@ -274,7 +276,7 @@ export class PatchComponent {
 	 * Captures a snapshot of the record before resetting so the stats update
 	 * can include the correct noteIndex and metadata after the async add.
 	 */
-	submitNewRecord() {
+	protected submitNewRecord() {
 		// Inject the current timestamp before submit; status is unwrapped from
 		// the PrimeNG select object via ['severity'] to get the raw string value.
 		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
@@ -389,7 +391,7 @@ export class PatchComponent {
 	 * @param rowIndex - The starting row index.
 	 * @returns The number of consecutive rows with the same component.
 	 */
-	getComponentRowSpan(data: any[], rowIndex: number) {
+	protected getComponentRowSpan(data: any[], rowIndex: number) {
 		const currentComponent = data[rowIndex].component;
 		let span = 1;
 
@@ -412,7 +414,7 @@ export class PatchComponent {
 	 * @param rowIndex - The starting row index.
 	 * @returns The number of consecutive rows with the same element.
 	 */
-	getElementRowSpan(data: any[], rowIndex: number) {
+	protected getElementRowSpan(data: any[], rowIndex: number) {
 		const currentElement = data[rowIndex].element;
 		const currentComponent = data[rowIndex].component;
 		let span = 1;
@@ -432,7 +434,7 @@ export class PatchComponent {
 	 * @param rowIndex - The row index to check.
 	 * @returns true if the component column should be displayed.
 	 */
-	shouldShowComponent(data: any[], rowIndex: number) {
+	protected shouldShowComponent(data: any[], rowIndex: number) {
 		if (rowIndex === 0 || rowIndex === this.indexOfFirstItem) return true;
 		return data[rowIndex].component !== data[rowIndex - 1].component;
 	}
@@ -445,7 +447,7 @@ export class PatchComponent {
 	 * @param rowIndex - The row index to check.
 	 * @returns true if the element column should be displayed.
 	 */
-	shouldShowElement(data: any[], rowIndex: number) {
+	protected shouldShowElement(data: any[], rowIndex: number) {
 		if (rowIndex === 0 || rowIndex === this.indexOfFirstItem) return true;
 		return (
 			data[rowIndex].element !== data[rowIndex - 1].element ||
@@ -499,7 +501,7 @@ export class PatchComponent {
 	 * @param data - The PrimeNG table data object.
 	 * @returns The rendered data array.
 	 */
-	getRenderedData(data: any) {
+	protected getRenderedData(data: any) {
 		return data.filteredValue ?? data.value ?? [];
 	}
 
@@ -511,7 +513,7 @@ export class PatchComponent {
 	 * @param rowIndex - The row index to check.
 	 * @returns true if the row shares the same component as the hovered row.
 	 */
-	isInSameComponentGroup(data: any[], rowIndex: number): boolean {
+	protected isInSameComponentGroup(data: any[], rowIndex: number): boolean {
 		if (this.hoveredRowIndex === null) return false;
 		return data[rowIndex]?.component === data[this.hoveredRowIndex]?.component;
 	}
@@ -524,7 +526,7 @@ export class PatchComponent {
 	 * @param rowIndex - The row index to check.
 	 * @returns true if the row shares the same component and element as the hovered row.
 	 */
-	isInSameElementGroup(data: any[], rowIndex: number): boolean {
+	protected isInSameElementGroup(data: any[], rowIndex: number): boolean {
 		if (this.hoveredRowIndex === null) return false;
 		const thisRow = data[rowIndex];
 		const hoveredRow = data[this.hoveredRowIndex];
@@ -538,7 +540,7 @@ export class PatchComponent {
 	 * @param status - The status value.
 	 * @returns The CSS class name for the severity tag.
 	 */
-	getSeverityClass(status: string) {
+	protected getSeverityClass(status: string) {
 		switch (status) {
 			case STATUS_RESOLVED:
 				return 'tag-debug-success';
@@ -553,7 +555,7 @@ export class PatchComponent {
 	 * @param status - The patch note status.
 	 * @returns The PrimeNG tag severity value.
 	 */
-	getSeverity(status: string) {
+	protected getSeverity(status: string) {
 		switch (status) {
 			case STATUS_TODO:
 				return 'info';
@@ -577,7 +579,7 @@ export class PatchComponent {
 	 * @param status - The patch note status.
 	 * @returns The PrimeNG icon CSS class.
 	 */
-	getSeverityIcon(status: string) {
+	protected getSeverityIcon(status: string) {
 		switch (status) {
 			case STATUS_TODO:
 				return 'pi pi-hourglass';

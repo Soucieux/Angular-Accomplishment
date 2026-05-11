@@ -17,7 +17,7 @@ export class LOG {
 	 * @param className - The name of the class emitting the log.
 	 * @param message - The message to log.
 	 */
-	static info(className: string, message: string) {
+	public static info(className: string, message: string) {
 		console.info(LOG.getTimestamp() + '[INFO] ' + className + '-' + message);
 	}
 
@@ -27,7 +27,7 @@ export class LOG {
 	 * @param className - The name of the class emitting the log.
 	 * @param message - The warning message to log.
 	 */
-	static warn(className: string, message: string) {
+	public static warn(className: string, message: string) {
 		console.warn(LOG.getTimestamp() + '[WARNING] ' + className + '-' + message);
 	}
 
@@ -38,7 +38,7 @@ export class LOG {
 	 * @param message - The error summary.
 	 * @param error - An optional Error object whose message is appended to the log.
 	 */
-	static error(className: string, message: string, error?: Error) {
+	public static error(className: string, message: string, error?: Error) {
 		if (error) {
 			console.error(LOG.getTimestamp() + '[ERROR] ' + className + '-' + message + ': ' + error.message);
 		} else {

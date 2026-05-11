@@ -154,37 +154,13 @@ export class Utilities {
 	 * @returns Current country code
 	 */
 	public static async checkCurrentCountry() {
-		// const cachedLocation = localStorage.getItem('location');
-
-		// if (cachedLocation) {
-		// 	const parsed = JSON.parse(cachedLocation);
-		// 	const now = Date.now();
-		// 	const ONE_DAY = 24 * 60 * 60 * 1000;
-
-		// 	// Check whether the last session is over 24 hours or not
-		// 	if (now - parsed.timestamp < ONE_DAY) {
-		// 		this.currentCountry = parsed.country;
-		// 		LOG.info(
-		// 			this.className,
-		// 			'Reusing last session. Current IP: ' + parsed.ip + ', Current country: ' + parsed.country
-		// 		);
-		// 		return;
-		// 	}
-		// }
 		try {
-			// const response = await fetch('https://ipinfo.io/json?token=581131c84dc255');
-			// if (!response.ok) throw new Error('IP lookup failed');
-
-			// const currentLocation = await response.json();
-
-			// this.currentCountry = currentLocation.country;
 			this.currentCountry = CN;
 
 			localStorage.setItem(
 				'location',
 				JSON.stringify({
 					country: this.currentCountry,
-					// ip: currentLocation.ip,
 					ip: 'null',
 					timestamp: Date.now()
 				})

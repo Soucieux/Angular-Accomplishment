@@ -17,8 +17,8 @@ export class SearchDialogComponent {
 	protected visible: boolean = false;
 	protected searchCompleteOrInterrupted: boolean = false;
 	private stopCallback?: () => void;
-	searchLogs: string[] = [];
-	searchLogsSub!: Subscription;
+	protected searchLogs: string[] = [];
+	private searchLogsSub!: Subscription;
 
 	constructor(private searchStreamService: SearchStreamService) {}
 
@@ -28,7 +28,7 @@ export class SearchDialogComponent {
 	 *
 	 * @param stopCallback - The callback to call when the user interrupts the search.
 	 */
-	protected openDialog(stopCallback: () => void) {
+	public openDialog(stopCallback: () => void) {
 		this.visible = true;
 		this.stopCallback = stopCallback;
 

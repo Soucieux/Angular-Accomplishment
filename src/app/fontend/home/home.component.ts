@@ -6,7 +6,17 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
 import { LOG } from '../../common/app.logs';
-import { COMPONENT_DESTROY } from '../../common/app.constant';
+import {
+	COMPONENT_DESTROY,
+	GENRE_FAVOURITE,
+	STATS_CAP_ACTIVITY_LOG,
+	STATS_FIELD_PATCH_IN_PROGRESS,
+	STATS_FIELD_RECENT_MOVIE,
+	STATS_FIELD_RECENT_PATCH,
+	STATS_FIELD_RECENT_REMINDER,
+	STATS_FIELD_RECENT_RESONANCE,
+	STATS_FIELD_REMINDER_UPCOMING
+} from '../../common/app.constant';
 
 @Component({
 	selector: 'home',
@@ -59,6 +69,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 	protected pomodoroSelectedPreset = 25;
 	private readonly BREAK_DURATION = 5 * 60;
 
+	/**
+	 * Returns the current work-interval duration in seconds, derived from the
+	 * selected preset (in minutes). Used to reset the timer when switching modes.
+	 */
 	private get workDuration(): number {
 		return this.pomodoroSelectedPreset * 60;
 	}
@@ -89,7 +103,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 * statistics observables. The login subscription drives the auth-transition
 	 * animation and starts / stops the stats subscription as the user signs in or out.
 	 */
-	ngOnInit() {
+	public ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			const saved = sessionStorage.getItem(this.NOTE_KEY);
 			if (saved) this.noteText = saved;
@@ -110,11 +124,20 @@ export class HomeComponent implements OnInit, OnDestroy {
 							this.cdr.detectChanges();
 						}
 					}, 5000);
+					let activityLogsCleaned = false;
 					this.statsSub = this.databaseService.getStatistics().subscribe((data) => {
 						clearTimeout(this.loadingTimer);
 						this.stats = data;
 						this.loading = false;
 						this.cdr.detectChanges();
+						// One-time cleanup per dashboard session: trim each activity-log array
+						// to only the items that would appear in the combined top-24 feed.
+						// This removes stale entries that accumulated before the per-array cap
+						// was enforced by appendToActivityLog.
+						if (!activityLogsCleaned) {
+							activityLogsCleaned = true;
+							this.trimActivityLogs(data);
+						}
 					});
 
 					// Animate quote view out, then reveal dashboard after animation completes (0.55s)
@@ -144,7 +167,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 * Clears all timers and intervals, unsubscribes from the stats and login
 	 * observables, and logs the component destruction event.
 	 */
-	ngOnDestroy() {
+	public ngOnDestroy() {
 		clearTimeout(this.loadingTimer);
 		clearTimeout(this.dashboardTimer);
 		clearInterval(this.clockInterval);
@@ -429,7 +452,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 *   if the field is absent.
 	 */
 	protected getAllReminderItems(): any[] {
-		const raw = this.stats?.reminderUpcoming;
+		const raw = this.stats?.[STATS_FIELD_REMINDER_UPCOMING];
 		if (!raw) return [];
 		return Array.isArray(raw) ? raw : Object.values(raw);
 	}
@@ -484,7 +507,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 * @returns An array of in-progress patch note objects, or an empty array if absent.
 	 */
 	protected getPatchInProgress(): any[] {
-		const raw = this.stats?.patchInProgress;
+		const raw = this.stats?.[STATS_FIELD_PATCH_IN_PROGRESS];
 		if (!raw) return [];
 		const items = Array.isArray(raw) ? raw : Object.values(raw);
 		return items;
@@ -502,7 +525,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		const raw = this.stats?.genre;
 		if (!raw) return [];
 		const entries = Object.entries(raw as Record<string, number>)
-			.filter(([key, val]) => key !== 'Favourite' && (val as number) > 0)
+			.filter(([key, val]) => key !== GENRE_FAVOURITE && (val as number) > 0)
 			.map(([label, count]) => ({ label, count: count as number, pct: 0 }));
 		if (!entries.length) return [];
 		entries.sort((a, b) => b.count - a.count);
@@ -538,7 +561,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		const events: RawEvent[] = [];
 
 		// ── Entertainment ──────────────────────────────────────────────────────
-		const rawMovie = this.stats?.recentMovieActivities;
+		const rawMovie = this.stats?.[STATS_FIELD_RECENT_MOVIE];
 		const movieActivities: any[] = rawMovie
 			? Array.isArray(rawMovie)
 				? rawMovie
@@ -573,7 +596,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		}
 
 		// ── Patch Notes ────────────────────────────────────────────────────────
-		const rawPatch = this.stats?.recentPatchActivities;
+		const rawPatch = this.stats?.[STATS_FIELD_RECENT_PATCH];
 		const patchActivities: any[] = rawPatch
 			? Array.isArray(rawPatch)
 				? rawPatch
@@ -609,7 +632,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		}
 
 		// ── Reminder ──────────────────────────────────────────────────────────
-		const rawReminder = this.stats?.recentReminderActivities;
+		const rawReminder = this.stats?.[STATS_FIELD_RECENT_REMINDER];
 		const reminderActivities: any[] = rawReminder
 			? Array.isArray(rawReminder)
 				? rawReminder
@@ -640,7 +663,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		}
 
 		// ── Resonance ─────────────────────────────────────────────────────────
-		const rawResonance = this.stats?.recentResonanceActivities;
+		const rawResonance = this.stats?.[STATS_FIELD_RECENT_RESONANCE];
 		const resonanceActivities: any[] = rawResonance
 			? Array.isArray(rawResonance)
 				? rawResonance
@@ -666,10 +689,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 			});
 		}
 
-		// Sort newest-first, cap at 24, strip the helper field.
+		// Sort newest-first, cap at the dashboard display limit, strip the helper field.
 		return events
 			.sort((a, b) => b.raw.localeCompare(a.raw))
-			.slice(0, 24)
+			.slice(0, STATS_CAP_ACTIVITY_LOG)
 			.map(({ raw: _raw, ...rest }) => rest);
 	}
 
@@ -712,5 +735,65 @@ export class HomeComponent implements OnInit, OnDestroy {
 				items: allItems.filter((item) => this.normaliseDateToString(item?.date) === dateStr)
 			};
 		});
+	}
+
+	/**
+	 * One-time cleanup called after the first statistics snapshot arrives.
+	 * Trims each of the four activity-log arrays so that only items that would
+	 * appear in the combined top-24 feed are kept in CloudBase.
+	 *
+	 * Algorithm:
+	 *  1. Flatten all four source arrays, tagging each item with its source-field
+	 *     index and position index.
+	 *  2. Sort the flat list newest-first by timestamp.
+	 *  3. Mark the top STATS_CAP_ACTIVITY_LOG entries as "keep".
+	 *  4. Write back any source array that was longer than its kept subset.
+	 *
+	 * This is safe to call on every component instantiation: if every array is
+	 * already ≤ 24 items and all items are in the top 24, no write is triggered.
+	 *
+	 * @param data - The raw statistics document from the first watcher emission.
+	 */
+	private trimActivityLogs(data: any): void {
+		const fields = [
+			STATS_FIELD_RECENT_MOVIE,
+			STATS_FIELD_RECENT_PATCH,
+			STATS_FIELD_RECENT_REMINDER,
+			STATS_FIELD_RECENT_RESONANCE
+		];
+
+		// Resolve each field to a plain array
+		const arrays: any[][] = fields.map((f) => {
+			const raw = data?.[f];
+			return raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
+		});
+
+		// Build a flat list with source coordinates and timestamp for sorting
+		const flat: { fi: number; ii: number; ts: string }[] = [];
+		for (let fi = 0; fi < arrays.length; fi++) {
+			for (let ii = 0; ii < arrays[fi].length; ii++) {
+				const ts: string = arrays[fi][ii]?.timestamp;
+				if (ts) flat.push({ fi, ii, ts });
+			}
+		}
+
+		// Sort newest-first; identify which items survive the combined cap
+		flat.sort((a, b) => b.ts.localeCompare(a.ts));
+		const keepSet = new Set<string>(
+			flat.slice(0, STATS_CAP_ACTIVITY_LOG).map((e) => `${e.fi}:${e.ii}`)
+		);
+
+		// Build the update payload — only include arrays that actually shrank
+		const updates: Record<string, any[]> = {};
+		for (let fi = 0; fi < arrays.length; fi++) {
+			const trimmed = arrays[fi].filter((_, ii) => keepSet.has(`${fi}:${ii}`));
+			if (trimmed.length < arrays[fi].length) {
+				updates[fields[fi]] = trimmed;
+			}
+		}
+
+		if (Object.keys(updates).length > 0) {
+			this.databaseService.updateStatisticsFields(updates);
+		}
 	}
 }

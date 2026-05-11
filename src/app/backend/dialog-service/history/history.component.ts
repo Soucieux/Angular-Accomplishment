@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, OnDestroy, Output, EventEmitter, ViewChild, ViewContainerRef } from '@angular/core';
 import { MovieItemVO } from '../../../common/movieitem.vo';
 import { DialogModule } from 'primeng/dialog';
 import { CommonModule } from '@angular/common';
@@ -15,7 +15,7 @@ import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.e
 	templateUrl: './history.component.html',
 	styleUrl: './history.component.css'
 })
-export class HistoryDialogComponent {
+export class HistoryDialogComponent implements OnDestroy {
 	private readonly className = 'HistoryDialogComponent';
 	@Output() closed$ = new EventEmitter<void>();
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
@@ -105,7 +105,11 @@ export class HistoryDialogComponent {
 		this.visible = false;
 	}
 
-	ngOnDestroy() {
+	/**
+	 * Clears any dynamically attached nested dialog components from the container
+	 * to prevent memory leaks when this dialog is destroyed.
+	 */
+	public ngOnDestroy() {
 		this.dialogComponentContainer?.clear();
 	}
 }

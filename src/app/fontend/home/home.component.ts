@@ -487,7 +487,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		const raw = this.stats?.patchInProgress;
 		if (!raw) return [];
 		const items = Array.isArray(raw) ? raw : Object.values(raw);
-		return items.slice(0, 5);
+		return items;
 	}
 
 	/**
@@ -513,7 +513,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	/**
 	 * Builds a unified recent-activity feed from all four sections
 	 * (Entertainment, Patch Notes, Reminder, Resonance), sorted newest-first
-	 * and capped at 5 entries.
+	 * and capped at 24 entries.
 	 *
 	 * Each section contributes at most one event from its latest stats field.
 	 * Entries are sorted by their raw timestamp string (lexicographic order works
@@ -666,10 +666,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 			});
 		}
 
-		// Sort newest-first, cap at 10, strip the helper field.
+		// Sort newest-first, cap at 24, strip the helper field.
 		return events
 			.sort((a, b) => b.raw.localeCompare(a.raw))
-			.slice(0, 10)
+			.slice(0, 24)
 			.map(({ raw: _raw, ...rest }) => rest);
 	}
 

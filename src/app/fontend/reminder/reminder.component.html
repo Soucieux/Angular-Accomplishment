@@ -215,10 +215,10 @@
 										[style]="{
 											color: 'black'
 										}"
-										[pTooltip]="isHoverCapable ? item.content.date : ''"
+										[pTooltip]="isHoverCapable ? formatDate(item.content.date) : ''"
 										(click)="!isHoverCapable && op.toggle($event)"
 										tooltipPosition="top"></i>
-									<p-popover #op>{{ item.content.date }}</p-popover>
+									<p-popover #op>{{ formatDate(item.content.date) }}</p-popover>
 								</p-inputgroup-addon>
 							}
 							@if (item.content.link) {

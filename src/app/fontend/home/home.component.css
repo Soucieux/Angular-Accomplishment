@@ -306,11 +306,11 @@
 	min-height: 0;
 	grid-template-columns: repeat(3, 1fr);
 	/* 4-row layout:
-	   Row 1 — Entertainment (col 1) | Resonance (col 2) | Clock (col 3) — 1.5fr
-	   Row 2 — Reminder (col 1) | Patch (col 2) | Quick Note (col 3)    — 1.5fr
-	   Row 3 — Activity (cols 1-2) | Focus Time (col 3)                  — 2fr
-	   Row 4 — Calendar (full width)                                      — 1.2fr */
-	grid-template-rows: 1.5fr 1.5fr 1.5fr 1fr;
+	   Row 1 — Entertainment (col 1) | Reminder (col 2) | Clock (col 3) — 1.4fr
+	   Row 2 — Quick Note (col 1)   | Patch (col 2)    | Pomodoro (col3)— 1.35fr
+	   Row 3 — Activity (cols 1-2)  | Resonance (col 3)                 — 1.55fr
+	   Row 4 — Calendar (full width)                                     — 1fr*/
+	grid-template-rows: 1.4fr 1.35fr 1.55fr 1fr;
 	gap: 8px;
 }
 
@@ -363,11 +363,11 @@
 		0 1px 3px rgba(0, 0, 0, 0.06);
 	overflow: hidden;
 	color: #1e293b;
-	cursor: pointer;
 	text-decoration: none;
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
+	height: 100%;
 	transition:
 		transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
 		box-shadow 0.2s;
@@ -481,6 +481,7 @@
 	display: flex;
 	flex-direction: column;
 	flex: 1;
+	min-height: 0;
 	padding: 10px 12px 12px;
 	gap: 6px;
 }
@@ -530,6 +531,8 @@
 	letter-spacing: 0.8px;
 	text-transform: uppercase;
 	color: #64748b;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .card-arrow {
@@ -632,6 +635,7 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	text-align: center;
 }
 
 .genre-bar-track {
@@ -720,7 +724,9 @@
 }
 
 .clock-date-str {
-	font-size: 11px;
+	font-size: 14px;
+	position: absolute;
+	left: 140px;
 	color: #e2e8f0;
 	font-weight: 500;
 	flex-shrink: 0;
@@ -738,7 +744,7 @@
 }
 
 .year-label-text {
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 600;
 	color: #94a3b8;
 	text-transform: uppercase;
@@ -787,7 +793,7 @@
 }
 
 .mini-label {
-	font-size: 9px;
+	font-size: 11px;
 	font-weight: 600;
 	color: #94a3b8;
 	text-transform: uppercase;
@@ -846,7 +852,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
-	max-height: 200px;
+	max-height: 190px;
 	overflow-y: auto;
 	scrollbar-width: thin;
 	scrollbar-color: #e2e8f0 transparent;
@@ -1080,6 +1086,29 @@
 	align-content: start;
 }
 
+/* Scrollable wrapper — grows to fill card body, thin scrollbar on the right */
+.activity-list-scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+	padding-right: 4px;
+}
+
+.activity-list-scroll::-webkit-scrollbar {
+	width: 4px;
+}
+
+.activity-list-scroll::-webkit-scrollbar-thumb {
+	background: rgba(100, 116, 139, 0.3);
+	border-radius: 2px;
+}
+
+.activity-list-scroll::-webkit-scrollbar-thumb:hover {
+	background: rgba(100, 116, 139, 0.55);
+}
+
 .activity-item {
 	display: flex;
 	align-items: center;
@@ -1195,7 +1224,7 @@
 .pomo-controls {
 	display: flex;
 	gap: 8px;
-	margin-bottom: 6px;
+	margin-bottom: 2px;
 	align-self: center;
 }
 
@@ -1245,6 +1274,7 @@
 	justify-content: center;
 	margin-top: 2px;
 	align-self: center;
+	position: relative;
 }
 
 .pomo-preset-btn {
@@ -1500,9 +1530,9 @@
 }
 
 /* ─────────────────────────────────────────
-   Responsive ≤ 950 px (mobile)
+   Responsive ≤ 1100 px (mobile)
 ───────────────────────────────────────── */
-@media (max-width: 950px) {
+@media (max-width: 1100px) {
 	.card-minimum-height {
 		min-height: 150px;
 	}
@@ -1532,6 +1562,13 @@
 		flex: none;
 	}
 
+	.clock-date-str {
+		font-size: 14px;
+		position: absolute;
+		left: 110px;
+		top: 15px;
+	}
+
 	.quick-actions-row {
 		flex-wrap: wrap;
 	}
@@ -1542,7 +1579,8 @@
 
 	.bento-grid {
 		grid-template-columns: repeat(1, 1fr);
-		grid-template-rows: auto auto auto auto auto auto auto auto auto;
+		/* recent activity only shows 8 items at a time */
+		grid-template-rows: auto auto auto auto auto auto auto 480px auto;
 	}
 	.card-clock {
 		grid-column: 1 / 3;
@@ -1636,6 +1674,9 @@
 
 /* ── Wide (≥ 1500 px) ── */
 @media (min-width: 1500px) {
+	.bento-grid {
+		grid-template-rows: 260px 1.35fr 1.55fr 1fr !important;
+	}
 	.chip-value {
 		font-size: 36px;
 	}
@@ -1645,7 +1686,6 @@
 	.stat-chip {
 		padding: 10px 20px;
 	}
-
 	.clock-display {
 		font-size: 44px;
 	}

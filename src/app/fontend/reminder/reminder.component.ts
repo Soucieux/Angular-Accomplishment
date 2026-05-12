@@ -985,13 +985,31 @@ export class ReminderComponent implements OnInit, OnDestroy {
 	protected formatDate(date: any): string {
 		if (!date) return '';
 		if (typeof date === 'string') return date;
+		if (typeof date === 'number') {
+			try { return format(new Date(date), 'yyyy-MM-dd'); } catch { return ''; }
+		}
 		try {
 			if (date instanceof Date) return format(date, 'yyyy-MM-dd');
-			// CloudBase timestamp objects store the epoch in a $date property
-			if (typeof date === 'object' && date.$date) return format(new Date(date.$date), 'yyyy-MM-dd');
+			if (typeof date === 'object') {
+				// CloudBase/MongoDB: { $date: ms } or { $date: { $numberLong: "ms" } }
+				if (date.$date !== undefined) {
+					const ms = typeof date.$date === 'object' && date.$date.$numberLong
+						? Number(date.$date.$numberLong)
+						: Number(date.$date);
+					return format(new Date(ms), 'yyyy-MM-dd');
+				}
+				// Tencent CloudBase SDK: { time: ms }
+				if (date.time !== undefined) return format(new Date(date.time), 'yyyy-MM-dd');
+				// Firestore-like: { seconds: s, nanoseconds: ns }
+				if (date.seconds !== undefined) return format(new Date(date.seconds * 1000), 'yyyy-MM-dd');
+				// Date-like object with getTime()
+				if (typeof date.getTime === 'function') return format(new Date(date.getTime()), 'yyyy-MM-dd');
+			}
 			return format(new Date(date), 'yyyy-MM-dd');
 		} catch {
-			return String(date);
+			// Never expose raw object stringification — return empty so the tooltip
+			// shows nothing rather than the meaningless "[object Object]" text.
+			return '';
 		}
 	}
 }

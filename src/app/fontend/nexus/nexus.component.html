@@ -1,0 +1,349 @@
+<div class="container container-nexus">
+	<p-toast />
+
+	<!-- ── Header ─────────────────────────────────────────────────── -->
+	<div class="page-header">
+		<h1 class="page-title">Nexus</h1>
+		<p class="page-subtitle">Your centralized AI search hub</p>
+		<div class="header-ornament"></div>
+	</div>
+
+	<!-- ── Row 1: Search Zone (full width) ───────────────────────── -->
+	<!-- ── Search Zone ────────────────────────────────────────────── -->
+	<div class="search-zone">
+		<!-- Search bar -->
+		<div class="search-bar-wrapper">
+			<span class="material-symbols-outlined search-icon">search</span>
+			<input
+				class="search-input"
+				type="text"
+				placeholder="Ask anything…"
+				[(ngModel)]="searchQuery"
+				(keyup.enter)="onLaunch()" />
+			<button class="launch-btn" (click)="onLaunch()">
+				<span class="material-symbols-outlined">arrow_forward</span>
+			</button>
+		</div>
+
+		<!-- Direct Query chip row -->
+		<div class="chip-row">
+			<span class="chip-row-label">Direct Query</span>
+			@for (tool of directTools; track tool.id) {
+				<button
+					class="ai-chip"
+					[class.selected]="tool.selected"
+					(click)="toggleAi(tool)"
+					[title]="tool.name">
+					@if (!failedLogos.has(tool.id)) {
+						<img [src]="tool.logo" [alt]="tool.name" class="chip-logo"
+							(error)="onLogoError(tool.id)" />
+					} @else {
+						<span class="chip-initial" [style.background]="logoFallbackColor(tool.id)">
+							{{ tool.name[0] }}
+						</span>
+					}
+					<span class="chip-name">{{ tool.name }}</span>
+				</button>
+			}
+		</div>
+
+		<!-- Opens Homepage row — click any chip to open that AI site directly -->
+		<div class="chip-row">
+			<span class="chip-row-label">Opens Homepage</span>
+			@for (tool of clipboardTools; track tool.id) {
+				<button
+					class="ai-chip homepage-chip"
+					(click)="openToolHomepage(tool)"
+					[title]="'Open ' + tool.name">
+					@if (!failedLogos.has(tool.id)) {
+						<img [src]="tool.logo" [alt]="tool.name" class="chip-logo"
+							(error)="onLogoError(tool.id)" />
+					} @else {
+						<span class="chip-initial" [style.background]="logoFallbackColor(tool.id)">
+							{{ tool.name[0] }}
+						</span>
+					}
+					<span class="chip-name">{{ tool.name }}</span>
+					<span class="material-symbols-outlined homepage-arrow">open_in_new</span>
+				</button>
+			}
+		</div>
+
+		<!-- ── News Strip ─────────────────────────────────────────────────── -->
+		<div class="news-section">
+			<!-- Header row: filter tabs + refresh -->
+			<div class="news-header">
+				<div class="news-tabs">
+					@for (tab of [
+						{ key: 'all',     label: 'All'      },
+						{ key: 'ai',      label: 'AI'       },
+						{ key: 'tech',    label: 'Tech'     },
+						{ key: 'science', label: 'Science'  }
+					]; track tab.key) {
+						<button
+							class="news-tab"
+							[class.active]="newsFilter === tab.key"
+							(click)="setNewsFilter($any(tab.key))">
+							{{ tab.label }}
+						</button>
+					}
+				</div>
+				<button class="news-refresh-btn" (click)="fetchNews()" [disabled]="newsLoading" title="Refresh news">
+					<span class="material-symbols-outlined" [class.spinning]="newsLoading">refresh</span>
+				</button>
+			</div>
+
+			<!-- News cards row -->
+			@if (newsLoading && filteredNews.length === 0) {
+				<div class="news-cards-row">
+					@for (i of [1,2,3,4,5]; track i) {
+						<div class="news-card skeleton-card"></div>
+					}
+				</div>
+			} @else if (newsError) {
+				<p class="news-empty">Could not load news. <button class="link-btn" (click)="fetchNews()">Retry</button></p>
+			} @else if (filteredNews.length === 0) {
+				<p class="news-empty">No articles found.</p>
+			} @else {
+				<div class="news-cards-row">
+					@for (article of filteredNews; track article.link) {
+						<a class="news-card" [href]="article.link" target="_blank" rel="noopener noreferrer">
+							<span class="news-source">{{ article.source }}</span>
+							<p class="news-title">{{ article.title }}</p>
+							<span class="news-age">{{ newsAge(article.pubDate) }}</span>
+						</a>
+					}
+				</div>
+			}
+		</div>
+	</div>
+
+	<!-- ── Row 2: History + Links ────────────────────────────────── -->
+	<div class="bottom-row">
+		<div class="history-col">
+			<div class="panel-header">
+				<span class="panel-title">Recent Searches</span>
+				@if (history.length > 0) {
+					<button class="clear-btn" (click)="clearHistory()">Clear all</button>
+				}
+			</div>
+
+			@if (history.length === 0) {
+				<div class="history-empty">
+					<span class="material-symbols-outlined empty-icon">history</span>
+					<p>No searches yet</p>
+				</div>
+			} @else {
+				<div class="history-list">
+					@for (entry of history; track entry.timestamp) {
+						<div class="history-card">
+							<p class="history-query">{{ entry.query }}</p>
+							<div class="history-meta">
+								<div class="history-chips">
+									@for (id of entry.aiIds; track id) {
+										@let tool = getToolById(id);
+										@if (tool) {
+											<img
+												[src]="tool.logo"
+												[alt]="tool.name"
+												[title]="tool.name"
+												class="history-chip-logo" />
+										}
+									}
+								</div>
+								<span class="history-time">{{ getRelativeTime(entry.timestamp) }}</span>
+							</div>
+							<button class="relaunch-btn" (click)="relaunch(entry)">Relaunch</button>
+						</div>
+					}
+				</div>
+			}
+		</div>
+		<div class="links-col">
+			<!-- ── Category tabs + search + add button ──────────────── -->
+			<div class="links-toolbar">
+				<div class="category-tabs">
+					<button
+						class="cat-tab"
+						[class.active]="activeCategory === 'all'"
+						(click)="activeCategory = 'all'">
+						All ({{ getLinkCount('all') }})
+					</button>
+					@for (cat of categories; track cat._id) {
+						<button
+							class="cat-tab"
+							[class.active]="activeCategory === cat._id"
+							(click)="activeCategory = cat._id"
+							[style.--cat-color]="cat.color">
+							{{ cat.name }} ({{ getLinkCount(cat._id) }})
+							<span class="cat-edit-btn"
+								  (click)="openEditCategoryDialog(cat, $event)"
+								  title="Edit category">✎</span>
+						</button>
+					}
+					<button class="cat-add-btn" (click)="openAddCategoryDialog()" title="New category">
+						<span class="material-symbols-outlined">add</span>
+					</button>
+				</div>
+				<div class="links-search-wrapper">
+					<span class="material-symbols-outlined" style="font-size:16px;color:rgba(0,0,0,0.35)">search</span>
+					<input
+						class="links-search-input"
+						type="text"
+						placeholder="Search links…"
+						[(ngModel)]="linkSearch" />
+				</div>
+				<button class="add-link-btn" (click)="openAddLinkDialog()">
+					<span class="material-symbols-outlined">add</span>
+					Add Link
+				</button>
+			</div>
+
+			<!-- ── Links grid ────────────────────────────────────────── -->
+			@if (linksLoading) {
+				<div class="links-grid">
+					@for (i of [1,2,3,4,5,6,7,8]; track i) {
+						<div class="link-card skeleton-card" style="height: 90px;"></div>
+					}
+				</div>
+			} @else if (filteredLinks.length === 0) {
+				<div class="links-empty">
+					<span class="material-symbols-outlined empty-icon">link</span>
+					<p>No links here yet</p>
+					<button class="add-link-btn" (click)="openAddLinkDialog()">
+						<span class="material-symbols-outlined">add</span>
+						Add Link
+					</button>
+				</div>
+			} @else {
+				<div class="links-grid">
+					@for (link of filteredLinks; track link._id) {
+						<div class="link-card" (click)="openLink(link)" [title]="link.url">
+							<div class="link-card-inner">
+								<img
+									class="link-favicon"
+									[src]="getFavicon(link.url)"
+									[alt]="link.title"
+									(error)="$any($event.target).src=''"
+									loading="lazy" />
+								<div class="link-info">
+									<p class="link-title">{{ link.title }}</p>
+									@if (link.visitCount) {
+										<span class="link-visits">{{ link.visitCount }} visits</span>
+									}
+								</div>
+								<div class="link-actions">
+									<button class="link-action-btn" (click)="openEditLinkDialog(link, $event)" title="Edit">
+										<span class="material-symbols-outlined">edit</span>
+									</button>
+									<button class="link-action-btn danger" (click)="deleteLink(link, $event)" title="Delete">
+										<span class="material-symbols-outlined">delete</span>
+									</button>
+								</div>
+							</div>
+						</div>
+					}
+				</div>
+			}
+		</div>
+	</div>
+</div>
+
+<!-- ── Add / Edit Link Dialog ───────────────────────────────── -->
+<p-dialog
+	[(visible)]="showLinkDialog"
+	[header]="linkDialogTitle"
+	[modal]="true"
+	[closable]="true"
+	[style]="{ width: '480px' }"
+	styleClass="link-dialog">
+
+	<div class="dialog-form">
+		<!-- URL field -->
+		<div class="form-field">
+			<label class="form-label">URL *</label>
+			<input
+				class="form-input"
+				type="url"
+				placeholder="https://example.com"
+				[(ngModel)]="linkForm.url"
+				(blur)="onLinkUrlBlur()" />
+		</div>
+
+		<!-- Favicon preview -->
+		@if (linkFaviconPreview) {
+			<div class="favicon-preview">
+				<img [src]="linkFaviconPreview" alt="Site icon" class="preview-favicon" />
+				<span class="preview-label">{{ linkForm.title || 'Loading title…' }}</span>
+			</div>
+		}
+
+		<!-- Title field -->
+		<div class="form-field">
+			<label class="form-label">Title *
+				@if (linkMetaLoading) { <span class="meta-loading">fetching…</span> }
+			</label>
+			<input
+				class="form-input"
+				type="text"
+				placeholder="My favourite resource"
+				[(ngModel)]="linkForm.title" />
+		</div>
+
+		<!-- Category field -->
+		<div class="form-field">
+			<label class="form-label">Category *</label>
+			<select class="form-select" [(ngModel)]="linkForm.category">
+				<option value="" disabled>Select a category</option>
+				@for (cat of categories; track cat._id) {
+					<option [value]="cat._id">{{ cat.name }}</option>
+				}
+			</select>
+		</div>
+	</div>
+
+	<ng-template pTemplate="footer">
+		<button class="dialog-cancel-btn" (click)="showLinkDialog = false">Cancel</button>
+		<button class="dialog-save-btn" (click)="saveLinkDialog()">Save</button>
+	</ng-template>
+</p-dialog>
+
+<!-- ── Add / Edit Category Dialog ───────────────────────────── -->
+<p-dialog
+	[(visible)]="showCategoryDialog"
+	[header]="editingCategory ? 'Edit Category' : 'New Category'"
+	[modal]="true"
+	[closable]="true"
+	[style]="{ width: '360px' }">
+
+	<div class="dialog-form">
+		<div class="form-field">
+			<label class="form-label">Name *</label>
+			<input
+				class="form-input"
+				type="text"
+				placeholder="e.g. Study, Tools, Dev"
+				[(ngModel)]="categoryForm.name" />
+		</div>
+		<div class="form-field">
+			<label class="form-label">Color</label>
+			<div class="color-row">
+				<input type="color" [(ngModel)]="categoryForm.color" class="color-picker" />
+				<span class="color-preview" [style.background]="categoryForm.color"></span>
+				<span class="color-hex">{{ categoryForm.color }}</span>
+			</div>
+		</div>
+		@if (editingCategory) {
+			<div class="danger-zone">
+				<button class="delete-cat-btn" (click)="deleteCategory(editingCategory, $event)">
+					Delete this category
+				</button>
+			</div>
+		}
+	</div>
+
+	<ng-template pTemplate="footer">
+		<button class="dialog-cancel-btn" (click)="showCategoryDialog = false">Cancel</button>
+		<button class="dialog-save-btn" (click)="saveCategoryDialog()">Save</button>
+	</ng-template>
+</p-dialog>

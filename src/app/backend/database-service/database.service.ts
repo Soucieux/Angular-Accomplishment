@@ -248,4 +248,80 @@ export abstract class DatabaseService {
 	 * @param activity - The activity object to record.
 	 */
 	public abstract appendToActivityLog(fieldName: string, activity: any): Promise<void>;
+
+	/**
+	 * Get the useful links from the database.
+	 *
+	 * @returns An observable that emits the useful links list.
+	 */
+	public abstract getUsefulLinks(): Observable<any[]>;
+
+	/**
+	 * Add a new useful link to the database.
+	 *
+	 * @param link - The link object to add.
+	 */
+	public abstract addUsefulLink(link: { url: string; title: string; category: string; visitCount: number; createdAt: string }): Promise<void>;
+
+	/**
+	 * Update an existing useful link in the database.
+	 *
+	 * @param key - The key of the link to update.
+	 * @param updates - The fields to update.
+	 */
+	public abstract updateUsefulLink(key: string, updates: Partial<{ url: string; title: string; category: string }>): Promise<void>;
+
+	/**
+	 * Increment the visit count for a useful link.
+	 *
+	 * @param key - The key of the link.
+	 * @param currentCount - The current visit count.
+	 */
+	public abstract incrementLinkVisit(key: string, currentCount: number): Promise<void>;
+
+	/**
+	 * Remove a useful link from the database.
+	 *
+	 * @param key - The key of the link to remove.
+	 */
+	public abstract removeUsefulLink(key: string): Promise<void>;
+
+	/**
+	 * Get the link categories from the database.
+	 *
+	 * @returns An observable that emits the link categories list.
+	 */
+	public abstract getLinkCategories(): Observable<any[]>;
+
+	/**
+	 * Add a new link category to the database.
+	 *
+	 * @param category - The category object to add.
+	 */
+	public abstract addLinkCategory(category: { name: string; color: string; order: number }): Promise<void>;
+
+	/**
+	 * Update an existing link category in the database.
+	 *
+	 * @param key - The key of the category to update.
+	 * @param updates - The fields to update.
+	 */
+	public abstract updateLinkCategory(key: string, updates: Partial<{ name: string; color: string; order: number }>): Promise<void>;
+
+	/**
+	 * Remove a link category from the database.
+	 *
+	 * @param key - The key of the category to remove.
+	 */
+	public abstract removeLinkCategory(key: string): Promise<void>;
+
+	/**
+	 * Proxy an HTTP GET request through the `fetchurl` CloudBase function,
+	 * bypassing browser CORS restrictions.  Used for RSS news feeds and
+	 * link-title auto-fetch on the Nexus page.
+	 *
+	 * @param url - The fully-qualified http/https URL to fetch.
+	 * @returns The response body as a string and its Content-Type header value.
+	 */
+	public abstract proxyFetch(url: string): Promise<{ content: string; contentType: string }>;
 }

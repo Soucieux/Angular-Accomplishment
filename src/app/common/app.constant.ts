@@ -11,6 +11,7 @@ export const DATABASE_REMINDER_FIRST = 'reminder_table_first';
 export const DATABASE_REMINDER_SECOND = 'reminder_table_second';
 export const DATABASE_REMINDER_THIRD = 'reminder_table_third';
 export const DATABASE_STATISTICS = 'statistics';
+export const DATABASE_USEFUL_LINKS = 'useful_links'; // stores both links (type:'link') and categories (type:'category')
 
 // ── Database — reminder table identifiers ──────────────────────────────────
 export const DATABASE_FIRST_TABLE = 'first_table';

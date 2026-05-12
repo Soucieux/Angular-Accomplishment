@@ -19,6 +19,7 @@ import {
 	DATABASE_SECOND_TABLE,
 	DATABASE_STATISTICS,
 	DATABASE_THIRD_TABLE,
+	DATABASE_USEFUL_LINKS,
 	ERROR_PERMISSION_DENIED,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
@@ -1380,5 +1381,189 @@ export class CloudbaseService extends DatabaseService {
 			default:
 				return '';
 		}
+	}
+
+	/**
+	 * Get the useful links from the database.
+	 *
+	 * @returns An observable that emits the useful links list.
+	 */
+	public override getUsefulLinks(): Observable<any[]> {
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<any[]>((observer) => {
+							const watcher = this.database.collection(DATABASE_USEFUL_LINKS).watch({
+								onChange: (snapshot: any) => {
+									// Filter to link-type documents only (excludes category docs in the same collection)
+								const links = snapshot.docs
+									.filter((doc: any) => doc.type !== 'category')
+									.map((doc: any) => ({ ...doc }));
+									observer.next(links);
+								},
+								onError: (err: any) => {
+									LOG.error(this.className, 'Error while retrieving useful links', err);
+									observer.error(err);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
+	}
+
+	/**
+	 * Add a new useful link to the database.
+	 *
+	 * @param link - The link object to add.
+	 */
+	public override async addUsefulLink(link: { url: string; title: string; category: string; visitCount: number; createdAt: string }): Promise<void> {
+		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
+		const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
+			...userId,
+			type: 'link',
+			...link
+		});
+		if (result.code) throw new Error(result.message);
+		LOG.info(this.className, 'New useful link has been added');
+	}
+
+	/**
+	 * Update an existing useful link in the database.
+	 *
+	 * @param key - The key of the link to update.
+	 * @param updates - The fields to update.
+	 */
+	public override async updateUsefulLink(key: string, updates: Partial<{ url: string; title: string; category: string }>): Promise<void> {
+		const result = await this.database
+			.collection(DATABASE_USEFUL_LINKS)
+			.doc(key)
+			.update({ ...updates });
+		if (result.code) throw new Error(result.message);
+		LOG.info(this.className, 'Useful link has been updated');
+	}
+
+	/**
+	 * Increment the visit count for a useful link.
+	 *
+	 * @param key - The key of the link.
+	 * @param currentCount - The current visit count.
+	 */
+	public override async incrementLinkVisit(key: string, currentCount: number): Promise<void> {
+		const result = await this.database
+			.collection(DATABASE_USEFUL_LINKS)
+			.doc(key)
+			.update({ visitCount: currentCount + 1 });
+		if (result.code) throw new Error(result.message);
+		LOG.info(this.className, 'Link visit count has been incremented');
+	}
+
+	/**
+	 * Remove a useful link from the database.
+	 *
+	 * @param key - The key of the link to remove.
+	 */
+	public override async removeUsefulLink(key: string): Promise<void> {
+		await this.removeSingleItemFromDatabase(DATABASE_USEFUL_LINKS, key);
+	}
+
+	/**
+	 * Get the link categories from the database.
+	 *
+	 * @returns An observable that emits the link categories list.
+	 */
+	public override getLinkCategories(): Observable<any[]> {
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<any[]>((observer) => {
+							const watcher = this.database.collection(DATABASE_USEFUL_LINKS).watch({
+								onChange: (snapshot: any) => {
+									// Filter to category-type documents only (shares collection with links)
+									const categories = snapshot.docs
+										.filter((doc: any) => doc.type === 'category')
+										.map((doc: any) => ({ ...doc }));
+									observer.next(categories);
+								},
+								onError: (err: any) => {
+									LOG.error(this.className, 'Error while retrieving link categories', err);
+									observer.error(err);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
+			)
+			.pipe(shareReplay(1));
+	}
+
+	/**
+	 * Add a new link category to the database.
+	 *
+	 * @param category - The category object to add.
+	 */
+	public override async addLinkCategory(category: { name: string; color: string; order: number }): Promise<void> {
+		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
+		const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
+			...userId,
+			type: 'category',
+			...category
+		});
+		if (result.code) throw new Error(result.message);
+		LOG.info(this.className, 'New link category has been added');
+	}
+
+	/**
+	 * Update an existing link category in the database.
+	 *
+	 * @param key - The key of the category to update.
+	 * @param updates - The fields to update.
+	 */
+	public override async updateLinkCategory(key: string, updates: Partial<{ name: string; color: string; order: number }>): Promise<void> {
+		const result = await this.database
+			.collection(DATABASE_USEFUL_LINKS)
+			.doc(key)
+			.update({ ...updates });
+		if (result.code) throw new Error(result.message);
+		LOG.info(this.className, 'Link category has been updated');
+	}
+
+	/**
+	 * Remove a link category from the database.
+	 *
+	 * @param key - The key of the category to remove.
+	 */
+	public override async removeLinkCategory(key: string): Promise<void> {
+		await this.removeSingleItemFromDatabase(DATABASE_USEFUL_LINKS, key);
+	}
+
+	/**
+	 * Proxy an HTTP GET request through the `fetchurl` CloudBase function.
+	 * The function fetches the target URL server-side (no CORS) and returns
+	 * the raw response body.
+	 *
+	 * @param url - The fully-qualified http/https URL to fetch.
+	 * @returns The response body and Content-Type header value.
+	 */
+	public override async proxyFetch(url: string): Promise<{ content: string; contentType: string }> {
+		const result: any = await this.cloudbase.callFunction({
+			name: 'fetchurl',
+			data: {
+				accessToken: environment.cloudbase.accessToken,
+				url
+			}
+		});
+		if (!result?.result?.success) {
+			throw new Error(result?.result?.error ?? 'fetchurl returned an error');
+		}
+		return {
+			content    : result.result.content     ?? '',
+			contentType: result.result.contentType ?? ''
+		};
 	}
 }

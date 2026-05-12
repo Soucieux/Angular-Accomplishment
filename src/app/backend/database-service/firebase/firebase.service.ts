@@ -33,7 +33,7 @@ import {
 	get,
 	push
 } from '@angular/fire/database';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { MovieItemVO } from '../../../common/movieitem.vo';
 import { DatabaseService } from '../database.service';
 
@@ -831,5 +831,93 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public override removePatchNote(key: string): Promise<void> {
 		return this.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
+	}
+
+	/**
+	 * Get the useful links from the database.
+	 *
+	 * @returns An observable that emits the useful links list.
+	 */
+	public override getUsefulLinks(): Observable<any[]> {
+		return of([]);
+	}
+
+	/**
+	 * Add a new useful link to the database.
+	 *
+	 * @param link - The link object to add.
+	 */
+	public override addUsefulLink(_link: { url: string; title: string; category: string; visitCount: number; createdAt: string }): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Update an existing useful link in the database.
+	 *
+	 * @param key - The key of the link to update.
+	 * @param updates - The fields to update.
+	 */
+	public override updateUsefulLink(_key: string, _updates: Partial<{ url: string; title: string; category: string }>): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Increment the visit count for a useful link.
+	 *
+	 * @param key - The key of the link.
+	 * @param currentCount - The current visit count.
+	 */
+	public override incrementLinkVisit(_key: string, _currentCount: number): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Remove a useful link from the database.
+	 *
+	 * @param key - The key of the link to remove.
+	 */
+	public override removeUsefulLink(_key: string): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Get the link categories from the database.
+	 *
+	 * @returns An observable that emits the link categories list.
+	 */
+	public override getLinkCategories(): Observable<any[]> {
+		return of([]);
+	}
+
+	/**
+	 * Add a new link category to the database.
+	 *
+	 * @param category - The category object to add.
+	 */
+	public override addLinkCategory(_category: { name: string; color: string; order: number }): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Update an existing link category in the database.
+	 *
+	 * @param key - The key of the category to update.
+	 * @param updates - The fields to update.
+	 */
+	public override updateLinkCategory(_key: string, _updates: Partial<{ name: string; color: string; order: number }>): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Remove a link category from the database.
+	 *
+	 * @param key - The key of the category to remove.
+	 */
+	public override removeLinkCategory(_key: string): Promise<void> {
+		return Promise.resolve();
+	}
+
+	public override proxyFetch(_url: string): Promise<{ content: string; contentType: string }> {
+		return Promise.resolve({ content: '', contentType: '' });
 	}
 }

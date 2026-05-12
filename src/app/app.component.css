@@ -18,7 +18,7 @@ mat-drawer-container {
 		display: none !important;
 	}
 
-	/* Add height by 20px whenever a new button is added */
+	/* Add height by 20px whenever a new button is added — currently 7 nav buttons (Home, Entertainment, Reminder, Patch Notes, Resonance, Nexus, About) */
 	mat-drawer {
 		width: 37px !important;
 	}

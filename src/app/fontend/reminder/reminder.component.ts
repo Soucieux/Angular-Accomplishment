@@ -28,6 +28,7 @@ import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
 	ACCOUNT_DEBT_DECREMENT,
+	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_FIRST_TABLE,
 	DATABASE_SECOND_TABLE,
@@ -35,6 +36,9 @@ import {
 	DIALOG_CONFIRM,
 	ERROR_PERMISSION_DENIED,
 	FAILURE,
+	HISTORY_STATUS_DELETED,
+	REMINDER_ITEM_EXPENSE,
+	REMINDER_ITEM_MESSAGE,
 	REMINDER_TABLE_ACCOUNT_EXPENSES,
 	REMINDER_TABLE_DATE_CALCULATOR,
 	REMINDER_TABLE_MESSAGES,
@@ -45,7 +49,6 @@ import {
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { format } from 'date-fns';
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 
 @Component({
 	selector: 'reminder',
@@ -66,7 +69,7 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 		ToggleSwitchModule
 	],
 	templateUrl: './reminder.component.html',
-	styleUrl: './reminder.component.css'
+	styleUrls: ['../../common/page-card.css', './reminder.component.css']
 })
 export class ReminderComponent implements OnInit, OnDestroy {
 	private readonly className = 'ReminderComponent';
@@ -88,7 +91,9 @@ export class ReminderComponent implements OnInit, OnDestroy {
 	private firstSub?: Subscription;
 	private secondSub?: Subscription;
 	private thirdSub?: Subscription;
-	/** Cached items per table — merged before each statistics write. */
+	/**
+	 * Cached items per table — merged before each statistics write.
+	 */
 	private upcomingExpenses: any[] = [];
 	private upcomingMessages: any[] = [];
 	protected FIRST_TABLE: string = DATABASE_FIRST_TABLE;
@@ -153,7 +158,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 				// Stopped automatically when secondSub is unsubscribed in ngOnDestroy.
 				this.upcomingExpenses = rows
 					.filter((item: any) => item.content?.date && !item.content?.paid)
-					.map((item: any) => ({ type: 'expense', name: item.name, date: item.content.date }));
+					.map((item: any) => ({ type: REMINDER_ITEM_EXPENSE, name: item.name, date: item.content.date }));
 				this.syncReminderStatistics();
 			});
 
@@ -170,7 +175,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 				this.upcomingMessages = rows
 					.filter((item: any) => item.content?.date)
 					.map((item: any) => ({
-						type: 'message',
+						type: REMINDER_ITEM_MESSAGE,
 						name: item.content.text ?? '',
 						date: item.content.date,
 						link: item.content.link ?? ''
@@ -469,7 +474,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 			// Fire-and-forget: surface this change in the Recent Activity widget.
 			this.databaseService
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-					type: 'updated',
+					type: ACTIVITY_TYPE_UPDATED,
 					table: REMINDER_TABLE_DATE_CALCULATOR,
 					text: '',
 					timestamp: this.utilities.getCurrentFormattedTime(true)
@@ -477,9 +482,9 @@ export class ReminderComponent implements OnInit, OnDestroy {
 				.catch(() => {});
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openPermissionErrorDialog();
+				this.dialogService.showPermissionError(this.dialogComponentContainer);
 			} else {
-				this.openUnexpectedErrorDialog();
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		}
 	}
@@ -539,9 +544,9 @@ export class ReminderComponent implements OnInit, OnDestroy {
 				this.triggerSaveIndicator(DATABASE_SECOND_TABLE);
 			} catch (error) {
 				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-					this.openPermissionErrorDialog();
+					this.dialogService.showPermissionError(this.dialogComponentContainer);
 				} else {
-					this.openUnexpectedErrorDialog();
+					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			}
 		} else {
@@ -634,7 +639,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 			// Fire-and-forget: surface the deletion in the Recent Activity widget.
 			this.databaseService
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-					type: 'deleted',
+					type: HISTORY_STATUS_DELETED,
 					table: REMINDER_TABLE_MESSAGES,
 					text: itemText,
 					timestamp: this.utilities.getCurrentFormattedTime(true)
@@ -642,9 +647,9 @@ export class ReminderComponent implements OnInit, OnDestroy {
 				.catch(() => {});
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openPermissionErrorDialog();
+				this.dialogService.showPermissionError(this.dialogComponentContainer);
 			} else {
-				this.openUnexpectedErrorDialog();
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		}
 	}
@@ -680,7 +685,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 			// so the reminder widget reflects it before the CloudBase round-trip ends.
 			if (newContent['date']) {
 				this.upcomingMessages.push({
-					type: 'message',
+					type: REMINDER_ITEM_MESSAGE,
 					name: String(newContent['text'] ?? ''),
 					date: String(newContent['date']),
 					link: String(newContent['link'] ?? '')
@@ -760,7 +765,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 							: '';
 				this.databaseService
 					.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-						type: 'updated',
+						type: ACTIVITY_TYPE_UPDATED,
 						table: tableLabel,
 						text: itemText,
 						timestamp: this.utilities.getCurrentFormattedTime(true)
@@ -775,9 +780,9 @@ export class ReminderComponent implements OnInit, OnDestroy {
 				if (rollbackUpdated && rollbackOriginal) {
 					rollbackUpdated.content[valueKey] = rollbackOriginal.content[valueKey];
 				}
-				this.openPermissionErrorDialog();
+				this.dialogService.showPermissionError(this.dialogComponentContainer);
 			} else {
-				this.openUnexpectedErrorDialog();
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		}
 	}
@@ -864,7 +869,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 		// Recompute expenses from the working copy of the second table.
 		this.upcomingExpenses = this.updatedSecondTable
 			.filter((item: any) => item.content?.date && !item.content?.paid)
-			.map((item: any) => ({ type: 'expense', name: item.name, date: item.content.date }));
+			.map((item: any) => ({ type: REMINDER_ITEM_EXPENSE, name: item.name, date: item.content.date }));
 
 		// Merge pagedThirdTable edits into a full view of the third table so that
 		// in-progress changes on the current page are visible before the subscription fires.
@@ -877,7 +882,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 		this.upcomingMessages = mergedThird
 			.filter((item: any) => item.content?.date)
 			.map((item: any) => ({
-				type: 'message',
+				type: REMINDER_ITEM_MESSAGE,
 				name: item.content.text ?? '',
 				date: item.content.date,
 				link: item.content.link ?? ''
@@ -888,41 +893,26 @@ export class ReminderComponent implements OnInit, OnDestroy {
 
 	////////////////////////////////COMMON METHODS////////////////////////////////
 	/**
-	 * Check whether the current user has permission to modify an entry in the
-	 * given table. Admins bypass the check; all other users must be the owner
-	 * of the row (first table: row[0]._openid; second/third: the entry's _openid).
-	 * Shows an appropriate error dialog on failure.
-	 *
+	 * Resolve the owner openid for the given table and entry, then delegate
+	 * the actual permission check to Utilities.checkPermission.
 	 * Use this method ONLY for buttons and dialogs to avoid multiple database calls.
 	 *
 	 * @param tableName - The table whose write permission is being checked.
 	 * @param entryKey - The key of the specific entry (unused for the first table — pass '0').
 	 * @returns SUCCESS if permitted, FAILURE otherwise.
 	 */
-	private checkPermission(tableName: string, entryKey: string) {
-		// Three-tier check: admins bypass all checks; first table checks row[0]._openid;
-		// second/third tables use findUpdatedItem() to get the specific entry's owner.
-		if (CloudbaseService.userHasAllRights()) return;
-		try {
-			if (
-				tableName == DATABASE_FIRST_TABLE &&
-				this.updatedFirstTable[0]._openid !== CloudbaseService.getUseId()
-			)
-				throw new Error(ERROR_PERMISSION_DENIED);
-			else if (
-				(tableName == DATABASE_SECOND_TABLE || tableName == DATABASE_THIRD_TABLE) &&
-				this.findUpdatedItem(tableName, entryKey)?._openid !== CloudbaseService.getUseId()
-			)
-				throw new Error(ERROR_PERMISSION_DENIED);
-			return SUCCESS;
-		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openPermissionErrorDialog();
-			} else {
-				this.openUnexpectedErrorDialog();
-			}
+	private checkPermission(tableName: string, entryKey: string): string {
+		// Resolve the owner ID: first table always uses row[0]; second/third tables
+		// look up the specific entry being modified.
+		const openid =
+			tableName === DATABASE_FIRST_TABLE
+				? (this.updatedFirstTable[0]?._openid ?? '')
+				: (this.findUpdatedItem(tableName, entryKey)?._openid ?? '');
+		if (!Utilities.checkPermission(openid)) {
+			this.dialogService.showPermissionError(this.dialogComponentContainer);
 			return FAILURE;
 		}
+		return SUCCESS;
 	}
 
 	/**
@@ -949,20 +939,6 @@ export class ReminderComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Open permission error confirmation dialog
-	 */
-	private openPermissionErrorDialog() {
-		this.dialogService.showPermissionError(this.dialogComponentContainer);
-	}
-
-	/**
-	 * Opens a dialog informing the user that an unexpected error has occurred.
-	 */
-	private openUnexpectedErrorDialog() {
-		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
-	}
-
-	/**
 	 * Checks whether the given text contains any Chinese characters within the
 	 * CJK Unified Ideographs range (U+4E00 to U+9FA5).
 	 *
@@ -975,41 +951,51 @@ export class ReminderComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Safely coerces any date value to a 'yyyy-MM-dd' display string.
-	 * Handles strings (returned as-is), JavaScript Date objects, and CloudBase
-	 * timestamp objects ({$date: ms}) that may have been persisted before the
-	 * format guard was added to updateTableWithNewDate.
+	 * Delegates to Utilities.coerceDateToString so the logic is not duplicated
+	 * between the Reminder and Home pages.
 	 *
 	 * @param date - Any date representation (string, Date, CloudBase timestamp, or falsy).
 	 * @returns A 'yyyy-MM-dd' string, or empty string if the value is falsy or unparseable.
 	 */
 	protected formatDate(date: any): string {
-		if (!date) return '';
-		if (typeof date === 'string') return date;
-		if (typeof date === 'number') {
-			try { return format(new Date(date), 'yyyy-MM-dd'); } catch { return ''; }
+		return Utilities.coerceDateToString(date);
+	}
+
+	/**
+	 * Persist a link change from the popover editor for the active third-table entry.
+	 * No-ops when the popover was opened in "add new" mode (no key yet).
+	 */
+	protected onPopoverLinkChange(): void {
+		if (this.thirdTableActiveItem?.key) {
+			this.updateLink(
+				this.THIRD_TABLE,
+				this.thirdTableActiveItem.key,
+				this.thirdTableActiveItem.content.link
+			);
 		}
-		try {
-			if (date instanceof Date) return format(date, 'yyyy-MM-dd');
-			if (typeof date === 'object') {
-				// CloudBase/MongoDB: { $date: ms } or { $date: { $numberLong: "ms" } }
-				if (date.$date !== undefined) {
-					const ms = typeof date.$date === 'object' && date.$date.$numberLong
-						? Number(date.$date.$numberLong)
-						: Number(date.$date);
-					return format(new Date(ms), 'yyyy-MM-dd');
-				}
-				// Tencent CloudBase SDK: { time: ms }
-				if (date.time !== undefined) return format(new Date(date.time), 'yyyy-MM-dd');
-				// Firestore-like: { seconds: s, nanoseconds: ns }
-				if (date.seconds !== undefined) return format(new Date(date.seconds * 1000), 'yyyy-MM-dd');
-				// Date-like object with getTime()
-				if (typeof date.getTime === 'function') return format(new Date(date.getTime()), 'yyyy-MM-dd');
-			}
-			return format(new Date(date), 'yyyy-MM-dd');
-		} catch {
-			// Never expose raw object stringification — return empty so the tooltip
-			// shows nothing rather than the meaningless "[object Object]" text.
-			return '';
+	}
+
+	/**
+	 * Persist a due-date change from the popover date-picker for the active
+	 * third-table entry. No-ops when in "add new" mode (no key yet).
+	 *
+	 * @param date - The Date value selected in the date-picker.
+	 */
+	protected onPopoverDateChange(date: Date): void {
+		if (this.thirdTableActiveItem?.key) {
+			this.updateTableWithNewDate(this.THIRD_TABLE, this.thirdTableActiveItem.key, date);
+		}
+	}
+
+	/**
+	 * Handle the primary action button in the popover: deletes the entry when
+	 * editing an existing item, or adds a new entry when in "add new" mode.
+	 */
+	protected onPopoverActionClick(): void {
+		if (this.thirdTableActiveItem?.key) {
+			this.openDeleteConfirmationDialog(this.thirdTableActiveItem.key);
+		} else {
+			this.addNewEntry();
 		}
 	}
 }

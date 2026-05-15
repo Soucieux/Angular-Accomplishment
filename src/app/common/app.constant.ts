@@ -75,12 +75,40 @@ export const SUCCESS = 'success';
 export const FAILURE = 'failure';
 
 // ── Dialogs & history ─────────────────────────────────────────────────────
-/** Dialog type string for a yes/no confirmation dialog. */
+/** Dialog type for a yes/no confirmation prompt. */
 export const DIALOG_CONFIRM = 'confirm';
+/** Dialog type for the add-movie flow. */
+export const DIALOG_ADD = 'add';
+/** Dialog type for the history restoration panel. */
+export const DIALOG_HISTORY = 'history';
+/** Dialog type for a non-blocking error message. */
+export const DIALOG_ERROR = 'error';
+/** Dialog type for a blocking progress overlay. */
+export const DIALOG_BLOCK = 'block';
 /** History-entry status when a movie is added — appears in the history message text. */
 export const HISTORY_STATUS_ADDED = 'added';
 /** History-entry status when a movie is deleted — appears in the history message text. */
 export const HISTORY_STATUS_DELETED = 'deleted';
+
+// ── Activity types ─────────────────────────────────────────────────────────
+// Type discriminators written into activity-log entries across all pages.
+// Use HISTORY_STATUS_ADDED / HISTORY_STATUS_DELETED for 'added' / 'deleted'.
+export const ACTIVITY_TYPE_UPDATED = 'updated';
+export const ACTIVITY_TYPE_BUG_LOGGED = 'bugLogged';
+export const ACTIVITY_TYPE_STATUS_CHANGED = 'statusChanged';
+export const ACTIVITY_TYPE_EDITED = 'edited';
+
+// ── Reminder item types ────────────────────────────────────────────────────
+/** Type value for an Account Expenses item in the reminder upcoming list. */
+export const REMINDER_ITEM_EXPENSE = 'expense';
+/** Type value for a Messages item in the reminder upcoming list. */
+export const REMINDER_ITEM_MESSAGE = 'message';
+
+// ── Dialog / error messages ────────────────────────────────────────────────
+/** User-facing message shown when an action is blocked by insufficient permissions. */
+export const MSG_PERMISSION_DENIED = 'User does not have permission';
+/** User-facing message shown when an unhandled exception occurs. */
+export const MSG_UNEXPECTED_ERROR = 'Unexpected error occurred';
 
 // ── Errors ─────────────────────────────────────────────────────────────────
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';

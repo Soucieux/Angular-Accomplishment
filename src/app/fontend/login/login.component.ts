@@ -33,7 +33,7 @@ import { wrongVerificationCodeError } from '../../common/error/wrong-verificatio
 	styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnDestroy {
-	private readonly classname = 'LoginComponent';
+	private readonly className = 'LoginComponent';
 	@ViewChild('dialogContainer', { read: ViewContainerRef })
 	private dialogContainer!: ViewContainerRef;
 	protected loginForm: FormGroup;
@@ -67,7 +67,7 @@ export class LoginComponent implements OnDestroy {
 			clearTimeout(this.codeSentTimeout);
 			this.codeSentTimeout = null;
 		}
-		LOG.info(this.classname, COMPONENT_DESTROY);
+		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
@@ -148,7 +148,7 @@ export class LoginComponent implements OnDestroy {
 			}, 4000);
 		} catch (error) {
 			this.codeSent = false;
-			LOG.error(this.classname, 'Failed to send verification code', error as Error);
+			LOG.error(this.className, 'Failed to send verification code', error as Error);
 		} finally {
 			this.sendingCode = false;
 		}

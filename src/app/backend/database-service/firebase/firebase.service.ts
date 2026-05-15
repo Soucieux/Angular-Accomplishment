@@ -8,9 +8,11 @@ import {
 	DATABASE_SECOND_TABLE,
 	DATABASE_THIRD_TABLE,
 	GENRE_FAVOURITE,
-	NO_RATE,
+	HISTORY_STATUS_ADDED,
+	HISTORY_STATUS_DELETED,
 	RATE_DECREASED,
 	RATE_INCREASED,
+	REMINDER_TABLE_MESSAGES,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_RECENT_MOVIE,
@@ -274,7 +276,7 @@ export class FirebaseService extends DatabaseService {
 			});
 
 			// Add new entry to history
-			await this.addNewHistoryEntry('added', movieItemVO);
+			await this.addNewHistoryEntry(HISTORY_STATUS_ADDED, movieItemVO);
 
 			// Update the movie statistics
 			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
@@ -312,7 +314,7 @@ export class FirebaseService extends DatabaseService {
 			await remove(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`));
 
 			// Add new entry to history
-			await this.addNewHistoryEntry('deleted', movieItemVO);
+			await this.addNewHistoryEntry(HISTORY_STATUS_DELETED, movieItemVO);
 
 			// Save the movie key to the reusable keys array for later use
 			const keys = await this.getReusableKeys();
@@ -423,13 +425,11 @@ export class FirebaseService extends DatabaseService {
 			await push(dbRef(this.db, DATABASE_HISTORY), {
 				id: movieItemVO.getMovieId(),
 				status: status,
-				message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
-					movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
-				}) was ${status} on ${timestamp}`
+				message: this.buildHistoryMessage(status, timestamp, movieItemVO)
 			});
 
 			// Keep statistics in sync: record the most recently added movie.
-			if (status === 'added') {
+			if (status === HISTORY_STATUS_ADDED) {
 				await update(this.statisticsRef, {
 					lastAdded: {
 						title: movieItemVO.getMovieName(),
@@ -439,7 +439,7 @@ export class FirebaseService extends DatabaseService {
 					}
 				});
 				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
-					type: 'added',
+					type: HISTORY_STATUS_ADDED,
 					title: movieItemVO.getMovieName(),
 					genre: movieItemVO.getMovieGenre(),
 					timestamp
@@ -448,12 +448,12 @@ export class FirebaseService extends DatabaseService {
 		} else {
 			await push(dbRef(this.db, DATABASE_HISTORY), {
 				status: status,
-				message: `New rate search was started on ${timestamp}`
+				message: this.buildHistoryMessage(status, timestamp)
 			});
 
 			// Keep statistics in sync: record the most recent rate-search timestamp.
 			await update(this.statisticsRef, { lastRateSearch: { timestamp } });
-			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: 'search', timestamp }).catch(() => {});
+			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: SEARCH, timestamp }).catch(() => {});
 		}
 		LOG.info(this.className, 'New history entry has been added');
 	}
@@ -727,7 +727,7 @@ export class FirebaseService extends DatabaseService {
 			currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
 			return currentData;
 		});
-		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, { type: 'added', author, timestamp }).catch(
+		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, { type: HISTORY_STATUS_ADDED, author, timestamp }).catch(
 			() => {}
 		);
 	}
@@ -748,7 +748,7 @@ export class FirebaseService extends DatabaseService {
 			return currentData;
 		});
 		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
-			type: 'deleted',
+			type: HISTORY_STATUS_DELETED,
 			author,
 			timestamp: deletedTimestamp
 		}).catch(() => {});
@@ -815,8 +815,8 @@ export class FirebaseService extends DatabaseService {
 			LOG.info(this.className, 'Reminder table has been updated');
 			if (tableName === DATABASE_THIRD_TABLE) {
 				this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-					type: 'added',
-					table: DATABASE_THIRD_TABLE,
+					type: HISTORY_STATUS_ADDED,
+					table: REMINDER_TABLE_MESSAGES,
 					text: newRecord.text ?? '',
 					timestamp: this.utilities.getCurrentFormattedTime(true)
 				}).catch(() => {});

@@ -7,8 +7,15 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 import { Utilities } from '../../common/app.utilities';
 import { LOG } from '../../common/app.logs';
 import {
+	ACTIVITY_TYPE_BUG_LOGGED,
+	ACTIVITY_TYPE_EDITED,
+	ACTIVITY_TYPE_STATUS_CHANGED,
+	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	GENRE_FAVOURITE,
+	HISTORY_STATUS_ADDED,
+	HISTORY_STATUS_DELETED,
+	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_PATCH_IN_PROGRESS,
 	STATS_FIELD_RECENT_MOVIE,
@@ -353,29 +360,27 @@ export class HomeComponent implements OnInit, OnDestroy {
 	/**
 	 * Converts a date value to a `YYYY-MM-DD` string regardless of whether it
 	 * arrived as a plain string, a JS Date, or a CloudBase Timestamp object.
-	 * Returns an empty string for any value that cannot be parsed, so callers can
-	 * safely skip the item rather than crashing.
+	 * Delegates to `Utilities.coerceDateToString` so the logic is not duplicated
+	 * with the Reminder page's equivalent formatter.
 	 *
 	 * @param value - A date in any form (string, Date, Timestamp object, etc.).
 	 * @returns A `YYYY-MM-DD` string, or `''` if conversion is not possible.
 	 */
 	private normaliseDateToString(value: any): string {
-		if (!value) return '';
-		if (typeof value === 'string') return value;
-		try {
-			// CloudBase Timestamp objects may carry { $date: ms } or { seconds: s }.
-			const ms =
-				typeof value.$date === 'number'
-					? value.$date
-					: typeof value.seconds === 'number'
-						? value.seconds * 1000
-						: null;
-			const d = new Date(ms ?? value);
-			if (isNaN(d.getTime())) return '';
-			return d.toISOString().slice(0, 10);
-		} catch {
-			return '';
-		}
+		return Utilities.coerceDateToString(value);
+	}
+
+	/**
+	 * Flatten a raw statistics field value (which CloudBase may return as either
+	 * a true array or an object keyed by insertion index) into a plain array.
+	 * Returns an empty array when the field is absent or falsy.
+	 *
+	 * @param raw - The raw field value from the statistics snapshot.
+	 * @returns A plain `any[]` array.
+	 */
+	private toArray(raw: any): any[] {
+		if (!raw) return [];
+		return Array.isArray(raw) ? raw : Object.values(raw);
 	}
 
 	/**
@@ -445,11 +450,11 @@ export class HomeComponent implements OnInit, OnDestroy {
 		const added = this.stats?.lastAdded;
 		const deleted = this.stats?.lastDeleted;
 		if (!added && !deleted) return null;
-		if (added && !deleted) return { type: 'added', ...added };
-		if (!added && deleted) return { type: 'deleted', ...deleted };
+		if (added && !deleted) return { type: HISTORY_STATUS_ADDED, ...added };
+		if (!added && deleted) return { type: HISTORY_STATUS_DELETED, ...deleted };
 		return added.timestamp >= deleted.timestamp
-			? { type: 'added', ...added }
-			: { type: 'deleted', ...deleted };
+			? { type: HISTORY_STATUS_ADDED, ...added }
+			: { type: HISTORY_STATUS_DELETED, ...deleted };
 	}
 
 	/**
@@ -460,9 +465,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 *   if the field is absent.
 	 */
 	protected getAllReminderItems(): any[] {
-		const raw = this.stats?.[STATS_FIELD_REMINDER_UPCOMING];
-		if (!raw) return [];
-		return Array.isArray(raw) ? raw : Object.values(raw);
+		return this.toArray(this.stats?.[STATS_FIELD_REMINDER_UPCOMING]);
 	}
 
 	/**
@@ -515,10 +518,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 * @returns An array of in-progress patch note objects, or an empty array if absent.
 	 */
 	protected getPatchInProgress(): any[] {
-		const raw = this.stats?.[STATS_FIELD_PATCH_IN_PROGRESS];
-		if (!raw) return [];
-		const items = Array.isArray(raw) ? raw : Object.values(raw);
-		return items;
+		return this.toArray(this.stats?.[STATS_FIELD_PATCH_IN_PROGRESS]);
 	}
 
 	/**
@@ -569,26 +569,21 @@ export class HomeComponent implements OnInit, OnDestroy {
 		const events: RawEvent[] = [];
 
 		// ── Entertainment ──────────────────────────────────────────────────────
-		const rawMovie = this.stats?.[STATS_FIELD_RECENT_MOVIE];
-		const movieActivities: any[] = rawMovie
-			? Array.isArray(rawMovie)
-				? rawMovie
-				: Object.values(rawMovie)
-			: [];
+		const movieActivities: any[] = this.toArray(this.stats?.[STATS_FIELD_RECENT_MOVIE]);
 		for (const m of movieActivities) {
 			if (!m?.timestamp) continue;
 			let icon = 'live_tv',
 				label = 'Movie Added',
 				color = '#e91e8c';
-			if (m.type === 'deleted') {
+			if (m.type === HISTORY_STATUS_DELETED) {
 				icon = 'tv_off';
 				label = 'Movie Removed';
 				color = '#94a3b8';
-			} else if (m.type === 'updated') {
+			} else if (m.type === ACTIVITY_TYPE_UPDATED) {
 				icon = 'star';
 				label = 'Movie Rated';
 				color = '#f7971e';
-			} else if (m.type === 'search') {
+			} else if (m.type === SEARCH) {
 				icon = 'search';
 				label = 'Entertainment Rate Search';
 				color = '#4776e6';
@@ -604,27 +599,22 @@ export class HomeComponent implements OnInit, OnDestroy {
 		}
 
 		// ── Patch Notes ────────────────────────────────────────────────────────
-		const rawPatch = this.stats?.[STATS_FIELD_RECENT_PATCH];
-		const patchActivities: any[] = rawPatch
-			? Array.isArray(rawPatch)
-				? rawPatch
-				: Object.values(rawPatch)
-			: [];
+		const patchActivities: any[] = this.toArray(this.stats?.[STATS_FIELD_RECENT_PATCH]);
 		for (const p of patchActivities) {
 			if (!p?.timestamp) continue;
 			let icon = 'note_stack';
 			let label = 'Patch Notes Added';
 			let color = '#8e54e9';
-			if (p.type === 'bugLogged') {
+			if (p.type === ACTIVITY_TYPE_BUG_LOGGED) {
 				icon = 'bug_report';
 				label = 'Patch Notes Bug Logged';
-			} else if (p.type === 'statusChanged') {
+			} else if (p.type === ACTIVITY_TYPE_STATUS_CHANGED) {
 				icon = 'swap_horiz';
 				label = 'Patch Notes Status Changed';
-			} else if (p.type === 'edited') {
+			} else if (p.type === ACTIVITY_TYPE_EDITED) {
 				icon = 'edit';
 				label = 'Patch Notes Updated';
-			} else if (p.type === 'deleted') {
+			} else if (p.type === HISTORY_STATUS_DELETED) {
 				icon = 'delete';
 				label = 'Patch Notes Deleted';
 				color = '#ef4444';
@@ -640,22 +630,17 @@ export class HomeComponent implements OnInit, OnDestroy {
 		}
 
 		// ── Reminder ──────────────────────────────────────────────────────────
-		const rawReminder = this.stats?.[STATS_FIELD_RECENT_REMINDER];
-		const reminderActivities: any[] = rawReminder
-			? Array.isArray(rawReminder)
-				? rawReminder
-				: Object.values(rawReminder)
-			: [];
+		const reminderActivities: any[] = this.toArray(this.stats?.[STATS_FIELD_RECENT_REMINDER]);
 		for (const r of reminderActivities) {
 			if (!r?.timestamp) continue;
 			let icon = 'note_add',
 				label = 'Reminder Added',
 				color = '#f59e0b';
-			if (r.type === 'deleted') {
+			if (r.type === HISTORY_STATUS_DELETED) {
 				icon = 'delete';
 				label = 'Reminder Deleted';
 				color = '#ef4444';
-			} else if (r.type === 'updated') {
+			} else if (r.type === ACTIVITY_TYPE_UPDATED) {
 				icon = 'edit_note';
 				label = 'Reminder Updated';
 			}
@@ -671,18 +656,13 @@ export class HomeComponent implements OnInit, OnDestroy {
 		}
 
 		// ── Resonance ─────────────────────────────────────────────────────────
-		const rawResonance = this.stats?.[STATS_FIELD_RECENT_RESONANCE];
-		const resonanceActivities: any[] = rawResonance
-			? Array.isArray(rawResonance)
-				? rawResonance
-				: Object.values(rawResonance)
-			: [];
+		const resonanceActivities: any[] = this.toArray(this.stats?.[STATS_FIELD_RECENT_RESONANCE]);
 		for (const q of resonanceActivities) {
 			if (!q?.timestamp) continue;
 			let icon = 'format_quote',
 				label = 'Resonance Quote Added',
 				color = '#fda085';
-			if (q.type === 'deleted') {
+			if (q.type === HISTORY_STATUS_DELETED) {
 				icon = 'format_clear';
 				label = 'Resonance Quote Removed';
 				color = '#94a3b8';
@@ -771,10 +751,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		];
 
 		// Resolve each field to a plain array
-		const arrays: any[][] = fields.map((f) => {
-			const raw = data?.[f];
-			return raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
-		});
+		const arrays: any[][] = fields.map((f) => this.toArray(data?.[f]));
 
 		// Build a flat list with source coordinates and timestamp for sorting
 		const flat: { fi: number; ii: number; ts: string }[] = [];

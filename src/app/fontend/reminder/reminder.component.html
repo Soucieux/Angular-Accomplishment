@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container page-card">
 	<!-- FIRST TABLE -->
 	<div class="table-wrapper">
 		<div class="header-wrapper">
@@ -100,8 +100,8 @@
 				@for (_ of [0, 1, 2, 3, 4, 5, 6, 7]; track $index) {
 					<div class="second-table-cell">
 						<p-skeleton height="20px" />
-						<p-skeleton height="47px" />
-						<p-skeleton height="47px" />
+						<p-skeleton height="45px" />
+						<p-skeleton height="45px" />
 						<p-skeleton height="20px" />
 					</div>
 				}
@@ -287,24 +287,8 @@
 						pInputText
 						[(ngModel)]="thirdTableActiveItem.content.link"
 						style="font-size: 15px"
-						(blur)="
-							thirdTableActiveItem.key
-								? updateLink(
-										THIRD_TABLE,
-										thirdTableActiveItem.key,
-										thirdTableActiveItem.content.link
-									)
-								: ''
-						"
-						(keyup.enter)="
-							thirdTableActiveItem.key
-								? updateLink(
-										THIRD_TABLE,
-										thirdTableActiveItem.key,
-										thirdTableActiveItem.content.link
-									)
-								: ''
-						" />
+						(blur)="onPopoverLinkChange()"
+						(keyup.enter)="onPopoverLinkChange()" />
 				</p-inputgroup>
 			</div>
 			<div class="popover-item">
@@ -318,11 +302,7 @@
 						dateFormat="yy-mm-dd"
 						[(ngModel)]="thirdTableActiveItem.content.date"
 						class="datapicker"
-						(ngModelChange)="
-							thirdTableActiveItem.key
-								? updateTableWithNewDate(THIRD_TABLE, thirdTableActiveItem.key, $event)
-								: ''
-						">
+						(ngModelChange)="onPopoverDateChange($event)">
 					</p-datepicker>
 				</p-inputgroup>
 			</div>
@@ -332,11 +312,7 @@
 					[icon]="thirdTableActiveItem.key ? 'pi pi-times' : 'pi pi-plus'"
 					[severity]="thirdTableActiveItem.key ? 'danger' : 'success'"
 					class="submit-button"
-					(onClick)="
-						thirdTableActiveItem.key
-							? openDeleteConfirmationDialog(thirdTableActiveItem.key)
-							: addNewEntry()
-					"></p-button>
+					(onClick)="onPopoverActionClick()"></p-button>
 			</div>
 		}
 	</p-popover>

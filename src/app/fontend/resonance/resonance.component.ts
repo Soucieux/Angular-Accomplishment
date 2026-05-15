@@ -22,7 +22,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
-import { COMPONENT_DESTROY } from '../../common/app.constant';
+import { COMPONENT_DESTROY, DIALOG_CONFIRM, DIALOG_ERROR } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 
 @Component({
@@ -41,7 +41,7 @@ import { LOG } from '../../common/app.logs';
 	styleUrls: ['./resonance.component.css']
 })
 export class ResonanceComponent implements OnInit, OnDestroy {
-	private readonly classname = 'ResonanceComponent';
+	private readonly className = 'ResonanceComponent';
 	protected readonly maxQuoteLength = 500;
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
@@ -106,7 +106,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			this.authService.signOut(true);
 		}
 		this.signedInAnonymously = false;
-		LOG.info(this.classname, COMPONENT_DESTROY);
+		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
@@ -201,7 +201,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		} catch (error) {
 			this.dialogService.openDialog(
 				this.dialogComponentContainer,
-				'error',
+				DIALOG_ERROR,
 				'Unexpected error while submitting'
 			);
 		} finally {
@@ -220,36 +220,22 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		// Permission guard: unauthorized users see the error dialog immediately
 		// without ever being shown the confirm dialog.
 		if (!this.canDelete(quote)) {
-			this.openPermissionError();
+			this.dialogService.showPermissionError(this.dialogComponentContainer);
 			return;
 		}
 
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'confirm',
+			DIALOG_CONFIRM,
 			async () => {
 				try {
 					await this.databaseService.removeQuote(quote.key, quote.text, quote.author);
 				} catch {
-					this.openUnexpectedError();
+					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			},
 			['Are you sure you want to delete this quote?', 'Delete Quote', 'Delete']
 		);
 	}
 
-	/**
-	 * Open a dialog informing the user that they lack permission to perform
-	 * the requested action.
-	 */
-	private openPermissionError() {
-		this.dialogService.showPermissionError(this.dialogComponentContainer);
-	}
-
-	/**
-	 * Open a dialog informing the user that an unexpected error has occurred.
-	 */
-	private openUnexpectedError() {
-		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
-	}
 }

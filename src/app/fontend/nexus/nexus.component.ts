@@ -15,6 +15,7 @@ import { DialogModule } from 'primeng/dialog';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { LOG } from '../../common/app.logs';
+import { Utilities } from '../../common/app.utilities';
 import { COMPONENT_DESTROY } from '../../common/app.constant';
 
 /**
@@ -65,10 +66,14 @@ export class NexusComponent implements OnInit, OnDestroy {
 
 	protected searchQuery = '';
 
-	/** Tracks tool IDs whose favicon image failed to load — shows initial fallback instead. */
+	/**
+	 * Tracks tool IDs whose favicon image failed to load — shows initial fallback instead.
+	 */
 	protected failedLogos = new Set<string>();
 
-	/** Brand accent colours used for the initial-letter fallback circle, keyed by tool ID. */
+	/**
+	 * Brand accent colours used for the initial-letter fallback circle, keyed by tool ID.
+	 */
 	private readonly LOGO_FALLBACK_COLORS: Record<string, string> = {
 		chatgpt: '#10a37f',
 		perplexity: '#20b2aa',
@@ -221,7 +226,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 		private readonly databaseService: DatabaseService
 	) {}
 
-	/** Lifecycle: initialise subscriptions and load data. */
+	/**
+	 * Lifecycle: initialise subscriptions and load data.
+	 */
 	public ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.restoreSelectedAis();
@@ -250,14 +257,18 @@ export class NexusComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	/** Lifecycle: clean up all subscriptions. */
+	/**
+	 * Lifecycle: clean up all subscriptions.
+	 */
 	public ngOnDestroy(): void {
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	/** Restore selected AI chips from localStorage. */
+	/**
+	 * Restore selected AI chips from localStorage.
+	 */
 	private restoreSelectedAis(): void {
 		try {
 			const saved = localStorage.getItem(this.SELECTED_AIS_KEY);
@@ -271,7 +282,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	/** Persist selected AI chip IDs to localStorage. */
+	/**
+	 * Persist selected AI chip IDs to localStorage.
+	 */
 	private persistSelectedAis(): void {
 		const ids = [...this.directTools, ...this.clipboardTools].filter((t) => t.selected).map((t) => t.id);
 		localStorage.setItem(this.SELECTED_AIS_KEY, JSON.stringify(ids));
@@ -287,7 +300,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 		this.persistSelectedAis();
 	}
 
-	/** Launch the search query to all selected AI tools. */
+	/**
+	 * Launch the search query to all selected AI tools.
+	 */
 	protected onLaunch(): void {
 		const query = this.searchQuery.trim();
 		if (!query) {
@@ -336,7 +351,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 		this.cdr.markForCheck();
 	}
 
-	/** Load search history from localStorage on init. */
+	/**
+	 * Load search history from localStorage on init.
+	 */
 	private loadHistory(): void {
 		try {
 			const raw = localStorage.getItem(this.HISTORY_KEY);
@@ -361,7 +378,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 		this.onLaunch();
 	}
 
-	/** Clear all search history from localStorage and the view. */
+	/**
+	 * Clear all search history from localStorage and the view.
+	 */
 	protected clearHistory(): void {
 		this.history = [];
 		localStorage.removeItem(this.HISTORY_KEY);
@@ -374,19 +393,15 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Return a human-readable relative time string for a given ISO timestamp.
+	 * Return a human-readable relative time string for a given timestamp.
+	 * Delegates to Utilities.getRelativeTime which handles both ISO 8601 and
+	 * the app's "YYYY.MM.DD HH:mm:ss" format.
 	 *
-	 * @param iso - ISO date string.
-	 * @returns A string like "3 min ago" or "2 hr ago".
+	 * @param timestamp - ISO 8601 or app-format date string.
+	 * @returns A human-readable relative time string (e.g. "just now", "5m ago").
 	 */
-	protected getRelativeTime(iso: string): string {
-		const diff = Date.now() - new Date(iso).getTime();
-		const mins = Math.floor(diff / 60000);
-		if (mins < 1) return 'just now';
-		if (mins < 60) return `${mins} min ago`;
-		const hrs = Math.floor(mins / 60);
-		if (hrs < 24) return `${hrs} hr ago`;
-		return `${Math.floor(hrs / 24)} d ago`;
+	protected getRelativeTime(timestamp: string): string {
+		return Utilities.getRelativeTime(timestamp);
 	}
 
 	/**
@@ -480,7 +495,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 		return this.links.filter((l) => l.category === categoryKey).length;
 	}
 
-	/** Open the Add Link dialog with a blank form. */
+	/**
+	 * Open the Add Link dialog with a blank form.
+	 */
 	protected openAddLinkDialog(): void {
 		this.editingLink = null;
 		this.linkDialogTitle = 'Add Link';
@@ -534,7 +551,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 			});
 	}
 
-	/** Save the link form (add or update). */
+	/**
+	 * Save the link form (add or update).
+	 */
 	protected async saveLinkDialog(): Promise<void> {
 		const { url, title, category } = this.linkForm;
 		if (!url.trim() || !title.trim() || !category) {
@@ -602,7 +621,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 			});
 	}
 
-	/** Open the Add Category dialog with a blank form. */
+	/**
+	 * Open the Add Category dialog with a blank form.
+	 */
 	protected openAddCategoryDialog(): void {
 		this.editingCategory = null;
 		this.categoryForm = { name: '', color: '#d53369' };
@@ -622,7 +643,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 		this.showCategoryDialog = true;
 	}
 
-	/** Save the category form (add or update). */
+	/**
+	 * Save the category form (add or update).
+	 */
 	protected async saveCategoryDialog(): Promise<void> {
 		const { name, color } = this.categoryForm;
 		if (!name.trim()) {

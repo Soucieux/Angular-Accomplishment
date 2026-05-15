@@ -2,6 +2,11 @@ import { SearchStreamService } from '../../backend/dialog-service/search/search-
 import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
+	DIALOG_ADD,
+	DIALOG_BLOCK,
+	DIALOG_CONFIRM,
+	DIALOG_ERROR,
+	DIALOG_HISTORY,
 	RATE_DECREASED,
 	RATE_INCREASED,
 	SEARCH_CANCEL,
@@ -132,9 +137,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				})
 			);
 
-			if (isPlatformBrowser(this.platformId)) {
-				this.updateGridLayout();
-			}
+			this.updateGridLayout();
 
 			// If navigated from the home quick-action buttons, auto-open the relevant dialog.
 			// history.state retains the router state passed via Router.navigate({ state: ... }).
@@ -230,9 +233,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				searchCount++;
 			} catch (error) {
 				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-					this.openPermissionErrorDialog();
+					this.dialogService.showPermissionError(this.dialogComponentContainer);
 				} else {
-					this.openUnexpectedErrorDialog();
+					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 					LOG.error(
 						this.className,
 						`Error while updating movie rate for ${movieItemVO.getMovieName()}`
@@ -454,7 +457,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			}
 		} catch (error) {
 			if (error instanceof MovieFetchFailedError) {
-				this.dialogService.openDialog(this.dialogComponentContainer, 'error', error.message);
+				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 			}
 			LOG.error(
 				this.className,
@@ -664,7 +667,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'confirm',
+			DIALOG_CONFIRM,
 			() => {
 				this.databaseService.removeMovieFromDatabase(movieItemVO);
 			},
@@ -680,18 +683,30 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected openAddNewMovieDialog() {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'add',
+			DIALOG_ADD,
 			// "Submit" button in the "Add New Movie" dialog
 			async (movie: MovieItemVO) => {
-				this.dialogService.openDialog(
-					this.dialogComponentContainer,
-					'block',
-					async () => await this.handleAddDialogSubmit(movie),
-					'Adding movie...'
-				);
+				this.openBlockDialog(async () => await this.handleAddDialogSubmit(movie), 'Adding movie...');
 			},
 			// "Search" button in the "Add New Movie" dialog
 			this.handleAddDialogSearch.bind(this)
+		);
+	}
+
+	/**
+	 * Open a blocking progress dialog that prevents user interaction while the
+	 * given async callback executes. Used during add and restore flows to lock
+	 * the UI while uploading covers and writing to the database.
+	 *
+	 * @param callback - The async operation to run while the dialog is shown.
+	 * @param message - The status message displayed inside the dialog.
+	 */
+	private openBlockDialog(callback: () => Promise<void>, message: string): Promise<void> {
+		return this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_BLOCK,
+			callback,
+			message
 		);
 	}
 
@@ -772,19 +787,14 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected openHistoryDialog() {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'history',
+			DIALOG_HISTORY,
 			// Restore flow: re-search the movie on Douban, then re-add to database.
 			// The inner block dialog keeps the UI locked during the restore.
 			async (movieToRestore: MovieItemVO) => {
-				await this.dialogService.openDialog(
-					this.dialogComponentContainer,
-					'block',
-					async () => {
-						await this.handleAddDialogSearch(movieToRestore);
-						await this.handleAddDialogSubmit(movieToRestore);
-					},
-					'Restoring movie...'
-				);
+				await this.openBlockDialog(async () => {
+					await this.handleAddDialogSearch(movieToRestore);
+					await this.handleAddDialogSubmit(movieToRestore);
+				}, 'Restoring movie...');
 			},
 			this.databaseService.getHistory()
 		);
@@ -826,9 +836,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			}
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openPermissionErrorDialog();
+				this.dialogService.showPermissionError(this.dialogComponentContainer);
 			} else {
-				this.openUnexpectedErrorDialog();
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				LOG.error(this.className, 'Error while updaing genre');
 			}
 		}
@@ -847,28 +857,12 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openPermissionErrorDialog();
+				this.dialogService.showPermissionError(this.dialogComponentContainer);
 			} else {
-				this.openUnexpectedErrorDialog();
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				LOG.error(this.className, 'Error while set favourite');
 			}
 		}
 	}
 
-	/**
-	 * Opens a dialog informing the user that a permission error has occurred,
-	 * typically when the user lacks read/write access to the database.
-	 */
-	private openPermissionErrorDialog() {
-		this.dialogService.showPermissionError(this.dialogComponentContainer);
-	}
-
-	/**
-	 * Opens a dialog informing the user that an unexpected error has occurred.
-	 * Used as a generic fallback for errors that are not specifically handled
-	 * (e.g., errors other than permission denied).
-	 */
-	private openUnexpectedErrorDialog() {
-		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
-	}
 }

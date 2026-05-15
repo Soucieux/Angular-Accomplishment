@@ -8,7 +8,7 @@ import { SearchDialogComponent } from './search/search.component';
 import { Observable } from 'rxjs';
 import { ErrorDialogComponent } from './error/error.component';
 import { BlockDialogComponent } from './block/block.component';
-import { SEARCH } from '../../common/app.constant';
+import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY, MSG_PERMISSION_DENIED, MSG_UNEXPECTED_ERROR, SEARCH } from '../../common/app.constant';
 @Injectable({
 	providedIn: 'root'
 })
@@ -26,17 +26,17 @@ export class DialogService {
 	 */
 	private getDialogComponent(dialogType: string): Type<any> {
 		switch (dialogType) {
-			case 'confirm':
+			case DIALOG_CONFIRM:
 				return ConfirmDialogComponent;
-			case 'add':
+			case DIALOG_ADD:
 				return AddDialogComponent;
-			case 'history':
+			case DIALOG_HISTORY:
 				return HistoryDialogComponent;
 			case SEARCH:
 				return SearchDialogComponent;
-			case 'error':
+			case DIALOG_ERROR:
 				return ErrorDialogComponent;
-			case 'block':
+			case DIALOG_BLOCK:
 				return BlockDialogComponent;
 			default:
 				throw new Error('Invalid dialog type');
@@ -100,7 +100,7 @@ export class DialogService {
 		// Block and error dialogs are allowed to stack (multiple can be open at once);
 		// all other dialog types enforce a single-instance rule to prevent duplicates.
 		if (this.openedDialogs.has(dialogType)) {
-			if (dialogType === 'error' || dialogType === 'block') return;
+			if (dialogType === DIALOG_ERROR || dialogType === DIALOG_BLOCK) return;
 			const error = new Error('Dialog already opened');
 			LOG.error(this.className, error.message);
 			throw error;
@@ -117,9 +117,9 @@ export class DialogService {
 			// SEARCH and error dialogs only need one callback/data argument;
 			// block dialogs return a promise so callers can await task completion;
 			// all other dialogs receive two callbacks.
-			if (dialogType === SEARCH || dialogType === 'error') {
+			if (dialogType === SEARCH || dialogType === DIALOG_ERROR) {
 				dialogComponentRef.instance.openDialog(dataOrCallback1);
-			} else if (dialogType === 'block') {
+			} else if (dialogType === DIALOG_BLOCK) {
 				blockPromise = dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
 			} else {
 				dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
@@ -151,7 +151,7 @@ export class DialogService {
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
 	public showPermissionError(container: ViewContainerRef) {
-		this.openDialog(container, 'error', 'User does not have permission');
+		this.openDialog(container, DIALOG_ERROR, MSG_PERMISSION_DENIED);
 	}
 
 	/**
@@ -160,6 +160,6 @@ export class DialogService {
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
 	public showUnexpectedError(container: ViewContainerRef) {
-		this.openDialog(container, 'error', 'Unexpected error occurred');
+		this.openDialog(container, DIALOG_ERROR, MSG_UNEXPECTED_ERROR);
 	}
 }

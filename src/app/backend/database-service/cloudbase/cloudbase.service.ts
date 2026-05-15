@@ -20,13 +20,15 @@ import {
 	DATABASE_STATISTICS,
 	DATABASE_THIRD_TABLE,
 	DATABASE_USEFUL_LINKS,
+	ACTIVITY_TYPE_UPDATED,
 	ERROR_PERMISSION_DENIED,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
-	NO_RATE,
 	RATE_DECREASED,
 	RATE_INCREASED,
+	REMINDER_ITEM_EXPENSE,
+	REMINDER_ITEM_MESSAGE,
 	REMINDER_TABLE_MESSAGES,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
@@ -67,7 +69,9 @@ export class CloudbaseService extends DatabaseService {
 		return CloudbaseService._authReady$.asObservable();
 	}
 
-	/** Signal auth state confirmed — unblocks all watchers waiting for credentials. */
+	/**
+	 * Signal auth state confirmed — unblocks all watchers waiting for credentials.
+	 */
 	static markAuthReady() {
 		this._authReady$.next(true);
 	}
@@ -96,8 +100,6 @@ export class CloudbaseService extends DatabaseService {
 			fetchStatId();
 			// Retry after auth confirms so statId is set before addQuote/removeQuote are called
 			CloudbaseService.authReady$.pipe(take(1)).subscribe(() => fetchStatId());
-
-			// this.tempHelpFunction();
 		}
 	}
 
@@ -175,40 +177,41 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Temporary helper function to migrate movie cover image links to cloud:// file IDs.
-	 * Fetches all movie documents and updates their coverImageLink to the cloud:// format.
+	 * Create a real-time CloudBase watcher for a collection and expose it as an Observable.
+	 * All watchers follow the same authReady → switchMap → watcher.close() lifecycle;
+	 * this helper eliminates the boilerplate so each public getter only supplies the
+	 * collection name, a mapping function, and an optional error-propagation flag.
+	 *
+	 * @param collectionName - The CloudBase collection to watch.
+	 * @param mapper - Transforms the raw docs array into the emitted value T.
+	 * @param propagateErrors - When true, onError forwards the error to the observer
+	 *   (in addition to logging it). Defaults to false so unexpected watcher errors
+	 *   do not terminate subscriptions in components that lack an error handler.
+	 * @returns A shared, replayed Observable that emits on every collection change.
 	 */
-	public async tempHelpFunction() {
-		// Step 1: Fetch all movie documents
-		const data = await this.database.collection(DATABASE_MOVIES).get();
-		const movies: any[] = data.data;
-		LOG.info(this.className, `Fetched ${movies.length} movies from database`);
-
-		// Step 2: Update each movie's coverImageLink to the cloud:// file ID.
-		// The format mirrors what the uploadCoverImage cloud function returns:
-		//   cloud://[envId].[bucket]/movies/[title].jpeg
-		// The files are already in CloudBase Storage — no re-upload is needed.
-		let updated = 0;
-
-		for (const movie of movies) {
-			const fileID = `cloud://${environment.cloudbase.envId}.${environment.cloudbase.bucket}/movies/${movie.title}.jpeg`;
-			await this.database
-				.collection(DATABASE_MOVIES)
-				.where({
-					_id: movie._id,
-					_openid: CloudbaseService.getUseId()
-				})
-				.update({
-					coverImageLink: fileID
-				});
-			updated++;
-			LOG.info(this.className, `[${updated}/${movies.length}] ${movie.title} → ${fileID}`);
-		}
-
-		LOG.info(
-			this.className,
-			`Migration complete: updated ${updated} movie cover links to cloud:// file IDs`
-		);
+	private watchCollection<T>(
+		collectionName: string,
+		mapper: (docs: any[]) => T,
+		propagateErrors = false
+	): Observable<T> {
+		return CloudbaseService.authReady$.pipe(
+			take(1),
+			switchMap(
+				() =>
+					new Observable<T>((observer) => {
+						const watcher = this.database.collection(collectionName).watch({
+							onChange: (snapshot: any) => {
+								observer.next(mapper(snapshot.docs));
+							},
+							onError: (err: any) => {
+								LOG.error(this.className, `Error watching collection ${collectionName}`, err);
+								if (propagateErrors) observer.error(err);
+							}
+						});
+						return () => watcher.close();
+					})
+			)
+		).pipe(shareReplay(1));
 	}
 
 	/**
@@ -330,25 +333,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the statistics.
 	 */
 	public getStatistics(): Observable<any> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<any>((observer) => {
-							const watcher = this.database.collection(DATABASE_STATISTICS).watch({
-								onChange: (snapshot: any) => {
-									observer.next(snapshot.docs[0]);
-								},
-								onError: (err: any) => {
-									LOG.error(this.className, 'Error while retrieving statistics', err);
-								}
-							});
-							return () => watcher.close();
-						})
-				)
-			)
-			.pipe(shareReplay(1));
+		return this.watchCollection(DATABASE_STATISTICS, (docs) => docs[0]);
 	}
 
 	/**
@@ -357,32 +342,14 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns The history list
 	 */
 	public getHistory(): Observable<any[]> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<any[]>((observer) => {
-							const watcher = this.database.collection(DATABASE_HISTORY).watch({
-								onChange: (snapshot: any) => {
-									const history = snapshot.docs
-										.map((doc: any) => {
-											const { _id, ...rest } = doc;
-											return {
-												key: _id,
-												...rest
-											};
-										})
-										.reverse();
-
-									observer.next(history);
-								}
-							});
-							return () => watcher.close();
-						})
-				)
-			)
-			.pipe(shareReplay(1));
+		return this.watchCollection(DATABASE_HISTORY, (docs) =>
+			docs
+				.map((doc: any) => {
+					const { _id, ...rest } = doc;
+					return { key: _id, ...rest };
+				})
+				.reverse()
+		);
 	}
 
 	/**
@@ -391,43 +358,23 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Patch notes
 	 */
 	public getPatchNotes(): Observable<any[]> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<any[]>((observer) => {
-							const watcher = this.database.collection(DATABASE_PATCH_NOTES).watch({
-								onChange: (snapshot: any) => {
-									const patchNotes = snapshot.docs.map((doc: any) => {
-										const { _id, ...rest } = doc;
-										return {
-											key: _id,
-											...rest
-										} as {
-											key: string;
-											component: string;
-											element: string;
-											details: string;
-											status: string;
-											timestamp: string;
-											isBug: boolean;
-										};
-									});
-
-									// CloudBase watch order is insertion order, not timestamp order — explicit sort needed.
-									patchNotes.sort((a: any, b: any) =>
-										a.timestamp.localeCompare(b.timestamp)
-									);
-
-									observer.next(patchNotes);
-								}
-							});
-							return () => watcher.close();
-						})
-				)
-			)
-			.pipe(shareReplay(1));
+		return this.watchCollection(DATABASE_PATCH_NOTES, (docs) => {
+			const patchNotes = docs.map((doc: any) => {
+				const { _id, ...rest } = doc;
+				return { key: _id, ...rest } as {
+					key: string;
+					component: string;
+					element: string;
+					details: string;
+					status: string;
+					timestamp: string;
+					isBug: boolean;
+				};
+			});
+			// CloudBase watch order is insertion order, not timestamp order — explicit sort needed.
+			patchNotes.sort((a: any, b: any) => a.timestamp.localeCompare(b.timestamp));
+			return patchNotes;
+		});
 	}
 
 	/**
@@ -436,25 +383,9 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Reminder table details
 	 */
 	public getFirstReminderTableDetails(): Observable<any[]> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<any[]>((observer) => {
-							const watcher = this.database.collection(DATABASE_REMINDER_FIRST).watch({
-								onChange: (snapshot: any) => {
-									// First table rows are flat — emit as-is. Fallback to [] prevents
-									// downstream .length errors when the collection is empty.
-									const data = snapshot.docs;
-									observer.next(data ? data : []);
-								}
-							});
-							return () => watcher.close();
-						})
-				)
-			)
-			.pipe(shareReplay(1));
+		// First table rows are flat — emit as-is. Fallback to [] prevents
+		// downstream .length errors when the collection is empty.
+		return this.watchCollection(DATABASE_REMINDER_FIRST, (docs) => docs ?? []);
 	}
 
 	/**
@@ -463,40 +394,23 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Second reminder table details
 	 */
 	public getSecondReminderTableDetails(): Observable<any[]> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<any[]>((observer) => {
-							const watcher = this.database.collection(DATABASE_REMINDER_SECOND).watch({
-								onChange: (snapshot: any) => {
-									// Map CloudBase _id → key so Angular *ngFor can trackBy it;
-									// name and content fields pass through as-is.
-									const secondTable = snapshot.docs.map((doc: any) => {
-										const { _id, ...rest } = doc;
-										return {
-											key: _id,
-											...rest
-										} as {
-											key: string;
-											name: string;
-											content: {
-												date: string;
-												debt: number;
-												original: number;
-												paid: boolean;
-											};
-										};
-									});
-									observer.next(secondTable);
-								}
-							});
-							return () => watcher.close();
-						})
-				)
-			)
-			.pipe(shareReplay(1));
+		// Map CloudBase _id → key so Angular *ngFor can trackBy it;
+		// name and content fields pass through as-is.
+		return this.watchCollection(DATABASE_REMINDER_SECOND, (docs) =>
+			docs.map((doc: any) => {
+				const { _id, ...rest } = doc;
+				return { key: _id, ...rest } as {
+					key: string;
+					name: string;
+					content: {
+						date: string;
+						debt: number;
+						original: number;
+						paid: boolean;
+					};
+				};
+			})
+		);
 	}
 
 	/**
@@ -505,38 +419,21 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Third reminder table details
 	 */
 	public getThirdReminderTableDetails(): Observable<any[]> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<any[]>((observer) => {
-							const watcher = this.database.collection(DATABASE_REMINDER_THIRD).watch({
-								onChange: (snapshot: any) => {
-									// Same watch→map→emit pattern as second table, but third table
-									// content shape is {text, date, link} so mapping differs accordingly.
-									const thirdTable = snapshot.docs.map((doc: any) => {
-										const { _id, ...rest } = doc;
-										return {
-											key: _id,
-											...rest
-										} as {
-											key: string;
-											content: {
-												text: string;
-												date: string;
-												link: string;
-											};
-										};
-									});
-									observer.next(thirdTable);
-								}
-							});
-							return () => watcher.close();
-						})
-				)
-			)
-			.pipe(shareReplay(1));
+		// Same watch→map→emit pattern as second table, but third table
+		// content shape is {text, date, link} so mapping differs accordingly.
+		return this.watchCollection(DATABASE_REMINDER_THIRD, (docs) =>
+			docs.map((doc: any) => {
+				const { _id, ...rest } = doc;
+				return { key: _id, ...rest } as {
+					key: string;
+					content: {
+						text: string;
+						date: string;
+						link: string;
+					};
+				};
+			})
+		);
 	}
 
 	/**
@@ -646,7 +543,7 @@ export class CloudbaseService extends DatabaseService {
 						LOG.error(this.className, 'Failed to update lastMovieUpdated stat', err)
 					);
 				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
-					type: 'updated',
+					type: ACTIVITY_TYPE_UPDATED,
 					title: movieItemVO.getMovieName(),
 					timestamp: updatedTimestamp
 				}).catch(() => {});
@@ -796,7 +693,7 @@ export class CloudbaseService extends DatabaseService {
 
 			// Append to activity log so multiple adds are all visible in Recent Activity
 			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
-				type: 'added',
+				type: HISTORY_STATUS_ADDED,
 				title: movieItemVO.getMovieName(),
 				genre: movieItemVO.getMovieGenre(),
 				timestamp
@@ -871,7 +768,7 @@ export class CloudbaseService extends DatabaseService {
 
 			// Append to activity log so multiple deletes are all visible in Recent Activity
 			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
-				type: 'deleted',
+				type: HISTORY_STATUS_DELETED,
 				title: movieItemVO.getMovieName(),
 				genre: movieItemVO.getMovieGenre(),
 				timestamp
@@ -944,9 +841,7 @@ export class CloudbaseService extends DatabaseService {
 					...userId,
 					id: movieItemVO.getMovieId(),
 					status: status,
-					message: `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${
-						movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate()
-					}) was ${status} on ${timestamp}`
+					message: this.buildHistoryMessage(status, timestamp, movieItemVO)
 				});
 				// CloudBase returns a non-empty result.code when the operation failed
 				// (e.g. permission denied, document not found).
@@ -958,7 +853,7 @@ export class CloudbaseService extends DatabaseService {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
 					...userId,
 					status: status,
-					message: `New rate search was started on ${timestamp}`
+					message: this.buildHistoryMessage(status, timestamp)
 				});
 				// CloudBase returns a non-empty result.code when the operation failed
 				// (e.g. permission denied, document not found).
@@ -966,7 +861,7 @@ export class CloudbaseService extends DatabaseService {
 
 				// Keep statistics in sync: record the most recent rate-search timestamp.
 				await this.statisticsRef.update({ lastRateSearch: { timestamp } });
-				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: 'search', timestamp }).catch(
+				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: SEARCH, timestamp }).catch(
 					() => {}
 				);
 			}
@@ -1205,7 +1100,7 @@ export class CloudbaseService extends DatabaseService {
 				// home-page Recent Activity widget can surface them immediately.
 				if (tableName === DATABASE_THIRD_TABLE) {
 					this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-						type: 'added',
+						type: HISTORY_STATUS_ADDED,
 						table: REMINDER_TABLE_MESSAGES,
 						text: newRecord.text ?? '',
 						timestamp: this.utilities.getCurrentFormattedTime(true)
@@ -1220,31 +1115,18 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the quotes list.
 	 */
 	public getQuotes(): Observable<any[]> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<any[]>((observer) => {
-							const watcher = this.database.collection(DATABASE_QUOTES).watch({
-								onChange: (snapshot: any) => {
-									const quotes = snapshot.docs.map((doc: any) => {
-										const { _id, ...rest } = doc;
-										return { key: _id, ...rest };
-									});
-									quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
-									observer.next(quotes);
-								},
-								onError: (err: any) => {
-									LOG.error(this.className, 'Error while retrieving quotes', err);
-									observer.error(err);
-								}
-							});
-							return () => watcher.close();
-						})
-				)
-			)
-			.pipe(shareReplay(1));
+		return this.watchCollection(
+			DATABASE_QUOTES,
+			(docs) => {
+				const quotes = docs.map((doc: any) => {
+					const { _id, ...rest } = doc;
+					return { key: _id, ...rest };
+				});
+				quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
+				return quotes;
+			},
+			true
+		);
 	}
 
 	/**
@@ -1274,7 +1156,7 @@ export class CloudbaseService extends DatabaseService {
 			latestQuote: { text, author, timestamp },
 			totalQuotes: this._.inc(1)
 		});
-		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, { type: 'added', author, timestamp }).catch(
+		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, { type: HISTORY_STATUS_ADDED, author, timestamp }).catch(
 			() => {}
 		);
 	}
@@ -1309,7 +1191,7 @@ export class CloudbaseService extends DatabaseService {
 			}
 		});
 		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
-			type: 'deleted',
+			type: HISTORY_STATUS_DELETED,
 			author,
 			timestamp: deletedTimestamp
 		}).catch(() => {});
@@ -1397,30 +1279,12 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the useful links list.
 	 */
 	public getUsefulLinks(): Observable<any[]> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<any[]>((observer) => {
-							const watcher = this.database.collection(DATABASE_USEFUL_LINKS).watch({
-								onChange: (snapshot: any) => {
-									// Filter to link-type documents only (excludes category docs in the same collection)
-									const links = snapshot.docs
-										.filter((doc: any) => doc.type !== 'category')
-										.map((doc: any) => ({ ...doc }));
-									observer.next(links);
-								},
-								onError: (err: any) => {
-									LOG.error(this.className, 'Error while retrieving useful links', err);
-									observer.error(err);
-								}
-							});
-							return () => watcher.close();
-						})
-				)
-			)
-			.pipe(shareReplay(1));
+		// Filter to link-type documents only (excludes category docs in the same collection)
+		return this.watchCollection(
+			DATABASE_USEFUL_LINKS,
+			(docs) => docs.filter((doc: any) => doc.type !== 'category').map((doc: any) => ({ ...doc })),
+			true
+		);
 	}
 
 	/**
@@ -1493,30 +1357,12 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the link categories list.
 	 */
 	public getLinkCategories(): Observable<any[]> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<any[]>((observer) => {
-							const watcher = this.database.collection(DATABASE_USEFUL_LINKS).watch({
-								onChange: (snapshot: any) => {
-									// Filter to category-type documents only (shares collection with links)
-									const categories = snapshot.docs
-										.filter((doc: any) => doc.type === 'category')
-										.map((doc: any) => ({ ...doc }));
-									observer.next(categories);
-								},
-								onError: (err: any) => {
-									LOG.error(this.className, 'Error while retrieving link categories', err);
-									observer.error(err);
-								}
-							});
-							return () => watcher.close();
-						})
-				)
-			)
-			.pipe(shareReplay(1));
+		// Filter to category-type documents only (shares collection with links)
+		return this.watchCollection(
+			DATABASE_USEFUL_LINKS,
+			(docs) => docs.filter((doc: any) => doc.type === 'category').map((doc: any) => ({ ...doc })),
+			true
+		);
 	}
 
 	/**

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../common/movieitem.vo';
 import { InjectionToken } from '@angular/core';
+import { NO_RATE } from '../../common/app.constant';
 import type cloudbase from '@cloudbase/js-sdk';
 export type CloudbaseApp = ReturnType<typeof cloudbase.init>;
 export const CLOUDBASE = new InjectionToken<CloudbaseApp>('CLOUDBASE');
@@ -9,6 +10,24 @@ export const CLOUDBASE = new InjectionToken<CloudbaseApp>('CLOUDBASE');
 @Injectable({ providedIn: 'root' })
 export abstract class DatabaseService {
 	protected constructor() {}
+
+	/**
+	 * Build a human-readable history message for a database entry.
+	 * Both FirebaseService and CloudbaseService call this shared implementation
+	 * so the wording stays consistent across backends.
+	 *
+	 * @param status - The activity status (e.g. 'added', 'deleted', 'search').
+	 * @param timestamp - The formatted timestamp string.
+	 * @param movieItemVO - The optional movie item associated with the activity.
+	 * @returns A formatted message string for the history collection.
+	 */
+	protected buildHistoryMessage(status: string, timestamp: string, movieItemVO?: MovieItemVO): string {
+		if (movieItemVO) {
+			const rate = movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate();
+			return `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${rate}) was ${status} on ${timestamp}`;
+		}
+		return `New rate search was started on ${timestamp}`;
+	}
 
 	/**
 	 * Upload the movie cover image to storage and return the downloadable link.

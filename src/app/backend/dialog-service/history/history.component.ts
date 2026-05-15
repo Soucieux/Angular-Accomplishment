@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { DialogService } from '../dialog.service';
 import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exists-error';
 import { LOG } from '../../../common/app.logs';
+import { HISTORY_STATUS_ADDED, HISTORY_STATUS_DELETED } from '../../../common/app.constant';
 import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';
 
 @Component({
@@ -46,9 +47,9 @@ export class HistoryDialogComponent implements OnDestroy {
 	 * @returns A CSS color string, or empty string if the status is unrecognized.
 	 */
 	protected setBackgroundColor(status: string) {
-		if (status === 'added') {
+		if (status === HISTORY_STATUS_ADDED) {
 			return 'solid green';
-		} else if (status === 'deleted') {
+		} else if (status === HISTORY_STATUS_DELETED) {
 			return 'solid red';
 		}
 		return '';

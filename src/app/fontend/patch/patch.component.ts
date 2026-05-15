@@ -18,17 +18,19 @@ import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/app.utilities';
 import {
+	ACTIVITY_TYPE_BUG_LOGGED,
+	ACTIVITY_TYPE_EDITED,
+	ACTIVITY_TYPE_STATUS_CHANGED,
 	COMPONENT_DESTROY,
 	DIALOG_CONFIRM,
-	ERROR_PERMISSION_DENIED,
-	FAILURE,
+	HISTORY_STATUS_ADDED,
+	HISTORY_STATUS_DELETED,
 	STATUS_COMPLETED,
 	STATUS_DEBUG,
 	STATUS_DRAFT,
 	STATUS_IN_PROGRESS,
 	STATUS_RESOLVED,
-	STATUS_TODO,
-	SUCCESS
+	STATUS_TODO
 } from '../../common/app.constant';
 import { map, Observable, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -37,7 +39,6 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PaginatorModule } from 'primeng/paginator';
 import { DatabaseService } from '../../backend/database-service/database.service';
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 
 @Component({
 	selector: 'patch',
@@ -54,7 +55,7 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 		CheckboxModule
 	],
 	templateUrl: './patch.component.html',
-	styleUrl: './patch.component.css'
+	styleUrls: ['../../common/page-card.css', './patch.component.css']
 })
 export class PatchComponent implements OnInit, OnDestroy {
 	private readonly className = 'PatchComponent';
@@ -74,9 +75,14 @@ export class PatchComponent implements OnInit, OnDestroy {
 	protected editedRows = new Map<string, any>();
 	protected hoveredRowIndex: number | null = null;
 	private previousDataLength: number | null = null;
-	/** Full ordered list of patch notes (no dummy row), kept in sync by the subscription tap. */
+	/**
+	 * Full ordered list of patch notes (no dummy row), kept in sync by the subscription tap.
+	 */
 	private patchNotesList: any[] = [];
-	/** The page (first-item index) the user intends to be on. Updated by user navigation and add/delete logic. */
+	/**
+	 * The page (first-item index) the user intends to be on.
+	 * Updated by user navigation and add/delete logic.
+	 */
 	private _savedFirst = 0;
 	/**
 	 * Set to true inside the tap whenever CloudBase pushes fresh data.
@@ -198,9 +204,10 @@ export class PatchComponent implements OnInit, OnDestroy {
 	 * @param row - The row to start editing.
 	 */
 	public async startEdit(row: any) {
-		const result = this.checkPermission(row._openid);
-		if (result === FAILURE) return;
-
+		if (!Utilities.checkPermission(row._openid)) {
+			this.dialogService.showPermissionError(this.dialogComponentContainer);
+			return;
+		}
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
 
@@ -239,7 +246,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 			if (changes.status) {
 				this.databaseService
 					.appendToPatchActivityLog({
-						type: 'statusChanged',
+						type: ACTIVITY_TYPE_STATUS_CHANGED,
 						component: row.component,
 						element: record.original.element,
 						fromStatus: record.original.status,
@@ -251,7 +258,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 			} else if (changes.details) {
 				this.databaseService
 					.appendToPatchActivityLog({
-						type: 'edited',
+						type: ACTIVITY_TYPE_EDITED,
 						component: row.component,
 						element: record.original.element,
 						noteIndex,
@@ -290,7 +297,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 				// 1-based index (patchNotesList doesn't include the new note yet).
 				this.databaseService
 					.appendToPatchActivityLog({
-						type: !!snapshot.isBug ? 'bugLogged' : 'added',
+						type: !!snapshot.isBug ? ACTIVITY_TYPE_BUG_LOGGED : HISTORY_STATUS_ADDED,
 						component: snapshot.component,
 						element: snapshot.element,
 						isBug: !!snapshot.isBug,
@@ -299,7 +306,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 					})
 					.catch(() => {});
 			})
-			.catch(() => this.openUnexpectedErrorDialog());
+			.catch(() => this.dialogService.showUnexpectedError(this.dialogComponentContainer));
 		this.newRecord = {
 			key: '',
 			component: '',
@@ -331,7 +338,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 					// Fire-and-forget: record the deletion in stats for the Recent Activity widget.
 					this.databaseService
 						.appendToPatchActivityLog({
-							type: 'deleted',
+							type: HISTORY_STATUS_DELETED,
 							component: noteToDelete?.component ?? '',
 							element: noteToDelete?.element ?? '',
 							noteIndex,
@@ -339,7 +346,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 						})
 						.catch(() => {});
 				} catch (error) {
-					this.openUnexpectedErrorDialog();
+					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			},
 			['Are you sure you want to delete this note?', 'Confirm', 'Delete']
@@ -453,45 +460,6 @@ export class PatchComponent implements OnInit, OnDestroy {
 			data[rowIndex].element !== data[rowIndex - 1].element ||
 			data[rowIndex].component !== data[rowIndex - 1].component
 		);
-	}
-
-	/**
-	 * Check whether the current user has permission to modify the given row
-	 * by comparing the row owner ID against the signed-in user's ID.
-	 * Users with all rights bypass this check.
-	 *
-	 * @param openid - The owner ID of the row to check.
-	 * @returns SUCCESS if permitted, FAILURE otherwise (after showing an error dialog).
-	 */
-	// Admins bypass all permission checks; for others, compare the entry's _openid
-	// against the current user's ID. Permission denied shows the error dialog directly.
-	private checkPermission(openid: string) {
-		if (CloudbaseService.userHasAllRights()) return;
-		try {
-			if (openid !== CloudbaseService.getUseId()) throw new Error(ERROR_PERMISSION_DENIED);
-			return SUCCESS;
-		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.openPermissionErrorDialog();
-			} else {
-				this.openUnexpectedErrorDialog();
-			}
-			return FAILURE;
-		}
-	}
-
-	/**
-	 * Open permission error confirmation dialog
-	 */
-	private openPermissionErrorDialog() {
-		this.dialogService.showPermissionError(this.dialogComponentContainer);
-	}
-
-	/**
-	 * Open a dialog informing the user that an unexpected error has occurred.
-	 */
-	private openUnexpectedErrorDialog() {
-		this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 	}
 
 	/**
@@ -609,9 +577,11 @@ export class PatchComponent implements OnInit, OnDestroy {
 	protected readonly components: { label: string; icon: string; iconClass: string }[] = [
 		{ label: 'Entertainment', icon: 'tv', iconClass: 'material-icons' },
 		{ label: 'Home', icon: 'home', iconClass: 'material-icons' },
+		{ label: 'Nexus', icon: 'neurology', iconClass: 'material-symbols-outlined' },
 		{ label: 'Patch Notes', icon: 'note_stack', iconClass: 'material-symbols-outlined' },
 		{ label: 'Login', icon: '', iconClass: 'pi pi-user' }, // pi icon — CSS only, no ligature text
 		{ label: 'Reminder', icon: 'priority', iconClass: 'material-symbols-outlined' },
+		{ label: 'Resonance', icon: 'format_quote', iconClass: 'material-symbols-outlined' },
 		{ label: 'About', icon: 'info', iconClass: 'material-symbols-outlined' },
 		{ label: 'All Pages', icon: 'web', iconClass: 'material-icons' },
 	];

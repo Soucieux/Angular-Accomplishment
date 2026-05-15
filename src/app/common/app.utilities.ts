@@ -3,6 +3,7 @@ import { Inject, Injectable, PLATFORM_ID, ViewContainerRef } from '@angular/core
 import { MovieItemVO } from './movieitem.vo';
 import { LOG } from './app.logs';
 import { CN } from './app.constant';
+import { CloudbaseService } from '../backend/database-service/cloudbase/cloudbase.service';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {
@@ -54,18 +55,27 @@ export class Utilities {
 
 	/**
 	 * Get a relative time string from a timestamp (e.g. "just now", "5m ago", "2d ago").
+	 * Accepts both the app's dot-separated format ("YYYY.MM.DD HH:mm:ss") and ISO 8601
+	 * strings (containing 'T', e.g. "2024-01-15T10:30:00.000Z") so that all pages can
+	 * share a single implementation.
 	 *
-	 * @param timestamp - The timestamp string in "YYYY.MM.DD HH:mm:ss" format.
+	 * @param timestamp - The timestamp string in either "YYYY.MM.DD HH:mm:ss" or ISO 8601 format.
 	 * @returns A human-readable relative time string.
 	 */
 	public static getRelativeTime(timestamp: string): string {
 		if (!timestamp) return '';
-		// Manually parse the "YYYY.MM.DD HH:mm:ss" format into a Date object,
-		// then compute the chain of differences (seconds→minutes→hours→days).
-		const [datePart, timePart] = timestamp.split(' ');
-		const [year, month, day] = datePart.split('.');
-		const [hours, minutes, seconds] = (timePart || '00:00:00').split(':');
-		const date = new Date(+year, +month - 1, +day, +hours, +minutes, +seconds);
+		let date: Date;
+		if (timestamp.includes('T')) {
+			// ISO 8601 format — let the Date constructor parse it directly.
+			date = new Date(timestamp);
+		} else {
+			// App format: "YYYY.MM.DD HH:mm:ss" — parse manually to avoid timezone
+			// ambiguity that Date.parse would introduce when given a non-standard string.
+			const [datePart, timePart] = timestamp.split(' ');
+			const [year, month, day] = datePart.split('.');
+			const [hours, minutes, seconds] = (timePart || '00:00:00').split(':');
+			date = new Date(+year, +month - 1, +day, +hours, +minutes, +seconds);
+		}
 		const now = new Date();
 		const diffSecs = Math.floor((now.getTime() - date.getTime()) / 1000);
 		const diffMins = Math.floor(diffSecs / 60);
@@ -77,6 +87,50 @@ export class Utilities {
 		if (diffHours < 24) return `${diffHours}h ago`;
 		if (diffDays < 7) return `${diffDays}d ago`;
 		return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+	}
+
+	/**
+	 * Safely coerce any date value to a "YYYY-MM-DD" display string.
+	 * Handles plain strings (returned as-is), JavaScript Date objects, and
+	 * database timestamp objects (CloudBase { $date: ms }, { seconds: s },
+	 * { time: ms }) that may have been persisted before format guards were added.
+	 *
+	 * @param date - Any date representation (string, Date, timestamp object, or falsy).
+	 * @returns A "YYYY-MM-DD" string, or '' if the value is falsy or unparseable.
+	 */
+	public static coerceDateToString(date: any): string {
+		if (!date) return '';
+		if (typeof date === 'string') return date;
+		try {
+			let ms: number | null = null;
+			if (typeof date === 'number') {
+				ms = date;
+			} else if (date instanceof Date || typeof date.getTime === 'function') {
+				ms = date.getTime();
+			} else if (typeof date === 'object') {
+				// CloudBase/MongoDB: { $date: ms } or { $date: { $numberLong: "ms" } }
+				if (date.$date !== undefined) {
+					ms = typeof date.$date === 'object' && date.$date.$numberLong
+						? Number(date.$date.$numberLong)
+						: Number(date.$date);
+				// Tencent CloudBase SDK: { time: ms }
+				} else if (date.time !== undefined) {
+					ms = Number(date.time);
+				// Firestore-like: { seconds: s }
+				} else if (date.seconds !== undefined) {
+					ms = Number(date.seconds) * 1000;
+				}
+			}
+			if (ms === null) ms = Number(new Date(date));
+			const d = new Date(ms);
+			if (isNaN(d.getTime())) return '';
+			const y = d.getFullYear();
+			const m = String(d.getMonth() + 1).padStart(2, '0');
+			const day = String(d.getDate()).padStart(2, '0');
+			return `${y}-${m}-${day}`;
+		} catch {
+			return '';
+		}
 	}
 
 	/**
@@ -135,6 +189,23 @@ export class Utilities {
 	public static checkMovieItemVO(movieItemVO: MovieItemVO) {
 		if (movieItemVO.getMovieName() === '' || movieItemVO.getMovieYear() === -1) {
 			throw new Error('Movie item VO is invalid');
+		}
+	}
+
+	/**
+	 * Check whether the current user has permission to modify an entry
+	 * owned by the given openid. Admin users bypass the check automatically.
+	 * Exceptions from the auth layer are treated as permission denied.
+	 *
+	 * @param openid - The owner ID stored on the database entry.
+	 * @returns true if the current user is permitted, false otherwise.
+	 */
+	public static checkPermission(openid: string): boolean {
+		try {
+			if (CloudbaseService.userHasAllRights()) return true;
+			return openid === CloudbaseService.getUseId();
+		} catch {
+			return false;
 		}
 	}
 

@@ -216,7 +216,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
-	public override getMovieList(): Observable<MovieItemVO[]> {
+	public getMovieList(): Observable<MovieItemVO[]> {
 		return CloudbaseService.authReady$
 			.pipe(
 				take(1),
@@ -548,7 +548,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param movieName - The name of the movie (used as the filename in storage).
 	 * @returns The cloud:// file ID on success, or an empty string on failure.
 	 */
-	public override async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
+	public async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
 		try {
 			// Convert Blob to a raw base64 string (no data-URL prefix) for the function payload
 			const base64 = await this.blobToBase64(coverImage);
@@ -608,7 +608,7 @@ export class CloudbaseService extends DatabaseService {
 	/**
 	 * Add new entry to history stating that a new search activity has been initialized
 	 */
-	public override async updateHistoryWithNewSearchActivity(): Promise<void> {
+	public async updateHistoryWithNewSearchActivity(): Promise<void> {
 		await this.addNewHistoryEntry(SEARCH);
 	}
 
@@ -617,7 +617,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public override async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
+	public async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
 		// Step 1 : Gather necessary info
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieItemVO.getMovieKey());
 		const oldRate = movieRef.exists() ? movieRef.get().rate : undefined;
@@ -677,7 +677,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param oldGenre - The old genre value.
 	 * @param newGenre - The new genre value.
 	 */
-	public override updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
+	public updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
 		// Step 1 : Update movie genre
 		return movieRef
@@ -712,7 +712,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param movieKey - The key of the movie to update.
 	 * @param isFavourite - The boolean value to set.
 	 */
-	public override updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
+	public updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
 		// Step 1 : Update movie favourite
 		return movieRef
@@ -751,7 +751,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
-	public override async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
+	public async addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Add new movie data
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
@@ -819,7 +819,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param movieItemVO - The movie item to remove.
 	 */
-	public override async removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
+	public async removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Step 1: Remove the movie document from the database
 			const removeRes = await this.database
@@ -896,7 +896,11 @@ export class CloudbaseService extends DatabaseService {
 	 * @param movieId Movie ID to check
 	 * @returns true if the movie already exists, otherwise, false.
 	 */
-	public override async isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean> {
+	public async isMovieAlreadyAdded(
+		movieName: string,
+		movieYear: number,
+		movieId: number
+	): Promise<boolean> {
 		try {
 			const result = await this.database
 				.collection(DATABASE_MOVIES)
@@ -978,7 +982,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param newRecord - The record to add.
 	 */
-	public override addNewRecordToPatchNotes(newRecord: any): Promise<void> {
+	public addNewRecordToPatchNotes(newRecord: any): Promise<void> {
 		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 		return this.database
 			.collection(DATABASE_PATCH_NOTES)
@@ -1013,7 +1017,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key associated with the record
 	 * @param updatedRecord - The record to update.
 	 */
-	public override updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
+	public updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
 		return this.database
 			.collection(DATABASE_PATCH_NOTES)
 			.where({
@@ -1080,7 +1084,12 @@ export class CloudbaseService extends DatabaseService {
 	 * @param valueKey - The key associated with the new value.
 	 * @param value - The new value to be stored.
 	 */
-	public override updateReminderTable(tableName: string, entryKey: string, valueKey: string, value: any): Promise<void> {
+	public updateReminderTable(
+		tableName: string,
+		entryKey: string,
+		valueKey: string,
+		value: any
+	): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 
 		// Branch on valueKey: "content" replaces entire content object (bulk edit);
@@ -1114,9 +1123,8 @@ export class CloudbaseService extends DatabaseService {
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The table to update
 	 */
-	public override async updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
+	public async updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
-		const tableRef = this.database.collection(collectionName);
 
 		// CloudBase has no batch document update API — each row must be updated
 		// individually. _id and _openid are stripped since they are CloudBase metadata.
@@ -1142,7 +1150,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param tableName - Corresponding collection name
 	 * @param key - The key of the record to remove
 	 */
-	public override async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
+	public async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
 		try {
 			const collectionName = this.convertTableNameToCollectionName(tableName);
 			// Delegate to the shared helper so error handling (result.code check)
@@ -1160,7 +1168,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param collectionName - The collection name in cloudbase
 	 * @param key - The key associated with the record
 	 */
-	public override async removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
+	public async removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
 		const result = await this.database
 			.collection(collectionName)
 			.where({ _id: key, _openid: CloudbaseService.getUseId() })
@@ -1178,7 +1186,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param tableName - The corresponding collection name.
 	 * @param newRecord - The new entry to add.
 	 */
-	public override addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
+	public addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
 		const collectionName = this.convertTableNameToCollectionName(tableName);
 		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 		return this.database
@@ -1211,7 +1219,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @returns An observable that emits the quotes list.
 	 */
-	public override getQuotes(): Observable<any[]> {
+	public getQuotes(): Observable<any[]> {
 		return CloudbaseService.authReady$
 			.pipe(
 				take(1),
@@ -1246,7 +1254,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param author - The author of the quote.
 	 * @param timestamp - The timestamp of the quote.
 	 */
-	public override async addQuote(text: string, author: string, timestamp: string): Promise<void> {
+	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		// Attach _openid whenever a user is authenticated so they can later delete their own quotes.
 		// Falls back to empty object for anonymous users (no delete permission).
 		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
@@ -1278,7 +1286,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param text - The text of the deleted quote (written to lastQuoteDeleted stat).
 	 * @param author - The author of the deleted quote (written to lastQuoteDeleted stat).
 	 */
-	public override async removeQuote(key: string, text: string, author: string): Promise<void> {
+	public async removeQuote(key: string, text: string, author: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
 
 		// Re-query remaining quotes so that latestQuote always reflects
@@ -1315,7 +1323,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param fields - Fields to merge into the statistics document.
 	 */
-	public override async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
+	public async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
 		try {
 			const result = await this.statisticsRef.update(fields);
 			if (result.code || result.updated === 0)
@@ -1336,7 +1344,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param fieldName - The statistics field that holds the array — use a STATS_FIELD_* constant.
 	 * @param activity - The activity object to record.
 	 */
-	public override async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
+	public async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
 		try {
 			const doc = await this.database.collection(DATABASE_STATISTICS).doc(this.statId).get();
 			const raw = doc.data?.[0]?.[fieldName];
@@ -1360,7 +1368,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param activity - The activity object to record.
 	 */
-	public override async appendToPatchActivityLog(activity: any): Promise<void> {
+	public async appendToPatchActivityLog(activity: any): Promise<void> {
 		return this.appendToActivityLog(STATS_FIELD_RECENT_PATCH, activity);
 	}
 
@@ -1388,7 +1396,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @returns An observable that emits the useful links list.
 	 */
-	public override getUsefulLinks(): Observable<any[]> {
+	public getUsefulLinks(): Observable<any[]> {
 		return CloudbaseService.authReady$
 			.pipe(
 				take(1),
@@ -1398,9 +1406,9 @@ export class CloudbaseService extends DatabaseService {
 							const watcher = this.database.collection(DATABASE_USEFUL_LINKS).watch({
 								onChange: (snapshot: any) => {
 									// Filter to link-type documents only (excludes category docs in the same collection)
-								const links = snapshot.docs
-									.filter((doc: any) => doc.type !== 'category')
-									.map((doc: any) => ({ ...doc }));
+									const links = snapshot.docs
+										.filter((doc: any) => doc.type !== 'category')
+										.map((doc: any) => ({ ...doc }));
 									observer.next(links);
 								},
 								onError: (err: any) => {
@@ -1420,7 +1428,13 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param link - The link object to add.
 	 */
-	public override async addUsefulLink(link: { url: string; title: string; category: string; visitCount: number; createdAt: string }): Promise<void> {
+	public async addUsefulLink(link: {
+		url: string;
+		title: string;
+		category: string;
+		visitCount: number;
+		createdAt: string;
+	}): Promise<void> {
 		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
 		const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
 			...userId,
@@ -1437,7 +1451,10 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key of the link to update.
 	 * @param updates - The fields to update.
 	 */
-	public override async updateUsefulLink(key: string, updates: Partial<{ url: string; title: string; category: string }>): Promise<void> {
+	public async updateUsefulLink(
+		key: string,
+		updates: Partial<{ url: string; title: string; category: string }>
+	): Promise<void> {
 		const result = await this.database
 			.collection(DATABASE_USEFUL_LINKS)
 			.doc(key)
@@ -1452,7 +1469,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key of the link.
 	 * @param currentCount - The current visit count.
 	 */
-	public override async incrementLinkVisit(key: string, currentCount: number): Promise<void> {
+	public async incrementLinkVisit(key: string, currentCount: number): Promise<void> {
 		const result = await this.database
 			.collection(DATABASE_USEFUL_LINKS)
 			.doc(key)
@@ -1466,7 +1483,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the link to remove.
 	 */
-	public override async removeUsefulLink(key: string): Promise<void> {
+	public async removeUsefulLink(key: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_USEFUL_LINKS, key);
 	}
 
@@ -1475,7 +1492,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @returns An observable that emits the link categories list.
 	 */
-	public override getLinkCategories(): Observable<any[]> {
+	public getLinkCategories(): Observable<any[]> {
 		return CloudbaseService.authReady$
 			.pipe(
 				take(1),
@@ -1507,7 +1524,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param category - The category object to add.
 	 */
-	public override async addLinkCategory(category: { name: string; color: string; order: number }): Promise<void> {
+	public async addLinkCategory(category: { name: string; color: string; order: number }): Promise<void> {
 		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
 		const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
 			...userId,
@@ -1524,7 +1541,10 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key of the category to update.
 	 * @param updates - The fields to update.
 	 */
-	public override async updateLinkCategory(key: string, updates: Partial<{ name: string; color: string; order: number }>): Promise<void> {
+	public async updateLinkCategory(
+		key: string,
+		updates: Partial<{ name: string; color: string; order: number }>
+	): Promise<void> {
 		const result = await this.database
 			.collection(DATABASE_USEFUL_LINKS)
 			.doc(key)
@@ -1538,28 +1558,51 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the category to remove.
 	 */
-	public override async removeLinkCategory(key: string): Promise<void> {
+	public async removeLinkCategory(key: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_USEFUL_LINKS, key);
 	}
 
 	/**
-	 * Proxy an HTTP GET request through the `fetchurl` CloudBase function.
-	 * The function fetches the target URL server-side (no CORS) and returns
-	 * the raw response body.
+	 * Proxy an HTTP GET request server-side to bypass browser CORS restrictions.
+	 *
+	 * Strategy (in order):
+	 *  1. Call the Express server's `/api/fetch-url` endpoint — zero CloudBase
+	 *     overhead, same Node.js process as the Angular SSR server.
+	 *  2. Fall back to the `fetchUrl` CloudBase function if the server endpoint
+	 *     is unavailable (e.g. running against a remote CloudBase-only deploy).
 	 *
 	 * @param url - The fully-qualified http/https URL to fetch.
 	 * @returns The response body and Content-Type header value.
 	 */
-	public override async proxyFetch(url: string): Promise<{ content: string; contentType: string }> {
-		const result: any = await this.cloudbase.callFunction({
-			name: 'fetchurl',
-			data: {
-				accessToken: environment.cloudbase.accessToken,
-				url
+	public async proxyFetch(url: string): Promise<{ content: string; contentType: string }> {
+		// ── 1. Try own Express server endpoint (production SSR server only) ──
+		// The endpoint only exists when the compiled Express server is running.
+		// In `ng serve` dev mode Angular intercepts all requests and returns HTML,
+		// so we guard on Content-Type before attempting to parse JSON — this keeps
+		// the dev experience clean with no spurious warnings.
+		try {
+			const res = await fetch(`/api/fetch-url?url=${encodeURIComponent(url)}`);
+			if (res.ok && (res.headers.get('content-type') ?? '').includes('application/json')) {
+				const json = await res.json() as { success: boolean; content?: string; contentType?: string; error?: string };
+				if (json.success) {
+					return { content: json.content ?? '', contentType: json.contentType ?? '' };
+				}
+				// Endpoint exists but reported an error — log and fall through to CloudBase.
+				LOG.warn(this.className, `/api/fetch-url error for ${url}: ${json.error}`);
 			}
+			// Non-JSON response means the Express server is not running (ng serve).
+			// Fall through silently to CloudBase.
+		} catch {
+			// Network error reaching /api/fetch-url — fall through silently.
+		}
+
+		// ── 2. CloudBase callFunction (dev mode and CloudBase-only deploys) ──
+		const result: any = await this.cloudbase.callFunction({
+			name: 'fetchUrl',
+			data: { accessToken: environment.cloudbase.accessToken, url }
 		});
 		if (!result?.result?.success) {
-			throw new Error(result?.result?.error ?? 'fetchurl returned an error');
+			throw new Error(result?.result?.error ?? 'fetchUrl returned an error');
 		}
 		return {
 			content    : result.result.content     ?? '',

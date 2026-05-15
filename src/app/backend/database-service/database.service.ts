@@ -316,7 +316,7 @@ export abstract class DatabaseService {
 	public abstract removeLinkCategory(key: string): Promise<void>;
 
 	/**
-	 * Proxy an HTTP GET request through the `fetchurl` CloudBase function,
+	 * Proxy an HTTP GET request through the `fetchUrl` CloudBase function,
 	 * bypassing browser CORS restrictions.  Used for RSS news feeds and
 	 * link-title auto-fetch on the Nexus page.
 	 *

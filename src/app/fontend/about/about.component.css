@@ -180,7 +180,7 @@
 /* ─────────────────────────────────────────
    Mobile
 ───────────────────────────────────────── */
-@media (max-width: 840px) {
+@media (max-width: 940px) {
 	.header {
 		margin-top: 0px;
 		padding: 20px 0px 20px 0px !important;

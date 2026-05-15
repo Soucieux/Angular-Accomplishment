@@ -125,18 +125,26 @@ export class HomeComponent implements OnInit, OnDestroy {
 						}
 					}, 5000);
 					let activityLogsCleaned = false;
-					this.statsSub = this.databaseService.getStatistics().subscribe((data) => {
-						clearTimeout(this.loadingTimer);
-						this.stats = data;
-						this.loading = false;
-						this.cdr.detectChanges();
-						// One-time cleanup per dashboard session: trim each activity-log array
-						// to only the items that would appear in the combined top-24 feed.
-						// This removes stale entries that accumulated before the per-array cap
-						// was enforced by appendToActivityLog.
-						if (!activityLogsCleaned) {
-							activityLogsCleaned = true;
-							this.trimActivityLogs(data);
+					this.statsSub = this.databaseService.getStatistics().subscribe({
+						next: (data) => {
+							clearTimeout(this.loadingTimer);
+							this.stats = data;
+							this.loading = false;
+							this.cdr.detectChanges();
+							// One-time cleanup per dashboard session: trim each activity-log array
+							// to only the items that would appear in the combined top-24 feed.
+							// This removes stale entries that accumulated before the per-array cap
+							// was enforced by appendToActivityLog.
+							if (!activityLogsCleaned) {
+								activityLogsCleaned = true;
+								this.trimActivityLogs(data);
+							}
+						},
+						error: (err) => {
+							LOG.error(this.className, 'Failed to load statistics', err as Error);
+							clearTimeout(this.loadingTimer);
+							this.loading = false;
+							this.cdr.detectChanges();
 						}
 					});
 

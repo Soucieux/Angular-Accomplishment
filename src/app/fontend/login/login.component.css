@@ -326,7 +326,7 @@
 }
 
 /* ── Mobile ── */
-@media (max-width: 840px) {
+@media (max-width: 940px) {
 	.title {
 		font-size: 35px;
 		letter-spacing: 5px;

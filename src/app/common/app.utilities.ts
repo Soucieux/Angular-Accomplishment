@@ -10,8 +10,8 @@ export class Utilities {
 	private static currentCountry: string = '';
 	private isUserAlive: boolean = false;
 
-    constructor(@Inject(PLATFORM_ID) private platformId: Object) { }
-    
+	constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+
 	/**
 	 * Check if the current device is a mobile device.
 	 *
@@ -157,16 +157,16 @@ export class Utilities {
 		try {
 			this.currentCountry = CN;
 
-			localStorage.setItem(
-				'location',
-				JSON.stringify({
-					country: this.currentCountry,
-					ip: 'null',
-					timestamp: Date.now()
-				})
-			);
+			// localStorage.setItem(
+			// 	'location',
+			// 	JSON.stringify({
+			// 		country: this.currentCountry,
+			// 		ip: 'null',
+			// 		timestamp: Date.now()
+			// 	})
+			// );
 
-			LOG.info(this.className, 'Current IP: ' + 'null' + ', Current country: ' + this.currentCountry);
+			// LOG.info(this.className, 'Current IP: ' + 'null' + ', Current country: ' + this.currentCountry);
 		} catch (error: any) {
 			LOG.error(this.className, 'Country detection failed: ', error);
 			this.currentCountry = CN;

@@ -404,7 +404,7 @@
 }
 
 /* ── Mobile ── */
-@media (max-width: 840px) {
+@media (max-width: 940px) {
 	:host {
 		padding: 24px 16px 60px;
 	}

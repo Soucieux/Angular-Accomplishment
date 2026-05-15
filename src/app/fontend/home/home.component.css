@@ -9,9 +9,10 @@
 	border-radius: 30px;
 	min-height: calc(100vh - 10px);
 	min-width: 100%;
+	overflow-y: auto;
 }
 
-/* Dashboard-state override: definite height prevents mat-drawer-content from scrolling */
+/* Dashboard-state override: exact height on large screens; fills viewport with no scrollbar */
 .container-dashboard {
 	height: calc(100vh - 10px);
 }
@@ -303,14 +304,15 @@
 	z-index: 1;
 	display: grid;
 	flex: 1;
-	min-height: 0;
 	grid-template-columns: repeat(3, 1fr);
-	/* 4-row layout:
-	   Row 1 — Entertainment (col 1) | Reminder (col 2) | Clock (col 3) — 1.4fr
-	   Row 2 — Quick Note (col 1)   | Patch (col 2)    | Pomodoro (col3)— 1.35fr
-	   Row 3 — Activity (cols 1-2)  | Resonance (col 3)                 — 1.55fr
-	   Row 4 — Calendar (full width)                                     — 1fr*/
-	grid-template-rows: 1.4fr 1.35fr 1.55fr 1fr;
+	/* 4-row layout — minmax(min, max):
+	   • min  = floor so content is always visible
+	   • max  = ceiling so widgets never grow too tall on large screens
+	   Row 1 — Entertainment | Reminder | Clock    minmax(200px, 280px)
+	   Row 2 — Note | Patch  | Pomodoro            minmax(195px, 265px)
+	   Row 3 — Activity (2-col) | Resonance        minmax(190px, 275px)
+	   Row 4 — Calendar (full-width)               minmax(145px, 205px) */
+	grid-template-rows: minmax(200px, 250px) minmax(195px, 235px) minmax(190px, 265px) 195px;
 	gap: 8px;
 }
 
@@ -1675,7 +1677,9 @@
 /* ── Wide (≥ 1500 px) ── */
 @media (min-width: 1500px) {
 	.bento-grid {
-		grid-template-rows: 260px 1.35fr 1.55fr 1fr !important;
+		grid-template-rows:
+			minmax(200px, 260px) minmax(195px, 235px) minmax(190px, 265px)
+			175px !important;
 	}
 	.chip-value {
 		font-size: 36px;

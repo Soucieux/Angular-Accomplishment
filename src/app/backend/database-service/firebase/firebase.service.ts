@@ -778,7 +778,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param fieldName - The statistics field that holds the array — use a STATS_FIELD_* constant.
 	 * @param activity - The activity object to record.
 	 */
-	public override async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
+	public async appendToActivityLog(fieldName: string, activity: any): Promise<void> {
 		try {
 			await runTransaction(this.statisticsRef, (currentData) => {
 				currentData = currentData ?? {};
@@ -797,7 +797,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param activity - The activity object to record.
 	 */
-	public override async appendToPatchActivityLog(activity: any): Promise<void> {
+	public async appendToPatchActivityLog(activity: any): Promise<void> {
 		return this.appendToActivityLog(STATS_FIELD_RECENT_PATCH, activity);
 	}
 
@@ -829,7 +829,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The document key of the patch note to remove.
 	 */
-	public override removePatchNote(key: string): Promise<void> {
+	public removePatchNote(key: string): Promise<void> {
 		return this.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
 	}
 
@@ -838,7 +838,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @returns An observable that emits the useful links list.
 	 */
-	public override getUsefulLinks(): Observable<any[]> {
+	public getUsefulLinks(): Observable<any[]> {
 		return of([]);
 	}
 
@@ -847,7 +847,13 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param link - The link object to add.
 	 */
-	public override addUsefulLink(_link: { url: string; title: string; category: string; visitCount: number; createdAt: string }): Promise<void> {
+	public addUsefulLink(_link: {
+		url: string;
+		title: string;
+		category: string;
+		visitCount: number;
+		createdAt: string;
+	}): Promise<void> {
 		return Promise.resolve();
 	}
 
@@ -857,7 +863,10 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key of the link to update.
 	 * @param updates - The fields to update.
 	 */
-	public override updateUsefulLink(_key: string, _updates: Partial<{ url: string; title: string; category: string }>): Promise<void> {
+	public updateUsefulLink(
+		_key: string,
+		_updates: Partial<{ url: string; title: string; category: string }>
+	): Promise<void> {
 		return Promise.resolve();
 	}
 
@@ -867,7 +876,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key of the link.
 	 * @param currentCount - The current visit count.
 	 */
-	public override incrementLinkVisit(_key: string, _currentCount: number): Promise<void> {
+	public incrementLinkVisit(_key: string, _currentCount: number): Promise<void> {
 		return Promise.resolve();
 	}
 
@@ -876,7 +885,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the link to remove.
 	 */
-	public override removeUsefulLink(_key: string): Promise<void> {
+	public removeUsefulLink(_key: string): Promise<void> {
 		return Promise.resolve();
 	}
 
@@ -885,7 +894,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @returns An observable that emits the link categories list.
 	 */
-	public override getLinkCategories(): Observable<any[]> {
+	public getLinkCategories(): Observable<any[]> {
 		return of([]);
 	}
 
@@ -894,7 +903,7 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param category - The category object to add.
 	 */
-	public override addLinkCategory(_category: { name: string; color: string; order: number }): Promise<void> {
+	public addLinkCategory(_category: { name: string; color: string; order: number }): Promise<void> {
 		return Promise.resolve();
 	}
 
@@ -904,7 +913,10 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key of the category to update.
 	 * @param updates - The fields to update.
 	 */
-	public override updateLinkCategory(_key: string, _updates: Partial<{ name: string; color: string; order: number }>): Promise<void> {
+	public updateLinkCategory(
+		_key: string,
+		_updates: Partial<{ name: string; color: string; order: number }>
+	): Promise<void> {
 		return Promise.resolve();
 	}
 
@@ -913,11 +925,11 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the category to remove.
 	 */
-	public override removeLinkCategory(_key: string): Promise<void> {
+	public removeLinkCategory(_key: string): Promise<void> {
 		return Promise.resolve();
 	}
 
-	public override proxyFetch(_url: string): Promise<{ content: string; contentType: string }> {
+	public proxyFetch(_url: string): Promise<{ content: string; contentType: string }> {
 		return Promise.resolve({ content: '', contentType: '' });
 	}
 }

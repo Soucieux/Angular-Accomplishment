@@ -1,4 +1,12 @@
 /* ─────────────────────────────────────────
+   Host — fill the drawer-content slot
+───────────────────────────────────────── */
+:host {
+	display: block;
+	min-height: 100%;
+}
+
+/* ─────────────────────────────────────────
    Container — mostly-opaque white card
 ───────────────────────────────────────── */
 .container {
@@ -611,9 +619,9 @@
 }
 
 /* ─────────────────────────────────────────
-   Responsive — ≤ 840 px (mobile)
+   Responsive — ≤ 940 px (mobile)
 ───────────────────────────────────────── */
-@media (max-width: 840px) {
+@media (max-width: 940px) {
 	h4 {
 		font-size: 18px;
 	}

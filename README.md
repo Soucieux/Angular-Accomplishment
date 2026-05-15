@@ -22,12 +22,6 @@
 
 ---
 
-## Overview
-
-Vision Canvas is a self-hosted single-page application designed for personal data sovereignty. It unifies entertainment cataloguing, multi-table financial reminders, internal patch tracking, and a life-progress dashboard — all behind a role-based auth system with dual-backend support for Firebase (global) and Tencent Cloudbase (CN region).
-
----
-
 ## ✨ Core Features
 
 | Module | Description | Status |

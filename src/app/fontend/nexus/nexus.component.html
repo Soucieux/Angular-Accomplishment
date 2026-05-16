@@ -1,3 +1,4 @@
+<ng-container #dialogComponentContainer></ng-container>
 <div class="container container-nexus">
 	<!-- ── Header ─────────────────────────────────────────────────── -->
 	<div class="page-header">
@@ -171,12 +172,16 @@
 					@for (link of filteredLinks; track link._id) {
 						<div class="link-card" (click)="openLink(link)" [title]="link.url">
 							<div class="link-card-inner">
+								@if (faviconFailedIds.has(link._id)) {
+								<div class="link-favicon-fallback">{{ link.title.charAt(0).toUpperCase() }}</div>
+							} @else {
 								<img
 									class="link-favicon"
 									[src]="getFavicon(link.url)"
 									[alt]="link.title"
-									(error)="$any($event.target).src=''"
+									(error)="onFaviconError(link)"
 									loading="lazy" />
+							}
 								<div class="link-info">
 									<p class="link-title">{{ link.title }}</p>
 									@if (link.visitCount) {

@@ -649,6 +649,20 @@
 	border-radius: 6px;
 }
 
+.link-favicon-fallback {
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: #fff;
+	font-size: 14px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
 .link-info {
 	flex: 1;
 	display: flex;

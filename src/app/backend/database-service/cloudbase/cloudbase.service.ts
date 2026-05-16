@@ -193,7 +193,8 @@ export class CloudbaseService extends DatabaseService {
 	private watchCollection<T>(
 		collectionName: string,
 		mapper: (docs: any[]) => T,
-		propagateErrors = false
+		propagateErrors = false,
+		queryBuilder?: (col: any) => any
 	): Observable<T> {
 		return CloudbaseService.authReady$
 			.pipe(
@@ -201,7 +202,9 @@ export class CloudbaseService extends DatabaseService {
 				switchMap(
 					() =>
 						new Observable<T>((observer) => {
-							const watcher = this.database.collection(collectionName).watch({
+							const col = this.database.collection(collectionName);
+							const query = queryBuilder ? queryBuilder(col) : col;
+							const watcher = query.watch({
 								onChange: (snapshot: any) => {
 									observer.next(mapper(snapshot.docs));
 								},
@@ -1293,7 +1296,8 @@ export class CloudbaseService extends DatabaseService {
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
 			(docs) => docs.filter((doc: any) => doc.type !== USEFUL_LINK_TYPE_CATEGORY).map((doc: any) => ({ ...doc })),
-			true
+			true,
+			(col) => col.where({ _openid: CloudbaseService.getUseId() })
 		);
 	}
 
@@ -1371,7 +1375,8 @@ export class CloudbaseService extends DatabaseService {
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
 			(docs) => docs.filter((doc: any) => doc.type === USEFUL_LINK_TYPE_CATEGORY).map((doc: any) => ({ ...doc })),
-			true
+			true,
+			(col) => col.where({ _openid: CloudbaseService.getUseId() })
 		);
 	}
 

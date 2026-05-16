@@ -5,7 +5,9 @@ import {
 	Inject,
 	OnDestroy,
 	OnInit,
-	PLATFORM_ID
+	PLATFORM_ID,
+	ViewChild,
+	ViewContainerRef
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,12 +19,17 @@ import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
+	DIALOG_CONFIRM,
 	NEXUS_CATEGORY_ALL,
 	NEXUS_DIALOG_TITLE_ADD_LINK,
 	NEXUS_DIALOG_TITLE_EDIT_LINK,
 	NEXUS_MSG_CATEGORY_ADDED,
 	NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL,
 	NEXUS_MSG_CATEGORY_DELETED,
+	NEXUS_MSG_DELETE_CATEGORY_BTN,
+	NEXUS_MSG_DELETE_CATEGORY_TITLE,
+	NEXUS_MSG_DELETE_LINK_BTN,
+	NEXUS_MSG_DELETE_LINK_TITLE,
 	NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL,
 	NEXUS_MSG_CATEGORY_UPDATED,
 	NEXUS_MSG_DELETE_FAILED,
@@ -93,6 +100,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 	private readonly className = 'NexusComponent';
 	private readonly SELECTED_AIS_KEY = 'nexus_selected_ais';
 	private readonly HISTORY_KEY = 'nexus_search_history';
+
+	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
+	private dialogComponentContainer!: ViewContainerRef;
 	protected history: SearchHistoryEntry[] = [];
 
 	protected searchQuery = '';
@@ -227,6 +237,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	// ── Links & Categories ────────────────────────────────────────
 	protected links: any[] = [];
 	protected categories: any[] = [];
+	protected faviconFailedIds = new Set<string>();
 	protected activeCategory = NEXUS_CATEGORY_ALL;
 	protected linkSearch = '';
 
@@ -463,10 +474,20 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected getFavicon(url: string): string {
 		try {
 			const hostname = new URL(url).hostname;
-			return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+			return `https://${hostname}/favicon.ico`;
 		} catch {
 			return '';
 		}
+	}
+
+	/**
+	 * Called when a link favicon image fails to load.
+	 * Marks the link for initial-letter fallback display and logs a warning.
+	 */
+	protected onFaviconError(link: any): void {
+		this.faviconFailedIds.add(link._id);
+		LOG.warn(this.className, `Favicon unavailable for ${link.title} (${link.url})`);
+		this.cdr.markForCheck();
 	}
 
 	/**
@@ -597,6 +618,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_LINK_SAVED);
 			}
 			this.showLinkDialog = false;
+			this.cdr.markForCheck();
 		} catch (err) {
 			LOG.error(this.className, 'Failed to save link', err as Error);
 			this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_SAVE_FAILED, NEXUS_MSG_LINK_SAVE_FAILED_DETAIL);
@@ -611,17 +633,23 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 */
 	protected deleteLink(link: any, event: Event): void {
 		event.stopPropagation();
-		if (!confirm(`Delete "${link.title}"?`)) return;
-		this.databaseService
-			.removeUsefulLink(link._id)
-			.then(() => {
-				LOG.info(this.className, `Link deleted: ${link.title}`);
-				this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_LINK_DELETED);
-			})
-			.catch((err: any) => {
-				LOG.error(this.className, `Failed to delete link: ${link.title}`, err as Error);
-				this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_LINK_DELETE_FAILED_DETAIL);
-			});
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_CONFIRM,
+			() => {
+				this.databaseService
+					.removeUsefulLink(link._id)
+					.then(() => {
+						LOG.info(this.className, `Link deleted: ${link.title}`);
+						this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_LINK_DELETED);
+					})
+					.catch((err: any) => {
+						LOG.error(this.className, `Failed to delete link: ${link.title}`, err as Error);
+						this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_LINK_DELETE_FAILED_DETAIL);
+					});
+			},
+			[`Are you sure you want to delete "${link.title}"?`, NEXUS_MSG_DELETE_LINK_TITLE, NEXUS_MSG_DELETE_LINK_BTN]
+		);
 	}
 
 	/**
@@ -687,18 +715,24 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 */
 	protected deleteCategory(category: any, event: Event): void {
 		event.stopPropagation();
-		if (!confirm(`Delete category "${category.name}"? Links in this category will become uncategorised.`))
-			return;
-		this.databaseService
-			.removeLinkCategory(category._id)
-			.then(() => {
-				LOG.info(this.className, `Category deleted: ${category.name}`);
-				this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_CATEGORY_DELETED);
-				this.showCategoryDialog = false;
-			})
-			.catch((err: any) => {
-				LOG.error(this.className, `Failed to delete category: ${category.name}`, err as Error);
-				this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL);
-			});
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_CONFIRM,
+			() => {
+				this.databaseService
+					.removeLinkCategory(category._id)
+					.then(() => {
+						LOG.info(this.className, `Category deleted: ${category.name}`);
+						this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_CATEGORY_DELETED);
+						this.showCategoryDialog = false;
+						this.cdr.markForCheck();
+					})
+					.catch((err: any) => {
+						LOG.error(this.className, `Failed to delete category: ${category.name}`, err as Error);
+						this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL);
+					});
+			},
+			[`Are you sure you want to delete category "${category.name}"? Links in this category will become uncategorised.`, NEXUS_MSG_DELETE_CATEGORY_TITLE, NEXUS_MSG_DELETE_CATEGORY_BTN]
+		);
 	}
 }

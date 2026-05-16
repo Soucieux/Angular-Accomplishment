@@ -157,6 +157,10 @@ export const NEXUS_MSG_CATEGORY_ADDED = 'Category added';
 export const NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL = 'Could not save the category. Please try again.';
 export const NEXUS_MSG_CATEGORY_DELETED = 'Category deleted';
 export const NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL = 'Could not delete the category. Please try again.';
+export const NEXUS_MSG_DELETE_LINK_TITLE = 'Delete Link';
+export const NEXUS_MSG_DELETE_LINK_BTN = 'Delete';
+export const NEXUS_MSG_DELETE_CATEGORY_TITLE = 'Delete Category';
+export const NEXUS_MSG_DELETE_CATEGORY_BTN = 'Delete';
 
 // ── Errors ─────────────────────────────────────────────────────────────────
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';

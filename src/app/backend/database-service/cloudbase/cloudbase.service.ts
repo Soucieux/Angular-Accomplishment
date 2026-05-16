@@ -20,6 +20,8 @@ import {
 	DATABASE_STATISTICS,
 	DATABASE_THIRD_TABLE,
 	DATABASE_USEFUL_LINKS,
+	USEFUL_LINK_TYPE_LINK,
+	USEFUL_LINK_TYPE_CATEGORY,
 	ACTIVITY_TYPE_UPDATED,
 	ERROR_PERMISSION_DENIED,
 	GENRE_FAVOURITE,
@@ -27,8 +29,6 @@ import {
 	HISTORY_STATUS_DELETED,
 	RATE_DECREASED,
 	RATE_INCREASED,
-	REMINDER_ITEM_EXPENSE,
-	REMINDER_ITEM_MESSAGE,
 	REMINDER_TABLE_MESSAGES,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
@@ -39,6 +39,7 @@ import {
 	STATS_FIELD_RECENT_RESONANCE,
 	STATUS_IN_PROGRESS
 } from '../../../common/app.constant';
+import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 
 @Injectable({ providedIn: 'root' })
 export class CloudbaseService extends DatabaseService {
@@ -49,7 +50,6 @@ export class CloudbaseService extends DatabaseService {
 	private static userRole: string;
 	private static userName: string;
 	private _!: any;
-	private searchStreamService: any;
 	private tempUrlCache = new Map<string, string>();
 	private static _authReady$ = new ReplaySubject<boolean>(1);
 
@@ -79,6 +79,7 @@ export class CloudbaseService extends DatabaseService {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		@Inject(CLOUDBASE) private cloudbase: CloudbaseApp,
+		private searchStreamService: SearchStreamService,
 		private utilities: Utilities
 	) {
 		super();
@@ -194,24 +195,30 @@ export class CloudbaseService extends DatabaseService {
 		mapper: (docs: any[]) => T,
 		propagateErrors = false
 	): Observable<T> {
-		return CloudbaseService.authReady$.pipe(
-			take(1),
-			switchMap(
-				() =>
-					new Observable<T>((observer) => {
-						const watcher = this.database.collection(collectionName).watch({
-							onChange: (snapshot: any) => {
-								observer.next(mapper(snapshot.docs));
-							},
-							onError: (err: any) => {
-								LOG.error(this.className, `Error watching collection ${collectionName}`, err);
-								if (propagateErrors) observer.error(err);
-							}
-						});
-						return () => watcher.close();
-					})
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(
+					() =>
+						new Observable<T>((observer) => {
+							const watcher = this.database.collection(collectionName).watch({
+								onChange: (snapshot: any) => {
+									observer.next(mapper(snapshot.docs));
+								},
+								onError: (err: any) => {
+									LOG.error(
+										this.className,
+										`Error watching collection ${collectionName}`,
+										err
+									);
+									if (propagateErrors) observer.error(err);
+								}
+							});
+							return () => watcher.close();
+						})
+				)
 			)
-		).pipe(shareReplay(1));
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -517,7 +524,8 @@ export class CloudbaseService extends DatabaseService {
 	public async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
 		// Step 1 : Gather necessary info
 		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieItemVO.getMovieKey());
-		const oldRate = movieRef.exists() ? movieRef.get().rate : undefined;
+		const movieData = await movieRef.get();
+		const oldRate = movieData.data[0].rate;
 
 		try {
 			// Step 2 : Compare latest rate with the one stored in the database
@@ -1156,9 +1164,11 @@ export class CloudbaseService extends DatabaseService {
 			latestQuote: { text, author, timestamp },
 			totalQuotes: this._.inc(1)
 		});
-		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, { type: HISTORY_STATUS_ADDED, author, timestamp }).catch(
-			() => {}
-		);
+		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
+			type: HISTORY_STATUS_ADDED,
+			author,
+			timestamp
+		}).catch(() => {});
 	}
 
 	/**
@@ -1282,7 +1292,7 @@ export class CloudbaseService extends DatabaseService {
 		// Filter to link-type documents only (excludes category docs in the same collection)
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
-			(docs) => docs.filter((doc: any) => doc.type !== 'category').map((doc: any) => ({ ...doc })),
+			(docs) => docs.filter((doc: any) => doc.type !== USEFUL_LINK_TYPE_CATEGORY).map((doc: any) => ({ ...doc })),
 			true
 		);
 	}
@@ -1302,7 +1312,7 @@ export class CloudbaseService extends DatabaseService {
 		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
 		const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
 			...userId,
-			type: 'link',
+			type: USEFUL_LINK_TYPE_LINK,
 			...link
 		});
 		if (result.code) throw new Error(result.message);
@@ -1360,7 +1370,7 @@ export class CloudbaseService extends DatabaseService {
 		// Filter to category-type documents only (shares collection with links)
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
-			(docs) => docs.filter((doc: any) => doc.type === 'category').map((doc: any) => ({ ...doc })),
+			(docs) => docs.filter((doc: any) => doc.type === USEFUL_LINK_TYPE_CATEGORY).map((doc: any) => ({ ...doc })),
 			true
 		);
 	}
@@ -1374,7 +1384,7 @@ export class CloudbaseService extends DatabaseService {
 		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
 		const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
 			...userId,
-			type: 'category',
+			type: USEFUL_LINK_TYPE_CATEGORY,
 			...category
 		});
 		if (result.code) throw new Error(result.message);
@@ -1429,7 +1439,12 @@ export class CloudbaseService extends DatabaseService {
 		try {
 			const res = await fetch(`/api/fetch-url?url=${encodeURIComponent(url)}`);
 			if (res.ok && (res.headers.get('content-type') ?? '').includes('application/json')) {
-				const json = await res.json() as { success: boolean; content?: string; contentType?: string; error?: string };
+				const json = (await res.json()) as {
+					success: boolean;
+					content?: string;
+					contentType?: string;
+					error?: string;
+				};
 				if (json.success) {
 					return { content: json.content ?? '', contentType: json.contentType ?? '' };
 				}
@@ -1451,7 +1466,7 @@ export class CloudbaseService extends DatabaseService {
 			throw new Error(result?.result?.error ?? 'fetchUrl returned an error');
 		}
 		return {
-			content    : result.result.content     ?? '',
+			content: result.result.content ?? '',
 			contentType: result.result.contentType ?? ''
 		};
 	}

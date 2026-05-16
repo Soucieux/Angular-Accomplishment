@@ -47,7 +47,6 @@ import { MovieAlreadyExistsError } from '../../common/error/movie-already-exists
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DatabaseService } from '../../backend/database-service/database.service';
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { MovieFetchFailedError } from '../../common/error/movie-fetch-failed-error';
 @Component({
 	selector: 'entertainment',
@@ -92,8 +91,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		protected utilities: Utilities,
-		private searchStreamService: SearchStreamService,
-		private router: Router
+		private searchStreamService: SearchStreamService
 	) {}
 
 	/**
@@ -455,16 +453,31 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				}
 				await this.getMovieCoverImageByLink(movieCoverImageLink, movieItemVO);
 			}
-		} catch (error) {
-			if (error instanceof MovieFetchFailedError) {
-				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
+        } catch (error) {
+            // For search dialog, record it inside.
+			if (!retrieveOtherData && !retrieveYearAndTitle) {
+				if (error instanceof MovieFetchFailedError) {
+					this.searchStreamService.addSearchLog(
+						`❌ Fetch failed for ${movieItemVO.getMovieName()}. SKIPPING.`
+					);
+				} else {
+					this.searchStreamService.addSearchLog(
+						`❌ Unable to retrieve rate for ${movieItemVO.getMovieName()}. SKIPPING.`
+					);
+				}
+            } else {
+                // For other places, show the error dialog
+				if (error instanceof MovieFetchFailedError) {
+					this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
+				} else {
+					LOG.error(
+						this.className,
+						`Error while retrieving movie webpage for movie ${movieItemVO.getMovieName()}`,
+						error as Error
+					);
+					throw error;
+				}
 			}
-			LOG.error(
-				this.className,
-				`Error while retrieving movie webpage for movie ${movieItemVO.getMovieName()}`,
-				error as Error
-			);
-			throw error;
 		}
 	}
 
@@ -702,12 +715,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param message - The status message displayed inside the dialog.
 	 */
 	private openBlockDialog(callback: () => Promise<void>, message: string): Promise<void> {
-		return this.dialogService.openDialog(
-			this.dialogComponentContainer,
-			DIALOG_BLOCK,
-			callback,
-			message
-		);
+		return this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_BLOCK, callback, message);
 	}
 
 	/**
@@ -864,5 +872,4 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			}
 		}
 	}
-
 }

@@ -20,7 +20,7 @@ export class DoubanService {
 	 * @param movieName - The movie name to search for.
 	 * @returns An observable that emits the JSON response from Douban.
 	 */
-	searchMovieJSON(movieName: string): Observable<any> {
+	public searchMovieJSON(movieName: string): Observable<any> {
 		/*  	
         1.	With ng serve (Development Mode):
 	        •	Simulated SSR: 
@@ -73,7 +73,7 @@ export class DoubanService {
 	 * @param movieName - The movie name (used for logging).
 	 * @returns An observable that emits the image as a Blob.
 	 */
-	searchMovieCover(imageLink: string, movieName: string): Observable<any> {
+	public searchMovieCover(imageLink: string, movieName: string): Observable<any> {
 		return this.http
 			.get(`${this.getFirebaseFunctionUrl()}?url=${imageLink}&type=image`, {
 				responseType: 'blob'
@@ -98,7 +98,7 @@ export class DoubanService {
 	 * @param id - The Douban movie ID to fetch.
 	 * @returns An observable that emits the page HTML as a string.
 	 */
-	searchMovieByWebpage(id: number): Observable<any> {
+	public searchMovieByWebpage(id: number): Observable<any> {
 		return this.http
 			.get(`${this.getFirebaseFunctionUrl()}?url=${this.doubanBaseUrl}/subject/${id}&type=json`, {
 				responseType: 'text'
@@ -124,7 +124,7 @@ export class DoubanService {
 	 * @param id - The Douban movie ID to look up.
 	 * @returns An observable that emits the API response as a string (parsed to JSON by the caller).
 	 */
-	searchMovieByThirdPartyApi(id: number): Observable<any> {
+	public searchMovieByThirdPartyApi(id: number): Observable<any> {
 		return this.http
 			.get(`${this.getFirebaseFunctionUrl()}?url=https://api.wmdb.tv/movie/api?id=${id}&type=json`, {
 				responseType: 'text'

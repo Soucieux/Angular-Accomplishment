@@ -9,14 +9,46 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
-import { COMPONENT_DESTROY } from '../../common/app.constant';
+import {
+	COMPONENT_DESTROY,
+	NEXUS_CATEGORY_ALL,
+	NEXUS_DIALOG_TITLE_ADD_LINK,
+	NEXUS_DIALOG_TITLE_EDIT_LINK,
+	NEXUS_MSG_CATEGORY_ADDED,
+	NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL,
+	NEXUS_MSG_CATEGORY_DELETED,
+	NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL,
+	NEXUS_MSG_CATEGORY_UPDATED,
+	NEXUS_MSG_DELETE_FAILED,
+	NEXUS_MSG_EMPTY_QUERY,
+	NEXUS_MSG_EMPTY_QUERY_DETAIL,
+	NEXUS_MSG_HISTORY_CLEARED,
+	NEXUS_MSG_HISTORY_CLEARED_DETAIL,
+	NEXUS_MSG_LAUNCHED,
+	NEXUS_MSG_LINK_DELETE_FAILED_DETAIL,
+	NEXUS_MSG_LINK_DELETED,
+	NEXUS_MSG_LINK_SAVE_FAILED_DETAIL,
+	NEXUS_MSG_LINK_SAVED,
+	NEXUS_MSG_LINK_UPDATED,
+	NEXUS_MSG_MISSING_FIELDS,
+	NEXUS_MSG_MISSING_FIELDS_DETAIL,
+	NEXUS_MSG_NAME_REQUIRED,
+	NEXUS_MSG_NO_AI_SELECTED,
+	NEXUS_MSG_NO_AI_SELECTED_DETAIL,
+	NEXUS_MSG_SAVE_FAILED,
+	NEXUS_TOOL_TYPE_CLIPBOARD,
+	NEXUS_TOOL_TYPE_DIRECT,
+	TOAST_ERROR,
+	TOAST_INFO,
+	TOAST_SUCCESS,
+	TOAST_WARN
+} from '../../common/app.constant';
 
 /**
  * Safely extract an error message from any thrown value.
@@ -52,11 +84,10 @@ interface SearchHistoryEntry {
 @Component({
 	selector: 'nexus',
 	standalone: true,
-	imports: [CommonModule, FormsModule, ToastModule, DialogModule],
+	imports: [CommonModule, FormsModule, DialogModule],
 	templateUrl: './nexus.component.html',
 	styleUrl: './nexus.component.css',
-	changeDetection: ChangeDetectionStrategy.OnPush,
-	providers: [MessageService]
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NexusComponent implements OnInit, OnDestroy {
 	private readonly className = 'NexusComponent';
@@ -113,7 +144,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'ChatGPT',
 			logo: 'https://icon.horse/icon/chatgpt.com',
 			url: 'https://chatgpt.com/?q=',
-			type: 'direct',
+			type: NEXUS_TOOL_TYPE_DIRECT,
 			selected: false
 		},
 		{
@@ -121,7 +152,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'Perplexity',
 			logo: 'https://icon.horse/icon/perplexity.ai',
 			url: 'https://www.perplexity.ai/search?q=',
-			type: 'direct',
+			type: NEXUS_TOOL_TYPE_DIRECT,
 			selected: false
 		},
 		{
@@ -129,7 +160,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'Grok',
 			logo: 'https://icon.horse/icon/grok.com',
 			url: 'https://grok.com/?q=',
-			type: 'direct',
+			type: NEXUS_TOOL_TYPE_DIRECT,
 			selected: false
 		},
 		{
@@ -137,7 +168,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'Mistral',
 			logo: 'https://icon.horse/icon/mistral.ai',
 			url: 'https://chat.mistral.ai/chat?q=',
-			type: 'direct',
+			type: NEXUS_TOOL_TYPE_DIRECT,
 			selected: false
 		},
 		{
@@ -145,7 +176,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'You.com',
 			logo: 'https://icon.horse/icon/you.com',
 			url: 'https://you.com/search?fromSearchBar=true&tbm=youchat&q=',
-			type: 'direct',
+			type: NEXUS_TOOL_TYPE_DIRECT,
 			selected: false
 		}
 	];
@@ -156,7 +187,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'DeepSeek',
 			logo: 'https://icon.horse/icon/deepseek.com',
 			url: 'https://chat.deepseek.com',
-			type: 'clipboard',
+			type: NEXUS_TOOL_TYPE_CLIPBOARD,
 			selected: false
 		},
 		{
@@ -164,7 +195,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'Gemini',
 			logo: 'https://icon.horse/icon/gemini.google.com',
 			url: 'https://gemini.google.com/app',
-			type: 'clipboard',
+			type: NEXUS_TOOL_TYPE_CLIPBOARD,
 			selected: false
 		},
 		{
@@ -172,7 +203,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'KIMI',
 			logo: 'https://icon.horse/icon/kimi.com',
 			url: 'https://www.kimi.com/en',
-			type: 'clipboard',
+			type: NEXUS_TOOL_TYPE_CLIPBOARD,
 			selected: false
 		},
 		{
@@ -180,7 +211,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'Claude',
 			logo: 'https://icon.horse/icon/claude.ai',
 			url: 'https://claude.ai',
-			type: 'clipboard',
+			type: NEXUS_TOOL_TYPE_CLIPBOARD,
 			selected: false
 		},
 		{
@@ -188,7 +219,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			name: 'Meta AI',
 			logo: 'https://icon.horse/icon/meta.ai',
 			url: 'https://www.meta.ai',
-			type: 'clipboard',
+			type: NEXUS_TOOL_TYPE_CLIPBOARD,
 			selected: false
 		}
 	];
@@ -196,12 +227,12 @@ export class NexusComponent implements OnInit, OnDestroy {
 	// ── Links & Categories ────────────────────────────────────────
 	protected links: any[] = [];
 	protected categories: any[] = [];
-	protected activeCategory = 'all';
+	protected activeCategory = NEXUS_CATEGORY_ALL;
 	protected linkSearch = '';
 
 	// ── Add/Edit Link dialog ──────────────────────────────────────
 	protected showLinkDialog = false;
-	protected linkDialogTitle = 'Add Link';
+	protected linkDialogTitle = NEXUS_DIALOG_TITLE_ADD_LINK;
 	protected editingLink: any | null = null;
 	protected linkForm = { url: '', title: '', category: '' };
 	protected linkFaviconPreview = '';
@@ -222,7 +253,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private readonly cdr: ChangeDetectorRef,
-		private readonly messageService: MessageService,
+		private readonly dialogService: DialogService,
 		private readonly databaseService: DatabaseService
 	) {}
 
@@ -306,30 +337,18 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected onLaunch(): void {
 		const query = this.searchQuery.trim();
 		if (!query) {
-			this.messageService.add({
-				severity: 'warn',
-				summary: 'Empty query',
-				detail: 'Type something first'
-			});
+			this.dialogService.showToast(TOAST_WARN, NEXUS_MSG_EMPTY_QUERY, NEXUS_MSG_EMPTY_QUERY_DETAIL);
 			return;
 		}
 		const selectedDirect = this.directTools.filter((t) => t.selected);
 		if (selectedDirect.length === 0) {
-			this.messageService.add({
-				severity: 'warn',
-				summary: 'No AI selected',
-				detail: 'Select at least one Direct Query tool'
-			});
+			this.dialogService.showToast(TOAST_WARN, NEXUS_MSG_NO_AI_SELECTED, NEXUS_MSG_NO_AI_SELECTED_DETAIL);
 			return;
 		}
 		// Open direct-query tools with the query pre-filled in the URL
 		selectedDirect.forEach((t) => window.open(t.url + encodeURIComponent(query), '_blank'));
 		// Build summary toast
-		this.messageService.add({
-			severity: 'success',
-			summary: 'Launched',
-			detail: `Opened ${selectedDirect.map((t) => t.name).join(', ')}`
-		});
+		this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_LAUNCHED, `Opened ${selectedDirect.map((t) => t.name).join(', ')}`);
 		this.saveToHistory(
 			query,
 			selectedDirect.map((t) => t.id)
@@ -384,11 +403,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected clearHistory(): void {
 		this.history = [];
 		localStorage.removeItem(this.HISTORY_KEY);
-		this.messageService.add({
-			severity: 'info',
-			summary: 'History cleared',
-			detail: 'Search history has been removed'
-		});
+		this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_HISTORY_CLEARED, NEXUS_MSG_HISTORY_CLEARED_DETAIL);
 		this.cdr.markForCheck();
 	}
 
@@ -432,7 +447,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 */
 	protected get filteredLinks(): any[] {
 		return this.links.filter((link) => {
-			const matchesCategory = this.activeCategory === 'all' || link.category === this.activeCategory;
+			const matchesCategory = this.activeCategory === NEXUS_CATEGORY_ALL || link.category === this.activeCategory;
 			const matchesSearch =
 				!this.linkSearch.trim() || link.title.toLowerCase().includes(this.linkSearch.toLowerCase());
 			return matchesCategory && matchesSearch;
@@ -491,7 +506,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 * @returns The count of matching links.
 	 */
 	protected getLinkCount(categoryKey: string): number {
-		if (categoryKey === 'all') return this.links.length;
+		if (categoryKey === NEXUS_CATEGORY_ALL) return this.links.length;
 		return this.links.filter((l) => l.category === categoryKey).length;
 	}
 
@@ -500,11 +515,11 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 */
 	protected openAddLinkDialog(): void {
 		this.editingLink = null;
-		this.linkDialogTitle = 'Add Link';
+		this.linkDialogTitle = NEXUS_DIALOG_TITLE_ADD_LINK;
 		this.linkForm = {
 			url: '',
 			title: '',
-			category: this.activeCategory !== 'all' ? this.activeCategory : ''
+			category: this.activeCategory !== NEXUS_CATEGORY_ALL ? this.activeCategory : ''
 		};
 		this.linkFaviconPreview = '';
 		this.showLinkDialog = true;
@@ -519,7 +534,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected openEditLinkDialog(link: any, event: Event): void {
 		event.stopPropagation();
 		this.editingLink = link;
-		this.linkDialogTitle = 'Edit Link';
+		this.linkDialogTitle = NEXUS_DIALOG_TITLE_EDIT_LINK;
 		this.linkForm = { url: link.url, title: link.title, category: link.category ?? '' };
 		this.linkFaviconPreview = this.getFavicon(link.url);
 		this.showLinkDialog = true;
@@ -557,11 +572,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected async saveLinkDialog(): Promise<void> {
 		const { url, title, category } = this.linkForm;
 		if (!url.trim() || !title.trim() || !category) {
-			this.messageService.add({
-				severity: 'warn',
-				summary: 'Missing fields',
-				detail: 'URL, title, and category are required'
-			});
+			this.dialogService.showToast(TOAST_WARN, NEXUS_MSG_MISSING_FIELDS, NEXUS_MSG_MISSING_FIELDS_DETAIL);
 			return;
 		}
 		const finalUrl = this.normalizeUrl(url.trim());
@@ -573,7 +584,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 					category
 				});
 				LOG.info(this.className, `Link updated: ${finalUrl}`);
-				this.messageService.add({ severity: 'success', summary: 'Link updated' });
+				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_LINK_UPDATED);
 			} else {
 				await this.databaseService.addUsefulLink({
 					url: finalUrl,
@@ -583,16 +594,12 @@ export class NexusComponent implements OnInit, OnDestroy {
 					createdAt: new Date().toISOString()
 				});
 				LOG.info(this.className, `Link saved: ${finalUrl}`);
-				this.messageService.add({ severity: 'success', summary: 'Link saved' });
+				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_LINK_SAVED);
 			}
 			this.showLinkDialog = false;
 		} catch (err) {
 			LOG.error(this.className, 'Failed to save link', err as Error);
-			this.messageService.add({
-				severity: 'error',
-				summary: 'Save failed',
-				detail: 'Could not save the link. Please try again.'
-			});
+			this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_SAVE_FAILED, NEXUS_MSG_LINK_SAVE_FAILED_DETAIL);
 		}
 	}
 
@@ -609,15 +616,11 @@ export class NexusComponent implements OnInit, OnDestroy {
 			.removeUsefulLink(link._id)
 			.then(() => {
 				LOG.info(this.className, `Link deleted: ${link.title}`);
-				this.messageService.add({ severity: 'info', summary: 'Link deleted' });
+				this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_LINK_DELETED);
 			})
 			.catch((err: any) => {
 				LOG.error(this.className, `Failed to delete link: ${link.title}`, err as Error);
-				this.messageService.add({
-					severity: 'error',
-					summary: 'Delete failed',
-					detail: 'Could not delete the link. Please try again.'
-				});
+				this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_LINK_DELETE_FAILED_DETAIL);
 			});
 	}
 
@@ -649,7 +652,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected async saveCategoryDialog(): Promise<void> {
 		const { name, color } = this.categoryForm;
 		if (!name.trim()) {
-			this.messageService.add({ severity: 'warn', summary: 'Name required' });
+			this.dialogService.showToast(TOAST_WARN, NEXUS_MSG_NAME_REQUIRED);
 			return;
 		}
 		try {
@@ -659,7 +662,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 					color
 				});
 				LOG.info(this.className, `Category updated: ${name}`);
-				this.messageService.add({ severity: 'success', summary: 'Category updated' });
+				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_CATEGORY_UPDATED);
 			} else {
 				await this.databaseService.addLinkCategory({
 					name: name.trim(),
@@ -667,16 +670,12 @@ export class NexusComponent implements OnInit, OnDestroy {
 					order: this.categories.length
 				});
 				LOG.info(this.className, `Category added: ${name}`);
-				this.messageService.add({ severity: 'success', summary: 'Category added' });
+				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_CATEGORY_ADDED);
 			}
 			this.showCategoryDialog = false;
 		} catch (err) {
 			LOG.error(this.className, 'Failed to save category', err as Error);
-			this.messageService.add({
-				severity: 'error',
-				summary: 'Save failed',
-				detail: 'Could not save the category. Please try again.'
-			});
+			this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_SAVE_FAILED, NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL);
 		}
 	}
 
@@ -694,16 +693,12 @@ export class NexusComponent implements OnInit, OnDestroy {
 			.removeLinkCategory(category._id)
 			.then(() => {
 				LOG.info(this.className, `Category deleted: ${category.name}`);
-				this.messageService.add({ severity: 'info', summary: 'Category deleted' });
+				this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_CATEGORY_DELETED);
 				this.showCategoryDialog = false;
 			})
 			.catch((err: any) => {
 				LOG.error(this.className, `Failed to delete category: ${category.name}`, err as Error);
-				this.messageService.add({
-					severity: 'error',
-					summary: 'Delete failed',
-					detail: 'Could not delete the category. Please try again.'
-				});
+				this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL);
 			});
 	}
 }

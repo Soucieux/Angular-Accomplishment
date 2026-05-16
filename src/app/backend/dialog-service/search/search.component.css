@@ -27,34 +27,47 @@
 }
 
 ::ng-deep .dialog .p-dialog-footer {
-	padding: 14px 20px !important;
+	padding: 0 24px !important;
+	height: 50px !important;
 	background: rgba(248, 245, 252, 0.9) !important;
 	border-top: 1px solid rgba(102, 126, 234, 0.12) !important;
 	border-radius: 0 0 20px 20px !important;
 	display: flex !important;
+	align-items: center !important;
 	justify-content: flex-end !important;
-	position: relative !important;
-	right: 0 !important;
-	bottom: 0 !important;
+	gap: 8px !important;
+}
+
+
+/* Shared button sizing — matches add dialog footer buttons */
+::ng-deep .dialog .p-dialog-footer .p-button {
+	height: 32px !important;
+	padding: 0 14px !important;
+	font-size: 13px !important;
+	border-radius: 9px !important;
 }
 
 /* DONE button */
 ::ng-deep .dialog .p-dialog-footer .submit-button .p-button[severity='success'] {
 	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
 	border: none !important;
-	border-radius: 10px !important;
+	border-radius: 9px !important;
 	color: rgba(0, 40, 20, 0.9) !important;
-	font-weight: 700 !important;
-	padding: 8px 28px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	height: 32px !important;
+	padding: 0 14px !important;
 }
 
 /* STOP button */
 ::ng-deep .dialog .p-dialog-footer .submit-button .p-button[severity='danger'] {
 	background: linear-gradient(135deg, #d53369 0%, #ef5350 100%) !important;
 	border: none !important;
-	border-radius: 10px !important;
-	font-weight: 700 !important;
-	padding: 8px 28px !important;
+	border-radius: 9px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	height: 32px !important;
+	padding: 0 14px !important;
 }
 
 .logs {

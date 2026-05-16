@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 import { ErrorDialogComponent } from './error/error.component';
 import { BlockDialogComponent } from './block/block.component';
 import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY, MSG_PERMISSION_DENIED, MSG_UNEXPECTED_ERROR, SEARCH } from '../../common/app.constant';
+import { MessageService } from 'primeng/api';
 @Injectable({
 	providedIn: 'root'
 })
@@ -16,7 +17,7 @@ export class DialogService {
 	private readonly className = 'DialogService';
 	private openedDialogs = new Map<string, ComponentRef<any>>();
 
-	constructor() {}
+	constructor(private messageService: MessageService) {}
 
 	/**
 	 * Get the dialog component based on the dialog type
@@ -161,5 +162,16 @@ export class DialogService {
 	 */
 	public showUnexpectedError(container: ViewContainerRef) {
 		this.openDialog(container, DIALOG_ERROR, MSG_UNEXPECTED_ERROR);
+	}
+
+	/**
+	 * Show a PrimeNG toast notification.
+	 *
+	 * @param severity - Visual style: 'success' | 'info' | 'warn' | 'error'.
+	 * @param summary - Short title shown in the toast.
+	 * @param detail - Optional longer message shown below the title.
+	 */
+	public showToast(severity: 'success' | 'info' | 'warn' | 'error', summary: string, detail?: string) {
+		this.messageService.add({ severity, summary, detail });
 	}
 }

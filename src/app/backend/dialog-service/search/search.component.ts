@@ -1,5 +1,5 @@
 import { SearchStreamService } from './search-stream.service';
-import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
@@ -20,7 +20,10 @@ export class SearchDialogComponent {
 	protected searchLogs: string[] = [];
 	private searchLogsSub!: Subscription;
 
-	constructor(private searchStreamService: SearchStreamService) {}
+	constructor(
+		private searchStreamService: SearchStreamService,
+		private cdr: ChangeDetectorRef
+	) {}
 
 	/**
 	 * Open the search dialog and subscribe to the search log stream.
@@ -39,6 +42,8 @@ export class SearchDialogComponent {
 			if (lastLog === SEARCH_COMPELTE || lastLog === SEARCH_CANCEL) {
 				this.searchCompleteOrInterrupted = true;
 			}
+
+			this.cdr.markForCheck();
 
 			setTimeout(() => {
 				const element = this.logContainer?.nativeElement;

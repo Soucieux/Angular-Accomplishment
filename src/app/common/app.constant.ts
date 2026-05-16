@@ -110,5 +110,53 @@ export const MSG_PERMISSION_DENIED = 'User does not have permission';
 /** User-facing message shown when an unhandled exception occurs. */
 export const MSG_UNEXPECTED_ERROR = 'Unexpected error occurred';
 
+// ── Useful links — type discriminators ────────────────────────────────────
+/** Type value for a link document in the useful_links collection. */
+export const USEFUL_LINK_TYPE_LINK = 'link';
+/** Type value for a category document in the useful_links collection. */
+export const USEFUL_LINK_TYPE_CATEGORY = 'category';
+
+// ── Nexus — AI tool types ──────────────────────────────────────────────────
+/** AI tool type that opens the query URL directly in a new tab. */
+export const NEXUS_TOOL_TYPE_DIRECT = 'direct';
+/** AI tool type that copies the query to the clipboard and opens the tool. */
+export const NEXUS_TOOL_TYPE_CLIPBOARD = 'clipboard';
+/** Sentinel value for the "show all categories" filter in the Nexus links panel. */
+export const NEXUS_CATEGORY_ALL = 'all';
+/** Dialog title when adding a new link. */
+export const NEXUS_DIALOG_TITLE_ADD_LINK = 'Add Link';
+/** Dialog title when editing an existing link. */
+export const NEXUS_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
+
+// ── Toast severities ───────────────────────────────────────────────────────
+export const TOAST_SUCCESS = 'success';
+export const TOAST_INFO = 'info';
+export const TOAST_WARN = 'warn';
+export const TOAST_ERROR = 'error';
+
+// ── Nexus — toast messages ─────────────────────────────────────────────────
+export const NEXUS_MSG_EMPTY_QUERY = 'Empty query';
+export const NEXUS_MSG_EMPTY_QUERY_DETAIL = 'Type something first';
+export const NEXUS_MSG_NO_AI_SELECTED = 'No AI selected';
+export const NEXUS_MSG_NO_AI_SELECTED_DETAIL = 'Select at least one Direct Query tool';
+export const NEXUS_MSG_LAUNCHED = 'Launched';
+export const NEXUS_MSG_HISTORY_CLEARED = 'History cleared';
+export const NEXUS_MSG_HISTORY_CLEARED_DETAIL = 'Search history has been removed';
+export const NEXUS_MSG_MISSING_FIELDS = 'Missing fields';
+export const NEXUS_MSG_MISSING_FIELDS_DETAIL = 'URL, title, and category are required';
+export const NEXUS_MSG_LINK_UPDATED = 'Link updated';
+export const NEXUS_MSG_LINK_SAVED = 'Link saved';
+export const NEXUS_MSG_SAVE_FAILED = 'Save failed';
+export const NEXUS_MSG_LINK_SAVE_FAILED_DETAIL = 'Could not save the link. Please try again.';
+export const NEXUS_MSG_LINK_DELETED = 'Link deleted';
+export const NEXUS_MSG_DELETE_FAILED = 'Delete failed';
+export const NEXUS_MSG_LINK_DELETE_FAILED_DETAIL = 'Could not delete the link. Please try again.';
+export const NEXUS_MSG_NAME_REQUIRED = 'Name required';
+export const NEXUS_MSG_CATEGORY_UPDATED = 'Category updated';
+export const NEXUS_MSG_CATEGORY_ADDED = 'Category added';
+export const NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL = 'Could not save the category. Please try again.';
+export const NEXUS_MSG_CATEGORY_DELETED = 'Category deleted';
+export const NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL = 'Could not delete the category. Please try again.';
+
 // ── Errors ─────────────────────────────────────────────────────────────────
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';

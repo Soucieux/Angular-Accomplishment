@@ -1,6 +1,5 @@
 import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { ConfirmationService } from 'primeng/api';
-import { Utilities } from '../../../common/app.utilities';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({

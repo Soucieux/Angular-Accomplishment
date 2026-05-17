@@ -40,7 +40,6 @@ import {
 	BadgeTag,
 	EditorIngredient,
 	EditorStep,
-	EditorSubpoint,
 	Ingredient,
 	IngredientGroup,
 	IngredientType,

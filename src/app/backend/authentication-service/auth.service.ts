@@ -15,7 +15,6 @@ import { CloudbaseService } from '../database-service/cloudbase/cloudbase.servic
 import { Utilities } from '../../common/app.utilities';
 import { CN } from '../../common/app.constant';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
-import { WrongParametersError } from '../../common/error/wrong-parameters.error';
 import { wrongVerificationCodeError } from '../../common/error/wrong-verification-code';
 
 @Injectable({

@@ -1,4 +1,9 @@
 import {
+	RECIPE_CATEGORY_ALL,
+	RECIPE_CATEGORY_CHINESE,
+	RECIPE_CATEGORY_DESSERT,
+	RECIPE_CATEGORY_QUICK,
+	RECIPE_CATEGORY_WESTERN,
 	RECIPE_ITYPE_CONDIMENT,
 	RECIPE_ITYPE_DAIRY,
 	RECIPE_ITYPE_EGG,
@@ -124,3 +129,39 @@ export interface EditorStep {
 	text: string;
 	subs: EditorSubpoint[];
 }
+
+/** A grouped view of editor ingredients, ordered by MASTER_TYPE_TABS. */
+export interface EditorGroup {
+	type: IngredientType;
+	emoji: string;
+	label: string;
+	items: EditorIngredient[];
+}
+
+/** All category options used by the list-view filter chips (includes "All"). */
+export const RECIPE_CATEGORIES: string[] = [
+	RECIPE_CATEGORY_ALL,
+	RECIPE_CATEGORY_CHINESE,
+	RECIPE_CATEGORY_WESTERN,
+	RECIPE_CATEGORY_QUICK,
+	RECIPE_CATEGORY_DESSERT,
+];
+
+/** Category options available in the recipe editor dropdown (excludes "All"). */
+export const RECIPE_EDITOR_CATEGORIES: string[] = [
+	RECIPE_CATEGORY_CHINESE,
+	RECIPE_CATEGORY_WESTERN,
+	RECIPE_CATEGORY_QUICK,
+	RECIPE_CATEGORY_DESSERT,
+];
+
+/** The 7 ingredient types active in the editor by default when creating a new recipe. */
+export const RECIPE_EDITOR_DEFAULT_TYPES: IngredientType[] = [
+	RECIPE_ITYPE_VEG,
+	RECIPE_ITYPE_MEAT,
+	RECIPE_ITYPE_SEAS,
+	RECIPE_ITYPE_DAIRY,
+	RECIPE_ITYPE_GRAIN,
+	RECIPE_ITYPE_LIQ,
+	RECIPE_ITYPE_SPICE,
+];

@@ -11,7 +11,7 @@ import { BlockDialogComponent } from './block/block.component';
 import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY, DIALOG_RECIPE_TYPE, MSG_PERMISSION_DENIED, MSG_UNEXPECTED_ERROR, SEARCH } from '../../common/app.constant';
 import { MessageService } from 'primeng/api';
 import { RecipeTypeDialogComponent } from './recipe-type/recipe-type.component';
-import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.types';
+import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
 @Injectable({
 	providedIn: 'root'
 })

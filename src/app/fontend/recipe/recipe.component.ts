@@ -22,12 +22,21 @@ import {
 	RECIPE_CATEGORY_DESSERT,
 	RECIPE_CATEGORY_QUICK,
 	RECIPE_CATEGORY_WESTERN,
+	RECIPE_BAND_CHINESE,
+	RECIPE_BAND_DESSERT,
+	RECIPE_BAND_QUICK,
+	RECIPE_BAND_SPICY,
+	RECIPE_BAND_WESTERN,
 	RECIPE_DELETE_BTN,
 	RECIPE_DELETE_MESSAGE,
 	RECIPE_DELETE_TITLE,
 	RECIPE_DISCARD_BTN,
 	RECIPE_DISCARD_MESSAGE,
 	RECIPE_DISCARD_TITLE,
+	RECIPE_DROP_ABOVE,
+	RECIPE_DROP_BELOW,
+	RECIPE_EDITING_MODE_CREATE,
+	RECIPE_EDITING_MODE_EDIT,
 	RECIPE_ITYPE_DAIRY,
 	RECIPE_ITYPE_GRAIN,
 	RECIPE_ITYPE_LIQ,
@@ -41,17 +50,21 @@ import {
 } from '../../common/app.constant';
 import {
 	BadgeTag,
+	EditorGroup,
 	EditorIngredient,
 	EditorStep,
 	Ingredient,
 	IngredientGroup,
 	IngredientType,
 	MASTER_TYPE_TABS,
+	RECIPE_CATEGORIES,
+	RECIPE_EDITOR_CATEGORIES,
+	RECIPE_EDITOR_DEFAULT_TYPES,
 	Recipe,
 	RecipeStep,
 	StepToken,
 	TypeTab
-} from './recipe.types';
+} from './recipe.model';
 
 /**
  * Generate a short random alphanumeric ID suitable for use as a
@@ -86,20 +99,8 @@ export class RecipeComponent implements AfterViewChecked {
 	protected readonly VIEW_ADD = RECIPE_VIEW_ADD;
 	protected readonly CAT_ALL = RECIPE_CATEGORY_ALL;
 	protected readonly MASTER_TYPE_TABS = MASTER_TYPE_TABS;
-
-	protected readonly categories: string[] = [
-		RECIPE_CATEGORY_ALL,
-		RECIPE_CATEGORY_CHINESE,
-		RECIPE_CATEGORY_WESTERN,
-		RECIPE_CATEGORY_QUICK,
-		RECIPE_CATEGORY_DESSERT
-	];
-	protected readonly editorCategories: string[] = [
-		RECIPE_CATEGORY_CHINESE,
-		RECIPE_CATEGORY_WESTERN,
-		RECIPE_CATEGORY_QUICK,
-		RECIPE_CATEGORY_DESSERT
-	];
+	protected readonly categories = RECIPE_CATEGORIES;
+	protected readonly editorCategories = RECIPE_EDITOR_CATEGORIES;
 
 	protected currentView: string = RECIPE_VIEW_LIST;
 	protected searchQuery = '';
@@ -110,10 +111,7 @@ export class RecipeComponent implements AfterViewChecked {
 	protected ingredientsCollapsed = false;
 
 	// ── Editor type-tab management ──────────────────────────────────
-	protected activeTypeIds = new Set<IngredientType>([
-		RECIPE_ITYPE_VEG, RECIPE_ITYPE_MEAT, RECIPE_ITYPE_SEAS,
-		RECIPE_ITYPE_DAIRY, RECIPE_ITYPE_GRAIN, RECIPE_ITYPE_LIQ, RECIPE_ITYPE_SPICE
-	]);
+	protected activeTypeIds = new Set<IngredientType>(RECIPE_EDITOR_DEFAULT_TYPES);
 
 	// ── Editor state ────────────────────────────────────────────────
 	protected editorName = '';
@@ -126,7 +124,7 @@ export class RecipeComponent implements AfterViewChecked {
 	protected editorSteps: EditorStep[] = [];
 	protected editorNameInvalid = false;
 	protected editorCategoryInvalid = false;
-	protected editingMode: 'create' | 'edit' = 'create';
+	protected editingMode: 'create' | 'edit' = RECIPE_EDITING_MODE_CREATE;
 	private editingRecipeId: string | null = null;
 	private draggingStepId: string | null = null;
 	protected dropTargetStepId: string | null = null;
@@ -138,7 +136,7 @@ export class RecipeComponent implements AfterViewChecked {
 			name: 'Garlic Beef Stir-Fry',
 			detailName: 'Garlic Beef Stir-Fry with Broccoli',
 			category: RECIPE_CATEGORY_CHINESE,
-			bandClass: 'band-chinese',
+			bandClass: RECIPE_BAND_CHINESE,
 			cookTimeMin: 40,
 			baseServings: 2,
 			badges: [
@@ -186,9 +184,7 @@ export class RecipeComponent implements AfterViewChecked {
 					type: RECIPE_ITYPE_SPICE,
 					emoji: '🌶️',
 					label: 'Spice',
-					items: [
-						{ name: 'Chili flakes', baseQty: 1, unit: 'tsp', hidden: true }
-					]
+					items: [{ name: 'Chili flakes', baseQty: 1, unit: 'tsp', hidden: true }]
 				}
 			],
 			steps: [
@@ -245,9 +241,7 @@ export class RecipeComponent implements AfterViewChecked {
 						{ kind: 'pill', text: 'ginger', pillType: RECIPE_ITYPE_VEG },
 						{ kind: 'text', text: '. Stir-fry 30 seconds until fragrant.' }
 					],
-					substeps: [
-						'Lower the heat slightly so the aromatics don’t burn before the next step.'
-					],
+					substeps: ['Lower the heat slightly so the aromatics don’t burn before the next step.'],
 					done: false
 				},
 				{
@@ -281,7 +275,7 @@ export class RecipeComponent implements AfterViewChecked {
 			name: 'Creamy Pasta Carbonara',
 			detailName: 'Creamy Pasta Carbonara',
 			category: RECIPE_CATEGORY_WESTERN,
-			bandClass: 'band-western',
+			bandClass: RECIPE_BAND_WESTERN,
 			cookTimeMin: 25,
 			baseServings: 2,
 			badges: [
@@ -298,7 +292,7 @@ export class RecipeComponent implements AfterViewChecked {
 			name: 'Spicy Tofu Hotpot',
 			detailName: 'Spicy Tofu Hotpot',
 			category: RECIPE_CATEGORY_CHINESE,
-			bandClass: 'band-spicy',
+			bandClass: RECIPE_BAND_SPICY,
 			cookTimeMin: 55,
 			baseServings: 4,
 			badges: [
@@ -329,7 +323,9 @@ export class RecipeComponent implements AfterViewChecked {
 		this.attachAutoHide(this.stepsScrollEl?.nativeElement);
 		this.attachAutoHide(this.ingredientsScrollEl?.nativeElement);
 		document.querySelectorAll<HTMLElement>('.editor-body').forEach((el) => this.attachAutoHide(el));
-		document.querySelectorAll<HTMLElement>('.container-recipe > .view').forEach((el) => this.attachAutoHide(el));
+		document
+			.querySelectorAll<HTMLElement>('.container-recipe > .view')
+			.forEach((el) => this.attachAutoHide(el));
 	}
 
 	/**
@@ -389,7 +385,8 @@ export class RecipeComponent implements AfterViewChecked {
 	protected get filteredRecipes(): Recipe[] {
 		const q = this.searchQuery.trim().toLowerCase();
 		return this.recipes.filter((r) => {
-			const matchCat = this.activeCategory === RECIPE_CATEGORY_ALL || r.category === this.activeCategory;
+			const matchCat =
+				this.activeCategory === RECIPE_CATEGORY_ALL || r.category === this.activeCategory;
 			const matchQ = !q || r.name.toLowerCase().includes(q);
 			return matchCat && matchQ;
 		});
@@ -463,7 +460,8 @@ export class RecipeComponent implements AfterViewChecked {
 	protected formatQty(base: number, unit: string): string {
 		if (!this.activeRecipe) return '';
 		const scaled = base * (this.servings / this.activeRecipe.baseServings);
-		const rounded = scaled === Math.round(scaled) ? String(scaled) : scaled.toFixed(1).replace(/\.0$/, '');
+		const rounded =
+			scaled === Math.round(scaled) ? String(scaled) : scaled.toFixed(1).replace(/\.0$/, '');
 		return unit ? `${rounded} ${unit}` : rounded;
 	}
 
@@ -541,7 +539,7 @@ export class RecipeComponent implements AfterViewChecked {
 	 * default blank state before navigating to the add-recipe view.
 	 */
 	protected openAddView(): void {
-		this.editingMode = 'create';
+		this.editingMode = RECIPE_EDITING_MODE_CREATE;
 		this.editingRecipeId = null;
 		this.resetEditor();
 		this.transitionTo(RECIPE_VIEW_ADD);
@@ -554,7 +552,7 @@ export class RecipeComponent implements AfterViewChecked {
 	 */
 	protected openEditView(): void {
 		if (!this.activeRecipe) return;
-		this.editingMode = 'edit';
+		this.editingMode = RECIPE_EDITING_MODE_EDIT;
 		this.editingRecipeId = this.activeRecipe.id;
 		this.loadRecipeIntoEditor(this.activeRecipe);
 		this.transitionTo(RECIPE_VIEW_ADD);
@@ -589,9 +587,7 @@ export class RecipeComponent implements AfterViewChecked {
 		// Active type tab defaults to the first group present, or veg if empty
 		this.editorActiveType = recipe.groups[0]?.type ?? RECIPE_ITYPE_VEG;
 		if (this.editorIngredients.length === 0) {
-			this.editorIngredients = [
-				{ id: makeId(), type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }
-			];
+			this.editorIngredients = [{ id: makeId(), type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }];
 		}
 
 		this.editorSteps = recipe.steps.map((s) => ({
@@ -695,7 +691,7 @@ export class RecipeComponent implements AfterViewChecked {
 	 *
 	 * @returns An array of grouped ingredient objects for the editor summary view.
 	 */
-	protected get editorGroupedIngredients(): { type: IngredientType; emoji: string; label: string; items: EditorIngredient[] }[] {
+	protected get editorGroupedIngredients(): EditorGroup[] {
 		return MASTER_TYPE_TABS.flatMap((tab) => {
 			const items = this.editorIngredients.filter((i) => i.type === tab.id);
 			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: tab.label, items }];
@@ -820,9 +816,7 @@ export class RecipeComponent implements AfterViewChecked {
 					baseQty: Number(i.qty) || 0,
 					unit: i.unit.trim()
 				}));
-			return items.length === 0
-				? []
-				: [{ type: tab.id, emoji: tab.emoji, label: tab.label, items }];
+			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: tab.label, items }];
 		});
 
 		const steps: RecipeStep[] = this.editorSteps
@@ -834,12 +828,11 @@ export class RecipeComponent implements AfterViewChecked {
 			}));
 
 		const presentTypes = new Set(validIngredients.map((i) => i.type));
-		const badges: BadgeTag[] = MASTER_TYPE_TABS
-			.filter((t) => presentTypes.has(t.id))
+		const badges: BadgeTag[] = MASTER_TYPE_TABS.filter((t) => presentTypes.has(t.id))
 			.slice(0, 3)
 			.map((t) => ({ type: t.id, emoji: t.emoji, label: t.label }));
 
-		const isEdit = this.editingMode === 'edit' && !!this.editingRecipeId;
+		const isEdit = this.editingMode === RECIPE_EDITING_MODE_EDIT && !!this.editingRecipeId;
 		const recipe: Recipe = {
 			id: isEdit ? this.editingRecipeId! : makeId(),
 			name: this.editorName.trim(),
@@ -918,14 +911,14 @@ export class RecipeComponent implements AfterViewChecked {
 	private bandClassForCategory(cat: string): string {
 		switch (cat) {
 			case RECIPE_CATEGORY_WESTERN:
-				return 'band-western';
+				return RECIPE_BAND_WESTERN;
 			case RECIPE_CATEGORY_QUICK:
-				return 'band-quick';
+				return RECIPE_BAND_QUICK;
 			case RECIPE_CATEGORY_DESSERT:
-				return 'band-dessert';
+				return RECIPE_BAND_DESSERT;
 			case RECIPE_CATEGORY_CHINESE:
 			default:
-				return 'band-chinese';
+				return RECIPE_BAND_CHINESE;
 		}
 	}
 
@@ -967,7 +960,7 @@ export class RecipeComponent implements AfterViewChecked {
 		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
 		const before = event.clientY - rect.top < rect.height / 2;
 		this.dropTargetStepId = step.id;
-		this.dropPosition = before ? 'above' : 'below';
+		this.dropPosition = before ? RECIPE_DROP_ABOVE : RECIPE_DROP_BELOW;
 	}
 
 	/**

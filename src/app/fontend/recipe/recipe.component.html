@@ -192,7 +192,12 @@
 					Recipes
 				</button>
 				<div class="editor-actions">
-					<button class="btn btn-secondary" (click)="cancelAdd()">Cancel</button>
+					@if (editingMode === 'edit') {
+						<button class="btn btn-danger" (click)="removeCurrentRecipe()">
+							<span class="material-symbols-outlined">delete</span>
+							Delete
+						</button>
+					}
 					<button class="btn btn-primary" (click)="saveRecipe()">
 						<span class="material-symbols-outlined">save</span>
 						{{ editingMode === 'edit' ? 'Save Changes' : 'Save Recipe' }}

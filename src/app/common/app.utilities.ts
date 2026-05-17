@@ -153,6 +153,18 @@ export class Utilities {
 		return string ? string.trim().charAt(0).toUpperCase() + string.slice(1) : '';
 	}
 
+	/**
+	 * Checks whether the given text contains any Chinese characters within the
+	 * CJK Unified Ideographs range (U+4E00 to U+9FA5). Used to switch fonts or
+	 * layout when text is mixed-script.
+	 *
+	 * @param text - The text string to check.
+	 * @returns True if the text contains at least one Chinese character.
+	 */
+	public checkIfChinese(text: string | null | undefined): boolean {
+		return !!text && /[一-龥]/.test(text);
+	}
+
 	////////////////////////////// Below are static methods //////////////////////////////
 	/**
 	 * Get the current country code

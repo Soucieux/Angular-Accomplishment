@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Observable, ReplaySubject } from 'rxjs';
 import { shareReplay, switchMap, take, filter } from 'rxjs/operators';
-import { MovieItemVO } from '../../../common/movieitem.vo';
+import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
 import { LOG } from '../../../common/app.logs';
 import { Utilities } from '../../../common/app.utilities';

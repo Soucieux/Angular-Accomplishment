@@ -1,0 +1,145 @@
+/* ── PrimeNG dialog shell ────────────────────────────────────────── */
+::ng-deep .itype-dialog .p-dialog-content {
+	padding: 18px 24px 8px;
+}
+::ng-deep .itype-dialog .p-dialog-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	padding: 14px 24px 16px;
+}
+::ng-deep .itype-dialog .dialog-cancel-btn,
+::ng-deep .itype-dialog .dialog-save-btn {
+	font: inherit;
+	font-size: 13px;
+	font-weight: 500;
+	padding: 8px 18px;
+	border-radius: 999px;
+	cursor: pointer;
+	border: 1px solid transparent;
+}
+::ng-deep .itype-dialog .dialog-cancel-btn {
+	background: #fff;
+	color: #d53369;
+	border-color: rgba(213, 51, 105, 0.28);
+}
+::ng-deep .itype-dialog .dialog-cancel-btn:hover {
+	background: rgba(213, 51, 105, 0.06);
+}
+::ng-deep .itype-dialog .dialog-save-btn {
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	color: #fff;
+	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
+}
+::ng-deep .itype-dialog .dialog-save-btn:hover {
+	transform: translateY(-1px);
+}
+
+/* ── Template-owned elements ────────────────────────────────────── */
+.itype-body {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.itype-counter {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	align-self: flex-start;
+	background: #faf6ef;
+	border: 1px solid rgba(0, 0, 0, 0.06);
+	color: rgba(30, 15, 35, 0.6);
+	font-size: 12px;
+	padding: 5px 12px;
+	border-radius: 999px;
+}
+.itype-counter.at-cap {
+	background: #fff4d4;
+	color: #7a5500;
+	border-color: #f0d68a;
+}
+.itype-counter .material-symbols-outlined {
+	font-size: 14px;
+}
+
+.itype-hint {
+	font-size: 13px;
+	color: rgba(30, 15, 35, 0.55);
+	margin: 0;
+	line-height: 1.5;
+}
+
+.itype-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	gap: 10px;
+}
+
+.itype-card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	padding: 14px 10px 12px;
+	border-radius: 14px;
+	border: 2px solid transparent;
+	background: #f8f5f2;
+	cursor: pointer;
+	font: inherit;
+	transition:
+		transform 0.15s ease,
+		border-color 0.2s ease,
+		box-shadow 0.2s ease,
+		background 0.2s ease;
+}
+.itype-card:hover:not([disabled]) {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+.itype-card.selected {
+	border-color: currentColor;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+.itype-card.at-cap {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.itype-card.veg       { background: #d4f5d4; color: #2d6a2d; }
+.itype-card.meat      { background: #fde8e8; color: #8b2020; }
+.itype-card.seas      { background: #fff4d4; color: #7a5500; }
+.itype-card.dairy     { background: #fff8ec; color: #7a4f00; }
+.itype-card.grain     { background: #fef3e2; color: #7a5800; }
+.itype-card.liq       { background: #e3f0ff; color: #1a4a7a; }
+.itype-card.spice     { background: #fde8d4; color: #7a2800; }
+.itype-card.seafood   { background: #cce8f5; color: #0a4a6a; }
+.itype-card.egg       { background: #fef8d4; color: #7a5e00; }
+.itype-card.nut       { background: #f5e8d8; color: #6b3800; }
+.itype-card.fruit     { background: #fdd8d8; color: #7a1010; }
+.itype-card.oil       { background: #fef0d4; color: #7a4a00; }
+.itype-card.herb      { background: #e0f5d8; color: #285a18; }
+.itype-card.fungi     { background: #f0d4f5; color: #581a78; }
+.itype-card.sweet     { background: #fde8ef; color: #7a1040; }
+.itype-card.condiment { background: #f5ddd4; color: #7a2400; }
+
+.itype-emoji {
+	font-size: 28px;
+	line-height: 1;
+}
+.itype-label {
+	font-size: 11.5px;
+	font-weight: 600;
+	letter-spacing: 0.4px;
+	text-align: center;
+	line-height: 1.3;
+}
+.itype-check {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	font-size: 16px;
+	color: currentColor;
+	opacity: 0.85;
+}

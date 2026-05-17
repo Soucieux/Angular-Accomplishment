@@ -55,7 +55,7 @@ import { DatabaseService } from '../../backend/database-service/database.service
 		CheckboxModule
 	],
 	templateUrl: './patch.component.html',
-	styleUrls: ['../../common/page-card.css', './patch.component.css']
+	styleUrls: ['../../common/page.card.css', './patch.component.css']
 })
 export class PatchComponent implements OnInit, OnDestroy {
 	private readonly className = 'PatchComponent';

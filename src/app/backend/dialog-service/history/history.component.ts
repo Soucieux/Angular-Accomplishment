@@ -1,5 +1,5 @@
 import { Component, OnDestroy, Output, EventEmitter, ViewChild, ViewContainerRef } from '@angular/core';
-import { MovieItemVO } from '../../../common/movieitem.vo';
+import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { DialogModule } from 'primeng/dialog';
 import { CommonModule } from '@angular/common';
 import { DividerModule } from 'primeng/divider';

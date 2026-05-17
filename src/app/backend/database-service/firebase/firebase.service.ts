@@ -36,7 +36,7 @@ import {
 	push
 } from '@angular/fire/database';
 import { Observable, map, of } from 'rxjs';
-import { MovieItemVO } from '../../../common/movieitem.vo';
+import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { DatabaseService } from '../database.service';
 
 @Injectable({

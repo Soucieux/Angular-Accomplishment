@@ -252,7 +252,7 @@
 }
 .btn-primary {
 	color: #fff;
-	background: linear-gradient(135deg, var(--rose) 0%, #e25a83 100%);
+	background: linear-gradient(135deg, var(--rose) 0%, var(--gold) 100%);
 	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
 }
 .btn-primary:hover {
@@ -287,7 +287,7 @@
 	color: var(--rose);
 }
 .chip.active {
-	background: linear-gradient(135deg, var(--rose) 0%, #e25a83 100%);
+	background: linear-gradient(135deg, var(--rose) 0%, var(--gold) 100%);
 	color: #fff;
 	border-color: transparent;
 	box-shadow: 0 4px 12px rgba(213, 51, 105, 0.25);
@@ -1024,7 +1024,7 @@
 	color: #fff;
 	font-weight: 600;
 	font-size: 13px;
-	background: linear-gradient(135deg, var(--rose) 0%, #e25a83 100%);
+	background: linear-gradient(135deg, var(--rose) 0%, var(--gold) 100%);
 	box-shadow: 0 4px 10px rgba(213, 51, 105, 0.28);
 	margin-top: 1px;
 }
@@ -1130,7 +1130,7 @@
 	font-size: 16px;
 	line-height: 28px;
 	color: #3a2a1a;
-	min-height: 168px;
+	min-height: 280px;
 }
 .notepad::before {
 	content: '';
@@ -1891,7 +1891,7 @@
 }
 .editor-notepad {
 	width: 100%;
-	min-height: 168px;
+	min-height: 280px;
 	border: 1px solid rgba(218, 174, 81, 0.3);
 	background:
 		repeating-linear-gradient(
@@ -1914,383 +1914,6 @@
 .editor-notepad::placeholder {
 	color: rgba(122, 87, 30, 0.45);
 	font-style: italic;
-}
-
-/* ── Visibility dialog (appended to body, needs ::ng-deep to reach) ─── */
-::ng-deep .visibility-dialog .p-dialog-content {
-	padding: 18px 24px 8px;
-}
-::ng-deep .visibility-dialog .p-dialog-footer {
-	display: flex;
-	justify-content: flex-end;
-	gap: 10px;
-	padding: 14px 24px 16px;
-}
-::ng-deep .visibility-dialog .dialog-cancel-btn,
-::ng-deep .visibility-dialog .dialog-save-btn {
-	font: inherit;
-	font-size: 13px;
-	font-weight: 500;
-	padding: 8px 18px;
-	border-radius: 999px;
-	cursor: pointer;
-	border: 1px solid transparent;
-}
-::ng-deep .visibility-dialog .dialog-cancel-btn {
-	background: #fff;
-	color: #d53369;
-	border-color: rgba(213, 51, 105, 0.28);
-}
-::ng-deep .visibility-dialog .dialog-cancel-btn:hover {
-	background: rgba(213, 51, 105, 0.06);
-}
-::ng-deep .visibility-dialog .dialog-save-btn {
-	background: linear-gradient(135deg, #d53369 0%, #e25a83 100%);
-	color: #fff;
-	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
-}
-::ng-deep .visibility-dialog .dialog-save-btn:hover {
-	transform: translateY(-1px);
-}
-
-::ng-deep .visibility-body {
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-	max-height: 60vh;
-	overflow-y: auto;
-	padding-right: 4px;
-}
-::ng-deep .visibility-counter {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	align-self: flex-start;
-	background: #faf6ef;
-	border: 1px solid rgba(0, 0, 0, 0.06);
-	color: rgba(30, 15, 35, 0.6);
-	font-size: 12px;
-	padding: 5px 12px;
-	border-radius: 999px;
-}
-::ng-deep .visibility-counter.at-cap {
-	background: #fff4d4;
-	color: #7a5500;
-	border-color: #f0d68a;
-}
-::ng-deep .visibility-counter .material-symbols-outlined {
-	font-size: 14px;
-}
-
-::ng-deep .vis-group {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
-::ng-deep .vis-group-head {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	padding: 5px 12px;
-	border-radius: 999px;
-	font-size: 11.5px;
-	font-weight: 600;
-	letter-spacing: 1.4px;
-	text-transform: uppercase;
-	margin-bottom: 4px;
-	align-self: flex-start;
-}
-::ng-deep .vis-group-head.veg {
-	background: #d4f5d4;
-	color: #2d6a2d;
-}
-::ng-deep .vis-group-head.meat {
-	background: #fde8e8;
-	color: #8b2020;
-}
-::ng-deep .vis-group-head.seas {
-	background: #fff4d4;
-	color: #7a5500;
-}
-::ng-deep .vis-group-head.dairy {
-	background: #fff8ec;
-	color: #7a4f00;
-}
-::ng-deep .vis-group-head.grain {
-	background: #fef3e2;
-	color: #7a5800;
-}
-::ng-deep .vis-group-head.liq {
-	background: #e3f0ff;
-	color: #1a4a7a;
-}
-::ng-deep .vis-group-head.spice {
-	background: #fde8d4;
-	color: #7a2800;
-}
-::ng-deep .vis-group-head.seafood {
-	background: #cce8f5;
-	color: #0a4a6a;
-}
-::ng-deep .vis-group-head.egg {
-	background: #fef8d4;
-	color: #7a5e00;
-}
-::ng-deep .vis-group-head.nut {
-	background: #f5e8d8;
-	color: #6b3800;
-}
-::ng-deep .vis-group-head.fruit {
-	background: #fdd8d8;
-	color: #7a1010;
-}
-::ng-deep .vis-group-head.oil {
-	background: #fef0d4;
-	color: #7a4a00;
-}
-::ng-deep .vis-group-head.herb {
-	background: #e0f5d8;
-	color: #285a18;
-}
-::ng-deep .vis-group-head.fungi {
-	background: #f0d4f5;
-	color: #581a78;
-}
-::ng-deep .vis-group-head.sweet {
-	background: #fde8ef;
-	color: #7a1040;
-}
-::ng-deep .vis-group-head.condiment {
-	background: #f5ddd4;
-	color: #7a2400;
-}
-
-::ng-deep .vis-row {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 8px 4px;
-	border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
-	cursor: pointer;
-	user-select: none;
-}
-::ng-deep .vis-row:last-child {
-	border-bottom: none;
-}
-::ng-deep .vis-row.disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-::ng-deep .vis-row input[type='checkbox'] {
-	accent-color: #d53369;
-	width: 16px;
-	height: 16px;
-	cursor: pointer;
-}
-::ng-deep .vis-row.disabled input[type='checkbox'] {
-	cursor: not-allowed;
-}
-::ng-deep .vis-name {
-	flex: 1;
-	font-size: 14px;
-	color: #1a1a1a;
-}
-::ng-deep .vis-tag {
-	font-size: 10px;
-	text-transform: uppercase;
-	letter-spacing: 1px;
-	color: rgba(30, 15, 35, 0.45);
-	background: rgba(0, 0, 0, 0.04);
-	padding: 2px 8px;
-	border-radius: 999px;
-}
-
-/* ── Ingredient type manager dialog ────────────────────────────── */
-::ng-deep .itype-dialog .p-dialog-content {
-	padding: 18px 24px 8px;
-}
-::ng-deep .itype-dialog .p-dialog-footer {
-	display: flex;
-	justify-content: flex-end;
-	gap: 10px;
-	padding: 14px 24px 16px;
-}
-::ng-deep .itype-dialog .dialog-cancel-btn,
-::ng-deep .itype-dialog .dialog-save-btn {
-	font: inherit;
-	font-size: 13px;
-	font-weight: 500;
-	padding: 8px 18px;
-	border-radius: 999px;
-	cursor: pointer;
-	border: 1px solid transparent;
-}
-::ng-deep .itype-dialog .dialog-cancel-btn {
-	background: #fff;
-	color: #d53369;
-	border-color: rgba(213, 51, 105, 0.28);
-}
-::ng-deep .itype-dialog .dialog-cancel-btn:hover {
-	background: rgba(213, 51, 105, 0.06);
-}
-::ng-deep .itype-dialog .dialog-save-btn {
-	background: linear-gradient(135deg, #d53369 0%, #e25a83 100%);
-	color: #fff;
-	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
-}
-::ng-deep .itype-dialog .dialog-save-btn:hover {
-	transform: translateY(-1px);
-}
-
-::ng-deep .itype-body {
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-}
-::ng-deep .itype-counter {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	align-self: flex-start;
-	background: #faf6ef;
-	border: 1px solid rgba(0, 0, 0, 0.06);
-	color: rgba(30, 15, 35, 0.6);
-	font-size: 12px;
-	padding: 5px 12px;
-	border-radius: 999px;
-}
-::ng-deep .itype-counter.at-cap {
-	background: #fff4d4;
-	color: #7a5500;
-	border-color: #f0d68a;
-}
-::ng-deep .itype-counter .material-symbols-outlined {
-	font-size: 14px;
-}
-::ng-deep .itype-hint {
-	font-size: 13px;
-	color: rgba(30, 15, 35, 0.55);
-	margin: 0;
-	line-height: 1.5;
-}
-::ng-deep .itype-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-	gap: 10px;
-}
-::ng-deep .itype-card {
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 6px;
-	padding: 14px 10px 12px;
-	border-radius: 14px;
-	border: 2px solid transparent;
-	background: #f8f5f2;
-	cursor: pointer;
-	font: inherit;
-	transition:
-		transform 0.15s ease,
-		border-color 0.2s ease,
-		box-shadow 0.2s ease,
-		background 0.2s ease;
-}
-::ng-deep .itype-card:hover:not([disabled]) {
-	transform: translateY(-2px);
-	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
-::ng-deep .itype-card.selected {
-	border-color: currentColor;
-	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
-}
-::ng-deep .itype-card.at-cap {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
-/* per-type card backgrounds */
-::ng-deep .itype-card.veg {
-	background: #d4f5d4;
-	color: #2d6a2d;
-}
-::ng-deep .itype-card.meat {
-	background: #fde8e8;
-	color: #8b2020;
-}
-::ng-deep .itype-card.seas {
-	background: #fff4d4;
-	color: #7a5500;
-}
-::ng-deep .itype-card.dairy {
-	background: #fff8ec;
-	color: #7a4f00;
-}
-::ng-deep .itype-card.grain {
-	background: #fef3e2;
-	color: #7a5800;
-}
-::ng-deep .itype-card.liq {
-	background: #e3f0ff;
-	color: #1a4a7a;
-}
-::ng-deep .itype-card.spice {
-	background: #fde8d4;
-	color: #7a2800;
-}
-::ng-deep .itype-card.seafood {
-	background: #cce8f5;
-	color: #0a4a6a;
-}
-::ng-deep .itype-card.egg {
-	background: #fef8d4;
-	color: #7a5e00;
-}
-::ng-deep .itype-card.nut {
-	background: #f5e8d8;
-	color: #6b3800;
-}
-::ng-deep .itype-card.fruit {
-	background: #fdd8d8;
-	color: #7a1010;
-}
-::ng-deep .itype-card.oil {
-	background: #fef0d4;
-	color: #7a4a00;
-}
-::ng-deep .itype-card.herb {
-	background: #e0f5d8;
-	color: #285a18;
-}
-::ng-deep .itype-card.fungi {
-	background: #f0d4f5;
-	color: #581a78;
-}
-::ng-deep .itype-card.sweet {
-	background: #fde8ef;
-	color: #7a1040;
-}
-::ng-deep .itype-card.condiment {
-	background: #f5ddd4;
-	color: #7a2400;
-}
-::ng-deep .itype-emoji {
-	font-size: 28px;
-	line-height: 1;
-}
-::ng-deep .itype-label {
-	font-size: 11.5px;
-	font-weight: 600;
-	letter-spacing: 0.4px;
-	text-align: center;
-	line-height: 1.3;
-}
-::ng-deep .itype-check {
-	position: absolute;
-	top: 6px;
-	right: 6px;
-	font-size: 16px;
-	color: currentColor;
-	opacity: 0.85;
 }
 
 /* ── Mobile ────────────────────────────────────────────────────── */

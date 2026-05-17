@@ -107,13 +107,6 @@
 					<h2 class="panel-heading collapsible" (click)="toggleIngredients()">
 						<span class="material-symbols-outlined">kitchen</span>
 						Ingredients
-						<button
-							class="manage-btn"
-							type="button"
-							title="Show or hide ingredients"
-							(click)="openVisibilityDialog($event)">
-							<span class="material-symbols-outlined">tune</span>
-						</button>
 						<span class="chev material-symbols-outlined">expand_more</span>
 					</h2>
 
@@ -375,89 +368,3 @@
 	}
 </div>
 
-<!-- ===================== INGREDIENT VISIBILITY DIALOG ===================== -->
-<p-dialog
-	[(visible)]="showVisibilityDialog"
-	[header]="VISIBILITY_TITLE"
-	[modal]="true"
-	[closable]="true"
-	[style]="{ width: '460px', maxWidth: '92vw' }"
-	styleClass="visibility-dialog"
-	appendTo="body">
-
-	<div class="visibility-body">
-		<div class="visibility-counter" [class.at-cap]="!canShowMore()">
-			<span class="material-symbols-outlined">visibility</span>
-			{{ visibilityVisibleCount }} / {{ VISIBLE_MAX }} visible
-		</div>
-
-		@for (g of visibilityDraft; track g.type) {
-			<div class="vis-group">
-				<div class="vis-group-head" [class]="g.type">
-					<span class="emoji">{{ g.emoji }}</span> {{ g.label }}
-				</div>
-				@for (it of g.items; track it.name) {
-					<label class="vis-row" [class.disabled]="it.hidden && !canShowMore()">
-						<input
-							type="checkbox"
-							[checked]="!it.hidden"
-							[disabled]="it.hidden && !canShowMore()"
-							(change)="toggleVisibility(it)" />
-						<span class="vis-name">{{ it.name }}</span>
-						@if (it.hidden) {
-							<span class="vis-tag">hidden</span>
-						}
-					</label>
-				}
-			</div>
-		}
-	</div>
-
-	<ng-template pTemplate="footer">
-		<button class="dialog-cancel-btn" (click)="cancelVisibility()">Cancel</button>
-		<button class="dialog-save-btn" (click)="applyVisibility()">Apply</button>
-	</ng-template>
-</p-dialog>
-
-<!-- ===================== INGREDIENT TYPE MANAGEMENT DIALOG ===================== -->
-<p-dialog
-	[(visible)]="showTypeDialog"
-	[header]="ITYPE_DIALOG_TITLE"
-	[modal]="true"
-	[closable]="true"
-	[style]="{ width: '500px', maxWidth: '92vw' }"
-	styleClass="itype-dialog"
-	appendTo="body">
-
-	<div class="itype-body">
-		<div class="itype-counter" [class.at-cap]="!canAddTypeDraft()">
-			<span class="material-symbols-outlined">category</span>
-			{{ typeDraft.size }} / {{ EDITOR_TYPE_MAX }} selected
-		</div>
-		<p class="itype-hint">Choose which ingredient types appear in the recipe editor. At least one must be selected.</p>
-		<div class="itype-grid">
-			@for (tab of MASTER_TYPE_TABS; track tab.id) {
-				@let isSelected = typeDraft.has(tab.id);
-				@let isDisabled = !isSelected && !canAddTypeDraft();
-				<button
-					class="itype-card"
-					[class]="tab.id"
-					[class.selected]="isSelected"
-					[class.at-cap]="isDisabled"
-					[disabled]="isDisabled"
-					(click)="toggleTypeDraft(tab.id)">
-					<span class="itype-emoji">{{ tab.emoji }}</span>
-					<span class="itype-label">{{ tab.label }}</span>
-					@if (isSelected) {
-						<span class="itype-check material-symbols-outlined">check_circle</span>
-					}
-				</button>
-			}
-		</div>
-	</div>
-
-	<ng-template pTemplate="footer">
-		<button class="dialog-cancel-btn" (click)="cancelTypeDialog()">Cancel</button>
-		<button class="dialog-save-btn" (click)="applyTypeDialog()">Apply</button>
-	</ng-template>
-</p-dialog>

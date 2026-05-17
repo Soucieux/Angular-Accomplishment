@@ -185,12 +185,6 @@ export const RECIPE_CATEGORY_WESTERN = 'Western';
 export const RECIPE_CATEGORY_QUICK = 'Quick';
 export const RECIPE_CATEGORY_DESSERT = 'Dessert';
 
-// ── Recipe — visibility limits ────────────────────────────────────────────
-/** Maximum number of ingredients shown in the detail view at once. */
-export const RECIPE_VISIBLE_MAX = 10;
-/** Dialog title for the ingredient visibility manager. */
-export const RECIPE_VISIBILITY_TITLE = 'Manage Ingredients';
-
 // ── Recipe — ingredient type discriminators ───────────────────────────────
 export const RECIPE_ITYPE_VEG = 'veg';
 export const RECIPE_ITYPE_MEAT = 'meat';
@@ -214,6 +208,8 @@ export const RECIPE_ITYPE_CONDIMENT = 'condiment';
 export const RECIPE_EDITOR_TYPE_MAX = 7;
 /** Dialog title for the ingredient type manager in the editor. */
 export const RECIPE_ITYPE_DIALOG_TITLE = 'Manage Ingredient Types';
+/** Dialog type for the ingredient type manager in the editor. */
+export const DIALOG_RECIPE_TYPE = 'recipe-type';
 
 // ── Errors ─────────────────────────────────────────────────────────────────
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';

@@ -36,7 +36,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { DoubanService } from '../../backend/douban-service/douban.service';
-import { MovieItemVO } from '../../common/movieitem.vo';
+import { MovieItemVO } from './movieItem.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';

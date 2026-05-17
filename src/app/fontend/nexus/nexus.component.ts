@@ -73,20 +73,7 @@ function safeErrMsg(err: unknown): string {
 	}
 }
 
-interface AiTool {
-	id: string;
-	name: string;
-	logo: string;
-	type: 'direct' | 'clipboard';
-	url: string;
-	selected: boolean;
-}
-
-interface SearchHistoryEntry {
-	query: string;
-	aiIds: string[];
-	timestamp: string;
-}
+import { AiTool, SearchHistoryEntry } from './nexus.types';
 
 @Component({
 	selector: 'nexus',

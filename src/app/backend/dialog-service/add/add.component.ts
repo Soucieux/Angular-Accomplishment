@@ -15,7 +15,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { FormsModule, NgForm } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
-import { MovieItemVO } from '../../../common/movieitem.vo';
+import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { CommonModule } from '@angular/common';
 import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';
 import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exists-error';

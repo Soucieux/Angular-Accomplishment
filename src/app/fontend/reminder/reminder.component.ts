@@ -69,7 +69,7 @@ import { format } from 'date-fns';
 		ToggleSwitchModule
 	],
 	templateUrl: './reminder.component.html',
-	styleUrls: ['../../common/page-card.css', './reminder.component.css']
+	styleUrls: ['../../common/page.card.css', './reminder.component.css']
 })
 export class ReminderComponent implements OnInit, OnDestroy {
 	private readonly className = 'ReminderComponent';

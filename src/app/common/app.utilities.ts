@@ -1,6 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID, ViewContainerRef } from '@angular/core';
-import { MovieItemVO } from './movieitem.vo';
+import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
 import { LOG } from './app.logs';
 import { CN } from './app.constant';
 import { CloudbaseService } from '../backend/database-service/cloudbase/cloudbase.service';

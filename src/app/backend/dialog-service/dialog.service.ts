@@ -2,14 +2,16 @@ import { ComponentRef, Injectable, Type, ViewContainerRef } from '@angular/core'
 import { ConfirmDialogComponent } from './confirm/confirm.component';
 import { AddDialogComponent } from './add/add.component';
 import { LOG } from '../../common/app.logs';
-import { MovieItemVO } from '../../common/movieitem.vo';
+import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { HistoryDialogComponent } from './history/history.component';
 import { SearchDialogComponent } from './search/search.component';
 import { Observable } from 'rxjs';
 import { ErrorDialogComponent } from './error/error.component';
 import { BlockDialogComponent } from './block/block.component';
-import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY, MSG_PERMISSION_DENIED, MSG_UNEXPECTED_ERROR, SEARCH } from '../../common/app.constant';
+import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY, DIALOG_RECIPE_TYPE, MSG_PERMISSION_DENIED, MSG_UNEXPECTED_ERROR, SEARCH } from '../../common/app.constant';
 import { MessageService } from 'primeng/api';
+import { RecipeTypeDialogComponent } from './recipe-type/recipe-type.component';
+import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.types';
 @Injectable({
 	providedIn: 'root'
 })
@@ -39,6 +41,8 @@ export class DialogService {
 				return ErrorDialogComponent;
 			case DIALOG_BLOCK:
 				return BlockDialogComponent;
+			case DIALOG_RECIPE_TYPE:
+				return RecipeTypeDialogComponent;
 			default:
 				throw new Error('Invalid dialog type');
 		}
@@ -75,6 +79,13 @@ export class DialogService {
 		dialogType: 'history',
 		revertDataCallback: (movie: MovieItemVO) => void,
 		data: Observable<any>
+	): void;
+
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'recipe-type',
+		applyCallback: (newIds: Set<IngredientType>) => void,
+		data: { masterTabs: TypeTab[]; activeTypeIds: Set<IngredientType> }
 	): void;
 
 	/**

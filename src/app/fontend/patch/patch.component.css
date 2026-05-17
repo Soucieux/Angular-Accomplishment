@@ -6,12 +6,38 @@
 }
 
 /* ─────────────────────────────────────────
-   Container — size constraints only.
+   Container — fills viewport, scrolls internally.
    Visual properties (glassmorphism, animation)
    are provided by the global .page-card class.
 ───────────────────────────────────────── */
 .container {
 	min-width: 100%;
+	height: calc(100dvh - 10px);
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.4s ease;
+}
+.container::-webkit-scrollbar {
+	width: 8px;
+}
+.container::-webkit-scrollbar-track {
+	background: transparent;
+}
+.container::-webkit-scrollbar-thumb {
+	background: transparent;
+	border-radius: 999px;
+	transition: background 0.4s ease;
+}
+.container:hover {
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+}
+.container:hover::-webkit-scrollbar-thumb {
+	background: rgba(213, 51, 105, 0.28);
+}
+.container:hover::-webkit-scrollbar-thumb:hover {
+	background: #d53369;
 }
 
 /* ─────────────────────────────────────────

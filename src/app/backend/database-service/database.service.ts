@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { MovieItemVO } from '../../common/movieitem.vo';
+import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { InjectionToken } from '@angular/core';
 import { NO_RATE } from '../../common/app.constant';
 import type cloudbase from '@cloudbase/js-sdk';

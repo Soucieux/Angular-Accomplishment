@@ -1,5 +1,4 @@
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
-import { environment } from '../environment/environment';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';

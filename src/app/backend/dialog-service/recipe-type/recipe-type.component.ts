@@ -2,7 +2,7 @@ import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
 import { RECIPE_EDITOR_TYPE_MAX, RECIPE_ITYPE_DIALOG_TITLE } from '../../../common/app.constant';
-import { IngredientType, TypeTab } from '../../../fontend/recipe/recipe.types';
+import { IngredientType, TypeTab } from '../../../fontend/recipe/recipe.model';
 
 @Component({
 	selector: 'recipe-type-dialog',

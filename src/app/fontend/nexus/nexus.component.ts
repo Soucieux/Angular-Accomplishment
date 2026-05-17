@@ -49,13 +49,14 @@ import {
 	NEXUS_MSG_NO_AI_SELECTED,
 	NEXUS_MSG_NO_AI_SELECTED_DETAIL,
 	NEXUS_MSG_SAVE_FAILED,
-	NEXUS_TOOL_TYPE_CLIPBOARD,
-	NEXUS_TOOL_TYPE_DIRECT,
+	NEXUS_STORAGE_KEY_HISTORY,
+	NEXUS_STORAGE_KEY_SELECTED_AIS,
 	TOAST_ERROR,
 	TOAST_INFO,
 	TOAST_SUCCESS,
 	TOAST_WARN
 } from '../../common/app.constant';
+import { AiTool, NEXUS_CLIPBOARD_TOOLS, NEXUS_DIRECT_TOOLS, NEXUS_LOGO_FALLBACK_COLORS, SearchHistoryEntry } from './nexus.model';
 
 /**
  * Safely extract an error message from any thrown value.
@@ -73,8 +74,6 @@ function safeErrMsg(err: unknown): string {
 	}
 }
 
-import { AiTool, SearchHistoryEntry } from './nexus.types';
-
 @Component({
 	selector: 'nexus',
 	standalone: true,
@@ -85,8 +84,8 @@ import { AiTool, SearchHistoryEntry } from './nexus.types';
 })
 export class NexusComponent implements OnInit, OnDestroy {
 	private readonly className = 'NexusComponent';
-	private readonly SELECTED_AIS_KEY = 'nexus_selected_ais';
-	private readonly HISTORY_KEY = 'nexus_search_history';
+	private readonly SELECTED_AIS_KEY = NEXUS_STORAGE_KEY_SELECTED_AIS;
+	private readonly HISTORY_KEY = NEXUS_STORAGE_KEY_HISTORY;
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	private dialogComponentContainer!: ViewContainerRef;
@@ -99,127 +98,10 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 */
 	protected failedLogos = new Set<string>();
 
-	/**
-	 * Brand accent colours used for the initial-letter fallback circle, keyed by tool ID.
-	 */
-	private readonly LOGO_FALLBACK_COLORS: Record<string, string> = {
-		chatgpt: '#10a37f',
-		perplexity: '#20b2aa',
-		grok: '#1d1d1d',
-		mistral: '#ff6600',
-		youcom: '#7856ff',
-		deepseek: '#4d6bfe',
-		gemini: '#4285f4',
-		kimi: '#ff4757',
-		claude: '#cc785c',
-		metaai: '#0866ff'
-	};
+	private readonly LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
 
-	/**
-	 * Mark a tool's logo as failed so the initial-letter fallback is shown instead.
-	 *
-	 * @param toolId - The ID of the AI tool whose image failed to load.
-	 */
-	protected onLogoError(toolId: string): void {
-		this.failedLogos.add(toolId);
-		this.cdr.markForCheck();
-	}
-
-	/**
-	 * Return the brand fallback colour for a given tool ID.
-	 *
-	 * @param toolId - The AI tool ID.
-	 * @returns A CSS colour string.
-	 */
-	protected logoFallbackColor(toolId: string): string {
-		return this.LOGO_FALLBACK_COLORS[toolId] ?? '#888';
-	}
-
-	protected directTools: AiTool[] = [
-		{
-			id: 'chatgpt',
-			name: 'ChatGPT',
-			logo: 'https://icon.horse/icon/chatgpt.com',
-			url: 'https://chatgpt.com/?q=',
-			type: NEXUS_TOOL_TYPE_DIRECT,
-			selected: false
-		},
-		{
-			id: 'perplexity',
-			name: 'Perplexity',
-			logo: 'https://icon.horse/icon/perplexity.ai',
-			url: 'https://www.perplexity.ai/search?q=',
-			type: NEXUS_TOOL_TYPE_DIRECT,
-			selected: false
-		},
-		{
-			id: 'grok',
-			name: 'Grok',
-			logo: 'https://icon.horse/icon/grok.com',
-			url: 'https://grok.com/?q=',
-			type: NEXUS_TOOL_TYPE_DIRECT,
-			selected: false
-		},
-		{
-			id: 'mistral',
-			name: 'Mistral',
-			logo: 'https://icon.horse/icon/mistral.ai',
-			url: 'https://chat.mistral.ai/chat?q=',
-			type: NEXUS_TOOL_TYPE_DIRECT,
-			selected: false
-		},
-		{
-			id: 'youcom',
-			name: 'You.com',
-			logo: 'https://icon.horse/icon/you.com',
-			url: 'https://you.com/search?fromSearchBar=true&tbm=youchat&q=',
-			type: NEXUS_TOOL_TYPE_DIRECT,
-			selected: false
-		}
-	];
-
-	protected clipboardTools: AiTool[] = [
-		{
-			id: 'deepseek',
-			name: 'DeepSeek',
-			logo: 'https://icon.horse/icon/deepseek.com',
-			url: 'https://chat.deepseek.com',
-			type: NEXUS_TOOL_TYPE_CLIPBOARD,
-			selected: false
-		},
-		{
-			id: 'gemini',
-			name: 'Gemini',
-			logo: 'https://icon.horse/icon/gemini.google.com',
-			url: 'https://gemini.google.com/app',
-			type: NEXUS_TOOL_TYPE_CLIPBOARD,
-			selected: false
-		},
-		{
-			id: 'kimi',
-			name: 'KIMI',
-			logo: 'https://icon.horse/icon/kimi.com',
-			url: 'https://www.kimi.com/en',
-			type: NEXUS_TOOL_TYPE_CLIPBOARD,
-			selected: false
-		},
-		{
-			id: 'claude',
-			name: 'Claude',
-			logo: 'https://icon.horse/icon/claude.ai',
-			url: 'https://claude.ai',
-			type: NEXUS_TOOL_TYPE_CLIPBOARD,
-			selected: false
-		},
-		{
-			id: 'metaai',
-			name: 'Meta AI',
-			logo: 'https://icon.horse/icon/meta.ai',
-			url: 'https://www.meta.ai',
-			type: NEXUS_TOOL_TYPE_CLIPBOARD,
-			selected: false
-		}
-	];
+	protected directTools: AiTool[] = NEXUS_DIRECT_TOOLS.map((t) => ({ ...t }));
+	protected clipboardTools: AiTool[] = NEXUS_CLIPBOARD_TOOLS.map((t) => ({ ...t }));
 
 	// ── Links & Categories ────────────────────────────────────────
 	protected links: any[] = [];
@@ -293,6 +175,26 @@ export class NexusComponent implements OnInit, OnDestroy {
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
 		LOG.info(this.className, COMPONENT_DESTROY);
+	}
+
+	/**
+	 * Mark a tool's logo as failed so the initial-letter fallback is shown instead.
+	 *
+	 * @param toolId - The ID of the AI tool whose image failed to load.
+	 */
+	protected onLogoError(toolId: string): void {
+		this.failedLogos.add(toolId);
+		this.cdr.markForCheck();
+	}
+
+	/**
+	 * Return the brand fallback colour for a given tool ID.
+	 *
+	 * @param toolId - The AI tool ID.
+	 * @returns A CSS colour string.
+	 */
+	protected logoFallbackColor(toolId: string): string {
+		return this.LOGO_FALLBACK_COLORS[toolId] ?? '#888';
 	}
 
 	/**

@@ -127,6 +127,10 @@ export const NEXUS_CATEGORY_ALL = 'all';
 export const NEXUS_DIALOG_TITLE_ADD_LINK = 'Add Link';
 /** Dialog title when editing an existing link. */
 export const NEXUS_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
+/** LocalStorage key for persisting selected AI chip IDs across sessions. */
+export const NEXUS_STORAGE_KEY_SELECTED_AIS = 'nexus_selected_ais';
+/** LocalStorage key for persisting the launch search history. */
+export const NEXUS_STORAGE_KEY_HISTORY = 'nexus_search_history';
 
 // ── Toast severities ───────────────────────────────────────────────────────
 export const TOAST_SUCCESS = 'success';
@@ -216,6 +220,21 @@ export const RECIPE_EDITOR_TYPE_MAX = 7;
 export const RECIPE_ITYPE_DIALOG_TITLE = 'Manage Ingredient Types';
 /** Dialog type for the ingredient type manager in the editor. */
 export const DIALOG_RECIPE_TYPE = 'recipe-type';
+
+// ── Recipe — editing mode discriminators ─────────────────────────────────
+export const RECIPE_EDITING_MODE_CREATE = 'create';
+export const RECIPE_EDITING_MODE_EDIT = 'edit';
+
+// ── Recipe — band CSS class names ────────────────────────────────────────
+export const RECIPE_BAND_CHINESE = 'band-chinese';
+export const RECIPE_BAND_WESTERN = 'band-western';
+export const RECIPE_BAND_QUICK = 'band-quick';
+export const RECIPE_BAND_DESSERT = 'band-dessert';
+export const RECIPE_BAND_SPICY = 'band-spicy';
+
+// ── Recipe — drag-drop position discriminators ───────────────────────────
+export const RECIPE_DROP_ABOVE = 'above';
+export const RECIPE_DROP_BELOW = 'below';
 
 // ── Errors ─────────────────────────────────────────────────────────────────
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';

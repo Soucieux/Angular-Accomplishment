@@ -22,6 +22,9 @@ import {
 	RECIPE_CATEGORY_DESSERT,
 	RECIPE_CATEGORY_QUICK,
 	RECIPE_CATEGORY_WESTERN,
+	RECIPE_DELETE_BTN,
+	RECIPE_DELETE_MESSAGE,
+	RECIPE_DELETE_TITLE,
 	RECIPE_DISCARD_BTN,
 	RECIPE_DISCARD_MESSAGE,
 	RECIPE_DISCARD_TITLE,
@@ -622,6 +625,24 @@ export class RecipeComponent implements AfterViewChecked {
 			DIALOG_CONFIRM,
 			() => this.transitionTo(RECIPE_VIEW_LIST),
 			[RECIPE_DISCARD_MESSAGE, RECIPE_DISCARD_TITLE, RECIPE_DISCARD_BTN]
+		);
+	}
+
+	/**
+	 * Prompt the user to confirm deletion of the recipe currently being edited,
+	 * then remove it from the in-memory list and navigate back to the list view.
+	 * Only callable when {@link editingMode} is 'edit' and {@link editingRecipeId} is set.
+	 */
+	protected removeCurrentRecipe(): void {
+		this.dialogService.openDialog(
+			this.dialogContainer,
+			DIALOG_CONFIRM,
+			() => {
+				this.recipes = this.recipes.filter((r) => r.id !== this.editingRecipeId);
+				LOG.info('RecipeComponent', `Recipe deleted: ${this.editingRecipeId}`);
+				this.transitionTo(RECIPE_VIEW_LIST);
+			},
+			[RECIPE_DELETE_MESSAGE, RECIPE_DELETE_TITLE, RECIPE_DELETE_BTN]
 		);
 	}
 

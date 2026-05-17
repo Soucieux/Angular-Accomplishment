@@ -1167,6 +1167,15 @@
 	border-color: var(--rose);
 	background: rgba(213, 51, 105, 0.06);
 }
+.btn-danger {
+	background: #fff;
+	color: #c0392b;
+	border: 1.5px solid rgba(192, 57, 43, 0.3);
+}
+.btn-danger:hover {
+	border-color: #c0392b;
+	background: rgba(192, 57, 43, 0.06);
+}
 
 /* Editor header — inline-editable title */
 .editor-header {
@@ -1975,25 +1984,14 @@
 
 	/* Editor view mobile tweaks */
 	.editor-topbar {
-		position: sticky;
-		top: -22px;
-		z-index: 5;
-		background: rgba(255, 255, 255, 0.92);
-		backdrop-filter: blur(14px);
-		margin: -22px -18px 14px;
-		padding: 14px 18px;
-		border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-		/* Match the container's top corners so the sticky bar doesn't square them off */
-		border-top-left-radius: 18px;
-		border-top-right-radius: 18px;
+		flex-wrap: wrap;
+		gap: 10px;
+		margin-bottom: 16px;
 	}
-	/* Make sure the container clips children so all 4 corners stay rounded on mobile */
-	.container-recipe {
-		overflow: hidden;
-	}
-	.container-recipe > .view {
-		margin-right: -18px;
-		padding-right: 18px;
+	.editor-actions {
+		margin-left: auto;
+		flex-wrap: wrap;
+		justify-content: flex-end;
 	}
 	.title-field {
 		font-size: 32px;
@@ -2017,5 +2015,93 @@
 	.step-card .remove,
 	.sub-row .remove {
 		opacity: 1;
+	}
+
+	/* Category chips — horizontal scroll prevents multi-row wrap */
+	.chips {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
+		gap: 8px;
+		margin: 14px 0 20px;
+		padding-bottom: 4px;
+	}
+	.chips::-webkit-scrollbar {
+		display: none;
+	}
+	.chip {
+		flex-shrink: 0;
+		height: 30px;
+		padding: 0 14px;
+		font-size: 12px;
+	}
+
+	/* Slightly smaller action buttons */
+	.btn {
+		height: 40px;
+		padding: 0 16px;
+		font-size: 13px;
+	}
+	.btn .material-symbols-outlined {
+		font-size: 16px;
+	}
+
+	/* Panel heading */
+	.panel-heading {
+		font-size: 18px;
+		margin: 0 0 12px;
+	}
+	.panel-heading .material-symbols-outlined {
+		font-size: 18px;
+	}
+
+	/* Panel padding */
+	.panel {
+		padding: 16px 18px 20px;
+	}
+
+	/* Card band and title */
+	.recipe-card .band {
+		height: 70px;
+	}
+	.recipe-card .name {
+		font-size: 17px;
+	}
+
+	/* Grid: smaller minimum for narrow phones */
+	.grid {
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: 16px;
+	}
+
+	/* Spacing reductions */
+	.detail-header {
+		margin-bottom: 18px;
+	}
+	.notes-card {
+		margin-top: 20px;
+	}
+	.header-ornament {
+		margin: 8px 0 16px;
+	}
+
+	/* Notepad: less left indent on narrow screens */
+	.notepad,
+	.editor-notepad {
+		padding: 2px 14px 14px 40px;
+		font-size: 15px;
+	}
+	.notepad::before {
+		left: 28px;
+	}
+
+	/* Steps tighten */
+	.step {
+		padding: 12px 14px 12px 16px;
+		column-gap: 12px;
+	}
+	.step .text {
+		font-size: 14px;
 	}
 }

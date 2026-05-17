@@ -177,6 +177,12 @@ export const RECIPE_DISCARD_TITLE = 'Discard Recipe';
 export const RECIPE_DISCARD_MESSAGE = 'Discard this recipe? Any changes will be lost.';
 /** Confirm button label for the discard dialog. */
 export const RECIPE_DISCARD_BTN = 'Discard';
+/** Confirm-delete title shown when the user clicks Delete Recipe in edit mode. */
+export const RECIPE_DELETE_TITLE = 'Delete Recipe';
+/** Confirm-delete message body. */
+export const RECIPE_DELETE_MESSAGE = 'Delete this recipe permanently? This cannot be undone.';
+/** Confirm button label for the delete dialog. */
+export const RECIPE_DELETE_BTN = 'Delete';
 
 // ── Recipe — category discriminators ──────────────────────────────────────
 export const RECIPE_CATEGORY_ALL = 'All';

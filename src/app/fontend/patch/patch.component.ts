@@ -580,6 +580,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 		{ label: 'Nexus', icon: 'neurology', iconClass: 'material-symbols-outlined' },
 		{ label: 'Patch Notes', icon: 'note_stack', iconClass: 'material-symbols-outlined' },
 		{ label: 'Login', icon: '', iconClass: 'pi pi-user' }, // pi icon — CSS only, no ligature text
+		{ label: 'Recipe', icon: 'restaurant', iconClass: 'material-symbols-outlined' },
 		{ label: 'Reminder', icon: 'priority', iconClass: 'material-symbols-outlined' },
 		{ label: 'Resonance', icon: 'format_quote', iconClass: 'material-symbols-outlined' },
 		{ label: 'About', icon: 'info', iconClass: 'material-symbols-outlined' },

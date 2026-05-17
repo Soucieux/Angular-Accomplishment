@@ -939,14 +939,14 @@ export class ReminderComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Checks whether the given text contains any Chinese characters within the
-	 * CJK Unified Ideographs range (U+4E00 to U+9FA5).
+	 * Template helper \u2014 delegates to Utilities.checkIfChinese so the regex
+	 * lives in a single place.
 	 *
 	 * @param text - The text string to check.
 	 * @returns True if the text contains at least one Chinese character.
 	 */
-	protected checkIfChinese(text: string) {
-		return /[\u4e00-\u9fa5]/.test(text);
+	protected checkIfChinese(text: string): boolean {
+		return this.utilities.checkIfChinese(text);
 	}
 
 	/**

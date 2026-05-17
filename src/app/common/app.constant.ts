@@ -162,5 +162,58 @@ export const NEXUS_MSG_DELETE_LINK_BTN = 'Delete';
 export const NEXUS_MSG_DELETE_CATEGORY_TITLE = 'Delete Category';
 export const NEXUS_MSG_DELETE_CATEGORY_BTN = 'Delete';
 
+// ── Recipe — view identifiers ─────────────────────────────────────────────
+/** List view id for the recipe page router. */
+export const RECIPE_VIEW_LIST = 'list';
+/** Detail view id for the recipe page router. */
+export const RECIPE_VIEW_DETAIL = 'detail';
+/** Add (editor) view id for the recipe page router. */
+export const RECIPE_VIEW_ADD = 'add';
+
+// ── Recipe — Add page messages ────────────────────────────────────────────
+/** Confirm-discard title shown when the user clicks Cancel with unsaved edits. */
+export const RECIPE_DISCARD_TITLE = 'Discard Recipe';
+/** Confirm-discard message body. */
+export const RECIPE_DISCARD_MESSAGE = 'Discard this recipe? Any changes will be lost.';
+/** Confirm button label for the discard dialog. */
+export const RECIPE_DISCARD_BTN = 'Discard';
+
+// ── Recipe — category discriminators ──────────────────────────────────────
+export const RECIPE_CATEGORY_ALL = 'All';
+export const RECIPE_CATEGORY_CHINESE = 'Chinese';
+export const RECIPE_CATEGORY_WESTERN = 'Western';
+export const RECIPE_CATEGORY_QUICK = 'Quick';
+export const RECIPE_CATEGORY_DESSERT = 'Dessert';
+
+// ── Recipe — visibility limits ────────────────────────────────────────────
+/** Maximum number of ingredients shown in the detail view at once. */
+export const RECIPE_VISIBLE_MAX = 10;
+/** Dialog title for the ingredient visibility manager. */
+export const RECIPE_VISIBILITY_TITLE = 'Manage Ingredients';
+
+// ── Recipe — ingredient type discriminators ───────────────────────────────
+export const RECIPE_ITYPE_VEG = 'veg';
+export const RECIPE_ITYPE_MEAT = 'meat';
+export const RECIPE_ITYPE_SEAS = 'seas';
+export const RECIPE_ITYPE_DAIRY = 'dairy';
+export const RECIPE_ITYPE_GRAIN = 'grain';
+export const RECIPE_ITYPE_LIQ = 'liq';
+export const RECIPE_ITYPE_SPICE = 'spice';
+export const RECIPE_ITYPE_SEAFOOD = 'seafood';
+export const RECIPE_ITYPE_EGG = 'egg';
+export const RECIPE_ITYPE_NUT = 'nut';
+export const RECIPE_ITYPE_FRUIT = 'fruit';
+export const RECIPE_ITYPE_OIL = 'oil';
+export const RECIPE_ITYPE_HERB = 'herb';
+export const RECIPE_ITYPE_FUNGI = 'fungi';
+export const RECIPE_ITYPE_SWEET = 'sweet';
+export const RECIPE_ITYPE_CONDIMENT = 'condiment';
+
+// ── Recipe — editor type tab management ──────────────────────────────────
+/** Maximum number of ingredient type tabs shown in the add/edit editor. */
+export const RECIPE_EDITOR_TYPE_MAX = 7;
+/** Dialog title for the ingredient type manager in the editor. */
+export const RECIPE_ITYPE_DIALOG_TITLE = 'Manage Ingredient Types';
+
 // ── Errors ─────────────────────────────────────────────────────────────────
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';

@@ -1166,7 +1166,17 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async removeQuote(key: string, text: string, author: string): Promise<void> {
 		try {
-			await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+			// Admins may delete any quote regardless of ownership — bypass the _openid constraint.
+			if (CloudbaseService.userHasAllRights()) {
+				const result = await this.database
+					.collection(DATABASE_QUOTES)
+					.where({ _id: key })
+					.remove();
+				if (result.code) throw new Error(result.message);
+				LOG.info(this.className, `Record has been removed from ${DATABASE_QUOTES}`);
+			} else {
+				await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+			}
 			// Re-query remaining quotes so that latestQuote always reflects
 			// the most recently added quote still in the collection.
 			const remaining = await this.database.collection(DATABASE_QUOTES).limit(1000).get();

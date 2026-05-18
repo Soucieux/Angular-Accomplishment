@@ -143,3 +143,22 @@
 	color: currentColor;
 	opacity: 0.85;
 }
+
+@media (max-width: 580px) {
+	::ng-deep .itype-dialog {
+		min-width: 100% !important;
+		min-height: 100dvh !important;
+		border-radius: 0 !important;
+	}
+	::ng-deep .itype-dialog .p-dialog-header {
+		border-radius: 0 !important;
+	}
+	::ng-deep .itype-dialog .p-dialog-content {
+		flex: 1 !important;
+		display: flex !important;
+		flex-direction: column !important;
+	}
+	::ng-deep .itype-dialog .p-dialog-footer {
+		border-radius: 0 !important;
+	}
+}

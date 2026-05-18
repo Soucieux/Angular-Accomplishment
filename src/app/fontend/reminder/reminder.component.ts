@@ -128,7 +128,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 	 */
 	public ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
-			this.isHoverCapable = Utilities.checkIfHoverCapable();
+			this.isHoverCapable = this.utilities.checkIfHoverCapable();
 			this.currentDay = new Date().getDate();
 
 			// Get the data of the first table
@@ -477,7 +477,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 					type: ACTIVITY_TYPE_UPDATED,
 					table: REMINDER_TABLE_DATE_CALCULATOR,
 					text: '',
-					timestamp: this.utilities.getCurrentFormattedTime(true)
+					timestamp: Utilities.getCurrentFormattedTime(true)
 				})
 				.catch(() => {});
 		} catch (error) {
@@ -642,7 +642,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 					type: HISTORY_STATUS_DELETED,
 					table: REMINDER_TABLE_MESSAGES,
 					text: itemText,
-					timestamp: this.utilities.getCurrentFormattedTime(true)
+					timestamp: Utilities.getCurrentFormattedTime(true)
 				})
 				.catch(() => {});
 		} catch (error) {
@@ -768,7 +768,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 						type: ACTIVITY_TYPE_UPDATED,
 						table: tableLabel,
 						text: itemText,
-						timestamp: this.utilities.getCurrentFormattedTime(true)
+						timestamp: Utilities.getCurrentFormattedTime(true)
 					})
 					.catch(() => {});
 			}
@@ -946,7 +946,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 	 * @returns True if the text contains at least one Chinese character.
 	 */
 	protected checkIfChinese(text: string): boolean {
-		return this.utilities.checkIfChinese(text);
+		return Utilities.checkIfChinese(text);
 	}
 
 	/**

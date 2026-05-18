@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
+import { Recipe } from '../../fontend/recipe/recipe.model';
 import { InjectionToken } from '@angular/core';
 import { NO_RATE } from '../../common/app.constant';
 import type cloudbase from '@cloudbase/js-sdk';
@@ -333,6 +334,34 @@ export abstract class DatabaseService {
 	 * @param key - The key of the category to remove.
 	 */
 	public abstract removeLinkCategory(key: string): Promise<void>;
+
+	/**
+	 * Get all recipes for the current user from the database.
+	 *
+	 * @returns An observable that emits the recipe list.
+	 */
+	public abstract getRecipes(): Observable<Recipe[]>;
+
+	/**
+	 * Add a new recipe to the database.
+	 *
+	 * @param recipe - The recipe to persist. The `id` field is ignored; the database assigns one.
+	 */
+	public abstract addRecipe(recipe: Recipe): Promise<void>;
+
+	/**
+	 * Update an existing recipe in the database.
+	 *
+	 * @param recipe - The recipe to update. The `id` field identifies the document.
+	 */
+	public abstract updateRecipe(recipe: Recipe): Promise<void>;
+
+	/**
+	 * Remove a recipe from the database.
+	 *
+	 * @param recipeId - The database ID of the recipe to delete.
+	 */
+	public abstract removeRecipe(recipeId: string): Promise<void>;
 
 	/**
 	 * Proxy an HTTP GET request through the `fetchUrl` CloudBase function,

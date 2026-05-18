@@ -4,17 +4,25 @@ import {
 	ChangeDetectorRef,
 	Component,
 	ElementRef,
+	HostListener,
 	Inject,
+	NgZone,
+	OnDestroy,
+	OnInit,
 	PLATFORM_ID,
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser, ViewportScroller } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { Subscription } from 'rxjs';
+import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
+	COMPONENT_DESTROY,
 	DIALOG_CONFIRM,
 	DIALOG_RECIPE_TYPE,
 	RECIPE_CATEGORY_ALL,
@@ -37,22 +45,29 @@ import {
 	RECIPE_DROP_BELOW,
 	RECIPE_EDITING_MODE_CREATE,
 	RECIPE_EDITING_MODE_EDIT,
-	RECIPE_ITYPE_DAIRY,
-	RECIPE_ITYPE_GRAIN,
-	RECIPE_ITYPE_LIQ,
-	RECIPE_ITYPE_MEAT,
-	RECIPE_ITYPE_SEAS,
-	RECIPE_ITYPE_SPICE,
 	RECIPE_ITYPE_VEG,
+	RECIPE_MSG_ADDED,
+	RECIPE_MSG_DELETE_FAILED,
+	RECIPE_MSG_DELETE_FAILED_DETAIL,
+	RECIPE_MSG_DELETED,
+	RECIPE_MSG_LOAD_FAILED,
+	RECIPE_MSG_SAVE_FAILED,
+	RECIPE_MSG_SAVE_FAILED_DETAIL,
+	RECIPE_MSG_UPDATED,
 	RECIPE_VIEW_ADD,
 	RECIPE_VIEW_DETAIL,
-	RECIPE_VIEW_LIST
+	RECIPE_VIEW_LIST,
+	TOAST_ERROR,
+	TOAST_INFO,
+	TOAST_SUCCESS,
+	BREAKPOINT_MOBILE
 } from '../../common/app.constant';
 import {
 	BadgeTag,
 	EditorGroup,
 	EditorIngredient,
 	EditorStep,
+	EditorSubpoint,
 	Ingredient,
 	IngredientGroup,
 	IngredientType,
@@ -66,16 +81,6 @@ import {
 	TypeTab
 } from './recipe.model';
 
-/**
- * Generate a short random alphanumeric ID suitable for use as a
- * local-only row key in the editor ingredient and step lists.
- *
- * @returns A 7-character random base-36 string.
- */
-function makeId(): string {
-	return Math.random().toString(36).slice(2, 9);
-}
-
 @Component({
 	selector: 'recipe',
 	standalone: true,
@@ -84,15 +89,17 @@ function makeId(): string {
 	styleUrl: './recipe.component.css',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class RecipeComponent implements AfterViewChecked {
+export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
+	private readonly className = 'RecipeComponent';
+
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	protected dialogContainer!: ViewContainerRef;
 
 	@ViewChild('stepsScroll') private stepsScrollEl?: ElementRef<HTMLElement>;
 	@ViewChild('ingredientsScroll') private ingredientsScrollEl?: ElementRef<HTMLElement>;
+	@ViewChild('catDropdown') private catDropdownEl?: ElementRef<HTMLElement>;
 
-	private boundScrollEls = new WeakSet<HTMLElement>();
-	private scrollTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
+	private recipesSub?: Subscription;
 
 	protected readonly VIEW_LIST = RECIPE_VIEW_LIST;
 	protected readonly VIEW_DETAIL = RECIPE_VIEW_DETAIL;
@@ -124,194 +131,49 @@ export class RecipeComponent implements AfterViewChecked {
 	protected editorSteps: EditorStep[] = [];
 	protected editorNameInvalid = false;
 	protected editorCategoryInvalid = false;
+	protected editorCategoryOpen = false;
 	protected editingMode: 'create' | 'edit' = RECIPE_EDITING_MODE_CREATE;
 	private editingRecipeId: string | null = null;
-	private draggingStepId: string | null = null;
-	protected dropTargetStepId: string | null = null;
-	protected dropPosition: 'above' | 'below' | null = null;
+	private draggingStep: EditorStep | null = null;
+	private dropTargetStep: EditorStep | null = null;
+	private dropPosition: 'above' | 'below' | null = null;
 
-	protected recipes: Recipe[] = [
-		{
-			id: 'garlic-beef',
-			name: 'Garlic Beef Stir-Fry',
-			detailName: 'Garlic Beef Stir-Fry with Broccoli',
-			category: RECIPE_CATEGORY_CHINESE,
-			bandClass: RECIPE_BAND_CHINESE,
-			cookTimeMin: 40,
-			baseServings: 2,
-			badges: [
-				{ type: RECIPE_ITYPE_MEAT, emoji: '🥩', label: 'Meat' },
-				{ type: RECIPE_ITYPE_VEG, emoji: '🥬', label: 'Vegetables' },
-				{ type: RECIPE_ITYPE_SEAS, emoji: '🧂', label: 'Seasoning' }
-			],
-			groups: [
-				{
-					type: RECIPE_ITYPE_MEAT,
-					emoji: '🥩',
-					label: 'Meat / Protein',
-					items: [
-						{ name: 'Beef sirloin', baseQty: 300, unit: 'g' },
-						{ name: 'Egg white', baseQty: 1, unit: '' },
-						{ name: 'Bacon', baseQty: 50, unit: 'g', hidden: true }
-					]
-				},
-				{
-					type: RECIPE_ITYPE_VEG,
-					emoji: '🥬',
-					label: 'Vegetables',
-					items: [
-						{ name: 'Broccoli', baseQty: 200, unit: 'g' },
-						{ name: 'Garlic', baseQty: 4, unit: 'cloves' },
-						{ name: 'Ginger', baseQty: 1, unit: 'thumb' },
-						{ name: 'Onion', baseQty: 1, unit: '', hidden: true },
-						{ name: 'Spring onion', baseQty: 2, unit: 'stalks', hidden: true }
-					]
-				},
-				{
-					type: RECIPE_ITYPE_SEAS,
-					emoji: '🧂',
-					label: 'Seasoning',
-					items: [
-						{ name: 'Soy sauce', baseQty: 2, unit: 'tbsp' },
-						{ name: 'Oyster sauce', baseQty: 1, unit: 'tbsp' },
-						{ name: 'Sesame oil', baseQty: 1, unit: 'tsp' },
-						{ name: 'Cornstarch', baseQty: 1, unit: 'tbsp' },
-						{ name: 'Salt', baseQty: 1, unit: 'tsp', hidden: true },
-						{ name: 'Black pepper', baseQty: 1, unit: 'pinch', hidden: true }
-					]
-				},
-				{
-					type: RECIPE_ITYPE_SPICE,
-					emoji: '🌶️',
-					label: 'Spice',
-					items: [{ name: 'Chili flakes', baseQty: 1, unit: 'tsp', hidden: true }]
-				}
-			],
-			steps: [
-				{
-					text: [
-						{ kind: 'text', text: 'Slice the ' },
-						{ kind: 'pill', text: 'Beef', pillType: RECIPE_ITYPE_MEAT },
-						{ kind: 'text', text: ' against the grain into thin strips. Mix with ' },
-						{ kind: 'pill', text: 'cornstarch', pillType: RECIPE_ITYPE_SEAS },
-						{ kind: 'text', text: ', ' },
-						{ kind: 'pill', text: 'egg white', pillType: RECIPE_ITYPE_MEAT },
-						{ kind: 'text', text: ', ' },
-						{ kind: 'pill', text: 'soy sauce', pillType: RECIPE_ITYPE_SEAS },
-						{ kind: 'text', text: ' (1 tbsp), and ' },
-						{ kind: 'pill', text: 'cooking wine', pillType: RECIPE_ITYPE_LIQ },
-						{ kind: 'text', text: '. Marinate 15 minutes.' }
-					],
-					substeps: [
-						'Slice with the knife at a 30° angle for a wider surface area — the beef will be more tender.',
-						'Aim for slices about 3 mm thick; partial-freezing the beef for 15 min first makes it easier.',
-						'Massage the marinade in by hand for 30 seconds before resting — this is called “velveting”.'
-					],
-					done: false
-				},
-				{
-					text: [
-						{ kind: 'text', text: 'Blanch ' },
-						{ kind: 'pill', text: 'broccoli', pillType: RECIPE_ITYPE_VEG },
-						{ kind: 'text', text: ' in salted boiling water for 2 minutes. Drain and set aside.' }
-					],
-					substeps: [
-						'Cut florets to roughly the same size so they cook evenly.',
-						'Shock in ice water immediately after blanching to lock in the bright green colour.'
-					],
-					done: false
-				},
-				{
-					text: [
-						{ kind: 'text', text: 'Heat the wok on high. Add oil. Stir-fry ' },
-						{ kind: 'pill', text: 'Beef', pillType: RECIPE_ITYPE_MEAT },
-						{ kind: 'text', text: ' for 90 seconds until browned. Remove from wok.' }
-					],
-					substeps: [
-						'Wok should smoke lightly before the oil goes in — that’s “wok hei”.',
-						'Spread beef in a single layer, leave 20 sec untouched for a sear, then toss.'
-					],
-					done: true
-				},
-				{
-					text: [
-						{ kind: 'text', text: 'In the same wok, add ' },
-						{ kind: 'pill', text: 'garlic', pillType: RECIPE_ITYPE_VEG },
-						{ kind: 'text', text: ' and ' },
-						{ kind: 'pill', text: 'ginger', pillType: RECIPE_ITYPE_VEG },
-						{ kind: 'text', text: '. Stir-fry 30 seconds until fragrant.' }
-					],
-					substeps: ['Lower the heat slightly so the aromatics don’t burn before the next step.'],
-					done: false
-				},
-				{
-					text: [
-						{ kind: 'text', text: 'Return the ' },
-						{ kind: 'pill', text: 'Beef', pillType: RECIPE_ITYPE_MEAT },
-						{ kind: 'text', text: '. Add ' },
-						{ kind: 'pill', text: 'broccoli', pillType: RECIPE_ITYPE_VEG },
-						{ kind: 'text', text: ', ' },
-						{ kind: 'pill', text: 'oyster sauce', pillType: RECIPE_ITYPE_SEAS },
-						{ kind: 'text', text: ', remaining ' },
-						{ kind: 'pill', text: 'soy sauce', pillType: RECIPE_ITYPE_SEAS },
-						{ kind: 'text', text: ', and ' },
-						{ kind: 'pill', text: 'water', pillType: RECIPE_ITYPE_LIQ },
-						{ kind: 'text', text: '. Toss for 1 minute. Finish with ' },
-						{ kind: 'pill', text: 'sesame oil', pillType: RECIPE_ITYPE_SEAS },
-						{ kind: 'text', text: '. Serve immediately.' }
-					],
-					substeps: [
-						'Toss with the wok, not a spatula — keeps the broccoli intact.',
-						'Sesame oil goes in off the heat; high heat destroys its aroma.',
-						'Serve straight from the wok onto a warm plate to preserve the glaze.'
-					],
-					done: false
-				}
-			],
-			notes: 'Velveting the beef with cornstarch and egg white is the key to restaurant-level tenderness. Don’t skip the marinade time — give it the full 15 minutes for the proteins to relax.'
-		},
-		{
-			id: 'carbonara',
-			name: 'Creamy Pasta Carbonara',
-			detailName: 'Creamy Pasta Carbonara',
-			category: RECIPE_CATEGORY_WESTERN,
-			bandClass: RECIPE_BAND_WESTERN,
-			cookTimeMin: 25,
-			baseServings: 2,
-			badges: [
-				{ type: RECIPE_ITYPE_GRAIN, emoji: '🌾', label: 'Starch' },
-				{ type: RECIPE_ITYPE_DAIRY, emoji: '🧈', label: 'Dairy' },
-				{ type: RECIPE_ITYPE_MEAT, emoji: '🥩', label: 'Meat' }
-			],
-			groups: [],
-			steps: [],
-			notes: ''
-		},
-		{
-			id: 'tofu-hotpot',
-			name: 'Spicy Tofu Hotpot',
-			detailName: 'Spicy Tofu Hotpot',
-			category: RECIPE_CATEGORY_CHINESE,
-			bandClass: RECIPE_BAND_SPICY,
-			cookTimeMin: 55,
-			baseServings: 4,
-			badges: [
-				{ type: RECIPE_ITYPE_VEG, emoji: '🥬', label: 'Vegetables' },
-				{ type: RECIPE_ITYPE_SPICE, emoji: '🌶️', label: 'Spice' },
-				{ type: RECIPE_ITYPE_LIQ, emoji: '💧', label: 'Liquid' }
-			],
-			groups: [],
-			steps: [],
-			notes: ''
-		}
-	];
+	protected recipes: Recipe[] = [];
 
 	constructor(
 		private cdr: ChangeDetectorRef,
-		private utilities: Utilities,
+		private ngZone: NgZone,
 		private dialogService: DialogService,
+		private databaseService: DatabaseService,
+		private viewportScroller: ViewportScroller,
+		private breakpointObserver: BreakpointObserver,
 		@Inject(PLATFORM_ID) private platformId: object
 	) {}
+
+	/**
+	 * Lifecycle: subscribe to the recipes collection and keep the local list in sync.
+	 */
+	public ngOnInit(): void {
+		if (isPlatformBrowser(this.platformId)) {
+			this.recipesSub = this.databaseService.getRecipes().subscribe({
+				next: (recipes) => {
+					this.ngZone.run(() => {
+						this.recipes = recipes;
+						this.cdr.markForCheck();
+					});
+				},
+				error: (err) => LOG.error(this.className, RECIPE_MSG_LOAD_FAILED, err as Error)
+			});
+		}
+	}
+
+	/**
+	 * Lifecycle: unsubscribe from the recipes watcher and log component teardown.
+	 */
+	public ngOnDestroy(): void {
+		this.recipesSub?.unsubscribe();
+		LOG.info(this.className, COMPONENT_DESTROY);
+	}
 
 	/**
 	 * After every change-detection cycle, ensure all scrollable panels in the
@@ -320,38 +182,13 @@ export class RecipeComponent implements AfterViewChecked {
 	 */
 	public ngAfterViewChecked(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
-		this.attachAutoHide(this.stepsScrollEl?.nativeElement);
-		this.attachAutoHide(this.ingredientsScrollEl?.nativeElement);
-		document.querySelectorAll<HTMLElement>('.editor-body').forEach((el) => this.attachAutoHide(el));
+		Utilities.attachScrollAutoHide(this.stepsScrollEl?.nativeElement);
+		Utilities.attachScrollAutoHide(this.ingredientsScrollEl?.nativeElement);
+		document.querySelectorAll<HTMLElement>('.editor-body').forEach((el) => Utilities.attachScrollAutoHide(el));
+		document.querySelectorAll<HTMLElement>('.type-tabs').forEach((el) => Utilities.attachScrollAutoHide(el));
 		document
 			.querySelectorAll<HTMLElement>('.container-recipe > .view')
-			.forEach((el) => this.attachAutoHide(el));
-	}
-
-	/**
-	 * Attach a scroll-activity listener to a scrollable element that adds the
-	 * `is-scrolling` CSS class while the user is scrolling and removes it
-	 * 700 ms after scrolling stops, keeping the scrollbar hidden at rest.
-	 * No-ops if the element is already bound or is undefined.
-	 *
-	 * @param el - The scrollable DOM element to observe, or undefined to skip.
-	 */
-	private attachAutoHide(el?: HTMLElement): void {
-		if (!el || this.boundScrollEls.has(el)) return;
-		this.boundScrollEls.add(el);
-		const reveal = () => {
-			el.classList.add('is-scrolling');
-			const prev = this.scrollTimers.get(el);
-			if (prev) clearTimeout(prev);
-			this.scrollTimers.set(
-				el,
-				setTimeout(() => el.classList.remove('is-scrolling'), 700)
-			);
-		};
-		el.addEventListener('scroll', reveal, { passive: true });
-		el.addEventListener('mouseenter', () => {
-			if (el.scrollHeight > el.clientHeight) reveal();
-		});
+			.forEach((el) => Utilities.attachScrollAutoHide(el));
 	}
 
 	/**
@@ -362,7 +199,7 @@ export class RecipeComponent implements AfterViewChecked {
 	 * @returns True if the text contains a Chinese character, false otherwise.
 	 */
 	protected hasChinese(text: string | null | undefined): boolean {
-		return this.utilities.checkIfChinese(text);
+		return Utilities.checkIfChinese(text);
 	}
 
 	/**
@@ -373,7 +210,7 @@ export class RecipeComponent implements AfterViewChecked {
 	 * @returns The title-cased string, or an empty string for falsy input.
 	 */
 	protected titleCase(text: string | null | undefined): string {
-		return this.utilities.capitalizeFirstLetterOnEachWord(text);
+		return Utilities.capitalizeFirstLetterOnEachWord(text);
 	}
 
 	/**
@@ -428,11 +265,11 @@ export class RecipeComponent implements AfterViewChecked {
 	 * @param view - The view identifier to activate (one of the VIEW_* constants).
 	 */
 	private transitionTo(view: string): void {
-		this.currentView = view;
-		if (isPlatformBrowser(this.platformId)) {
-			window.scrollTo({ top: 0, behavior: 'auto' });
-		}
-		this.cdr.markForCheck();
+		this.ngZone.run(() => {
+			this.currentView = view;
+			this.viewportScroller.scrollToPosition([0, 0]);
+			this.cdr.markForCheck();
+		});
 	}
 
 	/**
@@ -472,7 +309,7 @@ export class RecipeComponent implements AfterViewChecked {
 	 */
 	protected toggleIngredients(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
-		if (!window.matchMedia('(max-width: 940px)').matches) return;
+		if (!this.breakpointObserver.isMatched(BREAKPOINT_MOBILE)) return;
 		this.ingredientsCollapsed = !this.ingredientsCollapsed;
 	}
 
@@ -577,7 +414,6 @@ export class RecipeComponent implements AfterViewChecked {
 
 		this.editorIngredients = recipe.groups.flatMap((g) =>
 			g.items.map((item) => ({
-				id: makeId(),
 				type: g.type,
 				name: item.name,
 				qty: item.baseQty ? String(item.baseQty) : '',
@@ -587,16 +423,15 @@ export class RecipeComponent implements AfterViewChecked {
 		// Active type tab defaults to the first group present, or veg if empty
 		this.editorActiveType = recipe.groups[0]?.type ?? RECIPE_ITYPE_VEG;
 		if (this.editorIngredients.length === 0) {
-			this.editorIngredients = [{ id: makeId(), type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }];
+			this.editorIngredients = [{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }];
 		}
 
 		this.editorSteps = recipe.steps.map((s) => ({
-			id: makeId(),
 			text: s.text.map((t) => t.text).join(''),
-			subs: s.substeps.map((text) => ({ id: makeId(), text }))
+			subs: s.substeps.map((text) => ({ text }))
 		}));
 		if (this.editorSteps.length === 0) {
-			this.editorSteps = [{ id: makeId(), text: '', subs: [] }];
+			this.editorSteps = [{ text: '', subs: [] }];
 		}
 	}
 
@@ -626,7 +461,7 @@ export class RecipeComponent implements AfterViewChecked {
 
 	/**
 	 * Prompt the user to confirm deletion of the recipe currently being edited,
-	 * then remove it from the in-memory list and navigate back to the list view.
+	 * then remove it from the database and navigate back to the list view.
 	 * Only callable when {@link editingMode} is 'edit' and {@link editingRecipeId} is set.
 	 */
 	protected removeCurrentRecipe(): void {
@@ -634,9 +469,19 @@ export class RecipeComponent implements AfterViewChecked {
 			this.dialogContainer,
 			DIALOG_CONFIRM,
 			() => {
-				this.recipes = this.recipes.filter((r) => r.id !== this.editingRecipeId);
-				LOG.info('RecipeComponent', `Recipe deleted: ${this.editingRecipeId}`);
-				this.transitionTo(RECIPE_VIEW_LIST);
+				if (!this.editingRecipeId) return;
+				const id = this.editingRecipeId;
+				this.databaseService
+					.removeRecipe(id)
+					.then(() => {
+						LOG.info(this.className, `Recipe deleted: ${id}`);
+						this.dialogService.showToast(TOAST_INFO, RECIPE_MSG_DELETED);
+						this.transitionTo(RECIPE_VIEW_LIST);
+					})
+					.catch((err: unknown) => {
+						LOG.error(this.className, RECIPE_MSG_DELETE_FAILED, err as Error);
+						this.dialogService.showToast(TOAST_ERROR, RECIPE_MSG_DELETE_FAILED, RECIPE_MSG_DELETE_FAILED_DETAIL);
+					});
 			},
 			[RECIPE_DELETE_MESSAGE, RECIPE_DELETE_TITLE, RECIPE_DELETE_BTN]
 		);
@@ -654,12 +499,12 @@ export class RecipeComponent implements AfterViewChecked {
 		this.editorNotes = '';
 		this.editorActiveType = RECIPE_ITYPE_VEG;
 		this.editorIngredients = [
-			{ id: makeId(), type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' },
-			{ id: makeId(), type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }
+			{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' },
+			{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }
 		];
 		this.editorSteps = [
-			{ id: makeId(), text: '', subs: [] },
-			{ id: makeId(), text: '', subs: [] }
+			{ text: '', subs: [] },
+			{ text: '', subs: [] }
 		];
 		this.editorNameInvalid = false;
 		this.editorCategoryInvalid = false;
@@ -714,7 +559,6 @@ export class RecipeComponent implements AfterViewChecked {
 	 */
 	protected addEditorIngredient(): void {
 		this.editorIngredients.push({
-			id: makeId(),
 			type: this.editorActiveType,
 			name: '',
 			qty: '',
@@ -723,41 +567,28 @@ export class RecipeComponent implements AfterViewChecked {
 	}
 
 	/**
-	 * Remove the ingredient row with the given ID from the editor list.
+	 * Remove an ingredient row from the editor list.
 	 *
-	 * @param id - The local ID of the ingredient row to remove.
+	 * @param ing - The ingredient row to remove.
 	 */
-	protected removeEditorIngredient(id: string): void {
-		this.editorIngredients = this.editorIngredients.filter((i) => i.id !== id);
-	}
-
-	/**
-	 * Angular track-by function for `@for` loops over editor rows.
-	 * Returns the item's stable local ID so Angular can reuse DOM nodes
-	 * across list mutations instead of re-rendering every row.
-	 *
-	 * @param _ - The loop index (unused).
-	 * @param item - The list item with an `id` property.
-	 * @returns The item's ID string.
-	 */
-	protected trackById(_: number, item: { id: string }): string {
-		return item.id;
+	protected removeEditorIngredient(ing: EditorIngredient): void {
+		this.editorIngredients = this.editorIngredients.filter((i) => i !== ing);
 	}
 
 	/**
 	 * Append a new blank step card to the editor step list.
 	 */
 	protected addEditorStep(): void {
-		this.editorSteps.push({ id: makeId(), text: '', subs: [] });
+		this.editorSteps.push({ text: '', subs: [] });
 	}
 
 	/**
-	 * Remove the step card with the given ID from the editor step list.
+	 * Remove a step card from the editor step list.
 	 *
-	 * @param id - The local ID of the step to remove.
+	 * @param step - The step to remove.
 	 */
-	protected removeEditorStep(id: string): void {
-		this.editorSteps = this.editorSteps.filter((s) => s.id !== id);
+	protected removeEditorStep(step: EditorStep): void {
+		this.editorSteps = this.editorSteps.filter((s) => s !== step);
 	}
 
 	/**
@@ -766,17 +597,57 @@ export class RecipeComponent implements AfterViewChecked {
 	 * @param step - The step card that should receive the new sub-point.
 	 */
 	protected addSubpoint(step: EditorStep): void {
-		step.subs.push({ id: makeId(), text: '' });
+		step.subs.push({ text: '' });
 	}
 
 	/**
-	 * Remove a sub-point from a step by its local ID.
+	 * Remove a sub-point from a step.
 	 *
-	 * @param step  - The step card that owns the sub-point.
-	 * @param subId - The local ID of the sub-point to remove.
+	 * @param step - The step card that owns the sub-point.
+	 * @param sub  - The sub-point to remove.
 	 */
-	protected removeSubpoint(step: EditorStep, subId: string): void {
-		step.subs = step.subs.filter((x) => x.id !== subId);
+	protected removeSubpoint(step: EditorStep, sub: EditorSubpoint): void {
+		step.subs = step.subs.filter((x) => x !== sub);
+	}
+
+	/**
+	 * Close the category dropdown when a click lands outside it.
+	 * No-ops when the dropdown is already closed to avoid spurious change detection.
+	 *
+	 * @param event - The document-level click event.
+	 */
+	@HostListener('document:click', ['$event'])
+	protected onDocumentClick(event: Event): void {
+		if (!this.editorCategoryOpen) return;
+		if (this.catDropdownEl?.nativeElement.contains(event.target as Node)) return;
+		this.editorCategoryOpen = false;
+		this.cdr.markForCheck();
+	}
+
+	/**
+	 * Toggle the category dropdown open/closed.
+	 * Stops event propagation so the document click handler does not
+	 * immediately close the panel we just opened.
+	 *
+	 * @param event - The click event from the trigger button.
+	 */
+	protected toggleCategoryDropdown(event: Event): void {
+		event.stopPropagation();
+		this.editorCategoryOpen = !this.editorCategoryOpen;
+		this.cdr.markForCheck();
+	}
+
+	/**
+	 * Select a category from the custom dropdown, close the panel,
+	 * and clear the invalid flag if one was showing.
+	 *
+	 * @param cat - The category string the user clicked.
+	 */
+	protected selectCategoryOption(cat: string): void {
+		this.editorCategory = cat;
+		this.editorCategoryOpen = false;
+		this.editorCategoryInvalid = false;
+		this.cdr.markForCheck();
 	}
 
 	/**
@@ -788,20 +659,12 @@ export class RecipeComponent implements AfterViewChecked {
 	}
 
 	/**
-	 * Clear the category-invalid flag as soon as the user selects a category,
-	 * removing the error highlight before the next save attempt.
-	 */
-	protected onEditorCategoryChange(): void {
-		if (this.editorCategory) this.editorCategoryInvalid = false;
-	}
-
-	/**
 	 * Validate and persist the current editor state as a new or updated recipe.
 	 * Marks required fields invalid and returns early if validation fails.
-	 * On success, adds or replaces the recipe in the in-memory list, updates
-	 * `activeRecipe` when editing, logs the operation, and navigates to the list view.
+	 * On success, writes to the database and navigates back to the list view.
+	 * The recipe watcher keeps the local list in sync automatically.
 	 */
-	protected saveRecipe(): void {
+	protected async saveRecipe(): Promise<void> {
 		this.editorNameInvalid = !this.editorName.trim();
 		this.editorCategoryInvalid = !this.editorCategory;
 		if (this.editorNameInvalid || this.editorCategoryInvalid) return;
@@ -834,7 +697,7 @@ export class RecipeComponent implements AfterViewChecked {
 
 		const isEdit = this.editingMode === RECIPE_EDITING_MODE_EDIT && !!this.editingRecipeId;
 		const recipe: Recipe = {
-			id: isEdit ? this.editingRecipeId! : makeId(),
+			id: isEdit ? this.editingRecipeId! : '',
 			name: this.editorName.trim(),
 			detailName: this.editorName.trim(),
 			category: this.editorCategory,
@@ -847,19 +710,21 @@ export class RecipeComponent implements AfterViewChecked {
 			notes: this.editorNotes.trim()
 		};
 
-		if (isEdit) {
-			const idx = this.recipes.findIndex((r) => r.id === this.editingRecipeId);
-			if (idx >= 0) this.recipes[idx] = recipe;
-			this.activeRecipe = recipe;
-		} else {
-			this.recipes.push(recipe);
+		try {
+			if (isEdit) {
+				await this.databaseService.updateRecipe(recipe);
+				LOG.info(this.className, `Recipe updated: ${recipe.id} "${recipe.name}"`);
+				this.dialogService.showToast(TOAST_SUCCESS, RECIPE_MSG_UPDATED);
+			} else {
+				await this.databaseService.addRecipe(recipe);
+				LOG.info(this.className, `Recipe created: "${recipe.name}"`);
+				this.dialogService.showToast(TOAST_SUCCESS, RECIPE_MSG_ADDED);
+			}
+			this.transitionTo(RECIPE_VIEW_LIST);
+		} catch (err) {
+			LOG.error(this.className, RECIPE_MSG_SAVE_FAILED, err as Error);
+			this.dialogService.showToast(TOAST_ERROR, RECIPE_MSG_SAVE_FAILED, RECIPE_MSG_SAVE_FAILED_DETAIL);
 		}
-
-		LOG.info(
-			'RecipeComponent',
-			`Recipe ${isEdit ? 'updated' : 'created'}: ${recipe.id} "${recipe.name}"`
-		);
-		this.transitionTo(RECIPE_VIEW_LIST);
 	}
 
 	/**
@@ -891,7 +756,7 @@ export class RecipeComponent implements AfterViewChecked {
 			}
 			const matched = match[1];
 			const type = nameMap.get(matched.toLowerCase());
-			const labeled = this.utilities.capitalizeFirstLetterOnEachWord(matched);
+			const labeled = Utilities.capitalizeFirstLetterOnEachWord(matched);
 			tokens.push({ kind: 'pill', text: labeled, pillType: type });
 			lastIdx = match.index + matched.length;
 		}
@@ -924,15 +789,15 @@ export class RecipeComponent implements AfterViewChecked {
 
 	// ── Drag-to-reorder steps ─────────────────────────────────────────
 	/**
-	 * Handle the dragstart event on a step card, recording the dragged step ID
-	 * and setting the drag-transfer data and effect.
+	 * Handle the dragstart event on a step card, recording the dragged step
+	 * reference and setting the drag-transfer data and effect.
 	 *
 	 * @param step  - The step card being dragged.
 	 * @param event - The native drag event.
 	 */
 	protected onStepDragStart(step: EditorStep, event: DragEvent): void {
-		this.draggingStepId = step.id;
-		event.dataTransfer?.setData('text/plain', step.id);
+		this.draggingStep = step;
+		event.dataTransfer?.setData('text/plain', String(this.editorSteps.indexOf(step)));
 		if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
 	}
 
@@ -941,8 +806,8 @@ export class RecipeComponent implements AfterViewChecked {
 	 * so no step card remains styled as a drag source or drop target.
 	 */
 	protected onStepDragEnd(): void {
-		this.draggingStepId = null;
-		this.dropTargetStepId = null;
+		this.draggingStep = null;
+		this.dropTargetStep = null;
 		this.dropPosition = null;
 	}
 
@@ -959,7 +824,7 @@ export class RecipeComponent implements AfterViewChecked {
 		if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
 		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
 		const before = event.clientY - rect.top < rect.height / 2;
-		this.dropTargetStepId = step.id;
+		this.dropTargetStep = step;
 		this.dropPosition = before ? RECIPE_DROP_ABOVE : RECIPE_DROP_BELOW;
 	}
 
@@ -971,8 +836,8 @@ export class RecipeComponent implements AfterViewChecked {
 	 * @param step - The step card the cursor has left.
 	 */
 	protected onStepDragLeave(step: EditorStep): void {
-		if (this.dropTargetStepId === step.id) {
-			this.dropTargetStepId = null;
+		if (this.dropTargetStep === step) {
+			this.dropTargetStep = null;
 			this.dropPosition = null;
 		}
 	}
@@ -988,20 +853,20 @@ export class RecipeComponent implements AfterViewChecked {
 	 */
 	protected onStepDrop(target: EditorStep, event: DragEvent): void {
 		event.preventDefault();
-		const draggedId = event.dataTransfer?.getData('text/plain') ?? this.draggingStepId;
-		if (!draggedId || draggedId === target.id) {
+		const dragged = this.draggingStep;
+		if (!dragged || dragged === target) {
 			this.onStepDragEnd();
 			return;
 		}
 		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
 		const before = event.clientY - rect.top < rect.height / 2;
-		const fromIdx = this.editorSteps.findIndex((x) => x.id === draggedId);
+		const fromIdx = this.editorSteps.indexOf(dragged);
 		if (fromIdx < 0) {
 			this.onStepDragEnd();
 			return;
 		}
 		const moved = this.editorSteps.splice(fromIdx, 1)[0];
-		let toIdx = this.editorSteps.findIndex((x) => x.id === target.id);
+		let toIdx = this.editorSteps.indexOf(target);
 		if (!before) toIdx += 1;
 		this.editorSteps.splice(toIdx, 0, moved);
 		this.onStepDragEnd();
@@ -1014,7 +879,7 @@ export class RecipeComponent implements AfterViewChecked {
 	 * @returns True if this step is the active drag source.
 	 */
 	protected isStepDragging(step: EditorStep): boolean {
-		return this.draggingStepId === step.id;
+		return this.draggingStep === step;
 	}
 
 	/**
@@ -1026,6 +891,6 @@ export class RecipeComponent implements AfterViewChecked {
 	 * @returns True if this step is the active drop target at the given position.
 	 */
 	protected isStepDropTarget(step: EditorStep, position: 'above' | 'below'): boolean {
-		return this.dropTargetStepId === step.id && this.dropPosition === position;
+		return this.dropTargetStep === step && this.dropPosition === position;
 	}
 }

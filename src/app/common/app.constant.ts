@@ -4,6 +4,7 @@ export const COMPONENT_DESTROY = 'Component Destroyed';
 // ── Database — collection names ────────────────────────────────────────────
 export const DATABASE_HISTORY = 'history';
 export const DATABASE_MOVIES = 'movies';
+export const DATABASE_RECIPES = 'recipes';
 export const DATABASE_PATCH_NOTES = 'patch_notes';
 export const DATABASE_QUOTES = 'quotes';
 export const DATABASE_REMINDER = 'reminder'; // Firebase path prefix
@@ -131,6 +132,8 @@ export const NEXUS_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
 export const NEXUS_STORAGE_KEY_SELECTED_AIS = 'nexus_selected_ais';
 /** LocalStorage key for persisting the launch search history. */
 export const NEXUS_STORAGE_KEY_HISTORY = 'nexus_search_history';
+/** Default colour applied to new and un-styled link categories. */
+export const NEXUS_DEFAULT_CATEGORY_COLOR = '#d53369';
 
 // ── Toast severities ───────────────────────────────────────────────────────
 export const TOAST_SUCCESS = 'success';
@@ -235,6 +238,19 @@ export const RECIPE_BAND_SPICY = 'band-spicy';
 // ── Recipe — drag-drop position discriminators ───────────────────────────
 export const RECIPE_DROP_ABOVE = 'above';
 export const RECIPE_DROP_BELOW = 'below';
+
+// ── Recipe — log / toast messages ────────────────────────────────────────
+export const RECIPE_MSG_LOAD_FAILED = 'Failed to load recipes';
+export const RECIPE_MSG_ADDED = 'Recipe saved';
+export const RECIPE_MSG_UPDATED = 'Recipe updated';
+export const RECIPE_MSG_DELETED = 'Recipe deleted';
+export const RECIPE_MSG_SAVE_FAILED = 'Save failed';
+export const RECIPE_MSG_SAVE_FAILED_DETAIL = 'Could not save the recipe. Please try again.';
+export const RECIPE_MSG_DELETE_FAILED = 'Delete failed';
+export const RECIPE_MSG_DELETE_FAILED_DETAIL = 'Could not delete the recipe. Please try again.';
+
+// ── Layout — responsive breakpoints ──────────────────────────────────────
+export const BREAKPOINT_MOBILE = '(max-width: 940px)';
 
 // ── Errors ─────────────────────────────────────────────────────────────────
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';

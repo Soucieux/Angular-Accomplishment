@@ -44,6 +44,12 @@
 						<article class="recipe-card" (click)="openRecipe(recipe)">
 							<div class="band" [class]="recipe.bandClass">
 								<span class="category-tag">{{ recipe.category }}</span>
+								@if (recipes.length === 1) {
+									<span class="example-badge">
+										<span class="material-symbols-outlined">auto_awesome</span>
+										Example
+									</span>
+								}
 							</div>
 							<div class="body">
 								<div class="name">{{ recipe.name }}</div>
@@ -192,7 +198,7 @@
 					Recipes
 				</button>
 				<div class="editor-actions">
-					@if (editingMode === 'edit') {
+					@if (editingMode === 'edit' && recipes.length > 1) {
 						<button class="btn btn-danger" (click)="removeCurrentRecipe()">
 							<span class="material-symbols-outlined">delete</span>
 							Delete
@@ -229,16 +235,30 @@
 						<input type="number" min="1" [(ngModel)]="editorServings" />
 						<span class="suffix">servings</span>
 					</label>
-					<label class="meta-chip editor-meta-chip select-chip" [class.invalid]="editorCategoryInvalid">
+					<div #catDropdown class="meta-chip editor-meta-chip select-chip" [class.invalid]="editorCategoryInvalid" [class.open]="editorCategoryOpen">
 						<span class="material-symbols-outlined ico">restaurant</span>
-						<select [(ngModel)]="editorCategory" (change)="onEditorCategoryChange()">
-							<option value="" disabled>Choose category…</option>
-							@for (cat of editorCategories; track cat) {
-								<option [value]="cat">{{ cat }}</option>
-							}
-						</select>
-					</label>
+						<span class="cat-trigger" role="button" tabindex="0"
+							(click)="toggleCategoryDropdown($event)"
+							(keydown.enter)="toggleCategoryDropdown($event)"
+							(keydown.space)="toggleCategoryDropdown($event)">
+							<span [class.cat-placeholder]="!editorCategory">{{ editorCategory || 'Choose category…' }}</span>
+							<span class="material-symbols-outlined drop-arrow">expand_more</span>
+						</span>
+						@if (editorCategoryOpen) {
+							<div class="cat-panel">
+								@for (cat of editorCategories; track cat) {
+									<button type="button" class="cat-option" [class.selected]="editorCategory === cat" (click)="selectCategoryOption(cat)">{{ cat }}</button>
+								}
+							</div>
+						}
+					</div>
 				</div>
+				@if (editorCategoryInvalid) {
+					<p class="field-error">
+						<span class="material-symbols-outlined">error</span>
+						Please select a category before saving.
+					</p>
+				}
 			</div>
 
 			<div class="detail-grid">
@@ -271,7 +291,7 @@
 							@for (g of editorGroupedIngredients; track g.type) {
 								<div class="ing-group" [class]="g.type">
 									<div class="ing-group-head">{{ g.emoji }} {{ g.label }}</div>
-									@for (it of g.items; track it.id) {
+									@for (it of g.items; track $index) {
 										<div class="ing-row" [class]="g.type">
 											<span class="type-dot"></span>
 											<input
@@ -289,7 +309,7 @@
 												type="text"
 												placeholder="unit"
 												[(ngModel)]="it.unit" />
-											<button class="remove" title="Remove" (click)="removeEditorIngredient(it.id)">×</button>
+											<button class="remove" title="Remove" (click)="removeEditorIngredient(it)">×</button>
 										</div>
 									}
 								</div>
@@ -309,7 +329,7 @@
 						Steps
 					</h2>
 					<div class="editor-body steps-editor-body">
-						@for (step of editorSteps; track step.id; let i = $index) {
+						@for (step of editorSteps; track $index; let i = $index) {
 							<div
 								class="step-card"
 								[class.dragging]="isStepDragging(step)"
@@ -329,14 +349,14 @@
 										placeholder="Describe this step…"
 										[(ngModel)]="step.text"></textarea>
 									<div class="subpoints">
-										@for (sub of step.subs; track sub.id) {
+										@for (sub of step.subs; track $index) {
 											<div class="sub-row">
 												<span class="sub-dot"></span>
 												<input
 													type="text"
 													placeholder="Sub-point (optional)"
 													[(ngModel)]="sub.text" />
-												<button class="remove" title="Remove" (click)="removeSubpoint(step, sub.id)">×</button>
+												<button class="remove" title="Remove" (click)="removeSubpoint(step, sub)">×</button>
 											</div>
 										}
 									</div>
@@ -344,7 +364,7 @@
 								</div>
 								<div class="step-tools">
 									<span class="drag" title="Drag to reorder">⋮⋮</span>
-									<button class="remove" title="Remove step" (click)="removeEditorStep(step.id)">×</button>
+									<button class="remove" title="Remove step" (click)="removeEditorStep(step)">×</button>
 								</div>
 							</div>
 						}

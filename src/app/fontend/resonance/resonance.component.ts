@@ -61,7 +61,6 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		private authService: AuthService,
-		private utilities: Utilities,
 		private cdr: ChangeDetectorRef
 	) {}
 
@@ -186,7 +185,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			const name = this.isSignedIn
 				? CloudbaseService.getUserName() || 'Anonymous'
 				: this.authorName.trim() || 'Anonymous';
-			const timestamp = this.utilities.getCurrentFormattedTime(true);
+			const timestamp = Utilities.getCurrentFormattedTime(true);
 			await this.databaseService.addQuote(text, name, timestamp);
 			this.newQuoteText = '';
 			this.authorName = '';

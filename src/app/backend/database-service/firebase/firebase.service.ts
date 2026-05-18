@@ -37,6 +37,7 @@ import {
 } from '@angular/fire/database';
 import { Observable, map, of } from 'rxjs';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
+import { Recipe } from '../../../fontend/recipe/recipe.model';
 import { DatabaseService } from '../database.service';
 
 @Injectable({
@@ -57,7 +58,6 @@ export class FirebaseService extends DatabaseService {
 		@Inject(Database) private db: Database,
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
 		private searchStreamService: SearchStreamService,
-		private utilities: Utilities
 	) {
 		super();
 		this.moviesRef = dbRef(this.db, 'movies');
@@ -156,26 +156,31 @@ export class FirebaseService extends DatabaseService {
 	 * @param movieItemVO - The movie item to update.
 	 */
 	public async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
-		// Step 1 : Gather necessary info
-		const movieRef = dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`);
-		const snapshot = await get(movieRef);
-		const oldRate = snapshot.exists() ? snapshot.val().rate : undefined;
+		try {
+			// Step 1 : Gather necessary info
+			const movieRef = dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`);
+			const snapshot = await get(movieRef);
+			const oldRate = snapshot.exists() ? snapshot.val().rate : undefined;
 
-		// Step 2 : Compare latest rate with the one stored in the database
-		if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
-			await update(movieRef, {
-				rate: movieItemVO.getMovieRate()
-			});
-			const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
-			this.searchStreamService.addSearchLog(
-				`The rate of ${movieItemVO.getMovieName()} is <span ${
-					rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
-				}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
-					rateDifference
-				)}</span> to ${movieItemVO.getMovieRate()}`
-			);
-		} else {
-			this.searchStreamService.addSearchLog(`The rate of ${movieItemVO.getMovieName()} stays the same`);
+			// Step 2 : Compare latest rate with the one stored in the database
+			if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
+				await update(movieRef, { rate: movieItemVO.getMovieRate() });
+				const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
+				this.searchStreamService.addSearchLog(
+					`The rate of ${movieItemVO.getMovieName()} is <span ${
+						rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
+					}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
+						rateDifference
+					)}</span> to ${movieItemVO.getMovieRate()}`
+				);
+			} else {
+				this.searchStreamService.addSearchLog(
+					`The rate of ${movieItemVO.getMovieName()} stays the same`
+				);
+			}
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating movie rate', error as Error);
+			throw error;
 		}
 	}
 
@@ -190,9 +195,7 @@ export class FirebaseService extends DatabaseService {
 		const movieRef = dbRef(this.db, `movies/${movieKey}`);
 
 		// Step 1 : Update movie genre
-		return update(movieRef, {
-			genre: newGenre
-		})
+		return update(movieRef, { genre: newGenre })
 			.then(() => {
 				LOG.info(this.className, `Movie genre has been updated`);
 
@@ -205,7 +208,10 @@ export class FirebaseService extends DatabaseService {
 			})
 			.then(() => {
 				LOG.info(this.className, `Movie statistics have been updated`);
-				return;
+			})
+			.catch((error: Error) => {
+				LOG.error(this.className, 'Error while updating movie genre', error);
+				throw error;
 			});
 	}
 
@@ -219,9 +225,7 @@ export class FirebaseService extends DatabaseService {
 		const movieRef = dbRef(this.db, `movies/${movieKey}`);
 
 		// Step 1 : Update movie favourite
-		return update(movieRef, {
-			isFavourite: isFavourite
-		})
+		return update(movieRef, { isFavourite })
 			.then(() => {
 				LOG.info(this.className, `Movie favourite tag has been updated`);
 
@@ -237,7 +241,10 @@ export class FirebaseService extends DatabaseService {
 			})
 			.then(() => {
 				LOG.info(this.className, `Movie statistics have been updated`);
-				return;
+			})
+			.catch((error: Error) => {
+				LOG.error(this.className, 'Error while updating movie favourite', error);
+				throw error;
 			});
 	}
 
@@ -368,9 +375,14 @@ export class FirebaseService extends DatabaseService {
 	 * @param keys - The keys to save.
 	 */
 	private saveReusableKeys(keys: string[]): Promise<void> {
-		return update(dbRef(this.db, 'statistics'), { reusableKeys: keys }).then(() => {
-			LOG.info(this.className, `Reusable keys have been updated`);
-		});
+		return update(dbRef(this.db, 'statistics'), { reusableKeys: keys })
+			.then(() => {
+				LOG.info(this.className, `Reusable keys have been updated`);
+			})
+			.catch((error: Error) => {
+				LOG.error(this.className, 'Error while saving reusable keys', error);
+				throw error;
+			});
 	}
 
 	/**
@@ -418,44 +430,49 @@ export class FirebaseService extends DatabaseService {
 	 * @param movieItemVO - The movie item to update.
 	 */
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
-		// Capture timestamp once so the same value is used in the history message
-		// and in the statistics update below.
-		const timestamp = this.utilities.getCurrentFormattedTime(true);
-		if (movieItemVO) {
-			await push(dbRef(this.db, DATABASE_HISTORY), {
-				id: movieItemVO.getMovieId(),
-				status: status,
-				message: this.buildHistoryMessage(status, timestamp, movieItemVO)
-			});
+		try {
+			// Capture timestamp once so the same value is used in the history message
+			// and in the statistics update below.
+			const timestamp = Utilities.getCurrentFormattedTime(true);
+			if (movieItemVO) {
+				await push(dbRef(this.db, DATABASE_HISTORY), {
+					id: movieItemVO.getMovieId(),
+					status: status,
+					message: this.buildHistoryMessage(status, timestamp, movieItemVO)
+				});
 
-			// Keep statistics in sync: record the most recently added movie.
-			if (status === HISTORY_STATUS_ADDED) {
-				await update(this.statisticsRef, {
-					lastAdded: {
+				// Keep statistics in sync: record the most recently added movie.
+				if (status === HISTORY_STATUS_ADDED) {
+					await update(this.statisticsRef, {
+						lastAdded: {
+							title: movieItemVO.getMovieName(),
+							genre: movieItemVO.getMovieGenre(),
+							rate: movieItemVO.getMovieRate(),
+							timestamp
+						}
+					});
+					this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
+						type: HISTORY_STATUS_ADDED,
 						title: movieItemVO.getMovieName(),
 						genre: movieItemVO.getMovieGenre(),
-						rate: movieItemVO.getMovieRate(),
 						timestamp
-					}
+					}).catch(() => {});
+				}
+			} else {
+				await push(dbRef(this.db, DATABASE_HISTORY), {
+					status: status,
+					message: this.buildHistoryMessage(status, timestamp)
 				});
-				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
-					type: HISTORY_STATUS_ADDED,
-					title: movieItemVO.getMovieName(),
-					genre: movieItemVO.getMovieGenre(),
-					timestamp
-				}).catch(() => {});
-			}
-		} else {
-			await push(dbRef(this.db, DATABASE_HISTORY), {
-				status: status,
-				message: this.buildHistoryMessage(status, timestamp)
-			});
 
-			// Keep statistics in sync: record the most recent rate-search timestamp.
-			await update(this.statisticsRef, { lastRateSearch: { timestamp } });
-			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: SEARCH, timestamp }).catch(() => {});
+				// Keep statistics in sync: record the most recent rate-search timestamp.
+				await update(this.statisticsRef, { lastRateSearch: { timestamp } });
+				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: SEARCH, timestamp }).catch(() => {});
+			}
+			LOG.info(this.className, 'New history entry has been added');
+		} catch (error) {
+			LOG.error(this.className, 'Error while adding new history entry', error as Error);
+			throw error;
 		}
-		LOG.info(this.className, 'New history entry has been added');
 	}
 
 	/**
@@ -487,15 +504,20 @@ export class FirebaseService extends DatabaseService {
 		return push(dbRef(this.db, DATABASE_PATCH_NOTES), {
 			// Normalize text casing so patch note entries have consistent formatting
 			// regardless of how the user typed them.
-			component: this.utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
-			element: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
-			details: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
+			component: Utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
+			element: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
+			details: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
 			status: newRecord.status,
 			timestamp: newRecord.timestamp,
 			isBug: newRecord.isBug
-		}).then(() => {
-			LOG.info(this.className, 'New patch notes record has been added');
-		});
+		})
+			.then(() => {
+				LOG.info(this.className, 'New patch notes record has been added');
+			})
+			.catch((error: Error) => {
+				LOG.error(this.className, 'Error while adding new patch notes record', error);
+				throw error;
+			});
 	}
 
 	/**
@@ -505,11 +527,14 @@ export class FirebaseService extends DatabaseService {
 	 * @param updatedRecord - The record to update.
 	 */
 	public updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
-		return update(dbRef(this.db, `${DATABASE_PATCH_NOTES}/${key}`), {
-			...updatedRecord
-		}).then(() => {
-			LOG.info(this.className, 'Patch notes record has been updated');
-		});
+		return update(dbRef(this.db, `${DATABASE_PATCH_NOTES}/${key}`), { ...updatedRecord })
+			.then(() => {
+				LOG.info(this.className, 'Patch notes record has been updated');
+			})
+			.catch((error: Error) => {
+				LOG.error(this.className, 'Error while updating patch notes record', error);
+				throw error;
+			});
 	}
 
 	/**
@@ -561,9 +586,14 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key associated with the record
 	 */
 	public removeSingleItemFromDatabase(tablePath: string, key: string): Promise<void> {
-		return remove(dbRef(this.db, `${tablePath}/${key}`)).then(() => {
-			LOG.info(this.className, 'Patch notes record has been removed');
-		});
+		return remove(dbRef(this.db, `${tablePath}/${key}`))
+			.then(() => {
+				LOG.info(this.className, `Record has been removed from ${tablePath}`);
+			})
+			.catch((error: Error) => {
+				LOG.error(this.className, `Error while removing record from ${tablePath}`, error);
+				throw error;
+			});
 	}
 
 	/**
@@ -660,18 +690,22 @@ export class FirebaseService extends DatabaseService {
 		valueKey: string,
 		value: any
 	): Promise<void> {
-		if (tableName === DATABASE_SECOND_TABLE) {
-			const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
-
-			await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}/content`), {
-				...valueToUpdate
-			});
-			LOG.info(this.className, 'Reminder table has been updated');
-		} else if (tableName === DATABASE_THIRD_TABLE) {
-			await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}`), {
-				[valueKey]: value
-			});
-			LOG.info(this.className, 'Reminder table has been updated');
+		try {
+			if (tableName === DATABASE_SECOND_TABLE) {
+				const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
+				await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}/content`), {
+					...valueToUpdate
+				});
+				LOG.info(this.className, 'Reminder table has been updated');
+			} else if (tableName === DATABASE_THIRD_TABLE) {
+				await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}`), {
+					[valueKey]: value
+				});
+				LOG.info(this.className, 'Reminder table has been updated');
+			}
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating reminder table', error as Error);
+			throw error;
 		}
 	}
 
@@ -682,11 +716,14 @@ export class FirebaseService extends DatabaseService {
 	 * @param updatedTable - The table to update
 	 */
 	public updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
-		return update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), {
-			...updatedTable
-		}).then(() => {
-			LOG.info(this.className, 'Reminder table has been updated');
-		});
+		return update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), { ...updatedTable })
+			.then(() => {
+				LOG.info(this.className, 'Reminder table has been updated');
+			})
+			.catch((error: Error) => {
+				LOG.error(this.className, 'Error while updating first reminder table', error);
+				throw error;
+			});
 	}
 
 	/**
@@ -717,19 +754,25 @@ export class FirebaseService extends DatabaseService {
 	 * @param timestamp - The timestamp of the quote.
 	 */
 	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
-		await push(dbRef(this.db, DATABASE_QUOTES), { text, author, timestamp });
-		LOG.info(this.className, 'New quote has been added');
-
-		// Update statistics: record latest quote and increment total count.
-		await runTransaction(this.statisticsRef, (currentData) => {
-			currentData = currentData ?? {};
-			currentData.latestQuote = { text, author, timestamp };
-			currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
-			return currentData;
-		});
-		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, { type: HISTORY_STATUS_ADDED, author, timestamp }).catch(
-			() => {}
-		);
+		try {
+			await push(dbRef(this.db, DATABASE_QUOTES), { text, author, timestamp });
+			LOG.info(this.className, 'New quote has been added');
+			// Update statistics: record latest quote and increment total count.
+			await runTransaction(this.statisticsRef, (currentData) => {
+				currentData = currentData ?? {};
+				currentData.latestQuote = { text, author, timestamp };
+				currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
+				return currentData;
+			});
+			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
+				type: HISTORY_STATUS_ADDED,
+				author,
+				timestamp
+			}).catch(() => {});
+		} catch (error) {
+			LOG.error(this.className, 'Error while adding quote', error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -738,20 +781,25 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key of the quote to remove.
 	 */
 	public async removeQuote(key: string, _text: string, author: string): Promise<void> {
-		await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
-		// Update statistics: decrement total quote count.
-		// latestQuote is intentionally left as-is; it refreshes on the next submission.
-		const deletedTimestamp = this.utilities.getCurrentFormattedTime(true);
-		await runTransaction(this.statisticsRef, (currentData) => {
-			currentData = currentData ?? {};
-			currentData.totalQuotes = Math.max(0, (currentData.totalQuotes ?? 1) - 1);
-			return currentData;
-		});
-		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
-			type: HISTORY_STATUS_DELETED,
-			author,
-			timestamp: deletedTimestamp
-		}).catch(() => {});
+		try {
+			await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+			// Update statistics: decrement total quote count.
+			// latestQuote is intentionally left as-is; it refreshes on the next submission.
+			const deletedTimestamp = Utilities.getCurrentFormattedTime(true);
+			await runTransaction(this.statisticsRef, (currentData) => {
+				currentData = currentData ?? {};
+				currentData.totalQuotes = Math.max(0, (currentData.totalQuotes ?? 1) - 1);
+				return currentData;
+			});
+			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
+				type: HISTORY_STATUS_DELETED,
+				author,
+				timestamp: deletedTimestamp
+			}).catch(() => {});
+		} catch (error) {
+			LOG.error(this.className, `Error while removing quote ${key}`, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -811,17 +859,22 @@ export class FirebaseService extends DatabaseService {
 	public addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
 		return push(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), {
 			content: { ...newRecord }
-		}).then(() => {
-			LOG.info(this.className, 'Reminder table has been updated');
-			if (tableName === DATABASE_THIRD_TABLE) {
-				this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-					type: HISTORY_STATUS_ADDED,
-					table: REMINDER_TABLE_MESSAGES,
-					text: newRecord.text ?? '',
-					timestamp: this.utilities.getCurrentFormattedTime(true)
-				}).catch(() => {});
-			}
-		});
+		})
+			.then(() => {
+				LOG.info(this.className, 'Reminder table has been updated');
+				if (tableName === DATABASE_THIRD_TABLE) {
+					this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
+						type: HISTORY_STATUS_ADDED,
+						table: REMINDER_TABLE_MESSAGES,
+						text: newRecord.text ?? '',
+						timestamp: Utilities.getCurrentFormattedTime(true)
+					}).catch(() => {});
+				}
+			})
+			.catch((error: Error) => {
+				LOG.error(this.className, 'Error while adding new record for reminder table', error);
+				throw error;
+			});
 	}
 
 	/**
@@ -931,5 +984,27 @@ export class FirebaseService extends DatabaseService {
 
 	public proxyFetch(_url: string): Promise<{ content: string; contentType: string }> {
 		return Promise.resolve({ content: '', contentType: '' });
+	}
+
+	// ── Recipes (not implemented for Firebase) ────────────────────────────────
+
+	/** @inheritdoc */
+	public getRecipes(): Observable<Recipe[]> {
+		return of([]);
+	}
+
+	/** @inheritdoc */
+	public addRecipe(_recipe: Recipe): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/** @inheritdoc */
+	public updateRecipe(_recipe: Recipe): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/** @inheritdoc */
+	public removeRecipe(_recipeId: string): Promise<void> {
+		return Promise.resolve();
 	}
 }

@@ -68,7 +68,7 @@
 				<div class="stat-chip chip-reminders">
 					<span class="material-symbols-outlined chip-icon">schedule</span>
 					<div class="chip-info">
-						<span class="chip-value">{{ getAllReminderItems().length }}</span>
+						<span class="chip-value">{{ stats?.reminderTotal ?? 0 }}</span>
 						<span class="chip-label">
 							Reminders
 							@if (getOverdueCount() > 0) {

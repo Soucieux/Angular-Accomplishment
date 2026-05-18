@@ -125,7 +125,11 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Attaches the auto-hide scroll listener to the page container after each view check.
 	 */
 	public ngAfterViewChecked(): void {
-		document.querySelectorAll<HTMLElement>('.container.page-card').forEach((el) => Utilities.attachScrollAutoHide(el));
+		if (isPlatformBrowser(this.platformId)) {
+			document
+				.querySelectorAll<HTMLElement>('.container.page-card')
+				.forEach((el) => Utilities.attachScrollAutoHide(el));
+		}
 	}
 
 	/**
@@ -166,7 +170,11 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 				// Stopped automatically when secondSub is unsubscribed in ngOnDestroy.
 				this.upcomingExpenses = rows
 					.filter((item: any) => item.content?.date && !item.content?.paid)
-					.map((item: any) => ({ type: REMINDER_ITEM_EXPENSE, name: item.name, date: item.content.date }));
+					.map((item: any) => ({
+						type: REMINDER_ITEM_EXPENSE,
+						name: item.name,
+						date: item.content.date
+					}));
 				this.syncReminderStatistics();
 			});
 

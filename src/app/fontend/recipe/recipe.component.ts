@@ -1,6 +1,5 @@
 import {
 	AfterViewChecked,
-	ChangeDetectionStrategy,
 	ChangeDetectorRef,
 	Component,
 	ElementRef,
@@ -87,7 +86,6 @@ import {
 	imports: [CommonModule, FormsModule],
 	templateUrl: './recipe.component.html',
 	styleUrl: './recipe.component.css',
-	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'RecipeComponent';
@@ -134,6 +132,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected editorCategoryOpen = false;
 	protected editingMode: 'create' | 'edit' = RECIPE_EDITING_MODE_CREATE;
 	private editingRecipeId: string | null = null;
+	private pendingDetailName: string | null = null;
 	private draggingStep: EditorStep | null = null;
 	private dropTargetStep: EditorStep | null = null;
 	private dropPosition: 'above' | 'below' | null = null;
@@ -162,6 +161,13 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 					this.ngZone.run(() => {
 						this.recipes = recipes;
 						this.isLoading = false;
+						if (this.pendingDetailName) {
+							const match = recipes.find((r) => r.name === this.pendingDetailName);
+							if (match) {
+								this.activeRecipe = match;
+								this.pendingDetailName = null;
+							}
+						}
 						this.cdr.markForCheck();
 					});
 				},
@@ -272,7 +278,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.ngZone.run(() => {
 			this.currentView = view;
 			this.viewportScroller.scrollToPosition([0, 0]);
-			this.cdr.markForCheck();
+			this.cdr.detectChanges();
 		});
 	}
 
@@ -300,6 +306,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected formatQty(base: number, unit: string): string {
 		if (!this.activeRecipe) return '';
+		if (!base) return '';
 		const scaled = base * (this.servings / this.activeRecipe.baseServings);
 		const rounded =
 			scaled === Math.round(scaled) ? String(scaled) : scaled.toFixed(1).replace(/\.0$/, '');
@@ -445,6 +452,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * navigates to the list view only if the user confirms.
 	 */
 	protected cancelAdd(): void {
+		if (this.editingMode === RECIPE_EDITING_MODE_EDIT) {
+			this.transitionTo(RECIPE_VIEW_DETAIL);
+			return;
+		}
 		const empty =
 			!this.editorName.trim() &&
 			!this.editorCategory &&
@@ -719,12 +730,17 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 				await this.databaseService.updateRecipe(recipe);
 				LOG.info(this.className, `Recipe updated: ${recipe.id} "${recipe.name}"`);
 				this.dialogService.showToast(TOAST_SUCCESS, RECIPE_MSG_UPDATED);
+				this.activeRecipe = recipe;
 			} else {
 				await this.databaseService.addRecipe(recipe);
 				LOG.info(this.className, `Recipe created: "${recipe.name}"`);
 				this.dialogService.showToast(TOAST_SUCCESS, RECIPE_MSG_ADDED);
+				this.pendingDetailName = recipe.name;
+				this.activeRecipe = recipe;
 			}
-			this.transitionTo(RECIPE_VIEW_LIST);
+			this.servings = recipe.baseServings || 1;
+			this.ingredientsCollapsed = false;
+			this.transitionTo(RECIPE_VIEW_DETAIL);
 		} catch (err) {
 			LOG.error(this.className, RECIPE_MSG_SAVE_FAILED, err as Error);
 			this.dialogService.showToast(TOAST_ERROR, RECIPE_MSG_SAVE_FAILED, RECIPE_MSG_SAVE_FAILED_DETAIL);

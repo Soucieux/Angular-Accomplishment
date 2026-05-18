@@ -1,4 +1,5 @@
 import {
+	AfterViewChecked,
 	ChangeDetectorRef,
 	Component,
 	Inject,
@@ -43,12 +44,12 @@ import {
 	REMINDER_TABLE_DATE_CALCULATOR,
 	REMINDER_TABLE_MESSAGES,
 	STATS_FIELD_RECENT_REMINDER,
+	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS
 } from '../../common/app.constant';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
-import { format } from 'date-fns';
 
 @Component({
 	selector: 'reminder',
@@ -71,7 +72,7 @@ import { format } from 'date-fns';
 	templateUrl: './reminder.component.html',
 	styleUrls: ['../../common/page.card.css', './reminder.component.css']
 })
-export class ReminderComponent implements OnInit, OnDestroy {
+export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'ReminderComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
@@ -117,8 +118,15 @@ export class ReminderComponent implements OnInit, OnDestroy {
 		private dialogService: DialogService,
 		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,
-		private utilities: Utilities
+		protected utilities: Utilities
 	) {}
+
+	/**
+	 * Attaches the auto-hide scroll listener to the page container after each view check.
+	 */
+	public ngAfterViewChecked(): void {
+		document.querySelectorAll<HTMLElement>('.container.page-card').forEach((el) => Utilities.attachScrollAutoHide(el));
+	}
 
 	/**
 	 * Initialises the component: checks hover capability, determines the current
@@ -586,15 +594,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 		const oldItem = this.findOriginalItem(DATABASE_THIRD_TABLE, entryKey);
 		if (JSON.stringify(updatedItem) === JSON.stringify(oldItem)) return;
 
-		let linkInLowerCase = link.toLowerCase();
-		if (linkInLowerCase.startsWith('www.')) {
-			linkInLowerCase = 'https://' + linkInLowerCase;
-		} else if (linkInLowerCase.startsWith('https://') || linkInLowerCase.startsWith('http://')) {
-			// do nothing
-		} else if (link) {
-			linkInLowerCase = 'https://www.' + linkInLowerCase;
-		}
-		updatedItem.content.link = linkInLowerCase;
+		updatedItem.content.link = Utilities.normalizeWebUrl(link);
 
 		await this.updateTableSingleValue(tableName, entryKey, 'link');
 	}
@@ -799,7 +799,7 @@ export class ReminderComponent implements OnInit, OnDestroy {
 		// Always format to 'YYYY-MM-DD' string — never store a raw Date object.
 		// The previous guard `if (updatedItem.content.date)` caused first-time date
 		// saves to bypass formatting, persisting a Date/Timestamp object to CloudBase.
-		updatedItem.content.date = format(date, 'yyyy-MM-dd');
+		updatedItem.content.date = Utilities.formatDateForStorage(date);
 		await this.updateTableSingleValue(tableName, entryKey, 'date');
 		// Immediately reflect the date change (or removal) in the home-page reminder
 		// widget without waiting for the CloudBase subscription to fire.
@@ -846,8 +846,11 @@ export class ReminderComponent implements OnInit, OnDestroy {
 	 * current. Fire-and-forget — errors are swallowed inside updateStatisticsFields.
 	 */
 	private syncReminderStatistics(): void {
+		const totalReminders =
+			(this.originalSecondTable?.length ?? 0) + (this.originalThirdTable?.length ?? 0);
 		this.databaseService.updateStatisticsFields({
-			[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses, ...this.upcomingMessages]
+			[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses, ...this.upcomingMessages],
+			[STATS_FIELD_REMINDER_TOTAL]: totalReminders
 		});
 	}
 

@@ -88,12 +88,38 @@
 						<td
 							[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
 							class="component">
-							<div class="component-content">
-								@if (getComponentOption(row.component); as opt) {
-									<span [class]="opt.iconClass + ' hide-on-mobile'">{{ opt.icon }}</span>
-								}
-								<span>{{ row.component }}</span>
-							</div>
+							@if (editedRows.has(row.key)) {
+								<p-select
+									[options]="components"
+									optionLabel="label"
+									optionValue="label"
+									[appendTo]="'body'"
+									panelStyleClass="dropdown-panel-font component-dropdown-panel"
+									[(ngModel)]="editedRows.get(row.key).updated.component"
+									class="input">
+									<ng-template #selectedItem let-value>
+										@if (getComponentOption(value); as opt) {
+											<div class="component-option">
+												<span [class]="opt.iconClass">{{ opt.icon }}</span>
+												<span>{{ opt.label }}</span>
+											</div>
+										}
+									</ng-template>
+									<ng-template #item let-opt>
+										<div class="component-option">
+											<span [class]="opt.iconClass">{{ opt.icon }}</span>
+											<span>{{ opt.label }}</span>
+										</div>
+									</ng-template>
+								</p-select>
+							} @else {
+								<div class="component-content">
+									@if (getComponentOption(row.component); as opt) {
+										<span [class]="opt.iconClass + ' hide-on-mobile'">{{ opt.icon }}</span>
+									}
+									<span>{{ row.component }}</span>
+								</div>
+							}
 						</td>
 					}
 					@if (shouldShowElement(getRenderedData(t), rowIndex)) {
@@ -147,7 +173,16 @@
 						}
 					</td>
 
-					<td class="timestamp">{{ row.timestamp }}</td>
+					<td class="timestamp">
+						@if (editedRows.has(row.key)) {
+							<p-datepicker
+								[appendTo]="'body'"
+								dateFormat="yy.mm.dd"
+								[(ngModel)]="editedRows.get(row.key).updated.timestampDate" />
+						} @else {
+							{{ row.timestamp }}
+						}
+					</td>
 
 					<td class="edit-button hide-on-mobile">
 						@if (editedRows.has(row.key)) {
@@ -233,6 +268,11 @@
 							(keyup.enter)="submitNewRecord()" />
 					</td>
 					<td class="timeStamp">
+						<p-datepicker
+							[appendTo]="'body'"
+							dateFormat="yy.mm.dd"
+							[(ngModel)]="newRecordDate"
+							styleClass="input" />
 						<p-button
 							label="Add"
 							icon="pi pi-plus"

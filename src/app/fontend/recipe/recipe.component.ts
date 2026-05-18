@@ -139,6 +139,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private dropPosition: 'above' | 'below' | null = null;
 
 	protected recipes: Recipe[] = [];
+	protected isLoading = true;
 
 	constructor(
 		private cdr: ChangeDetectorRef,
@@ -147,7 +148,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		private databaseService: DatabaseService,
 		private viewportScroller: ViewportScroller,
 		private breakpointObserver: BreakpointObserver,
-		@Inject(PLATFORM_ID) private platformId: object
+		@Inject(PLATFORM_ID) private platformId: object,
+		protected utilities: Utilities
 	) {}
 
 	/**
@@ -159,6 +161,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 				next: (recipes) => {
 					this.ngZone.run(() => {
 						this.recipes = recipes;
+						this.isLoading = false;
 						this.cdr.markForCheck();
 					});
 				},
@@ -186,6 +189,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		Utilities.attachScrollAutoHide(this.ingredientsScrollEl?.nativeElement);
 		document.querySelectorAll<HTMLElement>('.editor-body').forEach((el) => Utilities.attachScrollAutoHide(el));
 		document.querySelectorAll<HTMLElement>('.type-tabs').forEach((el) => Utilities.attachScrollAutoHide(el));
+		document.querySelectorAll<HTMLElement>('.chips').forEach((el) => Utilities.attachScrollAutoHide(el));
 		document
 			.querySelectorAll<HTMLElement>('.container-recipe > .view')
 			.forEach((el) => Utilities.attachScrollAutoHide(el));

@@ -159,7 +159,7 @@
 	border-radius: 50%;
 	border: none;
 	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
-	color: #fff;
+	color: #fff !important;
 	cursor: pointer;
 	flex-shrink: 0;
 	transition:
@@ -490,7 +490,7 @@
 .cat-tab.active {
 	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
 	border-color: transparent;
-	color: #fff;
+	color: #fff !important;
 	font-weight: 600;
 }
 
@@ -572,7 +572,7 @@
 	border-radius: 50px;
 	border: none;
 	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
-	color: #fff;
+	color: #fff !important;
 	font-family: inherit;
 	font-size: 12px;
 	font-weight: 600;
@@ -906,7 +906,7 @@
 	font-weight: 600;
 	padding: 7px 22px;
 	cursor: pointer;
-	color: #fff;
+	color: #fff !important;
 	transition:
 		transform 0.15s,
 		box-shadow 0.15s;

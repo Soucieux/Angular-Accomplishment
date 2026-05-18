@@ -1,5 +1,6 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { format } from 'date-fns';
 import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
 import { LOG } from './app.logs';
 import { CN } from './app.constant';
@@ -234,6 +235,164 @@ export class Utilities {
 	 */
 	public checkIfHoverCapable(): boolean {
 		return this.document.defaultView?.matchMedia('(hover: hover)').matches ?? false;
+	}
+
+	/**
+	 * Open a URL in a new tab using a temporary anchor element on the injected
+	 * Document, avoiding any direct reference to the global window object.
+	 *
+	 * @param url - The fully-qualified URL to open.
+	 */
+	public openInNewTab(url: string): void {
+		const a = this.document.createElement('a');
+		a.href = url;
+		a.target = '_blank';
+		a.rel = 'noopener noreferrer';
+		this.document.body.appendChild(a);
+		a.click();
+		this.document.body.removeChild(a);
+	}
+
+	/**
+	 * Truncate a string to at most `max` characters, appending an ellipsis (`…`)
+	 * when the text is cut. Returns an empty string for falsy input.
+	 *
+	 * @param text - The text to truncate.
+	 * @param max - The maximum number of characters to keep before truncating.
+	 * @returns The truncated string with an ellipsis appended if needed.
+	 */
+	public static truncate(text: string, max: number): string {
+		if (!text) return '';
+		return text.length > max ? text.substring(0, max) + '…' : text;
+	}
+
+	/**
+	 * Flatten a raw CloudBase statistics field (returned as either a true array
+	 * or an object keyed by insertion index) into a plain array.
+	 * Returns an empty array when the field is absent or falsy.
+	 *
+	 * @param raw - The raw field value from a CloudBase snapshot.
+	 * @returns A plain `any[]` array.
+	 */
+	public static toArray(raw: any): any[] {
+		if (!raw) return [];
+		return Array.isArray(raw) ? raw : Object.values(raw);
+	}
+
+	/**
+	 * Ensure a URL has an explicit protocol prefix so the browser treats it as an
+	 * absolute URL. Returns the value unchanged if it already starts with
+	 * `http://` or `https://`; otherwise prepends `https://`.
+	 *
+	 * @param url - The raw URL string (may or may not have a protocol).
+	 * @returns A URL string guaranteed to begin with a valid protocol.
+	 */
+	public static normalizeUrl(url: string): string {
+		if (!url) return url;
+		if (url.startsWith('http://') || url.startsWith('https://')) return url;
+		return 'https://' + url;
+	}
+
+	/**
+	 * Normalise a raw user-entered link to a full HTTPS URL. Adds `https://www.`
+	 * when no protocol or subdomain is present, and `https://` when the value
+	 * already starts with `www.`. This www-aware variant is used for contact /
+	 * reminder links (compare {@link normalizeUrl} which only prepends the protocol).
+	 *
+	 * @param link - The raw link string entered by the user.
+	 * @returns A normalised URL string beginning with http(s)://, or the original
+	 *          value when it is falsy.
+	 */
+	public static normalizeWebUrl(link: string): string {
+		if (!link) return link;
+		const lower = link.toLowerCase();
+		if (lower.startsWith('www.')) return 'https://' + lower;
+		if (lower.startsWith('https://') || lower.startsWith('http://')) return lower;
+		return 'https://www.' + lower;
+	}
+
+	/**
+	 * Format a Date object to the app's canonical date-storage format: "YYYY-MM-DD".
+	 *
+	 * @param date - The Date object to format.
+	 * @returns A "YYYY-MM-DD" string.
+	 */
+	public static formatDateForStorage(date: Date): string {
+		return format(date, 'yyyy-MM-dd');
+	}
+
+	/**
+	 * Extract a favicon URL from any site URL by reading the hostname and
+	 * constructing the conventional /favicon.ico path.
+	 *
+	 * @param url - The full URL of the website.
+	 * @returns A favicon image URL string, or '' if the URL is unparseable.
+	 */
+	public static getFavicon(url: string): string {
+		try {
+			const hostname = new URL(url).hostname;
+			return `https://${hostname}/favicon.ico`;
+		} catch {
+			return '';
+		}
+	}
+
+	/**
+	 * Safely extract a human-readable error message from any thrown value.
+	 * Guards against SDK objects whose `.message` getter itself throws.
+	 *
+	 * @param err - Any thrown value (Error, string, SDK error object, etc.).
+	 * @returns A plain string describing the error, never throws.
+	 */
+	public static safeErrorMessage(err: unknown): string {
+		try {
+			if (err == null) return 'unknown error';
+			if (typeof err === 'string') return err;
+			const msg = (err as any).message;
+			return typeof msg === 'string' ? msg : String(err);
+		} catch {
+			return 'unknown error';
+		}
+	}
+
+	/**
+	 * Compute how many days remain until a `YYYY-MM-DD` date string, returning
+	 * a short human-readable label ("Today", "Tomorrow", "in Xd", or "Xd overdue").
+	 *
+	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
+	 * @returns A countdown label, or an empty string if no date is provided.
+	 */
+	public static getDaysUntil(dateStr: any): string {
+		if (!dateStr) return '';
+		const str = Utilities.coerceDateToString(dateStr);
+		if (!str) return '';
+		const [year, month, day] = str.split('-').map(Number);
+		const target = new Date(year, month - 1, day);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+		if (diff < 0) return `${Math.abs(diff)}d overdue`;
+		if (diff === 0) return 'Today';
+		if (diff === 1) return 'Tomorrow';
+		return `in ${diff}d`;
+	}
+
+	/**
+	 * Returns `true` if the given date is strictly before today (i.e. the item
+	 * is past due). Accepts any form understood by {@link coerceDateToString}.
+	 *
+	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
+	 * @returns `true` if the date is in the past, `false` otherwise.
+	 */
+	public static isOverdue(dateStr: any): boolean {
+		if (!dateStr) return false;
+		const str = Utilities.coerceDateToString(dateStr);
+		if (!str) return false;
+		const [year, month, day] = str.split('-').map(Number);
+		const target = new Date(year, month - 1, day);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		return target < today;
 	}
 
 	/**

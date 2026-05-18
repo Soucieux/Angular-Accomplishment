@@ -1,4 +1,12 @@
-import { AfterViewChecked, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
+import {
+	AfterViewChecked,
+	ChangeDetectorRef,
+	Component,
+	Inject,
+	OnDestroy,
+	OnInit,
+	PLATFORM_ID
+} from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -183,8 +191,14 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Uses the utility guard so each element is only bound once.
 	 */
 	public ngAfterViewChecked(): void {
-		document.querySelectorAll<HTMLElement>('.scrollable-list').forEach((el) => Utilities.attachScrollAutoHide(el));
-		document.querySelectorAll<HTMLElement>('.activity-list-scroll').forEach((el) => Utilities.attachScrollAutoHide(el));
+		if (isPlatformBrowser(this.platformId)) {
+			document
+				.querySelectorAll<HTMLElement>('.scrollable-list')
+				.forEach((el) => Utilities.attachScrollAutoHide(el));
+			document
+				.querySelectorAll<HTMLElement>('.activity-list-scroll')
+				.forEach((el) => Utilities.attachScrollAutoHide(el));
+		}
 	}
 
 	/**
@@ -715,9 +729,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		// Sort newest-first; identify which items survive the combined cap
 		flat.sort((a, b) => b.ts.localeCompare(a.ts));
-		const keepSet = new Set<string>(
-			flat.slice(0, STATS_CAP_ACTIVITY_LOG).map((e) => `${e.fi}:${e.ii}`)
-		);
+		const keepSet = new Set<string>(flat.slice(0, STATS_CAP_ACTIVITY_LOG).map((e) => `${e.fi}:${e.ii}`));
 
 		// Build the update payload — only include arrays that actually shrank
 		const updates: Record<string, any[]> = {};

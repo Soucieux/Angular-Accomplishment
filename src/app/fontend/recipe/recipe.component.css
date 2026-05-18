@@ -168,7 +168,7 @@
 }
 .detail-title {
 	font-size: 36px;
-	margin-top: 14px;
+	margin: 14px 0px;
 }
 .page-subtitle {
 	color: var(--ink-muted);
@@ -187,7 +187,7 @@
 /* ── Toolbar ───────────────────────────────────────────────────── */
 .toolbar {
 	display: flex;
-	gap: 28px;
+	gap: 10px;
 	align-items: center;
 	justify-content: space-between;
 	margin-top: 8px;
@@ -420,7 +420,7 @@
 	border-radius: 999px;
 	background: rgba(0, 0, 0, 0.04);
 	color: var(--ink-muted);
-	font-size: 12px;
+	font-size: 13px;
 	font-weight: 500;
 }
 .meta-chip .material-symbols-outlined {
@@ -469,13 +469,13 @@
 	gap: 4px;
 	padding: 3px 10px;
 	border-radius: 20px;
-	font-size: 12px;
+	font-size: 13px;
 	font-weight: 500;
 	border: 1px solid;
 	line-height: 1.4;
 }
 .ipill.tiny {
-	font-size: 14px;
+	font-size: 17px;
 	padding: 1px 8px;
 	border-width: 2px;
 	border-style: solid;
@@ -590,7 +590,7 @@
 	border: none;
 	color: var(--rose);
 	font: inherit;
-	font-size: 20px;
+	font-size: 25px;
 	font-weight: 500;
 	cursor: pointer;
 	padding: 6px 0;
@@ -620,7 +620,7 @@
 	border: 1px solid rgba(0, 0, 0, 0.06);
 	height: 28px;
 	padding: 0 12px;
-	font-size: 12px;
+	font-size: 13px;
 }
 .detail-meta .cat-chip {
 	background: linear-gradient(135deg, var(--rose-soft), rgba(218, 174, 81, 0.18));
@@ -965,11 +965,11 @@
 }
 .iname {
 	color: var(--ink);
-	font-size: 14px;
+	font-size: 17px;
 }
 .iqty {
 	color: var(--ink-muted);
-	font-size: 13px;
+	font-size: 17px;
 	font-variant-numeric: tabular-nums;
 }
 
@@ -1053,7 +1053,7 @@
 }
 .step .text {
 	color: var(--ink);
-	font-size: 14.5px;
+	font-size: 17px;
 	line-height: 1.6;
 }
 .step.done {
@@ -1088,7 +1088,7 @@
 	align-items: start;
 	padding: 5px 0;
 	color: var(--ink-muted);
-	font-size: 13px;
+	font-size: 17px;
 	line-height: 1.55;
 }
 .substep::before {
@@ -1140,9 +1140,9 @@
 		repeating-linear-gradient(
 			to bottom,
 			transparent 0,
-			transparent 27px,
-			rgba(213, 51, 105, 0.18) 27px,
-			rgba(213, 51, 105, 0.18) 28px
+			transparent 33px,
+			rgba(213, 51, 105, 0.18) 33px,
+			rgba(213, 51, 105, 0.18) 34px
 		),
 		#fffdf6;
 	border: 1px solid rgba(218, 174, 81, 0.3);
@@ -1150,8 +1150,8 @@
 	padding: 2px 18px 14px 60px;
 	position: relative;
 	font-family: 'nlf', 'cf', serif;
-	font-size: 16px;
-	line-height: 28px;
+	font-size: 19px;
+	line-height: 34px;
 	color: #3a2a1a;
 	min-height: 280px;
 }
@@ -1353,8 +1353,14 @@
 	animation: dropReveal 0.15s ease both;
 }
 @keyframes dropReveal {
-	from { opacity: 0; transform: translateY(-4px); }
-	to { opacity: 1; transform: translateY(0); }
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 .cat-option {
 	display: flex;
@@ -1743,7 +1749,7 @@
 	outline: none;
 	font: inherit;
 	background: transparent;
-	font-size: 14px;
+	font-size: 17px;
 	color: var(--ink);
 	padding: 4px 2px;
 }
@@ -1875,7 +1881,7 @@
 	outline: none;
 	resize: none;
 	font: inherit;
-	font-size: 14.5px;
+	font-size: 17px;
 	line-height: 1.55;
 	color: var(--ink);
 	background: transparent;
@@ -1907,7 +1913,7 @@
 	border: none;
 	outline: none;
 	font: inherit;
-	font-size: 13px;
+	font-size: 20px;
 	color: rgba(30, 15, 35, 0.78);
 	background: transparent;
 	padding: 2px 0;
@@ -1982,16 +1988,16 @@
 		repeating-linear-gradient(
 			to bottom,
 			transparent 0,
-			transparent 27px,
-			rgba(213, 51, 105, 0.18) 27px,
-			rgba(213, 51, 105, 0.18) 28px
+			transparent 33px,
+			rgba(213, 51, 105, 0.18) 33px,
+			rgba(213, 51, 105, 0.18) 34px
 		),
 		#fffdf6;
 	border-radius: 8px;
 	padding: 2px 18px 14px 60px;
 	font-family: 'nlf', 'cf', serif;
-	font-size: 16px;
-	line-height: 28px;
+	font-size: 19px;
+	line-height: 34px;
 	color: #3a2a1a;
 	outline: none;
 	resize: vertical;
@@ -2203,7 +2209,6 @@
 	.notepad,
 	.editor-notepad {
 		padding: 2px 14px 14px 40px;
-		font-size: 15px;
 	}
 	.notepad::before {
 		left: 28px;
@@ -2213,9 +2218,6 @@
 	.step {
 		padding: 12px 14px 12px 16px;
 		column-gap: 12px;
-	}
-	.step .text {
-		font-size: 14px;
 	}
 
 	/* Category dropdown — ensure panel doesn't overflow narrow screens */
@@ -2228,8 +2230,12 @@
 
 /* ── Skeleton ──────────────────────────────────────────────── */
 @keyframes shimmer {
-	0%   { background-position: 200% 0; }
-	100% { background-position: -200% 0; }
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
 }
 
 .skeleton-card {
@@ -2244,25 +2250,49 @@
 
 .skeleton-band {
 	height: 88px;
-	background: linear-gradient(90deg, rgba(0,0,0,0.07) 25%, rgba(0,0,0,0.04) 50%, rgba(0,0,0,0.07) 75%);
+	background: linear-gradient(
+		90deg,
+		rgba(0, 0, 0, 0.07) 25%,
+		rgba(0, 0, 0, 0.04) 50%,
+		rgba(0, 0, 0, 0.07) 75%
+	);
 	background-size: 200% 100%;
 	animation: shimmer 1.5s infinite;
 }
 
 .skeleton-line {
 	border-radius: 6px;
-	background: linear-gradient(90deg, rgba(0,0,0,0.07) 25%, rgba(0,0,0,0.04) 50%, rgba(0,0,0,0.07) 75%);
+	background: linear-gradient(
+		90deg,
+		rgba(0, 0, 0, 0.07) 25%,
+		rgba(0, 0, 0, 0.04) 50%,
+		rgba(0, 0, 0, 0.07) 75%
+	);
 	background-size: 200% 100%;
 	animation: shimmer 1.5s infinite;
 }
 
-.skeleton-name   { height: 25px; width: 65%; }
-.skeleton-badges { height: 24px; width: 50%; }
-.skeleton-chips  { height: 24px; width: 40%; }
+.skeleton-name {
+	height: 25px;
+	width: 65%;
+}
+.skeleton-badges {
+	height: 24px;
+	width: 50%;
+}
+.skeleton-chips {
+	height: 24px;
+	width: 40%;
+}
 
 .skeleton-footer {
 	height: 38px;
-	background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.02) 50%, rgba(0,0,0,0.05) 75%);
+	background: linear-gradient(
+		90deg,
+		rgba(0, 0, 0, 0.05) 25%,
+		rgba(0, 0, 0, 0.02) 50%,
+		rgba(0, 0, 0, 0.05) 75%
+	);
 	background-size: 200% 100%;
 	animation: shimmer 1.5s infinite;
 	transition: none;
@@ -2309,8 +2339,13 @@
 }
 
 @keyframes adDrift {
-	0%, 100% { transform: translateY(0) scale(1); }
-	50% { transform: translateY(-36px) scale(1.04); }
+	0%,
+	100% {
+		transform: translateY(0) scale(1);
+	}
+	50% {
+		transform: translateY(-36px) scale(1.04);
+	}
 }
 
 .access-denied-card {
@@ -2326,13 +2361,21 @@
 	-webkit-backdrop-filter: blur(28px);
 	border: 1px solid rgba(255, 255, 255, 0.2);
 	border-radius: 32px;
-	box-shadow: 0 8px 48px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+	box-shadow:
+		0 8px 48px rgba(0, 0, 0, 0.08),
+		inset 0 1px 0 rgba(255, 255, 255, 0.28);
 	animation: adCardReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes adCardReveal {
-	from { opacity: 0; transform: translateY(-16px) scale(0.97); }
-	to { opacity: 1; transform: translateY(0) scale(1); }
+	from {
+		opacity: 0;
+		transform: translateY(-16px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
 }
 
 .access-denied-icon {
@@ -2346,8 +2389,13 @@
 }
 
 @keyframes adIconPulse {
-	0%, 100% { filter: drop-shadow(0 2px 16px rgba(255, 255, 255, 0.35)); }
-	50% { filter: drop-shadow(0 2px 30px rgba(255, 255, 255, 0.58)); }
+	0%,
+	100% {
+		filter: drop-shadow(0 2px 16px rgba(255, 255, 255, 0.35));
+	}
+	50% {
+		filter: drop-shadow(0 2px 30px rgba(255, 255, 255, 0.58));
+	}
 }
 
 .access-denied-container h1 {
@@ -2365,6 +2413,12 @@
 }
 
 @keyframes adFadeUp {
-	from { opacity: 0; transform: translateY(10px); }
-	to { opacity: 1; transform: translateY(0); }
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }

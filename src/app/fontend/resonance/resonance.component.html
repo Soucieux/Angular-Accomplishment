@@ -15,7 +15,7 @@
 			placeholder="Write something worth remembering..."
 			class="quote-input"
 			rows="3"
-			(keydown.enter)="($any($event).ctrlKey || $any($event).metaKey) && submitQuote()"></textarea>
+			(keyup.enter)="submitQuote()"></textarea>
 		@if (!isSignedIn) {
 			<div class="name-row">
 				<input

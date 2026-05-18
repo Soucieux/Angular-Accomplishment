@@ -1,4 +1,5 @@
 import {
+	AfterViewChecked,
 	Component,
 	HostListener,
 	Inject,
@@ -57,7 +58,7 @@ import { DatabaseService } from '../../backend/database-service/database.service
 	templateUrl: './patch.component.html',
 	styleUrls: ['../../common/page.card.css', './patch.component.css']
 })
-export class PatchComponent implements OnInit, OnDestroy {
+export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'PatchComponent';
 	@ViewChild('t') private table!: Table; // This is the reference for the table in html
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
@@ -95,9 +96,16 @@ export class PatchComponent implements OnInit, OnDestroy {
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
-		private utilities: Utilities,
+		protected utilities: Utilities,
 		private ngZone: NgZone
 	) {}
+
+	/**
+	 * Attaches the auto-hide scroll listener to the page container after each view check.
+	 */
+	public ngAfterViewChecked(): void {
+		document.querySelectorAll<HTMLElement>('.container.page-card').forEach((el) => Utilities.attachScrollAutoHide(el));
+	}
 
 	/**
 	 * Initialises the component: detects mobile layout, builds the patch-notes

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
+import { AfterViewChecked, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -32,7 +32,7 @@ import {
 	templateUrl: './home.component.html',
 	styleUrl: './home.component.css'
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'HomeComponent';
 	private statsSub?: Subscription;
 	private loginSub?: Subscription;
@@ -176,6 +176,15 @@ export class HomeComponent implements OnInit, OnDestroy {
 				this.cdr.detectChanges();
 			});
 		}
+	}
+
+	/**
+	 * Attaches the auto-hide scroll listener to all widget scroll containers after each view check.
+	 * Uses the utility guard so each element is only bound once.
+	 */
+	public ngAfterViewChecked(): void {
+		document.querySelectorAll<HTMLElement>('.scrollable-list').forEach((el) => Utilities.attachScrollAutoHide(el));
+		document.querySelectorAll<HTMLElement>('.activity-list-scroll').forEach((el) => Utilities.attachScrollAutoHide(el));
 	}
 
 	/**
@@ -358,85 +367,35 @@ export class HomeComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Converts a date value to a `YYYY-MM-DD` string regardless of whether it
-	 * arrived as a plain string, a JS Date, or a CloudBase Timestamp object.
-	 * Delegates to `Utilities.coerceDateToString` so the logic is not duplicated
-	 * with the Reminder page's equivalent formatter.
-	 *
-	 * @param value - A date in any form (string, Date, Timestamp object, etc.).
-	 * @returns A `YYYY-MM-DD` string, or `''` if conversion is not possible.
-	 */
-	private normaliseDateToString(value: any): string {
-		return Utilities.coerceDateToString(value);
-	}
-
-	/**
-	 * Flatten a raw statistics field value (which CloudBase may return as either
-	 * a true array or an object keyed by insertion index) into a plain array.
-	 * Returns an empty array when the field is absent or falsy.
-	 *
-	 * @param raw - The raw field value from the statistics snapshot.
-	 * @returns A plain `any[]` array.
-	 */
-	private toArray(raw: any): any[] {
-		if (!raw) return [];
-		return Array.isArray(raw) ? raw : Object.values(raw);
-	}
-
-	/**
-	 * Computes how many days remain until a `YYYY-MM-DD` date string, returning
-	 * a short label ("Today", "Tomorrow", "in Xd", or "Xd overdue").
-	 *
-	 * @param dateStr - An ISO-format date string (YYYY-MM-DD).
-	 * @returns A human-readable countdown label, or an empty string if no date is provided.
-	 */
-	protected getDaysUntil(dateStr: any): string {
-		if (!dateStr) return '';
-		// Defensive: CloudBase may return a Date/Timestamp object if the date was
-		// saved without string-formatting. Normalise to YYYY-MM-DD before splitting.
-		const str: string = this.normaliseDateToString(dateStr);
-		if (!str) return '';
-		const [year, month, day] = str.split('-').map(Number);
-		const target = new Date(year, month - 1, day);
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-		if (diff < 0) return `${Math.abs(diff)}d overdue`;
-		if (diff === 0) return 'Today';
-		if (diff === 1) return 'Tomorrow';
-		return `in ${diff}d`;
-	}
-
-	/**
-	 * Returns `true` if the given `YYYY-MM-DD` date is strictly before today
-	 * (i.e. the item is past due).
-	 *
-	 * @param dateStr - An ISO-format date string (YYYY-MM-DD).
-	 * @returns `true` if the date is in the past, `false` otherwise.
-	 */
-	protected isOverdue(dateStr: any): boolean {
-		if (!dateStr) return false;
-		// Defensive: normalise Date/Timestamp objects the same way getDaysUntil does.
-		const str: string = this.normaliseDateToString(dateStr);
-		if (!str) return false;
-		const [year, month, day] = str.split('-').map(Number);
-		const target = new Date(year, month - 1, day);
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		return target < today;
-	}
-
-	/**
-	 * Truncates a string to at most `max` characters, appending an ellipsis
-	 * (`…`) when the text is cut. Returns an empty string for falsy input.
+	 * Truncate a string for display in the template.
+	 * Delegates to {@link Utilities.truncate}.
 	 *
 	 * @param text - The text to truncate.
-	 * @param max - The maximum number of characters to keep before truncating.
-	 * @returns The truncated string with an ellipsis appended if needed.
+	 * @param max - Maximum number of characters before the ellipsis.
+	 * @returns The truncated string.
 	 */
 	protected truncate(text: string, max: number): string {
-		if (!text) return '';
-		return text.length > max ? text.substring(0, max) + '…' : text;
+		return Utilities.truncate(text, max);
+	}
+
+	/**
+	 * Compute a countdown label for a date. Delegates to {@link Utilities.getDaysUntil}.
+	 *
+	 * @param dateStr - A date in any form accepted by {@link Utilities.coerceDateToString}.
+	 * @returns A label such as "Today", "Tomorrow", "in 3d", or "2d overdue".
+	 */
+	protected getDaysUntil(dateStr: any): string {
+		return Utilities.getDaysUntil(dateStr);
+	}
+
+	/**
+	 * Check whether a date is past due. Delegates to {@link Utilities.isOverdue}.
+	 *
+	 * @param dateStr - A date in any form accepted by {@link Utilities.coerceDateToString}.
+	 * @returns `true` if the date is strictly before today.
+	 */
+	protected isOverdue(dateStr: any): boolean {
+		return Utilities.isOverdue(dateStr);
 	}
 
 	// ── Data accessors ────────────────────────────────────────────────────
@@ -465,7 +424,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 *   if the field is absent.
 	 */
 	protected getAllReminderItems(): any[] {
-		return this.toArray(this.stats?.[STATS_FIELD_REMINDER_UPCOMING]);
+		return Utilities.toArray(this.stats?.[STATS_FIELD_REMINDER_UPCOMING]);
 	}
 
 	/**
@@ -475,30 +434,23 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 * @returns The number of overdue reminder items.
 	 */
 	protected getOverdueCount(): number {
-		return this.getAllReminderItems().filter((item) => this.isOverdue(item?.date)).length;
+		return this.getAllReminderItems().filter((item) => Utilities.isOverdue(item?.date)).length;
 	}
 
 	/**
-	 * Returns the items shown in the reminder dashboard widget:
-	 * every overdue item plus every item due within the next 7 days,
-	 * sorted ascending by days-until-due (most overdue first → today → 7 days out),
-	 * capped at 5 entries.
+	 * Returns all dated items for the reminder dashboard widget,
+	 * sorted ascending by date (most overdue first → soonest due).
+	 *
+	 * @returns Sorted array of all reminder items that have a date set.
 	 */
 	protected getReminderWidgetItems(): any[] {
-		const toDateStr = (d: any): string => this.normaliseDateToString(d);
+		const toDateStr = (d: any): string => Utilities.coerceDateToString(d);
 
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
 		return this.getAllReminderItems()
 			.filter((item: any) => {
 				if (!item?.date) return false;
 				const str = toDateStr(item.date);
-				if (!str) return false; // unparseable date — skip rather than crash
-				const [y, m, d] = str.split('-').map(Number);
-				const target = new Date(y, m - 1, d);
-				const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-				// Include overdue (diff < 0) and anything due within 7 days (0–7)
-				return diff <= 7;
+				return !!str;
 			})
 			.sort((a: any, b: any) => {
 				const parse = (dateVal: any) => {
@@ -506,8 +458,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 					return new Date(y, m - 1, d).getTime();
 				};
 				return parse(a.date) - parse(b.date); // ascending: most overdue → soonest due
-			})
-			.slice(0, 7);
+			});
 	}
 
 	/**
@@ -518,7 +469,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 * @returns An array of in-progress patch note objects, or an empty array if absent.
 	 */
 	protected getPatchInProgress(): any[] {
-		return this.toArray(this.stats?.[STATS_FIELD_PATCH_IN_PROGRESS]);
+		return Utilities.toArray(this.stats?.[STATS_FIELD_PATCH_IN_PROGRESS]);
 	}
 
 	/**
@@ -569,7 +520,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		const events: RawEvent[] = [];
 
 		// ── Entertainment ──────────────────────────────────────────────────────
-		const movieActivities: any[] = this.toArray(this.stats?.[STATS_FIELD_RECENT_MOVIE]);
+		const movieActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_MOVIE]);
 		for (const m of movieActivities) {
 			if (!m?.timestamp) continue;
 			let icon = 'live_tv',
@@ -591,7 +542,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 			events.push({
 				icon,
 				label,
-				detail: this.truncate(m.title ?? '', 36),
+				detail: Utilities.truncate(m.title ?? '', 36),
 				time: this.getRelativeTime(m.timestamp),
 				color,
 				raw: m.timestamp
@@ -599,7 +550,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		}
 
 		// ── Patch Notes ────────────────────────────────────────────────────────
-		const patchActivities: any[] = this.toArray(this.stats?.[STATS_FIELD_RECENT_PATCH]);
+		const patchActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_PATCH]);
 		for (const p of patchActivities) {
 			if (!p?.timestamp) continue;
 			let icon = 'note_stack';
@@ -622,7 +573,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 			events.push({
 				icon,
 				label,
-				detail: this.truncate(`#${p.noteIndex ?? '?'} ${p.component}`, 36),
+				detail: Utilities.truncate(`#${p.noteIndex ?? '?'} ${p.component}`, 36),
 				time: this.getRelativeTime(p.timestamp),
 				color,
 				raw: p.timestamp
@@ -630,7 +581,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		}
 
 		// ── Reminder ──────────────────────────────────────────────────────────
-		const reminderActivities: any[] = this.toArray(this.stats?.[STATS_FIELD_RECENT_REMINDER]);
+		const reminderActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_REMINDER]);
 		for (const r of reminderActivities) {
 			if (!r?.timestamp) continue;
 			let icon = 'note_add',
@@ -644,7 +595,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 				icon = 'edit_note';
 				label = 'Reminder Updated';
 			}
-			const detail = r.text ? this.truncate(`${r.table ?? ''} · ${r.text}`, 40) : (r.table ?? '');
+			const detail = r.text ? Utilities.truncate(`${r.table ?? ''} · ${r.text}`, 40) : (r.table ?? '');
 			events.push({
 				icon,
 				label,
@@ -656,7 +607,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		}
 
 		// ── Resonance ─────────────────────────────────────────────────────────
-		const resonanceActivities: any[] = this.toArray(this.stats?.[STATS_FIELD_RECENT_RESONANCE]);
+		const resonanceActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_RESONANCE]);
 		for (const q of resonanceActivities) {
 			if (!q?.timestamp) continue;
 			let icon = 'format_quote',
@@ -670,7 +621,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 			events.push({
 				icon,
 				label,
-				detail: this.truncate(`by ${q.author ?? ''}`, 36),
+				detail: Utilities.truncate(`by ${q.author ?? ''}`, 36),
 				time: this.getRelativeTime(q.timestamp),
 				color,
 				raw: q.timestamp
@@ -720,7 +671,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 				dateStr,
 				isToday: date.getTime() === today.getTime(),
 				isPast: date.getTime() < today.getTime(),
-				items: allItems.filter((item) => this.normaliseDateToString(item?.date) === dateStr)
+				items: allItems.filter((item) => Utilities.coerceDateToString(item?.date) === dateStr)
 			};
 		});
 	}
@@ -751,7 +702,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		];
 
 		// Resolve each field to a plain array
-		const arrays: any[][] = fields.map((f) => this.toArray(data?.[f]));
+		const arrays: any[][] = fields.map((f) => Utilities.toArray(data?.[f]));
 
 		// Build a flat list with source coordinates and timestamp for sorting
 		const flat: { fi: number; ii: number; ts: string }[] = [];

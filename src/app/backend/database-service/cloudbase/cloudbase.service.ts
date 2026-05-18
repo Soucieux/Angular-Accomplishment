@@ -19,6 +19,7 @@ import {
 	DATABASE_SECOND_TABLE,
 	DATABASE_STATISTICS,
 	DATABASE_THIRD_TABLE,
+	DATABASE_RECIPES,
 	DATABASE_USEFUL_LINKS,
 	USEFUL_LINK_TYPE_LINK,
 	USEFUL_LINK_TYPE_CATEGORY,
@@ -40,6 +41,7 @@ import {
 	STATUS_IN_PROGRESS
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
+import { Recipe } from '../../../fontend/recipe/recipe.model';
 
 @Injectable({ providedIn: 'root' })
 export class CloudbaseService extends DatabaseService {
@@ -80,7 +82,6 @@ export class CloudbaseService extends DatabaseService {
 		@Inject(PLATFORM_ID) private platformId: Object,
 		@Inject(CLOUDBASE) private cloudbase: CloudbaseApp,
 		private searchStreamService: SearchStreamService,
-		private utilities: Utilities
 	) {
 		super();
 		if (isPlatformBrowser(this.platformId)) {
@@ -525,12 +526,12 @@ export class CloudbaseService extends DatabaseService {
 	 * @param movieItemVO - The movie item to update.
 	 */
 	public async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
-		// Step 1 : Gather necessary info
-		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieItemVO.getMovieKey());
-		const movieData = await movieRef.get();
-		const oldRate = movieData.data[0].rate;
-
 		try {
+			// Step 1 : Gather necessary info
+			const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieItemVO.getMovieKey());
+			const movieData = await movieRef.get();
+			const oldRate = movieData.data[0].rate;
+
 			// Step 2 : Compare latest rate with the one stored in the database
 			if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
 				const result = await movieRef.update({
@@ -542,7 +543,7 @@ export class CloudbaseService extends DatabaseService {
 				if (result.code) throw new Error(result.message);
 
 				// Fire-and-forget: record this rate update in stats for Recent Activity.
-				const updatedTimestamp = this.utilities.getCurrentFormattedTime(true);
+				const updatedTimestamp = Utilities.getCurrentFormattedTime(true);
 				this.statisticsRef
 					.update({
 						lastMovieUpdated: {
@@ -585,33 +586,25 @@ export class CloudbaseService extends DatabaseService {
 	 * @param oldGenre - The old genre value.
 	 * @param newGenre - The new genre value.
 	 */
-	public updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
-		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
-		// Step 1 : Update movie genre
-		return movieRef
-			.update({
-				genre: newGenre
-			})
-			.then((result: any) => {
-				// CloudBase returns a non-empty result.code when the operation failed
-				// (e.g. permission denied, document not found).
-				if (result.code) throw new Error(result.message);
+	public async updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
+		try {
+			const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
+			// Step 1 : Update movie genre
+			const movieRes = await movieRef.update({ genre: newGenre });
+			if (movieRes.code) throw new Error(movieRes.message);
+			LOG.info(this.className, `Movie genre has been updated`);
 
-				LOG.info(this.className, `Movie genre has been updated`);
-
-				// Step 2 : Update movie statistics
-				return this.statisticsRef.update({
-					[`genre.${oldGenre}`]: this._.inc(-1),
-					[`genre.${newGenre}`]: this._.inc(1)
-				});
-			})
-			.then((result: any) => {
-				// CloudBase returns a non-empty result.code when the operation failed
-				// (e.g. permission denied, document not found).
-				if (result.code) throw new Error(result.message);
-
-				LOG.info(this.className, `Movie statistics have been updated`);
+			// Step 2 : Update movie statistics
+			const statRes = await this.statisticsRef.update({
+				[`genre.${oldGenre}`]: this._.inc(-1),
+				[`genre.${newGenre}`]: this._.inc(1)
 			});
+			if (statRes.code) throw new Error(statRes.message);
+			LOG.info(this.className, `Movie statistics have been updated`);
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating movie genre', error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -620,38 +613,28 @@ export class CloudbaseService extends DatabaseService {
 	 * @param movieKey - The key of the movie to update.
 	 * @param isFavourite - The boolean value to set.
 	 */
-	public updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
-		const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
-		// Step 1 : Update movie favourite
-		return movieRef
-			.update({
-				isFavourite: isFavourite
-			})
-			.then((result: any) => {
-				// CloudBase returns a non-empty result.code when the operation failed
-				// (e.g. permission denied, document not found).
-				if (result.code) throw new Error(result.message);
+	public async updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
+		try {
+			const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
+			// Step 1 : Update movie favourite
+			const movieRes = await movieRef.update({ isFavourite });
+			if (movieRes.code) throw new Error(movieRes.message);
+			LOG.info(this.className, `Movie favourite tag has been updated`);
 
-				LOG.info(this.className, `Movie favourite tag has been updated`);
-
-				// Step 2 : Update movie statistics
-				const updatedData: any = {};
-
-				if (isFavourite) {
-					updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(1);
-				} else {
-					updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
-				}
-
-				return this.statisticsRef.update(updatedData);
-			})
-			.then((result: any) => {
-				// CloudBase returns a non-empty result.code when the operation failed
-				// (e.g. permission denied, document not found).
-				if (result.code) throw new Error(result.message);
-
-				LOG.info(this.className, `Movie statistics have been updated`);
-			});
+			// Step 2 : Update movie statistics
+			const updatedData: any = {};
+			if (isFavourite) {
+				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(1);
+			} else {
+				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
+			}
+			const statRes = await this.statisticsRef.update(updatedData);
+			if (statRes.code) throw new Error(statRes.message);
+			LOG.info(this.className, `Movie statistics have been updated`);
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating movie favourite', error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -684,7 +667,7 @@ export class CloudbaseService extends DatabaseService {
 			// Add new entry to history
 			await this.addNewHistoryEntry(HISTORY_STATUS_ADDED, movieItemVO);
 
-			const timestamp = this.utilities.getCurrentFormattedTime(true);
+			const timestamp = Utilities.getCurrentFormattedTime(true);
 			const updatedData: any = {};
 			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(1);
 			updatedData[`totalNumber`] = this._.inc(1);
@@ -760,7 +743,7 @@ export class CloudbaseService extends DatabaseService {
 			await this.addNewHistoryEntry(HISTORY_STATUS_DELETED, movieItemVO);
 
 			// Step 4: Decrement statistics (single call — no race condition with watcher)
-			const timestamp = this.utilities.getCurrentFormattedTime(true);
+			const timestamp = Utilities.getCurrentFormattedTime(true);
 			const updatedData: any = {};
 			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(-1);
 			updatedData[`totalNumber`] = this._.inc(-1);
@@ -846,7 +829,7 @@ export class CloudbaseService extends DatabaseService {
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 			// Capture timestamp once so the same value is used in the history message
 			// and in the statistics update below (no need to parse it back from the string).
-			const timestamp = this.utilities.getCurrentFormattedTime(true);
+			const timestamp = Utilities.getCurrentFormattedTime(true);
 			if (movieItemVO) {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
 					...userId,
@@ -888,33 +871,27 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param newRecord - The record to add.
 	 */
-	public addNewRecordToPatchNotes(newRecord: any): Promise<void> {
-		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
-		return this.database
-			.collection(DATABASE_PATCH_NOTES)
-			.add({
+	public async addNewRecordToPatchNotes(newRecord: any): Promise<void> {
+		try {
+			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
+			const result = await this.database.collection(DATABASE_PATCH_NOTES).add({
 				...userId,
 				component: newRecord.component,
-				element: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
-				details: this.utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
+				element: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
+				details: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
 				status: newRecord.status,
 				timestamp: newRecord.timestamp,
 				isBug: newRecord.isBug
-			})
-			.then((result: any) => {
-				if (result.code) {
-					LOG.error(
-						this.className,
-						'Error while adding new patch notes',
-						new Error(result.message)
-					);
-					throw new Error(result.message);
-				}
-				LOG.info(this.className, 'New patch notes record has been added');
-				// Sync patchInProgress so the home-page widget reflects the new note
-				// immediately without waiting for the subscription tap to run.
-				this.syncPatchInProgressStat();
 			});
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'New patch notes record has been added');
+			// Sync patchInProgress so the home-page widget reflects the new note
+			// immediately without waiting for the subscription tap to run.
+			this.syncPatchInProgressStat();
+		} catch (error) {
+			LOG.error(this.className, 'Error while adding new patch notes', error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -923,26 +900,21 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key associated with the record
 	 * @param updatedRecord - The record to update.
 	 */
-	public updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
-		return this.database
-			.collection(DATABASE_PATCH_NOTES)
-			.where({
-				_id: key,
-				_openid: CloudbaseService.getUseId()
-			})
-			.update({
-				...updatedRecord
-			})
-			.then((result: any) => {
-				// CloudBase returns a non-empty result.code when the operation failed
-				// (e.g. permission denied, document not found).
-				if (result.code) throw new Error(result.message);
-
-				LOG.info(this.className, 'Patch notes record has been updated');
-				// Sync patchInProgress so status-change edits reflect on the home-page
-				// widget without waiting for the subscription tap.
-				this.syncPatchInProgressStat();
-			});
+	public async updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
+		try {
+			const result = await this.database
+				.collection(DATABASE_PATCH_NOTES)
+				.where({ _id: key, _openid: CloudbaseService.getUseId() })
+				.update({ ...updatedRecord });
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'Patch notes record has been updated');
+			// Sync patchInProgress so status-change edits reflect on the home-page
+			// widget without waiting for the subscription tap.
+			this.syncPatchInProgressStat();
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating patch notes record', error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -952,8 +924,13 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The document key of the patch note to remove.
 	 */
 	async removePatchNote(key: string): Promise<void> {
-		await this.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
-		this.syncPatchInProgressStat();
+		try {
+			await this.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
+			this.syncPatchInProgressStat();
+		} catch (error) {
+			LOG.error(this.className, `Error while removing patch note ${key}`, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -990,37 +967,29 @@ export class CloudbaseService extends DatabaseService {
 	 * @param valueKey - The key associated with the new value.
 	 * @param value - The new value to be stored.
 	 */
-	public updateReminderTable(
+	public async updateReminderTable(
 		tableName: string,
 		entryKey: string,
 		valueKey: string,
 		value: any
 	): Promise<void> {
-		const collectionName = this.convertTableNameToCollectionName(tableName);
-
-		// Branch on valueKey: "content" replaces entire content object (bulk edit);
-		// any other key updates a single nested field inside content (e.g. toggling paid).
-		let valueToUpdate;
-		if (valueKey === 'content') {
-			valueToUpdate = { content: { ...value } };
-		} else {
-			valueToUpdate = { content: { [valueKey]: value } };
+		try {
+			const collectionName = this.convertTableNameToCollectionName(tableName);
+			// Branch on valueKey: "content" replaces entire content object (bulk edit);
+			// any other key updates a single nested field inside content (e.g. toggling paid).
+			const valueToUpdate =
+				valueKey === 'content' ? { content: { ...value } } : { content: { [valueKey]: value } };
+			const result = await this.database
+				.collection(collectionName)
+				.where({ _id: entryKey, _openid: CloudbaseService.getUseId() })
+				.update(valueToUpdate);
+			if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
+			else if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'Reminder table has been updated');
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating reminder table', error as Error);
+			throw error;
 		}
-		return this.database
-			.collection(collectionName)
-			.where({
-				_id: entryKey,
-				_openid: CloudbaseService.getUseId()
-			})
-			.update(valueToUpdate)
-			.then((result: any) => {
-				if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
-				// CloudBase returns a non-empty result.code when the operation failed
-				// (e.g. permission denied, document not found).
-				else if (result.code) throw new Error(result.message);
-
-				LOG.info(this.className, 'Reminder table has been updated');
-			});
 	}
 
 	/**
@@ -1030,23 +999,23 @@ export class CloudbaseService extends DatabaseService {
 	 * @param updatedTable - The table to update
 	 */
 	public async updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
-		const collectionName = this.convertTableNameToCollectionName(tableName);
-
-		// CloudBase has no batch document update API — each row must be updated
-		// individually. _id and _openid are stripped since they are CloudBase metadata.
-		for (const data of updatedTable) {
-			const { _id, _openid, ...rest } = data;
-			const result = await this.database
-				.collection(collectionName)
-				.where({
-					_id: _id,
-					_openid: CloudbaseService.getUseId()
-				})
-				.update(rest);
-			if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
+		try {
+			const collectionName = this.convertTableNameToCollectionName(tableName);
+			// CloudBase has no batch document update API — each row must be updated
+			// individually. _id and _openid are stripped since they are CloudBase metadata.
+			for (const data of updatedTable) {
+				const { _id, _openid, ...rest } = data;
+				const result = await this.database
+					.collection(collectionName)
+					.where({ _id, _openid: CloudbaseService.getUseId() })
+					.update(rest);
+				if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
+			}
+			LOG.info(this.className, 'Reminder table has been updated');
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating first reminder table', error as Error);
+			throw error;
 		}
-
-		LOG.info(this.className, 'Reminder table has been updated');
 	}
 
 	/**
@@ -1075,14 +1044,17 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key associated with the record
 	 */
 	public async removeSingleItemFromDatabase(collectionName: string, key: string): Promise<void> {
-		const result = await this.database
-			.collection(collectionName)
-			.where({ _id: key, _openid: CloudbaseService.getUseId() })
-			.remove();
-		// CloudBase returns a non-empty result.code when the operation failed
-		// (e.g. permission denied, document not found).
-		if (result.code) throw new Error(result.message);
-		LOG.info(this.className, `Record has been removed from ${collectionName}`);
+		try {
+			const result = await this.database
+				.collection(collectionName)
+				.where({ _id: key, _openid: CloudbaseService.getUseId() })
+				.remove();
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, `Record has been removed from ${collectionName}`);
+		} catch (error) {
+			LOG.error(this.className, `Error while removing record from ${collectionName}`, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1092,32 +1064,30 @@ export class CloudbaseService extends DatabaseService {
 	 * @param tableName - The corresponding collection name.
 	 * @param newRecord - The new entry to add.
 	 */
-	public addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
-		const collectionName = this.convertTableNameToCollectionName(tableName);
-		const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
-		return this.database
-			.collection(collectionName)
-			.add({
+	public async addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
+		try {
+			const collectionName = this.convertTableNameToCollectionName(tableName);
+			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
+			const result = await this.database.collection(collectionName).add({
 				...userId,
 				content: { ...newRecord }
-			})
-			.then((result: any) => {
-				if (result.code) {
-					LOG.error(this.className, 'Error while adding new record for reminder table');
-					throw new Error(result.message);
-				}
-				LOG.info(this.className, 'Reminder table has been updated');
-				// Fire-and-forget: record third-table additions in stats so the
-				// home-page Recent Activity widget can surface them immediately.
-				if (tableName === DATABASE_THIRD_TABLE) {
-					this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-						type: HISTORY_STATUS_ADDED,
-						table: REMINDER_TABLE_MESSAGES,
-						text: newRecord.text ?? '',
-						timestamp: this.utilities.getCurrentFormattedTime(true)
-					}).catch(() => {});
-				}
 			});
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'Reminder table has been updated');
+			// Fire-and-forget: record third-table additions in stats so the
+			// home-page Recent Activity widget can surface them immediately.
+			if (tableName === DATABASE_THIRD_TABLE) {
+				this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
+					type: HISTORY_STATUS_ADDED,
+					table: REMINDER_TABLE_MESSAGES,
+					text: newRecord.text ?? '',
+					timestamp: Utilities.getCurrentFormattedTime(true)
+				}).catch(() => {});
+			}
+		} catch (error) {
+			LOG.error(this.className, 'Error while adding new record for reminder table', error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1148,30 +1118,32 @@ export class CloudbaseService extends DatabaseService {
 	 * @param timestamp - The timestamp of the quote.
 	 */
 	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
-		// Attach _openid whenever a user is authenticated so they can later delete their own quotes.
-		// Falls back to empty object for anonymous users (no delete permission).
-		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
-		const result = await this.database.collection(DATABASE_QUOTES).add({
-			...userId,
-			text,
-			author,
-			timestamp
-		});
-		// CloudBase returns a non-empty result.code when the operation failed
-		// (e.g. permission denied, document not found).
-		if (result.code) throw new Error(result.message);
-		LOG.info(this.className, 'New quote has been added');
-
-		// Update statistics: record latest quote and increment total count.
-		await this.statisticsRef.update({
-			latestQuote: { text, author, timestamp },
-			totalQuotes: this._.inc(1)
-		});
-		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
-			type: HISTORY_STATUS_ADDED,
-			author,
-			timestamp
-		}).catch(() => {});
+		try {
+			// Attach _openid whenever a user is authenticated so they can later delete their own quotes.
+			// Falls back to empty object for anonymous users (no delete permission).
+			const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
+			const result = await this.database.collection(DATABASE_QUOTES).add({
+				...userId,
+				text,
+				author,
+				timestamp
+			});
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'New quote has been added');
+			// Update statistics: record latest quote and increment total count.
+			await this.statisticsRef.update({
+				latestQuote: { text, author, timestamp },
+				totalQuotes: this._.inc(1)
+			});
+			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
+				type: HISTORY_STATUS_ADDED,
+				author,
+				timestamp
+			}).catch(() => {});
+		} catch (error) {
+			LOG.error(this.className, 'Error while adding quote', error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1182,32 +1154,31 @@ export class CloudbaseService extends DatabaseService {
 	 * @param author - The author of the deleted quote (written to lastQuoteDeleted stat).
 	 */
 	public async removeQuote(key: string, text: string, author: string): Promise<void> {
-		await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
-
-		// Re-query remaining quotes so that latestQuote always reflects
-		// the most recently added quote still in the collection.
-		const remaining = await this.database.collection(DATABASE_QUOTES).limit(1000).get();
-		const quotes: any[] = remaining.data ?? [];
-		quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
-		const latest = quotes[0];
-
-		const deletedTimestamp = this.utilities.getCurrentFormattedTime(true);
-		await this.statisticsRef.update({
-			totalQuotes: this._.inc(-1),
-			latestQuote: latest
-				? { text: latest.text, author: latest.author, timestamp: latest.timestamp }
-				: null,
-			lastQuoteDeleted: {
-				text,
+		try {
+			await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+			// Re-query remaining quotes so that latestQuote always reflects
+			// the most recently added quote still in the collection.
+			const remaining = await this.database.collection(DATABASE_QUOTES).limit(1000).get();
+			const quotes: any[] = remaining.data ?? [];
+			quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
+			const latest = quotes[0];
+			const deletedTimestamp = Utilities.getCurrentFormattedTime(true);
+			await this.statisticsRef.update({
+				totalQuotes: this._.inc(-1),
+				latestQuote: latest
+					? { text: latest.text, author: latest.author, timestamp: latest.timestamp }
+					: null,
+				lastQuoteDeleted: { text, author, timestamp: deletedTimestamp }
+			});
+			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
+				type: HISTORY_STATUS_DELETED,
 				author,
 				timestamp: deletedTimestamp
-			}
-		});
-		this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
-			type: HISTORY_STATUS_DELETED,
-			author,
-			timestamp: deletedTimestamp
-		}).catch(() => {});
+			}).catch(() => {});
+		} catch (error) {
+			LOG.error(this.className, `Error while removing quote ${key}`, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1295,7 +1266,10 @@ export class CloudbaseService extends DatabaseService {
 		// Filter to link-type documents only (excludes category docs in the same collection)
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
-			(docs) => docs.filter((doc: any) => doc.type !== USEFUL_LINK_TYPE_CATEGORY).map((doc: any) => ({ ...doc })),
+			(docs) =>
+				docs
+					.filter((doc: any) => doc.type !== USEFUL_LINK_TYPE_CATEGORY)
+					.map((doc: any) => ({ ...doc })),
 			true,
 			(col) => col.where({ _openid: CloudbaseService.getUseId() })
 		);
@@ -1313,14 +1287,19 @@ export class CloudbaseService extends DatabaseService {
 		visitCount: number;
 		createdAt: string;
 	}): Promise<void> {
-		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
-		const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
-			...userId,
-			type: USEFUL_LINK_TYPE_LINK,
-			...link
-		});
-		if (result.code) throw new Error(result.message);
-		LOG.info(this.className, 'New useful link has been added');
+		try {
+			const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
+			const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
+				...userId,
+				type: USEFUL_LINK_TYPE_LINK,
+				...link
+			});
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'New useful link has been added');
+		} catch (error) {
+			LOG.error(this.className, 'Error while adding useful link', error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1333,12 +1312,17 @@ export class CloudbaseService extends DatabaseService {
 		key: string,
 		updates: Partial<{ url: string; title: string; category: string }>
 	): Promise<void> {
-		const result = await this.database
-			.collection(DATABASE_USEFUL_LINKS)
-			.doc(key)
-			.update({ ...updates });
-		if (result.code) throw new Error(result.message);
-		LOG.info(this.className, 'Useful link has been updated');
+		try {
+			const result = await this.database
+				.collection(DATABASE_USEFUL_LINKS)
+				.doc(key)
+				.update({ ...updates });
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'Useful link has been updated');
+		} catch (error) {
+			LOG.error(this.className, `Error while updating useful link ${key}`, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1348,12 +1332,17 @@ export class CloudbaseService extends DatabaseService {
 	 * @param currentCount - The current visit count.
 	 */
 	public async incrementLinkVisit(key: string, currentCount: number): Promise<void> {
-		const result = await this.database
-			.collection(DATABASE_USEFUL_LINKS)
-			.doc(key)
-			.update({ visitCount: currentCount + 1 });
-		if (result.code) throw new Error(result.message);
-		LOG.info(this.className, 'Link visit count has been incremented');
+		try {
+			const result = await this.database
+				.collection(DATABASE_USEFUL_LINKS)
+				.doc(key)
+				.update({ visitCount: currentCount + 1 });
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'Link visit count has been incremented');
+		} catch (error) {
+			LOG.error(this.className, `Error while incrementing visit count for link ${key}`, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1374,7 +1363,10 @@ export class CloudbaseService extends DatabaseService {
 		// Filter to category-type documents only (shares collection with links)
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
-			(docs) => docs.filter((doc: any) => doc.type === USEFUL_LINK_TYPE_CATEGORY).map((doc: any) => ({ ...doc })),
+			(docs) =>
+				docs
+					.filter((doc: any) => doc.type === USEFUL_LINK_TYPE_CATEGORY)
+					.map((doc: any) => ({ ...doc })),
 			true,
 			(col) => col.where({ _openid: CloudbaseService.getUseId() })
 		);
@@ -1386,14 +1378,19 @@ export class CloudbaseService extends DatabaseService {
 	 * @param category - The category object to add.
 	 */
 	public async addLinkCategory(category: { name: string; color: string; order: number }): Promise<void> {
-		const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
-		const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
-			...userId,
-			type: USEFUL_LINK_TYPE_CATEGORY,
-			...category
-		});
-		if (result.code) throw new Error(result.message);
-		LOG.info(this.className, 'New link category has been added');
+		try {
+			const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
+			const result = await this.database.collection(DATABASE_USEFUL_LINKS).add({
+				...userId,
+				type: USEFUL_LINK_TYPE_CATEGORY,
+				...category
+			});
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'New link category has been added');
+		} catch (error) {
+			LOG.error(this.className, 'Error while adding link category', error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1406,12 +1403,17 @@ export class CloudbaseService extends DatabaseService {
 		key: string,
 		updates: Partial<{ name: string; color: string; order: number }>
 	): Promise<void> {
-		const result = await this.database
-			.collection(DATABASE_USEFUL_LINKS)
-			.doc(key)
-			.update({ ...updates });
-		if (result.code) throw new Error(result.message);
-		LOG.info(this.className, 'Link category has been updated');
+		try {
+			const result = await this.database
+				.collection(DATABASE_USEFUL_LINKS)
+				.doc(key)
+				.update({ ...updates });
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, 'Link category has been updated');
+		} catch (error) {
+			LOG.error(this.className, `Error while updating link category ${key}`, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1437,6 +1439,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async proxyFetch(url: string): Promise<{ content: string; contentType: string }> {
 		// ── 1. Try own Express server endpoint (production SSR server only) ──
+
 		// The endpoint only exists when the compiled Express server is running.
 		// In `ng serve` dev mode Angular intercepts all requests and returns HTML,
 		// so we guard on Content-Type before attempting to parse JSON — this keeps
@@ -1463,16 +1466,114 @@ export class CloudbaseService extends DatabaseService {
 		}
 
 		// ── 2. CloudBase callFunction (dev mode and CloudBase-only deploys) ──
-		const result: any = await this.cloudbase.callFunction({
-			name: 'fetchUrl',
-			data: { accessToken: environment.cloudbase.accessToken, url }
-		});
-		if (!result?.result?.success) {
-			throw new Error(result?.result?.error ?? 'fetchUrl returned an error');
+		try {
+			const result: any = await this.cloudbase.callFunction({
+				name: 'fetchUrl',
+				data: { accessToken: environment.cloudbase.accessToken, url }
+			});
+			if (!result?.result?.success) {
+				throw new Error(result?.result?.error ?? 'fetchUrl returned an error');
+			}
+			return {
+				content: result.result.content ?? '',
+				contentType: result.result.contentType ?? ''
+			};
+		} catch (error) {
+			LOG.error(this.className, `Error while proxying fetch for ${url}`, error as Error);
+			throw error;
 		}
-		return {
-			content: result.result.content ?? '',
-			contentType: result.result.contentType ?? ''
-		};
+	}
+
+	// ── Recipes ───────────────────────────────────────────────────────────────
+
+	/**
+	 * Watch the recipes collection and emit the current user's recipes on every change.
+	 *
+	 * @returns An observable that emits the full recipe list whenever the collection changes.
+	 */
+	public getRecipes(): Observable<Recipe[]> {
+		return this.watchCollection(
+			DATABASE_RECIPES,
+			(docs) =>
+				docs.map((doc: any) => ({
+					id: doc._id,
+					name: doc.name,
+					detailName: doc.detailName,
+					category: doc.category,
+					bandClass: doc.bandClass,
+					cookTimeMin: doc.cookTimeMin ?? 0,
+					baseServings: doc.baseServings ?? 1,
+					badges: doc.badges ?? [],
+					groups: doc.groups ?? [],
+					steps: (doc.steps ?? []).map((s: any) => ({ ...s, done: false })),
+					notes: doc.notes ?? ''
+				})) as Recipe[],
+			true,
+			(col) => {
+				const userId = CloudbaseService.getUseId();
+				return userId ? col.where({ _openid: userId }) : col;
+			}
+		);
+	}
+
+	/**
+	 * Add a new recipe to the database for the current user.
+	 *
+	 * @param recipe - The recipe to persist.
+	 */
+	public async addRecipe(recipe: Recipe): Promise<void> {
+		try {
+			const { id: _, ...payload } = recipe;
+			const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
+			const result = await this.database.collection(DATABASE_RECIPES).add({
+				...userId,
+				...payload,
+				steps: payload.steps.map((s) => ({ ...s, done: false }))
+			});
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, `Recipe added: "${recipe.name}"`);
+		} catch (error) {
+			LOG.error(this.className, `Error while adding recipe "${recipe.name}"`, error as Error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update an existing recipe in the database.
+	 * Uses `recipe.id` to locate the document.
+	 *
+	 * @param recipe - The recipe with updated fields. `recipe.id` must match an existing document.
+	 */
+	public async updateRecipe(recipe: Recipe): Promise<void> {
+		try {
+			const { id, ...payload } = recipe;
+			const result = await this.database
+				.collection(DATABASE_RECIPES)
+				.where({ _id: id, _openid: CloudbaseService.getUseId() })
+				.update({
+					...payload,
+					steps: payload.steps.map((s) => ({ ...s, done: false }))
+				});
+			if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
+			LOG.info(this.className, `Recipe updated: "${recipe.name}"`);
+		} catch (error) {
+			LOG.error(this.className, `Error while updating recipe "${recipe.name}"`, error as Error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Remove a recipe from the database.
+	 *
+	 * @param recipeId - The `_id` of the recipe document to delete.
+	 */
+	public async removeRecipe(recipeId: string): Promise<void> {
+		try {
+			await this.removeSingleItemFromDatabase(DATABASE_RECIPES, recipeId);
+			LOG.info(this.className, `Recipe removed: ${recipeId}`);
+		} catch (error) {
+			LOG.error(this.className, `Error while removing recipe ${recipeId}`, error as Error);
+			throw error;
+		}
 	}
 }

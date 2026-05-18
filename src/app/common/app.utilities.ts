@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
 import { LOG } from './app.logs';
@@ -9,9 +9,14 @@ import { CloudbaseService } from '../backend/database-service/cloudbase/cloudbas
 export class Utilities {
 	private static readonly className = 'Utilities';
 	private static currentCountry: string = '';
+	private static boundScrollEls = new WeakSet<HTMLElement>();
+	private static scrollTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
 	private isUserAlive: boolean = false;
 
-	constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+	constructor(
+		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(DOCUMENT) private document: Document
+	) {}
 
 	/**
 	 * Check if the current device is a mobile device.
@@ -31,7 +36,7 @@ export class Utilities {
 	 * @param isTimeIncluded - Whether to include time in the formatted time.
 	 * @returns Formatted time
 	 */
-	public getCurrentFormattedTime(isTimeIncluded: boolean): string {
+	public static getCurrentFormattedTime(isTimeIncluded: boolean): string {
 		const now = new Date();
 
 		let formattedTime = '';
@@ -110,13 +115,14 @@ export class Utilities {
 			} else if (typeof date === 'object') {
 				// CloudBase/MongoDB: { $date: ms } or { $date: { $numberLong: "ms" } }
 				if (date.$date !== undefined) {
-					ms = typeof date.$date === 'object' && date.$date.$numberLong
-						? Number(date.$date.$numberLong)
-						: Number(date.$date);
-				// Tencent CloudBase SDK: { time: ms }
+					ms =
+						typeof date.$date === 'object' && date.$date.$numberLong
+							? Number(date.$date.$numberLong)
+							: Number(date.$date);
+					// Tencent CloudBase SDK: { time: ms }
 				} else if (date.time !== undefined) {
 					ms = Number(date.time);
-				// Firestore-like: { seconds: s }
+					// Firestore-like: { seconds: s }
 				} else if (date.seconds !== undefined) {
 					ms = Number(date.seconds) * 1000;
 				}
@@ -131,15 +137,16 @@ export class Utilities {
 		} catch {
 			return '';
 		}
-	}
-
+    }
+    
+	////////////////////////////// Below are static methods //////////////////////////////
 	/**
 	 * Capitalize the first letter of the string on each word
 	 *
 	 * @param string - The string to capitalize.
 	 * @returns The string with the first letter capitalized.
 	 */
-	public capitalizeFirstLetterOnEachWord(string: string | null | undefined) {
+	public static capitalizeFirstLetterOnEachWord(string: string | null | undefined) {
 		return string ? string.replace(/\b\w/g, (char) => char.toUpperCase()) : '';
 	}
 
@@ -149,7 +156,7 @@ export class Utilities {
 	 * @param string - The string to capitalize.
 	 * @returns The string with the first letter capitalized.
 	 */
-	public capitalizeFirstLetterWithOthersUnchanged(string: string | null | undefined) {
+	public static capitalizeFirstLetterWithOthersUnchanged(string: string | null | undefined) {
 		return string ? string.trim().charAt(0).toUpperCase() + string.slice(1) : '';
 	}
 
@@ -161,11 +168,10 @@ export class Utilities {
 	 * @param text - The text string to check.
 	 * @returns True if the text contains at least one Chinese character.
 	 */
-	public checkIfChinese(text: string | null | undefined): boolean {
+	public static checkIfChinese(text: string | null | undefined): boolean {
 		return !!text && /[一-龥]/.test(text);
 	}
 
-	////////////////////////////// Below are static methods //////////////////////////////
 	/**
 	 * Get the current country code
 	 *
@@ -226,8 +232,34 @@ export class Utilities {
 	 *
 	 * @returns true if the device supports hover, otherwise false.
 	 */
-	public static checkIfHoverCapable() {
-		return window.matchMedia('(hover: hover)').matches;
+	public checkIfHoverCapable(): boolean {
+		return this.document.defaultView?.matchMedia('(hover: hover)').matches ?? false;
+	}
+
+	/**
+	 * Attach a scroll-activity listener to a scrollable element that adds the
+	 * `is-scrolling` CSS class while the user is scrolling and removes it
+	 * 700 ms after scrolling stops, keeping the scrollbar hidden at rest.
+	 * No-ops if the element is already bound or is undefined.
+	 *
+	 * @param el - The scrollable DOM element to observe, or undefined to skip.
+	 */
+	public static attachScrollAutoHide(el?: HTMLElement): void {
+		if (!el || Utilities.boundScrollEls.has(el)) return;
+		Utilities.boundScrollEls.add(el);
+		const reveal = () => {
+			el.classList.add('is-scrolling');
+			const prev = Utilities.scrollTimers.get(el);
+			if (prev) clearTimeout(prev);
+			Utilities.scrollTimers.set(
+				el,
+				setTimeout(() => el.classList.remove('is-scrolling'), 700)
+			);
+		};
+		el.addEventListener('scroll', reveal, { passive: true });
+		el.addEventListener('mouseenter', () => {
+			if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) reveal();
+		});
 	}
 
 	/**

@@ -50,9 +50,11 @@
 		<div class="chip-row">
 			<span class="chip-row-label">Opens Homepage</span>
 			@for (tool of clipboardTools; track tool.id) {
-				<button
+				<a
 					class="ai-chip homepage-chip"
-					(click)="openToolHomepage(tool)"
+					[href]="tool.url"
+					target="_blank"
+					rel="noopener noreferrer"
 					[title]="'Open ' + tool.name">
 					@if (!failedLogos.has(tool.id)) {
 						<img [src]="tool.logo" [alt]="tool.name" class="chip-logo"
@@ -64,7 +66,7 @@
 					}
 					<span class="chip-name">{{ tool.name }}</span>
 					<span class="material-symbols-outlined homepage-arrow">open_in_new</span>
-				</button>
+				</a>
 			}
 		</div>
 

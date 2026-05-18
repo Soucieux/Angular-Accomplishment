@@ -9,7 +9,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { Subscription } from 'rxjs';
@@ -49,6 +49,7 @@ import {
 	NEXUS_MSG_NO_AI_SELECTED,
 	NEXUS_MSG_NO_AI_SELECTED_DETAIL,
 	NEXUS_MSG_SAVE_FAILED,
+	NEXUS_DEFAULT_CATEGORY_COLOR,
 	NEXUS_STORAGE_KEY_HISTORY,
 	NEXUS_STORAGE_KEY_SELECTED_AIS,
 	TOAST_ERROR,
@@ -120,7 +121,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 
 	// ── Category dialog ───────────────────────────────────────────
 	protected showCategoryDialog = false;
-	protected categoryForm = { name: '', color: '#d53369' };
+	protected categoryForm = { name: '', color: NEXUS_DEFAULT_CATEGORY_COLOR };
 	protected editingCategory: any | null = null;
 
 	// ── Links loading state ───────────────────────────────────────
@@ -132,6 +133,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(DOCUMENT) private document: Document,
 		private readonly cdr: ChangeDetectorRef,
 		private readonly dialogService: DialogService,
 		private readonly databaseService: DatabaseService
@@ -246,7 +248,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			return;
 		}
 		// Open direct-query tools with the query pre-filled in the URL
-		selectedDirect.forEach((t) => window.open(t.url + encodeURIComponent(query), '_blank'));
+		selectedDirect.forEach((t) => this.openInNewTab(t.url + encodeURIComponent(query)));
 		// Build summary toast
 		this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_LAUNCHED, `Opened ${selectedDirect.map((t) => t.name).join(', ')}`);
 		this.saveToHistory(
@@ -330,16 +332,6 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Open an "Opens Homepage" AI tool directly in a new tab.
-	 * No query is passed — the user interacts on the tool's own site.
-	 *
-	 * @param tool - The AI tool to open.
-	 */
-	protected openToolHomepage(tool: AiTool): void {
-		window.open(tool.url, '_blank', 'noopener,noreferrer');
-	}
-
-	/**
 	 * Return the subset of links that match the active category tab and the
 	 * current search string. Used directly by the template as a getter.
 	 *
@@ -380,7 +372,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Ensure a URL has an explicit protocol prefix so `window.open()` treats it
+	 * Ensure a URL has an explicit protocol prefix so the browser treats it
 	 * as an absolute URL rather than a relative path.  If the value already
 	 * starts with `http://` or `https://` it is returned unchanged; otherwise
 	 * `https://` is prepended.
@@ -395,13 +387,28 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Open a URL in a new tab using a temporary anchor element attached to
+	 * the injected Document, avoiding any direct reference to the global window object.
+	 *
+	 * @param url - The fully-qualified URL to open.
+	 */
+	private openInNewTab(url: string): void {
+		const a = this.document.createElement('a');
+		a.href = url;
+		a.target = '_blank';
+		a.rel = 'noopener noreferrer';
+		this.document.body.appendChild(a);
+		a.click();
+		this.document.body.removeChild(a);
+	}
+
+	/**
 	 * Open a saved link in a new tab and increment its visit count.
 	 *
 	 * @param link - The link document to open.
 	 */
 	protected openLink(link: any): void {
-		const url = this.normalizeUrl(link.url);
-		window.open(url, '_blank', 'noopener,noreferrer');
+		this.openInNewTab(this.normalizeUrl(link.url));
 		this.databaseService
 			.incrementLinkVisit(link._id, link.visitCount ?? 0)
 			.catch((err: any) =>
@@ -546,7 +553,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 */
 	protected openAddCategoryDialog(): void {
 		this.editingCategory = null;
-		this.categoryForm = { name: '', color: '#d53369' };
+		this.categoryForm = { name: '', color: NEXUS_DEFAULT_CATEGORY_COLOR };
 		this.showCategoryDialog = true;
 	}
 
@@ -559,7 +566,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected openEditCategoryDialog(category: any, event: Event): void {
 		event.stopPropagation();
 		this.editingCategory = category;
-		this.categoryForm = { name: category.name, color: category.color ?? '#d53369' };
+		this.categoryForm = { name: category.name, color: category.color ?? NEXUS_DEFAULT_CATEGORY_COLOR };
 		this.showCategoryDialog = true;
 	}
 

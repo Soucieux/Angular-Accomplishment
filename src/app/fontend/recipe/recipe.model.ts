@@ -112,7 +112,6 @@ export interface Recipe {
 }
 
 export interface EditorIngredient {
-	id: string;
 	type: IngredientType;
 	name: string;
 	qty: string;
@@ -120,12 +119,10 @@ export interface EditorIngredient {
 }
 
 export interface EditorSubpoint {
-	id: string;
 	text: string;
 }
 
 export interface EditorStep {
-	id: string;
 	text: string;
 	subs: EditorSubpoint[];
 }

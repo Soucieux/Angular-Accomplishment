@@ -237,12 +237,12 @@ export class PatchComponent implements OnInit, OnDestroy {
 		}
 
 		if (Object.keys(changes).length > 0) {
-			changes.timestamp = this.utilities.getCurrentFormattedTime(false);
+			changes.timestamp = Utilities.getCurrentFormattedTime(false);
 			await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
 
 			// Fire-and-forget: record the edit type in stats for the Recent Activity widget.
 			const noteIndex = this.patchNotesList.findIndex((n) => n.key === row.key) + 1;
-			const ts = this.utilities.getCurrentFormattedTime(true);
+			const ts = Utilities.getCurrentFormattedTime(true);
 			if (changes.status) {
 				this.databaseService
 					.appendToPatchActivityLog({
@@ -286,7 +286,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 	protected submitNewRecord() {
 		// Inject the current timestamp before submit; status is unwrapped from
 		// the PrimeNG select object via ['severity'] to get the raw string value.
-		this.newRecord.timestamp = this.utilities.getCurrentFormattedTime(false);
+		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
 		const snapshot = { ...this.newRecord };
 		const noteIndex = this.patchNotesList.length + 1;
@@ -302,7 +302,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 						element: snapshot.element,
 						isBug: !!snapshot.isBug,
 						noteIndex,
-						timestamp: this.utilities.getCurrentFormattedTime(true)
+						timestamp: Utilities.getCurrentFormattedTime(true)
 					})
 					.catch(() => {});
 			})
@@ -342,7 +342,7 @@ export class PatchComponent implements OnInit, OnDestroy {
 							component: noteToDelete?.component ?? '',
 							element: noteToDelete?.element ?? '',
 							noteIndex,
-							timestamp: this.utilities.getCurrentFormattedTime(true)
+							timestamp: Utilities.getCurrentFormattedTime(true)
 						})
 						.catch(() => {});
 				} catch (error) {

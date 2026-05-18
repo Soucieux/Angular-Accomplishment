@@ -254,6 +254,7 @@
 .homepage-chip {
 	border-style: dashed;
 	gap: 5px;
+	text-decoration: none;
 }
 
 .homepage-chip:hover {

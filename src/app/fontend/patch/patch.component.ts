@@ -16,7 +16,6 @@ import { Tag } from 'primeng/tag';
 import { InputText } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
-import { DatePicker } from 'primeng/datepicker';
 import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/app.utilities';
 import {
@@ -51,7 +50,6 @@ import { DatabaseService } from '../../backend/database-service/database.service
 		InputText,
 		Button,
 		Select,
-		DatePicker,
 		FormsModule,
 		CommonModule,
 		PaginatorModule,
@@ -106,7 +104,11 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Attaches the auto-hide scroll listener to the page container after each view check.
 	 */
 	public ngAfterViewChecked(): void {
-		document.querySelectorAll<HTMLElement>('.container.page-card').forEach((el) => Utilities.attachScrollAutoHide(el));
+		if (isPlatformBrowser(this.platformId)) {
+			document
+				.querySelectorAll<HTMLElement>('.container.page-card')
+				.forEach((el) => Utilities.attachScrollAutoHide(el));
+		}
 	}
 
 	/**
@@ -218,10 +220,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			this.dialogService.showPermissionError(this.dialogComponentContainer);
 			return;
 		}
-		const parts = (row.timestamp ?? '').split('.');
-		const timestampDate =
-			parts.length === 3 ? new Date(+parts[0], +parts[1] - 1, +parts[2]) : new Date();
-		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row, timestampDate } });
+		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
 
 	/**
@@ -234,24 +233,15 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const record = this.editedRows.get(row.key);
 		const changes: any = {};
 
-		if (record.original.component !== record.updated.component) {
-			changes.component = record.updated.component;
-		}
 		if (record.original.details !== record.updated.details.trim()) {
 			changes.details = record.updated.details.trim();
 		}
 		if (record.original.status !== record.updated.status) {
 			changes.status = record.updated.status;
 		}
-		const d: Date = record.updated.timestampDate;
-		const formattedTs = d
-			? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-			: record.original.timestamp;
-		if (formattedTs !== record.original.timestamp) {
-			changes.timestamp = formattedTs;
-		}
 
 		if (Object.keys(changes).length > 0) {
+			changes.timestamp = Utilities.getCurrentFormattedTime(false);
 			await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
 
 			// Fire-and-forget: record the edit type in stats for the Recent Activity widget.
@@ -298,10 +288,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * can include the correct noteIndex and metadata after the async add.
 	 */
 	protected submitNewRecord() {
-		const d = this.newRecordDate;
-		this.newRecord.timestamp = d
-			? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-			: Utilities.getCurrentFormattedTime(false);
+		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
 		const snapshot = { ...this.newRecord };
 		const noteIndex = this.patchNotesList.length + 1;
@@ -331,7 +318,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			timestamp: '',
 			isBug: false
 		};
-		this.newRecordDate = new Date();
 	}
 
 	/**
@@ -600,7 +586,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		{ label: 'Reminder', icon: 'priority', iconClass: 'material-symbols-outlined' },
 		{ label: 'Resonance', icon: 'format_quote', iconClass: 'material-symbols-outlined' },
 		{ label: 'About', icon: 'info', iconClass: 'material-symbols-outlined' },
-		{ label: 'All Pages', icon: 'web', iconClass: 'material-icons' },
+		{ label: 'All Pages', icon: 'web', iconClass: 'material-icons' }
 	];
 
 	/**
@@ -629,5 +615,4 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		timestamp: '',
 		isBug: false
 	};
-	protected newRecordDate: Date = new Date();
 }

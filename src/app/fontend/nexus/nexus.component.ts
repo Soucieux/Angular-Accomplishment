@@ -9,7 +9,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { Subscription } from 'rxjs';
@@ -58,22 +58,6 @@ import {
 	TOAST_WARN
 } from '../../common/app.constant';
 import { AiTool, NEXUS_CLIPBOARD_TOOLS, NEXUS_DIRECT_TOOLS, NEXUS_LOGO_FALLBACK_COLORS, SearchHistoryEntry } from './nexus.model';
-
-/**
- * Safely extract an error message from any thrown value.
- * Some SDK error objects (e.g. CloudBase JS SDK) have broken `.message` getters
- * that throw internally, so we must guard before passing to LOG.error.
- */
-function safeErrMsg(err: unknown): string {
-	try {
-		if (err == null) return 'unknown error';
-		if (typeof err === 'string') return err;
-		const msg = (err as any).message;
-		return typeof msg === 'string' ? msg : String(err);
-	} catch {
-		return 'unknown error';
-	}
-}
 
 @Component({
 	selector: 'nexus',
@@ -133,7 +117,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
-		@Inject(DOCUMENT) private document: Document,
+		private readonly utilities: Utilities,
 		private readonly cdr: ChangeDetectorRef,
 		private readonly dialogService: DialogService,
 		private readonly databaseService: DatabaseService
@@ -248,7 +232,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			return;
 		}
 		// Open direct-query tools with the query pre-filled in the URL
-		selectedDirect.forEach((t) => this.openInNewTab(t.url + encodeURIComponent(query)));
+		selectedDirect.forEach((t) => this.utilities.openInNewTab(t.url + encodeURIComponent(query)));
 		// Build summary toast
 		this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_LAUNCHED, `Opened ${selectedDirect.map((t) => t.name).join(', ')}`);
 		this.saveToHistory(
@@ -353,12 +337,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 * @returns A favicon image URL string.
 	 */
 	protected getFavicon(url: string): string {
-		try {
-			const hostname = new URL(url).hostname;
-			return `https://${hostname}/favicon.ico`;
-		} catch {
-			return '';
-		}
+		return Utilities.getFavicon(url);
 	}
 
 	/**
@@ -372,43 +351,12 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Ensure a URL has an explicit protocol prefix so the browser treats it
-	 * as an absolute URL rather than a relative path.  If the value already
-	 * starts with `http://` or `https://` it is returned unchanged; otherwise
-	 * `https://` is prepended.
-	 *
-	 * @param url - The raw URL string entered by the user.
-	 * @returns A URL string guaranteed to begin with a valid protocol.
-	 */
-	private normalizeUrl(url: string): string {
-		if (!url) return url;
-		if (url.startsWith('http://') || url.startsWith('https://')) return url;
-		return 'https://' + url;
-	}
-
-	/**
-	 * Open a URL in a new tab using a temporary anchor element attached to
-	 * the injected Document, avoiding any direct reference to the global window object.
-	 *
-	 * @param url - The fully-qualified URL to open.
-	 */
-	private openInNewTab(url: string): void {
-		const a = this.document.createElement('a');
-		a.href = url;
-		a.target = '_blank';
-		a.rel = 'noopener noreferrer';
-		this.document.body.appendChild(a);
-		a.click();
-		this.document.body.removeChild(a);
-	}
-
-	/**
 	 * Open a saved link in a new tab and increment its visit count.
 	 *
 	 * @param link - The link document to open.
 	 */
 	protected openLink(link: any): void {
-		this.openInNewTab(this.normalizeUrl(link.url));
+		this.utilities.openInNewTab(Utilities.normalizeUrl(link.url));
 		this.databaseService
 			.incrementLinkVisit(link._id, link.visitCount ?? 0)
 			.catch((err: any) =>
@@ -464,7 +412,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected onLinkUrlBlur(): void {
 		const raw = this.linkForm.url.trim();
 		if (!raw) return;
-		const url = this.normalizeUrl(raw);
+		const url = Utilities.normalizeUrl(raw);
 		this.linkForm.url = url; // write back so the input shows the normalized value
 		this.linkFaviconPreview = this.getFavicon(url);
 		if (this.linkForm.title) return; // don't overwrite existing title
@@ -478,7 +426,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 				this.cdr.markForCheck();
 			})
 			.catch((err) => {
-				LOG.error(this.className, `Could not fetch page title for ${url}: ${safeErrMsg(err)}`);
+				LOG.error(this.className, `Could not fetch page title for ${url}: ${Utilities.safeErrorMessage(err)}`);
 				this.linkMetaLoading = false;
 			});
 	}
@@ -492,7 +440,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			this.dialogService.showToast(TOAST_WARN, NEXUS_MSG_MISSING_FIELDS, NEXUS_MSG_MISSING_FIELDS_DETAIL);
 			return;
 		}
-		const finalUrl = this.normalizeUrl(url.trim());
+		const finalUrl = Utilities.normalizeUrl(url.trim());
 		try {
 			if (this.editingLink) {
 				await this.databaseService.updateUsefulLink(this.editingLink._id, {

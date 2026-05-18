@@ -16,6 +16,7 @@ import { Tag } from 'primeng/tag';
 import { InputText } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
+import { DatePicker } from 'primeng/datepicker';
 import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/app.utilities';
 import {
@@ -50,6 +51,7 @@ import { DatabaseService } from '../../backend/database-service/database.service
 		InputText,
 		Button,
 		Select,
+		DatePicker,
 		FormsModule,
 		CommonModule,
 		PaginatorModule,
@@ -216,7 +218,10 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			this.dialogService.showPermissionError(this.dialogComponentContainer);
 			return;
 		}
-		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
+		const parts = (row.timestamp ?? '').split('.');
+		const timestampDate =
+			parts.length === 3 ? new Date(+parts[0], +parts[1] - 1, +parts[2]) : new Date();
+		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row, timestampDate } });
 	}
 
 	/**
@@ -229,23 +234,24 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const record = this.editedRows.get(row.key);
 		const changes: any = {};
 
-		/*
-        This one is not needed as we are not updating the element name
-
-        if (record.original.element !== record.updated.element.trim()) {
-		 	changes.element = record.updated.element.trim();
-         }
-         */
-
+		if (record.original.component !== record.updated.component) {
+			changes.component = record.updated.component;
+		}
 		if (record.original.details !== record.updated.details.trim()) {
 			changes.details = record.updated.details.trim();
 		}
 		if (record.original.status !== record.updated.status) {
 			changes.status = record.updated.status;
 		}
+		const d: Date = record.updated.timestampDate;
+		const formattedTs = d
+			? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+			: record.original.timestamp;
+		if (formattedTs !== record.original.timestamp) {
+			changes.timestamp = formattedTs;
+		}
 
 		if (Object.keys(changes).length > 0) {
-			changes.timestamp = Utilities.getCurrentFormattedTime(false);
 			await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
 
 			// Fire-and-forget: record the edit type in stats for the Recent Activity widget.
@@ -292,9 +298,10 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * can include the correct noteIndex and metadata after the async add.
 	 */
 	protected submitNewRecord() {
-		// Inject the current timestamp before submit; status is unwrapped from
-		// the PrimeNG select object via ['severity'] to get the raw string value.
-		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(false);
+		const d = this.newRecordDate;
+		this.newRecord.timestamp = d
+			? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+			: Utilities.getCurrentFormattedTime(false);
 		this.newRecord.status = this.newRecord.status?.['severity'];
 		const snapshot = { ...this.newRecord };
 		const noteIndex = this.patchNotesList.length + 1;
@@ -324,6 +331,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			timestamp: '',
 			isBug: false
 		};
+		this.newRecordDate = new Date();
 	}
 
 	/**
@@ -621,4 +629,5 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		timestamp: '',
 		isBug: false
 	};
+	protected newRecordDate: Date = new Date();
 }

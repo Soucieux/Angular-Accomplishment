@@ -215,13 +215,18 @@ export class AuthService {
 					CloudbaseService.setUserName(data.user.user_metadata?.username);
 					this.cloudbaseUserSubject.next(data.user);
 					CloudbaseService.markAuthReady();
+					CloudbaseService.setLoginState(true);
 				} else {
+					// Anonymous or missing user — ensure dashboard stays hidden.
 					this.cloudbaseUserSubject.next(null);
+					CloudbaseService.setLoginState(false);
 				}
 			})
 			.catch(() => {
+				// Auth check failed — treat as logged out so dashboard is not shown.
 				this.cloudbaseUserSubject.next(null);
 				CloudbaseService.markAuthReady();
+				CloudbaseService.setLoginState(false);
 			});
 		return this.cloudbaseUserSubject.asObservable();
 	}
@@ -240,6 +245,9 @@ export class AuthService {
 				if (!isAnonymous) this.router.navigate(['/']);
 				this.utilities.setIsUserAlive(false);
 				CloudbaseService.setUseId('');
+				CloudbaseService.setUserRole('');
+				CloudbaseService.setUserName('');
+				CloudbaseService.setLoginState(false);
 			})
 			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}

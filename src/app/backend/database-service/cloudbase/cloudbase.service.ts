@@ -1,6 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { Observable, ReplaySubject } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
 import { shareReplay, switchMap, take, filter } from 'rxjs/operators';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
@@ -54,6 +54,7 @@ export class CloudbaseService extends DatabaseService {
 	private _!: any;
 	private tempUrlCache = new Map<string, string>();
 	private static _authReady$ = new ReplaySubject<boolean>(1);
+	private static _loginState$ = new BehaviorSubject<boolean>(false);
 
 	/**
 	 * Emits only true — watchers must never receive false, or they would start
@@ -64,11 +65,12 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Emits every auth-state change (true / false) — for components that need
-	 * to react to sign-out by hiding data or switching views.
+	 * Emits every real login-state change (true = non-anonymous user signed in,
+	 * false = signed out or anonymous). Starts as false so new subscribers always
+	 * get the correct initial state without waiting for a replay.
 	 */
 	static get loginState$() {
-		return CloudbaseService._authReady$.asObservable();
+		return CloudbaseService._loginState$.asObservable();
 	}
 
 	/**
@@ -76,6 +78,15 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	static markAuthReady() {
 		this._authReady$.next(true);
+	}
+
+	/**
+	 * Set the real login state. True only for non-anonymous authenticated users.
+	 *
+	 * @param loggedIn - Whether a real (non-anonymous) user is signed in.
+	 */
+	static setLoginState(loggedIn: boolean) {
+		this._loginState$.next(loggedIn);
 	}
 
 	constructor(

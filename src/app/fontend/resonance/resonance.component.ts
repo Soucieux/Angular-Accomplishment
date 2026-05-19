@@ -148,8 +148,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @returns true if the user can delete the quote, otherwise false.
 	 */
 	protected canDelete(quote: any): boolean {
-		if (CloudbaseService.userHasAllRights()) return true;
-		return quote._openid === CloudbaseService.getUseId();
+		return Utilities.checkPermission(quote._openid);
 	}
 
 	/**
@@ -228,5 +227,4 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			['Are you sure you want to delete this quote?', 'Delete Quote', 'Delete']
 		);
 	}
-
 }

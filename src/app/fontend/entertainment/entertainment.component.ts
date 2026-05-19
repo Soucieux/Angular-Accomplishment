@@ -14,7 +14,6 @@ import {
 	NO_RATE,
 	GENRE_FAVOURITE,
 	SEARCH,
-	ERROR_PERMISSION_DENIED,
 	MOVIE_GENRES
 } from '../../common/app.constant';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
@@ -230,15 +229,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				}
 				searchCount++;
 			} catch (error) {
-				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-					this.dialogService.showPermissionError(this.dialogComponentContainer);
-				} else {
-					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
-					LOG.error(
-						this.className,
-						`Error while updating movie rate for ${movieItemVO.getMovieName()}`
-					);
-				}
+				this.dialogService.handleError(this.dialogComponentContainer, error);
+				LOG.error(this.className, `Error while updating movie rate for ${movieItemVO.getMovieName()}`);
 			}
 		}
 
@@ -843,12 +835,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				this.editedItems.delete(movie.getMovieKey());
 			}
 		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.dialogService.showPermissionError(this.dialogComponentContainer);
-			} else {
-				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
-				LOG.error(this.className, 'Error while updaing genre');
-			}
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+			LOG.error(this.className, 'Error while updaing genre');
 		}
 	}
 
@@ -864,12 +852,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			// if currently false, set true. The database only stores the final boolean.
 			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
 		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.dialogService.showPermissionError(this.dialogComponentContainer);
-			} else {
-				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
-				LOG.error(this.className, 'Error while set favourite');
-			}
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+			LOG.error(this.className, 'Error while set favourite');
 		}
 	}
 }

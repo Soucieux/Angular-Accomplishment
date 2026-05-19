@@ -1,10 +1,11 @@
-import { ChangeDetectorRef, Component, OnDestroy, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { IftaLabelModule } from 'primeng/iftalabel';
+import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { InputGroupModule } from 'primeng/inputgroup';
@@ -32,7 +33,7 @@ import { wrongVerificationCodeError } from '../../common/error/wrong-verificatio
 	templateUrl: './login.component.html',
 	styleUrls: ['./login.component.css']
 })
-export class LoginComponent implements OnDestroy {
+export class LoginComponent implements OnInit, OnDestroy {
 	private readonly className = 'LoginComponent';
 	@ViewChild('dialogContainer', { read: ViewContainerRef })
 	private dialogContainer!: ViewContainerRef;
@@ -43,12 +44,14 @@ export class LoginComponent implements OnDestroy {
 	protected codeSent = false;
 	protected sendingCode = false;
 	private codeSentTimeout: ReturnType<typeof setTimeout> | null = null;
+	private returnUrl: string = '/';
 
 	constructor(
 		private fb: FormBuilder,
 		private authService: AuthService,
 		private dialogService: DialogService,
-		private cdr: ChangeDetectorRef
+		private cdr: ChangeDetectorRef,
+		private route: ActivatedRoute
 	) {
 		this.loginForm = this.fb.group({
 			username: ['', Validators.required],
@@ -56,6 +59,14 @@ export class LoginComponent implements OnDestroy {
 			password: ['', Validators.required],
 			verificationCode: ['']
 		});
+	}
+
+	/**
+	 * Reads the returnUrl query param so sign-in can redirect back to the
+	 * page the user came from.
+	 */
+	public ngOnInit(): void {
+		this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
 	}
 
 	/**
@@ -177,13 +188,15 @@ export class LoginComponent implements OnDestroy {
 					// Cloudbase sign in
 					await this.authService.signIn(
 						this.loginForm.value['username'],
-						this.loginForm.value['password']
+						this.loginForm.value['password'],
+						this.returnUrl
 					);
 				} else {
 					// Firebase sign in
 					await this.authService.emailPasswordLogin(
 						this.loginForm.value['username'],
-						this.loginForm.value['password']
+						this.loginForm.value['password'],
+						this.returnUrl
 					);
 				}
 			}

@@ -77,7 +77,7 @@
 			} @else {
 				<li class="signin-button-container">
 					<p-button
-						routerLink="/login"
+						(click)="navigateToLogin()"
 						icon="pi pi-user"
 						[rounded]="true"
 						class="signin-signout-button signin-btn" />

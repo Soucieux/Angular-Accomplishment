@@ -1,6 +1,7 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { format } from 'date-fns';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
 import { LOG } from './app.logs';
 import { CN } from './app.constant';
@@ -12,7 +13,7 @@ export class Utilities {
 	private static currentCountry: string = '';
 	private static boundScrollEls = new WeakSet<HTMLElement>();
 	private static scrollTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
-	private isUserAlive: boolean = false;
+	private readonly isUserAliveSubject = new BehaviorSubject<boolean>(false);
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -187,17 +188,28 @@ export class Utilities {
 	 *
 	 * @returns Whether the user is alive.
 	 */
-	public getIsUserAlive() {
-		return this.isUserAlive;
+	public getIsUserAlive(): boolean {
+		return this.isUserAliveSubject.getValue();
 	}
 
 	/**
-	 * Set the user alive state.
+	 * Get an observable that emits whenever the user alive state changes.
+	 * Subscribe to this in components that need to react immediately to
+	 * login/logout events without relying on zone-based change detection.
+	 *
+	 * @returns An Observable that emits the current and future user alive states.
+	 */
+	public getIsUserAlive$(): Observable<boolean> {
+		return this.isUserAliveSubject.asObservable();
+	}
+
+	/**
+	 * Set the user alive state and notify all subscribers reactively.
 	 *
 	 * @param isUserAlive - Whether the user is alive.
 	 */
-	public setIsUserAlive(isUserAlive: boolean) {
-		this.isUserAlive = isUserAlive;
+	public setIsUserAlive(isUserAlive: boolean): void {
+		this.isUserAliveSubject.next(isUserAlive);
 	}
 
 	/**

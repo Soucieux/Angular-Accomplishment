@@ -114,6 +114,7 @@
 			}
 		</div>
 		<div class="links-col">
+			@if (utilities.getIsUserAlive()) {
 			<!-- ── Category tabs + search + add button ──────────────── -->
 			<div class="links-toolbar">
 				<div class="category-tabs">
@@ -201,6 +202,26 @@
 							</div>
 						</div>
 					}
+				</div>
+			}
+			} @else {
+				<!-- ── Mini access-denied ──────────────────────────────── -->
+				<div class="mini-access-denied" role="status" aria-live="polite">
+					<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+						<defs>
+							<linearGradient id="miniAdLockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+								<stop offset="0%" stop-color="#ffffff" />
+								<stop offset="100%" stop-color="#daae51" />
+							</linearGradient>
+						</defs>
+					</svg>
+					<div class="mini-access-denied__card">
+						<svg class="mini-access-denied__icon" viewBox="0 0 24 24" aria-hidden="true">
+							<path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 0 0-6 0v3Zm3 4a1.6 1.6 0 0 0-.8 2.99V18a.8.8 0 0 0 1.6 0v-1.01A1.6 1.6 0 0 0 12 14Z" fill="url(#miniAdLockGradient)" />
+						</svg>
+						<h3 class="mini-access-denied__title">Access Denied</h3>
+						<p class="mini-access-denied__subtitle">Sign in to view your saved links and pick up where you left off.</p>
+					</div>
 				</div>
 			}
 		</div>

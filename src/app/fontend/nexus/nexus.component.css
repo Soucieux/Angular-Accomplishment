@@ -94,8 +94,136 @@
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
+	position: relative;
 	border-left: 1px solid rgba(0, 0, 0, 0.06);
 	padding-left: 16px;
+}
+
+/* ── Mini access-denied ─────────────────────────────────────────── */
+.mini-access-denied {
+	flex: 1;
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	display: grid;
+	place-items: center;
+	padding: 28px;
+	border-radius: 16px;
+}
+.mini-access-denied::before,
+.mini-access-denied::after {
+	content: '';
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(80px);
+	opacity: 0.25;
+	pointer-events: none;
+	z-index: 0;
+}
+.mini-access-denied::before {
+	width: 340px;
+	height: 340px;
+	background: radial-gradient(circle, #d53369 0%, rgba(213, 51, 105, 0) 70%);
+	top: -100px;
+	left: -100px;
+	animation: miniAdDrift 14s ease-in-out infinite alternate;
+}
+.mini-access-denied::after {
+	width: 380px;
+	height: 380px;
+	background: radial-gradient(circle, #daae51 0%, rgba(218, 174, 81, 0) 70%);
+	bottom: -130px;
+	right: -120px;
+	animation: miniAdDrift 19s ease-in-out infinite alternate-reverse;
+}
+.mini-access-denied__card {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	z-index: 1;
+	width: 100%;
+	max-width: 360px;
+	padding: 28px 26px 30px;
+	border-radius: 22px;
+	background:
+		radial-gradient(120% 80% at 20% 0%, rgba(255, 255, 255, 0.18), transparent 60%),
+		linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	box-shadow: 0 8px 32px -8px rgba(213, 51, 105, 0.35);
+	text-align: center;
+	animation: miniAdCardReveal 720ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+	color: #fff;
+}
+.mini-access-denied__card::before,
+.mini-access-denied__card::after {
+	content: '';
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(28px);
+	opacity: 0.5;
+	pointer-events: none;
+	z-index: 0;
+}
+.mini-access-denied__card::before {
+	width: 180px;
+	height: 180px;
+	background: radial-gradient(circle at 30% 30%, #ffd29a, rgba(255, 210, 154, 0));
+	top: -60px;
+	left: -50px;
+	animation: miniAdDrift 14s ease-in-out infinite alternate;
+}
+.mini-access-denied__card::after {
+	width: 200px;
+	height: 200px;
+	background: radial-gradient(circle at 60% 40%, #ff7aa8, rgba(255, 122, 168, 0));
+	bottom: -80px;
+	right: -60px;
+	animation: miniAdDrift 19s ease-in-out infinite alternate-reverse;
+}
+@keyframes miniAdDrift {
+	0%   { transform: translate3d(0, 0, 0) scale(1); }
+	50%  { transform: translate3d(14px, -10px, 0) scale(1.06); }
+	100% { transform: translate3d(-10px, 14px, 0) scale(0.96); }
+}
+@keyframes miniAdCardReveal {
+	from { opacity: 0; transform: translateY(10px) scale(0.985); }
+	to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes miniAdCardReveal {
+	from { opacity: 0; transform: translateY(10px) scale(0.985); }
+	to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.mini-access-denied__icon {
+	position: relative;
+	z-index: 1;
+	width: 44px;
+	height: 44px;
+	margin: 0 auto 14px;
+	display: block;
+}
+.mini-access-denied__title {
+	position: relative;
+	z-index: 1;
+	margin: 0 0 6px;
+	font-size: 20px;
+	line-height: 1.15;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: #fff;
+}
+.mini-access-denied__subtitle {
+	position: relative;
+	z-index: 1;
+	margin: 0;
+	font-size: 13.5px;
+	line-height: 1.5;
+	color: rgba(255, 255, 255, 0.82);
+}
+@media (prefers-reduced-motion: reduce) {
+	.mini-access-denied__card::before,
+	.mini-access-denied__card::after,
+	.mini-access-denied__card {
+		animation: none;
+	}
 }
 
 /* ── Search Zone — sizes to content, bottom strip fills the rest ── */

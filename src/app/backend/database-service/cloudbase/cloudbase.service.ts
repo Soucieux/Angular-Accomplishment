@@ -24,7 +24,6 @@ import {
 	USEFUL_LINK_TYPE_LINK,
 	USEFUL_LINK_TYPE_CATEGORY,
 	ACTIVITY_TYPE_UPDATED,
-	ERROR_PERMISSION_DENIED,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
@@ -38,7 +37,8 @@ import {
 	STATS_FIELD_RECENT_PATCH,
 	STATS_FIELD_RECENT_REMINDER,
 	STATS_FIELD_RECENT_RESONANCE,
-	STATUS_IN_PROGRESS
+	STATUS_IN_PROGRESS,
+	ERROR_PERMISSION_DENIED
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
@@ -1508,7 +1508,10 @@ export class CloudbaseService extends DatabaseService {
 	// ── Recipes ───────────────────────────────────────────────────────────────
 
 	/**
-	 * Watch the recipes collection and emit the current user's recipes on every change.
+	 * Watch the recipes collection and emit all recipes on every change.
+	 * Read access is enforced by the database security rule (non-anonymous
+	 * authenticated users only); no additional client-side owner filter is applied
+	 * so that all users see the full shared recipe list.
 	 *
 	 * @returns An observable that emits the full recipe list whenever the collection changes.
 	 */
@@ -1529,11 +1532,7 @@ export class CloudbaseService extends DatabaseService {
 					steps: (doc.steps ?? []).map((s: any) => ({ ...s, done: false })),
 					notes: doc.notes ?? ''
 				})) as Recipe[],
-			true,
-			(col) => {
-				const userId = CloudbaseService.getUseId();
-				return userId ? col.where({ _openid: userId }) : col;
-			}
+			true
 		);
 	}
 

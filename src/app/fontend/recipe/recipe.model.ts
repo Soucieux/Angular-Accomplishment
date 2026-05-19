@@ -99,6 +99,7 @@ export interface RecipeStep {
 
 export interface Recipe {
 	id: string;
+	openid: string;
 	name: string;
 	detailName: string;
 	category: string;

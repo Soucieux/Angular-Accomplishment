@@ -396,10 +396,11 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Open the editor in edit mode for the currently active recipe, loading its
 	 * existing data into the editor fields before navigating to the add-recipe view.
-	 * No-ops if no recipe is currently active.
+	 * No-ops if no recipe is currently active or the user lacks permission.
 	 */
 	protected openEditView(): void {
 		if (!this.activeRecipe) return;
+		if (!this.dialogService.ensurePermission(this.dialogContainer, this.activeRecipe.openid)) return;
 		this.editingMode = RECIPE_EDITING_MODE_EDIT;
 		this.editingRecipeId = this.activeRecipe.id;
 		this.loadRecipeIntoEditor(this.activeRecipe);
@@ -717,6 +718,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const isEdit = this.editingMode === RECIPE_EDITING_MODE_EDIT && !!this.editingRecipeId;
 		const recipe: Recipe = {
 			id: isEdit ? this.editingRecipeId! : '',
+			openid: this.activeRecipe?.openid ?? '',
 			name: this.editorName.trim(),
 			detailName: this.editorName.trim(),
 			category: this.editorCategory,

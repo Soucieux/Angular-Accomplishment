@@ -1521,6 +1521,7 @@ export class CloudbaseService extends DatabaseService {
 			(docs) =>
 				docs.map((doc: any) => ({
 					id: doc._id,
+					openid: doc._openid ?? '',
 					name: doc.name,
 					detailName: doc.detailName,
 					category: doc.category,

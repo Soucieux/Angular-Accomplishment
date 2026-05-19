@@ -1,4 +1,4 @@
-import { EnvironmentInjector, inject, Inject, Injectable, runInInjectionContext } from '@angular/core';
+import { EnvironmentInjector, inject, Inject, Injectable, NgZone, runInInjectionContext } from '@angular/core';
 import {
 	GoogleAuthProvider,
 	signInWithEmailAndPassword,
@@ -30,7 +30,8 @@ export class AuthService {
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
 		private router: Router,
 		private databaseService: DatabaseService,
-		private utilities: Utilities
+		private utilities: Utilities,
+		private ngZone: NgZone
 	) {
 		if (Utilities.getCurrentCountry() === CN) {
 			const cloudbaseService = this.databaseService as CloudbaseService;
@@ -66,11 +67,12 @@ export class AuthService {
 	 *
 	 * @param email - The user's email address.
 	 * @param password - The user's password.
+	 * @param returnUrl - Optional URL to navigate to after sign-in. Defaults to '/'.
 	 */
-	public async emailPasswordLogin(email: string, password: string) {
+	public async emailPasswordLogin(email: string, password: string, returnUrl: string = '/') {
 		try {
 			await signInWithEmailAndPassword(this.firebaseAuth, email, password);
-			this.router.navigate(['/']);
+			this.router.navigate([returnUrl]);
 			this.utilities.setIsUserAlive(true);
 		} catch (error: any) {
 			LOG.error(this.className, 'Error when signing in with email and password');
@@ -99,14 +101,16 @@ export class AuthService {
 	}
 
 	/**
-	 * Sign out the current Firebase user and navigate to the home page.
+	 * Sign out the current Firebase user and reactively update auth state
+	 * without navigating away from the current page.
 	 */
 	public logout() {
 		// CurrentUser in this.auth gets removed immediately after signOut
 		signOut(this.firebaseAuth)
 			.then(() => {
-				this.router.navigate(['/']);
-				this.utilities.setIsUserAlive(false);
+				this.ngZone.run(() => {
+					this.utilities.setIsUserAlive(false);
+				});
 			})
 			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}
@@ -175,10 +179,11 @@ export class AuthService {
 	 *
 	 * @param username - The user's username.
 	 * @param password - The user's password.
+	 * @param returnUrl - Optional URL to navigate to after sign-in. Defaults to '/'.
 	 * @throws WrongCredentialsError if the username or password is incorrect.
 	 * @throws UnexpectedError if a different authentication error occurs.
 	 */
-	public async signIn(username: string, password: string) {
+	public async signIn(username: string, password: string, returnUrl: string = '/') {
 		const { _, error } = await this.cloudbaseAuth.signInWithPassword({
 			username: username,
 			password: password
@@ -191,7 +196,7 @@ export class AuthService {
 		}
 
 		this.cloudbaseGetCurrentUser();
-		this.router.navigate(['/']);
+		this.router.navigate([returnUrl]);
 	}
 
 	/**
@@ -232,22 +237,23 @@ export class AuthService {
 	}
 
 	/**
-	 * Sign out the current CloudBase user. Clears user state and navigates
-	 * to the home page unless the sign-out is for an anonymous session.
+	 * Sign out the current CloudBase user. Clears user state and reactively
+	 * updates auth status without navigating away from the current page.
 	 *
-	 * @param isAnonymous - If true, skips navigation (anonymous sign-out on page leave).
+	 * @param isAnonymous - If true, this is an anonymous session sign-out (no state change needed).
 	 */
 	public async signOut(isAnonymous: boolean) {
 		await this.cloudbaseAuth
 			.signOut()
 			.then(() => {
-				this.cloudbaseUserSubject.next(null);
-				if (!isAnonymous) this.router.navigate(['/']);
-				this.utilities.setIsUserAlive(false);
-				CloudbaseService.setUseId('');
-				CloudbaseService.setUserRole('');
-				CloudbaseService.setUserName('');
-				CloudbaseService.setLoginState(false);
+				this.ngZone.run(() => {
+					this.cloudbaseUserSubject.next(null);
+					this.utilities.setIsUserAlive(false);
+					CloudbaseService.setUseId('');
+					CloudbaseService.setUserRole('');
+					CloudbaseService.setUserName('');
+					CloudbaseService.setLoginState(false);
+				});
 			})
 			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}

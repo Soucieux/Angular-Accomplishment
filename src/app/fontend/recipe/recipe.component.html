@@ -350,9 +350,6 @@
 								[class.dragging]="isStepDragging(step)"
 								[class.drop-above]="isStepDropTarget(step, 'above')"
 								[class.drop-below]="isStepDropTarget(step, 'below')"
-								draggable="true"
-								(dragstart)="onStepDragStart(step, $event)"
-								(dragend)="onStepDragEnd()"
 								(dragover)="onStepDragOver(step, $event)"
 								(dragleave)="onStepDragLeave(step)"
 								(drop)="onStepDrop(step, $event)">
@@ -378,7 +375,7 @@
 									<button class="add-sub" (click)="addSubpoint(step)">+ Add sub-point</button>
 								</div>
 								<div class="step-tools">
-									<span class="drag" title="Drag to reorder">⋮⋮</span>
+									<span class="drag" title="Drag to reorder" draggable="true" (dragstart)="onStepDragStart(step, $event)" (dragend)="onStepDragEnd()">⋮⋮</span>
 									<button class="remove" title="Remove step" (click)="removeEditorStep(step)">×</button>
 								</div>
 							</div>

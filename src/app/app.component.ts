@@ -1,6 +1,6 @@
 import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterOutlet, RouterModule } from '@angular/router';
+import { Router, RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
@@ -35,6 +35,7 @@ export class AppComponent {
 
 	constructor(
 		private authService: AuthService,
+		private router: Router,
 		@Inject(PLATFORM_ID) private platformId: Object
 	) {}
 
@@ -53,6 +54,16 @@ export class AppComponent {
 	 */
 	ngOnDestroy() {
 		LOG.info(this.className, COMPONENT_DESTROY);
+	}
+
+	/**
+	 * Navigate to the login page, preserving the current URL as a returnUrl
+	 * query param so the user is sent back after signing in.
+	 */
+	navigateToLogin() {
+		this.router.navigate(['/login'], {
+			queryParams: { returnUrl: this.router.url }
+		});
 	}
 
 	async logout() {

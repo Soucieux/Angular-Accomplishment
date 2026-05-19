@@ -22,7 +22,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
-import { COMPONENT_DESTROY, DIALOG_CONFIRM, DIALOG_ERROR } from '../../common/app.constant';
+import { COMPONENT_DESTROY, DIALOG_CONFIRM } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 import { RESONANCE_GRADIENTS } from './resonance.model';
 
@@ -189,11 +189,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			this.newQuoteText = '';
 			this.authorName = '';
 		} catch (error) {
-			this.dialogService.openDialog(
-				this.dialogComponentContainer,
-				DIALOG_ERROR,
-				'Unexpected error while submitting'
-			);
+			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 		} finally {
 			this.submitting = false;
 			this.cdr.detectChanges();
@@ -207,12 +203,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object to delete.
 	 */
 	protected confirmDelete(quote: any) {
-		// Permission guard: unauthorized users see the error dialog immediately
-		// without ever being shown the confirm dialog.
-		if (!this.canDelete(quote)) {
-			this.dialogService.showPermissionError(this.dialogComponentContainer);
-			return;
-		}
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, quote._openid)) return;
 
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,

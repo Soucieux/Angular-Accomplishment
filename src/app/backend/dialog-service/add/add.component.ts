@@ -123,16 +123,14 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 			this.canSubmit = true;
 		} catch (error) {
-			let errorMessage = '';
 			// Each error type maps to a specific user-facing message;
 			// the dialog is shown in-place (not thrown) because this is a search flow.
 			if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
-				errorMessage = error.message;
+				this.dialogService.openDialog(this.dialogComponentContainer, 'error', error.message);
 			} else {
-				errorMessage = 'Error while searching movie';
 				LOG.error(this.className, 'Error while searching new movie from add dialog', error as Error);
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
-			this.dialogService.openDialog(this.dialogComponentContainer, 'error', errorMessage);
 		} finally {
 			this.isLoading = false;
 			this.cdr.detectChanges();

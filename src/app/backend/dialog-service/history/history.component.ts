@@ -80,18 +80,16 @@ export class HistoryDialogComponent implements OnDestroy {
 					movieToRestore.setMovieGenre(genre);
 					await this.revertDataCallback?.(movieToRestore);
 				} catch (error) {
-					let errorMessage = '';
 					if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
-						errorMessage = error.message;
+						this.dialogService.openDialog(this.dialogComponentContainer, 'error', error.message);
 					} else {
-						errorMessage = 'Error while searching movie';
 						LOG.error(
 							this.className,
 							'Error while searching new movie from add dialog',
 							error as Error
 						);
+						this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 					}
-					this.dialogService.openDialog(this.dialogComponentContainer, 'error', errorMessage);
 				}
 			},
 			['Undo this deletion?', 'Undo', 'Confirm']

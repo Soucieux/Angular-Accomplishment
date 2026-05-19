@@ -12,6 +12,7 @@ import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY,
 import { MessageService } from 'primeng/api';
 import { RecipeTypeDialogComponent } from './recipe-type/recipe-type.component';
 import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
+import { Utilities } from '../../common/app.utilities';
 @Injectable({
 	providedIn: 'root'
 })
@@ -173,6 +174,22 @@ export class DialogService {
 	 */
 	public showUnexpectedError(container: ViewContainerRef) {
 		this.openDialog(container, DIALOG_ERROR, MSG_UNEXPECTED_ERROR);
+	}
+
+	/**
+	 * Front-end permission guard. Checks whether the current user owns the
+	 * entity (or is an admin) before any database call is attempted, and shows
+	 * the permission-denied dialog when the check fails. Lets the caller
+	 * short-circuit with `if (!ensurePermission(...)) return;`.
+	 *
+	 * @param container - The ViewContainerRef to attach the dialog to.
+	 * @param openid - The owner ID stored on the entity being modified.
+	 * @returns true when the user is permitted, false (dialog shown) otherwise.
+	 */
+	public ensurePermission(container: ViewContainerRef, openid: string): boolean {
+		if (Utilities.checkPermission(openid)) return true;
+		this.showPermissionError(container);
+		return false;
 	}
 
 	/**

@@ -919,11 +919,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			tableName === DATABASE_FIRST_TABLE
 				? (this.updatedFirstTable[0]?._openid ?? '')
 				: (this.findUpdatedItem(tableName, entryKey)?._openid ?? '');
-		if (!Utilities.checkPermission(openid)) {
-			this.dialogService.showPermissionError(this.dialogComponentContainer);
-			return FAILURE;
-		}
-		return SUCCESS;
+		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid) ? SUCCESS : FAILURE;
 	}
 
 	/**

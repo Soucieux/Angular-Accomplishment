@@ -495,7 +495,11 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 					})
 					.catch((err: unknown) => {
 						LOG.error(this.className, RECIPE_MSG_DELETE_FAILED, err as Error);
-						this.dialogService.showToast(TOAST_ERROR, RECIPE_MSG_DELETE_FAILED, RECIPE_MSG_DELETE_FAILED_DETAIL);
+						this.dialogService.showToast(
+							TOAST_ERROR,
+							RECIPE_MSG_DELETE_FAILED,
+							RECIPE_MSG_DELETE_FAILED_DETAIL
+						);
 					});
 			},
 			[RECIPE_DELETE_MESSAGE, RECIPE_DELETE_TITLE, RECIPE_DELETE_BTN]
@@ -809,16 +813,21 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	// ── Drag-to-reorder steps ─────────────────────────────────────────
 	/**
-	 * Handle the dragstart event on a step card, recording the dragged step
-	 * reference and setting the drag-transfer data and effect.
+	 * Handle the dragstart event on the step drag handle. Sets the full card as
+	 * the drag image so the preview matches the card rather than just the icon.
 	 *
-	 * @param step  - The step card being dragged.
+	 * @param step  - The step being dragged.
 	 * @param event - The native drag event.
 	 */
 	protected onStepDragStart(step: EditorStep, event: DragEvent): void {
 		this.draggingStep = step;
 		event.dataTransfer?.setData('text/plain', String(this.editorSteps.indexOf(step)));
 		if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+		const card = (event.target as HTMLElement).closest('.step-card') as HTMLElement;
+		if (card && event.dataTransfer) {
+			const rect = card.getBoundingClientRect();
+			event.dataTransfer.setDragImage(card, event.clientX - rect.left, event.clientY - rect.top);
+		}
 	}
 
 	/**

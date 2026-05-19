@@ -62,10 +62,10 @@ import { AiTool, NEXUS_CLIPBOARD_TOOLS, NEXUS_DIRECT_TOOLS, NEXUS_LOGO_FALLBACK_
 @Component({
 	selector: 'nexus',
 	standalone: true,
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [CommonModule, FormsModule, DialogModule],
 	templateUrl: './nexus.component.html',
 	styleUrl: './nexus.component.css',
-	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NexusComponent implements OnInit, OnDestroy {
 	private readonly className = 'NexusComponent';
@@ -114,10 +114,11 @@ export class NexusComponent implements OnInit, OnDestroy {
 	// ── Subscriptions ─────────────────────────────────────────────
 	private linksSub?: Subscription;
 	private categoriesSub?: Subscription;
+	private userAliveSub?: Subscription;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
-		private readonly utilities: Utilities,
+		protected readonly utilities: Utilities,
 		private readonly cdr: ChangeDetectorRef,
 		private readonly dialogService: DialogService,
 		private readonly databaseService: DatabaseService
@@ -151,6 +152,12 @@ export class NexusComponent implements OnInit, OnDestroy {
 					LOG.error(this.className, 'Failed to load link categories', err as Error);
 				}
 			});
+			// Subscribe directly to the auth-alive stream so the links column
+			// switches between the real content and the access-denied card
+			// immediately on login/logout — without waiting for a zone event.
+			this.userAliveSub = this.utilities.getIsUserAlive$().subscribe(() => {
+				this.cdr.markForCheck();
+			});
 		}
 	}
 
@@ -160,6 +167,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	public ngOnDestroy(): void {
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
+		this.userAliveSub?.unsubscribe();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 

@@ -8,7 +8,7 @@ import { SearchDialogComponent } from './search/search.component';
 import { Observable } from 'rxjs';
 import { ErrorDialogComponent } from './error/error.component';
 import { BlockDialogComponent } from './block/block.component';
-import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY, DIALOG_RECIPE_TYPE, MSG_PERMISSION_DENIED, MSG_UNEXPECTED_ERROR, SEARCH } from '../../common/app.constant';
+import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY, DIALOG_RECIPE_TYPE, ERROR_PERMISSION_DENIED, MSG_PERMISSION_DENIED, MSG_UNEXPECTED_ERROR, SEARCH } from '../../common/app.constant';
 import { MessageService } from 'primeng/api';
 import { RecipeTypeDialogComponent } from './recipe-type/recipe-type.component';
 import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
@@ -190,6 +190,22 @@ export class DialogService {
 		if (Utilities.checkPermission(openid)) return true;
 		this.showPermissionError(container);
 		return false;
+	}
+
+	/**
+	 * Centralised catch-block handler. Shows the permission-denied dialog when the
+	 * error signals a permission failure, or the unexpected-error dialog otherwise.
+	 * Callers can replace the repeated if/else pattern with a single call.
+	 *
+	 * @param container - The ViewContainerRef to attach the dialog to.
+	 * @param error - The caught error value.
+	 */
+	public handleError(container: ViewContainerRef, error: unknown): void {
+		if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+			this.showPermissionError(container);
+		} else {
+			this.showUnexpectedError(container);
+		}
 	}
 
 	/**

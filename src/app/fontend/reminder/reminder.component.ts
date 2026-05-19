@@ -497,11 +497,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 				})
 				.catch(() => {});
 		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.dialogService.showPermissionError(this.dialogComponentContainer);
-			} else {
-				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
-			}
+			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
 	}
 
@@ -559,11 +555,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 				);
 				this.triggerSaveIndicator(DATABASE_SECOND_TABLE);
 			} catch (error) {
-				if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-					this.dialogService.showPermissionError(this.dialogComponentContainer);
-				} else {
-					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
-				}
+				this.dialogService.handleError(this.dialogComponentContainer, error);
 			}
 		} else {
 			// Reset value
@@ -654,11 +646,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 				})
 				.catch(() => {});
 		} catch (error) {
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				this.dialogService.showPermissionError(this.dialogComponentContainer);
-			} else {
-				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
-			}
+			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
 	}
 
@@ -781,17 +769,15 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 					.catch(() => {});
 			}
 		} catch (error) {
-			// Rollback
+			// Rollback on permission denied before showing the dialog
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 				const rollbackUpdated = this.findUpdatedItem(tableName, entryKey);
 				const rollbackOriginal = this.findOriginalItem(tableName, entryKey);
 				if (rollbackUpdated && rollbackOriginal) {
 					rollbackUpdated.content[valueKey] = rollbackOriginal.content[valueKey];
 				}
-				this.dialogService.showPermissionError(this.dialogComponentContainer);
-			} else {
-				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
+			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
 	}
 	/**

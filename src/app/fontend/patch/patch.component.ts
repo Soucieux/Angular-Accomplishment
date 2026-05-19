@@ -115,8 +115,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Initialises the component: detects mobile layout, builds the patch-notes
 	 * observable (with a dummy-row appended for desktop to keep the add-entry row
 	 * visible), populates the severity option lists, and sets up the subscription
-	 * tap that keeps `patchNotesList`, page-index state, and the `patchInProgress`
-	 * statistic in sync whenever CloudBase pushes fresh data.
+	 * tap that keeps `patchNotesList`, and page-index state.
 	 */
 	public async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
@@ -162,17 +161,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 						// 3. Keep a local ordered copy for look-ups in edit/delete stats writes.
 						this.patchNotesList = data.filter((note: any) => !note.__dummy);
-
-						// 4. Sync in-progress items to statistics while this page is active.
-						// Stopped automatically when the async pipe unsubscribes on destroy.
-						const inProgress = this.patchNotesList
-							.filter((note: any) => note.status === STATUS_IN_PROGRESS)
-							.map((note: any) => ({
-								component: note.component,
-								element: note.element,
-								details: note.details
-							}));
-						this.databaseService.updateStatisticsFields({ patchInProgress: inProgress });
 					});
 				})
 			);
@@ -216,10 +204,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param row - The row to start editing.
 	 */
 	public async startEdit(row: any) {
-		if (!Utilities.checkPermission(row._openid)) {
-			this.dialogService.showPermissionError(this.dialogComponentContainer);
-			return;
-		}
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, row._openid)) return;
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
 

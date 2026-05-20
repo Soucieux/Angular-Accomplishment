@@ -29,6 +29,7 @@ export const STATS_FIELD_RECENT_RESONANCE = 'recentResonanceActivities';
 export const STATS_FIELD_PATCH_IN_PROGRESS = 'patchInProgress';
 export const STATS_FIELD_REMINDER_UPCOMING = 'reminderUpcoming';
 export const STATS_FIELD_REMINDER_TOTAL = 'reminderTotal';
+export const STATS_FIELD_TOTAL_RECIPES = 'totalRecipes';
 
 // ── Statistics — display cap ───────────────────────────────────────────────
 // The combined recent-activity feed shows at most this many items.

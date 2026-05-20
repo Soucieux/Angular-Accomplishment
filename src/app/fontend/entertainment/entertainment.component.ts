@@ -10,7 +10,7 @@ import {
 	RATE_DECREASED,
 	RATE_INCREASED,
 	SEARCH_CANCEL,
-	SEARCH_COMPELTE,
+	SEARCH_COMPLETE,
 	NO_RATE,
 	GENRE_FAVOURITE,
 	SEARCH,
@@ -236,7 +236,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 
 		// Prevent race condition
 		if (currentSessionId === this.sessionId) {
-			if (this.isSearching) this.searchStreamService.addSearchLog(SEARCH_COMPELTE);
+			if (this.isSearching) this.searchStreamService.addSearchLog(SEARCH_COMPLETE);
 			else {
 				this.searchStreamService.addSearchLog(SEARCH_CANCEL);
 			}
@@ -673,8 +673,12 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
-			() => {
-				this.databaseService.removeMovieFromDatabase(movieItemVO);
+			async () => {
+				try {
+					await this.databaseService.removeMovieFromDatabase(movieItemVO);
+				} catch (error) {
+					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+				}
 			},
 			[`Are you sure you want to delete ${movieItemVO.getMovieName()}?`, 'Delete Movie', 'Delete']
 		);

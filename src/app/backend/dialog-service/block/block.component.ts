@@ -29,8 +29,6 @@ export class BlockDialogComponent {
 		this.visible = true;
 		try {
 			await task();
-		} catch (error) {
-			throw error;
 		} finally {
 			this.visible = false;
 			this.closed$.emit();

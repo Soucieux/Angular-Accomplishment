@@ -74,7 +74,7 @@ export class HistoryDialogComponent implements OnDestroy {
 					// This string-based reconstruction is brittle but avoids storing full movie data in history.
 					const movieName = entry.message.split(' - ')[0];
 					const genre = entry.message.split(' - ')[1].split(' ')[0].trim();
-					const year = entry.message.split(' ')[7].split('.');
+					const year = Number(entry.message.split(' ')[7].split('.')[0]);
 					movieToRestore.setMovieName(movieName);
 					movieToRestore.setMovieYear(year);
 					movieToRestore.setMovieGenre(genre);

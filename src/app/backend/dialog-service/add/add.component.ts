@@ -21,6 +21,7 @@ import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exi
 import { LOG } from '../../../common/app.logs';
 import { Checkbox } from 'primeng/checkbox';
 import { DialogService } from '../dialog.service';
+import { MOVIE_GENRES } from '../../../common/app.constant';
 
 @Component({
 	selector: 'add-dialog',
@@ -66,15 +67,9 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	 * Initialises the year and genre selection dropdown options used in the add-movie form.
 	 */
 	public ngOnInit() {
-		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (2026 - i).toString() }));
-		this.genres = [
-			{ genre: '刑侦' },
-			{ genre: '古装' },
-			{ genre: '悬疑' },
-			{ genre: '校园' },
-			{ genre: '现代' },
-			{ genre: '谍战' }
-		];
+		const currentYear = new Date().getFullYear();
+		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (currentYear - i).toString() }));
+		this.genres = MOVIE_GENRES;
 	}
 
 	/**

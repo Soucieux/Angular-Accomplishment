@@ -17,6 +17,7 @@ import { FormsModule } from '@angular/forms';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
@@ -718,7 +719,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const isEdit = this.editingMode === RECIPE_EDITING_MODE_EDIT && !!this.editingRecipeId;
 		const recipe: Recipe = {
 			id: isEdit ? this.editingRecipeId! : '',
-			openid: this.activeRecipe?.openid ?? '',
+			openid: isEdit ? (this.activeRecipe?.openid ?? '') : (CloudbaseService.getUseId() ?? ''),
 			name: this.editorName.trim(),
 			detailName: this.editorName.trim(),
 			category: this.editorCategory,

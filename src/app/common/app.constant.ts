@@ -71,10 +71,11 @@ export const ACCOUNT_DEBT_DECREMENT = 998.05;
 // ── Common ─────────────────────────────────────────────────────────────────
 export const CN = 'CN';
 export const SEARCH = 'search';
-export const SEARCH_COMPELTE = 'Search complete';
+export const SEARCH_COMPLETE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
 export const SUCCESS = 'success';
 export const FAILURE = 'failure';
+export const HOME_NOTE_KEY = 'home_quick_note';
 
 // ── Dialogs & history ─────────────────────────────────────────────────────
 /** Dialog type for a yes/no confirmation prompt. */

@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, EventEmitter, Output, ViewChild, ElementR
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
-import { SEARCH_CANCEL, SEARCH_COMPELTE } from '../../../common/app.constant';
+import { SEARCH_CANCEL, SEARCH_COMPLETE } from '../../../common/app.constant';
 
 @Component({
 	selector: 'search-dialog',
@@ -39,7 +39,7 @@ export class SearchDialogComponent {
 			this.searchLogs = searchLogs;
 
 			const lastLog = searchLogs[searchLogs.length - 1];
-			if (lastLog === SEARCH_COMPELTE || lastLog === SEARCH_CANCEL) {
+			if (lastLog === SEARCH_COMPLETE || lastLog === SEARCH_CANCEL) {
 				this.searchCompleteOrInterrupted = true;
 			}
 

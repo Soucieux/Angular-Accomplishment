@@ -66,7 +66,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 	 * page the user came from.
 	 */
 	public ngOnInit(): void {
-		this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+		const raw = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+		this.returnUrl = raw.startsWith('/') ? raw : '/';
 	}
 
 	/**

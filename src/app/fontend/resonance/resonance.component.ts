@@ -94,7 +94,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 */
 	public ngOnDestroy() {
 		if (this.signedInAnonymously) {
-			this.authService.signOut(true);
+			this.authService.signOut();
 		}
 		this.signedInAnonymously = false;
 		LOG.info(this.className, COMPONENT_DESTROY);

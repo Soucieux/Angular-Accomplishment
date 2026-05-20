@@ -241,9 +241,8 @@ export class AuthService {
 	 * Sign out the current CloudBase user. Clears user state and reactively
 	 * updates auth status without navigating away from the current page.
 	 *
-	 * @param isAnonymous - If true, this is an anonymous session sign-out (no state change needed).
 	 */
-	public async signOut(isAnonymous: boolean) {
+	public async signOut() {
 		await this.cloudbaseAuth
 			.signOut()
 			.then(() => {

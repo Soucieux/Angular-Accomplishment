@@ -110,6 +110,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		THIRD_TABLE: false
 	};
 	private saveIndicatorTimeouts: Record<string, any> = {};
+	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
 	private chargedCellsInitialized = false;
 	protected isNextMonth!: boolean;
 
@@ -680,7 +681,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			);
 			newContent['text'] = this.thirdTableNewText;
 			if (newContent['date'] instanceof Date) {
-				newContent['date'] = Utilities.formatDateForStorage(newContent['date'] as Date);
+				newContent['date'] = Utilities.formatDateForStorage(newContent['date']);
 			}
 			try {
 				await this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, newContent);
@@ -851,12 +852,18 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * current. Fire-and-forget — errors are swallowed inside updateStatisticsFields.
 	 */
 	private syncReminderStatistics(): void {
-		const totalReminders =
-			(this.originalSecondTable?.length ?? 0) + (this.originalThirdTable?.length ?? 0);
-		this.databaseService.updateStatisticsFields({
-			[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses, ...this.upcomingMessages],
-			[STATS_FIELD_REMINDER_TOTAL]: totalReminders
-		});
+		// Debounce: both secondSub and thirdSub emit on init in the same tick.
+		// Defer the write so a single CloudBase call is made after both have settled.
+		if (this.syncStatTimer !== null) clearTimeout(this.syncStatTimer);
+		this.syncStatTimer = setTimeout(() => {
+			this.syncStatTimer = null;
+			const totalReminders =
+				(this.originalSecondTable?.length ?? 0) + (this.originalThirdTable?.length ?? 0);
+			this.databaseService.updateStatisticsFields({
+				[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses, ...this.upcomingMessages],
+				[STATS_FIELD_REMINDER_TOTAL]: totalReminders
+			});
+		}, 0);
 	}
 
 	/**

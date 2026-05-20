@@ -112,7 +112,7 @@ export class Utilities {
 			let ms: number | null = null;
 			if (typeof date === 'number') {
 				ms = date;
-			} else if (date instanceof Date || typeof (date as any).getTime === 'function') {
+			} else if (date instanceof Date || typeof (date as Record<string, unknown>)['getTime'] === 'function') {
 				ms = (date as Date).getTime();
 			} else if (typeof date === 'object' && date !== null) {
 				const d = date as Record<string, unknown>;
@@ -131,7 +131,7 @@ export class Utilities {
 					ms = Number(d['seconds']) * 1000;
 				}
 			}
-			if (ms === null) ms = Number(new Date(date as any));
+			if (ms === null) ms = Number(new Date(date as string));
 			const d = new Date(ms);
 			if (isNaN(d.getTime())) return '';
 			const y = d.getFullYear();
@@ -143,7 +143,6 @@ export class Utilities {
 		}
     }
     
-	////////////////////////////// Below are static methods //////////////////////////////
 	/**
 	 * Capitalize the first letter of the string on each word
 	 *

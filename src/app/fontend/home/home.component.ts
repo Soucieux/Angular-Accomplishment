@@ -52,6 +52,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly NOTE_KEY = HOME_NOTE_KEY;
 	private readonly DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 	private readonly MON_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+	private _lastMonth = -1;
 
 	protected stats: any = null;
 	protected loading = true;
@@ -256,7 +257,12 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		);
 
 		// Month progress — 1st 00:00 = 0 %, last-day 23:59:59 ≈ 100 %
-		this.daysInMonth = new Date(y, now.getMonth() + 1, 0).getDate();
+		// Only recompute daysInMonth when the month changes, not every second.
+		const currentMonth = now.getMonth();
+		if (currentMonth !== this._lastMonth) {
+			this._lastMonth = currentMonth;
+			this.daysInMonth = new Date(y, currentMonth + 1, 0).getDate();
+		}
 		this.currentDayOfMonth = now.getDate();
 		this.monthProgress = parseFloat(
 			(

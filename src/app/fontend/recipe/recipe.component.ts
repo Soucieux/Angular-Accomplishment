@@ -174,6 +174,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 				},
 				error: (err) => LOG.error(this.className, RECIPE_MSG_LOAD_FAILED, err as Error)
 			});
+
+			// If navigated from the home quick-action button, auto-open the add view.
+			// history.state retains the router state passed via Router.navigate({ state: ... }).
+			if (history.state?.openAddView) {
+				setTimeout(() => this.openAddView(), 0);
+			}
 		}
 	}
 

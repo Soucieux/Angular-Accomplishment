@@ -84,11 +84,11 @@
 						<span class="chip-label">Voices</span>
 					</div>
 				</div>
-				<div class="stat-chip chip-patch">
-					<span class="material-symbols-outlined chip-icon">add_task</span>
+				<div class="stat-chip chip-recipes">
+					<span class="material-symbols-outlined chip-icon">menu_book</span>
 					<div class="chip-info">
-						<span class="chip-value">{{ getPatchInProgress().length }}</span>
-						<span class="chip-label">In Progress</span>
+						<span class="chip-value">{{ stats?.totalRecipes ?? 0 }}</span>
+						<span class="chip-label">Recipes</span>
 					</div>
 				</div>
 			</div>
@@ -103,23 +103,23 @@
 					<span class="material-symbols-outlined qa-icon">format_quote</span>
 					<span class="qa-label">Add Quote</span>
 				</a>
-				<a class="qa-btn qa-note" routerLink="/reminder">
-					<span class="material-symbols-outlined qa-icon">note_add</span>
-					<span class="qa-label">Add Note</span>
+				<a class="qa-btn qa-recipe" (click)="navigateQA('/recipe', { openAddView: true })">
+					<span class="material-symbols-outlined qa-icon">menu_book</span>
+					<span class="qa-label">Add Recipe</span>
 				</a>
 				<a class="qa-btn qa-expense" routerLink="/reminder">
 					<span class="material-symbols-outlined qa-icon">payments</span>
 					<span class="qa-label">Add Expense</span>
+				</a>
+				<a class="qa-btn qa-patch" (click)="navigateQA('/patch', { goToLastPage: true })">
+					<span class="material-symbols-outlined qa-icon">bug_report</span>
+					<span class="qa-label">Log Bug</span>
 				</a>
 				<a
 					class="qa-btn qa-search"
 					(click)="navigateQA('/entertainment', { openSearchDialog: true })">
 					<span class="material-symbols-outlined qa-icon">manage_search</span>
 					<span class="qa-label">Rate Search</span>
-				</a>
-				<a class="qa-btn qa-patch" (click)="navigateQA('/patch', { goToLastPage: true })">
-					<span class="material-symbols-outlined qa-icon">bug_report</span>
-					<span class="qa-label">Log Bug</span>
 				</a>
 			</div>
 

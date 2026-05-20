@@ -231,8 +231,8 @@
 .chip-quotes {
 	background: linear-gradient(135deg, #8e54e9, #bc8bf5);
 }
-.chip-patch {
-	background: linear-gradient(135deg, #11998e, #38ef7d);
+.chip-recipes {
+	background: linear-gradient(135deg, #0d9488, #14b8a6);
 }
 
 .chip-icon {
@@ -1503,8 +1503,8 @@
 .qa-quote {
 	background: linear-gradient(135deg, #f97316, #fbbf24);
 }
-.qa-note {
-	background: linear-gradient(135deg, #4776e6, #8e54e9);
+.qa-recipe {
+	background: linear-gradient(135deg, #0d9488, #14b8a6);
 }
 .qa-expense {
 	background: linear-gradient(135deg, #059669, #34d399);

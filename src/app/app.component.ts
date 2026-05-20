@@ -68,7 +68,7 @@ export class AppComponent {
 
 	async logout() {
 		if (Utilities.getCurrentCountry() === CN) {
-			await this.authService.signOut(false);
+			await this.authService.signOut();
 		} else {
 			this.authService.logout();
 		}

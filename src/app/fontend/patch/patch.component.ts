@@ -92,23 +92,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * (where PrimeNG's default page-1 reset is the correct behaviour).
 	 */
 	private _isDataUpdate = false;
-	protected newRecord: {
-		key: string;
-		component: string;
-		element: string;
-		details: string;
-		status: any;
-		timestamp: string;
-		isBug: boolean;
-	} = {
-		key: '',
-		component: '',
-		element: '',
-		details: '',
-		status: undefined,
-		timestamp: '',
-		isBug: false
-	};
+	protected newRecord = this.emptyRecord();
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private databaseService: DatabaseService,
@@ -116,6 +100,32 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		protected utilities: Utilities,
 		private ngZone: NgZone
 	) {}
+
+	/**
+	 * Returns a blank patch-note record used both for field initialisation
+	 * and to reset the form after a successful submission.
+	 *
+	 * @returns A zeroed-out patch note record object.
+	 */
+	private emptyRecord(): {
+		key: string;
+		component: string;
+		element: string;
+		details: string;
+		status: any;
+		timestamp: string;
+		isBug: boolean;
+	} {
+		return {
+			key: '',
+			component: '',
+			element: '',
+			details: '',
+			status: undefined,
+			timestamp: '',
+			isBug: false
+		};
+	}
 
 	/**
 	 * Attaches the auto-hide scroll listener to the page container after each view check.
@@ -312,15 +322,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 					.catch(() => {});
 			})
 			.catch(() => this.dialogService.showUnexpectedError(this.dialogComponentContainer));
-		this.newRecord = {
-			key: '',
-			component: '',
-			element: '',
-			details: '',
-			status: undefined,
-			timestamp: '',
-			isBug: false
-		};
+		this.newRecord = this.emptyRecord();
 	}
 
 	/**

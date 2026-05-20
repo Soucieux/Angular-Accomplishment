@@ -539,9 +539,15 @@ export class CloudbaseService extends DatabaseService {
 	public async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Step 1 : Gather necessary info
-			const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieItemVO.getMovieKey());
+			// Use .where() instead of .doc() so the query satisfies the "doc._openid == auth.uid"
+			// security rule subset requirement. Admin bypasses the _openid constraint.
+			const whereClause = CloudbaseService.userHasAllRights()
+				? { _id: movieItemVO.getMovieKey() }
+				: { _id: movieItemVO.getMovieKey(), _openid: CloudbaseService.getUseId() };
+			const movieRef = this.database.collection(DATABASE_MOVIES).where(whereClause);
 			const movieData = await movieRef.get();
-			const oldRate = movieData.data[0].rate;
+			const oldRate = movieData.data?.[0]?.rate;
+			if (oldRate === undefined) throw new Error(`Movie document not found for key ${movieItemVO.getMovieKey()}`);
 
 			// Step 2 : Compare latest rate with the one stored in the database
 			if (oldRate !== undefined && oldRate !== movieItemVO.getMovieRate()) {
@@ -599,7 +605,12 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
 		try {
-			const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
+			// Use .where() instead of .doc() so the query satisfies the "doc._openid == auth.uid"
+			// security rule subset requirement. Admin bypasses the _openid constraint.
+			const whereClause = CloudbaseService.userHasAllRights()
+				? { _id: movieKey }
+				: { _id: movieKey, _openid: CloudbaseService.getUseId() };
+			const movieRef = this.database.collection(DATABASE_MOVIES).where(whereClause);
 			// Step 1 : Update movie genre
 			const movieRes = await movieRef.update({ genre: newGenre });
 			if (movieRes.code) throw new Error(movieRes.message);
@@ -626,7 +637,12 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
 		try {
-			const movieRef = this.database.collection(DATABASE_MOVIES).doc(movieKey);
+			// Use .where() instead of .doc() so the query satisfies the "doc._openid == auth.uid"
+			// security rule subset requirement. Admin bypasses the _openid constraint.
+			const whereClause = CloudbaseService.userHasAllRights()
+				? { _id: movieKey }
+				: { _id: movieKey, _openid: CloudbaseService.getUseId() };
+			const movieRef = this.database.collection(DATABASE_MOVIES).where(whereClause);
 			// Step 1 : Update movie favourite
 			const movieRes = await movieRef.update({ isFavourite });
 			if (movieRes.code) throw new Error(movieRes.message);
@@ -724,9 +740,13 @@ export class CloudbaseService extends DatabaseService {
 	public async removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Step 1: Remove the movie document from the database
+			// Admins may delete any movie regardless of ownership — bypass the _openid constraint.
+			const movieWhereClause = CloudbaseService.userHasAllRights()
+				? { _id: movieItemVO.getMovieKey() }
+				: { _id: movieItemVO.getMovieKey(), _openid: CloudbaseService.getUseId() };
 			const removeRes = await this.database
 				.collection(DATABASE_MOVIES)
-				.where({ _id: movieItemVO.getMovieKey(), _openid: CloudbaseService.getUseId() })
+				.where(movieWhereClause)
 				.remove();
 			if (removeRes.code) throw new Error(removeRes.message);
 
@@ -913,9 +933,13 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void> {
 		try {
+			// Admins may edit any patch note regardless of ownership — bypass the _openid constraint.
+			const whereClause = CloudbaseService.userHasAllRights()
+				? { _id: key }
+				: { _id: key, _openid: CloudbaseService.getUseId() };
 			const result = await this.database
 				.collection(DATABASE_PATCH_NOTES)
-				.where({ _id: key, _openid: CloudbaseService.getUseId() })
+				.where(whereClause)
 				.update({ ...updatedRecord });
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'Patch notes record has been updated');
@@ -936,7 +960,17 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	async removePatchNote(key: string): Promise<void> {
 		try {
-			await this.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
+			// Admins may delete any patch note regardless of ownership — bypass the _openid constraint.
+			if (CloudbaseService.userHasAllRights()) {
+				const res = await this.database
+					.collection(DATABASE_PATCH_NOTES)
+					.where({ _id: key })
+					.remove();
+				if (res.code) throw new Error(res.message);
+				LOG.info(this.className, `Record has been removed from ${DATABASE_PATCH_NOTES}`);
+			} else {
+				await this.removeSingleItemFromDatabase(DATABASE_PATCH_NOTES, key);
+			}
 			this.syncPatchInProgressStat();
 		} catch (error) {
 			LOG.error(this.className, `Error while removing patch note ${key}`, error as Error);
@@ -990,9 +1024,13 @@ export class CloudbaseService extends DatabaseService {
 			// any other key updates a single nested field inside content (e.g. toggling paid).
 			const valueToUpdate =
 				valueKey === 'content' ? { content: { ...value } } : { content: { [valueKey]: value } };
+			// Admins may edit any entry regardless of ownership — bypass the _openid constraint.
+			const whereClause = CloudbaseService.userHasAllRights()
+				? { _id: entryKey }
+				: { _id: entryKey, _openid: CloudbaseService.getUseId() };
 			const result = await this.database
 				.collection(collectionName)
-				.where({ _id: entryKey, _openid: CloudbaseService.getUseId() })
+				.where(whereClause)
 				.update(valueToUpdate);
 			if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
 			else if (result.code) throw new Error(result.message);
@@ -1016,9 +1054,13 @@ export class CloudbaseService extends DatabaseService {
 			// individually. _id and _openid are stripped since they are CloudBase metadata.
 			for (const data of updatedTable) {
 				const { _id, _openid, ...rest } = data;
+				// Admins may update any row regardless of ownership — bypass the _openid constraint.
+				const whereClause = CloudbaseService.userHasAllRights()
+					? { _id }
+					: { _id, _openid: CloudbaseService.getUseId() };
 				const result = await this.database
 					.collection(collectionName)
-					.where({ _id, _openid: CloudbaseService.getUseId() })
+					.where(whereClause)
 					.update(rest);
 				if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
 			}
@@ -1039,9 +1081,17 @@ export class CloudbaseService extends DatabaseService {
 	public async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
 		try {
 			const collectionName = this.convertTableNameToCollectionName(tableName);
-			// Delegate to the shared helper so error handling (result.code check)
-			// and logging stay consistent across all collections.
-			return await this.removeSingleItemFromDatabase(collectionName, key);
+			// Admins may delete any entry regardless of ownership — bypass the _openid constraint.
+			if (CloudbaseService.userHasAllRights()) {
+				const result = await this.database
+					.collection(collectionName)
+					.where({ _id: key })
+					.remove();
+				if (result.code) throw new Error(result.message);
+				LOG.info(this.className, `Record has been removed from ${collectionName}`);
+			} else {
+				return await this.removeSingleItemFromDatabase(collectionName, key);
+			}
 		} catch (error) {
 			LOG.error(this.className, 'Error while removing a record from reminder table');
 			throw error;
@@ -1236,8 +1286,14 @@ export class CloudbaseService extends DatabaseService {
 			const doc = await this.database.collection(DATABASE_STATISTICS).doc(this.statId).get();
 			const raw = doc.data?.[0]?.[fieldName];
 			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
+			// Dedup: remove any entries that share both type and timestamp with the new
+			// activity before prepending. Guards against the read-write race that can
+			// produce duplicate entries when two operations fire in the same second.
+			const deduped = existing.filter(
+				(e) => !(e.type === activity.type && e.timestamp === activity.timestamp)
+			);
 			// Prepend the new item and trim to the cap so CloudBase storage stays bounded.
-			const updated = [activity, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
+			const updated = [activity, ...deduped].slice(0, STATS_CAP_ACTIVITY_LOG);
 			const result = await this.statisticsRef.update({ [fieldName]: updated });
 			if (result.code || result.updated === 0)
 				throw new Error(
@@ -1336,7 +1392,7 @@ export class CloudbaseService extends DatabaseService {
 		try {
 			const result = await this.database
 				.collection(DATABASE_USEFUL_LINKS)
-				.doc(key)
+				.where({ _id: key, _openid: CloudbaseService.getUseId() })
 				.update({ ...updates });
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'Useful link has been updated');
@@ -1356,7 +1412,7 @@ export class CloudbaseService extends DatabaseService {
 		try {
 			const result = await this.database
 				.collection(DATABASE_USEFUL_LINKS)
-				.doc(key)
+				.where({ _id: key, _openid: CloudbaseService.getUseId() })
 				.update({ visitCount: currentCount + 1 });
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'Link visit count has been incremented');
@@ -1427,7 +1483,7 @@ export class CloudbaseService extends DatabaseService {
 		try {
 			const result = await this.database
 				.collection(DATABASE_USEFUL_LINKS)
-				.doc(key)
+				.where({ _id: key, _openid: CloudbaseService.getUseId() })
 				.update({ ...updates });
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'Link category has been updated');
@@ -1568,9 +1624,13 @@ export class CloudbaseService extends DatabaseService {
 	public async updateRecipe(recipe: Recipe): Promise<void> {
 		try {
 			const { id, ...payload } = recipe;
+			// Admins may edit any recipe regardless of ownership — bypass the _openid constraint.
+			const whereClause = CloudbaseService.userHasAllRights()
+				? { _id: id }
+				: { _id: id, _openid: CloudbaseService.getUseId() };
 			const result = await this.database
 				.collection(DATABASE_RECIPES)
-				.where({ _id: id, _openid: CloudbaseService.getUseId() })
+				.where(whereClause)
 				.update({
 					...payload,
 					steps: payload.steps.map((s) => ({ ...s, done: false }))
@@ -1590,7 +1650,17 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async removeRecipe(recipeId: string): Promise<void> {
 		try {
-			await this.removeSingleItemFromDatabase(DATABASE_RECIPES, recipeId);
+			// Admins may delete any recipe regardless of ownership — bypass the _openid constraint.
+			if (CloudbaseService.userHasAllRights()) {
+				const res = await this.database
+					.collection(DATABASE_RECIPES)
+					.where({ _id: recipeId })
+					.remove();
+				if (res.code) throw new Error(res.message);
+				LOG.info(this.className, `Record has been removed from ${DATABASE_RECIPES}`);
+			} else {
+				await this.removeSingleItemFromDatabase(DATABASE_RECIPES, recipeId);
+			}
 			LOG.info(this.className, `Recipe removed: ${recipeId}`);
 		} catch (error) {
 			LOG.error(this.className, `Error while removing recipe ${recipeId}`, error as Error);

@@ -5,7 +5,7 @@ import { LOG } from '../../common/app.logs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { HistoryDialogComponent } from './history/history.component';
 import { SearchDialogComponent } from './search/search.component';
-import { Observable } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { ErrorDialogComponent } from './error/error.component';
 import { BlockDialogComponent } from './block/block.component';
 import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY, DIALOG_RECIPE_TYPE, ERROR_PERMISSION_DENIED, MSG_PERMISSION_DENIED, MSG_UNEXPECTED_ERROR, SEARCH } from '../../common/app.constant';
@@ -140,7 +140,7 @@ export class DialogService {
 
 			// When the dialog emits its closed event, remove it from the tracking map
 			// and destroy the component to prevent memory leaks.
-			dialogComponentRef.instance.closed$.subscribe(() => {
+			dialogComponentRef.instance.closed$.pipe(take(1)).subscribe(() => {
 				this.openedDialogs.delete(dialogType);
 				dialogComponentRef.destroy();
 			});

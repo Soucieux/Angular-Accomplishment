@@ -653,13 +653,17 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Add a plain-text entry to the third reminder table.
 	 */
-	protected addNewTextOnly() {
+	protected async addNewTextOnly() {
 		if (this.thirdTableNewText.trim() !== '') {
-			this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, {
-				text: this.thirdTableNewText
-			});
-			this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
-			this.thirdTableNewText = '';
+			try {
+				await this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, {
+					text: this.thirdTableNewText
+				});
+				this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
+				this.thirdTableNewText = '';
+			} catch (error) {
+				this.dialogService.handleError(this.dialogComponentContainer, error);
+			}
 		}
 	}
 
@@ -669,27 +673,34 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * If the new entry includes a due date, the home-page reminder widget is
 	 * updated immediately without waiting for the subscription to fire.
 	 */
-	protected addNewEntry() {
+	protected async addNewEntry() {
 		if (this.thirdTableNewText.trim() !== '') {
 			let newContent = Object.fromEntries(
 				Object.entries(this.thirdTableActiveItem.content).filter(([_, value]) => value !== '')
 			);
 			newContent['text'] = this.thirdTableNewText;
-			this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, newContent);
-			this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
-			// If the new entry has a due date, push it into the local messages cache
-			// so the reminder widget reflects it before the CloudBase round-trip ends.
-			if (newContent['date']) {
-				this.upcomingMessages.push({
-					type: REMINDER_ITEM_MESSAGE,
-					name: String(newContent['text'] ?? ''),
-					date: String(newContent['date']),
-					link: String(newContent['link'] ?? '')
-				});
-				this.syncReminderStatistics();
+			if (newContent['date'] instanceof Date) {
+				newContent['date'] = Utilities.formatDateForStorage(newContent['date'] as Date);
 			}
-			this.thirdTableNewText = '';
-			this.op2.hide();
+			try {
+				await this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, newContent);
+				this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
+				// If the new entry has a due date, push it into the local messages cache
+				// so the reminder widget reflects it before the CloudBase round-trip ends.
+				if (newContent['date']) {
+					this.upcomingMessages.push({
+						type: REMINDER_ITEM_MESSAGE,
+						name: String(newContent['text'] ?? ''),
+						date: String(newContent['date']),
+						link: String(newContent['link'] ?? '')
+					});
+					this.syncReminderStatistics();
+				}
+				this.thirdTableNewText = '';
+				this.op2.hide();
+			} catch (error) {
+				this.dialogService.handleError(this.dialogComponentContainer, error);
+			}
 		}
 	}
 

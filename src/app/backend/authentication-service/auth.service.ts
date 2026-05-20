@@ -13,7 +13,7 @@ import { LOG } from '../../common/app.logs';
 import { DatabaseService } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
-import { CN } from '../../common/app.constant';
+import { CN, MSG_UNEXPECTED_ERROR } from '../../common/app.constant';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { wrongVerificationCodeError } from '../../common/error/wrong-verification-code';
 
@@ -76,6 +76,7 @@ export class AuthService {
 			this.utilities.setIsUserAlive(true);
 		} catch (error: any) {
 			LOG.error(this.className, 'Error when signing in with email and password');
+			throw error;
 		}
 	}
 
@@ -167,7 +168,7 @@ export class AuthService {
 			if (error && error.code === 'INVALID_ARGUMENT') {
 				throw new wrongVerificationCodeError();
 			} else {
-				throw new Error('Unexpected error occurred');
+				throw new Error(MSG_UNEXPECTED_ERROR);
 			}
 		}
 	}
@@ -192,7 +193,7 @@ export class AuthService {
 		if (error && error.category === 'INVALID_CREDENTIALS') {
 			throw new WrongCredentialsError();
 		} else if (error) {
-			throw new Error('Unexpected error occurred');
+			throw new Error(MSG_UNEXPECTED_ERROR);
 		}
 
 		this.cloudbaseGetCurrentUser();

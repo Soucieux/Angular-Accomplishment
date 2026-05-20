@@ -30,7 +30,8 @@ import {
 	STATS_FIELD_RECENT_PATCH,
 	STATS_FIELD_RECENT_REMINDER,
 	STATS_FIELD_RECENT_RESONANCE,
-	STATS_FIELD_REMINDER_UPCOMING
+	STATS_FIELD_REMINDER_UPCOMING,
+	HOME_NOTE_KEY
 } from '../../common/app.constant';
 
 @Component({
@@ -48,7 +49,9 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private dashboardTimer?: ReturnType<typeof setTimeout>;
 	private clockInterval?: ReturnType<typeof setInterval>;
 	private pomodoroInterval?: ReturnType<typeof setInterval>;
-	private readonly NOTE_KEY = 'home_quick_note';
+	private readonly NOTE_KEY = HOME_NOTE_KEY;
+	private readonly DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	private readonly MON_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 	protected stats: any = null;
 	protected loading = true;
@@ -228,9 +231,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const pad = (n: number) => String(n).padStart(2, '0');
 		this.clockTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-		const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-		const monNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-		this.clockDate = `${dayNames[now.getDay()]}, ${monNames[now.getMonth()]} ${now.getDate()}`;
+		this.clockDate = `${this.DAY_NAMES[now.getDay()]}, ${this.MON_NAMES[now.getMonth()]} ${now.getDate()}`;
 
 		const y = now.getFullYear();
 		this.currentYear = y;

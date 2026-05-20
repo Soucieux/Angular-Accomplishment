@@ -105,31 +105,33 @@ export class Utilities {
 	 * @param date - Any date representation (string, Date, timestamp object, or falsy).
 	 * @returns A "YYYY-MM-DD" string, or '' if the value is falsy or unparseable.
 	 */
-	public static coerceDateToString(date: any): string {
+	public static coerceDateToString(date: unknown): string {
 		if (!date) return '';
 		if (typeof date === 'string') return date;
 		try {
 			let ms: number | null = null;
 			if (typeof date === 'number') {
 				ms = date;
-			} else if (date instanceof Date || typeof date.getTime === 'function') {
-				ms = date.getTime();
-			} else if (typeof date === 'object') {
+			} else if (date instanceof Date || typeof (date as any).getTime === 'function') {
+				ms = (date as Date).getTime();
+			} else if (typeof date === 'object' && date !== null) {
+				const d = date as Record<string, unknown>;
 				// CloudBase/MongoDB: { $date: ms } or { $date: { $numberLong: "ms" } }
-				if (date.$date !== undefined) {
+				if (d['$date'] !== undefined) {
+					const raw = d['$date'];
 					ms =
-						typeof date.$date === 'object' && date.$date.$numberLong
-							? Number(date.$date.$numberLong)
-							: Number(date.$date);
+						typeof raw === 'object' && raw !== null && '$numberLong' in raw
+							? Number((raw as Record<string, unknown>)['$numberLong'])
+							: Number(raw);
 					// Tencent CloudBase SDK: { time: ms }
-				} else if (date.time !== undefined) {
-					ms = Number(date.time);
+				} else if (d['time'] !== undefined) {
+					ms = Number(d['time']);
 					// Firestore-like: { seconds: s }
-				} else if (date.seconds !== undefined) {
-					ms = Number(date.seconds) * 1000;
+				} else if (d['seconds'] !== undefined) {
+					ms = Number(d['seconds']) * 1000;
 				}
 			}
-			if (ms === null) ms = Number(new Date(date));
+			if (ms === null) ms = Number(new Date(date as any));
 			const d = new Date(ms);
 			if (isNaN(d.getTime())) return '';
 			const y = d.getFullYear();
@@ -286,9 +288,9 @@ export class Utilities {
 	 * @param raw - The raw field value from a CloudBase snapshot.
 	 * @returns A plain `any[]` array.
 	 */
-	public static toArray(raw: any): any[] {
+	public static toArray(raw: unknown): any[] {
 		if (!raw) return [];
-		return Array.isArray(raw) ? raw : Object.values(raw);
+		return Array.isArray(raw) ? raw : Object.values(raw as object);
 	}
 
 	/**
@@ -374,7 +376,7 @@ export class Utilities {
 	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
 	 * @returns A countdown label, or an empty string if no date is provided.
 	 */
-	public static getDaysUntil(dateStr: any): string {
+	public static getDaysUntil(dateStr: unknown): string {
 		if (!dateStr) return '';
 		const str = Utilities.coerceDateToString(dateStr);
 		if (!str) return '';
@@ -396,7 +398,7 @@ export class Utilities {
 	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
 	 * @returns `true` if the date is in the past, `false` otherwise.
 	 */
-	public static isOverdue(dateStr: any): boolean {
+	public static isOverdue(dateStr: unknown): boolean {
 		if (!dateStr) return false;
 		const str = Utilities.coerceDateToString(dateStr);
 		if (!str) return false;
@@ -442,17 +444,6 @@ export class Utilities {
 	public static async checkCurrentCountry() {
 		try {
 			this.currentCountry = CN;
-
-			// localStorage.setItem(
-			// 	'location',
-			// 	JSON.stringify({
-			// 		country: this.currentCountry,
-			// 		ip: 'null',
-			// 		timestamp: Date.now()
-			// 	})
-			// );
-
-			// LOG.info(this.className, 'Current IP: ' + 'null' + ', Current country: ' + this.currentCountry);
 		} catch (error: any) {
 			LOG.error(this.className, 'Country detection failed: ', error);
 			this.currentCountry = CN;

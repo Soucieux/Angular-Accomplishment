@@ -92,6 +92,23 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * (where PrimeNG's default page-1 reset is the correct behaviour).
 	 */
 	private _isDataUpdate = false;
+	protected newRecord: {
+		key: string;
+		component: string;
+		element: string;
+		details: string;
+		status: any;
+		timestamp: string;
+		isBug: boolean;
+	} = {
+		key: '',
+		component: '',
+		element: '',
+		details: '',
+		status: undefined,
+		timestamp: '',
+		isBug: false
+	};
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private databaseService: DatabaseService,
@@ -216,6 +233,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	public async completeEdit(row: any) {
 		const record = this.editedRows.get(row.key);
+		if (!record) return;
 		const changes: any = {};
 
 		if (record.original.details !== record.updated.details.trim()) {
@@ -590,14 +608,4 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const key = typeof label === 'string' ? label : (label?.label ?? '');
 		return this.components.find((c) => c.label === key) ?? null;
 	}
-
-	protected newRecord = {
-		key: '',
-		component: '',
-		element: '',
-		details: '',
-		status: undefined,
-		timestamp: '',
-		isBug: false
-	};
 }

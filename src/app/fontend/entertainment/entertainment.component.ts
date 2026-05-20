@@ -138,13 +138,12 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 
 			// If navigated from the home quick-action buttons, auto-open the relevant dialog.
 			// history.state retains the router state passed via Router.navigate({ state: ... }).
-			// By this point all awaits have completed, so ngAfterViewInit has run and
-			// dialogComponentContainer is available.
+			// Immediately clear the state so a page refresh does not re-trigger the dialog.
 			const navState = history.state;
-			if (navState?.openAddDialog) {
-				setTimeout(() => this.openAddNewMovieDialog(), 0);
-			} else if (navState?.openSearchDialog) {
-				setTimeout(() => this.openSearchDialog(), 0);
+			if (navState?.openAddDialog || navState?.openSearchDialog) {
+				history.replaceState({}, '');
+				if (navState.openAddDialog) setTimeout(() => this.openAddNewMovieDialog(), 0);
+				else setTimeout(() => this.openSearchDialog(), 0);
 			}
 		}
 	}

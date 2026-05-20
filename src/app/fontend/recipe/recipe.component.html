@@ -357,17 +357,17 @@
 								<div class="step-main">
 									<textarea
 										class="step-text"
-										rows="1"
 										placeholder="Describe this step…"
 										[(ngModel)]="step.text"></textarea>
 									<div class="subpoints">
 										@for (sub of step.subs; track $index) {
 											<div class="sub-row">
 												<span class="sub-dot"></span>
-												<input
-													type="text"
+												<textarea
+													class="sub-text"
+													rows="1"
 													placeholder="Sub-point (optional)"
-													[(ngModel)]="sub.text" />
+													[(ngModel)]="sub.text"></textarea>
 												<button class="remove" title="Remove" (click)="removeSubpoint(step, sub)">×</button>
 											</div>
 										}

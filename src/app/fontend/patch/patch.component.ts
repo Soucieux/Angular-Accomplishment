@@ -163,6 +163,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 						// On first load (prevLength === null): if navigated via "Log Bug",
 						// jump straight to the last page using the same formula as new-entry logic.
 						if (prevLength === null && history.state?.goToLastPage) {
+							history.replaceState({}, '');
 							this._savedFirst = Math.max(
 								0,
 								Math.floor((data.length - 1) / this.itemsPerPage) * this.itemsPerPage

@@ -1046,7 +1046,7 @@
 	justify-content: center;
 	color: #fff;
 	font-weight: 600;
-	font-size: 13px;
+	font-size: 15px;
 	background: linear-gradient(135deg, var(--rose) 0%, var(--gold) 100%);
 	box-shadow: 0 4px 10px rgba(213, 51, 105, 0.28);
 	margin-top: 1px;
@@ -1077,9 +1077,8 @@
 .substeps {
 	grid-column: 2 / -1;
 	list-style: none;
-	margin: 12px 0 0;
-	padding: 10px 0 0;
-	border-top: 1px dashed rgba(213, 51, 105, 0.18);
+	margin: 6px 0 0;
+	padding: 0;
 }
 .substep {
 	display: grid;
@@ -1087,7 +1086,7 @@
 	gap: 10px;
 	align-items: start;
 	padding: 5px 0;
-	color: var(--ink-muted);
+	color: var(--ink);
 	font-size: 15px;
 	line-height: 1.55;
 }
@@ -1102,9 +1101,9 @@
 	margin: 8px 0 0 6px;
 }
 .step.done .substep {
-	color: rgba(26, 26, 26, 0.4);
+	color: rgba(26, 26, 26, 0.5);
 	text-decoration: line-through;
-	text-decoration-color: rgba(26, 26, 26, 0.3);
+	text-decoration-color: rgba(26, 26, 26, 0.4);
 }
 .step.done .substep::before {
 	background: #b3aea7;
@@ -1867,7 +1866,7 @@
 	align-items: center;
 	justify-content: center;
 	font-size: 15px;
-	font-weight: 500;
+	font-weight: 600;
 	box-shadow: 0 4px 10px rgba(213, 51, 105, 0.3);
 	margin-top: 2px;
 }

@@ -1,30 +1,91 @@
-<div class="container">
-	<div class="header">
-		<h2 class="h2">More Than Just Code and Calendars</h2>
-		<h5 class="h5">
+<div class="about-page">
+	<div class="about-inner">
+		<!-- Status chip -->
+		<p-chip class="about-chip">
+			<span class="chip-dot"></span>
+			<span>About · May 2026</span>
+		</p-chip>
+
+		<!-- H1 -->
+		<h1 class="about-h1">A <span class="hl-pill">Second Brain</span>, Kept In Public.</h1>
+
+		<!-- Intro paragraph -->
+		<p class="about-intro">
 			Welcome to my personal corner of the web. This space serves as my second brain: a repository for
 			the films that stay with me, a compass for my most important dates, my life task-engine, and a
-			roadmap of what's coming next. Stay a while--there's more being built every day.
-		</h5>
-	</div>
+			roadmap of what's coming next. Stay a while — there's always more being built here, with new
+			features landing and growing every single week.
+		</p>
 
-	<p-timeline [value]="events" [align]="isMobile ? '' : 'alternate'">
-		<ng-template #marker let-event>
-			<span class="material-symbols-outlined icon" [style]="{ 'background-color': event.color }">
-				{{ event.icon }}
-			</span>
-		</ng-template>
-		<ng-template #opposite let-event>
-			@if (!isMobile) {
-				<div class="date">
-					<span>{{ event.date }}</span>
+		<!-- Quick stats -->
+		<div class="about-stats d-flex flex-wrap gap-3">
+			<div class="stat-card">
+				<div class="stat-num">10+</div>
+				<div class="stat-label">years in cs</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-num">2</div>
+				<div class="stat-label">degrees</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-num">3+</div>
+				<div class="stat-label">years at cra</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-num">2+</div>
+				<div class="stat-label">yrs indie dev</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-num">5+</div>
+				<div class="stat-label">yrs experience</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-num">3</div>
+				<div class="stat-label">career roles</div>
+			</div>
+		</div>
+
+		<!-- Section heading -->
+		<div class="section-head">
+			<h2 class="section-title">The Long Way Here</h2>
+			<span class="section-meta">{{ timeline.length }} milestones</span>
+		</div>
+
+		<!-- Timeline -->
+		<div class="tl-rail">
+			<div class="rail-bg"></div>
+			<div class="rail-fill" [style.height]="fillHeight()"></div>
+
+			@for (item of timeline; track item.date; let i = $index) {
+				<div
+					#tlEntry
+					class="tl-entry"
+					[class.is-visible]="visibleEntries.has(i)"
+					[style.transition-delay]="visibleEntries.has(i) ? entryDelay(i) : '0ms'"
+					(mouseenter)="onEntryEnter(i)"
+					(mouseleave)="onEntryLeave()">
+					<div
+						class="tl-node"
+						[class.is-hovered]="hoveredIndex === i"
+						[style.background]="hoveredIndex === i ? item.color : null"
+						[style.border-color]="hoveredIndex === i ? item.color : null">
+						<span class="material-symbols-outlined tl-icon">{{ item.icon }}</span>
+					</div>
+					<div class="tl-card" [class.is-hovered]="hoveredIndex === i">
+						<div class="tl-card-hd">
+							<h3 class="tl-title">
+								{{ item.title
+								}}<span class="hide-on-mobile">
+									· <span class="tl-date">{{ item.date }}</span></span
+								>
+							</h3>
+							<p-tag [value]="item.tag" class="tl-tag" [rounded]="true" />
+						</div>
+						<p class="tl-subheader">{{ item.subheader }}</p>
+						<p class="tl-body">{{ item.body }}</p>
+					</div>
 				</div>
 			}
-		</ng-template>
-		<ng-template #content let-event>
-			<p-card [header]="event.header" [subheader]="event.subheader" class="card">
-				<p class="text">{{ event.content }}</p>
-			</p-card>
-		</ng-template>
-	</p-timeline>
+		</div>
+	</div>
 </div>

@@ -394,15 +394,14 @@
 
 				<!-- Quick Links -->
 				<div class="bento-card card-links">
+					<div class="card-accent accent-links"></div>
 					<div class="links-body">
 
 						<!-- Header -->
-						<div class="links-hd">
-							<div class="links-hd-left">
-								<div class="links-eyebrow">My links</div>
-								<div class="links-title">Quick jumps</div>
-							</div>
-							<span class="links-count-chip">{{ dashLinks.length }}</span>
+						<div class="card-header links-card-hd">
+							<span class="material-symbols-outlined card-icon icon-links">link</span>
+							<span class="card-title">Quick Links</span>
+							<span class="header-badge badge-links">{{ dashLinks.length }}</span>
 						</div>
 
 						@if (dashLinksLoading) {

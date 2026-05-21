@@ -76,7 +76,11 @@ export const SEARCH_COMPLETE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
 export const SUCCESS = 'success';
 export const FAILURE = 'failure';
-export const HOME_NOTE_KEY = 'home_quick_note';
+export const HOME_LINKS_TILE_0 = '#6aa9d6';
+export const HOME_LINKS_TILE_1 = '#f0b88a';
+export const HOME_LINKS_TILE_2 = '#a8d4c2';
+export const HOME_LINKS_TILE_3 = '#d4a4c8';
+export const HOME_LINKS_DOT_FALLBACK = '#5a6878';
 
 // ── Dialogs & history ─────────────────────────────────────────────────────
 /** Dialog type for a yes/no confirmation prompt. */

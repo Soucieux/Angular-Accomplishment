@@ -51,9 +51,8 @@
 				<div class="bento-card skeleton card-patch"></div>
 				<div class="bento-card skeleton card-resonance"></div>
 				<div class="bento-card skeleton card-activity"></div>
-				<div class="bento-card skeleton card-pomodoro"></div>
-				<div class="bento-card skeleton card-note"></div>
-				<div class="bento-card skeleton card-calendar"></div>
+				<div class="bento-card skeleton card-links"></div>
+					<div class="bento-card skeleton card-calendar"></div>
 			</div>
 		} @else {
 			<!-- ── Stat chips ─────────────────────────────────────────────── -->
@@ -393,80 +392,80 @@
 					</div>
 				</div>
 
-				<!-- Pomodoro Timer -->
-				<div
-					class="bento-card card-pomodoro"
-					[class.pomo-work]="pomodoroMode === 'work'"
-					[class.pomo-break]="pomodoroMode === 'break'">
-					<div
-						class="card-accent"
-						[class.accent-pomo-work]="pomodoroMode === 'work'"
-						[class.accent-pomo-break]="pomodoroMode === 'break'"></div>
-					<div class="card-body pomo-body">
-						<div class="card-header">
-							<span
-								class="material-symbols-outlined card-icon"
-								[class.icon-pomo-work]="pomodoroMode === 'work'"
-								[class.icon-pomo-break]="pomodoroMode === 'break'">
-								{{ pomodoroMode === 'work' ? 'self_improvement' : 'coffee' }}
-							</span>
-							<span class="card-title pomo-mode-label">
-								{{ pomodoroMode === 'work' ? 'Focus Time' : 'Break Time' }}
-							</span>
-						</div>
-						<div class="pomo-ring-wrap">
-							<div class="pomo-ring" [style.background]="getPomodoroRingStyle()">
-								<div class="pomo-ring-inner">
-									<div class="pomo-time">{{ pomodoroDisplay }}</div>
-								</div>
+				<!-- Quick Links -->
+				<div class="bento-card card-links">
+					<div class="links-body">
+
+						<!-- Header -->
+						<div class="links-hd">
+							<div class="links-hd-left">
+								<div class="links-eyebrow">My links</div>
+								<div class="links-title">Quick jumps</div>
 							</div>
+							<span class="links-count-chip">{{ dashLinks.length }}</span>
 						</div>
-						<div class="pomo-controls">
-							<button
-								class="pomo-btn pomo-btn-main"
-								[class.pomo-btn-work]="pomodoroMode === 'work'"
-								[class.pomo-btn-break]="pomodoroMode === 'break'"
-								(click)="togglePomodoro()">
-								{{ pomodoroRunning ? 'Pause' : 'Start' }}
-							</button>
-							<button class="pomo-btn pomo-btn-reset" (click)="resetPomodoro()">Reset</button>
-						</div>
-						<div class="pomo-presets">
-							@for (preset of pomodoroPresets; track preset) {
-								<button
-									class="pomo-preset-btn"
-									[class.pomo-preset-active]="
-										pomodoroSelectedPreset === preset && !pomodoroRunning
-									"
-									[disabled]="pomodoroRunning"
-									(click)="selectPomodoroPreset(preset)">
-									{{ preset }}m
-								</button>
-							}
-						</div>
+
+						@if (dashLinksLoading) {
+							<div class="links-skeleton"></div>
+						} @else if (dashLinks.length === 0) {
+							<div class="links-empty-state">
+								<span class="material-symbols-outlined">link</span>
+								<span>Add links in <a routerLink="/nexus">Nexus</a></span>
+							</div>
+						} @else {
+							<!-- Pinned tiles -->
+							<div class="links-tiles">
+								@for (link of pinnedLinks; track link._id; let i = $index) {
+									<a class="link-tile"
+									   [style.background]="tileColor(i)"
+									   [style.--rot]="tileRotation(i)"
+									   (click)="openDashLink(link)"
+									   [title]="link.title">
+										<div class="tile-top">
+											<div class="tile-favicon-badge">
+												@if (dashFaviconFailedIds.has(link._id)) {
+													<span class="tile-favicon-letter">{{ link.title.charAt(0).toUpperCase() }}</span>
+												} @else {
+													<img [src]="getFavicon(link.url)" [alt]="link.title" loading="lazy" (error)="onDashFaviconError(link)" />
+												}
+											</div>
+											<span class="tile-pin" aria-hidden="true">📌</span>
+										</div>
+										<div class="tile-bottom">
+											<div class="tile-title">{{ link.title }}</div>
+											<div class="tile-visits">{{ link.visitCount ?? 0 }} visits</div>
+										</div>
+									</a>
+								}
+							</div>
+
+							<!-- Divider -->
+							<div class="links-divider">
+								<span>Everything else</span>
+								<span class="links-divider-line"></span>
+							</div>
+
+							<!-- Scrollable list -->
+							<div class="links-list">
+								@for (link of restLinks; track link._id) {
+									<a class="links-row"
+									   (click)="openDashLink(link)"
+									   [title]="link.url">
+										<span class="links-dot" [style.background]="getCategoryDotColor(link.category)"></span>
+										@if (dashFaviconFailedIds.has(link._id)) {
+											<span class="links-favicon-letter">{{ link.title.charAt(0).toUpperCase() }}</span>
+										} @else {
+											<img class="links-favicon" [src]="getFavicon(link.url)" [alt]="link.title" loading="lazy" (error)="onDashFaviconError(link)" />
+										}
+										<span class="links-name">{{ link.title }}</span>
+										<span class="links-meta">{{ link.lastVisited ? getRelativeTime(link.lastVisited) : '' }}</span>
+									</a>
+								}
+							</div>
+						}
 					</div>
 				</div>
 
-				<!-- Quick Note -->
-				<div class="bento-card card-note card-minimum-height">
-					<div class="card-accent accent-note"></div>
-					<div class="card-body note-body">
-						<div class="card-header">
-							<span class="material-symbols-outlined card-icon icon-note">edit_note</span>
-							<span class="card-title">Quick Note</span>
-							@if (noteSavedTime) {
-								<span class="note-saved-time">saved {{ noteSavedTime }}</span>
-							} @else {
-								<span class="note-hint">clears when tab closes</span>
-							}
-						</div>
-						<textarea
-							class="note-textarea"
-							[value]="noteText"
-							(input)="onNoteInput($event)"
-							placeholder="Jot something down…"></textarea>
-					</div>
-				</div>
 
 				<!-- ── Row 4 ─────────────────────────────────────────────── -->
 

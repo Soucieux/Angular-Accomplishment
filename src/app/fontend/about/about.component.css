@@ -12,10 +12,11 @@
 }
 
 /* ─────────────────────────────────────────
-   Status chip — p-chip override
+   Status chip — host is the chip in PrimeNG v4
 ───────────────────────────────────────── */
-::ng-deep p-chip.about-chip .p-chip {
-	display: inline-flex;
+p-chip.about-chip {
+	display: flex;
+	width: fit-content;
 	align-items: center;
 	gap: 8px;
 	background: rgba(255, 255, 255, 0.15);
@@ -35,7 +36,7 @@
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	background: #fff;
+	background: #4ade80;
 	flex-shrink: 0;
 }
 
@@ -327,6 +328,11 @@
 
 	.tl-rail {
 		padding-left: 52px;
+	}
+
+	.rail-bg,
+	.rail-fill {
+		left: 23px;
 	}
 
 	.tl-node {

@@ -65,13 +65,13 @@
 					(mouseenter)="onEntryEnter(i)"
 					(mouseleave)="onEntryLeave()">
 					<div
-						class="tl-node"
+						[class]="'tl-node ' + item.tag"
 						[class.is-hovered]="hoveredIndex === i"
 						[style.background]="hoveredIndex === i ? item.color : null"
 						[style.border-color]="hoveredIndex === i ? item.color : null">
 						<span class="material-symbols-outlined tl-icon">{{ item.icon }}</span>
 					</div>
-					<div class="tl-card" [class.is-hovered]="hoveredIndex === i">
+					<div [class]="'tl-card ' + item.tag" [class.is-hovered]="hoveredIndex === i">
 						<div class="tl-card-hd">
 							<h3 class="tl-title">
 								{{ item.title

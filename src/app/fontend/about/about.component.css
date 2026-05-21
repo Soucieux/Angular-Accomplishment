@@ -19,10 +19,10 @@ p-chip.about-chip {
 	width: fit-content;
 	align-items: center;
 	gap: 8px;
-	background: rgba(255, 255, 255, 0.15);
+	background: rgba(74, 222, 128, 0.18);
 	backdrop-filter: blur(8px);
 	-webkit-backdrop-filter: blur(8px);
-	border: 1px solid rgba(255, 255, 255, 0.25);
+	border: 1px solid rgba(74, 222, 128, 0.55);
 	border-radius: 999px;
 	padding: 6px 12px 6px 8px;
 	font-size: 12px;
@@ -54,12 +54,12 @@ p-chip.about-chip {
 
 .hl-pill {
 	display: inline-block;
-	background: rgba(255, 255, 255, 0.22);
+	background: rgba(156, 39, 176, 0.32);
 	color: #fff;
 	border-radius: 18px;
 	padding: 0 18px;
 	transform: translateY(-4px);
-	border: 1px solid rgba(255, 255, 255, 0.35);
+	border: 1px solid rgba(156, 39, 176, 0.72);
 }
 
 /* ─────────────────────────────────────────
@@ -81,10 +81,11 @@ p-chip.about-chip {
 }
 
 .stat-card {
-	background: rgba(255, 255, 255, 0.12);
+	background: rgba(255, 255, 255, 0.16);
 	backdrop-filter: blur(12px);
 	-webkit-backdrop-filter: blur(12px);
-	border: 1px solid rgba(255, 255, 255, 0.22);
+	border: 1px solid rgba(255, 255, 255, 0.35);
+	border-left: 3px solid rgba(213, 51, 105, 0.8);
 	border-radius: 16px;
 	padding: 14px 18px;
 	min-width: 130px;
@@ -156,7 +157,7 @@ p-chip.about-chip {
 	width: 2px;
 	height: 0;
 	border-radius: 2px;
-	background: #fff;
+	background: linear-gradient(to bottom, rgba(213, 51, 105, 0.9), rgba(156, 39, 176, 0.7));
 	transition: height 0.4s ease;
 }
 
@@ -212,13 +213,13 @@ p-chip.about-chip {
 
 /* Glass card */
 .tl-card {
-	background: rgba(255, 255, 255, 0.12);
+	background: rgba(255, 255, 255, 0.16);
 	backdrop-filter: blur(18px);
 	-webkit-backdrop-filter: blur(18px);
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.32);
 	border-radius: 18px;
 	padding: 18px 22px;
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
 	transition:
 		transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1),
 		box-shadow 0.3s,
@@ -279,6 +280,31 @@ p-chip.about-chip {
 	margin: 0;
 	text-align: justify;
 	white-space: pre-line;
+}
+
+/* ─────────────────────────────────────────
+   Tag-colour tints — nodes and cards at rest
+───────────────────────────────────────── */
+.tl-node.work,
+.tl-node.career {
+	background: rgba(156, 39, 176, 0.32);
+	border-color: rgba(156, 39, 176, 0.75);
+	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12), 0 0 10px rgba(156, 39, 176, 0.2);
+}
+
+.tl-node.education {
+	background: rgba(255, 152, 0, 0.28);
+	border-color: rgba(255, 152, 0, 0.7);
+	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12), 0 0 10px rgba(255, 152, 0, 0.18);
+}
+
+.tl-card.work,
+.tl-card.career {
+	border-left: 3px solid rgba(156, 39, 176, 0.75);
+}
+
+.tl-card.education {
+	border-left: 3px solid rgba(255, 152, 0, 0.72);
 }
 
 /* ─────────────────────────────────────────

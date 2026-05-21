@@ -127,6 +127,15 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 			observer.observe(ref.nativeElement);
 			this.observers.push(observer);
 		});
+		setTimeout(() => {
+			this.timeline.forEach((_, i) => {
+				if (!this.visibleEntries.has(i)) {
+					this.visibleEntries.add(i);
+					if (i + 1 > this.maxSeen) this.maxSeen = i + 1;
+				}
+			});
+			this.cdr.detectChanges();
+		}, 0);
 	}
 
 	/**

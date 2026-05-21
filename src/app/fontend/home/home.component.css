@@ -465,6 +465,9 @@
 .accent-calendar {
 	background: linear-gradient(90deg, #0ea5e9, #6366f1);
 }
+.accent-links {
+	background: linear-gradient(90deg, #4a90c8, #56ccf2);
+}
 
 /* ─────────────────────────────────────────
    Card body & header
@@ -1159,43 +1162,15 @@
 }
 
 /* Header */
-.links-hd {
-	display: flex;
-	align-items: flex-end;
-	justify-content: space-between;
+.links-card-hd {
 	padding: 14px 16px 8px;
-	flex-shrink: 0;
 }
-.links-hd-left {
-	min-width: 0;
+.icon-links {
+	color: #4a7fa8;
 }
-.links-eyebrow {
-	font-size: 10px;
-	font-weight: 600;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	color: #5a6878;
-	margin-bottom: 3px;
-}
-.links-title {
-	font-size: 18px;
-	font-weight: 700;
-	letter-spacing: -0.025em;
-	line-height: 1;
-	color: #1a2530;
-}
-.links-count-chip {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 22px;
-	height: 22px;
-	border-radius: 6px;
-	background: #f5f9fb;
-	font-size: 11px;
-	font-weight: 700;
-	color: #5a6878;
-	flex-shrink: 0;
+.badge-links {
+	background: #d5e4ed;
+	color: #3a6080;
 }
 
 /* Pinned tiles */
@@ -1262,7 +1237,7 @@
 	min-width: 0;
 }
 .tile-title {
-	font-size: 11px;
+	font-size: 12px;
 	font-weight: 700;
 	letter-spacing: -0.01em;
 	line-height: 1.1;
@@ -1373,7 +1348,7 @@
 	flex-shrink: 0;
 }
 .links-name {
-	font-size: 12px;
+	font-size: 13px;
 	font-weight: 500;
 	overflow: hidden;
 	text-overflow: ellipsis;

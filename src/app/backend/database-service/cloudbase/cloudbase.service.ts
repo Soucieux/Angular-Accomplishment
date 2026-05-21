@@ -1396,7 +1396,7 @@ export class CloudbaseService extends DatabaseService {
 			const result = await this.database
 				.collection(DATABASE_USEFUL_LINKS)
 				.where({ _id: key, _openid: CloudbaseService.getUseId() })
-				.update({ visitCount: currentCount + 1 });
+				.update({ visitCount: currentCount + 1, lastVisited: new Date().toISOString() });
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'Link visit count has been incremented');
 		} catch (error) {

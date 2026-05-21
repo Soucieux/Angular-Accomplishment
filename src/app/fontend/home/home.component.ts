@@ -31,7 +31,11 @@ import {
 	STATS_FIELD_RECENT_REMINDER,
 	STATS_FIELD_RECENT_RESONANCE,
 	STATS_FIELD_REMINDER_UPCOMING,
-	HOME_NOTE_KEY
+	HOME_LINKS_TILE_0,
+	HOME_LINKS_TILE_1,
+	HOME_LINKS_TILE_2,
+	HOME_LINKS_TILE_3,
+	HOME_LINKS_DOT_FALLBACK
 } from '../../common/app.constant';
 
 @Component({
@@ -45,11 +49,12 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'HomeComponent';
 	private statsSub?: Subscription;
 	private loginSub?: Subscription;
+	private linksSub?: Subscription;
+	private categoriesSub?: Subscription;
 	private loadingTimer?: ReturnType<typeof setTimeout>;
+	private linksLoadingTimer?: ReturnType<typeof setTimeout>;
 	private dashboardTimer?: ReturnType<typeof setTimeout>;
 	private clockInterval?: ReturnType<typeof setInterval>;
-	private pomodoroInterval?: ReturnType<typeof setInterval>;
-	private readonly NOTE_KEY = HOME_NOTE_KEY;
 	private readonly DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 	private readonly MON_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 	private _lastMonth = -1;
@@ -76,28 +81,17 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected currentDayOfMonth = 1;
 	protected dayOfWeekNum = 1; // Mon = 1 … Sun = 7
 
-	// Quick Note
-	protected noteText = '';
-	protected noteSavedTime = '';
-
-	// Pomodoro
-	protected pomodoroTime = 25 * 60;
-	protected pomodoroRunning = false;
-	protected pomodoroMode: 'work' | 'break' = 'work';
-	protected readonly pomodoroPresets = [5, 10, 25, 45, 60];
-	protected pomodoroSelectedPreset = 25;
-	private readonly BREAK_DURATION = 5 * 60;
-
-	/**
-	 * Returns the current work-interval duration in seconds, derived from the
-	 * selected preset (in minutes). Used to reset the timer when switching modes.
-	 */
-	private get workDuration(): number {
-		return this.pomodoroSelectedPreset * 60;
-	}
+	// Quick Links
+	protected dashLinks: any[] = [];
+	protected dashCategories: any[] = [];
+	protected dashLinksLoading = true;
+	protected dashFaviconFailedIds = new Set<string>();
+	protected pinnedLinks: any[] = [];
+	protected restLinks: any[] = [];
 
 	// Genre bar colours
 	protected readonly genreColors = ['#4776e6', '#e91e8c', '#f7971e', '#78d000', '#8e54e9', '#22d3ee'];
+	private readonly TILE_ROTATIONS = [-1.5, 0.8, -0.5, 1.2];
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
@@ -124,9 +118,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	public ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
-			const saved = sessionStorage.getItem(this.NOTE_KEY);
-			if (saved) this.noteText = saved;
-
 			this.tickClock();
 			this.clockInterval = setInterval(() => this.tickClock(), 1000);
 
@@ -144,6 +135,36 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 						}
 					}, 5000);
 					let activityLogsCleaned = false;
+					this.linksLoadingTimer = setTimeout(() => {
+						if (this.dashLinksLoading) {
+							this.dashLinksLoading = false;
+							this.cdr.detectChanges();
+						}
+					}, 4000);
+					this.linksSub = this.databaseService.getUsefulLinks().subscribe({
+						next: (data) => {
+							clearTimeout(this.linksLoadingTimer);
+							this.dashLinks = data;
+							this.computeDashLinkSets();
+							this.dashLinksLoading = false;
+							this.cdr.detectChanges();
+						},
+						error: () => {
+							clearTimeout(this.linksLoadingTimer);
+							this.dashLinksLoading = false;
+							this.cdr.detectChanges();
+						}
+					});
+					this.categoriesSub = this.databaseService.getLinkCategories().subscribe({
+						next: (data) => {
+							this.dashCategories = [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+							this.cdr.detectChanges();
+						},
+						error: (err) => {
+							LOG.error(this.className, 'Failed to load link categories', err as Error);
+						}
+					});
+
 					this.statsSub = this.databaseService.getStatistics().subscribe({
 						next: (data) => {
 							clearTimeout(this.loadingTimer);
@@ -177,9 +198,18 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 					}, 600);
 				} else if (!loggedIn) {
 					clearTimeout(this.loadingTimer);
+					clearTimeout(this.linksLoadingTimer);
 					clearTimeout(this.dashboardTimer);
 					this.statsSub?.unsubscribe();
+					this.linksSub?.unsubscribe();
+					this.categoriesSub?.unsubscribe();
 					this.stats = null;
+					this.dashLinks = [];
+					this.dashCategories = [];
+					this.pinnedLinks = [];
+					this.restLinks = [];
+					this.dashFaviconFailedIds.clear();
+					this.dashLinksLoading = true;
 					this.loading = true;
 					this.showDashboard = false;
 					this.transitioning = false;
@@ -202,19 +232,24 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			document
 				.querySelectorAll<HTMLElement>('.activity-list-scroll')
 				.forEach((el) => Utilities.attachScrollAutoHide(el));
+			document
+				.querySelectorAll<HTMLElement>('.links-list')
+				.forEach((el) => Utilities.attachScrollAutoHide(el));
 		}
 	}
 
 	/**
-	 * Clears all timers and intervals, unsubscribes from the stats and login
+	 * Clears all timers and intervals, unsubscribes from all data and login
 	 * observables, and logs the component destruction event.
 	 */
 	public ngOnDestroy() {
 		clearTimeout(this.loadingTimer);
+		clearTimeout(this.linksLoadingTimer);
 		clearTimeout(this.dashboardTimer);
 		clearInterval(this.clockInterval);
-		clearInterval(this.pomodoroInterval);
 		this.statsSub?.unsubscribe();
+		this.linksSub?.unsubscribe();
+		this.categoriesSub?.unsubscribe();
 		this.loginSub?.unsubscribe();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
@@ -275,103 +310,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.dayOfWeekNum = dow + 1;
 
 		this.cdr.detectChanges();
-	}
-
-	// ── Quick Note ────────────────────────────────────────────────────────
-
-	/**
-	 * Handles input events from the quick-note textarea. Persists the current
-	 * text to `sessionStorage` (survives page refresh but is wiped on tab close)
-	 * and updates the "last saved" time label shown beneath the textarea.
-	 *
-	 * @param event - The native input event from the textarea element.
-	 */
-	protected onNoteInput(event: Event): void {
-		const value = (event.target as HTMLTextAreaElement).value;
-		this.noteText = value;
-		sessionStorage.setItem(this.NOTE_KEY, value);
-		const now = new Date();
-		const pad = (n: number) => String(n).padStart(2, '0');
-		this.noteSavedTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-	}
-
-	// ── Pomodoro ──────────────────────────────────────────────────────────
-
-	/**
-	 * Formats the remaining pomodoro seconds as a zero-padded `MM:SS` string
-	 * for display in the timer ring.
-	 */
-	protected get pomodoroDisplay(): string {
-		const pad = (n: number) => String(n).padStart(2, '0');
-		return `${pad(Math.floor(this.pomodoroTime / 60))}:${pad(this.pomodoroTime % 60)}`;
-	}
-
-	/**
-	 * Builds the inline `background` style for the conic-gradient ring that
-	 * shows how much of the current interval has elapsed. The colour switches
-	 * between red (work) and green (break) to match the active mode.
-	 *
-	 * @returns A CSS `conic-gradient(…)` string ready for `[style.background]`.
-	 */
-	protected getPomodoroRingStyle(): string {
-		const total = this.pomodoroMode === 'work' ? this.workDuration : this.BREAK_DURATION;
-		const elapsed = total - this.pomodoroTime;
-		const pct = (elapsed / total) * 100;
-		const color = this.pomodoroMode === 'work' ? '#ef4444' : '#22c55e';
-		return `conic-gradient(${color} ${pct}%, #f1f5f9 ${pct}%)`;
-	}
-
-	/**
-	 * Select a preset work-interval duration. No-ops if the timer is running so
-	 * an in-progress session is not accidentally reset.
-	 *
-	 * @param minutes - The preset duration in minutes (e.g. 5, 10, 25, 45, 60).
-	 */
-	protected selectPomodoroPreset(minutes: number): void {
-		if (this.pomodoroRunning) return;
-		this.pomodoroSelectedPreset = minutes;
-		this.pomodoroTime = minutes * 60;
-		this.pomodoroMode = 'work';
-	}
-
-	/**
-	 * Toggle the pomodoro timer between running and paused. When the countdown
-	 * reaches zero it automatically switches mode (work → break or break → work)
-	 * and resets to the corresponding duration.
-	 */
-	protected togglePomodoro(): void {
-		if (this.pomodoroRunning) {
-			clearInterval(this.pomodoroInterval);
-			this.pomodoroRunning = false;
-		} else {
-			this.pomodoroRunning = true;
-			this.pomodoroInterval = setInterval(() => {
-				this.pomodoroTime--;
-				if (this.pomodoroTime <= 0) {
-					clearInterval(this.pomodoroInterval);
-					this.pomodoroRunning = false;
-					if (this.pomodoroMode === 'work') {
-						this.pomodoroMode = 'break';
-						this.pomodoroTime = this.BREAK_DURATION;
-					} else {
-						this.pomodoroMode = 'work';
-						this.pomodoroTime = this.workDuration;
-					}
-				}
-				this.cdr.detectChanges();
-			}, 1000);
-		}
-	}
-
-	/**
-	 * Stop the timer, reset mode to 'work', and restore the selected preset
-	 * duration so the user can start a fresh session.
-	 */
-	protected resetPomodoro(): void {
-		clearInterval(this.pomodoroInterval);
-		this.pomodoroRunning = false;
-		this.pomodoroMode = 'work';
-		this.pomodoroTime = this.workDuration;
 	}
 
 	// ── Time helpers ──────────────────────────────────────────────────────
@@ -750,5 +688,93 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (Object.keys(updates).length > 0) {
 			this.databaseService.updateStatisticsFields(updates);
 		}
+	}
+
+	// ── Quick Links ───────────────────────────────────────────────────────
+
+	/**
+	 * Computes and caches the pinned-tiles list and the "everything else" list
+	 * from the current `dashLinks` array. Called once whenever `dashLinks` is
+	 * reassigned so template methods never re-sort on every render cycle.
+	 */
+	private computeDashLinkSets(): void {
+		const sorted = [...this.dashLinks].sort((a, b) => (b.visitCount ?? 0) - (a.visitCount ?? 0));
+		this.pinnedLinks = sorted.slice(0, 4);
+		const pinnedIds = new Set(this.pinnedLinks.map((l) => l._id));
+		this.restLinks = [...this.dashLinks]
+			.filter((l) => !pinnedIds.has(l._id))
+			.sort((a, b) => {
+				if (!a.lastVisited && !b.lastVisited) return 0;
+				if (!a.lastVisited) return 1;
+				if (!b.lastVisited) return -1;
+				return new Date(b.lastVisited).getTime() - new Date(a.lastVisited).getTime();
+			});
+	}
+
+	/**
+	 * Builds the direct favicon URL for the given link URL, delegating to the
+	 * shared utility so the behaviour matches the Nexus page exactly.
+	 *
+	 * @param url - The full URL of the bookmark.
+	 * @returns Favicon image URL string, or empty string on parse failure.
+	 */
+	protected getFavicon(url: string): string {
+		return Utilities.getFavicon(url);
+	}
+
+	/**
+	 * Called when a favicon <img> fails to load. Marks the link ID so the
+	 * template can swap to the initial-letter fallback.
+	 *
+	 * @param link - The link object whose favicon failed.
+	 */
+	protected onDashFaviconError(link: any): void {
+		this.dashFaviconFailedIds.add(link._id);
+	}
+
+	/**
+	 * Returns the hex color for a link's category, falling back to the neutral
+	 * sub-text colour when the category is not found.
+	 *
+	 * @param categoryId - The category _id stored on the link document.
+	 * @returns CSS color string.
+	 */
+	protected getCategoryDotColor(categoryId: string): string {
+		const cat = this.dashCategories.find((c) => c._id === categoryId);
+		return cat?.color ?? HOME_LINKS_DOT_FALLBACK;
+	}
+
+	/**
+	 * Opens a Quick Links bookmark in a new tab and increments its visit counter.
+	 *
+	 * @param link - The link object to open.
+	 */
+	protected openDashLink(link: any): void {
+		window.open(link.url, '_blank', 'noopener,noreferrer');
+		this.databaseService
+			.incrementLinkVisit(link._id, link.visitCount ?? 0)
+			.catch((err: Error) => LOG.error(this.className, 'Failed to increment link visit', err));
+	}
+
+	/**
+	 * Returns the tile background colour for a pinned tile at index i,
+	 * cycling through the four pool-theme colours.
+	 *
+	 * @param i - Zero-based tile index.
+	 * @returns CSS colour string.
+	 */
+	protected tileColor(i: number): string {
+		return [HOME_LINKS_TILE_0, HOME_LINKS_TILE_1, HOME_LINKS_TILE_2, HOME_LINKS_TILE_3][i % 4];
+	}
+
+	/**
+	 * Returns the CSS rotation for a pinned tile at index i, giving the
+	 * sticker-stack tilt effect.
+	 *
+	 * @param i - Zero-based tile index.
+	 * @returns CSS rotation string, e.g. "-1.5deg".
+	 */
+	protected tileRotation(i: number): string {
+		return `${this.TILE_ROTATIONS[i % 4]}deg`;
 	}
 }

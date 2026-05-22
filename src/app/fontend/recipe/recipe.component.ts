@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser, ViewportScroller } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
@@ -39,6 +40,8 @@ import {
 	RECIPE_DELETE_MESSAGE,
 	RECIPE_DELETE_TITLE,
 	RECIPE_DISCARD_BTN,
+	RECIPE_DISCARD_CHANGES_MESSAGE,
+	RECIPE_DISCARD_CHANGES_TITLE,
 	RECIPE_DISCARD_MESSAGE,
 	RECIPE_DISCARD_TITLE,
 	RECIPE_DROP_ABOVE,
@@ -55,6 +58,7 @@ import {
 	RECIPE_MSG_SAVE_FAILED,
 	RECIPE_MSG_SAVE_FAILED_DETAIL,
 	RECIPE_MSG_UPDATED,
+	RECIPE_UNIT_OPTIONS,
 	RECIPE_VIEW_ADD,
 	RECIPE_VIEW_DETAIL,
 	RECIPE_VIEW_LIST,
@@ -85,7 +89,7 @@ import {
 @Component({
 	selector: 'recipe',
 	standalone: true,
-	imports: [CommonModule, FormsModule],
+	imports: [CommonModule, FormsModule, AutoComplete],
 	templateUrl: './recipe.component.html',
 	styleUrl: './recipe.component.css',
 })
@@ -133,6 +137,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected editorCategoryInvalid = false;
 	/** True only after a failed save attempt where a named ingredient has qty but no unit. */
 	protected editorIngredientInvalid = false;
+	/** Filtered unit suggestions shown by the unit autocomplete dropdown. */
+	protected editorUnitSuggestions: string[] = [];
+	/** True for one completeMethod cycle after focus, so focus always shows the full list. */
+	private unitFocused = false;
 
 	/** Exposes the unit-required message to the template. */
 	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
@@ -487,13 +495,19 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Handle the Cancel button in the editor. If the editor is empty, navigates
-	 * directly to the list view. Otherwise shows a confirm-discard dialog and
-	 * navigates to the list view only if the user confirms.
+	 * Handle the back/cancel button in the editor.
+	 * In edit mode: always shows a confirm-discard dialog before returning to the detail view.
+	 * In create mode: navigates directly to the list view if the form is empty, otherwise
+	 * shows a confirm-discard dialog first.
 	 */
 	protected cancelAdd(): void {
 		if (this.editingMode === RECIPE_EDITING_MODE_EDIT) {
-			this.transitionTo(RECIPE_VIEW_DETAIL);
+			this.dialogService.openDialog(
+				this.dialogContainer,
+				DIALOG_CONFIRM,
+				() => this.transitionTo(RECIPE_VIEW_DETAIL),
+				[RECIPE_DISCARD_CHANGES_MESSAGE, RECIPE_DISCARD_CHANGES_TITLE, RECIPE_DISCARD_BTN]
+			);
 			return;
 		}
 		const empty =
@@ -741,6 +755,35 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (this.editorIngredientInvalid && !this.hasIngredientUnitViolation) {
 			this.editorIngredientInvalid = false;
 		}
+	}
+
+	/**
+	 * Set the focus flag so the next completeMethod call returns the full list.
+	 * PrimeNG fires onFocus before completeMethod, so the flag is always set
+	 * before filterUnits consumes it.
+	 */
+	protected onUnitFocus(): void {
+		this.unitFocused = true;
+	}
+
+	/**
+	 * Populate the unit autocomplete suggestion list.
+	 * When triggered by focus (flag set), always returns the full list so
+	 * re-opening the dropdown after a selection shows all options.
+	 * When triggered by typing, filters to prefix matches.
+	 *
+	 * @param event - The PrimeNG complete event carrying the current query string.
+	 */
+	protected filterUnits(event: AutoCompleteCompleteEvent): void {
+		if (this.unitFocused) {
+			this.unitFocused = false;
+			this.editorUnitSuggestions = [...RECIPE_UNIT_OPTIONS];
+			return;
+		}
+		const q = event.query.trim().toLowerCase();
+		this.editorUnitSuggestions = q
+			? RECIPE_UNIT_OPTIONS.filter((u) => u.toLowerCase().startsWith(q))
+			: [...RECIPE_UNIT_OPTIONS];
 	}
 
 	/**

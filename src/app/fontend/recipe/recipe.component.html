@@ -327,19 +327,29 @@
 												type="text"
 												placeholder="Ingredient name"
 												[(ngModel)]="it.name" />
-											<input
-												class="qty"
-												type="text"
-												placeholder="qty"
-												[(ngModel)]="it.qty" />
-											<input
-												class="unit"
-												[class.required]="it.qty && !it.unit"
-												type="text"
-												placeholder="unit *"
-												[(ngModel)]="it.unit"
-												(input)="onEditorUnitInput()" />
-											<button class="remove" title="Remove" (click)="removeEditorIngredient(it)">×</button>
+											<div class="ing-qty-group">
+												<input
+													class="qty"
+													type="text"
+													placeholder="qty"
+													[(ngModel)]="it.qty" />
+												<p-autocomplete
+													styleClass="unit-ac"
+													panelStyleClass="unit-ac-panel"
+													[class.required]="it.qty && !it.unit"
+													placeholder="unit *"
+													[suggestions]="editorUnitSuggestions"
+													[completeOnFocus]="true"
+													[forceSelection]="false"
+													[minLength]="0"
+													[showClear]="false"
+													appendTo="body"
+													(onFocus)="onUnitFocus()"
+													(completeMethod)="filterUnits($event)"
+													[(ngModel)]="it.unit"
+													(ngModelChange)="onEditorUnitInput()" />
+												<button class="remove" title="Remove" (click)="removeEditorIngredient(it)">×</button>
+											</div>
 										</div>
 									}
 								</div>

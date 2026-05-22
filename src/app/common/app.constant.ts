@@ -198,12 +198,16 @@ export const RECIPE_VIEW_DETAIL = 'detail';
 export const RECIPE_VIEW_ADD = 'add';
 
 // ── Recipe — Add page messages ────────────────────────────────────────────
-/** Confirm-discard title shown when the user clicks Cancel with unsaved edits. */
+/** Confirm-discard title shown when the user clicks Cancel on the add-recipe screen. */
 export const RECIPE_DISCARD_TITLE = 'Discard Recipe';
-/** Confirm-discard message body. */
+/** Confirm-discard message body for the add-recipe screen. */
 export const RECIPE_DISCARD_MESSAGE = 'Discard this recipe? Any changes will be lost.';
 /** Confirm button label for the discard dialog. */
 export const RECIPE_DISCARD_BTN = 'Discard';
+/** Confirm-discard title shown when the user clicks back on the edit-recipe screen. */
+export const RECIPE_DISCARD_CHANGES_TITLE = 'Discard Changes';
+/** Confirm-discard message body for the edit-recipe screen. */
+export const RECIPE_DISCARD_CHANGES_MESSAGE = 'Unsaved changes will be lost.';
 /** Confirm-delete title shown when the user clicks Delete Recipe in edit mode. */
 export const RECIPE_DELETE_TITLE = 'Delete Recipe';
 /** Confirm-delete message body. */
@@ -258,6 +262,13 @@ export const RECIPE_BAND_SPICY = 'band-spicy';
 // ── Recipe — drag-drop position discriminators ───────────────────────────
 export const RECIPE_DROP_ABOVE = 'above';
 export const RECIPE_DROP_BELOW = 'below';
+
+// ── Recipe — ingredient unit options ─────────────────────────────────────
+export const RECIPE_UNIT_OPTIONS: string[] = [
+	'tsp', 'tbsp', 'cup', 'ml', 'L',
+	'g', 'kg', 'oz', 'lb',
+	'piece', 'clove', 'slice', 'pinch', 'whole', 'to taste',
+];
 
 // ── Recipe — log / toast messages ────────────────────────────────────────
 export const RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = 'Some ingredients have a quantity but are missing a unit.';

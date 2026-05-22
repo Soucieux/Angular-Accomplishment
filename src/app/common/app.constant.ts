@@ -1,6 +1,15 @@
 // ── Application lifecycle ──────────────────────────────────────────────────
 export const COMPONENT_DESTROY = 'Component Destroyed';
 
+// ── Auth state persistence ─────────────────────────────────────────────────
+// Stored in localStorage to avoid the Access Denied flicker on page refresh.
+// The value '1' is a lightweight presence flag — it carries no user identity,
+// no token, and no permissions. It only signals that the last known session
+// was authenticated so the UI can optimistically show content while Firebase /
+// CloudBase re-validates the real session in the background. The flag is
+// written on login and removed on logout.
+export const LS_AUTH_HINT_KEY = 'auth_hint';
+
 // ── Database — collection names ────────────────────────────────────────────
 export const DATABASE_HISTORY = 'history';
 export const DATABASE_MOVIES = 'movies';

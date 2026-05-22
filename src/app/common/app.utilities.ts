@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
 import { LOG } from './app.logs';
-import { CN, RATE_LABEL_EXCELLENT, RATE_LABEL_GOOD, RATE_LABEL_AVERAGE, RATE_LABEL_POOR } from './app.constant';
+import { CN, LS_AUTH_HINT_KEY, RATE_LABEL_EXCELLENT, RATE_LABEL_GOOD, RATE_LABEL_AVERAGE, RATE_LABEL_POOR } from './app.constant';
 import { CloudbaseService } from '../backend/database-service/cloudbase/cloudbase.service';
 
 @Injectable({ providedIn: 'root' })
@@ -18,7 +18,11 @@ export class Utilities {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		@Inject(DOCUMENT) private document: Document
-	) {}
+	) {
+		if (isPlatformBrowser(this.platformId) && localStorage.getItem(LS_AUTH_HINT_KEY) === '1') {
+			this.isUserAliveSubject.next(true);
+		}
+	}
 
 	/**
 	 * Check if the current device is a mobile device.
@@ -206,10 +210,20 @@ export class Utilities {
 
 	/**
 	 * Set the user alive state and notify all subscribers reactively.
+	 * Also persists the state as a presence flag in localStorage so the
+	 * UI can restore the correct state immediately on the next page refresh
+	 * without waiting for Firebase / CloudBase to re-validate the session.
 	 *
 	 * @param isUserAlive - Whether the user is alive.
 	 */
 	public setIsUserAlive(isUserAlive: boolean): void {
+		if (isPlatformBrowser(this.platformId)) {
+			if (isUserAlive) {
+				localStorage.setItem(LS_AUTH_HINT_KEY, '1');
+			} else {
+				localStorage.removeItem(LS_AUTH_HINT_KEY);
+			}
+		}
 		this.isUserAliveSubject.next(isUserAlive);
 	}
 

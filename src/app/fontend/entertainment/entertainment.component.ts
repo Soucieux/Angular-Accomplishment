@@ -578,6 +578,17 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 
 	//////////////////////Below are Utilities Functions used by HTML template///////////////////////
 	/**
+	 * Returns the human-readable quality label for a movie rate ("Excellent", "Good",
+	 * "Average", or "Poor") by delegating to the shared utility method.
+	 *
+	 * @param rate - The numeric movie rate.
+	 * @returns A quality label string.
+	 */
+	protected getRateLabel(rate: number): string {
+		return Utilities.getMovieRateLabel(rate);
+	}
+
+	/**
 	 * Calculates a responsive font size for displaying a movie name, shrinking the
 	 * text as the name gets longer to prevent overflow. Uses different base sizes
 	 * for mobile and desktop viewports.
@@ -587,9 +598,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 */
 	protected calculateFontSize(length: number) {
 		if (this.utilities.isMobile()) {
-			return length <= 8 ? '18px' : String(18 - (length - 8) * 2 + 'px');
+			return length <= 8 ? '21px' : String(18 - (length - 8) * 2 + 'px');
 		}
-		return length <= 9 ? '20px' : String(20 - (length - 8.5) * 2 + 'px');
+		return length <= 9 ? '23px' : String(20 - (length - 8.5) * 2 + 'px');
 	}
 
 	/**

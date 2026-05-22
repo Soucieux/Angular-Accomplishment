@@ -50,6 +50,10 @@ export const GENRE_FAVOURITE = '特别关注';
 export const NO_RATE = '-1';
 export const RATE_DECREASED = 'decreased';
 export const RATE_INCREASED = 'increased';
+export const RATE_LABEL_EXCELLENT = 'Excellent';
+export const RATE_LABEL_GOOD = 'Good';
+export const RATE_LABEL_AVERAGE = 'Average';
+export const RATE_LABEL_POOR = 'Poor';
 export const MOVIE_GENRES = [
 	{ genre: '刑侦' },
 	{ genre: '古装' },

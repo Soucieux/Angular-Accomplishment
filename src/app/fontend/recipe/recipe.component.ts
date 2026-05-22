@@ -27,15 +27,6 @@ import {
 	DIALOG_CONFIRM,
 	DIALOG_RECIPE_TYPE,
 	RECIPE_CATEGORY_ALL,
-	RECIPE_CATEGORY_CHINESE,
-	RECIPE_CATEGORY_DESSERT,
-	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_WESTERN,
-	RECIPE_BAND_CHINESE,
-	RECIPE_BAND_DESSERT,
-	RECIPE_BAND_QUICK,
-	RECIPE_BAND_SPICY,
-	RECIPE_BAND_WESTERN,
 	RECIPE_DELETE_BTN,
 	RECIPE_DELETE_MESSAGE,
 	RECIPE_DELETE_TITLE,
@@ -69,10 +60,12 @@ import {
 } from '../../common/app.constant';
 import {
 	BadgeTag,
+	DropPosition,
 	EditorGroup,
 	EditorIngredient,
 	EditorStep,
 	EditorSubpoint,
+	EditingMode,
 	Ingredient,
 	IngredientGroup,
 	IngredientType,
@@ -85,11 +78,12 @@ import {
 	StepToken,
 	TypeTab
 } from './recipe.model';
+import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
 	selector: 'recipe',
 	standalone: true,
-	imports: [CommonModule, FormsModule, AutoComplete],
+	imports: [CommonModule, FormsModule, AutoComplete, AccessDeniedComponent],
 	templateUrl: './recipe.component.html',
 	styleUrl: './recipe.component.css',
 })
@@ -145,12 +139,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/** Exposes the unit-required message to the template. */
 	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
 	protected editorCategoryOpen = false;
-	protected editingMode: 'create' | 'edit' = RECIPE_EDITING_MODE_CREATE;
+	protected editingMode: EditingMode = RECIPE_EDITING_MODE_CREATE;
 	private editingRecipeId: string | null = null;
 	private pendingDetailName: string | null = null;
 	private draggingStep: EditorStep | null = null;
 	private dropTargetStep: EditorStep | null = null;
-	private dropPosition: 'above' | 'below' | null = null;
+	private dropPosition: DropPosition | null = null;
 
 	protected recipes: Recipe[] = [];
 	protected isLoading = true;
@@ -832,7 +826,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			name: this.editorName.trim(),
 			detailName: this.editorName.trim(),
 			category: this.editorCategory,
-			bandClass: this.bandClassForCategory(this.editorCategory),
+			bandClass: Utilities.recipeBandClass(this.editorCategory),
 			cookTimeMin: this.editorCookTime ?? 0,
 			baseServings: this.editorServings || 1,
 			badges,
@@ -900,27 +894,6 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			tokens.push({ kind: 'text', text: text.slice(lastIdx) });
 		}
 		return tokens.length > 0 ? tokens : [{ kind: 'text', text }];
-	}
-
-	/**
-	 * Map a recipe category string to its corresponding card band CSS class.
-	 * Falls back to the Chinese band class for unrecognised category values.
-	 *
-	 * @param cat - The recipe category string (one of the RECIPE_CATEGORY_* constants).
-	 * @returns The CSS class name for the recipe card colour band.
-	 */
-	private bandClassForCategory(cat: string): string {
-		switch (cat) {
-			case RECIPE_CATEGORY_WESTERN:
-				return RECIPE_BAND_WESTERN;
-			case RECIPE_CATEGORY_QUICK:
-				return RECIPE_BAND_QUICK;
-			case RECIPE_CATEGORY_DESSERT:
-				return RECIPE_BAND_DESSERT;
-			case RECIPE_CATEGORY_CHINESE:
-			default:
-				return RECIPE_BAND_CHINESE;
-		}
 	}
 
 	// ── Drag-to-reorder steps ─────────────────────────────────────────
@@ -1031,7 +1004,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param position - The edge to check (`'above'` or `'below'`).
 	 * @returns True if this step is the active drop target at the given position.
 	 */
-	protected isStepDropTarget(step: EditorStep, position: 'above' | 'below'): boolean {
+	protected isStepDropTarget(step: EditorStep, position: DropPosition): boolean {
 		return this.dropTargetStep === step && this.dropPosition === position;
 	}
 }

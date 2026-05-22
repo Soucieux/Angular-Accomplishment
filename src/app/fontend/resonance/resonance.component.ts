@@ -22,7 +22,14 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
-import { COMPONENT_DESTROY, DIALOG_CONFIRM } from '../../common/app.constant';
+import {
+	COMPONENT_DESTROY,
+	DIALOG_CONFIRM,
+	RESONANCE_AUTHOR_ANONYMOUS,
+	RESONANCE_MSG_DELETE_CONFIRM,
+	RESONANCE_DIALOG_TITLE_DELETE,
+	RESONANCE_DIALOG_BTN_DELETE
+} from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 import { RESONANCE_GRADIENTS } from './resonance.model';
 
@@ -127,7 +134,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @returns The author name or 'Anonymous'.
 	 */
 	protected getAuthorName(quote: any): string {
-		return quote.author || 'Anonymous';
+		return quote.author || RESONANCE_AUTHOR_ANONYMOUS;
 	}
 
 	/**
@@ -182,8 +189,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			// Name resolution chain: signed-in user → CloudBase username;
 			// not signed in → manually entered name; fallback → 'Anonymous'.
 			const name = this.isSignedIn
-				? CloudbaseService.getUserName() || 'Anonymous'
-				: this.authorName.trim() || 'Anonymous';
+				? CloudbaseService.getUserName() || RESONANCE_AUTHOR_ANONYMOUS
+				: this.authorName.trim() || RESONANCE_AUTHOR_ANONYMOUS;
 			const timestamp = Utilities.getCurrentFormattedTime(true);
 			await this.databaseService.addQuote(text, name, timestamp);
 			this.newQuoteText = '';
@@ -215,7 +222,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			},
-			['Are you sure you want to delete this quote?', 'Delete Quote', 'Delete']
+			[RESONANCE_MSG_DELETE_CONFIRM, RESONANCE_DIALOG_TITLE_DELETE, RESONANCE_DIALOG_BTN_DELETE]
 		);
 	}
 }

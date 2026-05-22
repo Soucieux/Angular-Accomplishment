@@ -4,6 +4,10 @@ import {
 	RECIPE_CATEGORY_DESSERT,
 	RECIPE_CATEGORY_QUICK,
 	RECIPE_CATEGORY_WESTERN,
+	RECIPE_DROP_ABOVE,
+	RECIPE_DROP_BELOW,
+	RECIPE_EDITING_MODE_CREATE,
+	RECIPE_EDITING_MODE_EDIT,
 	RECIPE_ITYPE_CONDIMENT,
 	RECIPE_ITYPE_DAIRY,
 	RECIPE_ITYPE_EGG,
@@ -163,3 +167,9 @@ export const RECIPE_EDITOR_DEFAULT_TYPES: IngredientType[] = [
 	RECIPE_ITYPE_LIQ,
 	RECIPE_ITYPE_SPICE,
 ];
+
+/** Union of valid editing modes for the recipe editor. */
+export type EditingMode = typeof RECIPE_EDITING_MODE_CREATE | typeof RECIPE_EDITING_MODE_EDIT;
+
+/** Union of valid drag-drop target positions. */
+export type DropPosition = typeof RECIPE_DROP_ABOVE | typeof RECIPE_DROP_BELOW;

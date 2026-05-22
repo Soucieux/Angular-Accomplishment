@@ -13,7 +13,7 @@ import { LOG } from '../../common/app.logs';
 import { DatabaseService } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
-import { CN, MSG_UNEXPECTED_ERROR } from '../../common/app.constant';
+import { CLOUDBASE_ERROR_INVALID_ARGUMENT, CLOUDBASE_ERROR_INVALID_CREDENTIALS, CN, MSG_UNEXPECTED_ERROR } from '../../common/app.constant';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { wrongVerificationCodeError } from '../../common/error/wrong-verification-code';
 
@@ -165,7 +165,7 @@ export class AuthService {
 			this.cloudbaseGetCurrentUser();
 			this.router.navigate(['/']);
 		} catch (error: any) {
-			if (error && error.code === 'INVALID_ARGUMENT') {
+			if (error && error.code === CLOUDBASE_ERROR_INVALID_ARGUMENT) {
 				throw new wrongVerificationCodeError();
 			} else {
 				throw new Error(MSG_UNEXPECTED_ERROR);
@@ -190,7 +190,7 @@ export class AuthService {
 			password: password
 		});
 
-		if (error && error.category === 'INVALID_CREDENTIALS') {
+		if (error && error.category === CLOUDBASE_ERROR_INVALID_CREDENTIALS) {
 			throw new WrongCredentialsError();
 		} else if (error) {
 			throw new Error(MSG_UNEXPECTED_ERROR);

@@ -46,10 +46,18 @@ import {
 	STATS_FIELD_RECENT_REMINDER,
 	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING,
-	SUCCESS
+	SUCCESS,
+	REMINDER_MSG_RESET_CONFIRM,
+	REMINDER_DIALOG_RESET_BTN,
+	REMINDER_DIALOG_CONFIRM_BTN,
+	REMINDER_MSG_DELETE_CONFIRM,
+	REMINDER_DIALOG_DELETE_BTN,
+	REMINDER_STYLE_CHARGED,
+	REMINDER_STYLE_TODAY
 } from '../../common/app.constant';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
 	selector: 'reminder',
@@ -67,7 +75,8 @@ import { DatabaseService } from '../../backend/database-service/database.service
 		Tooltip,
 		PaginatorModule,
 		PopoverModule,
-		ToggleSwitchModule
+		ToggleSwitchModule,
+		AccessDeniedComponent
 	],
 	templateUrl: './reminder.component.html',
 	styleUrls: ['../../common/page.card.css', './reminder.component.css']
@@ -432,7 +441,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			() => {
 				this.resetFirstTable();
 			},
-			['Are you sure you want to reset the dates?', 'Reset', 'Confirm']
+			[REMINDER_MSG_RESET_CONFIRM, REMINDER_DIALOG_RESET_BTN, REMINDER_DIALOG_CONFIRM_BTN]
 		);
 	}
 
@@ -445,9 +454,9 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected setStyle(isCharged: boolean, value: number) {
 		if (isCharged) {
-			return 'color: orange';
+			return REMINDER_STYLE_CHARGED;
 		} else if (value === this.currentDay) {
-			return 'color: red';
+			return REMINDER_STYLE_TODAY;
 		}
 		return '';
 	}
@@ -617,7 +626,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			async () => {
 				await this.removeRecordFromDatabase(entryKey);
 			},
-			['Are you sure you want to delete this entry?', 'Delete', 'Confirm']
+			[REMINDER_MSG_DELETE_CONFIRM, REMINDER_DIALOG_DELETE_BTN, REMINDER_DIALOG_CONFIRM_BTN]
 		);
 	}
 

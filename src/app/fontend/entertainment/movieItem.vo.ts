@@ -10,7 +10,7 @@ export class MovieItemVO {
 	private coverImageDownloadableLink: string = '';
 	private firstReleaseDate: string = '';
 	private episodeNumber: number = -1;
-	private coverImage: any = null;
+	private coverImage: Blob | null = null;
 	private movieKey: string = '';
 	private sessionId: number = -1;
 	private isFavourite: boolean = false;
@@ -113,7 +113,7 @@ export class MovieItemVO {
 	 *
 	 * @returns The cover image Blob, or null if not set.
 	 */
-	getMovieCoverImage(): any {
+	public getMovieCoverImage(): Blob | null {
 		return this.coverImage;
 	}
 
@@ -140,7 +140,7 @@ export class MovieItemVO {
 	 *
 	 * @returns The description string, or empty string if not set.
 	 */
-	getDescription() {
+	public getDescription(): string {
 		return this.description;
 	}
 
@@ -149,7 +149,7 @@ export class MovieItemVO {
 	 *
 	 * @returns The actors string, or empty string if not set.
 	 */
-	getActors() {
+	public getActors(): string {
 		return this.actors;
 	}
 
@@ -241,7 +241,7 @@ export class MovieItemVO {
 	 *
 	 * @param coverImage - The cover image Blob.
 	 */
-	setMovieCoverImage(coverImage: any) {
+	public setMovieCoverImage(coverImage: Blob | null) {
 		this.coverImage = coverImage;
 	}
 

@@ -31,7 +31,10 @@ import {
 	STATUS_DRAFT,
 	STATUS_IN_PROGRESS,
 	STATUS_RESOLVED,
-	STATUS_TODO
+	STATUS_TODO,
+	PATCH_MSG_DELETE_CONFIRM,
+	PATCH_DIALOG_CONFIRM_BTN,
+	PATCH_DIALOG_DELETE_BTN
 } from '../../common/app.constant';
 import { map, Observable, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -40,6 +43,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PaginatorModule } from 'primeng/paginator';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
 	selector: 'patch',
@@ -53,7 +57,8 @@ import { DatabaseService } from '../../backend/database-service/database.service
 		FormsModule,
 		CommonModule,
 		PaginatorModule,
-		CheckboxModule
+		CheckboxModule,
+		AccessDeniedComponent
 	],
 	templateUrl: './patch.component.html',
 	styleUrls: ['../../common/page.card.css', './patch.component.css']
@@ -231,7 +236,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param row - The row to start editing.
 	 */
-	public async startEdit(row: any) {
+	protected async startEdit(row: any) {
 		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, row._openid)) return;
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
@@ -242,7 +247,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param row - The row to complete editing.
 	 */
-	public async completeEdit(row: any) {
+	protected async completeEdit(row: any) {
 		const record = this.editedRows.get(row.key);
 		if (!record) return;
 		const changes: any = {};
@@ -357,7 +362,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			},
-			['Are you sure you want to delete this note?', 'Confirm', 'Delete']
+			[PATCH_MSG_DELETE_CONFIRM, PATCH_DIALOG_CONFIRM_BTN, PATCH_DIALOG_DELETE_BTN]
 		);
 	}
 

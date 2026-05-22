@@ -11,7 +11,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { Utilities } from '../../common/app.utilities';
-import { CN, COMPONENT_DESTROY } from '../../common/app.constant';
+import { CN, COMPONENT_DESTROY, DIALOG_ERROR } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { WrongParametersError } from '../../common/error/wrong-parameters.error';
@@ -207,7 +207,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 				error instanceof WrongParametersError ||
 				error instanceof wrongVerificationCodeError
 			) {
-				this.dialogService.openDialog(this.dialogContainer, 'error', error.message);
+				this.dialogService.openDialog(this.dialogContainer, DIALOG_ERROR, error.message);
 			} else {
 				this.dialogService.showUnexpectedError(this.dialogContainer);
 			}

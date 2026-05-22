@@ -290,7 +290,7 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 10px;
-	margin: 22px 0 28px;
+	margin: 22px 0 28px 14px;
 }
 .chip {
 	height: 34px;
@@ -359,8 +359,12 @@
 	animation: cardReveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 .recipe-card:hover {
-	transform: translateY(-3px);
-	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+	transform: translateY(-5px) scale(1.01);
+	box-shadow:
+		0 4px 8px rgba(0, 0, 0, 0.05),
+		0 16px 32px rgba(213, 51, 105, 0.09),
+		0 32px 48px rgba(0, 0, 0, 0.04);
+	border-color: rgba(213, 51, 105, 0.12);
 }
 
 /* Left vertical colour strip — spans both content rows */
@@ -1256,7 +1260,6 @@
 	font-family: 'nlf', 'cf', serif;
 	font-size: 18px;
 	font-weight: 500;
-	background: #fff;
 }
 .notes-header .material-symbols-outlined {
 	color: var(--gold);
@@ -2519,127 +2522,3 @@
 	transition: none;
 }
 
-/* ── Access Denied ─────────────────────────────────────────── */
-.access-denied-container {
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	text-align: center;
-	position: relative;
-	overflow: hidden;
-}
-
-.access-denied-container::before {
-	content: '';
-	position: absolute;
-	width: 520px;
-	height: 520px;
-	background: radial-gradient(circle, rgba(255, 255, 255, 0.13) 0%, transparent 68%);
-	border-radius: 50%;
-	top: -120px;
-	right: -160px;
-	animation: adDrift 14s ease-in-out infinite;
-	pointer-events: none;
-	z-index: 0;
-}
-
-.access-denied-container::after {
-	content: '';
-	position: absolute;
-	width: 420px;
-	height: 420px;
-	background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 65%);
-	border-radius: 50%;
-	bottom: 5%;
-	left: -130px;
-	animation: adDrift 19s ease-in-out infinite reverse;
-	pointer-events: none;
-	z-index: 0;
-}
-
-@keyframes adDrift {
-	0%,
-	100% {
-		transform: translateY(0) scale(1);
-	}
-	50% {
-		transform: translateY(-36px) scale(1.04);
-	}
-}
-
-.access-denied-card {
-	position: relative;
-	z-index: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 16px;
-	padding: 64px 96px;
-	background: rgba(255, 255, 255, 0.07);
-	backdrop-filter: blur(28px);
-	-webkit-backdrop-filter: blur(28px);
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	border-radius: 32px;
-	box-shadow:
-		0 8px 48px rgba(0, 0, 0, 0.08),
-		inset 0 1px 0 rgba(255, 255, 255, 0.28);
-	animation: adCardReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes adCardReveal {
-	from {
-		opacity: 0;
-		transform: translateY(-16px) scale(0.97);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0) scale(1);
-	}
-}
-
-.access-denied-icon {
-	font-size: 72px;
-	background: linear-gradient(135deg, #ffffff 20%, rgba(255, 218, 120, 0.88) 100%);
-	background-clip: text;
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	filter: drop-shadow(0 2px 16px rgba(255, 255, 255, 0.35));
-	animation: adIconPulse 3s ease-in-out infinite;
-}
-
-@keyframes adIconPulse {
-	0%,
-	100% {
-		filter: drop-shadow(0 2px 16px rgba(255, 255, 255, 0.35));
-	}
-	50% {
-		filter: drop-shadow(0 2px 30px rgba(255, 255, 255, 0.58));
-	}
-}
-
-.access-denied-container h1 {
-	background: linear-gradient(135deg, #ffffff 20%, rgba(255, 218, 120, 0.88) 100%);
-	background-clip: text;
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	filter: drop-shadow(0 2px 20px rgba(255, 255, 255, 0.35));
-	animation: adFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
-}
-
-.access-denied-container p {
-	color: rgba(255, 255, 255, 0.6);
-	animation: adFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
-}
-
-@keyframes adFadeUp {
-	from {
-		opacity: 0;
-		transform: translateY(10px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}

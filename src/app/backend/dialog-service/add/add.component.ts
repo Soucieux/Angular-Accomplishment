@@ -21,7 +21,7 @@ import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exi
 import { LOG } from '../../../common/app.logs';
 import { Checkbox } from 'primeng/checkbox';
 import { DialogService } from '../dialog.service';
-import { MOVIE_GENRES } from '../../../common/app.constant';
+import { DIALOG_ERROR, MOVIE_GENRES } from '../../../common/app.constant';
 
 @Component({
 	selector: 'add-dialog',
@@ -121,7 +121,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 			// Each error type maps to a specific user-facing message;
 			// the dialog is shown in-place (not thrown) because this is a search flow.
 			if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
-				this.dialogService.openDialog(this.dialogComponentContainer, 'error', error.message);
+				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 			} else {
 				LOG.error(this.className, 'Error while searching new movie from add dialog', error as Error);
 				this.dialogService.showUnexpectedError(this.dialogComponentContainer);

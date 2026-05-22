@@ -35,7 +35,48 @@ import {
 	HOME_LINKS_TILE_1,
 	HOME_LINKS_TILE_2,
 	HOME_LINKS_TILE_3,
-	HOME_LINKS_DOT_FALLBACK
+	HOME_LINKS_DOT_FALLBACK,
+	DAY_NAMES_LONG,
+	DAY_NAMES_SHORT,
+	MONTH_NAMES_SHORT,
+	HOME_GENRE_COLORS,
+	HOME_ACTIVITY_ICON_MOVIE_ADDED,
+	HOME_ACTIVITY_ICON_MOVIE_REMOVED,
+	HOME_ACTIVITY_ICON_MOVIE_RATED,
+	HOME_ACTIVITY_ICON_MOVIE_SEARCHED,
+	HOME_ACTIVITY_ICON_PATCH_ADDED,
+	HOME_ACTIVITY_ICON_PATCH_BUG,
+	HOME_ACTIVITY_ICON_PATCH_STATUS,
+	HOME_ACTIVITY_ICON_PATCH_UPDATED,
+	HOME_ACTIVITY_ICON_PATCH_DELETED,
+	HOME_ACTIVITY_ICON_REMINDER_ADDED,
+	HOME_ACTIVITY_ICON_REMINDER_DELETED,
+	HOME_ACTIVITY_ICON_REMINDER_UPDATED,
+	HOME_ACTIVITY_ICON_RESONANCE_ADDED,
+	HOME_ACTIVITY_ICON_RESONANCE_REMOVED,
+	HOME_ACTIVITY_LABEL_MOVIE_ADDED,
+	HOME_ACTIVITY_LABEL_MOVIE_REMOVED,
+	HOME_ACTIVITY_LABEL_MOVIE_RATED,
+	HOME_ACTIVITY_LABEL_MOVIE_SEARCHED,
+	HOME_ACTIVITY_LABEL_PATCH_ADDED,
+	HOME_ACTIVITY_LABEL_PATCH_BUG,
+	HOME_ACTIVITY_LABEL_PATCH_STATUS,
+	HOME_ACTIVITY_LABEL_PATCH_UPDATED,
+	HOME_ACTIVITY_LABEL_PATCH_DELETED,
+	HOME_ACTIVITY_LABEL_REMINDER_ADDED,
+	HOME_ACTIVITY_LABEL_REMINDER_DELETED,
+	HOME_ACTIVITY_LABEL_REMINDER_UPDATED,
+	HOME_ACTIVITY_LABEL_RESONANCE_ADDED,
+	HOME_ACTIVITY_LABEL_RESONANCE_REMOVED,
+	HOME_ACTIVITY_COLOR_MOVIE_ADDED,
+	HOME_ACTIVITY_COLOR_MOVIE_RATED,
+	HOME_ACTIVITY_COLOR_MOVIE_SEARCHED,
+	HOME_ACTIVITY_COLOR_NEUTRAL,
+	HOME_ACTIVITY_COLOR_PATCH,
+	HOME_ACTIVITY_COLOR_PATCH_DELETED,
+	HOME_ACTIVITY_COLOR_REMINDER,
+	HOME_ACTIVITY_COLOR_REMINDER_DELETED,
+	HOME_ACTIVITY_COLOR_RESONANCE
 } from '../../common/app.constant';
 
 @Component({
@@ -55,8 +96,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private linksLoadingTimer?: ReturnType<typeof setTimeout>;
 	private dashboardTimer?: ReturnType<typeof setTimeout>;
 	private clockInterval?: ReturnType<typeof setInterval>;
-	private readonly DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-	private readonly MON_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 	private _lastMonth = -1;
 
 	protected stats: any = null;
@@ -90,14 +129,15 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected restLinks: any[] = [];
 
 	// Genre bar colours
-	protected readonly genreColors = ['#4776e6', '#e91e8c', '#f7971e', '#78d000', '#8e54e9', '#22d3ee'];
+	protected readonly genreColors = HOME_GENRE_COLORS;
 	private readonly TILE_ROTATIONS = [-1.5, 0.8, -0.5, 1.2];
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,
-		private router: Router
+		private router: Router,
+		protected readonly utilities: Utilities
 	) {}
 
 	/**
@@ -157,7 +197,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 					});
 					this.categoriesSub = this.databaseService.getLinkCategories().subscribe({
 						next: (data) => {
-							this.dashCategories = [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+							this.dashCategories = Utilities.sortByOrder(data);
 							this.cdr.detectChanges();
 						},
 						error: (err) => {
@@ -267,7 +307,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const pad = (n: number) => String(n).padStart(2, '0');
 		this.clockTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-		this.clockDate = `${this.DAY_NAMES[now.getDay()]}, ${this.MON_NAMES[now.getMonth()]} ${now.getDate()}`;
+		this.clockDate = `${DAY_NAMES_LONG[now.getDay()]}, ${MONTH_NAMES_SHORT[now.getMonth()]} ${now.getDate()}`;
 
 		const y = now.getFullYear();
 		this.currentYear = y;
@@ -343,7 +383,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param dateStr - A date in any form accepted by {@link Utilities.coerceDateToString}.
 	 * @returns A label such as "Today", "Tomorrow", "in 3d", or "2d overdue".
 	 */
-	protected getDaysUntil(dateStr: any): string {
+	protected getDaysUntil(dateStr: unknown): string {
 		return Utilities.getDaysUntil(dateStr);
 	}
 
@@ -353,7 +393,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param dateStr - A date in any form accepted by {@link Utilities.coerceDateToString}.
 	 * @returns `true` if the date is strictly before today.
 	 */
-	protected isOverdue(dateStr: any): boolean {
+	protected isOverdue(dateStr: unknown): boolean {
 		return Utilities.isOverdue(dateStr);
 	}
 
@@ -482,21 +522,21 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const movieActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_MOVIE]);
 		for (const m of movieActivities) {
 			if (!m?.timestamp) continue;
-			let icon = 'live_tv',
-				label = 'Movie Added',
-				color = '#e91e8c';
+			let icon = HOME_ACTIVITY_ICON_MOVIE_ADDED,
+				label = HOME_ACTIVITY_LABEL_MOVIE_ADDED,
+				color = HOME_ACTIVITY_COLOR_MOVIE_ADDED;
 			if (m.type === HISTORY_STATUS_DELETED) {
-				icon = 'tv_off';
-				label = 'Movie Removed';
-				color = '#94a3b8';
+				icon = HOME_ACTIVITY_ICON_MOVIE_REMOVED;
+				label = HOME_ACTIVITY_LABEL_MOVIE_REMOVED;
+				color = HOME_ACTIVITY_COLOR_NEUTRAL;
 			} else if (m.type === ACTIVITY_TYPE_UPDATED) {
-				icon = 'star';
-				label = 'Movie Rated';
-				color = '#f7971e';
+				icon = HOME_ACTIVITY_ICON_MOVIE_RATED;
+				label = HOME_ACTIVITY_LABEL_MOVIE_RATED;
+				color = HOME_ACTIVITY_COLOR_MOVIE_RATED;
 			} else if (m.type === SEARCH) {
-				icon = 'search';
-				label = 'Entertainment Rate Search';
-				color = '#4776e6';
+				icon = HOME_ACTIVITY_ICON_MOVIE_SEARCHED;
+				label = HOME_ACTIVITY_LABEL_MOVIE_SEARCHED;
+				color = HOME_ACTIVITY_COLOR_MOVIE_SEARCHED;
 			}
 			events.push({
 				icon,
@@ -512,22 +552,22 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const patchActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_PATCH]);
 		for (const p of patchActivities) {
 			if (!p?.timestamp) continue;
-			let icon = 'note_stack';
-			let label = 'Patch Notes Added';
-			let color = '#8e54e9';
+			let icon = HOME_ACTIVITY_ICON_PATCH_ADDED;
+			let label = HOME_ACTIVITY_LABEL_PATCH_ADDED;
+			let color = HOME_ACTIVITY_COLOR_PATCH;
 			if (p.type === ACTIVITY_TYPE_BUG_LOGGED) {
-				icon = 'bug_report';
-				label = 'Patch Notes Bug Logged';
+				icon = HOME_ACTIVITY_ICON_PATCH_BUG;
+				label = HOME_ACTIVITY_LABEL_PATCH_BUG;
 			} else if (p.type === ACTIVITY_TYPE_STATUS_CHANGED) {
-				icon = 'swap_horiz';
-				label = 'Patch Notes Status Changed';
+				icon = HOME_ACTIVITY_ICON_PATCH_STATUS;
+				label = HOME_ACTIVITY_LABEL_PATCH_STATUS;
 			} else if (p.type === ACTIVITY_TYPE_EDITED) {
-				icon = 'edit';
-				label = 'Patch Notes Updated';
+				icon = HOME_ACTIVITY_ICON_PATCH_UPDATED;
+				label = HOME_ACTIVITY_LABEL_PATCH_UPDATED;
 			} else if (p.type === HISTORY_STATUS_DELETED) {
-				icon = 'delete';
-				label = 'Patch Notes Deleted';
-				color = '#ef4444';
+				icon = HOME_ACTIVITY_ICON_PATCH_DELETED;
+				label = HOME_ACTIVITY_LABEL_PATCH_DELETED;
+				color = HOME_ACTIVITY_COLOR_PATCH_DELETED;
 			}
 			events.push({
 				icon,
@@ -543,16 +583,16 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const reminderActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_REMINDER]);
 		for (const r of reminderActivities) {
 			if (!r?.timestamp) continue;
-			let icon = 'note_add',
-				label = 'Reminder Added',
-				color = '#f59e0b';
+			let icon = HOME_ACTIVITY_ICON_REMINDER_ADDED,
+				label = HOME_ACTIVITY_LABEL_REMINDER_ADDED,
+				color = HOME_ACTIVITY_COLOR_REMINDER;
 			if (r.type === HISTORY_STATUS_DELETED) {
-				icon = 'delete';
-				label = 'Reminder Deleted';
-				color = '#ef4444';
+				icon = HOME_ACTIVITY_ICON_REMINDER_DELETED;
+				label = HOME_ACTIVITY_LABEL_REMINDER_DELETED;
+				color = HOME_ACTIVITY_COLOR_REMINDER_DELETED;
 			} else if (r.type === ACTIVITY_TYPE_UPDATED) {
-				icon = 'edit_note';
-				label = 'Reminder Updated';
+				icon = HOME_ACTIVITY_ICON_REMINDER_UPDATED;
+				label = HOME_ACTIVITY_LABEL_REMINDER_UPDATED;
 			}
 			const detail = r.text ? Utilities.truncate(`${r.table ?? ''} · ${r.text}`, 40) : (r.table ?? '');
 			events.push({
@@ -569,13 +609,13 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const resonanceActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_RESONANCE]);
 		for (const q of resonanceActivities) {
 			if (!q?.timestamp) continue;
-			let icon = 'format_quote',
-				label = 'Resonance Quote Added',
-				color = '#fda085';
+			let icon = HOME_ACTIVITY_ICON_RESONANCE_ADDED,
+				label = HOME_ACTIVITY_LABEL_RESONANCE_ADDED,
+				color = HOME_ACTIVITY_COLOR_RESONANCE;
 			if (q.type === HISTORY_STATUS_DELETED) {
-				icon = 'format_clear';
-				label = 'Resonance Quote Removed';
-				color = '#94a3b8';
+				icon = HOME_ACTIVITY_ICON_RESONANCE_REMOVED;
+				label = HOME_ACTIVITY_LABEL_RESONANCE_REMOVED;
+				color = HOME_ACTIVITY_COLOR_NEUTRAL;
 			}
 			events.push({
 				icon,
@@ -616,7 +656,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const dow = today.getDay();
 		sunday.setDate(today.getDate() - dow);
 		const allItems = this.getAllReminderItems();
-		const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+		const dayLabels = DAY_NAMES_SHORT;
 		return Array.from({ length: 7 }, (_, i) => {
 			const date = new Date(sunday);
 			date.setDate(sunday.getDate() + i);
@@ -712,17 +752,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Builds the direct favicon URL for the given link URL, delegating to the
-	 * shared utility so the behaviour matches the Nexus page exactly.
-	 *
-	 * @param url - The full URL of the bookmark.
-	 * @returns Favicon image URL string, or empty string on parse failure.
-	 */
-	protected getFavicon(url: string): string {
-		return Utilities.getFavicon(url);
-	}
-
-	/**
 	 * Called when a favicon <img> fails to load. Marks the link ID so the
 	 * template can swap to the initial-letter fallback.
 	 *
@@ -750,7 +779,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param link - The link object to open.
 	 */
 	protected openDashLink(link: any): void {
-		window.open(link.url, '_blank', 'noopener,noreferrer');
+		this.utilities.openInNewTab(link.url);
 		this.databaseService
 			.incrementLinkVisit(link._id, link.visitCount ?? 0)
 			.catch((err: Error) => LOG.error(this.className, 'Failed to increment link visit', err));

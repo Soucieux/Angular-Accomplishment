@@ -1,59 +1,52 @@
 <mat-drawer-container class="drawer-container" hasBackdrop="false">
 	<mat-drawer mode="side" class="full-height-drawer" opened disableClose>
-		<ul
-			style="
-				list-style-type: none;
-				padding-left: 0px;
-				display: flex;
-				flex-direction: column;
-				height: 100%;
-			">
+		<ul class="nav-list">
 			<li>
 				<span class="nav-title hide-on-mobile">Menu</span>
 			</li>
-			<li style="padding-top: 5px">
+			<li class="nav-item">
 				<a mat-button class="nav-button" matRipple routerLink="" routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact: true}">
 					<span class="material-symbols-outlined nav-icon">home_app_logo</span>
 					<span class="nav-label hide-on-mobile">Home</span>
 				</a>
 			</li>
-			<li style="padding-top: 5px">
+			<li class="nav-item">
 				<a mat-button class="nav-button" matRipple routerLink="/nexus" routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">neurology</span>
 					<span class="nav-label hide-on-mobile">Nexus</span>
 				</a>
 			</li>
-			<li style="padding-top: 5px">
+			<li class="nav-item">
 				<a mat-button class="nav-button" matRipple routerLink="/resonance" routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">format_quote</span>
 					<span class="nav-label hide-on-mobile">Resonance</span>
 				</a>
 			</li>
-			<li style="padding-top: 5px">
+			<li class="nav-item">
 				<a mat-button class="nav-button" matRipple routerLink="/recipe" routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">restaurant</span>
 					<span class="nav-label hide-on-mobile">Recipes</span>
 				</a>
 			</li>
-			<li style="padding-top: 5px">
+			<li class="nav-item">
 				<a mat-button class="nav-button" matRipple routerLink="/entertainment" routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">live_tv</span>
 					<span class="nav-label hide-on-mobile">Entertainment</span>
 				</a>
 			</li>
-			<li style="padding-top: 5px">
+			<li class="nav-item">
 				<a mat-button class="nav-button" matRipple routerLink="/reminder" routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">schedule</span>
 					<span class="nav-label hide-on-mobile">Reminder</span>
 				</a>
 			</li>
-			<li style="padding-top: 5px">
+			<li class="nav-item">
 				<a mat-button class="nav-button" matRipple routerLink="/patch" routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">add_task</span>
 					<span class="nav-label hide-on-mobile">Patch Notes</span>
 				</a>
 			</li>
-			<li style="padding-top: 5px">
+			<li class="nav-item">
 				<a mat-button class="nav-button" matRipple routerLink="/about" routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">info</span>
 					<span class="nav-label hide-on-mobile">About</span>

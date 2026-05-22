@@ -4,7 +4,22 @@ import { format } from 'date-fns';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
 import { LOG } from './app.logs';
-import { CN, LS_AUTH_HINT_KEY, RATE_LABEL_EXCELLENT, RATE_LABEL_GOOD, RATE_LABEL_AVERAGE, RATE_LABEL_POOR } from './app.constant';
+import {
+	CN,
+	LS_AUTH_HINT_KEY,
+	RATE_LABEL_AVERAGE,
+	RATE_LABEL_EXCELLENT,
+	RATE_LABEL_GOOD,
+	RATE_LABEL_POOR,
+	RECIPE_BAND_CHINESE,
+	RECIPE_BAND_DESSERT,
+	RECIPE_BAND_QUICK,
+	RECIPE_BAND_WESTERN,
+	RECIPE_CATEGORY_CHINESE,
+	RECIPE_CATEGORY_DESSERT,
+	RECIPE_CATEGORY_QUICK,
+	RECIPE_CATEGORY_WESTERN
+} from './app.constant';
 import { CloudbaseService } from '../backend/database-service/cloudbase/cloudbase.service';
 
 @Injectable({ providedIn: 'root' })
@@ -315,9 +330,21 @@ export class Utilities {
 	 * @param raw - The raw field value from a CloudBase snapshot.
 	 * @returns A plain `any[]` array.
 	 */
-	public static toArray(raw: unknown): any[] {
+	public static toArray(raw: unknown): unknown[] {
 		if (!raw) return [];
 		return Array.isArray(raw) ? raw : Object.values(raw as object);
+	}
+
+	/**
+	 * Sort an array of objects by their optional `order` field ascending.
+	 * Items without an `order` field are treated as order 0.
+	 * The original array is not mutated.
+	 *
+	 * @param items - Array of objects that may carry a numeric `order` property.
+	 * @returns A new array sorted ascending by `order`.
+	 */
+	public static sortByOrder<T extends { order?: number }>(items: T[]): T[] {
+		return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 	}
 
 	/**
@@ -379,6 +406,18 @@ export class Utilities {
 	}
 
 	/**
+	 * Instance wrapper around {@link Utilities.getFavicon} so templates that
+	 * inject `Utilities` as an instance can call `utilities.getFavicon(url)`
+	 * without needing a per-component wrapper method.
+	 *
+	 * @param url - The full URL of the website.
+	 * @returns A favicon image URL string, or '' if the URL is unparseable.
+	 */
+	public getFavicon(url: string): string {
+		return Utilities.getFavicon(url);
+	}
+
+	/**
 	 * Safely extract a human-readable error message from any thrown value.
 	 * Guards against SDK objects whose `.message` getter itself throws.
 	 *
@@ -389,7 +428,7 @@ export class Utilities {
 		try {
 			if (err == null) return 'unknown error';
 			if (typeof err === 'string') return err;
-			const msg = (err as any).message;
+			const msg = (err as Record<string, unknown>)['message'];
 			return typeof msg === 'string' ? msg : String(err);
 		} catch {
 			return 'unknown error';
@@ -483,10 +522,27 @@ export class Utilities {
 	public static async checkCurrentCountry() {
 		try {
 			this.currentCountry = CN;
-		} catch (error: any) {
-			LOG.error(this.className, 'Country detection failed: ', error);
+		} catch (error: unknown) {
+			LOG.error(this.className, 'Country detection failed: ', error as Error);
 			this.currentCountry = CN;
 			LOG.info(this.className, 'Use default country: ' + this.currentCountry);
+		}
+	}
+
+	/**
+	 * Return the CSS band class name for a given recipe category.
+	 *
+	 * @param category - The recipe category string (e.g. 'Chinese', 'Western').
+	 * @returns The CSS band class constant for that category, or an empty string
+	 *   if the category is not recognised.
+	 */
+	public static recipeBandClass(category: string): string {
+		switch (category) {
+			case RECIPE_CATEGORY_CHINESE: return RECIPE_BAND_CHINESE;
+			case RECIPE_CATEGORY_WESTERN: return RECIPE_BAND_WESTERN;
+			case RECIPE_CATEGORY_QUICK:   return RECIPE_BAND_QUICK;
+			case RECIPE_CATEGORY_DESSERT: return RECIPE_BAND_DESSERT;
+			default:                      return '';
 		}
 	}
 }

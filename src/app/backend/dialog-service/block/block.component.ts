@@ -14,8 +14,6 @@ export class BlockDialogComponent {
 	protected visible: boolean = false;
 	protected message: string = '';
 
-	constructor() {}
-
 	/**
 	 * Open the blocking dialog and execute the given task. The dialog
 	 * stays visible until the task completes or fails, then closes automatically.

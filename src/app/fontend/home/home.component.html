@@ -425,7 +425,7 @@
 												@if (dashFaviconFailedIds.has(link._id)) {
 													<span class="tile-favicon-letter">{{ link.title.charAt(0).toUpperCase() }}</span>
 												} @else {
-													<img [src]="getFavicon(link.url)" [alt]="link.title" loading="lazy" (error)="onDashFaviconError(link)" />
+													<img [src]="utilities.getFavicon(link.url)" [alt]="link.title" loading="lazy" (error)="onDashFaviconError(link)" />
 												}
 											</div>
 											<span class="tile-pin" aria-hidden="true">📌</span>
@@ -454,7 +454,7 @@
 										@if (dashFaviconFailedIds.has(link._id)) {
 											<span class="links-favicon-letter">{{ link.title.charAt(0).toUpperCase() }}</span>
 										} @else {
-											<img class="links-favicon" [src]="getFavicon(link.url)" [alt]="link.title" loading="lazy" (error)="onDashFaviconError(link)" />
+											<img class="links-favicon" [src]="utilities.getFavicon(link.url)" [alt]="link.title" loading="lazy" (error)="onDashFaviconError(link)" />
 										}
 										<span class="links-name">{{ link.title }}</span>
 										<span class="links-meta">{{ link.lastVisited ? getRelativeTime(link.lastVisited) : '' }}</span>

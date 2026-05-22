@@ -7,7 +7,16 @@ import { Observable } from 'rxjs';
 import { DialogService } from '../dialog.service';
 import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exists-error';
 import { LOG } from '../../../common/app.logs';
-import { HISTORY_STATUS_ADDED, HISTORY_STATUS_DELETED } from '../../../common/app.constant';
+import {
+	DIALOG_ERROR,
+	HISTORY_DIALOG_CONFIRM_BTN,
+	HISTORY_DIALOG_UNDO_BTN,
+	HISTORY_MSG_UNDO_CONFIRM,
+	HISTORY_STATUS_ADDED,
+	HISTORY_STATUS_DELETED,
+	HISTORY_STYLE_ADDED,
+	HISTORY_STYLE_DELETED
+} from '../../../common/app.constant';
 import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';
 
 @Component({
@@ -34,7 +43,7 @@ export class HistoryDialogComponent implements OnDestroy {
 	 * @param revertDataCallback - The callback to call to restore a deleted movie.
 	 * @param entries - The observable that emits the history entries.
 	 */
-	protected openDialog(revertDataCallback: (movie: MovieItemVO) => void, entries: Observable<any>) {
+	public openDialog(revertDataCallback: (movie: MovieItemVO) => void, entries: Observable<any>) {
 		this.visible = true;
 		this.entries$ = entries;
 		this.revertDataCallback = revertDataCallback;
@@ -48,9 +57,9 @@ export class HistoryDialogComponent implements OnDestroy {
 	 */
 	protected setBackgroundColor(status: string) {
 		if (status === HISTORY_STATUS_ADDED) {
-			return 'solid green';
+			return HISTORY_STYLE_ADDED;
 		} else if (status === HISTORY_STATUS_DELETED) {
-			return 'solid red';
+			return HISTORY_STYLE_DELETED;
 		}
 		return '';
 	}
@@ -81,7 +90,7 @@ export class HistoryDialogComponent implements OnDestroy {
 					await this.revertDataCallback?.(movieToRestore);
 				} catch (error) {
 					if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
-						this.dialogService.openDialog(this.dialogComponentContainer, 'error', error.message);
+						this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 					} else {
 						LOG.error(
 							this.className,
@@ -92,7 +101,7 @@ export class HistoryDialogComponent implements OnDestroy {
 					}
 				}
 			},
-			['Undo this deletion?', 'Undo', 'Confirm']
+			[HISTORY_MSG_UNDO_CONFIRM, HISTORY_DIALOG_UNDO_BTN, HISTORY_DIALOG_CONFIRM_BTN]
 		);
 	}
 

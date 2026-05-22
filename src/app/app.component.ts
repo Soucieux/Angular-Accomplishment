@@ -39,7 +39,11 @@ export class AppComponent {
 		@Inject(PLATFORM_ID) private platformId: Object
 	) {}
 
-	async ngOnInit() {
+	/**
+	 * Initialise the component, subscribe to auth state changes, and set up
+	 * the navigation sidebar visibility.
+	 */
+	public async ngOnInit(): Promise<void> {
 		if (isPlatformBrowser(this.platformId)) {
 			if (Utilities.getCurrentCountry() === CN) {
 				this.currentUser$ = this.authService.cloudbaseGetCurrentUser();
@@ -52,7 +56,7 @@ export class AppComponent {
 	/**
 	 * Anything that needs to be done when the component is destroyed.
 	 */
-	ngOnDestroy() {
+	public ngOnDestroy() {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
@@ -60,13 +64,17 @@ export class AppComponent {
 	 * Navigate to the login page, preserving the current URL as a returnUrl
 	 * query param so the user is sent back after signing in.
 	 */
-	navigateToLogin() {
+	protected navigateToLogin() {
 		this.router.navigate(['/login'], {
 			queryParams: { returnUrl: this.router.url }
 		});
 	}
 
-	async logout() {
+	/**
+	 * Sign the current user out, using the appropriate service depending on the
+	 * detected country (CloudBase for CN, Firebase otherwise).
+	 */
+	protected async logout() {
 		if (Utilities.getCurrentCountry() === CN) {
 			await this.authService.signOut();
 		} else {

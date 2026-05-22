@@ -1,3 +1,4 @@
+import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 import { SearchStreamService } from '../../backend/dialog-service/search/search-stream.service';
 import { Utilities } from '../../common/app.utilities';
 import {
@@ -14,7 +15,13 @@ import {
 	NO_RATE,
 	GENRE_FAVOURITE,
 	SEARCH,
-	MOVIE_GENRES
+	MOVIE_GENRES,
+	ENT_MSG_DELETE_CONFIRM_PREFIX,
+	ENT_DIALOG_TITLE_DELETE_MOVIE,
+	ENT_DIALOG_BTN_DELETE,
+	ENT_MSG_ADDING,
+	ENT_MSG_RESTORING,
+	CN
 } from '../../common/app.constant';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -59,7 +66,8 @@ import { MovieFetchFailedError } from '../../common/error/movie-fetch-failed-err
 		MatRippleModule,
 		MatTooltipModule,
 		ButtonModule,
-		SelectModule
+		SelectModule,
+		AccessDeniedComponent
 	],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'
@@ -422,7 +430,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 					let actors = movieWebpageAsData['actor'];
 
 					const allActors = actors
-						.map((actor: any) => actor.data.find((d: any) => d.lang === 'Cn')?.name)
+						.map((actor: any) => actor.data.find((d: any) => d.lang === CN)?.name)
 						.filter(Boolean);
 
 					const actorRetrieved =
@@ -561,7 +569,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			// Upload the cover image Blob to cloud storage, then get the resultant
 			// downloadable URL. These are separate operations in Firebase/CloudBase.
 			const downloadableLink = await this.databaseService.uploadImageAndGetDownloadLink(
-				movieItemVO.getMovieCoverImage(),
+				movieItemVO.getMovieCoverImage()!,
 				movieItemVO.getMovieName()
 			);
 			movieItemVO.setMovieCoverImageDownloadableLink(downloadableLink);
@@ -690,7 +698,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			},
-			[`Are you sure you want to delete ${movieItemVO.getMovieName()}?`, 'Delete Movie', 'Delete']
+			[`${ENT_MSG_DELETE_CONFIRM_PREFIX}${movieItemVO.getMovieName()}?`, ENT_DIALOG_TITLE_DELETE_MOVIE, ENT_DIALOG_BTN_DELETE]
 		);
 	}
 
@@ -705,7 +713,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			DIALOG_ADD,
 			// "Submit" button in the "Add New Movie" dialog
 			async (movie: MovieItemVO) => {
-				this.openBlockDialog(async () => await this.handleAddDialogSubmit(movie), 'Adding movie...');
+				this.openBlockDialog(async () => await this.handleAddDialogSubmit(movie), ENT_MSG_ADDING);
 			},
 			// "Search" button in the "Add New Movie" dialog
 			this.handleAddDialogSearch.bind(this)
@@ -749,7 +757,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @returns The movie cover image as a Blob.
 	 * @throws MovieAlreadyExistsError if the movie is already in the database.
 	 */
-	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob> {
+	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob | null> {
 		// Check for duplicates BEFORE searching — avoids unnecessary API calls
 		// for movies already in the database.
 		if (
@@ -808,7 +816,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				await this.openBlockDialog(async () => {
 					await this.handleAddDialogSearch(movieToRestore);
 					await this.handleAddDialogSubmit(movieToRestore);
-				}, 'Restoring movie...');
+				}, ENT_MSG_RESTORING);
 			},
 			this.databaseService.getHistory()
 		);

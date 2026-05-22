@@ -5,7 +5,8 @@ import { RATE_DECREASED, RATE_INCREASED } from '../../../common/app.constant';
 @Injectable({ providedIn: 'root' })
 export class SearchStreamService {
 	private searchLogsSubject = new BehaviorSubject<string[]>([]);
-	searchLogs$ = this.searchLogsSubject.asObservable();
+	/** Observable stream of search log strings emitted during a Douban search. */
+	public readonly searchLogs$ = this.searchLogsSubject.asObservable();
 
 	/**
 	 * Append a message to the search log stream.

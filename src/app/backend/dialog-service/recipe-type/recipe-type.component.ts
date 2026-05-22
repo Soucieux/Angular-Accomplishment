@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
 import { RECIPE_EDITOR_TYPE_MAX, RECIPE_ITYPE_DIALOG_TITLE } from '../../../common/app.constant';
@@ -11,7 +11,7 @@ import { IngredientType, TypeTab } from '../../../fontend/recipe/recipe.model';
 	templateUrl: './recipe-type.component.html',
 	styleUrl: './recipe-type.component.css'
 })
-export class RecipeTypeDialogComponent implements OnDestroy {
+export class RecipeTypeDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 
 	protected readonly ITYPE_DIALOG_TITLE = RECIPE_ITYPE_DIALOG_TITLE;
@@ -87,11 +87,6 @@ export class RecipeTypeDialogComponent implements OnDestroy {
 		this.closed$.emit();
 		this.visible = false;
 	}
-
-	/**
-	 * Clean up when the component is destroyed.
-	 */
-	public ngOnDestroy(): void {}
 
 	/**
 	 * Hide the dialog and emit the closed event so DialogService cleans up.

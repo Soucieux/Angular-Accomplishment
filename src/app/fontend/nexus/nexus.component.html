@@ -180,7 +180,7 @@
 							} @else {
 								<img
 									class="link-favicon"
-									[src]="getFavicon(link.url)"
+									[src]="utilities.getFavicon(link.url)"
 									[alt]="link.title"
 									(error)="onFaviconError(link)"
 									loading="lazy" />

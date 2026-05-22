@@ -39,7 +39,8 @@ import {
 	STATS_FIELD_RECENT_RESONANCE,
 	STATS_FIELD_TOTAL_RECIPES,
 	STATUS_IN_PROGRESS,
-	ERROR_PERMISSION_DENIED
+	ERROR_PERMISSION_DENIED,
+	ROLE_ADMIN
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
@@ -187,7 +188,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns true if the user is an administrator, otherwise false.
 	 */
 	public static userHasAllRights() {
-		return this.userRole === '管理员';
+		return this.userRole === ROLE_ADMIN;
 	}
 
 	/**

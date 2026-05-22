@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
 import { LOG } from './app.logs';
-import { CN } from './app.constant';
+import { CN, RATE_LABEL_EXCELLENT, RATE_LABEL_GOOD, RATE_LABEL_AVERAGE, RATE_LABEL_POOR } from './app.constant';
 import { CloudbaseService } from '../backend/database-service/cloudbase/cloudbase.service';
 
 @Injectable({ providedIn: 'root' })
@@ -27,7 +27,7 @@ export class Utilities {
 	 */
 	public isMobile() {
 		if (isPlatformBrowser(this.platformId)) {
-			return globalThis.innerWidth <= 840;
+			return globalThis.innerWidth <= 940;
 		}
 		return false;
 	}
@@ -218,6 +218,20 @@ export class Utilities {
 	 *
 	 * @param movieItemVO - The movie item to check.
 	 */
+	/**
+	 * Returns a human-readable label for a movie rate based on the app's four rate tiers.
+	 * Mirrors the ngClass thresholds used in the entertainment template.
+	 *
+	 * @param rate - The numeric movie rate.
+	 * @returns "Excellent" (≥9), "Good" (≥7.9), "Average" (≥7), or "Poor" (<7).
+	 */
+	public static getMovieRateLabel(rate: number): string {
+		if (rate >= 9) return RATE_LABEL_EXCELLENT;
+		if (rate >= 7.9) return RATE_LABEL_GOOD;
+		if (rate >= 7) return RATE_LABEL_AVERAGE;
+		return RATE_LABEL_POOR;
+	}
+
 	public static checkMovieItemVO(movieItemVO: MovieItemVO) {
 		if (movieItemVO.getMovieName() === '' || movieItemVO.getMovieYear() === -1) {
 			throw new Error('Movie item VO is invalid');

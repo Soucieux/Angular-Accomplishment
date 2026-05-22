@@ -365,23 +365,38 @@
 .individual-item {
 	min-width: var(--individual-item-width);
 	max-width: var(--individual-item-width);
+	position: relative;
 	background: rgba(255, 255, 255, 0.5);
 	border-radius: 20px;
-	border: 2px solid rgb(255, 255, 255);
-	box-shadow: 3px 3px 10px rgb(238, 240, 243);
+	border: 1.5px solid rgba(255, 255, 255, 0.75);
+	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
 	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
 	margin-bottom: 10px;
 	display: flex;
-	overflow: visible;
+	overflow: hidden;
+	transition:
+		box-shadow 0.28s ease,
+		transform 0.28s ease;
 }
 
 .individual-item:hover {
 	border: none;
-	box-shadow: none;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+	transform: translateY(-3px);
 
 	& .rate {
 		background: white;
 		color: black;
+	}
+
+	& .rate-label {
+		color: rgba(255, 255, 255, 0.85);
+	}
+
+	& .rate-divider,
+	& .buttons-group {
+		border-top-color: rgba(255, 255, 255, 0.25);
 	}
 }
 
@@ -399,33 +414,42 @@
 	width: 100%;
 }
 
-.individual-item.very-high-rate::before,
-.individual-item.very-high-rate .rate {
+/* Hover background gradients (::before sweep) */
+.individual-item.very-high-rate::before {
 	background: linear-gradient(-45deg, #e21f1f 0%, #e21f1f 100%);
 }
-
-.individual-item.high-rate::before,
-.individual-item.high-rate .rate {
+.individual-item.high-rate::before {
 	background: linear-gradient(-45deg, #f89b29 0%, #ff0f7b 100%);
 }
-
-.individual-item.medium-rate::before,
-.individual-item.medium-rate .rate {
+.individual-item.medium-rate::before {
 	background: linear-gradient(-45deg, #e8c602 0%, #e47a00 100%);
 }
-
-.individual-item.low-rate::before,
-.individual-item.low-rate .rate {
+.individual-item.low-rate::before {
 	background: linear-gradient(-45deg, #c5e50d 0%, #e8c602 100%);
+}
+
+/* Rate badge — solid colors */
+.individual-item.very-high-rate .rate {
+	background: #e21f1f;
+}
+.individual-item.high-rate .rate {
+	background: #f89b29;
+}
+.individual-item.medium-rate .rate {
+	background: #e8c602;
+	color: rgba(0, 0, 0, 0.75);
+}
+.individual-item.low-rate .rate {
+	background: #97b80a;
 }
 
 .image-container {
 	width: 180px;
-	height: 285px;
+	height: calc(100% - 20px);
+	min-height: 265px;
 	margin: 10px;
 
-	/* Stretch the image to the container */
-	background-size: 100% 100%;
+	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
 	border-radius: 10px;
@@ -451,13 +475,13 @@
 /* Default info: genre, episodes, year, 4 buttons — fades out to the right on image hover */
 .info-default {
 	position: relative;
-	height: 100%;
 	display: flex;
 	flex-direction: column;
 	gap: 5px;
 	transition:
 		transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
 		opacity 0.35s ease;
+	margin-right: 10px;
 }
 
 /* Hover info: description + actors. Sits in the same spot as info-default,
@@ -560,6 +584,38 @@
 	/* margin-top/bottom are now handled by .title-rate-row */
 }
 
+.rate-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding-right: 10px;
+}
+
+.rate-label {
+	font-weight: 600;
+	font-size: 17px;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.very-high-rate .rate-label {
+	color: #b81010;
+}
+.high-rate .rate-label {
+	color: #c96000;
+}
+.medium-rate .rate-label {
+	color: #9a7200;
+}
+.low-rate .rate-label {
+	color: #5a7a00;
+}
+
+.rate-divider {
+	width: calc(100% - 10px);
+	border-top: 1px solid rgba(0, 0, 0, 0.09);
+}
+
 .text {
 	font-family: 'cf';
 	font-size: 17px;
@@ -574,15 +630,15 @@
 	flex-shrink: 0;
 	width: fit-content;
 	white-space: nowrap;
-	font-size: 25px;
-	font-weight: 400;
+	font-size: 17px;
+	font-weight: 700;
 	line-height: 1;
-	display: flex;
+	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: 6px 14px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-	border-radius: 10px;
+	padding: 5px 10px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	border-radius: 6px;
 	color: white;
 	/* background is still set by .very-high-rate .rate / .high-rate .rate etc. */
 }
@@ -590,12 +646,15 @@
 .buttons-group {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	justify-content: center;
+	width: 100%;
 	flex-direction: row;
-	gap: 12px;
+	gap: 20px;
 
 	position: absolute;
 	bottom: 0px;
+	border-top: 1px solid rgba(0, 0, 0, 0.09);
+	padding-top: 10px;
 }
 
 .edit-button {
@@ -603,9 +662,13 @@
 	align-items: center;
 }
 
+.edit-button-icon {
+	font-size: 20px;
+}
+
 ::ng-deep .edit-button .p-button.p-button-text {
-	width: 38px;
-	height: 38px;
+	width: 30px;
+	height: 30px;
 	background-color: rgba(105, 102, 102, 0.41);
 }
 
@@ -620,12 +683,12 @@
 
 ::ng-deep .delete-button .p-button-icon {
 	color: white;
-	font-size: 20px;
+	font-size: 17px;
 }
 
 ::ng-deep .delete-button .p-button-danger {
-	width: 38px;
-	height: 38px;
+	width: 30px;
+	height: 30px;
 }
 
 .douban-button {
@@ -634,8 +697,8 @@
 }
 
 .douban-icon {
-	width: 32px; /* 👈 control size here */
-	height: 32px;
+	width: 28px;
+	height: 28px;
 	border-radius: 20%;
 }
 
@@ -655,12 +718,16 @@
 	width: 100px;
 }
 
+::ng-deep .favourite .p-button {
+	padding: 0 !important;
+}
+
 ::ng-deep .favourite .p-button.p-button-text:hover {
 	background-color: transparent;
 }
 
 ::ng-deep .favourite .p-button-icon {
-	font-size: 30px;
+	font-size: 28px;
 	color: yellow;
 }
 
@@ -695,19 +762,21 @@
 	.individual-item {
 		min-width: 0;
 		width: 100%;
-		height: 250px;
+		height: 270px;
 	}
 
 	.individual-item-content {
 		flex: 1;
 		width: auto;
 		min-width: 0;
-		row-gap: 0.5px;
+		row-gap: 6px;
+		letter-spacing: 1px;
 	}
 
 	.image-container {
-		width: 167px;
-		height: 230px;
+		width: 150px;
+		height: calc(100% - 20px);
+		min-height: 0;
 		flex-shrink: 0;
 	}
 
@@ -744,25 +813,30 @@
 	}
 
 	.buttons-group {
-		bottom: 5px;
-		gap: 20px !important;
+		margin-bottom: 10px;
+		width: 100%;
+		justify-content: space-around;
+		gap: 0;
 	}
 
 	.edit-button-icon {
-		font-size: 22px;
-	}
-
-	.text {
-		font-size: 18px;
+		font-size: 20px;
 	}
 
 	.rate {
-		font-size: 22px;
-		margin-top: 0px !important;
+		font-size: 15px;
+	}
+
+	.rate-label {
+		font-size: 15px;
+	}
+
+	.text {
+		font-size: 14px;
 	}
 
 	::ng-deep .favourite .p-button-icon {
-		font-size: 28px;
+		font-size: 23px;
 	}
 
 	::ng-deep .dropdown-panel .p-select-option {

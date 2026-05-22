@@ -77,16 +77,18 @@
 							[style.font-size]="calculateFontSize(movie.getMovieName().length)">
 							{{ movie.getMovieName() }}
 						</span>
+					</div>
+					<div class="rate-row">
 						@if (movie.getMovieRate()) {
-							<span class="rate">
-								{{ movie.getMovieRate().toFixed(1) }}
-							</span>
+							<span class="rate">{{ movie.getMovieRate().toFixed(1) }}</span>
+							<span class="rate-label">{{ getRateLabel(movie.getMovieRate()) }}</span>
 						} @else {
 							<span class="rate">{{ NO_RATE }}</span>
 						}
 					</div>
 					<div class="info-swap">
-						<div class="info-default">
+                        <div class="info-default">
+                            <div class="rate-divider"></div>
 							<span class="text"
 								>类型:
 								@if (editedItems.has(movie.getMovieKey())) {
@@ -107,7 +109,6 @@
 							<div class="buttons-group">
 								<a
 									class="douban-button"
-									severity="danger"
 									[href]="'https://movie.douban.com/subject/' + movie.getMovieId()"
 									target="_blank"
 									rel="noopener noreferrer"

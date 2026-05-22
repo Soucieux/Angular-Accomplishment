@@ -359,12 +359,8 @@
 	animation: cardReveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 .recipe-card:hover {
-	transform: translateY(-5px) scale(1.01);
-	box-shadow:
-		0 4px 8px rgba(0, 0, 0, 0.05),
-		0 16px 32px rgba(213, 51, 105, 0.09),
-		0 32px 48px rgba(0, 0, 0, 0.04);
-	border-color: rgba(213, 51, 105, 0.12);
+	transform: translateY(-3px);
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
 }
 
 /* Left vertical colour strip — spans both content rows */
@@ -717,7 +713,7 @@
 .detail-grid {
 	display: grid;
 	grid-template-columns: 38% 1fr;
-	gap: 32px;
+	gap: 15px;
 	align-items: stretch;
 }
 
@@ -1260,6 +1256,7 @@
 	font-family: 'nlf', 'cf', serif;
 	font-size: 18px;
 	font-weight: 500;
+	background: #fff;
 }
 .notes-header .material-symbols-outlined {
 	color: var(--gold);
@@ -1892,24 +1889,80 @@
 	flex: 1;
 	min-width: 0;
 }
+.ing-qty-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: none;
+}
 .ing-row .qty {
-	width: 60px;
+	width: 5ch;
 	text-align: right;
 	color: var(--rose);
+	font-size: 15px;
 	font-variant-numeric: tabular-nums;
 }
-.ing-row .unit {
-	width: 76px;
-	color: var(--ink-muted);
-	font-size: 13px;
-	transition: border-color 0.2s ease, background 0.2s ease;
+/* ── Unit AutoComplete ───────────────────────────────────────── */
+/* Host element width — no encapsulation issue, applied by Angular to the host */
+.unit-ac {
+	width: 62px;
+	overflow: visible;
 }
-.ing-row .unit.required {
-	border-color: var(--rose) !important;
-	background: rgba(213, 51, 105, 0.04);
+/* PrimeNG renders its internals in its own template → must use ::ng-deep */
+::ng-deep .unit-ac .p-autocomplete-input {
+	border: none !important;
+	border-bottom: 1px solid rgba(30, 15, 35, 0.18) !important;
+	outline: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	border-radius: 0 !important;
+	padding: 4px 2px !important;
+	font-family: 'nlf', 'cf', sans-serif !important;
+	font-size: 13px !important;
+	color: var(--ink-muted) !important;
+	width: 62px !important;
+	transition: border-color 0.2s ease !important;
 }
-.ing-row .unit.required::placeholder {
-	color: rgba(213, 51, 105, 0.65);
+::ng-deep .unit-ac .p-autocomplete-input::placeholder {
+	color: rgba(30, 15, 35, 0.35) !important;
+	font-family: 'nlf', 'cf', sans-serif !important;
+}
+::ng-deep .unit-ac.required .p-autocomplete-input {
+	border-bottom: 1px solid var(--rose) !important;
+	background: rgba(213, 51, 105, 0.04) !important;
+}
+::ng-deep .unit-ac.required .p-autocomplete-input::placeholder {
+	color: rgba(213, 51, 105, 0.65) !important;
+}
+/* Overlay panel — appended to body, needs ::ng-deep */
+::ng-deep .unit-ac-panel {
+	font-family: 'nlf', 'cf', sans-serif !important;
+	background: #fff !important;
+	border: 1px solid rgba(213, 51, 105, 0.15) !important;
+	border-radius: 12px !important;
+	box-shadow: 0 8px 28px rgba(0, 0, 0, 0.11) !important;
+	overflow: hidden !important;
+	padding: 5px !important;
+	min-width: 120px !important;
+}
+::ng-deep .unit-ac-panel .p-autocomplete-list {
+	padding: 0 !important;
+}
+::ng-deep .unit-ac-panel .p-autocomplete-option {
+	font-family: 'nlf', 'cf', sans-serif !important;
+	font-size: 13px !important;
+	font-weight: 400 !important;
+	color: #1a1a1a !important;
+	padding: 7px 11px !important;
+	border-radius: 8px !important;
+	cursor: pointer !important;
+	transition: background 0.15s ease, color 0.15s ease !important;
+	letter-spacing: 0.01em !important;
+}
+::ng-deep .unit-ac-panel .p-autocomplete-option:hover,
+::ng-deep .unit-ac-panel .p-autocomplete-option[data-p-focused='true'] {
+	background: rgba(213, 51, 105, 0.08) !important;
+	color: #d53369 !important;
 }
 .ing-row .remove,
 .step-card .remove,

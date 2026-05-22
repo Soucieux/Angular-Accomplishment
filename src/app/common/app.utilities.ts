@@ -397,6 +397,18 @@ export class Utilities {
 	}
 
 	/**
+	 * Return true if the given string represents a finite number.
+	 * Useful for hiding numeric-only unit fields that carry no semantic meaning
+	 * (e.g. a user who typed "1" as a unit placeholder).
+	 *
+	 * @param value - The string to test.
+	 * @returns true if the trimmed string is a finite numeric value.
+	 */
+	public static isNumericString(value: string): boolean {
+		return value.trim() !== '' && isFinite(Number(value));
+	}
+
+	/**
 	 * Compute how many days remain until a `YYYY-MM-DD` date string, returning
 	 * a short human-readable label ("Today", "Tomorrow", "in Xd", or "Xd overdue").
 	 *

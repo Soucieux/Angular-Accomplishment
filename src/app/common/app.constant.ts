@@ -260,6 +260,7 @@ export const RECIPE_DROP_ABOVE = 'above';
 export const RECIPE_DROP_BELOW = 'below';
 
 // ── Recipe — log / toast messages ────────────────────────────────────────
+export const RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = 'Some ingredients have a quantity but are missing a unit.';
 export const RECIPE_MSG_LOAD_FAILED = 'Failed to load recipes';
 export const RECIPE_MSG_ADDED = 'Recipe saved';
 export const RECIPE_MSG_UPDATED = 'Recipe updated';

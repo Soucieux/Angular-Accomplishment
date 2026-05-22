@@ -131,16 +131,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected editorSteps: EditorStep[] = [];
 	protected editorNameInvalid = false;
 	protected editorCategoryInvalid = false;
-
-	/**
-	 * True when any named ingredient has a quantity but no unit.
-	 * Evaluated as a getter so it clears automatically as the user fixes fields.
-	 *
-	 * @returns Whether any ingredient is missing a required unit.
-	 */
-	protected get editorIngredientInvalid(): boolean {
-		return this.editorIngredients.some((i) => i.name.trim() && i.qty && !i.unit.trim());
-	}
+	/** True only after a failed save attempt where a named ingredient has qty but no unit. */
+	protected editorIngredientInvalid = false;
 
 	/** Exposes the unit-required message to the template. */
 	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
@@ -322,15 +314,13 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Scale a base ingredient quantity to the current servings count and return
 	 * only the numeric portion as a formatted string, without the unit.
+	 * Delegates to {@link formatQty} with an empty unit string.
 	 *
 	 * @param base - The base quantity for one serving.
 	 * @returns The scaled quantity string, or an empty string if not applicable.
 	 */
 	protected formatQtyNum(base: number): string {
-		if (!this.activeRecipe) return '';
-		if (!base) return '';
-		const scaled = base * (this.servings / this.activeRecipe.baseServings);
-		return scaled === Math.round(scaled) ? String(scaled) : scaled.toFixed(1).replace(/\.0$/, '');
+		return this.formatQty(base, '');
 	}
 
 	/**
@@ -471,6 +461,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.editorNotes = recipe.notes;
 		this.editorNameInvalid = false;
 		this.editorCategoryInvalid = false;
+		this.editorIngredientInvalid = false;
 
 		this.editorIngredients = recipe.groups.flatMap((g) =>
 			g.items.map((item) => ({
@@ -576,6 +567,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		];
 		this.editorNameInvalid = false;
 		this.editorCategoryInvalid = false;
+		this.editorIngredientInvalid = false;
 	}
 
 	/**
@@ -636,11 +628,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Remove an ingredient row from the editor list.
+	 * Also clears the unit-invalid flag if the removal resolves all violations.
 	 *
 	 * @param ing - The ingredient row to remove.
 	 */
 	protected removeEditorIngredient(ing: EditorIngredient): void {
 		this.editorIngredients = this.editorIngredients.filter((i) => i !== ing);
+		if (this.editorIngredientInvalid && !this.hasIngredientUnitViolation) {
+			this.editorIngredientInvalid = false;
+		}
 	}
 
 	/**
@@ -727,6 +723,27 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
+	 * True when at least one named ingredient has a quantity but no unit.
+	 * Single source of truth used by saveRecipe, onEditorUnitInput, and removeEditorIngredient.
+	 *
+	 * @returns Whether any ingredient violates the qty-requires-unit rule.
+	 */
+	private get hasIngredientUnitViolation(): boolean {
+		return this.editorIngredients.some((i) => i.name.trim() && i.qty && !i.unit.trim());
+	}
+
+	/**
+	 * Clear the ingredient-unit-invalid flag once the user has resolved all
+	 * qty-without-unit violations, so the error disappears as soon as the last
+	 * missing unit is filled in.
+	 */
+	protected onEditorUnitInput(): void {
+		if (this.editorIngredientInvalid && !this.hasIngredientUnitViolation) {
+			this.editorIngredientInvalid = false;
+		}
+	}
+
+	/**
 	 * Validate and persist the current editor state as a new or updated recipe.
 	 * Marks required fields invalid and returns early if validation fails.
 	 * Also blocks save if any ingredient has a quantity without a unit.
@@ -736,11 +753,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected async saveRecipe(): Promise<void> {
 		this.editorNameInvalid = !this.editorName.trim();
 		this.editorCategoryInvalid = !this.editorCategory;
-		if (this.editorNameInvalid || this.editorCategoryInvalid) return;
-
-		// Block save if any named ingredient has a quantity but no unit.
-		// The getter also drives the field-error message in the template.
-		if (this.editorIngredientInvalid) return;
+		this.editorIngredientInvalid = this.hasIngredientUnitViolation;
+		if (this.editorNameInvalid || this.editorCategoryInvalid || this.editorIngredientInvalid) return;
 
 		const validIngredients = this.editorIngredients.filter((i) => i.name.trim());
 

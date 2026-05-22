@@ -337,7 +337,8 @@
 												[class.required]="it.qty && !it.unit"
 												type="text"
 												placeholder="unit *"
-												[(ngModel)]="it.unit" />
+												[(ngModel)]="it.unit"
+												(input)="onEditorUnitInput()" />
 											<button class="remove" title="Remove" (click)="removeEditorIngredient(it)">×</button>
 										</div>
 									}

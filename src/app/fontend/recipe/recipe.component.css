@@ -1064,9 +1064,23 @@
 	font-size: 17px;
 }
 .iqty {
-	color: var(--ink-muted);
-	font-size: 17px;
+	display: inline-flex;
+	align-items: baseline;
+	gap: 3px;
+	background: rgba(213, 51, 105, 0.07);
+	border-radius: 6px;
+	padding: 2px 8px;
 	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.iqty-num {
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--rose);
+}
+.iqty-unit {
+	font-size: 12px;
+	color: var(--ink-muted);
 }
 
 /* ── Steps ─────────────────────────────────────────────────────── */
@@ -1888,6 +1902,14 @@
 	width: 76px;
 	color: var(--ink-muted);
 	font-size: 13px;
+	transition: border-color 0.2s ease, background 0.2s ease;
+}
+.ing-row .unit.required {
+	border-color: var(--rose) !important;
+	background: rgba(213, 51, 105, 0.04);
+}
+.ing-row .unit.required::placeholder {
+	color: rgba(213, 51, 105, 0.65);
 }
 .ing-row .remove,
 .step-card .remove,

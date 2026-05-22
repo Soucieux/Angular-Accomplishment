@@ -50,6 +50,7 @@ import {
 	RECIPE_MSG_DELETE_FAILED,
 	RECIPE_MSG_DELETE_FAILED_DETAIL,
 	RECIPE_MSG_DELETED,
+	RECIPE_MSG_INGREDIENT_UNIT_REQUIRED,
 	RECIPE_MSG_LOAD_FAILED,
 	RECIPE_MSG_SAVE_FAILED,
 	RECIPE_MSG_SAVE_FAILED_DETAIL,
@@ -130,6 +131,19 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected editorSteps: EditorStep[] = [];
 	protected editorNameInvalid = false;
 	protected editorCategoryInvalid = false;
+
+	/**
+	 * True when any named ingredient has a quantity but no unit.
+	 * Evaluated as a getter so it clears automatically as the user fixes fields.
+	 *
+	 * @returns Whether any ingredient is missing a required unit.
+	 */
+	protected get editorIngredientInvalid(): boolean {
+		return this.editorIngredients.some((i) => i.name.trim() && i.qty && !i.unit.trim());
+	}
+
+	/** Exposes the unit-required message to the template. */
+	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
 	protected editorCategoryOpen = false;
 	protected editingMode: 'create' | 'edit' = RECIPE_EDITING_MODE_CREATE;
 	private editingRecipeId: string | null = null;
@@ -306,6 +320,20 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
+	 * Scale a base ingredient quantity to the current servings count and return
+	 * only the numeric portion as a formatted string, without the unit.
+	 *
+	 * @param base - The base quantity for one serving.
+	 * @returns The scaled quantity string, or an empty string if not applicable.
+	 */
+	protected formatQtyNum(base: number): string {
+		if (!this.activeRecipe) return '';
+		if (!base) return '';
+		const scaled = base * (this.servings / this.activeRecipe.baseServings);
+		return scaled === Math.round(scaled) ? String(scaled) : scaled.toFixed(1).replace(/\.0$/, '');
+	}
+
+	/**
 	 * Scale a base ingredient quantity to the current servings count and format
 	 * it as a human-readable string with the unit appended.
 	 *
@@ -320,6 +348,17 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const rounded =
 			scaled === Math.round(scaled) ? String(scaled) : scaled.toFixed(1).replace(/\.0$/, '');
 		return unit ? `${rounded} ${unit}` : rounded;
+	}
+
+	/**
+	 * Return true if the given unit string is purely numeric and therefore
+	 * carries no semantic meaning for the user (e.g. "1" entered as a placeholder).
+	 *
+	 * @param unit - The unit label to test.
+	 * @returns true if the unit is a numeric string and should be hidden.
+	 */
+	protected isNumericUnit(unit: string): boolean {
+		return Utilities.isNumericString(unit);
 	}
 
 	/**
@@ -690,6 +729,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Validate and persist the current editor state as a new or updated recipe.
 	 * Marks required fields invalid and returns early if validation fails.
+	 * Also blocks save if any ingredient has a quantity without a unit.
 	 * On success, writes to the database and navigates back to the list view.
 	 * The recipe watcher keeps the local list in sync automatically.
 	 */
@@ -697,6 +737,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.editorNameInvalid = !this.editorName.trim();
 		this.editorCategoryInvalid = !this.editorCategory;
 		if (this.editorNameInvalid || this.editorCategoryInvalid) return;
+
+		// Block save if any named ingredient has a quantity but no unit.
+		// The getter also drives the field-error message in the template.
+		if (this.editorIngredientInvalid) return;
 
 		const validIngredients = this.editorIngredients.filter((i) => i.name.trim());
 

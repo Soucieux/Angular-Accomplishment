@@ -149,7 +149,14 @@
 										<div class="irow" [class]="g.type">
 											<span class="dot"></span>
 											<span class="iname">{{ it.name }}</span>
-											<span class="iqty">{{ formatQty(it.baseQty, it.unit) }}</span>
+											@if (formatQtyNum(it.baseQty)) {
+												<span class="iqty">
+													<span class="iqty-num">{{ formatQtyNum(it.baseQty) }}</span>
+													@if (it.unit && !isNumericUnit(it.unit)) {
+														<span class="iqty-unit">{{ it.unit }}</span>
+													}
+												</span>
+											}
 										</div>
 									}
 								</div>
@@ -274,6 +281,12 @@
 						Please select a category before saving.
 					</p>
 				}
+				@if (editorIngredientInvalid) {
+					<p class="field-error">
+						<span class="material-symbols-outlined">error</span>
+						{{ RECIPE_MSG_INGREDIENT_UNIT_REQUIRED }}
+					</p>
+				}
 			</div>
 
 			<div class="detail-grid">
@@ -321,8 +334,9 @@
 												[(ngModel)]="it.qty" />
 											<input
 												class="unit"
+												[class.required]="it.qty && !it.unit"
 												type="text"
-												placeholder="unit"
+												placeholder="unit *"
 												[(ngModel)]="it.unit" />
 											<button class="remove" title="Remove" (click)="removeEditorIngredient(it)">×</button>
 										</div>

@@ -145,7 +145,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 			});
 			this.categoriesSub = this.databaseService.getLinkCategories().subscribe({
 				next: (data) => {
-					this.categories = [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+					this.categories = Utilities.sortByOrder(data);
 					this.cdr.markForCheck();
 				},
 				error: (err) => {
@@ -339,16 +339,6 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Build a Google favicon URL for the given link URL.
-	 *
-	 * @param url - The full URL of the website.
-	 * @returns A favicon image URL string.
-	 */
-	protected getFavicon(url: string): string {
-		return Utilities.getFavicon(url);
-	}
-
-	/**
 	 * Called when a link favicon image fails to load.
 	 * Marks the link for initial-letter fallback display and logs a warning.
 	 */
@@ -409,7 +399,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 		this.editingLink = link;
 		this.linkDialogTitle = NEXUS_DIALOG_TITLE_EDIT_LINK;
 		this.linkForm = { url: link.url, title: link.title, category: link.category ?? '' };
-		this.linkFaviconPreview = this.getFavicon(link.url);
+		this.linkFaviconPreview = Utilities.getFavicon(link.url);
 		this.showLinkDialog = true;
 	}
 
@@ -422,7 +412,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 		if (!raw) return;
 		const url = Utilities.normalizeUrl(raw);
 		this.linkForm.url = url; // write back so the input shows the normalized value
-		this.linkFaviconPreview = this.getFavicon(url);
+		this.linkFaviconPreview = Utilities.getFavicon(url);
 		if (this.linkForm.title) return; // don't overwrite existing title
 		this.linkMetaLoading = true;
 		this.databaseService

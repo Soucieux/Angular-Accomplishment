@@ -1,6 +1,12 @@
 import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import {
+	ERROR_DIALOG_BTN_LABEL,
+	ERROR_DIALOG_HEADER,
+	ERROR_DIALOG_ICON_CLASS,
+	ERROR_DIALOG_MSG_CLASS
+} from '../../../common/app.constant';
 
 @Component({
 	selector: 'error-dialog',
@@ -16,7 +22,6 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 export class ErrorDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private confirmationService = inject(ConfirmationService);
-	constructor() {}
 	/**
 	 * Open an error dialog displaying the given error message.
 	 *
@@ -24,12 +29,12 @@ export class ErrorDialogComponent {
 	 */
 	public openDialog(errorMessage: string) {
 		this.confirmationService.confirm({
-			message: `<div class="error-dialog-message">${errorMessage}</div>`,
-			header: 'Error',
-			icon: 'pi pi-times-circle text-red-500',
+			message: `<div class="${ERROR_DIALOG_MSG_CLASS}">${errorMessage}</div>`,
+			header: ERROR_DIALOG_HEADER,
+			icon: ERROR_DIALOG_ICON_CLASS,
 			rejectVisible: false,
 			acceptButtonProps: {
-				label: 'OK',
+				label: ERROR_DIALOG_BTN_LABEL,
 				severity: 'danger',
 				style: { width: '100px' }
 			}

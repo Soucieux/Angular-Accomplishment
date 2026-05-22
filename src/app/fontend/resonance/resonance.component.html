@@ -27,7 +27,7 @@
 			</div>
 		}
 		@if (isOverLimit) {
-			<p class="char-warning">Your quote exceeds 500 characters. Please shorten it before posting.</p>
+			<p class="char-warning">Your quote exceeds {{ maxQuoteLength }} characters. Please shorten it before posting.</p>
 		}
 		<div class="submit-footer">
 			<span class="char-count" [class.over-limit]="isOverLimit">{{ newQuoteText.length }} / {{ maxQuoteLength }}</span>

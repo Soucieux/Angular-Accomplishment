@@ -1,10 +1,16 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { MessageService } from 'primeng/api';
+
+import { CN } from './common/app.constant';
+import { Utilities } from './common/app.utilities';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			imports: [AppComponent]
+			imports: [AppComponent],
+			providers: [provideRouter([]), MessageService]
 		}).compileComponents();
 	});
 
@@ -14,18 +20,20 @@ describe('AppComponent', () => {
 		expect(app).toBeTruthy();
 	});
 
-	it(`should have the 'My-Own-Website' title`, () => {
-		const fixture = TestBed.createComponent(AppComponent);
-		const app = fixture.componentInstance;
-		// expect(app.title).toEqual('My-Own-Website');
-	});
+	// ── isCN ───────────────────────────────────────────────────────────────
 
-	it('should render title', () => {
-		const fixture = TestBed.createComponent(AppComponent);
-		fixture.detectChanges();
-		const compiled = fixture.nativeElement as HTMLElement;
-		expect(compiled.querySelector('h1')?.textContent).toContain(
-			'Hello, My-Own-Website'
-		);
+	describe('isCN', () => {
+		it('returns true when the current country is CN', () => {
+			// Create the component first so ngOnInit fires before the spy is in place.
+			const fixture = TestBed.createComponent(AppComponent);
+			spyOn(Utilities, 'getCurrentCountry').and.returnValue(CN);
+			expect((fixture.componentInstance as any).isCN()).toBeTrue();
+		});
+
+		it('returns false when the current country is not CN', () => {
+			const fixture = TestBed.createComponent(AppComponent);
+			spyOn(Utilities, 'getCurrentCountry').and.returnValue('US');
+			expect((fixture.componentInstance as any).isCN()).toBeFalse();
+		});
 	});
 });

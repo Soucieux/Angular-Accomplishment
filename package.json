@@ -25,7 +25,7 @@
 		"@angular/ssr": "^21.2.3",
 		"@cloudbase/js-sdk": "^2.25.7",
 		"@cloudbase/types": "^2.25.9",
-		"@primeng/themes": "^20.2.0",
+		"@primeuix/themes": "^2.0.3",
 		"bootstrap": "^5.3.2",
 		"date-fns": "^4.1.0",
 		"firebase": "^11.10.0",

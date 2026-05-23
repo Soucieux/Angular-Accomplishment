@@ -10,7 +10,7 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
-import Aura from '@primeng/themes/aura';
+import Aura from '@primeuix/themes/aura';
 export const appConfig: ApplicationConfig = {
 	providers: [
 		provideRouter(routes),

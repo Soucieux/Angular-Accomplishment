@@ -2433,37 +2433,6 @@
 		padding: 16px 18px 20px;
 	}
 
-	/* Mobile card: switch to top-band layout */
-	.recipe-card {
-		grid-template-columns: 1fr;
-		grid-template-rows: 88px 1fr auto;
-		min-height: auto;
-	}
-	.recipe-card .band {
-		grid-row: 1;
-		grid-column: 1;
-		height: 88px;
-	}
-	.recipe-card .body {
-		grid-row: 2;
-		grid-column: 1;
-		padding: 14px 16px 8px;
-	}
-	.recipe-card .view-recipe {
-		grid-row: 3;
-		grid-column: 1;
-	}
-	.category-tag {
-		transform: translate(-50%, -50%);
-	}
-	.skeleton-band {
-		height: 88px;
-		width: 100%;
-	}
-	.recipe-card .name {
-		font-size: 17px;
-	}
-
 	/* Grid: smaller minimum for narrow phones */
 	.grid {
 		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

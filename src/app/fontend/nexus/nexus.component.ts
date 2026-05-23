@@ -50,8 +50,6 @@ import {
 	NEXUS_MSG_NO_AI_SELECTED_DETAIL,
 	NEXUS_MSG_SAVE_FAILED,
 	NEXUS_DEFAULT_CATEGORY_COLOR,
-	NEXUS_STORAGE_KEY_HISTORY,
-	NEXUS_STORAGE_KEY_SELECTED_AIS,
 	TOAST_ERROR,
 	TOAST_INFO,
 	TOAST_SUCCESS,
@@ -69,8 +67,6 @@ import { AiTool, NEXUS_CLIPBOARD_TOOLS, NEXUS_DIRECT_TOOLS, NEXUS_LOGO_FALLBACK_
 })
 export class NexusComponent implements OnInit, OnDestroy {
 	private readonly className = 'NexusComponent';
-	private readonly SELECTED_AIS_KEY = NEXUS_STORAGE_KEY_SELECTED_AIS;
-	private readonly HISTORY_KEY = NEXUS_STORAGE_KEY_HISTORY;
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	private dialogComponentContainer!: ViewContainerRef;
@@ -129,8 +125,6 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 */
 	public ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			this.restoreSelectedAis();
-			this.loadHistory();
 			this.linksSub = this.databaseService.getUsefulLinks().subscribe({
 				next: (data) => {
 					this.links = data;
@@ -192,37 +186,12 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Restore selected AI chips from localStorage.
-	 */
-	private restoreSelectedAis(): void {
-		try {
-			const saved = localStorage.getItem(this.SELECTED_AIS_KEY);
-			if (!saved) return;
-			const ids: string[] = JSON.parse(saved);
-			[...this.directTools, ...this.clipboardTools].forEach((t) => {
-				t.selected = ids.includes(t.id);
-			});
-		} catch {
-			// ignore parse errors
-		}
-	}
-
-	/**
-	 * Persist selected AI chip IDs to localStorage.
-	 */
-	private persistSelectedAis(): void {
-		const ids = [...this.directTools, ...this.clipboardTools].filter((t) => t.selected).map((t) => t.id);
-		localStorage.setItem(this.SELECTED_AIS_KEY, JSON.stringify(ids));
-	}
-
-	/**
-	 * Toggle the selected state of an AI chip and persist the new selection.
+	 * Toggle the selected state of an AI chip.
 	 *
 	 * @param tool - The AI tool whose selected flag should be flipped.
 	 */
 	protected toggleAi(tool: AiTool): void {
 		tool.selected = !tool.selected;
-		this.persistSelectedAis();
 	}
 
 	/**
@@ -251,8 +220,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Prepend a new entry to the in-memory history array and persist the
-	 * updated list to localStorage, keeping at most 50 entries.
+	 * Prepend a new entry to the in-memory history array, keeping at most 50 entries.
 	 *
 	 * @param query - The search query string that was launched.
 	 * @param aiIds - The IDs of the AI tools that were used for the query.
@@ -260,20 +228,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	private saveToHistory(query: string, aiIds: string[]): void {
 		const entry: SearchHistoryEntry = { query, aiIds, timestamp: new Date().toISOString() };
 		this.history = [entry, ...this.history].slice(0, 50);
-		localStorage.setItem(this.HISTORY_KEY, JSON.stringify(this.history));
 		this.cdr.markForCheck();
-	}
-
-	/**
-	 * Load search history from localStorage on init.
-	 */
-	private loadHistory(): void {
-		try {
-			const raw = localStorage.getItem(this.HISTORY_KEY);
-			this.history = raw ? JSON.parse(raw) : [];
-		} catch {
-			this.history = [];
-		}
 	}
 
 	/**
@@ -287,16 +242,14 @@ export class NexusComponent implements OnInit, OnDestroy {
 		[...this.directTools, ...this.clipboardTools].forEach((t) => {
 			t.selected = entry.aiIds.includes(t.id);
 		});
-		this.persistSelectedAis();
 		this.onLaunch();
 	}
 
 	/**
-	 * Clear all search history from localStorage and the view.
+	 * Clear all search history from the in-memory list.
 	 */
 	protected clearHistory(): void {
 		this.history = [];
-		localStorage.removeItem(this.HISTORY_KEY);
 		this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_HISTORY_CLEARED, NEXUS_MSG_HISTORY_CLEARED_DETAIL);
 		this.cdr.markForCheck();
 	}

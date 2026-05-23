@@ -66,4 +66,5 @@
 - Format: `R1 - <Area> - <Description>`
 - Areas: Entertainment, Home, Nexus, Patch Notes, Login, Recipe, Reminder, Resonance, About, All Pages
 - One concise line only — no multi-line body
+- **Maximum 70 characters total (including spaces) — no exceptions**
 - After every commit: add entry to the patch notes page in the same session

@@ -1,5 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, flushMicrotasks, TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
+import { of } from 'rxjs';
 
 import {
 	STATUS_COMPLETED,
@@ -9,6 +10,7 @@ import {
 	STATUS_RESOLVED,
 	STATUS_TODO
 } from '../../common/app.constant';
+import { DatabaseService } from '../../backend/database-service/database.service';
 import { PatchComponent } from './patch.component';
 
 describe('PatchComponent', () => {
@@ -199,12 +201,12 @@ describe('PatchComponent', () => {
 	// ── getSeverityIcon ────────────────────────────────────────────────────
 
 	describe('getSeverityIcon', () => {
-		it('returns hourglass icon for To Do', () => {
-			expect((component as any).getSeverityIcon(STATUS_TODO)).toBe('pi pi-hourglass');
+		it('returns clock icon for To Do', () => {
+			expect((component as any).getSeverityIcon(STATUS_TODO)).toBe('pi pi-clock');
 		});
 
-		it('returns play icon for In Progress', () => {
-			expect((component as any).getSeverityIcon(STATUS_IN_PROGRESS)).toBe('pi pi-play');
+		it('returns play-circle icon for In Progress', () => {
+			expect((component as any).getSeverityIcon(STATUS_IN_PROGRESS)).toBe('pi pi-play-circle');
 		});
 
 		it('returns verified icon for Completed', () => {
@@ -215,18 +217,19 @@ describe('PatchComponent', () => {
 			expect((component as any).getSeverityIcon(STATUS_RESOLVED)).toBe('pi pi-verified');
 		});
 
-		it('returns exclamation icon for Debug', () => {
-			expect((component as any).getSeverityIcon(STATUS_DEBUG)).toBe('pi pi-exclamation-triangle');
+		it('returns exclamation-circle icon for Debug', () => {
+			expect((component as any).getSeverityIcon(STATUS_DEBUG)).toBe('pi pi-exclamation-circle');
 		});
 
-		it('returns pencil icon for Draft', () => {
-			expect((component as any).getSeverityIcon(STATUS_DRAFT)).toBe('pi pi-pencil');
+		it('returns file-edit icon for Draft', () => {
+			expect((component as any).getSeverityIcon(STATUS_DRAFT)).toBe('pi pi-file-edit');
 		});
 
 		it('returns undefined for an unknown status', () => {
 			expect((component as any).getSeverityIcon('Unknown')).toBeUndefined();
 		});
 	});
+
 
 	// ── isInSameComponentGroup ─────────────────────────────────────────────
 
@@ -291,4 +294,68 @@ describe('PatchComponent', () => {
 			expect(option.label).toBe('Home');
 		});
 	});
+});
+
+describe('PatchComponent — submitNewRecord isBug derivation', () => {
+	let component: PatchComponent;
+	let mockDb: jasmine.SpyObj<DatabaseService>;
+
+	beforeEach(async () => {
+		mockDb = jasmine.createSpyObj('DatabaseService', [
+			'getPatchNotes',
+			'addNewRecordToPatchNotes',
+			'appendToPatchActivityLog',
+			'updateExistingRecordToPatchNotes',
+			'removePatchNote'
+		]);
+		mockDb.getPatchNotes.and.returnValue(of([]));
+		mockDb.addNewRecordToPatchNotes.and.returnValue(Promise.resolve());
+		mockDb.appendToPatchActivityLog.and.returnValue(Promise.resolve());
+
+		await TestBed.configureTestingModule({
+			imports: [PatchComponent],
+			providers: [
+				MessageService,
+				{ provide: DatabaseService, useValue: mockDb }
+			]
+		}).compileComponents();
+
+		const fixture = TestBed.createComponent(PatchComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
+
+	/**
+	 * Calls submitNewRecord with a given status inside fakeAsync and flushes
+	 * microtasks so the .then() chain runs synchronously.
+	 *
+	 * @param statusValue - The status severity string to submit.
+	 * @returns The activity log snapshot passed to appendToPatchActivityLog.
+	 */
+	function submitWithStatus(statusValue: string): any {
+		let capturedSnapshot: any;
+		mockDb.appendToPatchActivityLog.and.callFake((s: any) => {
+			capturedSnapshot = s;
+			return Promise.resolve();
+		});
+		(component as any).newRecord = {
+			key: '', component: 'Home', element: 'Test', details: 'Detail',
+			status: statusValue, timestamp: '', isBug: false
+		};
+		(component as any).submitNewRecord();
+		flushMicrotasks();
+		return capturedSnapshot;
+	}
+
+	it('sets isBug true when status is Debug', fakeAsync(() => {
+		expect(submitWithStatus(STATUS_DEBUG).isBug).toBeTrue();
+	}));
+
+	it('sets isBug true when status is Resolved', fakeAsync(() => {
+		expect(submitWithStatus(STATUS_RESOLVED).isBug).toBeTrue();
+	}));
+
+	it('sets isBug false when status is a feature status', fakeAsync(() => {
+		expect(submitWithStatus(STATUS_TODO).isBug).toBeFalse();
+	}));
 });

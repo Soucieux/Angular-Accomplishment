@@ -90,6 +90,8 @@
 	overflow-y: auto;
 	overflow-x: hidden;
 	padding-top: 2px;
+	margin-left: -16px;
+	padding-left: 16px;
 	margin-right: -32px;
 	padding-right: 32px;
 	scrollbar-width: thin;
@@ -142,8 +144,15 @@
 	}
 }
 @keyframes chipPulse {
-	0%, 100% { box-shadow: 0 4px 12px rgba(213, 51, 105, 0.25); }
-	50%       { box-shadow: 0 4px 22px rgba(213, 51, 105, 0.48), 0 0 0 3px rgba(213, 51, 105, 0.1); }
+	0%,
+	100% {
+		box-shadow: 0 4px 12px rgba(213, 51, 105, 0.25);
+	}
+	50% {
+		box-shadow:
+			0 4px 22px rgba(213, 51, 105, 0.48),
+			0 0 0 3px rgba(213, 51, 105, 0.1);
+	}
 }
 
 /* ── View transition ───────────────────────────────────────────── */
@@ -290,7 +299,7 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 10px;
-	margin: 22px 0 28px 14px;
+	margin: 22px 0 28px;
 }
 .chip {
 	height: 34px;
@@ -327,18 +336,42 @@
 }
 
 /* Staggered entrance for up to 12 cards */
-.grid .recipe-card:nth-child(1)  { animation-delay:   0ms; }
-.grid .recipe-card:nth-child(2)  { animation-delay:  55ms; }
-.grid .recipe-card:nth-child(3)  { animation-delay: 110ms; }
-.grid .recipe-card:nth-child(4)  { animation-delay: 165ms; }
-.grid .recipe-card:nth-child(5)  { animation-delay: 220ms; }
-.grid .recipe-card:nth-child(6)  { animation-delay: 275ms; }
-.grid .recipe-card:nth-child(7)  { animation-delay: 330ms; }
-.grid .recipe-card:nth-child(8)  { animation-delay: 385ms; }
-.grid .recipe-card:nth-child(9)  { animation-delay: 440ms; }
-.grid .recipe-card:nth-child(10) { animation-delay: 495ms; }
-.grid .recipe-card:nth-child(11) { animation-delay: 550ms; }
-.grid .recipe-card:nth-child(12) { animation-delay: 605ms; }
+.grid .recipe-card:nth-child(1) {
+	animation-delay: 0ms;
+}
+.grid .recipe-card:nth-child(2) {
+	animation-delay: 55ms;
+}
+.grid .recipe-card:nth-child(3) {
+	animation-delay: 110ms;
+}
+.grid .recipe-card:nth-child(4) {
+	animation-delay: 165ms;
+}
+.grid .recipe-card:nth-child(5) {
+	animation-delay: 220ms;
+}
+.grid .recipe-card:nth-child(6) {
+	animation-delay: 275ms;
+}
+.grid .recipe-card:nth-child(7) {
+	animation-delay: 330ms;
+}
+.grid .recipe-card:nth-child(8) {
+	animation-delay: 385ms;
+}
+.grid .recipe-card:nth-child(9) {
+	animation-delay: 440ms;
+}
+.grid .recipe-card:nth-child(10) {
+	animation-delay: 495ms;
+}
+.grid .recipe-card:nth-child(11) {
+	animation-delay: 550ms;
+}
+.grid .recipe-card:nth-child(12) {
+	animation-delay: 605ms;
+}
 
 /* Horizontal editorial card — band strip on left, content on right */
 .recipe-card {
@@ -1066,7 +1099,7 @@
 .iqty {
 	display: inline-flex;
 	align-items: baseline;
-	gap: 3px;
+	gap: 5px;
 	background: rgba(213, 51, 105, 0.07);
 	border-radius: 6px;
 	padding: 2px 8px;
@@ -1887,6 +1920,7 @@
 }
 .ing-row input::placeholder {
 	color: rgba(30, 15, 35, 0.35);
+	font-size: 15px;
 }
 .ing-row .name {
 	flex: 1;
@@ -1908,7 +1942,7 @@
 /* ── Unit AutoComplete ───────────────────────────────────────── */
 /* Host element width — no encapsulation issue, applied by Angular to the host */
 .unit-ac {
-	width: 62px;
+	width: 30px;
 	overflow: visible;
 }
 /* PrimeNG renders its internals in its own template → must use ::ng-deep */
@@ -1923,7 +1957,7 @@
 	font-family: 'nlf', 'cf', sans-serif !important;
 	font-size: 13px !important;
 	color: var(--ink-muted) !important;
-	width: 62px !important;
+	width: 30px !important;
 	transition: border-color 0.2s ease !important;
 }
 ::ng-deep .unit-ac .p-autocomplete-input::placeholder {
@@ -1946,7 +1980,7 @@
 	box-shadow: 0 8px 28px rgba(0, 0, 0, 0.11) !important;
 	overflow: hidden !important;
 	padding: 5px !important;
-	min-width: 120px !important;
+	min-width: 80px !important;
 }
 ::ng-deep .unit-ac-panel .p-autocomplete-list {
 	padding: 0 !important;
@@ -1959,7 +1993,9 @@
 	padding: 7px 11px !important;
 	border-radius: 8px !important;
 	cursor: pointer !important;
-	transition: background 0.15s ease, color 0.15s ease !important;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease !important;
 	letter-spacing: 0.01em !important;
 }
 ::ng-deep .unit-ac-panel .p-autocomplete-option:hover,
@@ -2521,4 +2557,3 @@
 	animation: shimmer 1.5s infinite;
 	transition: none;
 }
-

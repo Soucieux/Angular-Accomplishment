@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
  * appeared in every page template.
  */
 @Component({
-	selector: 'app-access-denied',
+	selector: 'access-denied',
 	standalone: true,
 	templateUrl: './access-denied.component.html',
 	styleUrl: './access-denied.component.css'

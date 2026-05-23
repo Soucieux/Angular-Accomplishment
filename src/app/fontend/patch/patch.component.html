@@ -1,268 +1,340 @@
 @if (utilities.getIsUserAlive()) {
-<div class="container page-card">
-	<h1>PATCH NOTES</h1>
-	<p-table
-		#t
-		[value]="(patchNotes$ | async) ?? []"
-		[paginator]="true"
-		[rows]="itemsPerPage"
-		[(first)]="indexOfFirstItem"
-		[showCurrentPageReport]="!isMobile"
-		currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-		[showFirstLastIcon]="true"
-		[showPageLinks]="!isMobile"
-		[loading]="loading"
-		[showLoader]="false"
-		(onPage)="pageChange($event)"
-		(onFilter)="onTableFilter()">
-		<ng-template pTemplate="header">
-			<tr>
-				<th class="component">Component</th>
-				<th class="element">Element</th>
-				<th class="details">Details</th>
-				<th class="status">
-					Status
-					<p-columnFilter
-						class="column-filter"
-						#columnFilter
-						display="menu"
-						field="status"
-						matchMode="equals"
-						[showOperator]="false"
-						[showMatchModes]="false"
-						[showAddButton]="false"
-						[showApplyButton]="false"
-						[showClearButton]="false">
-						<ng-template pTemplate="filtericon">
-							<i class="pi pi-filter custom-filter-icon"></i>
-						</ng-template>
-						<ng-template #filter let-value let-filter="filterCallback">
-							<div class="status-filter">
-								@for (s of allSeverity; track s.severity) {
-									<p-tag
-										[value]="s.severity"
-										[icon]="getSeverityIcon(s.severity)"
-										[severity]="getSeverity(s.severity)"
-										[class.selected]="value === s.severity"
-										(click)="filter(s.severity)">
-									</p-tag>
-								}
-							</div>
-							<!-- Custom clear -->
-							<p-tag
-								value="Clear Filter"
-								icon="pi pi-times"
-								severity="secondary"
-								class="clear-tag"
-								(click)="filter(null); columnFilter.hide()">
-							</p-tag>
-						</ng-template>
-					</p-columnFilter>
-				</th>
-				<th class="timestamp">TimeStamp</th>
-				<th class="edit-button hide-on-mobile">Edit</th>
-			</tr>
-		</ng-template>
-		<ng-template pTemplate="loadingbody">
-			@for (_ of skeletonRows; track $index) {
+	<div class="container page-card">
+		<div class="page-header">
+			<div class="eyebrow">Progress Tracker</div>
+			<h1 class="page-title">Patch Notes</h1>
+			<p class="page-subtitle">Development history and open items</p>
+			<div class="header-ornament"></div>
+		</div>
+
+		<div class="toolbar">
+			<label class="search">
+				<span class="material-symbols-outlined">search</span>
+				<input
+					type="text"
+					placeholder="Search patch notes…"
+					[(ngModel)]="searchQuery"
+					(ngModelChange)="t.filterGlobal($event, 'contains')" />
+			</label>
+		</div>
+
+		@if (!loading) {
+			<div class="stats-strip">
+				<span class="stat-chip">
+					<span class="stat-num">{{ statsTotal }}</span> total
+				</span>
+				<span class="stat-divider">·</span>
+				<span class="stat-chip">
+					<span class="stat-num stat-progress">{{ statsInProgress }}</span> in progress
+				</span>
+				<span class="stat-divider">·</span>
+				<span class="stat-chip">
+					<span class="stat-num stat-bug">{{ statsOpenBugs }}</span> open bugs
+				</span>
+			</div>
+		}
+
+		<p-table
+			#t
+			[value]="(patchNotes$ | async) ?? []"
+			[paginator]="true"
+			[rows]="itemsPerPage"
+			[(first)]="indexOfFirstItem"
+			[showCurrentPageReport]="!isMobile"
+			currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+			[showFirstLastIcon]="true"
+			[showPageLinks]="!isMobile"
+			[loading]="loading"
+			[showLoader]="false"
+			[globalFilterFields]="['component', 'element', 'details']"
+			(onPage)="pageChange($event)"
+			(onFilter)="onTableFilter()">
+			<ng-template pTemplate="header">
 				<tr>
-					<td><p-skeleton /></td>
-					<td><p-skeleton /></td>
-					<td><p-skeleton /></td>
-					<td><p-skeleton /></td>
-					<td><p-skeleton /></td>
-					@if (!isMobile) {
-						<td><p-skeleton /></td>
-					}
+					<th class="component">Component</th>
+					<th class="element">Element</th>
+					<th class="details">Details</th>
+					<th class="status">
+						Status
+						<p-columnFilter
+							class="column-filter"
+							#columnFilter
+							display="menu"
+							field="status"
+							matchMode="equals"
+							[showOperator]="false"
+							[showMatchModes]="false"
+							[showAddButton]="false"
+							[showApplyButton]="false"
+							[showClearButton]="false">
+							<ng-template pTemplate="filtericon">
+								<i class="pi pi-filter custom-filter-icon"></i>
+							</ng-template>
+							<ng-template #filter let-value let-filter="filterCallback">
+								<div class="status-filter">
+									@for (s of allSeverity; track s.severity) {
+										<p-tag
+											[value]="s.severity"
+											[icon]="getSeverityIcon(s.severity)"
+											[severity]="getSeverity(s.severity)"
+											[class.selected]="value === s.severity"
+											(click)="filter(s.severity)">
+										</p-tag>
+									}
+								</div>
+								<!-- Custom clear -->
+								<p-tag
+									value="Clear Filter"
+									icon="pi pi-times"
+									severity="secondary"
+									class="clear-tag"
+									(click)="filter(null); columnFilter.hide()">
+								</p-tag>
+							</ng-template>
+						</p-columnFilter>
+					</th>
+					<th class="timestamp">TimeStamp</th>
+					<th class="edit-button hide-on-mobile">Edit</th>
 				</tr>
-			}
-		</ng-template>
-		<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
-			@if (!row.__dummy) {
-				<tr
-					(mouseenter)="hoveredRowIndex = rowIndex"
-					(mouseleave)="hoveredRowIndex = null"
-					[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
-					[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
-					@if (shouldShowComponent(getRenderedData(t), rowIndex)) {
-						<td
-							[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
-							class="component">
-							<div class="component-content">
-								@if (getComponentOption(row.component); as opt) {
-									<span [class]="opt.iconClass + ' hide-on-mobile'">{{ opt.icon }}</span>
-								}
-								<span>{{ row.component }}</span>
-							</div>
-						</td>
-					}
-					@if (shouldShowElement(getRenderedData(t), rowIndex)) {
-						<td [attr.rowspan]="getElementRowSpan(getRenderedData(t), rowIndex)" class="element">
-							<!-- This one is not needed as we are not updating the element name -->
-							<!-- @if(editedRows.has(row.key)){
+			</ng-template>
+			<ng-template pTemplate="loadingbody">
+				@for (_ of skeletonRows; track $index) {
+					<tr class="skeleton-row">
+						<td><p-skeleton /></td>
+						<td><p-skeleton /></td>
+						<td><p-skeleton /></td>
+						<td><p-skeleton /></td>
+						<td><p-skeleton /></td>
+						@if (!isMobile) {
+							<td><p-skeleton /></td>
+						}
+					</tr>
+				}
+			</ng-template>
+			<ng-template pTemplate="emptymessage">
+				<tr>
+					<td [attr.colspan]="isMobile ? 5 : 6">
+						<div class="empty-state">
+							<span class="material-symbols-outlined empty-icon">note_stack</span>
+							<p>No patch notes match your search</p>
+						</div>
+					</td>
+				</tr>
+			</ng-template>
+			<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+				@if (!row.__dummy) {
+					<tr
+						(mouseenter)="hoveredRowIndex = rowIndex"
+						(mouseleave)="hoveredRowIndex = null"
+						[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
+						[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
+						@if (shouldShowComponent(getRenderedData(t), rowIndex)) {
+							<td
+								[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
+								class="component">
+								<div class="component-content">
+									@if (getComponentOption(row.component); as opt) {
+										<span [class]="opt.iconClass + ' ' + opt.colorClass + ' hide-on-mobile'">{{
+											opt.icon
+										}}</span>
+									}
+									<span>{{ row.component }}</span>
+								</div>
+							</td>
+						}
+						@if (shouldShowElement(getRenderedData(t), rowIndex)) {
+							<td
+								[attr.rowspan]="getElementRowSpan(getRenderedData(t), rowIndex)"
+								class="element">
+								<!-- This one is not needed as we are not updating the element name -->
+								<!-- @if(editedRows.has(row.key)){
                             <input
                                 pInputText
                                 [(ngModel)]="editedRows.get(row.key).updated.element"
                                 class="input"
                                 (keyup.enter)="completeEdit(row)" />
                             } @else{ -->
-							{{ row.element }}
+								{{ row.element }}
 
-							<!-- } -->
+								<!-- } -->
+							</td>
+						}
+
+						<td class="details">
+							@if (editedRows.has(row.key)) {
+								<textarea
+									pTextarea
+									variant="filled"
+									fluid
+									[(ngModel)]="editedRows.get(row.key).updated.details"
+									class="input textarea-input"
+									(keyup.enter)="completeEdit(row)"></textarea>
+							} @else {
+								{{ row.details }}
+							}
 						</td>
-					}
 
-					<td class="details">
-						@if (editedRows.has(row.key)) {
+						<td class="status">
+							@if (editedRows.has(row.key)) {
+								<p-select
+									optionLabel="severity"
+									optionValue="severity"
+									[options]="
+										editedRows.get(row.key).original.isBug ? bugSeverity : severity
+									"
+									[appendTo]="'body'"
+									panelStyleClass="dropdown-panel-font"
+									[(ngModel)]="editedRows.get(row.key).updated.status"
+									class="input"
+									(keyup.enter)="completeEdit(row)">
+									<ng-template #selectedItem let-value>
+										@if (value) {
+											<div class="status-option">
+												<i [class]="getSeverityIcon(value.severity)"></i>
+												<span>{{ value.severity }}</span>
+											</div>
+										}
+									</ng-template>
+									<ng-template #item let-opt>
+										<div class="status-option">
+											<i [class]="getSeverityIcon(opt.severity)"></i>
+											<span>{{ opt.severity }}</span>
+										</div>
+									</ng-template>
+								</p-select>
+							} @else {
+								<p-tag
+									[value]="row.status"
+									[icon]="getSeverityIcon(row.status)"
+									[severity]="getSeverity(row.status)"
+									[class]="getSeverityClass(row.status)"
+									class="tag"></p-tag>
+							}
+						</td>
+
+						<td class="timestamp">
+							{{ row.timestamp }}
+						</td>
+
+						<td class="edit-button hide-on-mobile">
+							@if (editedRows.has(row.key)) {
+								<div class="edit-button-group">
+									<p-button
+										severity="secondary"
+										icon="pi pi-check"
+										rounded="true"
+										(click)="completeEdit(row)"></p-button>
+									<p-button
+										severity="secondary"
+										icon="pi pi-trash"
+										rounded="true"
+										(click)="openDeleteConfirmationDialog(row.key)"></p-button>
+								</div>
+							} @else {
+								<p-button
+									severity="secondary"
+									icon="pi pi-pen-to-square"
+									rounded="true"
+									(click)="startEdit(row)"></p-button>
+							}
+						</td>
+					</tr>
+				}
+			</ng-template>
+			<ng-template pTemplate="footer">
+				@if (!loading && t.first && t.rows && t.first + t.rows > t.totalRecords - 1) {
+					<tr class="hide-on-mobile">
+						<td class="component">
+							<p-select
+								[options]="components"
+								optionLabel="label"
+								optionValue="label"
+								placeholder="Component"
+								[appendTo]="'body'"
+								panelStyleClass="dropdown-panel-font component-dropdown-panel"
+								[(ngModel)]="newRecord.component"
+								class="input">
+								<ng-template #selectedItem let-value>
+									@if (getComponentOption(value); as opt) {
+										<div class="component-option">
+											<span [class]="opt.iconClass + ' ' + opt.colorClass">{{ opt.icon }}</span>
+											<span>{{ opt.label }}</span>
+										</div>
+									}
+								</ng-template>
+								<ng-template #item let-opt>
+									<div class="component-option">
+										<span [class]="opt.iconClass + ' ' + opt.colorClass">{{ opt.icon }}</span>
+										<span>{{ opt.label }}</span>
+									</div>
+								</ng-template>
+							</p-select>
+						</td>
+						<td class="element">
+							<input
+								pInputText
+								type="text"
+								placeholder="Element"
+								[(ngModel)]="newRecord.element"
+								class="input"
+								(keyup.enter)="submitNewRecord()" />
+						</td>
+						<td class="details">
 							<textarea
 								pTextarea
 								variant="filled"
 								fluid
-								[(ngModel)]="editedRows.get(row.key).updated.details"
+								placeholder="Details"
+								[(ngModel)]="newRecord.details"
 								class="input textarea-input"
-								(keyup.enter)="completeEdit(row)"></textarea>
-						} @else {
-							{{ row.details }}
-						}
-					</td>
-
-					<td class="status">
-						@if (editedRows.has(row.key)) {
+								(keyup.enter)="submitNewRecord()"></textarea>
+						</td>
+						<td class="status">
 							<p-select
 								optionLabel="severity"
 								optionValue="severity"
-								[options]="editedRows.get(row.key).original.isBug ? bugSeverity : severity"
+								[options]="allSeverity"
 								[appendTo]="'body'"
 								panelStyleClass="dropdown-panel-font"
-								[(ngModel)]="editedRows.get(row.key).updated.status"
+								[(ngModel)]="newRecord.status"
 								class="input"
-								(keyup.enter)="completeEdit(row)" />
-						} @else {
-							<p-tag
-								[value]="row.status"
-								[icon]="getSeverityIcon(row.status)"
-								[severity]="getSeverity(row.status)"
-								[class]="getSeverityClass(row.status)"
-								class="tag"></p-tag>
-						}
-					</td>
-
-					<td class="timestamp">
-						{{ row.timestamp }}
-					</td>
-
-					<td class="edit-button hide-on-mobile">
-						@if (editedRows.has(row.key)) {
-							<div class="edit-button-group">
-								<p-button
-									severity="secondary"
-									icon="pi pi-check"
-									rounded="true"
-									(click)="completeEdit(row)"></p-button>
-								<p-button
-									severity="secondary"
-									icon="pi pi-trash"
-									rounded="true"
-									(click)="openDeleteConfirmationDialog(row.key)"></p-button>
-							</div>
-						} @else {
-							<p-button
-								severity="secondary"
-								icon="pi pi-pen-to-square"
-								rounded="true"
-								(click)="startEdit(row)"></p-button>
-						}
-					</td>
-				</tr>
-			}
-		</ng-template>
-		<ng-template pTemplate="footer">
-			@if (!loading && t.first && t.rows && t.first + t.rows > t.totalRecords - 1) {
-				<tr class="hide-on-mobile">
-					<td class="component">
-						<p-select
-							[options]="components"
-							optionLabel="label"
-							optionValue="label"
-							placeholder="Component"
-							[appendTo]="'body'"
-							panelStyleClass="dropdown-panel-font component-dropdown-panel"
-							[(ngModel)]="newRecord.component"
-							class="input">
-							<ng-template #selectedItem let-value>
-								@if (getComponentOption(value); as opt) {
-									<div class="component-option">
-										<span [class]="opt.iconClass">{{ opt.icon }}</span>
-										<span>{{ opt.label }}</span>
+								(keyup.enter)="submitNewRecord()">
+								<ng-template #selectedItem let-value>
+									@if (value) {
+										<div class="status-option">
+											<i [class]="getSeverityIcon(value.severity)"></i>
+											<span>{{ value.severity }}</span>
+										</div>
+									}
+								</ng-template>
+								<ng-template #item let-opt>
+									<div class="status-option">
+										<i [class]="getSeverityIcon(opt.severity)"></i>
+										<span>{{ opt.severity }}</span>
 									</div>
-								}
-							</ng-template>
-							<ng-template #item let-opt>
-								<div class="component-option">
-									<span [class]="opt.iconClass">{{ opt.icon }}</span>
-									<span>{{ opt.label }}</span>
-								</div>
-							</ng-template>
-						</p-select>
-					</td>
-					<td class="element">
-						<input
-							pInputText
-							type="text"
-							placeholder="Element"
-							[(ngModel)]="newRecord.element"
-							class="input"
-							(keyup.enter)="submitNewRecord()" />
-					</td>
-					<td class="details">
-						<textarea
-							pTextarea
-							variant="filled"
-							fluid
-							placeholder="Details"
-							[(ngModel)]="newRecord.details"
-							class="input textarea-input"
-							(keyup.enter)="submitNewRecord()"></textarea>
-					</td>
-					<td class="status">
-						<p-select
-							optionLabel="severity"
-							[options]="newRecord.isBug ? bugSeverity : severity"
-							[appendTo]="'body'"
-							panelStyleClass="dropdown-panel-font"
-							[(ngModel)]="newRecord.status"
-							class="input"
-							(keyup.enter)="submitNewRecord()" />
-					</td>
-					<td class="timeStamp">
-						<p-button
-							label="Add"
-							icon="pi pi-plus"
-							severity="secondary"
-							[disabled]="
-								!newRecord.component.trim() ||
-								!newRecord.details.trim() ||
-								!newRecord.element.trim() ||
-								!newRecord.status
-							"
-							(onClick)="submitNewRecord()"
-							styleClass="input"></p-button>
-					</td>
-					<td class="edit-button">
-						<label class="bug-toggle" [class.bug-active]="newRecord.isBug">
-							<span class="pi pi-exclamation-triangle bug-toggle-icon"></span>
-							<p-check-box
-								[(ngModel)]="newRecord.isBug"
-								[binary]="true"
-								(onChange)="clearStatusField()"></p-check-box>
-						</label>
-					</td>
-				</tr>
-			}
-		</ng-template>
-	</p-table>
-	<ng-container #dialogComponentContainer></ng-container>
-</div>
+								</ng-template>
+							</p-select>
+						</td>
+						<td class="timeStamp" colspan="2">
+							<p-button
+								label="Add"
+								icon="pi pi-plus"
+								severity="secondary"
+								[disabled]="
+									!newRecord.component.trim() ||
+									!newRecord.details.trim() ||
+									!newRecord.element.trim() ||
+									!newRecord.status
+								"
+								(onClick)="submitNewRecord()"
+								styleClass="input"></p-button>
+						</td>
+					</tr>
+				}
+			</ng-template>
+		</p-table>
+		<ng-container #dialogComponentContainer></ng-container>
+	</div>
 } @else {
 	<access-denied />
 }

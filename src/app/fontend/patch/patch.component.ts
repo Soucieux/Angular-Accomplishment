@@ -40,7 +40,6 @@ import { map, Observable, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-import { CheckboxModule } from 'primeng/checkbox';
 import { PaginatorModule } from 'primeng/paginator';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
@@ -57,7 +56,6 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		FormsModule,
 		CommonModule,
 		PaginatorModule,
-		CheckboxModule,
 		AccessDeniedComponent
 	],
 	templateUrl: './patch.component.html',
@@ -75,7 +73,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected allSeverity: { severity: string }[] | undefined;
 	protected patchNotes$!: Observable<any[]>;
 	protected indexOfFirstItem = 0;
-	protected itemsPerPage = 9;
+	protected itemsPerPage = 8;
 	protected isMobile!: boolean;
 	protected skeletonRows = Array.from({ length: this.itemsPerPage });
 	protected editedRows = new Map<string, any>();
@@ -98,6 +96,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	private _isDataUpdate = false;
 	protected newRecord = this.emptyRecord();
+	protected searchQuery = '';
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		private databaseService: DatabaseService,
@@ -295,20 +294,13 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Clear the status field of the new record form.
-	 */
-	protected clearStatusField() {
-		this.newRecord.status = undefined;
-	}
-
-	/**
 	 * Submit the new record form data to the database and reset the form.
 	 * Captures a snapshot of the record before resetting so the stats update
 	 * can include the correct noteIndex and metadata after the async add.
 	 */
 	protected submitNewRecord() {
 		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(false);
-		this.newRecord.status = this.newRecord.status?.['severity'];
+		this.newRecord.isBug = this.newRecord.status === STATUS_DEBUG || this.newRecord.status === STATUS_RESOLVED;
 		const snapshot = { ...this.newRecord };
 		const noteIndex = this.patchNotesList.length + 1;
 		this.databaseService
@@ -563,16 +555,16 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected getSeverityIcon(status: string) {
 		switch (status) {
 			case STATUS_TODO:
-				return 'pi pi-hourglass';
+				return 'pi pi-clock';
 			case STATUS_IN_PROGRESS:
-				return 'pi pi-play';
+				return 'pi pi-play-circle';
 			case STATUS_COMPLETED:
 			case STATUS_RESOLVED:
 				return 'pi pi-verified';
 			case STATUS_DEBUG:
-				return 'pi pi-exclamation-triangle';
+				return 'pi pi-exclamation-circle';
 			case STATUS_DRAFT:
-				return 'pi pi-pencil';
+				return 'pi pi-file-edit';
 			default:
 				return undefined;
 		}
@@ -586,19 +578,47 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * CSS pseudo-elements and require no text content, so their `icon` value is
 	 * intentionally an empty string — the full icon definition lives in
 	 * `iconClass` (e.g. `'pi pi-user'`).
+	 * `colorClass` maps to a CSS gradient rule that matches the nav panel icon colour.
 	 */
-	protected readonly components: { label: string; icon: string; iconClass: string }[] = [
-		{ label: 'Entertainment', icon: 'tv', iconClass: 'material-icons' },
-		{ label: 'Home', icon: 'home', iconClass: 'material-icons' },
-		{ label: 'Nexus', icon: 'neurology', iconClass: 'material-symbols-outlined' },
-		{ label: 'Patch Notes', icon: 'note_stack', iconClass: 'material-symbols-outlined' },
-		{ label: 'Login', icon: '', iconClass: 'pi pi-user' }, // pi icon — CSS only, no ligature text
-		{ label: 'Recipe', icon: 'restaurant', iconClass: 'material-symbols-outlined' },
-		{ label: 'Reminder', icon: 'priority', iconClass: 'material-symbols-outlined' },
-		{ label: 'Resonance', icon: 'format_quote', iconClass: 'material-symbols-outlined' },
-		{ label: 'About', icon: 'info', iconClass: 'material-symbols-outlined' },
-		{ label: 'All Pages', icon: 'web', iconClass: 'material-icons' }
+	protected readonly components: { label: string; icon: string; iconClass: string; colorClass: string }[] = [
+		{ label: 'All Pages', icon: 'grid_view', iconClass: 'material-symbols-outlined', colorClass: 'icon-all-pages' },
+		{ label: 'Home', icon: 'home_app_logo', iconClass: 'material-symbols-outlined', colorClass: 'icon-home' },
+		{ label: 'Nexus', icon: 'neurology', iconClass: 'material-symbols-outlined', colorClass: 'icon-nexus' },
+		{ label: 'Resonance', icon: 'format_quote', iconClass: 'material-symbols-outlined', colorClass: 'icon-resonance' },
+		{ label: 'Recipe', icon: 'menu_book', iconClass: 'material-symbols-outlined', colorClass: 'icon-recipe' },
+		{ label: 'Entertainment', icon: 'live_tv', iconClass: 'material-symbols-outlined', colorClass: 'icon-entertainment' },
+		{ label: 'Reminder', icon: 'alarm', iconClass: 'material-symbols-outlined', colorClass: 'icon-reminder' },
+		{ label: 'Patch Notes', icon: 'note_stack', iconClass: 'material-symbols-outlined', colorClass: 'icon-patch-notes' },
+		{ label: 'About', icon: 'badge', iconClass: 'material-symbols-outlined', colorClass: 'icon-about' },
+		{ label: 'Login', icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' }, // pi icon — CSS only, no ligature text
 	];
+
+	/**
+	 * Total number of patch notes currently loaded (excluding the dummy row).
+	 *
+	 * @returns The count of real patch-note records.
+	 */
+	protected get statsTotal(): number {
+		return this.patchNotesList.length;
+	}
+
+	/**
+	 * Number of patch notes currently in the In Progress status.
+	 *
+	 * @returns The count of in-progress records.
+	 */
+	protected get statsInProgress(): number {
+		return this.patchNotesList.filter((n: any) => n.status === STATUS_IN_PROGRESS).length;
+	}
+
+	/**
+	 * Number of patch notes currently in the Debug (open bug) status.
+	 *
+	 * @returns The count of open bug records.
+	 */
+	protected get statsOpenBugs(): number {
+		return this.patchNotesList.filter((n: any) => n.status === STATUS_DEBUG).length;
+	}
 
 	/**
 	 * Looks up a component option object by label string.

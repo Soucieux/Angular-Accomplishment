@@ -31,6 +31,7 @@
 | **Reminder Suite** | Triple-table system — date calculator, account expense tracker, and bank debt ledger — with colour-coded status indicators and persistent cloud sync. | Active |
 | **Nexus** | Personal AI search hub with chip-based query filters and a saved link management panel. | Beta |
 | **Resonance** | Personal quote vault with author attribution, timestamps, and anonymous browsing support. | Active |
+| **Recipe Vault** | Personal cookbook with category filtering, ingredient groups with type badges, step-by-step instructions, and a live servings scaler. Ingredient names support both Chinese characters and English — enter each language on a separate line; the first line is used as the coloured pill label shown on the right side of steps. | Active |
 | **Patch Notes** | Internal development log with add/edit/delete, bug flagging per component, status filters, and pagination. | Active |
 | **Secure Entry** | Auth page with Google Sign-In, email/password login, and user sign-up — with route guards protecting all authenticated pages. | Stable |
 | **About** | Professional history timeline with animated visual background. | Stable |
@@ -70,6 +71,7 @@
 | **April 2026** | Entertainment images migrated from Firebase Storage to Tencent Cloudbase CDN for CN-region performance; Reminder currency icon updated to correct locale symbol; disabled-cell field feature removed from Reminder; IP-lookup feature removed; SSRF security vulnerability identified and patched; multiple security dependency bumps merged. |
 | **May 2026** | Seven sequential UI style passes applied across the entire application (Parts I–VII): Entertainment card layout and dialog polish; Home dashboard spacing and chip sizing; Patch Notes filter icon and bug checkbox overrides; Reminder table density and cell alignment; global navigation drawer refinements. PrimeNG component overrides, colour tokens, and spacing systematically tightened throughout all passes. |
 | **May 2026** | Vision Home bento-grid dashboard launched — live stat chips (movies, reminders, quotes, patches); Life Clock with real-time year / month / week / day progress bars; Pomodoro Focus Timer with preset durations; Quick Note scratch pad; recent activity feed in a 2-column grid; week calendar with task pills; quick-action shortcut row; mobile-responsive layout. Login page entrance animations added. Sign-up flow completed — new users can register directly from the login page. |
+| **May 2026** | Recipe Vault module launched — personal cookbook with list, detail, and editor views; ingredient groups with type classification and colour-coded badges; live servings scaler; step-by-step instructions with ingredient pill highlights; category chip filtering; drag-to-reorder steps; notes and tips section; skeleton loading states. |
 | **May 2026** | Resonance module launched — personal quote vault with author attribution, ISO timestamps, and anonymous browsing support; anonymous-user refresh race condition identified and patched. Nexus module built out — AI search hub with chip-based category filters, search history, and a saved link management panel with add and delete flows. Search feature added to Entertainment with a dedicated search dialog and block-dialog state; movie deletion flow ported to Cloudbase. Cloudbase authentication race condition on app startup resolved. Full JSDoc documentation and access modifier pass across all services and components. Environment template added for safer onboarding. Bundle size budget increased; error message and exception handling refactored globally. |
 
 ---
@@ -108,6 +110,7 @@ src/app/
     ├── entertainment/            # Entertainment tracking hub
     ├── reminder/                 # Expense and date reminder tables
     ├── nexus/                    # AI search hub
+    ├── recipe/                   # Personal cookbook vault
     ├── resonance/                # Quote vault
     ├── patch/                    # Patch notes / internal dev log
     ├── about/                    # Professional history timeline

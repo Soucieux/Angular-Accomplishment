@@ -1028,7 +1028,7 @@
 .irow {
 	display: grid;
 	grid-template-columns: 18px 1fr auto;
-	align-items: center;
+	align-items: start;
 	gap: 10px;
 	padding: 6px 4px;
 	border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
@@ -1095,6 +1095,7 @@
 .iname {
 	color: var(--ink);
 	font-size: 17px;
+	white-space: pre-line;
 }
 .iqty {
 	display: inline-flex;
@@ -1613,14 +1614,30 @@
 	letter-spacing: 0.3px;
 }
 
-/* Type tabs */
+/* ── Add-footer (ingredient editor action zone) ─────────────────── */
+.add-footer {
+	flex-shrink: 0;
+	border-top: 1px solid rgba(0, 0, 0, 0.07);
+	padding-top: 14px;
+	margin-top: 4px;
+}
+
+/* Type tabs — 5-column grid on desktop so row 1 = 5 types, row 2 = 4 types + filter */
 .type-tabs {
-	display: flex;
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
 	gap: 6px;
-	flex-wrap: wrap;
-	padding-bottom: 14px;
-	margin-bottom: 6px;
-	border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+}
+.type-tabs .manage-btn {
+	width: 100%;
+	height: auto;
+	border-radius: 999px;
+	padding: 6px 0;
+	border-width: 1.5px;
+	margin-left: 0;
+}
+.type-tabs .manage-btn .material-symbols-outlined {
+	font-size: 14px;
 }
 .type-tab {
 	display: inline-flex;
@@ -1845,8 +1862,9 @@
 }
 
 .ing-row {
-	display: flex;
-	align-items: center;
+	display: grid;
+	grid-template-columns: 18px 1fr auto;
+	align-items: start;
 	gap: 10px;
 	padding: 10px 4px;
 	border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
@@ -1856,7 +1874,7 @@
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
-	flex: none;
+	margin-top: 10px;
 	box-shadow:
 		0 0 0 3px #fff,
 		0 0 0 4px rgba(0, 0, 0, 0.06);
@@ -1909,7 +1927,8 @@
 .ing-row.condiment .type-dot {
 	background: var(--condiment-tx);
 }
-.ing-row input {
+.ing-row input,
+.ing-row textarea {
 	border: none;
 	outline: none;
 	font: inherit;
@@ -1918,19 +1937,25 @@
 	color: var(--ink);
 	padding: 4px 2px;
 }
-.ing-row input::placeholder {
+.ing-row input::placeholder,
+.ing-row textarea::placeholder {
 	color: rgba(30, 15, 35, 0.35);
 	font-size: 15px;
 }
+.ing-row textarea.name {
+	resize: none;
+	overflow: hidden;
+	field-sizing: content;
+	min-height: 1lh;
+	width: 100%;
+}
 .ing-row .name {
-	flex: 1;
 	min-width: 0;
 }
 .ing-qty-group {
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	flex: none;
 }
 .ing-row .qty {
 	width: 5ch;
@@ -2322,34 +2347,24 @@
 		min-height: 420px;
 		max-height: none;
 	}
+	.add-footer {
+		padding-top: 12px;
+	}
 	.type-tabs {
+		display: flex;
 		flex-wrap: nowrap;
 		overflow-x: auto;
 		overflow-y: hidden;
-		padding-bottom: 6px;
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
 		transition: scrollbar-color 0.4s ease;
 	}
-	.type-tabs::-webkit-scrollbar {
-		height: 3px;
-	}
-	.type-tabs::-webkit-scrollbar-track {
-		background: transparent;
-	}
-	.type-tabs::-webkit-scrollbar-thumb {
-		background: transparent;
-		border-radius: 999px;
-	}
-	.type-tabs.is-scrolling {
-		scrollbar-color: var(--rose-border) transparent;
-	}
-	.type-tabs.is-scrolling::-webkit-scrollbar-thumb {
-		background: var(--rose-border);
-	}
-	.type-tabs .type-tab {
-		flex: none;
-	}
+	.type-tabs::-webkit-scrollbar { height: 3px; }
+	.type-tabs::-webkit-scrollbar-track { background: transparent; }
+	.type-tabs::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; }
+	.type-tabs.is-scrolling { scrollbar-color: var(--rose-border) transparent; }
+	.type-tabs.is-scrolling::-webkit-scrollbar-thumb { background: var(--rose-border); }
+	.type-tab, .type-tabs .manage-btn { flex: none; }
 	.ing-row .remove,
 	.step-card .remove,
 	.sub-row .remove {

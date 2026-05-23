@@ -1,435 +1,488 @@
 <ng-container #dialogComponentContainer></ng-container>
 @if (utilities.getIsUserAlive()) {
-<div class="container container-recipe">
+	<div class="container container-recipe">
+		<!-- ===================== VIEW 1: LIST ===================== -->
+		@if (currentView === VIEW_LIST) {
+			<section class="view">
+				<div class="page-header">
+					<div class="eyebrow">Personal Cookbook</div>
+					<h1 class="page-title">Recipes</h1>
+					<p class="page-subtitle">Your personal cookbook</p>
+					<div class="header-ornament"></div>
+				</div>
 
-	<!-- ===================== VIEW 1: LIST ===================== -->
-	@if (currentView === VIEW_LIST) {
-		<section class="view">
-			<div class="page-header">
-				<div class="eyebrow">Personal Cookbook</div>
-				<h1 class="page-title">Recipes</h1>
-				<p class="page-subtitle">Your personal cookbook</p>
-				<div class="header-ornament"></div>
-			</div>
-
-			<div class="toolbar">
-				<label class="search">
-					<span class="material-symbols-outlined">search</span>
-					<input type="text" placeholder="Search recipes…" [(ngModel)]="searchQuery" />
-				</label>
-				<button class="btn btn-primary" (click)="openAddView()">
-					<span class="material-symbols-outlined">add</span>
-					Add Recipe
-				</button>
-			</div>
-
-			<div class="chips">
-				@for (cat of categories; track cat) {
-					<button
-						class="chip"
-						[class.active]="activeCategory === cat"
-						(click)="selectCategory(cat)">
-						{{ cat }}
+				<div class="toolbar">
+					<label class="search">
+						<span class="material-symbols-outlined">search</span>
+						<input type="text" placeholder="Search recipes…" [(ngModel)]="searchQuery" />
+					</label>
+					<button class="btn btn-primary" (click)="openAddView()">
+						<span class="material-symbols-outlined">add</span>
+						Add Recipe
 					</button>
-				}
-			</div>
+				</div>
 
-			@if (isLoading) {
-				<div class="grid">
-					@for (i of [1,2,3,4,5,6]; track i) {
-						<article class="recipe-card skeleton-card">
-							<div class="band skeleton-band"></div>
-							<div class="body">
-								<div class="skeleton-line skeleton-name"></div>
-								<div class="skeleton-line skeleton-badges"></div>
-								<div class="skeleton-line skeleton-chips"></div>
-							</div>
-							<div class="view-recipe skeleton-footer"></div>
-						</article>
+				<div class="chips">
+					@for (cat of categories; track cat) {
+						<button
+							class="chip"
+							[class.active]="activeCategory === cat"
+							(click)="selectCategory(cat)">
+							{{ cat }}
+						</button>
 					}
 				</div>
-			} @else if (filteredRecipes.length === 0) {
-				<div class="empty-state">
-					<span class="material-symbols-outlined empty-icon">restaurant_menu</span>
-					<p>No recipes match your search</p>
-				</div>
-			} @else {
-				<div class="grid">
-					@for (recipe of filteredRecipes; track recipe.id) {
-						<article class="recipe-card" (click)="openRecipe(recipe)">
-							<div class="band" [class]="recipe.bandClass">
-								<span class="category-tag">{{ recipe.category }}</span>
-								@if (recipes.length === 1) {
-									<span class="example-badge">
-										<span class="material-symbols-outlined">auto_awesome</span>
-										Example
-									</span>
-								}
-							</div>
-							<div class="body">
-								<div class="name">{{ recipe.name }}</div>
-								<div class="badge-row">
-									@for (b of recipe.badges; track b.label) {
-										<span class="ipill" [class]="b.type">{{ b.emoji }} {{ b.label }}</span>
+
+				@if (isLoading) {
+					<div class="grid">
+						@for (i of [1, 2, 3, 4, 5, 6]; track i) {
+							<article class="recipe-card skeleton-card">
+								<div class="band skeleton-band"></div>
+								<div class="body">
+									<div class="skeleton-line skeleton-name"></div>
+									<div class="skeleton-line skeleton-badges"></div>
+									<div class="skeleton-line skeleton-chips"></div>
+								</div>
+								<div class="view-recipe skeleton-footer"></div>
+							</article>
+						}
+					</div>
+				} @else if (filteredRecipes.length === 0) {
+					<div class="empty-state">
+						<span class="material-symbols-outlined empty-icon">restaurant_menu</span>
+						<p>No recipes match your search</p>
+					</div>
+				} @else {
+					<div class="grid">
+						@for (recipe of filteredRecipes; track recipe.id) {
+							<article class="recipe-card" (click)="openRecipe(recipe)">
+								<div class="band" [class]="recipe.bandClass">
+									<span class="category-tag">{{ recipe.category }}</span>
+									@if (recipes.length === 1) {
+										<span class="example-badge">
+											<span class="material-symbols-outlined">auto_awesome</span>
+											Example
+										</span>
 									}
 								</div>
-								<div class="meta-row">
-									<span class="meta-chip">
-										<span class="material-symbols-outlined">schedule</span>
-										{{ recipe.cookTimeMin }} min
-									</span>
-									<span class="meta-chip">
-										<span class="material-symbols-outlined">restaurant</span>
-										{{ recipe.baseServings }} servings
-									</span>
+								<div class="body">
+									<div class="name">{{ recipe.name }}</div>
+									<div class="badge-row">
+										@for (b of recipe.badges; track b.label) {
+											<span class="ipill" [class]="b.type"
+												>{{ b.emoji }} {{ b.label }}</span
+											>
+										}
+									</div>
+									<div class="meta-row">
+										<span class="meta-chip">
+											<span class="material-symbols-outlined">schedule</span>
+											{{ recipe.cookTimeMin }} min
+										</span>
+										<span class="meta-chip">
+											<span class="material-symbols-outlined">restaurant</span>
+											{{ recipe.baseServings }} servings
+										</span>
+									</div>
 								</div>
+								<div class="view-recipe">View Recipe →</div>
+							</article>
+						}
+					</div>
+				}
+			</section>
+		}
+
+		<!-- ===================== VIEW 2: DETAIL ===================== -->
+		@if (currentView === VIEW_DETAIL && activeRecipe) {
+			<section class="view">
+				<div class="detail-topbar">
+					<button class="back-btn" (click)="backToList()">
+						<span class="material-symbols-outlined">arrow_back</span>
+						Recipes
+					</button>
+					<button class="btn btn-secondary edit-btn" (click)="openEditView()">
+						<span class="material-symbols-outlined">edit</span>
+						Edit Recipe
+					</button>
+				</div>
+
+				<div class="detail-header">
+					<h1 class="page-title detail-title">{{ activeRecipe.detailName }}</h1>
+					<div class="detail-meta">
+						<span class="meta-chip">
+							<span class="material-symbols-outlined">schedule</span>
+							{{ activeRecipe.cookTimeMin }} min
+						</span>
+						<span class="meta-chip">
+							<span class="material-symbols-outlined">restaurant</span>
+							Serves {{ activeRecipe.baseServings }}
+						</span>
+						<span class="meta-chip cat-chip">{{ activeRecipe.category }}</span>
+					</div>
+					<div class="header-ornament"></div>
+				</div>
+
+				<div class="detail-grid">
+					<!-- INGREDIENTS -->
+					<aside class="panel ingredients-panel" [class.collapsed]="ingredientsCollapsed">
+						<h2 class="panel-heading collapsible" (click)="toggleIngredients()">
+							<span class="material-symbols-outlined">kitchen</span>
+							Ingredients
+							<span class="chev material-symbols-outlined">expand_more</span>
+						</h2>
+
+						<div class="panel-collapse-body" #ingredientsScroll>
+							<div class="servings-row">
+								<button (click)="decServings()" aria-label="decrease servings">−</button>
+								<span class="count">{{ servings }} servings</span>
+								<button (click)="incServings()" aria-label="increase servings">+</button>
 							</div>
-							<div class="view-recipe">View Recipe →</div>
-						</article>
+
+							@for (g of activeRecipe.groups; track g.type) {
+								@let visible = visibleItems(g);
+								@if (visible.length > 0) {
+									<div class="igroup">
+										<div class="igroup-header" [class]="g.type">
+											<span class="emoji">{{ g.emoji }}</span> {{ g.label }}
+										</div>
+										@for (it of visible; track it.name) {
+											<div class="irow" [class]="g.type">
+												<span class="dot"></span>
+												<span class="iname">{{ it.name }}</span>
+												@if (formatQtyNum(it.baseQty)) {
+													<span class="iqty">
+														<span class="iqty-num">{{
+															formatQtyNum(it.baseQty)
+														}}</span>
+														@if (it.unit && !isNumericUnit(it.unit)) {
+															<span class="iqty-unit">{{ it.unit }}</span>
+														}
+													</span>
+												}
+											</div>
+										}
+									</div>
+								}
+							}
+						</div>
+					</aside>
+
+					<!-- STEPS -->
+					<div class="panel steps-panel">
+						<h2 class="panel-heading">
+							<span class="material-symbols-outlined">format_list_numbered</span>
+							Steps
+						</h2>
+
+						<div class="steps" #stepsScroll>
+							@for (step of activeRecipe.steps; track $index) {
+								<div
+									class="step"
+									[class.done]="step.done"
+									(click)="toggleStepDone(step, $event)">
+									<div class="num">{{ $index + 1 }}</div>
+									<div class="text">
+										@for (tok of step.text; track $index) {
+											@if (tok.kind === 'pill') {
+												<span class="ipill tiny" [class]="tok.pillType ?? ''">{{
+													titleCase(tok.text)
+												}}</span>
+											} @else {
+												<span>{{ tok.text }}</span>
+											}
+										}
+									</div>
+									@if (step.substeps.length > 0) {
+										<ul class="substeps">
+											@for (sub of step.substeps; track sub) {
+												<li class="substep">{{ sub }}</li>
+											}
+										</ul>
+									}
+								</div>
+							}
+						</div>
+					</div>
+				</div>
+
+				<!-- NOTES -->
+				<div class="notes-card">
+					<div class="notes-header">
+						<span class="material-symbols-outlined">sticky_note_2</span>
+						Notes &amp; Tips
+					</div>
+					<div class="notes-inner">
+						<div class="notepad">{{ activeRecipe.notes }}</div>
+					</div>
+				</div>
+			</section>
+		}
+
+		<!-- ===================== VIEW 3: ADD / EDITOR ===================== -->
+		@if (currentView === VIEW_ADD) {
+			<section class="view editor-view">
+				<div class="editor-topbar">
+					<button class="back-btn" (click)="cancelAdd()">
+						<span class="material-symbols-outlined">arrow_back</span>
+						Recipes
+					</button>
+					<div class="editor-actions">
+						@if (editingMode === 'edit' && recipes.length > 1) {
+							<button class="btn btn-danger" (click)="removeCurrentRecipe()">
+								<span class="material-symbols-outlined">delete</span>
+								Delete
+							</button>
+						}
+						<button class="btn btn-primary" (click)="saveRecipe()">
+							<span class="material-symbols-outlined">save</span>
+							{{ editingMode === 'edit' ? 'Save Changes' : 'Save Recipe' }}
+						</button>
+					</div>
+				</div>
+
+				<div class="editor-header">
+					<div class="editor-eyebrow">
+						{{ editingMode === 'edit' ? 'Edit Recipe' : 'Add Recipe' }}
+					</div>
+					<input
+						class="title-field"
+						type="text"
+						placeholder="Untitled recipe…"
+						autocomplete="off"
+						[class.invalid]="editorNameInvalid"
+						[(ngModel)]="editorName"
+						(input)="onEditorNameInput()" />
+					<div class="header-ornament"></div>
+					<div class="editor-meta-row">
+						<label class="meta-chip editor-meta-chip">
+							<span class="material-symbols-outlined ico">schedule</span>
+							<input type="number" min="0" placeholder="—" [(ngModel)]="editorCookTime" />
+							<span class="suffix">min</span>
+						</label>
+						<label class="meta-chip editor-meta-chip">
+							<span class="material-symbols-outlined ico">group</span>
+							<input type="number" min="1" [(ngModel)]="editorServings" />
+							<span class="suffix">servings</span>
+						</label>
+						<div
+							#catDropdown
+							class="meta-chip editor-meta-chip select-chip"
+							[class.invalid]="editorCategoryInvalid"
+							[class.open]="editorCategoryOpen">
+							<span class="material-symbols-outlined ico">restaurant</span>
+							<span
+								class="cat-trigger"
+								role="button"
+								tabindex="0"
+								(click)="toggleCategoryDropdown($event)"
+								(keydown.enter)="toggleCategoryDropdown($event)"
+								(keydown.space)="toggleCategoryDropdown($event)">
+								<span [class.cat-placeholder]="!editorCategory">{{
+									editorCategory || 'Choose category…'
+								}}</span>
+								<span class="material-symbols-outlined drop-arrow">expand_more</span>
+							</span>
+							@if (editorCategoryOpen) {
+								<div class="cat-panel">
+									@for (cat of editorCategories; track cat) {
+										<button
+											type="button"
+											class="cat-option"
+											[class.selected]="editorCategory === cat"
+											(click)="selectCategoryOption(cat)">
+											{{ cat }}
+										</button>
+									}
+								</div>
+							}
+						</div>
+					</div>
+					@if (editorCategoryInvalid) {
+						<p class="field-error">
+							<span class="material-symbols-outlined">error</span>
+							Please select a category before saving.
+						</p>
+					}
+					@if (editorIngredientInvalid) {
+						<p class="field-error">
+							<span class="material-symbols-outlined">error</span>
+							{{ RECIPE_MSG_INGREDIENT_UNIT_REQUIRED }}
+						</p>
 					}
 				</div>
-			}
-		</section>
-	}
 
-	<!-- ===================== VIEW 2: DETAIL ===================== -->
-	@if (currentView === VIEW_DETAIL && activeRecipe) {
-		<section class="view">
-			<div class="detail-topbar">
-				<button class="back-btn" (click)="backToList()">
-					<span class="material-symbols-outlined">arrow_back</span>
-					Recipes
-				</button>
-				<button class="btn btn-secondary edit-btn" (click)="openEditView()">
-					<span class="material-symbols-outlined">edit</span>
-					Edit Recipe
-				</button>
-			</div>
-
-			<div class="detail-header">
-				<h1 class="page-title detail-title">{{ activeRecipe.detailName }}</h1>
-				<div class="detail-meta">
-					<span class="meta-chip">
-						<span class="material-symbols-outlined">schedule</span>
-						{{ activeRecipe.cookTimeMin }} min
-					</span>
-					<span class="meta-chip">
-						<span class="material-symbols-outlined">restaurant</span>
-						Serves {{ activeRecipe.baseServings }}
-					</span>
-					<span class="meta-chip cat-chip">{{ activeRecipe.category }}</span>
-				</div>
-				<div class="header-ornament"></div>
-			</div>
-
-			<div class="detail-grid">
-				<!-- INGREDIENTS -->
-				<aside class="panel ingredients-panel" [class.collapsed]="ingredientsCollapsed">
-					<h2 class="panel-heading collapsible" (click)="toggleIngredients()">
-						<span class="material-symbols-outlined">kitchen</span>
-						Ingredients
-						<span class="chev material-symbols-outlined">expand_more</span>
-					</h2>
-
-					<div class="panel-collapse-body" #ingredientsScroll>
-						<div class="servings-row">
-							<button (click)="decServings()" aria-label="decrease servings">−</button>
-							<span class="count">{{ servings }} servings</span>
-							<button (click)="incServings()" aria-label="increase servings">+</button>
-						</div>
-
-						@for (g of activeRecipe.groups; track g.type) {
-							@let visible = visibleItems(g);
-							@if (visible.length > 0) {
-								<div class="igroup">
-									<div class="igroup-header" [class]="g.type">
-										<span class="emoji">{{ g.emoji }}</span> {{ g.label }}
+				<div class="detail-grid">
+					<!-- INGREDIENTS EDITOR -->
+					<aside class="panel ingredients-panel editor-panel">
+						<h2 class="panel-heading">
+							<span class="material-symbols-outlined">kitchen</span>
+							Ingredients
+							<button
+								class="manage-btn"
+								type="button"
+								title="Manage ingredient types"
+								(click)="openTypeDialog()">
+								<span class="material-symbols-outlined">tune</span>
+							</button>
+						</h2>
+						<div class="panel-collapse-body editor-body">
+							<div class="type-tabs">
+								@for (tab of editorTypeTabs; track tab.id) {
+									<button
+										class="type-tab"
+										[class]="tab.id"
+										[class.active]="editorActiveType === tab.id"
+										(click)="selectEditorType(tab.id)">
+										<span class="emo">{{ tab.emoji }}</span
+										>{{ tab.label }}
+									</button>
+								}
+							</div>
+							<div class="editor-groups">
+								@for (g of editorGroupedIngredients; track g.type) {
+									<div class="ing-group" [class]="g.type">
+										<div class="ing-group-head">{{ g.emoji }} {{ g.label }}</div>
+										@for (it of g.items; track $index) {
+											<div class="ing-row" [class]="g.type">
+												<span class="type-dot"></span>
+												<input
+													class="name"
+													type="text"
+													placeholder="Ingredient name"
+													[(ngModel)]="it.name" />
+												<div class="ing-qty-group">
+													<input
+														class="qty"
+														type="text"
+														placeholder="qty"
+														[(ngModel)]="it.qty" />
+													<p-autocomplete
+														class="unit-ac"
+														panelStyleClass="unit-ac-panel"
+														[class.required]="it.qty && !it.unit"
+														placeholder="unit *"
+														[suggestions]="editorUnitSuggestions"
+														[completeOnFocus]="true"
+														[forceSelection]="false"
+														[minLength]="0"
+														[showClear]="false"
+														appendTo="body"
+														(onFocus)="onUnitFocus()"
+														(completeMethod)="filterUnits($event)"
+														[(ngModel)]="it.unit"
+														(ngModelChange)="onEditorUnitInput()" />
+													<button
+														class="remove"
+														title="Remove"
+														(click)="removeEditorIngredient(it)">
+														×
+													</button>
+												</div>
+											</div>
+										}
 									</div>
-									@for (it of visible; track it.name) {
-										<div class="irow" [class]="g.type">
-											<span class="dot"></span>
-											<span class="iname">{{ it.name }}</span>
-											@if (formatQtyNum(it.baseQty)) {
-												<span class="iqty">
-													<span class="iqty-num">{{ formatQtyNum(it.baseQty) }}</span>
-													@if (it.unit && !isNumericUnit(it.unit)) {
-														<span class="iqty-unit">{{ it.unit }}</span>
-													}
-												</span>
+								}
+							</div>
+							<button class="add-btn" (click)="addEditorIngredient()">+ Add ingredient</button>
+						</div>
+						<div class="panel-foot">
+							<span class="count-badge"
+								>{{ editorIngredientCount }} ingredient{{
+									editorIngredientCount === 1 ? '' : 's'
+								}}</span
+							>
+						</div>
+					</aside>
+
+					<!-- STEPS EDITOR -->
+					<div class="panel steps-panel editor-panel">
+						<h2 class="panel-heading">
+							<span class="material-symbols-outlined">format_list_numbered</span>
+							Steps
+						</h2>
+						<div class="editor-body steps-editor-body">
+							@for (step of editorSteps; track $index; let i = $index) {
+								<div
+									class="step-card"
+									[class.dragging]="isStepDragging(step)"
+									[class.drop-above]="isStepDropTarget(step, 'above')"
+									[class.drop-below]="isStepDropTarget(step, 'below')"
+									(dragover)="onStepDragOver(step, $event)"
+									(dragleave)="onStepDragLeave(step)"
+									(drop)="onStepDrop(step, $event)">
+									<div class="step-num">{{ i + 1 }}</div>
+									<div class="step-main">
+										<textarea
+											class="step-text"
+											placeholder="Describe this step…"
+											[(ngModel)]="step.text"></textarea>
+										<div class="subpoints">
+											@for (sub of step.subs; track $index) {
+												<div class="sub-row">
+													<span class="sub-dot"></span>
+													<textarea
+														class="sub-text"
+														rows="1"
+														placeholder="Sub-point (optional)"
+														[(ngModel)]="sub.text"></textarea>
+													<button
+														class="remove"
+														title="Remove"
+														(click)="removeSubpoint(step, sub)">
+														×
+													</button>
+												</div>
 											}
 										</div>
-									}
-								</div>
-							}
-						}
-					</div>
-				</aside>
-
-				<!-- STEPS -->
-				<div class="panel steps-panel">
-					<h2 class="panel-heading">
-						<span class="material-symbols-outlined">format_list_numbered</span>
-						Steps
-					</h2>
-
-					<div class="steps" #stepsScroll>
-						@for (step of activeRecipe.steps; track $index) {
-							<div class="step" [class.done]="step.done" (click)="toggleStepDone(step, $event)">
-								<div class="num">{{ $index + 1 }}</div>
-								<div class="text">
-									@for (tok of step.text; track $index) {
-										@if (tok.kind === 'pill') {
-											<span class="ipill tiny" [class]="tok.pillType ?? ''">{{ titleCase(tok.text) }}</span>
-										} @else {
-											<span>{{ tok.text }}</span>
-										}
-									}
-								</div>
-								@if (step.substeps.length > 0) {
-									<ul class="substeps">
-										@for (sub of step.substeps; track sub) {
-											<li class="substep">{{ sub }}</li>
-										}
-									</ul>
-								}
-							</div>
-						}
-					</div>
-				</div>
-			</div>
-
-			<!-- NOTES -->
-			<div class="notes-card">
-				<div class="notes-header">
-					<span class="material-symbols-outlined">sticky_note_2</span>
-					Notes &amp; Tips
-				</div>
-				<div class="notes-inner">
-					<div class="notepad">{{ activeRecipe.notes }}</div>
-				</div>
-			</div>
-		</section>
-	}
-
-	<!-- ===================== VIEW 3: ADD / EDITOR ===================== -->
-	@if (currentView === VIEW_ADD) {
-		<section class="view editor-view">
-			<div class="editor-topbar">
-				<button class="back-btn" (click)="cancelAdd()">
-					<span class="material-symbols-outlined">arrow_back</span>
-					Recipes
-				</button>
-				<div class="editor-actions">
-					@if (editingMode === 'edit' && recipes.length > 1) {
-						<button class="btn btn-danger" (click)="removeCurrentRecipe()">
-							<span class="material-symbols-outlined">delete</span>
-							Delete
-						</button>
-					}
-					<button class="btn btn-primary" (click)="saveRecipe()">
-						<span class="material-symbols-outlined">save</span>
-						{{ editingMode === 'edit' ? 'Save Changes' : 'Save Recipe' }}
-					</button>
-				</div>
-			</div>
-
-			<div class="editor-header">
-				<div class="editor-eyebrow">
-					{{ editingMode === 'edit' ? 'Edit Recipe' : 'Add Recipe' }}
-				</div>
-				<input
-					class="title-field"
-					type="text"
-					placeholder="Untitled recipe…"
-					autocomplete="off"
-					[class.invalid]="editorNameInvalid"
-					[(ngModel)]="editorName"
-					(input)="onEditorNameInput()" />
-				<div class="header-ornament"></div>
-				<div class="editor-meta-row">
-					<label class="meta-chip editor-meta-chip">
-						<span class="material-symbols-outlined ico">schedule</span>
-						<input type="number" min="0" placeholder="—" [(ngModel)]="editorCookTime" />
-						<span class="suffix">min</span>
-					</label>
-					<label class="meta-chip editor-meta-chip">
-						<span class="material-symbols-outlined ico">group</span>
-						<input type="number" min="1" [(ngModel)]="editorServings" />
-						<span class="suffix">servings</span>
-					</label>
-					<div #catDropdown class="meta-chip editor-meta-chip select-chip" [class.invalid]="editorCategoryInvalid" [class.open]="editorCategoryOpen">
-						<span class="material-symbols-outlined ico">restaurant</span>
-						<span class="cat-trigger" role="button" tabindex="0"
-							(click)="toggleCategoryDropdown($event)"
-							(keydown.enter)="toggleCategoryDropdown($event)"
-							(keydown.space)="toggleCategoryDropdown($event)">
-							<span [class.cat-placeholder]="!editorCategory">{{ editorCategory || 'Choose category…' }}</span>
-							<span class="material-symbols-outlined drop-arrow">expand_more</span>
-						</span>
-						@if (editorCategoryOpen) {
-							<div class="cat-panel">
-								@for (cat of editorCategories; track cat) {
-									<button type="button" class="cat-option" [class.selected]="editorCategory === cat" (click)="selectCategoryOption(cat)">{{ cat }}</button>
-								}
-							</div>
-						}
-					</div>
-				</div>
-				@if (editorCategoryInvalid) {
-					<p class="field-error">
-						<span class="material-symbols-outlined">error</span>
-						Please select a category before saving.
-					</p>
-				}
-				@if (editorIngredientInvalid) {
-					<p class="field-error">
-						<span class="material-symbols-outlined">error</span>
-						{{ RECIPE_MSG_INGREDIENT_UNIT_REQUIRED }}
-					</p>
-				}
-			</div>
-
-			<div class="detail-grid">
-				<!-- INGREDIENTS EDITOR -->
-				<aside class="panel ingredients-panel editor-panel">
-					<h2 class="panel-heading">
-						<span class="material-symbols-outlined">kitchen</span>
-						Ingredients
-						<button
-							class="manage-btn"
-							type="button"
-							title="Manage ingredient types"
-							(click)="openTypeDialog()">
-							<span class="material-symbols-outlined">tune</span>
-						</button>
-					</h2>
-					<div class="panel-collapse-body editor-body">
-						<div class="type-tabs">
-							@for (tab of editorTypeTabs; track tab.id) {
-								<button
-									class="type-tab"
-									[class]="tab.id"
-									[class.active]="editorActiveType === tab.id"
-									(click)="selectEditorType(tab.id)">
-									<span class="emo">{{ tab.emoji }}</span>{{ tab.label }}
-								</button>
-							}
-						</div>
-						<div class="editor-groups">
-							@for (g of editorGroupedIngredients; track g.type) {
-								<div class="ing-group" [class]="g.type">
-									<div class="ing-group-head">{{ g.emoji }} {{ g.label }}</div>
-									@for (it of g.items; track $index) {
-										<div class="ing-row" [class]="g.type">
-											<span class="type-dot"></span>
-											<input
-												class="name"
-												type="text"
-												placeholder="Ingredient name"
-												[(ngModel)]="it.name" />
-											<div class="ing-qty-group">
-												<input
-													class="qty"
-													type="text"
-													placeholder="qty"
-													[(ngModel)]="it.qty" />
-												<p-autocomplete
-													styleClass="unit-ac"
-													panelStyleClass="unit-ac-panel"
-													[class.required]="it.qty && !it.unit"
-													placeholder="unit *"
-													[suggestions]="editorUnitSuggestions"
-													[completeOnFocus]="true"
-													[forceSelection]="false"
-													[minLength]="0"
-													[showClear]="false"
-													appendTo="body"
-													(onFocus)="onUnitFocus()"
-													(completeMethod)="filterUnits($event)"
-													[(ngModel)]="it.unit"
-													(ngModelChange)="onEditorUnitInput()" />
-												<button class="remove" title="Remove" (click)="removeEditorIngredient(it)">×</button>
-											</div>
-										</div>
-									}
-								</div>
-							}
-						</div>
-						<button class="add-btn" (click)="addEditorIngredient()">+ Add ingredient</button>
-					</div>
-					<div class="panel-foot">
-						<span class="count-badge">{{ editorIngredientCount }} ingredient{{ editorIngredientCount === 1 ? '' : 's' }}</span>
-					</div>
-				</aside>
-
-				<!-- STEPS EDITOR -->
-				<div class="panel steps-panel editor-panel">
-					<h2 class="panel-heading">
-						<span class="material-symbols-outlined">format_list_numbered</span>
-						Steps
-					</h2>
-					<div class="editor-body steps-editor-body">
-						@for (step of editorSteps; track $index; let i = $index) {
-							<div
-								class="step-card"
-								[class.dragging]="isStepDragging(step)"
-								[class.drop-above]="isStepDropTarget(step, 'above')"
-								[class.drop-below]="isStepDropTarget(step, 'below')"
-								(dragover)="onStepDragOver(step, $event)"
-								(dragleave)="onStepDragLeave(step)"
-								(drop)="onStepDrop(step, $event)">
-								<div class="step-num">{{ i + 1 }}</div>
-								<div class="step-main">
-									<textarea
-										class="step-text"
-										placeholder="Describe this step…"
-										[(ngModel)]="step.text"></textarea>
-									<div class="subpoints">
-										@for (sub of step.subs; track $index) {
-											<div class="sub-row">
-												<span class="sub-dot"></span>
-												<textarea
-													class="sub-text"
-													rows="1"
-													placeholder="Sub-point (optional)"
-													[(ngModel)]="sub.text"></textarea>
-												<button class="remove" title="Remove" (click)="removeSubpoint(step, sub)">×</button>
-											</div>
-										}
+										<button class="add-sub" (click)="addSubpoint(step)">
+											+ Add sub-point
+										</button>
 									</div>
-									<button class="add-sub" (click)="addSubpoint(step)">+ Add sub-point</button>
+									<div class="step-tools">
+										<span
+											class="drag"
+											title="Drag to reorder"
+											draggable="true"
+											(dragstart)="onStepDragStart(step, $event)"
+											(dragend)="onStepDragEnd()"
+											>⋮⋮</span
+										>
+										<button
+											class="remove"
+											title="Remove step"
+											(click)="removeEditorStep(step)">
+											×
+										</button>
+									</div>
 								</div>
-								<div class="step-tools">
-									<span class="drag" title="Drag to reorder" draggable="true" (dragstart)="onStepDragStart(step, $event)" (dragend)="onStepDragEnd()">⋮⋮</span>
-									<button class="remove" title="Remove step" (click)="removeEditorStep(step)">×</button>
-								</div>
-							</div>
-						}
-						<button class="add-btn" (click)="addEditorStep()">+ Add step</button>
-					</div>
-					<div class="panel-foot">
-						<span class="count-badge">{{ editorStepCount }} step{{ editorStepCount === 1 ? '' : 's' }}</span>
+							}
+							<button class="add-btn" (click)="addEditorStep()">+ Add step</button>
+						</div>
+						<div class="panel-foot">
+							<span class="count-badge"
+								>{{ editorStepCount }} step{{ editorStepCount === 1 ? '' : 's' }}</span
+							>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<!-- NOTES EDITOR -->
-			<div class="notes-card editor-notes">
-				<div class="notes-header">
-					<span class="material-symbols-outlined">edit_note</span>
-					Notes &amp; Tips
+				<!-- NOTES EDITOR -->
+				<div class="notes-card editor-notes">
+					<div class="notes-header">
+						<span class="material-symbols-outlined">edit_note</span>
+						Notes &amp; Tips
+					</div>
+					<div class="notes-inner">
+						<textarea
+							class="notepad editor-notepad"
+							placeholder="Tips, tweaks, or things to remember next time…"
+							[(ngModel)]="editorNotes"></textarea>
+					</div>
 				</div>
-				<div class="notes-inner">
-					<textarea
-						class="notepad editor-notepad"
-						placeholder="Tips, tweaks, or things to remember next time…"
-						[(ngModel)]="editorNotes"></textarea>
-				</div>
-			</div>
-		</section>
-	}
-</div>
+			</section>
+		}
+	</div>
 } @else {
-	<app-access-denied />
+	<access-denied />
 }
-

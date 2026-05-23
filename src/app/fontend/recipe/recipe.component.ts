@@ -145,6 +145,9 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private draggingStep: EditorStep | null = null;
 	private dropTargetStep: EditorStep | null = null;
 	private dropPosition: DropPosition | null = null;
+	private pendingScrollToNewIngredient = false;
+	/** JSON snapshot of the editor state at the moment a recipe was loaded for editing. */
+	private initialEditorSnapshot: string | null = null;
 
 	protected recipes: Recipe[] = [];
 	protected isLoading = true;
@@ -205,6 +208,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * After every change-detection cycle, ensure all scrollable panels in the
 	 * component have the auto-hide scroll listener attached. Uses a WeakSet so
 	 * each element is bound exactly once regardless of how often the hook fires.
+	 * Also handles scroll-and-focus for a newly added ingredient row when
+	 * {@link pendingScrollToNewIngredient} is set.
 	 */
 	public ngAfterViewChecked(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
@@ -216,6 +221,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		document
 			.querySelectorAll<HTMLElement>('.container-recipe > .view')
 			.forEach((el) => Utilities.attachScrollAutoHide(el));
+		if (this.pendingScrollToNewIngredient) {
+			this.pendingScrollToNewIngredient = false;
+			const rows = document.querySelectorAll<HTMLElement>(`.ing-row.${this.editorActiveType}`);
+			const lastRow = rows[rows.length - 1];
+			if (lastRow) {
+				lastRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+				lastRow.querySelector<HTMLTextAreaElement>('textarea.name')?.focus();
+			}
+		}
 	}
 
 	/**
@@ -473,6 +487,14 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 				unit: item.unit
 			}))
 		);
+
+		// Sync type tabs to match exactly the types present in this recipe so the
+		// user sees the right tabs without having to open the filter dialog manually.
+		const recipeTypes = recipe.groups.map((g) => g.type);
+		if (recipeTypes.length > 0) {
+			this.activeTypeIds = new Set(recipeTypes);
+		}
+
 		// Active type tab defaults to the first group present, or veg if empty
 		this.editorActiveType = recipe.groups[0]?.type ?? RECIPE_ITYPE_VEG;
 		if (this.editorIngredients.length === 0) {
@@ -486,6 +508,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (this.editorSteps.length === 0) {
 			this.editorSteps = [{ text: '', subs: [] }];
 		}
+
+		this.initialEditorSnapshot = this.snapshotEditorState();
 	}
 
 	/**
@@ -496,6 +520,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected cancelAdd(): void {
 		if (this.editingMode === RECIPE_EDITING_MODE_EDIT) {
+			if (!this.isEditorDirty) {
+				this.transitionTo(RECIPE_VIEW_DETAIL);
+				return;
+			}
 			this.dialogService.openDialog(
 				this.dialogContainer,
 				DIALOG_CONFIRM,
@@ -576,6 +604,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.editorNameInvalid = false;
 		this.editorCategoryInvalid = false;
 		this.editorIngredientInvalid = false;
+		this.initialEditorSnapshot = null;
 	}
 
 	/**
@@ -623,7 +652,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Append a new blank ingredient row of the currently active type to the
-	 * editor ingredient list.
+	 * editor ingredient list, then schedule a scroll-and-focus to the new row.
 	 */
 	protected addEditorIngredient(): void {
 		this.editorIngredients.push({
@@ -632,6 +661,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			qty: '',
 			unit: ''
 		});
+		this.pendingScrollToNewIngredient = true;
 	}
 
 	/**
@@ -731,6 +761,44 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
+	 * Serialize the current editor fields to a JSON string for change detection.
+	 * Only data fields are captured — UI-only state such as active type tab and
+	 * type-tab visibility are excluded.
+	 *
+	 * @returns A JSON string representing the current editor data state.
+	 */
+	private snapshotEditorState(): string {
+		return JSON.stringify({
+			name: this.editorName,
+			cookTime: this.editorCookTime,
+			servings: this.editorServings,
+			category: this.editorCategory,
+			notes: this.editorNotes,
+			ingredients: this.editorIngredients.map((i) => ({
+				type: i.type,
+				name: i.name,
+				qty: i.qty,
+				unit: i.unit
+			})),
+			steps: this.editorSteps.map((s) => ({
+				text: s.text,
+				subs: s.subs.map((x) => x.text)
+			}))
+		});
+	}
+
+	/**
+	 * Whether the editor fields differ from the state captured when the recipe
+	 * was loaded. Always returns true in create mode (no snapshot exists).
+	 *
+	 * @returns True if any data field has changed since the recipe was loaded.
+	 */
+	private get isEditorDirty(): boolean {
+		if (!this.initialEditorSnapshot) return true;
+		return this.snapshotEditorState() !== this.initialEditorSnapshot;
+	}
+
+	/**
 	 * True when at least one named ingredient has a quantity but no unit.
 	 * Single source of truth used by saveRecipe, onEditorUnitInput, and removeEditorIngredient.
 	 *
@@ -788,6 +856,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * The recipe watcher keeps the local list in sync automatically.
 	 */
 	protected async saveRecipe(): Promise<void> {
+		if (this.editingMode === RECIPE_EDITING_MODE_EDIT && !this.isEditorDirty) {
+			this.transitionTo(RECIPE_VIEW_DETAIL);
+			return;
+		}
 		this.editorNameInvalid = !this.editorName.trim();
 		this.editorCategoryInvalid = !this.editorCategory;
 		this.editorIngredientInvalid = this.hasIngredientUnitViolation;
@@ -862,13 +934,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * pill tokens so the read view keeps its colored highlights after editing.
 	 * Best-effort substring match — sorts names longest-first so multi-word
 	 * names like "soy sauce" win over their constituent words.
+	 * For bilingual names (two lines), only the first line is used for matching
+	 * so steps can reference whichever language the name starts with.
 	 */
 	private autoPillStepText(text: string, ingredients: EditorIngredient[]): StepToken[] {
 		if (!text) return [{ kind: 'text', text: '' }];
 
 		const nameMap = new Map<string, IngredientType>();
 		ingredients.forEach((i) => {
-			const name = i.name.trim().toLowerCase();
+			const name = i.name.split('\n')[0].trim().toLowerCase();
 			if (name) nameMap.set(name, i.type);
 		});
 		if (nameMap.size === 0) return [{ kind: 'text', text }];

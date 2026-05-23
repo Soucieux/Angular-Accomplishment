@@ -148,10 +148,6 @@ export const NEXUS_CATEGORY_ALL = 'all';
 export const NEXUS_DIALOG_TITLE_ADD_LINK = 'Add Link';
 /** Dialog title when editing an existing link. */
 export const NEXUS_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
-/** LocalStorage key for persisting selected AI chip IDs across sessions. */
-export const NEXUS_STORAGE_KEY_SELECTED_AIS = 'nexus_selected_ais';
-/** LocalStorage key for persisting the launch search history. */
-export const NEXUS_STORAGE_KEY_HISTORY = 'nexus_search_history';
 /** Default colour applied to new and un-styled link categories. */
 export const NEXUS_DEFAULT_CATEGORY_COLOR = '#d53369';
 
@@ -242,7 +238,7 @@ export const RECIPE_ITYPE_CONDIMENT = 'condiment';
 
 // ── Recipe — editor type tab management ──────────────────────────────────
 /** Maximum number of ingredient type tabs shown in the add/edit editor. */
-export const RECIPE_EDITOR_TYPE_MAX = 7;
+export const RECIPE_EDITOR_TYPE_MAX = 9;
 /** Dialog title for the ingredient type manager in the editor. */
 export const RECIPE_ITYPE_DIALOG_TITLE = 'Manage Ingredient Types';
 /** Dialog type for the ingredient type manager in the editor. */

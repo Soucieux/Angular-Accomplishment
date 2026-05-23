@@ -318,27 +318,8 @@
 						<h2 class="panel-heading">
 							<span class="material-symbols-outlined">kitchen</span>
 							Ingredients
-							<button
-								class="manage-btn"
-								type="button"
-								title="Manage ingredient types"
-								(click)="openTypeDialog()">
-								<span class="material-symbols-outlined">tune</span>
-							</button>
 						</h2>
 						<div class="panel-collapse-body editor-body">
-							<div class="type-tabs">
-								@for (tab of editorTypeTabs; track tab.id) {
-									<button
-										class="type-tab"
-										[class]="tab.id"
-										[class.active]="editorActiveType === tab.id"
-										(click)="selectEditorType(tab.id)">
-										<span class="emo">{{ tab.emoji }}</span
-										>{{ tab.label }}
-									</button>
-								}
-							</div>
 							<div class="editor-groups">
 								@for (g of editorGroupedIngredients; track g.type) {
 									<div class="ing-group" [class]="g.type">
@@ -346,11 +327,11 @@
 										@for (it of g.items; track $index) {
 											<div class="ing-row" [class]="g.type">
 												<span class="type-dot"></span>
-												<input
+												<textarea
 													class="name"
-													type="text"
 													placeholder="Ingredient name"
-													[(ngModel)]="it.name" />
+													rows="1"
+													[(ngModel)]="it.name"></textarea>
 												<div class="ing-qty-group">
 													<input
 														class="qty"
@@ -383,6 +364,26 @@
 										}
 									</div>
 								}
+							</div>
+						</div>
+						<div class="add-footer">
+							<div class="type-tabs">
+								@for (tab of editorTypeTabs; track tab.id) {
+									<button
+										class="type-tab"
+										[class]="tab.id"
+										[class.active]="editorActiveType === tab.id"
+										(click)="selectEditorType(tab.id)">
+										<span class="emo">{{ tab.emoji }}</span>
+									</button>
+								}
+								<button
+									class="manage-btn"
+									type="button"
+									title="Manage ingredient types"
+									(click)="openTypeDialog()">
+									<span class="material-symbols-outlined">tune</span>
+								</button>
 							</div>
 							<button class="add-btn" (click)="addEditorIngredient()">+ Add ingredient</button>
 						</div>

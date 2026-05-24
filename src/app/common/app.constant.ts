@@ -375,6 +375,34 @@ export const ENT_DIALOG_BTN_DELETE = 'Delete';
 export const ENT_MSG_ADDING = 'Adding movie...';
 export const ENT_MSG_RESTORING = 'Restoring movie...';
 
+// ── Entertainment — header strings ────────────────────────────────────────
+/** Tooltip for the Refresh Rates action button. */
+export const ENT_TOOLTIP_REFRESH = 'Refresh Rates';
+/** Tooltip for the Add Movie action button. */
+export const ENT_TOOLTIP_ADD = 'Add Movie';
+/** Tooltip for the History action button. */
+export const ENT_TOOLTIP_HISTORY = 'History';
+/** Placeholder text for the movie search input. */
+export const ENT_SEARCH_PLACEHOLDER = 'Search movies...';
+/** Suffix label in the count pill (e.g. "77 films"). */
+export const ENT_LABEL_FILMS = 'films';
+/** Secondary label on each category card (e.g. "10 to watch"). */
+export const ENT_LABEL_TO_WATCH = 'to watch';
+/** Pushpin colours for corkboard category cards, cycling by card index. */
+export const ENT_CORK_PIN_COLORS: string[] = [
+	'#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'
+];
+/** Rotation amounts (degrees) for corkboard category cards, cycling by card index. */
+export const ENT_CORK_ROTATIONS: number[] = [-2.4, 1.9, -1.3, 2.6, -0.7, 1.5, -2.1];
+/** Number of progress-bar blocks per category card. */
+export const ENT_CORK_BLOCKS = 8;
+/** ID of the programmatically injected View Transition style element. */
+export const ENT_VTA_STYLE_ID = 'ent-vta-styles';
+/** CSS view-transition-class value applied to movie cards being filtered out. */
+export const ENT_VT_CLASS_LEAVING = 'vt-leaving';
+/** CSS view-transition-class value applied to movie cards being filtered in. */
+export const ENT_VT_CLASS_ENTERING = 'vt-entering';
+
 // ── Resonance — constants ─────────────────────────────────────────────────
 export const RESONANCE_AUTHOR_ANONYMOUS = 'Anonymous';
 export const RESONANCE_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this quote?';

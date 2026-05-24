@@ -369,7 +369,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Toggle the collapsed state of the ingredients panel on mobile only.
-	 * On desktop viewports (> 940 px) the panel is always expanded and this
+	 * On desktop viewports (> 800 px) the panel is always expanded and this
 	 * method is a no-op.
 	 */
 	protected toggleIngredients(): void {

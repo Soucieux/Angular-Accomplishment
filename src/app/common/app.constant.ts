@@ -274,7 +274,11 @@ export const RECIPE_MSG_DELETE_FAILED = 'Delete failed';
 export const RECIPE_MSG_DELETE_FAILED_DETAIL = 'Could not delete the recipe. Please try again.';
 
 // ── Layout — responsive breakpoints ──────────────────────────────────────
-export const BREAKPOINT_MOBILE = '(max-width: 940px)';
+export const BREAKPOINT_MOBILE = '(max-width: 800px)';
+export const BREAKPOINT_MID    = '(max-width: 1100px)';
+export const BREAKPOINT_LARGE  = '(max-width: 1500px)';
+// Dialog panels have a narrower breakpoint — they are floating overlays, not full pages.
+export const BREAKPOINT_DIALOG = '(max-width: 580px)';
 
 // ── Errors ─────────────────────────────────────────────────────────────────
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';

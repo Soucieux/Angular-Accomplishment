@@ -521,13 +521,15 @@
 	flex-direction: row;
 	gap: 20px;
 
-	position: absolute;
-	bottom: 0px;
+	position: relative;
+	top: 60px;
 	border-top: 1px solid rgba(0, 0, 0, 0.09);
 	padding-top: 10px;
 }
 
 .edit-button {
+	position: relative;
+	right: -2px;
 	display: flex;
 	align-items: center;
 }
@@ -547,6 +549,8 @@
 }
 
 .delete-button {
+	position: relative;
+	right: -2px;
 	display: flex;
 	align-items: center;
 }
@@ -607,6 +611,10 @@
 
 /* The max-width here is the **current** maximum width of the browser */
 @media (max-width: 940px) {
+	.info-swap {
+		height: 70%;
+	}
+
 	.control-button-title {
 		font-size: 22px;
 	}
@@ -679,14 +687,15 @@
 	}
 
 	.info-hover {
-		gap: 10px !important;
+		gap: 5px !important;
 	}
 
 	.buttons-group {
-		margin-bottom: 10px;
+		margin-bottom: 15px;
 		width: 100%;
 		justify-content: space-around;
 		gap: 0;
+		top: 40px;
 	}
 
 	.edit-button-icon {

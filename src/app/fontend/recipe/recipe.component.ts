@@ -41,11 +41,14 @@ import {
 	RECIPE_EDITING_MODE_EDIT,
 	RECIPE_ITYPE_VEG,
 	RECIPE_MSG_ADDED,
+	RECIPE_MAX_BADGES,
+	RECIPE_MAX_NAME_CHARS,
 	RECIPE_MSG_DELETE_FAILED,
 	RECIPE_MSG_DELETE_FAILED_DETAIL,
 	RECIPE_MSG_DELETED,
 	RECIPE_MSG_INGREDIENT_UNIT_REQUIRED,
 	RECIPE_MSG_LOAD_FAILED,
+	RECIPE_MSG_NAME_TOO_LONG,
 	RECIPE_MSG_SAVE_FAILED,
 	RECIPE_MSG_SAVE_FAILED_DETAIL,
 	RECIPE_MSG_UPDATED,
@@ -85,7 +88,7 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 	standalone: true,
 	imports: [CommonModule, FormsModule, AutoComplete, AccessDeniedComponent],
 	templateUrl: './recipe.component.html',
-	styleUrl: './recipe.component.css',
+	styleUrl: './recipe.component.css'
 })
 export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'RecipeComponent';
@@ -128,6 +131,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected editorIngredients: EditorIngredient[] = [];
 	protected editorSteps: EditorStep[] = [];
 	protected editorNameInvalid = false;
+	protected editorNameTooLong = false;
 	protected editorCategoryInvalid = false;
 	/** True only after a failed save attempt where a named ingredient has qty but no unit. */
 	protected editorIngredientInvalid = false;
@@ -138,6 +142,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/** Exposes the unit-required message to the template. */
 	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
+	/** Exposes the name-too-long message to the template. */
+	protected readonly RECIPE_MSG_NAME_TOO_LONG = RECIPE_MSG_NAME_TOO_LONG;
 	protected editorCategoryOpen = false;
 	protected editingMode: EditingMode = RECIPE_EDITING_MODE_CREATE;
 	private editingRecipeId: string | null = null;
@@ -215,9 +221,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (!isPlatformBrowser(this.platformId)) return;
 		Utilities.attachScrollAutoHide(this.stepsScrollEl?.nativeElement);
 		Utilities.attachScrollAutoHide(this.ingredientsScrollEl?.nativeElement);
-		document.querySelectorAll<HTMLElement>('.editor-body').forEach((el) => Utilities.attachScrollAutoHide(el));
-		document.querySelectorAll<HTMLElement>('.type-tabs').forEach((el) => Utilities.attachScrollAutoHide(el));
-		document.querySelectorAll<HTMLElement>('.chips').forEach((el) => Utilities.attachScrollAutoHide(el));
+		document
+			.querySelectorAll<HTMLElement>('.editor-body')
+			.forEach((el) => Utilities.attachScrollAutoHide(el));
+		document
+			.querySelectorAll<HTMLElement>('.type-tabs')
+			.forEach((el) => Utilities.attachScrollAutoHide(el));
+		document
+			.querySelectorAll<HTMLElement>('.chips-scroll')
+			.forEach((el) => Utilities.attachScrollAutoHide(el));
 		document
 			.querySelectorAll<HTMLElement>('.container-recipe > .view')
 			.forEach((el) => Utilities.attachScrollAutoHide(el));
@@ -476,6 +488,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.editorCategory = recipe.category;
 		this.editorNotes = recipe.notes;
 		this.editorNameInvalid = false;
+		this.editorNameTooLong = false;
 		this.editorCategoryInvalid = false;
 		this.editorIngredientInvalid = false;
 
@@ -602,6 +615,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			{ text: '', subs: [] }
 		];
 		this.editorNameInvalid = false;
+		this.editorNameTooLong = false;
 		this.editorCategoryInvalid = false;
 		this.editorIngredientInvalid = false;
 		this.initialEditorSnapshot = null;
@@ -758,6 +772,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected onEditorNameInput(): void {
 		if (this.editorName.trim()) this.editorNameInvalid = false;
+		if (
+			this.editorNameTooLong &&
+			Utilities.chineseCharWidth(this.editorName.trim()) <= RECIPE_MAX_NAME_CHARS
+		) {
+			this.editorNameTooLong = false;
+		}
 	}
 
 	/**
@@ -861,9 +881,18 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			return;
 		}
 		this.editorNameInvalid = !this.editorName.trim();
+		this.editorNameTooLong =
+			!!this.editorName.trim() &&
+			Utilities.chineseCharWidth(this.editorName.trim()) > RECIPE_MAX_NAME_CHARS;
 		this.editorCategoryInvalid = !this.editorCategory;
 		this.editorIngredientInvalid = this.hasIngredientUnitViolation;
-		if (this.editorNameInvalid || this.editorCategoryInvalid || this.editorIngredientInvalid) return;
+		if (
+			this.editorNameInvalid ||
+			this.editorNameTooLong ||
+			this.editorCategoryInvalid ||
+			this.editorIngredientInvalid
+		)
+			return;
 
 		const validIngredients = this.editorIngredients.filter((i) => i.name.trim());
 
@@ -888,7 +917,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		const presentTypes = new Set(validIngredients.map((i) => i.type));
 		const badges: BadgeTag[] = MASTER_TYPE_TABS.filter((t) => presentTypes.has(t.id))
-			.slice(0, 3)
+			.slice(0, RECIPE_MAX_BADGES)
 			.map((t) => ({ type: t.id, emoji: t.emoji, label: t.label }));
 
 		const isEdit = this.editingMode === RECIPE_EDITING_MODE_EDIT && !!this.editingRecipeId;

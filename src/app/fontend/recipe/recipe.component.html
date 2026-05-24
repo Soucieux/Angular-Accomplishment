@@ -22,15 +22,17 @@
 					</button>
 				</div>
 
-				<div class="chips">
-					@for (cat of categories; track cat) {
-						<button
-							class="chip"
-							[class.active]="activeCategory === cat"
-							(click)="selectCategory(cat)">
-							{{ cat }}
-						</button>
-					}
+				<div class="chips-scroll">
+					<div class="chips">
+						@for (cat of categories; track cat) {
+							<button
+								class="chip"
+								[class.active]="activeCategory === cat"
+								(click)="selectCategory(cat)">
+								{{ cat }}
+							</button>
+						}
+					</div>
 				</div>
 
 				@if (isLoading) {
@@ -70,7 +72,8 @@
 									<div class="badge-row">
 										@for (b of recipe.badges; track b.label) {
 											<span class="ipill" [class]="b.type"
-												>{{ b.emoji }} {{ b.label }}</span
+												>{{ b.emoji
+												}}<span class="hide-on-mobile"> {{ b.label }}</span></span
 											>
 										}
 									</div>
@@ -79,7 +82,7 @@
 											<span class="material-symbols-outlined">schedule</span>
 											{{ recipe.cookTimeMin }} min
 										</span>
-										<span class="meta-chip">
+										<span class="meta-chip hide-on-mobile">
 											<span class="material-symbols-outlined">restaurant</span>
 											{{ recipe.baseServings }} servings
 										</span>
@@ -250,7 +253,7 @@
 						type="text"
 						placeholder="Untitled recipe…"
 						autocomplete="off"
-						[class.invalid]="editorNameInvalid"
+						[class.invalid]="editorNameInvalid || editorNameTooLong"
 						[(ngModel)]="editorName"
 						(input)="onEditorNameInput()" />
 					<div class="header-ornament"></div>
@@ -298,6 +301,12 @@
 							}
 						</div>
 					</div>
+					@if (editorNameTooLong) {
+						<p class="field-error">
+							<span class="material-symbols-outlined">error</span>
+							{{ RECIPE_MSG_NAME_TOO_LONG }}
+						</p>
+					}
 					@if (editorCategoryInvalid) {
 						<p class="field-error">
 							<span class="material-symbols-outlined">error</span>

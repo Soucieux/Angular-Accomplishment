@@ -1,57 +1,83 @@
 @let stats = statistics$ | async;
+@let selectedGenre = selectedGenres$ | async;
 @if (utilities.getIsUserAlive() && stats !== null) {
 	<div class="page-container">
-		<div class="control-button-container">
-			<h1 class="control-button-title" style="margin-right: auto">Movies ({{ stats.totalNumber }})</h1>
+		<div class="top-bar">
+			<div class="top-bar-left">
+				<h1 class="bar-title">Entertainment</h1>
+				<span class="count-pill">{{ stats.totalNumber }} {{ ENT_LABEL_FILMS }}</span>
+			</div>
 			<div class="search-input-wrapper hide-on-mobile">
 				<span class="material-symbols-outlined search-icon-input">search</span>
 				<input
 					type="text"
 					class="search-input"
-					placeholder="Search movies..."
+					[placeholder]="ENT_SEARCH_PLACEHOLDER"
 					[(ngModel)]="searchText"
 					(ngModelChange)="updateSearchQuery($event)" />
 			</div>
-			<button
-				mat-mini-fab
-				(click)="openSearchDialog()"
-				class="control-button search-button"
-				matTooltip="Refresh Rates"
-				matTooltipPosition="below">
-				<span class="material-symbols-outlined control-button-icon">cached</span>
-			</button>
-			<button
-				mat-mini-fab
-				(click)="openAddNewMovieDialog()"
-				class="control-button add-button"
-				matTooltip="Add Movie"
-				matTooltipPosition="below">
-				<span class="material-symbols-outlined control-button-icon">add</span>
-			</button>
-			<button
-				mat-mini-fab
-				(click)="openHistoryDialog()"
-				class="control-button history-button"
-				matTooltip="History"
-				matTooltipPosition="below">
-				<span class="material-symbols-outlined control-button-icon">history</span>
-			</button>
+			<div class="top-bar-actions">
+				<button
+					mat-mini-fab
+					(click)="openSearchDialog()"
+					class="control-button search-button"
+					[matTooltip]="ENT_TOOLTIP_REFRESH"
+					matTooltipPosition="below">
+					<span class="material-symbols-outlined control-button-icon">cached</span>
+				</button>
+				<button
+					mat-mini-fab
+					(click)="openAddNewMovieDialog()"
+					class="control-button add-button"
+					[matTooltip]="ENT_TOOLTIP_ADD"
+					matTooltipPosition="below">
+					<span class="material-symbols-outlined control-button-icon">add</span>
+				</button>
+				<button
+					mat-mini-fab
+					(click)="openHistoryDialog()"
+					class="control-button history-button"
+					[matTooltip]="ENT_TOOLTIP_HISTORY"
+					matTooltipPosition="below">
+					<span class="material-symbols-outlined control-button-icon">history</span>
+				</button>
+			</div>
 		</div>
-		<div class="category-button-container">
-			@for (genre of stats.genre | keyvalue; track genre.key) {
-				<div
-					matRipple
-					class="category-button"
-					(click)="filterByGenre($any(genre.key))"
-					[ngClass]="{
-						'selected-category': (selectedGenres$ | async)?.includes($any(genre.key))
-					}">
-					<span class="category-text">{{ genre.key }}</span>
+		<div class="category-row">
+			@for (genre of stats.genre | keyvalue; track genre.key; let i = $index) {
+				<button
+					class="category-card"
+					[class.card-active]="selectedGenre === genre.key"
+					[style.transform]="
+						selectedGenre === genre.key ? 'rotate(0deg)' : 'rotate(' + getGenreRotation(i) + ')'
+					"
+					[style.background]="getCardBackground(i, selectedGenre === genre.key)"
+					[style.box-shadow]="getCardShadow(i, selectedGenre === genre.key)"
+					(click)="filterByGenre($any(genre.key))">
 					<span
-						><p class="category-count">{{ genre.value }}</p>
-						<p class="hide-on-mobile">to watch</p></span
-					>
-				</div>
+						class="pushpin"
+						[style.background]="getGenreColor(i)"
+						[style.box-shadow]="'0 2px 8px ' + getGenreColor(i) + '88'">
+					</span>
+					<span class="card-genre-name">{{ genre.key }}</span>
+					<div class="card-count-row">
+						<span class="card-count" [style.color]="getGenreColor(i)">{{ genre.value }}</span>
+						<span class="card-watch-label">{{ ENT_LABEL_TO_WATCH }}</span>
+					</div>
+					<div class="card-progress-bar">
+						@for (
+							filled of getFilledBlocks(+genre.value, getCorkMax(stats.genre));
+							track $index
+						) {
+							<span
+								class="progress-block"
+								[class.block-filled]="filled"
+								[style.background]="filled ? getGenreColor(i) : 'transparent'"
+								[style.border-color]="filled ? getGenreColor(i) : getGenreColor(i) + '55'">
+							</span>
+						}
+					</div>
+				</button>
 			}
 		</div>
 	</div>
@@ -59,6 +85,8 @@
 		@for (movie of filteredMovieList$ | async; track movie.getMovieId()) {
 			<div
 				class="individual-item"
+				[style.view-transition-name]="'movie-' + movie.getMovieId()"
+				[style.view-transition-class]="getMovieVtClass(movie)"
 				[ngClass]="{
 					'very-high-rate': movie.getMovieRate() >= 9,
 					'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,
@@ -87,8 +115,8 @@
 						}
 					</div>
 					<div class="info-swap">
-                        <div class="info-default">
-                            <div class="rate-divider"></div>
+						<div class="info-default">
+							<div class="rate-divider"></div>
 							<span class="text"
 								>类型:
 								@if (editedItems.has(movie.getMovieKey())) {

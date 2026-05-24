@@ -530,6 +530,21 @@ export class Utilities {
 	}
 
 	/**
+	 * Builds a boolean array representing a segmented progress bar.
+	 * Each element is true if that block should be filled, based on
+	 * the proportion of count to max scaled to totalBlocks segments.
+	 *
+	 * @param count - The value to represent (e.g. movies in a genre).
+	 * @param max - The maximum value used as the scale denominator.
+	 * @param totalBlocks - Total number of blocks in the bar.
+	 * @returns A boolean array of length totalBlocks.
+	 */
+	public static filledBlocks(count: number, max: number, totalBlocks: number): boolean[] {
+		const filled = max > 0 ? Math.round((count / max) * totalBlocks) : 0;
+		return Array.from({ length: totalBlocks }, (_, i) => i < filled);
+	}
+
+	/**
 	 * Return the CSS band class name for a given recipe category.
 	 *
 	 * @param category - The recipe category string (e.g. 'Chinese', 'Western').

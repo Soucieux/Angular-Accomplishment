@@ -21,11 +21,24 @@ import {
 	ENT_DIALOG_BTN_DELETE,
 	ENT_MSG_ADDING,
 	ENT_MSG_RESTORING,
-	CN
+	CN,
+	ENT_TOOLTIP_REFRESH,
+	ENT_TOOLTIP_ADD,
+	ENT_TOOLTIP_HISTORY,
+	ENT_SEARCH_PLACEHOLDER,
+	ENT_LABEL_FILMS,
+	ENT_LABEL_TO_WATCH,
+	ENT_CORK_PIN_COLORS,
+	ENT_CORK_ROTATIONS,
+	ENT_CORK_BLOCKS,
+	ENT_VTA_STYLE_ID,
+	ENT_VT_CLASS_LEAVING,
+	ENT_VT_CLASS_ENTERING
 } from '../../common/app.constant';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
+	ChangeDetectorRef,
 	Component,
 	ElementRef,
 	HostListener,
@@ -37,9 +50,8 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom, Observable, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
+import { firstValueFrom, Observable, Subscription, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { DoubanService } from '../../backend/douban-service/douban.service';
 import { MovieItemVO } from './movieItem.vo';
@@ -54,6 +66,23 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { MovieFetchFailedError } from '../../common/error/movie-fetch-failed-error';
+
+/**
+ * View Transition styles injected directly into <head> at runtime.
+ * They cannot live in the component stylesheet because Angular's
+ * ViewEncapsulation.Emulated prefixes ::view-transition-* selectors with an
+ * attribute selector, preventing them from matching the browser-generated
+ * pseudo-elements on the document root.
+ */
+const ENT_VTA_CSS = `
+::view-transition-old(*),::view-transition-new(*){mix-blend-mode:normal}
+::view-transition-old(*.${ENT_VT_CLASS_LEAVING}){animation:420ms ease-in both vt-fade-out}
+::view-transition-new(*.${ENT_VT_CLASS_ENTERING}){animation:420ms ease-out both vt-fade-in}
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+@keyframes vt-fade-out{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(0.88)}}
+@keyframes vt-fade-in{from{opacity:0;transform:scale(0.88)}to{opacity:1;transform:scale(1)}}
+`;
+
 @Component({
 	selector: 'entertainment',
 	standalone: true,
@@ -90,10 +119,21 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	private searchSummary!: Map<string, string[]>;
 	protected editedItems = new Map<string, { original: string; genre: string }>();
 	protected genres = MOVIE_GENRES;
+	protected readonly ENT_TOOLTIP_REFRESH = ENT_TOOLTIP_REFRESH;
+	protected readonly ENT_TOOLTIP_ADD = ENT_TOOLTIP_ADD;
+	protected readonly ENT_TOOLTIP_HISTORY = ENT_TOOLTIP_HISTORY;
+	protected readonly ENT_SEARCH_PLACEHOLDER = ENT_SEARCH_PLACEHOLDER;
+	protected readonly ENT_LABEL_FILMS = ENT_LABEL_FILMS;
+	protected readonly ENT_LABEL_TO_WATCH = ENT_LABEL_TO_WATCH;
+	private latestMovieList: MovieItemVO[] = [];
+	private readonly vtClassMap = new Map<string, string>();
+	private movieListSub?: Subscription;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(DOCUMENT) private doc: Document,
 		private elRef: ElementRef<HTMLElement>,
 		private renderer: Renderer2,
+		private cdr: ChangeDetectorRef,
 		private doubanService: DoubanService,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
@@ -108,6 +148,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId)) {
+			const vtaStyle = this.doc.createElement('style');
+			vtaStyle.id = ENT_VTA_STYLE_ID;
+			vtaStyle.textContent = ENT_VTA_CSS;
+			this.doc.head.appendChild(vtaStyle);
+
 			// Get the movie list (Observable) and statistics (Observable) from firebase or cloudbase
 			this.statistics$ = this.databaseService.getStatistics();
 
@@ -115,6 +160,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			await firstValueFrom(this.statistics$.pipe(take(1)));
 			// Below part will be executed only if there is no error reading data in the database
 			this.movieList$ = this.databaseService.getMovieList();
+			this.movieListSub = this.movieList$.subscribe(list => {
+				this.latestMovieList = list;
+			});
 
 			// Create a filter that reacts to genre selection and text search simultaneously
 			this.filteredMovieList$ = combineLatest([
@@ -161,6 +209,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * resets the searching flag, and logs the component destruction event.
 	 */
 	public ngOnDestroy() {
+		this.doc.getElementById(ENT_VTA_STYLE_ID)?.remove();
+		this.movieListSub?.unsubscribe();
 		this.selectedGenres$.complete();
 		this.searchQuery$.complete();
 		this.dialogComponentContainer?.clear();
@@ -597,6 +647,81 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Returns the pushpin colour for a corkboard category card, cycling through
+	 * ENT_CORK_PIN_COLORS by card index.
+	 *
+	 * @param index - Zero-based position of the card in the category row.
+	 * @returns A CSS colour string.
+	 */
+	protected getGenreColor(index: number): string {
+		return ENT_CORK_PIN_COLORS[index % ENT_CORK_PIN_COLORS.length];
+	}
+
+	/**
+	 * Returns the CSS rotation value for a corkboard category card, cycling through
+	 * ENT_CORK_ROTATIONS by card index.
+	 *
+	 * @param index - Zero-based position of the card in the category row.
+	 * @returns A CSS rotation string (e.g. "-2.4deg").
+	 */
+	protected getGenreRotation(index: number): string {
+		return ENT_CORK_ROTATIONS[index % ENT_CORK_ROTATIONS.length] + 'deg';
+	}
+
+	/**
+	 * Delegates to Utilities.filledBlocks using the cork-board block count.
+	 *
+	 * @param count - Number of titles in this genre.
+	 * @param max - Maximum count across all genres, used as the scale denominator.
+	 * @returns A boolean array of length ENT_CORK_BLOCKS.
+	 */
+	protected getFilledBlocks(count: number, max: number): boolean[] {
+		return Utilities.filledBlocks(count, max, ENT_CORK_BLOCKS);
+	}
+
+	/**
+	 * Computes the maximum genre count from the statistics genre map.
+	 * Used as the denominator when scaling the corkboard progress bar.
+	 *
+	 * @param genre - Genre map keyed by genre name with count values.
+	 * @returns The highest count, or 1 when the map is empty.
+	 */
+	protected getCorkMax(genre: Record<string, number>): number {
+		const values = Object.values(genre ?? {}).map(Number).filter((n) => !isNaN(n));
+		return values.length > 0 ? Math.max(...values) : 1;
+	}
+
+	/**
+	 * Returns the background style for a category card. Inactive cards use a
+	 * plain white background; the active card gets a gradient built from its
+	 * own pin colour for per-card colour variety.
+	 *
+	 * @param index - Zero-based position of the card in the category row.
+	 * @param isActive - Whether this card is currently selected.
+	 * @returns A CSS background string.
+	 */
+	protected getCardBackground(index: number, isActive: boolean): string {
+		if (!isActive) return '#ffffff';
+		const color = this.getGenreColor(index);
+		return `linear-gradient(135deg, ${color}ee 0%, ${color}99 100%)`;
+	}
+
+	/**
+	 * Returns the box-shadow style for a category card. Inactive cards get an
+	 * empty string (falling back to the CSS default shadow); the active card
+	 * gets a coloured glow matching its own pin colour.
+	 *
+	 * @param index - Zero-based position of the card in the category row.
+	 * @param isActive - Whether this card is currently selected.
+	 * @returns A CSS box-shadow string.
+	 */
+	protected getCardShadow(index: number, isActive: boolean): string {
+		if (!isActive) return '';
+		const color = this.getGenreColor(index);
+		return `0 10px 10px ${color}66, inset 0 1px 0 rgba(255,255,255,0.35)`;
+	}
+
+	/**
 	 * Calculates a responsive font size for displaying a movie name, shrinking the
 	 * text as the name gets longer to prevent overflow. Uses different base sizes
 	 * for mobile and desktop viewports.
@@ -606,9 +731,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 */
 	protected calculateFontSize(length: number) {
 		if (this.utilities.isMobile()) {
-			return length <= 8 ? '21px' : String(18 - (length - 8) * 2 + 'px');
+			return length <= 6 ? '21px' : String(18 - (length - 8) * 2 + 'px');
 		}
-		return length <= 9 ? '23px' : String(20 - (length - 8.5) * 2 + 'px');
+		return length <= 7 ? '23px' : String(20 - (length - 8.5) * 2 + 'px');
 	}
 
 	/**
@@ -656,9 +781,77 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 *
 	 * @param genre - The genre to toggle as the active filter.
 	 */
-	protected filterByGenre(genre: string) {
+	/**
+	 * Toggles the genre filter with a View Transition animation.
+	 * Movies leaving the visible set are tagged vt-leaving (fade out + scale);
+	 * movies entering are tagged vt-entering (fade in + scale);
+	 * movies that stay use the browser's default FLIP crossfade.
+	 *
+	 * @param genre The genre string whose category card was clicked.
+	 */
+	protected filterByGenre(genre: string): void {
 		const currentGenre = this.selectedGenres$.getValue();
-		this.selectedGenres$.next(currentGenre === genre ? '' : genre);
+		const newGenre = currentGenre === genre ? '' : genre;
+		this.computeVtClassMap(currentGenre, newGenre);
+		this.cdr.detectChanges();
+		const toggle = () => {
+			this.selectedGenres$.next(newGenre);
+		};
+		if ('startViewTransition' in document) {
+			(document as Document & { startViewTransition: (cb: () => unknown) => void }).startViewTransition(
+				async () => {
+					toggle();
+					await new Promise<void>(resolve => setTimeout(resolve));
+				}
+			);
+		} else {
+			toggle();
+		}
+	}
+
+	/**
+	 * Populates vtClassMap with ENT_VT_CLASS_LEAVING for movies visible under
+	 * currentGenre but not newGenre, and ENT_VT_CLASS_ENTERING for the reverse.
+	 * Staying movies (visible in both) are omitted so they use the default FLIP.
+	 *
+	 * @param currentGenre The genre filter currently active.
+	 * @param newGenre The genre filter that will be active after the transition.
+	 */
+	private computeVtClassMap(currentGenre: string, newGenre: string): void {
+		this.vtClassMap.clear();
+		for (const movie of this.latestMovieList) {
+			const inCurrent = this.isMovieInGenre(movie, currentGenre);
+			const inNew = this.isMovieInGenre(movie, newGenre);
+			if (inCurrent && !inNew) {
+				this.vtClassMap.set(movie.getMovieKey(), ENT_VT_CLASS_LEAVING);
+			} else if (!inCurrent && inNew) {
+				this.vtClassMap.set(movie.getMovieKey(), ENT_VT_CLASS_ENTERING);
+			}
+		}
+	}
+
+	/**
+	 * Returns whether the given movie should be visible under the specified genre filter.
+	 *
+	 * @param movie The movie to test.
+	 * @param genre The genre filter value; empty string means no filter (show all).
+	 * @returns True if the movie is visible under the filter.
+	 */
+	private isMovieInGenre(movie: MovieItemVO, genre: string): boolean {
+		if (genre === '') return true;
+		if (genre === GENRE_FAVOURITE) return movie.getIsFavourite();
+		return movie.getMovieGenre().includes(genre);
+	}
+
+	/**
+	 * Returns the view-transition-class value for a movie card, used by the
+	 * template to tag leaving and entering elements before the VTA snapshot.
+	 *
+	 * @param movie The movie card to query.
+	 * @returns The CSS class string, or null if no transition class is needed.
+	 */
+	protected getMovieVtClass(movie: MovieItemVO): string | null {
+		return this.vtClassMap.get(movie.getMovieKey()) ?? null;
 	}
 
 	/**

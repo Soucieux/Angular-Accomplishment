@@ -1046,7 +1046,7 @@
 }
 
 /* ── Mobile responsive ───────────────────────────────────────── */
-@media (max-width: 940px) {
+@media (max-width: 800px) {
 	/* Container */
 	.container-nexus {
 		min-height: 100%;

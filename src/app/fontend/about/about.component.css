@@ -310,7 +310,7 @@ p-chip.about-chip {
 /* ─────────────────────────────────────────
    Mobile
 ───────────────────────────────────────── */
-@media (max-width: 940px) {
+@media (max-width: 800px) {
 	.hide-on-mobile {
 		display: none;
 	}

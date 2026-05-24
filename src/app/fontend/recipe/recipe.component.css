@@ -2271,7 +2271,7 @@
 }
 
 /* ── Mobile ────────────────────────────────────────────────────── */
-@media (max-width: 940px) {
+@media (max-width: 800px) {
 	.container {
 		padding: 22px 18px;
 	}

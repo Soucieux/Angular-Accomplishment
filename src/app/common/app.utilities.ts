@@ -46,7 +46,7 @@ export class Utilities {
 	 */
 	public isMobile() {
 		if (isPlatformBrowser(this.platformId)) {
-			return globalThis.innerWidth <= 940;
+			return globalThis.innerWidth <= 800;
 		}
 		return false;
 	}

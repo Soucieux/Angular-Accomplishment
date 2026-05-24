@@ -24,8 +24,8 @@ mat-drawer-container {
 	flex-direction: column;
 }
 
-/* The max-width here is the **current** maximum width of the browser */
-@media (max-width: 940px) {
+/* This is for mid-range screen*/
+@media (max-width: 1100px) {
 	.hide-on-mobile {
 		display: none !important;
 	}

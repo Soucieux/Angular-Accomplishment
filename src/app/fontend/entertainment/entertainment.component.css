@@ -550,7 +550,7 @@
 
 .delete-button {
 	position: relative;
-	right: -2px;
+	right: 3px;
 	display: flex;
 	align-items: center;
 }
@@ -610,7 +610,7 @@
 }
 
 /* The max-width here is the **current** maximum width of the browser */
-@media (max-width: 940px) {
+@media (max-width: 800px) {
 	.info-swap {
 		height: 70%;
 	}
@@ -731,11 +731,5 @@
 	::ng-deep .dropdown .p-select-label {
 		font-size: 14px;
 		padding: 3px 8px;
-	}
-}
-
-@media (max-width: 1010px) {
-	.hide-on-small-screen {
-		display: none;
 	}
 }

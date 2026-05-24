@@ -265,6 +265,7 @@
 
 ::ng-deep .p-datatable .p-datatable-thead > tr > th .p-column-header-content {
 	color: rgba(255, 255, 255, 0.92) !important;
+	gap: 8px !important;
 }
 
 /* ─────────────────────────────────────────
@@ -998,6 +999,11 @@
 
 	.status {
 		min-width: 130px !important;
+	}
+
+	::ng-deep .p-datatable .p-datatable-thead > tr > th.status {
+		padding-top: 24px !important;
+		padding-bottom: 8px !important;
 	}
 
 	.p-datatable th.status .p-column-header-content {

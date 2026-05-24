@@ -24,21 +24,17 @@ import {
 	NEXUS_CATEGORY_ALL,
 	NEXUS_DIALOG_TITLE_ADD_LINK,
 	NEXUS_DIALOG_TITLE_EDIT_LINK,
+	NEXUS_DEFAULT_CATEGORY_COLOR,
 	NEXUS_MSG_CATEGORY_ADDED,
 	NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL,
 	NEXUS_MSG_CATEGORY_DELETED,
-	NEXUS_MSG_DELETE_CATEGORY_BTN,
-	NEXUS_MSG_DELETE_CATEGORY_TITLE,
-	NEXUS_MSG_DELETE_LINK_BTN,
-	NEXUS_MSG_DELETE_LINK_TITLE,
 	NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL,
 	NEXUS_MSG_CATEGORY_UPDATED,
+	NEXUS_MSG_DELETE_CATEGORY_BTN,
+	NEXUS_MSG_DELETE_CATEGORY_TITLE,
 	NEXUS_MSG_DELETE_FAILED,
-	NEXUS_MSG_EMPTY_QUERY,
-	NEXUS_MSG_EMPTY_QUERY_DETAIL,
-	NEXUS_MSG_HISTORY_CLEARED,
-	NEXUS_MSG_HISTORY_CLEARED_DETAIL,
-	NEXUS_MSG_LAUNCHED,
+	NEXUS_MSG_DELETE_LINK_BTN,
+	NEXUS_MSG_DELETE_LINK_TITLE,
 	NEXUS_MSG_LINK_DELETE_FAILED_DETAIL,
 	NEXUS_MSG_LINK_DELETED,
 	NEXUS_MSG_LINK_SAVE_FAILED_DETAIL,
@@ -47,16 +43,13 @@ import {
 	NEXUS_MSG_MISSING_FIELDS,
 	NEXUS_MSG_MISSING_FIELDS_DETAIL,
 	NEXUS_MSG_NAME_REQUIRED,
-	NEXUS_MSG_NO_AI_SELECTED,
-	NEXUS_MSG_NO_AI_SELECTED_DETAIL,
 	NEXUS_MSG_SAVE_FAILED,
-	NEXUS_DEFAULT_CATEGORY_COLOR,
 	TOAST_ERROR,
 	TOAST_INFO,
 	TOAST_SUCCESS,
 	TOAST_WARN
 } from '../../common/app.constant';
-import { AiTool, NEXUS_CLIPBOARD_TOOLS, NEXUS_DIRECT_TOOLS, NEXUS_LOGO_FALLBACK_COLORS, SearchHistoryEntry } from './nexus.model';
+import { AiTool, NEXUS_AI_TOOLS, NEXUS_LOGO_FALLBACK_COLORS } from './nexus.model';
 
 @Component({
 	selector: 'nexus',
@@ -71,19 +64,10 @@ export class NexusComponent implements OnInit, OnDestroy {
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	private dialogComponentContainer!: ViewContainerRef;
-	protected history: SearchHistoryEntry[] = [];
 
-	protected searchQuery = '';
-
-	/**
-	 * Tracks tool IDs whose favicon image failed to load — shows initial fallback instead.
-	 */
 	protected failedLogos = new Set<string>();
-
 	private readonly LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
-
-	protected directTools: AiTool[] = NEXUS_DIRECT_TOOLS.map((t) => ({ ...t }));
-	protected clipboardTools: AiTool[] = NEXUS_CLIPBOARD_TOOLS.map((t) => ({ ...t }));
+	protected readonly aiTools: AiTool[] = NEXUS_AI_TOOLS;
 
 	// ── Links & Categories ────────────────────────────────────────
 	protected links: any[] = [];
@@ -91,6 +75,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected faviconFailedIds = new Set<string>();
 	protected activeCategory = NEXUS_CATEGORY_ALL;
 	protected linkSearch = '';
+	protected linkSearchVisible = false;
 
 	// ── Add/Edit Link dialog ──────────────────────────────────────
 	protected showLinkDialog = false;
@@ -187,94 +172,30 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Toggle the selected state of an AI chip.
+	 * Open an AI tool's homepage in a new tab.
 	 *
-	 * @param tool - The AI tool whose selected flag should be flipped.
+	 * @param tool - The AI tool to open.
 	 */
-	protected toggleAi(tool: AiTool): void {
-		tool.selected = !tool.selected;
+	protected openAiTool(tool: AiTool): void {
+		this.utilities.openInNewTab(tool.url);
 	}
 
 	/**
-	 * Launch the search query to all selected AI tools.
+	 * Toggle the link search input visibility.
+	 * Clears the search query when collapsing.
 	 */
-	protected onLaunch(): void {
-		const query = this.searchQuery.trim();
-		if (!query) {
-			this.dialogService.showToast(TOAST_WARN, NEXUS_MSG_EMPTY_QUERY, NEXUS_MSG_EMPTY_QUERY_DETAIL);
-			return;
+	protected toggleLinkSearch(): void {
+		this.linkSearchVisible = !this.linkSearchVisible;
+		if (!this.linkSearchVisible) this.linkSearch = '';
+	}
+
+	/**
+	 * Collapse the link search input when it loses focus and the query is empty.
+	 */
+	protected onLinkSearchBlur(): void {
+		if (!this.linkSearch.trim()) {
+			this.linkSearchVisible = false;
 		}
-		const selectedDirect = this.directTools.filter((t) => t.selected);
-		if (selectedDirect.length === 0) {
-			this.dialogService.showToast(TOAST_WARN, NEXUS_MSG_NO_AI_SELECTED, NEXUS_MSG_NO_AI_SELECTED_DETAIL);
-			return;
-		}
-		// Open direct-query tools with the query pre-filled in the URL
-		selectedDirect.forEach((t) => this.utilities.openInNewTab(t.url + encodeURIComponent(query)));
-		// Build summary toast
-		this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_LAUNCHED, `Opened ${selectedDirect.map((t) => t.name).join(', ')}`);
-		this.saveToHistory(
-			query,
-			selectedDirect.map((t) => t.id)
-		);
-		this.cdr.markForCheck();
-	}
-
-	/**
-	 * Prepend a new entry to the in-memory history array, keeping at most 50 entries.
-	 *
-	 * @param query - The search query string that was launched.
-	 * @param aiIds - The IDs of the AI tools that were used for the query.
-	 */
-	private saveToHistory(query: string, aiIds: string[]): void {
-		const entry: SearchHistoryEntry = { query, aiIds, timestamp: new Date().toISOString() };
-		this.history = [entry, ...this.history].slice(0, 50);
-		this.cdr.markForCheck();
-	}
-
-	/**
-	 * Re-populate the search bar and re-select AI chips from a history entry,
-	 * then immediately launch the search.
-	 *
-	 * @param entry - The history entry to relaunch.
-	 */
-	protected relaunch(entry: SearchHistoryEntry): void {
-		this.searchQuery = entry.query;
-		[...this.directTools, ...this.clipboardTools].forEach((t) => {
-			t.selected = entry.aiIds.includes(t.id);
-		});
-		this.onLaunch();
-	}
-
-	/**
-	 * Clear all search history from the in-memory list.
-	 */
-	protected clearHistory(): void {
-		this.history = [];
-		this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_HISTORY_CLEARED, NEXUS_MSG_HISTORY_CLEARED_DETAIL);
-		this.cdr.markForCheck();
-	}
-
-	/**
-	 * Return a human-readable relative time string for a given timestamp.
-	 * Delegates to Utilities.getRelativeTime which handles both ISO 8601 and
-	 * the app's "YYYY.MM.DD HH:mm:ss" format.
-	 *
-	 * @param timestamp - ISO 8601 or app-format date string.
-	 * @returns A human-readable relative time string (e.g. "just now", "5m ago").
-	 */
-	protected getRelativeTime(timestamp: string): string {
-		return Utilities.getRelativeTime(timestamp);
-	}
-
-	/**
-	 * Find an AI tool by its ID (searches both direct and clipboard tool arrays).
-	 *
-	 * @param id - The tool ID to look up.
-	 * @returns The matching AiTool, or undefined if not found.
-	 */
-	protected getToolById(id: string): AiTool | undefined {
-		return [...this.directTools, ...this.clipboardTools].find((t) => t.id === id);
 	}
 
 	/**
@@ -295,6 +216,8 @@ export class NexusComponent implements OnInit, OnDestroy {
 	/**
 	 * Called when a link favicon image fails to load.
 	 * Marks the link for initial-letter fallback display and logs a warning.
+	 *
+	 * @param link - The link document whose favicon failed.
 	 */
 	protected onFaviconError(link: any): void {
 		this.faviconFailedIds.add(link._id);
@@ -365,9 +288,9 @@ export class NexusComponent implements OnInit, OnDestroy {
 		const raw = this.linkForm.url.trim();
 		if (!raw) return;
 		const url = Utilities.normalizeUrl(raw);
-		this.linkForm.url = url; // write back so the input shows the normalized value
+		this.linkForm.url = url;
 		this.linkFaviconPreview = Utilities.getFavicon(url);
-		if (this.linkForm.title) return; // don't overwrite existing title
+		if (this.linkForm.title) return;
 		this.linkMetaLoading = true;
 		this.databaseService
 			.proxyFetch(url)

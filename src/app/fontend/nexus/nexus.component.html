@@ -1,121 +1,41 @@
 <ng-container #dialogComponentContainer></ng-container>
 <div class="container container-nexus">
-	<!-- ── Header ─────────────────────────────────────────────────── -->
+
+	<!-- ── Header ───────────────────────────────────────────────── -->
 	<div class="page-header">
 		<h1 class="page-title">Nexus</h1>
-		<p class="page-subtitle">Your centralized AI search hub</p>
+		<p class="page-subtitle">Your AI & links command center</p>
 		<div class="header-ornament"></div>
 	</div>
 
-	<!-- ── Row 1: Search Zone (full width) ───────────────────────── -->
-	<!-- ── Search Zone ────────────────────────────────────────────── -->
-	<div class="search-zone">
-		<!-- Search bar -->
-		<div class="search-bar-wrapper">
-			<span class="material-symbols-outlined search-icon">search</span>
-			<input
-				class="search-input"
-				type="text"
-				placeholder="Ask anything…"
-				[(ngModel)]="searchQuery"
-				(keyup.enter)="onLaunch()" />
-			<button class="launch-btn" (click)="onLaunch()">
-				<span class="material-symbols-outlined">arrow_forward</span>
-			</button>
-		</div>
-
-		<!-- Direct Query chip row -->
-		<div class="chip-row">
-			<span class="chip-row-label">Direct Query</span>
-			@for (tool of directTools; track tool.id) {
-				<button
-					class="ai-chip"
-					[class.selected]="tool.selected"
-					(click)="toggleAi(tool)"
-					[title]="tool.name">
+	<!-- ── AI Tools launcher ─────────────────────────────────────── -->
+	<div class="ai-tools-section">
+		<span class="section-label">AI Tools</span>
+		<div class="ai-tools-row">
+			@for (tool of aiTools; track tool.id) {
+				<button class="ai-tile" (click)="openAiTool(tool)" [title]="'Open ' + tool.name">
 					@if (!failedLogos.has(tool.id)) {
-						<img [src]="tool.logo" [alt]="tool.name" class="chip-logo"
+						<img
+							[src]="tool.logo"
+							[alt]="tool.name"
+							class="ai-tile-logo"
 							(error)="onLogoError(tool.id)" />
 					} @else {
-						<span class="chip-initial" [style.background]="logoFallbackColor(tool.id)">
+						<span class="ai-tile-initial" [style.background]="logoFallbackColor(tool.id)">
 							{{ tool.name[0] }}
 						</span>
 					}
-					<span class="chip-name">{{ tool.name }}</span>
+					<span class="ai-tile-name">{{ tool.name }}</span>
 				</button>
 			}
 		</div>
-
-		<!-- Opens Homepage row — click any chip to open that AI site directly -->
-		<div class="chip-row">
-			<span class="chip-row-label">Opens Homepage</span>
-			@for (tool of clipboardTools; track tool.id) {
-				<a
-					class="ai-chip homepage-chip"
-					[href]="tool.url"
-					target="_blank"
-					rel="noopener noreferrer"
-					[title]="'Open ' + tool.name">
-					@if (!failedLogos.has(tool.id)) {
-						<img [src]="tool.logo" [alt]="tool.name" class="chip-logo"
-							(error)="onLogoError(tool.id)" />
-					} @else {
-						<span class="chip-initial" [style.background]="logoFallbackColor(tool.id)">
-							{{ tool.name[0] }}
-						</span>
-					}
-					<span class="chip-name">{{ tool.name }}</span>
-					<span class="material-symbols-outlined homepage-arrow">open_in_new</span>
-				</a>
-			}
-		</div>
-
 	</div>
 
-	<!-- ── Row 2: History + Links ────────────────────────────────── -->
-	<div class="bottom-row">
-		<div class="history-col">
-			<div class="panel-header">
-				<span class="panel-title">Recent Searches</span>
-				@if (history.length > 0) {
-					<button class="clear-btn" (click)="clearHistory()">Clear all</button>
-				}
-			</div>
+	<!-- ── Links library ─────────────────────────────────────────── -->
+	<div class="links-section">
+		@if (utilities.getIsUserAlive()) {
 
-			@if (history.length === 0) {
-				<div class="history-empty">
-					<span class="material-symbols-outlined empty-icon">history</span>
-					<p>No searches yet</p>
-				</div>
-			} @else {
-				<div class="history-list">
-					@for (entry of history; track entry.timestamp) {
-						<div class="history-card">
-							<p class="history-query">{{ entry.query }}</p>
-							<div class="history-meta">
-								<div class="history-chips">
-									@for (id of entry.aiIds; track id) {
-										@let tool = getToolById(id);
-										@if (tool) {
-											<img
-												[src]="tool.logo"
-												[alt]="tool.name"
-												[title]="tool.name"
-												class="history-chip-logo" />
-										}
-									}
-								</div>
-								<span class="history-time">{{ getRelativeTime(entry.timestamp) }}</span>
-							</div>
-							<button class="relaunch-btn" (click)="relaunch(entry)">Relaunch</button>
-						</div>
-					}
-				</div>
-			}
-		</div>
-		<div class="links-col">
-			@if (utilities.getIsUserAlive()) {
-			<!-- ── Category tabs + search + add button ──────────────── -->
+			<!-- Toolbar -->
 			<div class="links-toolbar">
 				<div class="category-tabs">
 					<button
@@ -132,33 +52,42 @@
 							[style.--cat-color]="cat.color">
 							{{ cat.name }} ({{ getLinkCount(cat._id) }})
 							<span class="cat-edit-btn"
-								  (click)="openEditCategoryDialog(cat, $event)"
-								  title="Edit category">✎</span>
+								(click)="openEditCategoryDialog(cat, $event)"
+								title="Edit category">✎</span>
 						</button>
 					}
 					<button class="cat-add-btn" (click)="openAddCategoryDialog()" title="New category">
 						<span class="material-symbols-outlined">add</span>
 					</button>
 				</div>
-				<div class="links-search-wrapper">
-					<span class="material-symbols-outlined" style="font-size:16px;color:rgba(0,0,0,0.35)">search</span>
-					<input
-						class="links-search-input"
-						type="text"
-						placeholder="Search links…"
-						[(ngModel)]="linkSearch" />
+				<div class="toolbar-right">
+					@if (linkSearchVisible) {
+						<input
+							class="links-search-input"
+							type="text"
+							placeholder="Search links…"
+							[(ngModel)]="linkSearch"
+							(blur)="onLinkSearchBlur()" />
+					}
+					<button
+						class="icon-btn"
+						[class.active]="linkSearchVisible"
+						(click)="toggleLinkSearch()"
+						title="Search links">
+						<span class="material-symbols-outlined">search</span>
+					</button>
+					<button class="add-link-btn" (click)="openAddLinkDialog()">
+						<span class="material-symbols-outlined">add</span>
+						Add Link
+					</button>
 				</div>
-				<button class="add-link-btn" (click)="openAddLinkDialog()">
-					<span class="material-symbols-outlined">add</span>
-					Add Link
-				</button>
 			</div>
 
-			<!-- ── Links grid ────────────────────────────────────────── -->
+			<!-- Link grid -->
 			@if (linksLoading) {
 				<div class="links-grid">
 					@for (i of [1,2,3,4,5,6,7,8]; track i) {
-						<div class="link-card skeleton-card" style="height: 90px;"></div>
+						<div class="link-card skeleton-card"></div>
 					}
 				</div>
 			} @else if (filteredLinks.length === 0) {
@@ -176,21 +105,22 @@
 						<div class="link-card" (click)="openLink(link)" [title]="link.url">
 							<div class="link-card-inner">
 								@if (faviconFailedIds.has(link._id)) {
-								<div class="link-favicon-fallback">{{ link.title.charAt(0).toUpperCase() }}</div>
-							} @else {
-								<img
-									class="link-favicon"
-									[src]="utilities.getFavicon(link.url)"
-									[alt]="link.title"
-									(error)="onFaviconError(link)"
-									loading="lazy" />
-							}
+									<div class="link-favicon-fallback">{{ link.title.charAt(0).toUpperCase() }}</div>
+								} @else {
+									<img
+										class="link-favicon"
+										[src]="utilities.getFavicon(link.url)"
+										[alt]="link.title"
+										(error)="onFaviconError(link)"
+										loading="lazy" />
+								}
 								<div class="link-info">
 									<p class="link-title">{{ link.title }}</p>
-									@if (link.visitCount) {
-										<span class="link-visits">{{ link.visitCount }} visits</span>
-									}
+									<span class="link-domain">{{ utilities.getDomain(link.url) }}</span>
 								</div>
+								@if (link.visitCount) {
+									<span class="link-visits-badge">{{ link.visitCount }}</span>
+								}
 								<div class="link-actions">
 									<button class="link-action-btn" (click)="openEditLinkDialog(link, $event)" title="Edit">
 										<span class="material-symbols-outlined">edit</span>
@@ -204,28 +134,29 @@
 					}
 				</div>
 			}
-			} @else {
-				<!-- ── Mini access-denied ──────────────────────────────── -->
-				<div class="mini-access-denied" role="status" aria-live="polite">
-					<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-						<defs>
-							<linearGradient id="miniAdLockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-								<stop offset="0%" stop-color="#ffffff" />
-								<stop offset="100%" stop-color="#daae51" />
-							</linearGradient>
-						</defs>
+
+		} @else {
+			<!-- ── Access denied ────────────────────────────────────── -->
+			<div class="mini-access-denied" role="status" aria-live="polite">
+				<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+					<defs>
+						<linearGradient id="miniAdLockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+							<stop offset="0%" stop-color="#ffffff" />
+							<stop offset="100%" stop-color="#daae51" />
+						</linearGradient>
+					</defs>
+				</svg>
+				<div class="mini-access-denied__card">
+					<svg class="mini-access-denied__icon" viewBox="0 0 24 24" aria-hidden="true">
+						<path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 0 0-6 0v3Zm3 4a1.6 1.6 0 0 0-.8 2.99V18a.8.8 0 0 0 1.6 0v-1.01A1.6 1.6 0 0 0 12 14Z" fill="url(#miniAdLockGradient)" />
 					</svg>
-					<div class="mini-access-denied__card">
-						<svg class="mini-access-denied__icon" viewBox="0 0 24 24" aria-hidden="true">
-							<path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 0 0-6 0v3Zm3 4a1.6 1.6 0 0 0-.8 2.99V18a.8.8 0 0 0 1.6 0v-1.01A1.6 1.6 0 0 0 12 14Z" fill="url(#miniAdLockGradient)" />
-						</svg>
-						<h3 class="mini-access-denied__title">Access Denied</h3>
-						<p class="mini-access-denied__subtitle">Sign in to view your saved links and pick up where you left off.</p>
-					</div>
+					<h3 class="mini-access-denied__title">Access Denied</h3>
+					<p class="mini-access-denied__subtitle">Sign in to view your saved links and pick up where you left off.</p>
 				</div>
-			}
-		</div>
+			</div>
+		}
 	</div>
+
 </div>
 
 <!-- ── Add / Edit Link Dialog ───────────────────────────────── -->
@@ -239,7 +170,6 @@
 	appendTo="body">
 
 	<div class="dialog-form">
-		<!-- URL field -->
 		<div class="form-field">
 			<label class="form-label">URL *</label>
 			<input
@@ -249,16 +179,12 @@
 				[(ngModel)]="linkForm.url"
 				(blur)="onLinkUrlBlur()" />
 		</div>
-
-		<!-- Favicon preview -->
 		@if (linkFaviconPreview) {
 			<div class="favicon-preview">
 				<img [src]="linkFaviconPreview" alt="Site icon" class="preview-favicon" />
 				<span class="preview-label">{{ linkForm.title || 'Loading title…' }}</span>
 			</div>
 		}
-
-		<!-- Title field -->
 		<div class="form-field">
 			<label class="form-label">Title *
 				@if (linkMetaLoading) { <span class="meta-loading">fetching…</span> }
@@ -269,8 +195,6 @@
 				placeholder="My favourite resource"
 				[(ngModel)]="linkForm.title" />
 		</div>
-
-		<!-- Category field -->
 		<div class="form-field">
 			<label class="form-label">Category *</label>
 			<select class="form-select" [(ngModel)]="linkForm.category">

@@ -441,6 +441,30 @@ export class Utilities {
 	}
 
 	/**
+	 * Extract the hostname (domain) from a URL string.
+	 *
+	 * @param url - The full URL of the website.
+	 * @returns The hostname string (e.g. "openai.com"), or the original value if unparseable.
+	 */
+	public static getDomain(url: string): string {
+		try {
+			return new URL(url).hostname;
+		} catch {
+			return url;
+		}
+	}
+
+	/**
+	 * Instance wrapper around {@link Utilities.getDomain} for use in Angular templates.
+	 *
+	 * @param url - The full URL of the website.
+	 * @returns The hostname string, or the original value if unparseable.
+	 */
+	public getDomain(url: string): string {
+		return Utilities.getDomain(url);
+	}
+
+	/**
 	 * Safely extract a human-readable error message from any thrown value.
 	 * Guards against SDK objects whose `.message` getter itself throws.
 	 *

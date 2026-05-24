@@ -138,10 +138,6 @@ export const USEFUL_LINK_TYPE_LINK = 'link';
 export const USEFUL_LINK_TYPE_CATEGORY = 'category';
 
 // ── Nexus — AI tool types ──────────────────────────────────────────────────
-/** AI tool type that opens the query URL directly in a new tab. */
-export const NEXUS_TOOL_TYPE_DIRECT = 'direct';
-/** AI tool type that copies the query to the clipboard and opens the tool. */
-export const NEXUS_TOOL_TYPE_CLIPBOARD = 'clipboard';
 /** Sentinel value for the "show all categories" filter in the Nexus links panel. */
 export const NEXUS_CATEGORY_ALL = 'all';
 /** Dialog title when adding a new link. */
@@ -158,13 +154,6 @@ export const TOAST_WARN = 'warn';
 export const TOAST_ERROR = 'error';
 
 // ── Nexus — toast messages ─────────────────────────────────────────────────
-export const NEXUS_MSG_EMPTY_QUERY = 'Empty query';
-export const NEXUS_MSG_EMPTY_QUERY_DETAIL = 'Type something first';
-export const NEXUS_MSG_NO_AI_SELECTED = 'No AI selected';
-export const NEXUS_MSG_NO_AI_SELECTED_DETAIL = 'Select at least one Direct Query tool';
-export const NEXUS_MSG_LAUNCHED = 'Launched';
-export const NEXUS_MSG_HISTORY_CLEARED = 'History cleared';
-export const NEXUS_MSG_HISTORY_CLEARED_DETAIL = 'Search history has been removed';
 export const NEXUS_MSG_MISSING_FIELDS = 'Missing fields';
 export const NEXUS_MSG_MISSING_FIELDS_DETAIL = 'URL, title, and category are required';
 export const NEXUS_MSG_LINK_UPDATED = 'Link updated';

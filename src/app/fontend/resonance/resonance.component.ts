@@ -28,7 +28,9 @@ import {
 	RESONANCE_AUTHOR_ANONYMOUS,
 	RESONANCE_MSG_DELETE_CONFIRM,
 	RESONANCE_DIALOG_TITLE_DELETE,
-	RESONANCE_DIALOG_BTN_DELETE
+	RESONANCE_DIALOG_BTN_DELETE,
+	RESONANCE_MSG_POSTED,
+	RESONANCE_LABEL_VOICES
 } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 import { RESONANCE_GRADIENTS } from './resonance.model';
@@ -70,6 +72,10 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	private signedInAnonymously = false;
 
 	protected readonly gradients = RESONANCE_GRADIENTS;
+	protected readonly postedLabel = RESONANCE_MSG_POSTED;
+	protected readonly voicesLabel = RESONANCE_LABEL_VOICES;
+	protected postSuccess = false;
+	private postSuccessTimer: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
@@ -108,6 +114,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * resets the flag, and logs the component destruction event.
 	 */
 	public ngOnDestroy() {
+		if (this.postSuccessTimer !== null) clearTimeout(this.postSuccessTimer);
 		if (this.signedInAnonymously) {
 			void this.authService.signOut();
 		}
@@ -185,8 +192,20 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Handle textarea Enter key: submit on bare Enter, allow newline on Shift+Enter.
+	 *
+	 * @param e - The DOM event fired from the textarea (cast to KeyboardEvent at runtime).
+	 */
+	protected onTextareaEnter(e: Event) {
+		if (!(e as KeyboardEvent).shiftKey) {
+			e.preventDefault();
+			void this.submitQuote();
+		}
+	}
+
+	/**
 	 * Submit a new quote to the database. Uses the signed-in user's name if available
-	 * otherwise falls back to the manually entered author name or'Anonymous'.
+	 * otherwise falls back to the manually entered author name or 'Anonymous'.
 	 */
 	protected async submitQuote() {
 		const text = this.newQuoteText.trim();
@@ -203,6 +222,12 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			await this.databaseService.addQuote(text, name, timestamp);
 			this.newQuoteText = '';
 			this.authorName = '';
+			this.postSuccess = true;
+			if (this.postSuccessTimer !== null) clearTimeout(this.postSuccessTimer);
+			this.postSuccessTimer = setTimeout(() => {
+				this.postSuccess = false;
+				this.cdr.detectChanges();
+			}, 2000);
 		} catch {
 			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 		} finally {

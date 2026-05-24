@@ -6,7 +6,9 @@
 }
 
 @keyframes borderSpin {
-	to { --angle: 360deg; }
+	to {
+		--angle: 360deg;
+	}
 }
 
 :host {
@@ -16,7 +18,7 @@
 }
 
 .container {
-	max-width: 1100px;
+	max-width: 100%;
 	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
@@ -69,7 +71,8 @@
 	position: relative;
 	background:
 		linear-gradient(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.22)) padding-box,
-		linear-gradient(135deg, rgba(213, 51, 105, 0.5), rgba(218, 174, 81, 0.32), rgba(213, 51, 105, 0.12)) border-box;
+		linear-gradient(135deg, rgba(213, 51, 105, 0.5), rgba(218, 174, 81, 0.32), rgba(213, 51, 105, 0.12))
+			border-box;
 	border: 1.5px solid transparent;
 	box-shadow:
 		0 8px 32px rgba(0, 0, 0, 0.18),
@@ -100,7 +103,15 @@
 .submit-card:focus-within {
 	background:
 		linear-gradient(rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.28)) padding-box,
-		conic-gradient(from var(--angle), #d53369, #daae51, rgba(213, 51, 105, 0.22), rgba(218, 174, 81, 0.12), #d53369) border-box;
+		conic-gradient(
+				from var(--angle),
+				#d53369,
+				#daae51,
+				rgba(213, 51, 105, 0.22),
+				rgba(218, 174, 81, 0.12),
+				#d53369
+			)
+			border-box;
 	border: 1.5px solid transparent;
 	box-shadow:
 		0 12px 40px rgba(213, 51, 105, 0.22),
@@ -191,7 +202,12 @@
 	left: 0;
 	right: 0;
 	height: 1px;
-	background: linear-gradient(90deg, rgba(213, 51, 105, 0.6), rgba(218, 174, 81, 0.38), rgba(255, 255, 255, 0.04));
+	background: linear-gradient(
+		90deg,
+		rgba(213, 51, 105, 0.6),
+		rgba(218, 174, 81, 0.38),
+		rgba(255, 255, 255, 0.04)
+	);
 }
 
 .char-count {
@@ -202,7 +218,10 @@
 	padding: 3px 10px;
 	border-radius: 999px;
 	border: 1px solid rgba(0, 0, 0, 0.1);
-	transition: color 0.2s, background 0.2s, border-color 0.2s;
+	transition:
+		color 0.2s,
+		background 0.2s,
+		border-color 0.2s;
 }
 
 .char-count.over-limit {
@@ -267,7 +286,7 @@
 /* ── Skeleton grid ── */
 .skeleton-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 	gap: 20px;
 	width: 100%;
 }
@@ -306,8 +325,15 @@
 }
 
 @keyframes iconPulse {
-	0%, 100% { opacity: 0.25; transform: scale(1); }
-	50% { opacity: 0.45; transform: scale(1.06); }
+	0%,
+	100% {
+		opacity: 0.25;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.45;
+		transform: scale(1.06);
+	}
 }
 
 .empty-text {
@@ -319,7 +345,7 @@
 /* ── Quote grid ── */
 .quote-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 	gap: 20px;
 	width: 100%;
 }

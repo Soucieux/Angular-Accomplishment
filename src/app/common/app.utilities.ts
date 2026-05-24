@@ -195,6 +195,29 @@ export class Utilities {
 	}
 
 	/**
+	 * Compute the visual display width of a string in Chinese-character units.
+	 * CJK unified ideographs and East Asian wide characters count as 1 unit;
+	 * all other characters (Latin, digits, punctuation) count as 0.5 units.
+	 *
+	 * @param text - The string to measure.
+	 * @returns The total display width in Chinese-character-width units.
+	 */
+	public static chineseCharWidth(text: string): number {
+		let width = 0;
+		for (const char of text) {
+			const cp = char.codePointAt(0) ?? 0;
+			const isWide =
+				(cp >= 0x3400 && cp <= 0x4dbf) ||
+				(cp >= 0x4e00 && cp <= 0x9fff) ||
+				(cp >= 0xf900 && cp <= 0xfaff) ||
+				(cp >= 0x3040 && cp <= 0x33ff) ||
+				(cp >= 0xac00 && cp <= 0xd7af);
+			width += isWide ? 1 : 0.5;
+		}
+		return width;
+	}
+
+	/**
 	 * Get the current country code
 	 *
 	 * @returns Current country code

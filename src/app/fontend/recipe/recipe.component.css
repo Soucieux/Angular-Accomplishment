@@ -581,7 +581,7 @@
 	align-items: center;
 	justify-content: center;
 	gap: 4px;
-	padding: 3px 10px;
+	padding: 3px 9px;
 	border-radius: 20px;
 	font-size: 13px;
 	font-weight: 500;
@@ -2275,6 +2275,9 @@
 	.container {
 		padding: 22px 18px;
 	}
+	.recipe-card .name {
+		font-size: 18px;
+	}
 	.page-title {
 		font-size: 32px;
 	}
@@ -2315,6 +2318,18 @@
 	.ingredients-panel.collapsed .panel-collapse-body {
 		max-height: 0;
 		opacity: 0;
+	}
+
+	.ipill {
+		font-size: 11px;
+	}
+
+	.meta-chip {
+		font-size: 11px;
+	}
+
+	.view-recipe {
+		font-size: 9px;
 	}
 
 	/* Steps panel sizes to content on mobile */
@@ -2359,48 +2374,76 @@
 		scrollbar-color: transparent transparent;
 		transition: scrollbar-color 0.4s ease;
 	}
-	.type-tabs::-webkit-scrollbar { height: 3px; }
-	.type-tabs::-webkit-scrollbar-track { background: transparent; }
-	.type-tabs::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; }
-	.type-tabs.is-scrolling { scrollbar-color: var(--rose-border) transparent; }
-	.type-tabs.is-scrolling::-webkit-scrollbar-thumb { background: var(--rose-border); }
-	.type-tab, .type-tabs .manage-btn { flex: none; }
+	.type-tabs::-webkit-scrollbar {
+		height: 3px;
+	}
+	.type-tabs::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.type-tabs::-webkit-scrollbar-thumb {
+		background: transparent;
+		border-radius: 999px;
+	}
+	.type-tabs.is-scrolling {
+		scrollbar-color: var(--rose-border) transparent;
+	}
+	.type-tabs.is-scrolling::-webkit-scrollbar-thumb {
+		background: var(--rose-border);
+	}
+	.type-tab,
+	.type-tabs .manage-btn {
+		flex: none;
+	}
 	.ing-row .remove,
 	.step-card .remove,
 	.sub-row .remove {
 		opacity: 1;
 	}
 
-	/* Category chips — horizontal scroll prevents multi-row wrap */
-	.chips {
-		flex-wrap: nowrap;
+	.hide-on-mobile {
+		display: none;
+	}
+
+	/* Category chips — two-element split fixes chipPulse shadow clipping.
+	   overflow:auto clips shadows at the content-box edge (not padding edge),
+	   so we separate the scroll container (.chips-scroll) from the flex
+	   container (.chips).  The 22px padding-left on .chips positions the first
+	   chip 22px inside .chips-scroll's content area, giving the 22px leftward
+	   shadow bleed full room.  20px padding-top covers the 18px upward bleed.
+	   Negative margins on .chips-scroll keep the chip at the same visual
+	   position as on desktop. */
+	.chips-scroll {
 		overflow-x: auto;
 		-webkit-overflow-scrolling: touch;
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
 		transition: scrollbar-color 0.4s ease;
-		gap: 8px;
-		margin: 14px 0 20px;
-		padding-bottom: 8px;
+		margin: -6px 0 0px -22px;
 	}
-	.chips::-webkit-scrollbar {
+	.chips-scroll::-webkit-scrollbar {
 		height: 3px;
 	}
-	.chips::-webkit-scrollbar-track {
+	.chips-scroll::-webkit-scrollbar-track {
 		background: transparent;
 	}
-	.chips::-webkit-scrollbar-thumb {
+	.chips-scroll::-webkit-scrollbar-thumb {
 		background: transparent;
 		border-radius: 999px;
 	}
-	.chips.is-scrolling {
+	.chips-scroll.is-scrolling {
 		scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
 	}
-	.chips.is-scrolling::-webkit-scrollbar-thumb {
+	.chips-scroll.is-scrolling::-webkit-scrollbar-thumb {
 		background: rgba(213, 51, 105, 0.28);
 	}
-	.chips.is-scrolling::-webkit-scrollbar-thumb:hover {
+	.chips-scroll.is-scrolling::-webkit-scrollbar-thumb:hover {
 		background: #d53369;
+	}
+	.chips {
+		flex-wrap: nowrap;
+		gap: 8px;
+		margin: 0;
+		padding: 20px 0 15px 22px;
 	}
 	.chip {
 		flex-shrink: 0;

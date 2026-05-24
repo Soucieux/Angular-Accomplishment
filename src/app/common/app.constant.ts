@@ -272,6 +272,9 @@ export const RECIPE_MSG_SAVE_FAILED = 'Save failed';
 export const RECIPE_MSG_SAVE_FAILED_DETAIL = 'Could not save the recipe. Please try again.';
 export const RECIPE_MSG_DELETE_FAILED = 'Delete failed';
 export const RECIPE_MSG_DELETE_FAILED_DETAIL = 'Could not delete the recipe. Please try again.';
+export const RECIPE_MAX_BADGES = 4;
+export const RECIPE_MAX_NAME_CHARS = 9;
+export const RECIPE_MSG_NAME_TOO_LONG = 'Recipe name must not exceed 9 Chinese characters in length.';
 
 // ── Layout — responsive breakpoints ──────────────────────────────────────
 export const BREAKPOINT_MOBILE = '(max-width: 800px)';

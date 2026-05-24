@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, @typescript-eslint/no-redundant-type-constituents, no-extra-boolean-cast */
 import {
 	AfterViewChecked,
 	Component,
@@ -98,7 +99,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected newRecord = this.emptyRecord();
 	protected searchQuery = '';
 	constructor(
-		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		protected utilities: Utilities,

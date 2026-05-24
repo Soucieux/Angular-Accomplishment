@@ -195,7 +195,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			// If navigated from the home quick-action button, auto-open the add view.
 			// history.state retains the router state passed via Router.navigate({ state: ... }).
 			// Immediately clear the state so a page refresh does not re-trigger the add view.
-			if (history.state?.openAddView) {
+			if ((history.state as { openAddView?: boolean })?.openAddView) {
 				history.replaceState({}, '');
 				setTimeout(() => this.openAddView(), 0);
 			}

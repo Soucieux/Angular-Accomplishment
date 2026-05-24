@@ -19,6 +19,13 @@ import {
 } from '../../../common/app.constant';
 import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';
 
+interface HistoryEntry {
+	key?: string;
+	id?: number;
+	message?: string;
+	status?: string;
+}
+
 @Component({
 	selector: 'history-dialog',
 	imports: [DialogModule, CommonModule, DividerModule],
@@ -32,8 +39,8 @@ export class HistoryDialogComponent implements OnDestroy {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	protected visible: boolean = false;
-	protected entries$!: Observable<any>;
-	private revertDataCallback!: (movie: MovieItemVO) => void;
+	protected entries$!: Observable<HistoryEntry[]>;
+	private revertDataCallback!: (movie: MovieItemVO) => Promise<void>;
 
 	constructor(private dialogService: DialogService) {}
 
@@ -43,7 +50,7 @@ export class HistoryDialogComponent implements OnDestroy {
 	 * @param revertDataCallback - The callback to call to restore a deleted movie.
 	 * @param entries - The observable that emits the history entries.
 	 */
-	public openDialog(revertDataCallback: (movie: MovieItemVO) => void, entries: Observable<any>) {
+	public openDialog(revertDataCallback: (movie: MovieItemVO) => Promise<void>, entries: Observable<HistoryEntry[]>) {
 		this.visible = true;
 		this.entries$ = entries;
 		this.revertDataCallback = revertDataCallback;
@@ -70,20 +77,22 @@ export class HistoryDialogComponent implements OnDestroy {
 	 *
 	 * @param entry - The history entry to potentially restore.
 	 */
-	protected async onMessageClick(entry: any) {
+	protected onMessageClick(entry: HistoryEntry) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'confirm',
 			async () => {
 				try {
-					let movieToRestore = new MovieItemVO();
+					if (!entry.id || !entry.message) throw new MovieIdNotFoundError('unknown');
+					const movieToRestore = new MovieItemVO();
 					movieToRestore.setMovieId(entry.id);
 					// Reconstruct MovieItemVO from the history message string.
 					// Format: "MovieName - Genre (Rate: X) was status on YYYY.MM.DD HH:mm:ss"
 					// This string-based reconstruction is brittle but avoids storing full movie data in history.
-					const movieName = entry.message.split(' - ')[0];
-					const genre = entry.message.split(' - ')[1].split(' ')[0].trim();
-					const year = Number(entry.message.split(' ')[7].split('.')[0]);
+					const msg = entry.message;
+					const movieName = msg.split(' - ')[0];
+					const genre = msg.split(' - ')[1]?.split(' ')[0]?.trim() ?? '';
+					const year = Number(msg.split(' ')[7]?.split('.')[0] ?? '0');
 					movieToRestore.setMovieName(movieName);
 					movieToRestore.setMovieYear(year);
 					movieToRestore.setMovieGenre(genre);

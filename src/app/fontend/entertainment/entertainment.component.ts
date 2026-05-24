@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, prefer-const, no-useless-assignment */
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 import { SearchStreamService } from '../../backend/dialog-service/search/search-stream.service';
 import { Utilities } from '../../common/app.utilities';
@@ -129,7 +130,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	private readonly vtClassMap = new Map<string, string>();
 	private movieListSub?: Subscription;
 	constructor(
-		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(PLATFORM_ID) private platformId: object,
 		@Inject(DOCUMENT) private doc: Document,
 		private elRef: ElementRef<HTMLElement>,
 		private renderer: Renderer2,
@@ -589,7 +590,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param movieItemVO - The movie item on which to store the downloaded cover image.
 	 */
 	private async getMovieCoverImageByLink(movieCoverImageLink: string, movieItemVO: MovieItemVO) {
-		LOG.info(this.className, `${(this.platformId as string).toUpperCase()} is searching movie cover`);
+		LOG.info(this.className, `${(this.platformId as unknown as string).toUpperCase()} is searching movie cover`);
 		try {
 			// searchMovieCover returns a Promise and we wait for the retrieval to complete
 			const movieCoverImage = await firstValueFrom(

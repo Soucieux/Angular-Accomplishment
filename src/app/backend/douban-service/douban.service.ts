@@ -20,6 +20,7 @@ export class DoubanService {
 	 * @param movieName - The movie name to search for.
 	 * @returns An observable that emits the JSON response from Douban.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public searchMovieJSON(movieName: string): Observable<any> {
 		/*  	
         1.	With ng serve (Development Mode):
@@ -54,7 +55,7 @@ export class DoubanService {
 				}
 			)
 			.pipe(
-				catchError((error) => {
+				catchError((error: unknown) => {
 					LOG.error(
 						this.className,
 						'Error while retrieving movie JSON for ' + movieName,
@@ -73,13 +74,13 @@ export class DoubanService {
 	 * @param movieName - The movie name (used for logging).
 	 * @returns An observable that emits the image as a Blob.
 	 */
-	public searchMovieCover(imageLink: string, movieName: string): Observable<any> {
+	public searchMovieCover(imageLink: string, movieName: string): Observable<Blob> {
 		return this.http
 			.get(`${this.getFirebaseFunctionUrl()}?url=${imageLink}&type=image`, {
 				responseType: 'blob'
 			})
 			.pipe(
-				catchError((error) => {
+				catchError((error: unknown) => {
 					LOG.error(
 						this.className,
 						'Error while retrieving movie cover for ' + movieName,
@@ -98,13 +99,13 @@ export class DoubanService {
 	 * @param id - The Douban movie ID to fetch.
 	 * @returns An observable that emits the page HTML as a string.
 	 */
-	public searchMovieByWebpage(id: number): Observable<any> {
+	public searchMovieByWebpage(id: number): Observable<string> {
 		return this.http
 			.get(`${this.getFirebaseFunctionUrl()}?url=${this.doubanBaseUrl}/subject/${id}&type=json`, {
 				responseType: 'text'
 			})
 			.pipe(
-				catchError((error) => {
+				catchError((error: unknown) => {
 					LOG.error(
 						this.className,
 						'Error while retrieving movie webpage for ID ' + id,
@@ -124,13 +125,13 @@ export class DoubanService {
 	 * @param id - The Douban movie ID to look up.
 	 * @returns An observable that emits the API response as a string (parsed to JSON by the caller).
 	 */
-	public searchMovieByThirdPartyApi(id: number): Observable<any> {
+	public searchMovieByThirdPartyApi(id: number): Observable<string> {
 		return this.http
 			.get(`${this.getFirebaseFunctionUrl()}?url=https://api.wmdb.tv/movie/api?id=${id}&type=json`, {
 				responseType: 'text'
 			})
 			.pipe(
-				catchError((error) => {
+				catchError((error: unknown) => {
 					LOG.error(
 						this.className,
 						'Error while retrieving movie webpage for ID ' + id,

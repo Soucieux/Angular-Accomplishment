@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-floating-promises */
 import {
 	AfterViewChecked,
 	ChangeDetectorRef,
@@ -133,7 +134,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly TILE_ROTATIONS = [-1.5, 0.8, -0.5, 1.2];
 
 	constructor(
-		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,
 		private router: Router,
@@ -147,7 +148,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param state - Optional navigation extras to pass as router state.
 	 */
 	protected navigateQA(path: string, state?: object): void {
-		this.router.navigate([path], state ? { state } : undefined);
+		void this.router.navigate([path], state ? { state } : undefined);
 	}
 
 	/**

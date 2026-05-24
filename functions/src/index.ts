@@ -67,7 +67,7 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 		}
 
 		validatedUrl = parsed.toString();
-	} catch (e) {
+	} catch {
 		res.status(400).json({ error: 'Invalid URL format' });
 		return;
 	}
@@ -102,7 +102,7 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 		} else {
 			res.status(500).send('No image data received');
 		}
-	} catch (error: any) {
+	} catch (error: unknown) {
 		console.error(error);
 		res.set('Access-Control-Allow-Origin', '*');
 		res.status(500).send('Internal server error');

@@ -15,7 +15,7 @@
 			placeholder="Write something worth remembering..."
 			class="quote-input"
 			rows="3"
-			(keyup.enter)="submitQuote()"></textarea>
+			(keydown.enter)="onTextareaEnter($event)"></textarea>
 		@if (!isSignedIn) {
 			<div class="name-row">
 				<input
@@ -31,6 +31,9 @@
 		}
 		<div class="submit-footer">
 			<span class="char-count" [class.over-limit]="isOverLimit">{{ newQuoteText.length }} / {{ maxQuoteLength }}</span>
+			@if (postSuccess) {
+				<span class="post-success-chip">{{ postedLabel }}</span>
+			}
 			<button
 				class="submit-btn"
 				pButton
@@ -50,6 +53,7 @@
 				<p class="empty-text">No voices yet. Yours could be the first to resonate.</p>
 			</div>
 		} @else {
+		<div class="quote-count-pill">{{ quotes.length }} {{ voicesLabel }}</div>
 		<div class="quote-grid">
 			@for (quote of quotes; track quote.key; let i = $index) {
 				<div
@@ -77,6 +81,7 @@
 										severity="contrast"
 										pTooltip="Delete"
 										tooltipPosition="top"
+										aria-label="Delete quote"
 										(click)="confirmDelete(quote)">
 									</button>
 								}

@@ -411,6 +411,8 @@ export const RESONANCE_AUTHOR_ANONYMOUS = 'Anonymous';
 export const RESONANCE_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this quote?';
 export const RESONANCE_DIALOG_TITLE_DELETE = 'Delete Quote';
 export const RESONANCE_DIALOG_BTN_DELETE = 'Delete';
+export const RESONANCE_MSG_POSTED = 'Posted';
+export const RESONANCE_LABEL_VOICES = 'voices';
 
 // ── Patch Notes — dialog strings ─────────────────────────────────────────
 export const PATCH_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this note?';

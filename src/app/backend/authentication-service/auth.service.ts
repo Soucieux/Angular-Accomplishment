@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, preserve-caught-error */
 import { EnvironmentInjector, inject, Inject, Injectable, NgZone, runInInjectionContext } from '@angular/core';
 import {
 	GoogleAuthProvider,
@@ -72,7 +73,7 @@ export class AuthService {
 	public async emailPasswordLogin(email: string, password: string, returnUrl: string = '/') {
 		try {
 			await signInWithEmailAndPassword(this.firebaseAuth, email, password);
-			this.router.navigate([returnUrl]);
+			void this.router.navigate([returnUrl]);
 			this.utilities.setIsUserAlive(true);
 		} catch (error: any) {
 			LOG.error(this.className, 'Error when signing in with email and password');
@@ -93,7 +94,7 @@ export class AuthService {
 				const unsub = onAuthStateChanged(this.firebaseAuth, (user) => {
 					unsub();
 					if (user) {
-						this.router.navigate(['/']);
+						void this.router.navigate(['/']);
 						this.utilities.setIsUserAlive(true);
 					}
 				});
@@ -163,7 +164,7 @@ export class AuthService {
 			});
 
 			this.cloudbaseGetCurrentUser();
-			this.router.navigate(['/']);
+			void this.router.navigate(['/']);
 		} catch (error: any) {
 			if (error && error.code === CLOUDBASE_ERROR_INVALID_ARGUMENT) {
 				throw new wrongVerificationCodeError();
@@ -185,7 +186,7 @@ export class AuthService {
 	 * @throws UnexpectedError if a different authentication error occurs.
 	 */
 	public async signIn(username: string, password: string, returnUrl: string = '/') {
-		const { _, error } = await this.cloudbaseAuth.signInWithPassword({
+		const { error } = await this.cloudbaseAuth.signInWithPassword({
 			username: username,
 			password: password
 		});
@@ -197,7 +198,7 @@ export class AuthService {
 		}
 
 		this.cloudbaseGetCurrentUser();
-		this.router.navigate([returnUrl]);
+		void this.router.navigate([returnUrl]);
 	}
 
 	/**

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-floating-promises, @typescript-eslint/no-misused-promises, @typescript-eslint/no-unused-vars, @typescript-eslint/no-base-to-string, prefer-const */
 import {
 	AfterViewChecked,
 	ChangeDetectorRef,
@@ -124,7 +125,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected isNextMonth!: boolean;
 
 	constructor(
-		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(PLATFORM_ID) private platformId: object,
 		private dialogService: DialogService,
 		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,

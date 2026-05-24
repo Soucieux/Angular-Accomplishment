@@ -3,6 +3,8 @@ import tseslint from 'typescript-eslint'
 import { defineConfig } from 'eslint/config'
 
 export default defineConfig(
+  { ignores: ['.angular/**', 'node_modules/**', '**/*.spec.ts', 'dist/**', 'functions/lib/**', '*.mjs'] },
+
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
 

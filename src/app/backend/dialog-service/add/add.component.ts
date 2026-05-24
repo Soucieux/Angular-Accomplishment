@@ -23,6 +23,13 @@ import { Checkbox } from 'primeng/checkbox';
 import { DialogService } from '../dialog.service';
 import { DIALOG_ERROR, MOVIE_GENRES } from '../../../common/app.constant';
 
+interface AddMovieFormValue {
+	movieName?: string;
+	id?: string;
+	years?: string;
+	genres?: { genre: string };
+}
+
 @Component({
 	selector: 'add-dialog',
 	standalone: true,
@@ -48,7 +55,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	@ViewChild('addMovieForm') addMovieForm!: NgForm;
 	@Output() closed$ = new EventEmitter<void>();
 	private submitCallback?: (movie: MovieItemVO) => void;
-	private searchCallback?: (movie: MovieItemVO) => Blob;
+	private searchCallback?: (movie: MovieItemVO) => Promise<Blob | null>;
 	private movieItemVO: MovieItemVO = new MovieItemVO();
 	protected visible: boolean = false;
 	protected isLoading: boolean = false;
@@ -88,7 +95,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	 */
 	public openDialog(
 		submitCallback: (movie: MovieItemVO) => void,
-		searchCallback: (movie: MovieItemVO) => Blob
+		searchCallback: (movie: MovieItemVO) => Promise<Blob | null>
 	) {
 		this.visible = true;
 		this.submitCallback = submitCallback;
@@ -101,7 +108,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	 *
 	 * @param newMovieData - The form values from the add movie form.
 	 */
-	protected async searchCurrentMovie(newMovieData: NgForm['value']) {
+	protected async searchCurrentMovie(newMovieData: AddMovieFormValue) {
 		this.isLoading = true;
 		try {
 			// Two input strategies: if movieName is provided, search by name+year;
@@ -112,7 +119,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 			} else if (newMovieData.id) {
 				this.movieItemVO.setMovieId(Number(newMovieData.id));
 			}
-			this.movieItemVO.setMovieGenre(newMovieData.genres.genre);
+			this.movieItemVO.setMovieGenre(newMovieData.genres?.genre ?? '');
 
 			const movieImage = await this.searchCallback?.(this.movieItemVO);
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;

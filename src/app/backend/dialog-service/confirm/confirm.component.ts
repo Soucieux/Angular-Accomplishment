@@ -25,7 +25,7 @@ export class ConfirmDialogComponent {
 	 * @param data[1] - The header to display in the dialog.
 	 * @param data[2] - The accept button label to display in the dialog.
 	 */
-	public openDialog(acceptCallback: () => Promise<void>, data: any[]) {
+	public openDialog(acceptCallback: () => Promise<void>, data: string[]) {
 		this.confirmationService.confirm({
 			message: data[0],
 			header: data[1],

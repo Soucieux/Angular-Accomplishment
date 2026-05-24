@@ -33,6 +33,14 @@ import {
 import { LOG } from '../../common/app.logs';
 import { RESONANCE_GRADIENTS } from './resonance.model';
 
+interface QuoteRecord {
+	_openid?: string;
+	key?: string;
+	text?: string;
+	author?: string;
+	timestamp?: string;
+}
+
 @Component({
 	selector: 'resonance',
 	standalone: true,
@@ -55,7 +63,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	protected dialogComponentContainer!: ViewContainerRef;
 
-	protected quotes$!: Observable<any[]>;
+	protected quotes$!: Observable<QuoteRecord[]>;
 	protected newQuoteText = '';
 	protected authorName = '';
 	protected submitting = false;
@@ -64,7 +72,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	protected readonly gradients = RESONANCE_GRADIENTS;
 
 	constructor(
-		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		private authService: AuthService,
@@ -80,7 +88,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			if (!CloudbaseService.getUseId()) {
 				// Wait for anonymous sign-in before starting the watcher —
 				// the CloudBase WebSocket needs valid credentials to connect.
-				this.authService.signInAnonymously().then(() => {
+				void this.authService.signInAnonymously().then(() => {
 					this.signedInAnonymously = true;
 					// Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
 					CloudbaseService.markAuthReady();
@@ -101,7 +109,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 */
 	public ngOnDestroy() {
 		if (this.signedInAnonymously) {
-			this.authService.signOut();
+			void this.authService.signOut();
 		}
 		this.signedInAnonymously = false;
 		LOG.info(this.className, COMPONENT_DESTROY);
@@ -123,8 +131,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param timestamp - The timestamp string in "YYYY.MM.DD HH:mm:ss" format.
 	 * @returns A relative time string (e.g. "just now", "5m ago", "2d ago").
 	 */
-	protected getRelativeTime(timestamp: string): string {
-		return Utilities.getRelativeTime(timestamp);
+	protected getRelativeTime(timestamp: string | undefined): string {
+		return Utilities.getRelativeTime(timestamp ?? '');
 	}
 
 	/**
@@ -133,7 +141,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object.
 	 * @returns The author name or 'Anonymous'.
 	 */
-	protected getAuthorName(quote: any): string {
+	protected getAuthorName(quote: QuoteRecord): string {
 		return quote.author || RESONANCE_AUTHOR_ANONYMOUS;
 	}
 
@@ -143,7 +151,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object.
 	 * @returns The uppercase first character of the author's name.
 	 */
-	protected getAuthorInitial(quote: any): string {
+	protected getAuthorInitial(quote: QuoteRecord): string {
 		const name = this.getAuthorName(quote);
 		return name.charAt(0).toUpperCase();
 	}
@@ -154,8 +162,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object to check.
 	 * @returns true if the user can delete the quote, otherwise false.
 	 */
-	protected canDelete(quote: any): boolean {
-		return Utilities.checkPermission(quote._openid);
+	protected canDelete(quote: QuoteRecord): boolean {
+		return Utilities.checkPermission(quote._openid ?? '');
 	}
 
 	/**
@@ -195,7 +203,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			await this.databaseService.addQuote(text, name, timestamp);
 			this.newQuoteText = '';
 			this.authorName = '';
-		} catch (error) {
+		} catch {
 			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 		} finally {
 			this.submitting = false;
@@ -209,15 +217,15 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 *
 	 * @param quote - The quote object to delete.
 	 */
-	protected confirmDelete(quote: any) {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, quote._openid)) return;
+	protected confirmDelete(quote: QuoteRecord) {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, quote._openid ?? '')) return;
 
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			async () => {
 				try {
-					await this.databaseService.removeQuote(quote.key, quote.text, quote.author);
+					await this.databaseService.removeQuote(quote.key ?? '', quote.text ?? '', quote.author ?? '');
 				} catch {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}

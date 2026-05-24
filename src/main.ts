@@ -9,12 +9,12 @@ import { FirebaseService } from './app/backend/database-service/firebase/firebas
 import { LOG } from './app/common/app.logs';
 import { environment } from './environment/environment';
 
-(async () => {
+void (async () => {
 	const className = 'Main';
-	await Utilities.checkCurrentCountry();
+	Utilities.checkCurrentCountry();
 	const country = Utilities.getCurrentCountry();
 
-	let providers = [...appConfig.providers];
+	const providers = [...appConfig.providers];
 
 	// Determine database service
 	const databaseProvider =

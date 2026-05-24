@@ -31,7 +31,7 @@ export class Utilities {
 	private readonly isUserAliveSubject = new BehaviorSubject<boolean>(false);
 
 	constructor(
-		@Inject(PLATFORM_ID) private platformId: Object,
+		@Inject(PLATFORM_ID) private platformId: object,
 		@Inject(DOCUMENT) private document: Document
 	) {
 		if (isPlatformBrowser(this.platformId) && localStorage.getItem(LS_AUTH_HINT_KEY) === '1') {
@@ -355,7 +355,7 @@ export class Utilities {
 	 */
 	public static toArray(raw: unknown): unknown[] {
 		if (!raw) return [];
-		return Array.isArray(raw) ? raw : Object.values(raw as object);
+		return Array.isArray(raw) ? raw : Object.values(raw as Record<string, unknown>);
 	}
 
 	/**
@@ -452,7 +452,7 @@ export class Utilities {
 			if (err == null) return 'unknown error';
 			if (typeof err === 'string') return err;
 			const msg = (err as Record<string, unknown>)['message'];
-			return typeof msg === 'string' ? msg : String(err);
+			return typeof msg === 'string' ? msg : JSON.stringify(err);
 		} catch {
 			return 'unknown error';
 		}
@@ -542,7 +542,7 @@ export class Utilities {
 	 *
 	 * @returns Current country code
 	 */
-	public static async checkCurrentCountry() {
+	public static checkCurrentCountry(): void {
 		try {
 			this.currentCountry = CN;
 		} catch (error: unknown) {

@@ -31,19 +31,20 @@ import { Observable } from 'rxjs';
 })
 export class AppComponent {
 	private readonly className = 'AppComponent';
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	currentUser$!: Observable<any>;
 
 	constructor(
 		private authService: AuthService,
 		private router: Router,
-		@Inject(PLATFORM_ID) private platformId: Object
+		@Inject(PLATFORM_ID) private platformId: object
 	) {}
 
 	/**
 	 * Initialise the component, subscribe to auth state changes, and set up
 	 * the navigation sidebar visibility.
 	 */
-	public async ngOnInit(): Promise<void> {
+	public ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			if (Utilities.getCurrentCountry() === CN) {
 				this.currentUser$ = this.authService.cloudbaseGetCurrentUser();
@@ -65,7 +66,7 @@ export class AppComponent {
 	 * query param so the user is sent back after signing in.
 	 */
 	protected navigateToLogin() {
-		this.router.navigate(['/login'], {
+		void this.router.navigate(['/login'], {
 			queryParams: { returnUrl: this.router.url }
 		});
 	}

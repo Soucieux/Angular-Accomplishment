@@ -415,11 +415,14 @@ export const REMINDER_DIALOG_CONFIRM_BTN = 'Confirm';
 export const REMINDER_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this entry?';
 export const REMINDER_DIALOG_DELETE_BTN = 'Delete';
 
-// ── Reminder — inline style strings ──────────────────────────────────────
-/** Inline style string for a charged cell (orange highlight). */
-export const REMINDER_STYLE_CHARGED = 'color: orange';
-/** Inline style string for today's date cell (red highlight). */
-export const REMINDER_STYLE_TODAY = 'color: red';
+// ── Reminder — first-table UI labels ─────────────────────────────────────
+export const REMINDER_LABEL_CURRENT_MONTH = 'Current Month';
+export const REMINDER_LABEL_NEXT_MONTH = 'Next Month';
+export const REMINDER_LABEL_RESET = 'Reset';
+export const REMINDER_LABEL_CELL_CONFIRM = 'Confirm';
+export const REMINDER_LABEL_CELL_DONE = 'Done';
+export const REMINDER_LABEL_CELL_TODAY = 'Today';
+export const REMINDER_LABEL_CONFIRMED = 'confirmed';
 
 // ── History — dialog and style strings ───────────────────────────────────
 export const HISTORY_MSG_UNDO_CONFIRM = 'Undo this deletion?';

@@ -24,7 +24,6 @@ import { Tooltip } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { PopoverModule } from 'primeng/popover';
 import { PaginatorModule } from 'primeng/paginator';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { Subscription } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
@@ -53,8 +52,13 @@ import {
 	REMINDER_DIALOG_CONFIRM_BTN,
 	REMINDER_MSG_DELETE_CONFIRM,
 	REMINDER_DIALOG_DELETE_BTN,
-	REMINDER_STYLE_CHARGED,
-	REMINDER_STYLE_TODAY
+	REMINDER_LABEL_CURRENT_MONTH,
+	REMINDER_LABEL_NEXT_MONTH,
+	REMINDER_LABEL_RESET,
+	REMINDER_LABEL_CELL_CONFIRM,
+	REMINDER_LABEL_CELL_DONE,
+	REMINDER_LABEL_CELL_TODAY,
+	REMINDER_LABEL_CONFIRMED
 } from '../../common/app.constant';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
@@ -76,7 +80,6 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		Tooltip,
 		PaginatorModule,
 		PopoverModule,
-		ToggleSwitchModule,
 		AccessDeniedComponent
 	],
 	templateUrl: './reminder.component.html',
@@ -84,6 +87,13 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 })
 export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'ReminderComponent';
+	protected readonly labelCurrentMonth = REMINDER_LABEL_CURRENT_MONTH;
+	protected readonly labelNextMonth = REMINDER_LABEL_NEXT_MONTH;
+	protected readonly labelReset = REMINDER_LABEL_RESET;
+	protected readonly labelCellConfirm = REMINDER_LABEL_CELL_CONFIRM;
+	protected readonly labelCellDone = REMINDER_LABEL_CELL_DONE;
+	protected readonly labelCellToday = REMINDER_LABEL_CELL_TODAY;
+	protected readonly labelConfirmed = REMINDER_LABEL_CONFIRMED;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
@@ -210,6 +220,36 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 				this.syncReminderStatistics();
 			});
 		}
+	}
+
+	/**
+	 * Number of first-table cells the user has marked as charged (confirmed).
+	 *
+	 * @returns Count of cells where isCharged is true.
+	 */
+	protected get firstTableConfirmedCount(): number {
+		return (this.updatedFirstTable ?? [])
+			.flatMap((row: any) => this.fields.map((f: string) => row[f] as { isCharged: boolean }))
+			.filter((cell) => cell?.isCharged === true).length;
+	}
+
+	/**
+	 * Total number of editable cells in the first table (rows × 4 columns).
+	 *
+	 * @returns Total cell count.
+	 */
+	protected get firstTableTotalCount(): number {
+		return (this.updatedFirstTable?.length ?? 0) * this.fields.length;
+	}
+
+	/**
+	 * Set the active month view and refresh charged-cell state.
+	 *
+	 * @param isNext - True to switch to next-month view; false for current month.
+	 */
+	protected setMonth(isNext: boolean): void {
+		this.isNextMonth = isNext;
+		void this.updateChargedCells();
 	}
 
 	/**
@@ -444,22 +484,6 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			},
 			[REMINDER_MSG_RESET_CONFIRM, REMINDER_DIALOG_RESET_BTN, REMINDER_DIALOG_CONFIRM_BTN]
 		);
-	}
-
-	/**
-	 * Get the inline CSS color for a first-table cell based on its state.
-	 *
-	 * @param isCharged - Whether the cell is marked as charged (orange).
-	 * @param value - The cell's numeric value (red if it matches today's date).
-	 * @returns A CSS color style string, or empty string for default styling.
-	 */
-	protected setStyle(isCharged: boolean, value: number) {
-		if (isCharged) {
-			return REMINDER_STYLE_CHARGED;
-		} else if (value === this.currentDay) {
-			return REMINDER_STYLE_TODAY;
-		}
-		return '';
 	}
 
 	/**

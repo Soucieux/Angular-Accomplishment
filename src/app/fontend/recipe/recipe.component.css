@@ -110,13 +110,13 @@
 	transition: background 0.4s ease;
 }
 .container-recipe > .view.is-scrolling {
-	scrollbar-color: rgba(217, 119, 6, 0.28) transparent;
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
 }
 .container-recipe > .view.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(217, 119, 6, 0.28);
+	background: rgba(213, 51, 105, 0.28);
 }
 .container-recipe > .view.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #d97706;
+	background: #d53369;
 }
 @keyframes containerReveal {
 	from {
@@ -146,12 +146,12 @@
 @keyframes chipPulse {
 	0%,
 	100% {
-		box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+		box-shadow: 0 4px 12px rgba(213, 51, 105, 0.25);
 	}
 	50% {
 		box-shadow:
-			0 4px 22px rgba(217, 119, 6, 0.48),
-			0 0 0 3px rgba(217, 119, 6, 0.1);
+			0 4px 22px rgba(213, 51, 105, 0.48),
+			0 0 0 3px rgba(213, 51, 105, 0.1);
 	}
 }
 
@@ -188,11 +188,11 @@
 	letter-spacing: 2px;
 	margin: 6px 0 6px;
 	line-height: 1.1;
-	background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
 	-webkit-background-clip: text;
 	background-clip: text;
 	color: transparent;
-	filter: drop-shadow(0 1px 4px rgba(217, 119, 6, 0.18));
+	filter: drop-shadow(0 1px 4px rgba(213, 51, 105, 0.18));
 }
 .detail-title {
 	font-size: 36px;
@@ -207,7 +207,7 @@
 	width: 60px;
 	height: 2px;
 	margin: 12px 0 22px;
-	background: linear-gradient(90deg, #d97706, #b45309);
+	background: linear-gradient(90deg, #d53369, #b82d5a);
 	border-radius: 1px;
 	opacity: 0.7;
 }
@@ -258,8 +258,8 @@
 	color: var(--ink-muted);
 }
 .search input:focus {
-	border-color: rgba(217, 119, 6, 0.4);
-	box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1);
+	border-color: rgba(213, 51, 105, 0.4);
+	box-shadow: 0 0 0 4px rgba(213, 51, 105, 0.1);
 }
 
 /* ── Buttons ───────────────────────────────────────────────────── */
@@ -286,12 +286,12 @@
 }
 .btn-primary {
 	color: #fff !important;
-	background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-	box-shadow: 0 6px 18px rgba(217, 119, 6, 0.28);
+	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
+	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
 }
 .btn-primary:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 10px 22px rgba(217, 119, 6, 0.36);
+	box-shadow: 0 10px 22px rgba(213, 51, 105, 0.36);
 }
 
 /* ── Category chips ────────────────────────────────────────────── */
@@ -317,12 +317,12 @@
 	transition: all 0.2s ease;
 }
 .chip:hover {
-	border-color: rgba(217, 119, 6, 0.4);
-	color: #d97706;
-	box-shadow: 0 2px 8px rgba(217, 119, 6, 0.12);
+	border-color: rgba(213, 51, 105, 0.4);
+	color: #d53369;
+	box-shadow: 0 2px 8px rgba(213, 51, 105, 0.12);
 }
 .chip.active {
-	background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
 	color: #fff !important;
 	border-color: transparent;
 	animation: chipPulse 2.4s ease-in-out infinite;
@@ -1350,12 +1350,12 @@
 }
 .btn-secondary {
 	background: #fff;
-	color: #d97706 !important;
-	border: 1.5px solid rgba(217, 119, 6, 0.35);
+	color: #d53369 !important;
+	border: 1.5px solid rgba(213, 51, 105, 0.35);
 }
 .btn-secondary:hover {
-	border-color: #d97706;
-	background: rgba(217, 119, 6, 0.06);
+	border-color: #d53369;
+	background: rgba(213, 51, 105, 0.06);
 }
 .btn-danger {
 	background: #fff;
@@ -2610,8 +2610,11 @@
 
 /* ── Category accent overrides ──────────────────────────────────── */
 /*
- * RECIPE PAGE — BAND COLOR PALETTE
+ * RECIPE PAGE — COLOR PALETTE
  * ─────────────────────────────────────────────────────────────────
+ * page base     Rose    #d53369 / #b82d5a   rgba(213, 51, 105)
+ *               (list-view chrome: title, chips, Add Recipe btn — app accent)
+ *
  * band-default  Rose    #d53369 / #b82d5a   rgba(213, 51, 105)
  *               (app accent — shown when no category is chosen yet)
  *

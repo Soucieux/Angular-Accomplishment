@@ -56,6 +56,7 @@ import {
 	RECIPE_VIEW_ADD,
 	RECIPE_VIEW_DETAIL,
 	RECIPE_VIEW_LIST,
+	RECIPE_BAND_DEFAULT,
 	TOAST_ERROR,
 	TOAST_INFO,
 	TOAST_SUCCESS,
@@ -1109,5 +1110,14 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected isStepDropTarget(step: EditorStep, position: DropPosition): boolean {
 		return this.dropTargetStep === step && this.dropPosition === position;
+	}
+
+	/**
+	 * Returns the band CSS class for the editor section.
+	 * Falls back to the app-rose default when no category has been chosen yet (add screen).
+	 * @returns band class string e.g. 'band-western', 'band-default'
+	 */
+	protected getEditorBandClass(): string {
+		return Utilities.recipeBandClass(this.editorCategory) || RECIPE_BAND_DEFAULT;
 	}
 }

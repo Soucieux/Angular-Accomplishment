@@ -50,11 +50,11 @@
 	font-weight: 400;
 	letter-spacing: 2px;
 	margin: 0 0 4px;
-	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
-	filter: drop-shadow(0 1px 4px rgba(213, 51, 105, 0.15));
+	filter: drop-shadow(0 1px 4px rgba(37, 99, 235, 0.15));
 }
 
 .page-subtitle {
@@ -68,7 +68,7 @@
 	width: 60px;
 	height: 2px;
 	margin-top: 10px;
-	background: linear-gradient(90deg, #d53369, #daae51);
+	background: linear-gradient(90deg, #2563eb, #1e3a8a);
 	border-radius: 1px;
 	opacity: 0.6;
 }
@@ -207,7 +207,7 @@
 }
 
 .cat-tab.active {
-	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
 	border-color: transparent;
 	color: #fff !important;
 	font-weight: 600;
@@ -268,7 +268,7 @@
 }
 
 .links-search-input {
-	border: 1.5px solid rgba(213, 51, 105, 0.35);
+	border: 1.5px solid rgba(37, 99, 235, 0.35);
 	border-radius: 50px;
 	outline: none;
 	background: rgba(255, 255, 255, 0.8);
@@ -281,8 +281,8 @@
 }
 
 .links-search-input:focus {
-	border-color: #d53369;
-	box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.1);
+	border-color: #2563eb;
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .links-search-input::placeholder {
@@ -327,7 +327,7 @@
 	padding: 5px 14px;
 	border-radius: 50px;
 	border: none;
-	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
 	color: #fff !important;
 	font-family: inherit;
 	font-size: 12px;
@@ -342,7 +342,7 @@
 
 .add-link-btn:hover {
 	transform: scale(1.04);
-	box-shadow: 0 4px 12px rgba(213, 51, 105, 0.3);
+	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
 .add-link-btn .material-symbols-outlined {
@@ -718,8 +718,8 @@
 
 .form-input:focus,
 .form-select:focus {
-	border-color: #d53369;
-	box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.1);
+	border-color: #2563eb;
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .favicon-preview {
@@ -825,7 +825,7 @@
 }
 
 .dialog-save-btn {
-	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
 	border: none;
 	border-radius: 50px;
 	font-family: inherit;
@@ -841,7 +841,7 @@
 
 .dialog-save-btn:hover {
 	transform: scale(1.04);
-	box-shadow: 0 4px 12px rgba(213, 51, 105, 0.3);
+	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
 /* ── Mobile ──────────────────────────────────────────────────── */

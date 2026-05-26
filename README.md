@@ -31,7 +31,7 @@
 | **Reminder Suite** | Triple-table system — date calculator, account expense tracker, and bank debt ledger — with colour-coded status indicators and persistent cloud sync. | Active |
 | **Nexus** | Personal AI search hub with chip-based query filters and a saved link management panel. | Beta |
 | **Resonance** | Personal quote vault with author attribution, timestamps, and anonymous browsing support. | Active |
-| **Recipe Vault** | Personal cookbook with category filtering, ingredient groups with type badges, step-by-step instructions, and a live servings scaler. Ingredient names support both Chinese characters and English — enter each language on a separate line; the first line is used as the coloured pill label shown on the right side of steps. | Active |
+| **Recipe Vault** | Personal cookbook with category filtering, ingredient groups with type badges, step-by-step instructions, and a live servings scaler. Each category applies a distinct colour theme (rose · green · purple · amber · pink) across cards, panels, and action buttons. Ingredient names support both Chinese characters and English — enter each language on a separate line; the first line is used as the coloured pill label shown on the right side of steps. | Active |
 | **Patch Notes** | Internal development log with add/edit/delete, bug flagging per component, status filters, and pagination. | Active |
 | **Secure Entry** | Auth page with Google Sign-In, email/password login, and user sign-up — with route guards protecting all authenticated pages. | Stable |
 | **About** | Professional history timeline with animated visual background. | Stable |

@@ -593,6 +593,8 @@ export class Utilities {
 
 	/**
 	 * Return the CSS band class name for a given recipe category.
+	 * When adding a new category, add a corresponding case here and follow the
+	 * checklist in the RECIPE_BAND_* block inside app.constant.ts.
 	 *
 	 * @param category - The recipe category string (e.g. 'Chinese', 'Western').
 	 * @returns The CSS band class constant for that category, or an empty string

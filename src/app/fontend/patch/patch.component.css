@@ -62,11 +62,11 @@
 	letter-spacing: 2px;
 	margin: 6px 0;
 	line-height: 1.1;
-	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 	-webkit-background-clip: text;
 	background-clip: text;
 	color: transparent;
-	filter: drop-shadow(0 1px 4px rgba(213, 51, 105, 0.12));
+	filter: drop-shadow(0 1px 4px rgba(102, 126, 234, 0.18));
 }
 
 .page-subtitle {
@@ -79,7 +79,7 @@
 	width: 60px;
 	height: 2px;
 	margin: 12px 0 22px;
-	background: linear-gradient(90deg, #d53369, #daae51);
+	background: linear-gradient(90deg, #667eea, #7c3aed);
 	border-radius: 1px;
 	opacity: 0.7;
 }
@@ -107,7 +107,7 @@
 	transform: translateY(-50%);
 	font-size: 20px;
 	pointer-events: none;
-	background: linear-gradient(135deg, #d53369, #f7971e);
+	background: linear-gradient(135deg, #667eea, #7c3aed);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -134,8 +134,8 @@
 }
 
 .search input:focus {
-	border-color: rgba(213, 51, 105, 0.28);
-	box-shadow: 0 0 0 4px rgba(213, 51, 105, 0.1);
+	border-color: rgba(124, 58, 237, 0.4);
+	box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
 }
 
 /* ─────────────────────────────────────────
@@ -320,16 +320,16 @@
 	border-top: 2px solid rgba(0, 0, 0, 0.06) !important;
 }
 
-/* Add button — rose/gold (matches app brand) */
+/* Add button — indigo/purple (distinct from the rose-gold app background) */
 ::ng-deep .p-datatable .p-datatable-tfoot .p-button {
-	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 	border: none !important;
 	border-radius: 10px !important;
 	color: rgba(255, 255, 255, 0.95) !important;
 	font-weight: 700 !important;
 	height: 40px !important;
 	padding: 0 20px !important;
-	box-shadow: 0 3px 10px rgba(213, 51, 105, 0.28) !important;
+	box-shadow: 0 3px 10px rgba(102, 126, 234, 0.28) !important;
 	transition:
 		transform 0.2s,
 		box-shadow 0.2s !important;
@@ -337,7 +337,7 @@
 
 ::ng-deep .p-datatable .p-datatable-tfoot .p-button:not(:disabled):hover {
 	transform: translateY(-2px) !important;
-	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.38) !important;
+	box-shadow: 0 6px 18px rgba(102, 126, 234, 0.38) !important;
 }
 
 /* ─────────────────────────────────────────
@@ -476,9 +476,9 @@
 
 ::ng-deep .p-datatable .p-paginator .p-highlight,
 ::ng-deep .p-datatable .p-paginator .p-paginator-page-selected {
-	background: rgba(213, 51, 105, 0.08) !important;
-	color: rgba(30, 15, 35, 0.75) !important;
-	border-color: rgba(213, 51, 105, 0.25) !important;
+	background: rgba(102, 126, 234, 0.1) !important;
+	color: #667eea !important;
+	border-color: rgba(102, 126, 234, 0.3) !important;
 	box-shadow: none !important;
 }
 

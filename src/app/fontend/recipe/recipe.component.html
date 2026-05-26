@@ -57,7 +57,7 @@
 				} @else {
 					<div class="grid">
 						@for (recipe of filteredRecipes; track recipe.id) {
-							<article class="recipe-card" (click)="openRecipe(recipe)">
+							<article class="recipe-card" [ngClass]="recipe.bandClass" (click)="openRecipe(recipe)">
 								<div class="band" [class]="recipe.bandClass">
 									<span class="category-tag">{{ recipe.category }}</span>
 									@if (recipes.length === 1) {
@@ -98,7 +98,7 @@
 
 		<!-- ===================== VIEW 2: DETAIL ===================== -->
 		@if (currentView === VIEW_DETAIL && activeRecipe) {
-			<section class="view">
+			<section class="view" [ngClass]="activeRecipe.bandClass">
 				<div class="detail-topbar">
 					<button class="back-btn" (click)="backToList()">
 						<span class="material-symbols-outlined">arrow_back</span>
@@ -224,7 +224,7 @@
 
 		<!-- ===================== VIEW 3: ADD / EDITOR ===================== -->
 		@if (currentView === VIEW_ADD) {
-			<section class="view editor-view">
+			<section class="view editor-view" [ngClass]="getEditorBandClass()">
 				<div class="editor-topbar">
 					<button class="back-btn" (click)="cancelAdd()">
 						<span class="material-symbols-outlined">arrow_back</span>

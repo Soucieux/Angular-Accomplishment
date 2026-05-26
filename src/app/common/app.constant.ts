@@ -238,11 +238,20 @@ export const RECIPE_EDITING_MODE_CREATE = 'create';
 export const RECIPE_EDITING_MODE_EDIT = 'edit';
 
 // ── Recipe — band CSS class names ────────────────────────────────────────
+// Each band pairs with a RECIPE_CATEGORY_* constant above and a full CSS
+// section in recipe.component.css.  When adding a new band:
+//   1. Add RECIPE_CATEGORY_<NAME> above
+//   2. Add RECIPE_BAND_<NAME> here
+//   3. Register the new case in Utilities.recipeBandClass()
+//   4. Add RECIPE_CATEGORY_<NAME> to RECIPE_CATEGORIES and RECIPE_EDITOR_CATEGORIES
+//      in recipe.model.ts
+//   5. Add all CSS rules in recipe.component.css (see the palette comment block)
 export const RECIPE_BAND_CHINESE = 'band-chinese';
 export const RECIPE_BAND_WESTERN = 'band-western';
 export const RECIPE_BAND_QUICK = 'band-quick';
 export const RECIPE_BAND_DESSERT = 'band-dessert';
-export const RECIPE_BAND_SPICY = 'band-spicy';
+export const RECIPE_BAND_SPICY = 'band-spicy';   // reserved — CSS rules not yet added
+export const RECIPE_BAND_DEFAULT = 'band-default';
 
 // ── Recipe — drag-drop position discriminators ───────────────────────────
 export const RECIPE_DROP_ABOVE = 'above';

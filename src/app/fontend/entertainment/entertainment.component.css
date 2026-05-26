@@ -31,7 +31,7 @@
 .bar-title {
 	font-size: 28px;
 	font-weight: 700;
-	color: #2c1a0a;
+	color: #4a1d96;
 	letter-spacing: -0.5px;
 	margin: 0;
 	padding: 0;
@@ -41,8 +41,8 @@
 .count-pill {
 	font-size: 15px;
 	font-weight: 700;
-	color: #8a5a38;
-	background: rgba(184, 148, 104, 0.18);
+	color: #6d28d9;
+	background: rgba(109, 40, 217, 0.1);
 	border-radius: 20px;
 	padding: 5px 12px;
 	white-space: nowrap;

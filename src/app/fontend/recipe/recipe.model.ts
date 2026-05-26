@@ -140,7 +140,12 @@ export interface EditorGroup {
 	items: EditorIngredient[];
 }
 
-/** All category options used by the list-view filter chips (includes "All"). */
+/**
+ * All category options used by the list-view filter chips (includes "All").
+ * When adding a new category, append its RECIPE_CATEGORY_* constant here
+ * and also to RECIPE_EDITOR_CATEGORIES below.
+ * See the full checklist in the RECIPE_BAND_* block inside app.constant.ts.
+ */
 export const RECIPE_CATEGORIES: string[] = [
 	RECIPE_CATEGORY_ALL,
 	RECIPE_CATEGORY_CHINESE,
@@ -149,7 +154,11 @@ export const RECIPE_CATEGORIES: string[] = [
 	RECIPE_CATEGORY_DESSERT,
 ];
 
-/** Category options available in the recipe editor dropdown (excludes "All"). */
+/**
+ * Category options available in the recipe editor dropdown (excludes "All").
+ * Keep in sync with RECIPE_CATEGORIES above — every entry here must also
+ * appear there (without RECIPE_CATEGORY_ALL).
+ */
 export const RECIPE_EDITOR_CATEGORIES: string[] = [
 	RECIPE_CATEGORY_CHINESE,
 	RECIPE_CATEGORY_WESTERN,

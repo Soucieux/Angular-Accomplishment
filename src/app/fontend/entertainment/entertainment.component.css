@@ -721,16 +721,44 @@
 		font-size: 20px !important;
 	}
 
-	/* Category row — horizontally scrollable on mobile */
+	/* Category row — 3-column grid, all genres visible at once */
 	.category-row {
-		padding: 14px 16px 16px;
-		flex-wrap: nowrap;
-		-webkit-overflow-scrolling: touch;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 8px;
+		padding: 14px 16px 10px;
+		overflow-x: visible;
 	}
 
+	/* Mobile card: vertical stack (no progress bar), fills grid cell */
 	.category-card {
-		flex: 0 0 auto;
-		min-width: 80px;
+		flex: unset;
+		min-width: 0;
+		width: 100%;
+		display: block;
+		padding: 10px 10px 10px;
+	}
+
+	.category-card .card-genre-name {
+		margin-bottom: 4px;
+		margin-top: 0;
+		font-size: 13px;
+	}
+
+	.category-card .card-count-row {
+		margin-bottom: 0;
+	}
+
+	.category-card .card-count {
+		font-size: 17px;
+	}
+
+	.category-card .card-watch-label {
+		font-size: 10px;
+	}
+
+	.category-card .card-progress-bar {
+		display: none;
 	}
 
 	.content-container {

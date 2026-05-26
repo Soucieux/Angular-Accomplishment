@@ -2418,7 +2418,7 @@
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
 		transition: scrollbar-color 0.4s ease;
-		margin: -6px 0 0px -22px;
+		margin: -6px 0px 5px -22px;
 	}
 	.chips-scroll::-webkit-scrollbar {
 		height: 3px;
@@ -2443,7 +2443,7 @@
 		flex-wrap: nowrap;
 		gap: 8px;
 		margin: 0;
-		padding: 20px 0 15px 22px;
+		padding: 20px 0 10px 22px;
 	}
 	.chip {
 		flex-shrink: 0;

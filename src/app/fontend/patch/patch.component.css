@@ -56,9 +56,20 @@
 	color: rgba(30, 15, 35, 0.55);
 }
 
+/* PAGE-TITLE SIZE STANDARD
+ * Compact-header pages (Entertainment): 28px desktop / 15px mobile
+ * Large-header pages  (Nexus, Resonance, Patch Notes, Recipe): 44px desktop / 28px mobile
+ * All pages: font-weight 500
+ */
+/* PAGE ACCENT COLOR — Patch Notes
+ * Indigo  primary #667eea   rgba(102, 126, 234)
+ *         dark    #764ba2   rgba(118, 75, 162)
+ * Applied to: page-title gradient, buttons, version badge, timeline dots
+ * To change: replace all #667eea and #764ba2 throughout this file.
+ */
 .page-title {
 	font-size: 44px;
-	font-weight: 400;
+	font-weight: 500;
 	letter-spacing: 2px;
 	margin: 6px 0;
 	line-height: 1.1;
@@ -953,7 +964,7 @@
 		height: 8.8vh;
 	}
 	.page-title {
-		font-size: 28px;
+		font-size: 28px; /* large-header mobile standard */
 	}
 
 	::ng-deep table {

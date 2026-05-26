@@ -2412,32 +2412,11 @@
 	   shadow bleed full room.  20px padding-top covers the 18px upward bleed.
 	   Negative margins on .chips-scroll keep the chip at the same visual
 	   position as on desktop. */
+	/* iOS/WebKit does not support custom scrollbar colour — the native grey
+	   indicator is displayed as-is during scroll. No custom styling applied. */
 	.chips-scroll {
 		overflow-x: auto;
-		-webkit-overflow-scrolling: touch;
-		scrollbar-width: thin;
-		scrollbar-color: transparent transparent;
-		transition: scrollbar-color 0.4s ease;
 		margin: -6px 0px 5px -22px;
-	}
-	.chips-scroll::-webkit-scrollbar {
-		height: 3px;
-	}
-	.chips-scroll::-webkit-scrollbar-track {
-		background: transparent;
-	}
-	.chips-scroll::-webkit-scrollbar-thumb {
-		background: transparent;
-		border-radius: 999px;
-	}
-	.chips-scroll.is-scrolling {
-		scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
-	}
-	.chips-scroll.is-scrolling::-webkit-scrollbar-thumb {
-		background: rgba(213, 51, 105, 0.28);
-	}
-	.chips-scroll.is-scrolling::-webkit-scrollbar-thumb:hover {
-		background: #d53369;
 	}
 	.chips {
 		flex-wrap: nowrap;

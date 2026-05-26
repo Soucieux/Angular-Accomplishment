@@ -45,9 +45,20 @@
 	flex-shrink: 0;
 }
 
+/* PAGE-TITLE SIZE STANDARD
+ * Compact-header pages (Entertainment): 28px desktop / 15px mobile
+ * Large-header pages  (Nexus, Resonance, Patch Notes, Recipe): 44px desktop / 28px mobile
+ * All pages: font-weight 500
+ */
+/* PAGE ACCENT COLOR — Nexus
+ * Blue  primary #2563eb   rgba(37, 99, 235)
+ *       dark    #1e3a8a   rgba(30, 58, 138)
+ * Applied to: page-title gradient, buttons, border accents, focus rings
+ * To change: replace all #2563eb and #1e3a8a throughout this file.
+ */
 .page-title {
-	font-size: 28px;
-	font-weight: 400;
+	font-size: 44px;
+	font-weight: 500;
 	letter-spacing: 2px;
 	margin: 0 0 4px;
 	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
@@ -846,6 +857,10 @@
 
 /* ── Mobile ──────────────────────────────────────────────────── */
 @media (max-width: 800px) {
+	.page-title {
+		font-size: 28px; /* large-header mobile standard */
+	}
+
 	.container-nexus {
 		min-height: 100%;
 		height: auto;

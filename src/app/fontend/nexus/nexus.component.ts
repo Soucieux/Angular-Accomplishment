@@ -67,7 +67,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 
 	protected failedLogos = new Set<string>();
 	private readonly LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
-	protected readonly aiTools: AiTool[] = NEXUS_AI_TOOLS;
+	protected readonly aiTools: AiTool[] = [...NEXUS_AI_TOOLS];
 
 	// ── Links & Categories ────────────────────────────────────────
 	protected links: any[] = [];
@@ -167,7 +167,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 * @param toolId - The AI tool ID.
 	 * @returns A CSS colour string.
 	 */
-	protected logoFallbackColor(toolId: string): string {
+	protected getLogoFallbackColor(toolId: string): string {
 		return this.LOGO_FALLBACK_COLORS[toolId] ?? '#888';
 	}
 
@@ -191,11 +191,16 @@ export class NexusComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Collapse the link search input when it loses focus and the query is empty.
+	 * Skips the collapse when focus moves to the search-toggle icon button so
+	 * that the subsequent click handler can toggle the visibility itself,
+	 * avoiding the blur-then-click race that would reopen a just-closed input.
+	 *
+	 * @param event - The FocusEvent whose relatedTarget identifies where focus went.
 	 */
-	protected onLinkSearchBlur(): void {
-		if (!this.linkSearch.trim()) {
-			this.linkSearchVisible = false;
-		}
+	protected onLinkSearchBlur(event: FocusEvent): void {
+		const focusTarget = event.relatedTarget as HTMLElement | null;
+		if (focusTarget?.closest('.icon-btn')) return;
+		if (!this.linkSearch.trim()) this.linkSearchVisible = false;
 	}
 
 	/**
@@ -350,7 +355,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 * @param link - The link document to delete.
 	 * @param event - The click event (stopped to prevent card click).
 	 */
-	protected deleteLink(link: any, event: Event): void {
+	protected openDeleteLinkDialog(link: any, event: Event): void {
 		event.stopPropagation();
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -432,7 +437,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	 * @param category - The category document to delete.
 	 * @param event - The click event (stopped to prevent tab switch).
 	 */
-	protected deleteCategory(category: any, event: Event): void {
+	protected openDeleteCategoryDialog(category: any, event: Event): void {
 		event.stopPropagation();
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,

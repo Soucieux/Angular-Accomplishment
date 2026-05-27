@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig } from 'eslint/config'
 
 export default defineConfig(
-  { ignores: ['.angular/**', 'node_modules/**', '**/*.spec.ts', 'dist/**', 'functions/lib/**', '*.mjs'] },
+  { ignores: ['.angular/**', 'node_modules/**', '**/*.spec.ts', 'dist/**', 'functions/**', '*.mjs'] },
 
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -11,7 +11,7 @@ export default defineConfig(
   {
     languageOptions: {
       parserOptions: {
-        project: './tsconfig.json',
+        project: './tsconfig.eslint.json',
         tsconfigRootDir: import.meta.dirname
       }
     }

@@ -94,7 +94,7 @@
 
 			<!-- ── Quick Actions row (outside bento grid) ────────────────── -->
 			<div class="quick-actions-row">
-				<a class="qa-btn qa-movie" (click)="navigateQA('/entertainment', { openAddDialog: true })">
+				<a class="qa-btn qa-movie" (click)="navigateToQuickAction('/entertainment', { openAddDialog: true })">
 					<span class="material-symbols-outlined qa-icon">movie</span>
 					<span class="qa-label">Add Movie</span>
 				</a>
@@ -102,7 +102,7 @@
 					<span class="material-symbols-outlined qa-icon">format_quote</span>
 					<span class="qa-label">Add Quote</span>
 				</a>
-				<a class="qa-btn qa-recipe" (click)="navigateQA('/recipe', { openAddView: true })">
+				<a class="qa-btn qa-recipe" (click)="navigateToQuickAction('/recipe', { openAddView: true })">
 					<span class="material-symbols-outlined qa-icon">menu_book</span>
 					<span class="qa-label">Add Recipe</span>
 				</a>
@@ -110,13 +110,13 @@
 					<span class="material-symbols-outlined qa-icon">payments</span>
 					<span class="qa-label">Add Expense</span>
 				</a>
-				<a class="qa-btn qa-patch" (click)="navigateQA('/patch', { goToLastPage: true })">
+				<a class="qa-btn qa-patch" (click)="navigateToQuickAction('/patch', { goToLastPage: true })">
 					<span class="material-symbols-outlined qa-icon">bug_report</span>
 					<span class="qa-label">Log Bug</span>
 				</a>
 				<a
 					class="qa-btn qa-search"
-					(click)="navigateQA('/entertainment', { openSearchDialog: true })">
+					(click)="navigateToQuickAction('/entertainment', { openSearchDialog: true })">
 					<span class="material-symbols-outlined qa-icon">manage_search</span>
 					<span class="qa-label">Rate Search</span>
 				</a>
@@ -416,8 +416,8 @@
 							<div class="links-tiles">
 								@for (link of pinnedLinks; track link._id; let i = $index) {
 									<a class="link-tile"
-									   [style.background]="tileColor(i)"
-									   [style.--rot]="tileRotation(i)"
+									   [style.background]="getTileColor(i)"
+									   [style.--rot]="getTileRotation(i)"
 									   (click)="openDashLink(link)"
 									   [title]="link.title">
 										<div class="tile-top">

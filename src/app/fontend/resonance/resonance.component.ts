@@ -193,11 +193,12 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Handle textarea Enter key: submit on bare Enter, allow newline on Shift+Enter.
+	 * Uses instanceof narrowing so no cast is needed to access shiftKey.
 	 *
-	 * @param e - The DOM event fired from the textarea (cast to KeyboardEvent at runtime).
+	 * @param e - The event fired from the textarea keydown binding.
 	 */
-	protected onTextareaEnter(e: Event) {
-		if (!(e as KeyboardEvent).shiftKey) {
+	protected onTextareaEnter(e: Event): void {
+		if (e instanceof KeyboardEvent && !e.shiftKey) {
 			e.preventDefault();
 			void this.submitQuote();
 		}
@@ -225,6 +226,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			this.postSuccess = true;
 			if (this.postSuccessTimer !== null) clearTimeout(this.postSuccessTimer);
 			this.postSuccessTimer = setTimeout(() => {
+				this.postSuccessTimer = null;
 				this.postSuccess = false;
 				this.cdr.detectChanges();
 			}, 2000);
@@ -242,7 +244,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 *
 	 * @param quote - The quote object to delete.
 	 */
-	protected confirmDelete(quote: QuoteRecord) {
+	protected openDeleteConfirmationDialog(quote: QuoteRecord) {
 		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, quote._openid ?? '')) return;
 
 		this.dialogService.openDialog(

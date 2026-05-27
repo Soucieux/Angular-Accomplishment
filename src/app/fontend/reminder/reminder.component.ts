@@ -103,6 +103,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private chargedCells = new Set<string>();
 	protected originalFirstTable!: any[];
 	protected updatedFirstTable!: any[];
+	protected firstTableConfirmedCount = 0;
 	protected currentDay!: number;
 	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
 	protected updatedSecondTable!: any[];
@@ -177,6 +178,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 					await this.updateChargedCells();
 					this.chargedCellsInitialized = true;
 				}
+				this.refreshConfirmedCount();
 				this.cdr.detectChanges();
 			});
 
@@ -223,12 +225,11 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Number of first-table cells the user has marked as charged (confirmed).
-	 *
-	 * @returns Count of cells where isCharged is true.
+	 * Recompute and cache the count of first-table cells marked as charged.
+	 * Call this whenever updatedFirstTable or any cell's isCharged flag changes.
 	 */
-	protected get firstTableConfirmedCount(): number {
-		return (this.updatedFirstTable ?? [])
+	private refreshConfirmedCount(): void {
+		this.firstTableConfirmedCount = (this.updatedFirstTable ?? [])
 			.flatMap((row: any) => this.fields.map((f: string) => row[f] as { isCharged: boolean }))
 			.filter((cell) => cell?.isCharged === true).length;
 	}
@@ -288,6 +289,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			}
 		}
 
+		this.refreshConfirmedCount();
 		if (this.chargedCellsInitialized) {
 			await this.updateFirstTableSingleValue();
 		}
@@ -461,7 +463,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		if (!this.updatedFirstTable[rowIndex][field].isCharged) {
 			this.updatedFirstTable[rowIndex][field].isCharged = true;
-
+			this.refreshConfirmedCount();
 			// Update table to database
 			await this.updateFirstTableSingleValue();
 		}
@@ -501,7 +503,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			third: { value: values[index], isCharged: false },
 			fourth: { value: values[index], isCharged: false }
 		}));
-
+		this.refreshConfirmedCount();
 		await this.updateFirstTableSingleValue();
 	}
 

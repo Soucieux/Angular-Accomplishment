@@ -930,6 +930,13 @@
 	-webkit-text-fill-color: transparent;
 }
 
+.icon-pinboard {
+	background: linear-gradient(135deg, #f97316, #e879f9);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
 .icon-patch-notes {
 	background: linear-gradient(135deg, #d53369, #f7971e);
 	background-clip: text;

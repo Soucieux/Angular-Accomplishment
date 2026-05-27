@@ -255,8 +255,16 @@ li:nth-child(7) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Patch Notes — rose → orange */
+/* Pinboard — coral → fuchsia */
 li:nth-child(8) .nav-icon {
+	background: linear-gradient(135deg, #f97316, #e879f9);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+/* Patch Notes — rose → orange */
+li:nth-child(9) .nav-icon {
 	background: linear-gradient(135deg, #d53369, #f7971e);
 	background-clip: text;
 	-webkit-background-clip: text;
@@ -264,7 +272,7 @@ li:nth-child(8) .nav-icon {
 }
 
 /* About — purple → pink */
-li:nth-child(9) .nav-icon {
+li:nth-child(10) .nav-icon {
 	background: linear-gradient(135deg, #8e54e9, #e91e8c);
 	background-clip: text;
 	-webkit-background-clip: text;

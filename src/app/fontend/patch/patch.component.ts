@@ -589,6 +589,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		{ label: 'Recipe', icon: 'menu_book', iconClass: 'material-symbols-outlined', colorClass: 'icon-recipe' },
 		{ label: 'Entertainment', icon: 'live_tv', iconClass: 'material-symbols-outlined', colorClass: 'icon-entertainment' },
 		{ label: 'Reminder', icon: 'alarm', iconClass: 'material-symbols-outlined', colorClass: 'icon-reminder' },
+		{ label: 'Pinboard', icon: 'push_pin', iconClass: 'material-symbols-outlined', colorClass: 'icon-pinboard' },
 		{ label: 'Patch Notes', icon: 'note_stack', iconClass: 'material-symbols-outlined', colorClass: 'icon-patch-notes' },
 		{ label: 'About', icon: 'badge', iconClass: 'material-symbols-outlined', colorClass: 'icon-about' },
 		{ label: 'Login', icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' }, // pi icon — CSS only, no ligature text

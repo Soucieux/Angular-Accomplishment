@@ -147,7 +147,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param path - The target route path (e.g. '/entertainment').
 	 * @param state - Optional navigation extras to pass as router state.
 	 */
-	protected navigateQA(path: string, state?: object): void {
+	protected navigateToQuickAction(path: string, state?: object): void {
 		void this.router.navigate([path], state ? { state } : undefined);
 	}
 
@@ -793,7 +793,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param i - Zero-based tile index.
 	 * @returns CSS colour string.
 	 */
-	protected tileColor(i: number): string {
+	protected getTileColor(i: number): string {
 		return [HOME_LINKS_TILE_0, HOME_LINKS_TILE_1, HOME_LINKS_TILE_2, HOME_LINKS_TILE_3][i % 4];
 	}
 
@@ -804,7 +804,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param i - Zero-based tile index.
 	 * @returns CSS rotation string, e.g. "-1.5deg".
 	 */
-	protected tileRotation(i: number): string {
+	protected getTileRotation(i: number): string {
 		return `${this.TILE_ROTATIONS[i % 4]}deg`;
 	}
 }

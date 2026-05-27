@@ -412,7 +412,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param group - The ingredient group to filter.
 	 * @returns An array of visible (non-hidden) {@link Ingredient} objects.
 	 */
-	protected visibleItems(group: IngredientGroup): Ingredient[] {
+	protected getVisibleItems(group: IngredientGroup): Ingredient[] {
 		return group.items.filter((i) => !i.hidden);
 	}
 

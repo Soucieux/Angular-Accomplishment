@@ -21,7 +21,7 @@
 							class="ai-tile-logo"
 							(error)="onLogoError(tool.id)" />
 					} @else {
-						<span class="ai-tile-initial" [style.background]="logoFallbackColor(tool.id)">
+						<span class="ai-tile-initial" [style.background]="getLogoFallbackColor(tool.id)">
 							{{ tool.name[0] }}
 						</span>
 					}
@@ -67,7 +67,7 @@
 							type="text"
 							placeholder="Search links…"
 							[(ngModel)]="linkSearch"
-							(blur)="onLinkSearchBlur()" />
+							(blur)="onLinkSearchBlur($event)" />
 					}
 					<button
 						class="icon-btn"
@@ -125,7 +125,7 @@
 									<button class="link-action-btn" (click)="openEditLinkDialog(link, $event)" title="Edit">
 										<span class="material-symbols-outlined">edit</span>
 									</button>
-									<button class="link-action-btn danger" (click)="deleteLink(link, $event)" title="Delete">
+									<button class="link-action-btn danger" (click)="openDeleteLinkDialog(link, $event)" title="Delete">
 										<span class="material-symbols-outlined">delete</span>
 									</button>
 								</div>
@@ -241,7 +241,7 @@
 		</div>
 		@if (editingCategory) {
 			<div class="danger-zone">
-				<button class="delete-cat-btn" (click)="deleteCategory(editingCategory, $event)">
+				<button class="delete-cat-btn" (click)="openDeleteCategoryDialog(editingCategory, $event)">
 					Delete this category
 				</button>
 			</div>

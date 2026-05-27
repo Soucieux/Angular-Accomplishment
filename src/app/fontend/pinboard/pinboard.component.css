@@ -1,0 +1,720 @@
+/* PAGE ACCENT COLOR — Pinboard
+ * Amber-Orange  primary #f7971e   rgba(247, 151, 30)
+ *               dark    #e08900   rgba(224, 137, 0)
+ *               gold    #ffd200
+ * Applied to: title gradient, chip background, add-card hover, paginator active,
+ *             counter number, field pills
+ * To change: replace all #f7971e, #ffd200, #e08900 throughout this file.
+ */
+
+/* ── Host ── */
+:host {
+	display: block;
+	height: 100%;
+	font-family: 'nlf', 'cf', sans-serif;
+}
+
+/* ── Container ─────────────────────────────────────────────────────────────── */
+.pinboard-container {
+	height: calc(100dvh - 10px);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.8);
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+	border-radius: 18px;
+	padding: 20px 24px 16px;
+	animation: containerReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes containerReveal {
+	from { opacity: 0; transform: translateY(-8px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Body (scrollable, fills remaining height) ──────────────────────────────── */
+.pinboard-body {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.4s ease;
+}
+
+.pinboard-body::-webkit-scrollbar { width: 8px; }
+.pinboard-body::-webkit-scrollbar-track { background: transparent; }
+.pinboard-body::-webkit-scrollbar-thumb {
+	background: transparent;
+	border-radius: 999px;
+	transition: background 0.4s ease;
+}
+.pinboard-body.is-scrolling {
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+}
+.pinboard-body.is-scrolling::-webkit-scrollbar-thumb {
+	background: rgba(213, 51, 105, 0.28);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.pinboard-header {
+	flex-shrink: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 14px;
+}
+
+.pinboard-eyebrow {
+	font-size: 11px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	font-weight: 500;
+	color: rgba(30, 15, 35, 0.55);
+	display: block;
+	margin-bottom: 2px;
+}
+
+.pinboard-title {
+	font-size: 44px;
+	font-weight: 500;
+	letter-spacing: 2px;
+	margin: 4px 0 0;
+	line-height: 1.1;
+	background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	filter: drop-shadow(0 1px 4px rgba(247, 151, 30, 0.18));
+}
+
+.pinboard-subtitle {
+	color: rgba(30, 15, 35, 0.55);
+	font-size: 14px;
+	margin: 4px 0 0;
+}
+
+.pinboard-subtitle em {
+	font-style: italic;
+}
+
+.pinboard-header-ornament {
+	width: 60px;
+	height: 2px;
+	margin: 10px 0 0;
+	background: linear-gradient(90deg, #f7971e, #ffd200);
+	border-radius: 1px;
+	opacity: 0.7;
+}
+
+.pinboard-counter {
+	text-align: right;
+	flex-shrink: 0;
+}
+
+.pinboard-counter-number {
+	display: block;
+	font-style: italic;
+	font-size: 48px;
+	font-weight: 300;
+	line-height: 1;
+	color: #f7971e;
+}
+
+.pinboard-counter-label {
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	opacity: 0.55;
+	margin-top: 2px;
+	display: block;
+	color: rgba(40, 15, 35, 0.7);
+}
+
+/* ── Save indicator ─────────────────────────────────────────────────────────── */
+.pinboard-save-indicator {
+	display: block;
+	font-size: 9px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #27a24a;
+	font-weight: 600;
+	margin-top: 3px;
+	animation: pinboardSaveFlash 1s ease forwards;
+}
+
+@keyframes pinboardSaveFlash {
+	0%   { opacity: 0; transform: translateY(-3px); }
+	20%  { opacity: 1; transform: translateY(0); }
+	80%  { opacity: 1; }
+	100% { opacity: 0; }
+}
+
+/* ── Tag filter row ─────────────────────────────────────────────────────────── */
+.pinboard-tag-filter {
+	flex-shrink: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 10px;
+}
+
+.pinboard-tag-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 6px 14px;
+	background: rgba(247, 151, 30, 0.08);
+	border: 1.5px solid rgba(247, 151, 30, 0.25);
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 500;
+	color: rgba(224, 137, 0, 0.7);
+	cursor: pointer;
+	font-family: 'nlf', 'cf', sans-serif;
+	transition: all 140ms;
+	line-height: 1;
+}
+
+.pinboard-tag-chip:hover {
+	background: rgba(247, 151, 30, 0.15);
+	border-color: #f7971e;
+	color: #e08900;
+}
+
+.pinboard-tag-chip-active {
+	background: #f7971e;
+	border-color: #f7971e;
+	color: #ffffff;
+}
+
+.pinboard-tag-chip-active:hover {
+	background: #e08900;
+	border-color: #e08900;
+}
+
+.pinboard-tag-chip-clear {
+	background: transparent;
+	border-color: rgba(180, 60, 60, 0.25);
+	color: rgba(180, 60, 60, 0.6);
+}
+
+.pinboard-tag-chip-clear:hover {
+	background: rgba(180, 60, 60, 0.08);
+	border-color: rgba(180, 60, 60, 0.5);
+	color: #b43c3c;
+}
+
+.pinboard-tag-chip-clear .pi { font-size: 9px; }
+
+/* ── Grid ───────────────────────────────────────────────────────────────────── */
+.pinboard-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-auto-rows: auto;
+	gap: 10px;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────────── */
+.pinboard-card {
+	background: #ffffff;
+	border-radius: 14px;
+	box-shadow:
+		0 1px 0 rgba(13, 58, 44, 0.04),
+		0 14px 30px -20px rgba(13, 58, 44, 0.3);
+	padding: 10px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	height: 110px;
+	overflow: hidden;
+	transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.2s ease;
+	animation: cardIn 0.22s ease-out both;
+}
+
+.pinboard-card:hover {
+	transform: translateY(-2px);
+	box-shadow:
+		0 1px 0 rgba(13, 58, 44, 0.04),
+		0 20px 36px -16px rgba(13, 58, 44, 0.32);
+}
+
+@keyframes cardIn {
+	from { opacity: 0; transform: translateY(6px); }
+	to   { opacity: 1; transform: none; }
+}
+
+/* Card head: index + chips (inline) + remove */
+.pinboard-card-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
+	min-width: 0;
+}
+
+.pinboard-card-index {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.pinboard-card-number {
+	font-style: italic;
+	font-size: 16px;
+	line-height: 1;
+	color: rgba(40, 15, 35, 0.7);
+}
+
+.pinboard-card-total {
+	font-size: 10px;
+	opacity: 0.45;
+	letter-spacing: 0.06em;
+}
+
+.pinboard-card-remove {
+	width: 24px;
+	height: 24px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	display: grid;
+	place-items: center;
+	border-radius: 6px;
+	color: rgba(40, 15, 35, 0.45);
+	opacity: 0.55;
+	transition: opacity 140ms, background 140ms, color 140ms;
+	margin-left: auto;
+	flex-shrink: 0;
+}
+
+.pinboard-card-remove:hover {
+	opacity: 1;
+	background: #ffe7e3;
+	color: #b73a2a;
+}
+
+.pinboard-card-remove .pi { font-size: 10px; }
+
+/* ── Borderless message input (Peppermint style) ────────────────────────────── */
+.pinboard-card-message {
+	width: 100%;
+	border: none;
+	outline: none;
+	background: transparent;
+	font-family: 'nlf', 'cf', sans-serif;
+	font-size: 14px;
+	color: rgba(26, 10, 46, 0.88);
+	padding: 2px 0;
+	line-height: 1.4;
+	flex-shrink: 0;
+}
+
+.pinboard-card-message::placeholder {
+	color: rgba(40, 15, 35, 0.3);
+	font-style: italic;
+}
+
+/* ── Optional fields row (date + link at 50% each) ──────────────────────────── */
+.pinboard-card-optional {
+	display: flex;
+	gap: 5px;
+	flex-shrink: 0;
+}
+
+.pinboard-field {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	background: rgba(247, 151, 30, 0.1);
+	border-radius: 14px;
+	padding: 5px 5px 5px 8px;
+	cursor: pointer;
+	transition: background 0.14s;
+	font-size: 12px;
+	color: #e08900;
+	line-height: 1;
+}
+
+.pinboard-field:hover { background: rgba(247, 151, 30, 0.18); }
+
+.pinboard-field-icon { font-size: 11px; opacity: 0.8; flex-shrink: 0; }
+
+.pinboard-field-value {
+	font-weight: 500;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.pinboard-field-relative-time {
+	font-size: 10px;
+	opacity: 0.65;
+	white-space: nowrap;
+}
+
+.pinboard-field-open {
+	display: grid;
+	place-items: center;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	color: #4776e6;
+	text-decoration: none;
+	transition: background 0.12s;
+}
+
+.pinboard-field-open:hover { background: rgba(71, 118, 230, 0.12); }
+.pinboard-field-open .pi { font-size: 9px; }
+
+.pinboard-field-remove {
+	width: 16px;
+	height: 16px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	color: inherit;
+	opacity: 0.5;
+	transition: opacity 0.12s, background 0.12s;
+	padding: 0;
+}
+
+.pinboard-field-remove:hover {
+	opacity: 1;
+	background: rgba(247, 151, 30, 0.2);
+}
+
+.pinboard-field-remove .pi { font-size: 7px; }
+
+.pinboard-add-button {
+	flex: 1;
+	min-width: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 5px 8px;
+	border: 1.5px dashed rgba(247, 151, 30, 0.35);
+	border-radius: 14px;
+	background: transparent;
+	color: rgba(224, 137, 0, 0.55);
+	font-size: 12px;
+	font-family: 'nlf', 'cf', sans-serif;
+	cursor: pointer;
+	transition: all 140ms;
+	line-height: 1;
+}
+
+.pinboard-add-button:hover {
+	background: rgba(247, 151, 30, 0.08);
+	border-color: #f7971e;
+	color: #e08900;
+}
+
+.pinboard-add-button .pi { font-size: 9px; }
+
+/* ── Chips row (inline in head, right of number) ────────────────────────────── */
+.pinboard-card-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	align-items: center;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.pinboard-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 3px 3px 3px 7px;
+	background: rgba(247, 151, 30, 0.12);
+	border-radius: 999px;
+	font-size: 10px;
+	font-weight: 500;
+	color: #e08900;
+	cursor: pointer;
+	transition: background 0.13s;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.pinboard-chip:hover {
+	background: rgba(247, 151, 30, 0.2);
+}
+
+.pinboard-chip-label { line-height: 1.4; }
+
+.pinboard-chip-remove {
+	width: 14px;
+	height: 14px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	color: inherit;
+	opacity: 0.55;
+	transition: opacity 0.12s, background 0.12s;
+	padding: 0;
+}
+
+.pinboard-chip-remove:hover {
+	opacity: 1;
+	background: rgba(247, 151, 30, 0.2);
+}
+
+.pinboard-chip-remove .pi { font-size: 6px; }
+
+.pinboard-chip-editing {
+	background: rgba(247, 151, 30, 0.08);
+	box-shadow: 0 0 0 1.5px #f7971e inset;
+	padding: 3px 8px;
+	cursor: text;
+}
+
+.pinboard-chip-editing input {
+	border: none;
+	background: transparent;
+	outline: none;
+	font-size: 10px;
+	font-weight: 500;
+	color: #e08900;
+	padding: 0;
+}
+
+.pinboard-chip-editing input::placeholder { color: rgba(247, 151, 30, 0.45); }
+
+.pinboard-chip-add {
+	background: transparent;
+	border: 1.5px dashed rgba(247, 151, 30, 0.35);
+	color: rgba(224, 137, 0, 0.6);
+	padding: 3px 6px 3px 5px;
+	font-size: 10px;
+	font-weight: 500;
+	cursor: pointer;
+	opacity: 0.7;
+	letter-spacing: 0.02em;
+	transition: all 140ms;
+}
+
+.pinboard-chip-add:hover {
+	background: rgba(247, 151, 30, 0.08);
+	border-color: #f7971e;
+	color: #e08900;
+	opacity: 1;
+}
+
+.pinboard-chip-add .pi { font-size: 8px; }
+
+/* ── Add card (Peppermint-style form card — same structure as regular cards) ─── */
+.pinboard-card-add-form {
+	background: rgba(255, 255, 255, 0.72);
+	border: 2px dashed rgba(247, 151, 30, 0.25);
+	box-shadow: none;
+}
+
+.pinboard-card-add-form:focus-within {
+	border-color: rgba(247, 151, 30, 0.55);
+	background: #ffffff;
+}
+
+.pinboard-card-add-form-label {
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: rgba(247, 151, 30, 0.65);
+	font-weight: 500;
+}
+
+.pinboard-card-add-form-confirm {
+	width: 24px;
+	height: 24px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	display: grid;
+	place-items: center;
+	border-radius: 6px;
+	color: rgba(40, 160, 80, 0.6);
+	transition: opacity 140ms, background 140ms, color 140ms;
+	margin-left: auto;
+	flex-shrink: 0;
+}
+
+.pinboard-card-add-form-confirm:hover {
+	background: #e8f8ee;
+	color: #27a24a;
+}
+
+.pinboard-card-add-form-confirm .pi { font-size: 10px; }
+
+/* ── Footer (custom — mirrors Peppermint pill paginator design) ─────────────── */
+.pinboard-footer {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 4px 0;
+}
+
+.pinboard-footer-status {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	font-size: 11px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: rgba(30, 15, 35, 0.38);
+	font-weight: 500;
+}
+
+.pinboard-footer-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #f7971e;
+	opacity: 0.65;
+	flex-shrink: 0;
+}
+
+.pinboard-footer-pager {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+/* Pill: < [01] > */
+.pinboard-footer-pill {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	background: rgba(0, 0, 0, 0.04);
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	border-radius: 999px;
+	padding: 3px;
+}
+
+.pinboard-footer-arrow {
+	width: 28px;
+	height: 28px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	color: rgba(30, 15, 35, 0.45);
+	transition: background 130ms, color 130ms;
+	padding: 0;
+	flex-shrink: 0;
+}
+
+.pinboard-footer-arrow:hover:not(:disabled) {
+	background: rgba(0, 0, 0, 0.06);
+	color: rgba(30, 15, 35, 0.85);
+}
+
+.pinboard-footer-arrow:disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+}
+
+.pinboard-footer-arrow .pi { font-size: 13px; }
+
+/* Filled circle with current page number */
+.pinboard-footer-page-number {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: #f7971e;
+	color: #fff;
+	display: grid;
+	place-items: center;
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	flex-shrink: 0;
+}
+
+.pinboard-footer-page-info {
+	font-size: 11px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: rgba(30, 15, 35, 0.38);
+	font-weight: 500;
+}
+
+/* ── Card-edit popover (mirrors reminder op2 styles) ───────────────────────── */
+::ng-deep .p-popover {
+	border-radius: 14px !important;
+	border: 1px solid rgba(247, 151, 30, 0.2) !important;
+	box-shadow:
+		0 4px 8px rgba(0, 0, 0, 0.06),
+		0 16px 40px rgba(247, 151, 30, 0.16) !important;
+	overflow: hidden !important;
+}
+
+::ng-deep .p-popover::before {
+	content: '';
+	display: block;
+	height: 4px;
+	background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
+}
+
+::ng-deep .p-popover-content {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px !important;
+}
+
+.pinboard-popover-item {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.pinboard-popover-inputgroup {
+	height: 30px;
+	width: 300px;
+}
+
+::ng-deep .p-popover .p-inputgroup-addon {
+	background: #f8f9fa !important;
+	border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────────────────────── */
+@media (max-width: 940px) {
+	.pinboard-container {
+		padding: 16px 14px 12px;
+	}
+
+	.pinboard-title {
+		font-size: 28px;
+	}
+
+	.pinboard-counter-number {
+		font-size: 32px;
+	}
+
+	.pinboard-grid {
+		grid-template-columns: 1fr;
+	}
+}

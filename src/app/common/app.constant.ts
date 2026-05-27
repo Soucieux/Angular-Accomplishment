@@ -442,6 +442,22 @@ export const HISTORY_STYLE_ADDED = 'solid green';
 /** Inline border style for a "deleted" history entry. */
 export const HISTORY_STYLE_DELETED = 'solid red';
 
+// ── Pinboard ───────────────────────────────────────────────────────────────
+/** Items shown per page in the Pinboard grid. */
+export const PINBOARD_ITEMS_PER_PAGE = 10;
+/** Placeholder for the pin message text input. */
+export const PINBOARD_PLACEHOLDER_TEXT = 'What should we remind you about…';
+/** Placeholder for the link URL input inside the link popover. */
+export const PINBOARD_PLACEHOLDER_LINK = 'https://';
+/** Placeholder for the new-tag inline input. */
+export const PINBOARD_PLACEHOLDER_TAG = 'tag…';
+/** Confirmation message shown before deleting a pinboard entry. */
+export const PINBOARD_MSG_DELETE_CONFIRM = 'Delete this entry? This cannot be undone.';
+/** Primary action button label on the pinboard delete confirmation dialog. */
+export const PINBOARD_DIALOG_DELETE_BTN = 'Delete';
+/** Secondary confirm button label on the pinboard delete confirmation dialog. */
+export const PINBOARD_DIALOG_CONFIRM_BTN = 'Confirm';
+
 // ── Error dialog — strings ────────────────────────────────────────────────
 export const ERROR_DIALOG_HEADER = 'Error';
 export const ERROR_DIALOG_ICON_CLASS = 'pi pi-times-circle text-red-500';

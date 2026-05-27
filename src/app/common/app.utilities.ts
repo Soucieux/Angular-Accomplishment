@@ -465,6 +465,16 @@ export class Utilities {
 	}
 
 	/**
+	 * Instance wrapper around {@link Utilities.getDaysUntil} for use in Angular templates.
+	 *
+	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
+	 * @returns A countdown label, or an empty string if no date is provided.
+	 */
+	public getDaysUntil(dateStr: unknown): string {
+		return Utilities.getDaysUntil(dateStr);
+	}
+
+	/**
 	 * Safely extract a human-readable error message from any thrown value.
 	 * Guards against SDK objects whose `.message` getter itself throws.
 	 *

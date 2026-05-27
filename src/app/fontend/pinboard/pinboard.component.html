@@ -1,0 +1,340 @@
+<ng-container #dialogComponentContainer></ng-container>
+
+<div class="pinboard-container" #pinboardContainer>
+	<!-- ── Header ── -->
+	<div class="pinboard-header">
+		<div class="pinboard-header-left">
+			<span class="pinboard-eyebrow">Wednesday log</span>
+			<h1 class="pinboard-title">Pinboard</h1>
+			<p class="pinboard-subtitle">A little <em>list</em>, kindly kept.</p>
+			<div class="pinboard-header-ornament"></div>
+		</div>
+		<div class="pinboard-counter">
+			<span class="pinboard-counter-number">{{ counterLabel }}</span>
+			<span class="pinboard-counter-label">pins</span>
+			@if (saveIndicator) {
+				<span class="pinboard-save-indicator">saved</span>
+			}
+		</div>
+	</div>
+
+	<!-- ── Tag filter ── -->
+	@if (allTags.length) {
+		<div class="pinboard-tag-filter">
+			@for (tag of allTags; track tag) {
+				<button
+					class="pinboard-tag-chip"
+					[class.pinboard-tag-chip-active]="isTagSelected(tag)"
+					(click)="toggleTagFilter(tag)">
+					{{ tag }}
+				</button>
+			}
+			@if (tagFilter.size > 0) {
+				<button class="pinboard-tag-chip pinboard-tag-chip-clear" (click)="clearTagFilter()">
+					<i class="pi pi-times"></i>
+					clear
+				</button>
+			}
+		</div>
+	}
+
+	<!-- ── Body ── -->
+	<div class="pinboard-body" #pinboardBody>
+		<div class="pinboard-grid">
+			@for (item of pagedItems; let i = $index; track item.key) {
+				<div class="pinboard-card">
+					<!-- Head: index/total + chips (right of number) + trash -->
+					<div class="pinboard-card-head">
+						<span class="pinboard-card-index">
+							<span class="pinboard-card-number">{{ globalLabel(i) }}</span>
+							<span class="pinboard-card-total">/{{ filteredCountLabel }}</span>
+						</span>
+
+						<!-- Chips inline next to the number -->
+						<div class="pinboard-card-chips">
+							@for (tag of item.tags; let ti = $index; track tag) {
+								@if (isEditingTag(item, ti)) {
+									<span class="pinboard-chip pinboard-chip-editing">
+										<input
+											[(ngModel)]="tagEditSession!.value"
+											(blur)="completeTagEdit(false)"
+											(keyup.enter)="completeTagEdit(false)"
+											(keyup.escape)="cancelTagEdit()"
+											style="width: 58px" />
+									</span>
+								} @else {
+									<span class="pinboard-chip" (click)="startTagEdit(item, ti)">
+										<span class="pinboard-chip-label">{{ tag }}</span>
+										<button
+											class="pinboard-chip-remove"
+											(click)="$event.stopPropagation(); removeTag(ti, false, item)"
+											aria-label="Remove tag">
+											<i class="pi pi-times"></i>
+										</button>
+									</span>
+								}
+							}
+
+							@if (isAddingTag(item)) {
+								<span class="pinboard-chip pinboard-chip-editing">
+									<input
+										[(ngModel)]="tagEditSession!.value"
+										(blur)="completeTagEdit(false)"
+										(keyup.enter)="completeTagEdit(false)"
+										(keyup.escape)="cancelTagEdit()"
+										[placeholder]="PINBOARD_PLACEHOLDER_TAG"
+										style="width: 58px" />
+								</span>
+							} @else {
+								<button class="pinboard-chip pinboard-chip-add" (click)="startTagEdit(item, -1)">
+									<i class="pi pi-plus"></i>
+									tag
+								</button>
+							}
+						</div>
+
+						<button
+							class="pinboard-card-remove"
+							(click)="openDeleteConfirmationDialog(item.key)"
+							pTooltip="Remove"
+							tooltipPosition="top">
+							<i class="pi pi-trash"></i>
+						</button>
+					</div>
+
+					<!-- Message: borderless, transparent, Peppermint style -->
+					<input
+						type="text"
+						class="pinboard-card-message"
+						[class.cf]="checkIfChinese(item.text)"
+						[placeholder]="PINBOARD_PLACEHOLDER_TEXT"
+						[(ngModel)]="item.text"
+						(blur)="onTextBlur(item)" />
+
+					<!-- Optional fields: date pill + link pill each at 50% width -->
+					<div class="pinboard-card-optional">
+						@if (item.date) {
+							<div class="pinboard-field" (click)="openDatePopover($event, item)">
+								<i class="pi pi-calendar pinboard-field-icon"></i>
+								<span class="pinboard-field-value">{{ formatDate(item.date) }}</span>
+								<span class="pinboard-field-relative-time">{{
+									utilities.getDaysUntil(item.date)
+								}}</span>
+								<button
+									class="pinboard-field-remove"
+									(click)="$event.stopPropagation(); clearDate(item)">
+									<i class="pi pi-times"></i>
+								</button>
+							</div>
+						} @else {
+							<button class="pinboard-add-button" (click)="openDatePopover($event, item)">
+								<i class="pi pi-calendar"></i>
+								date
+							</button>
+						}
+
+						@if (item.link) {
+							<div class="pinboard-field" (click)="openLinkPopover($event, item)">
+								<i class="pi pi-link pinboard-field-icon"></i>
+								<span class="pinboard-field-value">{{ getLinkLabel(item) }}</span>
+								<a
+									[href]="item.link"
+									target="_blank"
+									rel="noopener noreferrer"
+									class="pinboard-field-open"
+									(click)="$event.stopPropagation()">
+									<i class="pi pi-external-link"></i>
+								</a>
+								<button
+									class="pinboard-field-remove"
+									(click)="$event.stopPropagation(); clearLink(item)">
+									<i class="pi pi-times"></i>
+								</button>
+							</div>
+						} @else {
+							<button class="pinboard-add-button" (click)="openLinkPopover($event, item)">
+								<i class="pi pi-link"></i>
+								link
+							</button>
+						}
+					</div>
+				</div>
+			}
+
+			<!-- Add card: Peppermint-style form card aligned with regular cards -->
+			@if (showAddCard) {
+				<div class="pinboard-card pinboard-card-add-form">
+					<!-- Head: "new entry" label + chips + confirm (✓) button -->
+					<div class="pinboard-card-head">
+						<span class="pinboard-card-add-form-label">New entry</span>
+
+						<!-- Chips inline next to the label -->
+						<div class="pinboard-card-chips">
+							@for (tag of newItem.tags; let ti = $index; track ti) {
+								@if (isEditingNewTag(ti)) {
+									<span class="pinboard-chip pinboard-chip-editing">
+										<input
+											[(ngModel)]="tagEditSession!.value"
+											(blur)="completeTagEdit(true)"
+											(keyup.enter)="completeTagEdit(true)"
+											(keyup.escape)="cancelTagEdit()"
+											style="width: 58px" />
+									</span>
+								} @else {
+									<span class="pinboard-chip" (click)="startNewItemTagEdit(ti)">
+										<span class="pinboard-chip-label">{{ tag }}</span>
+										<button
+											class="pinboard-chip-remove"
+											(click)="$event.stopPropagation(); removeTag(ti, true)"
+											aria-label="Remove tag">
+											<i class="pi pi-times"></i>
+										</button>
+									</span>
+								}
+							}
+
+							@if (isAddingNewTag()) {
+								<span class="pinboard-chip pinboard-chip-editing">
+									<input
+										[(ngModel)]="tagEditSession!.value"
+										(blur)="completeTagEdit(true)"
+										(keyup.enter)="completeTagEdit(true)"
+										(keyup.escape)="cancelTagEdit()"
+										[placeholder]="PINBOARD_PLACEHOLDER_TAG"
+										style="width: 58px" />
+								</span>
+							} @else {
+								<button class="pinboard-chip pinboard-chip-add" (click)="startNewItemTagEdit(-1)">
+									<i class="pi pi-plus"></i>
+									tag
+								</button>
+							}
+						</div>
+
+						<button
+							class="pinboard-card-add-form-confirm"
+							(click)="addNewItemWithDateOrLink()"
+							pTooltip="Add entry"
+							tooltipPosition="top">
+							<i class="pi pi-check"></i>
+						</button>
+					</div>
+
+					<!-- Borderless message input (same style as regular cards) -->
+					<input
+						type="text"
+						class="pinboard-card-message"
+						[placeholder]="PINBOARD_PLACEHOLDER_TEXT"
+						[(ngModel)]="newItem.text"
+						(keyup.enter)="addNewTextOnly()" />
+
+					<!-- Optional: date + link pills or ghost add-buttons -->
+					<div class="pinboard-card-optional">
+						@if (newItem.date) {
+							<div class="pinboard-field" (click)="openDatePopover($event)">
+								<i class="pi pi-calendar pinboard-field-icon"></i>
+								<span class="pinboard-field-value">{{ newItemDateLabel }}</span>
+								<button
+									class="pinboard-field-remove"
+									(click)="$event.stopPropagation(); newItem.date = null">
+									<i class="pi pi-times"></i>
+								</button>
+							</div>
+						} @else {
+							<button class="pinboard-add-button" (click)="openDatePopover($event)">
+								<i class="pi pi-calendar"></i>
+								date
+							</button>
+						}
+						@if (newItem.link) {
+							<div class="pinboard-field" (click)="openLinkPopover($event)">
+								<i class="pi pi-link pinboard-field-icon"></i>
+								<span class="pinboard-field-value">{{ newItemLinkLabel }}</span>
+								<button
+									class="pinboard-field-remove"
+									(click)="$event.stopPropagation(); newItem.link = ''">
+									<i class="pi pi-times"></i>
+								</button>
+							</div>
+						} @else {
+							<button class="pinboard-add-button" (click)="openLinkPopover($event)">
+								<i class="pi pi-link"></i>
+								link
+							</button>
+						}
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+	<!-- /pinboard-body -->
+
+	<!-- ── Date-or-link popover (isDate discriminates which content to show) ── -->
+	<p-popover [focusOnShow]="false" #dateOrLinkPopover>
+		<div class="pinboard-popover-item">
+			<p-inputgroup class="pinboard-popover-inputgroup">
+				<p-inputgroup-addon>
+					@if (isDate) {
+						<i class="pi pi-calendar" style="color: #f7971e"></i>
+					} @else {
+						<i class="pi pi-link" style="color: #4776e6"></i>
+					}
+				</p-inputgroup-addon>
+				@if (isDate) {
+					@if (editingItem) {
+						<p-datepicker
+							[appendTo]="'body'"
+							dateFormat="yy-mm-dd"
+							[ngModel]="editingDateModel"
+							(ngModelChange)="onPopoverDateChange($event)">
+						</p-datepicker>
+					} @else {
+						<p-datepicker [appendTo]="'body'" dateFormat="yy-mm-dd" [(ngModel)]="newItem.date">
+						</p-datepicker>
+					}
+				} @else {
+					@if (editingItem) {
+						<input
+							type="text"
+							pInputText
+							[(ngModel)]="editingLink"
+							(blur)="onPopoverLinkChange()"
+							(keyup.enter)="onPopoverLinkChange()"
+							[placeholder]="PINBOARD_PLACEHOLDER_LINK"
+							style="font-size: 14px" />
+					} @else {
+						<input
+							type="text"
+							pInputText
+							[(ngModel)]="newItem.link"
+							[placeholder]="PINBOARD_PLACEHOLDER_LINK"
+							style="font-size: 14px" />
+					}
+				}
+			</p-inputgroup>
+		</div>
+	</p-popover>
+
+	<!-- ── Footer: status + custom pill paginator ── -->
+	<div class="pinboard-footer">
+		<span class="pinboard-footer-status">
+			<span class="pinboard-footer-dot"></span>
+			{{ filteredCountLabel }} entries
+		</span>
+		<div class="pinboard-footer-pager">
+			<div class="pinboard-footer-pill">
+				<button class="pinboard-footer-arrow" [disabled]="page === 0" (click)="prevPage()">
+					<i class="pi pi-angle-left"></i>
+				</button>
+				<span class="pinboard-footer-page-number">{{ pageLabel }}</span>
+				<button
+					class="pinboard-footer-arrow"
+					[disabled]="page >= totalPages - 1"
+					(click)="nextPage()">
+					<i class="pi pi-angle-right"></i>
+				</button>
+			</div>
+			<span class="pinboard-footer-page-info">PAGE {{ pageLabel }} / {{ totalPagesLabel }}</span>
+		</div>
+	</div>
+</div>

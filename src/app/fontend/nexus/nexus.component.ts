@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-redundant-type-constituents */
 import {
+	AfterViewChecked,
 	ChangeDetectionStrategy,
 	ChangeDetectorRef,
 	Component,
@@ -59,10 +60,11 @@ import { AiTool, NEXUS_AI_TOOLS, NEXUS_LOGO_FALLBACK_COLORS } from './nexus.mode
 	templateUrl: './nexus.component.html',
 	styleUrl: './nexus.component.css',
 })
-export class NexusComponent implements OnInit, OnDestroy {
+export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private readonly className = 'NexusComponent';
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 
 	protected failedLogos = new Set<string>();
@@ -73,7 +75,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	protected links: any[] = [];
 	protected categories: any[] = [];
 	protected faviconFailedIds = new Set<string>();
-	protected activeCategory = NEXUS_CATEGORY_ALL;
+	protected selectedCategory = NEXUS_CATEGORY_ALL;
 	protected linkSearch = '';
 	protected linkSearchVisible = false;
 
@@ -109,7 +111,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	/**
 	 * Lifecycle: initialise subscriptions and load data.
 	 */
-	public ngOnInit(): void {
+	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.linksSub = this.databaseService.getUsefulLinks().subscribe({
 				next: (data) => {
@@ -117,8 +119,8 @@ export class NexusComponent implements OnInit, OnDestroy {
 					this.linksLoading = false;
 					this.cdr.markForCheck();
 				},
-				error: (err) => {
-					LOG.error(this.className, 'Failed to load useful links', err as Error);
+				error: (error) => {
+					LOG.error(this.className, 'Failed to load useful links', error as Error);
 					this.linksLoading = false;
 					this.cdr.markForCheck();
 				}
@@ -128,8 +130,8 @@ export class NexusComponent implements OnInit, OnDestroy {
 					this.categories = Utilities.sortByOrder(data);
 					this.cdr.markForCheck();
 				},
-				error: (err) => {
-					LOG.error(this.className, 'Failed to load link categories', err as Error);
+				error: (error) => {
+					LOG.error(this.className, 'Failed to load link categories', error as Error);
 				}
 			});
 			// Subscribe directly to the auth-alive stream so the links column
@@ -142,17 +144,27 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Lifecycle: clean up all subscriptions.
+	 * Attaches the auto-hide scroll listener to the links grid after each view check.
+	 * Uses a WeakSet internally so each element is bound exactly once.
 	 */
-	public ngOnDestroy(): void {
+	ngAfterViewChecked(): void {
+		if (!isPlatformBrowser(this.platformId)) return;
+		document.querySelectorAll<HTMLElement>('.links-grid').forEach((el) => Utilities.attachScrollAutoHide(el));
+	}
+
+	/**
+	 * Lifecycle: clean up all subscriptions and clear the dialog container.
+	 */
+	ngOnDestroy(): void {
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
 		this.userAliveSub?.unsubscribe();
+		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
-	 * Mark a tool's logo as failed so the initial-letter fallback is shown instead.
+	 * Marks a tool's logo as failed so the initial-letter fallback is shown instead.
 	 *
 	 * @param toolId - The ID of the AI tool whose image failed to load.
 	 */
@@ -162,7 +174,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Return the brand fallback colour for a given tool ID.
+	 * Returns the brand fallback colour for a given tool ID.
 	 *
 	 * @param toolId - The AI tool ID.
 	 * @returns A CSS colour string.
@@ -172,7 +184,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Open an AI tool's homepage in a new tab.
+	 * Opens an AI tool's homepage in a new tab.
 	 *
 	 * @param tool - The AI tool to open.
 	 */
@@ -181,7 +193,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Toggle the link search input visibility.
+	 * Toggles the link search input visibility.
 	 * Clears the search query when collapsing.
 	 */
 	protected toggleLinkSearch(): void {
@@ -190,28 +202,28 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Collapse the link search input when it loses focus and the query is empty.
+	 * Collapses the link search input when the user exits the field and the query is empty.
 	 * Skips the collapse when focus moves to the search-toggle icon button so
 	 * that the subsequent click handler can toggle the visibility itself,
 	 * avoiding the blur-then-click race that would reopen a just-closed input.
 	 *
 	 * @param event - The FocusEvent whose relatedTarget identifies where focus went.
 	 */
-	protected onLinkSearchBlur(event: FocusEvent): void {
+	protected onLinkSearchExit(event: FocusEvent): void {
 		const focusTarget = event.relatedTarget as HTMLElement | null;
 		if (focusTarget?.closest('.icon-btn')) return;
 		if (!this.linkSearch.trim()) this.linkSearchVisible = false;
 	}
 
 	/**
-	 * Return the subset of links that match the active category tab and the
+	 * Returns the subset of links that match the active category tab and the
 	 * current search string. Used directly by the template as a getter.
 	 *
 	 * @returns The filtered array of link documents.
 	 */
 	protected get filteredLinks(): any[] {
 		return this.links.filter((link) => {
-			const matchesCategory = this.activeCategory === NEXUS_CATEGORY_ALL || link.category === this.activeCategory;
+			const matchesCategory = this.selectedCategory === NEXUS_CATEGORY_ALL || link.category === this.selectedCategory;
 			const matchesSearch =
 				!this.linkSearch.trim() || link.title.toLowerCase().includes(this.linkSearch.toLowerCase());
 			return matchesCategory && matchesSearch;
@@ -231,7 +243,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Open a saved link in a new tab and increment its visit count.
+	 * Opens a saved link in a new tab and increments its visit count.
 	 *
 	 * @param link - The link document to open.
 	 */
@@ -239,24 +251,24 @@ export class NexusComponent implements OnInit, OnDestroy {
 		this.utilities.openInNewTab(Utilities.normalizeUrl(link.url));
 		this.databaseService
 			.incrementLinkVisit(link._id, link.visitCount ?? 0)
-			.catch((err: any) =>
-				LOG.error(this.className, `Failed to increment visit count for ${link.title}`, err as Error)
+			.catch((error: any) =>
+				LOG.error(this.className, `Failed to increment visit count for ${link.title}`, error as Error)
 			);
 	}
 
 	/**
-	 * Return the number of links belonging to a given category key.
+	 * Returns the number of links belonging to a given category key.
 	 *
 	 * @param categoryKey - The category _id, or 'all' for the total count.
 	 * @returns The count of matching links.
 	 */
 	protected getLinkCount(categoryKey: string): number {
 		if (categoryKey === NEXUS_CATEGORY_ALL) return this.links.length;
-		return this.links.filter((l) => l.category === categoryKey).length;
+		return this.links.filter((link) => link.category === categoryKey).length;
 	}
 
 	/**
-	 * Open the Add Link dialog with a blank form.
+	 * Opens the Add Link dialog with a blank form.
 	 */
 	protected openAddLinkDialog(): void {
 		this.editingLink = null;
@@ -264,14 +276,14 @@ export class NexusComponent implements OnInit, OnDestroy {
 		this.linkForm = {
 			url: '',
 			title: '',
-			category: this.activeCategory !== NEXUS_CATEGORY_ALL ? this.activeCategory : ''
+			category: this.selectedCategory !== NEXUS_CATEGORY_ALL ? this.selectedCategory : ''
 		};
 		this.linkFaviconPreview = '';
 		this.showLinkDialog = true;
 	}
 
 	/**
-	 * Open the Edit Link dialog pre-filled with an existing link's data.
+	 * Opens the Edit Link dialog pre-filled with an existing link's data.
 	 *
 	 * @param link - The link document to edit.
 	 * @param event - The click event (stopped to prevent card click).
@@ -286,33 +298,34 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Fetch the page title and favicon preview from the entered URL.
-	 * Called when the URL input loses focus.
+	 * Normalizes the entered URL, updates the favicon preview, and fetches the page title
+	 * when the URL is confirmed (Enter key or focus leaving the field).
 	 */
-	protected onLinkUrlBlur(): void {
-		const raw = this.linkForm.url.trim();
-		if (!raw) return;
-		const url = Utilities.normalizeUrl(raw);
+	protected onLinkUrlConfirm(): void {
+		const rawUrl = this.linkForm.url.trim();
+		if (!rawUrl) return;
+		const url = Utilities.normalizeUrl(rawUrl);
 		this.linkForm.url = url;
 		this.linkFaviconPreview = Utilities.getFavicon(url);
 		if (this.linkForm.title) return;
+		if (this.linkMetaLoading) return;
 		this.linkMetaLoading = true;
 		this.databaseService
 			.proxyFetch(url)
-			.then((res) => {
-				const match = res.content?.match(/<title[^>]*>([^<]+)<\/title>/i);
+			.then((fetchResult) => {
+				const match = fetchResult.content?.match(/<title[^>]*>([^<]+)<\/title>/i);
 				if (match?.[1]) this.linkForm.title = match[1].trim();
 				this.linkMetaLoading = false;
 				this.cdr.markForCheck();
 			})
-			.catch((err) => {
-				LOG.error(this.className, `Could not fetch page title for ${url}: ${Utilities.safeErrorMessage(err)}`);
+			.catch((error) => {
+				LOG.error(this.className, `Could not fetch page title for ${url}: ${Utilities.safeErrorMessage(error)}`);
 				this.linkMetaLoading = false;
 			});
 	}
 
 	/**
-	 * Save the link form (add or update).
+	 * Saves the link form (add or update).
 	 */
 	protected async saveLinkDialog(): Promise<void> {
 		const { url, title, category } = this.linkForm;
@@ -343,14 +356,14 @@ export class NexusComponent implements OnInit, OnDestroy {
 			}
 			this.showLinkDialog = false;
 			this.cdr.markForCheck();
-		} catch (err) {
-			LOG.error(this.className, 'Failed to save link', err as Error);
+		} catch (error) {
+			LOG.error(this.className, 'Failed to save link', error as Error);
 			this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_SAVE_FAILED, NEXUS_MSG_LINK_SAVE_FAILED_DETAIL);
 		}
 	}
 
 	/**
-	 * Prompt the user to confirm deletion of a link, then remove it.
+	 * Prompts the user to confirm deletion of a link, then removes it.
 	 *
 	 * @param link - The link document to delete.
 	 * @param event - The click event (stopped to prevent card click).
@@ -367,8 +380,8 @@ export class NexusComponent implements OnInit, OnDestroy {
 						LOG.info(this.className, `Link deleted: ${link.title}`);
 						this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_LINK_DELETED);
 					})
-					.catch((err: any) => {
-						LOG.error(this.className, `Failed to delete link: ${link.title}`, err as Error);
+					.catch((error: any) => {
+						LOG.error(this.className, `Failed to delete link: ${link.title}`, error as Error);
 						this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_LINK_DELETE_FAILED_DETAIL);
 					});
 			},
@@ -377,7 +390,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Open the Add Category dialog with a blank form.
+	 * Opens the Add Category dialog with a blank form.
 	 */
 	protected openAddCategoryDialog(): void {
 		this.editingCategory = null;
@@ -386,7 +399,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Open the Edit Category dialog pre-filled with an existing category.
+	 * Opens the Edit Category dialog pre-filled with an existing category.
 	 *
 	 * @param category - The category document to edit.
 	 * @param event - The click event (stopped to prevent tab switch).
@@ -399,7 +412,7 @@ export class NexusComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Save the category form (add or update).
+	 * Saves the category form (add or update).
 	 */
 	protected async saveCategoryDialog(): Promise<void> {
 		const { name, color } = this.categoryForm;
@@ -425,14 +438,14 @@ export class NexusComponent implements OnInit, OnDestroy {
 				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_CATEGORY_ADDED);
 			}
 			this.showCategoryDialog = false;
-		} catch (err) {
-			LOG.error(this.className, 'Failed to save category', err as Error);
+		} catch (error) {
+			LOG.error(this.className, 'Failed to save category', error as Error);
 			this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_SAVE_FAILED, NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL);
 		}
 	}
 
 	/**
-	 * Delete a category after user confirmation.
+	 * Deletes a category after user confirmation.
 	 *
 	 * @param category - The category document to delete.
 	 * @param event - The click event (stopped to prevent tab switch).
@@ -451,8 +464,8 @@ export class NexusComponent implements OnInit, OnDestroy {
 						this.showCategoryDialog = false;
 						this.cdr.markForCheck();
 					})
-					.catch((err: any) => {
-						LOG.error(this.className, `Failed to delete category: ${category.name}`, err as Error);
+					.catch((error: any) => {
+						LOG.error(this.className, `Failed to delete category: ${category.name}`, error as Error);
 						this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL);
 					});
 			},

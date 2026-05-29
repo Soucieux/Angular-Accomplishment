@@ -40,15 +40,15 @@
 				<div class="category-tabs">
 					<button
 						class="cat-tab"
-						[class.active]="activeCategory === 'all'"
-						(click)="activeCategory = 'all'">
+						[class.active]="selectedCategory === 'all'"
+						(click)="selectedCategory = 'all'">
 						All ({{ getLinkCount('all') }})
 					</button>
 					@for (cat of categories; track cat._id) {
 						<button
 							class="cat-tab"
-							[class.active]="activeCategory === cat._id"
-							(click)="activeCategory = cat._id"
+							[class.active]="selectedCategory === cat._id"
+							(click)="selectedCategory = cat._id"
 							[style.--cat-color]="cat.color">
 							{{ cat.name }} ({{ getLinkCount(cat._id) }})
 							<span class="cat-edit-btn"
@@ -67,7 +67,7 @@
 							type="text"
 							placeholder="Search links…"
 							[(ngModel)]="linkSearch"
-							(blur)="onLinkSearchBlur($event)" />
+							(blur)="onLinkSearchExit($event)" />
 					}
 					<button
 						class="icon-btn"
@@ -177,7 +177,8 @@
 				type="url"
 				placeholder="https://example.com"
 				[(ngModel)]="linkForm.url"
-				(blur)="onLinkUrlBlur()" />
+				(keyup.enter)="onLinkUrlConfirm()"
+				(blur)="onLinkUrlConfirm()" />
 		</div>
 		@if (linkFaviconPreview) {
 			<div class="favicon-preview">

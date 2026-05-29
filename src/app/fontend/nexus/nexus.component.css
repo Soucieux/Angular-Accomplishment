@@ -369,15 +369,35 @@
 	align-content: flex-start;
 	gap: 10px;
 	padding-right: 4px;
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.4s ease;
 }
 
 .links-grid::-webkit-scrollbar {
-	width: 4px;
+	width: 8px;
+}
+
+.links-grid::-webkit-scrollbar-track {
+	background: transparent;
 }
 
 .links-grid::-webkit-scrollbar-thumb {
-	background: rgba(213, 51, 105, 0.25);
-	border-radius: 2px;
+	background: transparent;
+	border-radius: 999px;
+	transition: background 0.4s ease;
+}
+
+.links-grid.is-scrolling {
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+}
+
+.links-grid.is-scrolling::-webkit-scrollbar-thumb {
+	background: rgba(213, 51, 105, 0.28);
+}
+
+.links-grid.is-scrolling::-webkit-scrollbar-thumb:hover {
+	background: #d53369;
 }
 
 /* ── Link card ───────────────────────────────────────────────── */

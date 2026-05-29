@@ -57,8 +57,8 @@
 									<span class="pinboard-chip pinboard-chip-editing">
 										<input
 											[(ngModel)]="tagEditSession!.value"
-											(blur)="completeTagEdit(false)"
-											(keyup.enter)="completeTagEdit(false)"
+											(blur)="onTagUpdate()"
+											(keyup.enter)="onTagUpdate()"
 											(keyup.escape)="cancelTagEdit()"
 											style="width: 58px" />
 									</span>
@@ -79,8 +79,8 @@
 								<span class="pinboard-chip pinboard-chip-editing">
 									<input
 										[(ngModel)]="tagEditSession!.value"
-										(blur)="completeTagEdit(false)"
-										(keyup.enter)="completeTagEdit(false)"
+										(blur)="onTagUpdate()"
+										(keyup.enter)="onTagUpdate()"
 										(keyup.escape)="cancelTagEdit()"
 										[placeholder]="PINBOARD_PLACEHOLDER_TAG"
 										style="width: 58px" />
@@ -109,7 +109,8 @@
 						[class.cf]="checkIfChinese(item.text)"
 						[placeholder]="PINBOARD_PLACEHOLDER_TEXT"
 						[(ngModel)]="item.text"
-						(blur)="onTextBlur(item)" />
+						(keyup.enter)="onCardTextUpdate(item)"
+						(blur)="onCardTextUpdate(item)" />
 
 					<!-- Optional fields: date pill + link pill each at 50% width -->
 					<div class="pinboard-card-optional">
@@ -175,8 +176,8 @@
 									<span class="pinboard-chip pinboard-chip-editing">
 										<input
 											[(ngModel)]="tagEditSession!.value"
-											(blur)="completeTagEdit(true)"
-											(keyup.enter)="completeTagEdit(true)"
+											(blur)="onNewItemTagUpdate()"
+											(keyup.enter)="onNewItemTagUpdate()"
 											(keyup.escape)="cancelTagEdit()"
 											style="width: 58px" />
 									</span>
@@ -197,8 +198,8 @@
 								<span class="pinboard-chip pinboard-chip-editing">
 									<input
 										[(ngModel)]="tagEditSession!.value"
-										(blur)="completeTagEdit(true)"
-										(keyup.enter)="completeTagEdit(true)"
+										(blur)="onNewItemTagUpdate()"
+										(keyup.enter)="onNewItemTagUpdate()"
 										(keyup.escape)="cancelTagEdit()"
 										[placeholder]="PINBOARD_PLACEHOLDER_TAG"
 										style="width: 58px" />
@@ -286,7 +287,7 @@
 							[appendTo]="'body'"
 							dateFormat="yy-mm-dd"
 							[ngModel]="editingDateModel"
-							(ngModelChange)="onPopoverDateChange($event)">
+							(ngModelChange)="onPopoverDateUpdate($event)">
 						</p-datepicker>
 					} @else {
 						<p-datepicker [appendTo]="'body'" dateFormat="yy-mm-dd" [(ngModel)]="newItem.date">
@@ -298,8 +299,8 @@
 							type="text"
 							pInputText
 							[(ngModel)]="editingLink"
-							(blur)="onPopoverLinkChange()"
-							(keyup.enter)="onPopoverLinkChange()"
+							(blur)="onPopoverLinkUpdate()"
+							(keyup.enter)="onPopoverLinkUpdate()"
 							[placeholder]="PINBOARD_PLACEHOLDER_LINK"
 							style="font-size: 14px" />
 					} @else {

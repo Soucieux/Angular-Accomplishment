@@ -48,6 +48,7 @@ import {
 	RECIPE_MSG_DELETED,
 	RECIPE_MSG_INGREDIENT_UNIT_REQUIRED,
 	RECIPE_MSG_LOAD_FAILED,
+	RECIPE_MSG_CATEGORY_REQUIRED,
 	RECIPE_MSG_NAME_TOO_LONG,
 	RECIPE_MSG_SAVE_FAILED,
 	RECIPE_MSG_SAVE_FAILED_DETAIL,
@@ -95,13 +96,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'RecipeComponent';
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
-	protected dialogContainer!: ViewContainerRef;
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
+	private dialogComponentContainer!: ViewContainerRef;
 
 	@ViewChild('stepsScroll') private stepsScrollEl?: ElementRef<HTMLElement>;
 	@ViewChild('ingredientsScroll') private ingredientsScrollEl?: ElementRef<HTMLElement>;
 	@ViewChild('catDropdown') private catDropdownEl?: ElementRef<HTMLElement>;
-
-	private recipesSub?: Subscription;
 
 	protected readonly VIEW_LIST = RECIPE_VIEW_LIST;
 	protected readonly VIEW_DETAIL = RECIPE_VIEW_DETAIL;
@@ -110,17 +110,24 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly MASTER_TYPE_TABS = MASTER_TYPE_TABS;
 	protected readonly categories = RECIPE_CATEGORIES;
 	protected readonly editorCategories = RECIPE_EDITOR_CATEGORIES;
+	/** Exposes the unit-required message to the template. */
+	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
+	/** Exposes the name-too-long message to the template. */
+	protected readonly RECIPE_MSG_NAME_TOO_LONG = RECIPE_MSG_NAME_TOO_LONG;
+	/** Exposes the category-required message to the template. */
+	protected readonly RECIPE_MSG_CATEGORY_REQUIRED = RECIPE_MSG_CATEGORY_REQUIRED;
 
+	private recipesSub?: Subscription;
 	protected currentView: string = RECIPE_VIEW_LIST;
 	protected searchQuery = '';
-	protected activeCategory: string = RECIPE_CATEGORY_ALL;
+	protected selectedCategory: string = RECIPE_CATEGORY_ALL;
 
-	protected activeRecipe: Recipe | null = null;
+	protected selectedRecipe: Recipe | null = null;
 	protected servings = 2;
 	protected ingredientsCollapsed = false;
 
 	// ── Editor type-tab management ──────────────────────────────────
-	protected activeTypeIds = new Set<IngredientType>(RECIPE_EDITOR_DEFAULT_TYPES);
+	protected enabledTypeIds = new Set<IngredientType>(RECIPE_EDITOR_DEFAULT_TYPES);
 
 	// ── Editor state ────────────────────────────────────────────────
 	protected editorName = '';
@@ -128,7 +135,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected editorServings = 1;
 	protected editorCategory = '';
 	protected editorNotes = '';
-	protected editorActiveType: IngredientType = RECIPE_ITYPE_VEG;
+	protected selectedEditorType: IngredientType = RECIPE_ITYPE_VEG;
 	protected editorIngredients: EditorIngredient[] = [];
 	protected editorSteps: EditorStep[] = [];
 	protected editorNameInvalid = false;
@@ -140,11 +147,6 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected editorUnitSuggestions: string[] = [];
 	/** True for one completeMethod cycle after focus, so focus always shows the full list. */
 	private unitFocused = false;
-
-	/** Exposes the unit-required message to the template. */
-	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
-	/** Exposes the name-too-long message to the template. */
-	protected readonly RECIPE_MSG_NAME_TOO_LONG = RECIPE_MSG_NAME_TOO_LONG;
 	protected editorCategoryOpen = false;
 	protected editingMode: EditingMode = RECIPE_EDITING_MODE_CREATE;
 	private editingRecipeId: string | null = null;
@@ -181,16 +183,16 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 						this.recipes = recipes;
 						this.isLoading = false;
 						if (this.pendingDetailName) {
-							const match = recipes.find((r) => r.name === this.pendingDetailName);
+							const match = recipes.find((recipe) => recipe.name === this.pendingDetailName);
 							if (match) {
-								this.activeRecipe = match;
+								this.selectedRecipe = match;
 								this.pendingDetailName = null;
 							}
 						}
 						this.cdr.markForCheck();
 					});
 				},
-				error: (err) => LOG.error(this.className, RECIPE_MSG_LOAD_FAILED, err as Error)
+				error: (error) => LOG.error(this.className, RECIPE_MSG_LOAD_FAILED, error as Error)
 			});
 
 			// If navigated from the home quick-action button, auto-open the add view.
@@ -204,10 +206,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Lifecycle: unsubscribe from the recipes watcher and log component teardown.
+	 * Lifecycle: unsubscribe from the recipes watcher, clear the dialog container,
+	 * and log component teardown.
 	 */
 	public ngOnDestroy(): void {
 		this.recipesSub?.unsubscribe();
+		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
@@ -236,7 +240,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			.forEach((el) => Utilities.attachScrollAutoHide(el));
 		if (this.pendingScrollToNewIngredient) {
 			this.pendingScrollToNewIngredient = false;
-			const rows = document.querySelectorAll<HTMLElement>(`.ing-row.${this.editorActiveType}`);
+			const rows = document.querySelectorAll<HTMLElement>(`.ing-row.${this.selectedEditorType}`);
 			const lastRow = rows[rows.length - 1];
 			if (lastRow) {
 				lastRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -246,7 +250,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Check whether a string contains at least one Chinese character.
+	 * Checks whether a string contains at least one Chinese character.
 	 * Delegates to {@link Utilities#checkIfChinese}.
 	 *
 	 * @param text - The string to inspect.
@@ -257,7 +261,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Convert a string to title case (first letter of every word capitalised).
+	 * Converts a string to title case (first letter of every word capitalised).
 	 * Delegates to {@link Utilities#capitalizeFirstLetterOnEachWord}.
 	 *
 	 * @param text - The string to convert.
@@ -274,32 +278,32 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns A filtered array of {@link Recipe} objects.
 	 */
 	protected get filteredRecipes(): Recipe[] {
-		const q = this.searchQuery.trim().toLowerCase();
-		return this.recipes.filter((r) => {
-			const matchCat =
-				this.activeCategory === RECIPE_CATEGORY_ALL || r.category === this.activeCategory;
-			const matchQ = !q || r.name.toLowerCase().includes(q);
-			return matchCat && matchQ;
+		const query = this.searchQuery.trim().toLowerCase();
+		return this.recipes.filter((recipe) => {
+			const matchesCategory =
+				this.selectedCategory === RECIPE_CATEGORY_ALL || recipe.category === this.selectedCategory;
+			const matchesQuery = !query || recipe.name.toLowerCase().includes(query);
+			return matchesCategory && matchesQuery;
 		});
 	}
 
 	/**
-	 * Set the active category filter for the recipe list.
+	 * Sets the active category filter for the recipe list.
 	 *
 	 * @param cat - The category string to activate (use {@link RECIPE_CATEGORY_ALL} to show all).
 	 */
 	protected selectCategory(cat: string): void {
-		this.activeCategory = cat;
+		this.selectedCategory = cat;
 	}
 
 	/**
-	 * Navigate to the detail view for the given recipe and reset the
+	 * Navigates to the detail view for the given recipe and resets the
 	 * servings counter to the recipe's base serving size.
 	 *
 	 * @param recipe - The recipe to display.
 	 */
 	protected openRecipe(recipe: Recipe): void {
-		this.activeRecipe = recipe;
+		this.selectedRecipe = recipe;
 		this.servings = recipe.baseServings;
 		this.ingredientsCollapsed = false;
 		this.transitionTo(RECIPE_VIEW_DETAIL);
@@ -313,8 +317,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Switch the visible view, scroll the window back to the top, and
-	 * trigger change detection so the template reflects the new state.
+	 * Switches the visible view, scrolls the window back to the top, and
+	 * triggers change detection so the template reflects the new state.
 	 *
 	 * @param view - The view identifier to activate (one of the VIEW_* constants).
 	 */
@@ -327,21 +331,21 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Decrement the current servings count by one, down to a minimum of 1.
+	 * Decrements the current servings count by one, down to a minimum of 1.
 	 */
 	protected decServings(): void {
 		if (this.servings > 1) this.servings--;
 	}
 
 	/**
-	 * Increment the current servings count by one, up to a maximum of 12.
+	 * Increments the current servings count by one, up to a maximum of 12.
 	 */
 	protected incServings(): void {
 		if (this.servings < 12) this.servings++;
 	}
 
 	/**
-	 * Scale a base ingredient quantity to the current servings count and return
+	 * Scales a base ingredient quantity to the current servings count and returns
 	 * only the numeric portion as a formatted string, without the unit.
 	 * Delegates to {@link formatQty} with an empty unit string.
 	 *
@@ -353,24 +357,24 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Scale a base ingredient quantity to the current servings count and format
+	 * Scales a base ingredient quantity to the current servings count and formats
 	 * it as a human-readable string with the unit appended.
 	 *
 	 * @param base - The quantity for the recipe's base serving size.
 	 * @param unit - The unit label (e.g. "g", "tbsp"). Pass an empty string for unitless quantities.
-	 * @returns The scaled, formatted quantity string, or an empty string if no recipe is active.
+	 * @returns The scaled, formatted quantity string, or an empty string if no recipe is selected.
 	 */
 	protected formatQty(base: number, unit: string): string {
-		if (!this.activeRecipe) return '';
+		if (!this.selectedRecipe) return '';
 		if (!base) return '';
-		const scaled = base * (this.servings / this.activeRecipe.baseServings);
+		const scaled = base * (this.servings / this.selectedRecipe.baseServings);
 		const rounded =
 			scaled === Math.round(scaled) ? String(scaled) : scaled.toFixed(1).replace(/\.0$/, '');
 		return unit ? `${rounded} ${unit}` : rounded;
 	}
 
 	/**
-	 * Return true if the given unit string is purely numeric and therefore
+	 * Returns true if the given unit string is purely numeric and therefore
 	 * carries no semantic meaning for the user (e.g. "1" entered as a placeholder).
 	 *
 	 * @param unit - The unit label to test.
@@ -381,7 +385,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Toggle the collapsed state of the ingredients panel on mobile only.
+	 * Toggles the collapsed state of the ingredients panel on mobile only.
 	 * On desktop viewports (> 800 px) the panel is always expanded and this
 	 * method is a no-op.
 	 */
@@ -392,7 +396,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Toggle the done state of a recipe step when the user taps or clicks it.
+	 * Toggles the done state of a recipe step when the user taps or clicks it.
 	 * Clicks originating inside the substeps list are ignored so sub-point
 	 * interaction does not accidentally mark the parent step as done.
 	 *
@@ -406,51 +410,51 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Return the non-hidden ingredients from an ingredient group for display
+	 * Returns the non-hidden ingredients from an ingredient group for display
 	 * in the detail view.
 	 *
 	 * @param group - The ingredient group to filter.
 	 * @returns An array of visible (non-hidden) {@link Ingredient} objects.
 	 */
 	protected getVisibleItems(group: IngredientGroup): Ingredient[] {
-		return group.items.filter((i) => !i.hidden);
+		return group.items.filter((item) => !item.hidden);
 	}
 
 	// ── Editor type-tab dialog ───────────────────────────────────────
 	/**
-	 * The subset of ingredient type tabs that are currently active in the editor,
+	 * The subset of ingredient type tabs that are currently enabled in the editor,
 	 * ordered as they appear in {@link MASTER_TYPE_TABS}.
 	 *
-	 * @returns An array of {@link TypeTab} objects for the active type IDs.
+	 * @returns An array of {@link TypeTab} objects for the enabled type IDs.
 	 */
 	protected get editorTypeTabs(): TypeTab[] {
-		return MASTER_TYPE_TABS.filter((t) => this.activeTypeIds.has(t.id));
+		return MASTER_TYPE_TABS.filter((tab) => this.enabledTypeIds.has(tab.id));
 	}
 
 	/**
-	 * Open the ingredient type manager dialog via DialogService, initialising
-	 * the draft from the currently active type IDs.
-	 * The apply callback updates the active type set and falls back the editor
-	 * tab if the previously selected type is no longer active.
+	 * Opens the ingredient type manager dialog via DialogService, initialising
+	 * the draft from the currently enabled type IDs.
+	 * The apply callback updates the enabled type set and falls back the editor
+	 * tab if the previously selected type is no longer enabled.
 	 */
 	protected openTypeDialog(): void {
 		this.dialogService.openDialog(
-			this.dialogContainer,
+			this.dialogComponentContainer,
 			DIALOG_RECIPE_TYPE,
 			(newIds: Set<IngredientType>) => {
-				this.activeTypeIds = newIds;
-				if (!this.activeTypeIds.has(this.editorActiveType)) {
-					this.editorActiveType = [...this.activeTypeIds][0] ?? RECIPE_ITYPE_VEG;
+				this.enabledTypeIds = newIds;
+				if (!this.enabledTypeIds.has(this.selectedEditorType)) {
+					this.selectedEditorType = [...this.enabledTypeIds][0] ?? RECIPE_ITYPE_VEG;
 				}
 				this.cdr.markForCheck();
 			},
-			{ masterTabs: MASTER_TYPE_TABS, activeTypeIds: this.activeTypeIds }
+			{ masterTabs: MASTER_TYPE_TABS, enabledTypeIds: this.enabledTypeIds }
 		);
 	}
 
 	// ── Editor (Add / Edit Recipe view) ───────────────────────────────
 	/**
-	 * Open the editor in create mode, resetting all editor fields to their
+	 * Opens the editor in create mode, resetting all editor fields to their
 	 * default blank state before navigating to the add-recipe view.
 	 */
 	protected openAddView(): void {
@@ -461,21 +465,22 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Open the editor in edit mode for the currently active recipe, loading its
+	 * Opens the editor in edit mode for the currently active recipe, loading its
 	 * existing data into the editor fields before navigating to the add-recipe view.
-	 * No-ops if no recipe is currently active or the user lacks permission.
+	 * No-ops if no recipe is currently selected or the user lacks permission.
 	 */
 	protected openEditView(): void {
-		if (!this.activeRecipe) return;
-		if (!this.dialogService.ensurePermission(this.dialogContainer, this.activeRecipe.openid)) return;
+		if (!this.selectedRecipe) return;
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.selectedRecipe.openid))
+			return;
 		this.editingMode = RECIPE_EDITING_MODE_EDIT;
-		this.editingRecipeId = this.activeRecipe.id;
-		this.loadRecipeIntoEditor(this.activeRecipe);
+		this.editingRecipeId = this.selectedRecipe.id;
+		this.loadRecipeIntoEditor(this.selectedRecipe);
 		this.transitionTo(RECIPE_VIEW_ADD);
 	}
 
 	/**
-	 * Populate all editor fields from the given recipe, converting the stored
+	 * Populates all editor fields from the given recipe, converting the stored
 	 * ingredient groups and step token arrays into their flat editor representations.
 	 * Ensures at least one blank ingredient row and one blank step row exist so the
 	 * editor is never displayed empty.
@@ -506,18 +511,18 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		// user sees the right tabs without having to open the filter dialog manually.
 		const recipeTypes = recipe.groups.map((g) => g.type);
 		if (recipeTypes.length > 0) {
-			this.activeTypeIds = new Set(recipeTypes);
+			this.enabledTypeIds = new Set(recipeTypes);
 		}
 
-		// Active type tab defaults to the first group present, or veg if empty
-		this.editorActiveType = recipe.groups[0]?.type ?? RECIPE_ITYPE_VEG;
+		// Default editor type tab to the first group present, or veg if empty
+		this.selectedEditorType = recipe.groups[0]?.type ?? RECIPE_ITYPE_VEG;
 		if (this.editorIngredients.length === 0) {
 			this.editorIngredients = [{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }];
 		}
 
-		this.editorSteps = recipe.steps.map((s) => ({
-			text: s.text.map((t) => t.text).join(''),
-			subs: s.substeps.map((text) => ({ text }))
+		this.editorSteps = recipe.steps.map((recipeStep) => ({
+			text: recipeStep.text.map((token) => token.text).join(''),
+			subs: recipeStep.substeps.map((text) => ({ text }))
 		}));
 		if (this.editorSteps.length === 0) {
 			this.editorSteps = [{ text: '', subs: [] }];
@@ -527,7 +532,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Handle the back/cancel button in the editor.
+	 * Handles the back/cancel button in the editor.
 	 * In edit mode: always shows a confirm-discard dialog before returning to the detail view.
 	 * In create mode: navigates directly to the list view if the form is empty, otherwise
 	 * shows a confirm-discard dialog first.
@@ -539,7 +544,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 				return;
 			}
 			this.dialogService.openDialog(
-				this.dialogContainer,
+				this.dialogComponentContainer,
 				DIALOG_CONFIRM,
 				() => this.transitionTo(RECIPE_VIEW_DETAIL),
 				[RECIPE_DISCARD_CHANGES_MESSAGE, RECIPE_DISCARD_CHANGES_TITLE, RECIPE_DISCARD_BTN]
@@ -549,15 +554,18 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const empty =
 			!this.editorName.trim() &&
 			!this.editorCategory &&
-			this.editorIngredients.every((i) => !i.name.trim()) &&
-			this.editorSteps.every((s) => !s.text.trim() && s.subs.every((x) => !x.text.trim())) &&
+			this.editorIngredients.every((ingredient) => !ingredient.name.trim()) &&
+			this.editorSteps.every(
+				(editorStep) =>
+					!editorStep.text.trim() && editorStep.subs.every((subpoint) => !subpoint.text.trim())
+			) &&
 			!this.editorNotes.trim();
 		if (empty) {
 			this.transitionTo(RECIPE_VIEW_LIST);
 			return;
 		}
 		this.dialogService.openDialog(
-			this.dialogContainer,
+			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			() => this.transitionTo(RECIPE_VIEW_LIST),
 			[RECIPE_DISCARD_MESSAGE, RECIPE_DISCARD_TITLE, RECIPE_DISCARD_BTN]
@@ -565,13 +573,13 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Prompt the user to confirm deletion of the recipe currently being edited,
-	 * then remove it from the database and navigate back to the list view.
+	 * Prompts the user to confirm deletion of the recipe currently being edited,
+	 * then removes it from the database and navigates back to the list view.
 	 * Only callable when {@link editingMode} is 'edit' and {@link editingRecipeId} is set.
 	 */
 	protected removeCurrentRecipe(): void {
 		this.dialogService.openDialog(
-			this.dialogContainer,
+			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			() => {
 				if (!this.editingRecipeId) return;
@@ -583,8 +591,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 						this.dialogService.showToast(TOAST_INFO, RECIPE_MSG_DELETED);
 						this.transitionTo(RECIPE_VIEW_LIST);
 					})
-					.catch((err: unknown) => {
-						LOG.error(this.className, RECIPE_MSG_DELETE_FAILED, err as Error);
+					.catch((error: unknown) => {
+						LOG.error(this.className, RECIPE_MSG_DELETE_FAILED, error as Error);
 						this.dialogService.showToast(
 							TOAST_ERROR,
 							RECIPE_MSG_DELETE_FAILED,
@@ -597,7 +605,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Reset all editor fields to their default blank/initial state, including
+	 * Resets all editor fields to their default blank/initial state, including
 	 * two empty ingredient rows and two empty step rows, ready for a new recipe.
 	 */
 	private resetEditor(): void {
@@ -606,7 +614,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.editorServings = 1;
 		this.editorCategory = '';
 		this.editorNotes = '';
-		this.editorActiveType = RECIPE_ITYPE_VEG;
+		this.selectedEditorType = RECIPE_ITYPE_VEG;
 		this.editorIngredients = [
 			{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' },
 			{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }
@@ -629,7 +637,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The count of named ingredients.
 	 */
 	protected get editorIngredientCount(): number {
-		return this.editorIngredients.filter((i) => i.name.trim()).length;
+		return this.editorIngredients.filter((ingredient) => ingredient.name.trim()).length;
 	}
 
 	/**
@@ -650,28 +658,28 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected get editorGroupedIngredients(): EditorGroup[] {
 		return MASTER_TYPE_TABS.flatMap((tab) => {
-			const items = this.editorIngredients.filter((i) => i.type === tab.id);
+			const items = this.editorIngredients.filter((ingredient) => ingredient.type === tab.id);
 			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: tab.label, items }];
 		});
 	}
 
 	/**
-	 * Set the active ingredient type tab in the editor, controlling which type
+	 * Sets the selected ingredient type tab in the editor, controlling which type
 	 * is assigned to newly added ingredient rows.
 	 *
-	 * @param type - The ingredient type to make active.
+	 * @param type - The ingredient type to select.
 	 */
 	protected selectEditorType(type: IngredientType): void {
-		this.editorActiveType = type;
+		this.selectedEditorType = type;
 	}
 
 	/**
-	 * Append a new blank ingredient row of the currently active type to the
-	 * editor ingredient list, then schedule a scroll-and-focus to the new row.
+	 * Appends a new blank ingredient row of the currently selected type to the
+	 * editor ingredient list, then schedules a scroll-and-focus to the new row.
 	 */
 	protected addEditorIngredient(): void {
 		this.editorIngredients.push({
-			type: this.editorActiveType,
+			type: this.selectedEditorType,
 			name: '',
 			qty: '',
 			unit: ''
@@ -680,36 +688,36 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Remove an ingredient row from the editor list.
+	 * Removes an ingredient row from the editor list.
 	 * Also clears the unit-invalid flag if the removal resolves all violations.
 	 *
 	 * @param ing - The ingredient row to remove.
 	 */
 	protected removeEditorIngredient(ing: EditorIngredient): void {
-		this.editorIngredients = this.editorIngredients.filter((i) => i !== ing);
+		this.editorIngredients = this.editorIngredients.filter((ingredient) => ingredient !== ing);
 		if (this.editorIngredientInvalid && !this.hasIngredientUnitViolation) {
 			this.editorIngredientInvalid = false;
 		}
 	}
 
 	/**
-	 * Append a new blank step card to the editor step list.
+	 * Appends a new blank step card to the editor step list.
 	 */
 	protected addEditorStep(): void {
 		this.editorSteps.push({ text: '', subs: [] });
 	}
 
 	/**
-	 * Remove a step card from the editor step list.
+	 * Removes a step card from the editor step list.
 	 *
 	 * @param step - The step to remove.
 	 */
 	protected removeEditorStep(step: EditorStep): void {
-		this.editorSteps = this.editorSteps.filter((s) => s !== step);
+		this.editorSteps = this.editorSteps.filter((editorStep) => editorStep !== step);
 	}
 
 	/**
-	 * Append a new blank sub-point to the given editor step.
+	 * Appends a new blank sub-point to the given editor step.
 	 *
 	 * @param step - The step card that should receive the new sub-point.
 	 */
@@ -718,17 +726,17 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Remove a sub-point from a step.
+	 * Removes a sub-point from a step.
 	 *
-	 * @param step - The step card that owns the sub-point.
-	 * @param sub  - The sub-point to remove.
+	 * @param step     - The step card that owns the sub-point.
+	 * @param subpoint - The sub-point to remove.
 	 */
-	protected removeSubpoint(step: EditorStep, sub: EditorSubpoint): void {
-		step.subs = step.subs.filter((x) => x !== sub);
+	protected removeSubpoint(step: EditorStep, subpoint: EditorSubpoint): void {
+		step.subs = step.subs.filter((sub) => sub !== subpoint);
 	}
 
 	/**
-	 * Close the category dropdown when a click lands outside it.
+	 * Closes the category dropdown when a click lands outside it.
 	 * No-ops when the dropdown is already closed to avoid spurious change detection.
 	 *
 	 * @param event - The document-level click event.
@@ -742,7 +750,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Toggle the category dropdown open/closed.
+	 * Toggles the category dropdown open/closed.
 	 * Stops event propagation so the document click handler does not
 	 * immediately close the panel we just opened.
 	 *
@@ -755,8 +763,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Select a category from the custom dropdown, close the panel,
-	 * and clear the invalid flag if one was showing.
+	 * Selects a category from the custom dropdown, closes the panel,
+	 * and clears the invalid flag if one was showing.
 	 *
 	 * @param cat - The category string the user clicked.
 	 */
@@ -768,7 +776,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Clear the name-invalid flag as soon as the user types a non-empty value,
+	 * Clears the name-invalid flag as soon as the user types a non-empty value,
 	 * removing the error highlight before the next save attempt.
 	 */
 	protected onEditorNameInput(): void {
@@ -782,7 +790,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Serialize the current editor fields to a JSON string for change detection.
+	 * Serializes the current editor fields to a JSON string for change detection.
 	 * Only data fields are captured — UI-only state such as active type tab and
 	 * type-tab visibility are excluded.
 	 *
@@ -795,15 +803,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			servings: this.editorServings,
 			category: this.editorCategory,
 			notes: this.editorNotes,
-			ingredients: this.editorIngredients.map((i) => ({
-				type: i.type,
-				name: i.name,
-				qty: i.qty,
-				unit: i.unit
+			ingredients: this.editorIngredients.map((ingredient) => ({
+				type: ingredient.type,
+				name: ingredient.name,
+				qty: ingredient.qty,
+				unit: ingredient.unit
 			})),
-			steps: this.editorSteps.map((s) => ({
-				text: s.text,
-				subs: s.subs.map((x) => x.text)
+			steps: this.editorSteps.map((editorStep) => ({
+				text: editorStep.text,
+				subs: editorStep.subs.map((subpoint) => subpoint.text)
 			}))
 		});
 	}
@@ -826,11 +834,13 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns Whether any ingredient violates the qty-requires-unit rule.
 	 */
 	private get hasIngredientUnitViolation(): boolean {
-		return this.editorIngredients.some((i) => i.name.trim() && i.qty && !i.unit.trim());
+		return this.editorIngredients.some(
+			(ingredient) => ingredient.name.trim() && ingredient.qty && !ingredient.unit.trim()
+		);
 	}
 
 	/**
-	 * Clear the ingredient-unit-invalid flag once the user has resolved all
+	 * Clears the ingredient-unit-invalid flag once the user has resolved all
 	 * qty-without-unit violations, so the error disappears as soon as the last
 	 * missing unit is filled in.
 	 */
@@ -841,7 +851,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Set the focus flag so the next completeMethod call returns the full list.
+	 * Sets the focus flag so the next completeMethod call returns the full list.
 	 * PrimeNG fires onFocus before completeMethod, so the flag is always set
 	 * before filterUnits consumes it.
 	 */
@@ -850,7 +860,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Populate the unit autocomplete suggestion list.
+	 * Populates the unit autocomplete suggestion list.
 	 * When triggered by focus (flag set), always returns the full list so
 	 * re-opening the dropdown after a selection shows all options.
 	 * When triggered by typing, filters to prefix matches.
@@ -863,14 +873,14 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			this.editorUnitSuggestions = [...RECIPE_UNIT_OPTIONS];
 			return;
 		}
-		const q = event.query.trim().toLowerCase();
-		this.editorUnitSuggestions = q
-			? RECIPE_UNIT_OPTIONS.filter((u) => u.toLowerCase().startsWith(q))
+		const query = event.query.trim().toLowerCase();
+		this.editorUnitSuggestions = query
+			? RECIPE_UNIT_OPTIONS.filter((unit) => unit.toLowerCase().startsWith(query))
 			: [...RECIPE_UNIT_OPTIONS];
 	}
 
 	/**
-	 * Validate and persist the current editor state as a new or updated recipe.
+	 * Validates and persists the current editor state as a new or updated recipe.
 	 * Marks required fields invalid and returns early if validation fails.
 	 * Also blocks save if any ingredient has a quantity without a unit.
 	 * On success, writes to the database and navigates back to the list view.
@@ -895,36 +905,39 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		)
 			return;
 
-		const validIngredients = this.editorIngredients.filter((i) => i.name.trim());
+		const validIngredients = this.editorIngredients.filter((ingredient) => ingredient.name.trim());
 
 		const groups: IngredientGroup[] = MASTER_TYPE_TABS.flatMap((tab) => {
 			const items: Ingredient[] = validIngredients
-				.filter((i) => i.type === tab.id)
-				.map((i) => ({
-					name: i.name.trim(),
-					baseQty: Number(i.qty) || 0,
-					unit: i.unit.trim()
+				.filter((ingredient) => ingredient.type === tab.id)
+				.map((ingredient) => ({
+					name: ingredient.name.trim(),
+					baseQty: Number(ingredient.qty) || 0,
+					unit: ingredient.unit.trim()
 				}));
 			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: tab.label, items }];
 		});
 
 		const steps: RecipeStep[] = this.editorSteps
-			.filter((s) => s.text.trim() || s.subs.some((x) => x.text.trim()))
-			.map((s) => ({
-				text: this.autoPillStepText(s.text.trim(), validIngredients),
-				substeps: s.subs.map((x) => x.text.trim()).filter(Boolean),
+			.filter(
+				(editorStep) =>
+					editorStep.text.trim() || editorStep.subs.some((subpoint) => subpoint.text.trim())
+			)
+			.map((editorStep) => ({
+				text: this.autoPillStepText(editorStep.text.trim(), validIngredients),
+				substeps: editorStep.subs.map((subpoint) => subpoint.text.trim()).filter(Boolean),
 				done: false
 			}));
 
-		const presentTypes = new Set(validIngredients.map((i) => i.type));
-		const badges: BadgeTag[] = MASTER_TYPE_TABS.filter((t) => presentTypes.has(t.id))
+		const presentTypes = new Set(validIngredients.map((ingredient) => ingredient.type));
+		const badges: BadgeTag[] = MASTER_TYPE_TABS.filter((tab) => presentTypes.has(tab.id))
 			.slice(0, RECIPE_MAX_BADGES)
-			.map((t) => ({ type: t.id, emoji: t.emoji, label: t.label }));
+			.map((tab) => ({ type: tab.id, emoji: tab.emoji, label: tab.label }));
 
 		const isEdit = this.editingMode === RECIPE_EDITING_MODE_EDIT && !!this.editingRecipeId;
 		const recipe: Recipe = {
 			id: isEdit ? this.editingRecipeId! : '',
-			openid: isEdit ? (this.activeRecipe?.openid ?? '') : (CloudbaseService.getUseId() ?? ''),
+			openid: isEdit ? (this.selectedRecipe?.openid ?? '') : (CloudbaseService.getUseId() ?? ''),
 			name: this.editorName.trim(),
 			detailName: this.editorName.trim(),
 			category: this.editorCategory,
@@ -942,67 +955,71 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 				await this.databaseService.updateRecipe(recipe);
 				LOG.info(this.className, `Recipe updated: ${recipe.id} "${recipe.name}"`);
 				this.dialogService.showToast(TOAST_SUCCESS, RECIPE_MSG_UPDATED);
-				this.activeRecipe = recipe;
+				this.selectedRecipe = recipe;
 			} else {
 				await this.databaseService.addRecipe(recipe);
 				LOG.info(this.className, `Recipe created: "${recipe.name}"`);
 				this.dialogService.showToast(TOAST_SUCCESS, RECIPE_MSG_ADDED);
 				this.pendingDetailName = recipe.name;
-				this.activeRecipe = recipe;
+				this.selectedRecipe = recipe;
 			}
 			this.servings = recipe.baseServings || 1;
 			this.ingredientsCollapsed = false;
 			this.transitionTo(RECIPE_VIEW_DETAIL);
-		} catch (err) {
-			LOG.error(this.className, RECIPE_MSG_SAVE_FAILED, err as Error);
+		} catch (error) {
+			LOG.error(this.className, RECIPE_MSG_SAVE_FAILED, error as Error);
 			this.dialogService.showToast(TOAST_ERROR, RECIPE_MSG_SAVE_FAILED, RECIPE_MSG_SAVE_FAILED_DETAIL);
 		}
 	}
 
 	/**
-	 * Scan plain step text for ingredient-name mentions and wrap matches as
+	 * Scans plain step text for ingredient-name mentions and wraps matches as
 	 * pill tokens so the read view keeps its colored highlights after editing.
 	 * Best-effort substring match — sorts names longest-first so multi-word
 	 * names like "soy sauce" win over their constituent words.
 	 * For bilingual names (two lines), only the first line is used for matching
 	 * so steps can reference whichever language the name starts with.
+	 *
+	 * @param text - The raw step text to scan.
+	 * @param ingredients - The current list of editor ingredients used for name matching.
+	 * @returns An array of StepToken objects representing text and pill segments.
 	 */
 	private autoPillStepText(text: string, ingredients: EditorIngredient[]): StepToken[] {
 		if (!text) return [{ kind: 'text', text: '' }];
 
 		const nameMap = new Map<string, IngredientType>();
-		ingredients.forEach((i) => {
-			const name = i.name.split('\n')[0].trim().toLowerCase();
-			if (name) nameMap.set(name, i.type);
+		ingredients.forEach((ingredient) => {
+			const name = ingredient.name.split('\n')[0].trim().toLowerCase();
+			if (name) nameMap.set(name, ingredient.type);
 		});
 		if (nameMap.size === 0) return [{ kind: 'text', text }];
 
 		const sortedNames = [...nameMap.keys()].sort((a, b) => b.length - a.length);
-		const escaped = sortedNames.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+		const escaped = sortedNames.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 		const regex = new RegExp(`(${escaped.join('|')})`, 'gi');
 
 		const tokens: StepToken[] = [];
-		let lastIdx = 0;
+		let lastIndex = 0;
 		let match: RegExpExecArray | null;
 		while ((match = regex.exec(text)) !== null) {
-			if (match.index > lastIdx) {
-				tokens.push({ kind: 'text', text: text.slice(lastIdx, match.index) });
+			if (match.index > lastIndex) {
+				tokens.push({ kind: 'text', text: text.slice(lastIndex, match.index) });
 			}
 			const matched = match[1];
 			const type = nameMap.get(matched.toLowerCase());
 			const labeled = Utilities.capitalizeFirstLetterOnEachWord(matched);
 			tokens.push({ kind: 'pill', text: labeled, pillType: type });
-			lastIdx = match.index + matched.length;
+			lastIndex = match.index + matched.length;
 		}
-		if (lastIdx < text.length) {
-			tokens.push({ kind: 'text', text: text.slice(lastIdx) });
+		if (lastIndex < text.length) {
+			tokens.push({ kind: 'text', text: text.slice(lastIndex) });
 		}
 		return tokens.length > 0 ? tokens : [{ kind: 'text', text }];
 	}
 
 	// ── Drag-to-reorder steps ─────────────────────────────────────────
 	/**
-	 * Handle the dragstart event on the step drag handle. Sets the full card as
+	 * Handles the dragstart event on the step drag handle. Sets the full card as
 	 * the drag image so the preview matches the card rather than just the icon.
 	 *
 	 * @param step  - The step being dragged.
@@ -1020,7 +1037,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Handle the dragend event, clearing all drag-and-drop tracking state
+	 * Handles the dragend event, clearing all drag-and-drop tracking state
 	 * so no step card remains styled as a drag source or drop target.
 	 */
 	protected onStepDragEnd(): void {
@@ -1030,7 +1047,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Handle the dragover event on a step card. Determines whether the dragged
+	 * Handles the dragover event on a step card. Determines whether the dragged
 	 * item should be dropped above or below the target based on the cursor's
 	 * vertical position relative to the card's midpoint.
 	 *
@@ -1047,7 +1064,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Handle the dragleave event on a step card, clearing the drop-target
+	 * Handles the dragleave event on a step card, clearing the drop-target
 	 * highlight only when the cursor leaves the card that is currently marked
 	 * as the drop target.
 	 *
@@ -1061,7 +1078,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Handle the drop event on a step card. Splices the dragged step out of its
+	 * Handles the drop event on a step card. Splices the dragged step out of its
 	 * current position and inserts it before or after the target step depending
 	 * on where the cursor landed. Calls {@link onStepDragEnd} to clean up state
 	 * regardless of whether the reorder succeeded.
@@ -1078,15 +1095,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		}
 		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
 		const before = event.clientY - rect.top < rect.height / 2;
-		const fromIdx = this.editorSteps.indexOf(dragged);
-		if (fromIdx < 0) {
+		const fromIndex = this.editorSteps.indexOf(dragged);
+		if (fromIndex < 0) {
 			this.onStepDragEnd();
 			return;
 		}
-		const moved = this.editorSteps.splice(fromIdx, 1)[0];
-		let toIdx = this.editorSteps.indexOf(target);
-		if (!before) toIdx += 1;
-		this.editorSteps.splice(toIdx, 0, moved);
+		const moved = this.editorSteps.splice(fromIndex, 1)[0];
+		let toIndex = this.editorSteps.indexOf(target);
+		if (!before) toIndex += 1;
+		this.editorSteps.splice(toIndex, 0, moved);
 		this.onStepDragEnd();
 	}
 

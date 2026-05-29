@@ -28,15 +28,15 @@ export class RecipeTypeDialogComponent {
 	 * from the provided active type IDs and storing the callback for Apply.
 	 *
 	 * @param applyCallback - Called with the final Set when the user clicks Apply.
-	 * @param data - Object containing the master tab list and currently active type IDs.
+	 * @param data - Object containing the master tab list and currently enabled type IDs.
 	 */
 	public openDialog(
 		applyCallback: (newIds: Set<IngredientType>) => void,
-		data: { masterTabs: TypeTab[]; activeTypeIds: Set<IngredientType> }
+		data: { masterTabs: TypeTab[]; enabledTypeIds: Set<IngredientType> }
 	): void {
 		this.applyCallback = applyCallback;
 		this.masterTabs = data.masterTabs;
-		this.draft = new Set(data.activeTypeIds);
+		this.draft = new Set(data.enabledTypeIds);
 		this.visible = true;
 	}
 

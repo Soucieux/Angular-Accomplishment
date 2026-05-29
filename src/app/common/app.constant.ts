@@ -273,6 +273,7 @@ export const RECIPE_MSG_DELETE_FAILED_DETAIL = 'Could not delete the recipe. Ple
 export const RECIPE_MAX_BADGES = 4;
 export const RECIPE_MAX_NAME_CHARS = 9;
 export const RECIPE_MSG_NAME_TOO_LONG = 'Recipe name must not exceed 9 Chinese characters in length.';
+export const RECIPE_MSG_CATEGORY_REQUIRED = 'Please select a category before saving.';
 
 // ── Layout — responsive breakpoints ──────────────────────────────────────
 export const BREAKPOINT_MOBILE = '(max-width: 800px)';
@@ -457,6 +458,14 @@ export const PINBOARD_MSG_DELETE_CONFIRM = 'Delete this entry? This cannot be un
 export const PINBOARD_DIALOG_DELETE_BTN = 'Delete';
 /** Secondary confirm button label on the pinboard delete confirmation dialog. */
 export const PINBOARD_DIALOG_CONFIRM_BTN = 'Confirm';
+/** CloudBase content field name for the pin message text. */
+export const PINBOARD_FIELD_TEXT = 'text';
+/** CloudBase content field name for the pin date. */
+export const PINBOARD_FIELD_DATE = 'date';
+/** CloudBase content field name for the pin link URL. */
+export const PINBOARD_FIELD_LINK = 'link';
+/** CloudBase content field name for the pin tags array. */
+export const PINBOARD_FIELD_TAGS = 'tags';
 
 // ── Error dialog — strings ────────────────────────────────────────────────
 export const ERROR_DIALOG_HEADER = 'Error';

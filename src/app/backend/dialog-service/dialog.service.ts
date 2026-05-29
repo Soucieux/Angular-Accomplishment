@@ -87,7 +87,7 @@ export class DialogService {
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'recipe-type',
 		applyCallback: (newIds: Set<IngredientType>) => void,
-		data: { masterTabs: TypeTab[]; activeTypeIds: Set<IngredientType> }
+		data: { masterTabs: TypeTab[]; enabledTypeIds: Set<IngredientType> }
 	): void;
 
 	/**
@@ -103,7 +103,7 @@ export class DialogService {
 		dialogType: string,
 		dataOrCallback1: any,
 		dataOrCallback2?: any
-	): any {
+	): void | Promise<void> {
 		// Guard: a null container means the component host is not initialized yet
 		if (!dialogContainerRef) {
 			const error = new Error('Dialog container not found');

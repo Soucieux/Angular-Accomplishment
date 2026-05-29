@@ -27,7 +27,7 @@
 						@for (cat of categories; track cat) {
 							<button
 								class="chip"
-								[class.active]="activeCategory === cat"
+								[class.active]="selectedCategory === cat"
 								(click)="selectCategory(cat)">
 								{{ cat }}
 							</button>
@@ -97,8 +97,8 @@
 		}
 
 		<!-- ===================== VIEW 2: DETAIL ===================== -->
-		@if (currentView === VIEW_DETAIL && activeRecipe) {
-			<section class="view" [ngClass]="activeRecipe.bandClass">
+		@if (currentView === VIEW_DETAIL && selectedRecipe) {
+			<section class="view" [ngClass]="selectedRecipe.bandClass">
 				<div class="detail-topbar">
 					<button class="back-btn" (click)="backToList()">
 						<span class="material-symbols-outlined">arrow_back</span>
@@ -111,17 +111,17 @@
 				</div>
 
 				<div class="detail-header">
-					<h1 class="page-title detail-title">{{ activeRecipe.detailName }}</h1>
+					<h1 class="page-title detail-title">{{ selectedRecipe.detailName }}</h1>
 					<div class="detail-meta">
 						<span class="meta-chip">
 							<span class="material-symbols-outlined">schedule</span>
-							{{ activeRecipe.cookTimeMin }} min
+							{{ selectedRecipe.cookTimeMin }} min
 						</span>
 						<span class="meta-chip">
 							<span class="material-symbols-outlined">restaurant</span>
-							Serves {{ activeRecipe.baseServings }}
+							Serves {{ selectedRecipe.baseServings }}
 						</span>
-						<span class="meta-chip cat-chip">{{ activeRecipe.category }}</span>
+						<span class="meta-chip cat-chip">{{ selectedRecipe.category }}</span>
 					</div>
 					<div class="header-ornament"></div>
 				</div>
@@ -142,7 +142,7 @@
 								<button (click)="incServings()" aria-label="increase servings">+</button>
 							</div>
 
-							@for (g of activeRecipe.groups; track g.type) {
+							@for (g of selectedRecipe.groups; track g.type) {
 								@let visible = getVisibleItems(g);
 								@if (visible.length > 0) {
 									<div class="igroup">
@@ -179,7 +179,7 @@
 						</h2>
 
 						<div class="steps" #stepsScroll>
-							@for (step of activeRecipe.steps; track $index) {
+							@for (step of selectedRecipe.steps; track $index) {
 								<div
 									class="step"
 									[class.done]="step.done"
@@ -216,7 +216,7 @@
 						Notes &amp; Tips
 					</div>
 					<div class="notes-inner">
-						<div class="notepad">{{ activeRecipe.notes }}</div>
+						<div class="notepad">{{ selectedRecipe.notes }}</div>
 					</div>
 				</div>
 			</section>
@@ -310,7 +310,7 @@
 					@if (editorCategoryInvalid) {
 						<p class="field-error">
 							<span class="material-symbols-outlined">error</span>
-							Please select a category before saving.
+							{{ RECIPE_MSG_CATEGORY_REQUIRED }}
 						</p>
 					}
 					@if (editorIngredientInvalid) {
@@ -381,7 +381,7 @@
 									<button
 										class="type-tab"
 										[class]="tab.id"
-										[class.active]="editorActiveType === tab.id"
+										[class.active]="selectedEditorType === tab.id"
 										(click)="selectEditorType(tab.id)">
 										<span class="emo">{{ tab.emoji }}</span>
 									</button>

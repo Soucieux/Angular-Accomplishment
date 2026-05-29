@@ -56,24 +56,25 @@ interface QuoteRecord {
 		TooltipModule
 	],
 	templateUrl: './resonance.component.html',
-	styleUrls: ['./resonance.component.css']
+	styleUrl: './resonance.component.css'
 })
 export class ResonanceComponent implements OnInit, OnDestroy {
 	private readonly className = 'ResonanceComponent';
-	protected readonly maxQuoteLength = 500;
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
-	protected dialogComponentContainer!: ViewContainerRef;
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
+	private dialogComponentContainer!: ViewContainerRef;
+
+	protected readonly maxQuoteLength = 500;
+	protected readonly gradients = RESONANCE_GRADIENTS;
+	protected readonly postedLabel = RESONANCE_MSG_POSTED;
+	protected readonly voicesLabel = RESONANCE_LABEL_VOICES;
 
 	protected quotes$!: Observable<QuoteRecord[]>;
 	protected newQuoteText = '';
 	protected authorName = '';
 	protected submitting = false;
 	private signedInAnonymously = false;
-
-	protected readonly gradients = RESONANCE_GRADIENTS;
-	protected readonly postedLabel = RESONANCE_MSG_POSTED;
-	protected readonly voicesLabel = RESONANCE_LABEL_VOICES;
 	protected postSuccess = false;
 	private postSuccessTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -89,18 +90,18 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * Initialises the component: signs in anonymously if no user is authenticated
 	 * so the CloudBase watcher can connect, then subscribes to the quotes collection.
 	 */
-	public ngOnInit() {
+	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			if (!CloudbaseService.getUseId()) {
 				// Wait for anonymous sign-in before starting the watcher —
 				// the CloudBase WebSocket needs valid credentials to connect.
-				void this.authService.signInAnonymously().then(() => {
+				this.authService.signInAnonymously().then(() => {
 					this.signedInAnonymously = true;
 					// Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
 					CloudbaseService.markAuthReady();
 					this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
 					this.cdr.detectChanges();
-				});
+				}).catch(() => {});
 			} else {
 				this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
 			}
@@ -111,29 +112,30 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Signs out the anonymous session if one was started by this component,
-	 * resets the flag, and logs the component destruction event.
+	 * clears the dialog container, resets the flag, and logs the component destruction event.
 	 */
-	public ngOnDestroy() {
+	ngOnDestroy(): void {
 		if (this.postSuccessTimer !== null) clearTimeout(this.postSuccessTimer);
 		if (this.signedInAnonymously) {
-			void this.authService.signOut();
+			this.authService.signOut().catch(() => {});
 		}
 		this.signedInAnonymously = false;
+		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
-	 * Get the gradient colors for a quote card based on its index.
+	 * Returns the gradient colors for a quote card based on its index.
 	 *
 	 * @param index - The index of the quote in the list.
-	 * @returns An object with from and to gradient colors.
+	 * @returns An object with from and to gradient color strings.
 	 */
-	protected getGradient(index: number) {
+	protected getGradient(index: number): { from: string; to: string } {
 		return this.gradients[index % this.gradients.length];
 	}
 
 	/**
-	 * Get a human-readable relative time string from a timestamp.
+	 * Returns a human-readable relative time string from a timestamp.
 	 *
 	 * @param timestamp - The timestamp string in "YYYY.MM.DD HH:mm:ss" format.
 	 * @returns A relative time string (e.g. "just now", "5m ago", "2d ago").
@@ -143,7 +145,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Get the display name of a quote's author, falling back to 'Anonymous'.
+	 * Returns the display name of a quote's author, falling back to 'Anonymous'.
 	 *
 	 * @param quote - The quote object.
 	 * @returns The author name or 'Anonymous'.
@@ -153,7 +155,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Get the uppercase first initial of a quote's author.
+	 * Returns the uppercase first initial of a quote's author.
 	 *
 	 * @param quote - The quote object.
 	 * @returns The uppercase first character of the author's name.
@@ -164,7 +166,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Check whether the current user has permission to delete the given quote.
+	 * Checks whether the current user has permission to delete the given quote.
 	 *
 	 * @param quote - The quote object to check.
 	 * @returns true if the user can delete the quote, otherwise false.
@@ -174,7 +176,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Check whether the current user is signed in.
+	 * Checks whether the current user is signed in.
 	 *
 	 * @returns true if a user ID is present, otherwise false.
 	 */
@@ -183,7 +185,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Check whether the new quote text exceeds the maximum character limit.
+	 * Checks whether the new quote text exceeds the maximum character limit.
 	 *
 	 * @returns true if the text length exceeds maxQuoteLength, otherwise false.
 	 */
@@ -192,23 +194,23 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Handle textarea Enter key: submit on bare Enter, allow newline on Shift+Enter.
+	 * Handles the textarea Enter key: submits on bare Enter, allows newline on Shift+Enter.
 	 * Uses instanceof narrowing so no cast is needed to access shiftKey.
 	 *
-	 * @param e - The event fired from the textarea keydown binding.
+	 * @param event - The event fired from the textarea keydown binding.
 	 */
-	protected onTextareaEnter(e: Event): void {
-		if (e instanceof KeyboardEvent && !e.shiftKey) {
-			e.preventDefault();
-			void this.submitQuote();
+	protected onTextareaEnter(event: Event): void {
+		if (event instanceof KeyboardEvent && !event.shiftKey) {
+			event.preventDefault();
+			this.submitQuote().catch(() => {});
 		}
 	}
 
 	/**
-	 * Submit a new quote to the database. Uses the signed-in user's name if available
+	 * Submits a new quote to the database. Uses the signed-in user's name if available,
 	 * otherwise falls back to the manually entered author name or 'Anonymous'.
 	 */
-	protected async submitQuote() {
+	protected async submitQuote(): Promise<void> {
 		const text = this.newQuoteText.trim();
 		if (!text) return;
 
@@ -239,12 +241,12 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Open a confirmation dialog to delete the given quote after checking
+	 * Opens a confirmation dialog to delete the given quote after checking
 	 * that the current user has permission to do so.
 	 *
 	 * @param quote - The quote object to delete.
 	 */
-	protected openDeleteConfirmationDialog(quote: QuoteRecord) {
+	protected openDeleteConfirmationDialog(quote: QuoteRecord): void {
 		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, quote._openid ?? '')) return;
 
 		this.dialogService.openDialog(

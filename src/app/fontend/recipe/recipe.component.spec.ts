@@ -66,12 +66,12 @@ describe('RecipeComponent', () => {
 
 	describe('formatQty', () => {
 		beforeEach(() => {
-			(component as any).activeRecipe = { baseServings: 2 };
+			(component as any).selectedRecipe = { baseServings: 2 };
 			(component as any).servings = 4;
 		});
 
 		it('returns empty string when there is no active recipe', () => {
-			(component as any).activeRecipe = null;
+			(component as any).selectedRecipe = null;
 			expect((component as any).formatQty(100, 'g')).toBe('');
 		});
 
@@ -93,7 +93,7 @@ describe('RecipeComponent', () => {
 
 	describe('formatQtyNum', () => {
 		it('delegates to formatQty with an empty unit', () => {
-			(component as any).activeRecipe = { baseServings: 1 };
+			(component as any).selectedRecipe = { baseServings: 1 };
 			(component as any).servings = 1;
 			expect((component as any).formatQtyNum(50)).toBe('50');
 		});
@@ -134,7 +134,7 @@ describe('RecipeComponent', () => {
 	describe('addEditorIngredient', () => {
 		it('appends a new blank ingredient of the active type', () => {
 			(component as any).editorIngredients = [];
-			(component as any).editorActiveType = RECIPE_ITYPE_VEG as IngredientType;
+			(component as any).selectedEditorType = RECIPE_ITYPE_VEG as IngredientType;
 			(component as any).addEditorIngredient();
 			expect((component as any).editorIngredients.length).toBe(1);
 			expect((component as any).editorIngredients[0].type).toBe(RECIPE_ITYPE_VEG);
@@ -244,7 +244,7 @@ describe('RecipeComponent', () => {
 				{ name: 'Pasta', category: 'Italian', baseServings: 2 },
 				{ name: 'Tacos', category: 'Mexican', baseServings: 2 }
 			];
-			(component as any).activeCategory = RECIPE_CATEGORY_ALL;
+			(component as any).selectedCategory = RECIPE_CATEGORY_ALL;
 			(component as any).searchQuery = '';
 			expect((component as any).filteredRecipes.length).toBe(2);
 		});
@@ -254,7 +254,7 @@ describe('RecipeComponent', () => {
 				{ name: 'Pasta', category: 'Italian', baseServings: 2 },
 				{ name: 'Tacos', category: 'Mexican', baseServings: 2 }
 			];
-			(component as any).activeCategory = 'Italian';
+			(component as any).selectedCategory = 'Italian';
 			(component as any).searchQuery = '';
 			expect((component as any).filteredRecipes.length).toBe(1);
 		});
@@ -264,7 +264,7 @@ describe('RecipeComponent', () => {
 				{ name: 'Pasta Carbonara', category: 'Italian', baseServings: 2 },
 				{ name: 'Tacos', category: 'Mexican', baseServings: 2 }
 			];
-			(component as any).activeCategory = RECIPE_CATEGORY_ALL;
+			(component as any).selectedCategory = RECIPE_CATEGORY_ALL;
 			(component as any).searchQuery = 'pasta';
 			expect((component as any).filteredRecipes.length).toBe(1);
 		});
@@ -275,14 +275,25 @@ describe('RecipeComponent', () => {
 	describe('selectCategory', () => {
 		it('updates the active category', () => {
 			(component as any).selectCategory('Italian');
-			expect((component as any).activeCategory).toBe('Italian');
+			expect((component as any).selectedCategory).toBe('Italian');
+		});
+
+		it('resets to ALL when the sentinel constant is passed', () => {
+			(component as any).selectedCategory = 'Italian';
+			(component as any).selectCategory(RECIPE_CATEGORY_ALL);
+			expect((component as any).selectedCategory).toBe(RECIPE_CATEGORY_ALL);
 		});
 	});
 
 	describe('selectEditorType', () => {
 		it('updates the active editor ingredient type', () => {
 			(component as any).selectEditorType(RECIPE_ITYPE_MEAT as IngredientType);
-			expect((component as any).editorActiveType).toBe(RECIPE_ITYPE_MEAT);
+			expect((component as any).selectedEditorType).toBe(RECIPE_ITYPE_MEAT);
+		});
+
+		it('updates to veg type', () => {
+			(component as any).selectEditorType(RECIPE_ITYPE_VEG as IngredientType);
+			expect((component as any).selectedEditorType).toBe(RECIPE_ITYPE_VEG);
 		});
 	});
 });

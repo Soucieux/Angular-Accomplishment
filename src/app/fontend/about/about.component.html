@@ -56,22 +56,22 @@
 			<div class="rail-bg"></div>
 			<div class="rail-fill" [style.height]="fillHeight()"></div>
 
-			@for (item of timeline; track item.date; let i = $index) {
+			@for (item of timeline; track item.date; let index = $index) {
 				<div
 					#tlEntry
 					class="tl-entry"
-					[class.is-visible]="visibleEntries.has(i)"
-					[style.transition-delay]="visibleEntries.has(i) ? entryDelay(i) : '0ms'"
-					(mouseenter)="onEntryEnter(i)"
+					[class.is-visible]="visibleEntries.has(index)"
+					[style.transition-delay]="visibleEntries.has(index) ? entryDelay(index) : '0ms'"
+					(mouseenter)="setHoveredEntry(index)"
 					(mouseleave)="onEntryLeave()">
 					<div
 						[class]="'tl-node ' + item.tag"
-						[class.is-hovered]="hoveredIndex === i"
-						[style.background]="hoveredIndex === i ? item.color : null"
-						[style.border-color]="hoveredIndex === i ? item.color : null">
+						[class.is-hovered]="hoveredIndex === index"
+						[style.background]="hoveredIndex === index ? item.color : null"
+						[style.border-color]="hoveredIndex === index ? item.color : null">
 						<span class="material-symbols-outlined tl-icon">{{ item.icon }}</span>
 					</div>
-					<div [class]="'tl-card ' + item.tag" [class.is-hovered]="hoveredIndex === i">
+					<div [class]="'tl-card ' + item.tag" [class.is-hovered]="hoveredIndex === index">
 						<div class="tl-card-hd">
 							<h3 class="tl-title">
 								{{ item.title

@@ -12,6 +12,7 @@ import { ButtonModule } from 'primeng/button';
 import { Utilities } from './common/app.utilities';
 import { CN, COMPONENT_DESTROY } from './common/app.constant';
 import { Observable } from 'rxjs';
+
 @Component({
 	selector: 'root',
 	standalone: true,
@@ -31,8 +32,7 @@ import { Observable } from 'rxjs';
 })
 export class AppComponent {
 	private readonly className = 'AppComponent';
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	currentUser$!: Observable<any>;
+	protected currentUser$!: Observable<any>;
 
 	constructor(
 		private authService: AuthService,
@@ -41,10 +41,10 @@ export class AppComponent {
 	) {}
 
 	/**
-	 * Initialise the component, subscribe to auth state changes, and set up
-	 * the navigation sidebar visibility.
+	 * Initialises the component, subscribes to the auth state observable,
+	 * and assigns the appropriate user stream based on the detected country.
 	 */
-	public ngOnInit(): void {
+	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			if (Utilities.getCurrentCountry() === CN) {
 				this.currentUser$ = this.authService.cloudbaseGetCurrentUser();
@@ -55,27 +55,27 @@ export class AppComponent {
 	}
 
 	/**
-	 * Anything that needs to be done when the component is destroyed.
+	 * Logs the component destruction event.
 	 */
-	public ngOnDestroy() {
+	ngOnDestroy(): void {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
-	 * Navigate to the login page, preserving the current URL as a returnUrl
-	 * query param so the user is sent back after signing in.
+	 * Navigates to the login page, preserving the current URL as a returnUrl
+	 * query param so the user is redirected back after signing in.
 	 */
-	protected navigateToLogin() {
-		void this.router.navigate(['/login'], {
-			queryParams: { returnUrl: this.router.url }
-		});
+	protected navigateToLogin(): void {
+		this.router
+			.navigate(['/login'], { queryParams: { returnUrl: this.router.url } })
+			.catch(() => {});
 	}
 
 	/**
-	 * Sign the current user out, using the appropriate service depending on the
+	 * Signs the current user out using the appropriate service based on the
 	 * detected country (CloudBase for CN, Firebase otherwise).
 	 */
-	protected async logout() {
+	protected async logout(): Promise<void> {
 		if (Utilities.getCurrentCountry() === CN) {
 			await this.authService.signOut();
 		} else {
@@ -83,7 +83,12 @@ export class AppComponent {
 		}
 	}
 
-	protected isCN() {
+	/**
+	 * Returns true when the app is running in the CN region.
+	 *
+	 * @returns True if the current country code is CN.
+	 */
+	protected isCN(): boolean {
 		return Utilities.getCurrentCountry() === CN;
 	}
 }

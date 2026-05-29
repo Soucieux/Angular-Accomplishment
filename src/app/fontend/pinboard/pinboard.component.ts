@@ -710,19 +710,21 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Removes a tag and persists the change if operating on an existing card.
-	 * New-item card removal is local only — no DB call.
+	 * Removes a tag from the new-item card. Local state update only — no DB write.
 	 *
 	 * @param index - The 0-based index of the tag to remove.
-	 * @param isNewItem - True when operating on the new-item card.
-	 * @param item - The existing card whose tag is being removed. Omit when isNewItem is true.
 	 */
-	protected async removeTag(index: number, isNewItem: boolean, item?: PinboardItem): Promise<void> {
-		if (isNewItem) {
-			this.newItem.tags.splice(index, 1);
-			return;
-		}
-		if (!item) return;
+	protected removeNewItemTag(index: number): void {
+		this.newItem.tags.splice(index, 1);
+	}
+
+	/**
+	 * Removes a tag from an existing card and persists the updated tags array to CloudBase.
+	 *
+	 * @param index - The 0-based index of the tag to remove.
+	 * @param item - The card whose tag is being removed.
+	 */
+	protected async removeExistingCardTag(index: number, item: PinboardItem): Promise<void> {
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
 		item.tags.splice(index, 1);

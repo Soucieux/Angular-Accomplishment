@@ -189,6 +189,7 @@ export const NEXUS_MSG_SAVE_LINK_FAILED = 'Failed to save link';
 export const NEXUS_MSG_SAVE_CATEGORY_FAILED = 'Failed to save category';
 
 ////////////////////// Below are login animation state and log constants /////////////
+export const LOGIN_URL_DEFAULT_RETURN = '/';
 export const LOGIN_ANIM_OUT = 'out';
 export const LOGIN_ANIM_IN = 'in';
 export const LOGIN_MSG_SEND_CODE_FAILED = 'Failed to send verification code';

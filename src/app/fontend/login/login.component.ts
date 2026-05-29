@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/unbound-method */
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -12,7 +11,15 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { Utilities } from '../../common/app.utilities';
-import { CN, COMPONENT_DESTROY, DIALOG_ERROR } from '../../common/app.constant';
+import {
+	CN,
+	COMPONENT_DESTROY,
+	DIALOG_ERROR,
+	LOGIN_ANIM_IN,
+	LOGIN_ANIM_OUT,
+	LOGIN_MSG_SEND_CODE_FAILED,
+	LOGIN_URL_DEFAULT_RETURN
+} from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { WrongParametersError } from '../../common/error/wrong-parameters.error';
@@ -36,16 +43,17 @@ import { wrongVerificationCodeError } from '../../common/error/wrong-verificatio
 })
 export class LoginComponent implements OnInit, OnDestroy {
 	private readonly className = 'LoginComponent';
-	@ViewChild('dialogContainer', { read: ViewContainerRef })
-	private dialogContainer!: ViewContainerRef;
-	protected loginForm: FormGroup;
+	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
+	private dialogComponentContainer!: ViewContainerRef;
+	protected loginForm!: FormGroup;
 	protected formSubmitted = false;
 	protected isSignUp = false;
 	protected animating: 'out' | 'in' | '' = '';
 	protected codeSent = false;
 	protected sendingCode = false;
 	private codeSentTimeout: ReturnType<typeof setTimeout> | null = null;
-	private returnUrl: string = '/';
+	private returnUrl: string = LOGIN_URL_DEFAULT_RETURN;
 
 	constructor(
 		private fb: FormBuilder,
@@ -53,57 +61,57 @@ export class LoginComponent implements OnInit, OnDestroy {
 		private dialogService: DialogService,
 		private cdr: ChangeDetectorRef,
 		private route: ActivatedRoute
-	) {
+	) {}
+
+	/**
+	 * Reads the returnUrl query param so sign-in can redirect back to the
+	 * page the user came from.
+	 */
+	ngOnInit(): void {
 		this.loginForm = this.fb.group({
 			username: ['', Validators.required],
 			email: [''],
 			password: ['', Validators.required],
 			verificationCode: ['']
 		});
-	}
-
-	/**
-	 * Reads the returnUrl query param so sign-in can redirect back to the
-	 * page the user came from.
-	 */
-	public ngOnInit(): void {
-		const raw = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
-		this.returnUrl = raw.startsWith('/') ? raw : '/';
+		const raw = this.route.snapshot.queryParamMap.get('returnUrl') ?? LOGIN_URL_DEFAULT_RETURN;
+		this.returnUrl = raw.startsWith(LOGIN_URL_DEFAULT_RETURN) ? raw : LOGIN_URL_DEFAULT_RETURN;
 	}
 
 	/**
 	 * Clears the code-sent auto-clear timer if active and logs the component
 	 * destruction event.
 	 */
-	public ngOnDestroy() {
+	ngOnDestroy(): void {
 		if (this.codeSentTimeout) {
 			clearTimeout(this.codeSentTimeout);
 			this.codeSentTimeout = null;
 		}
+		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
-	 * Check whether the given form control is invalid after the form has been
+	 * Checks whether the given form control is invalid after the form has been
 	 * submitted.
 	 *
 	 * @param controlName - The name of the form control to check.
-	 * @returns true if the control is invalid and the form has been submitted.
+	 * @returns True if the control is invalid and the form has been submitted, false otherwise.
 	 */
-	protected isInvalid(controlName: string) {
+	protected isInvalid(controlName: string): boolean {
 		const control = this.loginForm.get(controlName);
-		return control?.invalid && this.formSubmitted;
+		return !!(control?.invalid && this.formSubmitted);
 	}
 
 	/**
-	 * Toggle between sign-in and sign-up mode with a fade animation.
+	 * Toggles between sign-in and sign-up mode with a fade animation.
 	 * Resets the form and updates validators for the email and
 	 * verification code fields depending on the selected mode.
 	 */
-	protected toggleMode() {
+	protected toggleMode(): void {
 		// Start fade-out animation; after 280ms (matching CSS transition duration),
 		// swap the form mode, reset validators, and trigger fade-in.
-		this.animating = 'out';
+		this.animating = LOGIN_ANIM_OUT;
 
 		setTimeout(() => {
 			this.isSignUp = !this.isSignUp;
@@ -134,17 +142,19 @@ export class LoginComponent implements OnInit, OnDestroy {
 			passwordControl?.updateValueAndValidity();
 			codeControl?.updateValueAndValidity();
 
-			this.animating = 'in';
+			this.animating = LOGIN_ANIM_IN;
+			// setTimeout callback fires outside Angular's zone; detectChanges() is
+			// required to apply the animator state swap immediately in the template.
 			this.cdr.detectChanges();
 		}, 280);
 	}
 
 	/**
-	 * Send a verification code to the email address entered in the form.
+	 * Sends a verification code to the email address entered in the form.
 	 * Prevents duplicate requests while a code is already being sent.
 	 * The code-sent indicator auto-clears after 4 seconds.
 	 */
-	protected async getVerificationCodeEmail() {
+	protected async getVerificationCodeEmail(): Promise<void> {
 		// Prevent duplicate requests; codeSent is set optimistically before the API
 		// call so the user sees immediate feedback, then auto-clears after 4 seconds.
 		if (this.sendingCode) return;
@@ -159,20 +169,20 @@ export class LoginComponent implements OnInit, OnDestroy {
 				this.codeSent = false;
 				this.codeSentTimeout = null;
 			}, 4000);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.codeSent = false;
-			LOG.error(this.className, 'Failed to send verification code', error as Error);
+			LOG.error(this.className, LOGIN_MSG_SEND_CODE_FAILED, error as Error);
 		} finally {
 			this.sendingCode = false;
 		}
 	}
 
 	/**
-	 * Submit the login or sign-up form. Validates the form first; if invalid,
+	 * Submits the login or sign-up form. Validates the form first; if invalid,
 	 * marks the form as submitted to show validation errors. Routes to the
 	 * appropriate auth service method based on the current mode.
 	 */
-	protected async onSubmit() {
+	protected async onSubmit(): Promise<void> {
 		this.formSubmitted = true;
 		if (!this.loginForm.valid) return;
 
@@ -202,23 +212,23 @@ export class LoginComponent implements OnInit, OnDestroy {
 					);
 				}
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			if (
 				error instanceof WrongCredentialsError ||
 				error instanceof WrongParametersError ||
 				error instanceof wrongVerificationCodeError
 			) {
-				this.dialogService.openDialog(this.dialogContainer, DIALOG_ERROR, error.message);
+				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 			} else {
-				this.dialogService.showUnexpectedError(this.dialogContainer);
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		}
 	}
 
 	/**
-	 * Initiate Google sign-in flow.
+	 * Initiates the Google sign-in flow.
 	 */
-	protected googleLogin() {
+	protected googleLogin(): void {
 		this.authService.googleLogin();
 	}
 }

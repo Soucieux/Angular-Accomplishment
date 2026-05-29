@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-floating-promises */
 import {
 	AfterViewChecked,
 	ChangeDetectorRef,
@@ -15,6 +14,17 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
 import { LOG } from '../../common/app.logs';
+import { NexusCategory, NexusLink } from '../nexus/nexus.model';
+import {
+	HomeStats,
+	LastMovieEntry,
+	MovieActivityItem,
+	PatchActivityItem,
+	PatchInProgressItem,
+	ReminderActivityItem,
+	ReminderWidgetItem,
+	ResonanceActivityItem
+} from './home.model';
 import {
 	ACTIVITY_TYPE_BUG_LOGGED,
 	ACTIVITY_TYPE_EDITED,
@@ -77,7 +87,10 @@ import {
 	HOME_ACTIVITY_COLOR_PATCH_DELETED,
 	HOME_ACTIVITY_COLOR_REMINDER,
 	HOME_ACTIVITY_COLOR_REMINDER_DELETED,
-	HOME_ACTIVITY_COLOR_RESONANCE
+	HOME_ACTIVITY_COLOR_RESONANCE,
+	HOME_MSG_INCREMENT_VISIT_FAILED,
+	HOME_MSG_LOAD_STATISTICS_FAILED,
+	NEXUS_MSG_LOAD_CATEGORIES_FAILED
 } from '../../common/app.constant';
 
 @Component({
@@ -89,6 +102,10 @@ import {
 })
 export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'HomeComponent';
+
+	protected readonly HOME_GENRE_COLORS = HOME_GENRE_COLORS;
+	private readonly TILE_ROTATIONS = [-1.5, 0.8, -0.5, 1.2];
+
 	private statsSub?: Subscription;
 	private loginSub?: Subscription;
 	private linksSub?: Subscription;
@@ -97,17 +114,15 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private linksLoadingTimer?: ReturnType<typeof setTimeout>;
 	private dashboardTimer?: ReturnType<typeof setTimeout>;
 	private clockInterval?: ReturnType<typeof setInterval>;
-	private _lastMonth = -1;
+	private lastMonth = -1;
 
-	protected stats: any = null;
+	protected stats: HomeStats | null = null;
 	protected loading = true;
 	protected loggedIn = false;
 
-	// Auth transition animation
 	protected showDashboard = false;
 	protected transitioning = false;
 
-	// Clock
 	protected clockTime = '--:--:--';
 	protected clockDate = '';
 	protected currentYear = new Date().getFullYear();
@@ -119,45 +134,30 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected dayProgress = 0;
 	protected daysInMonth = 30;
 	protected currentDayOfMonth = 1;
-	protected dayOfWeekNum = 1; // Mon = 1 … Sun = 7
+	protected dayOfWeekNum = 1;
 
-	// Quick Links
-	protected dashLinks: any[] = [];
-	protected dashCategories: any[] = [];
+	protected dashLinks: NexusLink[] = [];
+	protected dashCategories: NexusCategory[] = [];
 	protected dashLinksLoading = true;
 	protected dashFaviconFailedIds = new Set<string>();
-	protected pinnedLinks: any[] = [];
-	protected restLinks: any[] = [];
-
-	// Genre bar colours
-	protected readonly genreColors = HOME_GENRE_COLORS;
-	private readonly TILE_ROTATIONS = [-1.5, 0.8, -0.5, 1.2];
+	protected pinnedLinks: NexusLink[] = [];
+	protected restLinks: NexusLink[] = [];
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,
 		private router: Router,
-		protected readonly utilities: Utilities
+		protected utilities: Utilities
 	) {}
 
 	/**
-	 * Navigate to a quick-action route, optionally passing router state.
-	 *
-	 * @param path - The target route path (e.g. '/entertainment').
-	 * @param state - Optional navigation extras to pass as router state.
+	 * Initialises the component: starts the live clock ticker and subscribes to
+	 * the login-state observable. The login subscription drives the auth-transition
+	 * animation and starts or stops the stats, links, and categories subscriptions
+	 * as the user signs in or out.
 	 */
-	protected navigateToQuickAction(path: string, state?: object): void {
-		void this.router.navigate([path], state ? { state } : undefined);
-	}
-
-	/**
-	 * Initialises the component: restores any saved quick note from sessionStorage,
-	 * starts the live clock ticker, and subscribes to both the login-state and
-	 * statistics observables. The login subscription drives the auth-transition
-	 * animation and starts / stops the stats subscription as the user signs in or out.
-	 */
-	public ngOnInit() {
+	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.tickClock();
 			this.clockInterval = setInterval(() => this.tickClock(), 1000);
@@ -183,7 +183,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 						}
 					}, 4000);
 					this.linksSub = this.databaseService.getUsefulLinks().subscribe({
-						next: (data) => {
+						next: (data: NexusLink[]) => {
 							clearTimeout(this.linksLoadingTimer);
 							this.dashLinks = data;
 							this.computeDashLinkSets();
@@ -197,17 +197,17 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 						}
 					});
 					this.categoriesSub = this.databaseService.getLinkCategories().subscribe({
-						next: (data) => {
+						next: (data: NexusCategory[]) => {
 							this.dashCategories = Utilities.sortByOrder(data);
 							this.cdr.detectChanges();
 						},
-						error: (err) => {
-							LOG.error(this.className, 'Failed to load link categories', err as Error);
+						error: (error: unknown) => {
+							LOG.error(this.className, NEXUS_MSG_LOAD_CATEGORIES_FAILED, error as Error);
 						}
 					});
 
 					this.statsSub = this.databaseService.getStatistics().subscribe({
-						next: (data) => {
+						next: (data: HomeStats) => {
 							clearTimeout(this.loadingTimer);
 							this.stats = data;
 							this.loading = false;
@@ -221,8 +221,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 								this.trimActivityLogs(data);
 							}
 						},
-						error: (err) => {
-							LOG.error(this.className, 'Failed to load statistics', err as Error);
+						error: (error: unknown) => {
+							LOG.error(this.className, HOME_MSG_LOAD_STATISTICS_FAILED, error as Error);
 							clearTimeout(this.loadingTimer);
 							this.loading = false;
 							this.cdr.detectChanges();
@@ -265,7 +265,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Attaches the auto-hide scroll listener to all widget scroll containers after each view check.
 	 * Uses the utility guard so each element is only bound once.
 	 */
-	public ngAfterViewChecked(): void {
+	ngAfterViewChecked(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			document
 				.querySelectorAll<HTMLElement>('.scrollable-list')
@@ -283,7 +283,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Clears all timers and intervals, unsubscribes from all data and login
 	 * observables, and logs the component destruction event.
 	 */
-	public ngOnDestroy() {
+	ngOnDestroy(): void {
 		clearTimeout(this.loadingTimer);
 		clearTimeout(this.linksLoadingTimer);
 		clearTimeout(this.dashboardTimer);
@@ -295,7 +295,17 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	// ── Clock ─────────────────────────────────────────────────────────────
+	/**
+	 * Navigates to a quick-action route, optionally passing router state.
+	 *
+	 * @param path - The target route path (e.g. '/entertainment').
+	 * @param state - The optional navigation extras to pass as router state.
+	 */
+	protected navigateToQuickAction(path: string, state?: object): void {
+		this.router.navigate([path], state ? { state } : undefined).catch(() => {});
+	}
+
+	////////////////////// Below are clock tick and progress computation methods //////////////
 
 	/**
 	 * Called once per second by `clockInterval`. Computes the current time
@@ -335,8 +345,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		// Month progress — 1st 00:00 = 0 %, last-day 23:59:59 ≈ 100 %
 		// Only recompute daysInMonth when the month changes, not every second.
 		const currentMonth = now.getMonth();
-		if (currentMonth !== this._lastMonth) {
-			this._lastMonth = currentMonth;
+		if (currentMonth !== this.lastMonth) {
+			this.lastMonth = currentMonth;
 			this.daysInMonth = new Date(y, currentMonth + 1, 0).getDate();
 		}
 		this.currentDayOfMonth = now.getDate();
@@ -350,10 +360,11 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		// Day of week label (Sun = 1 … Sat = 7)
 		this.dayOfWeekNum = dow + 1;
 
+		// setInterval fires outside Angular's zone — detectChanges required to update the clock display.
 		this.cdr.detectChanges();
 	}
 
-	// ── Time helpers ──────────────────────────────────────────────────────
+	////////////////////// Below are time helper methods used by the template ////////////////
 
 	/**
 	 * Converts a `YYYY.MM.DD HH:mm:ss` timestamp to a human-readable relative
@@ -367,7 +378,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Truncate a string for display in the template.
+	 * Truncates a string for display in the template.
 	 * Delegates to {@link Utilities.truncate}.
 	 *
 	 * @param text - The text to truncate.
@@ -379,7 +390,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Compute a countdown label for a date. Delegates to {@link Utilities.getDaysUntil}.
+	 * Computes a countdown label for a date. Delegates to {@link Utilities.getDaysUntil}.
 	 *
 	 * @param dateStr - A date in any form accepted by {@link Utilities.coerceDateToString}.
 	 * @returns A label such as "Today", "Tomorrow", "in 3d", or "2d overdue".
@@ -389,7 +400,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Check whether a date is past due. Delegates to {@link Utilities.isOverdue}.
+	 * Checks whether a date is past due. Delegates to {@link Utilities.isOverdue}.
 	 *
 	 * @param dateStr - A date in any form accepted by {@link Utilities.coerceDateToString}.
 	 * @returns `true` if the date is strictly before today.
@@ -398,22 +409,32 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		return Utilities.isOverdue(dateStr);
 	}
 
-	// ── Data accessors ────────────────────────────────────────────────────
+	////////////////////// Below are data accessor methods for the dashboard widgets //////////
 
 	/**
 	 * Returns whichever of `lastAdded` / `lastDeleted` is more recent, or
-	 * `null` if neither exists in the current statistics snapshot.
+	 * null if neither exists in the current statistics snapshot.
 	 * Used by the entertainment card to show a single "last activity" row.
+	 *
+	 * @returns The most recent movie activity object, or null if no activity exists.
 	 */
 	protected getLastMovieActivity(): { type: 'added' | 'deleted'; title: string; timestamp: string } | null {
-		const added = this.stats?.lastAdded;
-		const deleted = this.stats?.lastDeleted;
+		const added = this.stats?.['lastAdded'] as LastMovieEntry | undefined;
+		const deleted = this.stats?.['lastDeleted'] as LastMovieEntry | undefined;
 		if (!added && !deleted) return null;
-		if (added && !deleted) return { type: HISTORY_STATUS_ADDED, ...added };
-		if (!added && deleted) return { type: HISTORY_STATUS_DELETED, ...deleted };
-		return added.timestamp >= deleted.timestamp
-			? { type: HISTORY_STATUS_ADDED, ...added }
-			: { type: HISTORY_STATUS_DELETED, ...deleted };
+		if (added && !deleted)
+			return { type: HISTORY_STATUS_ADDED, title: added.title ?? '', timestamp: added.timestamp ?? '' };
+		if (!added && deleted)
+			return {
+				type: HISTORY_STATUS_DELETED,
+				title: deleted.title ?? '',
+				timestamp: deleted.timestamp ?? ''
+			};
+		const addedTime = added!.timestamp ?? '';
+		const deletedTime = deleted!.timestamp ?? '';
+		return addedTime >= deletedTime
+			? { type: HISTORY_STATUS_ADDED, title: added!.title ?? '', timestamp: addedTime }
+			: { type: HISTORY_STATUS_DELETED, title: deleted!.title ?? '', timestamp: deletedTime };
 	}
 
 	/**
@@ -423,8 +444,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns All reminder items from the statistics snapshot, or an empty array
 	 *   if the field is absent.
 	 */
-	protected getAllReminderItems(): any[] {
-		return Utilities.toArray(this.stats?.[STATS_FIELD_REMINDER_UPCOMING]);
+	protected getAllReminderItems(): ReminderWidgetItem[] {
+		return Utilities.toArray(this.stats?.[STATS_FIELD_REMINDER_UPCOMING]) as ReminderWidgetItem[];
 	}
 
 	/**
@@ -434,7 +455,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The number of overdue reminder items.
 	 */
 	protected getOverdueCount(): number {
-		return this.getAllReminderItems().filter((item) => Utilities.isOverdue(item?.date)).length;
+		return this.getAllReminderItems().filter((item) => Utilities.isOverdue(item.date)).length;
 	}
 
 	/**
@@ -443,21 +464,18 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @returns Sorted array of all reminder items that have a date set.
 	 */
-	protected getReminderWidgetItems(): any[] {
-		const toDateStr = (d: any): string => Utilities.coerceDateToString(d);
-
+	protected getReminderWidgetItems(): ReminderWidgetItem[] {
 		return this.getAllReminderItems()
-			.filter((item: any) => {
-				if (!item?.date) return false;
-				const str = toDateStr(item.date);
-				return !!str;
+			.filter((item) => {
+				if (!item.date) return false;
+				return !!Utilities.coerceDateToString(item.date);
 			})
-			.sort((a: any, b: any) => {
-				const parse = (dateVal: any) => {
-					const [y, m, d] = toDateStr(dateVal).split('-').map(Number);
-					return new Date(y, m - 1, d).getTime();
+			.sort((a, b) => {
+				const toMs = (dateVal: unknown) => {
+					const [year, month, day] = Utilities.coerceDateToString(dateVal).split('-').map(Number);
+					return new Date(year, month - 1, day).getTime();
 				};
-				return parse(a.date) - parse(b.date); // ascending: most overdue → soonest due
+				return toMs(a.date) - toMs(b.date); // ascending: most overdue → soonest due
 			});
 	}
 
@@ -468,8 +486,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @returns An array of in-progress patch note objects, or an empty array if absent.
 	 */
-	protected getPatchInProgress(): any[] {
-		return Utilities.toArray(this.stats?.[STATS_FIELD_PATCH_IN_PROGRESS]);
+	protected getPatchInProgress(): PatchInProgressItem[] {
+		return Utilities.toArray(this.stats?.[STATS_FIELD_PATCH_IN_PROGRESS]) as PatchInProgressItem[];
 	}
 
 	/**
@@ -481,7 +499,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns Genre bar data sorted descending by count, capped at 8 rows.
 	 */
 	protected getGenreData(): { label: string; count: number; pct: number }[] {
-		const raw = this.stats?.genre;
+		const raw = this.stats?.['genre'];
 		if (!raw) return [];
 		const entries = Object.entries(raw as Record<string, number>)
 			.filter(([key, val]) => key !== GENRE_FAVOURITE && (val as number) > 0)
@@ -501,6 +519,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Entries are sorted by their raw timestamp string (lexicographic order works
 	 * because the format is "YYYY.MM.DD HH:mm:ss", which sorts identically to
 	 * chronological order).
+	 *
+	 * @returns A sorted array of up to 24 recent-activity entries across all four sections.
 	 */
 	protected getRecentActivity(): {
 		icon: string;
@@ -519,22 +539,24 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		};
 		const events: RawEvent[] = [];
 
-		// ── Entertainment ──────────────────────────────────────────────────────
-		const movieActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_MOVIE]);
-		for (const m of movieActivities) {
-			if (!m?.timestamp) continue;
+		// Entertainment
+		const movieActivities = Utilities.toArray(
+			this.stats?.[STATS_FIELD_RECENT_MOVIE]
+		) as MovieActivityItem[];
+		for (const movie of movieActivities) {
+			if (!movie.timestamp) continue;
 			let icon = HOME_ACTIVITY_ICON_MOVIE_ADDED,
 				label = HOME_ACTIVITY_LABEL_MOVIE_ADDED,
 				color = HOME_ACTIVITY_COLOR_MOVIE_ADDED;
-			if (m.type === HISTORY_STATUS_DELETED) {
+			if (movie.type === HISTORY_STATUS_DELETED) {
 				icon = HOME_ACTIVITY_ICON_MOVIE_REMOVED;
 				label = HOME_ACTIVITY_LABEL_MOVIE_REMOVED;
 				color = HOME_ACTIVITY_COLOR_NEUTRAL;
-			} else if (m.type === ACTIVITY_TYPE_UPDATED) {
+			} else if (movie.type === ACTIVITY_TYPE_UPDATED) {
 				icon = HOME_ACTIVITY_ICON_MOVIE_RATED;
 				label = HOME_ACTIVITY_LABEL_MOVIE_RATED;
 				color = HOME_ACTIVITY_COLOR_MOVIE_RATED;
-			} else if (m.type === SEARCH) {
+			} else if (movie.type === SEARCH) {
 				icon = HOME_ACTIVITY_ICON_MOVIE_SEARCHED;
 				label = HOME_ACTIVITY_LABEL_MOVIE_SEARCHED;
 				color = HOME_ACTIVITY_COLOR_MOVIE_SEARCHED;
@@ -542,30 +564,32 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			events.push({
 				icon,
 				label,
-				detail: Utilities.truncate(m.title ?? '', 36),
-				time: this.getRelativeTime(m.timestamp),
+				detail: Utilities.truncate(movie.title ?? '', 36),
+				time: this.getRelativeTime(movie.timestamp),
 				color,
-				raw: m.timestamp
+				raw: movie.timestamp
 			});
 		}
 
-		// ── Patch Notes ────────────────────────────────────────────────────────
-		const patchActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_PATCH]);
-		for (const p of patchActivities) {
-			if (!p?.timestamp) continue;
+		// Patch Notes
+		const patchActivities = Utilities.toArray(
+			this.stats?.[STATS_FIELD_RECENT_PATCH]
+		) as PatchActivityItem[];
+		for (const patch of patchActivities) {
+			if (!patch.timestamp) continue;
 			let icon = HOME_ACTIVITY_ICON_PATCH_ADDED;
 			let label = HOME_ACTIVITY_LABEL_PATCH_ADDED;
 			let color = HOME_ACTIVITY_COLOR_PATCH;
-			if (p.type === ACTIVITY_TYPE_BUG_LOGGED) {
+			if (patch.type === ACTIVITY_TYPE_BUG_LOGGED) {
 				icon = HOME_ACTIVITY_ICON_PATCH_BUG;
 				label = HOME_ACTIVITY_LABEL_PATCH_BUG;
-			} else if (p.type === ACTIVITY_TYPE_STATUS_CHANGED) {
+			} else if (patch.type === ACTIVITY_TYPE_STATUS_CHANGED) {
 				icon = HOME_ACTIVITY_ICON_PATCH_STATUS;
 				label = HOME_ACTIVITY_LABEL_PATCH_STATUS;
-			} else if (p.type === ACTIVITY_TYPE_EDITED) {
+			} else if (patch.type === ACTIVITY_TYPE_EDITED) {
 				icon = HOME_ACTIVITY_ICON_PATCH_UPDATED;
 				label = HOME_ACTIVITY_LABEL_PATCH_UPDATED;
-			} else if (p.type === HISTORY_STATUS_DELETED) {
+			} else if (patch.type === HISTORY_STATUS_DELETED) {
 				icon = HOME_ACTIVITY_ICON_PATCH_DELETED;
 				label = HOME_ACTIVITY_LABEL_PATCH_DELETED;
 				color = HOME_ACTIVITY_COLOR_PATCH_DELETED;
@@ -573,47 +597,53 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			events.push({
 				icon,
 				label,
-				detail: Utilities.truncate(`#${p.noteIndex ?? '?'} ${p.component}`, 36),
-				time: this.getRelativeTime(p.timestamp),
+				detail: Utilities.truncate(`#${patch.noteIndex ?? '?'} ${patch.component ?? ''}`, 36),
+				time: this.getRelativeTime(patch.timestamp),
 				color,
-				raw: p.timestamp
+				raw: patch.timestamp
 			});
 		}
 
-		// ── Reminder ──────────────────────────────────────────────────────────
-		const reminderActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_REMINDER]);
-		for (const r of reminderActivities) {
-			if (!r?.timestamp) continue;
+		// Reminder
+		const reminderActivities = Utilities.toArray(
+			this.stats?.[STATS_FIELD_RECENT_REMINDER]
+		) as ReminderActivityItem[];
+		for (const reminder of reminderActivities) {
+			if (!reminder.timestamp) continue;
 			let icon = HOME_ACTIVITY_ICON_REMINDER_ADDED,
 				label = HOME_ACTIVITY_LABEL_REMINDER_ADDED,
 				color = HOME_ACTIVITY_COLOR_REMINDER;
-			if (r.type === HISTORY_STATUS_DELETED) {
+			if (reminder.type === HISTORY_STATUS_DELETED) {
 				icon = HOME_ACTIVITY_ICON_REMINDER_DELETED;
 				label = HOME_ACTIVITY_LABEL_REMINDER_DELETED;
 				color = HOME_ACTIVITY_COLOR_REMINDER_DELETED;
-			} else if (r.type === ACTIVITY_TYPE_UPDATED) {
+			} else if (reminder.type === ACTIVITY_TYPE_UPDATED) {
 				icon = HOME_ACTIVITY_ICON_REMINDER_UPDATED;
 				label = HOME_ACTIVITY_LABEL_REMINDER_UPDATED;
 			}
-			const detail = r.text ? Utilities.truncate(`${r.table ?? ''} · ${r.text}`, 40) : (r.table ?? '');
+			const detail = reminder.text
+				? Utilities.truncate(`${reminder.table ?? ''} · ${reminder.text}`, 40)
+				: (reminder.table ?? '');
 			events.push({
 				icon,
 				label,
 				detail,
-				time: this.getRelativeTime(r.timestamp),
+				time: this.getRelativeTime(reminder.timestamp),
 				color,
-				raw: r.timestamp
+				raw: reminder.timestamp
 			});
 		}
 
-		// ── Resonance ─────────────────────────────────────────────────────────
-		const resonanceActivities: any[] = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_RESONANCE]);
-		for (const q of resonanceActivities) {
-			if (!q?.timestamp) continue;
+		// Resonance
+		const resonanceActivities = Utilities.toArray(
+			this.stats?.[STATS_FIELD_RECENT_RESONANCE]
+		) as ResonanceActivityItem[];
+		for (const quote of resonanceActivities) {
+			if (!quote.timestamp) continue;
 			let icon = HOME_ACTIVITY_ICON_RESONANCE_ADDED,
 				label = HOME_ACTIVITY_LABEL_RESONANCE_ADDED,
 				color = HOME_ACTIVITY_COLOR_RESONANCE;
-			if (q.type === HISTORY_STATUS_DELETED) {
+			if (quote.type === HISTORY_STATUS_DELETED) {
 				icon = HOME_ACTIVITY_ICON_RESONANCE_REMOVED;
 				label = HOME_ACTIVITY_LABEL_RESONANCE_REMOVED;
 				color = HOME_ACTIVITY_COLOR_NEUTRAL;
@@ -621,10 +651,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			events.push({
 				icon,
 				label,
-				detail: Utilities.truncate(`by ${q.author ?? ''}`, 36),
-				time: this.getRelativeTime(q.timestamp),
+				detail: Utilities.truncate(`by ${quote.author ?? ''}`, 36),
+				time: this.getRelativeTime(quote.timestamp),
 				color,
-				raw: q.timestamp
+				raw: quote.timestamp
 			});
 		}
 
@@ -649,7 +679,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		dateStr: string;
 		isToday: boolean;
 		isPast: boolean;
-		items: any[];
+		items: ReminderWidgetItem[];
 	}[] {
 		const today = new Date();
 		today.setHours(0, 0, 0, 0);
@@ -658,20 +688,20 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		sunday.setDate(today.getDate() - dow);
 		const allItems = this.getAllReminderItems();
 		const dayLabels = DAY_NAMES_SHORT;
-		return Array.from({ length: 7 }, (_, i) => {
+		return Array.from({ length: 7 }, (_, dayIndex) => {
 			const date = new Date(sunday);
-			date.setDate(sunday.getDate() + i);
-			const y = date.getFullYear();
-			const m = String(date.getMonth() + 1).padStart(2, '0');
-			const d = String(date.getDate()).padStart(2, '0');
-			const dateStr = `${y}-${m}-${d}`;
+			date.setDate(sunday.getDate() + dayIndex);
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			const dateStr = `${year}-${month}-${day}`;
 			return {
-				label: dayLabels[i],
+				label: dayLabels[dayIndex],
 				dayNum: date.getDate(),
 				dateStr,
 				isToday: date.getTime() === today.getTime(),
 				isPast: date.getTime() < today.getTime(),
-				items: allItems.filter((item) => Utilities.coerceDateToString(item?.date) === dateStr)
+				items: allItems.filter((item) => Utilities.coerceDateToString(item.date) === dateStr)
 			};
 		});
 	}
@@ -693,7 +723,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param data - The raw statistics document from the first watcher emission.
 	 */
-	private trimActivityLogs(data: any): void {
+	private trimActivityLogs(data: HomeStats): void {
 		const fields = [
 			STATS_FIELD_RECENT_MOVIE,
 			STATS_FIELD_RECENT_PATCH,
@@ -701,28 +731,34 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			STATS_FIELD_RECENT_RESONANCE
 		];
 
-		// Resolve each field to a plain array
-		const arrays: any[][] = fields.map((f) => Utilities.toArray(data?.[f]));
+		// Resolve each field to a plain array; all activity entries share the timestamp field shape
+		const arrays: { timestamp?: string }[][] = fields.map(
+			(field) => Utilities.toArray(data?.[field]) as { timestamp?: string }[]
+		);
 
 		// Build a flat list with source coordinates and timestamp for sorting
-		const flat: { fi: number; ii: number; ts: string }[] = [];
-		for (let fi = 0; fi < arrays.length; fi++) {
-			for (let ii = 0; ii < arrays[fi].length; ii++) {
-				const ts: string = arrays[fi][ii]?.timestamp;
-				if (ts) flat.push({ fi, ii, ts });
+		const flat: { fieldIndex: number; itemIndex: number; timestamp: string }[] = [];
+		for (let fieldIndex = 0; fieldIndex < arrays.length; fieldIndex++) {
+			for (let itemIndex = 0; itemIndex < arrays[fieldIndex].length; itemIndex++) {
+				const { timestamp } = arrays[fieldIndex][itemIndex] ?? {};
+				if (timestamp) flat.push({ fieldIndex, itemIndex, timestamp });
 			}
 		}
 
 		// Sort newest-first; identify which items survive the combined cap
-		flat.sort((a, b) => b.ts.localeCompare(a.ts));
-		const keepSet = new Set<string>(flat.slice(0, STATS_CAP_ACTIVITY_LOG).map((e) => `${e.fi}:${e.ii}`));
+		flat.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+		const keepSet = new Set<string>(
+			flat.slice(0, STATS_CAP_ACTIVITY_LOG).map((entry) => `${entry.fieldIndex}:${entry.itemIndex}`)
+		);
 
 		// Build the update payload — only include arrays that actually shrank
-		const updates: Record<string, any[]> = {};
-		for (let fi = 0; fi < arrays.length; fi++) {
-			const trimmed = arrays[fi].filter((_, ii) => keepSet.has(`${fi}:${ii}`));
-			if (trimmed.length < arrays[fi].length) {
-				updates[fields[fi]] = trimmed;
+		const updates: Record<string, { timestamp?: string }[]> = {};
+		for (let fieldIndex = 0; fieldIndex < arrays.length; fieldIndex++) {
+			const trimmed = arrays[fieldIndex].filter((_item, itemIndex) =>
+				keepSet.has(`${fieldIndex}:${itemIndex}`)
+			);
+			if (trimmed.length < arrays[fieldIndex].length) {
+				updates[fields[fieldIndex]] = trimmed;
 			}
 		}
 
@@ -731,7 +767,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		}
 	}
 
-	// ── Quick Links ───────────────────────────────────────────────────────
+	////////////////////// Below are quick link methods for the dashboard tile panel ///////////
 
 	/**
 	 * Computes and caches the pinned-tiles list and the "everything else" list
@@ -741,9 +777,9 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private computeDashLinkSets(): void {
 		const sorted = [...this.dashLinks].sort((a, b) => (b.visitCount ?? 0) - (a.visitCount ?? 0));
 		this.pinnedLinks = sorted.slice(0, 4);
-		const pinnedIds = new Set(this.pinnedLinks.map((l) => l._id));
+		const pinnedIds = new Set(this.pinnedLinks.map((link) => link._id));
 		this.restLinks = [...this.dashLinks]
-			.filter((l) => !pinnedIds.has(l._id))
+			.filter((link) => !pinnedIds.has(link._id))
 			.sort((a, b) => {
 				if (!a.lastVisited && !b.lastVisited) return 0;
 				if (!a.lastVisited) return 1;
@@ -753,12 +789,12 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Called when a favicon <img> fails to load. Marks the link ID so the
-	 * template can swap to the initial-letter fallback.
+	 * Marks a link ID as favicon-failed when the favicon image cannot load,
+	 * so the template can display the initial-letter fallback instead.
 	 *
-	 * @param link - The link object whose favicon failed.
+	 * @param link - The link object whose favicon failed to load.
 	 */
-	protected onDashFaviconError(link: any): void {
+	protected onDashFaviconError(link: NexusLink): void {
 		this.dashFaviconFailedIds.add(link._id);
 	}
 
@@ -767,10 +803,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * sub-text colour when the category is not found.
 	 *
 	 * @param categoryId - The category _id stored on the link document.
-	 * @returns CSS color string.
+	 * @returns The CSS color string for the category dot.
 	 */
 	protected getCategoryDotColor(categoryId: string): string {
-		const cat = this.dashCategories.find((c) => c._id === categoryId);
+		const cat = this.dashCategories.find((category) => category._id === categoryId);
 		return cat?.color ?? HOME_LINKS_DOT_FALLBACK;
 	}
 
@@ -779,32 +815,32 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param link - The link object to open.
 	 */
-	protected openDashLink(link: any): void {
+	protected openDashLink(link: NexusLink): void {
 		this.utilities.openInNewTab(link.url);
 		this.databaseService
 			.incrementLinkVisit(link._id, link.visitCount ?? 0)
-			.catch((err: Error) => LOG.error(this.className, 'Failed to increment link visit', err));
+			.catch((error: Error) => LOG.error(this.className, HOME_MSG_INCREMENT_VISIT_FAILED, error));
 	}
 
 	/**
-	 * Returns the tile background colour for a pinned tile at index i,
+	 * Returns the tile background colour for a pinned tile at the given index,
 	 * cycling through the four pool-theme colours.
 	 *
-	 * @param i - Zero-based tile index.
-	 * @returns CSS colour string.
+	 * @param index - The zero-based tile index.
+	 * @returns The CSS colour string for that tile.
 	 */
-	protected getTileColor(i: number): string {
-		return [HOME_LINKS_TILE_0, HOME_LINKS_TILE_1, HOME_LINKS_TILE_2, HOME_LINKS_TILE_3][i % 4];
+	protected getTileColor(index: number): string {
+		return [HOME_LINKS_TILE_0, HOME_LINKS_TILE_1, HOME_LINKS_TILE_2, HOME_LINKS_TILE_3][index % 4];
 	}
 
 	/**
-	 * Returns the CSS rotation for a pinned tile at index i, giving the
+	 * Returns the CSS rotation for a pinned tile at the given index, giving the
 	 * sticker-stack tilt effect.
 	 *
-	 * @param i - Zero-based tile index.
-	 * @returns CSS rotation string, e.g. "-1.5deg".
+	 * @param index - The zero-based tile index.
+	 * @returns The CSS rotation string, e.g. "-1.5deg".
 	 */
-	protected getTileRotation(i: number): string {
-		return `${this.TILE_ROTATIONS[i % 4]}deg`;
+	protected getTileRotation(index: number): string {
+		return `${this.TILE_ROTATIONS[index % 4]}deg`;
 	}
 }

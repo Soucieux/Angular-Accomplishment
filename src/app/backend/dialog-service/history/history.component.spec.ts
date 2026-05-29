@@ -33,13 +33,13 @@ describe('HistoryDialogComponent', () => {
 
 	describe('openDialog', () => {
 		it('sets visible to true', () => {
-			component.openDialog(() => {}, of([]));
+			component.openDialog(() => Promise.resolve(), of([]));
 			expect((component as any).visible).toBeTrue();
 		});
 
 		it('stores the entries observable', () => {
 			const entries$ = of([{ id: 1 }]);
-			component.openDialog(() => {}, entries$);
+			component.openDialog(() => Promise.resolve(), entries$);
 			expect((component as any).entries$).toBe(entries$);
 		});
 	});

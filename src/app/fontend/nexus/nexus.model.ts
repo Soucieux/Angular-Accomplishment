@@ -5,6 +5,25 @@ export interface AiTool {
 	url: string;
 }
 
+/** Shape of a useful-link document returned from the useful_links collection. */
+export interface NexusLink {
+	_id: string;
+	url: string;
+	title: string;
+	category: string;
+	visitCount?: number;
+	lastVisited?: string;
+	createdAt?: string;
+}
+
+/** Shape of a link-category document returned from the useful_links collection. */
+export interface NexusCategory {
+	_id: string;
+	name: string;
+	color?: string;
+	order?: number;
+}
+
 /** Brand accent colours for the initial-letter fallback circle, keyed by tool ID. */
 export const NEXUS_LOGO_FALLBACK_COLORS: Record<string, string> = {
 	chatgpt: '#10a37f',

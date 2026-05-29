@@ -26,13 +26,13 @@ describe('RecipeTypeDialogComponent', () => {
 
 	describe('openDialog', () => {
 		it('sets visible to true', () => {
-			component.openDialog(() => {}, { masterTabs: [], activeTypeIds: new Set() });
+			component.openDialog(() => {}, { masterTabs: [], enabledTypeIds: new Set() });
 			expect((component as any).visible).toBeTrue();
 		});
 
-		it('initialises draft from the provided activeTypeIds', () => {
-			const activeTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEG, RECIPE_ITYPE_MEAT]);
-			component.openDialog(() => {}, { masterTabs: [], activeTypeIds });
+		it('initialises draft from the provided enabledTypeIds', () => {
+			const enabledTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEG, RECIPE_ITYPE_MEAT]);
+			component.openDialog(() => {}, { masterTabs: [], enabledTypeIds });
 			expect((component as any).draft.has(RECIPE_ITYPE_VEG)).toBeTrue();
 			expect((component as any).draft.has(RECIPE_ITYPE_MEAT)).toBeTrue();
 		});
@@ -47,7 +47,8 @@ describe('RecipeTypeDialogComponent', () => {
 		});
 
 		it('returns false when draft size equals the maximum', () => {
-			const types: IngredientType[] = ['veg', 'meat', 'seas', 'dairy', 'grain', 'liq', 'spice'];
+			// MASTER_TYPE_TABS has 16 types; RECIPE_EDITOR_TYPE_MAX = 9 — supply 10+ so slice(0, 9) hits the cap.
+			const types: IngredientType[] = ['veg', 'meat', 'seas', 'dairy', 'grain', 'liq', 'spice', 'seafood', 'egg', 'nut'];
 			(component as any).draft = new Set<IngredientType>(types.slice(0, RECIPE_EDITOR_TYPE_MAX));
 			expect((component as any).canAddMore()).toBeFalse();
 		});
@@ -80,8 +81,8 @@ describe('RecipeTypeDialogComponent', () => {
 	describe('apply', () => {
 		it('calls the apply callback with a copy of the draft', () => {
 			const cb = jasmine.createSpy('applyCallback');
-			const activeTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEG]);
-			component.openDialog(cb, { masterTabs: [], activeTypeIds });
+			const enabledTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEG]);
+			component.openDialog(cb, { masterTabs: [], enabledTypeIds });
 			(component as any).apply();
 			expect(cb).toHaveBeenCalledWith(jasmine.any(Set));
 			const received: Set<IngredientType> = cb.calls.mostRecent().args[0];
@@ -89,7 +90,7 @@ describe('RecipeTypeDialogComponent', () => {
 		});
 
 		it('closes the dialog after applying', () => {
-			component.openDialog(() => {}, { masterTabs: [], activeTypeIds: new Set() });
+			component.openDialog(() => {}, { masterTabs: [], enabledTypeIds: new Set() });
 			(component as any).apply();
 			expect((component as any).visible).toBeFalse();
 		});
@@ -100,7 +101,7 @@ describe('RecipeTypeDialogComponent', () => {
 	describe('cancel', () => {
 		it('closes the dialog without calling the apply callback', () => {
 			const cb = jasmine.createSpy('applyCallback');
-			component.openDialog(cb, { masterTabs: [], activeTypeIds: new Set() });
+			component.openDialog(cb, { masterTabs: [], enabledTypeIds: new Set() });
 			(component as any).cancel();
 			expect(cb).not.toHaveBeenCalled();
 			expect((component as any).visible).toBeFalse();

@@ -66,9 +66,9 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	private dialogComponentContainer!: ViewContainerRef;
 
 	protected readonly maxQuoteLength = 500;
-	protected readonly gradients = RESONANCE_GRADIENTS;
-	protected readonly postedLabel = RESONANCE_MSG_POSTED;
-	protected readonly voicesLabel = RESONANCE_LABEL_VOICES;
+	protected readonly RESONANCE_GRADIENTS = RESONANCE_GRADIENTS;
+	protected readonly RESONANCE_MSG_POSTED = RESONANCE_MSG_POSTED;
+	protected readonly RESONANCE_LABEL_VOICES = RESONANCE_LABEL_VOICES;
 
 	protected quotes$!: Observable<QuoteRecord[]>;
 	protected newQuoteText = '';
@@ -100,6 +100,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 					// Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
 					CloudbaseService.markAuthReady();
 					this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
+					// Promise callback fires outside Angular's zone; detectChanges() is
+					// required to bind the newly assigned quotes$ Observable in the template.
 					this.cdr.detectChanges();
 				}).catch(() => {});
 			} else {
@@ -131,7 +133,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @returns An object with from and to gradient color strings.
 	 */
 	protected getGradient(index: number): { from: string; to: string } {
-		return this.gradients[index % this.gradients.length];
+		return this.RESONANCE_GRADIENTS[index % this.RESONANCE_GRADIENTS.length];
 	}
 
 	/**
@@ -230,12 +232,16 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			this.postSuccessTimer = setTimeout(() => {
 				this.postSuccessTimer = null;
 				this.postSuccess = false;
+				// setTimeout callback fires outside Angular's zone; detectChanges() is
+				// required to hide the success chip immediately after the delay.
 				this.cdr.detectChanges();
 			}, 2000);
 		} catch {
 			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 		} finally {
 			this.submitting = false;
+			// async/await finally block may resume outside Angular's zone; detectChanges()
+			// is required to re-enable the submit button immediately after the request settles.
 			this.cdr.detectChanges();
 		}
 	}

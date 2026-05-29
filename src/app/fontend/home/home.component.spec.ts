@@ -34,23 +34,23 @@ describe('HomeComponent', () => {
 
 	describe('tileColor', () => {
 		it('returns the first colour for index 0', () => {
-			expect((component as any).tileColor(0)).toBe(HOME_LINKS_TILE_0);
+			expect((component as any).getTileColor(0)).toBe(HOME_LINKS_TILE_0);
 		});
 
 		it('returns the second colour for index 1', () => {
-			expect((component as any).tileColor(1)).toBe(HOME_LINKS_TILE_1);
+			expect((component as any).getTileColor(1)).toBe(HOME_LINKS_TILE_1);
 		});
 
 		it('returns the third colour for index 2', () => {
-			expect((component as any).tileColor(2)).toBe(HOME_LINKS_TILE_2);
+			expect((component as any).getTileColor(2)).toBe(HOME_LINKS_TILE_2);
 		});
 
 		it('returns the fourth colour for index 3', () => {
-			expect((component as any).tileColor(3)).toBe(HOME_LINKS_TILE_3);
+			expect((component as any).getTileColor(3)).toBe(HOME_LINKS_TILE_3);
 		});
 
 		it('wraps around after 4 tiles (index 4 → same as index 0)', () => {
-			expect((component as any).tileColor(4)).toBe(HOME_LINKS_TILE_0);
+			expect((component as any).getTileColor(4)).toBe(HOME_LINKS_TILE_0);
 		});
 	});
 
@@ -58,17 +58,17 @@ describe('HomeComponent', () => {
 
 	describe('tileRotation', () => {
 		it('returns a CSS rotation string ending with "deg"', () => {
-			expect((component as any).tileRotation(0)).toMatch(/^-?\d+(\.\d+)?deg$/);
+			expect((component as any).getTileRotation(0)).toMatch(/^-?\d+(\.\d+)?deg$/);
 		});
 
 		it('cycles through 4 distinct rotations', () => {
-			const rotations = [0, 1, 2, 3].map(i => (component as any).tileRotation(i));
+			const rotations = [0, 1, 2, 3].map(i => (component as any).getTileRotation(i));
 			const unique = new Set(rotations);
 			expect(unique.size).toBe(4);
 		});
 
 		it('wraps around after 4 tiles (index 4 → same as index 0)', () => {
-			expect((component as any).tileRotation(4)).toBe((component as any).tileRotation(0));
+			expect((component as any).getTileRotation(4)).toBe((component as any).getTileRotation(0));
 		});
 	});
 

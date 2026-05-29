@@ -568,8 +568,10 @@
 	letter-spacing: 0.4px;
 }
 
-/* ── Mobile ── */
-@media (max-width: 800px) {
+/* ─────────────────────────────────────────
+   Responsive ≤ 940 px (mobile)
+───────────────────────────────────────── */
+@media (max-width: 940px) {
 	:host {
 		padding: 24px 16px 60px;
 	}

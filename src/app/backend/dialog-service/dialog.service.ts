@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import { ComponentRef, Injectable, Type, ViewContainerRef } from '@angular/core';
 import { ConfirmDialogComponent } from './confirm/confirm.component';
 import { AddDialogComponent } from './add/add.component';

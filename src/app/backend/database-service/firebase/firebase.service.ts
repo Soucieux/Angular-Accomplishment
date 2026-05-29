@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { Utilities } from '../../../common/app.utilities';
 import {
 	DATABASE_FIRST_TABLE,

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises, @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, prefer-const, no-useless-assignment */
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 import { SearchStreamService } from '../../backend/dialog-service/search/search-stream.service';
 import { Utilities } from '../../common/app.utilities';

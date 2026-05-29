@@ -68,6 +68,80 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
+	/**
+	 * All available components that can be selected in the add-entry dropdown.
+	 *
+	 * `icon` holds the ligature name used as text content for Material Icons /
+	 * Material Symbols (e.g. `'tv'`, `'home'`). PrimeIcons render purely via
+	 * CSS pseudo-elements and require no text content, so their `icon` value is
+	 * intentionally an empty string — the full icon definition lives in
+	 * `iconClass` (e.g. `'pi pi-user'`).
+	 * `colorClass` maps to a CSS gradient rule that matches the nav panel icon colour.
+	 */
+	protected readonly components: { label: string; icon: string; iconClass: string; colorClass: string }[] =
+		[
+			{
+				label: 'All Pages',
+				icon: 'grid_view',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-all-pages'
+			},
+			{
+				label: 'Home',
+				icon: 'home_app_logo',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-home'
+			},
+			{
+				label: 'Nexus',
+				icon: 'neurology',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-nexus'
+			},
+			{
+				label: 'Resonance',
+				icon: 'format_quote',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-resonance'
+			},
+			{
+				label: 'Recipe',
+				icon: 'menu_book',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-recipe'
+			},
+			{
+				label: 'Entertainment',
+				icon: 'live_tv',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-entertainment'
+			},
+			{
+				label: 'Reminder',
+				icon: 'alarm',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-reminder'
+			},
+			{
+				label: 'Pinboard',
+				icon: 'push_pin',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-pinboard'
+			},
+			{
+				label: 'Patch Notes',
+				icon: 'note_stack',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-patch-notes'
+			},
+			{
+				label: 'About',
+				icon: 'badge',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-about'
+			},
+			{ label: 'Login', icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' } // pi icon — CSS only, no ligature text
+		];
 	protected loading = true;
 	protected severity: { severity: string }[] | undefined;
 	protected bugSeverity: { severity: string }[] | undefined;
@@ -107,35 +181,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	) {}
 
 	/**
-	 * Returns a blank patch-note record used both for field initialisation
-	 * and to reset the form after a successful submission.
-	 *
-	 * @returns A zeroed-out patch note record object.
-	 */
-	private emptyRecord(): {
-		key: string;
-		component: string;
-		element: string;
-		details: string;
-		status: any;
-		timestamp: string;
-		isBug: boolean;
-	} {
-		return {
-			key: '',
-			component: '',
-			element: '',
-			details: '',
-			status: undefined,
-			timestamp: '',
-			isBug: false
-		};
-	}
-
-	/**
 	 * Attaches the auto-hide scroll listener to the page container after each view check.
 	 */
-	public ngAfterViewChecked(): void {
+	ngAfterViewChecked(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			document
 				.querySelectorAll<HTMLElement>('.container.page-card')
@@ -149,7 +197,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * visible), populates the severity option lists, and sets up the subscription
 	 * tap that keeps `patchNotesList`, and page-index state.
 	 */
-	public async ngOnInit() {
+	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isMobile = this.utilities.isMobile();
 
@@ -212,7 +260,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Update the isMobile flag when the window is resized.
+	 * Updates the isMobile flag when the window is resized.
 	 */
 	@HostListener('window:resize')
 	protected onResize() {
@@ -226,9 +274,35 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * destruction event. The async pipe on `patchNotes$` tears down the
 	 * CloudBase watcher automatically when the view is destroyed.
 	 */
-	public ngOnDestroy() {
+	ngOnDestroy() {
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
+	}
+
+	/**
+	 * Returns a blank patch-note record used both for field initialisation
+	 * and to reset the form after a successful submission.
+	 *
+	 * @returns A zeroed-out patch note record object.
+	 */
+	private emptyRecord(): {
+		key: string;
+		component: string;
+		element: string;
+		details: string;
+		status: any;
+		timestamp: string;
+		isBug: boolean;
+	} {
+		return {
+			key: '',
+			component: '',
+			element: '',
+			details: '',
+			status: undefined,
+			timestamp: '',
+			isBug: false
+		};
 	}
 
 	/**
@@ -264,7 +338,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
 
 			// Fire-and-forget: record the edit type in stats for the Recent Activity widget.
-			const noteIndex = this.patchNotesList.findIndex((n) => n.key === row.key) + 1;
+			const noteIndex = this.patchNotesList.findIndex((note) => note.key === row.key) + 1;
 			const ts = Utilities.getCurrentFormattedTime(true);
 			if (changes.status) {
 				this.databaseService
@@ -301,7 +375,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected submitNewRecord() {
 		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(false);
-		this.newRecord.isBug = this.newRecord.status === STATUS_DEBUG || this.newRecord.status === STATUS_RESOLVED;
+		this.newRecord.isBug =
+			this.newRecord.status === STATUS_DEBUG || this.newRecord.status === STATUS_RESOLVED;
 		const snapshot = { ...this.newRecord };
 		const noteIndex = this.patchNotesList.length + 1;
 		this.databaseService
@@ -325,15 +400,15 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Triggered by the "Delete" button click event on the "Patch Notes" page
+	 * Opens a confirmation dialog before removing the given patch note.
 	 *
-	 * @param key key of the patch note to be removed
+	 * @param key - The key of the patch note to remove.
 	 */
 	protected openDeleteConfirmationDialog(key: string) {
 		// Capture note identity before the dialog opens — the list may have changed by
 		// the time the user confirms.
-		const noteToDelete = this.patchNotesList.find((n) => n.key === key);
-		const noteIndex = this.patchNotesList.findIndex((n) => n.key === key) + 1;
+		const noteToDelete = this.patchNotesList.find((note) => note.key === key);
+		const noteIndex = this.patchNotesList.findIndex((note) => note.key === key) + 1;
 
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -507,7 +582,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		return thisRow?.component === hoveredRow?.component && thisRow?.element === hoveredRow?.element;
 	}
 
-	// This is only used to add a border outline for ressolved bug
 	/**
 	 * Get the CSS class for a severity tag based on its status.
 	 *
@@ -572,30 +646,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * All available components that can be selected in the add-entry dropdown.
-	 *
-	 * `icon` holds the ligature name used as text content for Material Icons /
-	 * Material Symbols (e.g. `'tv'`, `'home'`). PrimeIcons render purely via
-	 * CSS pseudo-elements and require no text content, so their `icon` value is
-	 * intentionally an empty string — the full icon definition lives in
-	 * `iconClass` (e.g. `'pi pi-user'`).
-	 * `colorClass` maps to a CSS gradient rule that matches the nav panel icon colour.
-	 */
-	protected readonly components: { label: string; icon: string; iconClass: string; colorClass: string }[] = [
-		{ label: 'All Pages', icon: 'grid_view', iconClass: 'material-symbols-outlined', colorClass: 'icon-all-pages' },
-		{ label: 'Home', icon: 'home_app_logo', iconClass: 'material-symbols-outlined', colorClass: 'icon-home' },
-		{ label: 'Nexus', icon: 'neurology', iconClass: 'material-symbols-outlined', colorClass: 'icon-nexus' },
-		{ label: 'Resonance', icon: 'format_quote', iconClass: 'material-symbols-outlined', colorClass: 'icon-resonance' },
-		{ label: 'Recipe', icon: 'menu_book', iconClass: 'material-symbols-outlined', colorClass: 'icon-recipe' },
-		{ label: 'Entertainment', icon: 'live_tv', iconClass: 'material-symbols-outlined', colorClass: 'icon-entertainment' },
-		{ label: 'Reminder', icon: 'alarm', iconClass: 'material-symbols-outlined', colorClass: 'icon-reminder' },
-		{ label: 'Pinboard', icon: 'push_pin', iconClass: 'material-symbols-outlined', colorClass: 'icon-pinboard' },
-		{ label: 'Patch Notes', icon: 'note_stack', iconClass: 'material-symbols-outlined', colorClass: 'icon-patch-notes' },
-		{ label: 'About', icon: 'badge', iconClass: 'material-symbols-outlined', colorClass: 'icon-about' },
-		{ label: 'Login', icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' }, // pi icon — CSS only, no ligature text
-	];
-
-	/**
 	 * Total number of patch notes currently loaded (excluding the dummy row).
 	 *
 	 * @returns The count of real patch-note records.
@@ -610,7 +660,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The count of in-progress records.
 	 */
 	protected get statsInProgress(): number {
-		return this.patchNotesList.filter((n: any) => n.status === STATUS_IN_PROGRESS).length;
+		return this.patchNotesList.filter((note: any) => note.status === STATUS_IN_PROGRESS).length;
 	}
 
 	/**
@@ -619,7 +669,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The count of open bug records.
 	 */
 	protected get statsOpenBugs(): number {
-		return this.patchNotesList.filter((n: any) => n.status === STATUS_DEBUG).length;
+		return this.patchNotesList.filter((note: any) => note.status === STATUS_DEBUG).length;
 	}
 
 	/**
@@ -636,6 +686,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected getComponentOption(label: string | { label: string } | any) {
 		const key = typeof label === 'string' ? label : (label?.label ?? '');
-		return this.components.find((c) => c.label === key) ?? null;
+		return this.components.find((option) => option.label === key) ?? null;
 	}
 }

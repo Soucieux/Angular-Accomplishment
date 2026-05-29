@@ -480,14 +480,14 @@ export const PINBOARD_MSG_DELETE_CONFIRM = 'Delete this entry? This cannot be un
 export const PINBOARD_DIALOG_DELETE_BTN = 'Delete';
 /** Secondary confirm button label on the pinboard delete confirmation dialog. */
 export const PINBOARD_DIALOG_CONFIRM_BTN = 'Confirm';
-/** CloudBase content field name for the pin message text. */
-export const PINBOARD_FIELD_TEXT = 'text';
-/** CloudBase content field name for the pin date. */
-export const PINBOARD_FIELD_DATE = 'date';
-/** CloudBase content field name for the pin link URL. */
-export const PINBOARD_FIELD_LINK = 'link';
-/** CloudBase content field name for the pin tags array. */
-export const PINBOARD_FIELD_TAGS = 'tags';
+/** CloudBase content entry key for the pin message text. */
+export const PINBOARD_VALUE_KEY_TEXT = 'text';
+/** CloudBase content entry key for the pin date. */
+export const PINBOARD_VALUE_KEY_DATE = 'date';
+/** CloudBase content entry key for the pin link URL. */
+export const PINBOARD_VALUE_KEY_LINK = 'link';
+/** CloudBase content entry key for the pin tags array. */
+export const PINBOARD_VALUE_KEY_TAGS = 'tags';
 /** Items shown per page in the Pinboard grid. */
 export const PINBOARD_ITEMS_PER_PAGE = 10;
 

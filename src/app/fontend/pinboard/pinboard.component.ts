@@ -33,10 +33,10 @@ import {
 	HISTORY_STATUS_DELETED,
 	PINBOARD_DIALOG_CONFIRM_BTN,
 	PINBOARD_DIALOG_DELETE_BTN,
-	PINBOARD_FIELD_DATE,
-	PINBOARD_FIELD_LINK,
-	PINBOARD_FIELD_TAGS,
-	PINBOARD_FIELD_TEXT,
+	PINBOARD_VALUE_KEY_DATE,
+	PINBOARD_VALUE_KEY_LINK,
+	PINBOARD_VALUE_KEY_TAGS,
+	PINBOARD_VALUE_KEY_TEXT,
 	PINBOARD_ITEMS_PER_PAGE,
 	PINBOARD_MSG_DELETE_CONFIRM,
 	PINBOARD_PLACEHOLDER_LINK,
@@ -50,8 +50,8 @@ import {
 } from '../../common/app.constant';
 import {
 	NewItem,
-	PinboardDbRow,
-	PinboardEditableField,
+	PinboardDbRecord,
+	PinboardValueKey,
 	PinboardItem,
 	TagEditSession
 } from './pinboard.model';
@@ -98,7 +98,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected tagFilter = new Set<string>();
 
 	protected tagEditSession: TagEditSession | null = null;
-	private originalItems: PinboardDbRow[] = [];
+	private originalItems: PinboardDbRecord[] = [];
 	private itemsSub?: Subscription;
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
@@ -110,26 +110,26 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	) {}
 
 	/**
-	 * Subscribes to the third-table CloudBase collection, maps each raw row to a
-	 * PinboardItem view model, prunes stale tag filters, and syncs upcoming items
+	 * Subscribes to the third-table CloudBase collection, maps each raw record to a
+	 * PinboardItem view model, removes stale tag filters, and syncs upcoming items
 	 * to the statistics collection.
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.itemsSub = this.databaseService.getThirdReminderTableDetails().subscribe((raw) => {
-				// Step 1: Parse raw DB rows into PinboardItem view models
-				const rows = raw as PinboardDbRow[];
-				this.originalItems = structuredClone(rows);
-				this.items = rows.map((row) => ({
-					key: row.key ?? '',
-					_openid: row._openid ?? '',
-					text: row.content?.text ?? '',
-					date: row.content?.date != null ? Utilities.coerceDateToString(row.content.date) : null,
-					link: row.content?.link ?? null,
-					tags: row.content?.tags ?? []
+				// Step 1: Parse raw DB records into PinboardItem view models
+				const records = raw as PinboardDbRecord[];
+				this.originalItems = structuredClone(records);
+				this.items = records.map((record) => ({
+					key: record.key ?? '',
+					_openid: record._openid ?? '',
+					text: record.content?.text ?? '',
+					date: record.content?.date != null ? Utilities.coerceDateToString(record.content.date) : null,
+					link: record.content?.link ?? null,
+					tags: record.content?.tags ?? []
 				}));
 				// Step 2: Remove any selected tag filters that no longer exist in the item set
-				this.pruneStaleTags();
+				this.removeStaleTags();
 				// Step 3: Sync upcoming items to the statistics collection
 				this.updateUpcomingToStatistics();
 			});
@@ -160,14 +160,14 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are DB helper and permission check methods //////////////////////
 
 	/**
-	 * Checks whether the current user has permission to modify the item with the given key.
+	 * Checks whether the current user has permission to modify the entry with the given key.
 	 * Delegates the actual permission check to DialogService.ensurePermission.
 	 *
-	 * @param key - The CloudBase document key of the item.
+	 * @param entryKey - The CloudBase document key identifying the entry.
 	 * @returns SUCCESS if permitted, FAILURE otherwise.
 	 */
-	private checkPermission(key: string): string {
-		const openid = this.items.find((item) => item.key === key)?._openid ?? '';
+	private checkPermission(entryKey: string): string {
+		const openid = this.items.find((item) => item.key === entryKey)?._openid ?? '';
 		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid) ? SUCCESS : FAILURE;
 	}
 
@@ -212,60 +212,68 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	/**
 	 * Removes any selected tags from the filter that no longer exist in the current item set.
 	 */
-	private pruneStaleTags(): void {
+	private removeStaleTags(): void {
 		const remaining = new Set(this.items.flatMap((item) => item.tags));
 		this.tagFilter = new Set([...this.tagFilter].filter((tag) => remaining.has(tag)));
 	}
 
 	/**
-	 * Restores one editable field from the latest database snapshot.
+	 * Restores one single value on a view-model item from the latest database snapshot.
 	 *
-	 * @param rollbackItem - The view-model item whose field will be restored.
-	 * @param rollbackOriginal - The raw DB snapshot row to restore from.
-	 * @param field - The field name to restore.
+	 * @param item - The view-model item whose single value will be restored.
+	 * @param originalRecord - The raw DB snapshot record to restore from.
+	 * @param valueKey - The value key identifying which property inside the entry to restore.
 	 */
-	private rollbackField(
-		rollbackItem: PinboardItem,
-		rollbackOriginal: PinboardDbRow,
-		field: PinboardEditableField
+	private rollbackSingleValue(
+		item: PinboardItem,
+		originalRecord: PinboardDbRecord,
+		valueKey: PinboardValueKey
 	): void {
-		switch (field) {
-			case PINBOARD_FIELD_TEXT:
-				rollbackItem.text = rollbackOriginal.content.text ?? '';
+		switch (valueKey) {
+			case PINBOARD_VALUE_KEY_TEXT:
+				item.text = originalRecord.content.text ?? '';
 				break;
-			case PINBOARD_FIELD_DATE:
-				rollbackItem.date =
-					rollbackOriginal.content.date != null
-						? Utilities.coerceDateToString(rollbackOriginal.content.date)
+			case PINBOARD_VALUE_KEY_DATE:
+				item.date =
+					originalRecord.content.date != null
+						? Utilities.coerceDateToString(originalRecord.content.date)
 						: null;
 				break;
-			case PINBOARD_FIELD_LINK:
-				rollbackItem.link = rollbackOriginal.content.link ?? null;
+			case PINBOARD_VALUE_KEY_LINK:
+				item.link = originalRecord.content.link ?? null;
 				break;
-			case PINBOARD_FIELD_TAGS:
-				rollbackItem.tags = rollbackOriginal.content.tags ?? [];
+			case PINBOARD_VALUE_KEY_TAGS:
+				item.tags = originalRecord.content.tags ?? [];
 				break;
 		}
 	}
 
 	/**
-	 * Persists a single content-field change for an existing item to CloudBase,
+	 * Persists a single-value change for an existing item to CloudBase,
 	 * triggers the save indicator, and appends to the activity log.
-	 * Rolls back the local item field to its original snapshot value if the
+	 * Rolls back the local single value to its original snapshot value if the
 	 * server rejects the write with a permission error.
 	 *
-	 * @param key - The CloudBase document key of the item.
-	 * @param field - The content field name to update (e.g. PINBOARD_FIELD_TEXT, PINBOARD_FIELD_DATE).
-	 * @param value - The new value to store.
+	 * {@link onCardTextUpdate} - Persists text edits from the card input.
+	 * {@link onPopoverDateUpdate} - Persists date changes from the popover date-picker.
+	 * {@link onPopoverLinkUpdate} - Persists link changes from the popover link input.
+	 * {@link onTagUpdate} - Persists tag array updates for existing cards.
+	 * {@link removeExistingCardTag} - Persists tag removal for existing cards.
+	 * {@link clearDate} - Clears the date value on a pin.
+	 * {@link clearLink} - Clears the link value on a pin.
+	 *
+	 * @param entryKey - The CloudBase document key identifying which entry to update.
+	 * @param valueKey - The value key identifying which property inside the entry to update (e.g. PINBOARD_VALUE_KEY_TEXT).
+	 * @param singleValue - The new value to store.
 	 */
 	private async updateTableSingleValue(
-		key: string,
-		field: PinboardEditableField,
-		value: string | string[] | null
+		entryKey: string,
+		valueKey: PinboardValueKey,
+		singleValue: string | string[] | null
 	): Promise<void> {
 		try {
-			// Step 1: Persist the field change to CloudBase
-			await this.databaseService.updateReminderTable(DATABASE_THIRD_TABLE, key, field, value);
+			// Step 1: Persist the single-value change to CloudBase
+			await this.databaseService.updateReminderTable(DATABASE_THIRD_TABLE, entryKey, valueKey, singleValue);
 			// Step 2: Flash the save indicator
 			this.triggerSaveIndicator();
 			// Step 3: Append the change to the activity log
@@ -273,17 +281,17 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 					type: ACTIVITY_TYPE_UPDATED,
 					table: REMINDER_TABLE_MESSAGES,
-					text: this.items.find((item) => item.key === key)?.text ?? '',
+					text: this.items.find((item) => item.key === entryKey)?.text ?? '',
 					timestamp: Utilities.getCurrentFormattedTime(true)
 				})
 				.catch(() => {});
 		} catch (error) {
-			// Roll back the local field if the server denied permission, then show error dialog
+			// Roll back the local single value if the server denied permission, then show error dialog
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				const rollbackItem = this.items.find((item) => item.key === key);
-				const rollbackOriginal = this.originalItems.find((original) => original.key === key);
-				if (rollbackItem && rollbackOriginal) {
-					this.rollbackField(rollbackItem, rollbackOriginal, field);
+				const item = this.items.find((candidate) => candidate.key === entryKey);
+				const originalRecord = this.originalItems.find((candidate) => candidate.key === entryKey);
+				if (item && originalRecord) {
+					this.rollbackSingleValue(item, originalRecord, valueKey);
 				}
 			}
 			this.dialogService.handleError(this.dialogComponentContainer, error);
@@ -291,14 +299,14 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Deletes an item from CloudBase and appends the deletion to the activity log.
+	 * Removes an entry from CloudBase and appends the deletion to the activity log.
 	 *
-	 * @param key - The CloudBase document key of the item to delete.
+	 * @param entryKey - The CloudBase document key identifying the entry to remove.
 	 */
-	private async removeRecordFromDatabase(key: string): Promise<void> {
-		const itemText = this.items.find((item) => item.key === key)?.text ?? '';
+	private async removeRecordFromDatabase(entryKey: string): Promise<void> {
+		const itemText = this.items.find((item) => item.key === entryKey)?.text ?? '';
 		try {
-			await this.databaseService.removeRecordFromReminderTable(DATABASE_THIRD_TABLE, key);
+			await this.databaseService.removeRecordFromReminderTable(DATABASE_THIRD_TABLE, entryKey);
 			this.triggerSaveIndicator();
 			this.databaseService
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
@@ -507,7 +515,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Adds a new item to CloudBase, shared by both the Enter-key shortcut and the confirm button.
-	 * In text-only mode, optional fields (date, link) are skipped and popovers are not hidden.
+	 * In text-only mode, optional values (date, link) are skipped and popovers are not hidden.
 	 *
 	 * @param textOnly - When true, skips date and link fields and suppresses popover cleanup.
 	 */
@@ -515,7 +523,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (!this.newItem.text.trim()) return;
 
 		// Step 1: Build the content payload
-		const newContent: PinboardDbRow['content'] = {
+		const newContent: PinboardDbRecord['content'] = {
 			text: this.newItem.text.trim(),
 			tags: [...this.newItem.tags]
 		};
@@ -556,18 +564,18 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Opens a confirmation dialog before deleting an entry. Guards with a permission check.
+	 * Opens a confirmation dialog before removing an entry. Guards with a permission check.
 	 *
-	 * @param key - The CloudBase document key of the entry to delete.
+	 * @param entryKey - The CloudBase document key identifying the entry to remove.
 	 */
-	protected openDeleteConfirmationDialog(key: string): void {
-		const returnCode = this.checkPermission(key);
+	protected openDeleteConfirmationDialog(entryKey: string): void {
+		const returnCode = this.checkPermission(entryKey);
 		if (returnCode === FAILURE) return;
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			async () => {
-				await this.removeRecordFromDatabase(key);
+				await this.removeRecordFromDatabase(entryKey);
 			},
 			[PINBOARD_MSG_DELETE_CONFIRM, PINBOARD_DIALOG_DELETE_BTN, PINBOARD_DIALOG_CONFIRM_BTN]
 		);
@@ -580,12 +588,12 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param item - The PinboardItem whose text was edited.
 	 */
 	protected async onCardTextUpdate(item: PinboardItem): Promise<void> {
-		const originalIndex = this.originalItems.findIndex((originalRow) => originalRow.key === item.key);
+		const originalIndex = this.originalItems.findIndex((originalRecord) => originalRecord.key === item.key);
 		if (originalIndex === -1 || item.text === (this.originalItems[originalIndex].content?.text ?? '')) return;
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
 		const savedText = item.text.trim();
-		await this.updateTableSingleValue(item.key, PINBOARD_FIELD_TEXT, savedText);
+		await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_TEXT, savedText);
 		// The DB subscription fires asynchronously — replace the snapshot entry immutably so a
 		// concurrent blur cannot pass the changed-value guard and issue a duplicate write.
 		const updatedSnapshot = structuredClone(this.originalItems[originalIndex]);
@@ -623,7 +631,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.editingItem.date = date ? Utilities.formatDateForStorage(date) : null;
 			await this.updateTableSingleValue(
 				this.editingItem.key,
-				PINBOARD_FIELD_DATE,
+				PINBOARD_VALUE_KEY_DATE,
 				this.editingItem.date
 			);
 			this.updateUpcomingToStatistics();
@@ -641,7 +649,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.editingItem.link = trimmedLink ? Utilities.normalizeWebUrl(trimmedLink) : null;
 			await this.updateTableSingleValue(
 				this.editingItem.key,
-				PINBOARD_FIELD_LINK,
+				PINBOARD_VALUE_KEY_LINK,
 				this.editingItem.link
 			);
 		}
@@ -661,7 +669,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 			item,
 			index,
 			isNewItem: false,
-			value: index === -1 ? '' : item.tags[index]
+			tagText: index === -1 ? '' : item.tags[index]
 		};
 	}
 
@@ -675,15 +683,15 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		const item = session.item;
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
-		const value = session.value.trim();
+		const tagText = session.tagText.trim();
 		if (session.index === -1) {
-			if (value) item.tags.push(value);
+			if (tagText) item.tags.push(tagText);
 		} else {
-			if (value) item.tags[session.index] = value;
+			if (tagText) item.tags[session.index] = tagText;
 			else item.tags.splice(session.index, 1);
 		}
 		this.cancelTagEdit();
-		if (item.key) await this.updateTableSingleValue(item.key, PINBOARD_FIELD_TAGS, [...item.tags]);
+		if (item.key) await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_TAGS, [...item.tags]);
 	}
 
 	/**
@@ -692,11 +700,11 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected onNewItemTagUpdate(): void {
 		const session = this.tagEditSession;
-		const value = session?.value.trim() ?? '';
+		const tagText = session?.tagText.trim() ?? '';
 		if (session?.index === -1) {
-			if (value) this.newItem.tags.push(value);
+			if (tagText) this.newItem.tags.push(tagText);
 		} else if (session !== null && session.index >= 0) {
-			if (value) this.newItem.tags[session.index] = value;
+			if (tagText) this.newItem.tags[session.index] = tagText;
 			else this.newItem.tags.splice(session.index, 1);
 		}
 		this.cancelTagEdit();
@@ -728,7 +736,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
 		item.tags.splice(index, 1);
-		if (item.key) await this.updateTableSingleValue(item.key, PINBOARD_FIELD_TAGS, [...item.tags]);
+		if (item.key) await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_TAGS, [...item.tags]);
 	}
 
 	/**
@@ -767,7 +775,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 			item: null,
 			index,
 			isNewItem: true,
-			value: index === -1 ? '' : this.newItem.tags[index]
+			tagText: index === -1 ? '' : this.newItem.tags[index]
 		};
 	}
 
@@ -792,10 +800,10 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		return session !== null && session.isNewItem && session.index === -1;
 	}
 
-	////////////////////// Below are field clear helpers for date and link fields //////////////
+	////////////////////// Below are single-value clear handlers for date and link //////////////
 
 	/**
-	 * Clears the date field on a pin and persists the change to CloudBase.
+	 * Clears the date single value on a pin and persists the change to CloudBase.
 	 *
 	 * @param item - The PinboardItem to update.
 	 */
@@ -804,13 +812,13 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (returnCode === FAILURE) return;
 		item.date = null;
 		if (item.key) {
-			await this.updateTableSingleValue(item.key, PINBOARD_FIELD_DATE, null);
+			await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_DATE, null);
 			this.updateUpcomingToStatistics();
 		}
 	}
 
 	/**
-	 * Clears the link field on a pin and persists the change to CloudBase.
+	 * Clears the link single value on a pin and persists the change to CloudBase.
 	 *
 	 * @param item - The PinboardItem to update.
 	 */
@@ -820,7 +828,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		item.link = null;
 		if (this.editingItem === item) this.editingLink = '';
 		if (item.key) {
-			await this.updateTableSingleValue(item.key, PINBOARD_FIELD_LINK, null);
+			await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_LINK, null);
 		}
 	}
 

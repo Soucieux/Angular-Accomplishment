@@ -59,6 +59,9 @@
 .pinboard-body.is-scrolling::-webkit-scrollbar-thumb {
 	background: rgba(213, 51, 105, 0.28);
 }
+.pinboard-body.is-scrolling::-webkit-scrollbar-thumb:hover {
+	background: #d53369;
+}
 
 /* ── Header ─────────────────────────────────────────────────────────────────── */
 .pinboard-header {

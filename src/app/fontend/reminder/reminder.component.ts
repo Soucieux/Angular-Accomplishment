@@ -1009,10 +1009,10 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Persist a link change from the popover editor for the active third-table entry.
+	 * Persists a link change from the popover editor for the active third-table entry.
 	 * No-ops when the popover was opened in "add new" mode (no key yet).
 	 */
-	protected onPopoverLinkChange(): void {
+	protected onPopoverLinkUpdate(): void {
 		if (this.thirdTableActiveItem?.key) {
 			this.updateLink(
 				this.THIRD_TABLE,
@@ -1028,17 +1028,17 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param date - The Date value selected in the date-picker.
 	 */
-	protected onPopoverDateChange(date: Date): void {
+	protected onPopoverDateUpdate(date: Date): void {
 		if (this.thirdTableActiveItem?.key) {
 			this.updateTableWithNewDate(this.THIRD_TABLE, this.thirdTableActiveItem.key, date);
 		}
 	}
 
 	/**
-	 * Handle the primary action button in the popover: deletes the entry when
+	 * Handles the primary action button in the popover: deletes the entry when
 	 * editing an existing item, or adds a new entry when in "add new" mode.
 	 */
-	protected onPopoverActionClick(): void {
+	protected onPopoverButtonClick(): void {
 		if (this.thirdTableActiveItem?.key) {
 			this.openDeleteConfirmationDialog(this.thirdTableActiveItem.key);
 		} else {

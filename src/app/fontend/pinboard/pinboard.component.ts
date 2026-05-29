@@ -1,6 +1,5 @@
 import {
 	AfterViewInit,
-	ChangeDetectorRef,
 	Component,
 	ElementRef,
 	Inject,
@@ -20,7 +19,7 @@ import { PopoverModule } from 'primeng/popover';
 import { Popover } from 'primeng/popover';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom, timer } from 'rxjs';
 import { Utilities } from '../../common/app.utilities';
 import { LOG } from '../../common/app.logs';
 import {
@@ -34,6 +33,10 @@ import {
 	HISTORY_STATUS_DELETED,
 	PINBOARD_DIALOG_CONFIRM_BTN,
 	PINBOARD_DIALOG_DELETE_BTN,
+	PINBOARD_FIELD_DATE,
+	PINBOARD_FIELD_LINK,
+	PINBOARD_FIELD_TAGS,
+	PINBOARD_FIELD_TEXT,
 	PINBOARD_ITEMS_PER_PAGE,
 	PINBOARD_MSG_DELETE_CONFIRM,
 	PINBOARD_PLACEHOLDER_LINK,
@@ -45,37 +48,15 @@ import {
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS
 } from '../../common/app.constant';
-import { PinboardItem } from './pinboard.model';
+import {
+	NewItem,
+	PinboardDbRow,
+	PinboardEditableField,
+	PinboardItem,
+	TagEditSession
+} from './pinboard.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-
-/** Raw shape of a third-table document as returned by CloudBase. */
-interface PinboardDbRow {
-	key: string;
-	_openid: string;
-	content: {
-		text?: string;
-		date?: unknown;
-		link?: string | null;
-		tags?: string[];
-	};
-}
-
-/** Tag-edit session shared by both existing-card and new-item-card contexts. */
-interface TagEditSession {
-	item: PinboardItem | null; // null when operating on the new-item card
-	index: number; // -1 = adding new tag; 0+ = editing existing tag
-	isNewItem: boolean;
-	value: string; // text currently being typed in the tag input
-}
-
-/** Pending state for the new-item card form. */
-interface NewItem {
-	text: string;
-	date: Date | null;
-	link: string;
-	tags: string[];
-}
 
 @Component({
 	selector: 'pinboard',
@@ -121,11 +102,10 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	private itemsSub?: Subscription;
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
-	public constructor(
+	constructor(
 		@Inject(PLATFORM_ID) private readonly platformId: object,
 		private readonly databaseService: DatabaseService,
 		private readonly dialogService: DialogService,
-		private readonly cdr: ChangeDetectorRef,
 		protected utilities: Utilities
 	) {}
 
@@ -134,7 +114,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * PinboardItem view model, prunes stale tag filters, and syncs upcoming items
 	 * to the statistics collection.
 	 */
-	public ngOnInit(): void {
+	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.itemsSub = this.databaseService.getThirdReminderTableDetails().subscribe((raw) => {
 				// Step 1: Parse raw DB rows into PinboardItem view models
@@ -151,8 +131,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 				// Step 2: Remove any selected tag filters that no longer exist in the item set
 				this.pruneStaleTags();
 				// Step 3: Sync upcoming items to the statistics collection
-				this.syncUpcomingToStatistics();
-				this.cdr.detectChanges();
+				this.updateUpcomingToStatistics();
 			});
 		}
 	}
@@ -161,23 +140,24 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Attaches the scroll auto-hide behaviour to the pinboard body element so the
 	 * scrollbar only appears while the user is actively scrolling.
 	 */
-	public ngAfterViewInit(): void {
+	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			Utilities.attachScrollAutoHide(this.pinboardBody.nativeElement);
 		}
 	}
 
 	/**
-	 * Unsubscribes from the items stream, clears any pending save timer, clears
-	 * the dialog container, and logs the component destruction event.
+	 * Unsubscribes from the items stream, clears any pending save timer,
+	 * clears the dialog container, and logs the component destruction event.
 	 */
-	public ngOnDestroy(): void {
+	ngOnDestroy(): void {
 		this.itemsSub?.unsubscribe();
+		Object.values(this.saveIndicatorTimeouts).forEach(clearTimeout);
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	// ── DB helpers ────────────────────────────────────────────────────────────
+	////////////////////// Below are DB helper and permission check methods //////////////////////
 
 	/**
 	 * Checks whether the current user has permission to modify the item with the given key.
@@ -187,7 +167,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns SUCCESS if permitted, FAILURE otherwise.
 	 */
 	private checkPermission(key: string): string {
-		const openid = this.items.find((i) => i.key === key)?._openid ?? '';
+		const openid = this.items.find((item) => item.key === key)?._openid ?? '';
 		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid) ? SUCCESS : FAILURE;
 	}
 
@@ -198,7 +178,6 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	private triggerSaveIndicator(): void {
 		this.saveIndicator = true;
-		this.cdr.detectChanges();
 
 		// Clear any previous timeout before setting a new one — rapid successive
 		// saves should restart the indicator timer rather than flash on/off.
@@ -208,21 +187,20 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		this.saveIndicatorTimeouts[DATABASE_THIRD_TABLE] = setTimeout(() => {
 			this.saveIndicator = false;
-			this.cdr.detectChanges();
 		}, 1000);
 	}
 
 	/**
 	 * Writes the current upcoming messages (items with a date) to the statistics collection.
 	 */
-	private syncUpcomingToStatistics(): void {
+	private updateUpcomingToStatistics(): void {
 		const upcoming = this.items
-			.filter((i) => !!i.date)
-			.map((i) => ({
+			.filter((item) => !!item.date)
+			.map((item) => ({
 				type: REMINDER_ITEM_MESSAGE,
-				name: i.text,
-				date: i.date,
-				link: i.link ?? ''
+				name: item.text,
+				date: item.date,
+				link: item.link ?? ''
 			}));
 		this.databaseService
 			.updateStatisticsFields({
@@ -235,21 +213,56 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Removes any selected tags from the filter that no longer exist in the current item set.
 	 */
 	private pruneStaleTags(): void {
-		const remaining = new Set(this.items.flatMap((i) => i.tags));
-		this.tagFilter = new Set([...this.tagFilter].filter((t) => remaining.has(t)));
+		const remaining = new Set(this.items.flatMap((item) => item.tags));
+		this.tagFilter = new Set([...this.tagFilter].filter((tag) => remaining.has(tag)));
+	}
+
+	/**
+	 * Restores one editable field from the latest database snapshot.
+	 *
+	 * @param rollbackItem - The view-model item whose field will be restored.
+	 * @param rollbackOriginal - The raw DB snapshot row to restore from.
+	 * @param field - The field name to restore.
+	 */
+	private rollbackField(
+		rollbackItem: PinboardItem,
+		rollbackOriginal: PinboardDbRow,
+		field: PinboardEditableField
+	): void {
+		switch (field) {
+			case PINBOARD_FIELD_TEXT:
+				rollbackItem.text = rollbackOriginal.content.text ?? '';
+				break;
+			case PINBOARD_FIELD_DATE:
+				rollbackItem.date =
+					rollbackOriginal.content.date != null
+						? Utilities.coerceDateToString(rollbackOriginal.content.date)
+						: null;
+				break;
+			case PINBOARD_FIELD_LINK:
+				rollbackItem.link = rollbackOriginal.content.link ?? null;
+				break;
+			case PINBOARD_FIELD_TAGS:
+				rollbackItem.tags = rollbackOriginal.content.tags ?? [];
+				break;
+		}
 	}
 
 	/**
 	 * Persists a single content-field change for an existing item to CloudBase,
-	 * trigger the save indicator, and append to the activity log.
+	 * triggers the save indicator, and appends to the activity log.
 	 * Rolls back the local item field to its original snapshot value if the
 	 * server rejects the write with a permission error.
 	 *
 	 * @param key - The CloudBase document key of the item.
-	 * @param field - The content field name to update (e.g. 'text', 'date', 'tags').
+	 * @param field - The content field name to update (e.g. PINBOARD_FIELD_TEXT, PINBOARD_FIELD_DATE).
 	 * @param value - The new value to store.
 	 */
-	private async updateTableSingleValue(key: string, field: string, value: unknown): Promise<void> {
+	private async updateTableSingleValue(
+		key: string,
+		field: PinboardEditableField,
+		value: string | string[] | null
+	): Promise<void> {
 		try {
 			// Step 1: Persist the field change to CloudBase
 			await this.databaseService.updateReminderTable(DATABASE_THIRD_TABLE, key, field, value);
@@ -260,18 +273,17 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 					type: ACTIVITY_TYPE_UPDATED,
 					table: REMINDER_TABLE_MESSAGES,
-					text: this.items.find((i) => i.key === key)?.text ?? '',
+					text: this.items.find((item) => item.key === key)?.text ?? '',
 					timestamp: Utilities.getCurrentFormattedTime(true)
 				})
 				.catch(() => {});
 		} catch (error) {
 			// Roll back the local field if the server denied permission, then show error dialog
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				const rollbackItem = this.items.find((i) => i.key === key);
-				const rollbackOriginal = this.originalItems.find((o) => o.key === key);
+				const rollbackItem = this.items.find((item) => item.key === key);
+				const rollbackOriginal = this.originalItems.find((original) => original.key === key);
 				if (rollbackItem && rollbackOriginal) {
-					(rollbackItem as unknown as Record<string, unknown>)[field] =
-						(rollbackOriginal.content as Record<string, unknown>)[field] ?? null;
+					this.rollbackField(rollbackItem, rollbackOriginal, field);
 				}
 			}
 			this.dialogService.handleError(this.dialogComponentContainer, error);
@@ -284,7 +296,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param key - The CloudBase document key of the item to delete.
 	 */
 	private async removeRecordFromDatabase(key: string): Promise<void> {
-		const itemText = this.items.find((i) => i.key === key)?.text ?? '';
+		const itemText = this.items.find((item) => item.key === key)?.text ?? '';
 		try {
 			await this.databaseService.removeRecordFromReminderTable(DATABASE_THIRD_TABLE, key);
 			this.triggerSaveIndicator();
@@ -309,10 +321,10 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.tagEditSession?.isNewItem) this.tagEditSession = null;
 	}
 
-	// ── Tag filter ─────────────────────────────────────────────────────────────
+	////////////////////// Below are tag filter methods for the item list ////////////////////
 
 	/**
-	 * All unique tags across every item, sorted alphabetically.
+	 * Returns all unique tags across every item, sorted alphabetically.
 	 *
 	 * @returns Sorted deduplicated tag strings.
 	 */
@@ -325,18 +337,18 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Items matching the selected tag filters (OR logic).
-	 * Returns all items when no tags are selected.
+	 * Returns the items matching the selected tag filters (OR logic),
+	 * or all items when no tags are selected.
 	 *
 	 * @returns Filtered subset of items.
 	 */
 	protected get filteredItems(): PinboardItem[] {
 		if (this.tagFilter.size === 0) return this.items;
-		return this.items.filter((item) => item.tags.some((t) => this.tagFilter.has(t)));
+		return this.items.filter((item) => item.tags.some((tag) => this.tagFilter.has(tag)));
 	}
 
 	/**
-	 * Visible item count (filtered) zero-padded to 2 characters.
+	 * Returns the visible item count (filtered), zero-padded to 2 characters.
 	 *
 	 * @returns e.g. "03", "08".
 	 */
@@ -378,10 +390,10 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.page = 0;
 	}
 
-	// ── Pagination ─────────────────────────────────────────────────────────────
+	////////////////////// Below are pagination methods and page label getters //////////////////
 
 	/**
-	 * Items visible on the current page.
+	 * Returns the items visible on the current page.
 	 *
 	 * @returns The slice of filtered items for the current page.
 	 */
@@ -393,6 +405,8 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	/**
 	 * Returns true when the add-card should be visible: no tag filter is active and the
 	 * current page has room for the virtual add slot.
+	 *
+	 * @returns True when the add card is shown on the current page.
 	 */
 	protected get showAddCard(): boolean {
 		return (
@@ -402,8 +416,8 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Total number of pages. Includes the virtual add-card slot only when
-	 * no tags are selected in the filter.
+	 * Returns the total number of pages, including the virtual add-card slot
+	 * only when no tags are selected in the filter.
 	 *
 	 * @returns Page count (minimum 1).
 	 */
@@ -413,7 +427,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Current page number as a zero-padded 2-character string (1-based).
+	 * Returns the current page number as a zero-padded 2-character string (1-based).
 	 *
 	 * @returns e.g. "01", "02".
 	 */
@@ -422,7 +436,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Total page count as a zero-padded 2-character string.
+	 * Returns the total page count as a zero-padded 2-character string.
 	 *
 	 * @returns e.g. "01", "03".
 	 */
@@ -444,7 +458,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.page < this.totalPages - 1) this.page++;
 	}
 
-	// ── CRUD ──────────────────────────────────────────────────────────────────
+	////////////////////// Below are CRUD operations for adding and removing pins ///////////////
 
 	/**
 	 * Opens the shared date-or-link popover showing the date picker.
@@ -453,11 +467,12 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param event - The click event used to position the popover.
 	 * @param item - The PinboardItem being edited, or undefined for the new-item form.
 	 */
-	protected openDatePopover(event: Event, item?: PinboardItem): void {
+	protected async openDatePopover(event: Event, item?: PinboardItem): Promise<void> {
 		this.editingItem = item ?? null;
 		this.isDate = true;
 		this.dateOrLinkPopover.hide();
-		setTimeout(() => this.dateOrLinkPopover.show(event), 140);
+		await firstValueFrom(timer(140));
+		this.dateOrLinkPopover.show(event);
 	}
 
 	/**
@@ -467,16 +482,31 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param event - The click event used to position the popover.
 	 * @param item - The PinboardItem being edited, or undefined for the new-item form.
 	 */
-	protected openLinkPopover(event: Event, item?: PinboardItem): void {
+	protected async openLinkPopover(event: Event, item?: PinboardItem): Promise<void> {
 		this.editingItem = item ?? null;
 		this.editingLink = item?.link ?? '';
 		this.isDate = false;
 		this.dateOrLinkPopover.hide();
-		setTimeout(() => this.dateOrLinkPopover.show(event), 140);
+		await firstValueFrom(timer(140));
+		this.dateOrLinkPopover.show(event);
 	}
 
 	/**
-	 * Core logic for adding a new item, shared by both the Enter-key shortcut and the confirm button.
+	 * Adds text and tags only via the Enter-key shortcut, skipping optional date and link fields.
+	 */
+	protected addNewTextOnly(): Promise<void> {
+		return this.addNewItem(true);
+	}
+
+	/**
+	 * Adds the full new item via the confirm button, including optional date and link fields.
+	 */
+	protected addNewItemWithDateOrLink(): Promise<void> {
+		return this.addNewItem(false);
+	}
+
+	/**
+	 * Adds a new item to CloudBase, shared by both the Enter-key shortcut and the confirm button.
 	 * In text-only mode, optional fields (date, link) are skipped and popovers are not hidden.
 	 *
 	 * @param textOnly - When true, skips date and link fields and suppresses popover cleanup.
@@ -485,7 +515,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (!this.newItem.text.trim()) return;
 
 		// Step 1: Build the content payload
-		const newContent: Record<string, unknown> = {
+		const newContent: PinboardDbRow['content'] = {
 			text: this.newItem.text.trim(),
 			tags: [...this.newItem.tags]
 		};
@@ -493,10 +523,10 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		// Step 2: Include optional fields unless text-only mode
 		if (!textOnly) {
 			if (this.newItem.date) {
-				newContent['date'] = Utilities.formatDateForStorage(this.newItem.date);
+				newContent.date = Utilities.formatDateForStorage(this.newItem.date);
 			}
 			if (this.newItem.link.trim()) {
-				newContent['link'] = Utilities.normalizeWebUrl(this.newItem.link.trim());
+				newContent.link = Utilities.normalizeWebUrl(this.newItem.link.trim());
 			}
 		}
 
@@ -510,7 +540,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 					type: HISTORY_STATUS_ADDED,
 					table: REMINDER_TABLE_MESSAGES,
-					text: String(newContent['text']),
+					text: newContent.text ?? '',
 					timestamp: Utilities.getCurrentFormattedTime(true)
 				})
 				.catch(() => {});
@@ -523,20 +553,6 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
-	}
-
-	/**
-	 * Enter-key shortcut: add text and tags only, skip optional date and link fields.
-	 */
-	protected addNewTextOnly(): Promise<void> {
-		return this.addNewItem(true);
-	}
-
-	/**
-	 * Confirm-button: add the full new item including optional date and link fields.
-	 */
-	protected addNewItemWithDateOrLink(): Promise<void> {
-		return this.addNewItem(false);
 	}
 
 	/**
@@ -558,19 +574,30 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Saves the text of an existing item to CloudBase on blur, only when the value has changed.
+	 * Persists the card message text to CloudBase when confirmed (Enter or blur),
+	 * only when the value has changed.
 	 *
 	 * @param item - The PinboardItem whose text was edited.
 	 */
-	protected async onTextBlur(item: PinboardItem): Promise<void> {
-		const original = this.originalItems.find((o) => o.key === item.key);
-		if (!original || item.text === (original.content?.text ?? '')) return;
+	protected async onCardTextUpdate(item: PinboardItem): Promise<void> {
+		const originalIndex = this.originalItems.findIndex((originalRow) => originalRow.key === item.key);
+		if (originalIndex === -1 || item.text === (this.originalItems[originalIndex].content?.text ?? '')) return;
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
-		await this.updateTableSingleValue(item.key, 'text', item.text.trim());
+		const savedText = item.text.trim();
+		await this.updateTableSingleValue(item.key, PINBOARD_FIELD_TEXT, savedText);
+		// The DB subscription fires asynchronously — replace the snapshot entry immutably so a
+		// concurrent blur cannot pass the changed-value guard and issue a duplicate write.
+		const updatedSnapshot = structuredClone(this.originalItems[originalIndex]);
+		updatedSnapshot.content.text = savedText;
+		this.originalItems = [
+			...this.originalItems.slice(0, originalIndex),
+			updatedSnapshot,
+			...this.originalItems.slice(originalIndex + 1)
+		];
 	}
 
-	// ── Global index ───────────────────────────────────────────────────────────
+	////////////////////// Below are global index display helpers for paged items //////////////
 
 	/**
 	 * Returns the 1-based global index for a paged item, zero-padded to 2 digits.
@@ -582,33 +609,45 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		return String(this.page * PINBOARD_ITEMS_PER_PAGE + localIndex + 1).padStart(2, '0');
 	}
 
-	// ── Card edit popover ─────────────────────────────────────────────────────
+	////////////////////// Below are card edit popover event handlers ////////////////////////
 
 	/**
 	 * Persists a date change from the popover date-picker to the editing item and CloudBase.
 	 *
 	 * @param date - The Date value selected in the picker.
 	 */
-	protected async onPopoverDateChange(date: Date): Promise<void> {
+	protected async onPopoverDateUpdate(date: Date | null): Promise<void> {
 		if (this.editingItem) {
+			const returnCode = this.checkPermission(this.editingItem.key);
+			if (returnCode === FAILURE) return;
 			this.editingItem.date = date ? Utilities.formatDateForStorage(date) : null;
-			await this.updateTableSingleValue(this.editingItem.key, 'date', this.editingItem.date);
-			this.syncUpcomingToStatistics();
+			await this.updateTableSingleValue(
+				this.editingItem.key,
+				PINBOARD_FIELD_DATE,
+				this.editingItem.date
+			);
+			this.updateUpcomingToStatistics();
 		}
 	}
 
 	/**
 	 * Persists the normalized link from the popover link input to the editing item and CloudBase.
 	 */
-	protected async onPopoverLinkChange(): Promise<void> {
+	protected async onPopoverLinkUpdate(): Promise<void> {
 		if (this.editingItem) {
+			const returnCode = this.checkPermission(this.editingItem.key);
+			if (returnCode === FAILURE) return;
 			const trimmedLink = this.editingLink.trim();
 			this.editingItem.link = trimmedLink ? Utilities.normalizeWebUrl(trimmedLink) : null;
-			await this.updateTableSingleValue(this.editingItem.key, 'link', this.editingItem.link);
+			await this.updateTableSingleValue(
+				this.editingItem.key,
+				PINBOARD_FIELD_LINK,
+				this.editingItem.link
+			);
 		}
 	}
 
-	// ── Tag editing — existing cards ───────────────────────────────────────────
+	////////////////////// Below are tag editing handlers for existing card items //////////////
 
 	/**
 	 * Begins editing or adding a tag on an existing card.
@@ -627,35 +666,40 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Completes the current tag edit or add. Handles both the existing-card context
-	 * (persists to CloudBase) and the new-item card context (local only).
-	 *
-	 * @param isNewItem - True when operating on the new-item card.
+	 * Persists the current tag value for an existing card when confirmed (Enter or blur).
+	 * Writes the updated tags array to CloudBase.
 	 */
+	protected async onTagUpdate(): Promise<void> {
+		const session = this.tagEditSession;
+		if (!session?.item) return;
+		const item = session.item;
+		const returnCode = this.checkPermission(item.key);
+		if (returnCode === FAILURE) return;
+		const value = session.value.trim();
+		if (session.index === -1) {
+			if (value) item.tags.push(value);
+		} else {
+			if (value) item.tags[session.index] = value;
+			else item.tags.splice(session.index, 1);
+		}
+		this.cancelTagEdit();
+		if (item.key) await this.updateTableSingleValue(item.key, PINBOARD_FIELD_TAGS, [...item.tags]);
+	}
 
-	protected async completeTagEdit(isNewItem: boolean): Promise<void> {
+	/**
+	 * Commits the current tag value for the new-item card when confirmed (Enter or blur).
+	 * Updates the local newItem state only — no DB write.
+	 */
+	protected onNewItemTagUpdate(): void {
 		const session = this.tagEditSession;
 		const value = session?.value.trim() ?? '';
-		if (isNewItem) {
-			if (session?.index === -1) {
-				if (value) this.newItem.tags.push(value);
-			} else if (session !== null && session.index >= 0) {
-				if (value) this.newItem.tags[session.index] = value;
-				else this.newItem.tags.splice(session.index, 1);
-			}
-			this.cancelTagEdit();
-		} else {
-			const item = session?.item ?? null;
-			if (!item) return;
-			if (session!.index === -1) {
-				if (value) item.tags.push(value);
-			} else {
-				if (value) item.tags[session!.index] = value;
-				else item.tags.splice(session!.index, 1);
-			}
-			this.cancelTagEdit();
-			if (item.key) await this.updateTableSingleValue(item.key, 'tags', [...item.tags]);
+		if (session?.index === -1) {
+			if (value) this.newItem.tags.push(value);
+		} else if (session !== null && session.index >= 0) {
+			if (value) this.newItem.tags[session.index] = value;
+			else this.newItem.tags.splice(session.index, 1);
 		}
+		this.cancelTagEdit();
 	}
 
 	/**
@@ -678,8 +722,11 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.newItem.tags.splice(index, 1);
 			return;
 		}
-		item!.tags.splice(index, 1);
-		if (item!.key) await this.updateTableSingleValue(item!.key, 'tags', [...item!.tags]);
+		if (!item) return;
+		const returnCode = this.checkPermission(item.key);
+		if (returnCode === FAILURE) return;
+		item.tags.splice(index, 1);
+		if (item.key) await this.updateTableSingleValue(item.key, PINBOARD_FIELD_TAGS, [...item.tags]);
 	}
 
 	/**
@@ -705,7 +752,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		return session !== null && !session.isNewItem && session.item === item && session.index === -1;
 	}
 
-	// ── Tag editing — new-item card ───────────────────────────────────────────
+	////////////////////// Below are tag editing handlers for the new-item card ////////////////
 
 	/**
 	 * Begins editing or adding a tag on the new-item card.
@@ -743,7 +790,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		return session !== null && session.isNewItem && session.index === -1;
 	}
 
-	// ── Field clear helpers ────────────────────────────────────────────────────
+	////////////////////// Below are field clear helpers for date and link fields //////////////
 
 	/**
 	 * Clears the date field on a pin and persists the change to CloudBase.
@@ -751,10 +798,12 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param item - The PinboardItem to update.
 	 */
 	protected async clearDate(item: PinboardItem): Promise<void> {
+		const returnCode = this.checkPermission(item.key);
+		if (returnCode === FAILURE) return;
 		item.date = null;
 		if (item.key) {
-			await this.updateTableSingleValue(item.key, 'date', null);
-			this.syncUpcomingToStatistics();
+			await this.updateTableSingleValue(item.key, PINBOARD_FIELD_DATE, null);
+			this.updateUpcomingToStatistics();
 		}
 	}
 
@@ -764,14 +813,16 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param item - The PinboardItem to update.
 	 */
 	protected async clearLink(item: PinboardItem): Promise<void> {
+		const returnCode = this.checkPermission(item.key);
+		if (returnCode === FAILURE) return;
 		item.link = null;
 		if (this.editingItem === item) this.editingLink = '';
 		if (item.key) {
-			await this.updateTableSingleValue(item.key, 'link', null);
+			await this.updateTableSingleValue(item.key, PINBOARD_FIELD_LINK, null);
 		}
 	}
 
-	// ── Add-card display helpers ───────────────────────────────────────────────
+	////////////////////// Below are add-card display helpers and label getters ////////////////
 
 	/**
 	 * Returns the YYYY-MM-DD string for the new-item date pill.
@@ -793,7 +844,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * The editing item's date as a Date object for binding to the date picker.
+	 * Returns the editing item's date as a Date object for binding to the date picker.
 	 * Derived from editingItem.date — never stored as a separate field.
 	 *
 	 * @returns A Date instance, or null when the editing item has no date.
@@ -802,7 +853,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		return this.editingItem?.date ? new Date(this.editingItem.date) : null;
 	}
 
-	// ── Display helpers ────────────────────────────────────────────────────────
+	////////////////////// Below are display helper methods used by the card template /////////
 
 	/**
 	 * Safely coerces any date value (string, Date, CloudBase timestamp) to a YYYY-MM-DD string.
@@ -835,10 +886,10 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		return Utilities.getDomain(item.link);
 	}
 
-	// ── Utilities ──────────────────────────────────────────────────────────────
+	////////////////////// Below are utility counter getters used by the template //////////////
 
 	/**
-	 * Total pin count as a zero-padded 2-character string.
+	 * Returns the total pin count as a zero-padded 2-character string.
 	 *
 	 * @returns e.g. "01", "12".
 	 */

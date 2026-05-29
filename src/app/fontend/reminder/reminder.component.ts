@@ -87,17 +87,20 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 })
 export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'ReminderComponent';
-	protected readonly labelCurrentMonth = REMINDER_LABEL_CURRENT_MONTH;
-	protected readonly labelNextMonth = REMINDER_LABEL_NEXT_MONTH;
-	protected readonly labelReset = REMINDER_LABEL_RESET;
-	protected readonly labelCellConfirm = REMINDER_LABEL_CELL_CONFIRM;
-	protected readonly labelCellDone = REMINDER_LABEL_CELL_DONE;
-	protected readonly labelCellToday = REMINDER_LABEL_CELL_TODAY;
-	protected readonly labelConfirmed = REMINDER_LABEL_CONFIRMED;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	@ViewChild('op2') protected op2!: any;
+	protected readonly REMINDER_LABEL_CURRENT_MONTH = REMINDER_LABEL_CURRENT_MONTH;
+	protected readonly REMINDER_LABEL_NEXT_MONTH = REMINDER_LABEL_NEXT_MONTH;
+	protected readonly REMINDER_LABEL_RESET = REMINDER_LABEL_RESET;
+	protected readonly REMINDER_LABEL_CELL_CONFIRM = REMINDER_LABEL_CELL_CONFIRM;
+	protected readonly REMINDER_LABEL_CELL_DONE = REMINDER_LABEL_CELL_DONE;
+	protected readonly REMINDER_LABEL_CELL_TODAY = REMINDER_LABEL_CELL_TODAY;
+	protected readonly REMINDER_LABEL_CONFIRMED = REMINDER_LABEL_CONFIRMED;
+	protected readonly DATABASE_FIRST_TABLE = DATABASE_FIRST_TABLE;
+	protected readonly DATABASE_SECOND_TABLE = DATABASE_SECOND_TABLE;
+	protected readonly DATABASE_THIRD_TABLE = DATABASE_THIRD_TABLE;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
 	private chargedCells = new Set<string>();
@@ -118,9 +121,6 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	private upcomingExpenses: any[] = [];
 	private upcomingMessages: any[] = [];
-	protected FIRST_TABLE: string = DATABASE_FIRST_TABLE;
-	protected SECOND_TABLE: string = DATABASE_SECOND_TABLE;
-	protected THIRD_TABLE: string = DATABASE_THIRD_TABLE;
 	protected thirdTableActiveItem: any;
 	protected thirdTableNewText: string = '';
 	protected thirdTableIndexOfFirstItem: number = 0;
@@ -146,7 +146,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Attaches the auto-hide scroll listener to the page container after each view check.
 	 */
-	public ngAfterViewChecked(): void {
+	ngAfterViewChecked(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			document
 				.querySelectorAll<HTMLElement>('.container.page-card')
@@ -160,7 +160,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * populates its respective data arrays and immediately syncs upcoming items to
 	 * the statistics collection so the home-page reminder widget stays current.
 	 */
-	public ngOnInit() {
+	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = this.utilities.checkIfHoverCapable();
 			this.currentDay = new Date().getDate();
@@ -179,6 +179,8 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 					this.chargedCellsInitialized = true;
 				}
 				this.refreshConfirmedCount();
+				// await inside this callback suspends Zone.js tracking — detectChanges
+				// restores template sync after the async updateChargedCells resolves.
 				this.cdr.detectChanges();
 			});
 
@@ -187,6 +189,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			this.secondSub = getSecondObservable.subscribe((rows) => {
 				this.updatedSecondTable = structuredClone(rows);
 				this.originalSecondTable = structuredClone(rows);
+				// CloudBase subscription callbacks may emit outside Angular's zone — detectChanges ensures the template updates.
 				this.cdr.detectChanges();
 
 				// Sync unpaid expenses that have a due date into statistics (fire-and-forget).
@@ -207,6 +210,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 				this.originalThirdTable = structuredClone(rows);
 				this.pagedThirdTable = this.updatePagedThirdTable();
 				this.loading = false;
+				// CloudBase subscription callbacks may emit outside Angular's zone — detectChanges ensures the template updates.
 				this.cdr.detectChanges();
 
 				// Sync messages that have a due date into statistics (fire-and-forget).
@@ -230,7 +234,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	private refreshConfirmedCount(): void {
 		this.firstTableConfirmedCount = (this.updatedFirstTable ?? [])
-			.flatMap((row: any) => this.fields.map((f: string) => row[f] as { isCharged: boolean }))
+			.flatMap((row: any) => this.fields.map((field: string) => row[field] as { isCharged: boolean }))
 			.filter((cell) => cell?.isCharged === true).length;
 	}
 
@@ -300,14 +304,15 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * component destruction event. Unsubscribing also stops the periodic
 	 * statistics syncs that are driven by those subscriptions.
 	 */
-	public ngOnDestroy() {
+	ngOnDestroy() {
 		this.firstSub?.unsubscribe();
 		this.secondSub?.unsubscribe();
 		this.thirdSub?.unsubscribe();
+		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	///////////////////////////////////FIRST TABLE///////////////////////////////////
+	////////////////////// Below are first reminder table interaction handlers ////////////////////
 	/**
 	 * Prevent non-numeric input in first-table number fields. Allows
 	 * navigation and deletion keys to pass through.
@@ -405,7 +410,6 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		return this.chargedCells.has(`${rowIndex}-${field}`);
 	}
 
-	// 1 -> 2 && 3 -> 4
 	/**
 	 * Cascade a 6-day difference from the current row to the next row
 	 * (row 1 → row 2, row 3 → row 4). Caps the result at 31.
@@ -421,7 +425,6 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.isValueGreaterThan31(rowIndex, field);
 	}
 
-	// 0 -> 1 && 2 -> 3
 	/**
 	 * Cascade a 2-day difference from the current row to the next row
 	 * (row 0 → row 1, row 2 → row 3). Caps the result at 31.
@@ -470,7 +473,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Open a confirmation dialog before resetting the first table dates
+	 * Opens a confirmation dialog before resetting the first table dates
 	 * to their default sequence (1, 3, 9, 11, 17).
 	 */
 	protected openResetConfirmationDialog() {
@@ -538,7 +541,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		}
 	}
 
-	///////////////////////////////////SECOND TABLE///////////////////////////////////
+	////////////////////// Below are second reminder table interaction handlers ///////////////////
 	/**
 	 * Prevents the default action of a keyboard event, effectively blocking the
 	 * keystroke from being entered into an input field.
@@ -601,7 +604,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		}
 	}
 
-	///////////////////////////////////THIRD TABLE///////////////////////////////////
+	////////////////////// Below are third reminder table interaction handlers ////////////////////
 	/**
 	 * Clones and returns a subset of the original third table data based on the
 	 * current pagination window, defined by thirdTableIndexOfFirstItem and
@@ -637,7 +640,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Open a confirmation dialog before deleting a third-table entry.
+	 * Opens a confirmation dialog before deleting a third-table entry.
 	 * Guards with a permission check before showing the dialog.
 	 *
 	 * @param entryKey - The key of the entry to delete.
@@ -688,7 +691,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Add a plain-text entry to the third reminder table.
+	 * Adds a plain-text entry to the third reminder table.
 	 */
 	protected async addNewTextOnly() {
 		if (this.thirdTableNewText.trim() !== '') {
@@ -705,7 +708,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Add a new entry to the third reminder table using the active popover
+	 * Adds a new entry to the third reminder table using the active popover
 	 * item as a template. Filters out empty fields before saving.
 	 * If the new entry includes a due date, the home-page reminder widget is
 	 * updated immediately without waiting for the subscription to fire.
@@ -742,7 +745,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Open the popover for adding or editing a third-table entry.
+	 * Opens the popover for adding or editing a third-table entry.
 	 * If no item is provided, initializes an empty template.
 	 *
 	 * @param event - The triggering DOM event (used for popover positioning).
@@ -765,7 +768,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Handle a page-change event from the third-table paginator. Updates the
+	 * Handles a page-change event from the third-table paginator. Updates the
 	 * first-item index and refreshes the paged data slice.
 	 *
 	 * @param event - The PrimeNG paginator event containing the new `first` index.
@@ -775,14 +778,14 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.pagedThirdTable = this.updatePagedThirdTable();
 	}
 
-	///////////////////////////////////SECOND & THIRD TABLE/////////////////////////
+	////////////////////// Below are shared data methods for second and third tables /////////////
 	/**
-	 * This method calls database directly and rollback changes if an error occurs
+	 * Calls the database directly and rolls back changes if an error occurs.
 	 *
-	 * {@link updateDebt} - Update debt by decrement a constant value for second table
-	 * {@link setDefaultDebt} - Button to set defult debt for second table
-	 * {@link updateLink} - Update link for third table
-	 * {@link updateTableWithNewDate} - Update date for both second table and third table
+	 * {@link updateDebt} - Decrements debt by a constant for the second table.
+	 * {@link setDefaultDebt} - Resets the default debt for the second table.
+	 * {@link updateLink} - Updates the link for the third table.
+	 * {@link updateTableWithNewDate} - Updates the date for the second or third table.
 	 */
 	protected async updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
 		const updatedItem = this.findUpdatedItem(tableName, entryKey);
@@ -882,8 +885,8 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Merge the latest expense and message arrays into a single reminderUpcoming
-	 * array and write it to the statistics collection.
+	 * Merges the latest expense and message arrays into a single reminderUpcoming
+	 * array and writes it to the statistics collection.
 	 * Called after either secondSub or thirdSub emits so the merged list is always
 	 * current. Fire-and-forget — errors are swallowed inside updateStatisticsFields.
 	 */
@@ -924,9 +927,9 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		// Merge pagedThirdTable edits into a full view of the third table so that
 		// in-progress changes on the current page are visible before the subscription fires.
-		const pagedKeys = new Set(this.pagedThirdTable.map((i: any) => i.key));
+		const pagedKeys = new Set(this.pagedThirdTable.map((item: any) => item.key));
 		const mergedThird = [
-			...this.originalThirdTable.filter((i: any) => !pagedKeys.has(i.key)),
+			...this.originalThirdTable.filter((item: any) => !pagedKeys.has(item.key)),
 			...this.pagedThirdTable
 		];
 
@@ -942,11 +945,11 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.syncReminderStatistics();
 	}
 
-	////////////////////////////////COMMON METHODS////////////////////////////////
+	////////////////////// Below are common utility methods used across all tables //////////////
 	/**
-	 * Resolve the owner openid for the given table and entry, then delegate
-	 * the actual permission check to Utilities.checkPermission.
-	 * Use this method ONLY for buttons and dialogs to avoid multiple database calls.
+	 * Resolves the owner openid for the given table and entry, then delegates
+	 * the permission check to Utilities.checkPermission.
+	 * Intended only for button handlers and dialogs, to avoid redundant database calls.
 	 *
 	 * @param tableName - The table whose write permission is being checked.
 	 * @param entryKey - The key of the specific entry (unused for the first table — pass '0').
@@ -971,6 +974,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	private triggerSaveIndicator(tableName: string) {
 		this.saveIndicators[tableName] = true;
+		// Change must be reflected immediately before the setTimeout delay begins.
 		this.cdr.detectChanges();
 
 		// Clear any previous timeout before setting a new one — rapid successive
@@ -981,13 +985,14 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		this.saveIndicatorTimeouts[tableName] = setTimeout(() => {
 			this.saveIndicators[tableName] = false;
+			// setTimeout runs outside Angular's zone — detectChanges required to hide the indicator.
 			this.cdr.detectChanges();
 		}, 1000);
 	}
 
 	/**
-	 * Template helper \u2014 delegates to Utilities.checkIfChinese so the regex
-	 * lives in a single place.
+	 * Delegates to Utilities.checkIfChinese to check whether the text contains
+	 * at least one Chinese character, keeping the regex in a single place.
 	 *
 	 * @param text - The text string to check.
 	 * @returns True if the text contains at least one Chinese character.
@@ -1015,7 +1020,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected onPopoverLinkUpdate(): void {
 		if (this.thirdTableActiveItem?.key) {
 			this.updateLink(
-				this.THIRD_TABLE,
+				this.DATABASE_THIRD_TABLE,
 				this.thirdTableActiveItem.key,
 				this.thirdTableActiveItem.content.link
 			);
@@ -1023,14 +1028,14 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Persist a due-date change from the popover date-picker for the active
+	 * Persists a due-date change from the popover date-picker for the active
 	 * third-table entry. No-ops when in "add new" mode (no key yet).
 	 *
 	 * @param date - The Date value selected in the date-picker.
 	 */
 	protected onPopoverDateUpdate(date: Date): void {
 		if (this.thirdTableActiveItem?.key) {
-			this.updateTableWithNewDate(this.THIRD_TABLE, this.thirdTableActiveItem.key, date);
+			this.updateTableWithNewDate(this.DATABASE_THIRD_TABLE, this.thirdTableActiveItem.key, date);
 		}
 	}
 

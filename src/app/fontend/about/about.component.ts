@@ -37,11 +37,6 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 
 	@ViewChildren('tlEntry') private entryRefs!: QueryList<ElementRef<HTMLElement>>;
 
-	private observers: IntersectionObserver[] = [];
-	protected maxSeen = 0;
-	protected visibleEntries = new Set<number>();
-	protected hoveredIndex: number | null = null;
-
 	protected readonly timeline: TimelineItem[] = [
 		{
 			date: '2024.04 to present',
@@ -99,6 +94,11 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 		}
 	];
 
+	private observers: IntersectionObserver[] = [];
+	protected maxSeen = 0;
+	protected visibleEntries = new Set<number>();
+	protected hoveredIndex: number | null = null;
+
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private cdr: ChangeDetectorRef
@@ -109,15 +109,17 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 	 * renders. Each entry marks itself visible on first intersection, advancing
 	 * the rail fill and triggering the fade-up animation.
 	 */
-	public ngAfterViewInit(): void {
+	ngAfterViewInit(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
-		this.entryRefs.forEach((ref, i) => {
+		this.entryRefs.forEach((ref, index) => {
 			const observer = new IntersectionObserver(
 				(entries) => {
-					entries.forEach((e) => {
-						if (e.isIntersecting && !this.visibleEntries.has(i)) {
-							this.visibleEntries.add(i);
-							if (i + 1 > this.maxSeen) this.maxSeen = i + 1;
+					entries.forEach((entry) => {
+						if (entry.isIntersecting && !this.visibleEntries.has(index)) {
+							this.visibleEntries.add(index);
+							if (index + 1 > this.maxSeen) this.maxSeen = index + 1;
+							// IntersectionObserver callbacks fire outside Angular's zone;
+							// detectChanges() is required to update the template immediately.
 							this.cdr.detectChanges();
 						}
 					});
@@ -128,12 +130,14 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 			this.observers.push(observer);
 		});
 		setTimeout(() => {
-			this.timeline.forEach((_, i) => {
-				if (!this.visibleEntries.has(i)) {
-					this.visibleEntries.add(i);
-					if (i + 1 > this.maxSeen) this.maxSeen = i + 1;
+			this.timeline.forEach((_item, index) => {
+				if (!this.visibleEntries.has(index)) {
+					this.visibleEntries.add(index);
+					if (index + 1 > this.maxSeen) this.maxSeen = index + 1;
 				}
 			});
+			// setTimeout callback fires outside Angular's zone; detectChanges() is
+			// required to reflect the final fallback visibility state in the template.
 			this.cdr.detectChanges();
 		}, 0);
 	}
@@ -141,8 +145,8 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 	/**
 	 * Disconnects all IntersectionObservers and logs the component destruction event.
 	 */
-	public ngOnDestroy(): void {
-		this.observers.forEach((o) => o.disconnect());
+	ngOnDestroy(): void {
+		this.observers.forEach((observer) => observer.disconnect());
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
@@ -160,20 +164,20 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 	 * Returns the staggered transition-delay for a timeline entry reveal animation.
 	 * Capped at index 4 to prevent very long delays when the page loads deep.
 	 *
-	 * @param i - Zero-based entry index.
+	 * @param index - The zero-based entry index.
 	 * @returns CSS time string, e.g. "120ms".
 	 */
-	protected entryDelay(i: number): string {
-		return `${Math.min(i, 4) * 60}ms`;
+	protected entryDelay(index: number): string {
+		return `${Math.min(index, 4) * 60}ms`;
 	}
 
 	/**
-	 * Marks the given entry as hovered, activating the node spring and card slide.
+	 * Sets the hovered entry index, activating the node spring and card slide animation.
 	 *
-	 * @param i - Zero-based index of the hovered entry.
+	 * @param index - The zero-based index of the hovered entry.
 	 */
-	protected onEntryEnter(i: number): void {
-		this.hoveredIndex = i;
+	protected setHoveredEntry(index: number): void {
+		this.hoveredIndex = index;
 	}
 
 	/**

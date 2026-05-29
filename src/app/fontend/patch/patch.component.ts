@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-misused-promises, @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, @typescript-eslint/no-redundant-type-constituents, no-extra-boolean-cast */
 import {
 	AfterViewChecked,
 	Component,
@@ -306,7 +305,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Save a snapshot of the original row data and begin editing the row.
+	 * Saves a snapshot of the original row data and begins editing the row.
 	 *
 	 * @param row - The row to start editing.
 	 */
@@ -316,8 +315,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Compare the edited row against its snapshot and persist any changes
-	 * to the database, then remove the row from the editing state.
+	 * Compares the edited row against its snapshot and persists any changes
+	 * to the database, then removes the row from the editing state.
 	 *
 	 * @param row - The row to complete editing.
 	 */
@@ -369,7 +368,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Submit the new record form data to the database and reset the form.
+	 * Submits the new record form data to the database and resets the form.
 	 * Captures a snapshot of the record before resetting so the stats update
 	 * can include the correct noteIndex and metadata after the async add.
 	 */
@@ -435,10 +434,11 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Called by p-table's (onPage).
-	 * This is the ONLY place where _savedFirst should be updated via UI interaction.
-	 * It ensures that when a user manually clicks a page, we remember it as the
-	 * new "Safe Zone" to return to during background data updates.
+	 * Updates the saved page index when the user manually navigates to a new page.
+	 * This is the only place where _savedFirst is updated via UI interaction — it
+	 * records the new page as the "Safe Zone" to restore during background data updates.
+	 *
+	 * @param event - The PrimeNG paginator event containing the new first-item index.
 	 */
 	protected pageChange(event: any) {
 		this._savedFirst = event.first;
@@ -446,13 +446,13 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Called by p-table's (onFilter) every time PrimeNG's internal _filter() runs.
+	 * Intercepts PrimeNG's internal filter reset to restore the saved page index
+	 * when a data-driven update arrives via CloudBase.
 	 *
 	 * WHY THIS EXISTS
 	 * ───────────────
 	 * When data is pushed via CloudBase, PrimeNG triggers _filter(). Even with no
 	 * active user filters, it resets internal 'first' to 0.
-	 * * This method performs a "Synchronous Hijack":
 	 * If _isDataUpdate is true, it immediately overwrites the table's 'first'
 	 * property with our _savedFirst value before the function returns. This
 	 * prevents the UI from ever rendering Page 1, eliminating the "flicker"
@@ -472,7 +472,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Calculate the rowspan for a component cell by counting consecutive rows
+	 * Calculates the rowspan for a component cell by counting consecutive rows
 	 * that share the same component value.
 	 *
 	 * @param data - The table data array.
@@ -495,7 +495,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Calculate the rowspan for an element cell by counting consecutive rows
+	 * Calculates the rowspan for an element cell by counting consecutive rows
 	 * that share the same element and component values.
 	 *
 	 * @param data - The table data array.
@@ -515,7 +515,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Determine whether to show the component column for a given row.
+	 * Determines whether to show the component column for a given row.
 	 * Returns true for the first row of each new component group.
 	 *
 	 * @param data - The table data array.
@@ -528,7 +528,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Determine whether to show the element column for a given row.
+	 * Determines whether to show the element column for a given row.
 	 * Returns true for the first row of each new element group.
 	 *
 	 * @param data - The table data array.
@@ -544,7 +544,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Get the currently rendered data array from a PrimeNG table data object,
+	 * Returns the currently rendered data array from a PrimeNG table data object,
 	 * falling back from filtered value to raw value to an empty array.
 	 *
 	 * @param data - The PrimeNG table data object.
@@ -555,7 +555,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Check whether the given row belongs to the same component group as
+	 * Checks whether the given row belongs to the same component group as
 	 * the currently hovered row.
 	 *
 	 * @param data - The table data array.
@@ -568,7 +568,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Check whether the given row belongs to the same element group as
+	 * Checks whether the given row belongs to the same element group as
 	 * the currently hovered row (same component and same element).
 	 *
 	 * @param data - The table data array.
@@ -583,7 +583,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Get the CSS class for a severity tag based on its status.
+	 * Returns the CSS class for a severity tag based on its status value.
 	 *
 	 * @param status - The status value.
 	 * @returns The CSS class name for the severity tag.

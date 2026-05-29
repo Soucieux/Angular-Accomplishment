@@ -156,7 +156,7 @@
 												class="genre-bar-fill"
 												[style.width.%]="genre.pct"
 												[style.background]="
-													genreColors[i % genreColors.length]
+													HOME_GENRE_COLORS[i % HOME_GENRE_COLORS.length]
 												"></div>
 										</div>
 										<span class="genre-count">{{ genre.count }}</span>
@@ -301,13 +301,13 @@
 							</div>
 						} @else {
 							<div class="scrollable-list">
-								@for (item of getPatchInProgress(); track item.component + item.details) {
+								@for (item of getPatchInProgress(); track (item.component ?? '') + (item.details ?? '')) {
 									<div class="patch-item">
 										<span class="patch-dot" [class.bug-dot]="item.isBug"></span>
 										<div class="patch-info">
 											<span class="patch-component">{{ item.component }}</span>
 											<span class="patch-element">{{
-												truncate(item.details, 45)
+												truncate(item.details ?? '', 45)
 											}}</span>
 										</div>
 										@if (item.isBug) {
@@ -339,10 +339,10 @@
 								<span class="empty-text">No quotes yet</span>
 							</div>
 						} @else {
-							<div class="resonance-quote">"{{ truncate(stats.latestQuote.text, 160) }}"</div>
-							<div class="resonance-author">— {{ stats.latestQuote.author }}</div>
+							<div class="resonance-quote">"{{ truncate(stats?.latestQuote?.text ?? '', 160) }}"</div>
+							<div class="resonance-author">— {{ stats?.latestQuote?.author }}</div>
 							<div class="resonance-time">
-								{{ getRelativeTime(stats.latestQuote.timestamp) }}
+								{{ getRelativeTime(stats?.latestQuote?.timestamp ?? '') }}
 							</div>
 						}
 					</div>

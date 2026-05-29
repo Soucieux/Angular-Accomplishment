@@ -875,8 +875,10 @@
 	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
-/* ── Mobile ──────────────────────────────────────────────────── */
-@media (max-width: 800px) {
+/* ─────────────────────────────────────────
+   Responsive ≤ 940 px (mobile)
+───────────────────────────────────────── */
+@media (max-width: 940px) {
 	.page-title {
 		font-size: 28px; /* large-header mobile standard */
 	}

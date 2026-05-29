@@ -45,13 +45,13 @@ describe('AddMovieDialogComponent', () => {
 
 	describe('openDialog', () => {
 		it('sets visible to true', () => {
-			component.openDialog(() => {}, () => new Blob());
+			component.openDialog(() => {}, async () => new Blob());
 			expect((component as any).visible).toBeTrue();
 		});
 
 		it('stores the submit callback', () => {
 			const cb = jasmine.createSpy('submit');
-			component.openDialog(cb, () => new Blob());
+			component.openDialog(cb, async () => new Blob());
 			expect((component as any).submitCallback).toBe(cb);
 		});
 	});
@@ -94,13 +94,13 @@ describe('AddMovieDialogComponent', () => {
 	describe('onSubmit', () => {
 		it('calls the submit callback with the movie VO', () => {
 			const submitCb = jasmine.createSpy('submit');
-			component.openDialog(submitCb, () => new Blob());
+			component.openDialog(submitCb, async () => new Blob());
 			(component as any).onSubmit();
 			expect(submitCb).toHaveBeenCalledWith(jasmine.any(MovieItemVO));
 		});
 
 		it('closes the dialog', () => {
-			component.openDialog(() => {}, () => new Blob());
+			component.openDialog(() => {}, async () => new Blob());
 			(component as any).onSubmit();
 			expect((component as any).visible).toBeFalse();
 		});

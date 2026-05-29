@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, preserve-caught-error */
 import { EnvironmentInjector, inject, Inject, Injectable, NgZone, runInInjectionContext } from '@angular/core';
 import {
 	GoogleAuthProvider,
@@ -40,10 +39,10 @@ export class AuthService {
 		}
 	}
 
-	//////////////////////////////////// Below is for firebase /////////////////////////////////
+	////////////////////// Below are Firebase authentication methods //////////////////////
 
 	/**
-	 * Get the current Firebase user as an observable. Wraps onAuthStateChanged
+	 * Returns the current Firebase user as an observable. Wraps onAuthStateChanged
 	 * so subscribers receive continuous user updates (including null on sign-out).
 	 *
 	 * @returns An observable that emits the current Firebase user or null.
@@ -64,29 +63,29 @@ export class AuthService {
 	}
 
 	/**
-	 * Sign in with email and password via Firebase authentication.
+	 * Signs in with email and password via Firebase authentication.
 	 *
 	 * @param email - The user's email address.
 	 * @param password - The user's password.
 	 * @param returnUrl - Optional URL to navigate to after sign-in. Defaults to '/'.
 	 */
-	public async emailPasswordLogin(email: string, password: string, returnUrl: string = '/') {
+	public async emailPasswordLogin(email: string, password: string, returnUrl: string = '/'): Promise<void> {
 		try {
 			await signInWithEmailAndPassword(this.firebaseAuth, email, password);
-			void this.router.navigate([returnUrl]);
+			this.router.navigate([returnUrl]).catch(() => {});
 			this.utilities.setIsUserAlive(true);
-		} catch (error: any) {
+		} catch (error: unknown) {
 			LOG.error(this.className, 'Error when signing in with email and password');
 			throw error;
 		}
 	}
 
 	/**
-	 * Initiate Google sign-in via Firebase popup. After the popup completes,
+	 * Initiates Google sign-in via Firebase popup. After the popup completes,
 	 * listens for the auth state change to confirm the user is signed in
 	 * before navigating to the home page.
 	 */
-	public googleLogin() {
+	public googleLogin(): void {
 		// CurrentUser in this.auth is still null after signInWithPopup completes
 		// As the credentials are being returned after that and then firebase starts initializing
 		signInWithPopup(this.firebaseAuth, new GoogleAuthProvider())
@@ -94,7 +93,7 @@ export class AuthService {
 				const unsub = onAuthStateChanged(this.firebaseAuth, (user) => {
 					unsub();
 					if (user) {
-						void this.router.navigate(['/']);
+						this.router.navigate(['/']).catch(() => {});
 						this.utilities.setIsUserAlive(true);
 					}
 				});
@@ -103,10 +102,10 @@ export class AuthService {
 	}
 
 	/**
-	 * Sign out the current Firebase user and reactively update auth state
+	 * Signs out the current Firebase user and reactively updates auth state
 	 * without navigating away from the current page.
 	 */
-	public logout() {
+	public logout(): void {
 		// CurrentUser in this.auth gets removed immediately after signOut
 		signOut(this.firebaseAuth)
 			.then(() => {
@@ -117,28 +116,28 @@ export class AuthService {
 			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}
 
-	//////////////////////////////////// Below is for cloudbase /////////////////////////////////
+	////////////////////// Below are CloudBase authentication methods /////////////////////
 
 	/**
-	 * Sign in anonymously via CloudBase. Grants read-only access to public
+	 * Signs in anonymously via CloudBase. Grants read-only access to public
 	 * database collections without requiring a registered account.
 	 */
-	public async signInAnonymously() {
+	public async signInAnonymously(): Promise<void> {
 		await this.cloudbaseAuth.signInAnonymously();
 	}
 
 	/**
-	 * Request a verification code to be sent to the given email address.
+	 * Requests a verification code to be sent to the given email address.
 	 * The code is required when signing up a new CloudBase account.
 	 *
 	 * @param email - The email address to send the verification code to.
 	 */
-	public async getVerificationCodeEmail(email: string) {
+	public async getVerificationCodeEmail(email: string): Promise<void> {
 		this.verification = await this.cloudbaseAuth.getVerification({ email });
 	}
 
 	/**
-	 * Create a new CloudBase account. Verifies the email code first,
+	 * Creates a new CloudBase account. Verifies the email code first,
 	 * then calls signUp with the verification token and user details.
 	 *
 	 * @param email - The user's email address.
@@ -146,7 +145,7 @@ export class AuthService {
 	 * @param username - The desired username.
 	 * @param verificationCode - The numeric code sent to the email.
 	 */
-	public async signUp(email: string, password: string, username: string, verificationCode: number) {
+	public async signUp(email: string, password: string, username: string, verificationCode: number): Promise<void> {
 		try {
 			// Two-step flow: first get the verification token from the code,
 			// then call signUp with the token to create the account.
@@ -164,9 +163,9 @@ export class AuthService {
 			});
 
 			this.cloudbaseGetCurrentUser();
-			void this.router.navigate(['/']);
-		} catch (error: any) {
-			if (error && error.code === CLOUDBASE_ERROR_INVALID_ARGUMENT) {
+			this.router.navigate(['/']).catch(() => {});
+		} catch (error: unknown) {
+			if (error && (error as { code?: string }).code === CLOUDBASE_ERROR_INVALID_ARGUMENT) {
 				throw new wrongVerificationCodeError();
 			} else {
 				throw new Error(MSG_UNEXPECTED_ERROR);
@@ -185,7 +184,7 @@ export class AuthService {
 	 * @throws WrongCredentialsError if the username or password is incorrect.
 	 * @throws UnexpectedError if a different authentication error occurs.
 	 */
-	public async signIn(username: string, password: string, returnUrl: string = '/') {
+	public async signIn(username: string, password: string, returnUrl: string = '/'): Promise<void> {
 		const { error } = await this.cloudbaseAuth.signInWithPassword({
 			username: username,
 			password: password
@@ -198,11 +197,11 @@ export class AuthService {
 		}
 
 		this.cloudbaseGetCurrentUser();
-		void this.router.navigate([returnUrl]);
+		this.router.navigate([returnUrl]).catch(() => {});
 	}
 
 	/**
-	 * Get the current CloudBase user as an observable. Emits null for
+	 * Returns the current CloudBase user as an observable. Emits null for
 	 * anonymous users (no username in metadata) and errors.
 	 *
 	 * @returns An observable that emits the current CloudBase user or null.
@@ -239,23 +238,22 @@ export class AuthService {
 	}
 
 	/**
-	 * Sign out the current CloudBase user. Clears user state and reactively
+	 * Signs out the current CloudBase user. Clears user state and reactively
 	 * updates auth status without navigating away from the current page.
-	 *
 	 */
-	public async signOut() {
-		await this.cloudbaseAuth
-			.signOut()
-			.then(() => {
-				this.ngZone.run(() => {
-					this.cloudbaseUserSubject.next(null);
-					this.utilities.setIsUserAlive(false);
-					CloudbaseService.setUseId('');
-					CloudbaseService.setUserRole('');
-					CloudbaseService.setUserName('');
-					CloudbaseService.setLoginState(false);
-				});
-			})
-			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
+	public async signOut(): Promise<void> {
+		try {
+			await this.cloudbaseAuth.signOut();
+			this.ngZone.run(() => {
+				this.cloudbaseUserSubject.next(null);
+				this.utilities.setIsUserAlive(false);
+				CloudbaseService.setUseId('');
+				CloudbaseService.setUserRole('');
+				CloudbaseService.setUserName('');
+				CloudbaseService.setLoginState(false);
+			});
+		} catch {
+			LOG.error(this.className, 'ERROR when signing out current user');
+		}
 	}
 }

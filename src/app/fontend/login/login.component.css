@@ -325,8 +325,10 @@
 	animation: slideInRight 0.3s ease-out forwards;
 }
 
-/* ── Mobile ── */
-@media (max-width: 800px) {
+/* ─────────────────────────────────────────
+   Responsive ≤ 940 px (mobile)
+───────────────────────────────────────── */
+@media (max-width: 940px) {
 	.title {
 		font-size: 35px;
 		letter-spacing: 5px;

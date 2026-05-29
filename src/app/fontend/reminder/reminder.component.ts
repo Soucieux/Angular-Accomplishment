@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-floating-promises, @typescript-eslint/no-misused-promises, @typescript-eslint/no-unused-vars, @typescript-eslint/no-base-to-string, prefer-const */
 import {
 	AfterViewChecked,
 	ChangeDetectorRef,
@@ -22,7 +21,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { Checkbox } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
-import { PopoverModule } from 'primeng/popover';
+import { Popover, PopoverModule } from 'primeng/popover';
 import { PaginatorModule } from 'primeng/paginator';
 import { Subscription } from 'rxjs';
 import { LOG } from '../../common/app.logs';
@@ -90,7 +89,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	@ViewChild('op2') protected op2!: any;
+	@ViewChild('thirdTablePopover') private thirdTablePopover!: Popover;
 	protected readonly REMINDER_LABEL_CURRENT_MONTH = REMINDER_LABEL_CURRENT_MONTH;
 	protected readonly REMINDER_LABEL_NEXT_MONTH = REMINDER_LABEL_NEXT_MONTH;
 	protected readonly REMINDER_LABEL_RESET = REMINDER_LABEL_RESET;
@@ -126,9 +125,9 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected thirdTableIndexOfFirstItem: number = 0;
 	protected thirdTableItemsPerPage: number = 10;
 	protected saveIndicators: Record<string, boolean> = {
-		FIRST_TABLE: false,
-		SECOND_TABLE: false,
-		THIRD_TABLE: false
+		[DATABASE_FIRST_TABLE]: false,
+		[DATABASE_SECOND_TABLE]: false,
+		[DATABASE_THIRD_TABLE]: false
 	};
 	private saveIndicatorTimeouts: Record<string, any> = {};
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
@@ -337,7 +336,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param field - The column key (first, second, third, fourth) being changed.
 	 */
 	protected async onValueChange(rowIndex: number, field: string) {
-		let originalValue = this.originalFirstTable[rowIndex][field].value;
+		const originalValue = this.originalFirstTable[rowIndex][field].value;
 
 		// Do nothing if the value does not change
 		if (this.updatedFirstTable[rowIndex][field].value == originalValue) return;
@@ -715,7 +714,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected async addNewEntry() {
 		if (this.thirdTableNewText.trim() !== '') {
-			let newContent = Object.fromEntries(
+			const newContent = Object.fromEntries(
 				Object.entries(this.thirdTableActiveItem.content).filter(([_, value]) => value !== '')
 			);
 			newContent['text'] = this.thirdTableNewText;
@@ -737,7 +736,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 					this.syncReminderStatistics();
 				}
 				this.thirdTableNewText = '';
-				this.op2.hide();
+				this.thirdTablePopover.hide();
 			} catch (error) {
 				this.dialogService.handleError(this.dialogComponentContainer, error);
 			}
@@ -760,10 +759,10 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			this.thirdTableActiveItem = item;
 		}
 
-		this.op2.hide();
+		this.thirdTablePopover.hide();
 
 		setTimeout(() => {
-			this.op2.show(event);
+			this.thirdTablePopover.show(event);
 		}, 140);
 	}
 
@@ -791,7 +790,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const updatedItem = this.findUpdatedItem(tableName, entryKey);
 		const originalItem = this.findOriginalItem(tableName, entryKey);
 		if (!updatedItem || !originalItem) return;
-		let updatedValue = updatedItem.content[valueKey];
+		const updatedValue = updatedItem.content[valueKey];
 		const oldValue = originalItem.content[valueKey];
 		try {
 			if (updatedValue !== oldValue) {

@@ -67,7 +67,7 @@
 										<span class="pinboard-chip-label">{{ tag }}</span>
 										<button
 											class="pinboard-chip-remove"
-											(click)="$event.stopPropagation(); removeTag(ti, false, item)"
+											(click)="$event.stopPropagation(); removeExistingCardTag(ti, item)"
 											aria-label="Remove tag">
 											<i class="pi pi-times"></i>
 										</button>
@@ -186,7 +186,7 @@
 										<span class="pinboard-chip-label">{{ tag }}</span>
 										<button
 											class="pinboard-chip-remove"
-											(click)="$event.stopPropagation(); removeTag(ti, true)"
+											(click)="$event.stopPropagation(); removeNewItemTag(ti)"
 											aria-label="Remove tag">
 											<i class="pi pi-times"></i>
 										</button>

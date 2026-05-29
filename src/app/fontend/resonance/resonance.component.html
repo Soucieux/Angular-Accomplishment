@@ -32,7 +32,7 @@
 		<div class="submit-footer">
 			<span class="char-count" [class.over-limit]="isOverLimit">{{ newQuoteText.length }} / {{ maxQuoteLength }}</span>
 			@if (postSuccess) {
-				<span class="post-success-chip">{{ postedLabel }}</span>
+				<span class="post-success-chip">{{ RESONANCE_MSG_POSTED }}</span>
 			}
 			<button
 				class="submit-btn"
@@ -53,15 +53,15 @@
 				<p class="empty-text">No voices yet. Yours could be the first to resonate.</p>
 			</div>
 		} @else {
-		<div class="quote-count-pill">{{ quotes.length }} {{ voicesLabel }}</div>
+		<div class="quote-count-pill">{{ quotes.length }} {{ RESONANCE_LABEL_VOICES }}</div>
 		<div class="quote-grid">
-			@for (quote of quotes; track quote.key; let i = $index) {
+			@for (quote of quotes; track quote.key; let index = $index) {
 				<div
-					class="card-enter" [style.animation-delay.ms]="i * 80"><div
+					class="card-enter" [style.animation-delay.ms]="index * 80"><div
 						class="quote-card"
-					[style.background]="'linear-gradient(135deg, ' + getGradient(i).from + ' 0%, ' + getGradient(i).to + ' 100%)'"
-					[class.tilt-left]="i % 3 === 0"
-					[class.tilt-right]="i % 3 === 1">
+					[style.background]="'linear-gradient(135deg, ' + getGradient(index).from + ' 0%, ' + getGradient(index).to + ' 100%)'"
+					[class.tilt-left]="index % 3 === 0"
+					[class.tilt-right]="index % 3 === 1">
 					<div class="card-inner">
 						<div class="quote-meta">
 							<div class="quote-author">
@@ -96,11 +96,11 @@
 		}
 	} @else {
 		<div class="skeleton-grid">
-			@for (i of [0, 1, 2, 3, 4, 5]; track i) {
+			@for (index of [0, 1, 2, 3, 4, 5]; track index) {
 				<div
 					class="skeleton-card-wrapper"
-					[class.tilt-left]="i % 3 === 0"
-					[class.tilt-right]="i % 3 === 1">
+					[class.tilt-left]="index % 3 === 0"
+					[class.tilt-right]="index % 3 === 1">
 					<p-skeleton width="100%" height="180px" borderRadius="16px" />
 				</div>
 			}

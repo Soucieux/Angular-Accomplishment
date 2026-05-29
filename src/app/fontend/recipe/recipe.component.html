@@ -2,7 +2,7 @@
 @if (utilities.getIsUserAlive()) {
 	<div class="container container-recipe">
 		<!-- ===================== VIEW 1: LIST ===================== -->
-		@if (currentView === VIEW_LIST) {
+		@if (currentView === RECIPE_VIEW_LIST) {
 			<section class="view">
 				<div class="page-header">
 					<div class="eyebrow">Personal Cookbook</div>
@@ -24,7 +24,7 @@
 
 				<div class="chips-scroll">
 					<div class="chips">
-						@for (cat of categories; track cat) {
+						@for (cat of RECIPE_CATEGORIES; track cat) {
 							<button
 								class="chip"
 								[class.active]="selectedCategory === cat"
@@ -97,7 +97,7 @@
 		}
 
 		<!-- ===================== VIEW 2: DETAIL ===================== -->
-		@if (currentView === VIEW_DETAIL && selectedRecipe) {
+		@if (currentView === RECIPE_VIEW_DETAIL && selectedRecipe) {
 			<section class="view" [ngClass]="selectedRecipe.bandClass">
 				<div class="detail-topbar">
 					<button class="back-btn" (click)="backToList()">
@@ -223,7 +223,7 @@
 		}
 
 		<!-- ===================== VIEW 3: ADD / EDITOR ===================== -->
-		@if (currentView === VIEW_ADD) {
+		@if (currentView === RECIPE_VIEW_ADD) {
 			<section class="view editor-view" [ngClass]="getEditorBandClass()">
 				<div class="editor-topbar">
 					<button class="back-btn" (click)="cancelAdd()">
@@ -288,7 +288,7 @@
 							</span>
 							@if (editorCategoryOpen) {
 								<div class="cat-panel">
-									@for (cat of editorCategories; track cat) {
+									@for (cat of RECIPE_EDITOR_CATEGORIES; track cat) {
 										<button
 											type="button"
 											class="cat-option"

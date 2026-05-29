@@ -103,18 +103,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	@ViewChild('ingredientsScroll') private ingredientsScrollEl?: ElementRef<HTMLElement>;
 	@ViewChild('catDropdown') private catDropdownEl?: ElementRef<HTMLElement>;
 
-	protected readonly VIEW_LIST = RECIPE_VIEW_LIST;
-	protected readonly VIEW_DETAIL = RECIPE_VIEW_DETAIL;
-	protected readonly VIEW_ADD = RECIPE_VIEW_ADD;
-	protected readonly CAT_ALL = RECIPE_CATEGORY_ALL;
+	protected readonly RECIPE_VIEW_LIST = RECIPE_VIEW_LIST;
+	protected readonly RECIPE_VIEW_DETAIL = RECIPE_VIEW_DETAIL;
+	protected readonly RECIPE_VIEW_ADD = RECIPE_VIEW_ADD;
+	protected readonly RECIPE_CATEGORY_ALL = RECIPE_CATEGORY_ALL;
 	protected readonly MASTER_TYPE_TABS = MASTER_TYPE_TABS;
-	protected readonly categories = RECIPE_CATEGORIES;
-	protected readonly editorCategories = RECIPE_EDITOR_CATEGORIES;
-	/** Exposes the unit-required message to the template. */
+	protected readonly RECIPE_CATEGORIES = RECIPE_CATEGORIES;
+	protected readonly RECIPE_EDITOR_CATEGORIES = RECIPE_EDITOR_CATEGORIES;
 	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
-	/** Exposes the name-too-long message to the template. */
 	protected readonly RECIPE_MSG_NAME_TOO_LONG = RECIPE_MSG_NAME_TOO_LONG;
-	/** Exposes the category-required message to the template. */
 	protected readonly RECIPE_MSG_CATEGORY_REQUIRED = RECIPE_MSG_CATEGORY_REQUIRED;
 
 	private recipesSub?: Subscription;
@@ -126,10 +123,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected servings = 2;
 	protected ingredientsCollapsed = false;
 
-	// ── Editor type-tab management ──────────────────────────────────
 	protected enabledTypeIds = new Set<IngredientType>(RECIPE_EDITOR_DEFAULT_TYPES);
 
-	// ── Editor state ────────────────────────────────────────────────
 	protected editorName = '';
 	protected editorCookTime: number | null = null;
 	protected editorServings = 1;
@@ -173,9 +168,11 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	) {}
 
 	/**
-	 * Lifecycle: subscribe to the recipes collection and keep the local list in sync.
+	 * Initialises the component: subscribes to the recipes collection to keep the
+	 * local list in sync, and auto-opens the add view when navigated from the home
+	 * quick-action button via router state.
 	 */
-	public ngOnInit(): void {
+	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.recipesSub = this.databaseService.getRecipes().subscribe({
 				next: (recipes) => {
@@ -189,6 +186,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 								this.pendingDetailName = null;
 							}
 						}
+						// NgZone.run wraps this callback — manual check needed so the view reflects the new state.
 						this.cdr.markForCheck();
 					});
 				},
@@ -206,23 +204,22 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Lifecycle: unsubscribe from the recipes watcher, clear the dialog container,
-	 * and log component teardown.
+	 * Unsubscribes from the recipes watcher, clears the dialog container,
+	 * and logs component teardown.
 	 */
-	public ngOnDestroy(): void {
+	ngOnDestroy(): void {
 		this.recipesSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
-	 * After every change-detection cycle, ensure all scrollable panels in the
-	 * component have the auto-hide scroll listener attached. Uses a WeakSet so
-	 * each element is bound exactly once regardless of how often the hook fires.
-	 * Also handles scroll-and-focus for a newly added ingredient row when
+	 * Attaches the auto-hide scroll listener to all scrollable panels after each
+	 * change-detection cycle. Uses a WeakSet guard so each element is bound exactly
+	 * once. Also handles scroll-and-focus for a newly added ingredient row when
 	 * {@link pendingScrollToNewIngredient} is set.
 	 */
-	public ngAfterViewChecked(): void {
+	ngAfterViewChecked(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
 		Utilities.attachScrollAutoHide(this.stepsScrollEl?.nativeElement);
 		Utilities.attachScrollAutoHide(this.ingredientsScrollEl?.nativeElement);
@@ -326,6 +323,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.ngZone.run(() => {
 			this.currentView = view;
 			this.viewportScroller.scrollToPosition([0, 0]);
+			// Called inside ngZone.run() — detectChanges flushes the view synchronously so the
+			// new view is rendered before the viewport scroll position is applied.
 			this.cdr.detectChanges();
 		});
 	}
@@ -420,7 +419,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		return group.items.filter((item) => !item.hidden);
 	}
 
-	// ── Editor type-tab dialog ───────────────────────────────────────
+	////////////////////// Below are editor type-tab dialog methods ///////////////////////
+
 	/**
 	 * The subset of ingredient type tabs that are currently enabled in the editor,
 	 * ordered as they appear in {@link MASTER_TYPE_TABS}.
@@ -446,13 +446,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 				if (!this.enabledTypeIds.has(this.selectedEditorType)) {
 					this.selectedEditorType = [...this.enabledTypeIds][0] ?? RECIPE_ITYPE_VEG;
 				}
+				// Dialog callback runs outside Angular's zone — mark for check so the tab list updates.
 				this.cdr.markForCheck();
 			},
 			{ masterTabs: MASTER_TYPE_TABS, enabledTypeIds: this.enabledTypeIds }
 		);
 	}
 
-	// ── Editor (Add / Edit Recipe view) ───────────────────────────────
+	////////////////////// Below are editor add and edit view methods ////////////////////
+
 	/**
 	 * Opens the editor in create mode, resetting all editor fields to their
 	 * default blank state before navigating to the add-recipe view.
@@ -746,6 +748,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (!this.editorCategoryOpen) return;
 		if (this.catDropdownEl?.nativeElement.contains(event.target as Node)) return;
 		this.editorCategoryOpen = false;
+		// HostListener fires outside the component's default CD cycle — mark for check to update dropdown state.
 		this.cdr.markForCheck();
 	}
 
@@ -759,6 +762,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected toggleCategoryDropdown(event: Event): void {
 		event.stopPropagation();
 		this.editorCategoryOpen = !this.editorCategoryOpen;
+		// Needed for the same reason as onDocumentClick — HostListener runs outside normal CD.
 		this.cdr.markForCheck();
 	}
 
@@ -772,6 +776,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.editorCategory = cat;
 		this.editorCategoryOpen = false;
 		this.editorCategoryInvalid = false;
+		// Needed for the same reason as onDocumentClick — HostListener runs outside normal CD.
 		this.cdr.markForCheck();
 	}
 
@@ -1017,7 +1022,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		return tokens.length > 0 ? tokens : [{ kind: 'text', text }];
 	}
 
-	// ── Drag-to-reorder steps ─────────────────────────────────────────
+	////////////////////// Below are drag-to-reorder step methods ////////////////////////
+
 	/**
 	 * Handles the dragstart event on the step drag handle. Sets the full card as
 	 * the drag image so the preview matches the card rather than just the icon.

@@ -56,7 +56,7 @@
 								@if (isEditingTag(item, ti)) {
 									<span class="pinboard-chip pinboard-chip-editing">
 										<input
-											[(ngModel)]="tagEditSession!.value"
+											[(ngModel)]="tagEditSession!.tagText"
 											(blur)="onTagUpdate()"
 											(keyup.enter)="onTagUpdate()"
 											(keyup.escape)="cancelTagEdit()"
@@ -78,7 +78,7 @@
 							@if (isAddingTag(item)) {
 								<span class="pinboard-chip pinboard-chip-editing">
 									<input
-										[(ngModel)]="tagEditSession!.value"
+										[(ngModel)]="tagEditSession!.tagText"
 										(blur)="onTagUpdate()"
 										(keyup.enter)="onTagUpdate()"
 										(keyup.escape)="cancelTagEdit()"
@@ -175,7 +175,7 @@
 								@if (isEditingNewTag(ti)) {
 									<span class="pinboard-chip pinboard-chip-editing">
 										<input
-											[(ngModel)]="tagEditSession!.value"
+											[(ngModel)]="tagEditSession!.tagText"
 											(blur)="onNewItemTagUpdate()"
 											(keyup.enter)="onNewItemTagUpdate()"
 											(keyup.escape)="cancelTagEdit()"
@@ -197,7 +197,7 @@
 							@if (isAddingNewTag()) {
 								<span class="pinboard-chip pinboard-chip-editing">
 									<input
-										[(ngModel)]="tagEditSession!.value"
+										[(ngModel)]="tagEditSession!.tagText"
 										(blur)="onNewItemTagUpdate()"
 										(keyup.enter)="onNewItemTagUpdate()"
 										(keyup.escape)="cancelTagEdit()"

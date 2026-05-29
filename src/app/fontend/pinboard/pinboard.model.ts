@@ -7,10 +7,10 @@ export interface PinboardItem {
 	tags: string[];
 }
 
-export type PinboardEditableField = 'text' | 'date' | 'link' | 'tags';
+export type PinboardValueKey = 'text' | 'date' | 'link' | 'tags';
 
 /** Raw shape of a third-table document as returned by CloudBase. */
-export interface PinboardDbRow {
+export interface PinboardDbRecord {
 	key: string;
 	_openid: string;
 	content: {
@@ -26,7 +26,7 @@ export interface TagEditSession {
 	item: PinboardItem | null; // null when operating on the new-item card
 	index: number; // -1 = adding new tag; 0+ = editing existing tag
 	isNewItem: boolean;
-	value: string; // text currently being typed in the tag input
+	tagText: string; // text currently being typed in the tag input
 }
 
 /** Pending state for the new-item card form. */

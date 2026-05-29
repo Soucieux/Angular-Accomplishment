@@ -20,7 +20,6 @@ export class DoubanService {
 	 * @param movieName - The movie name to search for.
 	 * @returns An observable that emits the JSON response from Douban.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public searchMovieJSON(movieName: string): Observable<any> {
 		/*  	
         1.	With ng serve (Development Mode):

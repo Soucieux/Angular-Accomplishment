@@ -1000,9 +1000,9 @@
 }
 
 /* ─────────────────────────────────────────
-   Mobile: ≤ 800 px
+   Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
-@media (max-width: 800px) {
+@media (max-width: 940px) {
 	.component {
 		min-width: 150px !important;
 	}

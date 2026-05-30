@@ -8,7 +8,9 @@
 	align-items: center;
 }
 
-/* ── Header quotes ── */
+/* ─────────────────────────────────────────
+   Header quotes
+───────────────────────────────────────── */
 .word-container {
 	display: flex;
 	flex-direction: column;
@@ -104,7 +106,9 @@
 	font-weight: 400;
 }
 
-/* ── Form wrapper (animation target) ── */
+/* ─────────────────────────────────────────
+   Form wrapper (animation target)
+───────────────────────────────────────── */
 .form-wrapper {
 	overflow: hidden;
 	animation: formReveal 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.68s both;
@@ -121,7 +125,9 @@
 	}
 }
 
-/* ── Form ── */
+/* ─────────────────────────────────────────
+   Form fields and inputs
+───────────────────────────────────────── */
 .field-container {
 	display: flex;
 	justify-content: center;
@@ -165,7 +171,9 @@
 	color: rgba(213, 51, 105, 0.85) !important;
 }
 
-/* ── Verification code ── */
+/* ─────────────────────────────────────────
+   Verification code row
+───────────────────────────────────────── */
 .code-row {
 	margin-bottom: 15px;
 	gap: 0;
@@ -217,7 +225,9 @@
 	font-size: 13px;
 }
 
-/* ── Toggle link ── */
+/* ─────────────────────────────────────────
+   Mode toggle link
+───────────────────────────────────────── */
 .toggle-row {
 	margin-bottom: 4px;
 }

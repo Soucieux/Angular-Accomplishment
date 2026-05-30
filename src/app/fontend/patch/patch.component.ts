@@ -145,16 +145,19 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected severity: { severity: string }[] | undefined;
 	protected bugSeverity: { severity: string }[] | undefined;
 	protected allSeverity: { severity: string }[] | undefined;
+	// any: Patch note records are stored as schema-less CloudBase documents with no fixed TypeScript type
 	protected patchNotes$!: Observable<any[]>;
 	protected indexOfFirstItem = 0;
 	protected itemsPerPage = 8;
 	protected isMobile!: boolean;
 	protected skeletonRows = Array.from({ length: this.itemsPerPage });
+	// any: Patch note rows are schema-less CloudBase documents; each edit snapshot mirrors the raw shape
 	protected editedRows = new Map<string, any>();
 	protected hoveredRowIndex: number | null = null;
 	private previousDataLength: number | null = null;
 	/**
 	 * Full ordered list of patch notes (no dummy row), kept in sync by the subscription tap.
+	 * any: Patch note records are schema-less CloudBase documents with no fixed TypeScript type
 	 */
 	private patchNotesList: any[] = [];
 	/**
@@ -289,7 +292,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		component: string;
 		element: string;
 		details: string;
-		status: any;
+		status: any; // any: Status is a free-form string from PrimeNG Select with no closed union at this layer
 		timestamp: string;
 		isBug: boolean;
 	} {
@@ -309,7 +312,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param row - The row to start editing.
 	 */
-	protected async startEdit(row: any) {
+	protected async startEdit(row: any) { // any: schema-less CloudBase patch note document
 		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, row._openid)) return;
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
@@ -320,7 +323,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param row - The row to complete editing.
 	 */
-	protected async completeEdit(row: any) {
+	protected async completeEdit(row: any) { // any: schema-less CloudBase patch note document
 		const record = this.editedRows.get(row.key);
 		if (!record) return;
 		const changes: any = {};
@@ -550,7 +553,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param data - The PrimeNG table data object.
 	 * @returns The rendered data array.
 	 */
-	protected getRenderedData(data: any) {
+	protected getRenderedData(data: any) { // any: PrimeNG table data object has no exported TypeScript type
 		return data.filteredValue ?? data.value ?? [];
 	}
 
@@ -684,7 +687,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *   `label` property (e.g. from the PrimeNG selectedItem template context).
 	 * @returns The matching option object, or `null` if not found.
 	 */
-	protected getComponentOption(label: string | { label: string } | any) {
+	protected getComponentOption(label: string | { label: string } | any) { // any: PrimeNG selectedItem template context passes an untyped object
 		const key = typeof label === 'string' ? label : (label?.label ?? '');
 		return this.components.find((option) => option.label === key) ?? null;
 	}

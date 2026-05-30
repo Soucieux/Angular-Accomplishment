@@ -48,11 +48,14 @@ import { Recipe } from '../../../fontend/recipe/recipe.model';
 @Injectable({ providedIn: 'root' })
 export class CloudbaseService extends DatabaseService {
 	private readonly className = 'CloudbaseService';
+	// any: CloudBase SDK does not provide TypeScript types for its database instance
 	private database: any;
+	// any: CloudBase SDK returns document IDs as untyped values
 	private statId: any;
 	private static userId: string;
 	private static userRole: string;
 	private static userName: string;
+	// any: '_' is a reserved keyword in the CloudBase SDK used to access its command builder
 	private _!: any;
 	private tempUrlCache = new Map<string, string>();
 	private static _authReady$ = new ReplaySubject<boolean>(1);
@@ -76,14 +79,14 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Signal auth state confirmed — unblocks all watchers waiting for credentials.
+	 * Signals that auth state is confirmed, unblocking all watchers waiting for credentials.
 	 */
 	static markAuthReady() {
 		this._authReady$.next(true);
 	}
 
 	/**
-	 * Set the real login state. True only for non-anonymous authenticated users.
+	 * Sets the real login state. True only for non-anonymous authenticated users.
 	 *
 	 * @param loggedIn - Whether a real (non-anonymous) user is signed in.
 	 */
@@ -119,7 +122,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the CloudBase authentication instance.
+	 * Returns the CloudBase authentication instance.
 	 *
 	 * @returns The CloudBase auth object.
 	 */
@@ -128,7 +131,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Set the current user ID statically.
+	 * Sets the current user ID statically.
 	 *
 	 * @param userId - The user ID to set.
 	 */
@@ -138,7 +141,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the current user ID.
+	 * Returns the current user ID.
 	 *
 	 * @returns The current user ID.
 	 */
@@ -147,7 +150,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Set the current user role statically.
+	 * Sets the current user role statically.
 	 *
 	 * @param userRole - The user role to set.
 	 */
@@ -156,7 +159,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Set the current user name statically.
+	 * Sets the current user name statically.
 	 *
 	 * @param userName - The user name to set.
 	 */
@@ -174,7 +177,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the current user name.
+	 * Returns the current user name.
 	 *
 	 * @returns The current user name.
 	 */
@@ -183,16 +186,16 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Check if the current user has administrator rights.
+	 * Checks whether the current user has administrator rights.
 	 *
-	 * @returns true if the user is an administrator, otherwise false.
+	 * @returns True if the user is an administrator, otherwise false.
 	 */
 	public static userHasAllRights() {
 		return this.userRole === ROLE_ADMIN;
 	}
 
 	/**
-	 * Create a real-time CloudBase watcher for a collection and expose it as an Observable.
+	 * Creates a real-time CloudBase watcher for a collection and exposes it as an Observable.
 	 * All watchers follow the same authReady → switchMap → watcher.close() lifecycle;
 	 * this helper eliminates the boilerplate so each public getter only supplies the
 	 * collection name, a mapping function, and an optional error-propagation flag.
@@ -239,7 +242,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the movie list from cloudbase.
+	 * Returns the movie list from CloudBase as a real-time observable.
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
@@ -299,7 +302,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Resolve CloudBase file IDs (cloud://…) in a movie list to signed temporary URLs.
+	 * Resolves CloudBase file IDs (cloud://…) in a movie list to signed temporary URLs.
 	 * Results are cached in-memory so repeated watch emissions only resolve new / unseen file IDs.
 	 * Any link that is not a valid cloud:// ID (e.g. null, empty, stale value) resolves to empty string.
 	 *
@@ -352,7 +355,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the statistics from cloudbase.
+	 * Returns the statistics from CloudBase as a real-time observable.
 	 *
 	 * @returns An observable that emits the statistics.
 	 */
@@ -361,7 +364,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Retrieve history list
+	 * Returns the history list from CloudBase as a real-time observable.
 	 *
 	 * @returns The history list
 	 */
@@ -377,7 +380,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get patch notes
+	 * Returns the patch notes from CloudBase as a real-time observable.
 	 *
 	 * @returns Patch notes
 	 */
@@ -402,7 +405,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get reminder table details
+	 * Returns the first reminder table details from CloudBase as a real-time observable.
 	 *
 	 * @returns Reminder table details
 	 */
@@ -413,7 +416,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get second reminder table details
+	 * Returns the second reminder table details from CloudBase as a real-time observable.
 	 *
 	 * @returns Second reminder table details
 	 */
@@ -438,7 +441,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get third reminder table details
+	 * Returns the third reminder table details from CloudBase as a real-time observable.
 	 *
 	 * @returns Third reminder table details
 	 */
@@ -461,7 +464,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Upload the movie cover to CloudBase Storage via a cloud function and return the cloud:// file ID.
+	 * Uploads the movie cover to CloudBase Storage via a cloud function and returns the cloud:// file ID.
 	 * The upload is done server-side (cloud function → COS) to avoid browser CORS restrictions on COS.
 	 * The returned file ID is later resolved to a signed temp URL by resolveMovieCoverUrls().
 	 *
@@ -527,14 +530,14 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add new entry to history stating that a new search activity has been initialized
+	 * Adds a new entry to history stating that a new search activity has been initialized.
 	 */
 	public async updateHistoryWithNewSearchActivity(): Promise<void> {
 		await this.addNewHistoryEntry(SEARCH);
 	}
 
 	/**
-	 * Update the movie rate to cloudbase.
+	 * Updates the movie rate in CloudBase.
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
@@ -595,7 +598,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update the movie genre to cloudbase.
+	 * Updates the movie genre in CloudBase.
 	 *
 	 * @param movieKey - The key of the movie to update.
 	 * @param oldGenre - The old genre value.
@@ -625,7 +628,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update isFavourite for the given movie to cloudbase.
+	 * Updates the isFavourite flag for the given movie in CloudBase.
 	 *
 	 * @param movieKey - The key of the movie to update.
 	 * @param isFavourite - The boolean value to set.
@@ -657,7 +660,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update all movie data and statistics to cloudbase.
+	 * Adds new movie data to CloudBase and updates the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
@@ -724,7 +727,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a movie from the database, its cover image from CloudBase Storage,
+	 * Removes a movie from the database, its cover image from CloudBase Storage,
 	 * and update the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to remove.
@@ -798,7 +801,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Check if a given movie has already been added in the databse
+	 * Checks whether a given movie has already been added to the database.
 	 *
 	 * @param movieName Movie name to check
 	 * @param movieYear Movie year to check
@@ -837,7 +840,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add history with new activity
+	 * Adds a history entry with the given status and optional movie data.
 	 *
 	 * @param status - The status of the activity.
 	 * @param movieItemVO - The movie item to update.
@@ -885,7 +888,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add new record to patch notes
+	 * Adds a new record to the patch notes collection.
 	 *
 	 * @param newRecord - The record to add.
 	 */
@@ -913,7 +916,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update existing record to patch notes
+	 * Updates an existing record in the patch notes collection.
 	 *
 	 * @param key - The key associated with the record
 	 * @param updatedRecord - The record to update.
@@ -936,7 +939,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a patch note by key and resync the patchInProgress statistics field
+	 * Removes a patch note by key and resyncs the patchInProgress statistics field.
 	 * so the home-page widget is up to date without waiting for the subscription tap.
 	 *
 	 * @param key - The document key of the patch note to remove.
@@ -982,12 +985,11 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update reminder table details
-	 * Note: This method is used by second table and third table
+	 * Updates a single value in the reminder table. Used by both the second and third tables.
 	 *
-	 * @param tableName - Corresponding collection name
-	 * @param entryKey - The key of the entire entry
-	 * @param valueKey - The key associated with the new value.
+	 * @param tableName - The corresponding collection name.
+	 * @param entryKey - The key of the entry to update.
+	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to be stored.
 	 */
 	public async updateReminderTable(
@@ -1016,10 +1018,10 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update reminder table details
+	 * Updates the first reminder table with the given data.
 	 *
 	 * @param tableName - The name of the table to update.
-	 * @param updatedTable - The table to update
+	 * @param updatedTable - The updated table data.
 	 */
 	public async updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
 		try {
@@ -1045,7 +1047,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove record from reminder table
+	 * Removes a record from the reminder table.
 	 * Note: This is used by third table only
 	 *
 	 * @param tableName - Corresponding collection name
@@ -1067,7 +1069,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove an item from cloudbase
+	 * Removes an item from CloudBase by entry key.
 	 *
 	 * @param collectionName - The collection name in cloudbase
 	 * @param key - The key associated with the record
@@ -1087,7 +1089,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Build a where-clause for update or remove operations.
+	 * Builds a where-clause for update or remove operations.
 	 * Admin users bypass the _openid ownership constraint so they can modify any
 	 * document regardless of who created it. Non-admin users are restricted to
 	 * documents they own. All collections with the "doc._openid == auth.uid" write
@@ -1103,7 +1105,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new entry to a given reminder table.
+	 * Adds a new entry to the given reminder table.
 	 * Note: This is used by third table only.
 	 *
 	 * @param tableName - The corresponding collection name.
@@ -1136,7 +1138,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the quotes from the database.
+	 * Returns the quotes from the database as a real-time observable.
 	 *
 	 * @returns An observable that emits the quotes list.
 	 */
@@ -1156,7 +1158,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new quote to the database.
+	 * Adds a new quote to the database.
 	 *
 	 * @param text - The quote text.
 	 * @param author - The author of the quote.
@@ -1192,7 +1194,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a quote from the database and update statistics.
+	 * Removes a quote from the database and updates statistics.
 	 *
 	 * @param key - The key of the quote to remove.
 	 * @param text - The text of the deleted quote (written to lastQuoteDeleted stat).
@@ -1237,7 +1239,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update specific fields in the statistics document.
+	 * Updates specific fields in the statistics document.
 	 * Called by page components (Reminder, Patch) while they are active to sync
 	 * live data into the shared statistics collection. The call stops naturally
 	 * when the component is destroyed and its subscriptions are torn down.
@@ -1318,7 +1320,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the useful links from the database.
+	 * Returns the useful links from the database as a real-time observable.
 	 *
 	 * @returns An observable that emits the useful links list.
 	 */
@@ -1336,7 +1338,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new useful link to the database.
+	 * Adds a new useful link to the database.
 	 *
 	 * @param link - The link object to add.
 	 */
@@ -1363,7 +1365,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update an existing useful link in the database.
+	 * Updates an existing useful link in the database.
 	 *
 	 * @param key - The key of the link to update.
 	 * @param updates - The fields to update.
@@ -1406,7 +1408,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a useful link from the database.
+	 * Removes a useful link from the database.
 	 *
 	 * @param key - The key of the link to remove.
 	 */
@@ -1415,7 +1417,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the link categories from the database.
+	 * Returns the link categories from the database as a real-time observable.
 	 *
 	 * @returns An observable that emits the link categories list.
 	 */
@@ -1433,7 +1435,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new link category to the database.
+	 * Adds a new link category to the database.
 	 *
 	 * @param category - The category object to add.
 	 */
@@ -1454,7 +1456,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update an existing link category in the database.
+	 * Updates an existing link category in the database.
 	 *
 	 * @param key - The key of the category to update.
 	 * @param updates - The fields to update.
@@ -1477,7 +1479,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a link category from the database.
+	 * Removes a link category from the database.
 	 *
 	 * @param key - The key of the category to remove.
 	 */
@@ -1577,7 +1579,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new recipe to the database for the current user.
+	 * Adds a new recipe to the database for the current user.
 	 *
 	 * @param recipe - The recipe to persist.
 	 */
@@ -1603,7 +1605,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update an existing recipe in the database.
+	 * Updates an existing recipe in the database.
 	 * Uses `recipe.id` to locate the document.
 	 *
 	 * @param recipe - The recipe with updated fields. `recipe.id` must match an existing document.
@@ -1627,7 +1629,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a recipe from the database.
+	 * Removes a recipe from the database.
 	 *
 	 * @param recipeId - The `_id` of the recipe document to delete.
 	 */

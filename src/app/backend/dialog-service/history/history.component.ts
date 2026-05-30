@@ -34,10 +34,10 @@ interface HistoryEntry {
 })
 export class HistoryDialogComponent implements OnDestroy {
 	private readonly className = 'HistoryDialogComponent';
-	@Output() closed$ = new EventEmitter<void>();
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
+	@Output() closed$ = new EventEmitter<void>();
 	protected visible: boolean = false;
 	protected entries$!: Observable<HistoryEntry[]>;
 	private revertDataCallback!: (movie: MovieItemVO) => Promise<void>;
@@ -45,7 +45,7 @@ export class HistoryDialogComponent implements OnDestroy {
 	constructor(private dialogService: DialogService) {}
 
 	/**
-	 * Open the history dialog and store the revert callback and entries observable.
+	 * Opens the history dialog and stores the revert callback and entries observable.
 	 *
 	 * @param revertDataCallback - The callback to call to restore a deleted movie.
 	 * @param entries - The observable that emits the history entries.
@@ -57,7 +57,7 @@ export class HistoryDialogComponent implements OnDestroy {
 	}
 
 	/**
-	 * Get the background color for a history entry based on its status.
+	 * Sets the background color for a history entry based on its status.
 	 *
 	 * @param status - The status of the history entry.
 	 * @returns A CSS color string, or empty string if the status is unrecognized.
@@ -72,12 +72,11 @@ export class HistoryDialogComponent implements OnDestroy {
 	}
 
 	/**
-	 * Handle a click on a history entry by opening a confirmation dialog
-	 * to restore (undo) the associated movie deletion.
+	 * Opens a confirmation dialog to restore the deleted movie associated with the given history entry.
 	 *
-	 * @param entry - The history entry to potentially restore.
+	 * @param entry - The history entry whose associated movie will be restored.
 	 */
-	protected onMessageClick(entry: HistoryEntry) {
+	protected openRestoreEntryDialog(entry: HistoryEntry) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'confirm',
@@ -115,7 +114,7 @@ export class HistoryDialogComponent implements OnDestroy {
 	}
 
 	/**
-	 * Handle the dialog closed event by emitting the closed event.
+	 * Handles the dialog closed event by emitting the closed event.
 	 */
 	protected onDialogClosed() {
 		this.closed$.emit();
@@ -126,7 +125,7 @@ export class HistoryDialogComponent implements OnDestroy {
 	 * Clears any dynamically attached nested dialog components from the container
 	 * to prevent memory leaks when this dialog is destroyed.
 	 */
-	public ngOnDestroy() {
+	ngOnDestroy() {
 		this.dialogComponentContainer?.clear();
 	}
 }

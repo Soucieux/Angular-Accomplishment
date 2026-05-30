@@ -15,8 +15,7 @@ export class BlockDialogComponent {
 	protected message: string = '';
 
 	/**
-	 * Open the blocking dialog and execute the given task. The dialog
-	 * stays visible until the task completes or fails, then closes automatically.
+	 * Opens the blocking dialog, runs the given task, and closes automatically when it settles.
 	 *
 	 * @param task - The async task to execute while the dialog is visible.
 	 * @param message - The message to display in the dialog.
@@ -34,7 +33,7 @@ export class BlockDialogComponent {
 	}
 
 	/**
-	 * Handle the dialog closed event by emitting the closed event.
+	 * Handles the dialog closed event by emitting the closed event.
 	 */
 	protected onDialogClosed() {
 		this.closed$.emit();

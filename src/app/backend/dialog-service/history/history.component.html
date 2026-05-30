@@ -26,7 +26,7 @@
 			<p
 				class="message"
 				[class.message-deleted]="entry.status === 'deleted'"
-				(click)="entry.status === 'deleted' ? onMessageClick(entry) : null">
+				(click)="entry.status === 'deleted' ? openRestoreEntryDialog(entry) : null">
 				{{ entry.message }}
 			</p>
 		</div>

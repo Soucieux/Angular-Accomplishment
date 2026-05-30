@@ -39,7 +39,10 @@ import {
 	ENT_MSG_API_EMPTY_RESPONSE,
 	ENT_MSG_FETCH_FAILED_PREFIX,
 	ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX,
-	ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX
+	ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX,
+	ENT_LOG_SEARCH_CANCEL_REQUESTED,
+	ENT_LOG_MOVIE_DETAILS_RETRIEVED,
+	ENT_LOG_UPDATE_FAVOURITE_FAILED
 } from '../../common/app.constant';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
@@ -114,6 +117,12 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	private dialogComponentContainer!: ViewContainerRef;
 	protected readonly NO_RATE = NO_RATE;
 	protected readonly GENRE_FAVOURITE = GENRE_FAVOURITE;
+	protected readonly ENT_TOOLTIP_REFRESH = ENT_TOOLTIP_REFRESH;
+	protected readonly ENT_TOOLTIP_ADD = ENT_TOOLTIP_ADD;
+	protected readonly ENT_TOOLTIP_HISTORY = ENT_TOOLTIP_HISTORY;
+	protected readonly ENT_SEARCH_PLACEHOLDER = ENT_SEARCH_PLACEHOLDER;
+	protected readonly ENT_LABEL_FILMS = ENT_LABEL_FILMS;
+	protected readonly ENT_LABEL_TO_WATCH = ENT_LABEL_TO_WATCH;
 	protected isSearching: boolean = false;
 	private sessionId: number = 0;
 	protected movieList$!: Observable<MovieItemVO[]>;
@@ -121,16 +130,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected searchQuery$ = new BehaviorSubject<string>('');
 	protected searchText: string = '';
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
+	// any: Statistics document shape varies across versions and has no fixed TypeScript type
 	protected statistics$!: Observable<any>;
 	private searchSummary!: Map<string, string[]>;
 	protected editedItems = new Map<string, { originalGenre: string; genre: string }>();
 	protected genres = MOVIE_GENRES;
-	protected readonly ENT_TOOLTIP_REFRESH = ENT_TOOLTIP_REFRESH;
-	protected readonly ENT_TOOLTIP_ADD = ENT_TOOLTIP_ADD;
-	protected readonly ENT_TOOLTIP_HISTORY = ENT_TOOLTIP_HISTORY;
-	protected readonly ENT_SEARCH_PLACEHOLDER = ENT_SEARCH_PLACEHOLDER;
-	protected readonly ENT_LABEL_FILMS = ENT_LABEL_FILMS;
-	protected readonly ENT_LABEL_TO_WATCH = ENT_LABEL_TO_WATCH;
 	private latestMovieList: MovieItemVO[] = [];
 	private readonly vtClassMap = new Map<string, string>();
 	private movieListSub?: Subscription;
@@ -642,7 +646,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	//////////////////////Below are Utilities Functions used by HTML template///////////////////////
+	////////////////////// Below are Utilities Functions used by HTML template /////////////////////
 	/**
 	 * Returns the human-readable quality label for a movie rate ("Excellent", "Good",
 	 * "Average", or "Poor") by delegating to the shared utility method.
@@ -658,7 +662,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * Returns the pushpin colour for a corkboard category card, cycling through
 	 * ENT_CORK_PIN_COLORS by card index.
 	 *
-	 * @param index - Zero-based position of the card in the category row.
+	 * @param index - The zero-based position of the card in the category row.
 	 * @returns A CSS colour string.
 	 */
 	protected getGenreColor(index: number): string {
@@ -669,7 +673,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * Returns the CSS rotation value for a corkboard category card, cycling through
 	 * ENT_CORK_ROTATIONS by card index.
 	 *
-	 * @param index - Zero-based position of the card in the category row.
+	 * @param index - The zero-based position of the card in the category row.
 	 * @returns A CSS rotation string (e.g. "-2.4deg").
 	 */
 	protected getGenreRotation(index: number): string {
@@ -679,8 +683,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	/**
 	 * Delegates to Utilities.filledBlocks using the cork-board block count.
 	 *
-	 * @param count - Number of titles in this genre.
-	 * @param max - Maximum count across all genres, used as the scale denominator.
+	 * @param count - The number of titles in this genre.
+	 * @param max - The maximum count across all genres, used as the scale denominator.
 	 * @returns A boolean array of length ENT_CORK_BLOCKS.
 	 */
 	protected getFilledBlocks(count: number, max: number): boolean[] {
@@ -691,7 +695,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * Computes the maximum genre count from the statistics genre map.
 	 * Used as the denominator when scaling the corkboard progress bar.
 	 *
-	 * @param genre - Genre map keyed by genre name with count values.
+	 * @param genre - The genre map keyed by genre name with count values.
 	 * @returns The highest count, or 1 when the map is empty.
 	 */
 	protected getCorkMax(genre: Record<string, number>): number {
@@ -704,7 +708,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * plain white background; the active card gets a gradient built from its
 	 * own pin colour for per-card colour variety.
 	 *
-	 * @param index - Zero-based position of the card in the category row.
+	 * @param index - The zero-based position of the card in the category row.
 	 * @param isActive - Whether this card is currently selected.
 	 * @returns A CSS background string.
 	 */
@@ -719,7 +723,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * empty string (falling back to the CSS default shadow); the active card
 	 * gets a coloured glow matching its own pin colour.
 	 *
-	 * @param index - Zero-based position of the card in the category row.
+	 * @param index - The zero-based position of the card in the category row.
 	 * @param isActive - Whether this card is currently selected.
 	 * @returns A CSS box-shadow string.
 	 */
@@ -781,14 +785,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		this.searchQuery$.next(value);
 	}
 
-	//////////////////////Below are Event Handlers triggered by user actions///////////////////////
-	/**
-	 * Toggles the genre filter. If the given genre is already selected, it deselects
-	 * it (showing all movies). Otherwise, it selects the given genre, filtering the
-	 * movie list to only show movies matching that genre.
-	 *
-	 * @param genre - The genre to toggle as the active filter.
-	 */
+	////////////////////// Below are Event Handlers triggered by user actions ////////////////////
 	/**
 	 * Toggles the genre filter with a View Transition animation.
 	 * Movies leaving the visible set are tagged vt-leaving (fade out + scale);
@@ -822,8 +819,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * currentGenre but not newGenre, and ENT_VT_CLASS_ENTERING for the reverse.
 	 * Staying movies (visible in both) are omitted so they use the default FLIP.
 	 *
-	 * @param currentGenre The genre filter currently active.
-	 * @param newGenre The genre filter that will be active after the transition.
+	 * @param currentGenre - The genre filter currently active.
+	 * @param newGenre - The genre filter that will be active after the transition.
 	 */
 	private computeVtClassMap(currentGenre: string, newGenre: string): void {
 		this.vtClassMap.clear();
@@ -841,8 +838,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	/**
 	 * Returns whether the given movie should be visible under the specified genre filter.
 	 *
-	 * @param movie The movie to test.
-	 * @param genre The genre filter value; empty string means no filter (show all).
+	 * @param movie - The movie to test.
+	 * @param genre - The genre filter value; empty string means no filter (show all).
 	 * @returns True if the movie is visible under the filter.
 	 */
 	private isMovieInGenre(movie: MovieItemVO, genre: string): boolean {
@@ -855,7 +852,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * Returns the view-transition-class value for a movie card, used by the
 	 * template to tag leaving and entering elements before the VTA snapshot.
 	 *
-	 * @param movie The movie card to query.
+	 * @param movie - The movie card to query.
 	 * @returns The CSS class string, or null if no transition class is needed.
 	 */
 	protected getMovieVtClass(movie: MovieItemVO): string | null {
@@ -878,7 +875,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * iteration and prevents any further movie data from being fetched.
 	 */
 	private cancelSearch() {
-		this.searchStreamService.addSearchLog('Search cancel requested');
+		this.searchStreamService.addSearchLog(ENT_LOG_SEARCH_CANCEL_REQUESTED);
 		this.isSearching = false;
 	}
 
@@ -971,7 +968,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			throw new MovieAlreadyExistsError(newMovieItemVO.getMovieName());
 		}
 		await this.searchNewMovie(newMovieItemVO);
-		LOG.info(this.className, 'New movie details retrieved.');
+		LOG.info(this.className, ENT_LOG_MOVIE_DETAILS_RETRIEVED);
 		return newMovieItemVO.getMovieCoverImage();
 	}
 
@@ -1076,7 +1073,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
-			LOG.error(this.className, 'Error while set favourite');
+			LOG.error(this.className, ENT_LOG_UPDATE_FAVOURITE_FAILED);
 		}
 	}
 }

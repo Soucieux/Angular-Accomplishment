@@ -500,9 +500,9 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.editorCategoryInvalid = false;
 		this.editorIngredientInvalid = false;
 
-		this.editorIngredients = recipe.groups.flatMap((g) =>
-			g.items.map((item) => ({
-				type: g.type,
+		this.editorIngredients = recipe.groups.flatMap((group) =>
+			group.items.map((item) => ({
+				type: group.type,
 				name: item.name,
 				qty: item.baseQty ? String(item.baseQty) : '',
 				unit: item.unit
@@ -511,7 +511,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		// Sync type tabs to match exactly the types present in this recipe so the
 		// user sees the right tabs without having to open the filter dialog manually.
-		const recipeTypes = recipe.groups.map((g) => g.type);
+		const recipeTypes = recipe.groups.map((group) => group.type);
 		if (recipeTypes.length > 0) {
 			this.enabledTypeIds = new Set(recipeTypes);
 		}

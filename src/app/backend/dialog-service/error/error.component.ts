@@ -23,7 +23,7 @@ export class ErrorDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private confirmationService = inject(ConfirmationService);
 	/**
-	 * Open an error dialog displaying the given error message.
+	 * Opens an error dialog displaying the given error message.
 	 *
 	 * @param errorMessage - The error message to display.
 	 */
@@ -42,7 +42,7 @@ export class ErrorDialogComponent {
     }
     
 	/**
-	 * Handle the dialog closed event
+	 * Handles the dialog closed event by emitting the closed event.
 	 */
 	protected onDialogClosed() {
 		this.closed$.emit();

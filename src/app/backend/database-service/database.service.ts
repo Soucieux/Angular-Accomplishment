@@ -13,7 +13,7 @@ export abstract class DatabaseService {
 	protected constructor() {}
 
 	/**
-	 * Build a human-readable history message for a database entry.
+	 * Builds a human-readable history message for a database entry.
 	 * Both FirebaseService and CloudbaseService call this shared implementation
 	 * so the wording stays consistent across backends.
 	 *
@@ -31,7 +31,7 @@ export abstract class DatabaseService {
 	}
 
 	/**
-	 * Upload the movie cover image to storage and return the downloadable link.
+	 * Uploads the movie cover image to storage and returns the downloadable link.
 	 *
 	 * @param coverImage - The movie cover blob to upload.
 	 * @param movieName - The name of the movie (used as the filename in storage).
@@ -40,33 +40,34 @@ export abstract class DatabaseService {
 	public abstract uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string>;
 
 	/**
-	 * Get the movie list from the database.
+	 * Returns the movie list from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
 	public abstract getMovieList(): Observable<MovieItemVO[]>;
 
 	/**
-	 * Get the statistics from the database.
+	 * Returns the statistics document from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the statistics.
+	 *          // any: Statistics document shape varies across versions and has no fixed TypeScript type
 	 */
 	public abstract getStatistics(): Observable<any>;
 
 	/**
-	 * Add a new entry to history stating that a new search activity has been initialized.
+	 * Adds a new entry to history stating that a new rate-search activity has been started.
 	 */
 	public abstract updateHistoryWithNewSearchActivity(): Promise<void>;
 
 	/**
-	 * Update the movie rate in the database.
+	 * Updates the movie rate in the database.
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
 	public abstract updateMovieRate(movieItemVO: MovieItemVO): Promise<void>;
 
 	/**
-	 * Update the movie genre in the database.
+	 * Updates the movie genre in the database.
 	 *
 	 * @param movieKey - The key of the movie to update.
 	 * @param oldGenre - The old genre value.
@@ -75,7 +76,7 @@ export abstract class DatabaseService {
 	public abstract updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void>;
 
 	/**
-	 * Update the isFavourite flag for the given movie in the database.
+	 * Updates the isFavourite flag for the given movie in the database.
 	 *
 	 * @param movieKey - The key of the movie to update.
 	 * @param isFavourite - The boolean value to set.
@@ -83,31 +84,35 @@ export abstract class DatabaseService {
 	public abstract updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void>;
 
 	/**
-	 * Add a new movie to the database and update the statistics accordingly.
+	 * Adds a new movie to the database and updates the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to add.
 	 */
 	public abstract addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void>;
 
 	/**
-	 * Remove a movie from the database and update the statistics accordingly.
+	 * Removes a movie from the database and updates the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to remove.
 	 */
 	public abstract removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void>;
 
 	/**
-	 * Check if a given movie has already been added in the database.
+	 * Checks whether a given movie has already been added to the database.
 	 *
 	 * @param movieName - The name of the movie to check.
 	 * @param movieYear - The year of the movie to check.
 	 * @param movieId - The ID of the movie to check.
-	 * @returns true if the movie already exists, otherwise false.
+	 * @returns True if the movie already exists, otherwise false.
 	 */
-	public abstract isMovieAlreadyAdded(movieName: string, movieYear: number, movieId: number): Promise<boolean>;
+	public abstract isMovieAlreadyAdded(
+		movieName: string,
+		movieYear: number,
+		movieId: number
+	): Promise<boolean>;
 
 	/**
-	 * Add a new history entry with the given status and optional movie data.
+	 * Adds a new history entry with the given status and optional movie data.
 	 *
 	 * @param status - The status of the activity.
 	 * @param movieItemVO - The movie item associated with the activity.
@@ -115,36 +120,40 @@ export abstract class DatabaseService {
 	protected abstract addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void>;
 
 	/**
-	 * Retrieve the history list from the database.
+	 * Returns the history list from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the history list.
+	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getHistory(): Observable<any[]>;
 
 	/**
-	 * Add a new record to the patch notes collection.
+	 * Adds a new record to the patch notes collection.
 	 *
 	 * @param newRecord - The record to add.
+	 *                    // any: Patch note record shape is validated at the call site
 	 */
 	public abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
 
 	/**
-	 * Update an existing record in the patch notes collection.
+	 * Updates an existing record in the patch notes collection.
 	 *
 	 * @param key - The key of the record to update.
 	 * @param updatedRecord - The updated record data.
+	 *                        // any: Patch note record shape is validated at the call site
 	 */
 	public abstract updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void>;
 
 	/**
-	 * Get the patch notes from the database.
+	 * Returns the patch notes from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the patch notes.
+	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getPatchNotes(): Observable<any[]>;
 
 	/**
-	 * Remove a single item from the given collection in the database.
+	 * Removes a single item from the given collection in the database.
 	 *
 	 * @param name - The collection name.
 	 * @param key - The key of the record to remove.
@@ -152,40 +161,44 @@ export abstract class DatabaseService {
 	public abstract removeSingleItemFromDatabase(name: string, key: string): Promise<void>;
 
 	/**
-	 * Remove a patch note and keep the patchInProgress statistics field in sync.
+	 * Removes a patch note and keeps the patchInProgress statistics field in sync.
 	 *
 	 * @param key - The document key of the patch note to remove.
 	 */
 	public abstract removePatchNote(key: string): Promise<void>;
 
 	/**
-	 * Get the first reminder table details from the database.
+	 * Returns the first reminder table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the first reminder table details.
+	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getFirstReminderTableDetails(): Observable<any[]>;
 
 	/**
-	 * Get the second reminder table details from the database.
+	 * Returns the second reminder table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the second reminder table details.
+	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getSecondReminderTableDetails(): Observable<any[]>;
 
 	/**
-	 * Get the third reminder table details from the database.
+	 * Returns the third reminder table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the third reminder table details.
+	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getThirdReminderTableDetails(): Observable<any[]>;
 
 	/**
-	 * Update a value in the reminder table.
+	 * Updates a single value in the reminder table.
 	 *
 	 * @param tableName - The name of the table to update.
 	 * @param entryKey - The key of the entry to update.
 	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to store.
+	 *               // any: Reminder value types differ per table and are validated at the call site
 	 */
 	public abstract updateReminderTable(
 		tableName: string,
@@ -195,15 +208,16 @@ export abstract class DatabaseService {
 	): Promise<void>;
 
 	/**
-	 * Update the first reminder table with the given data.
+	 * Updates the first reminder table with the given data.
 	 *
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The updated table data.
+	 *                       // any: First table structure is validated at the call site
 	 */
 	public abstract updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void>;
 
 	/**
-	 * Remove a record from the reminder table.
+	 * Removes a record from the reminder table.
 	 *
 	 * @param tableName - The name of the table.
 	 * @param key - The key of the record to remove.
@@ -211,22 +225,24 @@ export abstract class DatabaseService {
 	public abstract removeRecordFromReminderTable(tableName: string, key: string): Promise<void>;
 
 	/**
-	 * Add a new record to the reminder table.
+	 * Adds a new record to the reminder table.
 	 *
 	 * @param tableName - The name of the table.
 	 * @param newRecord - The new record to add.
+	 *                    // any: Record shape varies by table and is validated at the call site
 	 */
 	public abstract addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void>;
 
 	/**
-	 * Get the quotes from the database.
+	 * Returns the quotes from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the quotes list.
+	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getQuotes(): Observable<any[]>;
 
 	/**
-	 * Add a new quote to the database.
+	 * Adds a new quote to the database.
 	 *
 	 * @param text - The quote text.
 	 * @param author - The author of the quote.
@@ -235,64 +251,79 @@ export abstract class DatabaseService {
 	public abstract addQuote(text: string, author: string, timestamp: string): Promise<void>;
 
 	/**
-	 * Remove a quote from the database.
+	 * Removes a quote from the database.
 	 *
 	 * @param key - The key of the quote to remove.
+	 * @param text - The text of the quote (used for activity log).
+	 * @param author - The author of the quote (used for activity log).
 	 */
 	public abstract removeQuote(key: string, text: string, author: string): Promise<void>;
 
 	/**
-	 * Update specific fields in the statistics document.
+	 * Updates specific fields in the statistics document.
 	 * Used by page components to sync their data into the shared statistics collection
 	 * while the page is active. The call is naturally lifecycle-scoped — components
 	 * unsubscribe (or lose their subscription) on destroy, stopping further updates.
 	 *
 	 * @param fields - A flat or nested record of fields to merge into the statistics document.
+	 *                 // any: Statistics field shapes vary per page and are validated at the call site
 	 */
 	public abstract updateStatisticsFields(fields: Record<string, any>): Promise<void>;
 
 	/**
-	 * Prepend a new entry to the `recentPatchActivities` list in the statistics
+	 * Prepends a new entry to the `recentPatchActivities` list in the statistics
 	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
 	 *
 	 * @param activity - The activity object to record.
+	 *                   // any: Activity shape varies by caller and is validated at the call site
 	 */
 	public abstract appendToPatchActivityLog(activity: any): Promise<void>;
 
 	/**
-	 * Prepend a new entry to a named activity-log array in the statistics
+	 * Prepends a new entry to a named activity-log array in the statistics
 	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
 	 * Used for movie, patch, reminder and resonance activity feeds.
 	 *
 	 * @param fieldName - The statistics field that holds the array — use a STATS_FIELD_* constant.
 	 * @param activity - The activity object to record.
+	 *                   // any: Activity shape varies by caller and is validated at the call site
 	 */
 	public abstract appendToActivityLog(fieldName: string, activity: any): Promise<void>;
 
 	/**
-	 * Get the useful links from the database.
+	 * Returns the useful links from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the useful links list.
+	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getUsefulLinks(): Observable<any[]>;
 
 	/**
-	 * Add a new useful link to the database.
+	 * Adds a new useful link to the database.
 	 *
 	 * @param link - The link object to add.
 	 */
-	public abstract addUsefulLink(link: { url: string; title: string; category: string; visitCount: number; createdAt: string }): Promise<void>;
+	public abstract addUsefulLink(link: {
+		url: string;
+		title: string;
+		category: string;
+		visitCount: number;
+		createdAt: string;
+	}): Promise<void>;
 
 	/**
-	 * Update an existing useful link in the database.
+	 * Updates an existing useful link in the database.
 	 *
 	 * @param key - The key of the link to update.
 	 * @param updates - The fields to update.
 	 */
-	public abstract updateUsefulLink(key: string, updates: Partial<{ url: string; title: string; category: string }>): Promise<void>;
+	public abstract updateUsefulLink(
+		key: string,
+		updates: Partial<{ url: string; title: string; category: string }>
+	): Promise<void>;
 
 	/**
-	 * Increment the visit count for a useful link.
+	 * Increments the visit count for a useful link.
 	 *
 	 * @param key - The key of the link.
 	 * @param currentCount - The current visit count.
@@ -300,72 +331,76 @@ export abstract class DatabaseService {
 	public abstract incrementLinkVisit(key: string, currentCount: number): Promise<void>;
 
 	/**
-	 * Remove a useful link from the database.
+	 * Removes a useful link from the database.
 	 *
 	 * @param key - The key of the link to remove.
 	 */
 	public abstract removeUsefulLink(key: string): Promise<void>;
 
 	/**
-	 * Get the link categories from the database.
+	 * Returns the link categories from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the link categories list.
+	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getLinkCategories(): Observable<any[]>;
 
 	/**
-	 * Add a new link category to the database.
+	 * Adds a new link category to the database.
 	 *
 	 * @param category - The category object to add.
 	 */
 	public abstract addLinkCategory(category: { name: string; color: string; order: number }): Promise<void>;
 
 	/**
-	 * Update an existing link category in the database.
+	 * Updates an existing link category in the database.
 	 *
 	 * @param key - The key of the category to update.
 	 * @param updates - The fields to update.
 	 */
-	public abstract updateLinkCategory(key: string, updates: Partial<{ name: string; color: string; order: number }>): Promise<void>;
+	public abstract updateLinkCategory(
+		key: string,
+		updates: Partial<{ name: string; color: string; order: number }>
+	): Promise<void>;
 
 	/**
-	 * Remove a link category from the database.
+	 * Removes a link category from the database.
 	 *
 	 * @param key - The key of the category to remove.
 	 */
 	public abstract removeLinkCategory(key: string): Promise<void>;
 
 	/**
-	 * Get all recipes for the current user from the database.
+	 * Returns all recipes for the current user from the database.
 	 *
 	 * @returns An observable that emits the recipe list.
 	 */
 	public abstract getRecipes(): Observable<Recipe[]>;
 
 	/**
-	 * Add a new recipe to the database.
+	 * Adds a new recipe to the database.
 	 *
 	 * @param recipe - The recipe to persist. The `id` field is ignored; the database assigns one.
 	 */
 	public abstract addRecipe(recipe: Recipe): Promise<void>;
 
 	/**
-	 * Update an existing recipe in the database.
+	 * Updates an existing recipe in the database.
 	 *
 	 * @param recipe - The recipe to update. The `id` field identifies the document.
 	 */
 	public abstract updateRecipe(recipe: Recipe): Promise<void>;
 
 	/**
-	 * Remove a recipe from the database.
+	 * Removes a recipe from the database.
 	 *
 	 * @param recipeId - The database ID of the recipe to delete.
 	 */
 	public abstract removeRecipe(recipeId: string): Promise<void>;
 
 	/**
-	 * Proxy an HTTP GET request through the `fetchUrl` CloudBase function,
-	 * bypassing browser CORS restrictions.  Used for RSS news feeds and
+	 * Proxies an HTTP GET request through the `fetchUrl` CloudBase function,
+	 * bypassing browser CORS restrictions. Used for RSS news feeds and
 	 * link-title auto-fetch on the Nexus page.
 	 *
 	 * @param url - The fully-qualified http/https URL to fetch.

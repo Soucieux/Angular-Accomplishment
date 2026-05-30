@@ -9,7 +9,6 @@ import { Utilities } from '../../common/app.utilities';
 import {
     DATABASE_FIRST_TABLE,
     DATABASE_SECOND_TABLE,
-    DATABASE_THIRD_TABLE,
     SUCCESS,
     FAILURE
 } from '../../common/app.constant';
@@ -37,11 +36,6 @@ function makeSecondRow(key = 'k1', debt = 100, paid = false) {
     };
 }
 
-/** Minimal third-table row factory. */
-function makeThirdRow(key = 'k1', text = 'hello', date = '') {
-    return { key, _openid: 'uid1', content: { text, date, link: '' } };
-}
-
 describe('ReminderComponent', () => {
     let component: ReminderComponent;
     let fixture: ComponentFixture<ReminderComponent>;
@@ -52,7 +46,6 @@ describe('ReminderComponent', () => {
         mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
             'getFirstReminderTableDetails',
             'getSecondReminderTableDetails',
-            'getThirdReminderTableDetails',
             'updateFirstReminderTable',
             'updateReminderTable',
             'removeRecordFromReminderTable',
@@ -62,7 +55,6 @@ describe('ReminderComponent', () => {
         ]);
         mockDb.getFirstReminderTableDetails.and.returnValue(of([]));
         mockDb.getSecondReminderTableDetails.and.returnValue(of([]));
-        mockDb.getThirdReminderTableDetails.and.returnValue(of([]));
         mockDb.updateFirstReminderTable.and.returnValue(Promise.resolve());
         mockDb.updateReminderTable.and.returnValue(Promise.resolve());
         mockDb.removeRecordFromReminderTable.and.returnValue(Promise.resolve());
@@ -227,103 +219,6 @@ describe('ReminderComponent', () => {
             const event = { key: 'ArrowLeft', preventDefault: jasmine.createSpy('pd') } as unknown as KeyboardEvent;
             (component as any).onNumberChange(event);
             expect(event.preventDefault).not.toHaveBeenCalled();
-        });
-    });
-
-    // ── updatePagedThirdTable ─────────────────────────────────────────────
-
-    describe('updatePagedThirdTable', () => {
-        it('returns an empty array when originalThirdTable is empty', () => {
-            (component as any).originalThirdTable = [];
-            (component as any).thirdTableIndexOfFirstItem = 0;
-            (component as any).thirdTableItemsPerPage = 10;
-            const result = (component as any).updatePagedThirdTable();
-            expect(result).toEqual([]);
-        });
-
-        it('returns only the items within the current pagination window', () => {
-            (component as any).originalThirdTable = [
-                makeThirdRow('k1'),
-                makeThirdRow('k2'),
-                makeThirdRow('k3')
-            ];
-            (component as any).thirdTableIndexOfFirstItem = 1;
-            (component as any).thirdTableItemsPerPage = 1;
-            const result = (component as any).updatePagedThirdTable();
-            expect(result.length).toBe(1);
-            expect(result[0].key).toBe('k2');
-        });
-    });
-
-    // ── thirdTablePageChange ──────────────────────────────────────────────
-
-    describe('thirdTablePageChange', () => {
-        it('updates thirdTableIndexOfFirstItem from the event', () => {
-            (component as any).originalThirdTable = [];
-            (component as any).thirdTablePageChange({ first: 10 });
-            expect((component as any).thirdTableIndexOfFirstItem).toBe(10);
-        });
-
-        it('refreshes the paged data slice', () => {
-            (component as any).originalThirdTable = [makeThirdRow('k1'), makeThirdRow('k2')];
-            (component as any).thirdTableIndexOfFirstItem = 0;
-            (component as any).thirdTableItemsPerPage = 1;
-            spyOn<any>(component, 'updatePagedThirdTable').and.returnValue([]);
-            (component as any).thirdTablePageChange({ first: 0 });
-            expect((component as any).updatePagedThirdTable).toHaveBeenCalled();
-        });
-    });
-
-    // ── addNewTextOnly ────────────────────────────────────────────────────
-
-    describe('addNewTextOnly', () => {
-        it('does not call addNewRecordForReminderTable when text is empty', async () => {
-            (component as any).thirdTableNewText = '   ';
-            await (component as any).addNewTextOnly();
-            expect(mockDb.addNewRecordForReminderTable).not.toHaveBeenCalled();
-        });
-
-        it('calls addNewRecordForReminderTable with the text when non-empty', async () => {
-            (component as any).thirdTableNewText = 'hello world';
-            await (component as any).addNewTextOnly();
-            expect(mockDb.addNewRecordForReminderTable).toHaveBeenCalledWith(
-                DATABASE_THIRD_TABLE,
-                jasmine.objectContaining({ text: 'hello world' })
-            );
-        });
-
-        it('clears thirdTableNewText after a successful add', async () => {
-            (component as any).thirdTableNewText = 'some text';
-            await (component as any).addNewTextOnly();
-            expect((component as any).thirdTableNewText).toBe('');
-        });
-
-        it('calls handleError when the database throws', async () => {
-            mockDb.addNewRecordForReminderTable.and.returnValue(Promise.reject(new Error('fail')));
-            (component as any).thirdTableNewText = 'text';
-            await (component as any).addNewTextOnly();
-            expect(mockDialogService.handleError).toHaveBeenCalled();
-        });
-    });
-
-    // ── openPopover ───────────────────────────────────────────────────────
-
-    describe('openPopover', () => {
-        it('initializes an empty template when item is undefined/null', () => {
-            const fakePopover = { hide: jasmine.createSpy('hide'), show: jasmine.createSpy('show') };
-            (component as any).thirdTablePopover = fakePopover;
-            (component as any).openPopover(new MouseEvent('click'), null);
-            expect((component as any).thirdTableActiveItem).toEqual(
-                jasmine.objectContaining({ content: jasmine.objectContaining({ link: '', date: '' }) })
-            );
-        });
-
-        it('sets thirdTableActiveItem to the provided item', () => {
-            const fakePopover = { hide: jasmine.createSpy('hide'), show: jasmine.createSpy('show') };
-            (component as any).thirdTablePopover = fakePopover;
-            const item = makeThirdRow('k1');
-            (component as any).openPopover(new MouseEvent('click'), item);
-            expect((component as any).thirdTableActiveItem).toBe(item);
         });
     });
 
@@ -539,65 +434,4 @@ describe('ReminderComponent', () => {
         });
     });
 
-    // ── onPopoverButtonClick ──────────────────────────────────────────────
-
-    describe('onPopoverButtonClick', () => {
-        it('opens the delete dialog when thirdTableActiveItem has a key', () => {
-            spyOn<any>(component, 'openDeleteConfirmationDialog').and.stub();
-            (component as any).thirdTableActiveItem = { key: 'k1', content: { text: 'hi' } };
-            (component as any).onPopoverButtonClick();
-            expect((component as any).openDeleteConfirmationDialog).toHaveBeenCalledWith('k1');
-        });
-
-        it('calls addNewEntry when thirdTableActiveItem has no key', () => {
-            spyOn<any>(component, 'addNewEntry').and.returnValue(Promise.resolve());
-            (component as any).thirdTableActiveItem = { content: { link: '', date: '' } };
-            (component as any).onPopoverButtonClick();
-            expect((component as any).addNewEntry).toHaveBeenCalled();
-        });
-    });
-
-    // ── onPopoverLinkUpdate ───────────────────────────────────────────────
-
-    describe('onPopoverLinkUpdate', () => {
-        it('calls updateLink when thirdTableActiveItem has a key', () => {
-            spyOn<any>(component, 'updateLink').and.returnValue(Promise.resolve());
-            (component as any).thirdTableActiveItem = {
-                key: 'k1',
-                content: { text: 'hi', date: '', link: 'https://example.com' }
-            };
-            (component as any).onPopoverLinkUpdate();
-            expect((component as any).updateLink).toHaveBeenCalledWith(
-                DATABASE_THIRD_TABLE, 'k1', 'https://example.com'
-            );
-        });
-
-        it('does nothing when thirdTableActiveItem has no key', () => {
-            spyOn<any>(component, 'updateLink').and.returnValue(Promise.resolve());
-            (component as any).thirdTableActiveItem = { content: { link: '', date: '' } };
-            (component as any).onPopoverLinkUpdate();
-            expect((component as any).updateLink).not.toHaveBeenCalled();
-        });
-    });
-
-    // ── onPopoverDateUpdate ───────────────────────────────────────────────
-
-    describe('onPopoverDateUpdate', () => {
-        it('calls updateTableWithNewDate when thirdTableActiveItem has a key', () => {
-            spyOn<any>(component, 'updateTableWithNewDate').and.returnValue(Promise.resolve());
-            (component as any).thirdTableActiveItem = { key: 'k1', content: { text: 'hi' } };
-            const date = new Date('2025-06-15');
-            (component as any).onPopoverDateUpdate(date);
-            expect((component as any).updateTableWithNewDate).toHaveBeenCalledWith(
-                DATABASE_THIRD_TABLE, 'k1', date
-            );
-        });
-
-        it('does nothing when thirdTableActiveItem has no key', () => {
-            spyOn<any>(component, 'updateTableWithNewDate').and.returnValue(Promise.resolve());
-            (component as any).thirdTableActiveItem = { content: { link: '', date: '' } };
-            (component as any).onPopoverDateUpdate(new Date());
-            expect((component as any).updateTableWithNewDate).not.toHaveBeenCalled();
-        });
-    });
 });

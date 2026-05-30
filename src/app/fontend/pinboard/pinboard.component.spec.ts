@@ -12,7 +12,7 @@ import {
     SUCCESS,
     FAILURE
 } from '../../common/app.constant';
-import { ReminderComponent } from './reminder.component';
+import { PinboardComponent } from './pinboard.component';
 
 /** Minimal first-table row factory. */
 function makeFirstRow(value = 5, isCharged = false) {
@@ -36,9 +36,9 @@ function makeSecondRow(key = 'k1', debt = 100, paid = false) {
     };
 }
 
-describe('ReminderComponent', () => {
-    let component: ReminderComponent;
-    let fixture: ComponentFixture<ReminderComponent>;
+describe('PinboardComponent', () => {
+    let component: PinboardComponent;
+    let fixture: ComponentFixture<PinboardComponent>;
     let mockDb: jasmine.SpyObj<DatabaseService>;
     let mockDialogService: jasmine.SpyObj<DialogService>;
 
@@ -73,7 +73,7 @@ describe('ReminderComponent', () => {
         mockDialogService.handleError.and.stub();
 
         await TestBed.configureTestingModule({
-            imports: [ReminderComponent],
+            imports: [PinboardComponent],
             providers: [
                 MessageService,
                 { provide: DatabaseService, useValue: mockDb },
@@ -81,7 +81,7 @@ describe('ReminderComponent', () => {
             ]
         }).compileComponents();
 
-        fixture = TestBed.createComponent(ReminderComponent);
+        fixture = TestBed.createComponent(PinboardComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

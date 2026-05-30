@@ -1,4 +1,4 @@
-export interface PinboardItem {
+export interface ReminderItem {
 	key: string;
 	_openid: string;
 	text: string;
@@ -7,10 +7,10 @@ export interface PinboardItem {
 	tags: string[];
 }
 
-export type PinboardValueKey = 'text' | 'date' | 'link' | 'tags';
+export type ReminderValueKey = 'text' | 'date' | 'link' | 'tags';
 
 /** Raw shape of a third-table document as returned by CloudBase. */
-export interface PinboardDbRecord {
+export interface ReminderDbRecord {
 	key: string;
 	_openid: string;
 	content: {
@@ -23,7 +23,7 @@ export interface PinboardDbRecord {
 
 /** Tag-edit session shared by both existing-card and new-item-card contexts. */
 export interface TagEditSession {
-	item: PinboardItem | null; // null when operating on the new-item card
+	item: ReminderItem | null; // null when operating on the new-item card
 	index: number; // -1 = adding new tag; 0+ = editing existing tag
 	isNewItem: boolean;
 	tagText: string; // text currently being typed in the tag input

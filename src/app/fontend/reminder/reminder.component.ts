@@ -33,17 +33,17 @@ import {
 	FAILURE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
-	PINBOARD_DIALOG_CONFIRM_BTN,
-	PINBOARD_DIALOG_DELETE_BTN,
+	REMINDER_DIALOG_CONFIRM_BTN,
+	REMINDER_DIALOG_DELETE_BTN,
 	PINBOARD_VALUE_KEY_DATE,
 	PINBOARD_VALUE_KEY_LINK,
 	PINBOARD_VALUE_KEY_TAGS,
 	PINBOARD_VALUE_KEY_TEXT,
-	PINBOARD_ITEMS_PER_PAGE,
-	PINBOARD_MSG_DELETE_CONFIRM,
-	PINBOARD_PLACEHOLDER_LINK,
-	PINBOARD_PLACEHOLDER_TAG,
-	PINBOARD_PLACEHOLDER_TEXT,
+	REMINDER_ITEMS_PER_PAGE,
+	REMINDER_MSG_DELETE_CONFIRM,
+	REMINDER_PLACEHOLDER_LINK,
+	REMINDER_PLACEHOLDER_TAG,
+	REMINDER_PLACEHOLDER_TEXT,
 	REMINDER_ITEM_MESSAGE,
 	REMINDER_TABLE_MESSAGES,
 	STATS_FIELD_RECENT_REMINDER,
@@ -53,17 +53,17 @@ import {
 } from '../../common/app.constant';
 import {
 	NewItem,
-	PinboardDbRecord,
-	PinboardValueKey,
-	PinboardItem,
+	ReminderDbRecord,
+	ReminderValueKey,
+	ReminderItem,
 	TagEditSession
-} from './pinboard.model';
+} from './reminder.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
-	selector: 'pinboard',
+	selector: 'reminder',
 	standalone: true,
 	imports: [
 		CommonModule,
@@ -78,11 +78,11 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		TooltipModule,
 		AccessDeniedComponent
 	],
-	templateUrl: './pinboard.component.html',
-	styleUrl: './pinboard.component.css'
+	templateUrl: './reminder.component.html',
+	styleUrl: './reminder.component.css'
 })
-export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
-	private readonly className = 'PinboardComponent';
+export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
+	private readonly className = 'ReminderComponent';
 
 	@ViewChild('pinboardBody') private pinboardBody!: ElementRef<HTMLElement>;
 	@ViewChild('dateOrLinkPopover') private dateOrLinkPopover!: Popover;
@@ -90,14 +90,14 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 
-	protected readonly PINBOARD_PLACEHOLDER_TEXT = PINBOARD_PLACEHOLDER_TEXT;
-	protected readonly PINBOARD_PLACEHOLDER_LINK = PINBOARD_PLACEHOLDER_LINK;
-	protected readonly PINBOARD_PLACEHOLDER_TAG = PINBOARD_PLACEHOLDER_TAG;
+	protected readonly REMINDER_PLACEHOLDER_TEXT = REMINDER_PLACEHOLDER_TEXT;
+	protected readonly REMINDER_PLACEHOLDER_LINK = REMINDER_PLACEHOLDER_LINK;
+	protected readonly REMINDER_PLACEHOLDER_TAG = REMINDER_PLACEHOLDER_TAG;
 
 	protected loading = true;
-	protected items: PinboardItem[] = [];
+	protected items: ReminderItem[] = [];
 	protected page = 0;
-	protected editingItem: PinboardItem | null = null;
+	protected editingItem: ReminderItem | null = null;
 	protected isDate = false;
 	protected editingLink = '';
 	protected newItem: NewItem = { text: '', date: null, link: '', tags: [] };
@@ -105,7 +105,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected tagFilter = new Set<string>();
 
 	protected tagEditSession: TagEditSession | null = null;
-	private originalItems: PinboardDbRecord[] = [];
+	private originalItems: ReminderDbRecord[] = [];
 	private itemsSub?: Subscription;
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
@@ -119,14 +119,14 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	/**
 	 * Subscribes to the third-table CloudBase collection, maps each raw record to a
-	 * PinboardItem view model, removes stale tag filters, syncs upcoming items to the
+	 * ReminderItem view model, removes stale tag filters, syncs upcoming items to the
 	 * statistics collection, and clears the loading state on first emission.
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.itemsSub = this.databaseService.getThirdReminderTableDetails().subscribe((raw) => {
-				// Step 1: Parse raw DB records into PinboardItem view models
-				const records = raw as PinboardDbRecord[];
+				// Step 1: Parse raw DB records into ReminderItem view models
+				const records = raw as ReminderDbRecord[];
 				this.originalItems = structuredClone(records);
 				this.items = records.map((record) => ({
 					key: record.key ?? '',
@@ -239,9 +239,9 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param valueKey - The value key identifying which property inside the entry to restore.
 	 */
 	private rollbackSingleValue(
-		item: PinboardItem,
-		originalRecord: PinboardDbRecord,
-		valueKey: PinboardValueKey
+		item: ReminderItem,
+		originalRecord: ReminderDbRecord,
+		valueKey: ReminderValueKey
 	): void {
 		switch (valueKey) {
 			case PINBOARD_VALUE_KEY_TEXT:
@@ -282,7 +282,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	private async updateTableSingleValue(
 		entryKey: string,
-		valueKey: PinboardValueKey,
+		valueKey: ReminderValueKey,
 		singleValue: string | string[] | null
 	): Promise<void> {
 		try {
@@ -364,7 +364,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 *
 	 * @returns Filtered subset of items.
 	 */
-	protected get filteredItems(): PinboardItem[] {
+	protected get filteredItems(): ReminderItem[] {
 		if (this.tagFilter.size === 0) return this.items;
 		return this.items.filter((item) => item.tags.some((tag) => this.tagFilter.has(tag)));
 	}
@@ -419,9 +419,9 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 *
 	 * @returns The slice of filtered items for the current page.
 	 */
-	protected get pagedItems(): PinboardItem[] {
-		const start = this.page * PINBOARD_ITEMS_PER_PAGE;
-		return this.filteredItems.slice(start, start + PINBOARD_ITEMS_PER_PAGE);
+	protected get pagedItems(): ReminderItem[] {
+		const start = this.page * REMINDER_ITEMS_PER_PAGE;
+		return this.filteredItems.slice(start, start + REMINDER_ITEMS_PER_PAGE);
 	}
 
 	/**
@@ -433,7 +433,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected get showAddCard(): boolean {
 		return (
 			this.tagFilter.size === 0 &&
-			this.page * PINBOARD_ITEMS_PER_PAGE + PINBOARD_ITEMS_PER_PAGE > this.items.length
+			this.page * REMINDER_ITEMS_PER_PAGE + REMINDER_ITEMS_PER_PAGE > this.items.length
 		);
 	}
 
@@ -445,7 +445,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected get totalPages(): number {
 		const count = this.filteredItems.length + (this.tagFilter.size === 0 ? 1 : 0);
-		return Math.max(1, Math.ceil(count / PINBOARD_ITEMS_PER_PAGE));
+		return Math.max(1, Math.ceil(count / REMINDER_ITEMS_PER_PAGE));
 	}
 
 	/**
@@ -487,9 +487,9 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * When item is provided, sets editingItem for an existing-card edit; otherwise targets the new-item form.
 	 *
 	 * @param event - The click event used to position the popover.
-	 * @param item - The PinboardItem being edited, or undefined for the new-item form.
+	 * @param item - The ReminderItem being edited, or undefined for the new-item form.
 	 */
-	protected async openDatePopover(event: Event, item?: PinboardItem): Promise<void> {
+	protected async openDatePopover(event: Event, item?: ReminderItem): Promise<void> {
 		this.editingItem = item ?? null;
 		this.isDate = true;
 		this.dateOrLinkPopover.hide();
@@ -502,9 +502,9 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * When item is provided, sets editingItem and loads the item's link; otherwise targets the new-item form.
 	 *
 	 * @param event - The click event used to position the popover.
-	 * @param item - The PinboardItem being edited, or undefined for the new-item form.
+	 * @param item - The ReminderItem being edited, or undefined for the new-item form.
 	 */
-	protected async openLinkPopover(event: Event, item?: PinboardItem): Promise<void> {
+	protected async openLinkPopover(event: Event, item?: ReminderItem): Promise<void> {
 		this.editingItem = item ?? null;
 		this.editingLink = item?.link ?? '';
 		this.isDate = false;
@@ -537,7 +537,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 		if (!this.newItem.text.trim()) return;
 
 		// Step 1: Build the content payload
-		const newContent: PinboardDbRecord['content'] = {
+		const newContent: ReminderDbRecord['content'] = {
 			text: this.newItem.text.trim(),
 			tags: [...this.newItem.tags]
 		};
@@ -591,7 +591,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 			async () => {
 				await this.removeRecordFromDatabase(entryKey);
 			},
-			[PINBOARD_MSG_DELETE_CONFIRM, PINBOARD_DIALOG_DELETE_BTN, PINBOARD_DIALOG_CONFIRM_BTN]
+			[REMINDER_MSG_DELETE_CONFIRM, REMINDER_DIALOG_DELETE_BTN, REMINDER_DIALOG_CONFIRM_BTN]
 		);
 	}
 
@@ -599,9 +599,9 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Persists the card message text to CloudBase when confirmed (Enter or blur),
 	 * only when the value has changed.
 	 *
-	 * @param item - The PinboardItem whose text was edited.
+	 * @param item - The ReminderItem whose text was edited.
 	 */
-	protected async onCardTextUpdate(item: PinboardItem): Promise<void> {
+	protected async onCardTextUpdate(item: ReminderItem): Promise<void> {
 		const originalIndex = this.originalItems.findIndex((originalRecord) => originalRecord.key === item.key);
 		if (originalIndex === -1 || item.text === (this.originalItems[originalIndex].content?.text ?? '')) return;
 		const returnCode = this.checkPermission(item.key);
@@ -628,7 +628,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @returns A 2-character padded string e.g. "01", "12".
 	 */
 	protected globalLabel(localIndex: number): string {
-		return String(this.page * PINBOARD_ITEMS_PER_PAGE + localIndex + 1).padStart(2, '0');
+		return String(this.page * REMINDER_ITEMS_PER_PAGE + localIndex + 1).padStart(2, '0');
 	}
 
 	////////////////////// Below are card edit popover event handlers ////////////////////////
@@ -678,7 +678,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param item - The card whose tag is being edited or extended.
 	 * @param index - The 0-based tag index to edit, or -1 to add a new tag.
 	 */
-	protected startTagEdit(item: PinboardItem, index: number): void {
+	protected startTagEdit(item: ReminderItem, index: number): void {
 		this.tagEditSession = {
 			item,
 			index,
@@ -746,7 +746,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param index - The 0-based index of the tag to remove.
 	 * @param item - The card whose tag is being removed.
 	 */
-	protected async removeExistingCardTag(index: number, item: PinboardItem): Promise<void> {
+	protected async removeExistingCardTag(index: number, item: ReminderItem): Promise<void> {
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
 		item.tags.splice(index, 1);
@@ -760,7 +760,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param index - The tag index to check.
 	 * @returns True when that exact tag cell is being edited.
 	 */
-	protected isEditingTag(item: PinboardItem, index: number): boolean {
+	protected isEditingTag(item: ReminderItem, index: number): boolean {
 		const session = this.tagEditSession;
 		return session !== null && !session.isNewItem && session.item === item && session.index === index;
 	}
@@ -771,7 +771,7 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param item - The card to check.
 	 * @returns True when the add-new-tag input is open for this card.
 	 */
-	protected isAddingTag(item: PinboardItem): boolean {
+	protected isAddingTag(item: ReminderItem): boolean {
 		const session = this.tagEditSession;
 		return session !== null && !session.isNewItem && session.item === item && session.index === -1;
 	}
@@ -819,9 +819,9 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	/**
 	 * Clears the date single value on a pin and persists the change to CloudBase.
 	 *
-	 * @param item - The PinboardItem to update.
+	 * @param item - The ReminderItem to update.
 	 */
-	protected async clearDate(item: PinboardItem): Promise<void> {
+	protected async clearDate(item: ReminderItem): Promise<void> {
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
 		item.date = null;
@@ -834,9 +834,9 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	/**
 	 * Clears the link single value on a pin and persists the change to CloudBase.
 	 *
-	 * @param item - The PinboardItem to update.
+	 * @param item - The ReminderItem to update.
 	 */
-	protected async clearLink(item: PinboardItem): Promise<void> {
+	protected async clearLink(item: ReminderItem): Promise<void> {
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
 		item.link = null;
@@ -902,10 +902,10 @@ export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	/**
 	 * Returns the hostname from a link for display.
 	 *
-	 * @param item - The PinboardItem.
+	 * @param item - The ReminderItem.
 	 * @returns The hostname string.
 	 */
-	protected getLinkLabel(item: PinboardItem): string {
+	protected getLinkLabel(item: ReminderItem): string {
 		if (!item.link) return '';
 		return Utilities.getDomain(item.link);
 	}

@@ -19,19 +19,19 @@
 							[class.active]="!isNextMonth"
 							[attr.aria-pressed]="!isNextMonth"
 							(click)="setMonth(false)">
-							{{ REMINDER_LABEL_CURRENT_MONTH }}
+							{{ PINBOARD_LABEL_CURRENT_MONTH }}
 						</button>
 						<button
 							class="first-table-seg-btn"
 							[class.active]="isNextMonth"
 							[attr.aria-pressed]="isNextMonth"
 							(click)="setMonth(true)">
-							{{ REMINDER_LABEL_NEXT_MONTH }}
+							{{ PINBOARD_LABEL_NEXT_MONTH }}
 						</button>
 					</div>
 					<button class="first-table-reset-btn" (click)="openResetConfirmationDialog()">
 						<span class="pi pi-refresh"></span>
-						{{ REMINDER_LABEL_RESET }}
+						{{ PINBOARD_LABEL_RESET }}
 					</button>
 				</div>
 			</div>
@@ -84,10 +84,10 @@
 										}
 										{{
 											row[field].isCharged
-												? REMINDER_LABEL_CELL_DONE
+												? PINBOARD_LABEL_CELL_DONE
 												: row[field].value === currentDay
-													? REMINDER_LABEL_CELL_TODAY
-													: REMINDER_LABEL_CELL_CONFIRM
+													? PINBOARD_LABEL_CELL_TODAY
+													: PINBOARD_LABEL_CELL_CONFIRM
 										}}
 									</button>
 								</div>
@@ -99,10 +99,10 @@
 			<div class="first-table-footer">
 				<div class="first-table-footer-left">
 					<span class="first-table-footer-dot"></span>
-					{{ firstTableConfirmedCount }} of {{ firstTableTotalCount }} {{ REMINDER_LABEL_CONFIRMED }}
+					{{ firstTableConfirmedCount }} of {{ firstTableTotalCount }} {{ PINBOARD_LABEL_CONFIRMED }}
 				</div>
 				<span class="first-table-footer-right">
-					{{ isNextMonth ? REMINDER_LABEL_NEXT_MONTH : REMINDER_LABEL_CURRENT_MONTH }}
+					{{ isNextMonth ? PINBOARD_LABEL_NEXT_MONTH : PINBOARD_LABEL_CURRENT_MONTH }}
 				</span>
 			</div>
 		</div>

@@ -1245,13 +1245,12 @@ export class CloudbaseService extends DatabaseService {
 	 * @param fields - Fields to merge into the statistics document.
 	 */
 	public async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
+		// statId is resolved asynchronously after auth confirms; skip silently if not yet ready.
+		if (!this.statId) return;
 		try {
 			const result = await this.statisticsRef.update(fields);
-			if (result.code || result.updated === 0)
-				throw new Error(
-					result.message ??
-						'No document updated — check CloudBase write permissions on statistics collection'
-				);
+			if (result.code)
+				throw new Error(result.message ?? 'Failed to update statistics collection');
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating statistics fields', error as Error);
 		}

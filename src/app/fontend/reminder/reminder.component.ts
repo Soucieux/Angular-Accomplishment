@@ -13,6 +13,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
+import { SkeletonModule } from 'primeng/skeleton';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
@@ -20,9 +21,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
 import { Checkbox } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
-import { SkeletonModule } from 'primeng/skeleton';
-import { Popover, PopoverModule } from 'primeng/popover';
-import { PaginatorModule } from 'primeng/paginator';
 import { Subscription } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
@@ -32,25 +30,18 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_FIRST_TABLE,
 	DATABASE_SECOND_TABLE,
-	DATABASE_THIRD_TABLE,
 	DIALOG_CONFIRM,
 	ERROR_PERMISSION_DENIED,
 	FAILURE,
-	HISTORY_STATUS_DELETED,
 	REMINDER_ITEM_EXPENSE,
-	REMINDER_ITEM_MESSAGE,
 	REMINDER_TABLE_ACCOUNT_EXPENSES,
 	REMINDER_TABLE_DATE_CALCULATOR,
-	REMINDER_TABLE_MESSAGES,
 	STATS_FIELD_RECENT_REMINDER,
-	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS,
 	REMINDER_MSG_RESET_CONFIRM,
 	REMINDER_DIALOG_RESET_BTN,
 	REMINDER_DIALOG_CONFIRM_BTN,
-	REMINDER_MSG_DELETE_CONFIRM,
-	REMINDER_DIALOG_DELETE_BTN,
 	REMINDER_LABEL_CURRENT_MONTH,
 	REMINDER_LABEL_NEXT_MONTH,
 	REMINDER_LABEL_RESET,
@@ -77,8 +68,6 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		InputNumber,
 		Checkbox,
 		Tooltip,
-		PaginatorModule,
-		PopoverModule,
 		AccessDeniedComponent
 	],
 	templateUrl: './reminder.component.html',
@@ -89,7 +78,6 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	@ViewChild('thirdTablePopover') private thirdTablePopover!: Popover;
 	protected readonly REMINDER_LABEL_CURRENT_MONTH = REMINDER_LABEL_CURRENT_MONTH;
 	protected readonly REMINDER_LABEL_NEXT_MONTH = REMINDER_LABEL_NEXT_MONTH;
 	protected readonly REMINDER_LABEL_RESET = REMINDER_LABEL_RESET;
@@ -99,7 +87,6 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly REMINDER_LABEL_CONFIRMED = REMINDER_LABEL_CONFIRMED;
 	protected readonly DATABASE_FIRST_TABLE = DATABASE_FIRST_TABLE;
 	protected readonly DATABASE_SECOND_TABLE = DATABASE_SECOND_TABLE;
-	protected readonly DATABASE_THIRD_TABLE = DATABASE_THIRD_TABLE;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
 	private chargedCells = new Set<string>();
@@ -110,24 +97,13 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
 	protected updatedSecondTable!: any[];
 	protected originalSecondTable!: any[];
-	protected pagedThirdTable!: any[];
-	protected originalThirdTable!: any[];
 	private firstSub?: Subscription;
 	private secondSub?: Subscription;
-	private thirdSub?: Subscription;
-	/**
-	 * Cached items per table — merged before each statistics write.
-	 */
+	/** Cached upcoming expenses — synced to statistics on every second-table emission. */
 	private upcomingExpenses: any[] = [];
-	private upcomingMessages: any[] = [];
-	protected thirdTableActiveItem: any;
-	protected thirdTableNewText: string = '';
-	protected thirdTableIndexOfFirstItem: number = 0;
-	protected thirdTableItemsPerPage: number = 10;
 	protected saveIndicators: Record<string, boolean> = {
 		[DATABASE_FIRST_TABLE]: false,
-		[DATABASE_SECOND_TABLE]: false,
-		[DATABASE_THIRD_TABLE]: false
+		[DATABASE_SECOND_TABLE]: false
 	};
 	private saveIndicatorTimeouts: Record<string, any> = {};
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
@@ -155,8 +131,8 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Initialises the component: checks hover capability, determines the current
-	 * day, and subscribes to all three reminder table observables. Each subscription
-	 * populates its respective data arrays and immediately syncs upcoming items to
+	 * day, and subscribes to the first and second reminder table observables. Each
+	 * subscription populates its respective data arrays and syncs upcoming items to
 	 * the statistics collection so the home-page reminder widget stays current.
 	 */
 	ngOnInit() {
@@ -188,6 +164,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			this.secondSub = getSecondObservable.subscribe((rows) => {
 				this.updatedSecondTable = structuredClone(rows);
 				this.originalSecondTable = structuredClone(rows);
+				this.loading = false;
 				// CloudBase subscription callbacks may emit outside Angular's zone — detectChanges ensures the template updates.
 				this.cdr.detectChanges();
 
@@ -199,28 +176,6 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 						type: REMINDER_ITEM_EXPENSE,
 						name: item.name,
 						date: item.content.date
-					}));
-				this.syncReminderStatistics();
-			});
-
-			// Get the data of the third table
-			const getThirdObservable = this.databaseService.getThirdReminderTableDetails();
-			this.thirdSub = getThirdObservable.subscribe((rows) => {
-				this.originalThirdTable = structuredClone(rows);
-				this.pagedThirdTable = this.updatePagedThirdTable();
-				this.loading = false;
-				// CloudBase subscription callbacks may emit outside Angular's zone — detectChanges ensures the template updates.
-				this.cdr.detectChanges();
-
-				// Sync messages that have a due date into statistics (fire-and-forget).
-				// Stopped automatically when thirdSub is unsubscribed in ngOnDestroy.
-				this.upcomingMessages = rows
-					.filter((item: any) => item.content?.date)
-					.map((item: any) => ({
-						type: REMINDER_ITEM_MESSAGE,
-						name: item.content.text ?? '',
-						date: item.content.date,
-						link: item.content.link ?? ''
 					}));
 				this.syncReminderStatistics();
 			});
@@ -299,14 +254,13 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Unsubscribes from all three reminder table subscriptions and logs the
+	 * Unsubscribes from both reminder table subscriptions and logs the
 	 * component destruction event. Unsubscribing also stops the periodic
 	 * statistics syncs that are driven by those subscriptions.
 	 */
 	ngOnDestroy() {
 		this.firstSub?.unsubscribe();
 		this.secondSub?.unsubscribe();
-		this.thirdSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
@@ -603,188 +557,13 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		}
 	}
 
-	////////////////////// Below are third reminder table interaction handlers ////////////////////
-	/**
-	 * Clones and returns a subset of the original third table data based on the
-	 * current pagination window, defined by thirdTableIndexOfFirstItem and
-	 * thirdTableItemsPerPage.
-	 *
-	 * @returns A deep-cloned array of rows for the current page of the third table.
-	 */
-	protected updatePagedThirdTable() {
-		return structuredClone(
-			this.originalThirdTable.slice(
-				this.thirdTableIndexOfFirstItem,
-				this.thirdTableIndexOfFirstItem + this.thirdTableItemsPerPage
-			)
-		);
-	}
-	/**
-	 * Normalizes and updates the link value for a third-table entry. Prepends
-	 * "https://" or "https://www." as needed to ensure the link is a valid URL,
-	 * then persists the change if it differs from the original.
-	 *
-	 * @param tableName - The name of the table containing the entry.
-	 * @param entryKey - The unique key identifying the entry to update.
-	 * @param link - The raw link text to normalize and store.
-	 */
-	protected async updateLink(tableName: string, entryKey: string, link: string) {
-		const updatedItem = this.findUpdatedItem(DATABASE_THIRD_TABLE, entryKey);
-		const oldItem = this.findOriginalItem(DATABASE_THIRD_TABLE, entryKey);
-		if (JSON.stringify(updatedItem) === JSON.stringify(oldItem)) return;
-
-		updatedItem.content.link = Utilities.normalizeWebUrl(link);
-
-		await this.updateTableSingleValue(tableName, entryKey, 'link');
-	}
-
-	/**
-	 * Opens a confirmation dialog before deleting a third-table entry.
-	 * Guards with a permission check before showing the dialog.
-	 *
-	 * @param entryKey - The key of the entry to delete.
-	 */
-	protected openDeleteConfirmationDialog(entryKey: string) {
-		const returnCode = this.checkPermission(DATABASE_THIRD_TABLE, entryKey);
-		//Rollback
-		if (returnCode === FAILURE) return;
-
-		this.dialogService.openDialog(
-			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
-			async () => {
-				await this.removeRecordFromDatabase(entryKey);
-			},
-			[REMINDER_MSG_DELETE_CONFIRM, REMINDER_DIALOG_DELETE_BTN, REMINDER_DIALOG_CONFIRM_BTN]
-		);
-	}
-
-	/**
-	 * Removes a single record from the third reminder table in the database and
-	 * shows a save indicator on success. Handles permission-denied and unexpected
-	 * errors by showing the appropriate dialog.
-	 *
-	 * @param entryKey - The unique key identifying the record to remove.
-	 */
-	private async removeRecordFromDatabase(entryKey: string) {
-		// Capture the item text before the delete so the stat can describe what was removed.
-		const itemText =
-			this.findUpdatedItem(DATABASE_THIRD_TABLE, entryKey)?.content?.text ??
-			this.originalThirdTable.find((i: any) => i.key === entryKey)?.content?.text ??
-			'';
-		try {
-			await this.databaseService.removeRecordFromReminderTable(DATABASE_THIRD_TABLE, entryKey);
-			this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
-			// Fire-and-forget: surface the deletion in the Recent Activity widget.
-			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-					type: HISTORY_STATUS_DELETED,
-					table: REMINDER_TABLE_MESSAGES,
-					text: itemText,
-					timestamp: Utilities.getCurrentFormattedTime(true)
-				})
-				.catch(() => {});
-		} catch (error) {
-			this.dialogService.handleError(this.dialogComponentContainer, error);
-		}
-	}
-
-	/**
-	 * Adds a plain-text entry to the third reminder table.
-	 */
-	protected async addNewTextOnly() {
-		if (this.thirdTableNewText.trim() !== '') {
-			try {
-				await this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, {
-					text: this.thirdTableNewText
-				});
-				this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
-				this.thirdTableNewText = '';
-			} catch (error) {
-				this.dialogService.handleError(this.dialogComponentContainer, error);
-			}
-		}
-	}
-
-	/**
-	 * Adds a new entry to the third reminder table using the active popover
-	 * item as a template. Filters out empty fields before saving.
-	 * If the new entry includes a due date, the home-page reminder widget is
-	 * updated immediately without waiting for the subscription to fire.
-	 */
-	protected async addNewEntry() {
-		if (this.thirdTableNewText.trim() !== '') {
-			const newContent = Object.fromEntries(
-				Object.entries(this.thirdTableActiveItem.content).filter(([_, value]) => value !== '')
-			);
-			newContent['text'] = this.thirdTableNewText;
-			if (newContent['date'] instanceof Date) {
-				newContent['date'] = Utilities.formatDateForStorage(newContent['date']);
-			}
-			try {
-				await this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, newContent);
-				this.triggerSaveIndicator(DATABASE_THIRD_TABLE);
-				// If the new entry has a due date, push it into the local messages cache
-				// so the reminder widget reflects it before the CloudBase round-trip ends.
-				if (newContent['date']) {
-					this.upcomingMessages.push({
-						type: REMINDER_ITEM_MESSAGE,
-						name: String(newContent['text'] ?? ''),
-						date: String(newContent['date']),
-						link: String(newContent['link'] ?? '')
-					});
-					this.syncReminderStatistics();
-				}
-				this.thirdTableNewText = '';
-				this.thirdTablePopover.hide();
-			} catch (error) {
-				this.dialogService.handleError(this.dialogComponentContainer, error);
-			}
-		}
-	}
-
-	/**
-	 * Opens the popover for adding or editing a third-table entry.
-	 * If no item is provided, initializes an empty template.
-	 *
-	 * @param event - The triggering DOM event (used for popover positioning).
-	 * @param item - The existing entry to edit, or undefined for a new entry.
-	 */
-	protected openPopover(event: Event, item: any) {
-		if (!item) {
-			this.thirdTableActiveItem = {
-				content: { link: '', date: '' }
-			};
-		} else {
-			this.thirdTableActiveItem = item;
-		}
-
-		this.thirdTablePopover.hide();
-
-		setTimeout(() => {
-			this.thirdTablePopover.show(event);
-		}, 140);
-	}
-
-	/**
-	 * Handles a page-change event from the third-table paginator. Updates the
-	 * first-item index and refreshes the paged data slice.
-	 *
-	 * @param event - The PrimeNG paginator event containing the new `first` index.
-	 */
-	protected thirdTablePageChange(event: any) {
-		this.thirdTableIndexOfFirstItem = event.first;
-		this.pagedThirdTable = this.updatePagedThirdTable();
-	}
-
-	////////////////////// Below are shared data methods for second and third tables /////////////
+	////////////////////// Below are shared data methods for second table ///////////////////////
 	/**
 	 * Calls the database directly and rolls back changes if an error occurs.
 	 *
 	 * {@link updateDebt} - Decrements debt by a constant for the second table.
 	 * {@link setDefaultDebt} - Resets the default debt for the second table.
-	 * {@link updateLink} - Updates the link for the third table.
-	 * {@link updateTableWithNewDate} - Updates the date for the second or third table.
+	 * {@link updateTableWithNewDate} - Updates the date for the second table.
 	 */
 	protected async updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
 		const updatedItem = this.findUpdatedItem(tableName, entryKey);
@@ -797,22 +576,12 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 				await this.databaseService.updateReminderTable(tableName, entryKey, valueKey, updatedValue);
 				this.triggerSaveIndicator(tableName);
 				// Fire-and-forget: surface this change in the Recent Activity widget.
-				const tableLabel =
-					tableName === DATABASE_SECOND_TABLE
-						? REMINDER_TABLE_ACCOUNT_EXPENSES
-						: REMINDER_TABLE_MESSAGES;
-				// For the second table the human-readable identifier is the account `name` field;
-				// for the third table it is the message text inside `content.text`.
-				const itemText =
-					tableName === DATABASE_SECOND_TABLE
-						? (this.findUpdatedItem(DATABASE_SECOND_TABLE, entryKey)?.name ?? '')
-						: tableName === DATABASE_THIRD_TABLE
-							? (this.findUpdatedItem(DATABASE_THIRD_TABLE, entryKey)?.content?.text ?? '')
-							: '';
+				// The human-readable identifier for the second table is the account `name` field.
+				const itemText = this.findUpdatedItem(DATABASE_SECOND_TABLE, entryKey)?.name ?? '';
 				this.databaseService
 					.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 						type: ACTIVITY_TYPE_UPDATED,
-						table: tableLabel,
+						table: REMINDER_TABLE_ACCOUNT_EXPENSES,
 						text: itemText,
 						timestamp: Utilities.getCurrentFormattedTime(true)
 					})
@@ -851,96 +620,58 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Finds an item in the updated (working) copy of either the second or third
-	 * table by its entry key.
+	 * Finds an item in the updated (working) copy of the second table by its entry key.
 	 *
-	 * @param tableName - The name of the table to search (SECOND_TABLE or THIRD_TABLE).
+	 * @param tableName - The name of the table to search.
 	 * @param entryKey - The unique key identifying the item to find.
-	 * @returns The matching item from the updated table, or undefined if not found.
+	 * @returns The matching item from the updated second table, or undefined if not found.
 	 */
 	private findUpdatedItem(tableName: string, entryKey: string) {
 		if (tableName === DATABASE_SECOND_TABLE) {
 			return this.updatedSecondTable.find((item) => item.key === entryKey);
-		} else if (tableName === DATABASE_THIRD_TABLE) {
-			return this.pagedThirdTable.find((item) => item.key === entryKey);
 		}
 	}
 
 	/**
-	 * Finds an item in the original (server-state) copy of either the second or
-	 * third table by its entry key. Used for comparing current edits against the
-	 * original data.
+	 * Finds an item in the original (server-state) copy of the second table by its entry key.
+	 * Used for comparing current edits against the original data.
 	 *
-	 * @param tableName - The name of the table to search (SECOND_TABLE or THIRD_TABLE).
+	 * @param tableName - The name of the table to search.
 	 * @param entryKey - The unique key identifying the item to find.
-	 * @returns The matching item from the original table, or undefined if not found.
+	 * @returns The matching item from the original second table, or undefined if not found.
 	 */
 	private findOriginalItem(tableName: string, entryKey: string) {
 		if (tableName === DATABASE_SECOND_TABLE) {
 			return this.originalSecondTable.find((item) => item.key === entryKey);
-		} else if (tableName === DATABASE_THIRD_TABLE) {
-			return this.originalThirdTable.find((item) => item.key === entryKey);
 		}
 	}
 
 	/**
-	 * Merges the latest expense and message arrays into a single reminderUpcoming
-	 * array and writes it to the statistics collection.
-	 * Called after either secondSub or thirdSub emits so the merged list is always
-	 * current. Fire-and-forget — errors are swallowed inside updateStatisticsFields.
+	 * Writes the latest upcoming expenses to the statistics collection.
+	 * Called after secondSub emits. Fire-and-forget.
 	 */
 	private syncReminderStatistics(): void {
-		// Debounce: both secondSub and thirdSub emit on init in the same tick.
-		// Defer the write so a single CloudBase call is made after both have settled.
 		if (this.syncStatTimer !== null) clearTimeout(this.syncStatTimer);
 		this.syncStatTimer = setTimeout(() => {
 			this.syncStatTimer = null;
-			const totalReminders =
-				(this.originalSecondTable?.length ?? 0) + (this.originalThirdTable?.length ?? 0);
 			this.databaseService.updateStatisticsFields({
-				[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses, ...this.upcomingMessages],
-				[STATS_FIELD_REMINDER_TOTAL]: totalReminders
+				[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses]
 			});
 		}, 0);
 	}
 
 	/**
-	 * Immediately recomputes both `upcomingExpenses` and `upcomingMessages` from
-	 * the current local data and writes the merged result to the statistics
-	 * collection without waiting for a CloudBase subscription callback.
-	 *
-	 * For the second table, expenses are derived from `updatedSecondTable` (the
-	 * working copy kept in sync with every date edit).  For the third table,
-	 * `pagedThirdTable` edits are merged on top of `originalThirdTable` so that
-	 * any change on the current page is visible before the server round-trip
-	 * completes.
+	 * Immediately recomputes `upcomingExpenses` from the current local data and
+	 * writes the result to the statistics collection without waiting for a
+	 * CloudBase subscription callback.
 	 *
 	 * Used to reflect date mutations and date removals in the home-page reminder
-	 * widget immediately after the user interacts.
+	 * widget immediately after the user interacts with the second table.
 	 */
 	private resyncUpcomingFromLocalData(): void {
-		// Recompute expenses from the working copy of the second table.
 		this.upcomingExpenses = this.updatedSecondTable
 			.filter((item: any) => item.content?.date && !item.content?.paid)
 			.map((item: any) => ({ type: REMINDER_ITEM_EXPENSE, name: item.name, date: item.content.date }));
-
-		// Merge pagedThirdTable edits into a full view of the third table so that
-		// in-progress changes on the current page are visible before the subscription fires.
-		const pagedKeys = new Set(this.pagedThirdTable.map((item: any) => item.key));
-		const mergedThird = [
-			...this.originalThirdTable.filter((item: any) => !pagedKeys.has(item.key)),
-			...this.pagedThirdTable
-		];
-
-		this.upcomingMessages = mergedThird
-			.filter((item: any) => item.content?.date)
-			.map((item: any) => ({
-				type: REMINDER_ITEM_MESSAGE,
-				name: item.content.text ?? '',
-				date: item.content.date,
-				link: item.content.link ?? ''
-			}));
-
 		this.syncReminderStatistics();
 	}
 
@@ -1012,41 +743,4 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		return Utilities.coerceDateToString(date);
 	}
 
-	/**
-	 * Persists a link change from the popover editor for the active third-table entry.
-	 * No-ops when the popover was opened in "add new" mode (no key yet).
-	 */
-	protected onPopoverLinkUpdate(): void {
-		if (this.thirdTableActiveItem?.key) {
-			this.updateLink(
-				this.DATABASE_THIRD_TABLE,
-				this.thirdTableActiveItem.key,
-				this.thirdTableActiveItem.content.link
-			);
-		}
-	}
-
-	/**
-	 * Persists a due-date change from the popover date-picker for the active
-	 * third-table entry. No-ops when in "add new" mode (no key yet).
-	 *
-	 * @param date - The Date value selected in the date-picker.
-	 */
-	protected onPopoverDateUpdate(date: Date): void {
-		if (this.thirdTableActiveItem?.key) {
-			this.updateTableWithNewDate(this.DATABASE_THIRD_TABLE, this.thirdTableActiveItem.key, date);
-		}
-	}
-
-	/**
-	 * Handles the primary action button in the popover: deletes the entry when
-	 * editing an existing item, or adds a new entry when in "add new" mode.
-	 */
-	protected onPopoverButtonClick(): void {
-		if (this.thirdTableActiveItem?.key) {
-			this.openDeleteConfirmationDialog(this.thirdTableActiveItem.key);
-		} else {
-			this.addNewEntry();
-		}
-	}
 }

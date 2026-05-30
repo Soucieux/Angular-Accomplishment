@@ -80,7 +80,7 @@ describe('AboutComponent', () => {
 
     // ── hover state ────────────────────────────────────────────────────────
 
-    describe('setHoveredEntry / onEntryLeave', () => {
+    describe('setHoveredEntry / resetHoverState', () => {
         it('sets hoveredIndex when an entry is hovered', () => {
             (component as any).setHoveredEntry(2);
             expect((component as any).hoveredIndex).toBe(2);
@@ -94,13 +94,13 @@ describe('AboutComponent', () => {
 
         it('clears hoveredIndex when the cursor leaves', () => {
             (component as any).hoveredIndex = 2;
-            (component as any).onEntryLeave();
+            (component as any).resetHoverState();
             expect((component as any).hoveredIndex).toBeNull();
         });
 
         it('clears hoveredIndex even when it was already null', () => {
             (component as any).hoveredIndex = null;
-            (component as any).onEntryLeave();
+            (component as any).resetHoverState();
             expect((component as any).hoveredIndex).toBeNull();
         });
 

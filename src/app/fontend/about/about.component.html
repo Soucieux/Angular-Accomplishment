@@ -63,7 +63,7 @@
 					[class.is-visible]="visibleEntries.has(index)"
 					[style.transition-delay]="visibleEntries.has(index) ? entryDelay(index) : '0ms'"
 					(mouseenter)="setHoveredEntry(index)"
-					(mouseleave)="onEntryLeave()">
+					(mouseleave)="resetHoverState()">
 					<div
 						[class]="'tl-node ' + item.tag"
 						[class.is-hovered]="hoveredIndex === index"

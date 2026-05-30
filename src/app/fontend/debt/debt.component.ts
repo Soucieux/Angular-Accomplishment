@@ -11,13 +11,11 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { InputTextModule } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
 import { Checkbox } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
@@ -28,27 +26,12 @@ import {
 	ACCOUNT_DEBT_DECREMENT,
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
-	DATABASE_FIRST_TABLE,
 	DATABASE_SECOND_TABLE,
-	DIALOG_CONFIRM,
 	ERROR_PERMISSION_DENIED,
-	FAILURE,
 	REMINDER_ITEM_EXPENSE,
 	REMINDER_TABLE_ACCOUNT_EXPENSES,
-	REMINDER_TABLE_DATE_CALCULATOR,
 	STATS_FIELD_RECENT_REMINDER,
 	STATS_FIELD_REMINDER_UPCOMING,
-	SUCCESS,
-	PINBOARD_MSG_RESET_CONFIRM,
-	PINBOARD_DIALOG_RESET_BTN,
-	PINBOARD_DIALOG_CONFIRM_BTN,
-	PINBOARD_LABEL_CURRENT_MONTH,
-	PINBOARD_LABEL_NEXT_MONTH,
-	PINBOARD_LABEL_RESET,
-	PINBOARD_LABEL_CELL_CONFIRM,
-	PINBOARD_LABEL_CELL_DONE,
-	PINBOARD_LABEL_CELL_TODAY,
-	PINBOARD_LABEL_CONFIRMED,
 	REMINDER_VALUE_KEY_DEBT,
 	REMINDER_VALUE_KEY_DATE,
 	REMINDER_VALUE_KEY_CONTENT
@@ -58,10 +41,8 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
-	selector: 'pinboard',
+	selector: 'debt',
 	imports: [
-		TableModule,
-		InputTextModule,
 		FormsModule,
 		Button,
 		SkeletonModule,
@@ -73,51 +54,31 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		Tooltip,
 		AccessDeniedComponent
 	],
-	templateUrl: './pinboard.component.html',
-	styleUrls: ['../../common/page.card.css', './pinboard.component.css']
+	templateUrl: './debt.component.html',
+	styleUrls: ['../../common/page.card.css', './debt.component.css']
 })
-export class PinboardComponent implements OnInit, OnDestroy, AfterViewChecked {
-	private readonly className = 'PinboardComponent';
+export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
+	private readonly className = 'DebtComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	protected readonly PINBOARD_LABEL_CURRENT_MONTH = PINBOARD_LABEL_CURRENT_MONTH;
-	protected readonly PINBOARD_LABEL_NEXT_MONTH = PINBOARD_LABEL_NEXT_MONTH;
-	protected readonly PINBOARD_LABEL_RESET = PINBOARD_LABEL_RESET;
-	protected readonly PINBOARD_LABEL_CELL_CONFIRM = PINBOARD_LABEL_CELL_CONFIRM;
-	protected readonly PINBOARD_LABEL_CELL_DONE = PINBOARD_LABEL_CELL_DONE;
-	protected readonly PINBOARD_LABEL_CELL_TODAY = PINBOARD_LABEL_CELL_TODAY;
-	protected readonly PINBOARD_LABEL_CONFIRMED = PINBOARD_LABEL_CONFIRMED;
-	protected readonly DATABASE_FIRST_TABLE = DATABASE_FIRST_TABLE;
 	protected readonly DATABASE_SECOND_TABLE = DATABASE_SECOND_TABLE;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
-	private chargedCells = new Set<string>();
-	// any: First-table rows are schema-less CloudBase documents with no fixed TypeScript type
-	protected originalFirstTable!: any[];
-	// any: First-table rows are schema-less CloudBase documents with no fixed TypeScript type
-	protected updatedFirstTable!: any[];
-	protected firstTableConfirmedCount = 0;
-	protected currentDay!: number;
-	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
 	// any: Second-table rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected updatedSecondTable!: any[];
 	// any: Second-table rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected originalSecondTable!: any[];
-	private firstSub?: Subscription;
 	private secondSub?: Subscription;
 	/** Cached upcoming expenses — synced to statistics on every second-table emission.
 	 *  any: Expense items are schema-less CloudBase documents with no fixed TypeScript type */
 	private upcomingExpenses: any[] = [];
 	protected saveIndicators: Record<string, boolean> = {
-		[DATABASE_FIRST_TABLE]: false,
 		[DATABASE_SECOND_TABLE]: false
 	};
 	// any: setTimeout return type varies by environment (browser vs Node); ReturnType<typeof setTimeout> unifies both
 	private saveIndicatorTimeouts: Record<string, any> = {};
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
-	private chargedCellsInitialized = false;
-	protected isNextMonth!: boolean;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
@@ -139,34 +100,14 @@ export class PinboardComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Initialises the component: checks hover capability, determines the current
-	 * day, and subscribes to the first and second reminder table observables. Each
-	 * subscription populates its respective data arrays and syncs upcoming items to
-	 * the statistics collection so the home-page reminder widget stays current.
+	 * Initialises the component: checks hover capability and subscribes to the
+	 * second reminder table observable. The subscription populates the data array
+	 * and syncs upcoming items to the statistics collection so the home-page
+	 * reminder widget stays current.
 	 */
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = this.utilities.checkIfHoverCapable();
-			this.currentDay = new Date().getDate();
-
-			// Get the data of the first table
-			const getFirstObservable = this.databaseService.getFirstReminderTableDetails();
-			this.firstSub = getFirstObservable.subscribe(async (rows) => {
-				// Need deep copy here so that we are not copying references
-				this.originalFirstTable = structuredClone(rows);
-				this.updatedFirstTable = structuredClone(rows).slice(0, -1);
-				this.isNextMonth = this.originalFirstTable[5]['isNextMonth'];
-
-				if (!this.chargedCellsInitialized) {
-					// Loop through to determine disabled fields
-					await this.updateChargedCells();
-					this.chargedCellsInitialized = true;
-				}
-				this.refreshConfirmedCount();
-				// await inside this callback suspends Zone.js tracking — detectChanges
-				// restores template sync after the async updateChargedCells resolves.
-				this.cdr.detectChanges();
-			});
 
 			// Get the data of the second table
 			const getSecondObservable = this.databaseService.getSecondReminderTableDetails();
@@ -192,315 +133,14 @@ export class PinboardComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Recomputes and caches the count of first-table cells marked as charged.
-	 * Called whenever updatedFirstTable or any cell's isCharged flag changes.
-	 */
-	private refreshConfirmedCount(): void {
-		this.firstTableConfirmedCount = (this.updatedFirstTable ?? [])
-			.flatMap((row: any) => this.fields.map((field: string) => row[field] as { isCharged: boolean }))
-			.filter((cell) => cell?.isCharged === true).length;
-	}
-
-	/**
-	 * Total number of editable cells in the first table (rows × 4 columns).
-	 *
-	 * @returns Total cell count.
-	 */
-	protected get firstTableTotalCount(): number {
-		return (this.updatedFirstTable?.length ?? 0) * this.fields.length;
-	}
-
-	/**
-	 * Sets the active month view and refreshes charged-cell state.
-	 *
-	 * @param isNext - True to switch to next-month view; false for current month.
-	 */
-	protected setMonth(isNext: boolean): void {
-		this.isNextMonth = isNext;
-		void this.updateChargedCells();
-	}
-
-	/**
-	 * Updates the charged/uncharged state of first-table cells based on
-	 * the current month direction and the current day of the month.
-	 * Persists the change to the database when called after initialisation.
-	 */
-	protected async updateChargedCells() {
-		if (this.chargedCellsInitialized) {
-			const returnCode = this.checkPermission(DATABASE_FIRST_TABLE, '0');
-			// Rollback
-			if (returnCode === FAILURE) {
-				setTimeout(() => {
-					this.isNextMonth = !this.isNextMonth;
-				});
-				return;
-			}
-		}
-
-		if (this.isNextMonth) {
-			this.chargedCells.clear();
-		}
-
-		for (let index = 0; index < this.updatedFirstTable.length; index++) {
-			for (const field of this.fields) {
-				if (this.isNextMonth && this.chargedCellsInitialized) {
-					this.updatedFirstTable[index][field].isCharged = false;
-				} else if (
-					!this.isNextMonth &&
-					this.updatedFirstTable[index][field].value < this.currentDay
-				) {
-					// Fieldes are no longer being set as charged so that its color is only changed on user input
-					// this.updatedFirstTable[index][field].isCharged = true;
-					this.chargedCells.add(`${index}-${field}`);
-				}
-			}
-		}
-
-		this.refreshConfirmedCount();
-		if (this.chargedCellsInitialized) {
-			await this.updateFirstTableSingleValue();
-		}
-	}
-
-	/**
 	 * Unsubscribes from both reminder table subscriptions and logs the
 	 * component destruction event. Unsubscribing also stops the periodic
 	 * statistics syncs that are driven by those subscriptions.
 	 */
 	ngOnDestroy() {
-		this.firstSub?.unsubscribe();
 		this.secondSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
-	}
-
-	////////////////////// Below are first reminder table interaction handlers ////////////////////
-	/**
-	 * Prevent non-numeric input in first-table number fields. Allows
-	 * navigation and deletion keys to pass through.
-	 *
-	 * @param event - The keyboard event to validate.
-	 */
-	protected onNumberChange(event: KeyboardEvent) {
-		const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
-		if (allowedKeys.includes(event.key)) return;
-
-		if (!/^[0-9]$/.test(event.key)) {
-			this.preventKeyin(event);
-		}
-	}
-
-	/**
-	 * Validate and propagate a date value change in the first table.
-	 * Enforces minimum day gaps between rows (2-day and 6-day), caps values
-	 * at 31, and cascades the change to downstream rows via twoDayDiff/sixDaysDiff.
-	 *
-	 * @param rowIndex - The index of the row being changed.
-	 * @param field - The column key (first, second, third, fourth) being changed.
-	 */
-	protected async onValueChange(rowIndex: number, field: string) {
-		const originalValue = this.originalFirstTable[rowIndex][field].value;
-
-		// Do nothing if the value does not change
-		if (this.updatedFirstTable[rowIndex][field].value == originalValue) return;
-
-		const returnCode = this.checkPermission(DATABASE_FIRST_TABLE, '0');
-		// Rollback OR reset value if it reaches threshold
-		if (returnCode === FAILURE || Number(this.updatedFirstTable[rowIndex][field].value) > 31) {
-			this.updatedFirstTable[rowIndex][field].value = originalValue;
-			return;
-		}
-
-		if (rowIndex !== 0) {
-			const previousValue = this.updatedFirstTable[rowIndex - 1][field].value;
-
-			// Get the difference
-			let requiredDiff: number | null = null;
-			if (rowIndex === 1 || rowIndex === 3) {
-				requiredDiff = 2;
-			} else if (rowIndex === 2 || rowIndex === 4) {
-				requiredDiff = 6;
-			}
-
-			if (
-				requiredDiff !== null &&
-				Number(this.updatedFirstTable[rowIndex][field].value) - Number(previousValue) < requiredDiff
-			) {
-				this.updatedFirstTable[rowIndex][field].value = originalValue;
-				return;
-			}
-		}
-
-		// Convert it to number
-		this.updatedFirstTable[rowIndex][field].value = Number(this.updatedFirstTable[rowIndex][field].value);
-
-		// Mark it as unCharged
-		this.updatedFirstTable[rowIndex][field].isCharged = false;
-
-		// Update other values in the same column
-		for (let index = rowIndex; index < this.updatedFirstTable.length - 1; index++) {
-			if (index == 0 || index == 2) {
-				this.twoDayDiff(index, field);
-			} else if (index == 1 || index == 3) {
-				this.sixDaysDiff(index, field);
-			}
-		}
-
-		// Re-evaluate grey background for every cell in this column —
-		// cascading may have shifted values above or below currentDay.
-		for (let i = 0; i < this.updatedFirstTable.length; i++) {
-			const key = `${i}-${field}`;
-			if (!this.isNextMonth && this.updatedFirstTable[i][field].value < this.currentDay) {
-				this.chargedCells.add(key);
-			} else {
-				this.chargedCells.delete(key);
-			}
-		}
-
-		await this.updateFirstTableSingleValue();
-	}
-
-	/**
-	 * Check whether a first-table cell is in the charged set and should
-	 * be displayed as disabled.
-	 *
-	 * @param rowIndex - The row index of the cell.
-	 * @param field - The column key of the cell.
-	 * @returns true if the cell is charged (disabled).
-	 */
-	protected isDisabled(rowIndex: number, field: string): boolean {
-		return this.chargedCells.has(`${rowIndex}-${field}`);
-	}
-
-	/**
-	 * Cascade a 6-day difference from the current row to the next row
-	 * (row 1 → row 2, row 3 → row 4). Caps the result at 31.
-	 *
-	 * @param rowIndex - The source row index (1 or 3).
-	 * @param field - The column key to cascade.
-	 */
-	private sixDaysDiff(rowIndex: number, field: string) {
-		this.updatedFirstTable[rowIndex + 1][field].value =
-			Number(this.updatedFirstTable[rowIndex][field].value) + 6;
-		this.updatedFirstTable[rowIndex + 1][field].isCharged = false;
-
-		this.isValueGreaterThan31(rowIndex, field);
-	}
-
-	/**
-	 * Cascade a 2-day difference from the current row to the next row
-	 * (row 0 → row 1, row 2 → row 3). Caps the result at 31.
-	 *
-	 * @param rowIndex - The source row index (0 or 2).
-	 * @param field - The column key to cascade.
-	 */
-	private twoDayDiff(rowIndex: number, field: string) {
-		this.updatedFirstTable[rowIndex + 1][field].value =
-			Number(this.updatedFirstTable[rowIndex][field].value) + 2;
-		this.updatedFirstTable[rowIndex + 1][field].isCharged = false;
-		this.isValueGreaterThan31(rowIndex, field);
-	}
-
-	/**
-	 * Clamp the cascaded value at 31 — days cannot exceed 31.
-	 *
-	 * @param rowIndex - The row index being cascaded to.
-	 * @param field - The column key.
-	 */
-	private isValueGreaterThan31(rowIndex: number, field: string) {
-		this.updatedFirstTable[rowIndex + 1][field].value =
-			this.updatedFirstTable[rowIndex + 1][field].value > 31
-				? 31
-				: this.updatedFirstTable[rowIndex + 1][field].value;
-	}
-
-	/**
-	 * Toggle a first-table cell to the charged state and persist to the database.
-	 * No-ops if the cell is already charged or the user lacks permission.
-	 *
-	 * @param rowIndex - The row index of the cell.
-	 * @param field - The column key of the cell.
-	 */
-	protected async setIsCharged(rowIndex: number, field: string) {
-		const returnCode = this.checkPermission(DATABASE_FIRST_TABLE, '0');
-		// Rollback
-		if (returnCode === FAILURE) return;
-
-		if (!this.updatedFirstTable[rowIndex][field].isCharged) {
-			this.updatedFirstTable[rowIndex][field].isCharged = true;
-			this.refreshConfirmedCount();
-			// Update table to database
-			await this.updateFirstTableSingleValue();
-		}
-	}
-
-	/**
-	 * Opens a confirmation dialog before resetting the first table dates
-	 * to their default sequence (1, 3, 9, 11, 17).
-	 */
-	protected openResetConfirmationDialog() {
-		const returnCode = this.checkPermission(DATABASE_FIRST_TABLE, '0');
-		// Rollback
-		if (returnCode === FAILURE) return;
-
-		this.dialogService.openDialog(
-			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
-			() => {
-				this.resetFirstTable();
-			},
-			[PINBOARD_MSG_RESET_CONFIRM, PINBOARD_DIALOG_RESET_BTN, PINBOARD_DIALOG_CONFIRM_BTN]
-		);
-	}
-
-	/**
-	 * Resets all values in the first table to their default sequence
-	 * (1, 3, 9, 11, 17), sets all cells to uncharged, and persists the reset
-	 * state to the database.
-	 */
-	private async resetFirstTable() {
-		const values = [1, 3, 9, 11, 17];
-		this.updatedFirstTable = this.originalFirstTable.slice(0, 5).map((original, index) => ({
-			_id: original._id,
-			_openid: original._openid,
-			first: { value: values[index], isCharged: false },
-			second: { value: values[index], isCharged: false },
-			third: { value: values[index], isCharged: false },
-			fourth: { value: values[index], isCharged: false }
-		}));
-		this.refreshConfirmedCount();
-		await this.updateFirstTableSingleValue();
-	}
-
-	/**
-	 * Persists the current state of the first table (including the isNextMonth
-	 * flag) to the database. Shows a save indicator on success or an error
-	 * dialog on failure.
-	 */
-	private async updateFirstTableSingleValue() {
-		try {
-			const payload = [
-				...this.updatedFirstTable,
-				{
-					_id: this.originalFirstTable[5]._id,
-					_openid: this.originalFirstTable[5]._openid,
-					isNextMonth: this.isNextMonth
-				}
-			];
-			await this.databaseService.updateFirstReminderTable(DATABASE_FIRST_TABLE, payload);
-			this.triggerSaveIndicator(DATABASE_FIRST_TABLE);
-			// Fire-and-forget: surface this change in the Recent Activity widget.
-			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-					type: ACTIVITY_TYPE_UPDATED,
-					table: REMINDER_TABLE_DATE_CALCULATOR,
-					text: '',
-					timestamp: Utilities.getCurrentFormattedTime(true)
-				})
-				.catch(() => {});
-		} catch (error) {
-			this.dialogService.handleError(this.dialogComponentContainer, error);
-		}
 	}
 
 	////////////////////// Below are second reminder table interaction handlers ///////////////////
@@ -685,24 +325,6 @@ export class PinboardComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	////////////////////// Below are common utility methods used across all tables //////////////
-	/**
-	 * Resolves the owner openid for the given table and entry, then delegates
-	 * the permission check to Utilities.checkPermission.
-	 * Intended only for button handlers and dialogs, to avoid redundant database calls.
-	 *
-	 * @param tableName - The table whose write permission is being checked.
-	 * @param entryKey - The key of the specific entry (unused for the first table — pass '0').
-	 * @returns SUCCESS if permitted, FAILURE otherwise.
-	 */
-	private checkPermission(tableName: string, entryKey: string): string {
-		// Resolve the owner ID: first table always uses row[0]; second/third tables
-		// look up the specific entry being modified.
-		const openid =
-			tableName === DATABASE_FIRST_TABLE
-				? (this.updatedFirstTable[0]?._openid ?? '')
-				: (this.findUpdatedItem(tableName, entryKey)?._openid ?? '');
-		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid) ? SUCCESS : FAILURE;
-	}
 
 	/**
 	 * Shows a save-confirmation indicator for the given table and automatically

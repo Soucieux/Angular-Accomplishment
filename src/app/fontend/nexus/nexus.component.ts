@@ -13,15 +13,34 @@ import {
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
+import { TableModule } from 'primeng/table';
+import { SkeletonModule } from 'primeng/skeleton';
+import { InputTextModule } from 'primeng/inputtext';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
+	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
+	DATABASE_FIRST_TABLE,
 	DIALOG_CONFIRM,
+	FAILURE,
 	NEXUS_CATEGORY_ALL,
+	PINBOARD_DIALOG_CONFIRM_BTN,
+	PINBOARD_DIALOG_RESET_BTN,
+	PINBOARD_LABEL_CELL_CONFIRM,
+	PINBOARD_LABEL_CELL_DONE,
+	PINBOARD_LABEL_CELL_TODAY,
+	PINBOARD_LABEL_CONFIRMED,
+	PINBOARD_LABEL_CURRENT_MONTH,
+	PINBOARD_LABEL_NEXT_MONTH,
+	PINBOARD_LABEL_RESET,
+	PINBOARD_MSG_RESET_CONFIRM,
+	REMINDER_TABLE_DATE_CALCULATOR,
+	STATS_FIELD_RECENT_REMINDER,
+	SUCCESS,
 	NEXUS_DIALOG_TITLE_ADD_LINK,
 	NEXUS_DIALOG_TITLE_EDIT_LINK,
 	NEXUS_DEFAULT_CATEGORY_COLOR,
@@ -63,7 +82,7 @@ import { AiTool, NexusCategory, NexusLink, NEXUS_AI_TOOLS, NEXUS_LOGO_FALLBACK_C
 	selector: 'nexus',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [CommonModule, FormsModule, DialogModule],
+	imports: [CommonModule, FormsModule, DialogModule, TableModule, SkeletonModule, InputTextModule],
 	templateUrl: './nexus.component.html',
 	styleUrl: './nexus.component.css',
 })
@@ -77,7 +96,33 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly NEXUS_CATEGORY_ALL = NEXUS_CATEGORY_ALL;
 	protected readonly NEXUS_LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
 	protected readonly aiTools: AiTool[] = [...NEXUS_AI_TOOLS];
+	// Date Calculator constants re-exposed for the template
+	protected readonly DATABASE_FIRST_TABLE = DATABASE_FIRST_TABLE;
+	protected readonly PINBOARD_LABEL_CURRENT_MONTH = PINBOARD_LABEL_CURRENT_MONTH;
+	protected readonly PINBOARD_LABEL_NEXT_MONTH = PINBOARD_LABEL_NEXT_MONTH;
+	protected readonly PINBOARD_LABEL_RESET = PINBOARD_LABEL_RESET;
+	protected readonly PINBOARD_LABEL_CELL_CONFIRM = PINBOARD_LABEL_CELL_CONFIRM;
+	protected readonly PINBOARD_LABEL_CELL_DONE = PINBOARD_LABEL_CELL_DONE;
+	protected readonly PINBOARD_LABEL_CELL_TODAY = PINBOARD_LABEL_CELL_TODAY;
+	protected readonly PINBOARD_LABEL_CONFIRMED = PINBOARD_LABEL_CONFIRMED;
 	protected failedLogos = new Set<string>();
+
+	// ── Date Calculator (first reminder table) state ──────────────────────────
+	private chargedCells = new Set<string>();
+	// any: First-table rows are schema-less CloudBase documents with no fixed TypeScript type
+	protected originalFirstTable!: any[];
+	// any: First-table rows are schema-less CloudBase documents with no fixed TypeScript type
+	protected updatedFirstTable!: any[];
+	protected firstTableConfirmedCount = 0;
+	protected currentDay!: number;
+	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
+	private firstSub?: Subscription;
+	protected saveIndicators: Record<string, boolean> = { [DATABASE_FIRST_TABLE]: false };
+	// any: setTimeout return type varies by environment (browser vs Node)
+	private saveIndicatorTimeouts: Record<string, any> = {};
+	private chargedCellsInitialized = false;
+	protected isNextMonth!: boolean;
+	protected dateCalculatorLoading = true;
 
 	protected links: NexusLink[] = [];
 	protected categories: NexusCategory[] = [];
@@ -119,6 +164,25 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
+			// ── Date Calculator subscription ───────────────────────────────────
+			this.currentDay = new Date().getDate();
+			const getFirstObservable = this.databaseService.getFirstReminderTableDetails();
+			this.firstSub = getFirstObservable.subscribe(async (rows) => {
+				// Need deep copy here so that we are not copying references
+				this.originalFirstTable = structuredClone(rows);
+				this.updatedFirstTable = structuredClone(rows).slice(0, -1);
+				this.isNextMonth = this.originalFirstTable[5]['isNextMonth'];
+				this.dateCalculatorLoading = false;
+				if (!this.chargedCellsInitialized) {
+					await this.updateChargedCells();
+					this.chargedCellsInitialized = true;
+				}
+				this.refreshConfirmedCount();
+				// markForCheck: async callback runs outside Angular's OnPush zone
+				this.cdr.markForCheck();
+			});
+
+			// ── Links and categories subscriptions ────────────────────────────
 			this.linksSub = this.databaseService.getUsefulLinks().subscribe({
 				next: (data) => {
 					this.links = data as NexusLink[];
@@ -167,12 +231,355 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * the component destruction event.
 	 */
 	ngOnDestroy(): void {
+		this.firstSub?.unsubscribe();
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
 		this.userAliveSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
+
+	////////////////////// Below are Date Calculator interaction handlers //////////////////
+
+	/**
+	 * Recomputes and caches the count of first-table cells marked as charged.
+	 * Called whenever updatedFirstTable or any cell's isCharged flag changes.
+	 */
+	private refreshConfirmedCount(): void {
+		this.firstTableConfirmedCount = (this.updatedFirstTable ?? [])
+			.flatMap((row: any) => this.fields.map((field: string) => row[field] as { isCharged: boolean }))
+			.filter((cell) => cell?.isCharged === true).length;
+	}
+
+	/**
+	 * Total number of editable cells in the first table (rows × 4 columns).
+	 *
+	 * @returns The total cell count.
+	 */
+	protected get firstTableTotalCount(): number {
+		return (this.updatedFirstTable?.length ?? 0) * this.fields.length;
+	}
+
+	/**
+	 * Sets the active month view and refreshes charged-cell state.
+	 *
+	 * @param isNext - True to switch to next-month view; false for current month.
+	 */
+	protected setMonth(isNext: boolean): void {
+		this.isNextMonth = isNext;
+		void this.updateChargedCells();
+	}
+
+	/**
+	 * Updates the charged/uncharged state of first-table cells based on
+	 * the current month direction and the current day of the month.
+	 * Persists the change to the database when called after initialisation.
+	 */
+	protected async updateChargedCells(): Promise<void> {
+		if (this.chargedCellsInitialized) {
+			const returnCode = this.checkPermission();
+			// Rollback
+			if (returnCode === FAILURE) {
+				setTimeout(() => {
+					this.isNextMonth = !this.isNextMonth;
+				});
+				return;
+			}
+		}
+
+		if (this.isNextMonth) {
+			this.chargedCells.clear();
+		}
+
+		for (let index = 0; index < this.updatedFirstTable.length; index++) {
+			for (const field of this.fields) {
+				if (this.isNextMonth && this.chargedCellsInitialized) {
+					this.updatedFirstTable[index][field].isCharged = false;
+				} else if (
+					!this.isNextMonth &&
+					this.updatedFirstTable[index][field].value < this.currentDay
+				) {
+					// Fields are no longer being set as charged so that its color is only changed on user input
+					// this.updatedFirstTable[index][field].isCharged = true;
+					this.chargedCells.add(`${index}-${field}`);
+				}
+			}
+		}
+
+		this.refreshConfirmedCount();
+		if (this.chargedCellsInitialized) {
+			await this.updateFirstTableSingleValue();
+		}
+	}
+
+	/**
+	 * Prevents non-numeric input in first-table number fields. Allows
+	 * navigation and deletion keys to pass through.
+	 *
+	 * @param event - The keyboard event to validate.
+	 */
+	protected onNumberChange(event: KeyboardEvent): void {
+		const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+		if (allowedKeys.includes(event.key)) return;
+
+		if (!/^[0-9]$/.test(event.key)) {
+			event.preventDefault();
+		}
+	}
+
+	/**
+	 * Validates and propagates a date value change in the first table.
+	 * Enforces minimum day gaps between rows (2-day and 6-day), caps values
+	 * at 31, and cascades the change to downstream rows via twoDayDiff/sixDaysDiff.
+	 *
+	 * @param rowIndex - The index of the row being changed.
+	 * @param field - The column key (first, second, third, fourth) being changed.
+	 */
+	protected async onValueChange(rowIndex: number, field: string): Promise<void> {
+		const originalValue = this.originalFirstTable[rowIndex][field].value;
+
+		// Do nothing if the value does not change
+		if (this.updatedFirstTable[rowIndex][field].value == originalValue) return;
+
+		const returnCode = this.checkPermission();
+		// Rollback OR reset value if it reaches threshold
+		if (returnCode === FAILURE || Number(this.updatedFirstTable[rowIndex][field].value) > 31) {
+			this.updatedFirstTable[rowIndex][field].value = originalValue;
+			return;
+		}
+
+		if (rowIndex !== 0) {
+			const previousValue = this.updatedFirstTable[rowIndex - 1][field].value;
+
+			// Get the difference
+			let requiredDiff: number | null = null;
+			if (rowIndex === 1 || rowIndex === 3) {
+				requiredDiff = 2;
+			} else if (rowIndex === 2 || rowIndex === 4) {
+				requiredDiff = 6;
+			}
+
+			if (
+				requiredDiff !== null &&
+				Number(this.updatedFirstTable[rowIndex][field].value) - Number(previousValue) < requiredDiff
+			) {
+				this.updatedFirstTable[rowIndex][field].value = originalValue;
+				return;
+			}
+		}
+
+		// Convert it to number
+		this.updatedFirstTable[rowIndex][field].value = Number(this.updatedFirstTable[rowIndex][field].value);
+
+		// Mark it as uncharged
+		this.updatedFirstTable[rowIndex][field].isCharged = false;
+
+		// Update other values in the same column
+		for (let index = rowIndex; index < this.updatedFirstTable.length - 1; index++) {
+			if (index == 0 || index == 2) {
+				this.twoDayDiff(index, field);
+			} else if (index == 1 || index == 3) {
+				this.sixDaysDiff(index, field);
+			}
+		}
+
+		// Re-evaluate grey background for every cell in this column —
+		// cascading may have shifted values above or below currentDay.
+		for (let i = 0; i < this.updatedFirstTable.length; i++) {
+			const key = `${i}-${field}`;
+			if (!this.isNextMonth && this.updatedFirstTable[i][field].value < this.currentDay) {
+				this.chargedCells.add(key);
+			} else {
+				this.chargedCells.delete(key);
+			}
+		}
+
+		await this.updateFirstTableSingleValue();
+	}
+
+	/**
+	 * Checks whether a first-table cell is in the charged set and should
+	 * be displayed as disabled.
+	 *
+	 * @param rowIndex - The row index of the cell.
+	 * @param field - The column key of the cell.
+	 * @returns True if the cell is charged (disabled).
+	 */
+	protected isDisabled(rowIndex: number, field: string): boolean {
+		return this.chargedCells.has(`${rowIndex}-${field}`);
+	}
+
+	/**
+	 * Cascades a 6-day difference from the current row to the next row
+	 * (row 1 → row 2, row 3 → row 4). Caps the result at 31.
+	 *
+	 * @param rowIndex - The source row index (1 or 3).
+	 * @param field - The column key to cascade.
+	 */
+	private sixDaysDiff(rowIndex: number, field: string): void {
+		this.updatedFirstTable[rowIndex + 1][field].value =
+			Number(this.updatedFirstTable[rowIndex][field].value) + 6;
+		this.updatedFirstTable[rowIndex + 1][field].isCharged = false;
+		this.isValueGreaterThan31(rowIndex, field);
+	}
+
+	/**
+	 * Cascades a 2-day difference from the current row to the next row
+	 * (row 0 → row 1, row 2 → row 3). Caps the result at 31.
+	 *
+	 * @param rowIndex - The source row index (0 or 2).
+	 * @param field - The column key to cascade.
+	 */
+	private twoDayDiff(rowIndex: number, field: string): void {
+		this.updatedFirstTable[rowIndex + 1][field].value =
+			Number(this.updatedFirstTable[rowIndex][field].value) + 2;
+		this.updatedFirstTable[rowIndex + 1][field].isCharged = false;
+		this.isValueGreaterThan31(rowIndex, field);
+	}
+
+	/**
+	 * Clamps the cascaded value at 31 — days cannot exceed 31.
+	 *
+	 * @param rowIndex - The row whose next-row value is being clamped.
+	 * @param field - The column key.
+	 */
+	private isValueGreaterThan31(rowIndex: number, field: string): void {
+		this.updatedFirstTable[rowIndex + 1][field].value =
+			this.updatedFirstTable[rowIndex + 1][field].value > 31
+				? 31
+				: this.updatedFirstTable[rowIndex + 1][field].value;
+	}
+
+	/**
+	 * Toggles a first-table cell to the charged state and persists to the database.
+	 * No-ops if the cell is already charged or the user lacks permission.
+	 *
+	 * @param rowIndex - The row index of the cell.
+	 * @param field - The column key of the cell.
+	 */
+	protected async setIsCharged(rowIndex: number, field: string): Promise<void> {
+		const returnCode = this.checkPermission();
+		// Rollback
+		if (returnCode === FAILURE) return;
+
+		if (!this.updatedFirstTable[rowIndex][field].isCharged) {
+			this.updatedFirstTable[rowIndex][field].isCharged = true;
+			this.refreshConfirmedCount();
+			// Update table to database
+			await this.updateFirstTableSingleValue();
+		}
+	}
+
+	/**
+	 * Opens a confirmation dialog before resetting the first table dates
+	 * to their default sequence (1, 3, 9, 11, 17).
+	 */
+	protected openResetConfirmationDialog(): void {
+		const returnCode = this.checkPermission();
+		// Rollback
+		if (returnCode === FAILURE) return;
+
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_CONFIRM,
+			() => {
+				this.resetFirstTable();
+			},
+			[PINBOARD_MSG_RESET_CONFIRM, PINBOARD_DIALOG_RESET_BTN, PINBOARD_DIALOG_CONFIRM_BTN]
+		);
+	}
+
+	/**
+	 * Resets all values in the first table to their default sequence
+	 * (1, 3, 9, 11, 17), sets all cells to uncharged, and persists the reset
+	 * state to the database.
+	 */
+	private async resetFirstTable(): Promise<void> {
+		const values = [1, 3, 9, 11, 17];
+		this.updatedFirstTable = this.originalFirstTable.slice(0, 5).map((original, index) => ({
+			_id: original._id,
+			_openid: original._openid,
+			first: { value: values[index], isCharged: false },
+			second: { value: values[index], isCharged: false },
+			third: { value: values[index], isCharged: false },
+			fourth: { value: values[index], isCharged: false }
+		}));
+		this.refreshConfirmedCount();
+		await this.updateFirstTableSingleValue();
+	}
+
+	/**
+	 * Persists the current state of the first table (including the isNextMonth
+	 * flag) to the database. Shows a save indicator on success or an error
+	 * dialog on failure.
+	 */
+	private async updateFirstTableSingleValue(): Promise<void> {
+		try {
+			const payload = [
+				...this.updatedFirstTable,
+				{
+					_id: this.originalFirstTable[5]._id,
+					_openid: this.originalFirstTable[5]._openid,
+					isNextMonth: this.isNextMonth
+				}
+			];
+			await this.databaseService.updateFirstReminderTable(DATABASE_FIRST_TABLE, payload);
+			this.triggerSaveIndicator(DATABASE_FIRST_TABLE);
+			// Fire-and-forget: surface this change in the Recent Activity widget.
+			this.databaseService
+				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
+					type: ACTIVITY_TYPE_UPDATED,
+					table: REMINDER_TABLE_DATE_CALCULATOR,
+					text: '',
+					timestamp: Utilities.getCurrentFormattedTime(true)
+				})
+				.catch(() => {});
+		} catch (error) {
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+		}
+	}
+
+	////////////////////// Below are shared utility methods //////////////////////////////
+
+	/**
+	 * Resolves the owner openid from the first-table row[0] and delegates
+	 * the permission check to DialogService.ensurePermission.
+	 *
+	 * @returns SUCCESS if the current user has write permission, FAILURE otherwise.
+	 */
+	private checkPermission(): string {
+		const openid = this.updatedFirstTable[0]?._openid ?? '';
+		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid)
+			? SUCCESS
+			: FAILURE;
+	}
+
+	/**
+	 * Shows a save-confirmation indicator for the given table and automatically
+	 * hides it after one second. If a previous timeout for the same table is
+	 * still active, it is cleared and restarted to avoid overlapping triggers.
+	 *
+	 * @param tableName - The name of the table for which to show the indicator.
+	 */
+	private triggerSaveIndicator(tableName: string): void {
+		this.saveIndicators[tableName] = true;
+		// markForCheck must be called immediately before the setTimeout delay begins.
+		this.cdr.markForCheck();
+
+		// Clear any previous timeout before setting a new one — rapid successive
+		// saves should restart the indicator timer rather than flash on/off.
+		if (this.saveIndicatorTimeouts[tableName]) {
+			clearTimeout(this.saveIndicatorTimeouts[tableName]);
+		}
+
+		this.saveIndicatorTimeouts[tableName] = setTimeout(() => {
+			this.saveIndicators[tableName] = false;
+			// setTimeout runs outside Angular's zone — markForCheck required to hide the indicator.
+			this.cdr.markForCheck();
+		}, 1000);
+	}
+
+	////////////////////// Below are AI tools and links handlers /////////////////////////
 
 	/**
 	 * Marks a tool's logo as failed so the initial-letter fallback is shown instead.

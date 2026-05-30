@@ -1,0 +1,243 @@
+/* ─────────────────────────────────────────
+   Host — fill the drawer-content slot
+───────────────────────────────────────── */
+:host {
+	display: block;
+	height: 100%;
+}
+
+/* ─────────────────────────────────────────
+   Container — grid layout, fills viewport, scrolls internally.
+   Visual properties (glassmorphism, animation)
+   are provided by the global .page-card class.
+───────────────────────────────────────── */
+.container {
+	min-width: 100%;
+	height: calc(100dvh - 10px);
+	padding: 10px 5px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.4s ease;
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 14px;
+	grid-auto-rows: min-content;
+	align-content: start;
+}
+.container::-webkit-scrollbar {
+	width: 8px;
+}
+.container::-webkit-scrollbar-track {
+	background: transparent;
+}
+.container::-webkit-scrollbar-thumb {
+	background: transparent;
+	border-radius: 999px;
+	transition: background 0.4s ease;
+}
+.container.is-scrolling {
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+}
+.container.is-scrolling::-webkit-scrollbar-thumb {
+	background: rgba(213, 51, 105, 0.28);
+}
+.container.is-scrolling::-webkit-scrollbar-thumb:hover {
+	background: #d53369;
+}
+
+/* ─────────────────────────────────────────
+   Table wrapper — section card
+───────────────────────────────────────── */
+.table-wrapper {
+	border-radius: 14px;
+	overflow: hidden;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ─────────────────────────────────────────
+   Header bar — teal-emerald for Account Expenses
+───────────────────────────────────────── */
+.header-wrapper {
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+
+.table-wrapper:nth-child(1) .header-wrapper {
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.header-main {
+	padding-top: 20px;
+	padding-left: 15px;
+	display: flex;
+	flex-direction: row;
+	gap: 5px;
+}
+
+.header-main h4 {
+	color: rgba(255, 255, 255, 0.96);
+	font-weight: 600;
+	letter-spacing: 0.3px;
+}
+
+/* ─────────────────────────────────────────
+   Save indicator
+───────────────────────────────────────── */
+.save-indicator {
+	padding-bottom: 5px;
+	padding-left: 5px;
+	display: flex;
+	align-items: center;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.save-indicator-icon {
+	font-size: 18px;
+}
+
+.save-indicator-text {
+	font-size: 19px;
+	margin-left: 5px;
+}
+
+/* ─────────────────────────────────────────
+   ACCOUNT EXPENSES
+───────────────────────────────────────── */
+.second-table {
+	border-top: 1px solid rgba(0, 0, 0, 0.07);
+	background-color: #ffffff;
+	padding: 10px 5px;
+	display: grid;
+	overflow: hidden;
+	height: fit-content;
+	grid-template-columns: repeat(4, 1fr);
+}
+
+/* Cell card hover */
+.second-table-cell {
+	height: fit-content;
+	padding: 15px 5px 12px 5px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	border-radius: 10px;
+	transition: background 0.18s;
+}
+
+.second-table-cell:hover {
+	transform: translateY(-2px) !important;
+	background: rgba(17, 153, 142, 0.05);
+}
+
+/* Cell title */
+.second-table-cell-header {
+	text-align: center;
+	padding-top: 5px;
+	font-weight: 700;
+	font-size: 15px;
+	color: rgba(30, 15, 35, 0.7);
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+}
+
+/* Currency / yen icon addon */
+::ng-deep .second-table .p-inputgroup-addon:first-child {
+	background: rgba(17, 153, 142, 0.08) !important;
+	border-color: rgba(0, 0, 0, 0.1) !important;
+	color: #11998e !important;
+	font-weight: 700 !important;
+}
+
+/* Debt number input */
+::ng-deep .second-table .p-inputnumber-input {
+	font-weight: 600 !important;
+	font-size: 15px !important;
+	border-color: rgba(0, 0, 0, 0.1) !important;
+	background: #ffffff !important;
+	transition:
+		border-color 0.18s,
+		box-shadow 0.18s !important;
+}
+
+::ng-deep .second-table .p-inputnumber-input:focus {
+	border-color: #11998e !important;
+	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.12) !important;
+	outline: none !important;
+}
+
+/* Minus (-) decrement button */
+::ng-deep .second-table .p-inputgroup .p-button {
+	background: rgba(0, 0, 0, 0.03) !important;
+	border: none !important;
+	border-left: 1px solid rgba(0, 0, 0, 0.1) !important;
+	color: rgba(30, 15, 35, 0.55) !important;
+	box-shadow: none !important;
+	transition:
+		background 0.15s,
+		color 0.15s !important;
+}
+
+::ng-deep .second-table .p-inputgroup .p-button:hover {
+	background: rgba(17, 153, 142, 0.12) !important;
+	color: #11998e !important;
+}
+
+/* Date picker input */
+::ng-deep .second-table .p-datepicker-input {
+	font-size: 15px !important;
+	border-color: rgba(0, 0, 0, 0.1) !important;
+	background: #ffffff !important;
+	transition:
+		border-color 0.18s,
+		box-shadow 0.18s !important;
+}
+
+::ng-deep .second-table .p-datepicker-input:focus {
+	border-color: #11998e !important;
+	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.12) !important;
+	outline: none !important;
+}
+
+/* Paid/unpaid checkbox row */
+.second-table-checkbox {
+	padding-top: 5px;
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
+/* ─────────────────────────────────────────
+   Responsive — ≤ 1500 px (single column)
+───────────────────────────────────────── */
+@media (max-width: 1500px) {
+	.container {
+		grid-template-columns: repeat(1, 1fr) !important;
+	}
+
+	.second-table-cell {
+		padding: 5px 5px 5px 5px !important;
+	}
+}
+
+/* ─────────────────────────────────────────
+   Responsive — ≤ 1100 px
+───────────────────────────────────────── */
+@media (max-width: 1100px) {
+	.second-table {
+		grid-template-columns: repeat(2, 1fr) !important;
+	}
+}
+
+/* ─────────────────────────────────────────
+   Responsive — ≤ 800 px (mobile)
+───────────────────────────────────────── */
+@media (max-width: 800px) {
+	.second-table {
+		grid-template-columns: repeat(1, 1fr) !important;
+	}
+}

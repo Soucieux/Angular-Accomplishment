@@ -9,7 +9,7 @@ import { AboutComponent } from './fontend/about/about.component';
 import { ResonanceComponent } from './fontend/resonance/resonance.component';
 import { NexusComponent } from './fontend/nexus/nexus.component';
 import { RecipeComponent } from './fontend/recipe/recipe.component';
-import { PinboardComponent } from './fontend/pinboard/pinboard.component';
+import { DebtComponent } from './fontend/debt/debt.component';
 
 export const routes: Routes = [
 	{ path: '', component: HomeComponent },
@@ -21,5 +21,5 @@ export const routes: Routes = [
 	{ path: 'resonance', component: ResonanceComponent },
 	{ path: 'nexus', component: NexusComponent },
 	{ path: 'recipe', component: RecipeComponent },
-	{ path: 'pinboard', component: PinboardComponent }
+	{ path: 'debt', component: DebtComponent }
 ];

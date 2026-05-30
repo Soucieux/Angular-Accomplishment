@@ -400,6 +400,12 @@ export const ENT_DIALOG_TITLE_DELETE_MOVIE = 'Delete Movie';
 export const ENT_DIALOG_BTN_DELETE = 'Delete';
 export const ENT_MSG_ADDING = 'Adding movie...';
 export const ENT_MSG_RESTORING = 'Restoring movie...';
+export const ENT_MSG_UPDATE_GENRE_FAILED = 'Error while updating genre';
+export const ENT_MSG_UPDATE_RATE_FAILED_PREFIX = 'Error while updating movie rate for ';
+export const ENT_MSG_API_EMPTY_RESPONSE = 'API responded with empty data due to too many requests';
+export const ENT_MSG_FETCH_FAILED_PREFIX = '❌ Fetch failed for ';
+export const ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX = '❌ Unable to retrieve rate for ';
+export const ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX = 'Error while retrieving movie webpage for movie ';
 
 ////////////////////// Below are entertainment page header string constants //////////
 /** Tooltip for the Refresh Rates action button. */

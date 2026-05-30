@@ -33,7 +33,13 @@ import {
 	ENT_CORK_BLOCKS,
 	ENT_VTA_STYLE_ID,
 	ENT_VT_CLASS_LEAVING,
-	ENT_VT_CLASS_ENTERING
+	ENT_VT_CLASS_ENTERING,
+	ENT_MSG_UPDATE_GENRE_FAILED,
+	ENT_MSG_UPDATE_RATE_FAILED_PREFIX,
+	ENT_MSG_API_EMPTY_RESPONSE,
+	ENT_MSG_FETCH_FAILED_PREFIX,
+	ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX,
+	ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX
 } from '../../common/app.constant';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
@@ -117,7 +123,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
 	protected statistics$!: Observable<any>;
 	private searchSummary!: Map<string, string[]>;
-	protected editedItems = new Map<string, { original: string; genre: string }>();
+	protected editedItems = new Map<string, { originalGenre: string; genre: string }>();
 	protected genres = MOVIE_GENRES;
 	protected readonly ENT_TOOLTIP_REFRESH = ENT_TOOLTIP_REFRESH;
 	protected readonly ENT_TOOLTIP_ADD = ENT_TOOLTIP_ADD;
@@ -142,9 +148,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	) {}
 
 	/**
-	 * Anything that needs to be done when the component is initialized.
+	 * Initialises the component: injects View Transition styles, wires the movie-list
+	 * and statistics observables, builds the combined filter stream, and auto-opens
+	 * the add or search dialog when navigated from a home quick-action button.
 	 */
-	public async ngOnInit() {
+	async ngOnInit() {
 		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		// Only logged in user can access the movie list
 		if (isPlatformBrowser(this.platformId)) {
@@ -208,7 +216,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * Completes the genre and search query subjects, clears any open dialogs,
 	 * resets the searching flag, and logs the component destruction event.
 	 */
-	public ngOnDestroy() {
+	ngOnDestroy() {
 		this.doc.getElementById(ENT_VTA_STYLE_ID)?.remove();
 		this.movieListSub?.unsubscribe();
 		this.selectedGenres$.complete();
@@ -287,7 +295,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				searchCount++;
 			} catch (error) {
 				this.dialogService.handleError(this.dialogComponentContainer, error);
-				LOG.error(this.className, `Error while updating movie rate for ${movieItemVO.getMovieName()}`);
+				LOG.error(this.className, `${ENT_MSG_UPDATE_RATE_FAILED_PREFIX}${movieItemVO.getMovieName()}`);
 			}
 		}
 
@@ -507,11 +515,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			if (!retrieveOtherData && !retrieveYearAndTitle) {
 				if (error instanceof MovieFetchFailedError) {
 					this.searchStreamService.addSearchLog(
-						`❌ Fetch failed for ${movieItemVO.getMovieName()}. SKIPPING.`
+						`${ENT_MSG_FETCH_FAILED_PREFIX}${movieItemVO.getMovieName()}. SKIPPING.`
 					);
 				} else {
 					this.searchStreamService.addSearchLog(
-						`❌ Unable to retrieve rate for ${movieItemVO.getMovieName()}. SKIPPING.`
+						`${ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX}${movieItemVO.getMovieName()}. SKIPPING.`
 					);
 				}
             } else {
@@ -521,7 +529,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				} else {
 					LOG.error(
 						this.className,
-						`Error while retrieving movie webpage for movie ${movieItemVO.getMovieName()}`,
+						`${ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX}${movieItemVO.getMovieName()}`,
 						error as Error
 					);
 					throw error;
@@ -548,7 +556,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		);
 		// Step 2: If empty data is received, it means the API is not responding due to too many requests.
 		if (extractedData == null || extractedData.length === 0) {
-			LOG.warn(this.className, 'API responded with empty data due to too many requests');
+			LOG.warn(this.className, ENT_MSG_API_EMPTY_RESPONSE);
 			// throw the error to let the calling method knows that the movie ID cannot be retrieved at this time.
 			throw new MovieIdNotFoundError(movieItemVO.getMovieName());
 		} else {
@@ -1024,7 +1032,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 */
 	protected startEdit(movie: MovieItemVO) {
 		this.editedItems.set(movie.getMovieKey(), {
-			original: movie.getMovieGenre(),
+			originalGenre: movie.getMovieGenre(),
 			genre: movie.getMovieGenre()
 		});
 	}
@@ -1040,10 +1048,10 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		const genreData = this.editedItems.get(movie.getMovieKey());
 		try {
 			if (genreData) {
-				if (genreData.original !== genreData.genre) {
+				if (genreData.originalGenre !== genreData.genre) {
 					await this.databaseService.updateMovieGenre(
 						movie.getMovieKey(),
-						genreData.original,
+						genreData.originalGenre,
 						genreData.genre
 					);
 				}
@@ -1051,7 +1059,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			}
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
-			LOG.error(this.className, 'Error while updaing genre');
+			LOG.error(this.className, ENT_MSG_UPDATE_GENRE_FAILED);
 		}
 	}
 

@@ -74,6 +74,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 
+	protected readonly NEXUS_CATEGORY_ALL = NEXUS_CATEGORY_ALL;
 	protected readonly NEXUS_LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
 	protected readonly aiTools: AiTool[] = [...NEXUS_AI_TOOLS];
 	protected failedLogos = new Set<string>();
@@ -406,6 +407,29 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 				NEXUS_MSG_DELETE_LINK_BTN
 			]
 		);
+	}
+
+	/**
+	 * Sets the active category filter, controlling which links are shown in the grid.
+	 *
+	 * @param categoryId - The category _id to filter by, or {@link NEXUS_CATEGORY_ALL} to show all.
+	 */
+	protected selectCategory(categoryId: string): void {
+		this.selectedCategory = categoryId;
+	}
+
+	/**
+	 * Closes the Add/Edit Link dialog.
+	 */
+	protected closeLinkDialog(): void {
+		this.showLinkDialog = false;
+	}
+
+	/**
+	 * Closes the Add/Edit Category dialog.
+	 */
+	protected closeCategoryDialog(): void {
+		this.showCategoryDialog = false;
 	}
 
 	/**

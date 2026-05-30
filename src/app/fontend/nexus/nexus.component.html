@@ -40,15 +40,15 @@
 				<div class="category-tabs">
 					<button
 						class="cat-tab"
-						[class.active]="selectedCategory === 'all'"
-						(click)="selectedCategory = 'all'">
-						All ({{ getLinkCount('all') }})
+						[class.active]="selectedCategory === NEXUS_CATEGORY_ALL"
+						(click)="selectCategory(NEXUS_CATEGORY_ALL)">
+						All ({{ getLinkCount(NEXUS_CATEGORY_ALL) }})
 					</button>
 					@for (cat of categories; track cat._id) {
 						<button
 							class="cat-tab"
 							[class.active]="selectedCategory === cat._id"
-							(click)="selectedCategory = cat._id"
+							(click)="selectCategory(cat._id)"
 							[style.--cat-color]="cat.color">
 							{{ cat.name }} ({{ getLinkCount(cat._id) }})
 							<span class="cat-edit-btn"
@@ -208,7 +208,7 @@
 	</div>
 
 	<ng-template pTemplate="footer">
-		<button class="dialog-cancel-btn" (click)="showLinkDialog = false">Cancel</button>
+		<button class="dialog-cancel-btn" (click)="closeLinkDialog()">Cancel</button>
 		<button class="dialog-save-btn" (click)="saveLinkDialog()">Save</button>
 	</ng-template>
 </p-dialog>
@@ -250,7 +250,7 @@
 	</div>
 
 	<ng-template pTemplate="footer">
-		<button class="dialog-cancel-btn" (click)="showCategoryDialog = false">Cancel</button>
+		<button class="dialog-cancel-btn" (click)="closeCategoryDialog()">Cancel</button>
 		<button class="dialog-save-btn" (click)="saveCategoryDialog()">Save</button>
 	</ng-template>
 </p-dialog>

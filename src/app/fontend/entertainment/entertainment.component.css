@@ -690,8 +690,10 @@
 	padding: 5px 10px; /* Adjust these values as needed */
 }
 
-/* The max-width here is the **current** maximum width of the browser */
-@media (max-width: 800px) {
+/* ─────────────────────────────────────────
+   Responsive ≤ 940 px (mobile)
+───────────────────────────────────────── */
+@media (max-width: 940px) {
 	.info-swap {
 		height: 70%;
 	}

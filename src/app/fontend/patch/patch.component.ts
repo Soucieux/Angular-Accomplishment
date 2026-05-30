@@ -598,7 +598,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Get the PrimeNG severity level for a tag based on the patch note status.
+	 * Returns the PrimeNG severity level for a tag based on the patch note status.
 	 *
 	 * @param status - The patch note status.
 	 * @returns The PrimeNG tag severity value.
@@ -622,7 +622,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Get the PrimeNG icon class for a tag based on the patch note status.
+	 * Returns the PrimeNG icon class for a tag based on the patch note status.
 	 *
 	 * @param status - The patch note status.
 	 * @returns The PrimeNG icon CSS class.

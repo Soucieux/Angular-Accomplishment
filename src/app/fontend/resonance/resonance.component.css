@@ -25,7 +25,9 @@
 	align-items: center;
 }
 
-/* ── Header ── */
+/* ─────────────────────────────────────────
+   Header
+───────────────────────────────────────── */
 .page-header {
 	text-align: center;
 	margin-bottom: 40px;
@@ -74,7 +76,9 @@
 	opacity: 0.75;
 }
 
-/* ── Submit card ── */
+/* ─────────────────────────────────────────
+   Submit card
+───────────────────────────────────────── */
 .submit-card {
 	width: 100%;
 	max-width: 640px;
@@ -255,7 +259,9 @@
 	z-index: 1;
 }
 
-/* ── Submit button ── */
+/* ─────────────────────────────────────────
+   Submit button
+───────────────────────────────────────── */
 ::ng-deep .submit-btn.p-button {
 	background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
 	border: none !important;
@@ -298,7 +304,9 @@
 	line-height: 1 !important;
 }
 
-/* ── Skeleton grid ── */
+/* ─────────────────────────────────────────
+   Skeleton grid
+───────────────────────────────────────── */
 .skeleton-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
@@ -325,7 +333,9 @@
 	border-radius: 16px !important;
 }
 
-/* ── Empty state ── */
+/* ─────────────────────────────────────────
+   Empty state
+───────────────────────────────────────── */
 .empty-state {
 	text-align: center;
 	padding: 80px 20px;
@@ -357,7 +367,9 @@
 	margin: 0;
 }
 
-/* ── Quote grid ── */
+/* ─────────────────────────────────────────
+   Quote grid
+───────────────────────────────────────── */
 .quote-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
@@ -365,7 +377,9 @@
 	width: 100%;
 }
 
-/* ── Staggered card entrance ── */
+/* ─────────────────────────────────────────
+   Staggered card entrance
+───────────────────────────────────────── */
 .card-enter {
 	animation: cardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -381,7 +395,9 @@
 	}
 }
 
-/* ── Quote card ── */
+/* ─────────────────────────────────────────
+   Quote card
+───────────────────────────────────────── */
 .quote-card {
 	border-radius: 16px;
 	position: relative;
@@ -460,7 +476,9 @@
 	z-index: 1;
 }
 
-/* ── Quote metadata ── */
+/* ─────────────────────────────────────────
+   Quote metadata
+───────────────────────────────────────── */
 .quote-meta {
 	display: flex;
 	justify-content: space-between;
@@ -519,7 +537,9 @@
 	background: rgba(0, 0, 0, 0.06) !important;
 }
 
-/* ── Quote text ── */
+/* ─────────────────────────────────────────
+   Quote text
+───────────────────────────────────────── */
 .quote-text {
 	font-size: 17px;
 	line-height: 1.6;
@@ -533,7 +553,9 @@
 	align-items: center;
 }
 
-/* ── Post success chip ── */
+/* ─────────────────────────────────────────
+   Post success chip
+───────────────────────────────────────── */
 @keyframes chipFadeIn {
 	from {
 		opacity: 0;
@@ -555,7 +577,9 @@
 	animation: chipFadeIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* ── Quote count pill ── */
+/* ─────────────────────────────────────────
+   Quote count pill
+───────────────────────────────────────── */
 .quote-count-pill {
 	align-self: flex-start;
 	margin-bottom: 14px;
@@ -606,3 +630,4 @@
 		transform: translateY(-4px) scale(1.01);
 	}
 }
+

@@ -64,8 +64,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 	) {}
 
 	/**
-	 * Reads the returnUrl query param so sign-in can redirect back to the
-	 * page the user came from.
+	 * Builds the reactive login form and reads the returnUrl query param
+	 * so sign-in can redirect back to the page the user came from.
 	 */
 	ngOnInit(): void {
 		this.loginForm = this.fb.group({

@@ -186,7 +186,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 						name: item.name,
 						date: item.content.date
 					}));
-				this.syncReminderStatistics();
+				this.syncStatistics();
 			});
 		}
 	}
@@ -659,7 +659,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Writes the latest upcoming expenses to the statistics collection.
 	 * Called after secondSub emits. Fire-and-forget.
 	 */
-	private syncReminderStatistics(): void {
+	private syncStatistics(): void {
 		if (this.syncStatTimer !== null) clearTimeout(this.syncStatTimer);
 		this.syncStatTimer = setTimeout(() => {
 			this.syncStatTimer = null;
@@ -681,7 +681,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.upcomingExpenses = this.updatedSecondTable
 			.filter((item: any) => item.content?.date && !item.content?.paid)
 			.map((item: any) => ({ type: REMINDER_ITEM_EXPENSE, name: item.name, date: item.content.date }));
-		this.syncReminderStatistics();
+		this.syncStatistics();
 	}
 
 	////////////////////// Below are common utility methods used across all tables //////////////
@@ -748,8 +748,8 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param date - Any date representation (string, Date, CloudBase timestamp, or falsy).
 	 * @returns A 'yyyy-MM-dd' string, or empty string if the value is falsy or unparseable.
 	 */
-	protected formatDate(date: any): string { // any: CloudBase date values arrive as Timestamp objects, plain strings, or null — no shared type
+	protected formatDate(date: any): string {
+		// any: CloudBase date values arrive as Timestamp objects, plain strings, or null — no shared type
 		return Utilities.coerceDateToString(date);
 	}
-
 }

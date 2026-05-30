@@ -15,10 +15,10 @@ import {
 	DATABASE_QUOTES,
 	DATABASE_REMINDER_FIRST,
 	DATABASE_REMINDER_SECOND,
-	DATABASE_REMINDER_THIRD,
+	DATABASE_REMINDER,
 	DATABASE_SECOND_TABLE,
 	DATABASE_STATISTICS,
-	DATABASE_REMINDER_TABLE,
+	DATABASE_THIRD_TABLE,
 	DATABASE_RECIPES,
 	DATABASE_USEFUL_LINKS,
 	USEFUL_LINK_TYPE_LINK,
@@ -448,7 +448,7 @@ export class CloudbaseService extends DatabaseService {
 	public getThirdReminderTableDetails(): Observable<any[]> {
 		// Same watch→map→emit pattern as second table, but third table
 		// content shape is {text, date, link} so mapping differs accordingly.
-		return this.watchCollection(DATABASE_REMINDER_THIRD, (docs) =>
+		return this.watchCollection(DATABASE_REMINDER, (docs) =>
 			docs.map((doc: any) => {
 				const { _id, ...rest } = doc;
 				return { key: _id, ...rest } as {
@@ -1123,7 +1123,7 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, 'Reminder table has been updated');
 			// Fire-and-forget: record third-table additions in stats so the
 			// home-page Recent Activity widget can surface them immediately.
-			if (tableName === DATABASE_REMINDER_TABLE) {
+			if (tableName === DATABASE_THIRD_TABLE) {
 				this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 					type: HISTORY_STATUS_ADDED,
 					table: REMINDER_TABLE_MESSAGES,
@@ -1312,8 +1312,8 @@ export class CloudbaseService extends DatabaseService {
 				return DATABASE_REMINDER_FIRST;
 			case DATABASE_SECOND_TABLE:
 				return DATABASE_REMINDER_SECOND;
-			case DATABASE_REMINDER_TABLE:
-				return DATABASE_REMINDER_THIRD;
+			case DATABASE_THIRD_TABLE:
+				return DATABASE_REMINDER;
 			default:
 				return '';
 		}

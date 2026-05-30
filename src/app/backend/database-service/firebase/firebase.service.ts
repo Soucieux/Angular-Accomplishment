@@ -6,7 +6,7 @@ import {
 	DATABASE_QUOTES,
 	DATABASE_REMINDER,
 	DATABASE_SECOND_TABLE,
-	DATABASE_REMINDER_TABLE,
+	DATABASE_THIRD_TABLE,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
@@ -658,7 +658,7 @@ export class FirebaseService extends DatabaseService {
 		return runInInjectionContext(this.ei, () =>
 			// Same list()+pipe+map pipeline as second table, but third table
 			// content shape is {text, date, link} so mapping differs accordingly.
-			list(dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_REMINDER_TABLE}`)).pipe(
+			list(dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_THIRD_TABLE}`)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -697,7 +697,7 @@ export class FirebaseService extends DatabaseService {
 					...valueToUpdate
 				});
 				LOG.info(this.className, 'Reminder table has been updated');
-			} else if (tableName === DATABASE_REMINDER_TABLE) {
+			} else if (tableName === DATABASE_THIRD_TABLE) {
 				await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}`), {
 					[valueKey]: value
 				});
@@ -861,7 +861,7 @@ export class FirebaseService extends DatabaseService {
 		})
 			.then(() => {
 				LOG.info(this.className, 'Reminder table has been updated');
-				if (tableName === DATABASE_REMINDER_TABLE) {
+				if (tableName === DATABASE_THIRD_TABLE) {
 					this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 						type: HISTORY_STATUS_ADDED,
 						table: REMINDER_TABLE_MESSAGES,

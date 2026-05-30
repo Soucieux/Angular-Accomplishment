@@ -27,7 +27,7 @@ import { LOG } from '../../common/app.logs';
 import {
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
-	DATABASE_THIRD_TABLE,
+	DATABASE_REMINDER_TABLE,
 	DIALOG_CONFIRM,
 	ERROR_PERMISSION_DENIED,
 	FAILURE,
@@ -193,11 +193,11 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 		// Clear any previous timeout before setting a new one — rapid successive
 		// saves should restart the indicator timer rather than flash on/off.
-		if (this.saveIndicatorTimeouts[DATABASE_THIRD_TABLE]) {
-			clearTimeout(this.saveIndicatorTimeouts[DATABASE_THIRD_TABLE]);
+		if (this.saveIndicatorTimeouts[DATABASE_REMINDER_TABLE]) {
+			clearTimeout(this.saveIndicatorTimeouts[DATABASE_REMINDER_TABLE]);
 		}
 
-		this.saveIndicatorTimeouts[DATABASE_THIRD_TABLE] = setTimeout(() => {
+		this.saveIndicatorTimeouts[DATABASE_REMINDER_TABLE] = setTimeout(() => {
 			this.saveIndicator = false;
 		}, 1000);
 	}
@@ -287,7 +287,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	): Promise<void> {
 		try {
 			// Step 1: Persist the single-value change to CloudBase
-			await this.databaseService.updateReminderTable(DATABASE_THIRD_TABLE, entryKey, valueKey, singleValue);
+			await this.databaseService.updateReminderTable(DATABASE_REMINDER_TABLE, entryKey, valueKey, singleValue);
 			// Step 2: Flash the save indicator
 			this.triggerSaveIndicator();
 			// Step 3: Append the change to the activity log
@@ -320,7 +320,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private async removeRecordFromDatabase(entryKey: string): Promise<void> {
 		const itemText = this.items.find((item) => item.key === entryKey)?.text ?? '';
 		try {
-			await this.databaseService.removeRecordFromReminderTable(DATABASE_THIRD_TABLE, entryKey);
+			await this.databaseService.removeRecordFromReminderTable(DATABASE_REMINDER_TABLE, entryKey);
 			this.triggerSaveIndicator();
 			this.databaseService
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
@@ -554,7 +554,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 		try {
 			// Step 3: Persist to the database
-			await this.databaseService.addNewRecordForReminderTable(DATABASE_THIRD_TABLE, newContent);
+			await this.databaseService.addNewRecordForReminderTable(DATABASE_REMINDER_TABLE, newContent);
 
 			// Step 4: Flash save indicator and append to the activity log
 			this.triggerSaveIndicator();

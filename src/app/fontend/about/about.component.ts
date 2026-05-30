@@ -181,9 +181,10 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Clears the hovered entry index when the cursor leaves the entry container.
+	 * Resets the hover state by nullifying the hovered index
+	 * when the cursor moves away from the entry container.
 	 */
-	protected onEntryLeave(): void {
+	protected resetHoverState(): void {
 		this.hoveredIndex = null;
 	}
 }

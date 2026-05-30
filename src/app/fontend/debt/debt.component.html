@@ -1,0 +1,104 @@
+@if (utilities.getIsUserAlive()) {
+	<div class="container page-card">
+		<!-- SECOND TABLE -->
+		<div class="table-wrapper">
+			<div class="header-wrapper">
+				<div class="header-main">
+					<h4>Account Expenses</h4>
+					@if (saveIndicators[DATABASE_SECOND_TABLE]) {
+						<div class="save-indicator">
+							<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+							<span class="save-indicator-text">Saving</span>
+						</div>
+					}
+				</div>
+			</div>
+			<div class="second-table">
+				@if (loading) {
+					@for (_ of [0, 1, 2, 3, 4, 5, 6, 7]; track $index) {
+						<div class="second-table-cell">
+							<p-skeleton height="20px" />
+							<p-skeleton height="45px" />
+							<p-skeleton height="45px" />
+							<p-skeleton height="20px" />
+						</div>
+					}
+				} @else {
+					@for (item of updatedSecondTable; let index = $index; track item.name) {
+						<div class="second-table-cell">
+							<div class="second-table-cell-header">{{ item.name }}</div>
+							<p-inputgroup style="height: 40px">
+								<p-inputgroup-addon>
+									@if (checkIfChinese(item.name)) {
+										<i class="material-symbols-outlined" style="color: black"
+											>currency_yen</i
+										>
+									} @else {
+										<i class="pi pi-dollar" style="color: black; font-weight: bold"></i>
+									}
+								</p-inputgroup-addon>
+								<p-inputnumber
+									mode="decimal"
+									locale="en-US"
+									[minFractionDigits]="2"
+									[maxFractionDigits]="2"
+									[step]="0.01"
+									[(ngModel)]="item.content.debt"
+									(onBlur)="updateTableSingleValue(DATABASE_SECOND_TABLE, item.key, 'debt')"
+									(keyup.enter)="updateTableSingleValue(DATABASE_SECOND_TABLE, item.key, 'debt')" />
+								<p-inputgroup-addon
+									><p-button
+										icon="pi pi-minus"
+										severity="secondary"
+										(onClick)="updateDebt(DATABASE_SECOND_TABLE, item.key, item.content.debt)"
+										pTooltip="Decrement by 998.05"
+										tooltipPosition="top"></p-button>
+								</p-inputgroup-addon>
+							</p-inputgroup>
+							<p-inputgroup style="height: 40px">
+								<p-datepicker
+									class="second-table-date"
+									[appendTo]="'body'"
+									dateFormat="yy-mm-dd"
+									[(ngModel)]="item.content.date"
+									(keydown)="preventKeyin($event)"
+									[disabled]="!item.content.paid"
+									(onSelect)="updateTableWithNewDate(DATABASE_SECOND_TABLE, item.key, $event)" />
+								<p-inputgroup-addon
+									><p-button
+										[icon]="item.content.paid ? 'pi pi-check' : 'pi pi-replay'"
+										severity="secondary"
+										[pTooltip]="
+											item.content.paid ? 'Set default debt' : 'Reset debt to default'
+										"
+										tooltipPosition="top"
+										(onClick)="setDefaultDebt(item.key, item.content.paid)"></p-button
+								></p-inputgroup-addon>
+							</p-inputgroup>
+							<div class="second-table-checkbox">
+								<p-checkbox
+									[inputId]="item.key"
+									[(ngModel)]="item.content.paid"
+									[binary]="true"
+									(onChange)="updateTableSingleValue(DATABASE_SECOND_TABLE, item.key, 'paid')" />
+								<label
+									[for]="item.key"
+									style="font-size: 15px"
+									[style]="item.content.paid ? 'color:green' : 'color:red'"
+									>{{
+										item.content.paid
+											? 'Paid'
+											: 'Not yet paid ($' + item.content.original + ')'
+									}}</label
+								>
+							</div>
+						</div>
+					}
+				}
+			</div>
+		</div>
+	</div>
+	<ng-container #dialogComponentContainer></ng-container>
+} @else {
+	<access-denied />
+}

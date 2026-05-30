@@ -122,10 +122,10 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				colorClass: 'icon-reminder'
 			},
 			{
-				label: 'Pinboard',
-				icon: 'push_pin',
+				label: 'Debt Sonata',
+				icon: 'account_balance',
 				iconClass: 'material-symbols-outlined',
-				colorClass: 'icon-pinboard'
+				colorClass: 'icon-debt'
 			},
 			{
 				label: 'Patch Notes',

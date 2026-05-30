@@ -7,24 +7,9 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
 import {
-    DATABASE_FIRST_TABLE,
-    DATABASE_SECOND_TABLE,
-    SUCCESS,
-    FAILURE
+    DATABASE_SECOND_TABLE
 } from '../../common/app.constant';
-import { PinboardComponent } from './pinboard.component';
-
-/** Minimal first-table row factory. */
-function makeFirstRow(value = 5, isCharged = false) {
-    return {
-        _id: 'id1',
-        _openid: 'uid1',
-        first: { value, isCharged },
-        second: { value, isCharged },
-        third: { value, isCharged },
-        fourth: { value, isCharged }
-    };
-}
+import { DebtComponent } from './debt.component';
 
 /** Minimal second-table row factory. */
 function makeSecondRow(key = 'k1', debt = 100, paid = false) {
@@ -36,26 +21,22 @@ function makeSecondRow(key = 'k1', debt = 100, paid = false) {
     };
 }
 
-describe('PinboardComponent', () => {
-    let component: PinboardComponent;
-    let fixture: ComponentFixture<PinboardComponent>;
+describe('DebtComponent', () => {
+    let component: DebtComponent;
+    let fixture: ComponentFixture<DebtComponent>;
     let mockDb: jasmine.SpyObj<DatabaseService>;
     let mockDialogService: jasmine.SpyObj<DialogService>;
 
     beforeEach(async () => {
         mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
-            'getFirstReminderTableDetails',
             'getSecondReminderTableDetails',
-            'updateFirstReminderTable',
             'updateReminderTable',
             'removeRecordFromReminderTable',
             'addNewRecordForReminderTable',
             'appendToActivityLog',
             'updateStatisticsFields'
         ]);
-        mockDb.getFirstReminderTableDetails.and.returnValue(of([]));
         mockDb.getSecondReminderTableDetails.and.returnValue(of([]));
-        mockDb.updateFirstReminderTable.and.returnValue(Promise.resolve());
         mockDb.updateReminderTable.and.returnValue(Promise.resolve());
         mockDb.removeRecordFromReminderTable.and.returnValue(Promise.resolve());
         mockDb.addNewRecordForReminderTable.and.returnValue(Promise.resolve());
@@ -73,7 +54,7 @@ describe('PinboardComponent', () => {
         mockDialogService.handleError.and.stub();
 
         await TestBed.configureTestingModule({
-            imports: [PinboardComponent],
+            imports: [DebtComponent],
             providers: [
                 MessageService,
                 { provide: DatabaseService, useValue: mockDb },
@@ -81,7 +62,7 @@ describe('PinboardComponent', () => {
             ]
         }).compileComponents();
 
-        fixture = TestBed.createComponent(PinboardComponent);
+        fixture = TestBed.createComponent(DebtComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });
@@ -105,120 +86,6 @@ describe('PinboardComponent', () => {
             const event = jasmine.createSpyObj<KeyboardEvent>('KeyboardEvent', ['preventDefault']);
             (component as any).preventKeyin(event);
             expect(event.preventDefault).toHaveBeenCalled();
-        });
-    });
-
-    // ── firstTableConfirmedCount ──────────────────────────────────────────
-
-    describe('firstTableConfirmedCount', () => {
-        it('returns 0 when updatedFirstTable is empty', () => {
-            (component as any).updatedFirstTable = [];
-            expect((component as any).firstTableConfirmedCount).toBe(0);
-        });
-
-        it('counts only cells where isCharged is true', () => {
-            (component as any).updatedFirstTable = [
-                {
-                    first: { isCharged: true },
-                    second: { isCharged: false },
-                    third: { isCharged: true },
-                    fourth: { isCharged: false }
-                }
-            ];
-            (component as any).refreshConfirmedCount();
-            expect((component as any).firstTableConfirmedCount).toBe(2);
-        });
-
-        it('returns 0 when no cells are charged', () => {
-            (component as any).updatedFirstTable = [
-                {
-                    first: { isCharged: false },
-                    second: { isCharged: false },
-                    third: { isCharged: false },
-                    fourth: { isCharged: false }
-                }
-            ];
-            (component as any).refreshConfirmedCount();
-            expect((component as any).firstTableConfirmedCount).toBe(0);
-        });
-    });
-
-    // ── firstTableTotalCount ──────────────────────────────────────────────
-
-    describe('firstTableTotalCount', () => {
-        it('returns 0 when updatedFirstTable is empty', () => {
-            (component as any).updatedFirstTable = [];
-            expect((component as any).firstTableTotalCount).toBe(0);
-        });
-
-        it('returns rows × 4 columns', () => {
-            (component as any).updatedFirstTable = [{}, {}, {}];
-            expect((component as any).firstTableTotalCount).toBe(12);
-        });
-    });
-
-    // ── setMonth ──────────────────────────────────────────────────────────
-
-    describe('setMonth', () => {
-        it('sets isNextMonth to true and calls updateChargedCells', () => {
-            spyOn<any>(component, 'updateChargedCells').and.returnValue(Promise.resolve());
-            (component as any).setMonth(true);
-            expect((component as any).isNextMonth).toBeTrue();
-            expect((component as any).updateChargedCells).toHaveBeenCalled();
-        });
-
-        it('sets isNextMonth to false and calls updateChargedCells', () => {
-            spyOn<any>(component, 'updateChargedCells').and.returnValue(Promise.resolve());
-            (component as any).setMonth(false);
-            expect((component as any).isNextMonth).toBeFalse();
-            expect((component as any).updateChargedCells).toHaveBeenCalled();
-        });
-    });
-
-    // ── isDisabled ────────────────────────────────────────────────────────
-
-    describe('isDisabled', () => {
-        it('returns false when the cell is not in chargedCells', () => {
-            (component as any).chargedCells = new Set<string>();
-            expect((component as any).isDisabled(0, 'first')).toBeFalse();
-        });
-
-        it('returns true when the cell is in chargedCells', () => {
-            (component as any).chargedCells = new Set<string>(['0-first']);
-            expect((component as any).isDisabled(0, 'first')).toBeTrue();
-        });
-
-        it('returns false for a different cell even when one cell is charged', () => {
-            (component as any).chargedCells = new Set<string>(['0-first']);
-            expect((component as any).isDisabled(0, 'second')).toBeFalse();
-        });
-    });
-
-    // ── onNumberChange ────────────────────────────────────────────────────
-
-    describe('onNumberChange', () => {
-        it('allows numeric keys to pass through', () => {
-            const event = { key: '5', preventDefault: jasmine.createSpy('pd') } as unknown as KeyboardEvent;
-            (component as any).onNumberChange(event);
-            expect(event.preventDefault).not.toHaveBeenCalled();
-        });
-
-        it('blocks non-numeric keys', () => {
-            const event = { key: 'a', preventDefault: jasmine.createSpy('pd') } as unknown as KeyboardEvent;
-            (component as any).onNumberChange(event);
-            expect(event.preventDefault).toHaveBeenCalled();
-        });
-
-        it('allows Backspace through', () => {
-            const event = { key: 'Backspace', preventDefault: jasmine.createSpy('pd') } as unknown as KeyboardEvent;
-            (component as any).onNumberChange(event);
-            expect(event.preventDefault).not.toHaveBeenCalled();
-        });
-
-        it('allows ArrowLeft through', () => {
-            const event = { key: 'ArrowLeft', preventDefault: jasmine.createSpy('pd') } as unknown as KeyboardEvent;
-            (component as any).onNumberChange(event);
-            expect(event.preventDefault).not.toHaveBeenCalled();
         });
     });
 
@@ -261,72 +128,6 @@ describe('PinboardComponent', () => {
             } else {
                 expect(val == null || val === undefined).toBeTrue();
             }
-        });
-    });
-
-    // ── setIsCharged ──────────────────────────────────────────────────────
-
-    describe('setIsCharged', () => {
-        beforeEach(() => {
-            (component as any).updatedFirstTable = [makeFirstRow(5, false)];
-            (component as any).originalFirstTable = [makeFirstRow(5, false), { _id: 'id2', _openid: 'uid1', isNextMonth: false }];
-            (component as any).chargedCellsInitialized = true;
-        });
-
-        it('marks the cell as charged and calls updateFirstTableSingleValue', async () => {
-            spyOn<any>(component, 'updateFirstTableSingleValue').and.returnValue(Promise.resolve());
-            await (component as any).setIsCharged(0, 'first');
-            expect((component as any).updatedFirstTable[0].first.isCharged).toBeTrue();
-        });
-
-        it('does nothing when the cell is already charged', async () => {
-            (component as any).updatedFirstTable[0].first.isCharged = true;
-            spyOn<any>(component, 'updateFirstTableSingleValue').and.returnValue(Promise.resolve());
-            await (component as any).setIsCharged(0, 'first');
-            expect((component as any).updateFirstTableSingleValue).not.toHaveBeenCalled();
-        });
-
-        it('does nothing when permission is denied', async () => {
-            mockDialogService.ensurePermission.and.returnValue(false);
-            spyOn<any>(component, 'updateFirstTableSingleValue').and.returnValue(Promise.resolve());
-            await (component as any).setIsCharged(0, 'first');
-            expect((component as any).updateFirstTableSingleValue).not.toHaveBeenCalled();
-        });
-    });
-
-    // ── onValueChange ─────────────────────────────────────────────────────
-
-    describe('onValueChange', () => {
-        beforeEach(() => {
-            (component as any).originalFirstTable = [
-                makeFirstRow(5, false),
-                makeFirstRow(7, false),
-                makeFirstRow(13, false),
-                makeFirstRow(15, false),
-                makeFirstRow(21, false),
-                { _id: 'id6', _openid: 'uid1', isNextMonth: false }
-            ];
-            (component as any).updatedFirstTable = [
-                makeFirstRow(5, false),
-                makeFirstRow(7, false),
-                makeFirstRow(13, false),
-                makeFirstRow(15, false),
-                makeFirstRow(21, false)
-            ];
-            (component as any).chargedCellsInitialized = true;
-            (component as any).chargedCells = new Set<string>();
-        });
-
-        it('does not update when the value did not change', async () => {
-            spyOn<any>(component, 'updateFirstTableSingleValue').and.returnValue(Promise.resolve());
-            await (component as any).onValueChange(0, 'first');
-            expect((component as any).updateFirstTableSingleValue).not.toHaveBeenCalled();
-        });
-
-        it('rolls back when the value exceeds 31', async () => {
-            (component as any).updatedFirstTable[0].first.value = 32;
-            await (component as any).onValueChange(0, 'first');
-            expect((component as any).updatedFirstTable[0].first.value).toBe(5);
         });
     });
 

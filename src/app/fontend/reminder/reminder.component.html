@@ -99,7 +99,7 @@
 										(blur)="onTagUpdate()"
 										(keyup.enter)="onTagUpdate()"
 										(keyup.escape)="cancelTagEdit()"
-										[placeholder]="PINBOARD_PLACEHOLDER_TAG"
+										[placeholder]="REMINDER_PLACEHOLDER_TAG"
 										style="width: 58px" />
 								</span>
 							} @else {
@@ -124,7 +124,7 @@
 						type="text"
 						class="pinboard-card-message"
 						[class.cf]="checkIfChinese(item.text)"
-						[placeholder]="PINBOARD_PLACEHOLDER_TEXT"
+						[placeholder]="REMINDER_PLACEHOLDER_TEXT"
 						[(ngModel)]="item.text"
 						(keyup.enter)="onCardTextUpdate(item)"
 						(blur)="onCardTextUpdate(item)" />
@@ -218,7 +218,7 @@
 										(blur)="onNewItemTagUpdate()"
 										(keyup.enter)="onNewItemTagUpdate()"
 										(keyup.escape)="cancelTagEdit()"
-										[placeholder]="PINBOARD_PLACEHOLDER_TAG"
+										[placeholder]="REMINDER_PLACEHOLDER_TAG"
 										style="width: 58px" />
 								</span>
 							} @else {
@@ -242,7 +242,7 @@
 					<input
 						type="text"
 						class="pinboard-card-message"
-						[placeholder]="PINBOARD_PLACEHOLDER_TEXT"
+						[placeholder]="REMINDER_PLACEHOLDER_TEXT"
 						[(ngModel)]="newItem.text"
 						(keyup.enter)="addNewTextOnly()" />
 
@@ -319,14 +319,14 @@
 							[(ngModel)]="editingLink"
 							(blur)="onPopoverLinkUpdate()"
 							(keyup.enter)="onPopoverLinkUpdate()"
-							[placeholder]="PINBOARD_PLACEHOLDER_LINK"
+							[placeholder]="REMINDER_PLACEHOLDER_LINK"
 							style="font-size: 14px" />
 					} @else {
 						<input
 							type="text"
 							pInputText
 							[(ngModel)]="newItem.link"
-							[placeholder]="PINBOARD_PLACEHOLDER_LINK"
+							[placeholder]="REMINDER_PLACEHOLDER_LINK"
 							style="font-size: 14px" />
 					}
 				}

@@ -465,21 +465,21 @@ export const REMINDER_VALUE_KEY_DATE = 'date';
 /** CloudBase content entry key for the full content object in the second reminder table. */
 export const REMINDER_VALUE_KEY_CONTENT = 'content';
 
-////////////////////// Below are reminder page dialog string constants ///////////////
-export const REMINDER_MSG_RESET_CONFIRM = 'Are you sure you want to reset the dates?';
-export const REMINDER_DIALOG_RESET_BTN = 'Reset';
-export const REMINDER_DIALOG_CONFIRM_BTN = 'Confirm';
-export const REMINDER_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this entry?';
-export const REMINDER_DIALOG_DELETE_BTN = 'Delete';
+////////////////////// Below are pinboard page dialog string constants //////////////
+export const PINBOARD_MSG_RESET_CONFIRM = 'Are you sure you want to reset the dates?';
+export const PINBOARD_DIALOG_RESET_BTN = 'Reset';
+export const PINBOARD_DIALOG_CONFIRM_BTN = 'Confirm';
+export const PINBOARD_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this entry?';
+export const PINBOARD_DIALOG_DELETE_BTN = 'Delete';
 
-////////////////////// Below are reminder first-table UI label constants /////////////
-export const REMINDER_LABEL_CURRENT_MONTH = 'Current Month';
-export const REMINDER_LABEL_NEXT_MONTH = 'Next Month';
-export const REMINDER_LABEL_RESET = 'Reset';
-export const REMINDER_LABEL_CELL_CONFIRM = 'Confirm';
-export const REMINDER_LABEL_CELL_DONE = 'Done';
-export const REMINDER_LABEL_CELL_TODAY = 'Today';
-export const REMINDER_LABEL_CONFIRMED = 'confirmed';
+////////////////////// Below are pinboard first-table UI label constants ////////////
+export const PINBOARD_LABEL_CURRENT_MONTH = 'Current Month';
+export const PINBOARD_LABEL_NEXT_MONTH = 'Next Month';
+export const PINBOARD_LABEL_RESET = 'Reset';
+export const PINBOARD_LABEL_CELL_CONFIRM = 'Confirm';
+export const PINBOARD_LABEL_CELL_DONE = 'Done';
+export const PINBOARD_LABEL_CELL_TODAY = 'Today';
+export const PINBOARD_LABEL_CONFIRMED = 'confirmed';
 
 ////////////////////// Below are history dialog and style string constants ///////////
 export const HISTORY_MSG_UNDO_CONFIRM = 'Undo this deletion?';
@@ -490,29 +490,29 @@ export const HISTORY_STYLE_ADDED = 'solid green';
 /** Inline border style for a "deleted" history entry. */
 export const HISTORY_STYLE_DELETED = 'solid red';
 
-////////////////////// Below are Pinboard page constants /////////////////////////////
-/** Placeholder for the pin message text input. */
-export const PINBOARD_PLACEHOLDER_TEXT = 'What should we remind you about…';
+////////////////////// Below are Reminder page constants /////////////////////////////
+/** Placeholder for the reminder message text input. */
+export const REMINDER_PLACEHOLDER_TEXT = 'What should we remind you about…';
 /** Placeholder for the link URL input inside the link popover. */
-export const PINBOARD_PLACEHOLDER_LINK = 'https://';
+export const REMINDER_PLACEHOLDER_LINK = 'https://';
 /** Placeholder for the new-tag inline input. */
-export const PINBOARD_PLACEHOLDER_TAG = 'tag…';
-/** Confirmation message shown before deleting a pinboard entry. */
-export const PINBOARD_MSG_DELETE_CONFIRM = 'Delete this entry? This cannot be undone.';
-/** Primary action button label on the pinboard delete confirmation dialog. */
-export const PINBOARD_DIALOG_DELETE_BTN = 'Delete';
-/** Secondary confirm button label on the pinboard delete confirmation dialog. */
-export const PINBOARD_DIALOG_CONFIRM_BTN = 'Confirm';
-/** CloudBase content entry key for the pin message text. */
+export const REMINDER_PLACEHOLDER_TAG = 'tag…';
+/** Confirmation message shown before deleting a reminder entry. */
+export const REMINDER_MSG_DELETE_CONFIRM = 'Delete this entry? This cannot be undone.';
+/** Primary action button label on the reminder delete confirmation dialog. */
+export const REMINDER_DIALOG_DELETE_BTN = 'Delete';
+/** Secondary confirm button label on the reminder delete confirmation dialog. */
+export const REMINDER_DIALOG_CONFIRM_BTN = 'Confirm';
+/** CloudBase content entry key for the reminder message text. */
 export const PINBOARD_VALUE_KEY_TEXT = 'text';
-/** CloudBase content entry key for the pin date. */
+/** CloudBase content entry key for the reminder date. */
 export const PINBOARD_VALUE_KEY_DATE = 'date';
-/** CloudBase content entry key for the pin link URL. */
+/** CloudBase content entry key for the reminder link URL. */
 export const PINBOARD_VALUE_KEY_LINK = 'link';
-/** CloudBase content entry key for the pin tags array. */
+/** CloudBase content entry key for the reminder tags array. */
 export const PINBOARD_VALUE_KEY_TAGS = 'tags';
-/** Items shown per page in the Pinboard grid. */
-export const PINBOARD_ITEMS_PER_PAGE = 10;
+/** Items shown per page in the Reminder grid. */
+export const REMINDER_ITEMS_PER_PAGE = 10;
 
 ////////////////////// Below are error dialog string constants ///////////////////////
 export const ERROR_DIALOG_HEADER = 'Error';

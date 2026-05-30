@@ -13,8 +13,8 @@ import {
     STATS_FIELD_REMINDER_TOTAL,
     STATS_FIELD_REMINDER_UPCOMING
 } from '../../common/app.constant';
-import { PinboardComponent } from './pinboard.component';
-import { PinboardItem } from './pinboard.model';
+import { ReminderComponent } from './reminder.component';
+import { ReminderItem } from './reminder.model';
 
 /** Minimal raw DB record factory. */
 function makeRecord(key = 'k1', text = 'hello', date: string | null = null, link: string | null = null, tags: string[] = []) {
@@ -22,13 +22,13 @@ function makeRecord(key = 'k1', text = 'hello', date: string | null = null, link
 }
 
 /** Minimal view-model item factory. */
-function makeItem(key = 'k1', text = 'hello', date: string | null = null, link: string | null = null, tags: string[] = []): PinboardItem {
+function makeItem(key = 'k1', text = 'hello', date: string | null = null, link: string | null = null, tags: string[] = []): ReminderItem {
     return { key, _openid: 'uid1', text, date, link, tags };
 }
 
-describe('PinboardComponent', () => {
-    let component: PinboardComponent;
-    let fixture: ComponentFixture<PinboardComponent>;
+describe('ReminderComponent', () => {
+    let component: ReminderComponent;
+    let fixture: ComponentFixture<ReminderComponent>;
     let mockDb: jasmine.SpyObj<DatabaseService>;
     let mockDialogService: jasmine.SpyObj<DialogService>;
     let mockUtilities: jasmine.SpyObj<Utilities>;
@@ -63,7 +63,7 @@ describe('PinboardComponent', () => {
         mockUtilities.getIsUserAlive.and.returnValue(true);
 
         await TestBed.configureTestingModule({
-            imports: [PinboardComponent],
+            imports: [ReminderComponent],
             providers: [
                 { provide: DatabaseService, useValue: mockDb },
                 { provide: DialogService, useValue: mockDialogService },
@@ -71,7 +71,7 @@ describe('PinboardComponent', () => {
             ]
         }).compileComponents();
 
-        fixture = TestBed.createComponent(PinboardComponent);
+        fixture = TestBed.createComponent(ReminderComponent);
         component = fixture.componentInstance;
     });
 
@@ -112,8 +112,8 @@ describe('PinboardComponent', () => {
             (component as any).tagFilter = new Set(['work']);
             const result = component['filteredItems'];
             expect(result.length).toBe(2);
-            expect(result.map((i: PinboardItem) => i.key)).toContain('k1');
-            expect(result.map((i: PinboardItem) => i.key)).toContain('k3');
+            expect(result.map((i: ReminderItem) => i.key)).toContain('k1');
+            expect(result.map((i: ReminderItem) => i.key)).toContain('k3');
         });
     });
 

@@ -39,16 +39,16 @@ import {
 	STATS_FIELD_RECENT_REMINDER,
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS,
-	REMINDER_MSG_RESET_CONFIRM,
-	REMINDER_DIALOG_RESET_BTN,
-	REMINDER_DIALOG_CONFIRM_BTN,
-	REMINDER_LABEL_CURRENT_MONTH,
-	REMINDER_LABEL_NEXT_MONTH,
-	REMINDER_LABEL_RESET,
-	REMINDER_LABEL_CELL_CONFIRM,
-	REMINDER_LABEL_CELL_DONE,
-	REMINDER_LABEL_CELL_TODAY,
-	REMINDER_LABEL_CONFIRMED,
+	PINBOARD_MSG_RESET_CONFIRM,
+	PINBOARD_DIALOG_RESET_BTN,
+	PINBOARD_DIALOG_CONFIRM_BTN,
+	PINBOARD_LABEL_CURRENT_MONTH,
+	PINBOARD_LABEL_NEXT_MONTH,
+	PINBOARD_LABEL_RESET,
+	PINBOARD_LABEL_CELL_CONFIRM,
+	PINBOARD_LABEL_CELL_DONE,
+	PINBOARD_LABEL_CELL_TODAY,
+	PINBOARD_LABEL_CONFIRMED,
 	REMINDER_VALUE_KEY_DEBT,
 	REMINDER_VALUE_KEY_DATE,
 	REMINDER_VALUE_KEY_CONTENT
@@ -58,7 +58,7 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
-	selector: 'reminder',
+	selector: 'pinboard',
 	imports: [
 		TableModule,
 		InputTextModule,
@@ -73,21 +73,21 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		Tooltip,
 		AccessDeniedComponent
 	],
-	templateUrl: './reminder.component.html',
-	styleUrls: ['../../common/page.card.css', './reminder.component.css']
+	templateUrl: './pinboard.component.html',
+	styleUrls: ['../../common/page.card.css', './pinboard.component.css']
 })
-export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
-	private readonly className = 'ReminderComponent';
+export class PinboardComponent implements OnInit, OnDestroy, AfterViewChecked {
+	private readonly className = 'PinboardComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	protected readonly REMINDER_LABEL_CURRENT_MONTH = REMINDER_LABEL_CURRENT_MONTH;
-	protected readonly REMINDER_LABEL_NEXT_MONTH = REMINDER_LABEL_NEXT_MONTH;
-	protected readonly REMINDER_LABEL_RESET = REMINDER_LABEL_RESET;
-	protected readonly REMINDER_LABEL_CELL_CONFIRM = REMINDER_LABEL_CELL_CONFIRM;
-	protected readonly REMINDER_LABEL_CELL_DONE = REMINDER_LABEL_CELL_DONE;
-	protected readonly REMINDER_LABEL_CELL_TODAY = REMINDER_LABEL_CELL_TODAY;
-	protected readonly REMINDER_LABEL_CONFIRMED = REMINDER_LABEL_CONFIRMED;
+	protected readonly PINBOARD_LABEL_CURRENT_MONTH = PINBOARD_LABEL_CURRENT_MONTH;
+	protected readonly PINBOARD_LABEL_NEXT_MONTH = PINBOARD_LABEL_NEXT_MONTH;
+	protected readonly PINBOARD_LABEL_RESET = PINBOARD_LABEL_RESET;
+	protected readonly PINBOARD_LABEL_CELL_CONFIRM = PINBOARD_LABEL_CELL_CONFIRM;
+	protected readonly PINBOARD_LABEL_CELL_DONE = PINBOARD_LABEL_CELL_DONE;
+	protected readonly PINBOARD_LABEL_CELL_TODAY = PINBOARD_LABEL_CELL_TODAY;
+	protected readonly PINBOARD_LABEL_CONFIRMED = PINBOARD_LABEL_CONFIRMED;
 	protected readonly DATABASE_FIRST_TABLE = DATABASE_FIRST_TABLE;
 	protected readonly DATABASE_SECOND_TABLE = DATABASE_SECOND_TABLE;
 	protected loading = true;
@@ -449,7 +449,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 			() => {
 				this.resetFirstTable();
 			},
-			[REMINDER_MSG_RESET_CONFIRM, REMINDER_DIALOG_RESET_BTN, REMINDER_DIALOG_CONFIRM_BTN]
+			[PINBOARD_MSG_RESET_CONFIRM, PINBOARD_DIALOG_RESET_BTN, PINBOARD_DIALOG_CONFIRM_BTN]
 		);
 	}
 

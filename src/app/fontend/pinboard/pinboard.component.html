@@ -1,3 +1,4 @@
+@if (utilities.getIsUserAlive()) {
 <ng-container #dialogComponentContainer></ng-container>
 
 <div class="pinboard-container" #pinboardContainer>
@@ -41,6 +42,22 @@
 	<!-- ── Body ── -->
 	<div class="pinboard-body" #pinboardBody>
 		<div class="pinboard-grid">
+			@if (loading) {
+				@for (_ of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; track $index) {
+					<div class="pinboard-card">
+						<div class="pinboard-card-head">
+							<p-skeleton width="28px" height="14px" />
+							<p-skeleton height="20px" [style]="{'flex': '1'}" />
+							<p-skeleton width="20px" height="20px" />
+						</div>
+						<p-skeleton height="20px" />
+						<div class="pinboard-card-optional">
+							<p-skeleton height="22px" [style]="{'flex': '1'}" />
+							<p-skeleton height="22px" [style]="{'flex': '1'}" />
+						</div>
+					</div>
+				}
+			} @else {
 			@for (item of pagedItems; let i = $index; track item.key) {
 				<div class="pinboard-card">
 					<!-- Head: index/total + chips (right of number) + trash -->
@@ -266,6 +283,7 @@
 					</div>
 				</div>
 			}
+		}
 		</div>
 	</div>
 	<!-- /pinboard-body -->
@@ -339,3 +357,6 @@
 		</div>
 	</div>
 </div>
+} @else {
+	<access-denied />
+}

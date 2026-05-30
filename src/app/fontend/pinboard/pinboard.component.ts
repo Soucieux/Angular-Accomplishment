@@ -1,5 +1,6 @@
 import {
-	AfterViewInit,
+	AfterViewChecked,
+	ChangeDetectorRef,
 	Component,
 	ElementRef,
 	Inject,
@@ -17,6 +18,7 @@ import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { PopoverModule } from 'primeng/popover';
 import { Popover } from 'primeng/popover';
+import { SkeletonModule } from 'primeng/skeleton';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subscription, firstValueFrom, timer } from 'rxjs';
@@ -45,6 +47,7 @@ import {
 	REMINDER_ITEM_MESSAGE,
 	REMINDER_TABLE_MESSAGES,
 	STATS_FIELD_RECENT_REMINDER,
+	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS
 } from '../../common/app.constant';
@@ -57,6 +60,7 @@ import {
 } from './pinboard.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
 	selector: 'pinboard',
@@ -69,13 +73,15 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 		InputGroupModule,
 		InputGroupAddonModule,
 		PopoverModule,
+		SkeletonModule,
 		DatePickerModule,
-		TooltipModule
+		TooltipModule,
+		AccessDeniedComponent
 	],
 	templateUrl: './pinboard.component.html',
 	styleUrl: './pinboard.component.css'
 })
-export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
+export class PinboardComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private readonly className = 'PinboardComponent';
 
 	@ViewChild('pinboardBody') private pinboardBody!: ElementRef<HTMLElement>;
@@ -88,6 +94,7 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly PINBOARD_PLACEHOLDER_LINK = PINBOARD_PLACEHOLDER_LINK;
 	protected readonly PINBOARD_PLACEHOLDER_TAG = PINBOARD_PLACEHOLDER_TAG;
 
+	protected loading = true;
 	protected items: PinboardItem[] = [];
 	protected page = 0;
 	protected editingItem: PinboardItem | null = null;
@@ -106,13 +113,14 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 		@Inject(PLATFORM_ID) private readonly platformId: object,
 		private readonly databaseService: DatabaseService,
 		private readonly dialogService: DialogService,
+		private readonly cdr: ChangeDetectorRef,
 		protected utilities: Utilities
 	) {}
 
 	/**
 	 * Subscribes to the third-table CloudBase collection, maps each raw record to a
-	 * PinboardItem view model, removes stale tag filters, and syncs upcoming items
-	 * to the statistics collection.
+	 * PinboardItem view model, removes stale tag filters, syncs upcoming items to the
+	 * statistics collection, and clears the loading state on first emission.
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
@@ -132,17 +140,21 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.removeStaleTags();
 				// Step 3: Sync upcoming items to the statistics collection
 				this.updateUpcomingToStatistics();
+				this.loading = false;
+				// CloudBase subscription callbacks may emit outside Angular's zone — detectChanges ensures the template updates.
+				this.cdr.detectChanges();
 			});
 		}
 	}
 
 	/**
-	 * Attaches the scroll auto-hide behaviour to the pinboard body element so the
-	 * scrollbar only appears while the user is actively scrolling.
+	 * Runs after each change detection cycle. Attaches the scroll auto-hide behaviour
+	 * to the pinboard body element when it is present in the DOM; the call is a no-op
+	 * once the element has already been bound.
 	 */
-	ngAfterViewInit(): void {
+	ngAfterViewChecked(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			Utilities.attachScrollAutoHide(this.pinboardBody.nativeElement);
+			Utilities.attachScrollAutoHide(this.pinboardBody?.nativeElement);
 		}
 	}
 
@@ -191,7 +203,8 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Writes the current upcoming messages (items with a date) to the statistics collection.
+	 * Writes the current upcoming messages (items with a date) and total pin count
+	 * to the statistics collection, keeping the home-page reminder widget current.
 	 */
 	private updateUpcomingToStatistics(): void {
 		const upcoming = this.items
@@ -204,7 +217,8 @@ export class PinboardComponent implements OnInit, AfterViewInit, OnDestroy {
 			}));
 		this.databaseService
 			.updateStatisticsFields({
-				[STATS_FIELD_REMINDER_UPCOMING]: upcoming
+				[STATS_FIELD_REMINDER_UPCOMING]: upcoming,
+				[STATS_FIELD_REMINDER_TOTAL]: this.items.length
 			})
 			.catch(() => {});
 	}

@@ -1,5 +1,5 @@
 import { SearchStreamService } from './search-stream.service';
-import { ChangeDetectorRef, Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
@@ -20,13 +20,10 @@ export class SearchDialogComponent {
 	protected searchLogs: string[] = [];
 	private searchLogsSub!: Subscription;
 
-	constructor(
-		private searchStreamService: SearchStreamService,
-		private cdr: ChangeDetectorRef
-	) {}
+	constructor(private searchStreamService: SearchStreamService) {}
 
 	/**
-	 * Open the search dialog and subscribe to the search log stream.
+	 * Opens the search dialog and subscribes to the search log stream.
 	 * Automatically scrolls the log container to the bottom on each new entry.
 	 *
 	 * @param stopCallback - The callback to call when the user interrupts the search.
@@ -43,8 +40,6 @@ export class SearchDialogComponent {
 				this.searchCompleteOrInterrupted = true;
 			}
 
-			this.cdr.markForCheck();
-
 			setTimeout(() => {
 				const element = this.logContainer?.nativeElement;
 				if (element) {
@@ -55,14 +50,14 @@ export class SearchDialogComponent {
 	}
 
 	/**
-	 * Trigger the stop callback to interrupt the ongoing search.
+	 * Triggers the stop callback to interrupt the ongoing search.
 	 */
 	protected triggerStopSearching() {
 		this.stopCallback?.();
 	}
 
 	/**
-	 * Handle the dialog closed event by emitting the closed event,
+	 * Handles the dialog closed event by emitting the closed event,
 	 * unsubscribing from search logs, and clearing the log state.
 	 */
 	protected onDialogClosed() {

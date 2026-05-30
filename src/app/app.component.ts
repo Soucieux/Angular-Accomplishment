@@ -32,6 +32,7 @@ import { Observable } from 'rxjs';
 })
 export class AppComponent {
 	private readonly className = 'AppComponent';
+	// any: Firebase User and CloudBase user are typed differently; unified here as a presence signal only
 	protected currentUser$!: Observable<any>;
 
 	constructor(

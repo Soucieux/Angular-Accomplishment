@@ -1,5 +1,7 @@
 ////////////////////// Below are application lifecycle constants //////////////////////
 export const COMPONENT_DESTROY = 'Component Destroyed';
+export const UTILITIES_LOG_COUNTRY_FAILED = 'Country detection failed';
+export const UTILITIES_LOG_DEFAULT_COUNTRY = 'Use default country: ';
 
 ////////////////////// Below are auth state persistence constants /////////////////////
 // Stored in localStorage to avoid the Access Denied flicker on page refresh.
@@ -407,6 +409,11 @@ export const ENT_MSG_FETCH_FAILED_PREFIX = '❌ Fetch failed for ';
 export const ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX = '❌ Unable to retrieve rate for ';
 export const ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX = 'Error while retrieving movie webpage for movie ';
 
+////////////////////// Below are entertainment page log string constants /////////////
+export const ENT_LOG_SEARCH_CANCEL_REQUESTED = 'Search cancel requested';
+export const ENT_LOG_MOVIE_DETAILS_RETRIEVED = 'New movie details retrieved.';
+export const ENT_LOG_UPDATE_FAVOURITE_FAILED = 'Error while setting favourite';
+
 ////////////////////// Below are entertainment page header string constants //////////
 /** Tooltip for the Refresh Rates action button. */
 export const ENT_TOOLTIP_REFRESH = 'Refresh Rates';
@@ -442,11 +449,21 @@ export const RESONANCE_DIALOG_TITLE_DELETE = 'Delete Quote';
 export const RESONANCE_DIALOG_BTN_DELETE = 'Delete';
 export const RESONANCE_MSG_POSTED = 'Posted';
 export const RESONANCE_LABEL_VOICES = 'voices';
+/** Maximum character count allowed for a new quote submission. */
+export const RESONANCE_MAX_QUOTE_LENGTH = 500;
 
 ////////////////////// Below are patch notes dialog string constants /////////////////
 export const PATCH_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this note?';
 export const PATCH_DIALOG_CONFIRM_BTN = 'Confirm';
 export const PATCH_DIALOG_DELETE_BTN = 'Delete';
+
+////////////////////// Below are reminder second-table content value key constants //
+/** CloudBase content entry key for the debt value in the second reminder table. */
+export const REMINDER_VALUE_KEY_DEBT = 'debt';
+/** CloudBase content entry key for the date value in the reminder tables. */
+export const REMINDER_VALUE_KEY_DATE = 'date';
+/** CloudBase content entry key for the full content object in the second reminder table. */
+export const REMINDER_VALUE_KEY_CONTENT = 'content';
 
 ////////////////////// Below are reminder page dialog string constants ///////////////
 export const REMINDER_MSG_RESET_CONFIRM = 'Are you sure you want to reset the dates?';

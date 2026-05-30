@@ -48,7 +48,10 @@ import {
 	REMINDER_LABEL_CELL_CONFIRM,
 	REMINDER_LABEL_CELL_DONE,
 	REMINDER_LABEL_CELL_TODAY,
-	REMINDER_LABEL_CONFIRMED
+	REMINDER_LABEL_CONFIRMED,
+	REMINDER_VALUE_KEY_DEBT,
+	REMINDER_VALUE_KEY_DATE,
+	REMINDER_VALUE_KEY_CONTENT
 } from '../../common/app.constant';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
@@ -90,21 +93,27 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected loading = true;
 	protected isHoverCapable!: boolean;
 	private chargedCells = new Set<string>();
+	// any: First-table rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected originalFirstTable!: any[];
+	// any: First-table rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected updatedFirstTable!: any[];
 	protected firstTableConfirmedCount = 0;
 	protected currentDay!: number;
 	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
+	// any: Second-table rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected updatedSecondTable!: any[];
+	// any: Second-table rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected originalSecondTable!: any[];
 	private firstSub?: Subscription;
 	private secondSub?: Subscription;
-	/** Cached upcoming expenses — synced to statistics on every second-table emission. */
+	/** Cached upcoming expenses — synced to statistics on every second-table emission.
+	 *  any: Expense items are schema-less CloudBase documents with no fixed TypeScript type */
 	private upcomingExpenses: any[] = [];
 	protected saveIndicators: Record<string, boolean> = {
 		[DATABASE_FIRST_TABLE]: false,
 		[DATABASE_SECOND_TABLE]: false
 	};
+	// any: setTimeout return type varies by environment (browser vs Node); ReturnType<typeof setTimeout> unifies both
 	private saveIndicatorTimeouts: Record<string, any> = {};
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
 	private chargedCellsInitialized = false;
@@ -183,8 +192,8 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Recompute and cache the count of first-table cells marked as charged.
-	 * Call this whenever updatedFirstTable or any cell's isCharged flag changes.
+	 * Recomputes and caches the count of first-table cells marked as charged.
+	 * Called whenever updatedFirstTable or any cell's isCharged flag changes.
 	 */
 	private refreshConfirmedCount(): void {
 		this.firstTableConfirmedCount = (this.updatedFirstTable ?? [])
@@ -202,7 +211,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Set the active month view and refresh charged-cell state.
+	 * Sets the active month view and refreshes charged-cell state.
 	 *
 	 * @param isNext - True to switch to next-month view; false for current month.
 	 */
@@ -212,9 +221,9 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Update the charged/unCharged state of first-table cells based on
+	 * Updates the charged/uncharged state of first-table cells based on
 	 * the current month direction and the current day of the month.
-	 * Persists the change to the database when called after initialization.
+	 * Persists the change to the database when called after initialisation.
 	 */
 	protected async updateChargedCells() {
 		if (this.chargedCellsInitialized) {
@@ -518,7 +527,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const item = this.findUpdatedItem(tableName, entryKey);
 		if (!item) return;
 		item.content.debt = Math.round((currentDebt - ACCOUNT_DEBT_DECREMENT) * 100) / 100;
-		await this.updateTableSingleValue(tableName, entryKey, 'debt');
+		await this.updateTableSingleValue(tableName, entryKey, REMINDER_VALUE_KEY_DEBT);
 	}
 
 	/**
@@ -543,7 +552,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 				await this.databaseService.updateReminderTable(
 					DATABASE_SECOND_TABLE,
 					entryKey,
-					'content',
+					REMINDER_VALUE_KEY_CONTENT,
 					newRecord
 				);
 				this.triggerSaveIndicator(DATABASE_SECOND_TABLE);
@@ -553,7 +562,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		} else {
 			// Reset value
 			existingRecord.debt = existingRecord.original;
-			await this.updateTableSingleValue(DATABASE_SECOND_TABLE, entryKey, 'debt');
+			await this.updateTableSingleValue(DATABASE_SECOND_TABLE, entryKey, REMINDER_VALUE_KEY_DEBT);
 		}
 	}
 
@@ -613,7 +622,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 		// The previous guard `if (updatedItem.content.date)` caused first-time date
 		// saves to bypass formatting, persisting a Date/Timestamp object to CloudBase.
 		updatedItem.content.date = Utilities.formatDateForStorage(date);
-		await this.updateTableSingleValue(tableName, entryKey, 'date');
+		await this.updateTableSingleValue(tableName, entryKey, REMINDER_VALUE_KEY_DATE);
 		// Immediately reflect the date change (or removal) in the home-page reminder
 		// widget without waiting for the CloudBase subscription to fire.
 		this.resyncUpcomingFromLocalData();
@@ -739,7 +748,7 @@ export class ReminderComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param date - Any date representation (string, Date, CloudBase timestamp, or falsy).
 	 * @returns A 'yyyy-MM-dd' string, or empty string if the value is falsy or unparseable.
 	 */
-	protected formatDate(date: any): string {
+	protected formatDate(date: any): string { // any: CloudBase date values arrive as Timestamp objects, plain strings, or null — no shared type
 		return Utilities.coerceDateToString(date);
 	}
 

@@ -13,12 +13,13 @@ export class DoubanService {
 	constructor(private http: HttpClient) {}
 
 	/**
-	 * Search Douban for a movie by name via the JSON suggestion API.
+	 * Searches Douban for a movie by name via the JSON suggestion API.
 	 * The request is proxied through a Firebase Cloud Function to avoid
 	 * CORS restrictions when calling Douban directly from the browser.
 	 *
 	 * @param movieName - The movie name to search for.
 	 * @returns An observable that emits the JSON response from Douban.
+	 * // any: Douban JSON API response shape varies and has no published TypeScript types
 	 */
 	public searchMovieJSON(movieName: string): Observable<any> {
 		/*  	
@@ -66,7 +67,7 @@ export class DoubanService {
 	}
 
 	/**
-	 * Download a movie cover image from the given Douban image link.
+	 * Downloads a movie cover image from the given Douban image link.
 	 * Proxied through a Firebase Cloud Function to avoid CORS and hotlinking issues.
 	 *
 	 * @param imageLink - The full URL of the cover image on Douban's servers.
@@ -91,7 +92,7 @@ export class DoubanService {
 	}
 
 	/**
-	 * Fetch a Douban movie page by ID and return its HTML as text.
+	 * Fetches a Douban movie page by ID and returns its HTML as text.
 	 * Used as a fallback when the JSON API is rate-limited or returns no data —
 	 * the HTML is parsed client-side to extract rating, release date, and other metadata.
 	 *
@@ -116,7 +117,7 @@ export class DoubanService {
 	}
 
 	/**
-	 * Fetch movie data from the wmdb.tv third-party API by Douban movie ID.
+	 * Fetches movie data from the wmdb.tv third-party API by Douban movie ID.
 	 * This API returns structured JSON (rating, release date, actors, etc.),
 	 * which is preferred over parsing the Douban webpage. Used as the primary
 	 * data source; falls back to searchMovieByWebpage if it fails.
@@ -142,7 +143,7 @@ export class DoubanService {
 	}
 
 	/**
-	 * Pick a random Firebase Cloud Function URL from the pool of available threads.
+	 * Returns a randomly selected Cloud Function base URL from the pool of available threads.
 	 * Load-balances requests across multiple function instances.
 	 *
 	 * @returns A randomly selected Cloud Function base URL.

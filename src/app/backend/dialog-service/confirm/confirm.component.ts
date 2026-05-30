@@ -14,16 +14,14 @@ export class ConfirmDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private confirmationService = inject(ConfirmationService);
 
-	constructor() {}
-
 	/**
-	 * Open the confirm dialog.
+	 * Opens the confirm dialog with the given message, header, and accept label.
 	 *
-	 * @param acceptCallback - The callback to call when the dialog is accepted.
-	 * @param data - The data required to display in the dialog.
-	 * @param data[0] - The message to display in the dialog.
-	 * @param data[1] - The header to display in the dialog.
-	 * @param data[2] - The accept button label to display in the dialog.
+	 * @param acceptCallback - The async callback to invoke when the user confirms.
+	 * @param data - The display data for the dialog (fixed three-element array).
+	 * @param data[0] - The message to display in the dialog body.
+	 * @param data[1] - The header title of the dialog.
+	 * @param data[2] - The accept button label.
 	 */
 	public openDialog(acceptCallback: () => Promise<void>, data: string[]) {
 		this.confirmationService.confirm({
@@ -50,7 +48,7 @@ export class ConfirmDialogComponent {
 	}
 
 	/**
-	 * Handle the dialog closed event
+	 * Handles the dialog closed event by emitting the closed event.
 	 */
 	protected onDialogClosed() {
 		this.closed$.emit();

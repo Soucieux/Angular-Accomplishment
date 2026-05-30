@@ -30,7 +30,8 @@ import {
 	RESONANCE_DIALOG_TITLE_DELETE,
 	RESONANCE_DIALOG_BTN_DELETE,
 	RESONANCE_MSG_POSTED,
-	RESONANCE_LABEL_VOICES
+	RESONANCE_LABEL_VOICES,
+	RESONANCE_MAX_QUOTE_LENGTH
 } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 import { RESONANCE_GRADIENTS } from './resonance.model';
@@ -65,10 +66,10 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 
-	protected readonly maxQuoteLength = 500;
 	protected readonly RESONANCE_GRADIENTS = RESONANCE_GRADIENTS;
 	protected readonly RESONANCE_MSG_POSTED = RESONANCE_MSG_POSTED;
 	protected readonly RESONANCE_LABEL_VOICES = RESONANCE_LABEL_VOICES;
+	protected readonly RESONANCE_MAX_QUOTE_LENGTH = RESONANCE_MAX_QUOTE_LENGTH;
 
 	protected quotes$!: Observable<QuoteRecord[]>;
 	protected newQuoteText = '';
@@ -189,19 +190,19 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	/**
 	 * Checks whether the new quote text exceeds the maximum character limit.
 	 *
-	 * @returns true if the text length exceeds maxQuoteLength, otherwise false.
+	 * @returns true if the text length exceeds RESONANCE_MAX_QUOTE_LENGTH, otherwise false.
 	 */
 	protected get isOverLimit(): boolean {
-		return this.newQuoteText.length > this.maxQuoteLength;
+		return this.newQuoteText.length > RESONANCE_MAX_QUOTE_LENGTH;
 	}
 
 	/**
-	 * Handles the textarea Enter key: submits on bare Enter, allows newline on Shift+Enter.
+	 * Handles the textarea keydown event: submits on bare Enter, allows newline on Shift+Enter.
 	 * Uses instanceof narrowing so no cast is needed to access shiftKey.
 	 *
-	 * @param event - The event fired from the textarea keydown binding.
+	 * @param event - The keydown event fired from the textarea binding.
 	 */
-	protected onTextareaEnter(event: Event): void {
+	protected handleQuoteTextareaSubmit(event: Event): void {
 		if (event instanceof KeyboardEvent && !event.shiftKey) {
 			event.preventDefault();
 			this.submitQuote().catch(() => {});

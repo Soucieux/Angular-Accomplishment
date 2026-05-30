@@ -315,14 +315,14 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	private tickClock(): void {
 		const now = new Date();
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (value: number) => String(value).padStart(2, '0');
 		this.clockTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
 		this.clockDate = `${DAY_NAMES_LONG[now.getDay()]}, ${MONTH_NAMES_SHORT[now.getMonth()]} ${now.getDate()}`;
 
 		const y = now.getFullYear();
 		this.currentYear = y;
-		const isLeap = (yr: number) => (yr % 4 === 0 && yr % 100 !== 0) || yr % 400 === 0;
+		const isLeap = (year: number) => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 		this.daysInYear = isLeap(y) ? 366 : 365;
 		const startOfYear = new Date(y, 0, 1);
 		const elapsed = now.getTime() - startOfYear.getTime();
@@ -392,7 +392,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Computes a countdown label for a date. Delegates to {@link Utilities.getDaysUntil}.
 	 *
-	 * @param dateStr - A date in any form accepted by {@link Utilities.coerceDateToString}.
+	 * @param dateStr - The date in any form accepted by {@link Utilities.coerceDateToString}.
 	 * @returns A label such as "Today", "Tomorrow", "in 3d", or "2d overdue".
 	 */
 	protected getDaysUntil(dateStr: unknown): string {
@@ -402,7 +402,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Checks whether a date is past due. Delegates to {@link Utilities.isOverdue}.
 	 *
-	 * @param dateStr - A date in any form accepted by {@link Utilities.coerceDateToString}.
+	 * @param dateStr - The date in any form accepted by {@link Utilities.coerceDateToString}.
 	 * @returns `true` if the date is strictly before today.
 	 */
 	protected isOverdue(dateStr: unknown): boolean {

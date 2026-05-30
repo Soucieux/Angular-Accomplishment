@@ -5,11 +5,13 @@ import { RATE_DECREASED, RATE_INCREASED } from '../../../common/app.constant';
 @Injectable({ providedIn: 'root' })
 export class SearchStreamService {
 	private searchLogsSubject = new BehaviorSubject<string[]>([]);
-	/** Observable stream of search log strings emitted during a Douban search. */
+	/**
+	 * Observable stream of search log strings emitted during a Douban search.
+	 */
 	public readonly searchLogs$ = this.searchLogsSubject.asObservable();
 
 	/**
-	 * Append a message to the search log stream.
+	 * Appends a message to the search log stream.
 	 *
 	 * @param message - The log message to add.
 	 */
@@ -19,7 +21,7 @@ export class SearchStreamService {
 	}
 
 	/**
-	 * Check the most recent search log entry for a rate change indicator.
+	 * Checks the most recent search log entry for a rate change indicator.
 	 *
 	 * @returns RATE_INCREASED if the last log indicates an increase,
 	 *          RATE_DECREASED if it indicates a decrease, or false if neither.
@@ -36,7 +38,7 @@ export class SearchStreamService {
 	}
 
 	/**
-	 * Clear all search log entries.
+	 * Clears all search log entries.
 	 */
 	public clearSearchLogs() {
 		this.searchLogsSubject.next([]);

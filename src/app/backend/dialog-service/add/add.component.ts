@@ -52,7 +52,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	@ViewChild('addMovieForm') addMovieForm!: NgForm;
+	@ViewChild('addMovieForm') private addMovieForm!: NgForm;
 	@Output() closed$ = new EventEmitter<void>();
 	private submitCallback?: (movie: MovieItemVO) => void;
 	private searchCallback?: (movie: MovieItemVO) => Promise<Blob | null>;
@@ -73,7 +73,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	/**
 	 * Initialises the year and genre selection dropdown options used in the add-movie form.
 	 */
-	public ngOnInit() {
+	ngOnInit() {
 		const currentYear = new Date().getFullYear();
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (currentYear - i).toString() }));
 		this.genres = MOVIE_GENRES;
@@ -83,12 +83,12 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	 * Clears any dynamically attached dialog components from the container
 	 * to prevent memory leaks when this dialog is destroyed.
 	 */
-	public ngOnDestroy() {
+	ngOnDestroy() {
 		this.dialogComponentContainer?.clear();
 	}
 
 	/**
-	 * Open the add dialog and store the submit and search callbacks.
+	 * Opens the add dialog and stores the submit and search callbacks.
 	 *
 	 * @param submitCallback - The callback to call when the form is submitted.
 	 * @param searchCallback - The callback to call to search for a movie and return its cover image blob.
@@ -103,8 +103,8 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Search for the current movie using the form data, populate the movie
-	 * item VO, and fetch the cover image via the search callback.
+	 * Searches for the current movie using the form data, populates the movie
+	 * item VO, and fetches the cover image via the search callback.
 	 *
 	 * @param newMovieData - The form values from the add movie form.
 	 */
@@ -140,7 +140,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Handle changes to the movie ID input field. Resets the name and year
+	 * Handles changes to the movie ID input field. Resets the name and year
 	 * fields if a value is entered.
 	 *
 	 * @param value - The new value of the ID input.
@@ -154,7 +154,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Handle changes to the movie name or year input fields by resetting
+	 * Handles changes to the movie name or year input fields by resetting
 	 * the submit state.
 	 */
 	protected onNameAndYearChange() {
@@ -162,7 +162,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Submit the add movie form, close the dialog, and call the submit
+	 * Submits the add movie form, closes the dialog, and calls the submit
 	 * callback with the populated movie item VO.
 	 */
 	protected onSubmit() {
@@ -173,7 +173,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Handle the dialog closed event by emitting the closed event.
+	 * Handles the dialog closed event by emitting the closed event.
 	 */
 	protected onDialogClosed() {
 		this.closed$.emit();

@@ -4,6 +4,7 @@ import {
 	signInWithEmailAndPassword,
 	signInWithPopup,
 	Auth,
+	User,
 	signOut,
 	onAuthStateChanged
 } from '@angular/fire/auth';
@@ -22,9 +23,12 @@ import { wrongVerificationCodeError } from '../../common/error/wrong-verificatio
 })
 export class AuthService {
 	private readonly className = 'AuthService';
+	// any: CloudBase SDK does not provide TypeScript types for its verification object
 	private verification: any;
+	// any: CloudBase SDK does not provide TypeScript types for its auth instance
 	private cloudbaseAuth: any;
-	private firebaseAuth: any;
+	private firebaseAuth!: Auth;
+	// any: CloudBase user object shape is not typed in the SDK
 	private cloudbaseUserSubject = new BehaviorSubject<any>(null);
 	constructor(
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
@@ -45,9 +49,9 @@ export class AuthService {
 	 * Returns the current Firebase user as an observable. Wraps onAuthStateChanged
 	 * so subscribers receive continuous user updates (including null on sign-out).
 	 *
-	 * @returns An observable that emits the current Firebase user or null.
+	 * @returns An observable that emits the current Firebase User or null.
 	 */
-	public firebaseGetCurrentUser(): Observable<any> {
+	public firebaseGetCurrentUser(): Observable<User | null> {
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
 		return new Observable((observer) => {
 			this.firebaseAuth = runInInjectionContext(this.ei, () => inject(Auth));
@@ -174,15 +178,14 @@ export class AuthService {
 	}
 
 	/**
-	 * Sign in with username and password via CloudBase. If the credentials
-	 * are invalid, throws WrongCredentialsError. On success, fetches the
-	 * current user profile and navigates to the home page.
+	 * Signs in with username and password via CloudBase. Throws WrongCredentialsError
+	 * when credentials are invalid, or Error on any other auth failure.
 	 *
 	 * @param username - The user's username.
 	 * @param password - The user's password.
-	 * @param returnUrl - Optional URL to navigate to after sign-in. Defaults to '/'.
+	 * @param returnUrl - The URL to navigate to after sign-in. Defaults to '/'.
 	 * @throws WrongCredentialsError if the username or password is incorrect.
-	 * @throws UnexpectedError if a different authentication error occurs.
+	 * @throws Error if a different authentication error occurs.
 	 */
 	public async signIn(username: string, password: string, returnUrl: string = '/'): Promise<void> {
 		const { error } = await this.cloudbaseAuth.signInWithPassword({
@@ -205,6 +208,7 @@ export class AuthService {
 	 * anonymous users (no username in metadata) and errors.
 	 *
 	 * @returns An observable that emits the current CloudBase user or null.
+	 *          // any: CloudBase user object shape is not typed in the SDK
 	 */
 	public cloudbaseGetCurrentUser(): Observable<any> {
 		this.cloudbaseAuth

@@ -92,7 +92,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the movie list from firebase.
+	 * Returns the movie list from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
@@ -128,7 +128,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the statistics from firebase.
+	 * Returns the statistics from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the statistics.
 	 */
@@ -144,14 +144,14 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add new entry to history stating that a new search activity has been initialized
+	 * Adds a new entry to history stating that a new search activity has been initialized.
 	 */
 	public async updateHistoryWithNewSearchActivity() {
 		await this.addNewHistoryEntry(SEARCH);
 	}
 
 	/**
-	 * Update the movie rate to firebase.
+	 * Updates the movie rate in Firebase.
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
@@ -185,11 +185,11 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update the movie genre to firebase
+	 * Updates the movie genre in Firebase.
 	 *
-	 * @param movieKey The given movie key
-	 * @param oldGenre The old genre
-	 * @param newGenre The new genre
+	 * @param movieKey - The key of the movie to update.
+	 * @param oldGenre - The old genre value.
+	 * @param newGenre - The new genre value.
 	 */
 	public updateMovieGenre(movieKey: string, oldGenre: string, newGenre: string): Promise<void> {
 		const movieRef = dbRef(this.db, `movies/${movieKey}`);
@@ -216,10 +216,10 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update isFavourite for the given movie to firebase
+	 * Updates the isFavourite flag for the given movie in Firebase.
 	 *
-	 * @param movieKey The given movie key
-	 * @param isFavourite The boolean value set
+	 * @param movieKey - The key of the movie to update.
+	 * @param isFavourite - The boolean value to set.
 	 */
 	public updateMovieFavourite(movieKey: string, isFavourite: boolean): Promise<void> {
 		const movieRef = dbRef(this.db, `movies/${movieKey}`);
@@ -249,7 +249,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update all movie data and statistics to firebase.
+	 * Adds new movie data to Firebase and updates the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to update.
 	 */
@@ -307,7 +307,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove the movie from the database.
+	 * Removes the movie from the database and its cover from storage.
 	 *
 	 * @param movieItemVO - The movie item to remove.
 	 */
@@ -354,9 +354,9 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the reusable keys from the database.
+	 * Returns the reusable keys from the database.
 	 *
-	 * @returns An array of reusable keys.
+	 * @returns The array of reusable key strings.
 	 */
 	private async getReusableKeys(): Promise<string[]> {
 		try {
@@ -370,9 +370,9 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Save the reusable keys to the database.
+	 * Saves the reusable keys to the database.
 	 *
-	 * @param keys - The keys to save.
+	 * @param keys - The reusable keys to persist.
 	 */
 	private saveReusableKeys(keys: string[]): Promise<void> {
 		return update(dbRef(this.db, 'statistics'), { reusableKeys: keys })
@@ -386,12 +386,12 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Check if a given movie has already been added in the databse
+	 * Checks whether a given movie has already been added to the database.
 	 *
-	 * @param movieName Movie name to check
-	 * @param movieYear Movie year to check
-	 * @param movieId Movie ID to check
-	 * @returns true if the movie already exists, otherwise, false.
+	 * @param movieName - The movie name to check.
+	 * @param movieYear - The movie year to check.
+	 * @param movieId - The movie ID to check.
+	 * @returns True if the movie already exists, otherwise false.
 	 */
 	public async isMovieAlreadyAdded(
 		movieName: string,
@@ -424,7 +424,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update history with new activity
+	 * Adds a new history entry with the given status and optional movie data.
 	 *
 	 * @param status - The status of the activity.
 	 * @param movieItemVO - The movie item to update.
@@ -476,9 +476,9 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Retrieve history list
+	 * Returns the history list from Firebase as a reactive observable.
 	 *
-	 * @returns The history list
+	 * @returns An observable that emits the history list.
 	 */
 	public getHistory(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
@@ -496,7 +496,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add new record to patch notes
+	 * Adds a new record to the patch notes collection.
 	 *
 	 * @param newRecord - The record to add.
 	 */
@@ -521,7 +521,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update existing record to patch notes
+	 * Updates an existing record in the patch notes collection.
 	 *
 	 * @param key - The key associated with the record
 	 * @param updatedRecord - The record to update.
@@ -538,9 +538,9 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get patch notes
+	 * Returns the patch notes from Firebase as a reactive observable.
 	 *
-	 * @returns Patch notes
+	 * @returns An observable that emits the patch notes.
 	 */
 	public getPatchNotes(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
@@ -571,10 +571,10 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove record from reminder table
+	 * Removes a record from the reminder table.
 	 *
-	 * @param tableName - The name of the table
-	 * @param index - The index of the record to remove
+	 * @param tableName - The name of the table.
+	 * @param key - The key of the record to remove.
 	 */
 	public removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
 		return this.removeSingleItemFromDatabase(`${DATABASE_REMINDER}/${tableName}`, key);
@@ -597,9 +597,9 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get first reminder table details
+	 * Returns the first reminder table details from Firebase as a reactive observable.
 	 *
-	 * @returns Reminder table details
+	 * @returns An observable that emits the first reminder table details.
 	 */
 	public getFirstReminderTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
@@ -619,9 +619,9 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get second reminder table details
+	 * Returns the second reminder table details from Firebase as a reactive observable.
 	 *
-	 * @returns Second reminder table details
+	 * @returns An observable that emits the second reminder table details.
 	 */
 	public getSecondReminderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
@@ -650,9 +650,9 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get third reminder table details
+	 * Returns the third reminder table details from Firebase as a reactive observable.
 	 *
-	 * @returns Third reminder table details
+	 * @returns An observable that emits the third reminder table details.
 	 */
 	public getThirdReminderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
@@ -677,12 +677,12 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update reminder table details
+	 * Updates a single value in the reminder table.
 	 *
-	 * @param entryKey - The key of the entire entry
-	 * @param valueKey - The key associated with the new value.
-	 * @param value - The new value to be stored.
 	 * @param tableName - The name of the table to update.
+	 * @param entryKey - The key of the entry to update.
+	 * @param valueKey - The key of the value to update.
+	 * @param value - The new value to be stored.
 	 */
 	public async updateReminderTable(
 		tableName: string,
@@ -710,10 +710,10 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update reminder table details
+	 * Updates the first reminder table with the given data.
 	 *
 	 * @param tableName - The name of the table to update.
-	 * @param updatedTable - The table to update
+	 * @param updatedTable - The updated table data.
 	 */
 	public updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
 		return update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), { ...updatedTable })
@@ -850,8 +850,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new entry to a given reminder table.
-	 * Note: This is used by third table only.
+	 * Adds a new entry to the given reminder table. Used by the third table only.
 	 *
 	 * @param tableName - The name of the table.
 	 * @param newRecord - The new entry to add.
@@ -878,7 +877,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a patch note by key from the Firebase database.
+	 * Removes a patch note by key from the Firebase database.
 	 *
 	 * @param key - The document key of the patch note to remove.
 	 */
@@ -982,11 +981,17 @@ export class FirebaseService extends DatabaseService {
 		return Promise.resolve();
 	}
 
+	/**
+	 * Not implemented for Firebase — returns an empty response.
+	 *
+	 * @param _url - The URL to proxy (unused in this backend).
+	 * @returns A resolved promise with empty content and contentType.
+	 */
 	public proxyFetch(_url: string): Promise<{ content: string; contentType: string }> {
 		return Promise.resolve({ content: '', contentType: '' });
 	}
 
-	// ── Recipes (not implemented for Firebase) ────────────────────────────────
+	////////////////////// Below are Recipe stubs (not implemented for Firebase) ////////////////////
 
 	/** @inheritdoc */
 	public getRecipes(): Observable<Recipe[]> {

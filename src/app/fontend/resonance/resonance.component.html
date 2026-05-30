@@ -15,7 +15,7 @@
 			placeholder="Write something worth remembering..."
 			class="quote-input"
 			rows="3"
-			(keydown.enter)="onTextareaEnter($event)"></textarea>
+			(keydown.enter)="handleQuoteTextareaSubmit($event)"></textarea>
 		@if (!isSignedIn) {
 			<div class="name-row">
 				<input
@@ -27,10 +27,10 @@
 			</div>
 		}
 		@if (isOverLimit) {
-			<p class="char-warning">Your quote exceeds {{ maxQuoteLength }} characters. Please shorten it before posting.</p>
+			<p class="char-warning">Your quote exceeds {{ RESONANCE_MAX_QUOTE_LENGTH }} characters. Please shorten it before posting.</p>
 		}
 		<div class="submit-footer">
-			<span class="char-count" [class.over-limit]="isOverLimit">{{ newQuoteText.length }} / {{ maxQuoteLength }}</span>
+			<span class="char-count" [class.over-limit]="isOverLimit">{{ newQuoteText.length }} / {{ RESONANCE_MAX_QUOTE_LENGTH }}</span>
 			@if (postSuccess) {
 				<span class="post-success-chip">{{ RESONANCE_MSG_POSTED }}</span>
 			}

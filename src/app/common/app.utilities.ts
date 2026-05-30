@@ -7,6 +7,8 @@ import { LOG } from './app.logs';
 import {
 	CN,
 	LS_AUTH_HINT_KEY,
+	UTILITIES_LOG_COUNTRY_FAILED,
+	UTILITIES_LOG_DEFAULT_COUNTRY,
 	RATE_LABEL_AVERAGE,
 	RATE_LABEL_EXCELLENT,
 	RATE_LABEL_GOOD,
@@ -40,9 +42,9 @@ export class Utilities {
 	}
 
 	/**
-	 * Check if the current device is a mobile device.
+	 * Checks whether the current device is a mobile device based on viewport width.
 	 *
-	 * @returns A boolean value that indicates if the current device is a mobile device.
+	 * @returns True if the viewport width is 800 px or below, false on the server.
 	 */
 	public isMobile() {
 		if (isPlatformBrowser(this.platformId)) {
@@ -52,10 +54,10 @@ export class Utilities {
 	}
 
 	/**
-	 * Get current timestamp
+	 * Returns the current date formatted as YYYY.MM.DD, optionally appending HH:mm:ss.
 	 *
-	 * @param isTimeIncluded - Whether to include time in the formatted time.
-	 * @returns Formatted time
+	 * @param isTimeIncluded - The flag controlling whether to append HH:mm:ss after the date.
+	 * @returns A date string in YYYY.MM.DD or YYYY.MM.DD HH:mm:ss format.
 	 */
 	public static getCurrentFormattedTime(isTimeIncluded: boolean): string {
 		const now = new Date();
@@ -163,20 +165,20 @@ export class Utilities {
     }
     
 	/**
-	 * Capitalize the first letter of the string on each word
+	 * Capitalizes the first letter of each word in the given string.
 	 *
 	 * @param string - The string to capitalize.
-	 * @returns The string with the first letter capitalized.
+	 * @returns The capitalized string, or an empty string if the input is falsy.
 	 */
 	public static capitalizeFirstLetterOnEachWord(string: string | null | undefined) {
 		return string ? string.replace(/\b\w/g, (char) => char.toUpperCase()) : '';
 	}
 
 	/**
-	 * Capitalize the first letter of the string with others unchanged.
+	 * Capitalizes only the first letter of the string, leaving all other characters unchanged.
 	 *
 	 * @param string - The string to capitalize.
-	 * @returns The string with the first letter capitalized.
+	 * @returns The capitalized string, or an empty string if the input is falsy.
 	 */
 	public static capitalizeFirstLetterWithOthersUnchanged(string: string | null | undefined) {
 		return string ? string.trim().charAt(0).toUpperCase() + string.slice(1) : '';
@@ -218,9 +220,9 @@ export class Utilities {
 	}
 
 	/**
-	 * Get the current country code
+	 * Returns the current country code stored in the static field.
 	 *
-	 * @returns Current country code
+	 * @returns The country code string, or an empty string before detection runs.
 	 */
 	public static getCurrentCountry() {
 		return this.currentCountry;
@@ -266,11 +268,6 @@ export class Utilities {
 	}
 
 	/**
-	 * Check if the movie item is valid.
-	 *
-	 * @param movieItemVO - The movie item to check.
-	 */
-	/**
 	 * Returns a human-readable label for a movie rate based on the app's four rate tiers.
 	 * Mirrors the ngClass thresholds used in the entertainment template.
 	 *
@@ -284,6 +281,12 @@ export class Utilities {
 		return RATE_LABEL_POOR;
 	}
 
+	/**
+	 * Validates that the given movie item VO has a name and a year set.
+	 *
+	 * @param movieItemVO - The movie item to validate.
+	 * @throws Error if the movie name is empty or the year is -1.
+	 */
 	public static checkMovieItemVO(movieItemVO: MovieItemVO) {
 		if (movieItemVO.getMovieName() === '' || movieItemVO.getMovieYear() === -1) {
 			throw new Error('Movie item VO is invalid');
@@ -291,12 +294,12 @@ export class Utilities {
 	}
 
 	/**
-	 * Check whether the current user has permission to modify an entry
+	 * Checks whether the current user has permission to modify an entry
 	 * owned by the given openid. Admin users bypass the check automatically.
 	 * Exceptions from the auth layer are treated as permission denied.
 	 *
 	 * @param openid - The owner ID stored on the database entry.
-	 * @returns true if the current user is permitted, false otherwise.
+	 * @returns True if the current user is permitted, false otherwise.
 	 */
 	public static checkPermission(openid: string): boolean {
 		try {
@@ -308,9 +311,9 @@ export class Utilities {
 	}
 
 	/**
-	 * Check if the current device is hover capable (has a pointing device like a mouse).
+	 * Checks whether the current device supports hover (has a pointing device like a mouse).
 	 *
-	 * @returns true if the device supports hover, otherwise false.
+	 * @returns True if the device supports hover, otherwise false.
 	 */
 	public checkIfHoverCapable(): boolean {
 		return this.document.defaultView?.matchMedia('(hover: hover)').matches ?? false;
@@ -571,18 +574,16 @@ export class Utilities {
 	}
 
 	/**
-	 * Check the current country code
-	 * Note: This method can only be called by bootstraps
-	 *
-	 * @returns Current country code
+	 * Checks and stores the current country code in the static field.
+	 * Only bootstraps should call this method — it must run before any component initialises.
 	 */
 	public static checkCurrentCountry(): void {
 		try {
 			this.currentCountry = CN;
 		} catch (error: unknown) {
-			LOG.error(this.className, 'Country detection failed: ', error as Error);
+			LOG.error(this.className, UTILITIES_LOG_COUNTRY_FAILED, error as Error);
 			this.currentCountry = CN;
-			LOG.info(this.className, 'Use default country: ' + this.currentCountry);
+			LOG.info(this.className, UTILITIES_LOG_DEFAULT_COUNTRY + this.currentCountry);
 		}
 	}
 

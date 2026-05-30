@@ -18,17 +18,22 @@ export const DATABASE_MOVIES = 'movies';
 export const DATABASE_RECIPES = 'recipes';
 export const DATABASE_PATCH_NOTES = 'patch_notes';
 export const DATABASE_QUOTES = 'quotes';
-export const DATABASE_REMINDER = 'reminder'; // Firebase path prefix
+export const DATABASE_REMINDER = 'reminder'; // Firebase Realtime DB root path for all reminder data
 export const DATABASE_REMINDER_FIRST = 'reminder_table_first';
 export const DATABASE_REMINDER_SECOND = 'reminder_table_second';
-export const DATABASE_REMINDER_THIRD = 'reminder_table_third';
+export const DATABASE_REMINDER_THIRD = 'reminder'; // CloudBase collection for the Reminder page (pins/messages)
 export const DATABASE_STATISTICS = 'statistics';
 export const DATABASE_USEFUL_LINKS = 'useful_links'; // stores both links (type:'link') and categories (type:'category')
 
 ////////////////////// Below are reminder table identifier constants //////////////////
+// These values are internal routing keys used by the database service layer.
+// CloudBase resolves each key to its own collection name.
+// Firebase uses these as sub-path segments under DATABASE_REMINDER (e.g. reminder/third_table).
 export const DATABASE_FIRST_TABLE = 'first_table';
 export const DATABASE_SECOND_TABLE = 'second_table';
-export const DATABASE_THIRD_TABLE = 'third_table';
+// Value is 'third_table' because Firebase Realtime DB still uses path reminder/third_table.
+// CloudBase maps this key to the 'reminder' collection (see DATABASE_REMINDER_THIRD).
+export const DATABASE_REMINDER_TABLE = 'third_table';
 
 ////////////////////// Below are statistics document field name constants /////////////
 // Single source of truth for every key read from or written to the statistics

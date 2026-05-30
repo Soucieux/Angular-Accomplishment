@@ -5,7 +5,7 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Utilities } from '../../common/app.utilities';
 import {
-    DATABASE_THIRD_TABLE,
+    DATABASE_REMINDER_TABLE,
     PINBOARD_VALUE_KEY_DATE,
     PINBOARD_VALUE_KEY_LINK,
     PINBOARD_VALUE_KEY_TAGS,
@@ -347,7 +347,7 @@ describe('ReminderComponent', () => {
             (component as any).newItem = { text: 'hello', date: null, link: '', tags: [] };
             await (component as any).addNewTextOnly();
             expect(mockDb.addNewRecordForReminderTable).toHaveBeenCalledWith(
-                DATABASE_THIRD_TABLE,
+                DATABASE_REMINDER_TABLE,
                 jasmine.objectContaining({ text: 'hello' })
             );
         });
@@ -378,7 +378,7 @@ describe('ReminderComponent', () => {
         it('calls updateReminderTable when text has changed', async () => {
             await (component as any).onCardTextUpdate(makeItem('k1', 'updated text'));
             expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-                DATABASE_THIRD_TABLE, 'k1', PINBOARD_VALUE_KEY_TEXT, 'updated text'
+                DATABASE_REMINDER_TABLE, 'k1', PINBOARD_VALUE_KEY_TEXT, 'updated text'
             );
         });
 
@@ -423,7 +423,7 @@ describe('ReminderComponent', () => {
             await (component as any).clearDate(item);
             expect(item.date).toBeNull();
             expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-                DATABASE_THIRD_TABLE, 'k1', PINBOARD_VALUE_KEY_DATE, null
+                DATABASE_REMINDER_TABLE, 'k1', PINBOARD_VALUE_KEY_DATE, null
             );
         });
 
@@ -445,7 +445,7 @@ describe('ReminderComponent', () => {
             await (component as any).clearLink(item);
             expect(item.link).toBeNull();
             expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-                DATABASE_THIRD_TABLE, 'k1', PINBOARD_VALUE_KEY_LINK, null
+                DATABASE_REMINDER_TABLE, 'k1', PINBOARD_VALUE_KEY_LINK, null
             );
         });
 
@@ -517,7 +517,7 @@ describe('ReminderComponent', () => {
             await (component as any).onTagUpdate();
             expect(item.tags).toContain('newtag');
             expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-                DATABASE_THIRD_TABLE, 'k1', PINBOARD_VALUE_KEY_TAGS, jasmine.arrayContaining(['newtag'])
+                DATABASE_REMINDER_TABLE, 'k1', PINBOARD_VALUE_KEY_TAGS, jasmine.arrayContaining(['newtag'])
             );
         });
 
@@ -537,7 +537,7 @@ describe('ReminderComponent', () => {
             await (component as any).removeExistingCardTag(0, item);
             expect(item.tags).toEqual(['personal']);
             expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-                DATABASE_THIRD_TABLE, 'k1', PINBOARD_VALUE_KEY_TAGS, ['personal']
+                DATABASE_REMINDER_TABLE, 'k1', PINBOARD_VALUE_KEY_TAGS, ['personal']
             );
         });
 

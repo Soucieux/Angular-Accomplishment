@@ -312,7 +312,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param row - The row to start editing.
 	 */
-	protected async startEdit(row: any) { // any: schema-less CloudBase patch note document
+	protected async startEdit(row: any) {
+		// any: schema-less CloudBase patch note document
 		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, row._openid)) return;
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
@@ -323,7 +324,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param row - The row to complete editing.
 	 */
-	protected async completeEdit(row: any) { // any: schema-less CloudBase patch note document
+	protected async completeEdit(row: any) {
+		// any: schema-less CloudBase patch note document
 		const record = this.editedRows.get(row.key);
 		if (!record) return;
 		const changes: any = {};
@@ -553,7 +555,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param data - The PrimeNG table data object.
 	 * @returns The rendered data array.
 	 */
-	protected getRenderedData(data: any) { // any: PrimeNG table data object has no exported TypeScript type
+	protected getRenderedData(data: any) {
+		// any: PrimeNG table data object has no exported TypeScript type
 		return data.filteredValue ?? data.value ?? [];
 	}
 
@@ -687,7 +690,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *   `label` property (e.g. from the PrimeNG selectedItem template context).
 	 * @returns The matching option object, or `null` if not found.
 	 */
-	protected getComponentOption(label: string | { label: string } | any) { // any: PrimeNG selectedItem template context passes an untyped object
+	protected getComponentOption(label: string | { label: string } | any) {
+		// any: PrimeNG selectedItem template context passes an untyped object
 		const key = typeof label === 'string' ? label : (label?.label ?? '');
 		return this.components.find((option) => option.label === key) ?? null;
 	}

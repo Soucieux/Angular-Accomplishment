@@ -1,6 +1,6 @@
 import { Utilities } from '../../../common/app.utilities';
 import {
-	DATABASE_FIRST_TABLE,
+	DATABASE_DATE_CALCULATOR,
 	DATABASE_HISTORY,
 	DATABASE_PATCH_NOTES,
 	DATABASE_QUOTES,
@@ -599,13 +599,13 @@ export class FirebaseService extends DatabaseService {
 	/**
 	 * Returns the first reminder table details from Firebase as a reactive observable.
 	 *
-	 * @returns An observable that emits the first reminder table details.
+	 * @returns An observable that emits the date calculator table details.
 	 */
-	public getFirstReminderTableDetails(): Observable<any[]> {
+	public getDateCalculatorTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
 				const unsub = onValue(
-					dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_FIRST_TABLE}`),
+					dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_DATE_CALCULATOR}`),
 					(snapshot) => {
 						const data = snapshot.val();
 						// Firebase stores the collection as an object keyed by push ID;
@@ -715,7 +715,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The updated table data.
 	 */
-	public updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
+	public updateDateCalculatorTable(tableName: string, updatedTable: any): Promise<void> {
 		return update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), { ...updatedTable })
 			.then(() => {
 				LOG.info(this.className, 'Reminder table has been updated');

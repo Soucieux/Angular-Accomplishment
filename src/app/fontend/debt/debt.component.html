@@ -1,104 +1,328 @@
+<ng-container #dialogComponentContainer></ng-container>
+
 @if (utilities.getIsUserAlive()) {
-	<div class="container page-card">
-		<!-- ACCOUNT EXPENSES -->
-		<div class="table-wrapper">
-			<div class="header-wrapper">
-				<div class="header-main">
-					<h4>Account Expenses</h4>
-					@if (saveIndicators[DATABASE_DEBT_SONATA]) {
-						<div class="save-indicator">
-							<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
-							<span class="save-indicator-text">Saving</span>
+	<div class="container">
+		<!-- ── Page header ────────────────────────────────────────────── -->
+		<div class="page-header">
+			<div class="header-left">
+				<span class="material-symbols-outlined header-icon">account_balance</span>
+				<div class="header-text">
+					<h1 class="page-title">Debt Sonata</h1>
+					<p class="page-subtitle">Where every repayment is a brushstroke — and a closing line.</p>
+				</div>
+			</div>
+			<button class="new-debt-btn" (click)="openNewDebtDialog()">
+				<span class="material-symbols-outlined">add</span>
+				New debt
+			</button>
+		</div>
+
+		<!-- ── Summary card ───────────────────────────────────────────── -->
+		<div class="summary-card">
+			@if (loading) {
+				<div class="summary-left">
+					@for (_ of [0, 1]; track $index) {
+						<p-skeleton height="18px" width="80px" style="margin-top: 8px" />
+						<p-skeleton height="34px" width="180px" style="margin-top: 8px" />
+						<p-skeleton
+							height="8px"
+							min-width="421px"
+							style="margin-top: 10px; border-radius: 999px" />
+						<p-skeleton height="18px" min-width="100%" style="margin-top: 6px" />
+					}
+				</div>
+				<div class="summary-right">
+					<div class="stat-grid">
+						@for (_ of [0, 1, 2, 3, 4, 5]; track $index) {
+							<div class="stat-cell">
+								<p-skeleton height="38px" width="44px" />
+								<p-skeleton height="10px" width="44px" style="margin-top: 5px" />
+							</div>
+						}
+					</div>
+				</div>
+			} @else {
+				<div class="summary-left">
+					<span class="summary-label">TOTAL DEBT</span>
+					@for (group of currencyGroups; track group.code) {
+						<div class="summary-amount-row">
+							<span class="summary-amount"
+								>{{ group.symbol }}{{ group.owed | number: '1.0-0' }}</span
+							>
+							<span class="summary-currency">{{ group.symbol }} {{ group.code }}</span>
+						</div>
+						<div class="summary-bar-track">
+							<div class="summary-bar-fill" [style.width.%]="group.pct"></div>
+						</div>
+						<div class="summary-bar-meta">
+							<span>{{ group.pct }}% cleared</span>
+							<span
+								>{{ group.symbol }}{{ group.paid | number: '1.0-0' }} of {{ group.symbol
+								}}{{ group.original | number: '1.0-0' }}</span
+							>
 						</div>
 					}
 				</div>
+				<div class="summary-right">
+					<div class="stat-grid">
+						<div class="stat-cell">
+							<span class="stat-num">{{ updatedDebtSonataItems.length }}</span>
+							<span class="stat-lbl">DEBTS</span>
+						</div>
+						<div class="stat-cell">
+							<span class="stat-num">{{ activeCount }}</span>
+							<span class="stat-lbl">ACTIVE</span>
+						</div>
+						<div class="stat-cell">
+							<span class="stat-num">{{ paidCount }}</span>
+							<span class="stat-lbl">PAID OFF</span>
+						</div>
+						<div class="stat-cell">
+							<span class="stat-num">{{ dueSoonCount }}</span>
+							<span class="stat-lbl">DUE SOON</span>
+						</div>
+						<div class="stat-cell" [class.is-overdue]="overdueCount > 0">
+							<span class="stat-num">{{ overdueCount }}</span>
+							<span class="stat-lbl">OVERDUE</span>
+						</div>
+						<div class="stat-cell">
+							<span class="stat-num">{{ totalPayments }}</span>
+							<span class="stat-lbl">PAYMENTS</span>
+						</div>
+					</div>
+				</div>
+				@if (saveIndicators[DATABASE_DEBT_SONATA]) {
+					<div class="summary-save">
+						<i class="pi pi-spin pi-spinner"></i>
+						<span>Saving</span>
+					</div>
+				}
+			}
+		</div>
+
+		<!-- ── Your debts ─────────────────────────────────────────────── -->
+		<div class="debts-section">
+			<div class="debts-header">
+				<h2 class="debts-title">Your debts</h2>
+				@if (!loading) {
+					<span class="debts-count">{{ updatedDebtSonataItems.length }}</span>
+				}
 			</div>
-			<div class="debt-card">
+
+			<div class="debts-grid">
 				@if (loading) {
-					@for (_ of [0, 1, 2, 3, 4, 5, 6, 7]; track $index) {
-						<div class="debt-card-item">
-							<p-skeleton height="20px" />
-							<p-skeleton height="45px" />
-							<p-skeleton height="45px" />
-							<p-skeleton height="20px" />
+					@for (_ of [0, 1, 2, 3, 4, 5]; track $index) {
+						<div class="debt-card">
+							<p-skeleton height="22px" width="55%" />
+							<p-skeleton height="40px" width="50%" style="margin-top: 8px" />
+							<p-skeleton height="7px" style="margin-top: 10px; border-radius: 999px" />
+							<p-skeleton height="11px" width="120px" style="margin-top: 5px" />
+							<p-skeleton height="38px" style="margin-top: 12px; border-radius: 10px" />
 						</div>
 					}
 				} @else {
-					@for (item of updatedDebtSonataItems; let index = $index; track item.name) {
-						<div class="debt-card-item">
-							<div class="debt-card-item-header">{{ item.name }}</div>
-							<p-inputgroup style="height: 40px">
-								<p-inputgroup-addon>
-									@if (checkIfChinese(item.name)) {
-										<i class="material-symbols-outlined" style="color: black"
-											>currency_yen</i
-										>
-									} @else {
-										<i class="pi pi-dollar" style="color: black; font-weight: bold"></i>
+					@for (item of sortedItems; track item.key) {
+						<div
+							class="debt-card"
+							[class.is-paid]="item.content?.paid"
+							[class.is-expanded]="expandedItems[item.key]"
+							[style.--cat-grad]="getCategoryForItem(item).grad">
+							@if (item.content?.paid) {
+								<div class="paid-ribbon">PAID OFF</div>
+							}
+
+							<!-- Card head: icon + name/category + due chip -->
+							<div class="card-head">
+								<div class="cat-icon" [style.background]="getCategoryForItem(item).grad">
+									<span class="material-symbols-outlined">{{
+										getCategoryForItem(item).icon
+									}}</span>
+								</div>
+								<div class="card-name-group">
+									<span class="card-name">{{ item.name }}</span>
+									<span class="card-cat">{{ getCategoryForItem(item).label }}</span>
+								</div>
+								@if (item.content?.date && !item.content?.paid) {
+									<button
+										class="due-chip"
+										[class]="getDueClassForItem(item)"
+										(click)="startDueDateEdit(item.key)">
+										<span class="material-symbols-outlined" style="font-size: 13px">{{
+											getDueIconForItem(item)
+										}}</span>
+										{{ getDueLabelForItem(item) }}
+									</button>
+									@if (showDuePicker[item.key]) {
+										<p-datepicker
+											appendTo="body"
+											dateFormat="yy-mm-dd"
+											[(ngModel)]="item.content.date"
+											(keydown)="preventKeyin($event)"
+											(onSelect)="
+												completeDueDateEdit(DATABASE_DEBT_SONATA, item.key, $event)
+											"
+											(onClose)="cancelDueDateEdit(item.key)" />
 									}
-								</p-inputgroup-addon>
-								<p-inputnumber
-									mode="decimal"
-									locale="en-US"
-									[minFractionDigits]="2"
-									[maxFractionDigits]="2"
-									[step]="0.01"
-									[(ngModel)]="item.content.debt"
-									(onBlur)="updateTableSingleValue(DATABASE_DEBT_SONATA, item.key, 'debt')"
-									(keyup.enter)="updateTableSingleValue(DATABASE_DEBT_SONATA, item.key, 'debt')" />
-								<p-inputgroup-addon
-									><p-button
-										icon="pi pi-minus"
-										severity="secondary"
-										(onClick)="updateDebt(DATABASE_DEBT_SONATA, item.key, item.content.debt)"
-										pTooltip="Decrement by 998.05"
-										tooltipPosition="top"></p-button>
-								</p-inputgroup-addon>
-							</p-inputgroup>
-							<p-inputgroup style="height: 40px">
-								<p-datepicker
-									class="debt-card-date"
-									[appendTo]="'body'"
-									dateFormat="yy-mm-dd"
-									[(ngModel)]="item.content.date"
-									(keydown)="preventKeyin($event)"
-									[disabled]="!item.content.paid"
-									(onSelect)="updateTableWithNewDate(DATABASE_DEBT_SONATA, item.key, $event)" />
-								<p-inputgroup-addon
-									><p-button
-										[icon]="item.content.paid ? 'pi pi-check' : 'pi pi-replay'"
-										severity="secondary"
-										[pTooltip]="
-											item.content.paid ? 'Set default debt' : 'Reset debt to default'
-										"
-										tooltipPosition="top"
-										(onClick)="setDefaultDebt(item.key, item.content.paid)"></p-button
-								></p-inputgroup-addon>
-							</p-inputgroup>
-							<div class="debt-card-checkbox">
-								<p-checkbox
-									[inputId]="item.key"
-									[(ngModel)]="item.content.paid"
-									[binary]="true"
-									(onChange)="updateTableSingleValue(DATABASE_DEBT_SONATA, item.key, 'paid')" />
-								<label
-									[for]="item.key"
-									style="font-size: 15px"
-									[style]="item.content.paid ? 'color:green' : 'color:red'"
-									>{{
-										item.content.paid
-											? 'Paid'
-											: 'Not yet paid ($' + item.content.original + ')'
-									}}</label
+								}
+							</div>
+
+							<!-- Balance -->
+							<div class="card-balance-row">
+								<span class="card-balance" [class.is-paid]="item.content?.paid">
+									{{ checkIfChinese(item.name) ? '¥' : '$'
+									}}{{
+										(item.content?.paid ? 0 : (item.content?.debt ?? 0)) | number: '1.0-0'
+									}}
+								</span>
+								@if (item.content?.paid) {
+									<span class="card-paid-tag">
+										<span class="material-symbols-outlined" style="font-size: 13px"
+											>music_note</span
+										>
+										Coda · paid in full
+									</span>
+								} @else {
+									<span class="card-remaining"
+										>remaining of
+										<b
+											>{{ checkIfChinese(item.name) ? '¥' : '$'
+											}}{{ item.content?.original | number: '1.0-0' }}</b
+										></span
+									>
+								}
+							</div>
+
+							<!-- Progress -->
+							<div class="card-progress-track">
+								<div
+									class="card-progress-fill"
+									[style.width.%]="getDebtProgress(item)"
+									[class.is-paid]="item.content?.paid"></div>
+							</div>
+							<div class="card-progress-meta">
+								<span>{{ getDebtProgress(item) }}% paid</span>
+								<span
+									>{{ checkIfChinese(item.name) ? '¥' : '$'
+									}}{{
+										(getDebtProgress(item) === 100
+											? (item.content?.original ?? 0)
+											: (item.content?.original ?? 0) - (item.content?.debt ?? 0)
+										) | number: '1.0-0'
+									}}
+									of {{ checkIfChinese(item.name) ? '¥' : '$'
+									}}{{ item.content?.original | number: '1.0-0' }}</span
 								>
 							</div>
+
+							<!-- Payment chips -->
+							@if (!showCustomInput[item.key]) {
+								<div class="payment-chips" [class.is-disabled]="item.content?.paid">
+									<button
+										class="pay-chip"
+										[disabled]="!!item.content?.paid"
+										(click)="payDebt(item.key, DEBT_PRESET_SMALL)">
+										−{{ fmtCompact(DEBT_PRESET_SMALL, checkIfChinese(item.name)) }}
+									</button>
+									<button
+										class="pay-chip"
+										[disabled]="!!item.content?.paid"
+										(click)="payDebt(item.key, DEBT_PRESET_LARGE)">
+										−{{ fmtCompact(DEBT_PRESET_LARGE, checkIfChinese(item.name)) }}
+									</button>
+									<button
+										class="pay-chip custom-chip"
+										[disabled]="!!item.content?.paid"
+										(click)="toggleCustomInput(item.key)">
+										<span class="material-symbols-outlined" style="font-size: 13px"
+											>edit</span
+										>
+										Custom
+									</button>
+								</div>
+							} @else {
+								<div class="custom-pay-row">
+									<input
+										class="custom-pay-input"
+										type="number"
+										placeholder="Amount"
+										[(ngModel)]="customInputValues[item.key]"
+										(keyup.enter)="submitCustomPay(item.key)"
+										(blur)="submitCustomPay(item.key)" />
+									<button class="custom-pay-cancel" (click)="cancelCustomPay(item.key)">
+										✕
+									</button>
+								</div>
+							}
+
+							<!-- Footer: reset / lock / delete / history -->
+							<div class="card-footer">
+								<button
+									class="footer-btn"
+									[class.is-armed]="isArmedReset[item.key]"
+									(click)="armOrConfirmReset(item.key)">
+									<span class="material-symbols-outlined" style="font-size: 17px"
+										>restart_alt</span
+									>
+									{{ isArmedReset[item.key] ? 'Restore?' : 'Reset' }}
+								</button>
+								<button class="footer-icon-btn">
+									<span class="material-symbols-outlined" style="font-size: 15px"
+										>lock_open</span
+									>
+								</button>
+								<button
+									class="footer-icon-btn danger-btn"
+									[class.is-armed]="isArmedDelete[item.key]"
+									(click)="armOrConfirmDelete(item.key)">
+									<span class="material-symbols-outlined" style="font-size: 15px">{{
+										isArmedDelete[item.key] ? 'warning' : 'delete'
+									}}</span>
+								</button>
+								<button class="footer-history-btn" (click)="toggleHistory(item.key)">
+									History
+									<span class="history-count-chip">{{
+										getHistoryForItem(item.key).length
+									}}</span>
+									<span class="material-symbols-outlined" style="font-size: 20px">{{
+										expandedItems[item.key] ? 'expand_less' : 'expand_more'
+									}}</span>
+								</button>
+							</div>
+
+							<!-- History panel -->
+							@if (expandedItems[item.key]) {
+								<div class="history-panel">
+									@if (getHistoryForItem(item.key).length === 0) {
+										<p class="history-empty">No payments yet — chip away at it above.</p>
+									} @else {
+										@for (entry of getHistoryForItem(item.key); track entry.ts) {
+											<div class="history-row">
+												<span class="history-dot"></span>
+												<span class="history-ts">{{ formatTs(entry.ts) }}</span>
+												<span class="history-amount"
+													>−{{
+														fmtMoney(entry.amount, checkIfChinese(item.name))
+													}}</span
+												>
+												<span class="history-balance">
+													<span
+														class="history-arrow material-symbols-outlined"
+														style="font-size: 16px"
+														>arrow_right_alt</span
+													>
+													{{ fmtMoney(entry.balance, checkIfChinese(item.name)) }}
+												</span>
+											</div>
+										}
+									}
+								</div>
+							}
 						</div>
 					}
 				}
 			</div>
 		</div>
 	</div>
-	<ng-container #dialogComponentContainer></ng-container>
 } @else {
 	<access-denied />
 }

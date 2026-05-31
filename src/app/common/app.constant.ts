@@ -77,6 +77,14 @@ export const REMINDER_TABLE_ACCOUNT_EXPENSES = 'Account Expenses';
 export const REMINDER_TABLE_MESSAGES = 'Messages';
 /** Fixed amount deducted from a second-table debt entry per payment cycle. */
 export const ACCOUNT_DEBT_DECREMENT = 998.05;
+/** Small quick-pay preset amount for the Debt Sonata page. */
+export const DEBT_PRESET_SMALL = 100;
+/** Large quick-pay preset amount for the Debt Sonata page. */
+export const DEBT_PRESET_LARGE = 1000;
+/** Milliseconds the two-step confirm button stays armed before auto-disarming. */
+export const DEBT_ARMED_TIMEOUT_MS = 2600;
+/** CloudBase content entry key for the paid flag in the debt collection. */
+export const REMINDER_VALUE_KEY_PAID = 'paid';
 
 ////////////////////// Below are common shared constants /////////////////////////////
 export const SEARCH_COMPLETE = 'Search complete';

@@ -200,12 +200,12 @@
 	height: 50px;
 }
 
-.date-calculator-tableth,
-.date-calculator-tabletd {
+.date-calculator-table th,
+.date-calculator-table td {
 	padding: 5px !important;
 }
 
-.date-calculator-tableth {
+.date-calculator-table th {
 	padding-top: 12px !important;
 }
 
@@ -213,7 +213,7 @@
 	text-align: center;
 }
 
-::ng-deep .date-calculator-table.p-datatable-thead > tr > th {
+::ng-deep .date-calculator-table .p-datatable-thead > tr > th {
 	background: #ffffff !important;
 	color: rgba(30, 15, 35, 0.78) !important;
 	border-top: none !important;
@@ -222,11 +222,11 @@
 	letter-spacing: 0.3px !important;
 }
 
-::ng-deep .date-calculator-table.p-datatable-tbody > tr {
+::ng-deep .date-calculator-table .p-datatable-tbody > tr {
 	background: #ffffff !important;
 }
 
-::ng-deep .date-calculator-table.p-datatable-tbody > tr > td {
+::ng-deep .date-calculator-table .p-datatable-tbody > tr > td {
 	border-color: rgba(0, 0, 0, 0.06) !important;
 }
 
@@ -1283,7 +1283,7 @@
 		padding: 10px 12px;
 	}
 
-	::ng-deep .date-calculator-table.p-datatable table {
+	::ng-deep .date-calculator-table .p-datatable table {
 		table-layout: fixed !important;
 		width: 100% !important;
 	}
@@ -1302,8 +1302,8 @@
 		text-overflow: ellipsis;
 	}
 
-	.date-calculator-tableth,
-	.date-calculator-tabletd {
+	.date-calculator-table th,
+	.date-calculator-table td {
 		margin: 0 !important;
 		padding: 2px !important;
 	}

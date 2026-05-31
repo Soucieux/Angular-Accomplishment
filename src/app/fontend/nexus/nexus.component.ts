@@ -24,7 +24,7 @@ import { Utilities } from '../../common/app.utilities';
 import {
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
-	DATABASE_FIRST_TABLE,
+	DATABASE_DATE_CALCULATOR,
 	DIALOG_CONFIRM,
 	FAILURE,
 	NEXUS_CATEGORY_ALL,
@@ -97,7 +97,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly NEXUS_LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
 	protected readonly aiTools: AiTool[] = [...NEXUS_AI_TOOLS];
 	// Date Calculator constants re-exposed for the template
-	protected readonly DATABASE_FIRST_TABLE = DATABASE_FIRST_TABLE;
+	protected readonly DATABASE_DATE_CALCULATOR = DATABASE_DATE_CALCULATOR;
 	protected readonly PINBOARD_LABEL_CURRENT_MONTH = PINBOARD_LABEL_CURRENT_MONTH;
 	protected readonly PINBOARD_LABEL_NEXT_MONTH = PINBOARD_LABEL_NEXT_MONTH;
 	protected readonly PINBOARD_LABEL_RESET = PINBOARD_LABEL_RESET;
@@ -107,17 +107,17 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly PINBOARD_LABEL_CONFIRMED = PINBOARD_LABEL_CONFIRMED;
 	protected failedLogos = new Set<string>();
 
-	// ── Date Calculator (first reminder table) state ──────────────────────────
+	// ── Date Calculator state ────────────────────────────────────────────────
 	private chargedCells = new Set<string>();
-	// any: First-table rows are schema-less CloudBase documents with no fixed TypeScript type
-	protected originalFirstTable!: any[];
-	// any: First-table rows are schema-less CloudBase documents with no fixed TypeScript type
-	protected updatedFirstTable!: any[];
-	protected firstTableConfirmedCount = 0;
+	// any: Date calculator rows are schema-less CloudBase documents with no fixed TypeScript type
+	protected originalDateCalculatorRows!: any[];
+	// any: Date calculator rows are schema-less CloudBase documents with no fixed TypeScript type
+	protected updatedDateCalculatorRows!: any[];
+	protected confirmedCount = 0;
 	protected currentDay!: number;
 	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
-	private firstSub?: Subscription;
-	protected saveIndicators: Record<string, boolean> = { [DATABASE_FIRST_TABLE]: false };
+	private dateCalculatorSub?: Subscription;
+	protected saveIndicators: Record<string, boolean> = { [DATABASE_DATE_CALCULATOR]: false };
 	// any: setTimeout return type varies by environment (browser vs Node)
 	private saveIndicatorTimeouts: Record<string, any> = {};
 	private chargedCellsInitialized = false;
@@ -166,12 +166,12 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		if (isPlatformBrowser(this.platformId)) {
 			// ── Date Calculator subscription ───────────────────────────────────
 			this.currentDay = new Date().getDate();
-			const getFirstObservable = this.databaseService.getFirstReminderTableDetails();
-			this.firstSub = getFirstObservable.subscribe(async (rows) => {
+			const dateCalculatorObservable = this.databaseService.getDateCalculatorTableDetails();
+			this.dateCalculatorSub = dateCalculatorObservable.subscribe(async (rows) => {
 				// Need deep copy here so that we are not copying references
-				this.originalFirstTable = structuredClone(rows);
-				this.updatedFirstTable = structuredClone(rows).slice(0, -1);
-				this.isNextMonth = this.originalFirstTable[5]['isNextMonth'];
+				this.originalDateCalculatorRows = structuredClone(rows);
+				this.updatedDateCalculatorRows = structuredClone(rows).slice(0, -1);
+				this.isNextMonth = this.originalDateCalculatorRows[5]['isNextMonth'];
 				this.dateCalculatorLoading = false;
 				if (!this.chargedCellsInitialized) {
 					await this.updateChargedCells();
@@ -231,7 +231,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * the component destruction event.
 	 */
 	ngOnDestroy(): void {
-		this.firstSub?.unsubscribe();
+		this.dateCalculatorSub?.unsubscribe();
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
 		this.userAliveSub?.unsubscribe();
@@ -242,22 +242,22 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	////////////////////// Below are Date Calculator interaction handlers //////////////////
 
 	/**
-	 * Recomputes and caches the count of first-table cells marked as charged.
-	 * Called whenever updatedFirstTable or any cell's isCharged flag changes.
+	 * Recomputes and caches the count of date calculator cells marked as charged.
+	 * Called whenever rows or any cell's isCharged flag changes.
 	 */
 	private refreshConfirmedCount(): void {
-		this.firstTableConfirmedCount = (this.updatedFirstTable ?? [])
+		this.confirmedCount = (this.updatedDateCalculatorRows ?? [])
 			.flatMap((row: any) => this.fields.map((field: string) => row[field] as { isCharged: boolean }))
 			.filter((cell) => cell?.isCharged === true).length;
 	}
 
 	/**
-	 * Total number of editable cells in the first table (rows × 4 columns).
+	 * Total number of editable cells in the date calculator (rows × 4 columns).
 	 *
 	 * @returns The total cell count.
 	 */
-	protected get firstTableTotalCount(): number {
-		return (this.updatedFirstTable?.length ?? 0) * this.fields.length;
+	protected get totalCount(): number {
+		return (this.updatedDateCalculatorRows?.length ?? 0) * this.fields.length;
 	}
 
 	/**
@@ -271,7 +271,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Updates the charged/uncharged state of first-table cells based on
+	 * Updates the charged/uncharged state of date calculator cells based on
 	 * the current month direction and the current day of the month.
 	 * Persists the change to the database when called after initialisation.
 	 */
@@ -291,16 +291,16 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.chargedCells.clear();
 		}
 
-		for (let index = 0; index < this.updatedFirstTable.length; index++) {
+		for (let index = 0; index < this.updatedDateCalculatorRows.length; index++) {
 			for (const field of this.fields) {
 				if (this.isNextMonth && this.chargedCellsInitialized) {
-					this.updatedFirstTable[index][field].isCharged = false;
+					this.updatedDateCalculatorRows[index][field].isCharged = false;
 				} else if (
 					!this.isNextMonth &&
-					this.updatedFirstTable[index][field].value < this.currentDay
+					this.updatedDateCalculatorRows[index][field].value < this.currentDay
 				) {
 					// Fields are no longer being set as charged so that its color is only changed on user input
-					// this.updatedFirstTable[index][field].isCharged = true;
+					// this.updatedDateCalculatorRows[index][field].isCharged = true;
 					this.chargedCells.add(`${index}-${field}`);
 				}
 			}
@@ -308,12 +308,12 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 		this.refreshConfirmedCount();
 		if (this.chargedCellsInitialized) {
-			await this.updateFirstTableSingleValue();
+			await this.updateDateCalculatorSingleValue();
 		}
 	}
 
 	/**
-	 * Prevents non-numeric input in first-table number fields. Allows
+	 * Prevents non-numeric input in date calculator number fields. Allows
 	 * navigation and deletion keys to pass through.
 	 *
 	 * @param event - The keyboard event to validate.
@@ -328,7 +328,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Validates and propagates a date value change in the first table.
+	 * Validates and propagates a date value change in the date calculator.
 	 * Enforces minimum day gaps between rows (2-day and 6-day), caps values
 	 * at 31, and cascades the change to downstream rows via twoDayDiff/sixDaysDiff.
 	 *
@@ -336,20 +336,20 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param field - The column key (first, second, third, fourth) being changed.
 	 */
 	protected async onValueChange(rowIndex: number, field: string): Promise<void> {
-		const originalValue = this.originalFirstTable[rowIndex][field].value;
+		const originalValue = this.originalDateCalculatorRows[rowIndex][field].value;
 
 		// Do nothing if the value does not change
-		if (this.updatedFirstTable[rowIndex][field].value == originalValue) return;
+		if (this.updatedDateCalculatorRows[rowIndex][field].value == originalValue) return;
 
 		const returnCode = this.checkPermission();
 		// Rollback OR reset value if it reaches threshold
-		if (returnCode === FAILURE || Number(this.updatedFirstTable[rowIndex][field].value) > 31) {
-			this.updatedFirstTable[rowIndex][field].value = originalValue;
+		if (returnCode === FAILURE || Number(this.updatedDateCalculatorRows[rowIndex][field].value) > 31) {
+			this.updatedDateCalculatorRows[rowIndex][field].value = originalValue;
 			return;
 		}
 
 		if (rowIndex !== 0) {
-			const previousValue = this.updatedFirstTable[rowIndex - 1][field].value;
+			const previousValue = this.updatedDateCalculatorRows[rowIndex - 1][field].value;
 
 			// Get the difference
 			let requiredDiff: number | null = null;
@@ -361,21 +361,21 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 			if (
 				requiredDiff !== null &&
-				Number(this.updatedFirstTable[rowIndex][field].value) - Number(previousValue) < requiredDiff
+				Number(this.updatedDateCalculatorRows[rowIndex][field].value) - Number(previousValue) < requiredDiff
 			) {
-				this.updatedFirstTable[rowIndex][field].value = originalValue;
+				this.updatedDateCalculatorRows[rowIndex][field].value = originalValue;
 				return;
 			}
 		}
 
 		// Convert it to number
-		this.updatedFirstTable[rowIndex][field].value = Number(this.updatedFirstTable[rowIndex][field].value);
+		this.updatedDateCalculatorRows[rowIndex][field].value = Number(this.updatedDateCalculatorRows[rowIndex][field].value);
 
 		// Mark it as uncharged
-		this.updatedFirstTable[rowIndex][field].isCharged = false;
+		this.updatedDateCalculatorRows[rowIndex][field].isCharged = false;
 
 		// Update other values in the same column
-		for (let index = rowIndex; index < this.updatedFirstTable.length - 1; index++) {
+		for (let index = rowIndex; index < this.updatedDateCalculatorRows.length - 1; index++) {
 			if (index == 0 || index == 2) {
 				this.twoDayDiff(index, field);
 			} else if (index == 1 || index == 3) {
@@ -385,20 +385,20 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 		// Re-evaluate grey background for every cell in this column —
 		// cascading may have shifted values above or below currentDay.
-		for (let i = 0; i < this.updatedFirstTable.length; i++) {
+		for (let i = 0; i < this.updatedDateCalculatorRows.length; i++) {
 			const key = `${i}-${field}`;
-			if (!this.isNextMonth && this.updatedFirstTable[i][field].value < this.currentDay) {
+			if (!this.isNextMonth && this.updatedDateCalculatorRows[i][field].value < this.currentDay) {
 				this.chargedCells.add(key);
 			} else {
 				this.chargedCells.delete(key);
 			}
 		}
 
-		await this.updateFirstTableSingleValue();
+		await this.updateDateCalculatorSingleValue();
 	}
 
 	/**
-	 * Checks whether a first-table cell is in the charged set and should
+	 * Checks whether a date calculator cell is in the charged set and should
 	 * be displayed as disabled.
 	 *
 	 * @param rowIndex - The row index of the cell.
@@ -417,9 +417,9 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param field - The column key to cascade.
 	 */
 	private sixDaysDiff(rowIndex: number, field: string): void {
-		this.updatedFirstTable[rowIndex + 1][field].value =
-			Number(this.updatedFirstTable[rowIndex][field].value) + 6;
-		this.updatedFirstTable[rowIndex + 1][field].isCharged = false;
+		this.updatedDateCalculatorRows[rowIndex + 1][field].value =
+			Number(this.updatedDateCalculatorRows[rowIndex][field].value) + 6;
+		this.updatedDateCalculatorRows[rowIndex + 1][field].isCharged = false;
 		this.isValueGreaterThan31(rowIndex, field);
 	}
 
@@ -431,9 +431,9 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param field - The column key to cascade.
 	 */
 	private twoDayDiff(rowIndex: number, field: string): void {
-		this.updatedFirstTable[rowIndex + 1][field].value =
-			Number(this.updatedFirstTable[rowIndex][field].value) + 2;
-		this.updatedFirstTable[rowIndex + 1][field].isCharged = false;
+		this.updatedDateCalculatorRows[rowIndex + 1][field].value =
+			Number(this.updatedDateCalculatorRows[rowIndex][field].value) + 2;
+		this.updatedDateCalculatorRows[rowIndex + 1][field].isCharged = false;
 		this.isValueGreaterThan31(rowIndex, field);
 	}
 
@@ -444,14 +444,14 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param field - The column key.
 	 */
 	private isValueGreaterThan31(rowIndex: number, field: string): void {
-		this.updatedFirstTable[rowIndex + 1][field].value =
-			this.updatedFirstTable[rowIndex + 1][field].value > 31
+		this.updatedDateCalculatorRows[rowIndex + 1][field].value =
+			this.updatedDateCalculatorRows[rowIndex + 1][field].value > 31
 				? 31
-				: this.updatedFirstTable[rowIndex + 1][field].value;
+				: this.updatedDateCalculatorRows[rowIndex + 1][field].value;
 	}
 
 	/**
-	 * Toggles a first-table cell to the charged state and persists to the database.
+	 * Toggles a date calculator cell to the charged state and persists to the database.
 	 * No-ops if the cell is already charged or the user lacks permission.
 	 *
 	 * @param rowIndex - The row index of the cell.
@@ -462,16 +462,16 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		// Rollback
 		if (returnCode === FAILURE) return;
 
-		if (!this.updatedFirstTable[rowIndex][field].isCharged) {
-			this.updatedFirstTable[rowIndex][field].isCharged = true;
+		if (!this.updatedDateCalculatorRows[rowIndex][field].isCharged) {
+			this.updatedDateCalculatorRows[rowIndex][field].isCharged = true;
 			this.refreshConfirmedCount();
 			// Update table to database
-			await this.updateFirstTableSingleValue();
+			await this.updateDateCalculatorSingleValue();
 		}
 	}
 
 	/**
-	 * Opens a confirmation dialog before resetting the first table dates
+	 * Opens a confirmation dialog before resetting the date calculator dates
 	 * to their default sequence (1, 3, 9, 11, 17).
 	 */
 	protected openResetConfirmationDialog(): void {
@@ -483,20 +483,20 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			() => {
-				this.resetFirstTable();
+				this.setDateCalculatorDefaults();
 			},
 			[PINBOARD_MSG_RESET_CONFIRM, PINBOARD_DIALOG_RESET_BTN, PINBOARD_DIALOG_CONFIRM_BTN]
 		);
 	}
 
 	/**
-	 * Resets all values in the first table to their default sequence
+	 * Resets all values in the date calculator to their default sequence
 	 * (1, 3, 9, 11, 17), sets all cells to uncharged, and persists the reset
 	 * state to the database.
 	 */
-	private async resetFirstTable(): Promise<void> {
+	private async setDateCalculatorDefaults(): Promise<void> {
 		const values = [1, 3, 9, 11, 17];
-		this.updatedFirstTable = this.originalFirstTable.slice(0, 5).map((original, index) => ({
+		this.updatedDateCalculatorRows = this.originalDateCalculatorRows.slice(0, 5).map((original, index) => ({
 			_id: original._id,
 			_openid: original._openid,
 			first: { value: values[index], isCharged: false },
@@ -505,26 +505,26 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			fourth: { value: values[index], isCharged: false }
 		}));
 		this.refreshConfirmedCount();
-		await this.updateFirstTableSingleValue();
+		await this.updateDateCalculatorSingleValue();
 	}
 
 	/**
-	 * Persists the current state of the first table (including the isNextMonth
+	 * Persists the current state of the date calculator (including the isNextMonth
 	 * flag) to the database. Shows a save indicator on success or an error
 	 * dialog on failure.
 	 */
-	private async updateFirstTableSingleValue(): Promise<void> {
+	private async updateDateCalculatorSingleValue(): Promise<void> {
 		try {
 			const payload = [
-				...this.updatedFirstTable,
+				...this.updatedDateCalculatorRows,
 				{
-					_id: this.originalFirstTable[5]._id,
-					_openid: this.originalFirstTable[5]._openid,
+					_id: this.originalDateCalculatorRows[5]._id,
+					_openid: this.originalDateCalculatorRows[5]._openid,
 					isNextMonth: this.isNextMonth
 				}
 			];
-			await this.databaseService.updateFirstReminderTable(DATABASE_FIRST_TABLE, payload);
-			this.triggerSaveIndicator(DATABASE_FIRST_TABLE);
+			await this.databaseService.updateDateCalculatorTable(DATABASE_DATE_CALCULATOR, payload);
+			this.triggerSaveIndicator(DATABASE_DATE_CALCULATOR);
 			// Fire-and-forget: surface this change in the Recent Activity widget.
 			this.databaseService
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
@@ -542,13 +542,13 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	////////////////////// Below are shared utility methods //////////////////////////////
 
 	/**
-	 * Resolves the owner openid from the first-table row[0] and delegates
+	 * Resolves the owner openid from the date calculator row[0] and delegates
 	 * the permission check to DialogService.ensurePermission.
 	 *
 	 * @returns SUCCESS if the current user has write permission, FAILURE otherwise.
 	 */
 	private checkPermission(): string {
-		const openid = this.updatedFirstTable[0]?._openid ?? '';
+		const openid = this.updatedDateCalculatorRows[0]?._openid ?? '';
 		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid)
 			? SUCCESS
 			: FAILURE;

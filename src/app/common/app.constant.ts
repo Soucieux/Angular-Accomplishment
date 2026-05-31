@@ -26,9 +26,9 @@ export const DATABASE_USEFUL_LINKS = 'useful_links'; // stores both links (type:
 
 ////////////////////// Below are Firebase-only table routing keys //////////////////
 // Used as sub-path segments under DATABASE_REMINDER in Firebase Realtime DB.
-// e.g. reminder/first_table, reminder/second_table, reminder/third_table
+// e.g. reminder/date_calculator, reminder/second_table, reminder/third_table
 // CloudBase uses DATABASE_REMINDER_FIRST, DATABASE_REMINDER_SECOND, and DATABASE_REMINDER directly.
-export const DATABASE_FIRST_TABLE = 'first_table';
+export const DATABASE_DATE_CALCULATOR = 'date_calculator';
 export const DATABASE_SECOND_TABLE = 'second_table';
 export const DATABASE_THIRD_TABLE = 'third_table';
 
@@ -474,7 +474,7 @@ export const PINBOARD_DIALOG_CONFIRM_BTN = 'Confirm';
 export const PINBOARD_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this entry?';
 export const PINBOARD_DIALOG_DELETE_BTN = 'Delete';
 
-////////////////////// Below are pinboard first-table UI label constants ////////////
+////////////////////// Below are date calculator UI label constants ////////////
 export const PINBOARD_LABEL_CURRENT_MONTH = 'Current Month';
 export const PINBOARD_LABEL_NEXT_MONTH = 'Next Month';
 export const PINBOARD_LABEL_RESET = 'Reset';

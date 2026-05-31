@@ -11,7 +11,7 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { NexusComponent } from './nexus.component';
 
-/** Minimal first-table row factory. */
+/** Minimal date calculator row factory. */
 function makeFirstRow(value = 5, isCharged = false) {
 	return {
 		_id: 'id1',
@@ -33,14 +33,14 @@ describe('NexusComponent', () => {
 		mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
 			'getUsefulLinks',
 			'getLinkCategories',
-			'getFirstReminderTableDetails',
-			'updateFirstReminderTable',
+			'getDateCalculatorTableDetails',
+			'updateDateCalculatorSingleValueTable',
 			'appendToActivityLog'
 		]);
 		mockDb.getUsefulLinks.and.returnValue(of([]));
 		mockDb.getLinkCategories.and.returnValue(of([]));
-		mockDb.getFirstReminderTableDetails.and.returnValue(of([]));
-		mockDb.updateFirstReminderTable.and.returnValue(Promise.resolve());
+		mockDb.getDateCalculatorTableDetails.and.returnValue(of([]));
+		mockDb.updateDateCalculatorSingleValueTable.and.returnValue(Promise.resolve());
 		mockDb.appendToActivityLog.and.returnValue(Promise.resolve());
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
@@ -71,16 +71,16 @@ describe('NexusComponent', () => {
 		expect(component).toBeTruthy();
 	});
 
-	// ── firstTableConfirmedCount ──────────────────────────────────────────
+	// ── confirmedCount ──────────────────────────────────────────
 
-	describe('firstTableConfirmedCount', () => {
-		it('returns 0 when updatedFirstTable is empty', () => {
-			(component as any).updatedFirstTable = [];
-			expect((component as any).firstTableConfirmedCount).toBe(0);
+	describe('confirmedCount', () => {
+		it('returns 0 when rows is empty', () => {
+			(component as any).updatedDateCalculatorRows = [];
+			expect((component as any).confirmedCount).toBe(0);
 		});
 
 		it('counts only cells where isCharged is true', () => {
-			(component as any).updatedFirstTable = [
+			(component as any).updatedDateCalculatorRows = [
 				{
 					first: { isCharged: true },
 					second: { isCharged: false },
@@ -89,11 +89,11 @@ describe('NexusComponent', () => {
 				}
 			];
 			(component as any).refreshConfirmedCount();
-			expect((component as any).firstTableConfirmedCount).toBe(2);
+			expect((component as any).confirmedCount).toBe(2);
 		});
 
 		it('returns 0 when no cells are charged', () => {
-			(component as any).updatedFirstTable = [
+			(component as any).updatedDateCalculatorRows = [
 				{
 					first: { isCharged: false },
 					second: { isCharged: false },
@@ -102,21 +102,21 @@ describe('NexusComponent', () => {
 				}
 			];
 			(component as any).refreshConfirmedCount();
-			expect((component as any).firstTableConfirmedCount).toBe(0);
+			expect((component as any).confirmedCount).toBe(0);
 		});
 	});
 
-	// ── firstTableTotalCount ──────────────────────────────────────────────
+	// ── totalCount ──────────────────────────────────────────────
 
-	describe('firstTableTotalCount', () => {
-		it('returns 0 when updatedFirstTable is empty', () => {
-			(component as any).updatedFirstTable = [];
-			expect((component as any).firstTableTotalCount).toBe(0);
+	describe('totalCount', () => {
+		it('returns 0 when rows is empty', () => {
+			(component as any).updatedDateCalculatorRows = [];
+			expect((component as any).totalCount).toBe(0);
 		});
 
 		it('returns rows × 4 columns', () => {
-			(component as any).updatedFirstTable = [{}, {}, {}];
-			expect((component as any).firstTableTotalCount).toBe(12);
+			(component as any).updatedDateCalculatorRows = [{}, {}, {}];
+			expect((component as any).totalCount).toBe(12);
 		});
 	});
 
@@ -189,29 +189,29 @@ describe('NexusComponent', () => {
 
 	describe('setIsCharged', () => {
 		beforeEach(() => {
-			(component as any).updatedFirstTable = [makeFirstRow(5, false)];
-			(component as any).originalFirstTable = [makeFirstRow(5, false), { _id: 'id2', _openid: 'uid1', isNextMonth: false }];
+			(component as any).updatedDateCalculatorRows = [makeFirstRow(5, false)];
+			(component as any).originalDateCalculatorRows = [makeFirstRow(5, false), { _id: 'id2', _openid: 'uid1', isNextMonth: false }];
 			(component as any).chargedCellsInitialized = true;
 		});
 
-		it('marks the cell as charged and calls updateFirstTableSingleValue', async () => {
-			spyOn<any>(component, 'updateFirstTableSingleValue').and.returnValue(Promise.resolve());
+		it('marks the cell as charged and calls updateDateCalculatorSingleValue', async () => {
+			spyOn<any>(component, 'updateDateCalculatorSingleValue').and.returnValue(Promise.resolve());
 			await (component as any).setIsCharged(0, 'first');
-			expect((component as any).updatedFirstTable[0].first.isCharged).toBeTrue();
+			expect((component as any).updatedDateCalculatorRows[0].first.isCharged).toBeTrue();
 		});
 
 		it('does nothing when the cell is already charged', async () => {
-			(component as any).updatedFirstTable[0].first.isCharged = true;
-			spyOn<any>(component, 'updateFirstTableSingleValue').and.returnValue(Promise.resolve());
+			(component as any).updatedDateCalculatorRows[0].first.isCharged = true;
+			spyOn<any>(component, 'updateDateCalculatorSingleValue').and.returnValue(Promise.resolve());
 			await (component as any).setIsCharged(0, 'first');
-			expect((component as any).updateFirstTableSingleValue).not.toHaveBeenCalled();
+			expect((component as any).updateDateCalculatorSingleValue).not.toHaveBeenCalled();
 		});
 
 		it('does nothing when permission is denied', async () => {
 			mockDialogService.ensurePermission.and.returnValue(false);
-			spyOn<any>(component, 'updateFirstTableSingleValue').and.returnValue(Promise.resolve());
+			spyOn<any>(component, 'updateDateCalculatorSingleValue').and.returnValue(Promise.resolve());
 			await (component as any).setIsCharged(0, 'first');
-			expect((component as any).updateFirstTableSingleValue).not.toHaveBeenCalled();
+			expect((component as any).updateDateCalculatorSingleValue).not.toHaveBeenCalled();
 		});
 	});
 
@@ -219,7 +219,7 @@ describe('NexusComponent', () => {
 
 	describe('onValueChange', () => {
 		beforeEach(() => {
-			(component as any).originalFirstTable = [
+			(component as any).originalDateCalculatorRows = [
 				makeFirstRow(5, false),
 				makeFirstRow(7, false),
 				makeFirstRow(13, false),
@@ -227,7 +227,7 @@ describe('NexusComponent', () => {
 				makeFirstRow(21, false),
 				{ _id: 'id6', _openid: 'uid1', isNextMonth: false }
 			];
-			(component as any).updatedFirstTable = [
+			(component as any).updatedDateCalculatorRows = [
 				makeFirstRow(5, false),
 				makeFirstRow(7, false),
 				makeFirstRow(13, false),
@@ -239,15 +239,15 @@ describe('NexusComponent', () => {
 		});
 
 		it('does not update when the value did not change', async () => {
-			spyOn<any>(component, 'updateFirstTableSingleValue').and.returnValue(Promise.resolve());
+			spyOn<any>(component, 'updateDateCalculatorSingleValue').and.returnValue(Promise.resolve());
 			await (component as any).onValueChange(0, 'first');
-			expect((component as any).updateFirstTableSingleValue).not.toHaveBeenCalled();
+			expect((component as any).updateDateCalculatorSingleValue).not.toHaveBeenCalled();
 		});
 
 		it('rolls back when the value exceeds 31', async () => {
-			(component as any).updatedFirstTable[0].first.value = 32;
+			(component as any).updatedDateCalculatorRows[0].first.value = 32;
 			await (component as any).onValueChange(0, 'first');
-			expect((component as any).updatedFirstTable[0].first.value).toBe(5);
+			expect((component as any).updatedDateCalculatorRows[0].first.value).toBe(5);
 		});
 	});
 

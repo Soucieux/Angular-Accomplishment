@@ -8,7 +8,7 @@ import { LOG } from '../../../common/app.logs';
 import { Utilities } from '../../../common/app.utilities';
 import { environment } from '../../../../environment/environment';
 import {
-	DATABASE_FIRST_TABLE,
+	DATABASE_DATE_CALCULATOR,
 	DATABASE_HISTORY,
 	DATABASE_MOVIES,
 	DATABASE_PATCH_NOTES,
@@ -409,8 +409,8 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @returns Reminder table details
 	 */
-	public getFirstReminderTableDetails(): Observable<any[]> {
-		// First table rows are flat — emit as-is. Fallback to [] prevents
+	public getDateCalculatorTableDetails(): Observable<any[]> {
+		// Date calculator rows are flat — emit as-is. Fallback to [] prevents
 		// downstream .length errors when the collection is empty.
 		return this.watchCollection(DATABASE_REMINDER_FIRST, (docs) => docs ?? []);
 	}
@@ -1023,7 +1023,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The updated table data.
 	 */
-	public async updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void> {
+	public async updateDateCalculatorTable(tableName: string, updatedTable: any): Promise<void> {
 		try {
 			const collectionName = this.convertTableNameToCollectionName(tableName);
 			// CloudBase has no batch document update API — rows are updated individually.
@@ -1308,7 +1308,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	private convertTableNameToCollectionName(tableName: string): string {
 		switch (tableName) {
-			case DATABASE_FIRST_TABLE:
+			case DATABASE_DATE_CALCULATOR:
 				return DATABASE_REMINDER_FIRST;
 			case DATABASE_SECOND_TABLE:
 				return DATABASE_REMINDER_SECOND;

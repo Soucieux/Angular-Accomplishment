@@ -168,12 +168,12 @@ export abstract class DatabaseService {
 	public abstract removePatchNote(key: string): Promise<void>;
 
 	/**
-	 * Returns the first reminder table details from the database as a reactive observable.
+	 * Returns the date calculator table details from the database as a reactive observable.
 	 *
-	 * @returns An observable that emits the first reminder table details.
+	 * @returns An observable that emits the date calculator table details.
 	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
-	public abstract getFirstReminderTableDetails(): Observable<any[]>;
+	public abstract getDateCalculatorTableDetails(): Observable<any[]>;
 
 	/**
 	 * Returns the second reminder table details from the database as a reactive observable.
@@ -212,9 +212,9 @@ export abstract class DatabaseService {
 	 *
 	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The updated table data.
-	 *                       // any: First table structure is validated at the call site
+	 *                       // any: Date calculator table structure is validated at the call site
 	 */
-	public abstract updateFirstReminderTable(tableName: string, updatedTable: any): Promise<void>;
+	public abstract updateDateCalculatorTable(tableName: string, updatedTable: any): Promise<void>;
 
 	/**
 	 * Removes a record from the reminder table.

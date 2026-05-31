@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────
-   Host — fill the drawer-content slot
+   Host
 ───────────────────────────────────────── */
 :host {
 	display: block;
@@ -7,24 +7,32 @@
 }
 
 /* ─────────────────────────────────────────
-   Container — grid layout, fills viewport, scrolls internally.
-   Visual properties (glassmorphism, animation)
-   are provided by the global .page-card class.
+   Container
 ───────────────────────────────────────── */
 .container {
 	min-width: 100%;
 	height: calc(100dvh - 10px);
-	padding: 10px 5px;
+	padding: 10px 16px 20px;
 	overflow-y: auto;
 	overflow-x: hidden;
 	scrollbar-width: thin;
 	scrollbar-color: transparent transparent;
 	transition: scrollbar-color 0.4s ease;
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 14px;
-	grid-auto-rows: min-content;
-	align-content: start;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	border-radius: 18px;
+	animation: containerReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes containerReveal {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 .container::-webkit-scrollbar {
 	width: 8px;
@@ -38,206 +46,820 @@
 	transition: background 0.4s ease;
 }
 .container.is-scrolling {
-	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+	scrollbar-color: rgba(17, 153, 142, 0.28) transparent;
 }
 .container.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(213, 51, 105, 0.28);
+	background: rgba(17, 153, 142, 0.28);
 }
 .container.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #d53369;
+	background: #11998e;
 }
 
 /* ─────────────────────────────────────────
-   Table wrapper — section card
+   Page header
 ───────────────────────────────────────── */
-.table-wrapper {
-	border-radius: 14px;
-	overflow: hidden;
-	border: 1px solid rgba(0, 0, 0, 0.08);
-	box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
-}
-
-/* ─────────────────────────────────────────
-   Header bar — teal-emerald for Account Expenses
-───────────────────────────────────────── */
-.header-wrapper {
-	position: relative;
+.page-header {
 	display: flex;
-	flex-direction: row;
+	align-items: center;
 	justify-content: space-between;
+	gap: 20px;
+	flex-wrap: wrap;
+	padding: 4px 2px 6px;
 }
 
-.table-wrapper:nth-child(1) .header-wrapper {
+.header-left {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.header-icon {
+	font-size: 46px;
+	color: #fff;
+	line-height: 1;
+	filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.22));
+}
+
+.page-title {
+	font-size: clamp(28px, 3.4vw, 40px);
+	font-weight: 700;
+	color: #fff;
+	line-height: 1.04;
+	letter-spacing: -0.5px;
+	text-shadow: 0 2px 14px rgba(0, 0, 0, 0.18);
+}
+
+.page-subtitle {
+	font-size: 15px;
+	color: rgba(255, 255, 255, 0.78);
+	margin-top: 3px;
+}
+
+.new-debt-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 10px 20px 10px 16px;
+	background: #fff;
+	color: #11998e !important;
+	border: none;
+	border-radius: 9999px;
+	font-size: 15px;
+	font-weight: 600;
+	cursor: pointer;
+	white-space: nowrap;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+	transition:
+		transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+		box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.new-debt-btn:hover {
+	transform: translateY(-2px) scale(1.02);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
+}
+.new-debt-btn:active {
+	transform: scale(0.97);
+}
+.new-debt-btn .material-symbols-outlined {
+	font-size: 21px;
+}
+
+/* ─────────────────────────────────────────
+   Summary card
+───────────────────────────────────────── */
+.summary-card {
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.8);
+	border-radius: 30px;
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+	padding: 20px 22px;
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	position: relative;
+	height: 210px;
+}
+
+.summary-left {
+	min-width: 421px;
+	margin-right: 20px;
+	height: 176px;
+	display: flex;
+	flex-direction: column;
+}
+
+.summary-label {
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: #64748b;
+}
+
+.summary-amount-row {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-top: 8px;
+	height: 34px;
+}
+
+.summary-amount {
+	font-size: 25px;
+	font-weight: 700;
+	letter-spacing: -1px;
+	line-height: 1;
+	height: 30px;
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.summary-currency {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #94a3b8;
+}
+
+.summary-bar-track {
+	height: 8px;
+	background: rgba(0, 0, 0, 0.07);
+	border-radius: 999px;
+	width: 100%;
+}
+
+.summary-bar-fill {
+	height: 100%;
+	border-radius: 999px;
+	background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+	transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.summary-bar-meta {
+	display: flex;
+	margin-top: 8px;
+	justify-content: space-between;
+	gap: 16px;
+	font-size: 13px;
+	font-weight: 500;
+	color: #64748b;
+}
+
+/* ── Stat grid ── */
+.summary-right {
+	flex-shrink: 0;
+}
+
+.stat-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+}
+
+.stat-cell {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 12px 14px;
+	background: #f8fafc;
+	border-radius: 12px;
+	min-width: 0;
+	text-align: center;
+}
+
+.stat-cell.is-overdue {
+	background: rgba(229, 57, 53, 0.1);
+}
+.stat-cell.is-overdue .stat-num {
+	color: #e53935;
+}
+
+.stat-num {
+	font-size: 26px;
+	font-weight: 700;
+	color: #1a1a1a;
+	line-height: 1;
+}
+
+.stat-lbl {
+	font-size: 11px;
+	font-weight: normal;
+	color: #64748b;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	margin-top: 4px;
+}
+
+/* ── Save indicator ── */
+.summary-save {
+	position: absolute;
+	top: 14px;
+	right: 20px;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 12px;
+	color: #64748b;
+}
+
+/* ─────────────────────────────────────────
+   Debts section
+───────────────────────────────────────── */
+.debts-section {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.debts-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 10px 2px 0;
+}
+
+.debts-title {
+	font-size: 20px;
+	font-weight: 700;
+	color: #fff;
+	text-shadow: 0 1px 8px rgba(0, 0, 0, 0.16);
+}
+
+.debts-count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+	height: 24px;
+	padding: 2px 11px;
+	background: rgba(255, 255, 255, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	color: #fff;
+	border-radius: 9999px;
+	font-size: 13px;
+	font-weight: 700;
+}
+
+/* ─────────────────────────────────────────
+   Debts grid
+───────────────────────────────────────── */
+.debts-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+	gap: 18px;
+	align-items: start;
+}
+
+/* ─────────────────────────────────────────
+   Debt card
+───────────────────────────────────────── */
+.debt-card {
+	position: relative;
+	background: #fff;
+	border-radius: 18px;
+	padding: 28px 24px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	box-shadow:
+		0 2px 12px rgba(0, 0, 0, 0.08),
+		0 1px 3px rgba(0, 0, 0, 0.05);
+	overflow: hidden;
+	height: 275px;
+	transition:
+		transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+		box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1);
+	animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.debt-card.is-expanded {
+	height: auto;
+	overflow: visible;
+}
+
+.debt-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 6px;
+	background: var(--cat-grad, linear-gradient(90deg, #11998e, #38ef7d));
+}
+
+.debt-card:hover {
+	transform: translateY(-3px);
+	box-shadow:
+		0 8px 28px rgba(0, 0, 0, 0.14),
+		0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.debt-card.is-paid {
+	background: linear-gradient(180deg, #f6fffb 0%, #fff 60%);
+}
+
+@keyframes cardIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ── Paid ribbon ── */
+.paid-ribbon {
+	position: absolute;
+	top: 19px;
+	right: -44px;
+	width: 152px;
+	z-index: 3;
+	transform: rotate(45deg);
+	text-align: center;
+	background: linear-gradient(90deg, #11998e, #38ef7d);
+	color: #fff;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	padding: 5px 0;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Card head ── */
+.card-head {
+	display: flex;
+	align-items: center;
+	gap: 13px;
+}
+
+.cat-icon {
+	flex-shrink: 0;
+	width: 46px;
+	height: 46px;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+}
+
+/* White overlay creates the soft tinted icon tile from the design */
+.cat-icon::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: rgba(255, 255, 255, 0.82);
+}
+
+.cat-icon .material-symbols-outlined {
+	position: relative;
+	z-index: 1;
+	font-size: 26px;
+	background: var(--cat-grad, linear-gradient(90deg, #11998e, #38ef7d));
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.card-name-group {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.card-name {
+	font-size: 17px;
+	font-weight: 700;
+	color: #1a1a1a;
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.card-cat {
+	font-size: 12px;
+	color: #94a3b8;
+	margin-top: 2px;
+}
+
+/* ── Due chip ── */
+.due-chip {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px 10px;
+	border-radius: 9999px;
+	font-size: 12px;
+	font-weight: 600;
+	background: #f8fafc;
+	color: #334155;
+	border: none;
+	cursor: pointer;
+	white-space: nowrap;
+	transition:
+		box-shadow 150ms,
+		filter 150ms;
+}
+.due-chip:hover {
+	box-shadow: 0 0 0 2px rgba(17, 153, 142, 0.1);
+	filter: brightness(0.98);
+}
+
+.due-chip.is-soon {
+	background: rgba(218, 174, 81, 0.16);
+	color: #a9791b;
+}
+
+.due-chip.is-over {
+	background: rgba(229, 57, 53, 0.12);
+	color: #e53935;
+}
+
+/* ── Balance ── */
+.card-balance-row {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.card-balance {
+	font-size: 26px;
+	font-weight: 700;
+	letter-spacing: -0.5px;
+	line-height: 1;
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.card-balance.is-paid {
+	background: none;
+	-webkit-text-fill-color: #e5533c;
+}
+
+.card-remaining {
+	font-size: 13px;
+	color: #64748b;
+}
+.card-remaining b {
+	color: #334155;
+}
+
+.card-paid-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	color: #e5533c;
+}
+
+/* ── Progress ── */
+.card-progress-track {
+	border: 1px solid red;
+	width: 100%;
+	height: 8px;
+	background: rgba(0, 0, 0, 0.1);
+	border-radius: 999px;
+}
+
+.card-progress-fill {
+	height: 100%;
+	border-radius: 999px;
+	background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+	transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card-progress-fill.is-paid {
+	background: linear-gradient(90deg, #11998e, #38ef7d);
+}
+
+.card-progress-meta {
+	display: flex;
+	justify-content: space-between;
+	font-size: 12px;
+	font-weight: 500;
+	color: #64748b;
+}
+
+/* ── Payment chips ── */
+.payment-chips {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+.payment-chips.is-disabled {
+	opacity: 0.4;
+	pointer-events: none;
+}
+
+.pay-chip {
+	flex: 1;
+	min-width: 84px;
+	height: 34px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 1px;
+	border: 1px solid rgba(17, 153, 142, 0.1);
+	background: rgba(17, 153, 142, 0.1);
+	color: #11998e !important;
+	font-size: 14px;
+	font-weight: 700;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pay-chip:hover:not(:disabled) {
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+	color: #fff !important;
+	border-color: transparent;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 16px rgba(17, 153, 142, 0.35);
+}
+.pay-chip:active:not(:disabled) {
+	transform: scale(0.96);
+}
+.pay-chip:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.custom-chip {
+	border: 1px solid #11998e;
+	background: rgba(255, 255, 255, 0.8);
+	color: #11998e !important;
+}
+.custom-chip:hover:not(:disabled) {
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+	color: #fff !important;
+	border-color: transparent;
+}
+
+/* ── Custom pay row ── */
+.custom-pay-row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.custom-pay-input {
+	flex: 1;
+	padding: 7px 12px;
+	border: 1px solid #11998e;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 700;
+	background: rgba(255, 255, 255, 0.8);
+	color: #11998e;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+}
+.custom-pay-input::placeholder {
+	color: #11998e;
+	opacity: 0.45;
+}
+
+.custom-pay-cancel {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	border: none;
+	background: rgba(0, 0, 0, 0.06);
+	color: #64748b !important;
+	font-size: 14px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 150ms;
+}
+.custom-pay-cancel:hover {
+	background: rgba(0, 0, 0, 0.12);
+}
+
+/* ── Card footer ── */
+.card-footer {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding-top: 2px;
+}
+
+.footer-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 7px 12px;
+	border-radius: 8px;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	background: transparent;
+	color: #64748b !important;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.footer-btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	background: rgba(17, 153, 142, 0.1);
+	color: #11998e !important;
+	border-color: transparent;
+}
+.footer-btn.is-armed {
+	background: #11998e;
+	color: #fff !important;
+	border-color: transparent;
+	transform: translateY(-1px);
+}
+
+.footer-icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border-radius: 8px;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	background: transparent;
+	color: #64748b !important;
+	cursor: pointer;
+	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.footer-icon-btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	background: rgba(17, 153, 142, 0.1);
+	color: #11998e !important;
+	border-color: transparent;
+}
+
+/* Delete button — red hover */
+.footer-icon-btn.danger-btn:hover {
+	background: rgba(229, 57, 53, 0.1);
+	color: #e53935 !important;
+	box-shadow: 0 4px 14px rgba(229, 57, 53, 0.28);
+	border-color: transparent;
+}
+.footer-icon-btn.is-armed {
+	background: #e53935;
+	color: #fff !important;
+	border-color: transparent;
+}
+
+.footer-history-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 6px 7px 10px;
+	margin-left: auto;
+	border-radius: 8px;
+	border: none;
+	background: transparent;
+	color: #334155 !important;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: color 150ms;
+}
+.footer-history-btn:hover {
+	color: #11998e !important;
+}
+
+.history-count-chip {
+	font-size: 11px;
+	font-weight: 700;
+	color: #64748b;
+	background: #f8fafc;
+	padding: 1px 8px;
+	border-radius: 9999px;
+}
+
+/* ── History panel ── */
+.history-panel {
+	border-top: 1px dashed rgba(0, 0, 0, 0.1);
+	padding-top: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	animation: histIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes histIn {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+.history-empty {
+	font-size: 13px;
+	color: #94a3b8;
+	text-align: center;
+	padding: 14px 0 6px;
+}
+
+.history-row {
+	display: grid;
+	grid-template-columns: auto 1fr auto auto;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 6px;
+	border-radius: 8px;
+	font-size: 13px;
+}
+.history-row:hover {
+	background: #f8fafc;
+}
+
+.history-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	flex-shrink: 0;
 	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }
 
-.header-main {
-	padding-top: 20px;
-	padding-left: 15px;
-	display: flex;
-	flex-direction: row;
-	gap: 5px;
+.history-ts {
+	color: #64748b;
 }
-
-.header-main h4 {
-	color: rgba(255, 255, 255, 0.96);
-	font-weight: 600;
-	letter-spacing: 0.3px;
-}
-
-/* ─────────────────────────────────────────
-   Save indicator
-───────────────────────────────────────── */
-.save-indicator {
-	padding-bottom: 5px;
-	padding-left: 5px;
-	display: flex;
-	align-items: center;
-	color: rgba(255, 255, 255, 0.85);
-}
-
-.save-indicator-icon {
-	font-size: 18px;
-}
-
-.save-indicator-text {
-	font-size: 19px;
-	margin-left: 5px;
-}
-
-/* ─────────────────────────────────────────
-   ACCOUNT EXPENSES
-───────────────────────────────────────── */
-.debt-card {
-	border-top: 1px solid rgba(0, 0, 0, 0.07);
-	background-color: #ffffff;
-	padding: 10px 5px;
-	display: grid;
-	overflow: hidden;
-	height: fit-content;
-	grid-template-columns: repeat(4, 1fr);
-}
-
-/* Cell card hover */
-.debt-card-item {
-	height: fit-content;
-	padding: 15px 5px 12px 5px;
-	display: flex;
-	flex-direction: column;
-	gap: 5px;
-	border-radius: 10px;
-	transition: background 0.18s;
-}
-
-.debt-card-item:hover {
-	transform: translateY(-2px) !important;
-	background: rgba(17, 153, 142, 0.05);
-}
-
-/* Cell title */
-.debt-card-item-header {
-	text-align: center;
-	padding-top: 5px;
+.history-amount {
 	font-weight: 700;
-	font-size: 15px;
-	color: rgba(30, 15, 35, 0.7);
-	letter-spacing: 0.3px;
-	text-transform: uppercase;
+	color: #11998e;
 }
-
-/* Currency / yen icon addon */
-::ng-deep .debt-card .p-inputgroup-addon:first-child {
-	background: rgba(17, 153, 142, 0.08) !important;
-	border-color: rgba(0, 0, 0, 0.1) !important;
-	color: #11998e !important;
-	font-weight: 700 !important;
-}
-
-/* Debt number input */
-::ng-deep .debt-card .p-inputnumber-input {
-	font-weight: 600 !important;
-	font-size: 15px !important;
-	border-color: rgba(0, 0, 0, 0.1) !important;
-	background: #ffffff !important;
-	transition:
-		border-color 0.18s,
-		box-shadow 0.18s !important;
-}
-
-::ng-deep .debt-card .p-inputnumber-input:focus {
-	border-color: #11998e !important;
-	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.12) !important;
-	outline: none !important;
-}
-
-/* Minus (-) decrement button */
-::ng-deep .debt-card .p-inputgroup .p-button {
-	background: rgba(0, 0, 0, 0.03) !important;
-	border: none !important;
-	border-left: 1px solid rgba(0, 0, 0, 0.1) !important;
-	color: rgba(30, 15, 35, 0.55) !important;
-	box-shadow: none !important;
-	transition:
-		background 0.15s,
-		color 0.15s !important;
-}
-
-::ng-deep .debt-card .p-inputgroup .p-button:hover {
-	background: rgba(17, 153, 142, 0.12) !important;
-	color: #11998e !important;
-}
-
-/* Date picker input */
-::ng-deep .debt-card .p-datepicker-input {
-	font-size: 15px !important;
-	border-color: rgba(0, 0, 0, 0.1) !important;
-	background: #ffffff !important;
-	transition:
-		border-color 0.18s,
-		box-shadow 0.18s !important;
-}
-
-::ng-deep .debt-card .p-datepicker-input:focus {
-	border-color: #11998e !important;
-	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.12) !important;
-	outline: none !important;
-}
-
-/* Paid/unpaid checkbox row */
-.debt-card-checkbox {
-	padding-top: 5px;
-	display: flex;
-	gap: 10px;
+.history-balance {
+	display: inline-flex;
 	align-items: center;
+	gap: 2px;
+	color: #334155;
+	font-weight: 600;
+}
+.history-arrow {
+	font-size: 16px;
+	color: #94a3b8;
 }
 
 /* ─────────────────────────────────────────
-   Responsive — ≤ 1500 px (single column)
+   Responsive — ≤ 940px
 ───────────────────────────────────────── */
-@media (max-width: 1500px) {
+@media (max-width: 940px) {
 	.container {
-		grid-template-columns: repeat(1, 1fr) !important;
+		padding: 8px 10px 16px;
 	}
 
-	.debt-card-item {
-		padding: 5px 5px 5px 5px !important;
+	.page-header {
+		flex-wrap: wrap;
 	}
-}
-
-/* ─────────────────────────────────────────
-   Responsive — ≤ 1100 px
-───────────────────────────────────────── */
-@media (max-width: 1100px) {
-	.debt-card {
-		grid-template-columns: repeat(2, 1fr) !important;
+	.page-title {
+		font-size: 26px;
 	}
-}
 
-/* ─────────────────────────────────────────
-   Responsive — ≤ 800 px (mobile)
-───────────────────────────────────────── */
-@media (max-width: 800px) {
-	.debt-card {
-		grid-template-columns: repeat(1, 1fr) !important;
+	.debts-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.summary-card {
+		grid-template-columns: 1fr;
+		padding: 18px 16px;
+	}
+
+	.summary-right {
+		width: 100%;
+	}
+
+	.stat-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+
+	.stat-cell {
+		padding: 10px 8px;
+	}
+
+	.card-head {
+		flex-wrap: wrap;
+	}
+	.due-chip {
+		margin-left: auto;
 	}
 }

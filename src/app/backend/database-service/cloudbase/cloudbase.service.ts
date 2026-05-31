@@ -9,16 +9,13 @@ import { Utilities } from '../../../common/app.utilities';
 import { environment } from '../../../../environment/environment';
 import {
 	DATABASE_DATE_CALCULATOR,
+	DATABASE_DEBT_SONATA,
 	DATABASE_HISTORY,
 	DATABASE_MOVIES,
 	DATABASE_PATCH_NOTES,
 	DATABASE_QUOTES,
-	DATABASE_REMINDER_FIRST,
-	DATABASE_REMINDER_SECOND,
 	DATABASE_REMINDER,
-	DATABASE_SECOND_TABLE,
 	DATABASE_STATISTICS,
-	DATABASE_THIRD_TABLE,
 	DATABASE_RECIPES,
 	DATABASE_USEFUL_LINKS,
 	USEFUL_LINK_TYPE_LINK,
@@ -412,18 +409,18 @@ export class CloudbaseService extends DatabaseService {
 	public getDateCalculatorTableDetails(): Observable<any[]> {
 		// Date calculator rows are flat — emit as-is. Fallback to [] prevents
 		// downstream .length errors when the collection is empty.
-		return this.watchCollection(DATABASE_REMINDER_FIRST, (docs) => docs ?? []);
+		return this.watchCollection(DATABASE_DATE_CALCULATOR, (docs) => docs ?? []);
 	}
 
 	/**
-	 * Returns the second reminder table details from CloudBase as a real-time observable.
+	 * Returns the Account Expenses (debt sonata) table details from CloudBase as a real-time observable.
 	 *
-	 * @returns Second reminder table details
+	 * @returns Account Expenses table details
 	 */
-	public getSecondReminderTableDetails(): Observable<any[]> {
+	public getDebtSonataTableDetails(): Observable<any[]> {
 		// Map CloudBase _id → key so Angular *ngFor can trackBy it;
 		// name and content fields pass through as-is.
-		return this.watchCollection(DATABASE_REMINDER_SECOND, (docs) =>
+		return this.watchCollection(DATABASE_DEBT_SONATA, (docs) =>
 			docs.map((doc: any) => {
 				const { _id, ...rest } = doc;
 				return { key: _id, ...rest } as {
@@ -441,13 +438,12 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the third reminder table details from CloudBase as a real-time observable.
+	 * Returns the reminder table details from CloudBase as a real-time observable.
 	 *
-	 * @returns Third reminder table details
+	 * @returns Reminder table details
 	 */
-	public getThirdReminderTableDetails(): Observable<any[]> {
-		// Same watch→map→emit pattern as second table, but third table
-		// content shape is {text, date, link} so mapping differs accordingly.
+	public getReminderTableDetails(): Observable<any[]> {
+		// Content shape is {text, date, link}.
 		return this.watchCollection(DATABASE_REMINDER, (docs) =>
 			docs.map((doc: any) => {
 				const { _id, ...rest } = doc;
@@ -999,13 +995,12 @@ export class CloudbaseService extends DatabaseService {
 		value: any
 	): Promise<void> {
 		try {
-			const collectionName = this.convertTableNameToCollectionName(tableName);
 			// Branch on valueKey: "content" replaces entire content object (bulk edit);
 			// any other key updates a single nested field inside content (e.g. toggling paid).
 			const valueToUpdate =
 				valueKey === 'content' ? { content: { ...value } } : { content: { [valueKey]: value } };
 			const result = await this.database
-				.collection(collectionName)
+				.collection(tableName)
 				.where(this.buildWhereClause(entryKey))
 				.update(valueToUpdate);
 			if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
@@ -1025,7 +1020,6 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateDateCalculatorTable(tableName: string, updatedTable: any): Promise<void> {
 		try {
-			const collectionName = this.convertTableNameToCollectionName(tableName);
 			// CloudBase has no batch document update API — rows are updated individually.
 			// _id and _openid are stripped since they are CloudBase metadata.
 			// Promise.all runs all updates in parallel to avoid sequential round-trip latency.
@@ -1033,7 +1027,7 @@ export class CloudbaseService extends DatabaseService {
 				updatedTable.map(async (data: any) => {
 					const { _id, _openid, ...rest } = data;
 					const result = await this.database
-						.collection(collectionName)
+						.collection(tableName)
 						.where(this.buildWhereClause(_id))
 						.update(rest);
 					if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
@@ -1055,13 +1049,12 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
 		try {
-			const collectionName = this.convertTableNameToCollectionName(tableName);
 			const result = await this.database
-				.collection(collectionName)
+				.collection(tableName)
 				.where(this.buildWhereClause(key))
 				.remove();
 			if (result.code) throw new Error(result.message);
-			LOG.info(this.className, `Record has been removed from ${collectionName}`);
+			LOG.info(this.className, `Record has been removed from ${tableName}`);
 		} catch (error) {
 			LOG.error(this.className, 'Error while removing a record from reminder table');
 			throw error;
@@ -1113,9 +1106,8 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
 		try {
-			const collectionName = this.convertTableNameToCollectionName(tableName);
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
-			const result = await this.database.collection(collectionName).add({
+			const result = await this.database.collection(tableName).add({
 				...userId,
 				content: { ...newRecord }
 			});
@@ -1123,7 +1115,7 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, 'Reminder table has been updated');
 			// Fire-and-forget: record third-table additions in stats so the
 			// home-page Recent Activity widget can surface them immediately.
-			if (tableName === DATABASE_THIRD_TABLE) {
+			if (tableName === DATABASE_REMINDER) {
 				this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 					type: HISTORY_STATUS_ADDED,
 					table: REMINDER_TABLE_MESSAGES,
@@ -1298,25 +1290,6 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async appendToPatchActivityLog(activity: any): Promise<void> {
 		return this.appendToActivityLog(STATS_FIELD_RECENT_PATCH, activity);
-	}
-
-	/**
-	 * Convert a table name to its corresponding CloudBase collection name.
-	 *
-	 * @param tableName - The table name to convert.
-	 * @returns The corresponding collection name.
-	 */
-	private convertTableNameToCollectionName(tableName: string): string {
-		switch (tableName) {
-			case DATABASE_DATE_CALCULATOR:
-				return DATABASE_REMINDER_FIRST;
-			case DATABASE_SECOND_TABLE:
-				return DATABASE_REMINDER_SECOND;
-			case DATABASE_THIRD_TABLE:
-				return DATABASE_REMINDER;
-			default:
-				return '';
-		}
 	}
 
 	/**

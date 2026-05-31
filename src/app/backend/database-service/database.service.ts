@@ -176,20 +176,20 @@ export abstract class DatabaseService {
 	public abstract getDateCalculatorTableDetails(): Observable<any[]>;
 
 	/**
-	 * Returns the second reminder table details from the database as a reactive observable.
+	 * Returns the Account Expenses (debt sonata) table details from the database as a reactive observable.
 	 *
-	 * @returns An observable that emits the second reminder table details.
+	 * @returns An observable that emits the Account Expenses table details.
 	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
-	public abstract getSecondReminderTableDetails(): Observable<any[]>;
+	public abstract getDebtSonataTableDetails(): Observable<any[]>;
 
 	/**
-	 * Returns the third reminder table details from the database as a reactive observable.
+	 * Returns the reminder table details from the database as a reactive observable.
 	 *
-	 * @returns An observable that emits the third reminder table details.
+	 * @returns An observable that emits the reminder table details.
 	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
-	public abstract getThirdReminderTableDetails(): Observable<any[]>;
+	public abstract getReminderTableDetails(): Observable<any[]>;
 
 	/**
 	 * Updates a single value in the reminder table.

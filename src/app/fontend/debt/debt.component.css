@@ -108,7 +108,7 @@
 /* ─────────────────────────────────────────
    ACCOUNT EXPENSES
 ───────────────────────────────────────── */
-.second-table {
+.debt-card {
 	border-top: 1px solid rgba(0, 0, 0, 0.07);
 	background-color: #ffffff;
 	padding: 10px 5px;
@@ -119,7 +119,7 @@
 }
 
 /* Cell card hover */
-.second-table-cell {
+.debt-card-item {
 	height: fit-content;
 	padding: 15px 5px 12px 5px;
 	display: flex;
@@ -129,13 +129,13 @@
 	transition: background 0.18s;
 }
 
-.second-table-cell:hover {
+.debt-card-item:hover {
 	transform: translateY(-2px) !important;
 	background: rgba(17, 153, 142, 0.05);
 }
 
 /* Cell title */
-.second-table-cell-header {
+.debt-card-item-header {
 	text-align: center;
 	padding-top: 5px;
 	font-weight: 700;
@@ -146,7 +146,7 @@
 }
 
 /* Currency / yen icon addon */
-::ng-deep .second-table .p-inputgroup-addon:first-child {
+::ng-deep .debt-card .p-inputgroup-addon:first-child {
 	background: rgba(17, 153, 142, 0.08) !important;
 	border-color: rgba(0, 0, 0, 0.1) !important;
 	color: #11998e !important;
@@ -154,7 +154,7 @@
 }
 
 /* Debt number input */
-::ng-deep .second-table .p-inputnumber-input {
+::ng-deep .debt-card .p-inputnumber-input {
 	font-weight: 600 !important;
 	font-size: 15px !important;
 	border-color: rgba(0, 0, 0, 0.1) !important;
@@ -164,14 +164,14 @@
 		box-shadow 0.18s !important;
 }
 
-::ng-deep .second-table .p-inputnumber-input:focus {
+::ng-deep .debt-card .p-inputnumber-input:focus {
 	border-color: #11998e !important;
 	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.12) !important;
 	outline: none !important;
 }
 
 /* Minus (-) decrement button */
-::ng-deep .second-table .p-inputgroup .p-button {
+::ng-deep .debt-card .p-inputgroup .p-button {
 	background: rgba(0, 0, 0, 0.03) !important;
 	border: none !important;
 	border-left: 1px solid rgba(0, 0, 0, 0.1) !important;
@@ -182,13 +182,13 @@
 		color 0.15s !important;
 }
 
-::ng-deep .second-table .p-inputgroup .p-button:hover {
+::ng-deep .debt-card .p-inputgroup .p-button:hover {
 	background: rgba(17, 153, 142, 0.12) !important;
 	color: #11998e !important;
 }
 
 /* Date picker input */
-::ng-deep .second-table .p-datepicker-input {
+::ng-deep .debt-card .p-datepicker-input {
 	font-size: 15px !important;
 	border-color: rgba(0, 0, 0, 0.1) !important;
 	background: #ffffff !important;
@@ -197,14 +197,14 @@
 		box-shadow 0.18s !important;
 }
 
-::ng-deep .second-table .p-datepicker-input:focus {
+::ng-deep .debt-card .p-datepicker-input:focus {
 	border-color: #11998e !important;
 	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.12) !important;
 	outline: none !important;
 }
 
 /* Paid/unpaid checkbox row */
-.second-table-checkbox {
+.debt-card-checkbox {
 	padding-top: 5px;
 	display: flex;
 	gap: 10px;
@@ -219,7 +219,7 @@
 		grid-template-columns: repeat(1, 1fr) !important;
 	}
 
-	.second-table-cell {
+	.debt-card-item {
 		padding: 5px 5px 5px 5px !important;
 	}
 }
@@ -228,7 +228,7 @@
    Responsive — ≤ 1100 px
 ───────────────────────────────────────── */
 @media (max-width: 1100px) {
-	.second-table {
+	.debt-card {
 		grid-template-columns: repeat(2, 1fr) !important;
 	}
 }
@@ -237,7 +237,7 @@
    Responsive — ≤ 800 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 800px) {
-	.second-table {
+	.debt-card {
 		grid-template-columns: repeat(1, 1fr) !important;
 	}
 }

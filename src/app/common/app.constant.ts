@@ -18,19 +18,11 @@ export const DATABASE_MOVIES = 'movies';
 export const DATABASE_RECIPES = 'recipes';
 export const DATABASE_PATCH_NOTES = 'patch_notes';
 export const DATABASE_QUOTES = 'quotes';
-export const DATABASE_REMINDER = 'reminder'; // Firebase root path and CloudBase collection for all reminder data
-export const DATABASE_REMINDER_FIRST = 'reminder_table_first';
-export const DATABASE_REMINDER_SECOND = 'reminder_table_second';
+export const DATABASE_DATE_CALCULATOR = 'date_calculator';
+export const DATABASE_DEBT_SONATA = 'debt_sonta';
+export const DATABASE_REMINDER = 'reminder';
 export const DATABASE_STATISTICS = 'statistics';
 export const DATABASE_USEFUL_LINKS = 'useful_links'; // stores both links (type:'link') and categories (type:'category')
-
-////////////////////// Below are Firebase-only table routing keys //////////////////
-// Used as sub-path segments under DATABASE_REMINDER in Firebase Realtime DB.
-// e.g. reminder/date_calculator, reminder/second_table, reminder/third_table
-// CloudBase uses DATABASE_REMINDER_FIRST, DATABASE_REMINDER_SECOND, and DATABASE_REMINDER directly.
-export const DATABASE_DATE_CALCULATOR = 'date_calculator';
-export const DATABASE_SECOND_TABLE = 'second_table';
-export const DATABASE_THIRD_TABLE = 'third_table';
 
 ////////////////////// Below are statistics document field name constants /////////////
 // Single source of truth for every key read from or written to the statistics
@@ -184,7 +176,8 @@ export const NEXUS_MSG_DELETE_LINK_CONFIRM_SUFFIX = '"?';
 /** Confirm-delete message prefix for a Nexus category; category name is appended at the call site. */
 export const NEXUS_MSG_DELETE_CATEGORY_CONFIRM_PREFIX = 'Are you sure you want to delete category "';
 /** Confirm-delete message suffix for a Nexus category. */
-export const NEXUS_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX = '"? Links in this category will become uncategorised.';
+export const NEXUS_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX =
+	'"? Links in this category will become uncategorised.';
 
 ////////////////////// Below are Nexus error log string constants ////////////////////
 export const NEXUS_MSG_LOAD_LINKS_FAILED = 'Failed to load useful links';
@@ -274,7 +267,7 @@ export const RECIPE_BAND_CHINESE = 'band-chinese';
 export const RECIPE_BAND_WESTERN = 'band-western';
 export const RECIPE_BAND_QUICK = 'band-quick';
 export const RECIPE_BAND_DESSERT = 'band-dessert';
-export const RECIPE_BAND_SPICY = 'band-spicy';   // reserved — CSS rules not yet added
+export const RECIPE_BAND_SPICY = 'band-spicy'; // reserved — CSS rules not yet added
 export const RECIPE_BAND_DEFAULT = 'band-default';
 
 ////////////////////// Below are recipe drag-drop position discriminator constants ///
@@ -301,8 +294,8 @@ export const RECIPE_MAX_NAME_CHARS = 9;
 
 ////////////////////// Below are layout responsive breakpoint constants //////////////
 export const BREAKPOINT_MOBILE = '(max-width: 800px)';
-export const BREAKPOINT_MID    = '(max-width: 1100px)';
-export const BREAKPOINT_LARGE  = '(max-width: 1500px)';
+export const BREAKPOINT_MID = '(max-width: 1100px)';
+export const BREAKPOINT_LARGE = '(max-width: 1500px)';
 // Dialog panels have a narrower breakpoint — they are floating overlays, not full pages.
 export const BREAKPOINT_DIALOG = '(max-width: 580px)';
 
@@ -431,7 +424,13 @@ export const ENT_LABEL_FILMS = 'films';
 export const ENT_LABEL_TO_WATCH = 'to watch';
 /** Pushpin colours for corkboard category cards, cycling by card index. */
 export const ENT_CORK_PIN_COLORS: string[] = [
-	'#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'
+	'#ef4444',
+	'#3b82f6',
+	'#22c55e',
+	'#f59e0b',
+	'#8b5cf6',
+	'#ec4899',
+	'#14b8a6'
 ];
 /** Rotation amounts (degrees) for corkboard category cards, cycling by card index. */
 export const ENT_CORK_ROTATIONS: number[] = [-2.4, 1.9, -1.3, 2.6, -0.7, 1.5, -2.1];

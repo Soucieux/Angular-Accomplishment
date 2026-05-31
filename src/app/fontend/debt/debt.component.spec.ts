@@ -7,12 +7,12 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
 import {
-    DATABASE_SECOND_TABLE
+    DATABASE_DEBT_SONATA
 } from '../../common/app.constant';
 import { DebtComponent } from './debt.component';
 
-/** Minimal second-table row factory. */
-function makeSecondRow(key = 'k1', debt = 100, paid = false) {
+/** Minimal Account Expenses row factory. */
+function makeDebtSonataRow(key = 'k1', debt = 100, paid = false) {
     return {
         key,
         _openid: 'uid1',
@@ -29,14 +29,14 @@ describe('DebtComponent', () => {
 
     beforeEach(async () => {
         mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
-            'getSecondReminderTableDetails',
+            'getDebtSonataTableDetails',
             'updateReminderTable',
             'removeRecordFromReminderTable',
             'addNewRecordForReminderTable',
             'appendToActivityLog',
             'updateStatisticsFields'
         ]);
-        mockDb.getSecondReminderTableDetails.and.returnValue(of([]));
+        mockDb.getDebtSonataTableDetails.and.returnValue(of([]));
         mockDb.updateReminderTable.and.returnValue(Promise.resolve());
         mockDb.removeRecordFromReminderTable.and.returnValue(Promise.resolve());
         mockDb.addNewRecordForReminderTable.and.returnValue(Promise.resolve());
@@ -135,20 +135,20 @@ describe('DebtComponent', () => {
 
     describe('updateDebt', () => {
         beforeEach(() => {
-            (component as any).updatedSecondTable = [makeSecondRow('k1', 1000)];
-            (component as any).originalSecondTable = [makeSecondRow('k1', 1000)];
+            (component as any).updatedDebtSonataItems = [makeDebtSonataRow('k1', 1000)];
+            (component as any).originalDebtSonataItems = [makeDebtSonataRow('k1', 1000)];
         });
 
         it('decrements debt by the constant and calls updateTableSingleValue', async () => {
             spyOn<any>(component, 'updateTableSingleValue').and.returnValue(Promise.resolve());
-            await (component as any).updateDebt(DATABASE_SECOND_TABLE, 'k1', 1000);
+            await (component as any).updateDebt(DATABASE_DEBT_SONATA, 'k1', 1000);
             // 1000 - 998.05 = 1.95
-            expect((component as any).updatedSecondTable[0].content.debt).toBeCloseTo(1.95, 2);
+            expect((component as any).updatedDebtSonataItems[0].content.debt).toBeCloseTo(1.95, 2);
         });
 
         it('does nothing when the entry key does not exist', async () => {
             spyOn<any>(component, 'updateTableSingleValue').and.returnValue(Promise.resolve());
-            await (component as any).updateDebt(DATABASE_SECOND_TABLE, 'nonexistent', 100);
+            await (component as any).updateDebt(DATABASE_DEBT_SONATA, 'nonexistent', 100);
             expect((component as any).updateTableSingleValue).not.toHaveBeenCalled();
         });
     });
@@ -157,14 +157,14 @@ describe('DebtComponent', () => {
 
     describe('setDefaultDebt', () => {
         beforeEach(() => {
-            (component as any).updatedSecondTable = [makeSecondRow('k1', 500, false)];
-            (component as any).originalSecondTable = [makeSecondRow('k1', 500, false)];
+            (component as any).updatedDebtSonataItems = [makeDebtSonataRow('k1', 500, false)];
+            (component as any).originalDebtSonataItems = [makeDebtSonataRow('k1', 500, false)];
         });
 
         it('calls updateReminderTable when marking as paid', async () => {
             await (component as any).setDefaultDebt('k1', true);
             expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-                DATABASE_SECOND_TABLE,
+                DATABASE_DEBT_SONATA,
                 'k1',
                 'content',
                 jasmine.objectContaining({ paid: false })
@@ -172,11 +172,11 @@ describe('DebtComponent', () => {
         });
 
         it('resets debt to original when unmarking paid', async () => {
-            (component as any).updatedSecondTable[0].content.debt = 100;
-            (component as any).updatedSecondTable[0].content.original = 500;
+            (component as any).updatedDebtSonataItems[0].content.debt = 100;
+            (component as any).updatedDebtSonataItems[0].content.original = 500;
             spyOn<any>(component, 'updateTableSingleValue').and.returnValue(Promise.resolve());
             await (component as any).setDefaultDebt('k1', false);
-            expect((component as any).updatedSecondTable[0].content.debt).toBe(500);
+            expect((component as any).updatedDebtSonataItems[0].content.debt).toBe(500);
         });
 
         it('does nothing when the entry key does not exist', async () => {
@@ -190,26 +190,26 @@ describe('DebtComponent', () => {
 
     describe('updateTableSingleValue', () => {
         beforeEach(() => {
-            (component as any).updatedSecondTable = [makeSecondRow('k1', 200)];
-            (component as any).originalSecondTable = [makeSecondRow('k1', 100)];
+            (component as any).updatedDebtSonataItems = [makeDebtSonataRow('k1', 200)];
+            (component as any).originalDebtSonataItems = [makeDebtSonataRow('k1', 100)];
         });
 
         it('calls databaseService.updateReminderTable when value changed', async () => {
-            await (component as any).updateTableSingleValue(DATABASE_SECOND_TABLE, 'k1', 'debt');
+            await (component as any).updateTableSingleValue(DATABASE_DEBT_SONATA, 'k1', 'debt');
             expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-                DATABASE_SECOND_TABLE, 'k1', 'debt', 200
+                DATABASE_DEBT_SONATA, 'k1', 'debt', 200
             );
         });
 
         it('does not call the database when updated and original values are the same', async () => {
-            (component as any).updatedSecondTable[0].content.debt = 100;
-            await (component as any).updateTableSingleValue(DATABASE_SECOND_TABLE, 'k1', 'debt');
+            (component as any).updatedDebtSonataItems[0].content.debt = 100;
+            await (component as any).updateTableSingleValue(DATABASE_DEBT_SONATA, 'k1', 'debt');
             expect(mockDb.updateReminderTable).not.toHaveBeenCalled();
         });
 
         it('calls handleError when the database throws', async () => {
             mockDb.updateReminderTable.and.returnValue(Promise.reject(new Error('fail')));
-            await (component as any).updateTableSingleValue(DATABASE_SECOND_TABLE, 'k1', 'debt');
+            await (component as any).updateTableSingleValue(DATABASE_DEBT_SONATA, 'k1', 'debt');
             expect(mockDialogService.handleError).toHaveBeenCalled();
         });
     });
@@ -218,19 +218,19 @@ describe('DebtComponent', () => {
 
     describe('updateTableWithNewDate', () => {
         beforeEach(() => {
-            (component as any).updatedSecondTable = [makeSecondRow('k1', 100)];
-            (component as any).originalSecondTable = [makeSecondRow('k1', 100)];
-            (component as any).updatedSecondTable[0].content.date = '2025-01-01';
-            (component as any).originalSecondTable[0].content.date = '2025-01-01';
+            (component as any).updatedDebtSonataItems = [makeDebtSonataRow('k1', 100)];
+            (component as any).originalDebtSonataItems = [makeDebtSonataRow('k1', 100)];
+            (component as any).updatedDebtSonataItems[0].content.date = '2025-01-01';
+            (component as any).originalDebtSonataItems[0].content.date = '2025-01-01';
         });
 
         it('formats the date and calls updateTableSingleValue', async () => {
             spyOn<any>(component, 'updateTableSingleValue').and.returnValue(Promise.resolve());
             spyOn<any>(component, 'resyncUpcomingFromLocalData').and.stub();
             const date = new Date('2025-06-15');
-            await (component as any).updateTableWithNewDate(DATABASE_SECOND_TABLE, 'k1', date);
+            await (component as any).updateTableWithNewDate(DATABASE_DEBT_SONATA, 'k1', date);
             expect((component as any).updateTableSingleValue).toHaveBeenCalledWith(
-                DATABASE_SECOND_TABLE, 'k1', 'date'
+                DATABASE_DEBT_SONATA, 'k1', 'date'
             );
         });
     });

@@ -26,7 +26,7 @@ import {
 	ACCOUNT_DEBT_DECREMENT,
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
-	DATABASE_SECOND_TABLE,
+	DATABASE_DEBT_SONATA,
 	ERROR_PERMISSION_DENIED,
 	REMINDER_ITEM_EXPENSE,
 	REMINDER_TABLE_ACCOUNT_EXPENSES,
@@ -62,19 +62,19 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-	protected readonly DATABASE_SECOND_TABLE = DATABASE_SECOND_TABLE;
+	protected readonly DATABASE_DEBT_SONATA = DATABASE_DEBT_SONATA;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
-	// any: Second-table rows are schema-less CloudBase documents with no fixed TypeScript type
-	protected updatedSecondTable!: any[];
-	// any: Second-table rows are schema-less CloudBase documents with no fixed TypeScript type
-	protected originalSecondTable!: any[];
-	private secondSub?: Subscription;
-	/** Cached upcoming expenses — synced to statistics on every second-table emission.
+	// any: Account Expenses rows are schema-less CloudBase documents with no fixed TypeScript type
+	protected updatedDebtSonataItems!: any[];
+	// any: Account Expenses rows are schema-less CloudBase documents with no fixed TypeScript type
+	protected originalDebtSonataItems!: any[];
+	private debtSonataSub?: Subscription;
+	/** Cached upcoming expenses — synced to statistics on every Account Expenses data emission.
 	 *  any: Expense items are schema-less CloudBase documents with no fixed TypeScript type */
 	private upcomingExpenses: any[] = [];
 	protected saveIndicators: Record<string, boolean> = {
-		[DATABASE_SECOND_TABLE]: false
+		[DATABASE_DEBT_SONATA]: false
 	};
 	// any: setTimeout return type varies by environment (browser vs Node); ReturnType<typeof setTimeout> unifies both
 	private saveIndicatorTimeouts: Record<string, any> = {};
@@ -101,7 +101,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Initialises the component: checks hover capability and subscribes to the
-	 * second reminder table observable. The subscription populates the data array
+	 * Account Expenses observable. The subscription populates the data arrays
 	 * and syncs upcoming items to the statistics collection so the home-page
 	 * reminder widget stays current.
 	 */
@@ -109,17 +109,16 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = this.utilities.checkIfHoverCapable();
 
-			// Get the data of the second table
-			const getSecondObservable = this.databaseService.getSecondReminderTableDetails();
-			this.secondSub = getSecondObservable.subscribe((rows) => {
-				this.updatedSecondTable = structuredClone(rows);
-				this.originalSecondTable = structuredClone(rows);
+			// Get the Account Expenses data
+			this.debtSonataSub = this.databaseService.getDebtSonataTableDetails().subscribe((rows) => {
+				this.updatedDebtSonataItems = structuredClone(rows);
+				this.originalDebtSonataItems = structuredClone(rows);
 				this.loading = false;
 				// CloudBase subscription callbacks may emit outside Angular's zone — detectChanges ensures the template updates.
 				this.cdr.detectChanges();
 
 				// Sync unpaid expenses that have a due date into statistics (fire-and-forget).
-				// Stopped automatically when secondSub is unsubscribed in ngOnDestroy.
+				// Stopped automatically when debtSonataSub is unsubscribed in ngOnDestroy.
 				this.upcomingExpenses = rows
 					.filter((item: any) => item.content?.date && !item.content?.paid)
 					.map((item: any) => ({
@@ -133,17 +132,17 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Unsubscribes from both reminder table subscriptions and logs the
+	 * Unsubscribes from the Account Expenses subscription and logs the
 	 * component destruction event. Unsubscribing also stops the periodic
-	 * statistics syncs that are driven by those subscriptions.
+	 * statistics syncs that are driven by the subscription.
 	 */
 	ngOnDestroy() {
-		this.secondSub?.unsubscribe();
+		this.debtSonataSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	////////////////////// Below are second reminder table interaction handlers ///////////////////
+	////////////////////// Below are Account Expenses interaction handlers //////////////////////
 	/**
 	 * Prevents the default action of a keyboard event, effectively blocking the
 	 * keystroke from being entered into an input field.
@@ -155,7 +154,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Calculates and updates the debt value for a given second-table entry by
+	 * Calculates and updates the debt value for a given Account Expenses entry by
 	 * subtracting a constant base amount (998.05) from the provided current debt,
 	 * then persists the change to the database.
 	 *
@@ -171,15 +170,15 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Sets or resets a default debt record for a second-table entry. When marking
+	 * Sets or resets a default debt record for an Account Expenses entry. When marking
 	 * as paid, stores the original debt value and persists a new unpaid record.
 	 * When unmarking, restores the original debt value and persists the change.
 	 *
-	 * @param entryKey - The unique key identifying the entry in the second table.
+	 * @param entryKey - The unique key identifying the entry in the Account Expenses table.
 	 * @param isPaid - Whether the entry is being marked as paid.
 	 */
 	protected async setDefaultDebt(entryKey: string, isPaid: boolean) {
-		const item = this.findUpdatedItem(DATABASE_SECOND_TABLE, entryKey);
+		const item = this.findUpdatedItem(DATABASE_DEBT_SONATA, entryKey);
 		if (!item) return;
 		const existingRecord = item.content;
 		if (isPaid) {
@@ -190,29 +189,29 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 					paid: false
 				};
 				await this.databaseService.updateReminderTable(
-					DATABASE_SECOND_TABLE,
+					DATABASE_DEBT_SONATA,
 					entryKey,
 					REMINDER_VALUE_KEY_CONTENT,
 					newRecord
 				);
-				this.triggerSaveIndicator(DATABASE_SECOND_TABLE);
+				this.triggerSaveIndicator(DATABASE_DEBT_SONATA);
 			} catch (error) {
 				this.dialogService.handleError(this.dialogComponentContainer, error);
 			}
 		} else {
 			// Reset value
 			existingRecord.debt = existingRecord.original;
-			await this.updateTableSingleValue(DATABASE_SECOND_TABLE, entryKey, REMINDER_VALUE_KEY_DEBT);
+			await this.updateTableSingleValue(DATABASE_DEBT_SONATA, entryKey, REMINDER_VALUE_KEY_DEBT);
 		}
 	}
 
-	////////////////////// Below are shared data methods for second table ///////////////////////
+	////////////////////// Below are shared data methods for Account Expenses ///////////////////
 	/**
 	 * Calls the database directly and rolls back changes if an error occurs.
 	 *
-	 * {@link updateDebt} - Decrements debt by a constant for the second table.
-	 * {@link setDefaultDebt} - Resets the default debt for the second table.
-	 * {@link updateTableWithNewDate} - Updates the date for the second table.
+	 * {@link updateDebt} - Decrements debt by a constant for the Account Expenses table.
+	 * {@link setDefaultDebt} - Resets the default debt for the Account Expenses table.
+	 * {@link updateTableWithNewDate} - Updates the date for the Account Expenses table.
 	 */
 	protected async updateTableSingleValue(tableName: string, entryKey: string, valueKey: string) {
 		const updatedItem = this.findUpdatedItem(tableName, entryKey);
@@ -225,8 +224,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 				await this.databaseService.updateReminderTable(tableName, entryKey, valueKey, updatedValue);
 				this.triggerSaveIndicator(tableName);
 				// Fire-and-forget: surface this change in the Recent Activity widget.
-				// The human-readable identifier for the second table is the account `name` field.
-				const itemText = this.findUpdatedItem(DATABASE_SECOND_TABLE, entryKey)?.name ?? '';
+				// The human-readable identifier for the Account Expenses table is the account `name` field.
+				const itemText = this.findUpdatedItem(DATABASE_DEBT_SONATA, entryKey)?.name ?? '';
 				this.databaseService
 					.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 						type: ACTIVITY_TYPE_UPDATED,
@@ -269,35 +268,35 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Finds an item in the updated (working) copy of the second table by its entry key.
+	 * Finds an item in the updated (working) copy of the Account Expenses table by its entry key.
 	 *
 	 * @param tableName - The name of the table to search.
 	 * @param entryKey - The unique key identifying the item to find.
-	 * @returns The matching item from the updated second table, or undefined if not found.
+	 * @returns The matching item from the updated Account Expenses table, or undefined if not found.
 	 */
 	private findUpdatedItem(tableName: string, entryKey: string) {
-		if (tableName === DATABASE_SECOND_TABLE) {
-			return this.updatedSecondTable.find((item) => item.key === entryKey);
+		if (tableName === DATABASE_DEBT_SONATA) {
+			return this.updatedDebtSonataItems.find((item) => item.key === entryKey);
 		}
 	}
 
 	/**
-	 * Finds an item in the original (server-state) copy of the second table by its entry key.
+	 * Finds an item in the original (server-state) copy of the Account Expenses table by its entry key.
 	 * Used for comparing current edits against the original data.
 	 *
 	 * @param tableName - The name of the table to search.
 	 * @param entryKey - The unique key identifying the item to find.
-	 * @returns The matching item from the original second table, or undefined if not found.
+	 * @returns The matching item from the original Account Expenses table, or undefined if not found.
 	 */
 	private findOriginalItem(tableName: string, entryKey: string) {
-		if (tableName === DATABASE_SECOND_TABLE) {
-			return this.originalSecondTable.find((item) => item.key === entryKey);
+		if (tableName === DATABASE_DEBT_SONATA) {
+			return this.originalDebtSonataItems.find((item) => item.key === entryKey);
 		}
 	}
 
 	/**
 	 * Writes the latest upcoming expenses to the statistics collection.
-	 * Called after secondSub emits. Fire-and-forget.
+	 * Called after debtSonataSub emits. Fire-and-forget.
 	 */
 	private syncStatistics(): void {
 		if (this.syncStatTimer !== null) clearTimeout(this.syncStatTimer);
@@ -315,10 +314,10 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * CloudBase subscription callback.
 	 *
 	 * Used to reflect date mutations and date removals in the home-page reminder
-	 * widget immediately after the user interacts with the second table.
+	 * widget immediately after the user interacts with the Account Expenses table.
 	 */
 	private resyncUpcomingFromLocalData(): void {
-		this.upcomingExpenses = this.updatedSecondTable
+		this.upcomingExpenses = this.updatedDebtSonataItems
 			.filter((item: any) => item.content?.date && !item.content?.paid)
 			.map((item: any) => ({ type: REMINDER_ITEM_EXPENSE, name: item.name, date: item.content.date }));
 		this.syncStatistics();

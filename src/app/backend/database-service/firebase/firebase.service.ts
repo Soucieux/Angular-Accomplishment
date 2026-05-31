@@ -1,12 +1,11 @@
 import { Utilities } from '../../../common/app.utilities';
 import {
 	DATABASE_DATE_CALCULATOR,
+	DATABASE_DEBT_SONATA,
 	DATABASE_HISTORY,
 	DATABASE_PATCH_NOTES,
 	DATABASE_QUOTES,
 	DATABASE_REMINDER,
-	DATABASE_SECOND_TABLE,
-	DATABASE_THIRD_TABLE,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
@@ -577,7 +576,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key of the record to remove.
 	 */
 	public removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
-		return this.removeSingleItemFromDatabase(`${DATABASE_REMINDER}/${tableName}`, key);
+		return this.removeSingleItemFromDatabase(tableName, key);
 	}
 
 	/**
@@ -605,7 +604,7 @@ export class FirebaseService extends DatabaseService {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
 				const unsub = onValue(
-					dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_DATE_CALCULATOR}`),
+					dbRef(this.db, DATABASE_DATE_CALCULATOR),
 					(snapshot) => {
 						const data = snapshot.val();
 						// Firebase stores the collection as an object keyed by push ID;
@@ -619,15 +618,15 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the second reminder table details from Firebase as a reactive observable.
+	 * Returns the Account Expenses (debt sonata) table details from Firebase as a reactive observable.
 	 *
-	 * @returns An observable that emits the second reminder table details.
+	 * @returns An observable that emits the Account Expenses table details.
 	 */
-	public getSecondReminderTableDetails(): Observable<any[]> {
+	public getDebtSonataTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
 			// list() reads once + subscribes to changes; pipe+map transforms
 			// each snapshot into {key, ...fields} for the table component.
-			list(dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_SECOND_TABLE}`)).pipe(
+			list(dbRef(this.db, DATABASE_DEBT_SONATA)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -650,15 +649,14 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the third reminder table details from Firebase as a reactive observable.
+	 * Returns the reminder table details from Firebase as a reactive observable.
 	 *
-	 * @returns An observable that emits the third reminder table details.
+	 * @returns An observable that emits the reminder table details.
 	 */
-	public getThirdReminderTableDetails(): Observable<any[]> {
+	public getReminderTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.ei, () =>
-			// Same list()+pipe+map pipeline as second table, but third table
-			// content shape is {text, date, link} so mapping differs accordingly.
-			list(dbRef(this.db, `${DATABASE_REMINDER}/${DATABASE_THIRD_TABLE}`)).pipe(
+			// Content shape is {text, date, link}.
+			list(dbRef(this.db, DATABASE_REMINDER)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
 						return {
@@ -691,14 +689,14 @@ export class FirebaseService extends DatabaseService {
 		value: any
 	): Promise<void> {
 		try {
-			if (tableName === DATABASE_SECOND_TABLE) {
+			if (tableName === DATABASE_DEBT_SONATA) {
 				const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
-				await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}/content`), {
+				await update(dbRef(this.db, `${tableName}/${entryKey}/content`), {
 					...valueToUpdate
 				});
 				LOG.info(this.className, 'Reminder table has been updated');
-			} else if (tableName === DATABASE_THIRD_TABLE) {
-				await update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}/${entryKey}`), {
+			} else if (tableName === DATABASE_REMINDER) {
+				await update(dbRef(this.db, `${tableName}/${entryKey}`), {
 					[valueKey]: value
 				});
 				LOG.info(this.className, 'Reminder table has been updated');
@@ -716,7 +714,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param updatedTable - The updated table data.
 	 */
 	public updateDateCalculatorTable(tableName: string, updatedTable: any): Promise<void> {
-		return update(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), { ...updatedTable })
+		return update(dbRef(this.db, tableName), { ...updatedTable })
 			.then(() => {
 				LOG.info(this.className, 'Reminder table has been updated');
 			})
@@ -856,12 +854,12 @@ export class FirebaseService extends DatabaseService {
 	 * @param newRecord - The new entry to add.
 	 */
 	public addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
-		return push(dbRef(this.db, `${DATABASE_REMINDER}/${tableName}`), {
+		return push(dbRef(this.db, tableName), {
 			content: { ...newRecord }
 		})
 			.then(() => {
 				LOG.info(this.className, 'Reminder table has been updated');
-				if (tableName === DATABASE_THIRD_TABLE) {
+				if (tableName === DATABASE_REMINDER) {
 					this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 						type: HISTORY_STATUS_ADDED,
 						table: REMINDER_TABLE_MESSAGES,

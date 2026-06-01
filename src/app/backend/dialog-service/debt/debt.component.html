@@ -81,7 +81,7 @@
 	<!-- Due date -->
 	<div class="add-debt-field">
 		<span class="add-debt-label">Due date</span>
-		<input type="date" [(ngModel)]="dueDate" />
+		<p-datepicker [appendTo]="'body'" dateFormat="yy-mm-dd" [(ngModel)]="dueDateModel"></p-datepicker>
 	</div>
 
 	@if (!isEditMode) {

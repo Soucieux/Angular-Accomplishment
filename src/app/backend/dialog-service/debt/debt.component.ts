@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
+import { DatePickerModule } from 'primeng/datepicker';
+import { Utilities } from '../../../common/app.utilities';
 import {
 	DEBT_CATEGORY_CARD,
 	DEBT_CATEGORY_HOME,
@@ -38,7 +40,7 @@ import { DebtCategoryDef, NewDebtData } from '../../../fontend/debt/debt.model';
 @Component({
 	selector: 'add-debt-dialog',
 	standalone: true,
-	imports: [DialogModule, FormsModule],
+	imports: [DialogModule, FormsModule, DatePickerModule],
 	templateUrl: './debt.component.html',
 	styleUrl: './debt.component.scss'
 })
@@ -91,7 +93,7 @@ export class AddDebtDialogComponent {
 	protected name = '';
 	protected selectedCategoryKey = DEBT_CATEGORY_CARD;
 	protected amount = '';
-	protected dueDate = '';
+	protected dueDateModel: Date | null = null;
 	protected selectedCurrency = DEBT_CURRENCY_CNY;
 	protected isPermanent = false;
 	private submitCallback?: (data: NewDebtData) => void;
@@ -125,14 +127,14 @@ export class AddDebtDialogComponent {
 			// Edit mode: only populate the fields the user can change (balance, due date, currency);
 			// name, category, and permanent toggle are hidden in this mode
 			this.amount = String(prefillData.amount ?? '');
-			this.dueDate = prefillData.dueDate ?? '';
+			this.dueDateModel = prefillData.dueDate ? new Date(prefillData.dueDate + 'T00:00') : null;
 			this.selectedCurrency = prefillData.currency ?? DEBT_CURRENCY_CNY;
 		} else {
 			// Add mode: reset all fields and default due date to 30 days from now
 			this.name = '';
 			this.selectedCategoryKey = DEBT_CATEGORY_CARD;
 			this.amount = '';
-			this.dueDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+			this.dueDateModel = new Date(Date.now() + 30 * 86400000);
 			this.selectedCurrency = DEBT_CURRENCY_CNY;
 			this.isPermanent = false;
 		}
@@ -148,7 +150,7 @@ export class AddDebtDialogComponent {
 		this.submitCallback?.({
 			name: this.name.trim(),
 			amount: parseFloat(this.amount),
-			dueDate: this.dueDate,
+			dueDate: this.dueDateModel ? Utilities.formatDateForStorage(this.dueDateModel) : '',
 			isPermanent: this.isPermanent,
 			category: this.selectedCategoryKey,
 			currency: this.selectedCurrency

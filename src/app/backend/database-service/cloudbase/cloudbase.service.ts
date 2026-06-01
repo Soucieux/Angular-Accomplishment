@@ -267,6 +267,7 @@ export class CloudbaseService extends DatabaseService {
 										movieItemVO.setIsFavourite(doc.isFavourite);
 										movieItemVO.setDescription(doc.description);
 										movieItemVO.setActors(doc.actors);
+										movieItemVO.setOpenId(doc._openid ?? '');
 										return movieItemVO;
 									});
 
@@ -444,17 +445,15 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Reminder table details
 	 */
 	public getReminderTableDetails(): Observable<any[]> {
-		// Content shape is {text, date, link}.
 		return this.watchCollection(DATABASE_REMINDER, (docs) =>
 			docs.map((doc: any) => {
 				const { _id, ...rest } = doc;
 				return { key: _id, ...rest } as {
 					key: string;
-					content: {
-						text: string;
-						date: string;
-						link: string;
-					};
+					text: string;
+					date: string;
+					link: string;
+					tags: string[];
 				};
 			})
 		);
@@ -1004,11 +1003,11 @@ export class CloudbaseService extends DatabaseService {
 	 * @param value - The new value to store.
 	 */
 	public async updateDebtTable(entryKey: string, valueKey: string, value: any): Promise<void> {
-		this.updateExistingRecordToTable(DATABASE_DEBT_SONATA, entryKey, valueKey, value);
+		return this.updateExistingRecordToTable(DATABASE_DEBT_SONATA, entryKey, valueKey, value);
 	}
 
 	/**
-	 * Updates value to a given table
+	 * Updates a single field in a record.
 	 *
 	 * @param tableName - The corresponding table name.
 	 * @param entryKey - The key of the entry to update.
@@ -1022,14 +1021,10 @@ export class CloudbaseService extends DatabaseService {
 		value: any
 	): Promise<void> {
 		try {
-			// Branch on valueKey: "content" replaces entire content object (bulk edit);
-			// any other key updates a single nested field inside content (e.g. toggling paid).
-			const valueToUpdate =
-				valueKey === 'content' ? { content: { ...value } } : { content: { [valueKey]: value } };
 			const result = await this.database
 				.collection(tableName)
 				.where(this.buildWhereClause(entryKey))
-				.update(valueToUpdate);
+				.update({ [valueKey]: value });
 			if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
 			else if (result.code) throw new Error(result.message);
 			LOG.info(this.className, `Record on ${tableName} has been updated`);
@@ -1074,7 +1069,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key of the record to remove.
 	 */
 	public async removeRecordFromDebtTable(key: string): Promise<void> {
-		this.removeRecordFromTable(DATABASE_DEBT_SONATA, key);
+		return this.removeRecordFromTable(DATABASE_DEBT_SONATA, key);
 	}
 
 	/**
@@ -1159,7 +1154,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new entry to add.
 	 */
 	public async addNewRecordToDebtTable(newRecord: any): Promise<void> {
-		this.addNewRecordToTable(DATABASE_DEBT_SONATA, STATS_FIELD_RECENT_DEBT, newRecord);
+		return this.addNewRecordToTable(DATABASE_DEBT_SONATA, STATS_FIELD_RECENT_DEBT, newRecord);
 	}
 
 	/**

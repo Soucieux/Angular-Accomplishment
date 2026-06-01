@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { ResonanceComponent } from './resonance.component';
+import { RESONANCE_MAX_QUOTE_LENGTH } from '../../common/app.constant';
 
 describe('ResonanceComponent', () => {
 	let component: ResonanceComponent;
@@ -45,12 +46,12 @@ describe('ResonanceComponent', () => {
 		});
 
 		it('returns true when the quote text exceeds maxQuoteLength', () => {
-			(component as any).newQuoteText = 'x'.repeat((component as any).maxQuoteLength + 1);
+			(component as any).newQuoteText = 'x'.repeat(RESONANCE_MAX_QUOTE_LENGTH + 1);
 			expect((component as any).isOverLimit).toBeTrue();
 		});
 
 		it('returns false when the text length is exactly at the limit', () => {
-			(component as any).newQuoteText = 'x'.repeat((component as any).maxQuoteLength);
+			(component as any).newQuoteText = 'x'.repeat(RESONANCE_MAX_QUOTE_LENGTH);
 			expect((component as any).isOverLimit).toBeFalse();
 		});
 	});

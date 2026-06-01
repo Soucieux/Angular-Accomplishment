@@ -13,5 +13,5 @@ export interface DebtCategoryDef {
 	key: string;
 	icon: string;
 	label: string;
-	grad: string;
+	gradient: string;
 }

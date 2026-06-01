@@ -95,7 +95,7 @@
 	margin-top: 3px;
 }
 
-.new-debt-btn {
+.new-debt-button {
 	display: inline-flex;
 	align-items: center;
 	gap: 7px;
@@ -113,14 +113,14 @@
 		transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
 		box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.new-debt-btn:hover {
+.new-debt-button:hover {
 	transform: translateY(-2px) scale(1.02);
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
 }
-.new-debt-btn:active {
+.new-debt-button:active {
 	transform: scale(0.97);
 }
-.new-debt-btn .material-symbols-outlined {
+.new-debt-button .material-symbols-outlined {
 	font-size: 21px;
 }
 
@@ -236,18 +236,18 @@
 .stat-cell.is-overdue {
 	background: rgba(229, 57, 53, 0.1);
 }
-.stat-cell.is-overdue .stat-num {
+.stat-cell.is-overdue .stat-number {
 	color: #e53935;
 }
 
-.stat-num {
+.stat-number {
 	font-size: 26px;
 	font-weight: 700;
 	color: #1a1a1a;
 	line-height: 1;
 }
 
-.stat-lbl {
+.stat-label {
 	font-size: 11px;
 	font-weight: normal;
 	color: #64748b;
@@ -349,7 +349,7 @@
 	left: 0;
 	right: 0;
 	height: 6px;
-	background: var(--cat-grad, linear-gradient(90deg, #11998e, #38ef7d));
+	background: var(--category-gradient, linear-gradient(90deg, #11998e, #38ef7d));
 }
 
 .debt-card:hover {
@@ -399,7 +399,7 @@
 	gap: 13px;
 }
 
-.cat-icon {
+.category-icon {
 	flex-shrink: 0;
 	width: 46px;
 	height: 46px;
@@ -411,7 +411,7 @@
 }
 
 /* White overlay creates the soft tinted icon tile from the design */
-.cat-icon::before {
+.category-icon::before {
 	content: '';
 	position: absolute;
 	inset: 0;
@@ -419,11 +419,11 @@
 	background: rgba(255, 255, 255, 0.82);
 }
 
-.cat-icon .material-symbols-outlined {
+.category-icon .material-symbols-outlined {
 	position: relative;
 	z-index: 1;
 	font-size: 26px;
-	background: var(--cat-grad, linear-gradient(90deg, #11998e, #38ef7d));
+	background: var(--category-gradient, linear-gradient(90deg, #11998e, #38ef7d));
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -447,7 +447,7 @@
 	text-overflow: ellipsis;
 }
 
-.card-cat {
+.card-category {
 	font-size: 12px;
 	color: #94a3b8;
 	margin-top: 2px;
@@ -667,7 +667,7 @@
 	padding-top: 2px;
 }
 
-.footer-btn {
+.footer-button {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
@@ -681,35 +681,35 @@
 	cursor: pointer;
 	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.footer-btn .material-symbols-outlined {
+.footer-button .material-symbols-outlined {
 	transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.footer-btn:hover {
+.footer-button:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	background: rgba(17, 153, 142, 0.1);
 	color: #11998e !important;
 	border-color: transparent;
 }
-.footer-btn:hover .material-symbols-outlined {
+.footer-button:hover .material-symbols-outlined {
 	transform: rotate(-180deg);
 }
 /* Edit button — teal hover, no icon spin */
-.footer-btn.edit-btn:hover .material-symbols-outlined {
+.footer-button.edit-button:hover .material-symbols-outlined {
 	transform: none !important;
 }
-.footer-btn.is-prompted {
+.footer-button.is-prompted {
 	background: #11998e;
 	color: #fff !important;
 	border-color: transparent;
 	transform: translateY(-1px);
 	animation: dcPromptRose 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
-.footer-btn.is-prompted .material-symbols-outlined {
+.footer-button.is-prompted .material-symbols-outlined {
 	animation: dcPromptIcon 0.6s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
 }
 
-.footer-icon-btn {
+.footer-icon-button {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -724,7 +724,7 @@
 }
 
 /* Lock button — graphite hover, no icon spin */
-.footer-icon-btn.lock-btn:hover {
+.footer-icon-button.lock-button:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	background: rgba(74, 79, 99, 0.1);
@@ -733,33 +733,33 @@
 }
 
 /* Lock button — locked (permanent) state */
-.footer-icon-btn.lock-btn.is-locked {
+.footer-icon-button.lock-button.is-locked {
 	background: rgba(74, 79, 99, 0.12);
 	color: #444a60 !important;
 	border-color: rgba(74, 79, 99, 0.26);
 }
-.footer-icon-btn.lock-btn.is-locked .material-symbols-outlined {
+.footer-icon-button.lock-button.is-locked .material-symbols-outlined {
 	font-variation-settings: 'FILL' 1;
 }
 
 /* Delete button — red hover with icon shake */
-.footer-icon-btn.danger-btn:hover {
+.footer-icon-button.danger-button:hover {
 	background: rgba(229, 57, 53, 0.1);
 	color: #e53935 !important;
 	transform: translateY(-2px);
 	box-shadow: 0 4px 14px rgba(229, 57, 53, 0.28);
 	border-color: transparent;
 }
-.footer-icon-btn.danger-btn:hover .material-symbols-outlined {
+.footer-icon-button.danger-button:hover .material-symbols-outlined {
 	animation: dcShake 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.footer-icon-btn.is-prompted {
+.footer-icon-button.is-prompted {
 	background: #e53935;
 	color: #fff !important;
 	border-color: transparent;
 	animation: dcPromptRed 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
-.footer-icon-btn.danger-btn.is-prompted {
+.footer-icon-button.danger-button.is-prompted {
 	width: auto;
 	padding: 0 9px;
 	gap: 4px;
@@ -769,18 +769,18 @@
 }
 
 /* Disabled delete — permanent account protection */
-.footer-icon-btn.danger-btn.is-disabled {
+.footer-icon-button.danger-button.is-disabled {
 	opacity: 0.42;
 	cursor: not-allowed;
 }
-.footer-icon-btn.danger-btn.is-disabled:hover {
+.footer-icon-button.danger-button.is-disabled:hover {
 	transform: none;
 	box-shadow: none;
 	background: transparent;
 	color: #64748b !important;
 	border-color: rgba(0, 0, 0, 0.08);
 }
-.footer-icon-btn.danger-btn.is-disabled:hover .material-symbols-outlined {
+.footer-icon-button.danger-button.is-disabled:hover .material-symbols-outlined {
 	animation: none;
 }
 
@@ -880,7 +880,7 @@
 	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }
 
-.history-ts {
+.history-timestamp {
 	color: #64748b;
 	font-variant-numeric: tabular-nums;
 }
@@ -925,13 +925,13 @@
 	color: #11998e;
 }
 
-.debts-empty-msg {
+.debts-empty-message {
 	color: #334155;
 	font-size: 15px;
 	max-width: 380px;
 }
 
-.debts-empty-btn {
+.debts-empty-button {
 	border: none;
 	cursor: pointer;
 	font-size: 14px;
@@ -944,7 +944,7 @@
 		transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
 		box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.debts-empty-btn:hover {
+.debts-empty-button:hover {
 	transform: scale(1.03);
 	box-shadow: 0 4px 16px rgba(17, 153, 142, 0.35);
 }

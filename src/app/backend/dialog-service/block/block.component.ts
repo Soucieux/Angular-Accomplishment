@@ -21,7 +21,7 @@ export class BlockDialogComponent {
 	 * @param message - The message to display in the dialog.
 	 * @returns The promise from the task.
 	 */
-	public async openDialog(task: () => Promise<void>, message: string) {
+	public async openDialog(task: () => Promise<void>, message: string): Promise<void> {
 		this.message = message;
 		this.visible = true;
 		try {

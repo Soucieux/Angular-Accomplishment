@@ -1,0 +1,107 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	appendTo="body"
+	[resizable]="false"
+	[closable]="false"
+	(onHide)="onDialogClosed()"
+	styleClass="add-debt-dialog">
+	<ng-template #header>
+		<span class="add-debt-dialog-title">{{ isEditMode ? DEBT_DIALOG_LABEL_EDIT : DEBT_DIALOG_TITLE }}</span>
+	</ng-template>
+
+	@if (!isEditMode) {
+		<!-- Name -->
+		<div class="add-debt-field">
+			<span class="add-debt-label">Name</span>
+			<input
+				type="text"
+				[(ngModel)]="name"
+				[placeholder]="DEBT_DIALOG_PLACEHOLDER_NAME"
+				(keyup.enter)="onSubmit()"
+				autocomplete="off" />
+		</div>
+
+		<!-- Category -->
+		<div class="add-debt-field">
+			<span class="add-debt-label">Category</span>
+			<div class="add-debt-category-grid">
+				@for (category of categoryOptions; track category.key) {
+					<button
+						type="button"
+						class="add-debt-category-option"
+						[class.selected]="selectedCategoryKey === category.key"
+						[style.--category-gradient]="category.gradient"
+						(click)="selectedCategoryKey = category.key"
+						[title]="category.label">
+						<span class="material-symbols-outlined add-debt-category-icon">{{ category.icon }}</span>
+						<span class="add-debt-category-label">{{ category.label }}</span>
+					</button>
+				}
+			</div>
+		</div>
+	}
+
+	<!-- Amount + Currency -->
+	<div class="add-debt-field-row">
+		<div class="add-debt-field">
+			@if (isEditMode) {
+				<span class="add-debt-label">{{ DEBT_DIALOG_LABEL_BALANCE }}</span>
+			} @else {
+				<span class="add-debt-label">Amount</span>
+			}
+			<input
+				type="number"
+				[(ngModel)]="amount"
+				[placeholder]="DEBT_DIALOG_PLACEHOLDER_AMOUNT"
+				min="0"
+				(keyup.enter)="onSubmit()" />
+		</div>
+		<div class="add-debt-field">
+			<span class="add-debt-label">Currency</span>
+			<div class="add-debt-currency-picker">
+				<button
+					type="button"
+					class="add-debt-currency-option"
+					[class.sel]="selectedCurrency === DEBT_CURRENCY_CNY"
+					(click)="selectedCurrency = DEBT_CURRENCY_CNY">
+					{{ DEBT_DIALOG_LABEL_CURRENCY_CNY }}
+				</button>
+				<button
+					type="button"
+					class="add-debt-currency-option"
+					[class.sel]="selectedCurrency === DEBT_CURRENCY_CAD"
+					(click)="selectedCurrency = DEBT_CURRENCY_CAD">
+					{{ DEBT_DIALOG_LABEL_CURRENCY_CAD }}
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Due date -->
+	<div class="add-debt-field">
+		<span class="add-debt-label">Due date</span>
+		<input type="date" [(ngModel)]="dueDate" />
+	</div>
+
+	@if (!isEditMode) {
+		<!-- Permanent toggle -->
+		<button type="button" class="add-debt-permanent-toggle" [class.on]="isPermanent" (click)="isPermanent = !isPermanent">
+			<span class="material-symbols-outlined add-debt-permanent-icon">{{ isPermanent ? 'lock' : 'lock_open' }}</span>
+			<span class="add-debt-permanent-text">
+				<b>{{ DEBT_DIALOG_LABEL_PERMANENT }}</b>
+				<small>{{ DEBT_DIALOG_LABEL_PERMANENT_DESC }}</small>
+			</span>
+			<span class="add-debt-switch" [class.on]="isPermanent">
+				<span class="add-debt-switch-knob"></span>
+			</span>
+		</button>
+	}
+
+	<ng-template #footer>
+		<button class="add-debt-button-ghost" (click)="onDialogClosed()">{{ DEBT_DIALOG_LABEL_CANCEL }}</button>
+		<button class="add-debt-button-gradient" [disabled]="!isValid" (click)="onSubmit()">
+			{{ isEditMode ? DEBT_DIALOG_LABEL_SAVE : DEBT_DIALOG_LABEL_ADD }}
+		</button>
+	</ng-template>
+</p-dialog>

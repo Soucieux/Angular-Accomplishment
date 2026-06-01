@@ -113,6 +113,8 @@ export class CloudbaseService extends DatabaseService {
 					})
 					.catch(() => {});
 
+			// Attempt to resolve statId immediately (anonymous session may succeed);
+			// retry once auth confirms so authenticated callers always have it ready
 			fetchStatId();
 			// Retry after auth confirms so statId is set before addQuote/removeQuote are called
 			CloudbaseService.authReady$.pipe(take(1)).subscribe(() => fetchStatId());
@@ -120,7 +122,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the CloudBase authentication instance.
+	 * Gets the CloudBase authentication instance.
 	 *
 	 * @returns The CloudBase auth object.
 	 */
@@ -139,7 +141,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the current user ID.
+	 * Gets the current user ID.
 	 *
 	 * @returns The current user ID.
 	 */
@@ -175,7 +177,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the current user name.
+	 * Gets the current user name.
 	 *
 	 * @returns The current user name.
 	 */
@@ -240,7 +242,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the movie list from CloudBase as a real-time observable.
+	 * Gets the movie list from CloudBase as a real-time observable.
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
@@ -353,7 +355,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the statistics from CloudBase as a real-time observable.
+	 * Gets the statistics from CloudBase as a real-time observable.
 	 *
 	 * @returns An observable that emits the statistics.
 	 */
@@ -362,7 +364,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the history list from CloudBase as a real-time observable.
+	 * Gets the history list from CloudBase as a real-time observable.
 	 *
 	 * @returns The history list
 	 */
@@ -378,7 +380,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the patch notes from CloudBase as a real-time observable.
+	 * Gets the patch notes from CloudBase as a real-time observable.
 	 *
 	 * @returns Patch notes
 	 */
@@ -403,7 +405,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the first reminder table details from CloudBase as a real-time observable.
+	 * Gets the first reminder table details from CloudBase as a real-time observable.
 	 *
 	 * @returns Reminder table details
 	 */
@@ -414,7 +416,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the Account Expenses (debt sonata) table details from CloudBase as a real-time observable.
+	 * Gets the Account Expenses (debt sonata) table details from CloudBase as a real-time observable.
 	 *
 	 * @returns Account Expenses table details
 	 */
@@ -439,7 +441,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the reminder table details from CloudBase as a real-time observable.
+	 * Gets the reminder table details from CloudBase as a real-time observable.
 	 *
 	 * @returns Reminder table details
 	 */
@@ -863,6 +865,7 @@ export class CloudbaseService extends DatabaseService {
 				// in the calling function (single statisticsRef.update call) to avoid
 				// triggering the CloudBase watcher twice per operation.
 			} else {
+				// No movie VO means this is a search activity — record without movie metadata
 				const result = await this.database.collection(DATABASE_HISTORY).add({
 					...userId,
 					status: status,
@@ -982,7 +985,7 @@ export class CloudbaseService extends DatabaseService {
 			.catch((err: any) => LOG.error(this.className, 'Failed to sync patchInProgress stat', err));
 	}
 
-	// ── Update existing record to table ─────────────────────────────────────────
+	////////////////////// Below are Update methods for database table records /////////////////
 
 	/**
 	 * Updates value in Reminder table
@@ -1065,7 +1068,7 @@ export class CloudbaseService extends DatabaseService {
 		}
 	}
 
-	// ── Remove existing record from table ─────────────────────────────────────────
+	////////////////////// Below are Removal methods for database table records ////////////////
 
 	/**
 	 * Removes a record from debt table.
@@ -1141,7 +1144,7 @@ export class CloudbaseService extends DatabaseService {
 			: { _id: id, _openid: CloudbaseService.getUseId() };
 	}
 
-	// ── Add new record to table ─────────────────────────────────────────
+	////////////////////// Below are Add methods for database table records ////////////////////────
 
 	/**
 	 * Adds a new entry to reminder table.
@@ -1190,7 +1193,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the quotes from the database as a real-time observable.
+	 * Gets the quotes from the database as a real-time observable.
 	 *
 	 * @returns An observable that emits the quotes list.
 	 */
@@ -1349,7 +1352,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the useful links from the database as a real-time observable.
+	 * Gets the useful links from the database as a real-time observable.
 	 *
 	 * @returns An observable that emits the useful links list.
 	 */
@@ -1446,7 +1449,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the link categories from the database as a real-time observable.
+	 * Gets the link categories from the database as a real-time observable.
 	 *
 	 * @returns An observable that emits the link categories list.
 	 */
@@ -1529,7 +1532,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns The response body and Content-Type header value.
 	 */
 	public async proxyFetch(url: string): Promise<{ content: string; contentType: string }> {
-		// ── 1. Try own Express server endpoint (production SSR server only) ──
+		// Step 1: Try own Express server endpoint (production SSR server only)
 
 		// The endpoint only exists when the compiled Express server is running.
 		// In `ng serve` dev mode Angular intercepts all requests and returns HTML,
@@ -1556,7 +1559,7 @@ export class CloudbaseService extends DatabaseService {
 			// Network error reaching /api/fetch-url — fall through silently.
 		}
 
-		// ── 2. CloudBase callFunction (dev mode and CloudBase-only deploys) ──
+		// Step 2: CloudBase callFunction (dev mode and CloudBase-only deploys)
 		try {
 			const result: any = await this.cloudbase.callFunction({
 				name: 'fetchUrl',
@@ -1575,7 +1578,7 @@ export class CloudbaseService extends DatabaseService {
 		}
 	}
 
-	// ── Recipes ───────────────────────────────────────────────────────────────
+	////////////////////// Below are Recipe table methods (read, write, remove) ///////////////
 
 	/**
 	 * Watch the recipes collection and emit all recipes on every change.

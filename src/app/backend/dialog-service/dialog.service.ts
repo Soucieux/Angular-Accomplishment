@@ -10,10 +10,9 @@ import { ErrorDialogComponent } from './error/error.component';
 import { BlockDialogComponent } from './block/block.component';
 import {
 	DIALOG_ADD,
-	DIALOG_ADD_DEBT,
 	DIALOG_BLOCK,
 	DIALOG_CONFIRM,
-	DIALOG_EDIT_DEBT,
+	DIALOG_DEBT,
 	DIALOG_ERROR,
 	DIALOG_HISTORY,
 	DIALOG_RECIPE_TYPE,
@@ -26,10 +25,8 @@ import { MessageService } from 'primeng/api';
 import { RecipeTypeDialogComponent } from './recipe-type/recipe-type.component';
 import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
 import { Utilities } from '../../common/app.utilities';
-import { AddDebtDialogComponent } from './add-debt/add-debt.component';
-import { NewDebtData } from './add-debt/add-debt.model';
-import { EditDebtDialogComponent } from './edit-debt/edit-debt.component';
-import { EditDebtData } from './edit-debt/edit-debt.model';
+import { AddDebtDialogComponent } from './debt/debt.component';
+import { NewDebtData } from '../../fontend/debt/debt.model';
 @Injectable({
 	providedIn: 'root'
 })
@@ -61,10 +58,8 @@ export class DialogService {
 				return BlockDialogComponent;
 			case DIALOG_RECIPE_TYPE:
 				return RecipeTypeDialogComponent;
-			case DIALOG_ADD_DEBT:
+			case DIALOG_DEBT:
 				return AddDebtDialogComponent;
-			case DIALOG_EDIT_DEBT:
-				return EditDebtDialogComponent;
 			default:
 				throw new Error('Invalid dialog type');
 		}
@@ -116,15 +111,9 @@ export class DialogService {
 
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
-		dialogType: 'add-debt',
-		submitCallback: (data: NewDebtData) => void
-	): void;
-
-	public openDialog(
-		dialogContainerRef: ViewContainerRef,
-		dialogType: 'edit-debt',
-		prefillData: EditDebtData,
-		submitCallback: (data: EditDebtData) => void
+		dialogType: 'debt',
+		submitCallback: (data: NewDebtData) => void,
+		prefillData: Partial<NewDebtData> | null
 	): void;
 
 	/**
@@ -167,8 +156,8 @@ export class DialogService {
 
 			// SEARCH and error dialogs only need one callback/data argument;
 			// block dialogs return a promise so callers can await task completion;
-			// edit-debt and all other dialogs receive two arguments (prefill/callback or two callbacks).
-			if (dialogType === SEARCH || dialogType === DIALOG_ERROR || dialogType === DIALOG_ADD_DEBT) {
+			// all other dialogs receive two arguments (prefill/callback or two callbacks).
+			if (dialogType === SEARCH || dialogType === DIALOG_ERROR) {
 				dialogComponentRef.instance.openDialog(dataOrCallback1);
 			} else if (dialogType === DIALOG_BLOCK) {
 				blockPromise = dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);

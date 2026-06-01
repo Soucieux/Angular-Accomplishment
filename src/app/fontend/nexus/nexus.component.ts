@@ -84,7 +84,7 @@ import { AiTool, NexusCategory, NexusLink, NEXUS_AI_TOOLS, NEXUS_LOGO_FALLBACK_C
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [CommonModule, FormsModule, DialogModule, TableModule, SkeletonModule, InputTextModule],
 	templateUrl: './nexus.component.html',
-	styleUrl: './nexus.component.css',
+	styleUrl: './nexus.component.css'
 })
 export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private readonly className = 'NexusComponent';
@@ -223,7 +223,9 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	ngAfterViewChecked(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
-		document.querySelectorAll<HTMLElement>('.links-grid').forEach((el) => Utilities.attachScrollAutoHide(el));
+		document
+			.querySelectorAll<HTMLElement>('.links-grid')
+			.forEach((el) => Utilities.attachScrollAutoHide(el));
 	}
 
 	/**
@@ -361,7 +363,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 			if (
 				requiredDiff !== null &&
-				Number(this.updatedDateCalculatorRows[rowIndex][field].value) - Number(previousValue) < requiredDiff
+				Number(this.updatedDateCalculatorRows[rowIndex][field].value) - Number(previousValue) <
+					requiredDiff
 			) {
 				this.updatedDateCalculatorRows[rowIndex][field].value = originalValue;
 				return;
@@ -369,7 +372,9 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		}
 
 		// Convert it to number
-		this.updatedDateCalculatorRows[rowIndex][field].value = Number(this.updatedDateCalculatorRows[rowIndex][field].value);
+		this.updatedDateCalculatorRows[rowIndex][field].value = Number(
+			this.updatedDateCalculatorRows[rowIndex][field].value
+		);
 
 		// Mark it as uncharged
 		this.updatedDateCalculatorRows[rowIndex][field].isCharged = false;
@@ -496,14 +501,16 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	private async setDateCalculatorDefaults(): Promise<void> {
 		const values = [1, 3, 9, 11, 17];
-		this.updatedDateCalculatorRows = this.originalDateCalculatorRows.slice(0, 5).map((original, index) => ({
-			_id: original._id,
-			_openid: original._openid,
-			first: { value: values[index], isCharged: false },
-			second: { value: values[index], isCharged: false },
-			third: { value: values[index], isCharged: false },
-			fourth: { value: values[index], isCharged: false }
-		}));
+		this.updatedDateCalculatorRows = this.originalDateCalculatorRows
+			.slice(0, 5)
+			.map((original, index) => ({
+				_id: original._id,
+				_openid: original._openid,
+				first: { value: values[index], isCharged: false },
+				second: { value: values[index], isCharged: false },
+				third: { value: values[index], isCharged: false },
+				fourth: { value: values[index], isCharged: false }
+			}));
 		this.refreshConfirmedCount();
 		await this.updateDateCalculatorSingleValue();
 	}
@@ -523,7 +530,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					isNextMonth: this.isNextMonth
 				}
 			];
-			await this.databaseService.updateDateCalculatorTable(DATABASE_DATE_CALCULATOR, payload);
+			await this.databaseService.updateDateCalculatorTable(payload);
 			this.triggerSaveIndicator(DATABASE_DATE_CALCULATOR);
 			// Fire-and-forget: surface this change in the Recent Activity widget.
 			this.databaseService
@@ -549,9 +556,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	private checkPermission(): string {
 		const openid = this.updatedDateCalculatorRows[0]?._openid ?? '';
-		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid)
-			? SUCCESS
-			: FAILURE;
+		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid) ? SUCCESS : FAILURE;
 	}
 
 	/**
@@ -642,7 +647,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected get filteredLinks(): NexusLink[] {
 		return this.links.filter((link) => {
-			const matchesCategory = this.selectedCategory === NEXUS_CATEGORY_ALL || link.category === this.selectedCategory;
+			const matchesCategory =
+				this.selectedCategory === NEXUS_CATEGORY_ALL || link.category === this.selectedCategory;
 			const matchesSearch =
 				!this.linkSearch.trim() || link.title.toLowerCase().includes(this.linkSearch.toLowerCase());
 			return matchesCategory && matchesSearch;
@@ -740,7 +746,10 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 				this.cdr.markForCheck();
 			})
 			.catch((error) => {
-				LOG.error(this.className, `Could not fetch page title for ${url}: ${Utilities.safeErrorMessage(error)}`);
+				LOG.error(
+					this.className,
+					`Could not fetch page title for ${url}: ${Utilities.safeErrorMessage(error)}`
+				);
 				this.linkMetaLoading = false;
 			});
 	}
@@ -752,7 +761,11 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected async saveLinkDialog(): Promise<void> {
 		const { url, title, category } = this.linkForm;
 		if (!url.trim() || !title.trim() || !category) {
-			this.dialogService.showToast(TOAST_WARN, NEXUS_MSG_MISSING_FIELDS, NEXUS_MSG_MISSING_FIELDS_DETAIL);
+			this.dialogService.showToast(
+				TOAST_WARN,
+				NEXUS_MSG_MISSING_FIELDS,
+				NEXUS_MSG_MISSING_FIELDS_DETAIL
+			);
 			return;
 		}
 		const finalUrl = Utilities.normalizeUrl(url.trim());
@@ -781,7 +794,11 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.cdr.markForCheck();
 		} catch (error) {
 			LOG.error(this.className, NEXUS_MSG_SAVE_LINK_FAILED, error as Error);
-			this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_SAVE_FAILED, NEXUS_MSG_LINK_SAVE_FAILED_DETAIL);
+			this.dialogService.showToast(
+				TOAST_ERROR,
+				NEXUS_MSG_SAVE_FAILED,
+				NEXUS_MSG_LINK_SAVE_FAILED_DETAIL
+			);
 		}
 	}
 
@@ -805,7 +822,11 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					})
 					.catch((error: unknown) => {
 						LOG.error(this.className, `Failed to delete link: ${link.title}`, error as Error);
-						this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_LINK_DELETE_FAILED_DETAIL);
+						this.dialogService.showToast(
+							TOAST_ERROR,
+							NEXUS_MSG_DELETE_FAILED,
+							NEXUS_MSG_LINK_DELETE_FAILED_DETAIL
+						);
 					});
 			},
 			[
@@ -891,7 +912,11 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.showCategoryDialog = false;
 		} catch (error) {
 			LOG.error(this.className, NEXUS_MSG_SAVE_CATEGORY_FAILED, error as Error);
-			this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_SAVE_FAILED, NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL);
+			this.dialogService.showToast(
+				TOAST_ERROR,
+				NEXUS_MSG_SAVE_FAILED,
+				NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL
+			);
 		}
 	}
 
@@ -917,12 +942,22 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 						this.cdr.markForCheck();
 					})
 					.catch((error: unknown) => {
-						LOG.error(this.className, `Failed to delete category: ${category.name}`, error as Error);
-						this.dialogService.showToast(TOAST_ERROR, NEXUS_MSG_DELETE_FAILED, NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL);
+						LOG.error(
+							this.className,
+							`Failed to delete category: ${category.name}`,
+							error as Error
+						);
+						this.dialogService.showToast(
+							TOAST_ERROR,
+							NEXUS_MSG_DELETE_FAILED,
+							NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL
+						);
 					});
 			},
 			[
-				NEXUS_MSG_DELETE_CATEGORY_CONFIRM_PREFIX + category.name + NEXUS_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX,
+				NEXUS_MSG_DELETE_CATEGORY_CONFIRM_PREFIX +
+					category.name +
+					NEXUS_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX,
 				NEXUS_MSG_DELETE_CATEGORY_TITLE,
 				NEXUS_MSG_DELETE_CATEGORY_BTN
 			]

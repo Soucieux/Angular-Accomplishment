@@ -311,10 +311,6 @@ p-chip.about-chip {
    Mobile
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
-	.hide-on-mobile {
-		display: none;
-	}
-
 	.about-inner {
 		padding: 20px 16px 48px;
 	}

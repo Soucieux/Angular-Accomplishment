@@ -26,10 +26,6 @@ mat-drawer-container {
 
 /* This is for mid-range screen*/
 @media (max-width: 1100px) {
-	.hide-on-mobile {
-		display: none !important;
-	}
-
 	/* Add height by 20px whenever a new button is added — currently 7 nav buttons (Home, Entertainment, Reminder, Patch Notes, Resonance, Nexus, About) */
 	mat-drawer {
 		width: 37px !important;

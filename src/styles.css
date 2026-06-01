@@ -32,4 +32,8 @@ button,
 	color: black !important;
 }
 
-
+@media (max-width: 940px) {
+	.hide-on-mobile {
+		display: none !important;
+	}
+}

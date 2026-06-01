@@ -41,7 +41,7 @@
 /* PAGE ACCENT COLOR — Resonance
  * Gold  primary #f59e0b   rgba(245, 158, 11)
  *       dark    #d97706   rgba(217, 119, 6)
- * Applied to: page-title drop-shadow glow, header-ornament, submit-btn,
+ * Applied to: page-title drop-shadow glow, header-ornament, submit-button,
  *             card left-borders, input focus ring, post-success chip
  * NOTE: page-title text is intentionally white — this page has no container and
  *       renders directly on the app's rose background; gold text on rose lacks
@@ -262,7 +262,7 @@
 /* ─────────────────────────────────────────
    Submit button
 ───────────────────────────────────────── */
-::ng-deep .submit-btn.p-button {
+::ng-deep .submit-button.p-button {
 	background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
 	border: none !important;
 	border-radius: 12px !important;
@@ -279,28 +279,28 @@
 	gap: 6px !important;
 }
 
-::ng-deep .submit-btn.p-button:not(:disabled):hover {
+::ng-deep .submit-button.p-button:not(:disabled):hover {
 	opacity: 0.92;
 	box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
 }
 
-::ng-deep .submit-btn.p-button:not(:disabled):active {
+::ng-deep .submit-button.p-button:not(:disabled):active {
 	opacity: 0.85;
 	box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
 	transform: scale(0.98);
 }
 
-::ng-deep .submit-btn.p-button:disabled {
+::ng-deep .submit-button.p-button:disabled {
 	opacity: 0.5;
 	box-shadow: none !important;
 }
 
-::ng-deep .submit-btn .p-button-loading-icon {
+::ng-deep .submit-button .p-button-loading-icon {
 	font-size: 15px !important;
 	line-height: 1 !important;
 }
 
-::ng-deep .submit-btn .p-button-label {
+::ng-deep .submit-button .p-button-label {
 	line-height: 1 !important;
 }
 
@@ -525,14 +525,14 @@
 	white-space: nowrap;
 }
 
-::ng-deep .delete-btn.p-button.p-button-text {
+::ng-deep .delete-button.p-button.p-button-text {
 	color: rgba(0, 0, 0, 0.35) !important;
 	width: 28px !important;
 	height: 28px !important;
 	padding: 0 !important;
 }
 
-::ng-deep .delete-btn.p-button.p-button-text:hover {
+::ng-deep .delete-button.p-button.p-button-text:hover {
 	color: rgba(0, 0, 0, 0.65) !important;
 	background: rgba(0, 0, 0, 0.06) !important;
 }

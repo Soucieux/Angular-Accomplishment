@@ -89,7 +89,7 @@
 	border: 1px solid rgba(255, 255, 255, 0.38);
 }
 
-.date-calculator-seg-btn {
+.date-calculator-segment-button {
 	flex: 1;
 	text-align: center;
 	white-space: nowrap;
@@ -110,11 +110,11 @@
 		color 0.15s;
 }
 
-.date-calculator-seg-btn:first-child {
+.date-calculator-segment-button:first-child {
 	border-right: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.date-calculator-seg-btn:not(.active) {
+.date-calculator-segment-button:not(.active) {
 	margin: 2px 2px 2px 0px;
 	border-top-left-radius: 0px;
 	border-bottom-left-radius: 0px;
@@ -122,18 +122,18 @@
 	border-bottom-right-radius: 4px;
 }
 
-.date-calculator-seg-btn.active {
+.date-calculator-segment-button.active {
 	background: rgba(255, 255, 255, 0.92);
 	color: #3b2677;
 	font-weight: 700;
 }
 
-.date-calculator-seg-btn:not(.active):hover {
+.date-calculator-segment-button:not(.active):hover {
 	background: rgba(255, 255, 255, 0.22);
 	color: rgba(255, 255, 255, 0.95);
 }
 
-.date-calculator-reset-btn {
+.date-calculator-reset-button {
 	display: flex;
 	align-items: center;
 	gap: 5px;
@@ -150,11 +150,11 @@
 		color 0.15s;
 }
 
-.date-calculator-reset-btn .pi {
+.date-calculator-reset-button .pi {
 	font-size: 13px;
 }
 
-.date-calculator-reset-btn:hover {
+.date-calculator-reset-button:hover {
 	background: rgba(255, 255, 255, 0.14);
 	color: #ffffff;
 }
@@ -290,7 +290,7 @@
    color uses !important to override the global `button { color: black !important }`
    in styles.css (Bootstrap + project reset). Specificity within !important rules
    means our more-specific selectors (.today, .charged) still win. */
-.date-calculator-cell-btn {
+.date-calculator-cell-button {
 	display: flex;
 	align-items: center;
 	gap: 4px;
@@ -310,32 +310,32 @@
 		border-color 0.15s;
 }
 
-.date-calculator-cell-btn .pi {
+.date-calculator-cell-button .pi {
 	font-size: 12px;
 	color: inherit !important;
 }
 
-.date-calculator-cell-btn:hover {
+.date-calculator-cell-button:hover {
 	background: rgba(71, 118, 230, 0.15);
 }
 
-.date-calculator-cell-btn.today {
+.date-calculator-cell-button.today {
 	border-color: #f0d58e;
 	color: #a07400 !important;
 	background: rgba(240, 213, 142, 0.18);
 }
 
-.date-calculator-cell-btn.today:hover {
+.date-calculator-cell-button.today:hover {
 	background: rgba(240, 213, 142, 0.32);
 }
 
-.date-calculator-cell-btn.charged {
+.date-calculator-cell-button.charged {
 	border-color: #a8d8c4;
 	color: #11845b !important;
 	background: rgba(17, 132, 91, 0.08);
 }
 
-.date-calculator-cell-btn.charged:hover {
+.date-calculator-cell-button.charged:hover {
 	background: rgba(17, 132, 91, 0.16);
 }
 
@@ -570,7 +570,7 @@
 	color: #d53369;
 }
 
-.cat-edit-btn {
+.category-edit-button {
 	font-size: 11px;
 	opacity: 0;
 	margin-left: 2px;
@@ -578,15 +578,15 @@
 	transition: opacity 0.15s;
 }
 
-.cat-tab:hover .cat-edit-btn {
+.cat-tab:hover .category-edit-button {
 	opacity: 1;
 }
 
-.cat-tab.active .cat-edit-btn {
+.cat-tab.active .category-edit-button {
 	opacity: 0.7;
 }
 
-.cat-add-btn {
+.category-add-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -601,13 +601,13 @@
 	flex-shrink: 0;
 }
 
-.cat-add-btn:hover {
+.category-add-button:hover {
 	border-color: #d53369;
 	color: #d53369;
 	background: rgba(213, 51, 105, 0.05);
 }
 
-.cat-add-btn .material-symbols-outlined {
+.category-add-button .material-symbols-outlined {
 	font-size: 18px;
 }
 
@@ -645,7 +645,7 @@
 	color: rgba(0, 0, 0, 0.3);
 }
 
-.icon-btn {
+.icon-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -660,23 +660,23 @@
 	flex-shrink: 0;
 }
 
-.icon-btn:hover {
+.icon-button:hover {
 	border-color: rgba(213, 51, 105, 0.35);
 	color: #d53369;
 	background: rgba(213, 51, 105, 0.05);
 }
 
-.icon-btn.active {
+.icon-button.active {
 	border-color: #d53369;
 	color: #d53369;
 	background: rgba(213, 51, 105, 0.08);
 }
 
-.icon-btn .material-symbols-outlined {
+.icon-button .material-symbols-outlined {
 	font-size: 17px;
 }
 
-.add-link-btn {
+.add-link-button {
 	display: flex;
 	align-items: center;
 	gap: 4px;
@@ -696,12 +696,12 @@
 	flex-shrink: 0;
 }
 
-.add-link-btn:hover {
+.add-link-button:hover {
 	transform: scale(1.04);
 	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
-.add-link-btn .material-symbols-outlined {
+.add-link-button .material-symbols-outlined {
 	font-size: 16px;
 }
 
@@ -851,7 +851,7 @@
 	transition: opacity 0.2s;
 }
 
-.link-action-btn {
+.link-action-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -867,17 +867,17 @@
 		color 0.15s;
 }
 
-.link-action-btn:hover {
+.link-action-button:hover {
 	background: rgba(0, 0, 0, 0.12);
 	color: #1a1a1a;
 }
 
-.link-action-btn.danger:hover {
+.link-action-button.danger:hover {
 	background: rgba(213, 51, 105, 0.12);
 	color: #d53369;
 }
 
-.link-action-btn .material-symbols-outlined {
+.link-action-button .material-symbols-outlined {
 	font-size: 14px;
 }
 
@@ -1195,7 +1195,7 @@
 	border-top: 1px solid rgba(213, 51, 105, 0.15);
 }
 
-.delete-cat-btn {
+.delete-category-button {
 	background: none;
 	border: 1px solid rgba(213, 51, 105, 0.3);
 	border-radius: 50px;
@@ -1207,12 +1207,12 @@
 	transition: all 0.2s;
 }
 
-.delete-cat-btn:hover {
+.delete-category-button:hover {
 	background: rgba(213, 51, 105, 0.08);
 	border-color: #d53369;
 }
 
-.dialog-cancel-btn {
+.dialog-cancel-button {
 	background: none;
 	border: 1.5px solid rgba(0, 0, 0, 0.15);
 	border-radius: 50px;
@@ -1224,11 +1224,11 @@
 	transition: background 0.2s;
 }
 
-.dialog-cancel-btn:hover {
+.dialog-cancel-button:hover {
 	background: rgba(0, 0, 0, 0.04);
 }
 
-.dialog-save-btn {
+.dialog-save-button {
 	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
 	border: none;
 	border-radius: 50px;
@@ -1243,7 +1243,7 @@
 		box-shadow 0.15s;
 }
 
-.dialog-save-btn:hover {
+.dialog-save-button:hover {
 	transform: scale(1.04);
 	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
@@ -1268,12 +1268,12 @@
 		justify-content: flex-end;
 	}
 
-	.date-calculator-seg-btn {
+	.date-calculator-segment-button {
 		font-size: 11px;
 		padding: 4px 8px;
 	}
 
-	.date-calculator-reset-btn {
+	.date-calculator-reset-button {
 		font-size: 11px;
 		padding: 4px 8px;
 	}
@@ -1313,7 +1313,7 @@
 		padding: 2px 3px 2px 0;
 	}
 
-	.date-calculator-cell-btn {
+	.date-calculator-cell-button {
 		font-size: 0;
 		width: 30px;
 		min-width: 30px;
@@ -1322,11 +1322,11 @@
 		gap: 0;
 	}
 
-	.date-calculator-cell-btn .pi {
+	.date-calculator-cell-button .pi {
 		font-size: 12px;
 	}
 
-	.date-calculator-cell-btn:not(.charged):not(.today)::before {
+	.date-calculator-cell-button:not(.charged):not(.today)::before {
 		content: '+';
 		font-size: 14px;
 		font-weight: 700;
@@ -1334,7 +1334,7 @@
 		color: #4776e6 !important;
 	}
 
-	.date-calculator-cell-btn.today::before {
+	.date-calculator-cell-button.today::before {
 		content: '★';
 		font-size: 11px;
 		line-height: 1;
@@ -1414,7 +1414,7 @@
 		width: 120px;
 	}
 
-	.add-link-btn {
+	.add-link-button {
 		justify-content: center;
 	}
 

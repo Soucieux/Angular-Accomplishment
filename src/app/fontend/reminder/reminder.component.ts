@@ -698,6 +698,8 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
 		const tagText = session.tagText.trim();
+		// index -1 means "add new tag"; a non-negative index means "edit existing" —
+		// an empty value on edit is treated as a deletion so users can remove tags inline
 		if (session.index === -1) {
 			if (tagText) item.tags.push(tagText);
 		} else {
@@ -715,6 +717,8 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected onNewItemTagUpdate(): void {
 		const session = this.tagEditSession;
 		const tagText = session?.tagText.trim() ?? '';
+		// Mirror the same index-based add/edit/delete logic as onTagUpdate, but write-only to
+		// local state — the new-item card has no DB record yet
 		if (session?.index === -1) {
 			if (tagText) this.newItem.tags.push(tagText);
 		} else if (session !== null && session.index >= 0) {

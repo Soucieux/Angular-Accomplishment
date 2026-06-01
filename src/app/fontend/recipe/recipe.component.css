@@ -713,19 +713,19 @@
 	gap: 12px;
 	margin-bottom: 6px;
 }
-.edit-btn {
+.edit-button {
 	height: 36px;
 	padding: 0 16px;
 	font-size: 13px;
 }
-.edit-btn .material-symbols-outlined {
+.edit-button .material-symbols-outlined {
 	font-size: 16px;
 }
 
 /* ─────────────────────────────────────────
    Detail header
 ───────────────────────────────────────── */
-.back-btn {
+.back-button {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
@@ -741,11 +741,11 @@
 		gap 0.2s ease,
 		color 0.2s ease;
 }
-.back-btn:hover {
+.back-button:hover {
 	gap: 10px;
 	color: #b82d5a;
 }
-.back-btn .material-symbols-outlined {
+.back-button .material-symbols-outlined {
 	font-size: 20px;
 }
 
@@ -846,7 +846,7 @@
 	transform: rotate(-90deg);
 }
 
-.manage-btn {
+.manage-button {
 	background: transparent;
 	border: 1px solid rgba(22, 163, 74, 0.3);
 	color: #16a34a;
@@ -864,12 +864,12 @@
 		transform 0.15s ease;
 	padding: 0;
 }
-.manage-btn:hover {
+.manage-button:hover {
 	background: rgba(22, 163, 74, 0.08);
 	border-color: #16a34a;
 	transform: scale(1.05);
 }
-.manage-btn .material-symbols-outlined {
+.manage-button .material-symbols-outlined {
 	font-size: 18px;
 	color: #16a34a;
 }
@@ -1145,7 +1145,7 @@
 	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
 }
-.iqty-num {
+.ingredient-quantity-number {
 	font-size: 14px;
 	font-weight: 700;
 	color: #d97706;
@@ -1490,7 +1490,7 @@
 	border-color: rgba(217, 119, 6, 0.5);
 	box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.08);
 }
-.editor-meta-chip .ico {
+.editor-meta-chip .icon {
 	color: #d97706;
 	font-size: 18px;
 }
@@ -1672,7 +1672,7 @@
 	grid-template-columns: repeat(5, 1fr);
 	gap: 6px;
 }
-.type-tabs .manage-btn {
+.type-tabs .manage-button {
 	width: 100%;
 	height: auto;
 	border-radius: 999px;
@@ -1680,7 +1680,7 @@
 	border-width: 1.5px;
 	margin-left: 0;
 }
-.type-tabs .manage-btn .material-symbols-outlined {
+.type-tabs .manage-button .material-symbols-outlined {
 	font-size: 14px;
 }
 .type-tab {
@@ -2108,7 +2108,7 @@
 }
 
 /* Dashed add button */
-.add-btn {
+.add-button {
 	width: 100%;
 	border: 1.5px dashed rgba(217, 119, 6, 0.4);
 	background: rgba(255, 255, 255, 0.4);
@@ -2130,7 +2130,7 @@
 		border-color 0.2s ease,
 		transform 0.15s ease;
 }
-.add-btn:hover {
+.add-button:hover {
 	background: rgba(255, 251, 235, 1);
 	border-color: #d97706;
 	transform: translateY(-1px);
@@ -2160,7 +2160,7 @@
 	border-color: rgba(217, 119, 6, 0.2);
 	transform: none;
 }
-.steps-editor-body .step-card .step-num {
+.steps-editor-body .step-card .step-number {
 	width: 32px;
 	height: 32px;
 	border-radius: 50%;
@@ -2440,7 +2440,7 @@
 		background: rgba(217, 119, 6, 0.28);
 	}
 	.type-tab,
-	.type-tabs .manage-btn {
+	.type-tabs .manage-button {
 		flex: none;
 	}
 	.ing-row .remove,
@@ -2615,8 +2615,8 @@
    Add-screen default theme (rose — app accent, no category chosen yet)
 ───────────────────────────────────────── */
 .view.band-default { background: transparent; }
-.view.band-default .back-btn { color: #d53369 !important; }
-.view.band-default .back-btn:hover { color: #b82d5a !important; }
+.view.band-default .back-button { color: #d53369 !important; }
+.view.band-default .back-button:hover { color: #b82d5a !important; }
 .view.band-default .title-field {
 	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
 	-webkit-background-clip: text;
@@ -2632,15 +2632,15 @@
 }
 .view.band-default .panel-heading .material-symbols-outlined { color: #d53369; }
 .view.band-default .panel-heading.collapsible:hover { background: rgba(213, 51, 105, 0.05); }
-.view.band-default .manage-btn {
+.view.band-default .manage-button {
 	border-color: rgba(213, 51, 105, 0.3);
 	color: #d53369;
 }
-.view.band-default .manage-btn:hover {
+.view.band-default .manage-button:hover {
 	background: rgba(213, 51, 105, 0.08);
 	border-color: #d53369;
 }
-.view.band-default .manage-btn .material-symbols-outlined { color: #d53369; }
+.view.band-default .manage-button .material-symbols-outlined { color: #d53369; }
 .view.band-default .notes-header .material-symbols-outlined { color: #d53369; }
 .view.band-default .btn-secondary {
 	color: #d53369 !important;
@@ -2714,7 +2714,7 @@
  *      .recipe-card.band-<name>:hover .view-recipe { background }
  *
  *    Detail / editor view rules (all under .view.band-<name>):
- *      .back-btn / .back-btn:hover
+ *      .back-button / .back-button:hover
  *      .detail-title
  *      .detail-header .header-ornament
  *      .title-field / ::placeholder / :focus
@@ -2723,7 +2723,7 @@
  *      .panel::before
  *      .panel-heading .material-symbols-outlined
  *      .panel-heading.collapsible:hover
- *      .manage-btn / :hover / .material-symbols-outlined
+ *      .manage-button / :hover / .material-symbols-outlined
  *      .step / :hover / .done
  *      .steps::before
  *      .substep::before
@@ -2750,8 +2750,8 @@
 .recipe-card.band-quick:hover .view-recipe {
 	background: linear-gradient(to right, transparent, rgba(22, 163, 74, 0.06));
 }
-.view.band-quick .back-btn { color: #16a34a !important; }
-.view.band-quick .back-btn:hover { color: #15803d !important; }
+.view.band-quick .back-button { color: #16a34a !important; }
+.view.band-quick .back-button:hover { color: #15803d !important; }
 .view.band-quick .detail-title {
 	background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
 	-webkit-background-clip: text;
@@ -2782,15 +2782,15 @@
 }
 .view.band-quick .panel-heading .material-symbols-outlined { color: #16a34a; }
 .view.band-quick .panel-heading.collapsible:hover { background: rgba(22, 163, 74, 0.05); }
-.view.band-quick .manage-btn {
+.view.band-quick .manage-button {
 	border-color: rgba(22, 163, 74, 0.3);
 	color: #16a34a;
 }
-.view.band-quick .manage-btn:hover {
+.view.band-quick .manage-button:hover {
 	background: rgba(22, 163, 74, 0.08);
 	border-color: #16a34a;
 }
-.view.band-quick .manage-btn .material-symbols-outlined { color: #16a34a; }
+.view.band-quick .manage-button .material-symbols-outlined { color: #16a34a; }
 .view.band-quick .step { border-left-color: #16a34a; }
 .view.band-quick .step:hover {
 	box-shadow:
@@ -2845,8 +2845,8 @@
 .recipe-card.band-chinese:hover .view-recipe {
 	background: linear-gradient(to right, transparent, rgba(168, 85, 247, 0.06));
 }
-.view.band-chinese .back-btn { color: #a855f7 !important; }
-.view.band-chinese .back-btn:hover { color: #9333ea !important; }
+.view.band-chinese .back-button { color: #a855f7 !important; }
+.view.band-chinese .back-button:hover { color: #9333ea !important; }
 .view.band-chinese .detail-title {
 	background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
 	-webkit-background-clip: text;
@@ -2877,15 +2877,15 @@
 }
 .view.band-chinese .panel-heading .material-symbols-outlined { color: #a855f7; }
 .view.band-chinese .panel-heading.collapsible:hover { background: rgba(168, 85, 247, 0.05); }
-.view.band-chinese .manage-btn {
+.view.band-chinese .manage-button {
 	border-color: rgba(168, 85, 247, 0.3);
 	color: #a855f7;
 }
-.view.band-chinese .manage-btn:hover {
+.view.band-chinese .manage-button:hover {
 	background: rgba(168, 85, 247, 0.08);
 	border-color: #a855f7;
 }
-.view.band-chinese .manage-btn .material-symbols-outlined { color: #a855f7; }
+.view.band-chinese .manage-button .material-symbols-outlined { color: #a855f7; }
 .view.band-chinese .step { border-left-color: #a855f7; }
 .view.band-chinese .step:hover {
 	box-shadow:
@@ -2936,8 +2936,8 @@
 .recipe-card.band-western:hover .view-recipe {
 	background: linear-gradient(to right, transparent, rgba(217, 119, 6, 0.06));
 }
-.view.band-western .back-btn { color: #d97706 !important; }
-.view.band-western .back-btn:hover { color: #b45309 !important; }
+.view.band-western .back-button { color: #d97706 !important; }
+.view.band-western .back-button:hover { color: #b45309 !important; }
 .view.band-western .detail-title {
 	background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 	-webkit-background-clip: text;
@@ -2968,15 +2968,15 @@
 }
 .view.band-western .panel-heading .material-symbols-outlined { color: #d97706; }
 .view.band-western .panel-heading.collapsible:hover { background: rgba(217, 119, 6, 0.05); }
-.view.band-western .manage-btn {
+.view.band-western .manage-button {
 	border-color: rgba(217, 119, 6, 0.3);
 	color: #d97706;
 }
-.view.band-western .manage-btn:hover {
+.view.band-western .manage-button:hover {
 	background: rgba(217, 119, 6, 0.08);
 	border-color: #d97706;
 }
-.view.band-western .manage-btn .material-symbols-outlined { color: #d97706; }
+.view.band-western .manage-button .material-symbols-outlined { color: #d97706; }
 .view.band-western .step { border-left-color: #d97706; }
 .view.band-western .step:hover {
 	box-shadow:
@@ -3027,8 +3027,8 @@
 .recipe-card.band-dessert:hover .view-recipe {
 	background: linear-gradient(to right, transparent, rgba(219, 39, 119, 0.06));
 }
-.view.band-dessert .back-btn { color: #db2777 !important; }
-.view.band-dessert .back-btn:hover { color: #be185d !important; }
+.view.band-dessert .back-button { color: #db2777 !important; }
+.view.band-dessert .back-button:hover { color: #be185d !important; }
 .view.band-dessert .detail-title {
 	background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
 	-webkit-background-clip: text;
@@ -3059,15 +3059,15 @@
 }
 .view.band-dessert .panel-heading .material-symbols-outlined { color: #db2777; }
 .view.band-dessert .panel-heading.collapsible:hover { background: rgba(219, 39, 119, 0.05); }
-.view.band-dessert .manage-btn {
+.view.band-dessert .manage-button {
 	border-color: rgba(219, 39, 119, 0.3);
 	color: #db2777;
 }
-.view.band-dessert .manage-btn:hover {
+.view.band-dessert .manage-button:hover {
 	background: rgba(219, 39, 119, 0.08);
 	border-color: #db2777;
 }
-.view.band-dessert .manage-btn .material-symbols-outlined { color: #db2777; }
+.view.band-dessert .manage-button .material-symbols-outlined { color: #db2777; }
 .view.band-dessert .step { border-left-color: #db2777; }
 .view.band-dessert .step:hover {
 	box-shadow:

@@ -91,7 +91,7 @@ p-chip.about-chip {
 	min-width: 130px;
 }
 
-.stat-num {
+.stat-number {
 	font-size: 22px;
 	font-weight: 700;
 	color: #fff;
@@ -340,7 +340,7 @@ p-chip.about-chip {
 		min-width: 140px;
 	}
 
-	.stat-num {
+	.stat-number {
 		font-size: 18px;
 	}
 

@@ -283,7 +283,7 @@
 	animation: fadeSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
 }
 
-.quick-actions-row .qa-btn {
+.quick-actions-row .quick-action-button {
 	flex: 1;
 	padding: 12px 8px;
 }
@@ -1443,7 +1443,7 @@
 	color: #0ea5e9;
 }
 
-.wday-num {
+.weekday-number {
 	font-size: 18px;
 	font-weight: 800;
 	color: #334155;
@@ -1451,7 +1451,7 @@
 	flex-shrink: 0;
 }
 
-.week-day-today .wday-num {
+.week-day-today .weekday-number {
 	color: #0369a1;
 }
 
@@ -1509,7 +1509,7 @@
 /* ─────────────────────────────────────────
    Quick Action buttons (shared styles)
 ───────────────────────────────────────── */
-.qa-btn {
+.quick-action-button {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -1526,41 +1526,41 @@
 		opacity 0.15s;
 }
 
-.qa-btn:hover {
+.quick-action-button:hover {
 	transform: translateY(-3px);
 	opacity: 0.9;
 }
-.qa-btn:active {
+.quick-action-button:active {
 	transform: scale(0.95);
 }
 
-.qa-icon {
+.quick-action-icon {
 	font-size: 24px;
 }
 
-.qa-label {
+.quick-action-label {
 	font-size: 10px;
 	letter-spacing: 0.3px;
 	text-align: center;
 	text-transform: uppercase;
 }
 
-.qa-movie {
+.quick-action-movie {
 	background: linear-gradient(135deg, #e91e8c, #9c27b0);
 }
-.qa-quote {
+.quick-action-quote {
 	background: linear-gradient(135deg, #f97316, #fbbf24);
 }
-.qa-recipe {
+.quick-action-recipe {
 	background: linear-gradient(135deg, #0d9488, #14b8a6);
 }
-.qa-expense {
+.quick-action-expense {
 	background: linear-gradient(135deg, #059669, #34d399);
 }
-.qa-search {
+.quick-action-search {
 	background: linear-gradient(135deg, #0ea5e9, #38bdf8);
 }
-.qa-patch {
+.quick-action-patch {
 	background: linear-gradient(135deg, #ef4444, #f97316);
 }
 
@@ -1656,7 +1656,7 @@
 	.quick-actions-row {
 		flex-wrap: wrap;
 	}
-	.quick-actions-row .qa-btn {
+	.quick-actions-row .quick-action-button {
 		min-width: calc(33.3% - 6px);
 		flex: none;
 	}
@@ -1714,7 +1714,7 @@
 	.week-strip {
 		gap: 3px;
 	}
-	.wday-num {
+	.weekday-number {
 		font-size: 14px;
 	}
 	.header-badge {
@@ -1770,13 +1770,13 @@
 		height: 13px;
 	}
 
-	.qa-btn {
+	.quick-action-button {
 		padding: 18px 12px;
 	}
-	.qa-icon {
+	.quick-action-icon {
 		font-size: 28px;
 	}
-	.qa-label {
+	.quick-action-label {
 		font-size: 11px;
 	}
 }

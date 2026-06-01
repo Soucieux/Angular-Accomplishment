@@ -278,6 +278,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Persists the change to the database when called after initialisation.
 	 */
 	protected async updateChargedCells(): Promise<void> {
+		// On init (chargedCellsInitialized === false) skip permission check — this is a read-only state setup
 		if (this.chargedCellsInitialized) {
 			const returnCode = this.checkPermission();
 			// Rollback
@@ -289,6 +290,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			}
 		}
 
+		// Switching to next-month view resets all charged state since next month has no past days
 		if (this.isNextMonth) {
 			this.chargedCells.clear();
 		}
@@ -303,6 +305,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 				) {
 					// Fields are no longer being set as charged so that its color is only changed on user input
 					// this.updatedDateCalculatorRows[index][field].isCharged = true;
+					// Track in chargedCells so the greyed-out style applies without writing isCharged to DB
 					this.chargedCells.add(`${index}-${field}`);
 				}
 			}
@@ -353,7 +356,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		if (rowIndex !== 0) {
 			const previousValue = this.updatedDateCalculatorRows[rowIndex - 1][field].value;
 
-			// Get the difference
+			// Rows alternate between 2-day and 6-day gaps: rows 1&3 require a 2-day gap
+			// from their predecessor; rows 2&4 require a 6-day gap (matches the payment cycle)
 			let requiredDiff: number | null = null;
 			if (rowIndex === 1 || rowIndex === 3) {
 				requiredDiff = 2;
@@ -500,6 +504,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * state to the database.
 	 */
 	private async setDateCalculatorDefaults(): Promise<void> {
+		// Default sequence: day 1 → 3 → 9 → 11 → 17 (matches the standard payment schedule)
 		const values = [1, 3, 9, 11, 17];
 		this.updatedDateCalculatorRows = this.originalDateCalculatorRows
 			.slice(0, 5)
@@ -522,7 +527,9 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	private async updateDateCalculatorSingleValue(): Promise<void> {
 		try {
-			const payload = [
+			// Row 6 (index 5) is the metadata row storing only isNextMonth — appended so the
+		// database update covers all rows including the flag in one call
+		const payload = [
 				...this.updatedDateCalculatorRows,
 				{
 					_id: this.originalDateCalculatorRows[5]._id,
@@ -635,7 +642,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected onLinkSearchExit(event: FocusEvent): void {
 		const focusTarget = event.relatedTarget as HTMLElement | null;
-		if (focusTarget?.closest('.icon-btn')) return;
+		if (focusTarget?.closest('.icon-button')) return;
 		if (!this.linkSearch.trim()) this.linkSearchVisible = false;
 	}
 
@@ -733,12 +740,14 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		const url = Utilities.normalizeUrl(rawUrl);
 		this.linkForm.url = url;
 		this.linkFaviconPreview = Utilities.getFavicon(url);
+		// Auto-fetch page title only when the user hasn't typed one yet — avoids overwriting manual input
 		if (this.linkForm.title) return;
 		if (this.linkMetaLoading) return;
 		this.linkMetaLoading = true;
 		this.databaseService
 			.proxyFetch(url)
 			.then((fetchResult) => {
+				// Extract the <title> tag value from the raw HTML; use it as a convenience pre-fill
 				const match = fetchResult.content?.match(/<title[^>]*>([^<]+)<\/title>/i);
 				if (match?.[1]) this.linkForm.title = match[1].trim();
 				this.linkMetaLoading = false;

@@ -288,18 +288,18 @@
 }
 
 /* ── Google button ── */
-::ng-deep .google-btn .p-button {
+::ng-deep .google-button .p-button {
 	background: rgba(255, 255, 255, 0.72) !important;
 	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
 	color: rgba(40, 15, 35, 0.78) !important;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
-::ng-deep .google-btn .p-button:hover {
+::ng-deep .google-button .p-button:hover {
 	background: rgba(255, 255, 255, 0.92) !important;
 }
 
-::ng-deep .google-btn .p-button:active {
+::ng-deep .google-button .p-button:active {
 	background: rgba(255, 255, 255, 0.78) !important;
 	transform: scale(0.98);
 }

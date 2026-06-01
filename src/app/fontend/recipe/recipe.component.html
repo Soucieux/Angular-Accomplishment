@@ -100,11 +100,11 @@
 		@if (currentView === RECIPE_VIEW_DETAIL && selectedRecipe) {
 			<section class="view" [ngClass]="selectedRecipe.bandClass">
 				<div class="detail-topbar">
-					<button class="back-btn" (click)="backToList()">
+					<button class="back-button" (click)="backToList()">
 						<span class="material-symbols-outlined">arrow_back</span>
 						Recipes
 					</button>
-					<button class="btn btn-secondary edit-btn" (click)="openEditView()">
+					<button class="btn btn-secondary edit-button" (click)="openEditView()">
 						<span class="material-symbols-outlined">edit</span>
 						Edit Recipe
 					</button>
@@ -155,7 +155,7 @@
 												<span class="iname">{{ it.name }}</span>
 												@if (formatQtyNum(it.baseQty)) {
 													<span class="iqty">
-														<span class="iqty-num">{{
+														<span class="ingredient-quantity-number">{{
 															formatQtyNum(it.baseQty)
 														}}</span>
 														@if (it.unit && !isNumericUnit(it.unit)) {
@@ -226,7 +226,7 @@
 		@if (currentView === RECIPE_VIEW_ADD) {
 			<section class="view editor-view" [ngClass]="getEditorBandClass()">
 				<div class="editor-topbar">
-					<button class="back-btn" (click)="cancelAdd()">
+					<button class="back-button" (click)="cancelAdd()">
 						<span class="material-symbols-outlined">arrow_back</span>
 						Recipes
 					</button>
@@ -259,12 +259,12 @@
 					<div class="header-ornament"></div>
 					<div class="editor-meta-row">
 						<label class="meta-chip editor-meta-chip">
-							<span class="material-symbols-outlined ico">schedule</span>
+							<span class="material-symbols-outlined icon">schedule</span>
 							<input type="number" min="0" placeholder="—" [(ngModel)]="editorCookTime" />
 							<span class="suffix">min</span>
 						</label>
 						<label class="meta-chip editor-meta-chip">
-							<span class="material-symbols-outlined ico">group</span>
+							<span class="material-symbols-outlined icon">group</span>
 							<input type="number" min="1" [(ngModel)]="editorServings" />
 							<span class="suffix">servings</span>
 						</label>
@@ -273,7 +273,7 @@
 							class="meta-chip editor-meta-chip select-chip"
 							[class.invalid]="editorCategoryInvalid"
 							[class.open]="editorCategoryOpen">
-							<span class="material-symbols-outlined ico">restaurant</span>
+							<span class="material-symbols-outlined icon">restaurant</span>
 							<span
 								class="cat-trigger"
 								role="button"
@@ -387,14 +387,14 @@
 									</button>
 								}
 								<button
-									class="manage-btn"
+									class="manage-button"
 									type="button"
 									title="Manage ingredient types"
 									(click)="openTypeDialog()">
 									<span class="material-symbols-outlined">tune</span>
 								</button>
 							</div>
-							<button class="add-btn" (click)="addEditorIngredient()">+ Add ingredient</button>
+							<button class="add-button" (click)="addEditorIngredient()">+ Add ingredient</button>
 						</div>
 						<div class="panel-foot">
 							<span class="count-badge"
@@ -421,7 +421,7 @@
 									(dragover)="onStepDragOver(step, $event)"
 									(dragleave)="onStepDragLeave(step)"
 									(drop)="onStepDrop(step, $event)">
-									<div class="step-num">{{ i + 1 }}</div>
+									<div class="step-number">{{ i + 1 }}</div>
 									<div class="step-main">
 										<textarea
 											class="step-text"
@@ -467,7 +467,7 @@
 									</div>
 								</div>
 							}
-							<button class="add-btn" (click)="addEditorStep()">+ Add step</button>
+							<button class="add-button" (click)="addEditorStep()">+ Add step</button>
 						</div>
 						<div class="panel-foot">
 							<span class="count-badge"

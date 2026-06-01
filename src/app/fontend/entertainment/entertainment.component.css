@@ -698,10 +698,6 @@
 		height: 70%;
 	}
 
-	.hide-on-mobile {
-		display: none;
-	}
-
 	/* Top bar — narrower margins on mobile */
 	.top-bar {
 		margin: 0 10px;

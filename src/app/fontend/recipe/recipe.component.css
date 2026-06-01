@@ -2449,10 +2449,6 @@
 		opacity: 1;
 	}
 
-	.hide-on-mobile {
-		display: none;
-	}
-
 	/* Category chips — two-element split fixes chipPulse shadow clipping.
 	   overflow:auto clips shadows at the content-box edge (not padding edge),
 	   so we separate the scroll container (.chips-scroll) from the flex

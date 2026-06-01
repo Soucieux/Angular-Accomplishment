@@ -125,13 +125,10 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 				this.items = records.map((record) => ({
 					key: record.key ?? '',
 					_openid: record._openid ?? '',
-					text: record.content?.text ?? '',
-					date:
-						record.content?.date != null
-							? Utilities.coerceDateToString(record.content.date)
-							: null,
-					link: record.content?.link ?? null,
-					tags: record.content?.tags ?? []
+					text: record.text ?? '',
+					date: record.date != null ? Utilities.coerceDateToString(record.date) : null,
+					link: record.link ?? null,
+					tags: record.tags ?? []
 				}));
 				// Step 2: Remove any selected tag filters that no longer exist in the item set
 				this.removeStaleTags();
@@ -169,15 +166,13 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	////////////////////// Below are DB helper and permission check methods //////////////////////
 
 	/**
-	 * Checks whether the current user has permission to modify the entry with the given key.
-	 * Delegates the actual permission check to DialogService.ensurePermission.
+	 * Get the user id of the current item
 	 *
 	 * @param entryKey - The CloudBase document key identifying the entry.
-	 * @returns SUCCESS if permitted, FAILURE otherwise.
+	 * @returns user open Id
 	 */
-	private checkPermission(entryKey: string): string {
-		const openid = this.items.find((item) => item.key === entryKey)?._openid ?? '';
-		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid) ? SUCCESS : FAILURE;
+	private getOpenId(entryKey: string): string {
+		return this.items.find((item) => item.key === entryKey)?._openid ?? '';
 	}
 
 	/**
@@ -242,19 +237,17 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	): void {
 		switch (valueKey) {
 			case REMINDER_VALUE_KEY_TEXT:
-				item.text = originalRecord.content.text ?? '';
+				item.text = originalRecord.text ?? '';
 				break;
 			case REMINDER_VALUE_KEY_DATE:
 				item.date =
-					originalRecord.content.date != null
-						? Utilities.coerceDateToString(originalRecord.content.date)
-						: null;
+					originalRecord.date != null ? Utilities.coerceDateToString(originalRecord.date) : null;
 				break;
 			case REMINDER_VALUE_KEY_LINK:
-				item.link = originalRecord.content.link ?? null;
+				item.link = originalRecord.link ?? null;
 				break;
 			case REMINDER_VALUE_KEY_TAGS:
-				item.tags = originalRecord.content.tags ?? [];
+				item.tags = originalRecord.tags ?? [];
 				break;
 		}
 	}
@@ -533,8 +526,8 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private async addNewItem(textOnly: boolean): Promise<void> {
 		if (!this.newItem.text.trim()) return;
 
-		// Step 1: Build the content payload
-		const newContent: ReminderDbRecord['content'] = {
+		// Step 1: Build the flat record payload
+		const newRecord: Partial<ReminderDbRecord> = {
 			text: this.newItem.text.trim(),
 			tags: [...this.newItem.tags]
 		};
@@ -542,16 +535,16 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		// Step 2: Include optional fields unless text-only mode
 		if (!textOnly) {
 			if (this.newItem.date) {
-				newContent.date = Utilities.formatDateForStorage(this.newItem.date);
+				newRecord.date = Utilities.formatDateForStorage(this.newItem.date);
 			}
 			if (this.newItem.link.trim()) {
-				newContent.link = Utilities.normalizeWebUrl(this.newItem.link.trim());
+				newRecord.link = Utilities.normalizeWebUrl(this.newItem.link.trim());
 			}
 		}
 
 		try {
 			// Step 3: Persist to the database
-			await this.databaseService.addNewRecordToReminderTable(newContent);
+			await this.databaseService.addNewRecordToReminderTable(newRecord);
 
 			// Step 4: Flash save indicator and append to the activity log
 			this.triggerSaveIndicator();
@@ -559,7 +552,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 					type: HISTORY_STATUS_ADDED,
 					table: REMINDER_TABLE_MESSAGES,
-					text: newContent.text ?? '',
+					text: newRecord.text ?? '',
 					timestamp: Utilities.getCurrentFormattedTime(true)
 				})
 				.catch(() => {});
@@ -580,7 +573,13 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param entryKey - The CloudBase document key identifying the entry to remove.
 	 */
 	protected openDeleteConfirmationDialog(entryKey: string): void {
-		const returnCode = this.checkPermission(entryKey);
+		const returnCode = this.dialogService.ensurePermission(
+			this.dialogComponentContainer,
+			this.getOpenId(entryKey)
+		)
+			? SUCCESS
+			: FAILURE;
+
 		if (returnCode === FAILURE) return;
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -602,16 +601,20 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		const originalIndex = this.originalItems.findIndex(
 			(originalRecord) => originalRecord.key === item.key
 		);
-		if (originalIndex === -1 || item.text === (this.originalItems[originalIndex].content?.text ?? ''))
-			return;
-		const returnCode = this.checkPermission(item.key);
+		if (originalIndex === -1 || item.text === (this.originalItems[originalIndex].text ?? '')) return;
+		const returnCode = this.dialogService.ensurePermission(
+			this.dialogComponentContainer,
+			this.getOpenId(item.key)
+		)
+			? SUCCESS
+			: FAILURE;
 		if (returnCode === FAILURE) return;
 		const savedText = item.text.trim();
 		await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TEXT, savedText);
 		// The DB subscription fires asynchronously — replace the snapshot entry immutably so a
 		// concurrent blur cannot pass the changed-value guard and issue a duplicate write.
 		const updatedSnapshot = structuredClone(this.originalItems[originalIndex]);
-		updatedSnapshot.content.text = savedText;
+		updatedSnapshot.text = savedText;
 		this.originalItems = [
 			...this.originalItems.slice(0, originalIndex),
 			updatedSnapshot,
@@ -640,7 +643,12 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected async onPopoverDateUpdate(date: Date | null): Promise<void> {
 		if (this.editingItem) {
-			const returnCode = this.checkPermission(this.editingItem.key);
+			const returnCode = this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				this.getOpenId(this.editingItem.key)
+			)
+				? SUCCESS
+				: FAILURE;
 			if (returnCode === FAILURE) return;
 			this.editingItem.date = date ? Utilities.formatDateForStorage(date) : null;
 			await this.updateTableSingleValue(
@@ -657,7 +665,12 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected async onPopoverLinkUpdate(): Promise<void> {
 		if (this.editingItem) {
-			const returnCode = this.checkPermission(this.editingItem.key);
+			const returnCode = this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				this.getOpenId(this.editingItem.key)
+			)
+				? SUCCESS
+				: FAILURE;
 			if (returnCode === FAILURE) return;
 			const trimmedLink = this.editingLink.trim();
 			this.editingItem.link = trimmedLink ? Utilities.normalizeWebUrl(trimmedLink) : null;
@@ -695,7 +708,12 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		const session = this.tagEditSession;
 		if (!session?.item) return;
 		const item = session.item;
-		const returnCode = this.checkPermission(item.key);
+		const returnCode = this.dialogService.ensurePermission(
+			this.dialogComponentContainer,
+			this.getOpenId(item.key)
+		)
+			? SUCCESS
+			: FAILURE;
 		if (returnCode === FAILURE) return;
 		const tagText = session.tagText.trim();
 		// index -1 means "add new tag"; a non-negative index means "edit existing" —
@@ -751,7 +769,12 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param item - The card whose tag is being removed.
 	 */
 	protected async removeExistingCardTag(index: number, item: ReminderItem): Promise<void> {
-		const returnCode = this.checkPermission(item.key);
+		const returnCode = this.dialogService.ensurePermission(
+			this.dialogComponentContainer,
+			this.getOpenId(item.key)
+		)
+			? SUCCESS
+			: FAILURE;
 		if (returnCode === FAILURE) return;
 		item.tags.splice(index, 1);
 		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAGS, [...item.tags]);
@@ -826,7 +849,12 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param item - The ReminderItem to update.
 	 */
 	protected async clearDate(item: ReminderItem): Promise<void> {
-		const returnCode = this.checkPermission(item.key);
+		const returnCode = this.dialogService.ensurePermission(
+			this.dialogComponentContainer,
+			this.getOpenId(item.key)
+		)
+			? SUCCESS
+			: FAILURE;
 		if (returnCode === FAILURE) return;
 		item.date = null;
 		if (item.key) {
@@ -841,7 +869,12 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param item - The ReminderItem to update.
 	 */
 	protected async clearLink(item: ReminderItem): Promise<void> {
-		const returnCode = this.checkPermission(item.key);
+		const returnCode = this.dialogService.ensurePermission(
+			this.dialogComponentContainer,
+			this.getOpenId(item.key)
+		)
+			? SUCCESS
+			: FAILURE;
 		if (returnCode === FAILURE) return;
 		item.link = null;
 		if (this.editingItem === item) this.editingLink = '';

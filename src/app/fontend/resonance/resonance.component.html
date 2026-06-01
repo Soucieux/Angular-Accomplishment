@@ -70,7 +70,7 @@
 							</div>
 							<div class="quote-actions">
 								<span class="quote-time">{{ getRelativeTime(quote.timestamp) }}</span>
-								@if (canDelete(quote)) {
+								@if (isAdmin) {
 									<button
 										class="delete-button"
 										pButton

@@ -186,11 +186,11 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 				this.loading = false;
 				this.cdr.detectChanges();
 				this.upcomingExpenses = rows
-					.filter((item: any) => item.content?.date && !item.content?.paid)
+					.filter((item: any) => item.date && !item.paid)
 					.map((item: any) => ({
 						type: DEBT_ITEM_EXPENSE,
 						name: item.name,
-						date: item.content.date
+						date: item.date
 					}));
 				this.syncStatistics();
 			});
@@ -214,7 +214,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Subtracts the given amount from the item's debt balance and persists
-	 * the change. Auto-marks the item as paid when the balance reaches zero.
+	 * the change. The balance may go negative (overpayment is allowed).
+	 * Auto-marks the item as paid when the balance reaches zero or below.
 	 * Tracks the payment in the in-session history map and briefly scales the
 	 * balance display via the is-bump CSS class for 360 ms.
 	 *
@@ -222,16 +223,17 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param amount - The positive amount to subtract from the current balance.
 	 */
 	protected async payDebt(entryKey: string, amount: number): Promise<void> {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
 		const item = this.findUpdatedItem(entryKey);
-		if (!item || amount <= 0 || item.content?.paid) return;
+		if (!item || amount <= 0 || item.paid) return;
 		// Round to 2 decimal places to avoid floating-point drift accumulating over multiple payments
-		const currentDebt: number = item.content?.debt ?? 0;
-		const newDebt = Math.max(0, Math.round((currentDebt - amount) * 100) / 100);
-		const isPaidOff = newDebt === 0;
-		item.content.debt = newDebt;
-		if (isPaidOff) item.content.paid = true;
+		const currentDebt: number = item.debt ?? 0;
+		const newDebt = Math.round((currentDebt - amount) * 100) / 100;
+		const isPaidOff = newDebt <= 0;
+		item.debt = newDebt;
 		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
 		if (isPaidOff) {
+			item.paid = true;
 			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_PAID);
 		}
 		// Track per-entry payment history in-session so the history panel can display it without a DB read
@@ -306,6 +308,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry to reset.
 	 */
 	protected promptOrConfirmReset(entryKey: string): void {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
 		if (this.isPromptedReset[entryKey]) {
 			clearTimeout(this.promptedResetTimers[entryKey]);
 			this.isPromptedReset = { ...this.isPromptedReset, [entryKey]: false };
@@ -326,6 +329,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry to delete.
 	 */
 	protected promptOrConfirmDelete(entryKey: string): void {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
 		if (this.isPromptedDelete[entryKey]) {
 			clearTimeout(this.promptedDeleteTimers[entryKey]);
 			this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: false };
@@ -356,9 +360,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	////////////////////// Below are Internal data methods for CloudBase writes /////////////////
 
 	/**
-	 * Creates a new debt record in CloudBase from the data returned by the
-	 * add-debt dialog. The category, currency, and permanent type are
-	 * stored in the content object alongside the initial balance.
+	 * Creates a new debt record in CloudBase from the data returned by the add-debt dialog. 
 	 *
 	 * @param debtData - The validated form data submitted from the add-debt dialog.
 	 */
@@ -387,19 +389,17 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry to toggle.
 	 */
 	protected async toggleLock(entryKey: string): Promise<void> {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
 		const item = this.findUpdatedItem(entryKey);
 		if (!item) return;
 		const newType =
-			(item.content?.type ?? DEBT_TYPE_TEMP) === DEBT_TYPE_PERMANENT
-				? DEBT_TYPE_TEMP
-				: DEBT_TYPE_PERMANENT;
-		item.content = { ...item.content, [DEBT_VALUE_KEY_TYPE]: newType };
+			(item.type ?? DEBT_TYPE_TEMP) === DEBT_TYPE_PERMANENT ? DEBT_TYPE_TEMP : DEBT_TYPE_PERMANENT;
+		item[DEBT_VALUE_KEY_TYPE] = newType;
 		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_TYPE);
 	}
 
 	/**
-	 * Resets the debt balance to its original amount and marks the entry as
-	 * unpaid. Writes the full content object to CloudBase in one operation.
+	 * Resets the debt balance to its original amount and marks the entry as unpaid.
 	 *
 	 * @param entryKey - The unique key of the entry to reset.
 	 */
@@ -407,9 +407,9 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const item = this.findUpdatedItem(entryKey);
 		const original = this.findOriginalItem(entryKey);
 		if (!item || !original) return;
-		const originalAmount: number = original.content?.original ?? item.content?.original ?? 0;
-		item.content.debt = originalAmount;
-		item.content.paid = false;
+		const originalAmount: number = original.original ?? item.original ?? 0;
+		item.debt = originalAmount;
+		item.paid = false;
 		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
 		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_PAID);
 		this.paymentHistoryMap = { ...this.paymentHistoryMap, [entryKey]: [] };
@@ -440,17 +440,17 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * {@link payDebt} - Persists the new debt balance, and the paid flag when zeroed.
 	 * {@link resetDebt} - Restores debt and paid flag to original values.
 	 * {@link toggleLock} - Persists the toggled goal/permanent type.
-	 * {@link editDebt} - Persists the updated balance, original, due date, and currency from the edit dialog.
+	 * {@link setDebtForCycle} - Persists the new amount, reset original, cleared paid flag, and due date from the Set dialog.
 	 *
 	 * @param entryKey - The unique key of the entry to update.
-	 * @param valueKey - The field name inside the entry's content object.
+	 * @param valueKey - The field name inside the entry's object.
 	 */
 	private async updateTableSingleValue(entryKey: string, valueKey: string): Promise<void> {
 		const updatedItem = this.findUpdatedItem(entryKey);
 		const originalItem = this.findOriginalItem(entryKey);
 		if (!updatedItem || !originalItem) return;
-		const updatedValue = updatedItem.content[valueKey];
-		const oldValue = originalItem.content[valueKey];
+		const updatedValue = updatedItem[valueKey];
+		const oldValue = originalItem[valueKey];
 		try {
 			if (updatedValue !== oldValue) {
 				await this.databaseService.updateDebtTable(entryKey, valueKey, updatedValue);
@@ -461,7 +461,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 				const rollback = this.findUpdatedItem(entryKey);
 				const rollbackOriginal = this.findOriginalItem(entryKey);
 				if (rollback && rollbackOriginal) {
-					rollback.content[valueKey] = rollbackOriginal.content[valueKey];
+					rollback[valueKey] = rollbackOriginal[valueKey];
 				}
 			}
 			this.dialogService.handleError(this.dialogComponentContainer, error);
@@ -508,11 +508,11 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	private resyncUpcomingFromLocalData(): void {
 		this.upcomingExpenses = (this.updatedDebtSonataItems ?? [])
-			.filter((item: any) => item.content?.date && !item.content?.paid)
+			.filter((item: any) => item.date && !item.paid)
 			.map((item: any) => ({
 				type: DEBT_ITEM_EXPENSE,
 				name: item.name,
-				date: item.content.date
+				date: item.date
 			}));
 		this.syncStatistics();
 	}
@@ -586,8 +586,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 			const isChinese = Utilities.checkIfChinese(item.name ?? '');
 			const code = isChinese ? 'CNY' : 'CAD';
 			if (!groups[code]) groups[code] = { owed: 0, original: 0 };
-			groups[code].owed += item.content?.debt ?? 0;
-			groups[code].original += item.content?.original ?? 0;
+			groups[code].owed += item.debt ?? 0;
+			groups[code].original += item.original ?? 0;
 		}
 		return Object.entries(groups).map(([code, g]) => {
 			const paidAmount = Math.max(0, g.original - g.owed);
@@ -609,7 +609,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The number of unpaid items.
 	 */
 	protected get activeCount(): number {
-		return (this.updatedDebtSonataItems ?? []).filter((item: any) => !item.content?.paid).length;
+		return (this.updatedDebtSonataItems ?? []).filter((item: any) => !item.paid).length;
 	}
 
 	/**
@@ -618,7 +618,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The number of paid items.
 	 */
 	protected get paidCount(): number {
-		return (this.updatedDebtSonataItems ?? []).filter((item: any) => item.content?.paid).length;
+		return (this.updatedDebtSonataItems ?? []).filter((item: any) => item.paid).length;
 	}
 
 	/**
@@ -628,8 +628,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected get dueSoonCount(): number {
 		return (this.updatedDebtSonataItems ?? []).filter((item: any) => {
-			if (item.content?.paid) return false;
-			const s = this.getDueStatus(item.content?.date);
+			if (item.paid) return false;
+			const s = this.getDueStatus(item.date);
 			return s.soon && !s.overdue;
 		}).length;
 	}
@@ -641,8 +641,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected get overdueCount(): number {
 		return (this.updatedDebtSonataItems ?? []).filter((item: any) => {
-			if (item.content?.paid) return false;
-			return this.getDueStatus(item.content?.date).overdue;
+			if (item.paid) return false;
+			return this.getDueStatus(item.date).overdue;
 		}).length;
 	}
 
@@ -663,8 +663,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The CategoryDef containing icon, label, and gradient.
 	 */
 	protected getCategoryForItem(item: any): CategoryDef {
-		if (item.content?.cat) {
-			const stored = this.categoryDefs.find((categoryDef) => categoryDef.key === item.content.cat);
+		if (item.cat) {
+			const stored = this.categoryDefs.find((categoryDef) => categoryDef.key === item.cat);
 			if (stored) return stored;
 		}
 		return this.categoryDefs[this.getCategoryIndexForItem(item)];
@@ -679,7 +679,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The due label string.
 	 */
 	protected getDueLabelForItem(item: any): string {
-		const dateStr: string | null | undefined = item.content?.date;
+		const dateStr: string | null | undefined = item.date;
 		if (!dateStr) return DEBT_DUE_LABEL_NONE;
 		const now = new Date();
 		now.setHours(0, 0, 0, 0);
@@ -700,7 +700,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The icon ligature string.
 	 */
 	protected getDueIconForItem(item: any): string {
-		const status = this.getDueStatus(item.content?.date);
+		const status = this.getDueStatus(item.date);
 		if (status.overdue) return DEBT_DUE_ICON_OVERDUE;
 		return DEBT_DUE_ICON_DEFAULT;
 	}
@@ -712,7 +712,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns 'is-over', 'is-soon', or empty string.
 	 */
 	protected getDueClassForItem(item: any): string {
-		const status = this.getDueStatus(item.content?.date);
+		const status = this.getDueStatus(item.date);
 		if (status.overdue) return DEBT_DUE_CLASS_OVERDUE;
 		if (status.soon) return DEBT_DUE_CLASS_SOON;
 		return '';
@@ -757,9 +757,9 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns A whole-number percentage between 0 and 100.
 	 */
 	protected getDebtProgress(item: any): number {
-		const original: number = item.content?.original ?? 0;
+		const original: number = item.original ?? 0;
 		if (original <= 0) return 0;
-		const repaid = Math.max(0, original - (item.content?.debt ?? 0));
+		const repaid = Math.max(0, original - (item.debt ?? 0));
 		return Math.min(100, Math.round((repaid / original) * 100));
 	}
 
@@ -816,60 +816,53 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Opens the edit-debt dialog pre-filled with the entry's current balance,
-	 * due date, and currency. Wires the submit callback to persist any changed
-	 * fields to CloudBase via {@link editDebt}.
+	 * Opens the Set-debt dialog pre-filled with the entry's current balance,
+	 * due date, and currency. Wires the submit callback to persist the new cycle
+	 * values to CloudBase via {@link setDebtForCycle}.
 	 *
-	 * @param entryKey - The unique key of the entry to edit.
+	 * @param entryKey - The unique key of the entry to set.
 	 */
-	protected openEditDebtDialog(entryKey: string): void {
+	protected openSetDebtDialog(entryKey: string): void {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
 		const item = this.findUpdatedItem(entryKey);
 		if (!item) return;
 		const prefillData: Partial<NewDebtData> = {
-			amount: item.content?.debt ?? 0,
-			dueDate: item.content?.date ?? '',
-			currency: item.content?.cur ?? DEBT_CURRENCY_CNY
+			amount: item.debt ?? 0,
+			dueDate: item.date ?? '',
+			currency: item.cur ?? DEBT_CURRENCY_CNY
 		};
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_DEBT,
-			(data: NewDebtData) => this.editDebt(entryKey, data).catch(() => {}),
+			(data: NewDebtData) => this.setDebtForCycle(entryKey, data).catch(() => {}),
 			prefillData
 		);
 	}
 
 	/**
-	 * Applies the changes submitted from the edit-debt dialog. Writes only
-	 * the fields that actually changed — currency, balance, original total
-	 * (when the new amount exceeds the old original), and due date.
+	 * Applies the Set-debt dialog submission as a fresh cycle: always resets
+	 * the original ceiling to the entered amount, clears the paid flag, and
+	 * persists currency and due date when they changed.
 	 *
 	 * @param entryKey - The unique key of the entry to update.
-	 * @param data - The validated form data returned by the dialog.
+	 * @param data - The validated form data returned by the Set dialog.
 	 */
-	private async editDebt(entryKey: string, data: NewDebtData): Promise<void> {
+	private async setDebtForCycle(entryKey: string, data: NewDebtData): Promise<void> {
 		const item = this.findUpdatedItem(entryKey);
 		if (!item) return;
-		if (data.currency !== item.content?.cur) {
-			item.content = { ...item.content, [DEBT_VALUE_KEY_CUR]: data.currency };
+		if (data.currency !== item.cur) {
+			item[DEBT_VALUE_KEY_CUR] = data.currency;
 			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_CUR);
 		}
-		if (data.amount !== item.content?.debt) {
-			const oldOriginal: number = item.content?.original ?? 0;
-			// When the user enters a higher balance than the stored original (e.g. adding new charges),
-			// bump the original ceiling so the progress bar stays meaningful
-			const newOriginal = Math.max(data.amount, oldOriginal);
-			item.content = {
-				...item.content,
-				[DEBT_VALUE_KEY_DEBT]: data.amount,
-				[DEBT_VALUE_KEY_ORIGINAL]: newOriginal
-			};
-			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
-			if (newOriginal !== oldOriginal) {
-				await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_ORIGINAL);
-			}
-		}
-		if (data.dueDate !== item.content?.date) {
-			item.content = { ...item.content, [DEBT_VALUE_KEY_DATE]: data.dueDate };
+		// Always reset both debt and original to the entered amount (fresh cycle)
+		item[DEBT_VALUE_KEY_DEBT] = data.amount;
+		item[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
+		item[DEBT_VALUE_KEY_PAID] = false;
+		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
+		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_ORIGINAL);
+		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_PAID);
+		if (data.dueDate !== item.date) {
+			item[DEBT_VALUE_KEY_DATE] = data.dueDate;
 			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DATE);
 		}
 		this.resyncUpcomingFromLocalData();
@@ -884,7 +877,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns Whether the item has type 'permanent'.
 	 */
 	protected isItemPermanent(item: any): boolean {
-		return item.content?.type === DEBT_TYPE_PERMANENT;
+		return item.type === DEBT_TYPE_PERMANENT;
 	}
 
 	/**
@@ -896,7 +889,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns Whether the item's currency is CNY.
 	 */
 	protected isCnyCurrency(item: any): boolean {
-		if (item.content?.cur) return item.content.cur === DEBT_CURRENCY_CNY;
+		if (item.cur) return item.cur === DEBT_CURRENCY_CNY;
 		return Utilities.checkIfChinese(item.name ?? '');
 	}
 }

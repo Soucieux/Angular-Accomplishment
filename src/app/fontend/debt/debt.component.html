@@ -5,7 +5,6 @@
 		<!-- ── Page header ────────────────────────────────────────────── -->
 		<div class="page-header">
 			<div class="header-left">
-				<span class="material-symbols-outlined header-icon">account_balance</span>
 				<div class="header-text">
 					<h1 class="page-title">Debt Sonata</h1>
 					<p class="page-subtitle">Where every repayment is a brushstroke — and a closing line.</p>
@@ -46,9 +45,9 @@
 					<span class="summary-label">TOTAL DEBT</span>
 					@for (group of currencyGroups; track group.code) {
 						<div class="summary-amount-row">
-							<span class="summary-amount"
-								>{{ formatMoney(group.owed, group.code === DEBT_CURRENCY_CNY) }}</span
-							>
+							<span class="summary-amount">{{
+								formatMoney(group.owed, group.code === DEBT_CURRENCY_CNY)
+							}}</span>
 							<span class="summary-currency">{{ group.symbol }} {{ group.code }}</span>
 						</div>
 						<div class="summary-bar-track">
@@ -195,7 +194,14 @@
 							<div class="card-progress-meta">
 								<span>{{ getDebtProgress(item) }}% paid</span>
 								<span
-									>{{ formatMoney(getDebtProgress(item) === 100 ? (item?.original ?? 0) : (item?.original ?? 0) - (item?.debt ?? 0), isCnyCurrency(item)) }}
+									>{{
+										formatMoney(
+											getDebtProgress(item) === 100
+												? (item?.original ?? 0)
+												: (item?.original ?? 0) - (item?.debt ?? 0),
+											isCnyCurrency(item)
+										)
+									}}
 									of {{ formatMoney(item?.original ?? 0, isCnyCurrency(item)) }}</span
 								>
 							</div>
@@ -239,6 +245,14 @@
 							<!-- Footer: reset / lock / delete / history -->
 							<div class="card-footer">
 								<button
+									class="footer-button edit-button"
+									(click)="openSetDebtDialog(item.key)">
+									<span class="material-symbols-outlined" style="font-size: 17px"
+										>tune</span
+									>
+									Set
+								</button>
+								<button
 									class="footer-button"
 									[class.is-prompted]="isPromptedReset[item.key]"
 									(click)="promptOrConfirmReset(item.key)">
@@ -260,24 +274,7 @@
 										isItemPermanent(item) ? 'lock' : 'lock_open'
 									}}</span>
 								</button>
-								<button
-									class="footer-button edit-button"
-									(click)="openEditDebtDialog(item.key)">
-									<span class="material-symbols-outlined" style="font-size: 17px"
-										>edit</span
-									>
-									Edit
-								</button>
-								@if (isItemPermanent(item)) {
-									<button
-										class="footer-icon-button danger-button is-disabled"
-										disabled
-										title="Unlock first to delete">
-										<span class="material-symbols-outlined" style="font-size: 15px"
-											>delete</span
-										>
-									</button>
-								} @else {
+								@if (!isItemPermanent(item)) {
 									<button
 										class="footer-icon-button danger-button"
 										[class.is-prompted]="isPromptedDelete[item.key]"

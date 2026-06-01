@@ -9,16 +9,14 @@ export interface ReminderItem {
 
 export type ReminderValueKey = 'text' | 'date' | 'link' | 'tags';
 
-/** Raw shape of a third-table document as returned by CloudBase. */
+/** Raw shape of a reminder document as returned by CloudBase (flat — no content wrapper). */
 export interface ReminderDbRecord {
 	key: string;
 	_openid: string;
-	content: {
-		text?: string;
-		date?: unknown;
-		link?: string | null;
-		tags?: string[];
-	};
+	text?: string;
+	date?: unknown;
+	link?: string | null;
+	tags?: string[];
 }
 
 /** Tag-edit session shared by both existing-card and new-item-card contexts. */

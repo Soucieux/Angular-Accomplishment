@@ -96,15 +96,18 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			if (!CloudbaseService.getUseId()) {
 				// Wait for anonymous sign-in before starting the watcher —
 				// the CloudBase WebSocket needs valid credentials to connect.
-				this.authService.signInAnonymously().then(() => {
-					this.signedInAnonymously = true;
-					// Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
-					CloudbaseService.markAuthReady();
-					this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
-					// Promise callback fires outside Angular's zone; detectChanges() is
-					// required to bind the newly assigned quotes$ Observable in the template.
-					this.cdr.detectChanges();
-				}).catch(() => {});
+				this.authService
+					.signInAnonymously()
+					.then(() => {
+						this.signedInAnonymously = true;
+						// Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
+						CloudbaseService.markAuthReady();
+						this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
+						// Promise callback fires outside Angular's zone; detectChanges() is
+						// required to bind the newly assigned quotes$ Observable in the template.
+						this.cdr.detectChanges();
+					})
+					.catch(() => {});
 			} else {
 				this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
 			}
@@ -169,13 +172,13 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Checks whether the current user has permission to delete the given quote.
+	 * Returns true when the current user has administrator rights.
+	 * Only admins can see and trigger the delete button on quote cards.
 	 *
-	 * @param quote - The quote object to check.
-	 * @returns true if the user can delete the quote, otherwise false.
+	 * @returns True if the current user is an admin.
 	 */
-	protected canDelete(quote: QuoteRecord): boolean {
-		return Utilities.checkPermission(quote._openid ?? '');
+	protected get isAdmin(): boolean {
+		return CloudbaseService.userHasAllRights();
 	}
 
 	/**
@@ -254,14 +257,16 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object to delete.
 	 */
 	protected openDeleteConfirmationDialog(quote: QuoteRecord): void {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, quote._openid ?? '')) return;
-
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			async () => {
 				try {
-					await this.databaseService.removeQuote(quote.key ?? '', quote.text ?? '', quote.author ?? '');
+					await this.databaseService.removeQuote(
+						quote.key ?? '',
+						quote.text ?? '',
+						quote.author ?? ''
+					);
 				} catch {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}

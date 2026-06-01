@@ -28,7 +28,7 @@ export class SearchDialogComponent {
 	 *
 	 * @param stopCallback - The callback to call when the user interrupts the search.
 	 */
-	public openDialog(stopCallback: () => void) {
+	public openDialog(stopCallback: () => void): void {
 		this.visible = true;
 		this.stopCallback = stopCallback;
 

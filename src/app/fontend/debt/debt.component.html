@@ -11,7 +11,7 @@
 					<p class="page-subtitle">Where every repayment is a brushstroke — and a closing line.</p>
 				</div>
 			</div>
-			<button class="new-debt-btn" (click)="openNewDebtDialog()">
+			<button class="new-debt-button" (click)="openNewDebtDialog()">
 				<span class="material-symbols-outlined">add</span>
 				New debt
 			</button>
@@ -66,28 +66,28 @@
 				<div class="summary-right hide-on-mobile">
 					<div class="stat-grid">
 						<div class="stat-cell">
-							<span class="stat-num">{{ updatedDebtSonataItems.length }}</span>
-							<span class="stat-lbl">DEBTS</span>
+							<span class="stat-number">{{ updatedDebtSonataItems.length }}</span>
+							<span class="stat-label">DEBTS</span>
 						</div>
 						<div class="stat-cell">
-							<span class="stat-num">{{ activeCount }}</span>
-							<span class="stat-lbl">ACTIVE</span>
+							<span class="stat-number">{{ activeCount }}</span>
+							<span class="stat-label">ACTIVE</span>
 						</div>
 						<div class="stat-cell">
-							<span class="stat-num">{{ paidCount }}</span>
-							<span class="stat-lbl">PAID OFF</span>
+							<span class="stat-number">{{ paidCount }}</span>
+							<span class="stat-label">PAID OFF</span>
 						</div>
 						<div class="stat-cell">
-							<span class="stat-num">{{ dueSoonCount }}</span>
-							<span class="stat-lbl">DUE SOON</span>
+							<span class="stat-number">{{ dueSoonCount }}</span>
+							<span class="stat-label">DUE SOON</span>
 						</div>
 						<div class="stat-cell" [class.is-overdue]="overdueCount > 0">
-							<span class="stat-num">{{ overdueCount }}</span>
-							<span class="stat-lbl">OVERDUE</span>
+							<span class="stat-number">{{ overdueCount }}</span>
+							<span class="stat-label">OVERDUE</span>
 						</div>
 						<div class="stat-cell">
-							<span class="stat-num">{{ totalPayments }}</span>
-							<span class="stat-lbl">PAYMENTS</span>
+							<span class="stat-number">{{ totalPayments }}</span>
+							<span class="stat-label">PAYMENTS</span>
 						</div>
 					</div>
 				</div>
@@ -123,8 +123,8 @@
 				} @else if (updatedDebtSonataItems.length === 0) {
 					<div class="debts-empty">
 						<span class="material-symbols-outlined debts-empty-icon">celebration</span>
-						<p class="debts-empty-msg">{{ DEBT_EMPTY_STATE_MSG }}</p>
-						<button class="debts-empty-btn" (click)="openNewDebtDialog()">{{ DEBT_EMPTY_STATE_BTN }}</button>
+						<p class="debts-empty-message">{{ DEBT_EMPTY_STATE_MSG }}</p>
+						<button class="debts-empty-button" (click)="openNewDebtDialog()">{{ DEBT_EMPTY_STATE_BTN }}</button>
 					</div>
 				} @else {
 					@for (item of sortedItems; track item.key) {
@@ -132,21 +132,21 @@
 							class="debt-card"
 							[class.is-paid]="item.content?.paid"
 							[class.is-expanded]="expandedItems[item.key]"
-							[style.--cat-grad]="getCategoryForItem(item).grad">
+							[style.--category-gradient]="getCategoryForItem(item).gradient">
 							@if (item.content?.paid) {
 								<div class="paid-ribbon">PAID OFF</div>
 							}
 
 							<!-- Card head: icon + name/category + due chip -->
 							<div class="card-head">
-								<div class="cat-icon" [style.background]="getCategoryForItem(item).grad">
+								<div class="category-icon" [style.background]="getCategoryForItem(item).gradient">
 									<span class="material-symbols-outlined">{{
 										getCategoryForItem(item).icon
 									}}</span>
 								</div>
 								<div class="card-name-group">
 									<span class="card-name">{{ item.name }}</span>
-									<span class="card-cat">{{ getCategoryForItem(item).label }}</span>
+									<span class="card-category">{{ getCategoryForItem(item).label }}</span>
 								</div>
 								@if (item.content?.date && !item.content?.paid) {
 									<span class="due-chip" [class]="getDueClassForItem(item)">
@@ -212,13 +212,13 @@
 									class="pay-chip"
 									[disabled]="!!item.content?.paid"
 									(click)="payDebt(item.key, DEBT_PRESET_SMALL)">
-									−{{ fmtCompact(DEBT_PRESET_SMALL, isCnyCurrency(item)) }}
+									−{{ formatCompact(DEBT_PRESET_SMALL, isCnyCurrency(item)) }}
 								</button>
 								<button
 									class="pay-chip"
 									[disabled]="!!item.content?.paid"
 									(click)="payDebt(item.key, DEBT_PRESET_LARGE)">
-									−{{ fmtCompact(DEBT_PRESET_LARGE, isCnyCurrency(item)) }}
+									−{{ formatCompact(DEBT_PRESET_LARGE, isCnyCurrency(item)) }}
 								</button>
 								@if (customInputState[item.key] == null) {
 									<button
@@ -243,7 +243,7 @@
 							<!-- Footer: reset / lock / delete / history -->
 							<div class="card-footer">
 								<button
-									class="footer-btn"
+									class="footer-button"
 									[class.is-prompted]="isPromptedReset[item.key]"
 									(click)="promptOrConfirmReset(item.key)">
 									<span class="material-symbols-outlined" style="font-size: 17px"
@@ -252,7 +252,7 @@
 									{{ isPromptedReset[item.key] ? 'Restore?' : 'Reset' }}
 								</button>
 								<button
-									class="footer-icon-btn lock-btn"
+									class="footer-icon-button lock-button"
 									[class.is-locked]="isItemPermanent(item)"
 									(click)="toggleLock(item.key)"
 									[title]="isItemPermanent(item) ? 'Permanent — click to unlock' : 'Mark as permanent'">
@@ -261,21 +261,21 @@
 									}}</span>
 								</button>
 								<button
-									class="footer-btn edit-btn"
+									class="footer-button edit-button"
 									(click)="openEditDebtDialog(item.key)">
 									<span class="material-symbols-outlined" style="font-size: 17px">edit</span>
 									Edit
 								</button>
 								@if (isItemPermanent(item)) {
 									<button
-										class="footer-icon-btn danger-btn is-disabled"
+										class="footer-icon-button danger-button is-disabled"
 										disabled
 										title="Unlock first to delete">
 										<span class="material-symbols-outlined" style="font-size: 15px">delete</span>
 									</button>
 								} @else {
 									<button
-										class="footer-icon-btn danger-btn"
+										class="footer-icon-button danger-button"
 										[class.is-prompted]="isPromptedDelete[item.key]"
 										(click)="promptOrConfirmDelete(item.key)">
 										<span class="material-symbols-outlined" style="font-size: 15px">{{
@@ -303,13 +303,13 @@
 									@if (getHistoryForItem(item.key).length === 0) {
 										<p class="history-empty">No payments yet — chip away at it above.</p>
 									} @else {
-										@for (entry of getHistoryForItem(item.key); track entry.ts) {
+										@for (entry of getHistoryForItem(item.key); track entry.timestamp) {
 											<div class="history-row">
 												<span class="history-dot"></span>
-												<span class="history-ts">{{ formatTs(entry.ts) }}</span>
+												<span class="history-timestamp">{{ formatTimestamp(entry.timestamp) }}</span>
 												<span class="history-amount"
 													>−{{
-														fmtMoney(entry.amount, isCnyCurrency(item))
+														formatMoney(entry.amount, isCnyCurrency(item))
 													}}</span
 												>
 												<span class="history-balance">
@@ -318,7 +318,7 @@
 														style="font-size: 16px"
 														>arrow_right_alt</span
 													>
-													{{ fmtMoney(entry.balance, isCnyCurrency(item)) }}
+													{{ formatMoney(entry.balance, isCnyCurrency(item)) }}
 												</span>
 											</div>
 										}

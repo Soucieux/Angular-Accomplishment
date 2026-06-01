@@ -50,7 +50,7 @@ export class FirebaseService extends DatabaseService {
 	constructor(
 		@Inject(Storage) private storage: Storage,
 		@Inject(Database) private db: Database,
-		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
+		@Inject(EnvironmentInjector) private environmentInjector: EnvironmentInjector,
 		private searchStreamService: SearchStreamService
 	) {
 		super();
@@ -86,12 +86,12 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the movie list from Firebase as a reactive observable.
+	 * Gets the movie list from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
 	public getMovieList(): Observable<MovieItemVO[]> {
-		return runInInjectionContext(this.ei, () =>
+		return runInInjectionContext(this.environmentInjector, () =>
 			list(this.moviesRef).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
@@ -122,13 +122,13 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the statistics from Firebase as a reactive observable.
+	 * Gets the statistics from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the statistics.
 	 */
 	public getStatistics(): Observable<any> {
 		return new Observable((observer) => {
-			runInInjectionContext(this.ei, () => {
+			runInInjectionContext(this.environmentInjector, () => {
 				const unsub = onValue(this.statisticsRef, (snapshot) => {
 					observer.next(snapshot.val());
 				});
@@ -348,7 +348,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the reusable keys from the database.
+	 * Gets the reusable keys from the database.
 	 *
 	 * @returns The array of reusable key strings.
 	 */
@@ -393,7 +393,7 @@ export class FirebaseService extends DatabaseService {
 		movieId: number
 	): Promise<boolean> {
 		try {
-			const snapshot = await runInInjectionContext(this.ei, () => get(this.moviesRef));
+			const snapshot = await runInInjectionContext(this.environmentInjector, () => get(this.moviesRef));
 			// Firebase Realtime DB does not support server-side .where() queries
 			// like CloudBase, so we must iterate all movies to check for duplicates.
 			const allMovies = snapshot.val();
@@ -472,12 +472,12 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the history list from Firebase as a reactive observable.
+	 * Gets the history list from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the history list.
 	 */
 	public getHistory(): Observable<any[]> {
-		return runInInjectionContext(this.ei, () =>
+		return runInInjectionContext(this.environmentInjector, () =>
 			list(dbRef(this.db, DATABASE_HISTORY)).pipe(
 				map((snapshots: any[]) =>
 					snapshots
@@ -534,12 +534,12 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the patch notes from Firebase as a reactive observable.
+	 * Gets the patch notes from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the patch notes.
 	 */
 	public getPatchNotes(): Observable<any[]> {
-		return runInInjectionContext(this.ei, () =>
+		return runInInjectionContext(this.environmentInjector, () =>
 			list(dbRef(this.db, DATABASE_PATCH_NOTES)).pipe(
 				map((snapshots: any[]) =>
 					snapshots
@@ -566,7 +566,7 @@ export class FirebaseService extends DatabaseService {
 		);
 	}
 
-	// ── Remove existing record from table ─────────────────────────────────────────
+	////////////////////// Below are Removal methods for database table records ////////////////
 
 	/**
 	 * Removes a record from debt table.
@@ -603,13 +603,13 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the first reminder table details from Firebase as a reactive observable.
+	 * Gets the first reminder table details from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the date calculator table details.
 	 */
 	public getDateCalculatorTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
-			runInInjectionContext(this.ei, () => {
+			runInInjectionContext(this.environmentInjector, () => {
 				const unsub = onValue(dbRef(this.db, DATABASE_DATE_CALCULATOR), (snapshot) => {
 					const data = snapshot.val();
 					// Firebase stores the collection as an object keyed by push ID;
@@ -622,12 +622,12 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the Account Expenses (debt sonata) table details from Firebase as a reactive observable.
+	 * Gets the Account Expenses (debt sonata) table details from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the Account Expenses table details.
 	 */
 	public getDebtSonataTableDetails(): Observable<any[]> {
-		return runInInjectionContext(this.ei, () =>
+		return runInInjectionContext(this.environmentInjector, () =>
 			// list() reads once + subscribes to changes; pipe+map transforms
 			// each snapshot into {key, ...fields} for the table component.
 			list(dbRef(this.db, DATABASE_DEBT_SONATA)).pipe(
@@ -653,12 +653,12 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Returns the reminder table details from Firebase as a reactive observable.
+	 * Gets the reminder table details from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the reminder table details.
 	 */
 	public getReminderTableDetails(): Observable<any[]> {
-		return runInInjectionContext(this.ei, () =>
+		return runInInjectionContext(this.environmentInjector, () =>
 			// Content shape is {text, date, link}.
 			list(dbRef(this.db, DATABASE_REMINDER)).pipe(
 				map((snapshots: any[]) =>
@@ -678,7 +678,7 @@ export class FirebaseService extends DatabaseService {
 		);
 	}
 
-	// ── Update existing record to table ─────────────────────────────────────────
+	////////////////////// Below are Update methods for database table records /////////////////
 
 	/**
 	 * Updates value in Reminder table
@@ -744,12 +744,12 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the quotes from the database.
+	 * Gets the quotes from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the quotes list.
 	 */
 	public getQuotes(): Observable<any[]> {
-		return runInInjectionContext(this.ei, () =>
+		return runInInjectionContext(this.environmentInjector, () =>
 			list(dbRef(this.db, DATABASE_QUOTES)).pipe(
 				map((snapshots: any[]) =>
 					snapshots
@@ -764,7 +764,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new quote to the database.
+	 * Adds a new quote to the database and updates the statistics collection.
 	 *
 	 * @param text - The quote text.
 	 * @param author - The author of the quote.
@@ -793,7 +793,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a quote from the database.
+	 * Removes a quote from the database and decrements the statistics total.
 	 *
 	 * @param key - The key of the quote to remove.
 	 */
@@ -866,7 +866,7 @@ export class FirebaseService extends DatabaseService {
 		return this.appendToActivityLog(STATS_FIELD_RECENT_PATCH, activity);
 	}
 
-	// ── Add new record to table ─────────────────────────────────────────
+	////////////////////// Below are Add methods for database table records ////////////////////
 
 	/**
 	 * Adds a new entry to reminder table.
@@ -878,9 +878,8 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Adds a new entry to debt table
+	 * Adds a new entry to the debt table.
 	 *
-	 * @param tableName - The corresponding collection name.
 	 * @param newRecord - The new entry to add.
 	 */
 	public async addNewRecordToDebtTable(newRecord: any): Promise<void> {
@@ -924,7 +923,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the useful links from the database.
+	 * Gets the useful links from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the useful links list.
 	 */
@@ -933,7 +932,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new useful link to the database.
+	 * Adds a new useful link to the database.
 	 *
 	 * @param link - The link object to add.
 	 */
@@ -948,7 +947,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update an existing useful link in the database.
+	 * Updates an existing useful link in the database.
 	 *
 	 * @param key - The key of the link to update.
 	 * @param updates - The fields to update.
@@ -961,7 +960,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Increment the visit count for a useful link.
+	 * Increments the visit count for a useful link.
 	 *
 	 * @param key - The key of the link.
 	 * @param currentCount - The current visit count.
@@ -971,7 +970,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a useful link from the database.
+	 * Removes a useful link from the database.
 	 *
 	 * @param key - The key of the link to remove.
 	 */
@@ -980,7 +979,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Get the link categories from the database.
+	 * Gets the link categories from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the link categories list.
 	 */
@@ -989,7 +988,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Add a new link category to the database.
+	 * Adds a new link category to the database.
 	 *
 	 * @param category - The category object to add.
 	 */
@@ -998,7 +997,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Update an existing link category in the database.
+	 * Updates an existing link category in the database.
 	 *
 	 * @param key - The key of the category to update.
 	 * @param updates - The fields to update.
@@ -1011,7 +1010,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Remove a link category from the database.
+	 * Removes a link category from the database.
 	 *
 	 * @param key - The key of the category to remove.
 	 */

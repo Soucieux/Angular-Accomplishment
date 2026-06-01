@@ -27,7 +27,7 @@ export class ErrorDialogComponent {
 	 *
 	 * @param errorMessage - The error message to display.
 	 */
-	public openDialog(errorMessage: string) {
+	public openDialog(errorMessage: string): void {
 		this.confirmationService.confirm({
 			message: `<div class="${ERROR_DIALOG_MSG_CLASS}">${errorMessage}</div>`,
 			header: ERROR_DIALOG_HEADER,

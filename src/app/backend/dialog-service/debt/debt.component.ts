@@ -9,23 +9,38 @@ import {
 	DEBT_CURRENCY_CAD,
 	DEBT_CURRENCY_CNY,
 	DEBT_DIALOG_LABEL_ADD,
+	DEBT_DIALOG_LABEL_BALANCE,
 	DEBT_DIALOG_LABEL_CANCEL,
 	DEBT_DIALOG_LABEL_CURRENCY_CAD,
 	DEBT_DIALOG_LABEL_CURRENCY_CNY,
+	DEBT_DIALOG_LABEL_EDIT,
 	DEBT_DIALOG_LABEL_PERMANENT,
 	DEBT_DIALOG_LABEL_PERMANENT_DESC,
+	DEBT_DIALOG_LABEL_SAVE,
 	DEBT_DIALOG_PLACEHOLDER_AMOUNT,
 	DEBT_DIALOG_PLACEHOLDER_NAME,
-	DEBT_DIALOG_TITLE
+	DEBT_DIALOG_TITLE,
+	DEBT_CATEGORY_LABEL_CARD,
+	DEBT_CATEGORY_LABEL_PERSON,
+	DEBT_CATEGORY_LABEL_SHOPPING,
+	DEBT_CATEGORY_LABEL_HOME,
+	DEBT_CATEGORY_ICON_CARD,
+	DEBT_CATEGORY_ICON_PERSON,
+	DEBT_CATEGORY_ICON_SHOPPING,
+	DEBT_CATEGORY_ICON_HOME,
+	DEBT_CATEGORY_GRADIENT_CARD,
+	DEBT_CATEGORY_GRADIENT_PERSON,
+	DEBT_CATEGORY_GRADIENT_SHOPPING,
+	DEBT_CATEGORY_GRADIENT_HOME
 } from '../../../common/app.constant';
-import { DebtCategoryDef, NewDebtData } from './add-debt.model';
+import { DebtCategoryDef, NewDebtData } from '../../../fontend/debt/debt.model';
 
 @Component({
 	selector: 'add-debt-dialog',
 	standalone: true,
 	imports: [DialogModule, FormsModule],
-	templateUrl: './add-debt.component.html',
-	styleUrl: './add-debt.component.scss'
+	templateUrl: './debt.component.html',
+	styleUrl: './debt.component.scss'
 })
 export class AddDebtDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
@@ -33,7 +48,10 @@ export class AddDebtDialogComponent {
 	protected readonly DEBT_DIALOG_TITLE = DEBT_DIALOG_TITLE;
 	protected readonly DEBT_DIALOG_PLACEHOLDER_NAME = DEBT_DIALOG_PLACEHOLDER_NAME;
 	protected readonly DEBT_DIALOG_PLACEHOLDER_AMOUNT = DEBT_DIALOG_PLACEHOLDER_AMOUNT;
+	protected readonly DEBT_DIALOG_LABEL_EDIT = DEBT_DIALOG_LABEL_EDIT;
 	protected readonly DEBT_DIALOG_LABEL_ADD = DEBT_DIALOG_LABEL_ADD;
+	protected readonly DEBT_DIALOG_LABEL_SAVE = DEBT_DIALOG_LABEL_SAVE;
+	protected readonly DEBT_DIALOG_LABEL_BALANCE = DEBT_DIALOG_LABEL_BALANCE;
 	protected readonly DEBT_DIALOG_LABEL_CANCEL = DEBT_DIALOG_LABEL_CANCEL;
 	protected readonly DEBT_DIALOG_LABEL_PERMANENT = DEBT_DIALOG_LABEL_PERMANENT;
 	protected readonly DEBT_DIALOG_LABEL_PERMANENT_DESC = DEBT_DIALOG_LABEL_PERMANENT_DESC;
@@ -44,30 +62,31 @@ export class AddDebtDialogComponent {
 	protected readonly categoryOptions: DebtCategoryDef[] = [
 		{
 			key: DEBT_CAT_CARD,
-			icon: 'credit_card',
-			label: 'Credit card',
-			grad: 'linear-gradient(90deg,#e91e8c,#f7971e)'
+			icon: DEBT_CATEGORY_ICON_CARD,
+			label: DEBT_CATEGORY_LABEL_CARD,
+			gradient: DEBT_CATEGORY_GRADIENT_CARD
 		},
 		{
 			key: DEBT_CAT_PERSON,
-			icon: 'handshake',
-			label: 'Personal',
-			grad: 'linear-gradient(90deg,#fda085,#f6d365)'
+			icon: DEBT_CATEGORY_ICON_PERSON,
+			label: DEBT_CATEGORY_LABEL_PERSON,
+			gradient: DEBT_CATEGORY_GRADIENT_PERSON
 		},
 		{
 			key: DEBT_CAT_SHOPPING,
-			icon: 'shopping_bag',
-			label: 'Financing',
-			grad: 'linear-gradient(90deg,#8e54e9,#e91e8c)'
+			icon: DEBT_CATEGORY_ICON_SHOPPING,
+			label: DEBT_CATEGORY_LABEL_SHOPPING,
+			gradient: DEBT_CATEGORY_GRADIENT_SHOPPING
 		},
 		{
 			key: DEBT_CAT_HOME,
-			icon: 'home',
-			label: 'Mortgage',
-			grad: 'linear-gradient(90deg,#11998e,#38ef7d)'
+			icon: DEBT_CATEGORY_ICON_HOME,
+			label: DEBT_CATEGORY_LABEL_HOME,
+			gradient: DEBT_CATEGORY_GRADIENT_HOME
 		}
 	];
 
+	protected isEditMode = false;
 	protected visible = false;
 	protected name = '';
 	protected selectedCategoryKey = DEBT_CAT_CARD;
@@ -84,23 +103,36 @@ export class AddDebtDialogComponent {
 	 * @returns Whether the form is in a submittable state.
 	 */
 	protected get isValid(): boolean {
+		if (this.isEditMode) return parseFloat(this.amount) > 0;
 		return this.name.trim().length > 0 && parseFloat(this.amount) > 0;
 	}
 
 	/**
-	 * Opens the dialog, resets all form fields to defaults, and stores the
-	 * submit callback to be invoked when the user confirms.
+	 * Opens the dialog in add mode (null prefill) or edit mode (object prefill).
+	 * When prefillData is not null, sets isEditMode to true and pre-populates
+	 * amount, due date, and currency; name, category, and permanent toggle are hidden.
 	 *
 	 * @param submitCallback - The callback invoked with the validated form data on submit.
+	 * @param prefillData - Prefill values for edit mode, or null for add mode.
 	 */
-	public openDialog(submitCallback: (data: NewDebtData) => void): void {
+	public openDialog(submitCallback: (data: NewDebtData) => void, prefillData: Partial<NewDebtData> | null): void {
 		this.submitCallback = submitCallback;
-		this.name = '';
-		this.selectedCategoryKey = DEBT_CAT_CARD;
-		this.amount = '';
-		this.dueDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-		this.selectedCurrency = DEBT_CURRENCY_CNY;
-		this.isPermanent = false;
+		this.isEditMode = prefillData !== null;
+		if (prefillData) {
+			// Edit mode: only populate the fields the user can change (balance, due date, currency);
+			// name, category, and permanent toggle are hidden in this mode
+			this.amount = String(prefillData.amount ?? '');
+			this.dueDate = prefillData.dueDate ?? '';
+			this.selectedCurrency = prefillData.currency ?? DEBT_CURRENCY_CNY;
+		} else {
+			// Add mode: reset all fields and default due date to 30 days from now
+			this.name = '';
+			this.selectedCategoryKey = DEBT_CAT_CARD;
+			this.amount = '';
+			this.dueDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+			this.selectedCurrency = DEBT_CURRENCY_CNY;
+			this.isPermanent = false;
+		}
 		this.visible = true;
 	}
 

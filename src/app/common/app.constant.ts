@@ -87,7 +87,7 @@ export const DEBT_PRESET_LARGE = 1000;
 /** Milliseconds the two-step confirm button stays prompted before auto-dismissing. */
 export const DEBT_PROMPT_TIMEOUT_MS = 2600;
 /** Debt record type for a standard deletable debt goal. */
-export const DEBT_TYPE_GOAL = 'goal';
+export const DEBT_TYPE_TEMP = 'temporary';
 /** Debt record type for a permanent account protected from deletion. */
 export const DEBT_TYPE_PERMANENT = 'permanent';
 /** Category key for credit-card debts. */
@@ -129,10 +129,8 @@ export const DIALOG_HISTORY = 'history';
 export const DIALOG_ERROR = 'error';
 /** Dialog type for a blocking progress overlay. */
 export const DIALOG_BLOCK = 'block';
-/** Dialog type for the add-debt flow. */
-export const DIALOG_ADD_DEBT = 'add-debt';
-/** Dialog type for the edit-debt flow. */
-export const DIALOG_EDIT_DEBT = 'edit-debt';
+/** Dialog type for the debt dialog (add and edit modes share one dialog). */
+export const DIALOG_DEBT = 'debt';
 /** History-entry status when a movie is added — appears in the history message text. */
 export const HISTORY_STATUS_ADDED = 'added';
 /** History-entry status when a movie is deleted — appears in the history message text. */
@@ -500,6 +498,8 @@ export const REMINDER_VALUE_KEY_CONTENT = 'content';
 export const DEBT_VALUE_KEY_TYPE = 'type';
 /** CloudBase content entry key for the currency field in the debt sonata table. */
 export const DEBT_VALUE_KEY_CUR = 'cur';
+/** CloudBase content entry key for the category field in the debt sonata table. */
+export const DEBT_VALUE_KEY_CAT = 'cat';
 /** CloudBase content entry key for the original (total) amount in the debt sonata table. */
 export const DEBT_VALUE_KEY_ORIGINAL = 'original';
 
@@ -569,6 +569,27 @@ export const DEBT_CUSTOM_INPUT_PLACEHOLDER = '−amount';
 export const DEBT_DIALOG_LABEL_EDIT = 'Edit debt';
 export const DEBT_DIALOG_LABEL_SAVE = 'Save changes';
 export const DEBT_DIALOG_LABEL_BALANCE = 'Current balance';
+export const DEBT_CATEGORY_LABEL_CARD = 'Credit card';
+export const DEBT_CATEGORY_LABEL_PERSON = 'Personal';
+export const DEBT_CATEGORY_LABEL_SHOPPING = 'Financing';
+export const DEBT_CATEGORY_LABEL_HOME = 'Mortgage';
+export const DEBT_DUE_LABEL_NONE = 'No due date';
+export const DEBT_DUE_LABEL_TODAY = 'Due today';
+export const DEBT_DUE_LABEL_TOMORROW = 'Due tomorrow';
+export const DEBT_CURRENCY_SYMBOL_CNY = '¥';
+export const DEBT_CURRENCY_SYMBOL_CAD = '$';
+export const DEBT_DUE_CLASS_OVERDUE = 'is-over';
+export const DEBT_DUE_CLASS_SOON = 'is-soon';
+export const DEBT_DUE_ICON_OVERDUE = 'error';
+export const DEBT_DUE_ICON_DEFAULT = 'event';
+export const DEBT_CATEGORY_ICON_CARD = 'credit_card';
+export const DEBT_CATEGORY_ICON_PERSON = 'handshake';
+export const DEBT_CATEGORY_ICON_SHOPPING = 'shopping_bag';
+export const DEBT_CATEGORY_ICON_HOME = 'home';
+export const DEBT_CATEGORY_GRADIENT_CARD = 'linear-gradient(90deg,#e91e8c,#f7971e)';
+export const DEBT_CATEGORY_GRADIENT_PERSON = 'linear-gradient(90deg,#fda085,#f6d365)';
+export const DEBT_CATEGORY_GRADIENT_SHOPPING = 'linear-gradient(90deg,#8e54e9,#e91e8c)';
+export const DEBT_CATEGORY_GRADIENT_HOME = 'linear-gradient(90deg,#11998e,#38ef7d)';
 
 ////////////////////// Below are error dialog string constants ///////////////////////
 export const ERROR_DIALOG_HEADER = 'Error';

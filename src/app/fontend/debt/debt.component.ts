@@ -31,25 +31,45 @@ import {
 	DEBT_LABEL_DELETE_CONFIRM,
 	DEBT_PRESET_LARGE,
 	DEBT_PRESET_SMALL,
-	DEBT_TYPE_GOAL,
+	DEBT_TYPE_TEMP,
 	DEBT_TYPE_PERMANENT,
 	DEBT_ITEM_EXPENSE,
 	DEBT_STATS_UPCOMING,
 	DEBT_TABLE_ACCOUNT_EXPENSES,
+	DEBT_VALUE_KEY_CAT,
 	DEBT_VALUE_KEY_CUR,
 	DEBT_VALUE_KEY_DATE,
 	DEBT_VALUE_KEY_DEBT,
 	DEBT_VALUE_KEY_ORIGINAL,
 	DEBT_VALUE_KEY_PAID,
 	DEBT_VALUE_KEY_TYPE,
-	DIALOG_ADD_DEBT,
-	DIALOG_EDIT_DEBT,
+	DIALOG_DEBT,
 	ERROR_PERMISSION_DENIED,
 	MONTH_NAMES_SHORT,
-	STATS_FIELD_RECENT_DEBT
+	STATS_FIELD_RECENT_DEBT,
+	DEBT_CATEGORY_LABEL_CARD,
+	DEBT_CATEGORY_LABEL_PERSON,
+	DEBT_CATEGORY_LABEL_SHOPPING,
+	DEBT_CATEGORY_LABEL_HOME,
+	DEBT_DUE_LABEL_NONE,
+	DEBT_DUE_LABEL_TODAY,
+	DEBT_DUE_LABEL_TOMORROW,
+	DEBT_CURRENCY_SYMBOL_CNY,
+	DEBT_CURRENCY_SYMBOL_CAD,
+	DEBT_DUE_CLASS_OVERDUE,
+	DEBT_DUE_CLASS_SOON,
+	DEBT_DUE_ICON_OVERDUE,
+	DEBT_DUE_ICON_DEFAULT,
+	DEBT_CATEGORY_ICON_CARD,
+	DEBT_CATEGORY_ICON_PERSON,
+	DEBT_CATEGORY_ICON_SHOPPING,
+	DEBT_CATEGORY_ICON_HOME,
+	DEBT_CATEGORY_GRADIENT_CARD,
+	DEBT_CATEGORY_GRADIENT_PERSON,
+	DEBT_CATEGORY_GRADIENT_SHOPPING,
+	DEBT_CATEGORY_GRADIENT_HOME
 } from '../../common/app.constant';
-import { NewDebtData } from '../../backend/dialog-service/add-debt/add-debt.model';
-import { EditDebtData } from '../../backend/dialog-service/edit-debt/edit-debt.model';
+import { NewDebtData } from './debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
@@ -58,7 +78,7 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 interface PaymentEntry {
 	amount: number;
 	balance: number;
-	ts: number;
+	timestamp: number;
 }
 
 /** Category visual definition: key identifier, icon ligature, display label, and gradient CSS value. */
@@ -66,7 +86,7 @@ interface CategoryDef {
 	key: string;
 	icon: string;
 	label: string;
-	grad: string;
+	gradient: string;
 }
 
 @Component({
@@ -111,27 +131,27 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly categoryDefs: CategoryDef[] = [
 		{
 			key: DEBT_CAT_CARD,
-			icon: 'credit_card',
-			label: 'Credit card',
-			grad: 'linear-gradient(90deg,#e91e8c,#f7971e)'
+			icon: DEBT_CATEGORY_ICON_CARD,
+			label: DEBT_CATEGORY_LABEL_CARD,
+			gradient: DEBT_CATEGORY_GRADIENT_CARD
 		},
 		{
 			key: DEBT_CAT_PERSON,
-			icon: 'handshake',
-			label: 'Personal',
-			grad: 'linear-gradient(90deg,#fda085,#f6d365)'
+			icon: DEBT_CATEGORY_ICON_PERSON,
+			label: DEBT_CATEGORY_LABEL_PERSON,
+			gradient: DEBT_CATEGORY_GRADIENT_PERSON
 		},
 		{
 			key: DEBT_CAT_SHOPPING,
-			icon: 'shopping_bag',
-			label: 'Financing',
-			grad: 'linear-gradient(90deg,#8e54e9,#e91e8c)'
+			icon: DEBT_CATEGORY_ICON_SHOPPING,
+			label: DEBT_CATEGORY_LABEL_SHOPPING,
+			gradient: DEBT_CATEGORY_GRADIENT_SHOPPING
 		},
 		{
 			key: DEBT_CAT_HOME,
-			icon: 'home',
-			label: 'Mortgage',
-			grad: 'linear-gradient(90deg,#11998e,#38ef7d)'
+			icon: DEBT_CATEGORY_ICON_HOME,
+			label: DEBT_CATEGORY_LABEL_HOME,
+			gradient: DEBT_CATEGORY_GRADIENT_HOME
 		}
 	];
 
@@ -192,7 +212,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	// ── Preset chip interactions ──────────────────────────────────────────────
+	////////////////////// Below are Preset chip payment interaction handlers ///////////////////
 
 	/**
 	 * Subtracts the given amount from the item's debt balance and persists
@@ -206,6 +226,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected async payDebt(entryKey: string, amount: number): Promise<void> {
 		const item = this.findUpdatedItem(entryKey);
 		if (!item || amount <= 0 || item.content?.paid) return;
+		// Round to 2 decimal places to avoid floating-point drift accumulating over multiple payments
 		const currentDebt: number = item.content?.debt ?? 0;
 		const newDebt = Math.max(0, Math.round((currentDebt - amount) * 100) / 100);
 		const isPaidOff = newDebt === 0;
@@ -215,13 +236,15 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (isPaidOff) {
 			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_PAID);
 		}
+		// Track per-entry payment history in-session so the history panel can display it without a DB read
 		this.paymentHistoryMap = {
 			...this.paymentHistoryMap,
 			[entryKey]: [
 				...(this.paymentHistoryMap[entryKey] ?? []),
-				{ amount, balance: newDebt, ts: Date.now() }
+				{ amount, balance: newDebt, timestamp: Date.now() }
 			]
 		};
+		// Trigger the balance-bump animation, then clear the flag after the CSS transition completes
 		this.balanceBumpItems = { ...this.balanceBumpItems, [entryKey]: true };
 		this.cdr.detectChanges();
 		if (this.balanceBumpTimers[entryKey]) clearTimeout(this.balanceBumpTimers[entryKey]);
@@ -276,7 +299,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.customInputState = { ...this.customInputState, [entryKey]: null };
 	}
 
-	// ── Two-step confirm interactions ─────────────────────────────────────────
+	////////////////////// Below are Two-step confirm interaction handlers //////////////////////
 
 	/**
 	 * First call prompts the Reset button; second call within 2.6 s executes
@@ -308,7 +331,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (this.isPromptedDelete[entryKey]) {
 			clearTimeout(this.promptedDeleteTimers[entryKey]);
 			this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: false };
-			this.deleteDebt(entryKey).catch(() => {});
+			this.removeDebt(entryKey).catch(() => {});
 		} else {
 			this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: true };
 			this.promptedDeleteTimers[entryKey] = setTimeout(() => {
@@ -318,7 +341,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		}
 	}
 
-	// ── History panel interaction ─────────────────────────────────────────────
+	////////////////////// Below are History panel interaction handlers //////////////////////////
 
 	/**
 	 * Toggles the payment history panel for the given entry open or closed.
@@ -332,7 +355,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		};
 	}
 
-	// ── Internal data methods ─────────────────────────────────────────────────
+	////////////////////// Below are Internal data methods for CloudBase writes /////////////////
 
 	/**
 	 * Creates a new debt record in CloudBase from the data returned by the
@@ -345,13 +368,13 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		try {
 			await this.databaseService.addNewRecordToDebtTable({
 				name: debtData.name,
-				debt: debtData.amount,
-				original: debtData.amount,
-				date: debtData.dueDate,
-				paid: false,
-				type: debtData.isPermanent ? DEBT_TYPE_PERMANENT : DEBT_TYPE_GOAL,
-				cat: debtData.category,
-				cur: debtData.currency
+				[DEBT_VALUE_KEY_DEBT]: debtData.amount,
+				[DEBT_VALUE_KEY_ORIGINAL]: debtData.amount,
+				[DEBT_VALUE_KEY_DATE]: debtData.dueDate,
+				[DEBT_VALUE_KEY_PAID]: false,
+				[DEBT_VALUE_KEY_TYPE]: debtData.isPermanent ? DEBT_TYPE_PERMANENT : DEBT_TYPE_TEMP,
+				[DEBT_VALUE_KEY_CAT]: debtData.category,
+				[DEBT_VALUE_KEY_CUR]: debtData.currency
 			});
 			this.triggerSaveIndicator();
 		} catch (error) {
@@ -369,10 +392,10 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const item = this.findUpdatedItem(entryKey);
 		if (!item) return;
 		const newType =
-			(item.content?.type ?? DEBT_TYPE_GOAL) === DEBT_TYPE_PERMANENT
-				? DEBT_TYPE_GOAL
+			(item.content?.type ?? DEBT_TYPE_TEMP) === DEBT_TYPE_PERMANENT
+				? DEBT_TYPE_TEMP
 				: DEBT_TYPE_PERMANENT;
-		item.content = { ...item.content, type: newType };
+		item.content = { ...item.content, [DEBT_VALUE_KEY_TYPE]: newType };
 		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_TYPE);
 	}
 
@@ -399,9 +422,9 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Removes the entry from the CloudBase collection. The realtime
 	 * subscription will update the display arrays automatically.
 	 *
-	 * @param entryKey - The unique key of the entry to delete.
+	 * @param entryKey - The unique key of the entry to remove.
 	 */
-	private async deleteDebt(entryKey: string): Promise<void> {
+	private async removeDebt(entryKey: string): Promise<void> {
 		try {
 			await this.databaseService.removeRecordFromDebtTable(entryKey);
 		} catch (error) {
@@ -513,7 +536,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns a stable category definition for the given item based on a
+	 * Gets a stable category definition for the given item based on a
 	 * hash of the item's name, ensuring the same name always maps to the
 	 * same category gradient regardless of sort order.
 	 *
@@ -545,10 +568,10 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		return { overdue: diffDays < 0, soon: diffDays >= 0 && diffDays <= 14 };
 	}
 
-	// ── Template helpers ──────────────────────────────────────────────────────
+	////////////////////// Below are Template helper methods for the HTML template ///////////////
 
 	/**
-	 * Returns the Account Expenses items in their original database order,
+	 * Gets the Account Expenses items in their original database order,
 	 * preserving position regardless of paid status.
 	 *
 	 * @returns The Account Expenses items array.
@@ -573,8 +596,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}[] {
 		const groups: Record<string, { owed: number; original: number }> = {};
 		for (const item of this.updatedDebtSonataItems ?? []) {
-			const isCN = Utilities.checkIfChinese(item.name ?? '');
-			const code = isCN ? 'CNY' : 'CAD';
+			const isChinese = Utilities.checkIfChinese(item.name ?? '');
+			const code = isChinese ? 'CNY' : 'CAD';
 			if (!groups[code]) groups[code] = { owed: 0, original: 0 };
 			groups[code].owed += item.content?.debt ?? 0;
 			groups[code].original += item.content?.original ?? 0;
@@ -584,7 +607,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 			const pct = g.original > 0 ? Math.min(100, Math.round((paidAmount / g.original) * 100)) : 0;
 			return {
 				code,
-				symbol: code === 'CNY' ? '¥' : '$',
+				symbol: code === 'CNY' ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD,
 				owed: g.owed,
 				original: g.original,
 				paid: paidAmount,
@@ -637,7 +660,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns the total number of payments recorded in-session across all items.
+	 * Gets the total number of payments recorded in-session across all items.
 	 *
 	 * @returns The sum of all history entry counts.
 	 */
@@ -646,22 +669,22 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns the category definition for the given item, assigned
+	 * Gets the category definition for the given item, assigned
 	 * deterministically via a hash of the item's name.
 	 *
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
-	 * @returns The CategoryDef containing icon, label, and grad.
+	 * @returns The CategoryDef containing icon, label, and gradient.
 	 */
 	protected getCategoryForItem(item: any): CategoryDef {
 		if (item.content?.cat) {
-			const stored = this.categoryDefs.find((c) => c.key === item.content.cat);
+			const stored = this.categoryDefs.find((categoryDef) => categoryDef.key === item.content.cat);
 			if (stored) return stored;
 		}
 		return this.categoryDefs[this.getCategoryIndexForItem(item)];
 	}
 
 	/**
-	 * Returns a human-readable due-date label for display in the due chip.
+	 * Gets a human-readable due-date label for display in the due chip.
 	 * Shows "Nd overdue", "N days left", "Due today/tomorrow", or a
 	 * formatted month-day-year string for dates further than 30 days out.
 	 *
@@ -670,41 +693,41 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected getDueLabelForItem(item: any): string {
 		const dateStr: string | null | undefined = item.content?.date;
-		if (!dateStr) return 'No due date';
+		if (!dateStr) return DEBT_DUE_LABEL_NONE;
 		const now = new Date();
 		now.setHours(0, 0, 0, 0);
 		const due = new Date(dateStr + 'T00:00');
 		const diffDays = Math.round((due.getTime() - now.getTime()) / 86400000);
 		if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`;
-		if (diffDays === 0) return 'Due today';
-		if (diffDays === 1) return 'Due tomorrow';
+		if (diffDays === 0) return DEBT_DUE_LABEL_TODAY;
+		if (diffDays === 1) return DEBT_DUE_LABEL_TOMORROW;
 		if (diffDays <= 30) return `${diffDays}d left`;
 		const m = MONTH_NAMES_SHORT[due.getMonth()];
 		return `${m} ${due.getDate()}, ${due.getFullYear()}`;
 	}
 
 	/**
-	 * Returns the Material Symbols icon name for the given item's due chip.
+	 * Gets the Material Symbols icon name for the given item's due chip.
 	 *
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns The icon ligature string.
 	 */
 	protected getDueIconForItem(item: any): string {
 		const status = this.getDueStatus(item.content?.date);
-		if (status.overdue) return 'error';
-		return 'event';
+		if (status.overdue) return DEBT_DUE_ICON_OVERDUE;
+		return DEBT_DUE_ICON_DEFAULT;
 	}
 
 	/**
-	 * Returns the CSS modifier class for the given item's due chip.
+	 * Gets the CSS modifier class for the given item's due chip.
 	 *
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns 'is-over', 'is-soon', or empty string.
 	 */
 	protected getDueClassForItem(item: any): string {
 		const status = this.getDueStatus(item.content?.date);
-		if (status.overdue) return 'is-over';
-		if (status.soon) return 'is-soon';
+		if (status.overdue) return DEBT_DUE_CLASS_OVERDUE;
+		if (status.soon) return DEBT_DUE_CLASS_SOON;
 		return '';
 	}
 
@@ -716,9 +739,9 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param isChinese - Whether to use the ¥ symbol.
 	 * @returns A formatted currency string.
 	 */
-	protected fmtMoney(amount: number, isChinese: boolean): string {
-		const sym = isChinese ? '¥' : '$';
-		return `${sym}${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+	protected formatMoney(amount: number, isChinese: boolean): string {
+		const symbol = isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
+		return `${symbol}${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 	}
 
 	/**
@@ -729,10 +752,10 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param isChinese - Whether to use the ¥ symbol.
 	 * @returns A compact currency label string.
 	 */
-	protected fmtCompact(amount: number, isChinese: boolean): string {
-		const sym = isChinese ? '¥' : '$';
-		if (amount >= 1000) return `${sym}${Math.floor(amount / 1000)}k`;
-		return `${sym}${amount}`;
+	protected formatCompact(amount: number, isChinese: boolean): string {
+		const symbol = isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
+		if (amount >= 1000) return `${symbol}${Math.floor(amount / 1000)}k`;
+		return `${symbol}${amount}`;
 	}
 
 	/**
@@ -749,7 +772,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns the in-session payment history for the given entry key.
+	 * Gets the in-session payment history for the given entry key.
 	 *
 	 * @param entryKey - The unique key of the entry.
 	 * @returns The array of payment entries recorded this session.
@@ -762,15 +785,15 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Formats a Unix timestamp as a human-readable datetime string
 	 * in the form "Mon D · h:mm AM" for the payment history list.
 	 *
-	 * @param ts - Unix timestamp in milliseconds.
+	 * @param timestamp - The Unix timestamp in milliseconds.
 	 * @returns A formatted date-time string.
 	 */
-	protected formatTs(ts: number): string {
-		const d = new Date(ts);
-		const month = MONTH_NAMES_SHORT[d.getMonth()];
-		const day = d.getDate();
-		const hours = d.getHours();
-		const minutes = d.getMinutes().toString().padStart(2, '0');
+	protected formatTimestamp(timestamp: number): string {
+		const date = new Date(timestamp);
+		const month = MONTH_NAMES_SHORT[date.getMonth()];
+		const day = date.getDate();
+		const hours = date.getHours();
+		const minutes = date.getMinutes().toString().padStart(2, '0');
 		const ampm = hours >= 12 ? 'PM' : 'AM';
 		const h12 = hours % 12 || 12;
 		return `${month} ${day} · ${h12}:${minutes} ${ampm}`;
@@ -794,8 +817,9 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected openNewDebtDialog(): void {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			DIALOG_ADD_DEBT,
-			(debtData: NewDebtData) => this.addNewDebt(debtData).catch(() => {})
+			DIALOG_DEBT,
+			(debtData: NewDebtData) => this.addNewDebt(debtData).catch(() => {}),
+			null
 		);
 	}
 
@@ -809,16 +833,16 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected openEditDebtDialog(entryKey: string): void {
 		const item = this.findUpdatedItem(entryKey);
 		if (!item) return;
-		const prefill: EditDebtData = {
+		const prefillData: Partial<NewDebtData> = {
 			amount: item.content?.debt ?? 0,
 			dueDate: item.content?.date ?? '',
 			currency: item.content?.cur ?? DEBT_CURRENCY_CNY
 		};
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			DIALOG_EDIT_DEBT,
-			prefill,
-			(data: EditDebtData) => this.editDebt(entryKey, data).catch(() => {})
+			DIALOG_DEBT,
+			(data: NewDebtData) => this.editDebt(entryKey, data).catch(() => {}),
+			prefillData
 		);
 	}
 
@@ -828,26 +852,32 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * (when the new amount exceeds the old original), and due date.
 	 *
 	 * @param entryKey - The unique key of the entry to update.
-	 * @param data - The validated form data returned by the edit-debt dialog.
+	 * @param data - The validated form data returned by the dialog.
 	 */
-	private async editDebt(entryKey: string, data: EditDebtData): Promise<void> {
+	private async editDebt(entryKey: string, data: NewDebtData): Promise<void> {
 		const item = this.findUpdatedItem(entryKey);
 		if (!item) return;
 		if (data.currency !== item.content?.cur) {
-			item.content = { ...item.content, cur: data.currency };
+			item.content = { ...item.content, [DEBT_VALUE_KEY_CUR]: data.currency };
 			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_CUR);
 		}
 		if (data.amount !== item.content?.debt) {
 			const oldOriginal: number = item.content?.original ?? 0;
+			// When the user enters a higher balance than the stored original (e.g. adding new charges),
+			// bump the original ceiling so the progress bar stays meaningful
 			const newOriginal = Math.max(data.amount, oldOriginal);
-			item.content = { ...item.content, debt: data.amount, original: newOriginal };
+			item.content = {
+				...item.content,
+				[DEBT_VALUE_KEY_DEBT]: data.amount,
+				[DEBT_VALUE_KEY_ORIGINAL]: newOriginal
+			};
 			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
 			if (newOriginal !== oldOriginal) {
 				await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_ORIGINAL);
 			}
 		}
 		if (data.dueDate !== item.content?.date) {
-			item.content = { ...item.content, date: data.dueDate };
+			item.content = { ...item.content, [DEBT_VALUE_KEY_DATE]: data.dueDate };
 			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DATE);
 		}
 		this.resyncUpcomingFromLocalData();

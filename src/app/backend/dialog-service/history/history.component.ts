@@ -50,7 +50,7 @@ export class HistoryDialogComponent implements OnDestroy {
 	 * @param revertDataCallback - The callback to call to restore a deleted movie.
 	 * @param entries - The observable that emits the history entries.
 	 */
-	public openDialog(revertDataCallback: (movie: MovieItemVO) => Promise<void>, entries: Observable<HistoryEntry[]>) {
+	public openDialog(revertDataCallback: (movie: MovieItemVO) => Promise<void>, entries: Observable<HistoryEntry[]>): void {
 		this.visible = true;
 		this.entries$ = entries;
 		this.revertDataCallback = revertDataCallback;

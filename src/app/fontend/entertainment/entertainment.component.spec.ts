@@ -3,11 +3,14 @@ import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { EntertainmentComponent } from './entertainment.component';
+import { MovieItemVO } from './movieItem.vo';
 
 describe('EntertainmentComponent', () => {
   let component: EntertainmentComponent;
   let fixture: ComponentFixture<EntertainmentComponent>;
+  let mockDialogService: jasmine.SpyObj<DialogService>;
 
   beforeEach(async () => {
     const mockDb = jasmine.createSpyObj('DatabaseService', [
@@ -21,11 +24,18 @@ describe('EntertainmentComponent', () => {
     mockDb.getHistory.and.returnValue(of([]));
     mockDb.updateHistoryWithNewSearchActivity.and.returnValue(Promise.resolve());
 
+    mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
+      'openDialog', 'ensurePermission', 'handleError', 'showUnexpectedError'
+    ]);
+    mockDialogService.ensurePermission.and.returnValue(true);
+    mockDialogService.openDialog.and.stub();
+
     await TestBed.configureTestingModule({
       imports: [EntertainmentComponent],
       providers: [
         MessageService,
-        { provide: DatabaseService, useValue: mockDb }
+        { provide: DatabaseService, useValue: mockDb },
+        { provide: DialogService, useValue: mockDialogService }
       ]
     }).compileComponents();
 
@@ -93,5 +103,52 @@ describe('EntertainmentComponent', () => {
 			tick();
 			expect((component as any).selectedGenres$.getValue()).toBe('');
 		}));
+	});
+
+	// ── startEdit ──────────────────────────────────────────────────────────
+
+	describe('startEdit', () => {
+		let movie: MovieItemVO;
+
+		beforeEach(() => {
+			movie = new MovieItemVO('Test Movie', 2024);
+			movie.setMovieKey('key1');
+			movie.setMovieGenre('Action');
+			movie.setOpenId('uid1');
+		});
+
+		it('adds the movie to editedItems when permission is granted', () => {
+			(component as any).startEdit(movie);
+			expect((component as any).editedItems.has('key1')).toBeTrue();
+		});
+
+		it('does not add to editedItems when permission is denied', () => {
+			mockDialogService.ensurePermission.and.returnValue(false);
+			(component as any).startEdit(movie);
+			expect((component as any).editedItems.has('key1')).toBeFalse();
+		});
+	});
+
+	// ── openDeleteConfirmationDialog ───────────────────────────────────────
+
+	describe('openDeleteConfirmationDialog', () => {
+		let movie: MovieItemVO;
+
+		beforeEach(() => {
+			movie = new MovieItemVO('Test Movie', 2024);
+			movie.setMovieKey('key1');
+			movie.setOpenId('uid1');
+		});
+
+		it('opens the confirm dialog when permission is granted', () => {
+			(component as any).openDeleteConfirmationDialog(movie);
+			expect(mockDialogService.openDialog).toHaveBeenCalled();
+		});
+
+		it('does not open the dialog when permission is denied', () => {
+			mockDialogService.ensurePermission.and.returnValue(false);
+			(component as any).openDeleteConfirmationDialog(movie);
+			expect(mockDialogService.openDialog).not.toHaveBeenCalled();
+		});
 	});
 });

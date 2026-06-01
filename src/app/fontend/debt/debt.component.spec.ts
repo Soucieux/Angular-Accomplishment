@@ -13,7 +13,10 @@ function makeDebtSonataRow(key = 'k1', debt = 100, paid = false) {
 		key,
 		_openid: 'uid1',
 		name: 'Row name',
-		content: { date: '2025-01-01', debt, original: debt, paid }
+		date: '2025-01-01',
+		debt,
+		original: debt,
+		paid
 	};
 }
 
@@ -112,7 +115,7 @@ describe('DebtComponent', () => {
 
 		it('decrements the debt balance by the given amount', async () => {
 			await (component as any).payDebt('k1', 200);
-			expect((component as any).updatedDebtSonataItems[0].content.debt).toBe(800);
+			expect((component as any).updatedDebtSonataItems[0].debt).toBe(800);
 		});
 
 		it('does nothing when the entry key does not exist', async () => {
@@ -121,14 +124,20 @@ describe('DebtComponent', () => {
 		});
 
 		it('does nothing when the item is already paid', async () => {
-			(component as any).updatedDebtSonataItems[0].content.paid = true;
+			(component as any).updatedDebtSonataItems[0].paid = true;
 			await (component as any).payDebt('k1', 100);
 			expect(mockDb.updateDebtTable).not.toHaveBeenCalled();
 		});
 
 		it('marks as paid when balance reaches zero', async () => {
 			await (component as any).payDebt('k1', 1000);
-			expect((component as any).updatedDebtSonataItems[0].content.paid).toBeTrue();
+			expect((component as any).updatedDebtSonataItems[0].paid).toBeTrue();
+		});
+
+		it('does nothing when permission is denied', async () => {
+			mockDialogService.ensurePermission.and.returnValue(false);
+			await (component as any).payDebt('k1', 200);
+			expect(mockDb.updateDebtTable).not.toHaveBeenCalled();
 		});
 	});
 
@@ -138,14 +147,12 @@ describe('DebtComponent', () => {
 		beforeEach(() => {
 			(component as any).updatedDebtSonataItems = [makeDebtSonataRow('k1', 200, false)];
 			(component as any).originalDebtSonataItems = [makeDebtSonataRow('k1', 500, false)];
-			(component as any).updatedDebtSonataItems[0].content.original = 500;
-			(component as any).originalDebtSonataItems[0].content.original = 500;
 		});
 
 		it('resets debt to original amount and marks as unpaid', async () => {
 			await (component as any).resetDebt('k1');
-			expect((component as any).updatedDebtSonataItems[0].content.debt).toBe(500);
-			expect((component as any).updatedDebtSonataItems[0].content.paid).toBeFalse();
+			expect((component as any).updatedDebtSonataItems[0].debt).toBe(500);
+			expect((component as any).updatedDebtSonataItems[0].paid).toBeFalse();
 		});
 
 		it('does nothing when the entry key does not exist', async () => {
@@ -168,7 +175,7 @@ describe('DebtComponent', () => {
 		});
 
 		it('does not call the database when updated and original values are the same', async () => {
-			(component as any).updatedDebtSonataItems[0].content.debt = 100;
+			(component as any).updatedDebtSonataItems[0].debt = 100;
 			await (component as any).updateTableSingleValue('k1', 'debt');
 			expect(mockDb.updateDebtTable).not.toHaveBeenCalled();
 		});

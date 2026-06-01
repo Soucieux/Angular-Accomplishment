@@ -75,12 +75,12 @@ describe('NexusComponent', () => {
 
 	describe('confirmedCount', () => {
 		it('returns 0 when rows is empty', () => {
-			(component as any).updatedDateCalculatorTable = [];
+			(component as any).updatedDateCalculatorRows = [];
 			expect((component as any).confirmedCount).toBe(0);
 		});
 
 		it('counts only cells where isCharged is true', () => {
-			(component as any).updatedDateCalculatorTable = [
+			(component as any).updatedDateCalculatorRows = [
 				{
 					first: { isCharged: true },
 					second: { isCharged: false },
@@ -93,7 +93,7 @@ describe('NexusComponent', () => {
 		});
 
 		it('returns 0 when no cells are charged', () => {
-			(component as any).updatedDateCalculatorTable = [
+			(component as any).updatedDateCalculatorRows = [
 				{
 					first: { isCharged: false },
 					second: { isCharged: false },
@@ -110,12 +110,12 @@ describe('NexusComponent', () => {
 
 	describe('totalCount', () => {
 		it('returns 0 when rows is empty', () => {
-			(component as any).updatedDateCalculatorTable = [];
+			(component as any).updatedDateCalculatorRows = [];
 			expect((component as any).totalCount).toBe(0);
 		});
 
 		it('returns rows × 4 columns', () => {
-			(component as any).updatedDateCalculatorTable = [{}, {}, {}];
+			(component as any).updatedDateCalculatorRows = [{}, {}, {}];
 			expect((component as any).totalCount).toBe(12);
 		});
 	});
@@ -189,7 +189,7 @@ describe('NexusComponent', () => {
 
 	describe('setIsCharged', () => {
 		beforeEach(() => {
-			(component as any).updatedDateCalculatorTable = [makeFirstRow(5, false)];
+			(component as any).updatedDateCalculatorRows = [makeFirstRow(5, false)];
 			(component as any).originalDateCalculatorRows = [makeFirstRow(5, false), { _id: 'id2', _openid: 'uid1', isNextMonth: false }];
 			(component as any).chargedCellsInitialized = true;
 		});
@@ -197,11 +197,11 @@ describe('NexusComponent', () => {
 		it('marks the cell as charged and calls updateDateCalculatorSingleValue', async () => {
 			spyOn<any>(component, 'updateDateCalculatorSingleValue').and.returnValue(Promise.resolve());
 			await (component as any).setIsCharged(0, 'first');
-			expect((component as any).updatedDateCalculatorTable[0].first.isCharged).toBeTrue();
+			expect((component as any).updatedDateCalculatorRows[0].first.isCharged).toBeTrue();
 		});
 
 		it('does nothing when the cell is already charged', async () => {
-			(component as any).updatedDateCalculatorTable[0].first.isCharged = true;
+			(component as any).updatedDateCalculatorRows[0].first.isCharged = true;
 			spyOn<any>(component, 'updateDateCalculatorSingleValue').and.returnValue(Promise.resolve());
 			await (component as any).setIsCharged(0, 'first');
 			expect((component as any).updateDateCalculatorSingleValue).not.toHaveBeenCalled();
@@ -227,7 +227,7 @@ describe('NexusComponent', () => {
 				makeFirstRow(21, false),
 				{ _id: 'id6', _openid: 'uid1', isNextMonth: false }
 			];
-			(component as any).updatedDateCalculatorTable = [
+			(component as any).updatedDateCalculatorRows = [
 				makeFirstRow(5, false),
 				makeFirstRow(7, false),
 				makeFirstRow(13, false),
@@ -245,9 +245,9 @@ describe('NexusComponent', () => {
 		});
 
 		it('rolls back when the value exceeds 31', async () => {
-			(component as any).updatedDateCalculatorTable[0].first.value = 32;
+			(component as any).updatedDateCalculatorRows[0].first.value = 32;
 			await (component as any).onValueChange(0, 'first');
-			expect((component as any).updatedDateCalculatorTable[0].first.value).toBe(5);
+			expect((component as any).updatedDateCalculatorRows[0].first.value).toBe(5);
 		});
 	});
 

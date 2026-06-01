@@ -23,7 +23,7 @@ function makeRecord(
 	link: string | null = null,
 	tags: string[] = []
 ) {
-	return { key, _openid: 'uid1', content: { text, date, link, tags } };
+	return { key, _openid: 'uid1', text, date, link, tags };
 }
 
 /** Minimal view-model item factory. */

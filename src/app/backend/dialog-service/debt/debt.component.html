@@ -63,14 +63,14 @@
 				<button
 					type="button"
 					class="add-debt-currency-option"
-					[class.sel]="selectedCurrency === DEBT_CURRENCY_CNY"
+					[class.selected]="selectedCurrency === DEBT_CURRENCY_CNY"
 					(click)="selectedCurrency = DEBT_CURRENCY_CNY">
 					{{ DEBT_DIALOG_LABEL_CURRENCY_CNY }}
 				</button>
 				<button
 					type="button"
 					class="add-debt-currency-option"
-					[class.sel]="selectedCurrency === DEBT_CURRENCY_CAD"
+					[class.selected]="selectedCurrency === DEBT_CURRENCY_CAD"
 					(click)="selectedCurrency = DEBT_CURRENCY_CAD">
 					{{ DEBT_DIALOG_LABEL_CURRENCY_CAD }}
 				</button>

@@ -9,7 +9,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { DecimalPipe, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Subscription } from 'rxjs';
@@ -91,7 +91,7 @@ interface CategoryDef {
 
 @Component({
 	selector: 'debt',
-	imports: [DecimalPipe, FormsModule, SkeletonModule, AccessDeniedComponent],
+	imports: [FormsModule, SkeletonModule, AccessDeniedComponent],
 	templateUrl: './debt.component.html',
 	styleUrls: ['../../common/page.card.css', './debt.component.css']
 })
@@ -101,6 +101,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	protected readonly DATABASE_DEBT_SONATA = DATABASE_DEBT_SONATA;
+	protected readonly DEBT_CURRENCY_CNY = DEBT_CURRENCY_CNY;
 	protected readonly DEBT_PRESET_SMALL = DEBT_PRESET_SMALL;
 	protected readonly DEBT_PRESET_LARGE = DEBT_PRESET_LARGE;
 	protected readonly DEBT_EMPTY_STATE_MSG = DEBT_EMPTY_STATE_MSG;
@@ -718,7 +719,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Formats an amount as a currency string with two decimal places.
+	 * Formats an amount as a currency string with 0–2 decimal places.
+	 * Places the minus sign before the symbol for negative values (e.g. -¥50).
 	 * Uses ¥ for Chinese items, $ for all others.
 	 *
 	 * @param amount - The numeric value to format.
@@ -727,7 +729,11 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected formatMoney(amount: number, isChinese: boolean): string {
 		const symbol = isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
-		return `${symbol}${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+		const formatted = Math.abs(amount).toLocaleString('en-US', {
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 2
+		});
+		return amount < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
 	}
 
 	/**

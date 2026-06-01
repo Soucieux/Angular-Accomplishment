@@ -16,6 +16,7 @@ export class MovieItemVO {
 	private isFavourite: boolean = false;
 	private description: string = '';
 	private actors: string = '';
+	private openid: string = '';
 
 	constructor();
 
@@ -279,5 +280,23 @@ export class MovieItemVO {
 	 */
 	setActors(actors: string) {
 		this.actors = actors;
+	}
+
+	/**
+	 * Returns the CloudBase owner ID stored on the database document.
+	 *
+	 * @returns The owner openid string, or empty string if not set.
+	 */
+	getOpenId(): string {
+		return this.openid;
+	}
+
+	/**
+	 * Sets the CloudBase owner ID from the database document.
+	 *
+	 * @param openid - The _openid field value from the CloudBase document.
+	 */
+	setOpenId(openid: string) {
+		this.openid = openid;
 	}
 }

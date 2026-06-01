@@ -18,6 +18,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { InputTextModule } from 'primeng/inputtext';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
@@ -26,7 +27,6 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_DATE_CALCULATOR,
 	DIALOG_CONFIRM,
-	FAILURE,
 	NEXUS_CATEGORY_ALL,
 	PINBOARD_DIALOG_CONFIRM_BTN,
 	PINBOARD_DIALOG_RESET_BTN,
@@ -40,7 +40,6 @@ import {
 	PINBOARD_MSG_RESET_CONFIRM,
 	REMINDER_TABLE_DATE_CALCULATOR,
 	STATS_FIELD_RECENT_REMINDER,
-	SUCCESS,
 	NEXUS_DIALOG_TITLE_ADD_LINK,
 	NEXUS_DIALOG_TITLE_EDIT_LINK,
 	NEXUS_DEFAULT_CATEGORY_COLOR,
@@ -277,9 +276,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected async updateChargedCells(): Promise<void> {
 		// On init (chargedCellsInitialized === false) skip permission check — this is a read-only state setup
 		if (this.chargedCellsInitialized) {
-			const returnCode = this.checkPermission();
-			// Rollback
-			if (returnCode === FAILURE) {
+			if (!this.dialogService.ensurePermission(this.dialogComponentContainer, CloudbaseService.getUseId() ?? '')) {
 				setTimeout(() => {
 					this.isNextMonth = !this.isNextMonth;
 				});
@@ -343,9 +340,12 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		// Do nothing if the value does not change
 		if (this.updatedDateCalculatorRows[rowIndex][field].value == originalValue) return;
 
-		const returnCode = this.checkPermission();
-		// Rollback OR reset value if it reaches threshold
-		if (returnCode === FAILURE || Number(this.updatedDateCalculatorRows[rowIndex][field].value) > 31) {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, CloudbaseService.getUseId() ?? '')) {
+			this.updatedDateCalculatorRows[rowIndex][field].value = originalValue;
+			return;
+		}
+		// Reset value if it exceeds the maximum day threshold
+		if (Number(this.updatedDateCalculatorRows[rowIndex][field].value) > 31) {
 			this.updatedDateCalculatorRows[rowIndex][field].value = originalValue;
 			return;
 		}
@@ -464,9 +464,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param field - The column key of the cell.
 	 */
 	protected async setIsCharged(rowIndex: number, field: string): Promise<void> {
-		const returnCode = this.checkPermission();
-		// Rollback
-		if (returnCode === FAILURE) return;
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, CloudbaseService.getUseId() ?? '')) return;
 
 		if (!this.updatedDateCalculatorRows[rowIndex][field].isCharged) {
 			this.updatedDateCalculatorRows[rowIndex][field].isCharged = true;
@@ -477,13 +475,10 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Opens a confirmation dialog before resetting the date calculator dates
-	 * to their default sequence (1, 3, 9, 11, 17).
+	 * Opens a confirmation dialog before resetting the date calculator dates to their default sequence (1, 3, 9, 11, 17).
 	 */
 	protected openResetConfirmationDialog(): void {
-		const returnCode = this.checkPermission();
-		// Rollback
-		if (returnCode === FAILURE) return;
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, CloudbaseService.getUseId() ?? '')) return;
 
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -551,17 +546,6 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	////////////////////// Below are shared utility methods //////////////////////////////
-
-	/**
-	 * Resolves the owner openid from the date calculator row[0] and delegates
-	 * the permission check to DialogService.ensurePermission.
-	 *
-	 * @returns SUCCESS if the current user has write permission, FAILURE otherwise.
-	 */
-	private checkPermission(): string {
-		const openid = this.updatedDateCalculatorRows[0]?._openid ?? '';
-		return this.dialogService.ensurePermission(this.dialogComponentContainer, openid) ? SUCCESS : FAILURE;
-	}
 
 	/**
 	 * Shows a save-confirmation indicator for the given table and automatically

@@ -23,12 +23,9 @@ import { wrongVerificationCodeError } from '../../common/error/wrong-verificatio
 })
 export class AuthService {
 	private readonly className = 'AuthService';
-	// any: CloudBase SDK does not provide TypeScript types for its verification object
 	private verification: any;
-	// any: CloudBase SDK does not provide TypeScript types for its auth instance
 	private cloudbaseAuth: any;
 	private firebaseAuth!: Auth;
-	// any: CloudBase user object shape is not typed in the SDK
 	private cloudbaseUserSubject = new BehaviorSubject<any>(null);
 	constructor(
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
@@ -208,7 +205,6 @@ export class AuthService {
 	 * anonymous users (no username in metadata) and errors.
 	 *
 	 * @returns An observable that emits the current CloudBase user or null.
-	 *          // any: CloudBase user object shape is not typed in the SDK
 	 */
 	public cloudbaseGetCurrentUser(): Observable<any> {
 		this.cloudbaseAuth

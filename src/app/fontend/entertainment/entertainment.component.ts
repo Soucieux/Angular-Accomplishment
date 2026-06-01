@@ -130,7 +130,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected searchQuery$ = new BehaviorSubject<string>('');
 	protected searchText: string = '';
 	protected filteredMovieList$!: Observable<MovieItemVO[]>;
-	// any: Statistics document shape varies across versions and has no fixed TypeScript type
 	protected statistics$!: Observable<any>;
 	private searchSummary!: Map<string, string[]>;
 	protected editedItems = new Map<string, { originalGenre: string; genre: string }>();

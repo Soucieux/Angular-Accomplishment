@@ -20,10 +20,10 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_DEBT_SONATA,
 	DEBT_PROMPT_TIMEOUT_MS,
-	DEBT_CAT_CARD,
-	DEBT_CAT_HOME,
-	DEBT_CAT_PERSON,
-	DEBT_CAT_SHOPPING,
+	DEBT_CATEGORY_CARD,
+	DEBT_CATEGORY_HOME,
+	DEBT_CATEGORY_PERSON,
+	DEBT_CATEGORY_SHOPPING,
 	DEBT_CURRENCY_CNY,
 	DEBT_EMPTY_STATE_BTN,
 	DEBT_EMPTY_STATE_MSG,
@@ -109,9 +109,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly DEBT_LABEL_DELETE_CONFIRM = DEBT_LABEL_DELETE_CONFIRM;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
-	// any: Account Expenses rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected updatedDebtSonataItems!: any[];
-	// any: Account Expenses rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected originalDebtSonataItems!: any[];
 	protected expandedItems: Record<string, boolean> = {};
 	protected balanceBumpItems: Record<string, boolean> = {};
@@ -125,30 +123,29 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private promptedResetTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private promptedDeleteTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private balanceBumpTimers: Record<string, ReturnType<typeof setTimeout>> = {};
-	// any: setTimeout return type varies by environment (browser vs Node)
 	private saveIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
 	private readonly categoryDefs: CategoryDef[] = [
 		{
-			key: DEBT_CAT_CARD,
+			key: DEBT_CATEGORY_CARD,
 			icon: DEBT_CATEGORY_ICON_CARD,
 			label: DEBT_CATEGORY_LABEL_CARD,
 			gradient: DEBT_CATEGORY_GRADIENT_CARD
 		},
 		{
-			key: DEBT_CAT_PERSON,
+			key: DEBT_CATEGORY_PERSON,
 			icon: DEBT_CATEGORY_ICON_PERSON,
 			label: DEBT_CATEGORY_LABEL_PERSON,
 			gradient: DEBT_CATEGORY_GRADIENT_PERSON
 		},
 		{
-			key: DEBT_CAT_SHOPPING,
+			key: DEBT_CATEGORY_SHOPPING,
 			icon: DEBT_CATEGORY_ICON_SHOPPING,
 			label: DEBT_CATEGORY_LABEL_SHOPPING,
 			gradient: DEBT_CATEGORY_GRADIENT_SHOPPING
 		},
 		{
-			key: DEBT_CAT_HOME,
+			key: DEBT_CATEGORY_HOME,
 			icon: DEBT_CATEGORY_ICON_HOME,
 			label: DEBT_CATEGORY_LABEL_HOME,
 			gradient: DEBT_CATEGORY_GRADIENT_HOME
@@ -544,7 +541,6 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns A CategoryDef with icon, label, and gradient CSS value.
 	 */
 	private getCategoryIndexForItem(item: any): number {
-		// any: item mirrors the schema-less CloudBase document structure
 		const name: string = item.name ?? '';
 		let hash = 0;
 		for (let i = 0; i < name.length; i++) {
@@ -569,16 +565,6 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	////////////////////// Below are Template helper methods for the HTML template ///////////////
-
-	/**
-	 * Gets the Account Expenses items in their original database order,
-	 * preserving position regardless of paid status.
-	 *
-	 * @returns The Account Expenses items array.
-	 */
-	protected get sortedItems(): any[] {
-		return this.updatedDebtSonataItems ?? [];
-	}
 
 	/**
 	 * Groups Account Expenses items by currency (CNY for Chinese names,

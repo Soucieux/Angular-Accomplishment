@@ -19,7 +19,6 @@ export class DoubanService {
 	 *
 	 * @param movieName - The movie name to search for.
 	 * @returns An observable that emits the JSON response from Douban.
-	 * // any: Douban JSON API response shape varies and has no published TypeScript types
 	 */
 	public searchMovieJSON(movieName: string): Observable<any> {
 		/*  	

@@ -2,10 +2,10 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import {
-	DEBT_CAT_CARD,
-	DEBT_CAT_HOME,
-	DEBT_CAT_PERSON,
-	DEBT_CAT_SHOPPING,
+	DEBT_CATEGORY_CARD,
+	DEBT_CATEGORY_HOME,
+	DEBT_CATEGORY_PERSON,
+	DEBT_CATEGORY_SHOPPING,
 	DEBT_CURRENCY_CAD,
 	DEBT_CURRENCY_CNY,
 	DEBT_DIALOG_LABEL_ADD,
@@ -61,25 +61,25 @@ export class AddDebtDialogComponent {
 	protected readonly DEBT_CURRENCY_CAD = DEBT_CURRENCY_CAD;
 	protected readonly categoryOptions: DebtCategoryDef[] = [
 		{
-			key: DEBT_CAT_CARD,
+			key: DEBT_CATEGORY_CARD,
 			icon: DEBT_CATEGORY_ICON_CARD,
 			label: DEBT_CATEGORY_LABEL_CARD,
 			gradient: DEBT_CATEGORY_GRADIENT_CARD
 		},
 		{
-			key: DEBT_CAT_PERSON,
+			key: DEBT_CATEGORY_PERSON,
 			icon: DEBT_CATEGORY_ICON_PERSON,
 			label: DEBT_CATEGORY_LABEL_PERSON,
 			gradient: DEBT_CATEGORY_GRADIENT_PERSON
 		},
 		{
-			key: DEBT_CAT_SHOPPING,
+			key: DEBT_CATEGORY_SHOPPING,
 			icon: DEBT_CATEGORY_ICON_SHOPPING,
 			label: DEBT_CATEGORY_LABEL_SHOPPING,
 			gradient: DEBT_CATEGORY_GRADIENT_SHOPPING
 		},
 		{
-			key: DEBT_CAT_HOME,
+			key: DEBT_CATEGORY_HOME,
 			icon: DEBT_CATEGORY_ICON_HOME,
 			label: DEBT_CATEGORY_LABEL_HOME,
 			gradient: DEBT_CATEGORY_GRADIENT_HOME
@@ -89,7 +89,7 @@ export class AddDebtDialogComponent {
 	protected isEditMode = false;
 	protected visible = false;
 	protected name = '';
-	protected selectedCategoryKey = DEBT_CAT_CARD;
+	protected selectedCategoryKey = DEBT_CATEGORY_CARD;
 	protected amount = '';
 	protected dueDate = '';
 	protected selectedCurrency = DEBT_CURRENCY_CNY;
@@ -115,7 +115,10 @@ export class AddDebtDialogComponent {
 	 * @param submitCallback - The callback invoked with the validated form data on submit.
 	 * @param prefillData - Prefill values for edit mode, or null for add mode.
 	 */
-	public openDialog(submitCallback: (data: NewDebtData) => void, prefillData: Partial<NewDebtData> | null): void {
+	public openDialog(
+		submitCallback: (data: NewDebtData) => void,
+		prefillData: Partial<NewDebtData> | null
+	): void {
 		this.submitCallback = submitCallback;
 		this.isEditMode = prefillData !== null;
 		if (prefillData) {
@@ -127,7 +130,7 @@ export class AddDebtDialogComponent {
 		} else {
 			// Add mode: reset all fields and default due date to 30 days from now
 			this.name = '';
-			this.selectedCategoryKey = DEBT_CAT_CARD;
+			this.selectedCategoryKey = DEBT_CATEGORY_CARD;
 			this.amount = '';
 			this.dueDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
 			this.selectedCurrency = DEBT_CURRENCY_CNY;

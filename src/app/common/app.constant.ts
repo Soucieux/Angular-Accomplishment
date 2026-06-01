@@ -91,13 +91,13 @@ export const DEBT_TYPE_TEMP = 'temporary';
 /** Debt record type for a permanent account protected from deletion. */
 export const DEBT_TYPE_PERMANENT = 'permanent';
 /** Category key for credit-card debts. */
-export const DEBT_CAT_CARD = 'card';
+export const DEBT_CATEGORY_CARD = 'card';
 /** Category key for personal debts. */
-export const DEBT_CAT_PERSON = 'person';
+export const DEBT_CATEGORY_PERSON = 'person';
 /** Category key for financing / shopping debts. */
-export const DEBT_CAT_SHOPPING = 'shopping';
+export const DEBT_CATEGORY_SHOPPING = 'shopping';
 /** Category key for mortgage debts. */
-export const DEBT_CAT_HOME = 'home';
+export const DEBT_CATEGORY_HOME = 'home';
 /** Currency code for Chinese yuan. */
 export const DEBT_CURRENCY_CNY = 'CNY';
 /** Currency code for Canadian dollar. */
@@ -497,9 +497,9 @@ export const REMINDER_VALUE_KEY_CONTENT = 'content';
 /** CloudBase content entry key for the type field (goal / permanent) in the debt sonata table. */
 export const DEBT_VALUE_KEY_TYPE = 'type';
 /** CloudBase content entry key for the currency field in the debt sonata table. */
-export const DEBT_VALUE_KEY_CUR = 'cur';
+export const DEBT_VALUE_KEY_CUR = 'currency';
 /** CloudBase content entry key for the category field in the debt sonata table. */
-export const DEBT_VALUE_KEY_CAT = 'cat';
+export const DEBT_VALUE_KEY_CAT = 'category';
 /** CloudBase content entry key for the original (total) amount in the debt sonata table. */
 export const DEBT_VALUE_KEY_ORIGINAL = 'original';
 

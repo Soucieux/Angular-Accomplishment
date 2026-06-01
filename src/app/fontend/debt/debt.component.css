@@ -340,7 +340,6 @@
 
 .debt-card.is-expanded {
 	height: auto;
-	overflow: visible;
 }
 
 .debt-card::before {
@@ -488,6 +487,25 @@
 	color: #e53935;
 }
 
+/* ── Inline due date picker (replaces chip in edit mode) ── */
+::ng-deep .due-date-picker .p-datepicker-input {
+	height: 28px;
+	width: 114px;
+	padding: 0 10px;
+	border-radius: 9999px;
+	border: 1.5px solid #11998e;
+	font-size: 12px;
+	font-weight: 600;
+	color: #11998e;
+	background: rgba(255, 255, 255, 0.8);
+	box-sizing: border-box;
+	outline: none;
+	cursor: pointer;
+}
+::ng-deep .due-date-picker .p-datepicker-input:focus {
+	box-shadow: 0 0 0 2px rgba(17, 153, 142, 0.2);
+}
+
 /* ── Balance ── */
 .card-balance-row {
 	display: flex;
@@ -505,6 +523,11 @@
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
+	transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card-balance.is-bump {
+	transform: scale(1.06);
 }
 
 .card-balance.is-paid {
@@ -529,10 +552,14 @@
 	letter-spacing: 0.02em;
 	color: #e5533c;
 }
+.card-paid-tag .material-symbols-outlined {
+	font-size: 16px;
+	animation: dcCoda 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+	transform-origin: 50% 80%;
+}
 
 /* ── Progress ── */
 .card-progress-track {
-	border: 1px solid red;
 	width: 100%;
 	height: 8px;
 	background: rgba(0, 0, 0, 0.1);
@@ -612,21 +639,17 @@
 	border-color: transparent;
 }
 
-/* ── Custom pay row ── */
-.custom-pay-row {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-}
-
 .custom-pay-input {
 	flex: 1;
-	padding: 7px 12px;
+	min-width: 84px;
+	height: 34px;
+	box-sizing: border-box;
+	padding: 0 12px;
 	border: 1px solid #11998e;
 	border-radius: 8px;
 	font-size: 14px;
 	font-weight: 700;
-	background: rgba(255, 255, 255, 0.8);
+	background: rgba(255, 255, 255, 0.65);
 	color: #11998e;
 	outline: none;
 	box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
@@ -634,24 +657,6 @@
 .custom-pay-input::placeholder {
 	color: #11998e;
 	opacity: 0.45;
-}
-
-.custom-pay-cancel {
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	border: none;
-	background: rgba(0, 0, 0, 0.06);
-	color: #64748b !important;
-	font-size: 14px;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: background 150ms;
-}
-.custom-pay-cancel:hover {
-	background: rgba(0, 0, 0, 0.12);
 }
 
 /* ── Card footer ── */
@@ -676,6 +681,9 @@
 	cursor: pointer;
 	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+.footer-btn .material-symbols-outlined {
+	transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
 .footer-btn:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -683,11 +691,22 @@
 	color: #11998e !important;
 	border-color: transparent;
 }
-.footer-btn.is-armed {
+.footer-btn:hover .material-symbols-outlined {
+	transform: rotate(-180deg);
+}
+/* Edit button — teal hover, no icon spin */
+.footer-btn.edit-btn:hover .material-symbols-outlined {
+	transform: none !important;
+}
+.footer-btn.is-prompted {
 	background: #11998e;
 	color: #fff !important;
 	border-color: transparent;
 	transform: translateY(-1px);
+	animation: dcPromptRose 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.footer-btn.is-prompted .material-symbols-outlined {
+	animation: dcPromptIcon 0.6s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
 }
 
 .footer-icon-btn {
@@ -703,25 +722,66 @@
 	cursor: pointer;
 	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.footer-icon-btn:hover {
+
+/* Lock button — graphite hover, no icon spin */
+.footer-icon-btn.lock-btn:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	background: rgba(17, 153, 142, 0.1);
-	color: #11998e !important;
-	border-color: transparent;
+	background: rgba(74, 79, 99, 0.1);
+	color: #444a60 !important;
+	border-color: rgba(74, 79, 99, 0.2);
 }
 
-/* Delete button — red hover */
+/* Lock button — locked (permanent) state */
+.footer-icon-btn.lock-btn.is-locked {
+	background: rgba(74, 79, 99, 0.12);
+	color: #444a60 !important;
+	border-color: rgba(74, 79, 99, 0.26);
+}
+.footer-icon-btn.lock-btn.is-locked .material-symbols-outlined {
+	font-variation-settings: 'FILL' 1;
+}
+
+/* Delete button — red hover with icon shake */
 .footer-icon-btn.danger-btn:hover {
 	background: rgba(229, 57, 53, 0.1);
 	color: #e53935 !important;
+	transform: translateY(-2px);
 	box-shadow: 0 4px 14px rgba(229, 57, 53, 0.28);
 	border-color: transparent;
 }
-.footer-icon-btn.is-armed {
+.footer-icon-btn.danger-btn:hover .material-symbols-outlined {
+	animation: dcShake 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.footer-icon-btn.is-prompted {
 	background: #e53935;
 	color: #fff !important;
 	border-color: transparent;
+	animation: dcPromptRed 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.footer-icon-btn.danger-btn.is-prompted {
+	width: auto;
+	padding: 0 9px;
+	gap: 4px;
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+
+/* Disabled delete — permanent account protection */
+.footer-icon-btn.danger-btn.is-disabled {
+	opacity: 0.42;
+	cursor: not-allowed;
+}
+.footer-icon-btn.danger-btn.is-disabled:hover {
+	transform: none;
+	box-shadow: none;
+	background: transparent;
+	color: #64748b !important;
+	border-color: rgba(0, 0, 0, 0.08);
+}
+.footer-icon-btn.danger-btn.is-disabled:hover .material-symbols-outlined {
+	animation: none;
 }
 
 .footer-history-btn {
@@ -747,7 +807,7 @@
 	font-size: 11px;
 	font-weight: 700;
 	color: #64748b;
-	background: #f8fafc;
+	background: rgba(0, 0, 0, 0.04);
 	padding: 1px 8px;
 	border-radius: 9999px;
 }
@@ -759,7 +819,26 @@
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
+	max-height: 232px;
+	overflow-y: auto;
+	padding-right: 4px;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(17, 153, 142, 0.3) transparent;
 	animation: histIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.history-panel::-webkit-scrollbar {
+	width: 7px;
+}
+.history-panel::-webkit-scrollbar-track {
+	background: transparent;
+	margin: 2px;
+}
+.history-panel::-webkit-scrollbar-thumb {
+	background: rgba(17, 153, 142, 0.3);
+	border-radius: 999px;
+}
+.history-panel::-webkit-scrollbar-thumb:hover {
+	background: #11998e;
 }
 
 @keyframes histIn {
@@ -803,10 +882,12 @@
 
 .history-ts {
 	color: #64748b;
+	font-variant-numeric: tabular-nums;
 }
 .history-amount {
 	font-weight: 700;
 	color: #11998e;
+	font-variant-numeric: tabular-nums;
 }
 .history-balance {
 	display: inline-flex;
@@ -814,10 +895,119 @@
 	gap: 2px;
 	color: #334155;
 	font-weight: 600;
+	font-variant-numeric: tabular-nums;
 }
 .history-arrow {
 	font-size: 16px;
 	color: #94a3b8;
+}
+
+/* ─────────────────────────────────────────
+   Empty state
+───────────────────────────────────────── */
+.debts-empty {
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid rgba(255, 255, 255, 0.8);
+	border-radius: 20px;
+	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+	padding: 50px 24px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+	text-align: center;
+}
+
+.debts-empty-icon {
+	font-size: 48px;
+	color: #11998e;
+}
+
+.debts-empty-msg {
+	color: #334155;
+	font-size: 15px;
+	max-width: 380px;
+}
+
+.debts-empty-btn {
+	border: none;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	color: #fff;
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+	padding: 11px 22px;
+	border-radius: 999px;
+	transition:
+		transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+		box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.debts-empty-btn:hover {
+	transform: scale(1.03);
+	box-shadow: 0 4px 16px rgba(17, 153, 142, 0.35);
+}
+
+/* ─────────────────────────────────────────
+   Button keyframes
+───────────────────────────────────────── */
+@keyframes dcShake {
+	0%,
+	100% {
+		transform: translateX(0) rotate(0);
+	}
+	20% {
+		transform: translateX(-2px) rotate(-9deg);
+	}
+	40% {
+		transform: translateX(2px) rotate(7deg);
+	}
+	60% {
+		transform: translateX(-1px) rotate(-5deg);
+	}
+	80% {
+		transform: translateX(1px) rotate(3deg);
+	}
+}
+@keyframes dcPromptRose {
+	0% {
+		box-shadow: 0 0 0 0 rgba(17, 153, 142, 0.3);
+	}
+	70%,
+	100% {
+		box-shadow: 0 0 0 9px transparent;
+	}
+}
+@keyframes dcPromptRed {
+	0% {
+		box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5);
+	}
+	70%,
+	100% {
+		box-shadow: 0 0 0 9px transparent;
+	}
+}
+@keyframes dcPromptIcon {
+	from {
+		transform: scale(1);
+	}
+	to {
+		transform: scale(1.18);
+	}
+}
+@keyframes dcCoda {
+	0%,
+	72%,
+	100% {
+		transform: rotate(0);
+	}
+	80% {
+		transform: rotate(-12deg);
+	}
+	88% {
+		transform: rotate(9deg);
+	}
 }
 
 /* ─────────────────────────────────────────
@@ -861,5 +1051,8 @@
 	}
 	.due-chip {
 		margin-left: auto;
+	}
+	::ng-deep .due-date-picker .p-datepicker-input {
+		width: 100px;
 	}
 }

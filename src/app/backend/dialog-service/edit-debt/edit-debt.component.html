@@ -1,0 +1,61 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	appendTo="body"
+	[resizable]="false"
+	[closable]="false"
+	(onHide)="onDialogClosed()"
+	styleClass="edit-debt-dialog">
+	<ng-template #header>
+		<span class="edit-debt-dialog-title">{{ DEBT_DIALOG_LABEL_EDIT }}</span>
+	</ng-template>
+
+	<!-- Current balance + Currency -->
+	<div class="edit-debt-field-row">
+		<div class="edit-debt-field">
+			<span class="edit-debt-label">{{ DEBT_DIALOG_LABEL_BALANCE }}</span>
+			<input
+				type="number"
+				[(ngModel)]="amount"
+				[placeholder]="DEBT_DIALOG_PLACEHOLDER_AMOUNT"
+				min="0"
+				(keyup.enter)="onSubmit()" />
+		</div>
+		<div class="edit-debt-field">
+			<span class="edit-debt-label">Currency</span>
+			<div class="edit-debt-cur-pick">
+				<button
+					type="button"
+					class="edit-debt-cur-opt"
+					[class.sel]="selectedCurrency === DEBT_CURRENCY_CNY"
+					(click)="selectedCurrency = DEBT_CURRENCY_CNY">
+					{{ DEBT_DIALOG_LABEL_CURRENCY_CNY }}
+				</button>
+				<button
+					type="button"
+					class="edit-debt-cur-opt"
+					[class.sel]="selectedCurrency === DEBT_CURRENCY_CAD"
+					(click)="selectedCurrency = DEBT_CURRENCY_CAD">
+					{{ DEBT_DIALOG_LABEL_CURRENCY_CAD }}
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Due date -->
+	<div class="edit-debt-field">
+		<span class="edit-debt-label">Due date</span>
+		<p-datepicker
+			[(ngModel)]="dueDateObj"
+			dateFormat="yy-mm-dd"
+			appendTo="body"
+			styleClass="edit-debt-datepicker" />
+	</div>
+
+	<ng-template #footer>
+		<button class="edit-debt-btn-ghost" (click)="onDialogClosed()">{{ DEBT_DIALOG_LABEL_CANCEL }}</button>
+		<button class="edit-debt-btn-grad" [disabled]="!isValid" (click)="onSubmit()">
+			{{ DEBT_DIALOG_LABEL_SAVE }}
+		</button>
+	</ng-template>
+</p-dialog>

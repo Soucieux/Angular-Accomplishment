@@ -12,7 +12,6 @@ import {
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SkeletonModule } from 'primeng/skeleton';
-import { DatePickerModule } from 'primeng/datepicker';
 import { Subscription } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
@@ -20,20 +19,37 @@ import {
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_DEBT_SONATA,
-	DEBT_ARMED_TIMEOUT_MS,
+	DEBT_PROMPT_TIMEOUT_MS,
+	DEBT_CAT_CARD,
+	DEBT_CAT_HOME,
+	DEBT_CAT_PERSON,
+	DEBT_CAT_SHOPPING,
+	DEBT_CURRENCY_CNY,
+	DEBT_EMPTY_STATE_BTN,
+	DEBT_EMPTY_STATE_MSG,
+	DEBT_CUSTOM_INPUT_PLACEHOLDER,
+	DEBT_LABEL_DELETE_CONFIRM,
 	DEBT_PRESET_LARGE,
 	DEBT_PRESET_SMALL,
+	DEBT_TYPE_GOAL,
+	DEBT_TYPE_PERMANENT,
+	DEBT_ITEM_EXPENSE,
+	DEBT_STATS_UPCOMING,
+	DEBT_TABLE_ACCOUNT_EXPENSES,
+	DEBT_VALUE_KEY_CUR,
+	DEBT_VALUE_KEY_DATE,
+	DEBT_VALUE_KEY_DEBT,
+	DEBT_VALUE_KEY_ORIGINAL,
+	DEBT_VALUE_KEY_PAID,
+	DEBT_VALUE_KEY_TYPE,
+	DIALOG_ADD_DEBT,
+	DIALOG_EDIT_DEBT,
 	ERROR_PERMISSION_DENIED,
 	MONTH_NAMES_SHORT,
-	REMINDER_ITEM_EXPENSE,
-	REMINDER_TABLE_ACCOUNT_EXPENSES,
-	REMINDER_VALUE_KEY_CONTENT,
-	REMINDER_VALUE_KEY_DATE,
-	REMINDER_VALUE_KEY_DEBT,
-	REMINDER_VALUE_KEY_PAID,
-	STATS_FIELD_RECENT_REMINDER,
-	STATS_FIELD_REMINDER_UPCOMING
+	STATS_FIELD_RECENT_DEBT
 } from '../../common/app.constant';
+import { NewDebtData } from '../../backend/dialog-service/add-debt/add-debt.model';
+import { EditDebtData } from '../../backend/dialog-service/edit-debt/edit-debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
@@ -45,8 +61,9 @@ interface PaymentEntry {
 	ts: number;
 }
 
-/** Category visual definition: icon ligature, display label, and gradient CSS value. */
+/** Category visual definition: key identifier, icon ligature, display label, and gradient CSS value. */
 interface CategoryDef {
+	key: string;
 	icon: string;
 	label: string;
 	grad: string;
@@ -54,7 +71,7 @@ interface CategoryDef {
 
 @Component({
 	selector: 'debt',
-	imports: [DecimalPipe, FormsModule, SkeletonModule, DatePickerModule, AccessDeniedComponent],
+	imports: [DecimalPipe, FormsModule, SkeletonModule, AccessDeniedComponent],
 	templateUrl: './debt.component.html',
 	styleUrls: ['../../common/page.card.css', './debt.component.css']
 })
@@ -66,6 +83,10 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly DATABASE_DEBT_SONATA = DATABASE_DEBT_SONATA;
 	protected readonly DEBT_PRESET_SMALL = DEBT_PRESET_SMALL;
 	protected readonly DEBT_PRESET_LARGE = DEBT_PRESET_LARGE;
+	protected readonly DEBT_EMPTY_STATE_MSG = DEBT_EMPTY_STATE_MSG;
+	protected readonly DEBT_EMPTY_STATE_BTN = DEBT_EMPTY_STATE_BTN;
+	protected readonly DEBT_CUSTOM_INPUT_PLACEHOLDER = DEBT_CUSTOM_INPUT_PLACEHOLDER;
+	protected readonly DEBT_LABEL_DELETE_CONFIRM = DEBT_LABEL_DELETE_CONFIRM;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
 	// any: Account Expenses rows are schema-less CloudBase documents with no fixed TypeScript type
@@ -73,25 +94,45 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	// any: Account Expenses rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected originalDebtSonataItems!: any[];
 	protected expandedItems: Record<string, boolean> = {};
-	protected isArmedReset: Record<string, boolean> = {};
-	protected isArmedDelete: Record<string, boolean> = {};
-	protected showCustomInput: Record<string, boolean> = {};
-	protected customInputValues: Record<string, string> = {};
-	protected showDuePicker: Record<string, boolean> = {};
-	protected saveIndicators: Record<string, boolean> = { [DATABASE_DEBT_SONATA]: false };
+	protected balanceBumpItems: Record<string, boolean> = {};
+	protected isPromptedReset: Record<string, boolean> = {};
+	protected isPromptedDelete: Record<string, boolean> = {};
+	protected customInputState: Record<string, string | null> = {};
+	protected saveIndicators: boolean = false;
 	private debtSonataSub?: Subscription;
 	private upcomingExpenses: any[] = [];
 	private paymentHistoryMap: Record<string, PaymentEntry[]> = {};
-	private armedResetTimers: Record<string, ReturnType<typeof setTimeout>> = {};
-	private armedDeleteTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+	private promptedResetTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+	private promptedDeleteTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+	private balanceBumpTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	// any: setTimeout return type varies by environment (browser vs Node)
-	private saveIndicatorTimeouts: Record<string, any> = {};
+	private saveIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
 	private readonly categoryDefs: CategoryDef[] = [
-		{ icon: 'credit_card', label: 'Credit card', grad: 'linear-gradient(90deg,#e91e8c,#f7971e)' },
-		{ icon: 'handshake', label: 'Personal', grad: 'linear-gradient(90deg,#fda085,#f6d365)' },
-		{ icon: 'shopping_bag', label: 'Financing', grad: 'linear-gradient(90deg,#8e54e9,#e91e8c)' },
-		{ icon: 'home', label: 'Mortgage', grad: 'linear-gradient(90deg,#11998e,#38ef7d)' }
+		{
+			key: DEBT_CAT_CARD,
+			icon: 'credit_card',
+			label: 'Credit card',
+			grad: 'linear-gradient(90deg,#e91e8c,#f7971e)'
+		},
+		{
+			key: DEBT_CAT_PERSON,
+			icon: 'handshake',
+			label: 'Personal',
+			grad: 'linear-gradient(90deg,#fda085,#f6d365)'
+		},
+		{
+			key: DEBT_CAT_SHOPPING,
+			icon: 'shopping_bag',
+			label: 'Financing',
+			grad: 'linear-gradient(90deg,#8e54e9,#e91e8c)'
+		},
+		{
+			key: DEBT_CAT_HOME,
+			icon: 'home',
+			label: 'Mortgage',
+			grad: 'linear-gradient(90deg,#11998e,#38ef7d)'
+		}
 	];
 
 	constructor(
@@ -129,7 +170,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 				this.upcomingExpenses = rows
 					.filter((item: any) => item.content?.date && !item.content?.paid)
 					.map((item: any) => ({
-						type: REMINDER_ITEM_EXPENSE,
+						type: DEBT_ITEM_EXPENSE,
 						name: item.name,
 						date: item.content.date
 					}));
@@ -139,13 +180,15 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Unsubscribes from the Account Expenses subscription and clears armed-button timers.
+	 * Unsubscribes from the Account Expenses subscription and clears all
+	 * prompted-button and balance-bump timers.
 	 */
 	ngOnDestroy() {
 		this.debtSonataSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
-		Object.values(this.armedResetTimers).forEach(clearTimeout);
-		Object.values(this.armedDeleteTimers).forEach(clearTimeout);
+		Object.values(this.promptedResetTimers).forEach(clearTimeout);
+		Object.values(this.promptedDeleteTimers).forEach(clearTimeout);
+		Object.values(this.balanceBumpTimers).forEach(clearTimeout);
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
@@ -154,7 +197,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Subtracts the given amount from the item's debt balance and persists
 	 * the change. Auto-marks the item as paid when the balance reaches zero.
-	 * Tracks the payment in the in-session history map.
+	 * Tracks the payment in the in-session history map and briefly scales the
+	 * balance display via the is-bump CSS class for 360 ms.
 	 *
 	 * @param entryKey - The unique key of the Account Expenses entry to pay.
 	 * @param amount - The positive amount to subtract from the current balance.
@@ -167,44 +211,33 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const isPaidOff = newDebt === 0;
 		item.content.debt = newDebt;
 		if (isPaidOff) item.content.paid = true;
-		try {
-			if (isPaidOff) {
-				await this.databaseService.updateReminderTable(
-					DATABASE_DEBT_SONATA,
-					entryKey,
-					REMINDER_VALUE_KEY_CONTENT,
-					{ ...item.content, debt: newDebt, paid: true }
-				);
-			} else {
-				await this.databaseService.updateReminderTable(
-					DATABASE_DEBT_SONATA,
-					entryKey,
-					REMINDER_VALUE_KEY_DEBT,
-					newDebt
-				);
-			}
-			this.triggerSaveIndicator(DATABASE_DEBT_SONATA);
-			this.paymentHistoryMap = {
-				...this.paymentHistoryMap,
-				[entryKey]: [
-					...(this.paymentHistoryMap[entryKey] ?? []),
-					{ amount, balance: newDebt, ts: Date.now() }
-				]
-			};
-			this.resyncUpcomingFromLocalData();
-			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-					type: ACTIVITY_TYPE_UPDATED,
-					table: REMINDER_TABLE_ACCOUNT_EXPENSES,
-					text: item.name ?? '',
-					timestamp: Utilities.getCurrentFormattedTime(true)
-				})
-				.catch(() => {});
-		} catch (error) {
-			item.content.debt = currentDebt;
-			if (isPaidOff) item.content.paid = false;
-			this.dialogService.handleError(this.dialogComponentContainer, error);
+		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
+		if (isPaidOff) {
+			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_PAID);
 		}
+		this.paymentHistoryMap = {
+			...this.paymentHistoryMap,
+			[entryKey]: [
+				...(this.paymentHistoryMap[entryKey] ?? []),
+				{ amount, balance: newDebt, ts: Date.now() }
+			]
+		};
+		this.balanceBumpItems = { ...this.balanceBumpItems, [entryKey]: true };
+		this.cdr.detectChanges();
+		if (this.balanceBumpTimers[entryKey]) clearTimeout(this.balanceBumpTimers[entryKey]);
+		this.balanceBumpTimers[entryKey] = setTimeout(() => {
+			this.balanceBumpItems = { ...this.balanceBumpItems, [entryKey]: false };
+			this.cdr.detectChanges();
+		}, 360);
+		this.resyncUpcomingFromLocalData();
+		this.databaseService
+			.appendToActivityLog(STATS_FIELD_RECENT_DEBT, {
+				type: ACTIVITY_TYPE_UPDATED,
+				table: DEBT_TABLE_ACCOUNT_EXPENSES,
+				text: item.name ?? '',
+				timestamp: Utilities.getCurrentFormattedTime(true)
+			})
+			.catch(() => {});
 	}
 
 	/**
@@ -214,8 +247,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry to show custom input for.
 	 */
 	protected toggleCustomInput(entryKey: string): void {
-		this.showCustomInput = { ...this.showCustomInput, [entryKey]: true };
-		this.customInputValues = { ...this.customInputValues, [entryKey]: '' };
+		this.customInputState = { ...this.customInputState, [entryKey]: '' };
 	}
 
 	/**
@@ -225,8 +257,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry to pay with a custom amount.
 	 */
 	protected submitCustomPay(entryKey: string): void {
-		if (!this.showCustomInput[entryKey]) return;
-		const raw = this.customInputValues[entryKey] ?? '';
+		if (this.customInputState[entryKey] == null) return;
+		const raw = this.customInputState[entryKey] ?? '';
 		const amount = parseFloat(raw);
 		if (amount > 0) {
 			this.payDebt(entryKey, amount).catch(() => {});
@@ -241,87 +273,49 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry whose custom input to close.
 	 */
 	protected cancelCustomPay(entryKey: string): void {
-		this.showCustomInput = { ...this.showCustomInput, [entryKey]: false };
-		this.customInputValues = { ...this.customInputValues, [entryKey]: '' };
+		this.customInputState = { ...this.customInputState, [entryKey]: null };
 	}
 
 	// ── Two-step confirm interactions ─────────────────────────────────────────
 
 	/**
-	 * First call arms the Reset button; second call within 2.6 s executes
-	 * the reset. Arms auto-disarm after the timeout.
+	 * First call prompts the Reset button; second call within 2.6 s executes
+	 * the reset. Prompted state auto-dismisses after the timeout.
 	 *
 	 * @param entryKey - The unique key of the entry to reset.
 	 */
-	protected armOrConfirmReset(entryKey: string): void {
-		if (this.isArmedReset[entryKey]) {
-			clearTimeout(this.armedResetTimers[entryKey]);
-			this.isArmedReset = { ...this.isArmedReset, [entryKey]: false };
+	protected promptOrConfirmReset(entryKey: string): void {
+		if (this.isPromptedReset[entryKey]) {
+			clearTimeout(this.promptedResetTimers[entryKey]);
+			this.isPromptedReset = { ...this.isPromptedReset, [entryKey]: false };
 			this.resetDebt(entryKey).catch(() => {});
 		} else {
-			this.isArmedReset = { ...this.isArmedReset, [entryKey]: true };
-			this.armedResetTimers[entryKey] = setTimeout(() => {
-				this.isArmedReset = { ...this.isArmedReset, [entryKey]: false };
+			this.isPromptedReset = { ...this.isPromptedReset, [entryKey]: true };
+			this.promptedResetTimers[entryKey] = setTimeout(() => {
+				this.isPromptedReset = { ...this.isPromptedReset, [entryKey]: false };
 				this.cdr.detectChanges();
-			}, DEBT_ARMED_TIMEOUT_MS);
+			}, DEBT_PROMPT_TIMEOUT_MS);
 		}
 	}
 
 	/**
-	 * First call arms the Delete button; second call within 2.6 s removes
-	 * the entry from CloudBase. Arms auto-disarm after the timeout.
+	 * First call prompts the Delete button; second call within 2.6 s removes
+	 * the entry from CloudBase. Prompted state auto-dismisses after the timeout.
 	 *
 	 * @param entryKey - The unique key of the entry to delete.
 	 */
-	protected armOrConfirmDelete(entryKey: string): void {
-		if (this.isArmedDelete[entryKey]) {
-			clearTimeout(this.armedDeleteTimers[entryKey]);
-			this.isArmedDelete = { ...this.isArmedDelete, [entryKey]: false };
+	protected promptOrConfirmDelete(entryKey: string): void {
+		if (this.isPromptedDelete[entryKey]) {
+			clearTimeout(this.promptedDeleteTimers[entryKey]);
+			this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: false };
 			this.deleteDebt(entryKey).catch(() => {});
 		} else {
-			this.isArmedDelete = { ...this.isArmedDelete, [entryKey]: true };
-			this.armedDeleteTimers[entryKey] = setTimeout(() => {
-				this.isArmedDelete = { ...this.isArmedDelete, [entryKey]: false };
+			this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: true };
+			this.promptedDeleteTimers[entryKey] = setTimeout(() => {
+				this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: false };
 				this.cdr.detectChanges();
-			}, DEBT_ARMED_TIMEOUT_MS);
+			}, DEBT_PROMPT_TIMEOUT_MS);
 		}
-	}
-
-	// ── Due date editing interactions ─────────────────────────────────────────
-
-	/**
-	 * Shows the PrimeNG date picker for the given entry's due chip.
-	 *
-	 * @param entryKey - The unique key of the entry to start editing.
-	 */
-	protected startDueDateEdit(entryKey: string): void {
-		this.showDuePicker = { ...this.showDuePicker, [entryKey]: true };
-	}
-
-	/**
-	 * Closes the PrimeNG date picker for the given entry without saving.
-	 *
-	 * @param entryKey - The unique key of the entry to cancel editing for.
-	 */
-	protected cancelDueDateEdit(entryKey: string): void {
-		this.showDuePicker = { ...this.showDuePicker, [entryKey]: false };
-	}
-
-	/**
-	 * Formats the selected Date to a 'yyyy-MM-dd' string, persists the
-	 * change to CloudBase, and closes the date picker.
-	 *
-	 * @param tableName - The CloudBase collection name.
-	 * @param entryKey - The unique key of the entry to update.
-	 * @param date - The Date value selected by the user.
-	 */
-	protected async completeDueDateEdit(tableName: string, entryKey: string, date: Date): Promise<void> {
-		const item = this.findUpdatedItem(entryKey);
-		if (!item) return;
-		item.content.date = Utilities.formatDateForStorage(date);
-		this.showDuePicker = { ...this.showDuePicker, [entryKey]: false };
-		await this.updateTableSingleValue(tableName, entryKey, REMINDER_VALUE_KEY_DATE);
-		this.resyncUpcomingFromLocalData();
 	}
 
 	// ── History panel interaction ─────────────────────────────────────────────
@@ -341,6 +335,48 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	// ── Internal data methods ─────────────────────────────────────────────────
 
 	/**
+	 * Creates a new debt record in CloudBase from the data returned by the
+	 * add-debt dialog. The category, currency, and permanent type are
+	 * stored in the content object alongside the initial balance.
+	 *
+	 * @param debtData - The validated form data submitted from the add-debt dialog.
+	 */
+	private async addNewDebt(debtData: NewDebtData): Promise<void> {
+		try {
+			await this.databaseService.addNewRecordToDebtTable({
+				name: debtData.name,
+				debt: debtData.amount,
+				original: debtData.amount,
+				date: debtData.dueDate,
+				paid: false,
+				type: debtData.isPermanent ? DEBT_TYPE_PERMANENT : DEBT_TYPE_GOAL,
+				cat: debtData.category,
+				cur: debtData.currency
+			});
+			this.triggerSaveIndicator();
+		} catch (error) {
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+		}
+	}
+
+	/**
+	 * Toggles the lock state of a debt entry between 'goal' and 'permanent'.
+	 * Permanent debts are protected from deletion. Rolls back on failure.
+	 *
+	 * @param entryKey - The unique key of the entry to toggle.
+	 */
+	protected async toggleLock(entryKey: string): Promise<void> {
+		const item = this.findUpdatedItem(entryKey);
+		if (!item) return;
+		const newType =
+			(item.content?.type ?? DEBT_TYPE_GOAL) === DEBT_TYPE_PERMANENT
+				? DEBT_TYPE_GOAL
+				: DEBT_TYPE_PERMANENT;
+		item.content = { ...item.content, type: newType };
+		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_TYPE);
+	}
+
+	/**
 	 * Resets the debt balance to its original amount and marks the entry as
 	 * unpaid. Writes the full content object to CloudBase in one operation.
 	 *
@@ -351,22 +387,12 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const original = this.findOriginalItem(entryKey);
 		if (!item || !original) return;
 		const originalAmount: number = original.content?.original ?? item.content?.original ?? 0;
-		try {
-			const newContent = { ...item.content, debt: originalAmount, paid: false };
-			await this.databaseService.updateReminderTable(
-				DATABASE_DEBT_SONATA,
-				entryKey,
-				REMINDER_VALUE_KEY_CONTENT,
-				newContent
-			);
-			item.content.debt = originalAmount;
-			item.content.paid = false;
-			this.paymentHistoryMap = { ...this.paymentHistoryMap, [entryKey]: [] };
-			this.triggerSaveIndicator(DATABASE_DEBT_SONATA);
-			this.resyncUpcomingFromLocalData();
-		} catch (error) {
-			this.dialogService.handleError(this.dialogComponentContainer, error);
-		}
+		item.content.debt = originalAmount;
+		item.content.paid = false;
+		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
+		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_PAID);
+		this.paymentHistoryMap = { ...this.paymentHistoryMap, [entryKey]: [] };
+		this.resyncUpcomingFromLocalData();
 	}
 
 	/**
@@ -377,7 +403,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	private async deleteDebt(entryKey: string): Promise<void> {
 		try {
-			await this.databaseService.removeRecordFromReminderTable(DATABASE_DEBT_SONATA, entryKey);
+			await this.databaseService.removeRecordFromDebtTable(entryKey);
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
@@ -385,17 +411,20 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Reads the updated value for the given field and writes it to CloudBase.
-	 * Rolls back the local change on permission error before showing the dialog.
+	 * Skips the write when the value has not changed. Rolls back the local change
+	 * on permission error before showing the dialog. All field-level updates in
+	 * this class route through here — only add and delete operations call the
+	 * database service directly.
 	 *
-	 * @param tableName - The CloudBase collection name.
+	 * {@link payDebt} - Persists the new debt balance, and the paid flag when zeroed.
+	 * {@link resetDebt} - Restores debt and paid flag to original values.
+	 * {@link toggleLock} - Persists the toggled goal/permanent type.
+	 * {@link editDebt} - Persists the updated balance, original, due date, and currency from the edit dialog.
+	 *
 	 * @param entryKey - The unique key of the entry to update.
 	 * @param valueKey - The field name inside the entry's content object.
 	 */
-	private async updateTableSingleValue(
-		tableName: string,
-		entryKey: string,
-		valueKey: string
-	): Promise<void> {
+	private async updateTableSingleValue(entryKey: string, valueKey: string): Promise<void> {
 		const updatedItem = this.findUpdatedItem(entryKey);
 		const originalItem = this.findOriginalItem(entryKey);
 		if (!updatedItem || !originalItem) return;
@@ -403,8 +432,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const oldValue = originalItem.content[valueKey];
 		try {
 			if (updatedValue !== oldValue) {
-				await this.databaseService.updateReminderTable(tableName, entryKey, valueKey, updatedValue);
-				this.triggerSaveIndicator(tableName);
+				await this.databaseService.updateDebtTable(entryKey, valueKey, updatedValue);
+				this.triggerSaveIndicator();
 			}
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
@@ -447,7 +476,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.syncStatTimer = setTimeout(() => {
 			this.syncStatTimer = null;
 			this.databaseService.updateStatisticsFields({
-				[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses]
+				[DEBT_STATS_UPCOMING]: [...this.upcomingExpenses]
 			});
 		}, 0);
 	}
@@ -460,7 +489,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.upcomingExpenses = (this.updatedDebtSonataItems ?? [])
 			.filter((item: any) => item.content?.date && !item.content?.paid)
 			.map((item: any) => ({
-				type: REMINDER_ITEM_EXPENSE,
+				type: DEBT_ITEM_EXPENSE,
 				name: item.name,
 				date: item.content.date
 			}));
@@ -470,17 +499,15 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Shows a save-confirmation indicator for the given table and hides
 	 * it after one second. Clears any active timeout before starting a new one.
-	 *
-	 * @param tableName - The name of the table for which to show the indicator.
 	 */
-	private triggerSaveIndicator(tableName: string): void {
-		this.saveIndicators[tableName] = true;
+	private triggerSaveIndicator(): void {
+		this.saveIndicators = true;
 		this.cdr.detectChanges();
-		if (this.saveIndicatorTimeouts[tableName]) {
-			clearTimeout(this.saveIndicatorTimeouts[tableName]);
+		if (this.saveIndicatorTimeout) {
+			clearTimeout(this.saveIndicatorTimeout);
 		}
-		this.saveIndicatorTimeouts[tableName] = setTimeout(() => {
-			this.saveIndicators[tableName] = false;
+		this.saveIndicatorTimeout = setTimeout(() => {
+			this.saveIndicators = false;
 			this.cdr.detectChanges();
 		}, 1000);
 	}
@@ -521,20 +548,13 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	// ── Template helpers ──────────────────────────────────────────────────────
 
 	/**
-	 * Returns the Account Expenses items sorted for display: active debts
-	 * first (ordered by due date, overdue first), paid-off items at the bottom.
+	 * Returns the Account Expenses items in their original database order,
+	 * preserving position regardless of paid status.
 	 *
-	 * @returns A new sorted array of Account Expenses items.
+	 * @returns The Account Expenses items array.
 	 */
 	protected get sortedItems(): any[] {
-		return [...(this.updatedDebtSonataItems ?? [])].sort((a, b) => {
-			const aDone: boolean = !!a.content?.paid;
-			const bDone: boolean = !!b.content?.paid;
-			if (aDone !== bDone) return aDone ? 1 : -1;
-			const aDate = a.content?.date ? new Date(a.content.date + 'T00:00').getTime() : Infinity;
-			const bDate = b.content?.date ? new Date(b.content.date + 'T00:00').getTime() : Infinity;
-			return aDate - bDate;
-		});
+		return this.updatedDebtSonataItems ?? [];
 	}
 
 	/**
@@ -633,6 +653,10 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The CategoryDef containing icon, label, and grad.
 	 */
 	protected getCategoryForItem(item: any): CategoryDef {
+		if (item.content?.cat) {
+			const stored = this.categoryDefs.find((c) => c.key === item.content.cat);
+			if (stored) return stored;
+		}
 		return this.categoryDefs[this.getCategoryIndexForItem(item)];
 	}
 
@@ -764,19 +788,93 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Opens the dialog for creating a new debt entry.
+	 * Opens the add-debt dialog and wires the submit callback to persist
+	 * the new entry to CloudBase.
 	 */
 	protected openNewDebtDialog(): void {
-		// TODO: implement new debt creation dialog
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_ADD_DEBT,
+			(debtData: NewDebtData) => this.addNewDebt(debtData).catch(() => {})
+		);
 	}
 
 	/**
-	 * Prevents the default action of a keyboard event, blocking input
-	 * into the due-date picker field.
+	 * Opens the edit-debt dialog pre-filled with the entry's current balance,
+	 * due date, and currency. Wires the submit callback to persist any changed
+	 * fields to CloudBase via {@link editDebt}.
 	 *
-	 * @param event - The keyboard event whose default action should be blocked.
+	 * @param entryKey - The unique key of the entry to edit.
 	 */
-	protected preventKeyin(event: KeyboardEvent): void {
-		event.preventDefault();
+	protected openEditDebtDialog(entryKey: string): void {
+		const item = this.findUpdatedItem(entryKey);
+		if (!item) return;
+		const prefill: EditDebtData = {
+			amount: item.content?.debt ?? 0,
+			dueDate: item.content?.date ?? '',
+			currency: item.content?.cur ?? DEBT_CURRENCY_CNY
+		};
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_EDIT_DEBT,
+			prefill,
+			(data: EditDebtData) => this.editDebt(entryKey, data).catch(() => {})
+		);
+	}
+
+	/**
+	 * Applies the changes submitted from the edit-debt dialog. Writes only
+	 * the fields that actually changed — currency, balance, original total
+	 * (when the new amount exceeds the old original), and due date.
+	 *
+	 * @param entryKey - The unique key of the entry to update.
+	 * @param data - The validated form data returned by the edit-debt dialog.
+	 */
+	private async editDebt(entryKey: string, data: EditDebtData): Promise<void> {
+		const item = this.findUpdatedItem(entryKey);
+		if (!item) return;
+		if (data.currency !== item.content?.cur) {
+			item.content = { ...item.content, cur: data.currency };
+			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_CUR);
+		}
+		if (data.amount !== item.content?.debt) {
+			const oldOriginal: number = item.content?.original ?? 0;
+			const newOriginal = Math.max(data.amount, oldOriginal);
+			item.content = { ...item.content, debt: data.amount, original: newOriginal };
+			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
+			if (newOriginal !== oldOriginal) {
+				await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_ORIGINAL);
+			}
+		}
+		if (data.dueDate !== item.content?.date) {
+			item.content = { ...item.content, date: data.dueDate };
+			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DATE);
+		}
+		this.resyncUpcomingFromLocalData();
+		this.cdr.detectChanges();
+	}
+
+	/**
+	 * Returns true when the given item is marked as a permanent account,
+	 * meaning it is protected from deletion until unlocked.
+	 *
+	 * @param item - The Account Expenses item (schema-less CloudBase document).
+	 * @returns Whether the item has type 'permanent'.
+	 */
+	protected isItemPermanent(item: any): boolean {
+		return item.content?.type === DEBT_TYPE_PERMANENT;
+	}
+
+	/**
+	 * Returns true when the item's currency is CNY, checking the stored
+	 * currency field first and falling back to Chinese-character detection
+	 * on the name for legacy records without a stored currency.
+	 *
+	 * @param item - The Account Expenses item (schema-less CloudBase document).
+	 * @returns Whether the item's currency is CNY.
+	 */
+	protected isCnyCurrency(item: any): boolean {
+		if (item.content?.cur) return item.content.cur === DEBT_CURRENCY_CNY;
+		return Utilities.checkIfChinese(item.name ?? '');
 	}
 }

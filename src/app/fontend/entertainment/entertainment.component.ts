@@ -885,6 +885,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param movieItemVO - The movie item to be deleted upon confirmation.
 	 */
 	protected openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, movieItemVO.getOpenId())) return;
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
@@ -1027,6 +1028,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param movie - The movie whose genre is being edited.
 	 */
 	protected startEdit(movie: MovieItemVO) {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, movie.getOpenId())) return;
 		this.editedItems.set(movie.getMovieKey(), {
 			originalGenre: movie.getMovieGenre(),
 			genre: movie.getMovieGenre()

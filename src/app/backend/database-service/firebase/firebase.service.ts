@@ -42,11 +42,6 @@ import { DatabaseService } from '../database.service';
 @Injectable({
 	providedIn: 'root'
 })
-
-/*
-    NOTE: This class is no longer being maintained. No need to edit this class anymore.
-    We have transformed to use cloudbase from now on.
-    */
 export class FirebaseService extends DatabaseService {
 	private readonly className = 'FirebaseService';
 	private moviesRef: any;
@@ -56,7 +51,7 @@ export class FirebaseService extends DatabaseService {
 		@Inject(Storage) private storage: Storage,
 		@Inject(Database) private db: Database,
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
-		private searchStreamService: SearchStreamService,
+		private searchStreamService: SearchStreamService
 	) {
 		super();
 		this.moviesRef = dbRef(this.db, 'movies');
@@ -465,7 +460,9 @@ export class FirebaseService extends DatabaseService {
 
 				// Keep statistics in sync: record the most recent rate-search timestamp.
 				await update(this.statisticsRef, { lastRateSearch: { timestamp } });
-				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: SEARCH, timestamp }).catch(() => {});
+				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: SEARCH, timestamp }).catch(
+					() => {}
+				);
 			}
 			LOG.info(this.className, 'New history entry has been added');
 		} catch (error) {
@@ -569,14 +566,24 @@ export class FirebaseService extends DatabaseService {
 		);
 	}
 
+	// ── Remove existing record from table ─────────────────────────────────────────
+
 	/**
-	 * Removes a record from the reminder table.
+	 * Removes a record from debt table.
 	 *
-	 * @param tableName - The name of the table.
 	 * @param key - The key of the record to remove.
 	 */
-	public removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
-		return this.removeSingleItemFromDatabase(tableName, key);
+	public async removeRecordFromDebtTable(key: string): Promise<void> {
+		this.removeSingleItemFromDatabase(DATABASE_DEBT_SONATA, key);
+	}
+
+	/**
+	 * Removes a record from reminder table.
+	 *
+	 * @param key - The key of the record to remove.
+	 */
+	public async removeRecordFromReminderTable(key: string): Promise<void> {
+		this.removeSingleItemFromDatabase(DATABASE_REMINDER, key);
 	}
 
 	/**
@@ -603,15 +610,12 @@ export class FirebaseService extends DatabaseService {
 	public getDateCalculatorTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
 			runInInjectionContext(this.ei, () => {
-				const unsub = onValue(
-					dbRef(this.db, DATABASE_DATE_CALCULATOR),
-					(snapshot) => {
-						const data = snapshot.val();
-						// Firebase stores the collection as an object keyed by push ID;
-						// Object.values() converts it to an array for PrimeNG table binding.
-						observer.next(data ? Object.values(data) : []);
-					}
-				);
+				const unsub = onValue(dbRef(this.db, DATABASE_DATE_CALCULATOR), (snapshot) => {
+					const data = snapshot.val();
+					// Firebase stores the collection as an object keyed by push ID;
+					// Object.values() converts it to an array for PrimeNG table binding.
+					observer.next(data ? Object.values(data) : []);
+				});
 				return () => unsub();
 			});
 		});
@@ -674,49 +678,64 @@ export class FirebaseService extends DatabaseService {
 		);
 	}
 
+	// ── Update existing record to table ─────────────────────────────────────────
+
 	/**
-	 * Updates a single value in the reminder table.
+	 * Updates value in Reminder table
+	 *
+	 * @param entryKey - The key of the entry to update.
+	 * @param valueKey - The key of the value to update.
+	 * @param value - The new value to store.
+	 */
+	public async updateReminderTable(entryKey: string, valueKey: string, value: any): Promise<void> {
+		this.updateExistingRecordToTable(DATABASE_REMINDER, entryKey, valueKey, value);
+	}
+
+	/**
+	 * Updates value in Debt table
+	 *
+	 * @param entryKey - The key of the entry to update.
+	 * @param valueKey - The key of the value to update.
+	 * @param value - The new value to store.
+	 */
+	public async updateDebtTable(entryKey: string, valueKey: string, value: any): Promise<void> {
+		this.updateExistingRecordToTable(DATABASE_DEBT_SONATA, entryKey, valueKey, value);
+	}
+
+	/**
+	 * Updates a single value in  a given table.
 	 *
 	 * @param tableName - The name of the table to update.
 	 * @param entryKey - The key of the entry to update.
 	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to be stored.
 	 */
-	public async updateReminderTable(
+	private async updateExistingRecordToTable(
 		tableName: string,
 		entryKey: string,
 		valueKey: string,
 		value: any
 	): Promise<void> {
 		try {
-			if (tableName === DATABASE_DEBT_SONATA) {
-				const valueToUpdate = valueKey === 'content' ? { ...value } : { [valueKey]: value };
-				await update(dbRef(this.db, `${tableName}/${entryKey}/content`), {
-					...valueToUpdate
-				});
-				LOG.info(this.className, 'Reminder table has been updated');
-			} else if (tableName === DATABASE_REMINDER) {
-				await update(dbRef(this.db, `${tableName}/${entryKey}`), {
-					[valueKey]: value
-				});
-				LOG.info(this.className, 'Reminder table has been updated');
-			}
+			await update(dbRef(this.db, `${tableName}/${entryKey}`), {
+				[valueKey]: value
+			});
+			LOG.info(this.className, `Record on ${tableName} has been updated`);
 		} catch (error) {
-			LOG.error(this.className, 'Error while updating reminder table', error as Error);
+			LOG.error(this.className, `Error while updating ${tableName}`, error as Error);
 			throw error;
 		}
 	}
 
 	/**
-	 * Updates the first reminder table with the given data.
+	 * Updates date calculator table with the given data in nexus page
 	 *
-	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The updated table data.
 	 */
-	public updateDateCalculatorTable(tableName: string, updatedTable: any): Promise<void> {
-		return update(dbRef(this.db, tableName), { ...updatedTable })
+	public updateDateCalculatorTable(updatedTable: any): Promise<void> {
+		return update(dbRef(this.db, DATABASE_DATE_CALCULATOR), { ...updatedTable })
 			.then(() => {
-				LOG.info(this.className, 'Reminder table has been updated');
+				LOG.info(this.className, 'Table record has been updated');
 			})
 			.catch((error: Error) => {
 				LOG.error(this.className, 'Error while updating first reminder table', error);
@@ -847,18 +866,39 @@ export class FirebaseService extends DatabaseService {
 		return this.appendToActivityLog(STATS_FIELD_RECENT_PATCH, activity);
 	}
 
+	// ── Add new record to table ─────────────────────────────────────────
+
+	/**
+	 * Adds a new entry to reminder table.
+	 *
+	 * @param newRecord - The new entry to add.
+	 */
+	public async addNewRecordToReminderTable(newRecord: any): Promise<void> {
+		this.addNewRecordToTable(DATABASE_REMINDER, newRecord);
+	}
+
+	/**
+	 * Adds a new entry to debt table
+	 *
+	 * @param tableName - The corresponding collection name.
+	 * @param newRecord - The new entry to add.
+	 */
+	public async addNewRecordToDebtTable(newRecord: any): Promise<void> {
+		this.addNewRecordToTable(DATABASE_DEBT_SONATA, newRecord);
+	}
+
 	/**
 	 * Adds a new entry to the given reminder table. Used by the third table only.
 	 *
 	 * @param tableName - The name of the table.
 	 * @param newRecord - The new entry to add.
 	 */
-	public addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
+	private addNewRecordToTable(tableName: string, newRecord: any): Promise<void> {
 		return push(dbRef(this.db, tableName), {
 			content: { ...newRecord }
 		})
 			.then(() => {
-				LOG.info(this.className, 'Reminder table has been updated');
+				LOG.info(this.className, 'Table record has been updated');
 				if (tableName === DATABASE_REMINDER) {
 					this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
 						type: HISTORY_STATUS_ADDED,

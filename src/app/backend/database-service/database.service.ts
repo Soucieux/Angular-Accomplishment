@@ -192,46 +192,57 @@ export abstract class DatabaseService {
 	public abstract getReminderTableDetails(): Observable<any[]>;
 
 	/**
-	 * Updates a single value in the reminder table.
+	 * Updates value in Reminder table
 	 *
-	 * @param tableName - The name of the table to update.
 	 * @param entryKey - The key of the entry to update.
 	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to store.
-	 *               // any: Reminder value types differ per table and are validated at the call site
 	 */
-	public abstract updateReminderTable(
-		tableName: string,
-		entryKey: string,
-		valueKey: string,
-		value: any
-	): Promise<void>;
+	public abstract updateReminderTable(entryKey: string, valueKey: string, value: any): Promise<void>;
 
 	/**
-	 * Updates the first reminder table with the given data.
+	 * Updates value in Debt table
 	 *
-	 * @param tableName - The name of the table to update.
+	 * @param entryKey - The key of the entry to update.
+	 * @param valueKey - The key of the value to update.
+	 * @param value - The new value to store.
+	 */
+	public abstract updateDebtTable(entryKey: string, valueKey: string, value: any): Promise<void>;
+
+	/**
+	 * Updates date calculator table with the given data in nexus page
+	 *
 	 * @param updatedTable - The updated table data.
-	 *                       // any: Date calculator table structure is validated at the call site
 	 */
-	public abstract updateDateCalculatorTable(tableName: string, updatedTable: any): Promise<void>;
+	public abstract updateDateCalculatorTable(updatedTable: any): Promise<void>;
 
 	/**
-	 * Removes a record from the reminder table.
+	 * Removes a record from debt table.
 	 *
-	 * @param tableName - The name of the table.
 	 * @param key - The key of the record to remove.
 	 */
-	public abstract removeRecordFromReminderTable(tableName: string, key: string): Promise<void>;
+	public abstract removeRecordFromDebtTable(key: string): Promise<void>;
 
 	/**
-	 * Adds a new record to the reminder table.
+	 * Removes a record from reminder table.
 	 *
-	 * @param tableName - The name of the table.
-	 * @param newRecord - The new record to add.
-	 *                    // any: Record shape varies by table and is validated at the call site
+	 * @param key - The key of the record to remove.
 	 */
-	public abstract addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void>;
+	public abstract removeRecordFromReminderTable(key: string): Promise<void>;
+
+	/**
+	 * Adds a new record to reminder table.
+	 *
+	 * @param newRecord - The new record to add.
+	 */
+	public abstract addNewRecordToReminderTable(newRecord: any): Promise<void>;
+
+	/**
+	 * Adds a new record to the debt table.
+	 *
+	 * @param newRecord - The new record to add.
+	 */
+	public abstract addNewRecordToDebtTable(newRecord: any): Promise<void>;
 
 	/**
 	 * Returns the quotes from the database as a reactive observable.
@@ -266,7 +277,6 @@ export abstract class DatabaseService {
 	 * unsubscribe (or lose their subscription) on destroy, stopping further updates.
 	 *
 	 * @param fields - A flat or nested record of fields to merge into the statistics document.
-	 *                 // any: Statistics field shapes vary per page and are validated at the call site
 	 */
 	public abstract updateStatisticsFields(fields: Record<string, any>): Promise<void>;
 
@@ -275,7 +285,6 @@ export abstract class DatabaseService {
 	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
 	 *
 	 * @param activity - The activity object to record.
-	 *                   // any: Activity shape varies by caller and is validated at the call site
 	 */
 	public abstract appendToPatchActivityLog(activity: any): Promise<void>;
 
@@ -286,7 +295,6 @@ export abstract class DatabaseService {
 	 *
 	 * @param fieldName - The statistics field that holds the array — use a STATS_FIELD_* constant.
 	 * @param activity - The activity object to record.
-	 *                   // any: Activity shape varies by caller and is validated at the call site
 	 */
 	public abstract appendToActivityLog(fieldName: string, activity: any): Promise<void>;
 
@@ -294,7 +302,6 @@ export abstract class DatabaseService {
 	 * Returns the useful links from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the useful links list.
-	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getUsefulLinks(): Observable<any[]>;
 
@@ -341,7 +348,6 @@ export abstract class DatabaseService {
 	 * Returns the link categories from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the link categories list.
-	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getLinkCategories(): Observable<any[]>;
 

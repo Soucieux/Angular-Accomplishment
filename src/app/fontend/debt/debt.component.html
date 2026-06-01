@@ -47,7 +47,7 @@
 					@for (group of currencyGroups; track group.code) {
 						<div class="summary-amount-row">
 							<span class="summary-amount"
-								>{{ group.symbol }}{{ group.owed | number: '1.0-0' }}</span
+								>{{ formatMoney(group.owed, group.code === DEBT_CURRENCY_CNY) }}</span
 							>
 							<span class="summary-currency">{{ group.symbol }} {{ group.code }}</span>
 						</div>
@@ -57,8 +57,8 @@
 						<div class="summary-bar-meta">
 							<span>{{ group.pct }}% cleared</span>
 							<span
-								>{{ group.symbol }}{{ group.paid | number: '1.0-0' }} of {{ group.symbol
-								}}{{ group.original | number: '1.0-0' }}</span
+								>{{ formatMoney(group.paid, group.code === DEBT_CURRENCY_CNY) }} of
+								{{ formatMoney(group.original, group.code === DEBT_CURRENCY_CNY) }}</span
 							>
 						</div>
 					}
@@ -168,10 +168,7 @@
 									class="card-balance"
 									[class.is-paid]="item.paid"
 									[class.is-bump]="balanceBumpItems[item.key]">
-									{{ isCnyCurrency(item) ? '¥' : '$'
-									}}{{
-										(item.paid ? 0 : (item.debt ?? 0)) | number: '1.0-0'
-									}}
+									{{ formatMoney(item.paid ? 0 : (item.debt ?? 0), isCnyCurrency(item)) }}
 								</span>
 								@if (item.paid) {
 									<span class="card-paid-tag">
@@ -183,10 +180,7 @@
 								} @else {
 									<span class="card-remaining"
 										>remaining of
-										<b
-											>{{ isCnyCurrency(item) ? '¥' : '$'
-											}}{{ item.original | number: '1.0-0' }}</b
-										></span
+										<b>{{ formatMoney(item.original, isCnyCurrency(item)) }}</b></span
 									>
 								}
 							</div>
@@ -201,15 +195,8 @@
 							<div class="card-progress-meta">
 								<span>{{ getDebtProgress(item) }}% paid</span>
 								<span
-									>{{ isCnyCurrency(item) ? '¥' : '$'
-									}}{{
-										(getDebtProgress(item) === 100
-											? (item?.original ?? 0)
-											: (item?.original ?? 0) - (item?.debt ?? 0)
-										) | number: '1.0-0'
-									}}
-									of {{ isCnyCurrency(item) ? '¥' : '$'
-									}}{{ item?.original | number: '1.0-0' }}</span
+									>{{ formatMoney(getDebtProgress(item) === 100 ? (item?.original ?? 0) : (item?.original ?? 0) - (item?.debt ?? 0), isCnyCurrency(item)) }}
+									of {{ formatMoney(item?.original ?? 0, isCnyCurrency(item)) }}</span
 								>
 							</div>
 

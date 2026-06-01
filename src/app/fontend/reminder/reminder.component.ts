@@ -35,10 +35,10 @@ import {
 	HISTORY_STATUS_DELETED,
 	REMINDER_DIALOG_CONFIRM_BTN,
 	REMINDER_DIALOG_DELETE_BTN,
-	PINBOARD_VALUE_KEY_DATE,
-	PINBOARD_VALUE_KEY_LINK,
-	PINBOARD_VALUE_KEY_TAGS,
-	PINBOARD_VALUE_KEY_TEXT,
+	REMINDER_VALUE_KEY_DATE,
+	REMINDER_VALUE_KEY_LINK,
+	REMINDER_VALUE_KEY_TAGS,
+	REMINDER_VALUE_KEY_TEXT,
 	REMINDER_ITEMS_PER_PAGE,
 	REMINDER_MSG_DELETE_CONFIRM,
 	REMINDER_PLACEHOLDER_LINK,
@@ -51,13 +51,7 @@ import {
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS
 } from '../../common/app.constant';
-import {
-	NewItem,
-	ReminderDbRecord,
-	ReminderValueKey,
-	ReminderItem,
-	TagEditSession
-} from './reminder.model';
+import { NewItem, ReminderDbRecord, ReminderValueKey, ReminderItem, TagEditSession } from './reminder.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
@@ -132,7 +126,10 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 					key: record.key ?? '',
 					_openid: record._openid ?? '',
 					text: record.content?.text ?? '',
-					date: record.content?.date != null ? Utilities.coerceDateToString(record.content.date) : null,
+					date:
+						record.content?.date != null
+							? Utilities.coerceDateToString(record.content.date)
+							: null,
 					link: record.content?.link ?? null,
 					tags: record.content?.tags ?? []
 				}));
@@ -244,19 +241,19 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		valueKey: ReminderValueKey
 	): void {
 		switch (valueKey) {
-			case PINBOARD_VALUE_KEY_TEXT:
+			case REMINDER_VALUE_KEY_TEXT:
 				item.text = originalRecord.content.text ?? '';
 				break;
-			case PINBOARD_VALUE_KEY_DATE:
+			case REMINDER_VALUE_KEY_DATE:
 				item.date =
 					originalRecord.content.date != null
 						? Utilities.coerceDateToString(originalRecord.content.date)
 						: null;
 				break;
-			case PINBOARD_VALUE_KEY_LINK:
+			case REMINDER_VALUE_KEY_LINK:
 				item.link = originalRecord.content.link ?? null;
 				break;
-			case PINBOARD_VALUE_KEY_TAGS:
+			case REMINDER_VALUE_KEY_TAGS:
 				item.tags = originalRecord.content.tags ?? [];
 				break;
 		}
@@ -277,7 +274,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * {@link clearLink} - Clears the link value on a pin.
 	 *
 	 * @param entryKey - The CloudBase document key identifying which entry to update.
-	 * @param valueKey - The value key identifying which property inside the entry to update (e.g. PINBOARD_VALUE_KEY_TEXT).
+	 * @param valueKey - The value key identifying which property inside the entry to update (e.g. REMINDER_VALUE_KEY_TEXT).
 	 * @param singleValue - The new value to store.
 	 */
 	private async updateTableSingleValue(
@@ -287,7 +284,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	): Promise<void> {
 		try {
 			// Step 1: Persist the single-value change to CloudBase
-			await this.databaseService.updateReminderTable(DATABASE_REMINDER, entryKey, valueKey, singleValue);
+			await this.databaseService.updateReminderTable(entryKey, valueKey, singleValue);
 			// Step 2: Flash the save indicator
 			this.triggerSaveIndicator();
 			// Step 3: Append the change to the activity log
@@ -320,7 +317,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private async removeRecordFromDatabase(entryKey: string): Promise<void> {
 		const itemText = this.items.find((item) => item.key === entryKey)?.text ?? '';
 		try {
-			await this.databaseService.removeRecordFromReminderTable(DATABASE_REMINDER, entryKey);
+			await this.databaseService.removeRecordFromReminderTable(entryKey);
 			this.triggerSaveIndicator();
 			this.databaseService
 				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
@@ -554,7 +551,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 		try {
 			// Step 3: Persist to the database
-			await this.databaseService.addNewRecordForReminderTable(DATABASE_REMINDER, newContent);
+			await this.databaseService.addNewRecordToReminderTable(newContent);
 
 			// Step 4: Flash save indicator and append to the activity log
 			this.triggerSaveIndicator();
@@ -602,12 +599,15 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param item - The ReminderItem whose text was edited.
 	 */
 	protected async onCardTextUpdate(item: ReminderItem): Promise<void> {
-		const originalIndex = this.originalItems.findIndex((originalRecord) => originalRecord.key === item.key);
-		if (originalIndex === -1 || item.text === (this.originalItems[originalIndex].content?.text ?? '')) return;
+		const originalIndex = this.originalItems.findIndex(
+			(originalRecord) => originalRecord.key === item.key
+		);
+		if (originalIndex === -1 || item.text === (this.originalItems[originalIndex].content?.text ?? ''))
+			return;
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
 		const savedText = item.text.trim();
-		await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_TEXT, savedText);
+		await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TEXT, savedText);
 		// The DB subscription fires asynchronously — replace the snapshot entry immutably so a
 		// concurrent blur cannot pass the changed-value guard and issue a duplicate write.
 		const updatedSnapshot = structuredClone(this.originalItems[originalIndex]);
@@ -645,7 +645,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.editingItem.date = date ? Utilities.formatDateForStorage(date) : null;
 			await this.updateTableSingleValue(
 				this.editingItem.key,
-				PINBOARD_VALUE_KEY_DATE,
+				REMINDER_VALUE_KEY_DATE,
 				this.editingItem.date
 			);
 			this.updateUpcomingToStatistics();
@@ -663,7 +663,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.editingItem.link = trimmedLink ? Utilities.normalizeWebUrl(trimmedLink) : null;
 			await this.updateTableSingleValue(
 				this.editingItem.key,
-				PINBOARD_VALUE_KEY_LINK,
+				REMINDER_VALUE_KEY_LINK,
 				this.editingItem.link
 			);
 		}
@@ -705,7 +705,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 			else item.tags.splice(session.index, 1);
 		}
 		this.cancelTagEdit();
-		if (item.key) await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_TAGS, [...item.tags]);
+		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAGS, [...item.tags]);
 	}
 
 	/**
@@ -750,7 +750,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		const returnCode = this.checkPermission(item.key);
 		if (returnCode === FAILURE) return;
 		item.tags.splice(index, 1);
-		if (item.key) await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_TAGS, [...item.tags]);
+		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAGS, [...item.tags]);
 	}
 
 	/**
@@ -826,7 +826,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		if (returnCode === FAILURE) return;
 		item.date = null;
 		if (item.key) {
-			await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_DATE, null);
+			await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_DATE, null);
 			this.updateUpcomingToStatistics();
 		}
 	}
@@ -842,7 +842,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		item.link = null;
 		if (this.editingItem === item) this.editingLink = '';
 		if (item.key) {
-			await this.updateTableSingleValue(item.key, PINBOARD_VALUE_KEY_LINK, null);
+			await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_LINK, null);
 		}
 	}
 

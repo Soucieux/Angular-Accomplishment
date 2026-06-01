@@ -168,16 +168,16 @@
 	gap: 4px;
 }
 
-.stat-num {
+.stat-number {
 	font-weight: 600;
 	color: rgba(30, 15, 35, 0.75);
 }
 
-.stat-num.stat-progress {
+.stat-number.stat-progress {
 	color: #f59e0b;
 }
 
-.stat-num.stat-bug {
+.stat-number.stat-bug {
 	color: #ee5a6f;
 }
 

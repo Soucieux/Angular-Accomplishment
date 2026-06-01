@@ -35,7 +35,7 @@
 				<span class="post-success-chip">{{ RESONANCE_MSG_POSTED }}</span>
 			}
 			<button
-				class="submit-btn"
+				class="submit-button"
 				pButton
 				(click)="submitQuote()"
 				[disabled]="!newQuoteText.trim() || submitting || isOverLimit"
@@ -72,7 +72,7 @@
 								<span class="quote-time">{{ getRelativeTime(quote.timestamp) }}</span>
 								@if (canDelete(quote)) {
 									<button
-										class="delete-btn"
+										class="delete-button"
 										pButton
 										icon="pi pi-times"
 										[rounded]="true"

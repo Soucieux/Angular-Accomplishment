@@ -26,21 +26,21 @@
 					<div class="date-calculator-toggle-wrapper">
 						<div class="date-calculator-seg-group">
 							<button
-								class="date-calculator-seg-btn"
+								class="date-calculator-segment-button"
 								[class.active]="!isNextMonth"
 								[attr.aria-pressed]="!isNextMonth"
 								(click)="setMonth(false)">
 								{{ PINBOARD_LABEL_CURRENT_MONTH }}
 							</button>
 							<button
-								class="date-calculator-seg-btn"
+								class="date-calculator-segment-button"
 								[class.active]="isNextMonth"
 								[attr.aria-pressed]="isNextMonth"
 								(click)="setMonth(true)">
 								{{ PINBOARD_LABEL_NEXT_MONTH }}
 							</button>
 						</div>
-						<button class="date-calculator-reset-btn" (click)="openResetConfirmationDialog()">
+						<button class="date-calculator-reset-button" (click)="openResetConfirmationDialog()">
 							<span class="pi pi-refresh"></span>
 							{{ PINBOARD_LABEL_RESET }}
 						</button>
@@ -84,7 +84,7 @@
 											(blur)="onValueChange(rowIndex, field)"
 											(keyup.enter)="onValueChange(rowIndex, field)" />
 										<button
-											class="date-calculator-cell-btn"
+											class="date-calculator-cell-button"
 											[class.charged]="row[field].isCharged"
 											[class.today]="
 												!row[field].isCharged && row[field].value === currentDay
@@ -163,12 +163,12 @@
 							(click)="selectCategory(cat._id)"
 							[style.--cat-color]="cat.color">
 							{{ cat.name }} ({{ getLinkCount(cat._id) }})
-							<span class="cat-edit-btn"
+							<span class="category-edit-button"
 								(click)="openEditCategoryDialog(cat, $event)"
 								title="Edit category">✎</span>
 						</button>
 					}
-					<button class="cat-add-btn" (click)="openAddCategoryDialog()" title="New category">
+					<button class="category-add-button" (click)="openAddCategoryDialog()" title="New category">
 						<span class="material-symbols-outlined">add</span>
 					</button>
 				</div>
@@ -182,13 +182,13 @@
 							(blur)="onLinkSearchExit($event)" />
 					}
 					<button
-						class="icon-btn"
+						class="icon-button"
 						[class.active]="linkSearchVisible"
 						(click)="toggleLinkSearch()"
 						title="Search links">
 						<span class="material-symbols-outlined">search</span>
 					</button>
-					<button class="add-link-btn" (click)="openAddLinkDialog()">
+					<button class="add-link-button" (click)="openAddLinkDialog()">
 						<span class="material-symbols-outlined">add</span>
 						Add Link
 					</button>
@@ -206,7 +206,7 @@
 				<div class="links-empty">
 					<span class="material-symbols-outlined empty-icon">link</span>
 					<p>No links here yet</p>
-					<button class="add-link-btn" (click)="openAddLinkDialog()">
+					<button class="add-link-button" (click)="openAddLinkDialog()">
 						<span class="material-symbols-outlined">add</span>
 						Add Link
 					</button>
@@ -234,10 +234,10 @@
 									<span class="link-visits-badge">{{ link.visitCount }}</span>
 								}
 								<div class="link-actions">
-									<button class="link-action-btn" (click)="openEditLinkDialog(link, $event)" title="Edit">
+									<button class="link-action-button" (click)="openEditLinkDialog(link, $event)" title="Edit">
 										<span class="material-symbols-outlined">edit</span>
 									</button>
-									<button class="link-action-btn danger" (click)="openDeleteLinkDialog(link, $event)" title="Delete">
+									<button class="link-action-button danger" (click)="openDeleteLinkDialog(link, $event)" title="Delete">
 										<span class="material-symbols-outlined">delete</span>
 									</button>
 								</div>
@@ -320,8 +320,8 @@
 	</div>
 
 	<ng-template pTemplate="footer">
-		<button class="dialog-cancel-btn" (click)="closeLinkDialog()">Cancel</button>
-		<button class="dialog-save-btn" (click)="saveLinkDialog()">Save</button>
+		<button class="dialog-cancel-button" (click)="closeLinkDialog()">Cancel</button>
+		<button class="dialog-save-button" (click)="saveLinkDialog()">Save</button>
 	</ng-template>
 </p-dialog>
 
@@ -354,7 +354,7 @@
 		</div>
 		@if (editingCategory) {
 			<div class="danger-zone">
-				<button class="delete-cat-btn" (click)="openDeleteCategoryDialog(editingCategory, $event)">
+				<button class="delete-category-button" (click)="openDeleteCategoryDialog(editingCategory, $event)">
 					Delete this category
 				</button>
 			</div>
@@ -362,7 +362,7 @@
 	</div>
 
 	<ng-template pTemplate="footer">
-		<button class="dialog-cancel-btn" (click)="closeCategoryDialog()">Cancel</button>
-		<button class="dialog-save-btn" (click)="saveCategoryDialog()">Save</button>
+		<button class="dialog-cancel-button" (click)="closeCategoryDialog()">Cancel</button>
+		<button class="dialog-save-button" (click)="saveCategoryDialog()">Save</button>
 	</ng-template>
 </p-dialog>

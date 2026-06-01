@@ -94,31 +94,31 @@
 
 			<!-- ── Quick Actions row (outside bento grid) ────────────────── -->
 			<div class="quick-actions-row">
-				<a class="qa-btn qa-movie" (click)="navigateToQuickAction('/entertainment', { openAddDialog: true })">
-					<span class="material-symbols-outlined qa-icon">movie</span>
-					<span class="qa-label">Add Movie</span>
+				<a class="quick-action-button quick-action-movie" (click)="navigateToQuickAction('/entertainment', { openAddDialog: true })">
+					<span class="material-symbols-outlined quick-action-icon">movie</span>
+					<span class="quick-action-label">Add Movie</span>
 				</a>
-				<a class="qa-btn qa-quote" routerLink="/resonance">
-					<span class="material-symbols-outlined qa-icon">format_quote</span>
-					<span class="qa-label">Add Quote</span>
+				<a class="quick-action-button quick-action-quote" routerLink="/resonance">
+					<span class="material-symbols-outlined quick-action-icon">format_quote</span>
+					<span class="quick-action-label">Add Quote</span>
 				</a>
-				<a class="qa-btn qa-recipe" (click)="navigateToQuickAction('/recipe', { openAddView: true })">
-					<span class="material-symbols-outlined qa-icon">menu_book</span>
-					<span class="qa-label">Add Recipe</span>
+				<a class="quick-action-button quick-action-recipe" (click)="navigateToQuickAction('/recipe', { openAddView: true })">
+					<span class="material-symbols-outlined quick-action-icon">menu_book</span>
+					<span class="quick-action-label">Add Recipe</span>
 				</a>
-				<a class="qa-btn qa-expense" routerLink="/reminder">
-					<span class="material-symbols-outlined qa-icon">payments</span>
-					<span class="qa-label">Add Expense</span>
+				<a class="quick-action-button quick-action-expense" routerLink="/reminder">
+					<span class="material-symbols-outlined quick-action-icon">payments</span>
+					<span class="quick-action-label">Add Expense</span>
 				</a>
-				<a class="qa-btn qa-patch" (click)="navigateToQuickAction('/patch', { goToLastPage: true })">
-					<span class="material-symbols-outlined qa-icon">bug_report</span>
-					<span class="qa-label">Log Bug</span>
+				<a class="quick-action-button quick-action-patch" (click)="navigateToQuickAction('/patch', { goToLastPage: true })">
+					<span class="material-symbols-outlined quick-action-icon">bug_report</span>
+					<span class="quick-action-label">Log Bug</span>
 				</a>
 				<a
-					class="qa-btn qa-search"
+					class="quick-action-button quick-action-search"
 					(click)="navigateToQuickAction('/entertainment', { openSearchDialog: true })">
-					<span class="material-symbols-outlined qa-icon">manage_search</span>
-					<span class="qa-label">Rate Search</span>
+					<span class="material-symbols-outlined quick-action-icon">manage_search</span>
+					<span class="quick-action-label">Rate Search</span>
 				</a>
 			</div>
 
@@ -485,7 +485,7 @@
 									[class.week-day-today]="day.isToday"
 									[class.week-day-past]="day.isPast">
 									<span class="wday-label">{{ day.label }}</span>
-									<span class="wday-num">{{ day.dayNum }}</span>
+									<span class="weekday-number">{{ day.dayNum }}</span>
 									<div class="wday-tasks">
 										@for (item of day.items.slice(0, 3); track item.name) {
 											<span

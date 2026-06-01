@@ -179,7 +179,7 @@ mat-drawer-content {
 }
 
 /* ── Button styles ── */
-::ng-deep .signin-btn .p-button {
+::ng-deep .signin-button .p-button {
 	background: linear-gradient(135deg, #d53369, #daae51) !important;
 	border: none !important;
 	color: white !important;
@@ -187,11 +187,11 @@ mat-drawer-content {
 	transition: box-shadow 0.2s !important;
 }
 
-::ng-deep .signin-btn .p-button:hover {
+::ng-deep .signin-button .p-button:hover {
 	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.5) !important;
 }
 
-::ng-deep .signout-btn .p-button {
+::ng-deep .signout-button .p-button {
 	background: linear-gradient(135deg, #ef5350, #d53369) !important;
 	border: none !important;
 	color: white !important;
@@ -199,7 +199,7 @@ mat-drawer-content {
 	transition: box-shadow 0.2s !important;
 }
 
-::ng-deep .signout-btn .p-button:hover {
+::ng-deep .signout-button .p-button:hover {
 	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.5) !important;
 }
 

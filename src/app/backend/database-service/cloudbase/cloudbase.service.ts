@@ -37,7 +37,8 @@ import {
 	STATS_FIELD_TOTAL_RECIPES,
 	STATUS_IN_PROGRESS,
 	ERROR_PERMISSION_DENIED,
-	ROLE_ADMIN
+	ROLE_ADMIN,
+	STATS_FIELD_RECENT_DEBT
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
@@ -94,7 +95,7 @@ export class CloudbaseService extends DatabaseService {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		@Inject(CLOUDBASE) private cloudbase: CloudbaseApp,
-		private searchStreamService: SearchStreamService,
+		private searchStreamService: SearchStreamService
 	) {
 		super();
 		if (isPlatformBrowser(this.platformId)) {
@@ -545,7 +546,8 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(movieItemVO.getMovieKey()));
 			const movieData = await movieRef.get();
 			const oldRate = movieData.data?.[0]?.rate;
-			if (oldRate === undefined) throw new Error(`Movie document not found for key ${movieItemVO.getMovieKey()}`);
+			if (oldRate === undefined)
+				throw new Error(`Movie document not found for key ${movieItemVO.getMovieKey()}`);
 
 			if (oldRate !== movieItemVO.getMovieRate()) {
 				const result = await movieRef.update({
@@ -980,15 +982,39 @@ export class CloudbaseService extends DatabaseService {
 			.catch((err: any) => LOG.error(this.className, 'Failed to sync patchInProgress stat', err));
 	}
 
+	// ── Update existing record to table ─────────────────────────────────────────
+
 	/**
-	 * Updates a single value in the reminder table. Used by both the second and third tables.
+	 * Updates value in Reminder table
 	 *
-	 * @param tableName - The corresponding collection name.
+	 * @param entryKey - The key of the entry to update.
+	 * @param valueKey - The key of the value to update.
+	 * @param value - The new value to store.
+	 */
+	public async updateReminderTable(entryKey: string, valueKey: string, value: any): Promise<void> {
+		this.updateExistingRecordToTable(DATABASE_REMINDER, entryKey, valueKey, value);
+	}
+
+	/**
+	 * Updates value in Debt table
+	 *
+	 * @param entryKey - The key of the entry to update.
+	 * @param valueKey - The key of the value to update.
+	 * @param value - The new value to store.
+	 */
+	public async updateDebtTable(entryKey: string, valueKey: string, value: any): Promise<void> {
+		this.updateExistingRecordToTable(DATABASE_DEBT_SONATA, entryKey, valueKey, value);
+	}
+
+	/**
+	 * Updates value to a given table
+	 *
+	 * @param tableName - The corresponding table name.
 	 * @param entryKey - The key of the entry to update.
 	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to be stored.
 	 */
-	public async updateReminderTable(
+	private async updateExistingRecordToTable(
 		tableName: string,
 		entryKey: string,
 		valueKey: string,
@@ -1005,20 +1031,19 @@ export class CloudbaseService extends DatabaseService {
 				.update(valueToUpdate);
 			if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
 			else if (result.code) throw new Error(result.message);
-			LOG.info(this.className, 'Reminder table has been updated');
+			LOG.info(this.className, `Record on ${tableName} has been updated`);
 		} catch (error) {
-			LOG.error(this.className, 'Error while updating reminder table', error as Error);
+			LOG.error(this.className, `Error while updating ${tableName}`, error as Error);
 			throw error;
 		}
 	}
 
 	/**
-	 * Updates the first reminder table with the given data.
+	 * Updates date calculator table with the given data in nexus page
 	 *
-	 * @param tableName - The name of the table to update.
 	 * @param updatedTable - The updated table data.
 	 */
-	public async updateDateCalculatorTable(tableName: string, updatedTable: any): Promise<void> {
+	public async updateDateCalculatorTable(updatedTable: any): Promise<void> {
 		try {
 			// CloudBase has no batch document update API — rows are updated individually.
 			// _id and _openid are stripped since they are CloudBase metadata.
@@ -1027,7 +1052,7 @@ export class CloudbaseService extends DatabaseService {
 				updatedTable.map(async (data: any) => {
 					const { _id, _openid, ...rest } = data;
 					const result = await this.database
-						.collection(tableName)
+						.collection(DATABASE_DATE_CALCULATOR)
 						.where(this.buildWhereClause(_id))
 						.update(rest);
 					if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
@@ -1040,14 +1065,33 @@ export class CloudbaseService extends DatabaseService {
 		}
 	}
 
+	// ── Remove existing record from table ─────────────────────────────────────────
+
 	/**
-	 * Removes a record from the reminder table.
-	 * Note: This is used by third table only
+	 * Removes a record from debt table.
+	 *
+	 * @param key - The key of the record to remove.
+	 */
+	public async removeRecordFromDebtTable(key: string): Promise<void> {
+		this.removeRecordFromTable(DATABASE_DEBT_SONATA, key);
+	}
+
+	/**
+	 * Removes a record from reminder table.
+	 *
+	 * @param key - The key of the record to remove.
+	 */
+	public async removeRecordFromReminderTable(key: string): Promise<void> {
+		this.removeRecordFromTable(DATABASE_REMINDER, key);
+	}
+
+	/**
+	 * Removes a record from a given table.
 	 *
 	 * @param tableName - Corresponding collection name
 	 * @param key - The key of the record to remove
 	 */
-	public async removeRecordFromReminderTable(tableName: string, key: string): Promise<void> {
+	private async removeRecordFromTable(tableName: string, key: string): Promise<void> {
 		try {
 			const result = await this.database
 				.collection(tableName)
@@ -1056,7 +1100,7 @@ export class CloudbaseService extends DatabaseService {
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, `Record has been removed from ${tableName}`);
 		} catch (error) {
-			LOG.error(this.className, 'Error while removing a record from reminder table');
+			LOG.error(this.className, `Error while removing a record from ${tableName}`);
 			throw error;
 		}
 	}
@@ -1097,34 +1141,50 @@ export class CloudbaseService extends DatabaseService {
 			: { _id: id, _openid: CloudbaseService.getUseId() };
 	}
 
+	// ── Add new record to table ─────────────────────────────────────────
+
 	/**
-	 * Adds a new entry to the given reminder table.
-	 * Note: This is used by third table only.
+	 * Adds a new entry to reminder table.
+	 *
+	 * @param newRecord - The new entry to add.
+	 */
+	public async addNewRecordToReminderTable(newRecord: any): Promise<void> {
+		this.addNewRecordToTable(DATABASE_REMINDER, STATS_FIELD_RECENT_REMINDER, newRecord);
+	}
+
+	/**
+	 * Adds a new entry to the debt table.
+	 *
+	 * @param newRecord - The new entry to add.
+	 */
+	public async addNewRecordToDebtTable(newRecord: any): Promise<void> {
+		this.addNewRecordToTable(DATABASE_DEBT_SONATA, STATS_FIELD_RECENT_DEBT, newRecord);
+	}
+
+	/**
+	 * Adds a new entry to debt table
 	 *
 	 * @param tableName - The corresponding collection name.
 	 * @param newRecord - The new entry to add.
 	 */
-	public async addNewRecordForReminderTable(tableName: string, newRecord: any): Promise<void> {
+	private async addNewRecordToTable(tableName: string, statsField: string, newRecord: any): Promise<void> {
 		try {
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 			const result = await this.database.collection(tableName).add({
 				...userId,
-				content: { ...newRecord }
+				...newRecord
 			});
 			if (result.code) throw new Error(result.message);
-			LOG.info(this.className, 'Reminder table has been updated');
-			// Fire-and-forget: record third-table additions in stats so the
+			LOG.info(this.className, `${tableName} table has been updated`);
+			// Fire-and-forget: record table additions in stats so the
 			// home-page Recent Activity widget can surface them immediately.
-			if (tableName === DATABASE_REMINDER) {
-				this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
-					type: HISTORY_STATUS_ADDED,
-					table: REMINDER_TABLE_MESSAGES,
-					text: newRecord.text ?? '',
-					timestamp: Utilities.getCurrentFormattedTime(true)
-				}).catch(() => {});
-			}
+			this.appendToActivityLog(statsField, {
+				type: HISTORY_STATUS_ADDED,
+				text: newRecord.text ?? '',
+				timestamp: Utilities.getCurrentFormattedTime(true)
+			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, 'Error while adding new record for reminder table', error as Error);
+			LOG.error(this.className, `Error while adding new record to ${tableName}`, error as Error);
 			throw error;
 		}
 	}
@@ -1196,10 +1256,7 @@ export class CloudbaseService extends DatabaseService {
 		try {
 			// Admins may delete any quote regardless of ownership — bypass the _openid constraint.
 			if (CloudbaseService.userHasAllRights()) {
-				const result = await this.database
-					.collection(DATABASE_QUOTES)
-					.where({ _id: key })
-					.remove();
+				const result = await this.database.collection(DATABASE_QUOTES).where({ _id: key }).remove();
 				if (result.code) throw new Error(result.message);
 				LOG.info(this.className, `Record has been removed from ${DATABASE_QUOTES}`);
 			} else {
@@ -1243,8 +1300,7 @@ export class CloudbaseService extends DatabaseService {
 		if (!this.statId) return;
 		try {
 			const result = await this.statisticsRef.update(fields);
-			if (result.code)
-				throw new Error(result.message ?? 'Failed to update statistics collection');
+			if (result.code) throw new Error(result.message ?? 'Failed to update statistics collection');
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating statistics fields', error as Error);
 		}
@@ -1568,9 +1624,7 @@ export class CloudbaseService extends DatabaseService {
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, `Recipe added: "${recipe.name}"`);
 			// Fire-and-forget: keep totalRecipes in sync so the home stat chip updates in realtime.
-			this.statisticsRef
-				.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(1) })
-				.catch(() => {});
+			this.statisticsRef.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(1) }).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, `Error while adding recipe "${recipe.name}"`, error as Error);
 			throw error;
@@ -1615,9 +1669,7 @@ export class CloudbaseService extends DatabaseService {
 			if (res.code) throw new Error(res.message);
 			LOG.info(this.className, `Recipe removed: ${recipeId}`);
 			// Fire-and-forget: keep totalRecipes in sync so the home stat chip updates in realtime.
-			this.statisticsRef
-				.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(-1) })
-				.catch(() => {});
+			this.statisticsRef.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(-1) }).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, `Error while removing recipe ${recipeId}`, error as Error);
 			throw error;

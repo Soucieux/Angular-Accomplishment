@@ -8,11 +8,28 @@ import { SearchDialogComponent } from './search/search.component';
 import { Observable, take } from 'rxjs';
 import { ErrorDialogComponent } from './error/error.component';
 import { BlockDialogComponent } from './block/block.component';
-import { DIALOG_ADD, DIALOG_BLOCK, DIALOG_CONFIRM, DIALOG_ERROR, DIALOG_HISTORY, DIALOG_RECIPE_TYPE, ERROR_PERMISSION_DENIED, MSG_PERMISSION_DENIED, MSG_UNEXPECTED_ERROR, SEARCH } from '../../common/app.constant';
+import {
+	DIALOG_ADD,
+	DIALOG_ADD_DEBT,
+	DIALOG_BLOCK,
+	DIALOG_CONFIRM,
+	DIALOG_EDIT_DEBT,
+	DIALOG_ERROR,
+	DIALOG_HISTORY,
+	DIALOG_RECIPE_TYPE,
+	ERROR_PERMISSION_DENIED,
+	MSG_PERMISSION_DENIED,
+	MSG_UNEXPECTED_ERROR,
+	SEARCH
+} from '../../common/app.constant';
 import { MessageService } from 'primeng/api';
 import { RecipeTypeDialogComponent } from './recipe-type/recipe-type.component';
 import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
 import { Utilities } from '../../common/app.utilities';
+import { AddDebtDialogComponent } from './add-debt/add-debt.component';
+import { NewDebtData } from './add-debt/add-debt.model';
+import { EditDebtDialogComponent } from './edit-debt/edit-debt.component';
+import { EditDebtData } from './edit-debt/edit-debt.model';
 @Injectable({
 	providedIn: 'root'
 })
@@ -44,6 +61,10 @@ export class DialogService {
 				return BlockDialogComponent;
 			case DIALOG_RECIPE_TYPE:
 				return RecipeTypeDialogComponent;
+			case DIALOG_ADD_DEBT:
+				return AddDebtDialogComponent;
+			case DIALOG_EDIT_DEBT:
+				return EditDebtDialogComponent;
 			default:
 				throw new Error('Invalid dialog type');
 		}
@@ -57,7 +78,11 @@ export class DialogService {
 		message: string
 	): Promise<void>;
 
-	public openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'search', acceptCallback: () => void): void;
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'search',
+		acceptCallback: () => void
+	): void;
 
 	public openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'error', errorMessage: string): void;
 
@@ -87,6 +112,19 @@ export class DialogService {
 		dialogType: 'recipe-type',
 		applyCallback: (newIds: Set<IngredientType>) => void,
 		data: { masterTabs: TypeTab[]; enabledTypeIds: Set<IngredientType> }
+	): void;
+
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'add-debt',
+		submitCallback: (data: NewDebtData) => void
+	): void;
+
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'edit-debt',
+		prefillData: EditDebtData,
+		submitCallback: (data: EditDebtData) => void
 	): void;
 
 	/**
@@ -129,8 +167,8 @@ export class DialogService {
 
 			// SEARCH and error dialogs only need one callback/data argument;
 			// block dialogs return a promise so callers can await task completion;
-			// all other dialogs receive two callbacks.
-			if (dialogType === SEARCH || dialogType === DIALOG_ERROR) {
+			// edit-debt and all other dialogs receive two arguments (prefill/callback or two callbacks).
+			if (dialogType === SEARCH || dialogType === DIALOG_ERROR || dialogType === DIALOG_ADD_DEBT) {
 				dialogComponentRef.instance.openDialog(dataOrCallback1);
 			} else if (dialogType === DIALOG_BLOCK) {
 				blockPromise = dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);

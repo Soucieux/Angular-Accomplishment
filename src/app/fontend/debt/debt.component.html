@@ -63,7 +63,7 @@
 						</div>
 					}
 				</div>
-				<div class="summary-right">
+				<div class="summary-right hide-on-mobile">
 					<div class="stat-grid">
 						<div class="stat-cell">
 							<span class="stat-num">{{ updatedDebtSonataItems.length }}</span>
@@ -91,7 +91,7 @@
 						</div>
 					</div>
 				</div>
-				@if (saveIndicators[DATABASE_DEBT_SONATA]) {
+				@if (saveIndicators) {
 					<div class="summary-save">
 						<i class="pi pi-spin pi-spinner"></i>
 						<span>Saving</span>
@@ -120,6 +120,12 @@
 							<p-skeleton height="38px" style="margin-top: 12px; border-radius: 10px" />
 						</div>
 					}
+				} @else if (updatedDebtSonataItems.length === 0) {
+					<div class="debts-empty">
+						<span class="material-symbols-outlined debts-empty-icon">celebration</span>
+						<p class="debts-empty-msg">{{ DEBT_EMPTY_STATE_MSG }}</p>
+						<button class="debts-empty-btn" (click)="openNewDebtDialog()">{{ DEBT_EMPTY_STATE_BTN }}</button>
+					</div>
 				} @else {
 					@for (item of sortedItems; track item.key) {
 						<div
@@ -143,33 +149,19 @@
 									<span class="card-cat">{{ getCategoryForItem(item).label }}</span>
 								</div>
 								@if (item.content?.date && !item.content?.paid) {
-									<button
-										class="due-chip"
-										[class]="getDueClassForItem(item)"
-										(click)="startDueDateEdit(item.key)">
+									<span class="due-chip" [class]="getDueClassForItem(item)">
 										<span class="material-symbols-outlined" style="font-size: 13px">{{
 											getDueIconForItem(item)
 										}}</span>
 										{{ getDueLabelForItem(item) }}
-									</button>
-									@if (showDuePicker[item.key]) {
-										<p-datepicker
-											appendTo="body"
-											dateFormat="yy-mm-dd"
-											[(ngModel)]="item.content.date"
-											(keydown)="preventKeyin($event)"
-											(onSelect)="
-												completeDueDateEdit(DATABASE_DEBT_SONATA, item.key, $event)
-											"
-											(onClose)="cancelDueDateEdit(item.key)" />
-									}
+									</span>
 								}
 							</div>
 
 							<!-- Balance -->
 							<div class="card-balance-row">
-								<span class="card-balance" [class.is-paid]="item.content?.paid">
-									{{ checkIfChinese(item.name) ? '¥' : '$'
+								<span class="card-balance" [class.is-paid]="item.content?.paid" [class.is-bump]="balanceBumpItems[item.key]">
+									{{ isCnyCurrency(item) ? '¥' : '$'
 									}}{{
 										(item.content?.paid ? 0 : (item.content?.debt ?? 0)) | number: '1.0-0'
 									}}
@@ -185,7 +177,7 @@
 									<span class="card-remaining"
 										>remaining of
 										<b
-											>{{ checkIfChinese(item.name) ? '¥' : '$'
+											>{{ isCnyCurrency(item) ? '¥' : '$'
 											}}{{ item.content?.original | number: '1.0-0' }}</b
 										></span
 									>
@@ -202,82 +194,98 @@
 							<div class="card-progress-meta">
 								<span>{{ getDebtProgress(item) }}% paid</span>
 								<span
-									>{{ checkIfChinese(item.name) ? '¥' : '$'
+									>{{ isCnyCurrency(item) ? '¥' : '$'
 									}}{{
 										(getDebtProgress(item) === 100
 											? (item.content?.original ?? 0)
 											: (item.content?.original ?? 0) - (item.content?.debt ?? 0)
 										) | number: '1.0-0'
 									}}
-									of {{ checkIfChinese(item.name) ? '¥' : '$'
+									of {{ isCnyCurrency(item) ? '¥' : '$'
 									}}{{ item.content?.original | number: '1.0-0' }}</span
 								>
 							</div>
 
 							<!-- Payment chips -->
-							@if (!showCustomInput[item.key]) {
-								<div class="payment-chips" [class.is-disabled]="item.content?.paid">
-									<button
-										class="pay-chip"
-										[disabled]="!!item.content?.paid"
-										(click)="payDebt(item.key, DEBT_PRESET_SMALL)">
-										−{{ fmtCompact(DEBT_PRESET_SMALL, checkIfChinese(item.name)) }}
-									</button>
-									<button
-										class="pay-chip"
-										[disabled]="!!item.content?.paid"
-										(click)="payDebt(item.key, DEBT_PRESET_LARGE)">
-										−{{ fmtCompact(DEBT_PRESET_LARGE, checkIfChinese(item.name)) }}
-									</button>
+							<div class="payment-chips" [class.is-disabled]="item.content?.paid">
+								<button
+									class="pay-chip"
+									[disabled]="!!item.content?.paid"
+									(click)="payDebt(item.key, DEBT_PRESET_SMALL)">
+									−{{ fmtCompact(DEBT_PRESET_SMALL, isCnyCurrency(item)) }}
+								</button>
+								<button
+									class="pay-chip"
+									[disabled]="!!item.content?.paid"
+									(click)="payDebt(item.key, DEBT_PRESET_LARGE)">
+									−{{ fmtCompact(DEBT_PRESET_LARGE, isCnyCurrency(item)) }}
+								</button>
+								@if (customInputState[item.key] == null) {
 									<button
 										class="pay-chip custom-chip"
 										[disabled]="!!item.content?.paid"
 										(click)="toggleCustomInput(item.key)">
-										<span class="material-symbols-outlined" style="font-size: 13px"
-											>edit</span
-										>
+										<span class="material-symbols-outlined" style="font-size: 13px">edit</span>
 										Custom
 									</button>
-								</div>
-							} @else {
-								<div class="custom-pay-row">
+								} @else {
 									<input
 										class="custom-pay-input"
-										type="number"
-										placeholder="Amount"
-										[(ngModel)]="customInputValues[item.key]"
+										type="text"
+										inputmode="decimal"
+										[placeholder]="DEBT_CUSTOM_INPUT_PLACEHOLDER"
+										[(ngModel)]="customInputState[item.key]"
 										(keyup.enter)="submitCustomPay(item.key)"
 										(blur)="submitCustomPay(item.key)" />
-									<button class="custom-pay-cancel" (click)="cancelCustomPay(item.key)">
-										✕
-									</button>
-								</div>
-							}
+								}
+							</div>
 
 							<!-- Footer: reset / lock / delete / history -->
 							<div class="card-footer">
 								<button
 									class="footer-btn"
-									[class.is-armed]="isArmedReset[item.key]"
-									(click)="armOrConfirmReset(item.key)">
+									[class.is-prompted]="isPromptedReset[item.key]"
+									(click)="promptOrConfirmReset(item.key)">
 									<span class="material-symbols-outlined" style="font-size: 17px"
 										>restart_alt</span
 									>
-									{{ isArmedReset[item.key] ? 'Restore?' : 'Reset' }}
-								</button>
-								<button class="footer-icon-btn">
-									<span class="material-symbols-outlined" style="font-size: 15px"
-										>lock_open</span
-									>
+									{{ isPromptedReset[item.key] ? 'Restore?' : 'Reset' }}
 								</button>
 								<button
-									class="footer-icon-btn danger-btn"
-									[class.is-armed]="isArmedDelete[item.key]"
-									(click)="armOrConfirmDelete(item.key)">
+									class="footer-icon-btn lock-btn"
+									[class.is-locked]="isItemPermanent(item)"
+									(click)="toggleLock(item.key)"
+									[title]="isItemPermanent(item) ? 'Permanent — click to unlock' : 'Mark as permanent'">
 									<span class="material-symbols-outlined" style="font-size: 15px">{{
-										isArmedDelete[item.key] ? 'warning' : 'delete'
+										isItemPermanent(item) ? 'lock' : 'lock_open'
 									}}</span>
 								</button>
+								<button
+									class="footer-btn edit-btn"
+									(click)="openEditDebtDialog(item.key)">
+									<span class="material-symbols-outlined" style="font-size: 17px">edit</span>
+									Edit
+								</button>
+								@if (isItemPermanent(item)) {
+									<button
+										class="footer-icon-btn danger-btn is-disabled"
+										disabled
+										title="Unlock first to delete">
+										<span class="material-symbols-outlined" style="font-size: 15px">delete</span>
+									</button>
+								} @else {
+									<button
+										class="footer-icon-btn danger-btn"
+										[class.is-prompted]="isPromptedDelete[item.key]"
+										(click)="promptOrConfirmDelete(item.key)">
+										<span class="material-symbols-outlined" style="font-size: 15px">{{
+											isPromptedDelete[item.key] ? 'help' : 'delete'
+										}}</span>
+										@if (isPromptedDelete[item.key]) {
+											{{ DEBT_LABEL_DELETE_CONFIRM }}
+										}
+									</button>
+								}
 								<button class="footer-history-btn" (click)="toggleHistory(item.key)">
 									History
 									<span class="history-count-chip">{{
@@ -301,7 +309,7 @@
 												<span class="history-ts">{{ formatTs(entry.ts) }}</span>
 												<span class="history-amount"
 													>−{{
-														fmtMoney(entry.amount, checkIfChinese(item.name))
+														fmtMoney(entry.amount, isCnyCurrency(item))
 													}}</span
 												>
 												<span class="history-balance">
@@ -310,7 +318,7 @@
 														style="font-size: 16px"
 														>arrow_right_alt</span
 													>
-													{{ fmtMoney(entry.balance, checkIfChinese(item.name)) }}
+													{{ fmtMoney(entry.balance, isCnyCurrency(item)) }}
 												</span>
 											</div>
 										}

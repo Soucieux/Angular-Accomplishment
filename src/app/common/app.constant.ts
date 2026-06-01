@@ -30,9 +30,12 @@ export const DATABASE_USEFUL_LINKS = 'useful_links'; // stores both links (type:
 export const STATS_FIELD_RECENT_MOVIE = 'recentMovieActivities';
 export const STATS_FIELD_RECENT_PATCH = 'recentPatchActivities';
 export const STATS_FIELD_RECENT_REMINDER = 'recentReminderActivities';
+export const STATS_FIELD_RECENT_DEBT = 'recentDebtActivities';
 export const STATS_FIELD_RECENT_RESONANCE = 'recentResonanceActivities';
 export const STATS_FIELD_PATCH_IN_PROGRESS = 'patchInProgress';
 export const STATS_FIELD_REMINDER_UPCOMING = 'reminderUpcoming';
+/** Statistics field used by the Debt Sonata page to write upcoming expense entries. */
+export const DEBT_STATS_UPCOMING = 'reminderUpcoming';
 export const STATS_FIELD_REMINDER_TOTAL = 'reminderTotal';
 export const STATS_FIELD_TOTAL_RECIPES = 'totalRecipes';
 
@@ -71,8 +74,8 @@ export const MOVIE_GENRES = [
 ////////////////////// Below are reminder table display name constants ////////////////
 /** Display name for the first reminder table — used in stat writes and the Recent Activity widget. */
 export const REMINDER_TABLE_DATE_CALCULATOR = 'Date Calculator';
-/** Display name for the second reminder table — used in stat writes and the Recent Activity widget. */
-export const REMINDER_TABLE_ACCOUNT_EXPENSES = 'Account Expenses';
+/** Display name for the Debt Sonata page — used in stat writes and the Recent Activity widget. */
+export const DEBT_TABLE_ACCOUNT_EXPENSES = 'Account Expenses';
 /** Display name for the third reminder table — used in stat writes and the Recent Activity widget. */
 export const REMINDER_TABLE_MESSAGES = 'Messages';
 /** Fixed amount deducted from a second-table debt entry per payment cycle. */
@@ -81,10 +84,26 @@ export const ACCOUNT_DEBT_DECREMENT = 998.05;
 export const DEBT_PRESET_SMALL = 100;
 /** Large quick-pay preset amount for the Debt Sonata page. */
 export const DEBT_PRESET_LARGE = 1000;
-/** Milliseconds the two-step confirm button stays armed before auto-disarming. */
-export const DEBT_ARMED_TIMEOUT_MS = 2600;
+/** Milliseconds the two-step confirm button stays prompted before auto-dismissing. */
+export const DEBT_PROMPT_TIMEOUT_MS = 2600;
+/** Debt record type for a standard deletable debt goal. */
+export const DEBT_TYPE_GOAL = 'goal';
+/** Debt record type for a permanent account protected from deletion. */
+export const DEBT_TYPE_PERMANENT = 'permanent';
+/** Category key for credit-card debts. */
+export const DEBT_CAT_CARD = 'card';
+/** Category key for personal debts. */
+export const DEBT_CAT_PERSON = 'person';
+/** Category key for financing / shopping debts. */
+export const DEBT_CAT_SHOPPING = 'shopping';
+/** Category key for mortgage debts. */
+export const DEBT_CAT_HOME = 'home';
+/** Currency code for Chinese yuan. */
+export const DEBT_CURRENCY_CNY = 'CNY';
+/** Currency code for Canadian dollar. */
+export const DEBT_CURRENCY_CAD = 'CAD';
 /** CloudBase content entry key for the paid flag in the debt collection. */
-export const REMINDER_VALUE_KEY_PAID = 'paid';
+export const DEBT_VALUE_KEY_PAID = 'paid';
 
 ////////////////////// Below are common shared constants /////////////////////////////
 export const SEARCH_COMPLETE = 'Search complete';
@@ -110,6 +129,10 @@ export const DIALOG_HISTORY = 'history';
 export const DIALOG_ERROR = 'error';
 /** Dialog type for a blocking progress overlay. */
 export const DIALOG_BLOCK = 'block';
+/** Dialog type for the add-debt flow. */
+export const DIALOG_ADD_DEBT = 'add-debt';
+/** Dialog type for the edit-debt flow. */
+export const DIALOG_EDIT_DEBT = 'edit-debt';
 /** History-entry status when a movie is added — appears in the history message text. */
 export const HISTORY_STATUS_ADDED = 'added';
 /** History-entry status when a movie is deleted — appears in the history message text. */
@@ -124,8 +147,8 @@ export const ACTIVITY_TYPE_STATUS_CHANGED = 'statusChanged';
 export const ACTIVITY_TYPE_EDITED = 'edited';
 
 ////////////////////// Below are reminder item type discriminator constants ///////////
-/** Type value for an Account Expenses item in the reminder upcoming list. */
-export const REMINDER_ITEM_EXPENSE = 'expense';
+/** Type value for a Debt Sonata upcoming item in the statistics upcoming list. */
+export const DEBT_ITEM_EXPENSE = 'expense';
 /** Type value for a Messages item in the reminder upcoming list. */
 export const REMINDER_ITEM_MESSAGE = 'message';
 
@@ -466,13 +489,19 @@ export const PATCH_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this no
 export const PATCH_DIALOG_CONFIRM_BTN = 'Confirm';
 export const PATCH_DIALOG_DELETE_BTN = 'Delete';
 
-////////////////////// Below are reminder second-table content value key constants //
-/** CloudBase content entry key for the debt value in the second reminder table. */
-export const REMINDER_VALUE_KEY_DEBT = 'debt';
-/** CloudBase content entry key for the date value in the reminder tables. */
-export const REMINDER_VALUE_KEY_DATE = 'date';
-/** CloudBase content entry key for the full content object in the second reminder table. */
+////////////////////// Below are debt sonata content value key constants ////////////
+/** CloudBase content entry key for the current debt balance in the debt sonata table. */
+export const DEBT_VALUE_KEY_DEBT = 'debt';
+/** CloudBase content entry key for the due date in the debt sonata table. */
+export const DEBT_VALUE_KEY_DATE = 'date';
+/** CloudBase content entry key for the full content object in the debt sonata table. */
 export const REMINDER_VALUE_KEY_CONTENT = 'content';
+/** CloudBase content entry key for the type field (goal / permanent) in the debt sonata table. */
+export const DEBT_VALUE_KEY_TYPE = 'type';
+/** CloudBase content entry key for the currency field in the debt sonata table. */
+export const DEBT_VALUE_KEY_CUR = 'cur';
+/** CloudBase content entry key for the original (total) amount in the debt sonata table. */
+export const DEBT_VALUE_KEY_ORIGINAL = 'original';
 
 ////////////////////// Below are pinboard page dialog string constants //////////////
 export const PINBOARD_MSG_RESET_CONFIRM = 'Are you sure you want to reset the dates?';
@@ -513,15 +542,33 @@ export const REMINDER_DIALOG_DELETE_BTN = 'Delete';
 /** Secondary confirm button label on the reminder delete confirmation dialog. */
 export const REMINDER_DIALOG_CONFIRM_BTN = 'Confirm';
 /** CloudBase content entry key for the reminder message text. */
-export const PINBOARD_VALUE_KEY_TEXT = 'text';
+export const REMINDER_VALUE_KEY_TEXT = 'text';
 /** CloudBase content entry key for the reminder date. */
-export const PINBOARD_VALUE_KEY_DATE = 'date';
+export const REMINDER_VALUE_KEY_DATE = 'date';
 /** CloudBase content entry key for the reminder link URL. */
-export const PINBOARD_VALUE_KEY_LINK = 'link';
+export const REMINDER_VALUE_KEY_LINK = 'link';
 /** CloudBase content entry key for the reminder tags array. */
-export const PINBOARD_VALUE_KEY_TAGS = 'tags';
+export const REMINDER_VALUE_KEY_TAGS = 'tags';
 /** Items shown per page in the Reminder grid. */
 export const REMINDER_ITEMS_PER_PAGE = 10;
+
+////////////////////// Below are Debt Sonata dialog and UI string constants //////////
+export const DEBT_DIALOG_TITLE = 'New debt';
+export const DEBT_DIALOG_PLACEHOLDER_NAME = 'e.g. Visa Platinum';
+export const DEBT_DIALOG_PLACEHOLDER_AMOUNT = '0';
+export const DEBT_DIALOG_LABEL_ADD = 'Add debt';
+export const DEBT_DIALOG_LABEL_CANCEL = 'Cancel';
+export const DEBT_DIALOG_LABEL_PERMANENT = 'Permanent account';
+export const DEBT_DIALOG_LABEL_PERMANENT_DESC = 'Protected from deletion — stays until you remove the lock';
+export const DEBT_DIALOG_LABEL_CURRENCY_CNY = '¥ CNY';
+export const DEBT_DIALOG_LABEL_CURRENCY_CAD = '$ CAD';
+export const DEBT_EMPTY_STATE_MSG = 'No debts here. Add one to start tracking — or enjoy being debt-free.';
+export const DEBT_EMPTY_STATE_BTN = 'Add a debt';
+export const DEBT_LABEL_DELETE_CONFIRM = 'Delete?';
+export const DEBT_CUSTOM_INPUT_PLACEHOLDER = '−amount';
+export const DEBT_DIALOG_LABEL_EDIT = 'Edit debt';
+export const DEBT_DIALOG_LABEL_SAVE = 'Save changes';
+export const DEBT_DIALOG_LABEL_BALANCE = 'Current balance';
 
 ////////////////////// Below are error dialog string constants ///////////////////////
 export const ERROR_DIALOG_HEADER = 'Error';

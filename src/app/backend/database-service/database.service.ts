@@ -50,7 +50,6 @@ export abstract class DatabaseService {
 	 * Returns the statistics document from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the statistics.
-	 *          // any: Statistics document shape varies across versions and has no fixed TypeScript type
 	 */
 	public abstract getStatistics(): Observable<any>;
 
@@ -123,7 +122,6 @@ export abstract class DatabaseService {
 	 * Returns the history list from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the history list.
-	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getHistory(): Observable<any[]>;
 
@@ -131,7 +129,6 @@ export abstract class DatabaseService {
 	 * Adds a new record to the patch notes collection.
 	 *
 	 * @param newRecord - The record to add.
-	 *                    // any: Patch note record shape is validated at the call site
 	 */
 	public abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
 
@@ -140,7 +137,6 @@ export abstract class DatabaseService {
 	 *
 	 * @param key - The key of the record to update.
 	 * @param updatedRecord - The updated record data.
-	 *                        // any: Patch note record shape is validated at the call site
 	 */
 	public abstract updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void>;
 
@@ -148,7 +144,6 @@ export abstract class DatabaseService {
 	 * Returns the patch notes from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the patch notes.
-	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getPatchNotes(): Observable<any[]>;
 
@@ -171,7 +166,6 @@ export abstract class DatabaseService {
 	 * Returns the date calculator table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the date calculator table details.
-	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getDateCalculatorTableDetails(): Observable<any[]>;
 
@@ -179,7 +173,6 @@ export abstract class DatabaseService {
 	 * Returns the Account Expenses (debt sonata) table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the Account Expenses table details.
-	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getDebtSonataTableDetails(): Observable<any[]>;
 
@@ -187,7 +180,6 @@ export abstract class DatabaseService {
 	 * Returns the reminder table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the reminder table details.
-	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getReminderTableDetails(): Observable<any[]>;
 
@@ -248,7 +240,6 @@ export abstract class DatabaseService {
 	 * Returns the quotes from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the quotes list.
-	 *          // any: Firebase/CloudBase snapshot values are untyped at the SDK level
 	 */
 	public abstract getQuotes(): Observable<any[]>;
 

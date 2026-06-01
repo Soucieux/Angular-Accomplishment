@@ -46,14 +46,12 @@ import { Recipe } from '../../../fontend/recipe/recipe.model';
 @Injectable({ providedIn: 'root' })
 export class CloudbaseService extends DatabaseService {
 	private readonly className = 'CloudbaseService';
-	// any: CloudBase SDK does not provide TypeScript types for its database instance
 	private database: any;
-	// any: CloudBase SDK returns document IDs as untyped values
 	private statId: any;
 	private static userId: string;
 	private static userRole: string;
 	private static userName: string;
-	// any: '_' is a reserved keyword in the CloudBase SDK used to access its command builder
+	// '_' is a reserved keyword in the CloudBase SDK used to access its command builder
 	private _!: any;
 	private tempUrlCache = new Map<string, string>();
 	private static _authReady$ = new ReplaySubject<boolean>(1);

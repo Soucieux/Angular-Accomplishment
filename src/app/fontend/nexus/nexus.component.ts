@@ -109,16 +109,13 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	// ── Date Calculator state ────────────────────────────────────────────────
 	private chargedCells = new Set<string>();
-	// any: Date calculator rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected originalDateCalculatorRows!: any[];
-	// any: Date calculator rows are schema-less CloudBase documents with no fixed TypeScript type
 	protected updatedDateCalculatorRows!: any[];
 	protected confirmedCount = 0;
 	protected currentDay!: number;
 	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
 	private dateCalculatorSub?: Subscription;
 	protected saveIndicators: Record<string, boolean> = { [DATABASE_DATE_CALCULATOR]: false };
-	// any: setTimeout return type varies by environment (browser vs Node)
 	private saveIndicatorTimeouts: Record<string, any> = {};
 	private chargedCellsInitialized = false;
 	protected isNextMonth!: boolean;

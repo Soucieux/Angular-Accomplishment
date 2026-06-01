@@ -32,7 +32,6 @@ import { Observable } from 'rxjs';
 })
 export class AppComponent {
 	private readonly className = 'AppComponent';
-	// any: Firebase User and CloudBase user are typed differently; unified here as a presence signal only
 	protected currentUser$!: Observable<any>;
 
 	constructor(
@@ -67,9 +66,7 @@ export class AppComponent {
 	 * query param so the user is redirected back after signing in.
 	 */
 	protected navigateToLogin(): void {
-		this.router
-			.navigate(['/login'], { queryParams: { returnUrl: this.router.url } })
-			.catch(() => {});
+		this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } }).catch(() => {});
 	}
 
 	/**

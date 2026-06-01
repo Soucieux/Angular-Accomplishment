@@ -124,22 +124,26 @@
 					<div class="debts-empty">
 						<span class="material-symbols-outlined debts-empty-icon">celebration</span>
 						<p class="debts-empty-message">{{ DEBT_EMPTY_STATE_MSG }}</p>
-						<button class="debts-empty-button" (click)="openNewDebtDialog()">{{ DEBT_EMPTY_STATE_BTN }}</button>
+						<button class="debts-empty-button" (click)="openNewDebtDialog()">
+							{{ DEBT_EMPTY_STATE_BTN }}
+						</button>
 					</div>
 				} @else {
-					@for (item of sortedItems; track item.key) {
+					@for (item of updatedDebtSonataItems; track item.key) {
 						<div
 							class="debt-card"
-							[class.is-paid]="item.content?.paid"
+							[class.is-paid]="item.paid"
 							[class.is-expanded]="expandedItems[item.key]"
 							[style.--category-gradient]="getCategoryForItem(item).gradient">
-							@if (item.content?.paid) {
+							@if (item.paid) {
 								<div class="paid-ribbon">PAID OFF</div>
 							}
 
 							<!-- Card head: icon + name/category + due chip -->
 							<div class="card-head">
-								<div class="category-icon" [style.background]="getCategoryForItem(item).gradient">
+								<div
+									class="category-icon"
+									[style.background]="getCategoryForItem(item).gradient">
 									<span class="material-symbols-outlined">{{
 										getCategoryForItem(item).icon
 									}}</span>
@@ -148,7 +152,7 @@
 									<span class="card-name">{{ item.name }}</span>
 									<span class="card-category">{{ getCategoryForItem(item).label }}</span>
 								</div>
-								@if (item.content?.date && !item.content?.paid) {
+								@if (item.date && !item.paid) {
 									<span class="due-chip" [class]="getDueClassForItem(item)">
 										<span class="material-symbols-outlined" style="font-size: 13px">{{
 											getDueIconForItem(item)
@@ -160,13 +164,16 @@
 
 							<!-- Balance -->
 							<div class="card-balance-row">
-								<span class="card-balance" [class.is-paid]="item.content?.paid" [class.is-bump]="balanceBumpItems[item.key]">
+								<span
+									class="card-balance"
+									[class.is-paid]="item.paid"
+									[class.is-bump]="balanceBumpItems[item.key]">
 									{{ isCnyCurrency(item) ? '¥' : '$'
 									}}{{
-										(item.content?.paid ? 0 : (item.content?.debt ?? 0)) | number: '1.0-0'
+										(item.paid ? 0 : (item.debt ?? 0)) | number: '1.0-0'
 									}}
 								</span>
-								@if (item.content?.paid) {
+								@if (item.paid) {
 									<span class="card-paid-tag">
 										<span class="material-symbols-outlined" style="font-size: 13px"
 											>music_note</span
@@ -178,7 +185,7 @@
 										>remaining of
 										<b
 											>{{ isCnyCurrency(item) ? '¥' : '$'
-											}}{{ item.content?.original | number: '1.0-0' }}</b
+											}}{{ item.original | number: '1.0-0' }}</b
 										></span
 									>
 								}
@@ -189,7 +196,7 @@
 								<div
 									class="card-progress-fill"
 									[style.width.%]="getDebtProgress(item)"
-									[class.is-paid]="item.content?.paid"></div>
+									[class.is-paid]="item?.paid"></div>
 							</div>
 							<div class="card-progress-meta">
 								<span>{{ getDebtProgress(item) }}% paid</span>
@@ -197,35 +204,37 @@
 									>{{ isCnyCurrency(item) ? '¥' : '$'
 									}}{{
 										(getDebtProgress(item) === 100
-											? (item.content?.original ?? 0)
-											: (item.content?.original ?? 0) - (item.content?.debt ?? 0)
+											? (item?.original ?? 0)
+											: (item?.original ?? 0) - (item?.debt ?? 0)
 										) | number: '1.0-0'
 									}}
 									of {{ isCnyCurrency(item) ? '¥' : '$'
-									}}{{ item.content?.original | number: '1.0-0' }}</span
+									}}{{ item?.original | number: '1.0-0' }}</span
 								>
 							</div>
 
 							<!-- Payment chips -->
-							<div class="payment-chips" [class.is-disabled]="item.content?.paid">
+							<div class="payment-chips" [class.is-disabled]="item?.paid">
 								<button
 									class="pay-chip"
-									[disabled]="!!item.content?.paid"
+									[disabled]="!!item.paid"
 									(click)="payDebt(item.key, DEBT_PRESET_SMALL)">
 									−{{ formatCompact(DEBT_PRESET_SMALL, isCnyCurrency(item)) }}
 								</button>
 								<button
 									class="pay-chip"
-									[disabled]="!!item.content?.paid"
+									[disabled]="!!item?.paid"
 									(click)="payDebt(item.key, DEBT_PRESET_LARGE)">
 									−{{ formatCompact(DEBT_PRESET_LARGE, isCnyCurrency(item)) }}
 								</button>
 								@if (customInputState[item.key] == null) {
 									<button
 										class="pay-chip custom-chip"
-										[disabled]="!!item.content?.paid"
+										[disabled]="!!item?.paid"
 										(click)="toggleCustomInput(item.key)">
-										<span class="material-symbols-outlined" style="font-size: 13px">edit</span>
+										<span class="material-symbols-outlined" style="font-size: 13px"
+											>edit</span
+										>
 										Custom
 									</button>
 								} @else {
@@ -255,7 +264,11 @@
 									class="footer-icon-button lock-button"
 									[class.is-locked]="isItemPermanent(item)"
 									(click)="toggleLock(item.key)"
-									[title]="isItemPermanent(item) ? 'Permanent — click to unlock' : 'Mark as permanent'">
+									[title]="
+										isItemPermanent(item)
+											? 'Permanent — click to unlock'
+											: 'Mark as permanent'
+									">
 									<span class="material-symbols-outlined" style="font-size: 15px">{{
 										isItemPermanent(item) ? 'lock' : 'lock_open'
 									}}</span>
@@ -263,7 +276,9 @@
 								<button
 									class="footer-button edit-button"
 									(click)="openEditDebtDialog(item.key)">
-									<span class="material-symbols-outlined" style="font-size: 17px">edit</span>
+									<span class="material-symbols-outlined" style="font-size: 17px"
+										>edit</span
+									>
 									Edit
 								</button>
 								@if (isItemPermanent(item)) {
@@ -271,7 +286,9 @@
 										class="footer-icon-button danger-button is-disabled"
 										disabled
 										title="Unlock first to delete">
-										<span class="material-symbols-outlined" style="font-size: 15px">delete</span>
+										<span class="material-symbols-outlined" style="font-size: 15px"
+											>delete</span
+										>
 									</button>
 								} @else {
 									<button
@@ -306,7 +323,9 @@
 										@for (entry of getHistoryForItem(item.key); track entry.timestamp) {
 											<div class="history-row">
 												<span class="history-dot"></span>
-												<span class="history-timestamp">{{ formatTimestamp(entry.timestamp) }}</span>
+												<span class="history-timestamp">{{
+													formatTimestamp(entry.timestamp)
+												}}</span>
 												<span class="history-amount"
 													>−{{
 														formatMoney(entry.amount, isCnyCurrency(item))

@@ -538,7 +538,7 @@ export const REMINDER_VALUE_KEY_LINK = 'link';
 /** CloudBase content entry key for the reminder tag. */
 export const REMINDER_VALUE_KEY_TAG = 'tag';
 /** Items shown per page in the Reminder grid. */
-export const REMINDER_ITEMS_PER_PAGE = 12;
+export const REMINDER_ITEMS_PER_PAGE = 14;
 /** Reminder category label — Work. */
 export const REMINDER_CATEGORY_WORK = 'Work';
 /** Reminder category label — Personal. */

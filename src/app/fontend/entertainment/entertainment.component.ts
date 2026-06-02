@@ -16,9 +16,9 @@ import {
 	GENRE_FAVOURITE,
 	SEARCH,
 	MOVIE_GENRES,
+	DIALOG_BTN_DELETE,
 	ENT_MSG_DELETE_CONFIRM_PREFIX,
 	ENT_DIALOG_TITLE_DELETE_MOVIE,
-	ENT_DIALOG_BTN_DELETE,
 	ENT_MSG_ADDING,
 	ENT_MSG_RESTORING,
 	CN,
@@ -896,7 +896,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			},
-			[`${ENT_MSG_DELETE_CONFIRM_PREFIX}${movieItemVO.getMovieName()}?`, ENT_DIALOG_TITLE_DELETE_MOVIE, ENT_DIALOG_BTN_DELETE]
+			[`${ENT_MSG_DELETE_CONFIRM_PREFIX}${movieItemVO.getMovieName()}?`, ENT_DIALOG_TITLE_DELETE_MOVIE, DIALOG_BTN_DELETE]
 		);
 	}
 

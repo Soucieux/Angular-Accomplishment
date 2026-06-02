@@ -26,9 +26,12 @@ import {
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_DATE_CALCULATOR,
+	DIALOG_BTN_CONFIRM,
+	DIALOG_BTN_DELETE,
 	DIALOG_CONFIRM,
+	MSG_DELETE_FAILED,
+	MSG_SAVE_FAILED,
 	NEXUS_CATEGORY_ALL,
-	PINBOARD_DIALOG_CONFIRM_BTN,
 	PINBOARD_DIALOG_RESET_BTN,
 	PINBOARD_LABEL_CELL_CONFIRM,
 	PINBOARD_LABEL_CELL_DONE,
@@ -48,12 +51,9 @@ import {
 	NEXUS_MSG_CATEGORY_DELETED,
 	NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL,
 	NEXUS_MSG_CATEGORY_UPDATED,
-	NEXUS_MSG_DELETE_CATEGORY_BTN,
 	NEXUS_MSG_DELETE_CATEGORY_CONFIRM_PREFIX,
 	NEXUS_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX,
 	NEXUS_MSG_DELETE_CATEGORY_TITLE,
-	NEXUS_MSG_DELETE_FAILED,
-	NEXUS_MSG_DELETE_LINK_BTN,
 	NEXUS_MSG_DELETE_LINK_CONFIRM_PREFIX,
 	NEXUS_MSG_DELETE_LINK_CONFIRM_SUFFIX,
 	NEXUS_MSG_DELETE_LINK_TITLE,
@@ -68,11 +68,10 @@ import {
 	NEXUS_MSG_MISSING_FIELDS_DETAIL,
 	NEXUS_MSG_NAME_REQUIRED,
 	NEXUS_MSG_SAVE_CATEGORY_FAILED,
-	NEXUS_MSG_SAVE_FAILED,
 	NEXUS_MSG_SAVE_LINK_FAILED,
+	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
-	TOAST_SUCCESS,
 	TOAST_WARN
 } from '../../common/app.constant';
 import { AiTool, NexusCategory, NexusLink, NEXUS_AI_TOOLS, NEXUS_LOGO_FALLBACK_COLORS } from './nexus.model';
@@ -486,7 +485,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			() => {
 				this.setDateCalculatorDefaults();
 			},
-			[PINBOARD_MSG_RESET_CONFIRM, PINBOARD_DIALOG_RESET_BTN, PINBOARD_DIALOG_CONFIRM_BTN]
+			[PINBOARD_MSG_RESET_CONFIRM, PINBOARD_DIALOG_RESET_BTN, DIALOG_BTN_CONFIRM]
 		);
 	}
 
@@ -767,7 +766,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					category
 				});
 				LOG.info(this.className, `Link updated: ${finalUrl}`);
-				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_LINK_UPDATED);
+				this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_UPDATED);
 			} else {
 				await this.databaseService.addUsefulLink({
 					url: finalUrl,
@@ -777,7 +776,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					createdAt: new Date().toISOString()
 				});
 				LOG.info(this.className, `Link saved: ${finalUrl}`);
-				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_LINK_SAVED);
+				this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_SAVED);
 			}
 			this.showLinkDialog = false;
 			// markForCheck required: async resolution runs outside Angular's zone.
@@ -786,7 +785,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			LOG.error(this.className, NEXUS_MSG_SAVE_LINK_FAILED, error as Error);
 			this.dialogService.showToast(
 				TOAST_ERROR,
-				NEXUS_MSG_SAVE_FAILED,
+				MSG_SAVE_FAILED,
 				NEXUS_MSG_LINK_SAVE_FAILED_DETAIL
 			);
 		}
@@ -814,7 +813,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 						LOG.error(this.className, `Failed to delete link: ${link.title}`, error as Error);
 						this.dialogService.showToast(
 							TOAST_ERROR,
-							NEXUS_MSG_DELETE_FAILED,
+							MSG_DELETE_FAILED,
 							NEXUS_MSG_LINK_DELETE_FAILED_DETAIL
 						);
 					});
@@ -822,7 +821,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			[
 				NEXUS_MSG_DELETE_LINK_CONFIRM_PREFIX + link.title + NEXUS_MSG_DELETE_LINK_CONFIRM_SUFFIX,
 				NEXUS_MSG_DELETE_LINK_TITLE,
-				NEXUS_MSG_DELETE_LINK_BTN
+				DIALOG_BTN_DELETE
 			]
 		);
 	}
@@ -889,7 +888,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					color
 				});
 				LOG.info(this.className, `Category updated: ${name}`);
-				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_CATEGORY_UPDATED);
+				this.dialogService.showToast(SUCCESS, NEXUS_MSG_CATEGORY_UPDATED);
 			} else {
 				await this.databaseService.addLinkCategory({
 					name: name.trim(),
@@ -897,14 +896,14 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					order: this.categories.length
 				});
 				LOG.info(this.className, `Category added: ${name}`);
-				this.dialogService.showToast(TOAST_SUCCESS, NEXUS_MSG_CATEGORY_ADDED);
+				this.dialogService.showToast(SUCCESS, NEXUS_MSG_CATEGORY_ADDED);
 			}
 			this.showCategoryDialog = false;
 		} catch (error) {
 			LOG.error(this.className, NEXUS_MSG_SAVE_CATEGORY_FAILED, error as Error);
 			this.dialogService.showToast(
 				TOAST_ERROR,
-				NEXUS_MSG_SAVE_FAILED,
+				MSG_SAVE_FAILED,
 				NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL
 			);
 		}
@@ -939,7 +938,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 						);
 						this.dialogService.showToast(
 							TOAST_ERROR,
-							NEXUS_MSG_DELETE_FAILED,
+							MSG_DELETE_FAILED,
 							NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL
 						);
 					});
@@ -949,7 +948,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					category.name +
 					NEXUS_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX,
 				NEXUS_MSG_DELETE_CATEGORY_TITLE,
-				NEXUS_MSG_DELETE_CATEGORY_BTN
+				DIALOG_BTN_DELETE
 			]
 		);
 	}

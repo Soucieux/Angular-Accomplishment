@@ -34,7 +34,7 @@
 }
 
 .table-wrapper:nth-child(1) .header-wrapper {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, #e91e8c 0%, #07db19 100%);
 	border-bottom: 2px solid rgba(0, 0, 0, 0.14);
 }
 
@@ -299,9 +299,9 @@
 	font-size: 12px;
 	font-weight: 600;
 	border-radius: 5px;
-	border: 1px solid rgba(71, 118, 230, 0.45);
-	color: #4776e6 !important;
-	background: rgba(71, 118, 230, 0.08);
+	border: 1px solid rgba(233, 30, 140, 0.45);
+	color: #e91e8c !important;
+	background: rgba(233, 30, 140, 0.08);
 	cursor: pointer;
 	white-space: nowrap;
 	transition:
@@ -316,7 +316,7 @@
 }
 
 .date-calculator-cell-button:hover {
-	background: rgba(71, 118, 230, 0.15);
+	background: rgba(233, 30, 140, 0.15);
 }
 
 .date-calculator-cell-button.today {
@@ -386,21 +386,22 @@
  * All pages: font-weight 500
  */
 /* PAGE ACCENT COLOR — Nexus
- * Blue  primary #2563eb   rgba(37, 99, 235)
- *       dark    #1e3a8a   rgba(30, 58, 138)
+ * Blue  primary #e91e8c   rgba(37, 99, 235)
+ *       dark    #07db19   rgba(30, 58, 138)
  * Applied to: page-title gradient, buttons, border accents, focus rings
- * To change: replace all #2563eb and #1e3a8a throughout this file.
+ * To change: replace all #e91e8c and #07db19 throughout this file.
  */
 .page-title {
 	font-size: 44px;
 	font-weight: 500;
 	letter-spacing: 2px;
 	margin: 0 0 4px;
-	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+	width: fit-content;
+	background: linear-gradient(135deg, #e91e8c 0%, #07db19 100%);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
-	filter: drop-shadow(0 1px 4px rgba(37, 99, 235, 0.15));
+	filter: drop-shadow(0 1px 4px rgba(233, 30, 140, 0.15));
 }
 
 .page-subtitle {
@@ -414,7 +415,7 @@
 	width: 60px;
 	height: 2px;
 	margin-top: 10px;
-	background: linear-gradient(90deg, #2563eb, #1e3a8a);
+	background: linear-gradient(90deg, #e91e8c, #07db19);
 	border-radius: 1px;
 	opacity: 0.6;
 }
@@ -559,7 +560,7 @@
 }
 
 .cat-tab.active {
-	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+	background: linear-gradient(135deg, #e91e8c 0%, #07db19 100%);
 	border-color: transparent;
 	color: #fff !important;
 	font-weight: 600;
@@ -637,7 +638,7 @@
 }
 
 .links-search-input:focus {
-	border-color: #2563eb;
+	border-color: #e91e8c;
 	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -683,7 +684,7 @@
 	padding: 5px 14px;
 	border-radius: 50px;
 	border: none;
-	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+	background: linear-gradient(135deg, #e91e8c 0%, #07db19 100%);
 	color: #fff !important;
 	font-family: inherit;
 	font-size: 12px;
@@ -1122,7 +1123,7 @@
 
 .form-input:focus,
 .form-select:focus {
-	border-color: #2563eb;
+	border-color: #e91e8c;
 	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -1229,7 +1230,7 @@
 }
 
 .dialog-save-button {
-	background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+	background: linear-gradient(135deg, #e91e8c 0%, #07db19 100%);
 	border: none;
 	border-radius: 50px;
 	font-family: inherit;

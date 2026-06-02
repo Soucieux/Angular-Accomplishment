@@ -1,9 +1,10 @@
 import {
-	AfterViewChecked,
+	AfterViewInit,
 	ChangeDetectorRef,
 	Component,
 	ElementRef,
 	Inject,
+	NgZone,
 	OnDestroy,
 	OnInit,
 	PLATFORM_ID,
@@ -33,19 +34,43 @@ import {
 	FAILURE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
-	REMINDER_DIALOG_CONFIRM_BTN,
-	REMINDER_DIALOG_DELETE_BTN,
-	REMINDER_VALUE_KEY_DATE,
-	REMINDER_VALUE_KEY_LINK,
-	REMINDER_VALUE_KEY_TAGS,
-	REMINDER_VALUE_KEY_TEXT,
+	REMINDER_ADD_BTN_LABEL,
+	REMINDER_ADD_DATE_LABEL,
+	REMINDER_ADD_LINK_LABEL,
+	REMINDER_AWAIT_SUFFIX_CN,
+	REMINDER_AWAIT_SUFFIX_EN,
+	REMINDER_CATEGORY_COLOR_DEFAULT,
+	REMINDER_CATEGORY_COLOR_HEALTH,
+	REMINDER_CATEGORY_COLOR_HOME,
+	REMINDER_CATEGORY_COLOR_PERSONAL,
+	REMINDER_CATEGORY_COLOR_WORK,
+	REMINDER_CATEGORY_HEALTH,
+	REMINDER_CATEGORY_HOME,
+	REMINDER_CATEGORY_PERSONAL,
+	REMINDER_CATEGORY_WORK,
+	DIALOG_BTN_CONFIRM,
+	DIALOG_BTN_DELETE,
+	REMINDER_DUE_SOON_LABEL,
+	REMINDER_DUE_SOON_SUBTITLE,
+	REMINDER_DUE_SOON_WINDOW_DAYS,
+	REMINDER_FILTER_ALL,
+	REMINDER_FILTER_LABEL,
+	REMINDER_GREETING_PLURAL,
+	REMINDER_GREETING_SINGULAR,
 	REMINDER_ITEMS_PER_PAGE,
+	REMINDER_ITEM_MESSAGE,
+	REMINDER_KNOWN_CATEGORIES,
 	REMINDER_MSG_DELETE_CONFIRM,
 	REMINDER_PLACEHOLDER_LINK,
 	REMINDER_PLACEHOLDER_TAG,
 	REMINDER_PLACEHOLDER_TEXT,
-	REMINDER_ITEM_MESSAGE,
+	REMINDER_SUBTITLE_CN,
+	REMINDER_SUBTITLE_EN,
 	REMINDER_TABLE_MESSAGES,
+	REMINDER_VALUE_KEY_DATE,
+	REMINDER_VALUE_KEY_LINK,
+	REMINDER_VALUE_KEY_TAG,
+	REMINDER_VALUE_KEY_TEXT,
 	STATS_FIELD_RECENT_REMINDER,
 	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING,
@@ -75,10 +100,11 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 	templateUrl: './reminder.component.html',
 	styleUrl: './reminder.component.css'
 })
-export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
+export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly className = 'ReminderComponent';
 
 	@ViewChild('pinboardBody') private pinboardBody!: ElementRef<HTMLElement>;
+	@ViewChild('cardGrid') private cardGrid!: ElementRef<HTMLElement>;
 	@ViewChild('dateOrLinkPopover') private dateOrLinkPopover!: Popover;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
@@ -87,6 +113,28 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly REMINDER_PLACEHOLDER_TEXT = REMINDER_PLACEHOLDER_TEXT;
 	protected readonly REMINDER_PLACEHOLDER_LINK = REMINDER_PLACEHOLDER_LINK;
 	protected readonly REMINDER_PLACEHOLDER_TAG = REMINDER_PLACEHOLDER_TAG;
+	protected readonly REMINDER_SUBTITLE_CN = REMINDER_SUBTITLE_CN;
+	protected readonly REMINDER_SUBTITLE_EN = REMINDER_SUBTITLE_EN;
+	protected readonly REMINDER_FILTER_ALL = REMINDER_FILTER_ALL;
+	protected readonly REMINDER_FILTER_LABEL = REMINDER_FILTER_LABEL;
+	protected readonly REMINDER_ADD_LINK_LABEL = REMINDER_ADD_LINK_LABEL;
+	protected readonly REMINDER_ADD_DATE_LABEL = REMINDER_ADD_DATE_LABEL;
+	protected readonly REMINDER_ADD_BTN_LABEL = REMINDER_ADD_BTN_LABEL;
+	protected readonly REMINDER_DUE_SOON_LABEL = REMINDER_DUE_SOON_LABEL;
+	protected readonly REMINDER_DUE_SOON_SUBTITLE = REMINDER_DUE_SOON_SUBTITLE;
+	protected readonly REMINDER_GREETING_SINGULAR = REMINDER_GREETING_SINGULAR;
+	protected readonly REMINDER_GREETING_PLURAL = REMINDER_GREETING_PLURAL;
+	protected readonly REMINDER_AWAIT_SUFFIX_CN = REMINDER_AWAIT_SUFFIX_CN;
+	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
+	protected readonly REMINDER_KNOWN_CATEGORIES = REMINDER_KNOWN_CATEGORIES;
+
+	private doneKeys = new Set<string>();
+	private readonly categoryColorMap: Record<string, string> = {
+		[REMINDER_CATEGORY_WORK]: REMINDER_CATEGORY_COLOR_WORK,
+		[REMINDER_CATEGORY_PERSONAL]: REMINDER_CATEGORY_COLOR_PERSONAL,
+		[REMINDER_CATEGORY_HOME]: REMINDER_CATEGORY_COLOR_HOME,
+		[REMINDER_CATEGORY_HEALTH]: REMINDER_CATEGORY_COLOR_HEALTH
+	};
 
 	protected loading = true;
 	protected items: ReminderItem[] = [];
@@ -94,10 +142,9 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected editingItem: ReminderItem | null = null;
 	protected isDate = false;
 	protected editingLink = '';
-	protected newItem: NewItem = { text: '', date: null, link: '', tags: [] };
+	protected newItem: NewItem = { text: '', date: null, link: '', tag: REMINDER_CATEGORY_PERSONAL };
 	protected saveIndicator = false;
 	protected tagFilter = new Set<string>();
-
 	protected tagEditSession: TagEditSession | null = null;
 	private originalItems: ReminderDbRecord[] = [];
 	private itemsSub?: Subscription;
@@ -108,6 +155,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		private readonly databaseService: DatabaseService,
 		private readonly dialogService: DialogService,
 		private readonly cdr: ChangeDetectorRef,
+		private readonly ngZone: NgZone,
 		protected utilities: Utilities
 	) {}
 
@@ -128,10 +176,10 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 					text: record.text ?? '',
 					date: record.date != null ? Utilities.coerceDateToString(record.date) : null,
 					link: record.link ?? null,
-					tags: record.tags ?? []
+					tag: record.tag ?? ''
 				}));
 				// Step 2: Remove any selected tag filters that no longer exist in the item set
-				this.removeStaleTags();
+				this.removeStaleTag();
 				// Step 3: Sync upcoming items to the statistics collection
 				this.updateUpcomingToStatistics();
 				this.loading = false;
@@ -142,13 +190,13 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Runs after each change detection cycle. Attaches the scroll auto-hide behaviour
-	 * to the pinboard body element when it is present in the DOM; the call is a no-op
-	 * once the element has already been bound.
+	 * Attaches the scroll auto-hide behaviour to the card grid outside Angular's zone
+	 * so that scroll and mouseenter events never trigger change detection.
+	 * Called once after the view is initialised.
 	 */
-	ngAfterViewChecked(): void {
+	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			Utilities.attachScrollAutoHide(this.pinboardBody?.nativeElement);
+			this.ngZone.runOutsideAngular(() => Utilities.attachScrollAutoHide(this.cardGrid?.nativeElement));
 		}
 	}
 
@@ -216,10 +264,10 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Removes any selected tags from the filter that no longer exist in the current item set.
+	 * Removes any selected tag from the filter that no longer exist in the current item set.
 	 */
-	private removeStaleTags(): void {
-		const remaining = new Set(this.items.flatMap((item) => item.tags));
+	private removeStaleTag(): void {
+		const remaining = new Set(this.items.map((item) => item.tag));
 		this.tagFilter = new Set([...this.tagFilter].filter((tag) => remaining.has(tag)));
 	}
 
@@ -246,8 +294,8 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 			case REMINDER_VALUE_KEY_LINK:
 				item.link = originalRecord.link ?? null;
 				break;
-			case REMINDER_VALUE_KEY_TAGS:
-				item.tags = originalRecord.tags ?? [];
+			case REMINDER_VALUE_KEY_TAG:
+				item.tag = originalRecord.tag ?? '';
 				break;
 		}
 	}
@@ -329,34 +377,89 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Resets all new-item form fields to their empty state.
 	 */
 	private resetNewItem(): void {
-		this.newItem = { text: '', date: null, link: '', tags: [] };
+		this.newItem = { text: '', date: null, link: '', tag: REMINDER_CATEGORY_PERSONAL };
 		if (this.tagEditSession?.isNewItem) this.tagEditSession = null;
+	}
+
+	////////////////////// Below are category, done state, and due-soon helpers //////////////
+
+	/**
+	 * Returns the accent color for a tag, falling back to the default neutral when
+	 * the tag is absent or does not match a known category.
+	 *
+	 * @param tag - The tag string to look up, or undefined when the item has no tag.
+	 * @returns A CSS hex color string.
+	 */
+	protected tagColor(tag: string | undefined): string {
+		if (!tag) return REMINDER_CATEGORY_COLOR_DEFAULT;
+		return this.categoryColorMap[tag] ?? REMINDER_CATEGORY_COLOR_DEFAULT;
+	}
+
+	/**
+	 * Returns whether the given item's date falls within the due-soon window (today
+	 * to {@link REMINDER_DUE_SOON_WINDOW_DAYS} days from now, inclusive).
+	 *
+	 * @param item - The ReminderItem to check.
+	 * @returns True when the item has a date that is due soon.
+	 */
+	protected isDueSoon(item: ReminderItem): boolean {
+		const days = Utilities.getDaysUntilNumber(item.date);
+		return days !== null && days >= 0 && days <= REMINDER_DUE_SOON_WINDOW_DAYS;
+	}
+
+	/**
+	 * Returns the count of items whose date is within the due-soon window.
+	 *
+	 * @returns The number of due-soon items.
+	 */
+	protected get dueSoonCount(): number {
+		return this.items.filter((item) => this.isDueSoon(item)).length;
+	}
+
+	/**
+	 * Returns the count of items not yet marked done in the local done-key set.
+	 *
+	 * @returns The number of open (not-done) items.
+	 */
+	protected get openCount(): number {
+		return this.items.filter((item) => !this.doneKeys.has(item.key)).length;
+	}
+
+	/**
+	 * Returns whether the given item key is in the local done-key set.
+	 *
+	 * @param key - The item's CloudBase document key.
+	 * @returns True when the item is marked done.
+	 */
+	protected isDone(key: string): boolean {
+		return this.doneKeys.has(key);
+	}
+
+	/**
+	 * Toggles the done state for a given item key in the local done-key set.
+	 *
+	 * @param key - The item's CloudBase document key.
+	 */
+	protected toggleDone(key: string): void {
+		const updated = new Set(this.doneKeys);
+		if (updated.has(key)) {
+			updated.delete(key);
+		} else {
+			updated.add(key);
+		}
+		this.doneKeys = updated;
 	}
 
 	////////////////////// Below are tag filter methods for the item list ////////////////////
 
 	/**
-	 * Returns all unique tags across every item, sorted alphabetically.
-	 *
-	 * @returns Sorted deduplicated tag strings.
-	 */
-	protected get allTags(): string[] {
-		const tags = new Set<string>();
-		for (const item of this.items) {
-			for (const tag of item.tags) tags.add(tag);
-		}
-		return [...tags].sort();
-	}
-
-	/**
-	 * Returns the items matching the selected tag filters (OR logic),
-	 * or all items when no tags are selected.
+	 * Gets the items matching the selected tag filters (OR logic) or all items when no tags are selected.
 	 *
 	 * @returns Filtered subset of items.
 	 */
 	protected get filteredItems(): ReminderItem[] {
 		if (this.tagFilter.size === 0) return this.items;
-		return this.items.filter((item) => item.tags.some((tag) => this.tagFilter.has(tag)));
+		return this.items.filter((item) => this.tagFilter.has(item.tag));
 	}
 
 	/**
@@ -421,10 +524,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @returns True when the add card is shown on the current page.
 	 */
 	protected get showAddCard(): boolean {
-		return (
-			this.tagFilter.size === 0 &&
-			this.page * REMINDER_ITEMS_PER_PAGE + REMINDER_ITEMS_PER_PAGE > this.items.length
-		);
+		return this.tagFilter.size === 0;
 	}
 
 	/**
@@ -434,7 +534,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @returns Page count (minimum 1).
 	 */
 	protected get totalPages(): number {
-		const count = this.filteredItems.length + (this.tagFilter.size === 0 ? 1 : 0);
+		const count = this.filteredItems.length;
 		return Math.max(1, Math.ceil(count / REMINDER_ITEMS_PER_PAGE));
 	}
 
@@ -471,6 +571,13 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	////////////////////// Below are CRUD operations for adding and removing pins ///////////////
+
+	/**
+	 * Hides the shared date-or-link popover.
+	 */
+	protected closePopover(): void {
+		this.dateOrLinkPopover.hide();
+	}
 
 	/**
 	 * Opens the shared date-or-link popover showing the date picker.
@@ -529,7 +636,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 		// Step 1: Build the flat record payload
 		const newRecord: Partial<ReminderDbRecord> = {
 			text: this.newItem.text.trim(),
-			tags: [...this.newItem.tags]
+			tag: this.newItem.tag
 		};
 
 		// Step 2: Include optional fields unless text-only mode
@@ -557,7 +664,8 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 				})
 				.catch(() => {});
 
-			// Step 5: Reset new-item state
+			// Step 5: Reset new-item state and navigate to last page
+			this.page = Math.max(0, Math.ceil((this.items.length + 1) / REMINDER_ITEMS_PER_PAGE) - 1);
 			this.resetNewItem();
 			if (!textOnly) {
 				this.dateOrLinkPopover.hide();
@@ -587,7 +695,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 			async () => {
 				await this.removeRecordFromDatabase(entryKey);
 			},
-			[REMINDER_MSG_DELETE_CONFIRM, REMINDER_DIALOG_DELETE_BTN, REMINDER_DIALOG_CONFIRM_BTN]
+			[REMINDER_MSG_DELETE_CONFIRM, DIALOG_BTN_DELETE, DIALOG_BTN_CONFIRM]
 		);
 	}
 
@@ -661,7 +769,8 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Persists the normalized link from the popover link input to the editing item and CloudBase.
+	 * Persists the normalized link from the popover link input to the editing item and CloudBase,
+	 * then hides the popover. Also closes the popover when called for a new item (no editing item).
 	 */
 	protected async onPopoverLinkUpdate(): Promise<void> {
 		if (this.editingItem) {
@@ -680,6 +789,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 				this.editingItem.link
 			);
 		}
+		this.dateOrLinkPopover.hide();
 	}
 
 	////////////////////// Below are tag editing handlers for existing card items //////////////
@@ -696,7 +806,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 			item,
 			index,
 			isNewItem: false,
-			tagText: index === -1 ? '' : item.tags[index]
+			tagText: index === -1 ? '' : item.tag
 		};
 	}
 
@@ -716,16 +826,10 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 			: FAILURE;
 		if (returnCode === FAILURE) return;
 		const tagText = session.tagText.trim();
-		// index -1 means "add new tag"; a non-negative index means "edit existing" —
-		// an empty value on edit is treated as a deletion so users can remove tags inline
-		if (session.index === -1) {
-			if (tagText) item.tags.push(tagText);
-		} else {
-			if (tagText) item.tags[session.index] = tagText;
-			else item.tags.splice(session.index, 1);
-		}
+		if (tagText) item.tag = tagText;
+		else if (session.index !== -1) item.tag = '';
 		this.cancelTagEdit();
-		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAGS, [...item.tags]);
+		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAG, item.tag);
 	}
 
 	/**
@@ -735,14 +839,8 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected onNewItemTagUpdate(): void {
 		const session = this.tagEditSession;
 		const tagText = session?.tagText.trim() ?? '';
-		// Mirror the same index-based add/edit/delete logic as onTagUpdate, but write-only to
-		// local state — the new-item card has no DB record yet
-		if (session?.index === -1) {
-			if (tagText) this.newItem.tags.push(tagText);
-		} else if (session !== null && session.index >= 0) {
-			if (tagText) this.newItem.tags[session.index] = tagText;
-			else this.newItem.tags.splice(session.index, 1);
-		}
+		if (tagText) this.newItem.tag = tagText;
+		else if (session !== null && session.index >= 0) this.newItem.tag = '';
 		this.cancelTagEdit();
 	}
 
@@ -759,7 +857,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param index - The 0-based index of the tag to remove.
 	 */
 	protected removeNewItemTag(index: number): void {
-		this.newItem.tags.splice(index, 1);
+		this.newItem.tag = '';
 	}
 
 	/**
@@ -776,8 +874,8 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 			? SUCCESS
 			: FAILURE;
 		if (returnCode === FAILURE) return;
-		item.tags.splice(index, 1);
-		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAGS, [...item.tags]);
+		item.tag = '';
+		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAG, item.tag);
 	}
 
 	/**
@@ -816,7 +914,7 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 			item: null,
 			index,
 			isNewItem: true,
-			tagText: index === -1 ? '' : this.newItem.tags[index]
+			tagText: index === -1 ? '' : this.newItem.tag
 		};
 	}
 
@@ -886,12 +984,12 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	////////////////////// Below are add-card display helpers and label getters ////////////////
 
 	/**
-	 * Returns the YYYY-MM-DD string for the new-item date pill.
+	 * Returns the YYYY.MM.DD display string for the new-item date pill.
 	 *
-	 * @returns A formatted date string, or empty string when no date is set.
+	 * @returns A dot-separated date string, or empty string when no date is set.
 	 */
 	protected get newItemDateLabel(): string {
-		return this.newItem.date ? Utilities.formatDateForStorage(this.newItem.date) : '';
+		return this.newItem.date ? Utilities.formatDateForStorage(this.newItem.date).replace(/-/g, '.') : '';
 	}
 
 	/**
@@ -917,13 +1015,14 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	////////////////////// Below are display helper methods used by the card template /////////
 
 	/**
-	 * Safely coerces any date value (string, Date, CloudBase timestamp) to a YYYY-MM-DD string.
+	 * Safely coerces any date value (string, Date, CloudBase timestamp) to a display string
+	 * in YYYY.MM.DD format with dot separators.
 	 *
 	 * @param date - Any date representation.
-	 * @returns A YYYY-MM-DD string, or empty string.
+	 * @returns A YYYY.MM.DD display string, or empty string.
 	 */
 	protected formatDate(date: unknown): string {
-		return Utilities.coerceDateToString(date);
+		return Utilities.coerceDateToString(date).replace(/-/g, '.');
 	}
 
 	/**
@@ -945,6 +1044,55 @@ export class ReminderComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected getLinkLabel(item: ReminderItem): string {
 		if (!item.link) return '';
 		return Utilities.getDomain(item.link);
+	}
+
+	////////////////////// Below are new-item category selection and paginator helpers ///////
+
+	/**
+	 * Sets the selected category for the new-item card. Clicking the same category
+	 * a second time deselects it (clears the tags array).
+	 *
+	 * @param tag - The tag string representing the category to select or deselect.
+	 */
+	protected selectNewItemCategory(tag: string): void {
+		this.newItem.tag = tag;
+	}
+
+	/**
+	 * Navigates to a specific page index in the paginator.
+	 *
+	 * @param index - The 0-based page index to navigate to.
+	 */
+	protected goToPage(index: number): void {
+		this.page = index;
+	}
+
+	/**
+	 * Returns an array of 0-based page indices for rendering the paginator buttons.
+	 *
+	 * @returns An array of integers from 0 to totalPages - 1.
+	 */
+	protected get pagesArray(): number[] {
+		return Array.from({ length: this.totalPages }, (_, i) => i);
+	}
+
+	/**
+	 * Returns the 1-based index of the first item on the current page, or 0 when
+	 * the filtered item list is empty.
+	 *
+	 * @returns The start index for the paginator range label.
+	 */
+	protected get rangeStart(): number {
+		return this.filteredItems.length === 0 ? 0 : this.page * REMINDER_ITEMS_PER_PAGE + 1;
+	}
+
+	/**
+	 * Returns the 1-based index of the last item on the current page.
+	 *
+	 * @returns The end index for the paginator range label.
+	 */
+	protected get rangeEnd(): number {
+		return Math.min((this.page + 1) * REMINDER_ITEMS_PER_PAGE, this.filteredItems.length);
 	}
 
 	////////////////////// Below are utility counter getters used by the template //////////////

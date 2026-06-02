@@ -530,6 +530,24 @@ export class Utilities {
 	}
 
 	/**
+	 * Computes the number of whole days from today until the given date.
+	 * Negative values indicate a past date. Positive values indicate a future date.
+	 *
+	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
+	 * @returns The number of whole days until the date, or null when no date is provided.
+	 */
+	public static getDaysUntilNumber(dateStr: unknown): number | null {
+		if (!dateStr) return null;
+		const str = Utilities.coerceDateToString(dateStr);
+		if (!str) return null;
+		const [year, month, day] = str.split('-').map(Number);
+		const target = new Date(year, month - 1, day);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+	}
+
+	/**
 	 * Returns `true` if the given date is strictly before today (i.e. the item
 	 * is past due). Accepts any form understood by {@link coerceDateToString}.
 	 *

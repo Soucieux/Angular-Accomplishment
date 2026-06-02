@@ -34,15 +34,15 @@
  * All pages: font-weight 500
  */
 /* PAGE ACCENT COLOR — Entertainment
- * Deep Purple  primary #4a1d96   rgba(74, 29, 150)
- *              accent  #6d28d9   rgba(109, 40, 217)
+ * Deep Purple  primary #11998e   rgba(74, 29, 150)
+ *              accent  #38ef7d   rgba(109, 40, 217)
  * Applied to: bar-title text, count-pill, active-chip background
- * To change: replace all #4a1d96 and #6d28d9 throughout this file.
+ * To change: replace all #11998e and #38ef7d throughout this file.
  */
 .bar-title {
 	font-size: 28px;
 	font-weight: 500;
-	color: #4a1d96;
+	color: #11998e;
 	letter-spacing: -0.5px;
 	margin: 0;
 	padding: 0;

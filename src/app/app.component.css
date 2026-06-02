@@ -219,23 +219,23 @@ li:nth-child(3) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Resonance — royal blue → violet */
+/* Resonance — pale gold → deep amber */
 li:nth-child(4) .nav-icon {
-	background: linear-gradient(135deg, #4776e6, #8e54e9);
+	background: linear-gradient(135deg, #fde68a, #b45309);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
-/* Recipes — amber → lime */
+/* Recipes — blush → deep crimson */
 li:nth-child(5) .nav-icon {
-	background: linear-gradient(135deg, #f7971e, #78d000);
+	background: linear-gradient(135deg, #fda4af, #9f1239);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
-/* Entertainment — teal → sky blue */
+/* Entertainment — teal → green */
 li:nth-child(6) .nav-icon {
 	background: linear-gradient(135deg, #11998e, #38ef7d);
 	background-clip: text;
@@ -251,7 +251,7 @@ li:nth-child(7) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Debt — coral → fuchsia */
+/* Debt Sonata — coral → fuchsia */
 li:nth-child(8) .nav-icon {
 	background: linear-gradient(135deg, #f97316, #e879f9);
 	background-clip: text;
@@ -259,17 +259,17 @@ li:nth-child(8) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Patch Notes — rose → orange */
+/* Patch Notes — periwinkle → deep indigo */
 li:nth-child(9) .nav-icon {
-	background: linear-gradient(135deg, #d53369, #f7971e);
+	background: linear-gradient(135deg, #a5b4fc, #3730a3);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
-/* About — purple → pink */
+/* About — orchid → deep purple */
 li:nth-child(10) .nav-icon {
-	background: linear-gradient(135deg, #8e54e9, #e91e8c);
+	background: linear-gradient(135deg, #f0abfc, #7e22ce);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;

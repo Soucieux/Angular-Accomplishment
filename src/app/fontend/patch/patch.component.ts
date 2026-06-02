@@ -32,9 +32,9 @@ import {
 	STATUS_IN_PROGRESS,
 	STATUS_RESOLVED,
 	STATUS_TODO,
-	PATCH_MSG_DELETE_CONFIRM,
-	PATCH_DIALOG_CONFIRM_BTN,
-	PATCH_DIALOG_DELETE_BTN
+	DIALOG_BTN_CONFIRM,
+	DIALOG_BTN_DELETE,
+	PATCH_MSG_DELETE_CONFIRM
 } from '../../common/app.constant';
 import { map, Observable, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -430,7 +430,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			},
-			[PATCH_MSG_DELETE_CONFIRM, PATCH_DIALOG_CONFIRM_BTN, PATCH_DIALOG_DELETE_BTN]
+			[PATCH_MSG_DELETE_CONFIRM, DIALOG_BTN_CONFIRM, DIALOG_BTN_DELETE]
 		);
 	}
 

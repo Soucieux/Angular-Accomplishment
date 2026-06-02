@@ -7,7 +7,7 @@ import { Utilities } from '../../common/app.utilities';
 import {
 	REMINDER_VALUE_KEY_DATE,
 	REMINDER_VALUE_KEY_LINK,
-	REMINDER_VALUE_KEY_TAGS,
+	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
 	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING
@@ -431,11 +431,7 @@ describe('ReminderComponent', () => {
 			const item = (component as any).items[0];
 			await (component as any).clearDate(item);
 			expect(item.date).toBeNull();
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-				'k1',
-				REMINDER_VALUE_KEY_DATE,
-				null
-			);
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_DATE, null);
 		});
 
 		it('does nothing when permission is denied', async () => {
@@ -455,11 +451,7 @@ describe('ReminderComponent', () => {
 			const item = (component as any).items[0];
 			await (component as any).clearLink(item);
 			expect(item.link).toBeNull();
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-				'k1',
-				REMINDER_VALUE_KEY_LINK,
-				null
-			);
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_LINK, null);
 		});
 
 		it('does nothing when permission is denied', async () => {
@@ -536,7 +528,7 @@ describe('ReminderComponent', () => {
 			expect(item.tags).toContain('newtag');
 			expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
 				'k1',
-				REMINDER_VALUE_KEY_TAGS,
+				REMINDER_VALUE_KEY_TAG,
 				jasmine.arrayContaining(['newtag'])
 			);
 		});
@@ -556,11 +548,9 @@ describe('ReminderComponent', () => {
 			const item = (component as any).items[0];
 			await (component as any).removeExistingCardTag(0, item);
 			expect(item.tags).toEqual(['personal']);
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-				'k1',
-				REMINDER_VALUE_KEY_TAGS,
-				['personal']
-			);
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, [
+				'personal'
+			]);
 		});
 
 		it('does nothing when permission is denied', async () => {

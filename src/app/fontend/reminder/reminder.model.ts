@@ -4,10 +4,10 @@ export interface ReminderItem {
 	text: string;
 	date: string | null;
 	link: string | null;
-	tags: string[];
+	tag: string;
 }
 
-export type ReminderValueKey = 'text' | 'date' | 'link' | 'tags';
+export type ReminderValueKey = 'text' | 'date' | 'link' | 'tag';
 
 /** Raw shape of a reminder document as returned by CloudBase (flat — no content wrapper). */
 export interface ReminderDbRecord {
@@ -16,7 +16,7 @@ export interface ReminderDbRecord {
 	text?: string;
 	date?: unknown;
 	link?: string | null;
-	tags?: string[];
+	tag: string;
 }
 
 /** Tag-edit session shared by both existing-card and new-item-card contexts. */
@@ -32,5 +32,5 @@ export interface NewItem {
 	text: string;
 	date: Date | null;
 	link: string;
-	tags: string[];
+	tag: string;
 }

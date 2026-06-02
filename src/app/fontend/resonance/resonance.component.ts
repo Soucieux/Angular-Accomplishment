@@ -24,11 +24,11 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
+	DIALOG_BTN_DELETE,
 	DIALOG_CONFIRM,
 	RESONANCE_AUTHOR_ANONYMOUS,
 	RESONANCE_MSG_DELETE_CONFIRM,
 	RESONANCE_DIALOG_TITLE_DELETE,
-	RESONANCE_DIALOG_BTN_DELETE,
 	RESONANCE_MSG_POSTED,
 	RESONANCE_LABEL_VOICES,
 	RESONANCE_MAX_QUOTE_LENGTH
@@ -271,7 +271,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			},
-			[RESONANCE_MSG_DELETE_CONFIRM, RESONANCE_DIALOG_TITLE_DELETE, RESONANCE_DIALOG_BTN_DELETE]
+			[RESONANCE_MSG_DELETE_CONFIRM, RESONANCE_DIALOG_TITLE_DELETE, DIALOG_BTN_DELETE]
 		);
 	}
 }

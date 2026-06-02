@@ -24,10 +24,12 @@ import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
 	COMPONENT_DESTROY,
+	DIALOG_BTN_DELETE,
 	DIALOG_CONFIRM,
 	DIALOG_RECIPE_TYPE,
+	MSG_DELETE_FAILED,
+	MSG_SAVE_FAILED,
 	RECIPE_CATEGORY_ALL,
-	RECIPE_DELETE_BTN,
 	RECIPE_DELETE_MESSAGE,
 	RECIPE_DELETE_TITLE,
 	RECIPE_DISCARD_BTN,
@@ -43,14 +45,12 @@ import {
 	RECIPE_MSG_ADDED,
 	RECIPE_MAX_BADGES,
 	RECIPE_MAX_NAME_CHARS,
-	RECIPE_MSG_DELETE_FAILED,
 	RECIPE_MSG_DELETE_FAILED_DETAIL,
 	RECIPE_MSG_DELETED,
 	RECIPE_MSG_INGREDIENT_UNIT_REQUIRED,
 	RECIPE_MSG_LOAD_FAILED,
 	RECIPE_MSG_CATEGORY_REQUIRED,
 	RECIPE_MSG_NAME_TOO_LONG,
-	RECIPE_MSG_SAVE_FAILED,
 	RECIPE_MSG_SAVE_FAILED_DETAIL,
 	RECIPE_MSG_UPDATED,
 	RECIPE_UNIT_OPTIONS,
@@ -58,9 +58,9 @@ import {
 	RECIPE_VIEW_DETAIL,
 	RECIPE_VIEW_LIST,
 	RECIPE_BAND_DEFAULT,
+	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
-	TOAST_SUCCESS,
 	BREAKPOINT_MOBILE
 } from '../../common/app.constant';
 import {
@@ -594,15 +594,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 						this.transitionTo(RECIPE_VIEW_LIST);
 					})
 					.catch((error: unknown) => {
-						LOG.error(this.className, RECIPE_MSG_DELETE_FAILED, error as Error);
+						LOG.error(this.className, MSG_DELETE_FAILED, error as Error);
 						this.dialogService.showToast(
 							TOAST_ERROR,
-							RECIPE_MSG_DELETE_FAILED,
+							MSG_DELETE_FAILED,
 							RECIPE_MSG_DELETE_FAILED_DETAIL
 						);
 					});
 			},
-			[RECIPE_DELETE_MESSAGE, RECIPE_DELETE_TITLE, RECIPE_DELETE_BTN]
+			[RECIPE_DELETE_MESSAGE, RECIPE_DELETE_TITLE, DIALOG_BTN_DELETE]
 		);
 	}
 
@@ -959,12 +959,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			if (isEdit) {
 				await this.databaseService.updateRecipe(recipe);
 				LOG.info(this.className, `Recipe updated: ${recipe.id} "${recipe.name}"`);
-				this.dialogService.showToast(TOAST_SUCCESS, RECIPE_MSG_UPDATED);
+				this.dialogService.showToast(SUCCESS, RECIPE_MSG_UPDATED);
 				this.selectedRecipe = recipe;
 			} else {
 				await this.databaseService.addRecipe(recipe);
 				LOG.info(this.className, `Recipe created: "${recipe.name}"`);
-				this.dialogService.showToast(TOAST_SUCCESS, RECIPE_MSG_ADDED);
+				this.dialogService.showToast(SUCCESS, RECIPE_MSG_ADDED);
 				this.pendingDetailName = recipe.name;
 				this.selectedRecipe = recipe;
 			}
@@ -972,8 +972,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			this.ingredientsCollapsed = false;
 			this.transitionTo(RECIPE_VIEW_DETAIL);
 		} catch (error) {
-			LOG.error(this.className, RECIPE_MSG_SAVE_FAILED, error as Error);
-			this.dialogService.showToast(TOAST_ERROR, RECIPE_MSG_SAVE_FAILED, RECIPE_MSG_SAVE_FAILED_DETAIL);
+			LOG.error(this.className, MSG_SAVE_FAILED, error as Error);
+			this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, RECIPE_MSG_SAVE_FAILED_DETAIL);
 		}
 	}
 

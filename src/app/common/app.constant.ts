@@ -151,6 +151,14 @@ export const DEBT_ITEM_EXPENSE = 'expense';
 export const REMINDER_ITEM_MESSAGE = 'message';
 
 ////////////////////// Below are dialog and error message string constants ////////////
+/** Shared delete button label used across all confirm-delete dialogs. */
+export const DIALOG_BTN_DELETE = 'Delete';
+/** Shared confirm button label used across all confirm dialogs. */
+export const DIALOG_BTN_CONFIRM = 'Confirm';
+/** Shared toast summary shown when a delete operation fails. */
+export const MSG_DELETE_FAILED = 'Delete failed';
+/** Shared toast summary shown when a save operation fails. */
+export const MSG_SAVE_FAILED = 'Save failed';
 /** User-facing message shown when an action is blocked by insufficient permissions. */
 export const MSG_PERMISSION_DENIED = 'User does not have permission';
 /** User-facing message shown when an unhandled exception occurs. */
@@ -173,7 +181,6 @@ export const NEXUS_CATEGORY_ALL = 'all';
 export const NEXUS_DEFAULT_CATEGORY_COLOR = '#d53369';
 
 ////////////////////// Below are toast severity string constants //////////////////////
-export const TOAST_SUCCESS = 'success';
 export const TOAST_INFO = 'info';
 export const TOAST_WARN = 'warn';
 export const TOAST_ERROR = 'error';
@@ -183,10 +190,8 @@ export const NEXUS_MSG_MISSING_FIELDS = 'Missing fields';
 export const NEXUS_MSG_MISSING_FIELDS_DETAIL = 'URL, title, and category are required';
 export const NEXUS_MSG_LINK_UPDATED = 'Link updated';
 export const NEXUS_MSG_LINK_SAVED = 'Link saved';
-export const NEXUS_MSG_SAVE_FAILED = 'Save failed';
 export const NEXUS_MSG_LINK_SAVE_FAILED_DETAIL = 'Could not save the link. Please try again.';
 export const NEXUS_MSG_LINK_DELETED = 'Link deleted';
-export const NEXUS_MSG_DELETE_FAILED = 'Delete failed';
 export const NEXUS_MSG_LINK_DELETE_FAILED_DETAIL = 'Could not delete the link. Please try again.';
 export const NEXUS_MSG_NAME_REQUIRED = 'Name required';
 export const NEXUS_MSG_CATEGORY_UPDATED = 'Category updated';
@@ -195,9 +200,7 @@ export const NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL = 'Could not save the categor
 export const NEXUS_MSG_CATEGORY_DELETED = 'Category deleted';
 export const NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL = 'Could not delete the category. Please try again.';
 export const NEXUS_MSG_DELETE_LINK_TITLE = 'Delete Link';
-export const NEXUS_MSG_DELETE_LINK_BTN = 'Delete';
 export const NEXUS_MSG_DELETE_CATEGORY_TITLE = 'Delete Category';
-export const NEXUS_MSG_DELETE_CATEGORY_BTN = 'Delete';
 /** Confirm-delete message prefix for a Nexus link; link title is appended at the call site. */
 export const NEXUS_MSG_DELETE_LINK_CONFIRM_PREFIX = 'Are you sure you want to delete "';
 /** Confirm-delete message suffix for a Nexus link. */
@@ -243,8 +246,6 @@ export const RECIPE_DISCARD_CHANGES_MESSAGE = 'Unsaved changes will be lost.';
 export const RECIPE_DELETE_TITLE = 'Delete Recipe';
 /** Confirm-delete message body. */
 export const RECIPE_DELETE_MESSAGE = 'Delete this recipe permanently? This cannot be undone.';
-/** Confirm button label for the delete dialog. */
-export const RECIPE_DELETE_BTN = 'Delete';
 
 ////////////////////// Below are recipe category discriminator constants /////////////
 export const RECIPE_CATEGORY_ALL = 'All';
@@ -312,9 +313,7 @@ export const RECIPE_MSG_LOAD_FAILED = 'Failed to load recipes';
 export const RECIPE_MSG_ADDED = 'Recipe saved';
 export const RECIPE_MSG_UPDATED = 'Recipe updated';
 export const RECIPE_MSG_DELETED = 'Recipe deleted';
-export const RECIPE_MSG_SAVE_FAILED = 'Save failed';
 export const RECIPE_MSG_SAVE_FAILED_DETAIL = 'Could not save the recipe. Please try again.';
-export const RECIPE_MSG_DELETE_FAILED = 'Delete failed';
 export const RECIPE_MSG_DELETE_FAILED_DETAIL = 'Could not delete the recipe. Please try again.';
 export const RECIPE_MSG_NAME_TOO_LONG = 'Recipe name must not exceed 9 Chinese characters in length.';
 export const RECIPE_MSG_CATEGORY_REQUIRED = 'Please select a category before saving.';
@@ -381,12 +380,12 @@ export const HOME_ACTIVITY_ICON_PATCH_ADDED = 'note_stack';
 export const HOME_ACTIVITY_ICON_PATCH_BUG = 'bug_report';
 export const HOME_ACTIVITY_ICON_PATCH_STATUS = 'swap_horiz';
 export const HOME_ACTIVITY_ICON_PATCH_UPDATED = 'edit';
-export const HOME_ACTIVITY_ICON_PATCH_DELETED = 'delete';
 export const HOME_ACTIVITY_ICON_REMINDER_ADDED = 'note_add';
-export const HOME_ACTIVITY_ICON_REMINDER_DELETED = 'delete';
 export const HOME_ACTIVITY_ICON_REMINDER_UPDATED = 'edit_note';
 export const HOME_ACTIVITY_ICON_RESONANCE_ADDED = 'format_quote';
 export const HOME_ACTIVITY_ICON_RESONANCE_REMOVED = 'format_clear';
+/** Shared delete icon used for all activity-feed deleted events. */
+export const HOME_ACTIVITY_ICON_DELETED = 'delete';
 
 ////////////////////// Below are home recent activity feed label constants ///////////
 export const HOME_ACTIVITY_LABEL_MOVIE_ADDED = 'Movie Added';
@@ -410,10 +409,10 @@ export const HOME_ACTIVITY_COLOR_MOVIE_RATED = '#f7971e';
 export const HOME_ACTIVITY_COLOR_MOVIE_SEARCHED = '#4776e6';
 export const HOME_ACTIVITY_COLOR_NEUTRAL = '#94a3b8';
 export const HOME_ACTIVITY_COLOR_PATCH = '#8e54e9';
-export const HOME_ACTIVITY_COLOR_PATCH_DELETED = '#ef4444';
 export const HOME_ACTIVITY_COLOR_REMINDER = '#f59e0b';
-export const HOME_ACTIVITY_COLOR_REMINDER_DELETED = '#ef4444';
 export const HOME_ACTIVITY_COLOR_RESONANCE = '#fda085';
+/** Shared delete color used for all activity-feed deleted events. */
+export const HOME_ACTIVITY_COLOR_DELETED = '#ef4444';
 
 ////////////////////// Below are home error log string constants ////////////////////
 export const HOME_MSG_LOAD_STATISTICS_FAILED = 'Failed to load statistics';
@@ -423,7 +422,6 @@ export const HOME_MSG_INCREMENT_VISIT_FAILED = 'Failed to increment link visit';
 /** Prefix for the delete-movie confirm message; movie name is appended at the call site. */
 export const ENT_MSG_DELETE_CONFIRM_PREFIX = 'Are you sure you want to delete ';
 export const ENT_DIALOG_TITLE_DELETE_MOVIE = 'Delete Movie';
-export const ENT_DIALOG_BTN_DELETE = 'Delete';
 export const ENT_MSG_ADDING = 'Adding movie...';
 export const ENT_MSG_RESTORING = 'Restoring movie...';
 export const ENT_MSG_UPDATE_GENRE_FAILED = 'Error while updating genre';
@@ -476,7 +474,6 @@ export const ENT_VT_CLASS_ENTERING = 'vt-entering';
 export const RESONANCE_AUTHOR_ANONYMOUS = 'Anonymous';
 export const RESONANCE_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this quote?';
 export const RESONANCE_DIALOG_TITLE_DELETE = 'Delete Quote';
-export const RESONANCE_DIALOG_BTN_DELETE = 'Delete';
 export const RESONANCE_MSG_POSTED = 'Posted';
 export const RESONANCE_LABEL_VOICES = 'voices';
 /** Maximum character count allowed for a new quote submission. */
@@ -484,8 +481,6 @@ export const RESONANCE_MAX_QUOTE_LENGTH = 500;
 
 ////////////////////// Below are patch notes dialog string constants /////////////////
 export const PATCH_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this note?';
-export const PATCH_DIALOG_CONFIRM_BTN = 'Confirm';
-export const PATCH_DIALOG_DELETE_BTN = 'Delete';
 
 ////////////////////// Below are debt sonata content value key constants ////////////
 /** CloudBase content entry key for the current debt balance in the debt sonata table. */
@@ -506,9 +501,7 @@ export const DEBT_VALUE_KEY_ORIGINAL = 'original';
 ////////////////////// Below are pinboard page dialog string constants //////////////
 export const PINBOARD_MSG_RESET_CONFIRM = 'Are you sure you want to reset the dates?';
 export const PINBOARD_DIALOG_RESET_BTN = 'Reset';
-export const PINBOARD_DIALOG_CONFIRM_BTN = 'Confirm';
 export const PINBOARD_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this entry?';
-export const PINBOARD_DIALOG_DELETE_BTN = 'Delete';
 
 ////////////////////// Below are date calculator UI label constants ////////////
 export const PINBOARD_LABEL_CURRENT_MONTH = 'Current Month';
@@ -522,7 +515,6 @@ export const PINBOARD_LABEL_CONFIRMED = 'confirmed';
 ////////////////////// Below are history dialog and style string constants ///////////
 export const HISTORY_MSG_UNDO_CONFIRM = 'Undo this deletion?';
 export const HISTORY_DIALOG_UNDO_BTN = 'Undo';
-export const HISTORY_DIALOG_CONFIRM_BTN = 'Confirm';
 /** Inline border style for an "added" history entry. */
 export const HISTORY_STYLE_ADDED = 'solid green';
 /** Inline border style for a "deleted" history entry. */
@@ -537,20 +529,73 @@ export const REMINDER_PLACEHOLDER_LINK = 'https://';
 export const REMINDER_PLACEHOLDER_TAG = 'tag…';
 /** Confirmation message shown before deleting a reminder entry. */
 export const REMINDER_MSG_DELETE_CONFIRM = 'Delete this entry? This cannot be undone.';
-/** Primary action button label on the reminder delete confirmation dialog. */
-export const REMINDER_DIALOG_DELETE_BTN = 'Delete';
-/** Secondary confirm button label on the reminder delete confirmation dialog. */
-export const REMINDER_DIALOG_CONFIRM_BTN = 'Confirm';
 /** CloudBase content entry key for the reminder message text. */
 export const REMINDER_VALUE_KEY_TEXT = 'text';
 /** CloudBase content entry key for the reminder date. */
 export const REMINDER_VALUE_KEY_DATE = 'date';
 /** CloudBase content entry key for the reminder link URL. */
 export const REMINDER_VALUE_KEY_LINK = 'link';
-/** CloudBase content entry key for the reminder tags array. */
-export const REMINDER_VALUE_KEY_TAGS = 'tags';
+/** CloudBase content entry key for the reminder tag. */
+export const REMINDER_VALUE_KEY_TAG = 'tag';
 /** Items shown per page in the Reminder grid. */
-export const REMINDER_ITEMS_PER_PAGE = 10;
+export const REMINDER_ITEMS_PER_PAGE = 12;
+/** Reminder category label — Work. */
+export const REMINDER_CATEGORY_WORK = 'Work';
+/** Reminder category label — Personal. */
+export const REMINDER_CATEGORY_PERSONAL = 'Personal';
+/** Reminder category label — Home. */
+export const REMINDER_CATEGORY_HOME = 'Home';
+/** Reminder category label — Health. */
+export const REMINDER_CATEGORY_HEALTH = 'Health';
+/** Accent color for the Work category. */
+export const REMINDER_CATEGORY_COLOR_WORK = '#1a6dff';
+/** Accent color for the Personal category. */
+export const REMINDER_CATEGORY_COLOR_PERSONAL = '#d53369';
+/** Accent color for the Home category. */
+export const REMINDER_CATEGORY_COLOR_HOME = '#c2820a';
+/** Accent color for the Health category. */
+export const REMINDER_CATEGORY_COLOR_HEALTH = '#0d9488';
+/** Fallback accent color for unrecognized or absent categories — matches the Reminder section accent. */
+export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
+/** Fixed ordered list of the four known Reminder categories, always shown in the filter bar and composer. */
+export const REMINDER_KNOWN_CATEGORIES = [
+	REMINDER_CATEGORY_PERSONAL,
+	REMINDER_CATEGORY_WORK,
+	REMINDER_CATEGORY_HOME,
+	REMINDER_CATEGORY_HEALTH
+] as const;
+/** Number of days ahead treated as "due soon". */
+export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;
+/** "All" filter chip label in the Reminder filter bar. */
+export const REMINDER_FILTER_ALL = 'All';
+/** Section label above the filter chips. */
+export const REMINDER_FILTER_LABEL = 'FILTER';
+/** Ghost button label for adding a link to a reminder card. */
+export const REMINDER_ADD_LINK_LABEL = 'Add link';
+/** Ghost button label for adding a date to a reminder card. */
+export const REMINDER_ADD_DATE_LABEL = 'Add date';
+/** Confirm button label on the new-reminder composer. */
+export const REMINDER_ADD_BTN_LABEL = 'Add';
+/** Primary label on the due-soon stat card. */
+export const REMINDER_DUE_SOON_LABEL = 'due soon';
+/** Chinese subtitle on the due-soon stat card. */
+export const REMINDER_DUE_SOON_SUBTITLE = '未来七天';
+/** Singular reminder unit used in the open-item greeting. */
+export const REMINDER_GREETING_SINGULAR = 'reminder';
+/** Plural reminder unit used in the open-item greeting. */
+export const REMINDER_GREETING_PLURAL = 'reminders';
+/** Trailing phrase appended to the open-item greeting. */
+export const REMINDER_AWAIT_SUFFIX = 'await · 静候处理';
+/** English segment of the open-item greeting suffix. */
+export const REMINDER_AWAIT_SUFFIX_EN = 'await ·';
+/** Chinese segment of the open-item greeting suffix. */
+export const REMINDER_AWAIT_SUFFIX_CN = '静候处理';
+/** Page subtitle shown below the Reminder title. */
+export const REMINDER_SUBTITLE = '日程 · things to do, dated or not';
+/** Chinese segment of the page subtitle. */
+export const REMINDER_SUBTITLE_CN = '日程 ·';
+/** English segment of the page subtitle. */
+export const REMINDER_SUBTITLE_EN = 'things to do, dated or not';
 
 ////////////////////// Below are Debt Sonata dialog and UI string constants //////////
 export const DEBT_DIALOG_TITLE = 'New debt';

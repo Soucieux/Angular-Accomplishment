@@ -8,8 +8,8 @@ import { DialogService } from '../dialog.service';
 import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exists-error';
 import { LOG } from '../../../common/app.logs';
 import {
+	DIALOG_BTN_CONFIRM,
 	DIALOG_ERROR,
-	HISTORY_DIALOG_CONFIRM_BTN,
 	HISTORY_DIALOG_UNDO_BTN,
 	HISTORY_MSG_UNDO_CONFIRM,
 	HISTORY_STATUS_ADDED,
@@ -109,7 +109,7 @@ export class HistoryDialogComponent implements OnDestroy {
 					}
 				}
 			},
-			[HISTORY_MSG_UNDO_CONFIRM, HISTORY_DIALOG_UNDO_BTN, HISTORY_DIALOG_CONFIRM_BTN]
+			[HISTORY_MSG_UNDO_CONFIRM, HISTORY_DIALOG_UNDO_BTN, DIALOG_BTN_CONFIRM]
 		);
 	}
 

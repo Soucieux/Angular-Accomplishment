@@ -94,8 +94,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			if (!CloudbaseService.getUseId()) {
-				// Wait for anonymous sign-in before starting the watcher —
-				// the CloudBase WebSocket needs valid credentials to connect.
+				/* Wait for anonymous sign-in before starting the watcher —
+				   the CloudBase WebSocket needs valid credentials to connect. */
 				this.authService
 					.signInAnonymously()
 					.then(() => {
@@ -103,8 +103,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 						// Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
 						CloudbaseService.markAuthReady();
 						this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
-						// Promise callback fires outside Angular's zone; detectChanges() is
-						// required to bind the newly assigned quotes$ Observable in the template.
+						/* Promise callback fires outside Angular's zone; detectChanges() is
+						   required to bind the newly assigned quotes$ Observable in the template. */
 						this.cdr.detectChanges();
 					})
 					.catch(() => {});
@@ -222,8 +222,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 
 		this.submitting = true;
 		try {
-			// Name resolution chain: signed-in user → CloudBase username;
-			// not signed in → manually entered name; fallback → 'Anonymous'.
+			/* Name resolution chain: signed-in user → CloudBase username;
+			   not signed in → manually entered name; fallback → 'Anonymous'. */
 			const name = this.isSignedIn
 				? CloudbaseService.getUserName() || RESONANCE_AUTHOR_ANONYMOUS
 				: this.authorName.trim() || RESONANCE_AUTHOR_ANONYMOUS;
@@ -236,16 +236,16 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			this.postSuccessTimer = setTimeout(() => {
 				this.postSuccessTimer = null;
 				this.postSuccess = false;
-				// setTimeout callback fires outside Angular's zone; detectChanges() is
-				// required to hide the success chip immediately after the delay.
+				/* setTimeout callback fires outside Angular's zone; detectChanges() is
+				   required to hide the success chip immediately after the delay. */
 				this.cdr.detectChanges();
 			}, 2000);
 		} catch {
 			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 		} finally {
 			this.submitting = false;
-			// async/await finally block may resume outside Angular's zone; detectChanges()
-			// is required to re-enable the submit button immediately after the request settles.
+			/* async/await finally block may resume outside Angular's zone; detectChanges()
+			   is required to re-enable the submit button immediately after the request settles. */
 			this.cdr.detectChanges();
 		}
 	}

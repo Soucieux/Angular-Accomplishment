@@ -137,8 +137,8 @@ export class DialogService {
 			throw error;
 		}
 
-		// Block and error dialogs are allowed to stack (multiple can be open at once);
-		// all other dialog types enforce a single-instance rule to prevent duplicates.
+		/* Block and error dialogs are allowed to stack (multiple can be open at once);
+		   all other dialog types enforce a single-instance rule to prevent duplicates. */
 		if (this.openedDialogs.has(dialogType)) {
 			if (dialogType === DIALOG_ERROR || dialogType === DIALOG_BLOCK) return;
 			const error = new Error('Dialog already opened');
@@ -148,15 +148,15 @@ export class DialogService {
 
 		try {
 			const dialogComponent = this.getDialogComponent(dialogType);
-			// Dynamically instantiate the dialog component inside the provided container,
-			// giving it access to the container's injector and change detection.
+			/* Dynamically instantiate the dialog component inside the provided container,
+			   giving it access to the container's injector and change detection. */
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			let blockPromise: Promise<void> | undefined;
 
-			// SEARCH and error dialogs only need one callback/data argument;
-			// block dialogs return a promise so callers can await task completion;
-			// all other dialogs receive two arguments (prefill/callback or two callbacks).
+			/* SEARCH and error dialogs only need one callback/data argument;
+			   block dialogs return a promise so callers can await task completion;
+			   all other dialogs receive two arguments (prefill/callback or two callbacks). */
 			if (dialogType === SEARCH || dialogType === DIALOG_ERROR) {
 				dialogComponentRef.instance.openDialog(dataOrCallback1);
 			} else if (dialogType === DIALOG_BLOCK) {
@@ -165,8 +165,8 @@ export class DialogService {
 				dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
 			}
 
-			// When the dialog emits its closed event, remove it from the tracking map
-			// and destroy the component to prevent memory leaks.
+			/* When the dialog emits its closed event, remove it from the tracking map
+			   and destroy the component to prevent memory leaks. */
 			dialogComponentRef.instance.closed$.pipe(take(1)).subscribe(() => {
 				this.openedDialogs.delete(dialogType);
 				dialogComponentRef.destroy();
@@ -174,8 +174,8 @@ export class DialogService {
 
 			this.openedDialogs.set(dialogType, dialogComponentRef);
 
-			// Return the promise for block dialogs so callers can await the task
-			// and handle any errors that occur during execution.
+			/* Return the promise for block dialogs so callers can await the task
+			   and handle any errors that occur during execution. */
 			if (blockPromise) {
 				return blockPromise;
 			}

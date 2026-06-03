@@ -111,8 +111,8 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	protected async searchCurrentMovie(newMovieData: AddMovieFormValue) {
 		this.isLoading = true;
 		try {
-			// Two input strategies: if movieName is provided, search by name+year;
-			// if id is provided instead, search by numeric Douban ID.
+			/* Two input strategies: if movieName is provided, search by name+year;
+			   if id is provided instead, search by numeric Douban ID. */
 			if (newMovieData.movieName) {
 				this.movieItemVO.setMovieName(newMovieData.movieName);
 				this.movieItemVO.setMovieYear(Number(newMovieData.years));
@@ -125,8 +125,8 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 			this.canSubmit = true;
 		} catch (error) {
-			// Each error type maps to a specific user-facing message;
-			// the dialog is shown in-place (not thrown) because this is a search flow.
+			/* Each error type maps to a specific user-facing message;
+			   the dialog is shown in-place (not thrown) because this is a search flow. */
 			if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
 				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 			} else {

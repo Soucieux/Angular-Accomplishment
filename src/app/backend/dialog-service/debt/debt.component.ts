@@ -125,8 +125,8 @@ export class AddDebtDialogComponent {
 		this.submitCallback = submitCallback;
 		this.isEditMode = prefillData !== null;
 		if (prefillData) {
-			// Edit mode: only populate the fields the user can change (balance, due date, currency);
-			// name, category, and permanent toggle are hidden in this mode
+			/* Edit mode: only populate the fields the user can change (balance, due date, currency);
+			   name, category, and permanent toggle are hidden in this mode */
 			this.amount = String(prefillData.amount ?? '');
 			this.dueDateModel = prefillData.dueDate ? new Date(prefillData.dueDate + 'T00:00') : null;
 			this.selectedCurrency = prefillData.currency ?? DEBT_CURRENCY_CNY;

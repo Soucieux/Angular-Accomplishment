@@ -112,8 +112,8 @@ export class CloudbaseService extends DatabaseService {
 					})
 					.catch(() => {});
 
-			// Attempt to resolve statId immediately (anonymous session may succeed);
-			// retry once auth confirms so authenticated callers always have it ready
+			/* Attempt to resolve statId immediately (anonymous session may succeed);
+			   retry once auth confirms so authenticated callers always have it ready */
 			fetchStatId();
 			// Retry after auth confirms so statId is set before addQuote/removeQuote are called
 			CloudbaseService.authReady$.pipe(take(1)).subscribe(() => fetchStatId());
@@ -326,9 +326,9 @@ export class CloudbaseService extends DatabaseService {
 				try {
 					const result: any = await this.cloudbase.getTempFileURL({ fileList: batch });
 					for (const file of result.fileList) {
-						// CloudBase SDK (CLOUD_API mode) returns each item with:
-						//   { fileid, download_url }            on success
-						//   { fileid, code: '<ERROR_CODE>' }   on failure (e.g. STORAGE_FILE_NONEXIST)
+						/* CloudBase SDK (CLOUD_API mode) returns each item with:
+						     { fileid, download_url }            on success
+						     { fileid, code: '<ERROR_CODE>' }   on failure (e.g. STORAGE_FILE_NONEXIST) */
 						if (file.download_url) {
 							this.tempUrlCache.set(file.fileid, file.download_url);
 						} else {
@@ -410,8 +410,8 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Reminder table details
 	 */
 	public getDateCalculatorTableDetails(): Observable<any[]> {
-		// Date calculator rows are flat — emit as-is. Fallback to [] prevents
-		// downstream .length errors when the collection is empty.
+		/* Date calculator rows are flat — emit as-is. Fallback to [] prevents
+		   downstream .length errors when the collection is empty. */
 		return this.watchCollection(DATABASE_DATE_CALCULATOR, (docs) => docs ?? []);
 	}
 
@@ -421,8 +421,8 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns Account Expenses table details
 	 */
 	public getDebtSonataTableDetails(): Observable<any[]> {
-		// Map CloudBase _id → key so Angular *ngFor can trackBy it;
-		// name and content fields pass through as-is.
+		/* Map CloudBase _id → key so Angular *ngFor can trackBy it;
+		   name and content fields pass through as-is. */
 		return this.watchCollection(DATABASE_DEBT_SONATA, (docs) =>
 			docs.map((doc: any) => {
 				const { _id, ...rest } = doc;
@@ -554,8 +554,8 @@ export class CloudbaseService extends DatabaseService {
 					rate: movieItemVO.getMovieRate()
 				});
 
-				// CloudBase returns a non-empty result.code when the operation failed
-				// (e.g. permission denied, document not found).
+				/* CloudBase returns a non-empty result.code when the operation failed
+				   (e.g. permission denied, document not found). */
 				if (result.code) throw new Error(result.message);
 
 				// Fire-and-forget: record this rate update in stats for Recent Activity.
@@ -819,8 +819,8 @@ export class CloudbaseService extends DatabaseService {
 				.get();
 			if (result.data?.length) return true;
 
-			// Fallback: id-based query may miss entries where the external API returned
-			// a different id for the same movie. A title+year query catches edge cases.
+			/* Fallback: id-based query may miss entries where the external API returned
+			   a different id for the same movie. A title+year query catches edge cases. */
 			const nameResult = await this.database
 				.collection(DATABASE_MOVIES)
 				.where({ title: movieName, year: movieYear })
@@ -846,8 +846,8 @@ export class CloudbaseService extends DatabaseService {
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		try {
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
-			// Capture timestamp once so the same value is used in the history message
-			// and in the statistics update below (no need to parse it back from the string).
+			/* Capture timestamp once so the same value is used in the history message
+			   and in the statistics update below (no need to parse it back from the string). */
 			const timestamp = Utilities.getCurrentFormattedTime(true);
 			if (movieItemVO) {
 				const result = await this.database.collection(DATABASE_HISTORY).add({
@@ -856,12 +856,12 @@ export class CloudbaseService extends DatabaseService {
 					status: status,
 					message: this.buildHistoryMessage(status, timestamp, movieItemVO)
 				});
-				// CloudBase returns a non-empty result.code when the operation failed
-				// (e.g. permission denied, document not found).
+				/* CloudBase returns a non-empty result.code when the operation failed
+				   (e.g. permission denied, document not found). */
 				if (result.code) throw new Error(result.message);
-				// lastAdded / lastDeleted are updated together with genre/totalNumber
-				// in the calling function (single statisticsRef.update call) to avoid
-				// triggering the CloudBase watcher twice per operation.
+				/* lastAdded / lastDeleted are updated together with genre/totalNumber
+				   in the calling function (single statisticsRef.update call) to avoid
+				   triggering the CloudBase watcher twice per operation. */
 			} else {
 				// No movie VO means this is a search activity — record without movie metadata
 				const result = await this.database.collection(DATABASE_HISTORY).add({
@@ -869,8 +869,8 @@ export class CloudbaseService extends DatabaseService {
 					status: status,
 					message: this.buildHistoryMessage(status, timestamp)
 				});
-				// CloudBase returns a non-empty result.code when the operation failed
-				// (e.g. permission denied, document not found).
+				/* CloudBase returns a non-empty result.code when the operation failed
+				   (e.g. permission denied, document not found). */
 				if (result.code) throw new Error(result.message);
 
 				// Keep statistics in sync: record the most recent rate-search timestamp.
@@ -905,8 +905,8 @@ export class CloudbaseService extends DatabaseService {
 			});
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'New patch notes record has been added');
-			// Sync patchInProgress so the home-page widget reflects the new note
-			// immediately without waiting for the subscription tap to run.
+			/* Sync patchInProgress so the home-page widget reflects the new note
+			   immediately without waiting for the subscription tap to run. */
 			this.syncPatchInProgressStat();
 		} catch (error) {
 			LOG.error(this.className, 'Error while adding new patch notes', error as Error);
@@ -928,8 +928,8 @@ export class CloudbaseService extends DatabaseService {
 				.update({ ...updatedRecord });
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'Patch notes record has been updated');
-			// Sync patchInProgress so status-change edits reflect on the home-page
-			// widget without waiting for the subscription tap.
+			/* Sync patchInProgress so status-change edits reflect on the home-page
+			   widget without waiting for the subscription tap. */
 			this.syncPatchInProgressStat();
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating patch notes record', error as Error);
@@ -1063,9 +1063,9 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateDateCalculatorTable(updatedTable: any): Promise<void> {
 		try {
-			// CloudBase has no batch document update API — rows are updated individually.
-			// _id and _openid are stripped since they are CloudBase metadata.
-			// Promise.all runs all updates in parallel to avoid sequential round-trip latency.
+			/* CloudBase has no batch document update API — rows are updated individually.
+			   _id and _openid are stripped since they are CloudBase metadata.
+			   Promise.all runs all updates in parallel to avoid sequential round-trip latency. */
 			await Promise.all(
 				updatedTable.map(async (data: any) => {
 					const { _id, _openid, ...rest } = data;
@@ -1194,8 +1194,8 @@ export class CloudbaseService extends DatabaseService {
 			});
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, `${tableName} table has been updated`);
-			// Fire-and-forget: record table additions in stats so the
-			// home-page Recent Activity widget can surface them immediately.
+			/* Fire-and-forget: record table additions in stats so the
+			   home-page Recent Activity widget can surface them immediately. */
 			this.appendToActivityLog(statsField, {
 				type: HISTORY_STATUS_ADDED,
 				text: newRecord.text ?? '',
@@ -1236,8 +1236,8 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		try {
-			// Attach _openid whenever a user is authenticated so they can later delete their own quotes.
-			// Falls back to empty object for anonymous users (no delete permission).
+			/* Attach _openid whenever a user is authenticated so they can later delete their own quotes.
+			   Falls back to empty object for anonymous users (no delete permission). */
 			const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
 			const result = await this.database.collection(DATABASE_QUOTES).add({
 				...userId,
@@ -1280,8 +1280,8 @@ export class CloudbaseService extends DatabaseService {
 			} else {
 				await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
 			}
-			// Re-query remaining quotes so that latestQuote always reflects
-			// the most recently added quote still in the collection.
+			/* Re-query remaining quotes so that latestQuote always reflects
+			   the most recently added quote still in the collection. */
 			const remaining = await this.database.collection(DATABASE_QUOTES).limit(1000).get();
 			const quotes: any[] = remaining.data ?? [];
 			quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
@@ -1337,9 +1337,9 @@ export class CloudbaseService extends DatabaseService {
 			const doc = await this.database.collection(DATABASE_STATISTICS).doc(this.statId).get();
 			const raw = doc.data?.[0]?.[fieldName];
 			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
-			// Dedup: remove any entries that share both type and timestamp with the new
-			// activity before prepending. Guards against the read-write race that can
-			// produce duplicate entries when two operations fire in the same second.
+			/* Dedup: remove any entries that share both type and timestamp with the new
+			   activity before prepending. Guards against the read-write race that can
+			   produce duplicate entries when two operations fire in the same second. */
 			const deduped = existing.filter(
 				(e) => !(e.type === activity.type && e.timestamp === activity.timestamp)
 			);
@@ -1549,10 +1549,10 @@ export class CloudbaseService extends DatabaseService {
 	public async proxyFetch(url: string): Promise<{ content: string; contentType: string }> {
 		// Step 1: Try own Express server endpoint (production SSR server only)
 
-		// The endpoint only exists when the compiled Express server is running.
-		// In `ng serve` dev mode Angular intercepts all requests and returns HTML,
-		// so we guard on Content-Type before attempting to parse JSON — this keeps
-		// the dev experience clean with no spurious warnings.
+		/* The endpoint only exists when the compiled Express server is running.
+		   In `ng serve` dev mode Angular intercepts all requests and returns HTML,
+		   so we guard on Content-Type before attempting to parse JSON — this keeps
+		   the dev experience clean with no spurious warnings. */
 		try {
 			const res = await fetch(`/api/fetch-url?url=${encodeURIComponent(url)}`);
 			if (res.ok && (res.headers.get('content-type') ?? '').includes('application/json')) {
@@ -1568,8 +1568,8 @@ export class CloudbaseService extends DatabaseService {
 				// Endpoint exists but reported an error — log and fall through to CloudBase.
 				LOG.warn(this.className, `/api/fetch-url error for ${url}: ${json.error}`);
 			}
-			// Non-JSON response means the Express server is not running (ng serve).
-			// Fall through silently to CloudBase.
+			/* Non-JSON response means the Express server is not running (ng serve).
+			   Fall through silently to CloudBase. */
 		} catch {
 			// Network error reaching /api/fetch-url — fall through silently.
 		}

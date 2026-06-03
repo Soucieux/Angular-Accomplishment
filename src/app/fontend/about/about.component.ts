@@ -118,8 +118,8 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 						if (entry.isIntersecting && !this.visibleEntries.has(index)) {
 							this.visibleEntries.add(index);
 							if (index + 1 > this.maxSeen) this.maxSeen = index + 1;
-							// IntersectionObserver callbacks fire outside Angular's zone;
-							// detectChanges() is required to update the template immediately.
+							/* IntersectionObserver callbacks fire outside Angular's zone;
+							   detectChanges() is required to update the template immediately. */
 							this.cdr.detectChanges();
 						}
 					});
@@ -136,8 +136,8 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 					if (index + 1 > this.maxSeen) this.maxSeen = index + 1;
 				}
 			});
-			// setTimeout callback fires outside Angular's zone; detectChanges() is
-			// required to reflect the final fallback visibility state in the template.
+			/* setTimeout callback fires outside Angular's zone; detectChanges() is
+			   required to reflect the final fallback visibility state in the template. */
 			this.cdr.detectChanges();
 		}, 0);
 	}

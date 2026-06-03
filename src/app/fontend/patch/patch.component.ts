@@ -212,9 +212,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 						const prevLength = this.previousDataLength;
 						this.previousDataLength = data.length;
 
-						// 1. Determine the "Source of Truth" for the page index
-						// On first load (prevLength === null): if navigated via "Log Bug",
-						// jump straight to the last page using the same formula as new-entry logic.
+						/* 1. Determine the "Source of Truth" for the page index
+						   On first load (prevLength === null): if navigated via "Log Bug",
+						   jump straight to the last page using the same formula as new-entry logic. */
 						if (prevLength === null && history.state?.goToLastPage) {
 							history.replaceState({}, '');
 							this._savedFirst = Math.max(
@@ -235,9 +235,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 							this._savedFirst = Math.max(0, this._savedFirst - this.itemsPerPage);
 						}
 
-						// 2. Arm the "Firewall"
-						// This tells onTableFilter that the next page-reset is data-driven
-						// and should be ignored/overridden.
+						/* 2. Arm the "Firewall"
+						   This tells onTableFilter that the next page-reset is data-driven
+						   and should be ignored/overridden. */
 						this._isDataUpdate = true;
 
 						// 3. Keep a local ordered copy for look-ups in edit/delete stats writes.
@@ -387,8 +387,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.databaseService
 			.addNewRecordToPatchNotes(snapshot)
 			.then(() => {
-				// Fire-and-forget: write the Recent Activity stat with the correct
-				// 1-based index (patchNotesList doesn't include the new note yet).
+				/* Fire-and-forget: write the Recent Activity stat with the correct
+				   1-based index (patchNotesList doesn't include the new note yet). */
 				this.databaseService
 					.appendToPatchActivityLog({
 						type: !!snapshot.isBug ? ACTIVITY_TYPE_BUG_LOGGED : HISTORY_STATUS_ADDED,
@@ -410,8 +410,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param key - The key of the patch note to remove.
 	 */
 	protected openDeleteConfirmationDialog(key: string) {
-		// Capture note identity before the dialog opens — the list may have changed by
-		// the time the user confirms.
+		/* Capture note identity before the dialog opens — the list may have changed by
+		   the time the user confirms. */
 		const noteToDelete = this.patchNotesList.find((note) => note.key === key);
 		const noteIndex = this.patchNotesList.findIndex((note) => note.key === key) + 1;
 

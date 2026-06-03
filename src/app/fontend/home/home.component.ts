@@ -42,10 +42,7 @@ import {
 	STATS_FIELD_RECENT_REMINDER,
 	STATS_FIELD_RECENT_RESONANCE,
 	STATS_FIELD_REMINDER_UPCOMING,
-	HOME_LINKS_TILE_0,
-	HOME_LINKS_TILE_1,
-	HOME_LINKS_TILE_2,
-	HOME_LINKS_TILE_3,
+	HOME_LINKS_TILE_COLORS,
 	HOME_LINKS_DOT_FALLBACK,
 	DAY_NAMES_LONG,
 	DAY_NAMES_SHORT,
@@ -210,10 +207,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 							this.stats = data;
 							this.loading = false;
 							this.cdr.detectChanges();
-							// One-time cleanup per dashboard session: trim each activity-log array
-							// to only the items that would appear in the combined top-24 feed.
-							// This removes stale entries that accumulated before the per-array cap
-							// was enforced by appendToActivityLog.
+							/* One-time cleanup per dashboard session: trim each activity-log array
+							   to only the items that would appear in the combined top-24 feed.
+							   This removes stale entries that accumulated before the per-array cap
+							   was enforced by appendToActivityLog. */
 							if (!activityLogsCleaned) {
 								activityLogsCleaned = true;
 								this.trimActivityLogs(data);
@@ -340,8 +337,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			(((daysSinceSun * 86400 + secondsToday) / (7 * 86400)) * 100).toFixed(1)
 		);
 
-		// Month progress — 1st 00:00 = 0 %, last-day 23:59:59 ≈ 100 %
-		// Only recompute daysInMonth when the month changes, not every second.
+		/* Month progress — 1st 00:00 = 0 %, last-day 23:59:59 ≈ 100 %
+		   Only recompute daysInMonth when the month changes, not every second. */
 		const currentMonth = now.getMonth();
 		if (currentMonth !== this.lastMonth) {
 			this.lastMonth = currentMonth;
@@ -828,7 +825,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The CSS colour string for that tile.
 	 */
 	protected getTileColor(index: number): string {
-		return [HOME_LINKS_TILE_0, HOME_LINKS_TILE_1, HOME_LINKS_TILE_2, HOME_LINKS_TILE_3][index % 4];
+		return HOME_LINKS_TILE_COLORS[index % HOME_LINKS_TILE_COLORS.length];
 	}
 
 	/**

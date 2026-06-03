@@ -37,10 +37,9 @@ import {
 	DEBT_TYPE_TEMP,
 	DEBT_TYPE_PERMANENT,
 	DEBT_ITEM_EXPENSE,
-	DEBT_STATS_UPCOMING,
 	DEBT_TABLE_ACCOUNT_EXPENSES,
-	DEBT_VALUE_KEY_CAT,
-	DEBT_VALUE_KEY_CUR,
+	DEBT_VALUE_KEY_CATEGORY,
+	DEBT_VALUE_KEY_CURRENCY,
 	DEBT_VALUE_KEY_DATE,
 	DEBT_VALUE_KEY_DEBT,
 	DEBT_VALUE_KEY_ORIGINAL,
@@ -50,6 +49,7 @@ import {
 	ERROR_PERMISSION_DENIED,
 	MONTH_NAMES_SHORT,
 	STATS_FIELD_RECENT_DEBT,
+	STATS_FIELD_REMINDER_UPCOMING,
 	DEBT_CATEGORY_LABEL_CARD,
 	DEBT_CATEGORY_LABEL_PERSON,
 	DEBT_CATEGORY_LABEL_SHOPPING,
@@ -194,10 +194,10 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = this.utilities.checkIfHoverCapable();
 			this.debtSonataSub = this.databaseService.getDebtSonataTableDetails().subscribe((rows) => {
-				// CloudBase WebSocket callbacks run outside Angular's NgZone.
-				// ngZone.run() schedules this as a new zone task so it never collides with
-				// an in-progress CD cycle (e.g. from dialog close), ensuring detectChanges()
-				// always runs on an idle change detector.
+				/* CloudBase WebSocket callbacks run outside Angular's NgZone.
+				   ngZone.run() schedules this as a new zone task so it never collides with
+				   an in-progress CD cycle (e.g. from dialog close), ensuring detectChanges()
+				   always runs on an idle change detector. */
 				this.ngZone.run(() => {
 					this.originalDebtSonataItems = structuredClone(rows);
 					const currentByKey = new Map(this.updatedDebtSonataItems.map((item) => [item.key, item]));
@@ -256,13 +256,13 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const currentDebt: number = item.debt ?? 0;
 		const newDebt = Math.round((currentDebt - amount) * 100) / 100;
 		const isPaidOff = this.isDebtFullySettled(newDebt);
-		// Apply mutations synchronously before any DB write — immune to subscription replacements.
-		// pendingWriteKeys shields this entry from subscription overwrites until the write settles.
+		/* Apply mutations synchronously before any DB write — immune to subscription replacements.
+		   pendingWriteKeys shields this entry from subscription overwrites until the write settles. */
 		this.pendingWriteKeys.add(entryKey);
 		item.debt = newDebt;
 		if (isPaidOff) item.paid = true;
-		// Write debt before paid so a subscription callback between the two writes shows
-		// 100% progress (debt=0, paid=false) rather than a transient 0% state (paid=true, debt=old)
+		/* Write debt before paid so a subscription callback between the two writes shows
+		   100% progress (debt=0, paid=false) rather than a transient 0% state (paid=true, debt=old) */
 		try {
 			await this.databaseService.updateDebtTable(entryKey, DEBT_VALUE_KEY_DEBT, newDebt);
 			if (isPaidOff) {
@@ -411,8 +411,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 				[DEBT_VALUE_KEY_DATE]: debtData.dueDate,
 				[DEBT_VALUE_KEY_PAID]: this.isDebtFullySettled(debtData.amount),
 				[DEBT_VALUE_KEY_TYPE]: debtData.isPermanent ? DEBT_TYPE_PERMANENT : DEBT_TYPE_TEMP,
-				[DEBT_VALUE_KEY_CAT]: debtData.category,
-				[DEBT_VALUE_KEY_CUR]: debtData.currency
+				[DEBT_VALUE_KEY_CATEGORY]: debtData.category,
+				[DEBT_VALUE_KEY_CURRENCY]: debtData.currency
 			});
 			this.triggerSaveIndicator();
 		} catch (error) {
@@ -562,7 +562,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.syncStatTimer = setTimeout(() => {
 			this.syncStatTimer = null;
 			this.databaseService.updateStatisticsFields({
-				[DEBT_STATS_UPCOMING]: [...this.upcomingExpenses]
+				[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses]
 			});
 		}, 0);
 	}
@@ -738,8 +738,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The CategoryDef containing icon, label, and gradient.
 	 */
 	protected getCategoryForItem(item: any): CategoryDef {
-		if (item[DEBT_VALUE_KEY_CAT]) {
-			const stored = this.categoryDefs.find((categoryDef) => categoryDef.key === item[DEBT_VALUE_KEY_CAT]);
+		if (item[DEBT_VALUE_KEY_CATEGORY]) {
+			const stored = this.categoryDefs.find((categoryDef) => categoryDef.key === item[DEBT_VALUE_KEY_CATEGORY]);
 			if (stored) return stored;
 		}
 		return this.categoryDefs[this.getCategoryIndexForItem(item)];
@@ -934,12 +934,12 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const original = this.findOriginalItem(entryKey);
 		if (!item || !original) return;
 
-		// Apply all local mutations synchronously before any DB write so the UI
-		// reflects the intended state regardless of subscription timing.
-		// pendingWriteKeys shields this entry from subscription overwrites until the write settles.
+		/* Apply all local mutations synchronously before any DB write so the UI
+		   reflects the intended state regardless of subscription timing.
+		   pendingWriteKeys shields this entry from subscription overwrites until the write settles. */
 		const newPaid = this.isDebtFullySettled(data.amount);
 		this.pendingWriteKeys.add(entryKey);
-		if (data.currency !== original[DEBT_VALUE_KEY_CUR]) item[DEBT_VALUE_KEY_CUR] = data.currency;
+		if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY]) item[DEBT_VALUE_KEY_CURRENCY] = data.currency;
 		item[DEBT_VALUE_KEY_DEBT] = data.amount;
 		item[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
 		item[DEBT_VALUE_KEY_PAID] = newPaid;
@@ -950,7 +950,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		// Build a single update object with only changed fields — one round-trip instead of up to five.
 		const fields: Record<string, unknown> = {};
-		if (data.currency !== original[DEBT_VALUE_KEY_CUR]) fields[DEBT_VALUE_KEY_CUR] = data.currency;
+		if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY]) fields[DEBT_VALUE_KEY_CURRENCY] = data.currency;
 		if (data.amount !== original.debt) fields[DEBT_VALUE_KEY_DEBT] = data.amount;
 		if (data.amount !== original.original) fields[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
 		if (original.paid !== newPaid) fields[DEBT_VALUE_KEY_PAID] = newPaid;
@@ -989,7 +989,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns Whether the item's currency is CNY.
 	 */
 	protected isCnyCurrency(item: any): boolean {
-		const stored = item[DEBT_VALUE_KEY_CUR];
+		const stored = item[DEBT_VALUE_KEY_CURRENCY];
 		if (stored) return stored === DEBT_CURRENCY_CNY;
 		return Utilities.checkIfChinese(item.name ?? '');
 	}

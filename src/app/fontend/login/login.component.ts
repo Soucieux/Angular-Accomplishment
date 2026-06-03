@@ -109,8 +109,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 	 * verification code fields depending on the selected mode.
 	 */
 	protected toggleMode(): void {
-		// Start fade-out animation; after 280ms (matching CSS transition duration),
-		// swap the form mode, reset validators, and trigger fade-in.
+		/* Start fade-out animation; after 280ms (matching CSS transition duration),
+		   swap the form mode, reset validators, and trigger fade-in. */
 		this.animating = LOGIN_ANIM_OUT;
 
 		setTimeout(() => {
@@ -143,8 +143,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 			codeControl?.updateValueAndValidity();
 
 			this.animating = LOGIN_ANIM_IN;
-			// setTimeout callback fires outside Angular's zone; detectChanges() is
-			// required to apply the animator state swap immediately in the template.
+			/* setTimeout callback fires outside Angular's zone; detectChanges() is
+			   required to apply the animator state swap immediately in the template. */
 			this.cdr.detectChanges();
 		}, 280);
 	}
@@ -155,8 +155,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 	 * The code-sent indicator auto-clears after 4 seconds.
 	 */
 	protected async getVerificationCodeEmail(): Promise<void> {
-		// Prevent duplicate requests; codeSent is set optimistically before the API
-		// call so the user sees immediate feedback, then auto-clears after 4 seconds.
+		/* Prevent duplicate requests; codeSent is set optimistically before the API
+		   call so the user sees immediate feedback, then auto-clears after 4 seconds. */
 		if (this.sendingCode) return;
 		this.sendingCode = true;
 		this.codeSent = true;

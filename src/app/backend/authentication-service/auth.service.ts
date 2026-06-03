@@ -87,8 +87,8 @@ export class AuthService {
 	 * before navigating to the home page.
 	 */
 	public googleLogin(): void {
-		// CurrentUser in this.auth is still null after signInWithPopup completes
-		// As the credentials are being returned after that and then firebase starts initializing
+		/* CurrentUser in this.auth is still null after signInWithPopup completes
+		   As the credentials are being returned after that and then firebase starts initializing */
 		signInWithPopup(this.firebaseAuth, new GoogleAuthProvider())
 			.then(() => {
 				const unsub = onAuthStateChanged(this.firebaseAuth, (user) => {
@@ -148,8 +148,8 @@ export class AuthService {
 	 */
 	public async signUp(email: string, password: string, username: string, verificationCode: number): Promise<void> {
 		try {
-			// Two-step flow: first get the verification token from the code,
-			// then call signUp with the token to create the account.
+			/* Two-step flow: first get the verification token from the code,
+			   then call signUp with the token to create the account. */
 			const verificationTokenRes = await this.cloudbaseAuth.verify({
 				verification_id: this.verification?.verification_id,
 				verification_code: verificationCode
@@ -212,8 +212,8 @@ export class AuthService {
 			.then((response: { data: { user: any } }) => {
 				const data = response?.data;
 
-				// Anonymous users have no username in metadata — emit null for them
-				// to distinguish anonymous sign-ins from real logged-in users.
+				/* Anonymous users have no username in metadata — emit null for them
+				   to distinguish anonymous sign-ins from real logged-in users. */
 				if (data?.user?.user_metadata?.username) {
 					this.utilities.setIsUserAlive(true);
 					CloudbaseService.setUseId(data.user.id);

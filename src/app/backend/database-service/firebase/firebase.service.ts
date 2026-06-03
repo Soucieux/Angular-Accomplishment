@@ -68,8 +68,8 @@ export class FirebaseService extends DatabaseService {
 	public async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
 		try {
 			const storageRefer = storageRef(this.storage, `/movies/${movieName}`);
-			// Firebase Storage separates upload from URL generation:
-			// first upload the Blob, then get a downloadable link.
+			/* Firebase Storage separates upload from URL generation:
+			   first upload the Blob, then get a downloadable link. */
 			await uploadBytes(storageRefer, coverImage, {
 				contentType: 'image/jpeg'
 			});
@@ -111,8 +111,8 @@ export class FirebaseService extends DatabaseService {
 					})
 				),
 				map((movies) =>
-					// Sort movies by first release date
-					// Note: By using this method, make sure the first release date has the format of YYYY.MM.DD
+					/* Sort movies by first release date
+					   Note: By using this method, make sure the first release date has the format of YYYY.MM.DD */
 					movies.sort((a, b) =>
 						a.getMovieFirstReleaseDate().localeCompare(b.getMovieFirstReleaseDate())
 					)
@@ -394,8 +394,8 @@ export class FirebaseService extends DatabaseService {
 	): Promise<boolean> {
 		try {
 			const snapshot = await runInInjectionContext(this.environmentInjector, () => get(this.moviesRef));
-			// Firebase Realtime DB does not support server-side .where() queries
-			// like CloudBase, so we must iterate all movies to check for duplicates.
+			/* Firebase Realtime DB does not support server-side .where() queries
+			   like CloudBase, so we must iterate all movies to check for duplicates. */
 			const allMovies = snapshot.val();
 
 			if (!allMovies) throw new Error('Movie list empty');
@@ -425,8 +425,8 @@ export class FirebaseService extends DatabaseService {
 	 */
 	protected async addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void> {
 		try {
-			// Capture timestamp once so the same value is used in the history message
-			// and in the statistics update below.
+			/* Capture timestamp once so the same value is used in the history message
+			   and in the statistics update below. */
 			const timestamp = Utilities.getCurrentFormattedTime(true);
 			if (movieItemVO) {
 				await push(dbRef(this.db, DATABASE_HISTORY), {
@@ -498,8 +498,8 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public addNewRecordToPatchNotes(newRecord: any): Promise<void> {
 		return push(dbRef(this.db, DATABASE_PATCH_NOTES), {
-			// Normalize text casing so patch note entries have consistent formatting
-			// regardless of how the user typed them.
+			/* Normalize text casing so patch note entries have consistent formatting
+			   regardless of how the user typed them. */
 			component: Utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
 			element: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
 			details: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
@@ -558,8 +558,8 @@ export class FirebaseService extends DatabaseService {
 									isBug: boolean;
 								}
 						)
-						// Sort by timestamp ascending — list() returns insertion order,
-						// not timestamp order, so an explicit sort is needed.
+						/* Sort by timestamp ascending — list() returns insertion order,
+						   not timestamp order, so an explicit sort is needed. */
 						.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
 				)
 			)
@@ -612,8 +612,8 @@ export class FirebaseService extends DatabaseService {
 			runInInjectionContext(this.environmentInjector, () => {
 				const unsub = onValue(dbRef(this.db, DATABASE_DATE_CALCULATOR), (snapshot) => {
 					const data = snapshot.val();
-					// Firebase stores the collection as an object keyed by push ID;
-					// Object.values() converts it to an array for PrimeNG table binding.
+					/* Firebase stores the collection as an object keyed by push ID;
+					   Object.values() converts it to an array for PrimeNG table binding. */
 					observer.next(data ? Object.values(data) : []);
 				});
 				return () => unsub();
@@ -628,8 +628,8 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getDebtSonataTableDetails(): Observable<any[]> {
 		return runInInjectionContext(this.environmentInjector, () =>
-			// list() reads once + subscribes to changes; pipe+map transforms
-			// each snapshot into {key, ...fields} for the table component.
+			/* list() reads once + subscribes to changes; pipe+map transforms
+			   each snapshot into {key, ...fields} for the table component. */
 			list(dbRef(this.db, DATABASE_DEBT_SONATA)).pipe(
 				map((snapshots: any[]) =>
 					snapshots.map((snapshot: any) => {
@@ -816,8 +816,8 @@ export class FirebaseService extends DatabaseService {
 	public async removeQuote(key: string, _text: string, author: string): Promise<void> {
 		try {
 			await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
-			// Update statistics: decrement total quote count.
-			// latestQuote is intentionally left as-is; it refreshes on the next submission.
+			/* Update statistics: decrement total quote count.
+			   latestQuote is intentionally left as-is; it refreshes on the next submission. */
 			const deletedTimestamp = Utilities.getCurrentFormattedTime(true);
 			await runTransaction(this.statisticsRef, (currentData) => {
 				currentData = currentData ?? {};

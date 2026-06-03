@@ -41,7 +41,7 @@ import {
 	RECIPE_DROP_BELOW,
 	RECIPE_EDITING_MODE_CREATE,
 	RECIPE_EDITING_MODE_EDIT,
-	RECIPE_ITYPE_VEG,
+	RECIPE_ITYPE_VEGETABLE,
 	RECIPE_MSG_ADDED,
 	RECIPE_MAX_BADGES,
 	RECIPE_MAX_NAME_CHARS,
@@ -130,7 +130,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected editorServings = 1;
 	protected editorCategory = '';
 	protected editorNotes = '';
-	protected selectedEditorType: IngredientType = RECIPE_ITYPE_VEG;
+	protected selectedEditorType: IngredientType = RECIPE_ITYPE_VEGETABLE;
 	protected editorIngredients: EditorIngredient[] = [];
 	protected editorSteps: EditorStep[] = [];
 	protected editorNameInvalid = false;
@@ -193,9 +193,9 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 				error: (error) => LOG.error(this.className, RECIPE_MSG_LOAD_FAILED, error as Error)
 			});
 
-			// If navigated from the home quick-action button, auto-open the add view.
-			// history.state retains the router state passed via Router.navigate({ state: ... }).
-			// Immediately clear the state so a page refresh does not re-trigger the add view.
+			/* If navigated from the home quick-action button, auto-open the add view.
+			   history.state retains the router state passed via Router.navigate({ state: ... }).
+			   Immediately clear the state so a page refresh does not re-trigger the add view. */
 			if ((history.state as { openAddView?: boolean })?.openAddView) {
 				history.replaceState({}, '');
 				setTimeout(() => this.openAddView(), 0);
@@ -323,8 +323,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.ngZone.run(() => {
 			this.currentView = view;
 			this.viewportScroller.scrollToPosition([0, 0]);
-			// Called inside ngZone.run() — detectChanges flushes the view synchronously so the
-			// new view is rendered before the viewport scroll position is applied.
+			/* Called inside ngZone.run() — detectChanges flushes the view synchronously so the
+			   new view is rendered before the viewport scroll position is applied. */
 			this.cdr.detectChanges();
 		});
 	}
@@ -444,7 +444,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			(newIds: Set<IngredientType>) => {
 				this.enabledTypeIds = newIds;
 				if (!this.enabledTypeIds.has(this.selectedEditorType)) {
-					this.selectedEditorType = [...this.enabledTypeIds][0] ?? RECIPE_ITYPE_VEG;
+					this.selectedEditorType = [...this.enabledTypeIds][0] ?? RECIPE_ITYPE_VEGETABLE;
 				}
 				// Dialog callback runs outside Angular's zone — mark for check so the tab list updates.
 				this.cdr.markForCheck();
@@ -509,17 +509,17 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			}))
 		);
 
-		// Sync type tabs to match exactly the types present in this recipe so the
-		// user sees the right tabs without having to open the filter dialog manually.
+		/* Sync type tabs to match exactly the types present in this recipe so the
+		   user sees the right tabs without having to open the filter dialog manually. */
 		const recipeTypes = recipe.groups.map((group) => group.type);
 		if (recipeTypes.length > 0) {
 			this.enabledTypeIds = new Set(recipeTypes);
 		}
 
 		// Default editor type tab to the first group present, or veg if empty
-		this.selectedEditorType = recipe.groups[0]?.type ?? RECIPE_ITYPE_VEG;
+		this.selectedEditorType = recipe.groups[0]?.type ?? RECIPE_ITYPE_VEGETABLE;
 		if (this.editorIngredients.length === 0) {
-			this.editorIngredients = [{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }];
+			this.editorIngredients = [{ type: RECIPE_ITYPE_VEGETABLE, name: '', qty: '', unit: '' }];
 		}
 
 		this.editorSteps = recipe.steps.map((recipeStep) => ({
@@ -616,10 +616,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.editorServings = 1;
 		this.editorCategory = '';
 		this.editorNotes = '';
-		this.selectedEditorType = RECIPE_ITYPE_VEG;
+		this.selectedEditorType = RECIPE_ITYPE_VEGETABLE;
 		this.editorIngredients = [
-			{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' },
-			{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }
+			{ type: RECIPE_ITYPE_VEGETABLE, name: '', qty: '', unit: '' },
+			{ type: RECIPE_ITYPE_VEGETABLE, name: '', qty: '', unit: '' }
 		];
 		this.editorSteps = [
 			{ text: '', subs: [] },

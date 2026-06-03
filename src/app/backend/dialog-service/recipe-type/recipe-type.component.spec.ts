@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RECIPE_EDITOR_TYPE_MAX, RECIPE_ITYPE_MEAT, RECIPE_ITYPE_VEG } from '../../../common/app.constant';
+import { RECIPE_EDITOR_TYPE_MAX, RECIPE_ITYPE_MEAT, RECIPE_ITYPE_VEGETABLE } from '../../../common/app.constant';
 import { IngredientType } from '../../../fontend/recipe/recipe.model';
 import { RecipeTypeDialogComponent } from './recipe-type.component';
 
@@ -31,9 +31,9 @@ describe('RecipeTypeDialogComponent', () => {
 		});
 
 		it('initialises draft from the provided enabledTypeIds', () => {
-			const enabledTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEG, RECIPE_ITYPE_MEAT]);
+			const enabledTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE, RECIPE_ITYPE_MEAT]);
 			component.openDialog(() => {}, { masterTabs: [], enabledTypeIds });
-			expect((component as any).draft.has(RECIPE_ITYPE_VEG)).toBeTrue();
+			expect((component as any).draft.has(RECIPE_ITYPE_VEGETABLE)).toBeTrue();
 			expect((component as any).draft.has(RECIPE_ITYPE_MEAT)).toBeTrue();
 		});
 	});
@@ -42,7 +42,7 @@ describe('RecipeTypeDialogComponent', () => {
 
 	describe('canAddMore', () => {
 		it('returns true when draft size is below the maximum', () => {
-			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEG]);
+			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
 			expect((component as any).canAddMore()).toBeTrue();
 		});
 
@@ -58,21 +58,21 @@ describe('RecipeTypeDialogComponent', () => {
 
 	describe('toggleType', () => {
 		it('adds a type when it is not in the draft', () => {
-			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEG]);
+			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
 			(component as any).toggleType(RECIPE_ITYPE_MEAT);
 			expect((component as any).draft.has(RECIPE_ITYPE_MEAT)).toBeTrue();
 		});
 
 		it('removes a type when it is in the draft and at least one other remains', () => {
-			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEG, RECIPE_ITYPE_MEAT]);
+			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE, RECIPE_ITYPE_MEAT]);
 			(component as any).toggleType(RECIPE_ITYPE_MEAT);
 			expect((component as any).draft.has(RECIPE_ITYPE_MEAT)).toBeFalse();
 		});
 
 		it('does not remove the last remaining type', () => {
-			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEG]);
-			(component as any).toggleType(RECIPE_ITYPE_VEG);
-			expect((component as any).draft.has(RECIPE_ITYPE_VEG)).toBeTrue();
+			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
+			(component as any).toggleType(RECIPE_ITYPE_VEGETABLE);
+			expect((component as any).draft.has(RECIPE_ITYPE_VEGETABLE)).toBeTrue();
 		});
 	});
 
@@ -81,12 +81,12 @@ describe('RecipeTypeDialogComponent', () => {
 	describe('apply', () => {
 		it('calls the apply callback with a copy of the draft', () => {
 			const cb = jasmine.createSpy('applyCallback');
-			const enabledTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEG]);
+			const enabledTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
 			component.openDialog(cb, { masterTabs: [], enabledTypeIds });
 			(component as any).apply();
 			expect(cb).toHaveBeenCalledWith(jasmine.any(Set));
 			const received: Set<IngredientType> = cb.calls.mostRecent().args[0];
-			expect(received.has(RECIPE_ITYPE_VEG)).toBeTrue();
+			expect(received.has(RECIPE_ITYPE_VEGETABLE)).toBeTrue();
 		});
 
 		it('closes the dialog after applying', () => {

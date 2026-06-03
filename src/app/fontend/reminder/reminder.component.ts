@@ -235,8 +235,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.saveIndicator = true;
 		this.cdr.detectChanges();
 
-		// Clear any previous timeout before setting a new one — rapid successive
-		// saves should restart the indicator timer rather than flash on/off.
+		/* Clear any previous timeout before setting a new one — rapid successive
+		   saves should restart the indicator timer rather than flash on/off. */
 		if (this.saveIndicatorTimeouts[DATABASE_REMINDER]) {
 			clearTimeout(this.saveIndicatorTimeouts[DATABASE_REMINDER]);
 		}
@@ -731,8 +731,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (returnCode === FAILURE) return;
 		const savedText = item.text.trim();
 		await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TEXT, savedText);
-		// The DB subscription fires asynchronously — replace the snapshot entry immutably so a
-		// concurrent blur cannot pass the changed-value guard and issue a duplicate write.
+		/* The DB subscription fires asynchronously — replace the snapshot entry immutably so a
+		   concurrent blur cannot pass the changed-value guard and issue a duplicate write. */
 		const updatedSnapshot = structuredClone(this.originalItems[originalIndex]);
 		updatedSnapshot.text = savedText;
 		this.originalItems = [

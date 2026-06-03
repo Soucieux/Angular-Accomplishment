@@ -158,8 +158,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * the add or search dialog when navigated from a home quick-action button.
 	 */
 	async ngOnInit() {
-		// Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
-		// Only logged in user can access the movie list
+		/* Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
+		   Only logged in user can access the movie list */
 		if (isPlatformBrowser(this.platformId)) {
 			const vtaStyle = this.doc.createElement('style');
 			vtaStyle.id = ENT_VTA_STYLE_ID;
@@ -205,9 +205,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 
 			this.updateGridLayout();
 
-			// If navigated from the home quick-action buttons, auto-open the relevant dialog.
-			// history.state retains the router state passed via Router.navigate({ state: ... }).
-			// Immediately clear the state so a page refresh does not re-trigger the dialog.
+			/* If navigated from the home quick-action buttons, auto-open the relevant dialog.
+			   history.state retains the router state passed via Router.navigate({ state: ... }).
+			   Immediately clear the state so a page refresh does not re-trigger the dialog. */
 			const navState = history.state;
 			if (navState?.openAddDialog || navState?.openSearchDialog) {
 				history.replaceState({}, '');
@@ -383,9 +383,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		let movieDataWebpage = null;
 
 		try {
-			// Try the third-party API first; if it returns nothing (rate-limited or down),
-			// fall back to parsing the Douban webpage HTML directly. The webpage parse
-			// is more brittle but works when the API is unavailable.
+			/* Try the third-party API first; if it returns nothing (rate-limited or down),
+			   fall back to parsing the Douban webpage HTML directly. The webpage parse
+			   is more brittle but works when the API is unavailable. */
 			movieData = await firstValueFrom(this.doubanService.searchMovieByThirdPartyApi(movieId));
 			if (!movieData) {
 				movieDataWebpage = await firstValueFrom(this.doubanService.searchMovieByWebpage(movieId));
@@ -568,8 +568,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			// Step 2: If data is received, then loop through the extracted data to get the correct movie ID
 			// as the result is retrieved by regex.
 			for (const movieData of extractedData) {
-				//This means that NEW movie must have title and year
-				// Movie name and year must be exactly the same
+				/* This means that NEW movie must have title and year
+				   Movie name and year must be exactly the same */
 				if (
 					movieData.title === movieItemVO.getMovieName() &&
 					movieData.year == movieItemVO.getMovieYear()
@@ -629,8 +629,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 */
 	private async uploadMovieImageAndGetDownloadableLink(movieItemVO: MovieItemVO) {
 		try {
-			// Upload the cover image Blob to cloud storage, then get the resultant
-			// downloadable URL. These are separate operations in Firebase/CloudBase.
+			/* Upload the cover image Blob to cloud storage, then get the resultant
+			   downloadable URL. These are separate operations in Firebase/CloudBase. */
 			const downloadableLink = await this.databaseService.uploadImageAndGetDownloadLink(
 				movieItemVO.getMovieCoverImage()!,
 				movieItemVO.getMovieName()
@@ -941,8 +941,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param newMovieItemVO - The new movie item to save to the database.
 	 */
 	private async handleAddDialogSubmit(newMovieItemVO: MovieItemVO) {
-		// Upload movie cover image to firebase storage and generate downloadable link
-		// The downloadable link needs to be acquired first and it will be uploaded to firebase in the next step
+		/* Upload movie cover image to firebase storage and generate downloadable link
+		   The downloadable link needs to be acquired first and it will be uploaded to firebase in the next step */
 		await this.uploadMovieImageAndGetDownloadableLink(newMovieItemVO);
 		// Save new movie data to firebase and update movie statistics
 		await this.databaseService.addNewMovieDataAndUpdateStatistics(newMovieItemVO);
@@ -958,8 +958,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @throws MovieAlreadyExistsError if the movie is already in the database.
 	 */
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob | null> {
-		// Check for duplicates BEFORE searching — avoids unnecessary API calls
-		// for movies already in the database.
+		/* Check for duplicates BEFORE searching — avoids unnecessary API calls
+		   for movies already in the database. */
 		if (
 			await this.databaseService.isMovieAlreadyAdded(
 				newMovieItemVO.getMovieName(),
@@ -1010,8 +1010,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_HISTORY,
-			// Restore flow: re-search the movie on Douban, then re-add to database.
-			// The inner block dialog keeps the UI locked during the restore.
+			/* Restore flow: re-search the movie on Douban, then re-add to database.
+			   The inner block dialog keeps the UI locked during the restore. */
 			async (movieToRestore: MovieItemVO) => {
 				await this.openBlockDialog(async () => {
 					await this.handleAddDialogSearch(movieToRestore);
@@ -1071,8 +1071,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 */
 	protected async setIsFavourite(movie: MovieItemVO) {
 		try {
-			// Toggle: pass the inverse of the current state. If currently true, set false;
-			// if currently false, set true. The database only stores the final boolean.
+			/* Toggle: pass the inverse of the current state. If currently true, set false;
+			   if currently false, set true. The database only stores the final boolean. */
 			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);

@@ -63,8 +63,8 @@ export class Utilities {
 		const now = new Date();
 
 		let formattedTime = '';
-		// Leading space separates date from time when time is included;
-		// when isTimeIncluded=false, formattedTime stays empty → no separator needed.
+		/* Leading space separates date from time when time is included;
+		   when isTimeIncluded=false, formattedTime stays empty → no separator needed. */
 		if (isTimeIncluded) {
 			formattedTime = ` ${now.getHours().toString().padStart(2, '0')}:${now
 				.getMinutes()
@@ -97,8 +97,8 @@ export class Utilities {
 			// ISO 8601 format — let the Date constructor parse it directly.
 			date = new Date(timestamp);
 		} else {
-			// App format: "YYYY.MM.DD HH:mm:ss" — parse manually to avoid timezone
-			// ambiguity that Date.parse would introduce when given a non-standard string.
+			/* App format: "YYYY.MM.DD HH:mm:ss" — parse manually to avoid timezone
+			   ambiguity that Date.parse would introduce when given a non-standard string. */
 			const [datePart, timePart] = timestamp.split(' ');
 			const [year, month, day] = datePart.split('.');
 			const [hours, minutes, seconds] = (timePart || '00:00:00').split(':');

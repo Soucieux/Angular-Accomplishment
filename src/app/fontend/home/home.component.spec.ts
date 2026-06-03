@@ -4,10 +4,7 @@ import {
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
-	HOME_LINKS_TILE_0,
-	HOME_LINKS_TILE_1,
-	HOME_LINKS_TILE_2,
-	HOME_LINKS_TILE_3,
+	HOME_LINKS_TILE_COLORS,
 	STATS_FIELD_REMINDER_UPCOMING
 } from '../../common/app.constant';
 import { HomeComponent } from './home.component';
@@ -34,23 +31,23 @@ describe('HomeComponent', () => {
 
 	describe('tileColor', () => {
 		it('returns the first colour for index 0', () => {
-			expect((component as any).getTileColor(0)).toBe(HOME_LINKS_TILE_0);
+			expect((component as any).getTileColor(0)).toBe(HOME_LINKS_TILE_COLORS[0]);
 		});
 
 		it('returns the second colour for index 1', () => {
-			expect((component as any).getTileColor(1)).toBe(HOME_LINKS_TILE_1);
+			expect((component as any).getTileColor(1)).toBe(HOME_LINKS_TILE_COLORS[1]);
 		});
 
 		it('returns the third colour for index 2', () => {
-			expect((component as any).getTileColor(2)).toBe(HOME_LINKS_TILE_2);
+			expect((component as any).getTileColor(2)).toBe(HOME_LINKS_TILE_COLORS[2]);
 		});
 
 		it('returns the fourth colour for index 3', () => {
-			expect((component as any).getTileColor(3)).toBe(HOME_LINKS_TILE_3);
+			expect((component as any).getTileColor(3)).toBe(HOME_LINKS_TILE_COLORS[3]);
 		});
 
 		it('wraps around after 4 tiles (index 4 → same as index 0)', () => {
-			expect((component as any).getTileColor(4)).toBe(HOME_LINKS_TILE_0);
+			expect((component as any).getTileColor(4)).toBe(HOME_LINKS_TILE_COLORS[0]);
 		});
 	});
 

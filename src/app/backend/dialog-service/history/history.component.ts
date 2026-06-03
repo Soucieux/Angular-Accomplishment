@@ -85,9 +85,9 @@ export class HistoryDialogComponent implements OnDestroy {
 					if (!entry.id || !entry.message) throw new MovieIdNotFoundError('unknown');
 					const movieToRestore = new MovieItemVO();
 					movieToRestore.setMovieId(entry.id);
-					// Reconstruct MovieItemVO from the history message string.
-					// Format: "MovieName - Genre (Rate: X) was status on YYYY.MM.DD HH:mm:ss"
-					// This string-based reconstruction is brittle but avoids storing full movie data in history.
+					/* Reconstruct MovieItemVO from the history message string.
+					   Format: "MovieName - Genre (Rate: X) was status on YYYY.MM.DD HH:mm:ss"
+					   This string-based reconstruction is brittle but avoids storing full movie data in history. */
 					const msg = entry.message;
 					const movieName = msg.split(' - ')[0];
 					const genre = msg.split(' - ')[1]?.split(' ')[0]?.trim() ?? '';

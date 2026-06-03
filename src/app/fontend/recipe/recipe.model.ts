@@ -15,24 +15,24 @@ import {
 	RECIPE_ITYPE_FUNGI,
 	RECIPE_ITYPE_GRAIN,
 	RECIPE_ITYPE_HERB,
-	RECIPE_ITYPE_LIQ,
+	RECIPE_ITYPE_LIQUID,
 	RECIPE_ITYPE_MEAT,
 	RECIPE_ITYPE_NUT,
 	RECIPE_ITYPE_OIL,
 	RECIPE_ITYPE_SEAFOOD,
-	RECIPE_ITYPE_SEAS,
+	RECIPE_ITYPE_SEASONING,
 	RECIPE_ITYPE_SPICE,
 	RECIPE_ITYPE_SWEET,
-	RECIPE_ITYPE_VEG
+	RECIPE_ITYPE_VEGETABLE
 } from '../../common/app.constant';
 
 export type IngredientType =
-	| typeof RECIPE_ITYPE_VEG
+	| typeof RECIPE_ITYPE_VEGETABLE
 	| typeof RECIPE_ITYPE_MEAT
-	| typeof RECIPE_ITYPE_SEAS
+	| typeof RECIPE_ITYPE_SEASONING
 	| typeof RECIPE_ITYPE_DAIRY
 	| typeof RECIPE_ITYPE_GRAIN
-	| typeof RECIPE_ITYPE_LIQ
+	| typeof RECIPE_ITYPE_LIQUID
 	| typeof RECIPE_ITYPE_SPICE
 	| typeof RECIPE_ITYPE_SEAFOOD
 	| typeof RECIPE_ITYPE_EGG
@@ -65,12 +65,12 @@ export interface IngredientGroup {
 }
 
 export const MASTER_TYPE_TABS: TypeTab[] = [
-	{ id: RECIPE_ITYPE_VEG,       emoji: '🥬',  label: 'Vegetables' },
+	{ id: RECIPE_ITYPE_VEGETABLE,       emoji: '🥬',  label: 'Vegetables' },
 	{ id: RECIPE_ITYPE_MEAT,      emoji: '🥩',  label: 'Meat'       },
-	{ id: RECIPE_ITYPE_SEAS,      emoji: '🧂',  label: 'Seasoning'  },
+	{ id: RECIPE_ITYPE_SEASONING,      emoji: '🧂',  label: 'Seasoning'  },
 	{ id: RECIPE_ITYPE_DAIRY,     emoji: '🧈',  label: 'Dairy'      },
 	{ id: RECIPE_ITYPE_GRAIN,     emoji: '🌾',  label: 'Grain'      },
-	{ id: RECIPE_ITYPE_LIQ,       emoji: '💧',  label: 'Liquid'     },
+	{ id: RECIPE_ITYPE_LIQUID,       emoji: '💧',  label: 'Liquid'     },
 	{ id: RECIPE_ITYPE_SPICE,     emoji: '🌶️', label: 'Spice'      },
 	{ id: RECIPE_ITYPE_SEAFOOD,   emoji: '🦐',  label: 'Seafood'    },
 	{ id: RECIPE_ITYPE_EGG,       emoji: '🥚',  label: 'Eggs'       },
@@ -168,12 +168,12 @@ export const RECIPE_EDITOR_CATEGORIES: string[] = [
 
 /** The 7 ingredient types active in the editor by default when creating a new recipe. */
 export const RECIPE_EDITOR_DEFAULT_TYPES: IngredientType[] = [
-	RECIPE_ITYPE_VEG,
+	RECIPE_ITYPE_VEGETABLE,
 	RECIPE_ITYPE_MEAT,
-	RECIPE_ITYPE_SEAS,
+	RECIPE_ITYPE_SEASONING,
 	RECIPE_ITYPE_DAIRY,
 	RECIPE_ITYPE_GRAIN,
-	RECIPE_ITYPE_LIQ,
+	RECIPE_ITYPE_LIQUID,
 	RECIPE_ITYPE_SPICE,
 ];
 

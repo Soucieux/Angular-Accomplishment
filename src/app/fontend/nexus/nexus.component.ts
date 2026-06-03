@@ -146,8 +146,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		protected utilities: Utilities,
-		// ChangeDetectorRef is required: this component uses OnPush strategy with external
-		// subscriptions that Angular's zone cannot detect automatically.
+		/* ChangeDetectorRef is required: this component uses OnPush strategy with external
+		   subscriptions that Angular's zone cannot detect automatically. */
 		private readonly cdr: ChangeDetectorRef,
 		private readonly dialogService: DialogService,
 		private readonly databaseService: DatabaseService
@@ -202,9 +202,9 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					LOG.error(this.className, NEXUS_MSG_LOAD_CATEGORIES_FAILED, error as Error);
 				}
 			});
-			// Subscribe directly to the auth-alive stream so the links column
-			// switches between the real content and the access-denied card
-			// immediately on login/logout — without waiting for a zone event.
+			/* Subscribe directly to the auth-alive stream so the links column
+			   switches between the real content and the access-denied card
+			   immediately on login/logout — without waiting for a zone event. */
 			this.userAliveSub = this.utilities.getIsUserAlive$().subscribe(() => {
 				// markForCheck required: auth stream fires outside Angular's zone.
 				this.cdr.markForCheck();
@@ -301,9 +301,9 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					!this.isNextMonth &&
 					this.updatedDateCalculatorRows[index][field].value < this.currentDay
 				) {
-					// Fields are no longer being set as charged so that its color is only changed on user input
-					// this.updatedDateCalculatorRows[index][field].isCharged = true;
-					// Track in chargedCells so the greyed-out style applies without writing isCharged to DB
+					/* Fields are no longer being set as charged so that its color is only changed on user input
+					   this.updatedDateCalculatorRows[index][field].isCharged = true;
+					   Track in chargedCells so the greyed-out style applies without writing isCharged to DB */
 					this.chargedCells.add(`${index}-${field}`);
 				}
 			}
@@ -362,8 +362,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		if (rowIndex !== 0) {
 			const previousValue = this.updatedDateCalculatorRows[rowIndex - 1][field].value;
 
-			// Rows alternate between 2-day and 6-day gaps: rows 1&3 require a 2-day gap
-			// from their predecessor; rows 2&4 require a 6-day gap (matches the payment cycle)
+			/* Rows alternate between 2-day and 6-day gaps: rows 1&3 require a 2-day gap
+			   from their predecessor; rows 2&4 require a 6-day gap (matches the payment cycle) */
 			let requiredDiff: number | null = null;
 			if (rowIndex === 1 || rowIndex === 3) {
 				requiredDiff = 2;
@@ -398,8 +398,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			}
 		}
 
-		// Re-evaluate grey background for every cell in this column —
-		// cascading may have shifted values above or below currentDay.
+		/* Re-evaluate grey background for every cell in this column —
+		   cascading may have shifted values above or below currentDay. */
 		for (let i = 0; i < this.updatedDateCalculatorRows.length; i++) {
 			const key = `${i}-${field}`;
 			if (!this.isNextMonth && this.updatedDateCalculatorRows[i][field].value < this.currentDay) {
@@ -540,8 +540,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	private async updateDateCalculatorSingleValue(): Promise<void> {
 		try {
-			// Row 6 (index 5) is the metadata row storing only isNextMonth — appended so the
-			// database update covers all rows including the flag in one call
+			/* Row 6 (index 5) is the metadata row storing only isNextMonth — appended so the
+			   database update covers all rows including the flag in one call */
 			const payload = [
 				...this.updatedDateCalculatorRows,
 				{
@@ -580,8 +580,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		// markForCheck must be called immediately before the setTimeout delay begins.
 		this.cdr.markForCheck();
 
-		// Clear any previous timeout before setting a new one — rapid successive
-		// saves should restart the indicator timer rather than flash on/off.
+		/* Clear any previous timeout before setting a new one — rapid successive
+		   saves should restart the indicator timer rather than flash on/off. */
 		if (this.saveIndicatorTimeouts[tableName]) {
 			clearTimeout(this.saveIndicatorTimeouts[tableName]);
 		}

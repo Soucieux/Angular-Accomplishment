@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
-import { RECIPE_CATEGORY_ALL, RECIPE_ITYPE_VEG, RECIPE_ITYPE_MEAT, RECIPE_UNIT_OPTIONS } from '../../common/app.constant';
+import { RECIPE_CATEGORY_ALL, RECIPE_ITYPE_VEGETABLE, RECIPE_ITYPE_MEAT, RECIPE_UNIT_OPTIONS } from '../../common/app.constant';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { IngredientType } from './recipe.model';
 import { RecipeComponent } from './recipe.component';
@@ -134,10 +134,10 @@ describe('RecipeComponent', () => {
 	describe('addEditorIngredient', () => {
 		it('appends a new blank ingredient of the active type', () => {
 			(component as any).editorIngredients = [];
-			(component as any).selectedEditorType = RECIPE_ITYPE_VEG as IngredientType;
+			(component as any).selectedEditorType = RECIPE_ITYPE_VEGETABLE as IngredientType;
 			(component as any).addEditorIngredient();
 			expect((component as any).editorIngredients.length).toBe(1);
-			expect((component as any).editorIngredients[0].type).toBe(RECIPE_ITYPE_VEG);
+			expect((component as any).editorIngredients[0].type).toBe(RECIPE_ITYPE_VEGETABLE);
 		});
 	});
 
@@ -154,8 +154,8 @@ describe('RecipeComponent', () => {
 	describe('editorIngredientCount', () => {
 		it('counts only ingredients with a non-empty name', () => {
 			(component as any).editorIngredients = [
-				{ type: RECIPE_ITYPE_VEG, name: 'Carrot', qty: '', unit: '' },
-				{ type: RECIPE_ITYPE_VEG, name: '', qty: '', unit: '' }
+				{ type: RECIPE_ITYPE_VEGETABLE, name: 'Carrot', qty: '', unit: '' },
+				{ type: RECIPE_ITYPE_VEGETABLE, name: '', qty: '', unit: '' }
 			];
 			expect((component as any).editorIngredientCount).toBe(1);
 		});
@@ -292,8 +292,8 @@ describe('RecipeComponent', () => {
 		});
 
 		it('updates to veg type', () => {
-			(component as any).selectEditorType(RECIPE_ITYPE_VEG as IngredientType);
-			expect((component as any).selectedEditorType).toBe(RECIPE_ITYPE_VEG);
+			(component as any).selectEditorType(RECIPE_ITYPE_VEGETABLE as IngredientType);
+			expect((component as any).selectedEditorType).toBe(RECIPE_ITYPE_VEGETABLE);
 		});
 	});
 });

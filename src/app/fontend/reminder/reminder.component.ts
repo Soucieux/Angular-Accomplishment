@@ -20,7 +20,7 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { PopoverModule } from 'primeng/popover';
 import { Popover } from 'primeng/popover';
 import { SkeletonModule } from 'primeng/skeleton';
-import { DatePickerModule } from 'primeng/datepicker';
+import { DatePickerModule, DatePicker } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subscription, firstValueFrom, timer } from 'rxjs';
 import { Utilities } from '../../common/app.utilities';
@@ -103,9 +103,11 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly className = 'ReminderComponent';
 
-	@ViewChild('pinboardBody') private pinboardBody!: ElementRef<HTMLElement>;
+	@ViewChild('reminderPanel') private reminderPanel!: ElementRef<HTMLElement>;
 	@ViewChild('cardGrid') private cardGrid!: ElementRef<HTMLElement>;
 	@ViewChild('dateOrLinkPopover') private dateOrLinkPopover!: Popover;
+	@ViewChild('editingDatepicker') private editingDatepicker?: DatePicker;
+	@ViewChild('newItemDatepicker') private newItemDatepicker?: DatePicker;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
@@ -140,6 +142,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected items: ReminderItem[] = [];
 	protected page = 0;
 	protected editingItem: ReminderItem | null = null;
+	protected editingDateModel: Date | null = null;
 	protected isDate = false;
 	protected editingLink = '';
 	protected newItem: NewItem = { text: '', date: null, link: '', tag: REMINDER_CATEGORY_PERSONAL };
@@ -196,7 +199,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			this.ngZone.runOutsideAngular(() => Utilities.attachScrollAutoHide(this.cardGrid?.nativeElement));
+			this.ngZone.runOutsideAngular(() => Utilities.attachScrollAutoHide(this.reminderPanel?.nativeElement));
 		}
 	}
 
@@ -230,6 +233,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	private triggerSaveIndicator(): void {
 		this.saveIndicator = true;
+		this.cdr.detectChanges();
 
 		// Clear any previous timeout before setting a new one — rapid successive
 		// saves should restart the indicator timer rather than flash on/off.
@@ -239,6 +243,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		this.saveIndicatorTimeouts[DATABASE_REMINDER] = setTimeout(() => {
 			this.saveIndicator = false;
+			// setTimeout runs outside Angular's zone — detectChanges required to hide the indicator.
+			this.cdr.detectChanges();
 		}, 1000);
 	}
 
@@ -576,6 +582,10 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Hides the shared date-or-link popover.
 	 */
 	protected closePopover(): void {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		(this.editingDatepicker as any)?.hideOverlay();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		(this.newItemDatepicker as any)?.hideOverlay();
 		this.dateOrLinkPopover.hide();
 	}
 
@@ -588,9 +598,11 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected async openDatePopover(event: Event, item?: ReminderItem): Promise<void> {
 		this.editingItem = item ?? null;
+		// Compute once here — a stable reference avoids the datepicker re-rendering on every CD cycle.
+		this.editingDateModel = item?.date ? new Date(item.date + 'T00:00') : null;
 		this.isDate = true;
 		this.dateOrLinkPopover.hide();
-		await firstValueFrom(timer(140));
+		await firstValueFrom(timer(50));
 		this.dateOrLinkPopover.show(event);
 	}
 
@@ -606,7 +618,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.editingLink = item?.link ?? '';
 		this.isDate = false;
 		this.dateOrLinkPopover.hide();
-		await firstValueFrom(timer(140));
+		await firstValueFrom(timer(50));
 		this.dateOrLinkPopover.show(event);
 	}
 
@@ -745,27 +757,32 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are card edit popover event handlers ////////////////////////
 
 	/**
-	 * Persists a date change from the popover date-picker to the editing item and CloudBase.
+	 * Handles date selection from the editing-item datepicker. Closes the calendar and popover
+	 * immediately, then persists the selected date to CloudBase in the background so the spinner
+	 * runs without blocking the UI.
 	 *
 	 * @param date - The Date value selected in the picker.
 	 */
-	protected async onPopoverDateUpdate(date: Date | null): Promise<void> {
-		if (this.editingItem) {
-			const returnCode = this.dialogService.ensurePermission(
-				this.dialogComponentContainer,
-				this.getOpenId(this.editingItem.key)
-			)
-				? SUCCESS
-				: FAILURE;
-			if (returnCode === FAILURE) return;
-			this.editingItem.date = date ? Utilities.formatDateForStorage(date) : null;
-			await this.updateTableSingleValue(
-				this.editingItem.key,
-				REMINDER_VALUE_KEY_DATE,
-				this.editingItem.date
-			);
-			this.updateUpcomingToStatistics();
-		}
+	protected async onEditingDateSelected(date: Date): Promise<void> {
+		// Close UI immediately — before any async work so the user is not blocked.
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		(this.editingDatepicker as any)?.hideOverlay();
+		this.dateOrLinkPopover.hide();
+		if (!this.editingItem) return;
+		const returnCode = this.dialogService.ensurePermission(
+			this.dialogComponentContainer,
+			this.getOpenId(this.editingItem.key)
+		)
+			? SUCCESS
+			: FAILURE;
+		if (returnCode === FAILURE) return;
+		this.editingItem.date = date ? Utilities.formatDateForStorage(date) : null;
+		await this.updateTableSingleValue(
+			this.editingItem.key,
+			REMINDER_VALUE_KEY_DATE,
+			this.editingItem.date
+		);
+		this.updateUpcomingToStatistics();
 	}
 
 	/**
@@ -1000,16 +1017,6 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected get newItemLinkLabel(): string {
 		if (!this.newItem.link.trim()) return '';
 		return Utilities.getDomain(Utilities.normalizeWebUrl(this.newItem.link.trim()));
-	}
-
-	/**
-	 * Returns the editing item's date as a Date object for binding to the date picker.
-	 * Derived from editingItem.date — never stored as a separate field.
-	 *
-	 * @returns A Date instance, or null when the editing item has no date.
-	 */
-	protected get editingDateModel(): Date | null {
-		return this.editingItem?.date ? new Date(this.editingItem.date) : null;
 	}
 
 	////////////////////// Below are display helper methods used by the card template /////////

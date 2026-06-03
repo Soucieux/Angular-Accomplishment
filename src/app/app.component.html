@@ -5,7 +5,13 @@
 				<span class="nav-title hide-on-mobile">Menu</span>
 			</li>
 			<li class="nav-item">
-				<a mat-button class="nav-button" matRipple routerLink="" routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact: true}">
+				<a
+					mat-button
+					class="nav-button"
+					matRipple
+					routerLink=""
+					routerLinkActive="nav-active"
+					[routerLinkActiveOptions]="{ exact: true }">
 					<span class="material-symbols-outlined nav-icon">home_app_logo</span>
 					<span class="nav-label hide-on-mobile">Home</span>
 				</a>
@@ -17,7 +23,12 @@
 				</a>
 			</li>
 			<li class="nav-item">
-				<a mat-button class="nav-button" matRipple routerLink="/resonance" routerLinkActive="nav-active">
+				<a
+					mat-button
+					class="nav-button"
+					matRipple
+					routerLink="/resonance"
+					routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">format_quote</span>
 					<span class="nav-label hide-on-mobile">Resonance</span>
 				</a>
@@ -29,13 +40,23 @@
 				</a>
 			</li>
 			<li class="nav-item">
-				<a mat-button class="nav-button" matRipple routerLink="/entertainment" routerLinkActive="nav-active">
+				<a
+					mat-button
+					class="nav-button"
+					matRipple
+					routerLink="/entertainment"
+					routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">live_tv</span>
 					<span class="nav-label hide-on-mobile">Entertainment</span>
 				</a>
 			</li>
 			<li class="nav-item">
-				<a mat-button class="nav-button" matRipple routerLink="/reminder" routerLinkActive="nav-active">
+				<a
+					mat-button
+					class="nav-button"
+					matRipple
+					routerLink="/reminder"
+					routerLinkActive="nav-active">
 					<span class="material-symbols-outlined nav-icon">alarm</span>
 					<span class="nav-label hide-on-mobile">Reminder</span>
 				</a>
@@ -59,27 +80,62 @@
 				</a>
 			</li>
 			@if (currentUser$ | async; as user) {
-				<li class="signout-button-container">
-					<p-button
-						(click)="logout()"
-						icon="pi pi-user"
-						[rounded]="true"
-						class="signin-signout-button signout-button" />
-					<p class="hide-on-mobile username">
-						@if (isCN()) {
-							{{ user.user_metadata.username }}
-						} @else {
-							{{ user.displayName ? user.displayName : '' }}
+				<li class="account-menu-container">
+					<div class="account-row-wrapper">
+						@if (accountMenuOpen) {
+							<div class="account-menu-popover hide-on-mobile">
+								<div class="account-menu-popover-header">
+									<span class="account-menu-popover-avatar">{{
+										getUserInitial(user)
+									}}</span>
+									<div class="account-menu-popover-name">
+										{{ getUserDisplayName(user) }}
+									</div>
+								</div>
+								<button
+									class="account-menu-popover-item account-menu-popover-item--danger"
+									(click)="logout()">
+									<span class="material-symbols-outlined">logout</span>Sign out
+								</button>
+							</div>
 						}
-					</p>
+						<button
+							class="account-row-button"
+							[class.account-row-button--open]="accountMenuOpen"
+							(click)="handleAccountButtonClick()">
+							<span class="account-row-avatar-wrapper hide-on-mobile">
+								<span class="account-row-avatar">{{ getUserInitial(user) }}</span>
+								<span class="account-row-presence-dot"></span>
+							</span>
+							<span class="material-symbols-outlined account-row-mobile-icon">logout</span>
+							<span class="account-row-meta hide-on-mobile">
+								<span class="account-row-name">{{ getUserDisplayName(user) }}</span>
+								<span class="account-row-status">Online</span>
+							</span>
+							<span class="material-symbols-outlined account-row-chevron hide-on-mobile">{{
+								accountMenuOpen ? 'expand_more' : 'expand_less'
+							}}</span>
+						</button>
+					</div>
 				</li>
 			} @else {
-				<li class="signin-button-container">
-					<p-button
-						(click)="navigateToLogin()"
-						icon="pi pi-user"
-						[rounded]="true"
-						class="signin-signout-button signin-button" />
+				<li class="account-menu-container">
+					<button
+						class="account-row-button account-row-button--signed-out"
+						(click)="navigateToLogin()">
+						<span class="account-row-avatar-wrapper hide-on-mobile">
+							<span class="account-row-avatar account-row-avatar--ghost">
+								<span class="material-symbols-outlined">person</span>
+							</span>
+						</span>
+						<span class="account-row-meta hide-on-mobile">
+							<span class="account-row-name">Sign in</span>
+							<span class="account-row-status">Offline</span>
+						</span>
+						<span class="material-symbols-outlined account-row-login-icon"
+							>login</span
+						>
+					</button>
 				</li>
 			}
 		</ul>
@@ -89,3 +145,4 @@
 		<router-outlet></router-outlet>
 	</mat-drawer-content>
 </mat-drawer-container>
+<ng-container #dialogComponentContainer></ng-container>

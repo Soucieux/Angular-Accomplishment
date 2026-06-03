@@ -18,7 +18,7 @@
 						<h4>Date Calculator</h4>
 						@if (saveIndicators[DATABASE_DATE_CALCULATOR]) {
 							<div class="save-indicator">
-								<i class="pi pi-spin pi-spinner save-indicator-icon"></i>
+								<span class="save-indicator-spinner"></span>
 								<span class="save-indicator-text">Saving</span>
 							</div>
 						}
@@ -30,19 +30,19 @@
 								[class.active]="!isNextMonth"
 								[attr.aria-pressed]="!isNextMonth"
 								(click)="setMonth(false)">
-								{{ PINBOARD_LABEL_CURRENT_MONTH }}
+								{{ NEXUS_LABEL_CURRENT_MONTH }}
 							</button>
 							<button
 								class="date-calculator-segment-button"
 								[class.active]="isNextMonth"
 								[attr.aria-pressed]="isNextMonth"
 								(click)="setMonth(true)">
-								{{ PINBOARD_LABEL_NEXT_MONTH }}
+								{{ NEXUS_LABEL_NEXT_MONTH }}
 							</button>
 						</div>
 						<button class="date-calculator-reset-button" (click)="openResetConfirmationDialog()">
 							<span class="pi pi-refresh"></span>
-							{{ PINBOARD_LABEL_RESET }}
+							{{ NEXUS_LABEL_RESET }}
 						</button>
 					</div>
 				</div>
@@ -95,10 +95,10 @@
 											}
 											{{
 												row[field].isCharged
-													? PINBOARD_LABEL_CELL_DONE
+													? NEXUS_LABEL_CELL_DONE
 													: row[field].value === currentDay
-														? PINBOARD_LABEL_CELL_TODAY
-														: PINBOARD_LABEL_CELL_CONFIRM
+														? NEXUS_LABEL_CELL_TODAY
+														: NEXUS_LABEL_CELL_CONFIRM
 											}}
 										</button>
 									</div>
@@ -110,10 +110,10 @@
 				<div class="date-calculator-footer">
 					<div class="date-calculator-footer-left">
 						<span class="date-calculator-footer-dot"></span>
-						{{ confirmedCount }} of {{ totalCount }} {{ PINBOARD_LABEL_CONFIRMED }}
+						{{ confirmedCount }} of {{ totalCount }} {{ NEXUS_LABEL_CONFIRMED }}
 					</div>
 					<span class="date-calculator-footer-right">
-						{{ isNextMonth ? PINBOARD_LABEL_NEXT_MONTH : PINBOARD_LABEL_CURRENT_MONTH }}
+						{{ isNextMonth ? NEXUS_LABEL_NEXT_MONTH : NEXUS_LABEL_CURRENT_MONTH }}
 					</span>
 				</div>
 			</div>

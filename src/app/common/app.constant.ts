@@ -151,6 +151,12 @@ export const DEBT_ITEM_EXPENSE = 'expense';
 export const REMINDER_ITEM_MESSAGE = 'message';
 
 ////////////////////// Below are dialog and error message string constants ////////////
+/** Confirmation message shown when the user attempts to sign out. */
+export const MSG_LOGOUT_CONFIRM = 'Are you sure you want to sign out?';
+/** Header for the sign-out confirmation dialog. */
+export const DIALOG_HEADER_SIGN_OUT = 'Sign Out';
+/** Accept button label for the sign-out confirmation dialog. */
+export const DIALOG_BTN_SIGN_OUT = 'Sign Out';
 /** Shared delete button label used across all confirm-delete dialogs. */
 export const DIALOG_BTN_DELETE = 'Delete';
 /** Shared confirm button label used across all confirm dialogs. */
@@ -444,6 +450,7 @@ export const ENT_TOOLTIP_ADD = 'Add Movie';
 /** Tooltip for the History action button. */
 export const ENT_TOOLTIP_HISTORY = 'History';
 /** Placeholder text for the movie search input. */
+export const ENT_TITLE_PAGE = 'Movies';
 export const ENT_SEARCH_PLACEHOLDER = 'Search movies...';
 /** Suffix label in the count pill (e.g. "77 films"). */
 export const ENT_LABEL_FILMS = 'films';
@@ -498,19 +505,18 @@ export const DEBT_VALUE_KEY_CAT = 'category';
 /** CloudBase content entry key for the original (total) amount in the debt sonata table. */
 export const DEBT_VALUE_KEY_ORIGINAL = 'original';
 
-////////////////////// Below are pinboard page dialog string constants //////////////
-export const PINBOARD_MSG_RESET_CONFIRM = 'Are you sure you want to reset the dates?';
-export const PINBOARD_DIALOG_RESET_BTN = 'Reset';
-export const PINBOARD_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this entry?';
+////////////////////// Below are nexus page dialog string constants //////////////
+export const NEXUS_MSG_RESET_CONFIRM = 'Are you sure you want to reset the dates?';
+export const NEXUS_DIALOG_RESET_BTN = 'Reset';
 
 ////////////////////// Below are date calculator UI label constants ////////////
-export const PINBOARD_LABEL_CURRENT_MONTH = 'Current Month';
-export const PINBOARD_LABEL_NEXT_MONTH = 'Next Month';
-export const PINBOARD_LABEL_RESET = 'Reset';
-export const PINBOARD_LABEL_CELL_CONFIRM = 'Confirm';
-export const PINBOARD_LABEL_CELL_DONE = 'Done';
-export const PINBOARD_LABEL_CELL_TODAY = 'Today';
-export const PINBOARD_LABEL_CONFIRMED = 'confirmed';
+export const NEXUS_LABEL_CURRENT_MONTH = 'Current Month';
+export const NEXUS_LABEL_NEXT_MONTH = 'Next Month';
+export const NEXUS_LABEL_RESET = 'Reset';
+export const NEXUS_LABEL_CELL_CONFIRM = 'Confirm';
+export const NEXUS_LABEL_CELL_DONE = 'Done';
+export const NEXUS_LABEL_CELL_TODAY = 'Today';
+export const NEXUS_LABEL_CONFIRMED = 'confirmed';
 
 ////////////////////// Below are history dialog and style string constants ///////////
 export const HISTORY_MSG_UNDO_CONFIRM = 'Undo this deletion?';

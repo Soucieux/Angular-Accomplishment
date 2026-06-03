@@ -11,7 +11,7 @@
 }
 
 mat-drawer-container {
-	background-image: linear-gradient(90deg, #d53369 0%, #daae51 100%);
+	background: linear-gradient(45deg, #fa61da 0%, #ff8891 50%, #ffcd5a 100%);
 	position: fixed;
 	inset: 0;
 	display: flex;
@@ -24,11 +24,15 @@ mat-drawer-container {
 	flex-direction: column;
 }
 
-/* This is for mid-range screen*/
-@media (max-width: 1100px) {
+/* This is for mobile screen*/
+@media (max-width: 940px) {
 	/* Add height by 20px whenever a new button is added — currently 7 nav buttons (Home, Entertainment, Reminder, Patch Notes, Resonance, Nexus, About) */
 	mat-drawer {
 		width: 37px !important;
+	}
+
+	.full-height-drawer {
+		height: 98.7%;
 	}
 
 	.nav-button {
@@ -43,17 +47,43 @@ mat-drawer-container {
 		margin-left: 7px !important;
 	}
 
-	::ng-deep .signin-signout-button .p-button {
-		height: 25px !important;
-		width: 25px;
-	}
-
 	.nav-button:hover {
 		box-shadow: none !important;
 	}
 
-	.signout-button-container {
-		display: block !important;
+	/* Requirement 2 — remove the left-border active indicator on mobile */
+	.nav-active {
+		box-shadow: none !important;
+	}
+
+	.account-menu-container {
+		padding: 0px !important;
+		height: 40px;
+		margin-bottom: 5px;
+	}
+
+	.account-row-avatar {
+		position: absolute !important;
+		width: 30px !important;
+		height: 30px !important;
+	}
+
+	.account-row-button {
+		justify-content: center;
+		padding: 0;
+	}
+
+	/* Show the plain icon at nav-icon size */
+	.account-row-mobile-icon {
+		display: inline-flex !important;
+		font-size: 22px !important;
+		background: none !important;
+		-webkit-text-fill-color: rgba(100, 116, 139, 0.85) !important;
+	}
+
+	.account-row-button:hover {
+		background-color: rgba(213, 51, 105, 0.12) !important;
+		box-shadow: none !important;
 	}
 }
 
@@ -126,9 +156,9 @@ mat-drawer {
 	text-align: center;
 	border-radius: 10px;
 	width: 250px;
-	height: calc(100% - 10px);
-	top: 5px;
-	left: 5px;
+	height: calc(100dvh - 10px);
+	margin-top: 5px;
+	margin-left: 5px;
 	backdrop-filter: blur(50px);
 	background-color: rgb(243, 227, 243);
 	border: 0.8px solid rgb(255, 255, 255);
@@ -136,7 +166,7 @@ mat-drawer {
 }
 
 mat-drawer-content {
-	padding-left: 15px;
+	padding-left: 12px;
 	padding-right: 5px;
 	padding-top: 5px;
 	padding-bottom: 5px;
@@ -149,58 +179,223 @@ mat-drawer-content {
 	overflow: hidden !important;
 }
 
-::ng-deep .signin-signout-button .p-button:active {
-	box-shadow: 0 1px 1px 1px black;
-}
-
-/* ── Sign Out ── */
-.signout-button-container {
+/* ─────────────────────────────────────────
+   Account menu footer (Variant D)
+───────────────────────────────────────── */
+.account-menu-container {
 	margin-top: auto;
-	padding-bottom: 10px;
-	display: grid;
-	grid-template-columns: 55% 1fr 40px;
-	width: 100%;
-}
-
-.username {
+	padding: 6px 8px 8px;
 	position: relative;
-	left: -25px;
-	top: 8px;
-	font-size: 17px;
-	color: rgba(40, 15, 35, 0.75);
 }
 
-/* ── Sign In ── */
-.signin-button-container {
-	margin-top: auto;
+.account-row-wrapper {
+	position: relative;
+}
+
+.account-row-button {
+	display: flex;
+	align-items: center;
+	gap: 12px;
 	width: 100%;
-	padding-bottom: 10px;
-	text-align: center;
+	padding: 8px 10px;
+	border: none;
+	background: transparent;
+	border-radius: 12px;
+	cursor: pointer;
+	font-family: inherit;
+	text-align: left;
+	transition: background 0.2s;
+	box-sizing: border-box;
 }
 
-/* ── Button styles ── */
-::ng-deep .signin-button .p-button {
-	background: linear-gradient(135deg, #d53369, #daae51) !important;
-	border: none !important;
-	color: white !important;
-	box-shadow: 0 3px 12px rgba(213, 51, 105, 0.3) !important;
-	transition: box-shadow 0.2s !important;
+.account-row-button:hover,
+.account-row-button--open {
+	background: rgba(213, 51, 105, 0.1);
 }
 
-::ng-deep .signin-button .p-button:hover {
-	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.5) !important;
+.account-row-avatar-wrapper {
+	position: relative;
+	width: 38px;
+	height: 38px;
+	flex-shrink: 0;
 }
 
-::ng-deep .signout-button .p-button {
-	background: linear-gradient(135deg, #ef5350, #d53369) !important;
-	border: none !important;
-	color: white !important;
-	box-shadow: 0 3px 12px rgba(213, 51, 105, 0.3) !important;
-	transition: box-shadow 0.2s !important;
+.account-row-avatar {
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #d53369, #daae51);
+	color: #fff;
+	font-weight: 700;
+	font-size: 16px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 3px 10px rgba(213, 51, 105, 0.28);
+	font-family: inherit;
 }
 
-::ng-deep .signout-button .p-button:hover {
-	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.5) !important;
+.account-row-avatar--ghost {
+	background: rgba(213, 51, 105, 0.1);
+	box-shadow: none;
+}
+
+.account-row-avatar--ghost .material-symbols-outlined {
+	font-size: 22px;
+	background: none;
+	-webkit-text-fill-color: rgba(100, 116, 139, 0.75);
+}
+
+.account-row-presence-dot {
+	position: absolute;
+	right: -1px;
+	bottom: -1px;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #22c55e;
+	border: 2.5px solid rgb(243, 227, 243);
+}
+
+.account-row-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+	min-width: 0;
+}
+
+.account-row-name {
+	font-size: 14px;
+	font-weight: 600;
+	color: rgba(26, 26, 26, 0.85);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.account-row-status {
+	font-size: 11.5px;
+	color: rgba(100, 116, 139, 0.85);
+}
+
+.account-row-chevron {
+	font-size: 23px;
+	flex-shrink: 0;
+	background: none;
+	-webkit-text-fill-color: rgba(148, 163, 184, 0.9);
+}
+
+.account-row-login-icon {
+	font-size: 23px;
+	flex-shrink: 0;
+	background: linear-gradient(135deg, #d53369, #daae51);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.account-row-mobile-icon {
+	display: none;
+}
+
+/* ─────────────────────────────────────────
+   Account popover
+───────────────────────────────────────── */
+.account-menu-popover {
+	position: absolute;
+	left: 4px;
+	right: 4px;
+	bottom: calc(100% + 6px);
+	background: #fff;
+	border-radius: 14px;
+	padding: 8px;
+	box-shadow:
+		0 8px 28px rgba(0, 0, 0, 0.14),
+		0 2px 6px rgba(0, 0, 0, 0.06);
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	animation: account-menu-pop-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+	z-index: 100;
+}
+
+@keyframes account-menu-pop-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+.account-menu-popover-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 6px 8px 10px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	margin-bottom: 6px;
+}
+
+.account-menu-popover-avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #d53369, #daae51);
+	color: #fff;
+	font-weight: 700;
+	font-size: 15px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	font-family: inherit;
+}
+
+.account-menu-popover-name {
+	font-size: 14px;
+	font-weight: 600;
+	color: rgba(26, 26, 26, 0.85);
+}
+
+.account-menu-popover-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 9px 8px;
+	border: none;
+	background: transparent;
+	border-radius: 9px;
+	cursor: pointer;
+	font-family: inherit;
+	font-size: 13.5px;
+	text-align: left;
+	transition: background 0.15s;
+	color: rgba(51, 65, 85, 0.9);
+}
+
+.account-menu-popover-item .material-symbols-outlined {
+	font-size: 19px;
+	background: none;
+	-webkit-text-fill-color: rgba(100, 116, 139, 0.8);
+}
+
+.account-menu-popover-item:hover {
+	background: rgba(213, 51, 105, 0.08);
+}
+
+.account-menu-popover-item--danger {
+	color: #b02257;
+}
+
+.account-menu-popover-item--danger .material-symbols-outlined {
+	-webkit-text-fill-color: #d53369;
+}
+
+.account-menu-popover-item--danger:hover {
+	background: rgba(213, 51, 105, 0.12);
 }
 
 /* Home — orange → gold */

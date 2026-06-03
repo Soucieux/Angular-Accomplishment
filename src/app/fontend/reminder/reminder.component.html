@@ -2,7 +2,7 @@
 
 @if (utilities.getIsUserAlive()) {
 	<div class="rm-stage">
-		<div class="rm-panel" #pinboardBody>
+		<div class="rm-panel" #reminderPanel>
 			<!-- ── Masthead ───────────────────────────────────────────────── -->
 			<div class="rm-masthead">
 				<div class="rm-masthead-left">
@@ -10,18 +10,20 @@
 						<div class="rm-title">Reminder</div>
 						@if (saveIndicator) {
 							<div class="rm-save-indicator">
-								<i class="pi pi-spin pi-spinner"></i>
+								<span class="rm-spinner"></span>
 							</div>
 						}
 					</div>
-					<div class="rm-subtitle"><span class="cf">{{ REMINDER_SUBTITLE_CN }}</span> {{ REMINDER_SUBTITLE_EN }}</div>
+					<div class="rm-subtitle">
+						<span class="cf">{{ REMINDER_SUBTITLE_CN }}</span> {{ REMINDER_SUBTITLE_EN }}
+					</div>
 					<div class="rm-greeting">
 						{{ openCount }}
 						{{ openCount === 1 ? REMINDER_GREETING_SINGULAR : REMINDER_GREETING_PLURAL }}
 						{{ REMINDER_AWAIT_SUFFIX_EN }} <span class="cf">{{ REMINDER_AWAIT_SUFFIX_CN }}</span>
 					</div>
 				</div>
-				<div class="rm-due-card" [style.--due-color]="dueSoonCount > 0 ? '#c2410c' : '#94a3b8'">
+				<div class="rm-due-card hide-on-mobile" [style.--due-color]="dueSoonCount > 0 ? '#c2410c' : '#94a3b8'">
 					<span class="rm-icon">notifications_active</span>
 					<div class="rm-due-number">{{ dueSoonCount }}</div>
 					<div class="rm-due-label">
@@ -104,7 +106,7 @@
 							<div class="rm-card-bar">
 								@if (item.link) {
 									<span class="rm-link-chip" (click)="openLinkPopover($event, item)">
-										<span class="rm-icon" style="font-size: 13px">link</span>
+										<span class="rm-icon" style="font-size: 15px; padding-top: 5px">link</span>
 										{{ getLinkLabel(item) }}
 										<a
 											[href]="item.link"
@@ -112,7 +114,7 @@
 											rel="noopener noreferrer"
 											class="rm-chip-external"
 											(click)="$event.stopPropagation()">
-											<span class="rm-icon" style="font-size: 11px">open_in_new</span>
+											<span class="rm-icon" style="font-size: 15px">open_in_new</span>
 										</a>
 										<button
 											class="rm-chip-remove"
@@ -200,7 +202,7 @@
 								[style.color]="newItem.tag === tag ? tagColor(tag) : null"
 								(click)="selectNewItemCategory(tag)">
 								<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
-								{{ tag }}
+								<span class="hide-on-mobile">{{ tag }}</span>
 							</button>
 						}
 						<span class="rm-bar-spacer"></span>
@@ -239,16 +241,21 @@
 						@if (isDate) {
 							@if (editingItem) {
 								<p-datepicker
+									#editingDatepicker
 									[appendTo]="'body'"
 									dateFormat="yy-mm-dd"
+									showTransitionOptions="0ms"
+									hideTransitionOptions="0ms"
 									[ngModel]="editingDateModel"
-									(ngModelChange)="onPopoverDateUpdate($event)"
-									(onSelect)="closePopover()">
+									(onSelect)="onEditingDateSelected($event)">
 								</p-datepicker>
 							} @else {
 								<p-datepicker
+									#newItemDatepicker
 									[appendTo]="'body'"
 									dateFormat="yy-mm-dd"
+									showTransitionOptions="0ms"
+									hideTransitionOptions="0ms"
 									[(ngModel)]="newItem.date"
 									(onSelect)="closePopover()">
 								</p-datepicker>

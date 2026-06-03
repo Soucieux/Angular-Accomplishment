@@ -25,12 +25,12 @@
 						<p-skeleton height="34px" width="180px" style="margin-top: 8px" />
 						<p-skeleton
 							height="8px"
-							min-width="421px"
-							style="margin-top: 10px; border-radius: 999px" />
+							[width]="utilities.isMobile() ? '100%' : '421px'"
+							style="margin-top: 10px" />
 						<p-skeleton height="18px" min-width="100%" style="margin-top: 6px" />
 					}
 				</div>
-				<div class="summary-right">
+				<div class="summary-right hide-on-mobile">
 					<div class="stat-grid">
 						@for (_ of [0, 1, 2, 3, 4, 5]; track $index) {
 							<div class="stat-cell">
@@ -92,7 +92,7 @@
 				</div>
 				@if (saveIndicators) {
 					<div class="summary-save">
-						<i class="pi pi-spin pi-spinner"></i>
+						<span class="debt-spinner"></span>
 						<span>Saving</span>
 					</div>
 				}
@@ -262,7 +262,7 @@
 									{{ isPromptedReset[item.key] ? 'Restore?' : 'Reset' }}
 								</button>
 								<button
-									class="footer-icon-button lock-button"
+									class="footer-icon-button lock-button hide-on-mobile"
 									[class.is-locked]="isItemPermanent(item)"
 									(click)="toggleLock(item.key)"
 									[title]="
@@ -276,7 +276,7 @@
 								</button>
 								@if (!isItemPermanent(item)) {
 									<button
-										class="footer-icon-button danger-button"
+										class="footer-icon-button danger-button hide-on-mobile"
 										[class.is-prompted]="isPromptedDelete[item.key]"
 										(click)="promptOrConfirmDelete(item.key)">
 										<span class="material-symbols-outlined" style="font-size: 15px">{{

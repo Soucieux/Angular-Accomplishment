@@ -160,7 +160,7 @@
 }
 
 .title-signed-in {
-	font-size: 40px;
+	font-size: 44px;
 	margin: 6px 0 4px;
 }
 
@@ -312,7 +312,7 @@
 	   Row 2 — Resonance     | Patch     | Quick Links ↕      minmax(195px, 235px)
 	   Row 3 — Activity (2-col)          | Quick Links (cont.) minmax(190px, 265px)
 	   Row 4 — Calendar (full-width)                           195px */
-	grid-template-rows: minmax(200px, 250px) minmax(195px, 235px) minmax(190px, 265px) 195px;
+	grid-template-rows: minmax(200px, 250px) minmax(195px, 235px) minmax(190px, 265px) 190px;
 	gap: 8px;
 }
 
@@ -1628,11 +1628,11 @@
 		height: auto;
 	}
 	.title {
-		font-size: 32px !important;
+		font-size: 28px !important;
 		margin-bottom: 3px;
 	}
 	.title-signed-in {
-		font-size: 18px;
+		font-size: 28px !important;
 	}
 	.chip-value {
 		font-size: 22px;
@@ -1690,9 +1690,6 @@
 		grid-column: 1 / 3;
 		grid-row: 8;
 	}
-	.card-links {
-		display: none;
-	}
 	.card-calendar {
 		grid-column: 1 / 3;
 		grid-row: 9;
@@ -1717,9 +1714,7 @@
 	.weekday-number {
 		font-size: 14px;
 	}
-	.header-badge {
-		display: none;
-	}
+
 
 	.card-title {
 		font-size: 11px;

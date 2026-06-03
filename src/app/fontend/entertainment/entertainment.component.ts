@@ -25,6 +25,7 @@ import {
 	ENT_TOOLTIP_REFRESH,
 	ENT_TOOLTIP_ADD,
 	ENT_TOOLTIP_HISTORY,
+	ENT_TITLE_PAGE,
 	ENT_SEARCH_PLACEHOLDER,
 	ENT_LABEL_FILMS,
 	ENT_LABEL_TO_WATCH,
@@ -120,6 +121,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected readonly ENT_TOOLTIP_REFRESH = ENT_TOOLTIP_REFRESH;
 	protected readonly ENT_TOOLTIP_ADD = ENT_TOOLTIP_ADD;
 	protected readonly ENT_TOOLTIP_HISTORY = ENT_TOOLTIP_HISTORY;
+	protected readonly ENT_TITLE_PAGE = ENT_TITLE_PAGE;
 	protected readonly ENT_SEARCH_PLACEHOLDER = ENT_SEARCH_PLACEHOLDER;
 	protected readonly ENT_LABEL_FILMS = ENT_LABEL_FILMS;
 	protected readonly ENT_LABEL_TO_WATCH = ENT_LABEL_TO_WATCH;

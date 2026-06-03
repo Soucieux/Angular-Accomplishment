@@ -14,12 +14,10 @@
 :host {
 	font-family: 'nlf';
 	display: block;
-	padding: 40px 24px 80px;
+	height: calc(100dvh - 10px);
 }
 
 .container {
-	max-width: 100%;
-	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -30,7 +28,7 @@
 ───────────────────────────────────────── */
 .page-header {
 	text-align: center;
-	margin-bottom: 40px;
+	margin-bottom: 0;
 }
 
 /* PAGE-TITLE SIZE STANDARD
@@ -43,9 +41,6 @@
  *       dark    #d97706   rgba(217, 119, 6)
  * Applied to: page-title drop-shadow glow, header-ornament, submit-button,
  *             card left-borders, input focus ring, post-success chip
- * NOTE: page-title text is intentionally white — this page has no container and
- *       renders directly on the app's rose background; gold text on rose lacks
- *       contrast. White text stays readable; gold accent appears on glass surfaces.
  * To change: replace all #f59e0b and #d97706 (and their rgba equivalents) throughout this file.
  */
 .page-title {
@@ -85,8 +80,8 @@
 	backdrop-filter: blur(40px) saturate(160%);
 	-webkit-backdrop-filter: blur(40px) saturate(160%);
 	border-radius: 24px;
-	padding: 32px 32px 24px;
-	margin-bottom: 36px;
+	padding: 32px 25px 25px;
+	margin-bottom: 20px;
 	position: relative;
 	background:
 		linear-gradient(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.22)) padding-box,
@@ -107,7 +102,6 @@
 	left: 18px;
 	font-size: 164px;
 	line-height: 1;
-	background: linear-gradient(135deg, #f59e0b, #d97706);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -150,23 +144,27 @@
 	z-index: 1;
 }
 
-::ng-deep .submit-card .p-inputtextarea {
+:host ::ng-deep .submit-card textarea {
+	font-size: 17px;
+	font-family: 'nlf', sans-serif;
+	color: rgba(0, 0, 0, 0.75);
+	padding: 0 0 8px 0;
+	line-height: 1.75;
+}
+
+::ng-deep .submit-card .p-textarea {
 	background: transparent !important;
 	border: none !important;
 	box-shadow: none !important;
-	color: rgba(0, 0, 0, 0.75) !important;
-	font-size: 17px !important;
-	font-family: 'nlf' !important;
 	padding: 0 0 8px 0 !important;
-	line-height: 1.75 !important;
 }
 
-::ng-deep .submit-card .p-inputtextarea::placeholder {
+::ng-deep .submit-card .p-textarea::placeholder {
 	color: rgba(0, 0, 0, 0.32) !important;
 	font-style: italic !important;
 }
 
-::ng-deep .submit-card .p-inputtextarea:focus {
+::ng-deep .submit-card .p-textarea:focus {
 	border: none !important;
 	box-shadow: none !important;
 }
@@ -181,13 +179,16 @@
 	width: 100%;
 }
 
+:host ::ng-deep .name-row input {
+	font-size: 14px;
+	font-family: 'nlf', sans-serif;
+}
+
 ::ng-deep .name-row .p-inputtext {
 	background: rgba(255, 255, 255, 0.22) !important;
 	border: 1px solid rgba(0, 0, 0, 0.1) !important;
 	border-radius: 12px !important;
 	color: rgba(0, 0, 0, 0.72) !important;
-	font-size: 14px !important;
-	font-family: 'nlf' !important;
 	padding: 10px 14px !important;
 	box-shadow: none !important;
 	transition: border-color 0.25s ease !important;
@@ -207,8 +208,8 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-top: 22px;
-	padding-top: 16px;
+	margin-top: 15px;
+	padding-top: 12px;
 	position: relative;
 	z-index: 1;
 }
@@ -466,7 +467,7 @@
 }
 
 .card-inner {
-	padding: 24px;
+	padding: 20px;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
@@ -483,7 +484,7 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: flex-start;
-	margin-bottom: 16px;
+	margin-bottom: 10px;
 }
 
 .quote-author {
@@ -597,7 +598,7 @@
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
 	:host {
-		padding: 24px 16px 60px;
+		padding: 22px 0px 40px;
 	}
 
 	.page-title {
@@ -606,7 +607,15 @@
 	}
 
 	.submit-card {
-		padding: 18px;
+		padding: 32px 15px 15px;
+	}
+
+	:host ::ng-deep .submit-card textarea {
+		font-size: 13px;
+	}
+
+	:host ::ng-deep .name-row input {
+		font-size: 12px;
 	}
 
 	.skeleton-grid,
@@ -630,4 +639,3 @@
 		transform: translateY(-4px) scale(1.01);
 	}
 }
-

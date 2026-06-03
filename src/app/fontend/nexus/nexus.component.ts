@@ -32,15 +32,15 @@ import {
 	MSG_DELETE_FAILED,
 	MSG_SAVE_FAILED,
 	NEXUS_CATEGORY_ALL,
-	PINBOARD_DIALOG_RESET_BTN,
-	PINBOARD_LABEL_CELL_CONFIRM,
-	PINBOARD_LABEL_CELL_DONE,
-	PINBOARD_LABEL_CELL_TODAY,
-	PINBOARD_LABEL_CONFIRMED,
-	PINBOARD_LABEL_CURRENT_MONTH,
-	PINBOARD_LABEL_NEXT_MONTH,
-	PINBOARD_LABEL_RESET,
-	PINBOARD_MSG_RESET_CONFIRM,
+	NEXUS_DIALOG_RESET_BTN,
+	NEXUS_LABEL_CELL_CONFIRM,
+	NEXUS_LABEL_CELL_DONE,
+	NEXUS_LABEL_CELL_TODAY,
+	NEXUS_LABEL_CONFIRMED,
+	NEXUS_LABEL_CURRENT_MONTH,
+	NEXUS_LABEL_NEXT_MONTH,
+	NEXUS_LABEL_RESET,
+	NEXUS_MSG_RESET_CONFIRM,
 	REMINDER_TABLE_DATE_CALCULATOR,
 	STATS_FIELD_RECENT_REMINDER,
 	NEXUS_DIALOG_TITLE_ADD_LINK,
@@ -96,13 +96,13 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly aiTools: AiTool[] = [...NEXUS_AI_TOOLS];
 	// Date Calculator constants re-exposed for the template
 	protected readonly DATABASE_DATE_CALCULATOR = DATABASE_DATE_CALCULATOR;
-	protected readonly PINBOARD_LABEL_CURRENT_MONTH = PINBOARD_LABEL_CURRENT_MONTH;
-	protected readonly PINBOARD_LABEL_NEXT_MONTH = PINBOARD_LABEL_NEXT_MONTH;
-	protected readonly PINBOARD_LABEL_RESET = PINBOARD_LABEL_RESET;
-	protected readonly PINBOARD_LABEL_CELL_CONFIRM = PINBOARD_LABEL_CELL_CONFIRM;
-	protected readonly PINBOARD_LABEL_CELL_DONE = PINBOARD_LABEL_CELL_DONE;
-	protected readonly PINBOARD_LABEL_CELL_TODAY = PINBOARD_LABEL_CELL_TODAY;
-	protected readonly PINBOARD_LABEL_CONFIRMED = PINBOARD_LABEL_CONFIRMED;
+	protected readonly NEXUS_LABEL_CURRENT_MONTH = NEXUS_LABEL_CURRENT_MONTH;
+	protected readonly NEXUS_LABEL_NEXT_MONTH = NEXUS_LABEL_NEXT_MONTH;
+	protected readonly NEXUS_LABEL_RESET = NEXUS_LABEL_RESET;
+	protected readonly NEXUS_LABEL_CELL_CONFIRM = NEXUS_LABEL_CELL_CONFIRM;
+	protected readonly NEXUS_LABEL_CELL_DONE = NEXUS_LABEL_CELL_DONE;
+	protected readonly NEXUS_LABEL_CELL_TODAY = NEXUS_LABEL_CELL_TODAY;
+	protected readonly NEXUS_LABEL_CONFIRMED = NEXUS_LABEL_CONFIRMED;
 	protected failedLogos = new Set<string>();
 
 	// ── Date Calculator state ────────────────────────────────────────────────
@@ -275,7 +275,12 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected async updateChargedCells(): Promise<void> {
 		// On init (chargedCellsInitialized === false) skip permission check — this is a read-only state setup
 		if (this.chargedCellsInitialized) {
-			if (!this.dialogService.ensurePermission(this.dialogComponentContainer, CloudbaseService.getUseId() ?? '')) {
+			if (
+				!this.dialogService.ensurePermission(
+					this.dialogComponentContainer,
+					CloudbaseService.getUseId() ?? ''
+				)
+			) {
 				setTimeout(() => {
 					this.isNextMonth = !this.isNextMonth;
 				});
@@ -339,7 +344,12 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		// Do nothing if the value does not change
 		if (this.updatedDateCalculatorRows[rowIndex][field].value == originalValue) return;
 
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, CloudbaseService.getUseId() ?? '')) {
+		if (
+			!this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				CloudbaseService.getUseId() ?? ''
+			)
+		) {
 			this.updatedDateCalculatorRows[rowIndex][field].value = originalValue;
 			return;
 		}
@@ -463,7 +473,13 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param field - The column key of the cell.
 	 */
 	protected async setIsCharged(rowIndex: number, field: string): Promise<void> {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, CloudbaseService.getUseId() ?? '')) return;
+		if (
+			!this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				CloudbaseService.getUseId() ?? ''
+			)
+		)
+			return;
 
 		if (!this.updatedDateCalculatorRows[rowIndex][field].isCharged) {
 			this.updatedDateCalculatorRows[rowIndex][field].isCharged = true;
@@ -477,7 +493,13 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Opens a confirmation dialog before resetting the date calculator dates to their default sequence (1, 3, 9, 11, 17).
 	 */
 	protected openResetConfirmationDialog(): void {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, CloudbaseService.getUseId() ?? '')) return;
+		if (
+			!this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				CloudbaseService.getUseId() ?? ''
+			)
+		)
+			return;
 
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -485,7 +507,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			() => {
 				this.setDateCalculatorDefaults();
 			},
-			[PINBOARD_MSG_RESET_CONFIRM, PINBOARD_DIALOG_RESET_BTN, DIALOG_BTN_CONFIRM]
+			[NEXUS_MSG_RESET_CONFIRM, NEXUS_DIALOG_RESET_BTN, DIALOG_BTN_CONFIRM]
 		);
 	}
 
@@ -519,8 +541,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private async updateDateCalculatorSingleValue(): Promise<void> {
 		try {
 			// Row 6 (index 5) is the metadata row storing only isNextMonth — appended so the
-		// database update covers all rows including the flag in one call
-		const payload = [
+			// database update covers all rows including the flag in one call
+			const payload = [
 				...this.updatedDateCalculatorRows,
 				{
 					_id: this.originalDateCalculatorRows[5]._id,
@@ -783,11 +805,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.cdr.markForCheck();
 		} catch (error) {
 			LOG.error(this.className, NEXUS_MSG_SAVE_LINK_FAILED, error as Error);
-			this.dialogService.showToast(
-				TOAST_ERROR,
-				MSG_SAVE_FAILED,
-				NEXUS_MSG_LINK_SAVE_FAILED_DETAIL
-			);
+			this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, NEXUS_MSG_LINK_SAVE_FAILED_DETAIL);
 		}
 	}
 
@@ -901,11 +919,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.showCategoryDialog = false;
 		} catch (error) {
 			LOG.error(this.className, NEXUS_MSG_SAVE_CATEGORY_FAILED, error as Error);
-			this.dialogService.showToast(
-				TOAST_ERROR,
-				MSG_SAVE_FAILED,
-				NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL
-			);
+			this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL);
 		}
 	}
 

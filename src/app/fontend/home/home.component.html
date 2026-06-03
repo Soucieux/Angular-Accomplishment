@@ -51,8 +51,8 @@
 				<div class="bento-card skeleton card-patch"></div>
 				<div class="bento-card skeleton card-resonance"></div>
 				<div class="bento-card skeleton card-activity"></div>
-				<div class="bento-card skeleton card-links"></div>
-					<div class="bento-card skeleton card-calendar"></div>
+				<div class="bento-card skeleton card-links hide-on-mobile"></div>
+				<div class="bento-card skeleton card-calendar"></div>
 			</div>
 		} @else {
 			<!-- ── Stat chips ─────────────────────────────────────────────── -->
@@ -94,7 +94,9 @@
 
 			<!-- ── Quick Actions row (outside bento grid) ────────────────── -->
 			<div class="quick-actions-row">
-				<a class="quick-action-button quick-action-movie" (click)="navigateToQuickAction('/entertainment', { openAddDialog: true })">
+				<a
+					class="quick-action-button quick-action-movie"
+					(click)="navigateToQuickAction('/entertainment', { openAddDialog: true })">
 					<span class="material-symbols-outlined quick-action-icon">movie</span>
 					<span class="quick-action-label">Add Movie</span>
 				</a>
@@ -102,7 +104,9 @@
 					<span class="material-symbols-outlined quick-action-icon">format_quote</span>
 					<span class="quick-action-label">Add Quote</span>
 				</a>
-				<a class="quick-action-button quick-action-recipe" (click)="navigateToQuickAction('/recipe', { openAddView: true })">
+				<a
+					class="quick-action-button quick-action-recipe"
+					(click)="navigateToQuickAction('/recipe', { openAddView: true })">
 					<span class="material-symbols-outlined quick-action-icon">menu_book</span>
 					<span class="quick-action-label">Add Recipe</span>
 				</a>
@@ -110,7 +114,9 @@
 					<span class="material-symbols-outlined quick-action-icon">payments</span>
 					<span class="quick-action-label">Add Expense</span>
 				</a>
-				<a class="quick-action-button quick-action-patch" (click)="navigateToQuickAction('/patch', { goToLastPage: true })">
+				<a
+					class="quick-action-button quick-action-patch"
+					(click)="navigateToQuickAction('/patch', { goToLastPage: true })">
 					<span class="material-symbols-outlined quick-action-icon">bug_report</span>
 					<span class="quick-action-label">Log Bug</span>
 				</a>
@@ -135,7 +141,7 @@
 								>live_tv</span
 							>
 							<span class="card-title">Entertainment</span>
-							<span class="header-badge badge-entertainment"
+							<span class="header-badge badge-entertainment hide-on-mobile"
 								>{{ stats?.totalNumber ?? 0 }} movies</span
 							>
 							<span class="card-arrow">↗</span>
@@ -301,7 +307,10 @@
 							</div>
 						} @else {
 							<div class="scrollable-list">
-								@for (item of getPatchInProgress(); track (item.component ?? '') + (item.details ?? '')) {
+								@for (
+									item of getPatchInProgress();
+									track (item.component ?? '') + (item.details ?? '')
+								) {
 									<div class="patch-item">
 										<span class="patch-dot" [class.bug-dot]="item.isBug"></span>
 										<div class="patch-info">
@@ -339,7 +348,9 @@
 								<span class="empty-text">No quotes yet</span>
 							</div>
 						} @else {
-							<div class="resonance-quote">"{{ truncate(stats?.latestQuote?.text ?? '', 160) }}"</div>
+							<div class="resonance-quote">
+								"{{ truncate(stats?.latestQuote?.text ?? '', 160) }}"
+							</div>
 							<div class="resonance-author">— {{ stats?.latestQuote?.author }}</div>
 							<div class="resonance-time">
 								{{ getRelativeTime(stats?.latestQuote?.timestamp ?? '') }}
@@ -393,10 +404,9 @@
 				</div>
 
 				<!-- Quick Links -->
-				<div class="bento-card card-links">
+				<div class="bento-card card-links hide-on-mobile">
 					<div class="card-accent accent-links"></div>
 					<div class="links-body">
-
 						<!-- Header -->
 						<div class="card-header links-card-hd">
 							<span class="material-symbols-outlined card-icon icon-links">link</span>
@@ -415,17 +425,24 @@
 							<!-- Pinned tiles -->
 							<div class="links-tiles">
 								@for (link of pinnedLinks; track link._id; let i = $index) {
-									<a class="link-tile"
-									   [style.background]="getTileColor(i)"
-									   [style.--rot]="getTileRotation(i)"
-									   (click)="openDashLink(link)"
-									   [title]="link.title">
+									<a
+										class="link-tile"
+										[style.background]="getTileColor(i)"
+										[style.--rot]="getTileRotation(i)"
+										(click)="openDashLink(link)"
+										[title]="link.title">
 										<div class="tile-top">
 											<div class="tile-favicon-badge">
 												@if (dashFaviconFailedIds.has(link._id)) {
-													<span class="tile-favicon-letter">{{ link.title.charAt(0).toUpperCase() }}</span>
+													<span class="tile-favicon-letter">{{
+														link.title.charAt(0).toUpperCase()
+													}}</span>
 												} @else {
-													<img [src]="utilities.getFavicon(link.url)" [alt]="link.title" loading="lazy" (error)="onDashFaviconError(link)" />
+													<img
+														[src]="utilities.getFavicon(link.url)"
+														[alt]="link.title"
+														loading="lazy"
+														(error)="onDashFaviconError(link)" />
 												}
 											</div>
 											<span class="tile-pin" aria-hidden="true">📌</span>
@@ -447,24 +464,32 @@
 							<!-- Scrollable list -->
 							<div class="links-list">
 								@for (link of restLinks; track link._id) {
-									<a class="links-row"
-									   (click)="openDashLink(link)"
-									   [title]="link.url">
-										<span class="links-dot" [style.background]="getCategoryDotColor(link.category)"></span>
+									<a class="links-row" (click)="openDashLink(link)" [title]="link.url">
+										<span
+											class="links-dot"
+											[style.background]="getCategoryDotColor(link.category)"></span>
 										@if (dashFaviconFailedIds.has(link._id)) {
-											<span class="links-favicon-letter">{{ link.title.charAt(0).toUpperCase() }}</span>
+											<span class="links-favicon-letter">{{
+												link.title.charAt(0).toUpperCase()
+											}}</span>
 										} @else {
-											<img class="links-favicon" [src]="utilities.getFavicon(link.url)" [alt]="link.title" loading="lazy" (error)="onDashFaviconError(link)" />
+											<img
+												class="links-favicon"
+												[src]="utilities.getFavicon(link.url)"
+												[alt]="link.title"
+												loading="lazy"
+												(error)="onDashFaviconError(link)" />
 										}
 										<span class="links-name">{{ link.title }}</span>
-										<span class="links-meta">{{ link.lastVisited ? getRelativeTime(link.lastVisited) : '' }}</span>
+										<span class="links-meta">{{
+											link.lastVisited ? getRelativeTime(link.lastVisited) : ''
+										}}</span>
 									</a>
 								}
 							</div>
 						}
 					</div>
 				</div>
-
 
 				<!-- ── Row 4 ─────────────────────────────────────────────── -->
 
@@ -521,7 +546,6 @@
 					>
 				</div>
 			</div>
-
 		}
 	}
 </div>

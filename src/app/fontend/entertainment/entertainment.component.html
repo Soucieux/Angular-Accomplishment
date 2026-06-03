@@ -4,7 +4,7 @@
 	<div class="page-container">
 		<div class="top-bar">
 			<div class="top-bar-left">
-				<h1 class="bar-title">Entertainment</h1>
+				<h1 class="bar-title">{{ ENT_TITLE_PAGE }}</h1>
 				<span class="count-pill">{{ stats.totalNumber }} {{ ENT_LABEL_FILMS }}</span>
 			</div>
 			<div class="search-input-wrapper hide-on-mobile">
@@ -64,7 +64,7 @@
 						<span class="card-count" [style.color]="getGenreColor(i)">{{ genre.value }}</span>
 						<span class="card-watch-label">{{ ENT_LABEL_TO_WATCH }}</span>
 					</div>
-					<div class="card-progress-bar">
+					<div class="card-progress-bar hide-on-mobile">
 						@for (
 							filled of getFilledBlocks(+genre.value, getCorkMax(stats.genre));
 							track $index

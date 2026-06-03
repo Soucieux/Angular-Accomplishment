@@ -1,6 +1,7 @@
 <ng-container #dialogComponentContainer></ng-container>
 
 @if (utilities.getIsUserAlive()) {
+	@let debtRows = (debtItems$ | async) ?? [];
 	<div class="container">
 		<!-- ── Page header ────────────────────────────────────────────── -->
 		<div class="page-header">
@@ -72,7 +73,7 @@
 				<div class="summary-right hide-on-mobile">
 					<div class="stat-grid">
 						<div class="stat-cell">
-							<span class="stat-number">{{ updatedDebtSonataItems.length }}</span>
+							<span class="stat-number">{{ debtRows.length }}</span>
 							<span class="stat-label">DEBTS</span>
 						</div>
 						<div class="stat-cell">
@@ -105,7 +106,7 @@
 			<div class="debts-header">
 				<h2 class="debts-title">Your debts</h2>
 				@if (!loading) {
-					<span class="debts-count">{{ updatedDebtSonataItems.length }}</span>
+					<span class="debts-count">{{ debtRows.length }}</span>
 				}
 			</div>
 
@@ -120,7 +121,7 @@
 							<p-skeleton height="38px" style="margin-top: 12px; border-radius: 10px" />
 						</div>
 					}
-				} @else if (updatedDebtSonataItems.length === 0) {
+				} @else if (debtRows.length === 0) {
 					<div class="debts-empty">
 						<span class="material-symbols-outlined debts-empty-icon">celebration</span>
 						<p class="debts-empty-message">{{ DEBT_EMPTY_STATE_MSG }}</p>
@@ -334,11 +335,11 @@
 				}
 			</div>
 
-			@if (!loading && updatedDebtSonataItems.length > DEBT_PAGE_SIZE) {
+			@if (!loading && debtRows.length > DEBT_PAGE_SIZE) {
 				<div class="debts-paginator">
 					<app-segmented-paginator
 						[page]="currentPage"
-						[totalItems]="updatedDebtSonataItems.length"
+						[totalItems]="debtRows.length"
 						[perPage]="DEBT_PAGE_SIZE"
 						(pageChange)="currentPage = $event" />
 				</div>

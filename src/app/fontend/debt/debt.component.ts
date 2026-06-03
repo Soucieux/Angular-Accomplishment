@@ -10,10 +10,11 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { AsyncPipe, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SkeletonModule } from 'primeng/skeleton';
-import { Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
@@ -95,7 +96,7 @@ interface CategoryDef {
 
 @Component({
 	selector: 'debt',
-	imports: [FormsModule, SkeletonModule, AccessDeniedComponent, SegmentedPaginatorComponent],
+	imports: [AsyncPipe, FormsModule, SkeletonModule, AccessDeniedComponent, SegmentedPaginatorComponent],
 	templateUrl: './debt.component.html',
 	styleUrls: ['../../common/page.card.css', './debt.component.css']
 })
@@ -124,7 +125,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected isPromptedDelete: Record<string, boolean> = {};
 	protected customInputState: Record<string, string | null> = {};
 	protected saveIndicators: boolean = false;
-	private debtSonataSub?: Subscription;
+	protected debtItems$!: Observable<any[]>;
 	private upcomingExpenses: any[] = [];
 	private paymentHistoryMap: Record<string, PaymentEntry[]> = {};
 	private pendingWriteKeys = new Set<string>();
@@ -181,45 +182,48 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Initialises the component: checks hover capability and subscribes to the
-	 * Account Expenses observable. The subscription populates both the display
-	 * and original-value arrays and syncs upcoming items to the statistics collection.
-	 * Items in pendingWriteKeys are shielded from subscription overwrite to prevent
-	 * the optimistic-update flip caused by CloudBase echoing stale data mid-write.
-	 * The subscription body runs inside ngZone.run() because CloudBase WebSocket
-	 * callbacks fire outside Angular's zone; without it, detectChanges() can silently
-	 * collide with an in-progress CD cycle triggered by a concurrent dialog close.
+	 * Initialises the component: checks hover capability and builds the Account
+	 * Expenses observable. The tap side-effect populates the display and
+	 * original-value arrays and syncs upcoming items to the statistics collection.
+	 * Items in pendingWriteKeys are shielded from overwrite to prevent the
+	 * optimistic-update flip caused by CloudBase echoing stale data mid-write.
+	 * The tap body runs inside ngZone.run() because CloudBase WebSocket callbacks
+	 * fire outside Angular's zone. The async pipe in the template manages the
+	 * subscription lifecycle and triggers change detection — no explicit
+	 * detectChanges() call is needed or safe here.
 	 */
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = this.utilities.checkIfHoverCapable();
-			this.debtSonataSub = this.databaseService.getDebtSonataTableDetails().subscribe((rows) => {
-				/* CloudBase WebSocket callbacks run outside Angular's NgZone.
-				   ngZone.run() schedules this as a new zone task so it never collides with
-				   an in-progress CD cycle (e.g. from dialog close), ensuring detectChanges()
-				   always runs on an idle change detector. */
-				this.ngZone.run(() => {
-					this.originalDebtSonataItems = structuredClone(rows);
-					const currentByKey = new Map(this.updatedDebtSonataItems.map((item) => [item.key, item]));
-					this.updatedDebtSonataItems = rows.map((row: any) =>
-						this.pendingWriteKeys.has(row.key)
-							? (currentByKey.get(row.key) ?? structuredClone(row))
-							: structuredClone(row)
-					);
-					const maxPage = Math.max(0, Math.ceil(this.updatedDebtSonataItems.length / DEBT_PAGE_SIZE) - 1);
-					if (this.currentPage > maxPage) this.currentPage = maxPage;
-					this.loading = false;
-					this.cdr.detectChanges();
-					this.upcomingExpenses = rows
-						.filter((item: any) => item.date && !item.paid)
-						.map((item: any) => ({
-							type: DEBT_ITEM_EXPENSE,
-							name: item.name,
-							date: item.date
-						}));
-					this.syncStatistics();
-				});
-			});
+			this.debtItems$ = this.databaseService.getDebtSonataTableDetails().pipe(
+				tap((rows) => {
+					this.ngZone.run(() => {
+						this.originalDebtSonataItems = structuredClone(rows);
+						const currentByKey = new Map(
+							this.updatedDebtSonataItems.map((item) => [item.key, item])
+						);
+						this.updatedDebtSonataItems = rows.map((row: any) =>
+							this.pendingWriteKeys.has(row.key)
+								? (currentByKey.get(row.key) ?? structuredClone(row))
+								: structuredClone(row)
+						);
+						const maxPage = Math.max(
+							0,
+							Math.ceil(this.updatedDebtSonataItems.length / DEBT_PAGE_SIZE) - 1
+						);
+						if (this.currentPage > maxPage) this.currentPage = maxPage;
+						this.loading = false;
+						this.upcomingExpenses = rows
+							.filter((item: any) => item.date && !item.paid)
+							.map((item: any) => ({
+								type: DEBT_ITEM_EXPENSE,
+								name: item.name,
+								date: item.date
+							}));
+						this.syncStatistics();
+					});
+				})
+			);
 		}
 	}
 
@@ -228,7 +232,6 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * prompted-button and balance-bump timers.
 	 */
 	ngOnDestroy() {
-		this.debtSonataSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
 		Object.values(this.promptedResetTimers).forEach(clearTimeout);
 		Object.values(this.promptedDeleteTimers).forEach(clearTimeout);
@@ -249,7 +252,13 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param amount - The positive amount to subtract from the current balance.
 	 */
 	protected async payDebt(entryKey: string, amount: number): Promise<void> {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
+		if (
+			!this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				this.findUpdatedItem(entryKey)?._openid ?? ''
+			)
+		)
+			return;
 		const item = this.findUpdatedItem(entryKey);
 		if (!item || amount <= 0 || this.isPayDisabled(item)) return;
 		// Round to 2 decimal places to avoid floating-point drift accumulating over multiple payments
@@ -346,7 +355,13 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry to reset.
 	 */
 	protected promptOrConfirmReset(entryKey: string): void {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
+		if (
+			!this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				this.findUpdatedItem(entryKey)?._openid ?? ''
+			)
+		)
+			return;
 		if (this.isPromptedReset[entryKey]) {
 			clearTimeout(this.promptedResetTimers[entryKey]);
 			this.isPromptedReset = { ...this.isPromptedReset, [entryKey]: false };
@@ -367,7 +382,13 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry to delete.
 	 */
 	protected promptOrConfirmDelete(entryKey: string): void {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
+		if (
+			!this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				this.findUpdatedItem(entryKey)?._openid ?? ''
+			)
+		)
+			return;
 		if (this.isPromptedDelete[entryKey]) {
 			clearTimeout(this.promptedDeleteTimers[entryKey]);
 			this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: false };
@@ -398,7 +419,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	////////////////////// Below are Internal data methods for CloudBase writes /////////////////
 
 	/**
-	 * Creates a new debt record in CloudBase from the data returned by the add-debt dialog. 
+	 * Creates a new debt record in CloudBase from the data returned by the add-debt dialog.
 	 *
 	 * @param debtData - The validated form data submitted from the add-debt dialog.
 	 */
@@ -427,7 +448,13 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry to toggle.
 	 */
 	protected async toggleLock(entryKey: string): Promise<void> {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
+		if (
+			!this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				this.findUpdatedItem(entryKey)?._openid ?? ''
+			)
+		)
+			return;
 		const item = this.findUpdatedItem(entryKey);
 		if (!item) return;
 		const newType =
@@ -739,7 +766,9 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected getCategoryForItem(item: any): CategoryDef {
 		if (item[DEBT_VALUE_KEY_CATEGORY]) {
-			const stored = this.categoryDefs.find((categoryDef) => categoryDef.key === item[DEBT_VALUE_KEY_CATEGORY]);
+			const stored = this.categoryDefs.find(
+				(categoryDef) => categoryDef.key === item[DEBT_VALUE_KEY_CATEGORY]
+			);
 			if (stored) return stored;
 		}
 		return this.categoryDefs[this.getCategoryIndexForItem(item)];
@@ -898,7 +927,13 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param entryKey - The unique key of the entry to set.
 	 */
 	protected openSetDebtDialog(entryKey: string): void {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
+		if (
+			!this.dialogService.ensurePermission(
+				this.dialogComponentContainer,
+				this.findUpdatedItem(entryKey)?._openid ?? ''
+			)
+		)
+			return;
 		const item = this.findUpdatedItem(entryKey);
 		if (!item) return;
 		const prefillData: Partial<NewDebtData> = {
@@ -939,7 +974,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		   pendingWriteKeys shields this entry from subscription overwrites until the write settles. */
 		const newPaid = this.isDebtFullySettled(data.amount);
 		this.pendingWriteKeys.add(entryKey);
-		if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY]) item[DEBT_VALUE_KEY_CURRENCY] = data.currency;
+		if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY])
+			item[DEBT_VALUE_KEY_CURRENCY] = data.currency;
 		item[DEBT_VALUE_KEY_DEBT] = data.amount;
 		item[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
 		item[DEBT_VALUE_KEY_PAID] = newPaid;
@@ -950,7 +986,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		// Build a single update object with only changed fields — one round-trip instead of up to five.
 		const fields: Record<string, unknown> = {};
-		if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY]) fields[DEBT_VALUE_KEY_CURRENCY] = data.currency;
+		if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY])
+			fields[DEBT_VALUE_KEY_CURRENCY] = data.currency;
 		if (data.amount !== original.debt) fields[DEBT_VALUE_KEY_DEBT] = data.amount;
 		if (data.amount !== original.original) fields[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
 		if (original.paid !== newPaid) fields[DEBT_VALUE_KEY_PAID] = newPaid;

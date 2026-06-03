@@ -335,7 +335,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		if (Object.keys(changes).length > 0) {
 			changes.timestamp = Utilities.getCurrentFormattedTime(false);
-			await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
+			try {
+				await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
+			} catch (error) {
+				this.dialogService.handleError(this.dialogComponentContainer, error);
+				return;
+			}
 
 			// Fire-and-forget: record the edit type in stats for the Recent Activity widget.
 			const noteIndex = this.patchNotesList.findIndex((note) => note.key === row.key) + 1;

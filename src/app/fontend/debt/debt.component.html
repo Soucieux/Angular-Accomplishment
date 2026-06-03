@@ -128,7 +128,7 @@
 						</button>
 					</div>
 				} @else {
-					@for (item of updatedDebtSonataItems; track item.key) {
+					@for (item of pagedItems; track item.key) {
 						<div
 							class="debt-card"
 							[class.is-paid]="item.paid"
@@ -332,6 +332,16 @@
 					}
 				}
 			</div>
+
+			@if (!loading && updatedDebtSonataItems.length > DEBT_PAGE_SIZE) {
+				<div class="debts-paginator">
+					<app-segmented-paginator
+						[page]="currentPage"
+						[totalItems]="updatedDebtSonataItems.length"
+						[perPage]="DEBT_PAGE_SIZE"
+						(pageChange)="currentPage = $event" />
+				</div>
+			}
 		</div>
 	</div>
 } @else {

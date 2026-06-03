@@ -86,6 +86,8 @@ export const DEBT_PRESET_SMALL = 100;
 export const DEBT_PRESET_LARGE = 1000;
 /** Milliseconds the two-step confirm button stays prompted before auto-dismissing. */
 export const DEBT_PROMPT_TIMEOUT_MS = 2600;
+/** Maximum number of Account Expenses cards visible on a single paginated page. */
+export const DEBT_PAGE_SIZE = 6;
 /** Debt record type for a standard deletable debt goal. */
 export const DEBT_TYPE_TEMP = 'temporary';
 /** Debt record type for a permanent account protected from deletion. */

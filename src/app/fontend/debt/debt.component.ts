@@ -3,6 +3,7 @@ import {
 	ChangeDetectorRef,
 	Component,
 	Inject,
+	NgZone,
 	OnDestroy,
 	OnInit,
 	PLATFORM_ID,
@@ -19,6 +20,7 @@ import {
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_DEBT_SONATA,
+	DEBT_PAGE_SIZE,
 	DEBT_PROMPT_TIMEOUT_MS,
 	DEBT_CATEGORY_CARD,
 	DEBT_CATEGORY_HOME,
@@ -74,6 +76,7 @@ import { NewDebtData } from './debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
+import { SegmentedPaginatorComponent } from './segmented-paginator/segmented-paginator.component';
 
 /** A single recorded payment entry, tracked in-memory per session. */
 interface PaymentEntry {
@@ -92,7 +95,7 @@ interface CategoryDef {
 
 @Component({
 	selector: 'debt',
-	imports: [FormsModule, SkeletonModule, AccessDeniedComponent],
+	imports: [FormsModule, SkeletonModule, AccessDeniedComponent, SegmentedPaginatorComponent],
 	templateUrl: './debt.component.html',
 	styleUrls: ['../../common/page.card.css', './debt.component.css']
 })
@@ -109,7 +112,9 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly DEBT_EMPTY_STATE_BTN = DEBT_EMPTY_STATE_BTN;
 	protected readonly DEBT_CUSTOM_INPUT_PLACEHOLDER = DEBT_CUSTOM_INPUT_PLACEHOLDER;
 	protected readonly DEBT_LABEL_DELETE_CONFIRM = DEBT_LABEL_DELETE_CONFIRM;
+	protected readonly DEBT_PAGE_SIZE = DEBT_PAGE_SIZE;
 	protected loading = true;
+	protected currentPage = 0;
 	protected isHoverCapable!: boolean;
 	protected updatedDebtSonataItems: any[] = [];
 	protected originalDebtSonataItems!: any[];
@@ -160,6 +165,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		private dialogService: DialogService,
 		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,
+		private ngZone: NgZone,
 		protected utilities: Utilities
 	) {}
 
@@ -180,28 +186,39 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * and original-value arrays and syncs upcoming items to the statistics collection.
 	 * Items in pendingWriteKeys are shielded from subscription overwrite to prevent
 	 * the optimistic-update flip caused by CloudBase echoing stale data mid-write.
+	 * The subscription body runs inside ngZone.run() because CloudBase WebSocket
+	 * callbacks fire outside Angular's zone; without it, detectChanges() can silently
+	 * collide with an in-progress CD cycle triggered by a concurrent dialog close.
 	 */
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = this.utilities.checkIfHoverCapable();
 			this.debtSonataSub = this.databaseService.getDebtSonataTableDetails().subscribe((rows) => {
-				this.originalDebtSonataItems = structuredClone(rows);
-				const currentByKey = new Map(this.updatedDebtSonataItems.map((item) => [item.key, item]));
-				this.updatedDebtSonataItems = rows.map((row: any) =>
-					this.pendingWriteKeys.has(row.key)
-						? (currentByKey.get(row.key) ?? structuredClone(row))
-						: structuredClone(row)
-				);
-				this.loading = false;
-				this.cdr.detectChanges();
-				this.upcomingExpenses = rows
-					.filter((item: any) => item.date && !item.paid)
-					.map((item: any) => ({
-						type: DEBT_ITEM_EXPENSE,
-						name: item.name,
-						date: item.date
-					}));
-				this.syncStatistics();
+				// CloudBase WebSocket callbacks run outside Angular's NgZone.
+				// ngZone.run() schedules this as a new zone task so it never collides with
+				// an in-progress CD cycle (e.g. from dialog close), ensuring detectChanges()
+				// always runs on an idle change detector.
+				this.ngZone.run(() => {
+					this.originalDebtSonataItems = structuredClone(rows);
+					const currentByKey = new Map(this.updatedDebtSonataItems.map((item) => [item.key, item]));
+					this.updatedDebtSonataItems = rows.map((row: any) =>
+						this.pendingWriteKeys.has(row.key)
+							? (currentByKey.get(row.key) ?? structuredClone(row))
+							: structuredClone(row)
+					);
+					const maxPage = Math.max(0, Math.ceil(this.updatedDebtSonataItems.length / DEBT_PAGE_SIZE) - 1);
+					if (this.currentPage > maxPage) this.currentPage = maxPage;
+					this.loading = false;
+					this.cdr.detectChanges();
+					this.upcomingExpenses = rows
+						.filter((item: any) => item.date && !item.paid)
+						.map((item: any) => ({
+							type: DEBT_ITEM_EXPENSE,
+							name: item.name,
+							date: item.date
+						}));
+					this.syncStatistics();
+				});
 			});
 		}
 	}
@@ -596,6 +613,17 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	////////////////////// Below are Template helper methods for the HTML template ///////////////
 
 	/**
+	 * Gets the slice of Account Expenses items for the current page.
+	 * At most DEBT_PAGE_SIZE items are returned.
+	 *
+	 * @returns The subset of updatedDebtSonataItems visible on the current page.
+	 */
+	protected get pagedItems(): any[] {
+		const start = this.currentPage * DEBT_PAGE_SIZE;
+		return (this.updatedDebtSonataItems ?? []).slice(start, start + DEBT_PAGE_SIZE);
+	}
+
+	/**
 	 * Groups Account Expenses items by currency (CNY for Chinese names,
 	 * CAD otherwise) and computes totals and progress for the summary bar.
 	 *
@@ -690,8 +718,8 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The CategoryDef containing icon, label, and gradient.
 	 */
 	protected getCategoryForItem(item: any): CategoryDef {
-		if (item.cat) {
-			const stored = this.categoryDefs.find((categoryDef) => categoryDef.key === item.cat);
+		if (item[DEBT_VALUE_KEY_CAT]) {
+			const stored = this.categoryDefs.find((categoryDef) => categoryDef.key === item[DEBT_VALUE_KEY_CAT]);
 			if (stored) return stored;
 		}
 		return this.categoryDefs[this.getCategoryIndexForItem(item)];

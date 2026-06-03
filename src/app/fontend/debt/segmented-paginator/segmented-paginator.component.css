@@ -1,0 +1,108 @@
+/* =============================================================================
+   Segmented-capsule paginator — self-contained component styles
+   Accent color matches the Debt Sonata page's orange brand (#f97316).
+   The glass track is built for the page's warm gradient backdrop.
+   ============================================================================= */
+
+:host {
+	--paginator-accent: #f97316;
+	--paginator-radius: 9999px;
+	--paginator-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--paginator-duration: 150ms;
+
+	display: inline-block;
+}
+
+.paginator {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.paginator button {
+	cursor: pointer;
+	border: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* ── End arrows ──────────────────────────────────────────────────────────── */
+.paginator-arrow {
+	width: 40px;
+	height: 40px;
+	border-radius: var(--paginator-radius);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: #fff;
+	background: rgba(255, 255, 255, 0.18);
+	border: 1px solid rgba(255, 255, 255, 0.30);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	transition: all var(--paginator-duration) var(--paginator-ease);
+}
+.paginator-arrow:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.34);
+}
+.paginator-arrow:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+.paginator-arrow .material-symbols-outlined {
+	font-size: 20px;
+	line-height: 1;
+}
+
+/* ── The connected capsule track ─────────────────────────────────────────── */
+.paginator-track {
+	display: flex;
+	padding: 4px;
+	gap: 2px;
+	background: rgba(255, 255, 255, 0.16);
+	border: 1px solid rgba(255, 255, 255, 0.30);
+	border-radius: var(--paginator-radius);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Individual page segment ─────────────────────────────────────────────── */
+.paginator-segment {
+	min-width: 42px;
+	height: 32px;
+	padding: 0 10px;
+	border-radius: var(--paginator-radius);
+	font-size: 14px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.82);
+	background: transparent;
+	transition: all var(--paginator-duration) var(--paginator-ease);
+}
+.paginator-segment:hover:not(.is-selected) {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.16);
+}
+
+/* active page — white lozenge with accent text */
+.paginator-segment.is-selected {
+	background: #fff;
+	color: var(--paginator-accent);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+/* focus ring for keyboard users */
+.paginator button:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+
+@media (max-width: 940px) {
+	.paginator-segment {
+		min-width: 36px;
+		height: 30px;
+		font-size: 13px;
+	}
+
+	.paginator-arrow {
+		width: 36px;
+		height: 36px;
+	}
+}

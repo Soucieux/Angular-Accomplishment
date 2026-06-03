@@ -1,0 +1,34 @@
+<nav class="paginator" [attr.aria-label]="ariaLabel">
+	<button
+		type="button"
+		class="paginator-arrow"
+		[disabled]="current === 0"
+		(click)="prev()"
+		aria-label="Previous page">
+		<span class="material-symbols-outlined">chevron_left</span>
+	</button>
+
+	<div class="paginator-track" role="tablist">
+		@for (pageIndex of pages; track pageIndex) {
+			<button
+				type="button"
+				class="paginator-segment"
+				[class.is-selected]="pageIndex === current"
+				role="tab"
+				[attr.aria-selected]="pageIndex === current"
+				[attr.aria-label]="'Page ' + (pageIndex + 1)"
+				(click)="go(pageIndex)">
+				{{ pageIndex + 1 }}
+			</button>
+		}
+	</div>
+
+	<button
+		type="button"
+		class="paginator-arrow"
+		[disabled]="current === count - 1"
+		(click)="next()"
+		aria-label="Next page">
+		<span class="material-symbols-outlined">chevron_right</span>
+	</button>
+</nav>

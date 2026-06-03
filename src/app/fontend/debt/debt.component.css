@@ -339,7 +339,7 @@
 		0 2px 12px rgba(0, 0, 0, 0.08),
 		0 1px 3px rgba(0, 0, 0, 0.05);
 	overflow: hidden;
-	height: 275px;
+	height: 270px;
 	transition:
 		transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
 		box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -645,6 +645,15 @@
 	background: linear-gradient(135deg, #f97316 0%, #e879f9 100%);
 	color: #fff !important;
 	border-color: transparent;
+}
+
+/* ─────────────────────────────────────────
+   Pagination
+───────────────────────────────────────── */
+.debts-paginator {
+	display: flex;
+	justify-content: center;
+	padding: 8px 0 4px;
 }
 
 .custom-pay-input {

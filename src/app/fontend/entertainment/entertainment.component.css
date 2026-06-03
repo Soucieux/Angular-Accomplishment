@@ -744,6 +744,7 @@
 		width: 100%;
 		display: block;
 		padding: 10px 10px 10px;
+		margin-top: 10px;
 	}
 
 	.category-card .card-genre-name {

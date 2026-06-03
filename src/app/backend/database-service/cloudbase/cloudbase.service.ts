@@ -37,6 +37,7 @@ import {
 	STATS_FIELD_TOTAL_RECIPES,
 	STATUS_IN_PROGRESS,
 	ERROR_PERMISSION_DENIED,
+	ERROR_NO_DOCUMENT_UPDATED,
 	ROLE_ADMIN,
 	STATS_FIELD_RECENT_DEBT
 } from '../../../common/app.constant';
@@ -992,7 +993,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param value - The new value to store.
 	 */
 	public async updateReminderTable(entryKey: string, valueKey: string, value: any): Promise<void> {
-		this.updateExistingRecordToTable(DATABASE_REMINDER, entryKey, valueKey, value);
+		return this.updateExistingRecordToTable(DATABASE_REMINDER, entryKey, valueKey, value);
 	}
 
 	/**
@@ -1004,6 +1005,27 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateDebtTable(entryKey: string, valueKey: string, value: any): Promise<void> {
 		return this.updateExistingRecordToTable(DATABASE_DEBT_SONATA, entryKey, valueKey, value);
+	}
+
+	/**
+	 * Updates multiple fields in a single debt table record in one round-trip.
+	 *
+	 * @param entryKey - The key of the entry to update.
+	 * @param fields - A record of field names and their new values.
+	 */
+	public async updateDebtTableFields(entryKey: string, fields: Record<string, unknown>): Promise<void> {
+		try {
+			const result = await this.database
+				.collection(DATABASE_DEBT_SONATA)
+				.where(this.buildWhereClause(entryKey))
+				.update(fields);
+			if (result.updated === 0) throw new Error(ERROR_NO_DOCUMENT_UPDATED);
+			else if (result.code) throw new Error(result.message);
+			LOG.info(this.className, `Record on ${DATABASE_DEBT_SONATA} has been updated`);
+		} catch (error) {
+			LOG.error(this.className, `Error while updating ${DATABASE_DEBT_SONATA}`, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1025,7 +1047,7 @@ export class CloudbaseService extends DatabaseService {
 				.collection(tableName)
 				.where(this.buildWhereClause(entryKey))
 				.update({ [valueKey]: value });
-			if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
+			if (result.updated === 0) throw new Error(ERROR_NO_DOCUMENT_UPDATED);
 			else if (result.code) throw new Error(result.message);
 			LOG.info(this.className, `Record on ${tableName} has been updated`);
 		} catch (error) {
@@ -1051,7 +1073,7 @@ export class CloudbaseService extends DatabaseService {
 						.collection(DATABASE_DATE_CALCULATOR)
 						.where(this.buildWhereClause(_id))
 						.update(rest);
-					if (result.code) throw new Error(ERROR_PERMISSION_DENIED);
+					if (result.code) throw new Error(result.message);
 				})
 			);
 			LOG.info(this.className, 'Reminder table has been updated');
@@ -1078,7 +1100,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The key of the record to remove.
 	 */
 	public async removeRecordFromReminderTable(key: string): Promise<void> {
-		this.removeRecordFromTable(DATABASE_REMINDER, key);
+		return this.removeRecordFromTable(DATABASE_REMINDER, key);
 	}
 
 	/**
@@ -1643,7 +1665,7 @@ export class CloudbaseService extends DatabaseService {
 					...payload,
 					steps: payload.steps.map((s) => ({ ...s, done: false }))
 				});
-			if (result.updated === 0) throw new Error(ERROR_PERMISSION_DENIED);
+			if (result.updated === 0) throw new Error(ERROR_NO_DOCUMENT_UPDATED);
 			LOG.info(this.className, `Recipe updated: "${recipe.name}"`);
 		} catch (error) {
 			LOG.error(this.className, `Error while updating recipe "${recipe.name}"`, error as Error);

@@ -167,7 +167,7 @@
 									class="card-balance"
 									[class.is-paid]="item.paid"
 									[class.is-bump]="balanceBumpItems[item.key]">
-									{{ formatMoney(item.paid ? 0 : (item.debt ?? 0), isCnyCurrency(item)) }}
+									{{ formatMoney(item.debt ?? 0, isCnyCurrency(item)) }}
 								</span>
 								@if (item.paid) {
 									<span class="card-paid-tag">
@@ -207,23 +207,23 @@
 							</div>
 
 							<!-- Payment chips -->
-							<div class="payment-chips" [class.is-disabled]="item?.paid">
+							<div class="payment-chips" [class.is-disabled]="isPayDisabled(item)">
 								<button
 									class="pay-chip"
-									[disabled]="!!item.paid"
+									[disabled]="isPayDisabled(item)"
 									(click)="payDebt(item.key, DEBT_PRESET_SMALL)">
 									−{{ formatCompact(DEBT_PRESET_SMALL, isCnyCurrency(item)) }}
 								</button>
 								<button
 									class="pay-chip"
-									[disabled]="!!item?.paid"
+									[disabled]="isPayDisabled(item)"
 									(click)="payDebt(item.key, DEBT_PRESET_LARGE)">
 									−{{ formatCompact(DEBT_PRESET_LARGE, isCnyCurrency(item)) }}
 								</button>
 								@if (customInputState[item.key] == null) {
 									<button
 										class="pay-chip custom-chip"
-										[disabled]="!!item?.paid"
+										[disabled]="isPayDisabled(item)"
 										(click)="toggleCustomInput(item.key)">
 										<span class="material-symbols-outlined" style="font-size: 13px"
 											>edit</span

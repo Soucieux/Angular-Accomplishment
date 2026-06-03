@@ -94,19 +94,20 @@ export class AddDebtDialogComponent {
 	protected selectedCategoryKey = DEBT_CATEGORY_CARD;
 	protected amount = '';
 	protected dueDateModel: Date | null = null;
-	protected selectedCurrency = DEBT_CURRENCY_CNY;
+	protected selectedCurrency = '';
 	protected isPermanent = false;
 	private submitCallback?: (data: NewDebtData) => void;
 
 	/**
-	 * Returns true when the form has enough valid data to submit:
-	 * name must be non-empty and amount must be a positive number.
+	 * Returns true when the form has enough valid data to submit.
+	 * Edit mode: amount must be a non-negative number.
+	 * Add mode: name must be non-empty, amount non-negative, and a currency selected.
 	 *
 	 * @returns Whether the form is in a submittable state.
 	 */
 	protected get isValid(): boolean {
-		if (this.isEditMode) return parseFloat(this.amount) > 0;
-		return this.name.trim().length > 0 && parseFloat(this.amount) > 0;
+		if (this.isEditMode) return parseFloat(this.amount) >= 0;
+		return this.name.trim().length > 0 && parseFloat(this.amount) >= 0 && this.selectedCurrency !== '';
 	}
 
 	/**
@@ -135,7 +136,7 @@ export class AddDebtDialogComponent {
 			this.selectedCategoryKey = DEBT_CATEGORY_CARD;
 			this.amount = '';
 			this.dueDateModel = new Date(Date.now() + 30 * 86400000);
-			this.selectedCurrency = DEBT_CURRENCY_CNY;
+			this.selectedCurrency = '';
 			this.isPermanent = false;
 		}
 		this.visible = true;

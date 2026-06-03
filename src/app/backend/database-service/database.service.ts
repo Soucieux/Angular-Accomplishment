@@ -202,6 +202,14 @@ export abstract class DatabaseService {
 	public abstract updateDebtTable(entryKey: string, valueKey: string, value: any): Promise<void>;
 
 	/**
+	 * Updates multiple fields in a single debt table record in one round-trip.
+	 *
+	 * @param entryKey - The key of the entry to update.
+	 * @param fields - A record of field names and their new values.
+	 */
+	public abstract updateDebtTableFields(entryKey: string, fields: Record<string, unknown>): Promise<void>;
+
+	/**
 	 * Updates date calculator table with the given data in nexus page
 	 *
 	 * @param updatedTable - The updated table data.

@@ -168,6 +168,12 @@
 		color: #11998e;
 		box-shadow: 0 0 0 2px rgba(17, 153, 142, 0.1);
 	}
+
+	&:disabled {
+		cursor: default;
+		pointer-events: none;
+		opacity: 0.5;
+	}
 }
 
 /* ── Permanent toggle ───────────────────────────────────────────────────────── */
@@ -298,8 +304,8 @@
 	}
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────────────── */
-@media (max-width: 480px) {
+/* ── Responsive ≤ 940 px (mobile) ───────────────────────────────────────────── */
+@media (max-width: 940px) {
 	::ng-deep .add-debt-dialog {
 		width: 100% !important;
 		min-height: 100dvh !important;
@@ -307,6 +313,14 @@
 	}
 
 	::ng-deep .add-debt-dialog .p-dialog-header {
+		border-radius: 0 !important;
+	}
+
+	::ng-deep .add-debt-dialog .p-dialog-content {
+		flex: 1 !important;
+	}
+
+	::ng-deep .add-debt-dialog .p-dialog-footer {
 		border-radius: 0 !important;
 	}
 

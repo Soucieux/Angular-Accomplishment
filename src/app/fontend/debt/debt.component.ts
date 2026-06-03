@@ -24,6 +24,7 @@ import {
 	DEBT_CATEGORY_HOME,
 	DEBT_CATEGORY_PERSON,
 	DEBT_CATEGORY_SHOPPING,
+	DEBT_CURRENCY_CAD,
 	DEBT_CURRENCY_CNY,
 	DEBT_EMPTY_STATE_BTN,
 	DEBT_EMPTY_STATE_MSG,
@@ -110,7 +111,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly DEBT_LABEL_DELETE_CONFIRM = DEBT_LABEL_DELETE_CONFIRM;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
-	protected updatedDebtSonataItems!: any[];
+	protected updatedDebtSonataItems: any[] = [];
 	protected originalDebtSonataItems!: any[];
 	protected expandedItems: Record<string, boolean> = {};
 	protected balanceBumpItems: Record<string, boolean> = {};
@@ -121,6 +122,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private debtSonataSub?: Subscription;
 	private upcomingExpenses: any[] = [];
 	private paymentHistoryMap: Record<string, PaymentEntry[]> = {};
+	private pendingWriteKeys = new Set<string>();
 	private promptedResetTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private promptedDeleteTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private balanceBumpTimers: Record<string, ReturnType<typeof setTimeout>> = {};
@@ -176,13 +178,20 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Initialises the component: checks hover capability and subscribes to the
 	 * Account Expenses observable. The subscription populates both the display
 	 * and original-value arrays and syncs upcoming items to the statistics collection.
+	 * Items in pendingWriteKeys are shielded from subscription overwrite to prevent
+	 * the optimistic-update flip caused by CloudBase echoing stale data mid-write.
 	 */
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = this.utilities.checkIfHoverCapable();
 			this.debtSonataSub = this.databaseService.getDebtSonataTableDetails().subscribe((rows) => {
-				this.updatedDebtSonataItems = structuredClone(rows);
 				this.originalDebtSonataItems = structuredClone(rows);
+				const currentByKey = new Map(this.updatedDebtSonataItems.map((item) => [item.key, item]));
+				this.updatedDebtSonataItems = rows.map((row: any) =>
+					this.pendingWriteKeys.has(row.key)
+						? (currentByKey.get(row.key) ?? structuredClone(row))
+						: structuredClone(row)
+				);
 				this.loading = false;
 				this.cdr.detectChanges();
 				this.upcomingExpenses = rows
@@ -225,16 +234,28 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected async payDebt(entryKey: string, amount: number): Promise<void> {
 		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, this.findUpdatedItem(entryKey)?._openid ?? '')) return;
 		const item = this.findUpdatedItem(entryKey);
-		if (!item || amount <= 0 || item.paid) return;
+		if (!item || amount <= 0 || this.isPayDisabled(item)) return;
 		// Round to 2 decimal places to avoid floating-point drift accumulating over multiple payments
 		const currentDebt: number = item.debt ?? 0;
 		const newDebt = Math.round((currentDebt - amount) * 100) / 100;
 		const isPaidOff = newDebt <= 0;
+		// Apply mutations synchronously before any DB write — immune to subscription replacements.
+		// pendingWriteKeys shields this entry from subscription overwrites until the write settles.
+		this.pendingWriteKeys.add(entryKey);
 		item.debt = newDebt;
-		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
-		if (isPaidOff) {
-			item.paid = true;
-			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_PAID);
+		if (isPaidOff) item.paid = true;
+		// Write debt before paid so a subscription callback between the two writes shows
+		// 100% progress (debt=0, paid=false) rather than a transient 0% state (paid=true, debt=old)
+		try {
+			await this.databaseService.updateDebtTable(entryKey, DEBT_VALUE_KEY_DEBT, newDebt);
+			if (isPaidOff) {
+				await this.databaseService.updateDebtTable(entryKey, DEBT_VALUE_KEY_PAID, true);
+			}
+			this.triggerSaveIndicator();
+		} catch (error) {
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+		} finally {
+			this.pendingWriteKeys.delete(entryKey);
 		}
 		// Track per-entry payment history in-session so the history panel can display it without a DB read
 		this.paymentHistoryMap = {
@@ -371,7 +392,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 				[DEBT_VALUE_KEY_DEBT]: debtData.amount,
 				[DEBT_VALUE_KEY_ORIGINAL]: debtData.amount,
 				[DEBT_VALUE_KEY_DATE]: debtData.dueDate,
-				[DEBT_VALUE_KEY_PAID]: false,
+				[DEBT_VALUE_KEY_PAID]: debtData.amount <= 0,
 				[DEBT_VALUE_KEY_TYPE]: debtData.isPermanent ? DEBT_TYPE_PERMANENT : DEBT_TYPE_TEMP,
 				[DEBT_VALUE_KEY_CAT]: debtData.category,
 				[DEBT_VALUE_KEY_CUR]: debtData.currency
@@ -408,10 +429,20 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const original = this.findOriginalItem(entryKey);
 		if (!item || !original) return;
 		const originalAmount: number = original.original ?? item.original ?? 0;
+		this.pendingWriteKeys.add(entryKey);
 		item.debt = originalAmount;
 		item.paid = false;
-		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
-		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_PAID);
+		try {
+			await this.databaseService.updateDebtTableFields(entryKey, {
+				[DEBT_VALUE_KEY_DEBT]: originalAmount,
+				[DEBT_VALUE_KEY_PAID]: false
+			});
+			this.triggerSaveIndicator();
+		} catch (error) {
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+		} finally {
+			this.pendingWriteKeys.delete(entryKey);
+		}
 		this.paymentHistoryMap = { ...this.paymentHistoryMap, [entryKey]: [] };
 		this.resyncUpcomingFromLocalData();
 	}
@@ -433,14 +464,12 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	/**
 	 * Reads the updated value for the given field and writes it to CloudBase.
 	 * Skips the write when the value has not changed. Rolls back the local change
-	 * on permission error before showing the dialog. All field-level updates in
-	 * this class route through here — only add and delete operations call the
-	 * database service directly.
+	 * on permission error before showing the dialog.
 	 *
-	 * {@link payDebt} - Persists the new debt balance, and the paid flag when zeroed.
-	 * {@link resetDebt} - Restores debt and paid flag to original values.
+	 * All values are captured before the first await so that a realtime subscription
+	 * callback mid-flight cannot corrupt the comparison or rollback targets.
+	 *
 	 * {@link toggleLock} - Persists the toggled goal/permanent type.
-	 * {@link setDebtForCycle} - Persists the new amount, reset original, cleared paid flag, and due date from the Set dialog.
 	 *
 	 * @param entryKey - The unique key of the entry to update.
 	 * @param valueKey - The field name inside the entry's object.
@@ -451,6 +480,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (!updatedItem || !originalItem) return;
 		const updatedValue = updatedItem[valueKey];
 		const oldValue = originalItem[valueKey];
+		this.pendingWriteKeys.add(entryKey);
 		try {
 			if (updatedValue !== oldValue) {
 				await this.databaseService.updateDebtTable(entryKey, valueKey, updatedValue);
@@ -458,13 +488,11 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 			}
 		} catch (error) {
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-				const rollback = this.findUpdatedItem(entryKey);
-				const rollbackOriginal = this.findOriginalItem(entryKey);
-				if (rollback && rollbackOriginal) {
-					rollback[valueKey] = rollbackOriginal[valueKey];
-				}
+				updatedItem[valueKey] = oldValue;
 			}
 			this.dialogService.handleError(this.dialogComponentContainer, error);
+		} finally {
+			this.pendingWriteKeys.delete(entryKey);
 		}
 	}
 
@@ -583,8 +611,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}[] {
 		const groups: Record<string, { owed: number; original: number }> = {};
 		for (const item of this.updatedDebtSonataItems ?? []) {
-			const isChinese = Utilities.checkIfChinese(item.name ?? '');
-			const code = isChinese ? 'CNY' : 'CAD';
+			const code = this.isCnyCurrency(item) ? 'CNY' : 'CAD';
 			if (!groups[code]) groups[code] = { owed: 0, original: 0 };
 			groups[code].owed += item.debt ?? 0;
 			groups[code].original += item.original ?? 0;
@@ -758,7 +785,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected getDebtProgress(item: any): number {
 		const original: number = item.original ?? 0;
-		if (original <= 0) return 0;
+		if (original <= 0) return item.paid ? 100 : 0;
 		const repaid = Math.max(0, original - (item.debt ?? 0));
 		return Math.min(100, Math.round((repaid / original) * 100));
 	}
@@ -829,7 +856,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const prefillData: Partial<NewDebtData> = {
 			amount: item.debt ?? 0,
 			dueDate: item.date ?? '',
-			currency: item.cur ?? DEBT_CURRENCY_CNY
+			currency: this.isCnyCurrency(item) ? DEBT_CURRENCY_CNY : DEBT_CURRENCY_CAD
 		};
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -841,29 +868,54 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Applies the Set-debt dialog submission as a fresh cycle: always resets
-	 * the original ceiling to the entered amount, clears the paid flag, and
-	 * persists currency and due date when they changed.
+	 * the original ceiling to the entered amount, sets the paid flag to true
+	 * when the entered amount is zero and false otherwise, and persists currency
+	 * and due date when they changed. Clears the in-session payment history
+	 * when the amount changes.
+	 *
+	 * Both `item` and `original` are captured before any await so that realtime
+	 * subscription callbacks (which replace updatedDebtSonataItems and
+	 * originalDebtSonataItems mid-flight) cannot corrupt the comparison values.
+	 * All comparisons use `original.*` against `data.*` directly.
 	 *
 	 * @param entryKey - The unique key of the entry to update.
 	 * @param data - The validated form data returned by the Set dialog.
 	 */
 	private async setDebtForCycle(entryKey: string, data: NewDebtData): Promise<void> {
 		const item = this.findUpdatedItem(entryKey);
-		if (!item) return;
-		if (data.currency !== item.cur) {
-			item[DEBT_VALUE_KEY_CUR] = data.currency;
-			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_CUR);
-		}
-		// Always reset both debt and original to the entered amount (fresh cycle)
+		const original = this.findOriginalItem(entryKey);
+		if (!item || !original) return;
+
+		// Apply all local mutations synchronously before any DB write so the UI
+		// reflects the intended state regardless of subscription timing.
+		// pendingWriteKeys shields this entry from subscription overwrites until the write settles.
+		const newPaid = data.amount <= 0;
+		this.pendingWriteKeys.add(entryKey);
+		if (data.currency !== original[DEBT_VALUE_KEY_CUR]) item[DEBT_VALUE_KEY_CUR] = data.currency;
 		item[DEBT_VALUE_KEY_DEBT] = data.amount;
 		item[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
-		item[DEBT_VALUE_KEY_PAID] = false;
-		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DEBT);
-		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_ORIGINAL);
-		await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_PAID);
-		if (data.dueDate !== item.date) {
-			item[DEBT_VALUE_KEY_DATE] = data.dueDate;
-			await this.updateTableSingleValue(entryKey, DEBT_VALUE_KEY_DATE);
+		item[DEBT_VALUE_KEY_PAID] = newPaid;
+		if (data.dueDate !== original.date) item[DEBT_VALUE_KEY_DATE] = data.dueDate;
+		if (data.amount !== original.debt) {
+			this.paymentHistoryMap = { ...this.paymentHistoryMap, [entryKey]: [] };
+		}
+
+		// Build a single update object with only changed fields — one round-trip instead of up to five.
+		const fields: Record<string, unknown> = {};
+		if (data.currency !== original[DEBT_VALUE_KEY_CUR]) fields[DEBT_VALUE_KEY_CUR] = data.currency;
+		if (data.amount !== original.debt) fields[DEBT_VALUE_KEY_DEBT] = data.amount;
+		if (data.amount !== original.original) fields[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
+		if (original.paid !== newPaid) fields[DEBT_VALUE_KEY_PAID] = newPaid;
+		if (data.dueDate !== original.date) fields[DEBT_VALUE_KEY_DATE] = data.dueDate;
+		try {
+			if (Object.keys(fields).length > 0) {
+				await this.databaseService.updateDebtTableFields(entryKey, fields);
+				this.triggerSaveIndicator();
+			}
+		} catch (error) {
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+		} finally {
+			this.pendingWriteKeys.delete(entryKey);
 		}
 		this.resyncUpcomingFromLocalData();
 		this.cdr.detectChanges();
@@ -881,15 +933,28 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns true when the item's currency is CNY, checking the stored
-	 * currency field first and falling back to Chinese-character detection
-	 * on the name for legacy records without a stored currency.
+	 * Returns true when the item's currency is CNY. Uses the stored currency
+	 * field as the authoritative source; falls back to Chinese-character detection
+	 * on the item name for legacy records that pre-date explicit currency selection.
 	 *
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns Whether the item's currency is CNY.
 	 */
 	protected isCnyCurrency(item: any): boolean {
-		if (item.cur) return item.cur === DEBT_CURRENCY_CNY;
+		const stored = item[DEBT_VALUE_KEY_CUR];
+		if (stored) return stored === DEBT_CURRENCY_CNY;
 		return Utilities.checkIfChinese(item.name ?? '');
+	}
+
+	/**
+	 * Returns true when the payment chips for the given item should be disabled.
+	 * Chips are disabled when the item is marked paid or when the remaining balance
+	 * is zero or negative — there is nothing left to subtract.
+	 *
+	 * @param item - The Account Expenses item (schema-less CloudBase document).
+	 * @returns Whether the payment chips should be in a disabled state.
+	 */
+	protected isPayDisabled(item: any): boolean {
+		return item.paid || item.debt <= 0;
 	}
 }

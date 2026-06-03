@@ -7,7 +7,9 @@
 	(onHide)="onDialogClosed()"
 	styleClass="add-debt-dialog">
 	<ng-template #header>
-		<span class="add-debt-dialog-title">{{ isEditMode ? DEBT_DIALOG_LABEL_EDIT : DEBT_DIALOG_TITLE }}</span>
+		<span class="add-debt-dialog-title">{{
+			isEditMode ? DEBT_DIALOG_LABEL_EDIT : DEBT_DIALOG_TITLE
+		}}</span>
 	</ng-template>
 
 	@if (!isEditMode) {
@@ -34,7 +36,9 @@
 						[style.--category-gradient]="category.gradient"
 						(click)="selectedCategoryKey = category.key"
 						[title]="category.label">
-						<span class="material-symbols-outlined add-debt-category-icon">{{ category.icon }}</span>
+						<span class="material-symbols-outlined add-debt-category-icon">{{
+							category.icon
+						}}</span>
 						<span class="add-debt-category-label">{{ category.label }}</span>
 					</button>
 				}
@@ -64,6 +68,7 @@
 					type="button"
 					class="add-debt-currency-option"
 					[class.selected]="selectedCurrency === DEBT_CURRENCY_CNY"
+					[disabled]="isEditMode"
 					(click)="selectedCurrency = DEBT_CURRENCY_CNY">
 					{{ DEBT_DIALOG_LABEL_CURRENCY_CNY }}
 				</button>
@@ -71,6 +76,7 @@
 					type="button"
 					class="add-debt-currency-option"
 					[class.selected]="selectedCurrency === DEBT_CURRENCY_CAD"
+					[disabled]="isEditMode"
 					(click)="selectedCurrency = DEBT_CURRENCY_CAD">
 					{{ DEBT_DIALOG_LABEL_CURRENCY_CAD }}
 				</button>
@@ -86,8 +92,14 @@
 
 	@if (!isEditMode) {
 		<!-- Permanent toggle -->
-		<button type="button" class="add-debt-permanent-toggle" [class.on]="isPermanent" (click)="isPermanent = !isPermanent">
-			<span class="material-symbols-outlined add-debt-permanent-icon">{{ isPermanent ? 'lock' : 'lock_open' }}</span>
+		<button
+			type="button"
+			class="add-debt-permanent-toggle"
+			[class.on]="isPermanent"
+			(click)="isPermanent = !isPermanent">
+			<span class="material-symbols-outlined add-debt-permanent-icon">{{
+				isPermanent ? 'lock' : 'lock_open'
+			}}</span>
 			<span class="add-debt-permanent-text">
 				<b>{{ DEBT_DIALOG_LABEL_PERMANENT }}</b>
 				<small>{{ DEBT_DIALOG_LABEL_PERMANENT_DESC }}</small>
@@ -99,7 +111,9 @@
 	}
 
 	<ng-template #footer>
-		<button class="add-debt-button-ghost" (click)="onDialogClosed()">{{ DEBT_DIALOG_LABEL_CANCEL }}</button>
+		<button class="add-debt-button-ghost" (click)="onDialogClosed()">
+			{{ DEBT_DIALOG_LABEL_CANCEL }}
+		</button>
 		<button class="add-debt-button-gradient" [disabled]="!isValid" (click)="onSubmit()">
 			{{ isEditMode ? DEBT_DIALOG_LABEL_SAVE : DEBT_DIALOG_LABEL_ADD }}
 		</button>

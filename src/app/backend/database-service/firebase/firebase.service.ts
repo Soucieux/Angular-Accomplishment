@@ -703,6 +703,22 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Updates multiple fields in a single debt table record in one round-trip.
+	 *
+	 * @param entryKey - The key of the entry to update.
+	 * @param fields - A record of field names and their new values.
+	 */
+	public async updateDebtTableFields(entryKey: string, fields: Record<string, unknown>): Promise<void> {
+		try {
+			await update(dbRef(this.db, `${DATABASE_DEBT_SONATA}/${entryKey}`), fields);
+			LOG.info(this.className, `Record on ${DATABASE_DEBT_SONATA} has been updated`);
+		} catch (error) {
+			LOG.error(this.className, `Error while updating ${DATABASE_DEBT_SONATA}`, error as Error);
+			throw error;
+		}
+	}
+
+	/**
 	 * Updates a single value in  a given table.
 	 *
 	 * @param tableName - The name of the table to update.

@@ -335,6 +335,7 @@ export const BREAKPOINT_DIALOG = '(max-width: 580px)';
 
 ////////////////////// Below are error code constants ////////////////////////////////
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';
+export const ERROR_NO_DOCUMENT_UPDATED = 'DATABASE_NO_DOCUMENT_UPDATED';
 
 ////////////////////// Below are auth role and error code constants //////////////////
 /** CloudBase role string that identifies an admin user. */

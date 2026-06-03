@@ -6,7 +6,14 @@
 		<div class="page-header">
 			<div class="header-left">
 				<div class="header-text">
-					<h1 class="page-title">Debt Sonata</h1>
+					<div class="page-title-row">
+						<h1 class="page-title">Debt Sonata</h1>
+						@if (saveIndicators) {
+							<div class="save-indicator">
+								<span class="save-spinner"></span>
+							</div>
+						}
+					</div>
 					<p class="page-subtitle">Where every repayment is a brushstroke — and a closing line.</p>
 				</div>
 			</div>
@@ -90,12 +97,6 @@
 						</div>
 					</div>
 				</div>
-				@if (saveIndicators) {
-					<div class="summary-save">
-						<span class="debt-spinner"></span>
-						<span>Saving</span>
-					</div>
-				}
 			}
 		</div>
 

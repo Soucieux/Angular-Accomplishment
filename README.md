@@ -4,7 +4,7 @@
 
 [![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)](https://angular.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-11-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Cloudbase](https://img.shields.io/badge/Tencent_Cloudbase-2.x-00A3FF)](https://cloudbase.net)
+[![Cloudbase](https://img.shields.io/badge/Tencent_Cloudbase-3.x-00A3FF)](https://cloudbase.net)
 [![PrimeNG](https://img.shields.io/badge/PrimeNG-20-7C3AED)](https://primeng.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 
@@ -28,12 +28,13 @@
 | :--- | :--- | :---: |
 | **Vision Home** | Bento-grid dashboard with live stat chips, Life Clock (year/month/week/day progress), Pomodoro Focus Timer, recent activity log, week calendar, and quick-action shortcuts. | Active |
 | **Entertainment Hub** | Track movies and TV dramas with Douban API metadata lookup, Firebase/Cloudbase image management, category filtering, favourites, rating system, and full addition/deletion history. | Stable |
-| **Reminder Suite** | Triple-table system — date calculator, account expense tracker, and bank debt ledger — with colour-coded status indicators and persistent cloud sync. | Active |
-| **Nexus** | Personal AI search hub with chip-based query filters and a saved link management panel. | Beta |
+| **Reminder Suite** | Account expense tracker with inline editing, colour-coded status indicators, and persistent cloud sync. | Active |
+| **Nexus** | Personal AI search hub with chip-based query filters, a saved link management panel, and an integrated Date Calculator for date-range arithmetic. | Beta |
+| **Debt Sonata** | Debt tracking canvas — card-based ledger with CNY/CAD currency, payment chips, progress bars, paid-off ribbon, summary totals, and a full payment history timeline per entry. | Active |
 | **Resonance** | Personal quote vault with author attribution, timestamps, and anonymous browsing support. | Active |
 | **Recipe Vault** | Personal cookbook with category filtering, ingredient groups with type badges, step-by-step instructions, and a live servings scaler. Each category applies a distinct colour theme (rose · green · purple · amber · pink) across cards, panels, and action buttons. Ingredient names support both Chinese characters and English — enter each language on a separate line; the first line is used as the coloured pill label shown on the right side of steps. | Active |
 | **Patch Notes** | Internal development log with add/edit/delete, bug flagging per component, status filters, and pagination. | Active |
-| **Secure Entry** | Auth page with Google Sign-In, email/password login, and user sign-up — with route guards protecting all authenticated pages. | Stable |
+| **Secure Entry** | Auth page with Google Sign-In, email/password login, and user sign-up — with route guards protecting all authenticated pages. Sidebar features a presence row with avatar, online status, and an account menu popover (desktop) or confirm dialog (mobile). | Stable |
 | **About** | Professional history timeline with animated visual background. | Stable |
 
 ---
@@ -54,7 +55,7 @@
 
 ---
 
-### 🚀 R1 — Feature Development (February 2025 – May 2026)
+### 🚀 R1 — Feature Development (February 2025 – June 2026)
 
 | Period | Milestone |
 | :--- | :--- |
@@ -73,6 +74,7 @@
 | **May 2026** | Vision Home bento-grid dashboard launched — live stat chips (movies, reminders, quotes, patches); Life Clock with real-time year / month / week / day progress bars; Pomodoro Focus Timer with preset durations; Quick Note scratch pad; recent activity feed in a 2-column grid; week calendar with task pills; quick-action shortcut row; mobile-responsive layout. Login page entrance animations added. Sign-up flow completed — new users can register directly from the login page. |
 | **May 2026** | Recipe Vault module launched — personal cookbook with list, detail, and editor views; ingredient groups with type classification and colour-coded badges; live servings scaler; step-by-step instructions with ingredient pill highlights; category chip filtering; drag-to-reorder steps; notes and tips section; skeleton loading states. |
 | **May 2026** | Resonance module launched — personal quote vault with author attribution, ISO timestamps, and anonymous browsing support; anonymous-user refresh race condition identified and patched. Nexus module built out — AI search hub with chip-based category filters, search history, and a saved link management panel with add and delete flows. Search feature added to Entertainment with a dedicated search dialog and block-dialog state; movie deletion flow ported to Cloudbase. Cloudbase authentication race condition on app startup resolved. Full JSDoc documentation and access modifier pass across all services and components. Environment template added for safer onboarding. Bundle size budget increased; error message and exception handling refactored globally. |
+| **June 2026** | Debt Sonata page launched — dedicated card-based debt ledger replacing the former bank debt tracker inside Reminder; CNY / CAD currency selection; preset and custom payment chips; paid-off ribbon with coral state when balance hits zero; summary card with per-currency progress bars and live stat counters; paginator; PrimeNG datepicker for due dates; all edits routed through dialogs. Date Calculator extracted from Reminder and integrated into Nexus. Sidebar account row redesigned — desktop popover with user avatar, name, online status, and sign-out; mobile collapses to a single icon that triggers a confirm dialog. Ownership-based permission checks added to edit and delete actions across Entertainment, Resonance, and Nexus. |
 
 ---
 
@@ -188,10 +190,10 @@ npm install
 Copy the environment template and populate it with your credentials:
 
 ```bash
-cp src/environments/environment.template.ts src/environments/environment.ts
+cp src/environment/environment-template.ts src/environment/environment.ts
 ```
 
-Open `src/environments/environment.ts` and fill in your Firebase config object and, if applicable, your Cloudbase `envId`.
+Open `src/environment/environment.ts` and fill in your Firebase config object and, if applicable, your Cloudbase `envId`.
 
 ### 4. Start the development server
 

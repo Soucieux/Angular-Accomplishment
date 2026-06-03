@@ -255,7 +255,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		// Round to 2 decimal places to avoid floating-point drift accumulating over multiple payments
 		const currentDebt: number = item.debt ?? 0;
 		const newDebt = Math.round((currentDebt - amount) * 100) / 100;
-		const isPaidOff = newDebt <= 0;
+		const isPaidOff = this.isDebtFullySettled(newDebt);
 		// Apply mutations synchronously before any DB write — immune to subscription replacements.
 		// pendingWriteKeys shields this entry from subscription overwrites until the write settles.
 		this.pendingWriteKeys.add(entryKey);
@@ -409,7 +409,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 				[DEBT_VALUE_KEY_DEBT]: debtData.amount,
 				[DEBT_VALUE_KEY_ORIGINAL]: debtData.amount,
 				[DEBT_VALUE_KEY_DATE]: debtData.dueDate,
-				[DEBT_VALUE_KEY_PAID]: debtData.amount <= 0,
+				[DEBT_VALUE_KEY_PAID]: this.isDebtFullySettled(debtData.amount),
 				[DEBT_VALUE_KEY_TYPE]: debtData.isPermanent ? DEBT_TYPE_PERMANENT : DEBT_TYPE_TEMP,
 				[DEBT_VALUE_KEY_CAT]: debtData.category,
 				[DEBT_VALUE_KEY_CUR]: debtData.currency
@@ -437,7 +437,9 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Resets the debt balance to its original amount and marks the entry as unpaid.
+	 * Resets the debt balance to its original amount. Paid state is derived from
+	 * the original amount via {@link isDebtFullySettled} — if the original amount
+	 * is zero or below, the entry is marked as paid rather than unpaid.
 	 *
 	 * @param entryKey - The unique key of the entry to reset.
 	 */
@@ -446,13 +448,14 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const original = this.findOriginalItem(entryKey);
 		if (!item || !original) return;
 		const originalAmount: number = original.original ?? item.original ?? 0;
+		const newPaid = this.isDebtFullySettled(originalAmount);
 		this.pendingWriteKeys.add(entryKey);
 		item.debt = originalAmount;
-		item.paid = false;
+		item.paid = newPaid;
 		try {
 			await this.databaseService.updateDebtTableFields(entryKey, {
 				[DEBT_VALUE_KEY_DEBT]: originalAmount,
-				[DEBT_VALUE_KEY_PAID]: false
+				[DEBT_VALUE_KEY_PAID]: newPaid
 			});
 			this.triggerSaveIndicator();
 		} catch (error) {
@@ -511,6 +514,23 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		} finally {
 			this.pendingWriteKeys.delete(entryKey);
 		}
+	}
+
+	/**
+	 * Returns true when the given amount should be treated as fully settled.
+	 * Any amount at or below zero is considered paid off.
+	 * Single source of truth for the settled threshold used across all write paths.
+	 *
+	 * {@link payDebt} - Checks the balance remaining after a chip payment.
+	 * {@link addNewDebt} - Checks the amount on a newly created record.
+	 * {@link setDebtForCycle} - Checks the amount entered via the Set dialog.
+	 * {@link resetDebt} - Checks the original amount restored by the reset action.
+	 *
+	 * @param amount - The debt amount to evaluate.
+	 * @returns Whether the amount qualifies as fully settled.
+	 */
+	private isDebtFullySettled(amount: number): boolean {
+		return amount <= 0;
 	}
 
 	/**
@@ -917,7 +937,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		// Apply all local mutations synchronously before any DB write so the UI
 		// reflects the intended state regardless of subscription timing.
 		// pendingWriteKeys shields this entry from subscription overwrites until the write settles.
-		const newPaid = data.amount <= 0;
+		const newPaid = this.isDebtFullySettled(data.amount);
 		this.pendingWriteKeys.add(entryKey);
 		if (data.currency !== original[DEBT_VALUE_KEY_CUR]) item[DEBT_VALUE_KEY_CUR] = data.currency;
 		item[DEBT_VALUE_KEY_DEBT] = data.amount;

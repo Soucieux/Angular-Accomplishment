@@ -21,7 +21,7 @@ import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exi
 import { LOG } from '../../../common/app.logs';
 import { Checkbox } from 'primeng/checkbox';
 import { DialogService } from '../dialog.service';
-import { DIALOG_ERROR, MOVIE_GENRES } from '../../../common/app.constant';
+import { DIALOG_ERROR, ENT_MSG_ADD_DIALOG_SEARCH_FAILED, MOVIE_GENRES } from '../../../common/app.constant';
 
 interface AddMovieFormValue {
 	movieName?: string;
@@ -130,7 +130,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 			if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
 				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 			} else {
-				LOG.error(this.className, 'Error while searching new movie from add dialog', error as Error);
+				LOG.error(this.className, ENT_MSG_ADD_DIALOG_SEARCH_FAILED, error as Error);
 				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		} finally {

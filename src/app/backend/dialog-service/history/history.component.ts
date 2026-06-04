@@ -9,8 +9,11 @@ import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exi
 import { LOG } from '../../../common/app.logs';
 import {
 	DIALOG_BTN_CONFIRM,
+	DIALOG_CONFIRM,
 	DIALOG_ERROR,
+	ENT_MSG_ADD_DIALOG_SEARCH_FAILED,
 	HISTORY_DIALOG_UNDO_BTN,
+	HISTORY_MOVIE_ID_UNKNOWN,
 	HISTORY_MSG_UNDO_CONFIRM,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
@@ -57,12 +60,12 @@ export class HistoryDialogComponent implements OnDestroy {
 	}
 
 	/**
-	 * Sets the background color for a history entry based on its status.
+	 * Gets the CSS background-color string for a history entry based on its status.
 	 *
 	 * @param status - The status of the history entry.
-	 * @returns A CSS color string, or empty string if the status is unrecognized.
+	 * @returns The CSS border-style string, or empty string if the status is unrecognized.
 	 */
-	protected setBackgroundColor(status: string) {
+	protected getBackgroundColor(status: string): string {
 		if (status === HISTORY_STATUS_ADDED) {
 			return HISTORY_STYLE_ADDED;
 		} else if (status === HISTORY_STATUS_DELETED) {
@@ -79,10 +82,10 @@ export class HistoryDialogComponent implements OnDestroy {
 	protected openRestoreEntryDialog(entry: HistoryEntry) {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'confirm',
+			DIALOG_CONFIRM,
 			async () => {
 				try {
-					if (!entry.id || !entry.message) throw new MovieIdNotFoundError('unknown');
+					if (!entry.id || !entry.message) throw new MovieIdNotFoundError(HISTORY_MOVIE_ID_UNKNOWN);
 					const movieToRestore = new MovieItemVO();
 					movieToRestore.setMovieId(entry.id);
 					/* Reconstruct MovieItemVO from the history message string.
@@ -102,7 +105,7 @@ export class HistoryDialogComponent implements OnDestroy {
 					} else {
 						LOG.error(
 							this.className,
-							'Error while searching new movie from add dialog',
+							ENT_MSG_ADD_DIALOG_SEARCH_FAILED,
 							error as Error
 						);
 						this.dialogService.showUnexpectedError(this.dialogComponentContainer);

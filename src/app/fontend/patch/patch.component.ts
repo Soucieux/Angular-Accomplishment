@@ -34,7 +34,17 @@ import {
 	STATUS_TODO,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
-	PATCH_MSG_DELETE_CONFIRM
+	PATCH_MSG_DELETE_CONFIRM,
+	TOAST_INFO,
+	TOAST_WARN,
+	SEVERITY_SUCCESS,
+	SEVERITY_DANGER,
+	SEVERITY_SECONDARY,
+	PATCH_SEVERITY_ICON_TODO,
+	PATCH_SEVERITY_ICON_IN_PROGRESS,
+	PATCH_SEVERITY_ICON_COMPLETED,
+	PATCH_SEVERITY_ICON_DEBUG,
+	PATCH_SEVERITY_ICON_DRAFT
 } from '../../common/app.constant';
 import { map, Observable, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -280,7 +290,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns a blank patch-note record used both for field initialisation
+	 * Gets a blank patch-note record used both for field initialisation
 	 * and to reset the form after a successful submission.
 	 *
 	 * @returns A zeroed-out patch note record object.
@@ -550,7 +560,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns the currently rendered data array from a PrimeNG table data object,
+	 * Gets the currently rendered data array from a PrimeNG table data object,
 	 * falling back from filtered value to raw value to an empty array.
 	 *
 	 * @param data - The PrimeNG table data object.
@@ -589,7 +599,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns the CSS class for a severity tag based on its status value.
+	 * Gets the CSS class for a severity tag based on its status value.
 	 *
 	 * @param status - The status value.
 	 * @returns The CSS class name for the severity tag.
@@ -604,7 +614,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns the PrimeNG severity level for a tag based on the patch note status.
+	 * Gets the PrimeNG severity level for a tag based on the patch note status.
 	 *
 	 * @param status - The patch note status.
 	 * @returns The PrimeNG tag severity value.
@@ -612,23 +622,23 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected getSeverity(status: string) {
 		switch (status) {
 			case STATUS_TODO:
-				return 'info';
+				return TOAST_INFO;
 			case STATUS_IN_PROGRESS:
-				return 'warn';
+				return TOAST_WARN;
 			case STATUS_COMPLETED:
 			case STATUS_RESOLVED:
-				return 'success';
+				return SEVERITY_SUCCESS;
 			case STATUS_DEBUG:
-				return 'danger';
+				return SEVERITY_DANGER;
 			case STATUS_DRAFT:
-				return 'secondary';
+				return SEVERITY_SECONDARY;
 			default:
 				return undefined;
 		}
 	}
 
 	/**
-	 * Returns the PrimeNG icon class for a tag based on the patch note status.
+	 * Gets the PrimeNG icon class for a tag based on the patch note status.
 	 *
 	 * @param status - The patch note status.
 	 * @returns The PrimeNG icon CSS class.
@@ -636,23 +646,23 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected getSeverityIcon(status: string) {
 		switch (status) {
 			case STATUS_TODO:
-				return 'pi pi-clock';
+				return PATCH_SEVERITY_ICON_TODO;
 			case STATUS_IN_PROGRESS:
-				return 'pi pi-play-circle';
+				return PATCH_SEVERITY_ICON_IN_PROGRESS;
 			case STATUS_COMPLETED:
 			case STATUS_RESOLVED:
-				return 'pi pi-verified';
+				return PATCH_SEVERITY_ICON_COMPLETED;
 			case STATUS_DEBUG:
-				return 'pi pi-exclamation-circle';
+				return PATCH_SEVERITY_ICON_DEBUG;
 			case STATUS_DRAFT:
-				return 'pi pi-file-edit';
+				return PATCH_SEVERITY_ICON_DRAFT;
 			default:
 				return undefined;
 		}
 	}
 
 	/**
-	 * Total number of patch notes currently loaded (excluding the dummy row).
+	 * Gets the total number of patch notes currently loaded (excluding the dummy row).
 	 *
 	 * @returns The count of real patch-note records.
 	 */
@@ -661,7 +671,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Number of patch notes currently in the In Progress status.
+	 * Gets the number of patch notes currently in the In Progress status.
 	 *
 	 * @returns The count of in-progress records.
 	 */
@@ -670,7 +680,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Number of patch notes currently in the Debug (open bug) status.
+	 * Gets the number of patch notes currently in the Debug (open bug) status.
 	 *
 	 * @returns The count of open bug records.
 	 */

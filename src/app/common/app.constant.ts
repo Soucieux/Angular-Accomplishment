@@ -17,6 +17,12 @@ export const MSG_SAVE_FAILED = 'Save failed';
 export const MSG_PERMISSION_DENIED = 'User does not have permission';
 /** User-facing message shown when an unhandled exception occurs. */
 export const MSG_UNEXPECTED_ERROR = 'Unexpected error occurred';
+/** Error message thrown when an unknown dialog type is requested. */
+export const MSG_INVALID_DIALOG_TYPE = 'Invalid dialog type';
+/** Error message thrown when the dialog container reference is missing. */
+export const MSG_DIALOG_CONTAINER_NOT_FOUND = 'Dialog container not found';
+/** Error message thrown when a second dialog is opened before the first is closed. */
+export const MSG_DIALOG_ALREADY_OPEN = 'Dialog already opened';
 export const ERROR_DIALOG_HEADER = 'Error';
 export const ERROR_DIALOG_ICON_CLASS = 'pi pi-times-circle text-red-500';
 export const ERROR_DIALOG_BTN_LABEL = 'OK';
@@ -26,6 +32,14 @@ export const ERROR_DIALOG_MSG_CLASS = 'error-dialog-message';
 export const TOAST_INFO = 'info';
 export const TOAST_WARN = 'warn';
 export const TOAST_ERROR = 'error';
+export const SEVERITY_SUCCESS = 'success';
+export const SEVERITY_DANGER = 'danger';
+export const SEVERITY_SECONDARY = 'secondary';
+export const PATCH_SEVERITY_ICON_TODO = 'pi pi-clock';
+export const PATCH_SEVERITY_ICON_IN_PROGRESS = 'pi pi-play-circle';
+export const PATCH_SEVERITY_ICON_COMPLETED = 'pi pi-verified';
+export const PATCH_SEVERITY_ICON_DEBUG = 'pi pi-exclamation-circle';
+export const PATCH_SEVERITY_ICON_DRAFT = 'pi pi-file-edit';
 
 ////////////////////// Below are dialog type discriminator constants /////////////////
 /** Dialog type for a yes/no confirmation prompt. */
@@ -50,6 +64,8 @@ export const HISTORY_STATUS_ADDED = 'added';
 export const HISTORY_STATUS_DELETED = 'deleted';
 export const HISTORY_MSG_UNDO_CONFIRM = 'Undo this deletion?';
 export const HISTORY_DIALOG_UNDO_BTN = 'Undo';
+/** Sentinel movie ID string used when a history entry has no valid numeric ID. */
+export const HISTORY_MOVIE_ID_UNKNOWN = 'unknown';
 /** Inline border style for an "added" history entry. */
 export const HISTORY_STYLE_ADDED = 'solid green';
 /** Inline border style for a "deleted" history entry. */
@@ -219,6 +235,7 @@ export const ENT_MSG_DELETE_CONFIRM_PREFIX = 'Are you sure you want to delete ';
 export const ENT_DIALOG_TITLE_DELETE_MOVIE = 'Delete Movie';
 export const ENT_MSG_ADDING = 'Adding movie...';
 export const ENT_MSG_RESTORING = 'Restoring movie...';
+export const ENT_MSG_ADD_DIALOG_SEARCH_FAILED = 'Error while searching new movie from add dialog';
 export const ENT_MSG_UPDATE_GENRE_FAILED = 'Error while updating genre';
 export const ENT_MSG_UPDATE_RATE_FAILED_PREFIX = 'Error while updating movie rate for ';
 export const ENT_MSG_API_EMPTY_RESPONSE = 'API responded with empty data due to too many requests';

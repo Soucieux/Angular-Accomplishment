@@ -17,6 +17,9 @@ import {
 	DIALOG_HISTORY,
 	DIALOG_RECIPE_TYPE,
 	ERROR_PERMISSION_DENIED,
+	MSG_DIALOG_ALREADY_OPEN,
+	MSG_DIALOG_CONTAINER_NOT_FOUND,
+	MSG_INVALID_DIALOG_TYPE,
 	MSG_PERMISSION_DENIED,
 	MSG_UNEXPECTED_ERROR,
 	SEARCH
@@ -37,7 +40,7 @@ export class DialogService {
 	constructor(private messageService: MessageService) {}
 
 	/**
-	 * Get the dialog component based on the dialog type
+	 * Gets the dialog component based on the dialog type
 	 *
 	 * @param dialogType - The type of dialog to get
 	 * @returns The dialog component
@@ -61,7 +64,7 @@ export class DialogService {
 			case DIALOG_DEBT:
 				return AddDebtDialogComponent;
 			default:
-				throw new Error('Invalid dialog type');
+				throw new Error(MSG_INVALID_DIALOG_TYPE);
 		}
 	}
 
@@ -117,7 +120,7 @@ export class DialogService {
 	): void;
 
 	/**
-	 * Open a dialog
+	 * Opens a dialog
 	 *
 	 * @param dialogContainerRef - The container where dialogs should be attached
 	 * @param dialogType - The type of dialog to open
@@ -132,7 +135,7 @@ export class DialogService {
 	): void | Promise<void> {
 		// Guard: a null container means the component host is not initialized yet
 		if (!dialogContainerRef) {
-			const error = new Error('Dialog container not found');
+			const error = new Error(MSG_DIALOG_CONTAINER_NOT_FOUND);
 			LOG.error(this.className, error.message);
 			throw error;
 		}
@@ -141,7 +144,7 @@ export class DialogService {
 		   all other dialog types enforce a single-instance rule to prevent duplicates. */
 		if (this.openedDialogs.has(dialogType)) {
 			if (dialogType === DIALOG_ERROR || dialogType === DIALOG_BLOCK) return;
-			const error = new Error('Dialog already opened');
+			const error = new Error(MSG_DIALOG_ALREADY_OPEN);
 			LOG.error(this.className, error.message);
 			throw error;
 		}
@@ -186,7 +189,7 @@ export class DialogService {
 	}
 
 	/**
-	 * Show a permission-denied error dialog.
+	 * Shows a permission-denied error dialog.
 	 *
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
@@ -195,7 +198,7 @@ export class DialogService {
 	}
 
 	/**
-	 * Show a generic unexpected-error dialog.
+	 * Shows a generic unexpected-error dialog.
 	 *
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
@@ -236,7 +239,7 @@ export class DialogService {
 	}
 
 	/**
-	 * Show a PrimeNG toast notification.
+	 * Shows a PrimeNG toast notification.
 	 *
 	 * @param severity - Visual style: 'success' | 'info' | 'warn' | 'error'.
 	 * @param summary - Short title shown in the toast.

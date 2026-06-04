@@ -435,13 +435,77 @@
 }
 
 /* ─────────────────────────────────────────
-   Mobile ≤ 940px
+   Mobile ≤ 940px — "Retreat" layout
+   Dark: lamp centred & full-size, form parked below bottom.
+   Lit:  lamp shrinks to a header at the top, form rises into view.
+   Pure CSS driven by the same lampOn flag — no extra JS.
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
 	.v-lamp {
-		gap: 0;
+		display: block; /* gap and flex no longer apply */
+		padding: 0;
 	}
+
+	/* lamp: centred when dark → small header when lit.
+	   left: 55% nudges both stage and form slightly right of centre
+	   so the pull cord clears the viewport edge on narrow screens. */
 	.v-lamp-stage {
-		transform: scale(0.85);
+		position: absolute;
+		top: 50%;
+		left: 55%;
+		transform-origin: top center;
+		transform: translate(-50%, -50%) scale(0.92);
+		transition:
+			top 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+			transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.v-lamp.is-on .v-lamp-stage {
+		top: 2%;
+		left: 50%;
+		transform: translate(-50%, 0) scale(0.5);
+	}
+
+	/* bigger touch target for the pull handle */
+	.lamp-handle::before {
+		content: '';
+		position: absolute;
+		inset: -18px;
+		border-radius: 50%;
+	}
+
+	/* cone follows the lamp up to its header position */
+	.lamp-cone {
+		top: 20%;
+		width: 300px;
+		height: 520px;
+	}
+
+	/* form: parked below the bottom edge → slides up when lit */
+	.v-lamp-form {
+		position: absolute;
+		left: 55%;
+		bottom: 0;
+		width: min(264px, calc(100% - 32px)); /* clamp preferred value (22.9vw) is ≤215px here, always hits the 264px floor */
+		max-height: calc(100dvh - 24px);
+		overflow-y: auto;
+		padding: 24px 22px;
+		transform: translateX(-50%) translateY(48px) scale(0.92);
+	}
+	.v-lamp.is-on .v-lamp-form {
+		transform: translateX(-50%) translateY(-26px); /* 26px above bottom: clears the browser chrome on most phones */
+	}
+	.v-lamp-head {
+		margin-bottom: 16px;
+	}
+
+	/* date sits below the dark lamp, fades out once lit */
+	.v-lamp-date {
+		bottom: 10px;
+		left: 50px;
+		right: 0;
+		transition: opacity 0.4s ease;
+	}
+	.v-lamp.is-on .v-lamp-date {
+		opacity: 0;
 	}
 }

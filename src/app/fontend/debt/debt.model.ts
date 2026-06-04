@@ -1,3 +1,10 @@
+/** A single recorded payment entry, tracked in-memory per session. */
+export interface PaymentEntry {
+	amount: number;
+	balance: number;
+	timestamp: number;
+}
+
 /** Submitted form data returned by the add-debt dialog to its caller. */
 export interface NewDebtData {
 	name: string;

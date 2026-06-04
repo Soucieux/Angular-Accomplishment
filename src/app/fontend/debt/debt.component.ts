@@ -73,26 +73,11 @@ import {
 	DEBT_CATEGORY_GRADIENT_SHOPPING,
 	DEBT_CATEGORY_GRADIENT_HOME
 } from '../../common/app.constant';
-import { NewDebtData } from './debt.model';
+import { DebtCategoryDef, NewDebtData, PaymentEntry } from './debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 import { SegmentedPaginatorComponent } from './segmented-paginator/segmented-paginator.component';
-
-/** A single recorded payment entry, tracked in-memory per session. */
-interface PaymentEntry {
-	amount: number;
-	balance: number;
-	timestamp: number;
-}
-
-/** Category visual definition: key identifier, icon ligature, display label, and gradient CSS value. */
-interface CategoryDef {
-	key: string;
-	icon: string;
-	label: string;
-	gradient: string;
-}
 
 @Component({
 	selector: 'debt',
@@ -134,7 +119,7 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private balanceBumpTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private saveIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
-	private readonly categoryDefs: CategoryDef[] = [
+	private readonly categoryDefs: DebtCategoryDef[] = [
 		{
 			key: DEBT_CATEGORY_CARD,
 			icon: DEBT_CATEGORY_ICON_CARD,
@@ -626,12 +611,12 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Gets a stable category definition for the given item based on a
+	 * Gets a stable category index for the given item based on a
 	 * hash of the item's name, ensuring the same name always maps to the
 	 * same category gradient regardless of sort order.
 	 *
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
-	 * @returns A CategoryDef with icon, label, and gradient CSS value.
+	 * @returns The index into {@link categoryDefs} for the item's deterministic category.
 	 */
 	private getCategoryIndexForItem(item: any): number {
 		const name: string = item.name ?? '';
@@ -762,9 +747,9 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * deterministically via a hash of the item's name.
 	 *
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
-	 * @returns The CategoryDef containing icon, label, and gradient.
+	 * @returns The DebtCategoryDef containing icon, label, and gradient.
 	 */
-	protected getCategoryForItem(item: any): CategoryDef {
+	protected getCategoryForItem(item: any): DebtCategoryDef {
 		if (item[DEBT_VALUE_KEY_CATEGORY]) {
 			const stored = this.categoryDefs.find(
 				(categoryDef) => categoryDef.key === item[DEBT_VALUE_KEY_CATEGORY]

@@ -14,8 +14,8 @@ import { IngredientType, TypeTab } from '../../../fontend/recipe/recipe.model';
 export class RecipeTypeDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 
-	protected readonly ITYPE_DIALOG_TITLE = RECIPE_ITYPE_DIALOG_TITLE;
-	protected readonly EDITOR_TYPE_MAX = RECIPE_EDITOR_TYPE_MAX;
+	protected readonly RECIPE_ITYPE_DIALOG_TITLE = RECIPE_ITYPE_DIALOG_TITLE;
+	protected readonly RECIPE_EDITOR_TYPE_MAX = RECIPE_EDITOR_TYPE_MAX;
 
 	protected visible = false;
 	protected masterTabs: TypeTab[] = [];
@@ -24,7 +24,7 @@ export class RecipeTypeDialogComponent {
 	private applyCallback!: (newIds: Set<IngredientType>) => void;
 
 	/**
-	 * Open the ingredient type manager dialog, initialising the draft selection
+	 * Opens the ingredient type manager dialog, initialising the draft selection
 	 * from the provided active type IDs and storing the callback for Apply.
 	 *
 	 * @param applyCallback - Called with the final Set when the user clicks Apply.
@@ -41,16 +41,16 @@ export class RecipeTypeDialogComponent {
 	}
 
 	/**
-	 * Whether the user can select an additional type in the draft.
+	 * Returns true when the draft has not yet reached the maximum type count.
 	 *
 	 * @returns True if the draft size is below {@link RECIPE_EDITOR_TYPE_MAX}.
 	 */
 	protected canAddMore(): boolean {
-		return this.draft.size < this.EDITOR_TYPE_MAX;
+		return this.draft.size < this.RECIPE_EDITOR_TYPE_MAX;
 	}
 
 	/**
-	 * Toggle an ingredient type in the draft selection.
+	 * Toggles an ingredient type in the draft selection.
 	 * Deselecting is always allowed as long as at least one type remains.
 	 * Selecting is blocked once the draft reaches {@link RECIPE_EDITOR_TYPE_MAX}.
 	 *
@@ -65,7 +65,7 @@ export class RecipeTypeDialogComponent {
 	}
 
 	/**
-	 * Commit the draft by calling the apply callback, then close the dialog.
+	 * Commits the draft by calling the apply callback, then closes the dialog.
 	 */
 	protected apply(): void {
 		this.applyCallback(new Set(this.draft));
@@ -73,14 +73,14 @@ export class RecipeTypeDialogComponent {
 	}
 
 	/**
-	 * Discard the draft and close the dialog without applying changes.
+	 * Discards the draft and closes the dialog without applying changes.
 	 */
 	protected cancel(): void {
 		this.close();
 	}
 
 	/**
-	 * Handle the PrimeNG onHide event emitted when the dialog closes via its
+	 * Handles the PrimeNG onHide event emitted when the dialog closes via its
 	 * own X button, emitting {@link closed$} so DialogService can clean up.
 	 */
 	protected onDialogClosed(): void {
@@ -89,7 +89,7 @@ export class RecipeTypeDialogComponent {
 	}
 
 	/**
-	 * Hide the dialog and emit the closed event so DialogService cleans up.
+	 * Hides the dialog and emits the closed event so DialogService cleans up.
 	 */
 	private close(): void {
 		this.visible = false;

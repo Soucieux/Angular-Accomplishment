@@ -217,7 +217,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are DB helper and permission check methods //////////////////////
 
 	/**
-	 * Get the user id of the current item
+	 * Gets the user id of the current item.
 	 *
 	 * @param entryKey - The CloudBase document key identifying the entry.
 	 * @returns user open Id
@@ -390,7 +390,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are category, done state, and due-soon helpers //////////////
 
 	/**
-	 * Returns the accent color for a tag, falling back to the default neutral when
+	 * Gets the accent color for a tag, falling back to the default neutral when
 	 * the tag is absent or does not match a known category.
 	 *
 	 * @param tag - The tag string to look up, or undefined when the item has no tag.
@@ -414,7 +414,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the count of items whose date is within the due-soon window.
+	 * Gets the count of items whose date is within the due-soon window.
 	 *
 	 * @returns The number of due-soon items.
 	 */
@@ -423,7 +423,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the count of items not yet marked done in the local done-key set.
+	 * Gets the count of items not yet marked done in the local done-key set.
 	 *
 	 * @returns The number of open (not-done) items.
 	 */
@@ -469,7 +469,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the visible item count (filtered), zero-padded to 2 characters.
+	 * Gets the visible item count (filtered), zero-padded to 2 characters.
 	 *
 	 * @returns e.g. "03", "08".
 	 */
@@ -514,7 +514,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are pagination methods and page label getters //////////////////
 
 	/**
-	 * Returns the items visible on the current page.
+	 * Gets the items visible on the current page.
 	 *
 	 * @returns The slice of filtered items for the current page.
 	 */
@@ -534,7 +534,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the total number of pages, including the virtual add-card slot
+	 * Gets the total number of pages, including the virtual add-card slot
 	 * only when no tags are selected in the filter.
 	 *
 	 * @returns Page count (minimum 1).
@@ -545,7 +545,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the current page number as a zero-padded 2-character string (1-based).
+	 * Gets the current page number as a zero-padded 2-character string (1-based).
 	 *
 	 * @returns e.g. "01", "02".
 	 */
@@ -554,7 +554,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the total page count as a zero-padded 2-character string.
+	 * Gets the total page count as a zero-padded 2-character string.
 	 *
 	 * @returns e.g. "01", "03".
 	 */
@@ -745,7 +745,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are global index display helpers for paged items //////////////
 
 	/**
-	 * Returns the 1-based global index for a paged item, zero-padded to 2 digits.
+	 * Gets the 1-based global index for a paged item, zero-padded to 2 digits.
 	 *
 	 * @param localIndex - The 0-based index within the current page.
 	 * @returns A 2-character padded string e.g. "01", "12".
@@ -1001,7 +1001,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are add-card display helpers and label getters ////////////////
 
 	/**
-	 * Returns the YYYY.MM.DD display string for the new-item date pill.
+	 * Gets the YYYY.MM.DD display string for the new-item date pill.
 	 *
 	 * @returns A dot-separated date string, or empty string when no date is set.
 	 */
@@ -1010,7 +1010,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the hostname for the new-item link pill.
+	 * Gets the hostname for the new-item link pill.
 	 *
 	 * @returns The domain string, or empty string when no link is set.
 	 */
@@ -1105,7 +1105,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are utility counter getters used by the template //////////////
 
 	/**
-	 * Returns the total pin count as a zero-padded 2-character string.
+	 * Gets the total pin count as a zero-padded 2-character string.
 	 *
 	 * @returns e.g. "01", "12".
 	 */

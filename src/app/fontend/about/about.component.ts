@@ -39,7 +39,7 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 
 	protected readonly timeline: TimelineItem[] = [
 		{
-			date: '2024.04 to present',
+			date: '2025.04 to present',
 			title: 'Self-employed',
 			subheader: 'Ottawa, Ontario',
 			body: 'Designing and developing personal web platforms with a focus on scalable architecture, data persistence, and performance optimization. Building custom backend services to serve as centralized data repositories, while continuously improving system reliability, security, and maintainability.',
@@ -48,7 +48,7 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 			tag: 'work'
 		},
 		{
-			date: '2023.01 ~ 2024.03',
+			date: '2022.01 ~ 2025.03',
 			title: 'Software Developer',
 			subheader: 'Canada Revenue Agency, Ottawa, Ontario',
 			body: 'Promoted from part-time to full-time role, contributing to feature development, bug fixes, and system enhancements. Took ownership of JIRA task coordination, organizing and prioritizing critical issues, improving team workflow, and ensuring timely delivery of project milestones.',
@@ -87,7 +87,7 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 			date: '2014.09 ~ 2018.12',
 			title: 'Bachelor Student',
 			subheader: 'Carleton University',
-			body: 'Completed a full-time Bachelor\'s degree in Computer Science, building a strong foundation in programming, algorithms, data structures, and software development principles through coursework, projects, and collaborative assignments.',
+			body: "Completed a full-time Bachelor's degree in Computer Science, building a strong foundation in programming, algorithms, data structures, and software development principles through coursework, projects, and collaborative assignments.",
 			icon: 'auto_stories',
 			color: '#FF9800',
 			tag: 'education'
@@ -130,7 +130,7 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 			this.observers.push(observer);
 		});
 		setTimeout(() => {
-			this.timeline.forEach((_item, index) => {
+			this.timeline.forEach((_, index) => {
 				if (!this.visibleEntries.has(index)) {
 					this.visibleEntries.add(index);
 					if (index + 1 > this.maxSeen) this.maxSeen = index + 1;
@@ -161,7 +161,7 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the staggered transition-delay for a timeline entry reveal animation.
+	 * Gets the staggered transition-delay for a timeline entry reveal animation.
 	 * Capped at index 4 to prevent very long delays when the page loads deep.
 	 *
 	 * @param index - The zero-based entry index.

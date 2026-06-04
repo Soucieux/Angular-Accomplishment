@@ -1,6 +1,6 @@
 export class LOG {
 	/**
-	 * Get the current timestamp formatted for log output.
+	 * Gets the current timestamp formatted for log output.
 	 *
 	 * @returns A formatted timestamp string like "[YYYY-M-D HH:mm:ss:ms]".
 	 */
@@ -12,7 +12,7 @@ export class LOG {
 	}
 
 	/**
-	 * Log an informational message to the console.
+	 * Logs an informational message to the console.
 	 *
 	 * @param className - The name of the class emitting the log.
 	 * @param message - The message to log.
@@ -22,7 +22,7 @@ export class LOG {
 	}
 
 	/**
-	 * Log a warning message to the console.
+	 * Logs a warning message to the console.
 	 *
 	 * @param className - The name of the class emitting the log.
 	 * @param message - The warning message to log.
@@ -32,7 +32,7 @@ export class LOG {
 	}
 
 	/**
-	 * Log an error message to the console with an optional Error object.
+	 * Logs an error message to the console with an optional Error object.
 	 *
 	 * @param className - The name of the class emitting the log.
 	 * @param message - The error summary.

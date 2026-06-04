@@ -43,7 +43,7 @@ export class AuthService {
 	////////////////////// Below are Firebase authentication methods //////////////////////
 
 	/**
-	 * Returns the current Firebase user as an observable. Wraps onAuthStateChanged
+	 * Gets the current Firebase user as an observable. Wraps onAuthStateChanged
 	 * so subscribers receive continuous user updates (including null on sign-out).
 	 *
 	 * @returns An observable that emits the current Firebase User or null.
@@ -201,7 +201,7 @@ export class AuthService {
 	}
 
 	/**
-	 * Returns the current CloudBase user as an observable. Emits null for
+	 * Gets the current CloudBase user as an observable. Emits null for
 	 * anonymous users (no username in metadata) and errors.
 	 *
 	 * @returns An observable that emits the current CloudBase user or null.

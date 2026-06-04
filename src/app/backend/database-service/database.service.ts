@@ -40,14 +40,14 @@ export abstract class DatabaseService {
 	public abstract uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string>;
 
 	/**
-	 * Returns the movie list from the database as a reactive observable.
+	 * Gets the movie list from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the movie list.
 	 */
 	public abstract getMovieList(): Observable<MovieItemVO[]>;
 
 	/**
-	 * Returns the statistics document from the database as a reactive observable.
+	 * Gets the statistics document from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the statistics.
 	 */
@@ -119,7 +119,7 @@ export abstract class DatabaseService {
 	protected abstract addNewHistoryEntry(status: string, movieItemVO?: MovieItemVO): Promise<void>;
 
 	/**
-	 * Returns the history list from the database as a reactive observable.
+	 * Gets the history list from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the history list.
 	 */
@@ -141,7 +141,7 @@ export abstract class DatabaseService {
 	public abstract updateExistingRecordToPatchNotes(key: string, updatedRecord: any): Promise<void>;
 
 	/**
-	 * Returns the patch notes from the database as a reactive observable.
+	 * Gets the patch notes from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the patch notes.
 	 */
@@ -163,21 +163,21 @@ export abstract class DatabaseService {
 	public abstract removePatchNote(key: string): Promise<void>;
 
 	/**
-	 * Returns the date calculator table details from the database as a reactive observable.
+	 * Gets the date calculator table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the date calculator table details.
 	 */
 	public abstract getDateCalculatorTableDetails(): Observable<any[]>;
 
 	/**
-	 * Returns the Account Expenses (debt sonata) table details from the database as a reactive observable.
+	 * Gets the Account Expenses (debt sonata) table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the Account Expenses table details.
 	 */
 	public abstract getDebtSonataTableDetails(): Observable<any[]>;
 
 	/**
-	 * Returns the reminder table details from the database as a reactive observable.
+	 * Gets the reminder table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the reminder table details.
 	 */
@@ -245,7 +245,7 @@ export abstract class DatabaseService {
 	public abstract addNewRecordToDebtTable(newRecord: any): Promise<void>;
 
 	/**
-	 * Returns the quotes from the database as a reactive observable.
+	 * Gets the quotes from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the quotes list.
 	 */
@@ -298,7 +298,7 @@ export abstract class DatabaseService {
 	public abstract appendToActivityLog(fieldName: string, activity: any): Promise<void>;
 
 	/**
-	 * Returns the useful links from the database as a reactive observable.
+	 * Gets the useful links from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the useful links list.
 	 */
@@ -344,7 +344,7 @@ export abstract class DatabaseService {
 	public abstract removeUsefulLink(key: string): Promise<void>;
 
 	/**
-	 * Returns the link categories from the database as a reactive observable.
+	 * Gets the link categories from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the link categories list.
 	 */
@@ -376,7 +376,7 @@ export abstract class DatabaseService {
 	public abstract removeLinkCategory(key: string): Promise<void>;
 
 	/**
-	 * Returns all recipes for the current user from the database.
+	 * Gets all recipes for the current user from the database.
 	 *
 	 * @returns An observable that emits the recipe list.
 	 */

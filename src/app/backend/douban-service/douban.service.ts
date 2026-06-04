@@ -142,7 +142,7 @@ export class DoubanService {
 	}
 
 	/**
-	 * Returns a randomly selected Cloud Function base URL from the pool of available threads.
+	 * Gets a randomly selected Cloud Function base URL from the pool of available threads.
 	 * Load-balances requests across multiple function instances.
 	 *
 	 * @returns A randomly selected Cloud Function base URL.

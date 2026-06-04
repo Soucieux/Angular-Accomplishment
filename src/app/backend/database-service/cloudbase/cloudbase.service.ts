@@ -61,15 +61,19 @@ export class CloudbaseService extends DatabaseService {
 	/**
 	 * Emits only true — watchers must never receive false, or they would start
 	 * a CloudBase .watch() with anonymous credentials after sign-out.
+	 *
+	 * @returns The observable that emits true once the CloudBase auth library is ready.
 	 */
 	static get authReady$() {
-		return CloudbaseService._authReady$.asObservable().pipe(filter((v) => v === true));
+		return CloudbaseService._authReady$.asObservable().pipe(filter((isReady) => isReady === true));
 	}
 
 	/**
 	 * Emits every real login-state change (true = non-anonymous user signed in,
 	 * false = signed out or anonymous). Starts as false so new subscribers always
 	 * get the correct initial state without waiting for a replay.
+	 *
+	 * @returns The observable that emits the current login boolean state.
 	 */
 	static get loginState$() {
 		return CloudbaseService._loginState$.asObservable();
@@ -314,7 +318,7 @@ export class CloudbaseService extends DatabaseService {
 		const toResolve = [
 			...new Set(
 				movies
-					.map((m) => m.getMovieCoverImageDownloadableLink())
+					.map((movie) => movie.getMovieCoverImageDownloadableLink())
 					.filter((link) => link?.startsWith('cloud://') && !this.tempUrlCache.has(link))
 			)
 		];
@@ -943,7 +947,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param key - The document key of the patch note to remove.
 	 */
-	async removePatchNote(key: string): Promise<void> {
+	public async removePatchNote(key: string): Promise<void> {
 		try {
 			const res = await this.database
 				.collection(DATABASE_PATCH_NOTES)
@@ -1159,7 +1163,7 @@ export class CloudbaseService extends DatabaseService {
 			: { _id: id, _openid: CloudbaseService.getUseId() };
 	}
 
-	////////////////////// Below are Add methods for database table records ////////////////////────
+	////////////////////// Below are Add methods for database table records /////////////////////
 
 	/**
 	 * Adds a new entry to reminder table.
@@ -1180,7 +1184,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Adds a new entry to debt table
+	 * Adds a new entry to the specified database table.
 	 *
 	 * @param tableName - The corresponding collection name.
 	 * @param newRecord - The new entry to add.
@@ -1618,7 +1622,7 @@ export class CloudbaseService extends DatabaseService {
 					baseServings: doc.baseServings ?? 1,
 					badges: doc.badges ?? [],
 					groups: doc.groups ?? [],
-					steps: (doc.steps ?? []).map((s: any) => ({ ...s, done: false })),
+					steps: (doc.steps ?? []).map((step: any) => ({ ...step, done: false })),
 					notes: doc.notes ?? ''
 				})) as Recipe[],
 			true
@@ -1637,7 +1641,7 @@ export class CloudbaseService extends DatabaseService {
 			const result = await this.database.collection(DATABASE_RECIPES).add({
 				...userId,
 				...payload,
-				steps: payload.steps.map((s) => ({ ...s, done: false }))
+				steps: payload.steps.map((step) => ({ ...step, done: false }))
 			});
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, `Recipe added: "${recipe.name}"`);
@@ -1663,7 +1667,7 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(id))
 				.update({
 					...payload,
-					steps: payload.steps.map((s) => ({ ...s, done: false }))
+					steps: payload.steps.map((step) => ({ ...step, done: false }))
 				});
 			if (result.updated === 0) throw new Error(ERROR_NO_DOCUMENT_UPDATED);
 			LOG.info(this.className, `Recipe updated: "${recipe.name}"`);

@@ -88,8 +88,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	) {}
 
 	/**
-	 * Initialises the component: signs in anonymously if no user is authenticated
-	 * so the CloudBase watcher can connect, then subscribes to the quotes collection.
+	 * Sets up the anonymous authentication session and subscribes to the quotes observable.
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
@@ -131,7 +130,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the gradient colors for a quote card based on its index.
+	 * Gets the gradient colors for a quote card based on its index.
 	 *
 	 * @param index - The index of the quote in the list.
 	 * @returns An object with from and to gradient color strings.
@@ -141,7 +140,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns a human-readable relative time string from a timestamp.
+	 * Gets a human-readable relative time string from a timestamp.
 	 *
 	 * @param timestamp - The timestamp string in "YYYY.MM.DD HH:mm:ss" format.
 	 * @returns A relative time string (e.g. "just now", "5m ago", "2d ago").
@@ -151,7 +150,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the display name of a quote's author, falling back to 'Anonymous'.
+	 * Gets the display name of a quote's author, falling back to 'Anonymous'.
 	 *
 	 * @param quote - The quote object.
 	 * @returns The author name or 'Anonymous'.
@@ -161,7 +160,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the uppercase first initial of a quote's author.
+	 * Gets the uppercase first initial of a quote's author.
 	 *
 	 * @param quote - The quote object.
 	 * @returns The uppercase first character of the author's name.

@@ -105,7 +105,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly NEXUS_LABEL_CONFIRMED = NEXUS_LABEL_CONFIRMED;
 	protected failedLogos = new Set<string>();
 
-	// ── Date Calculator state ────────────────────────────────────────────────
+	////////////////////// Below are Date Calculator state fields ////////////////////
 	private chargedCells = new Set<string>();
 	protected originalDateCalculatorRows!: any[];
 	protected updatedDateCalculatorRows!: any[];
@@ -159,7 +159,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			// ── Date Calculator subscription ───────────────────────────────────
+			////////////////////// Below are subscriptions started on init //////////
 			this.currentDay = new Date().getDate();
 			const dateCalculatorObservable = this.databaseService.getDateCalculatorTableDetails();
 			this.dateCalculatorSub = dateCalculatorObservable.subscribe(async (rows) => {
@@ -177,7 +177,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 				this.cdr.markForCheck();
 			});
 
-			// ── Links and categories subscriptions ────────────────────────────
+			////////////////////// Below are links and categories subscriptions /////
 			this.linksSub = this.databaseService.getUsefulLinks().subscribe({
 				next: (data) => {
 					this.links = data as NexusLink[];
@@ -264,7 +264,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected setMonth(isNext: boolean): void {
 		this.isNextMonth = isNext;
-		void this.updateChargedCells();
+		this.updateChargedCells().catch(() => {});
 	}
 
 	/**
@@ -607,7 +607,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Returns the brand fallback colour for a given tool ID.
+	 * Gets the brand fallback colour for a given tool ID.
 	 *
 	 * @param toolId - The AI tool ID.
 	 * @returns A CSS colour string.
@@ -692,7 +692,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Returns the number of links belonging to a given category key.
+	 * Gets the number of links belonging to a given category key.
 	 *
 	 * @param categoryKey - The category _id, or the sentinel value for all links.
 	 * @returns The count of matching links.

@@ -649,7 +649,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 
 	////////////////////// Below are Utilities Functions used by HTML template /////////////////////
 	/**
-	 * Returns the human-readable quality label for a movie rate ("Excellent", "Good",
+	 * Gets the human-readable quality label for a movie rate ("Excellent", "Good",
 	 * "Average", or "Poor") by delegating to the shared utility method.
 	 *
 	 * @param rate - The numeric movie rate.
@@ -660,7 +660,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the pushpin colour for a corkboard category card, cycling through
+	 * Gets the pushpin colour for a corkboard category card, cycling through
 	 * ENT_CORK_PIN_COLORS by card index.
 	 *
 	 * @param index - The zero-based position of the card in the category row.
@@ -671,7 +671,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the CSS rotation value for a corkboard category card, cycling through
+	 * Gets the CSS rotation value for a corkboard category card, cycling through
 	 * ENT_CORK_ROTATIONS by card index.
 	 *
 	 * @param index - The zero-based position of the card in the category row.
@@ -705,7 +705,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the background style for a category card. Inactive cards use a
+	 * Gets the background style for a category card. Inactive cards use a
 	 * plain white background; the active card gets a gradient built from its
 	 * own pin colour for per-card colour variety.
 	 *
@@ -720,7 +720,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the box-shadow style for a category card. Inactive cards get an
+	 * Gets the box-shadow style for a category card. Inactive cards get an
 	 * empty string (falling back to the CSS default shadow); the active card
 	 * gets a coloured glow matching its own pin colour.
 	 *
@@ -837,7 +837,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns whether the given movie should be visible under the specified genre filter.
+	 * Returns true when the given movie should be visible under the specified genre filter.
 	 *
 	 * @param movie - The movie to test.
 	 * @param genre - The genre filter value; empty string means no filter (show all).
@@ -850,7 +850,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the view-transition-class value for a movie card, used by the
+	 * Gets the view-transition-class value for a movie card, used by the
 	 * template to tag leaving and entering elements before the VTA snapshot.
 	 *
 	 * @param movie - The movie card to query.

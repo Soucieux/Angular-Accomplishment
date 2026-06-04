@@ -54,7 +54,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Returns the current date formatted as YYYY.MM.DD, optionally appending HH:mm:ss.
+	 * Gets the current date formatted as YYYY.MM.DD, optionally appending HH:mm:ss.
 	 *
 	 * @param isTimeIncluded - The flag controlling whether to append HH:mm:ss after the date.
 	 * @returns A date string in YYYY.MM.DD or YYYY.MM.DD HH:mm:ss format.
@@ -82,7 +82,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Get a relative time string from a timestamp (e.g. "just now", "5m ago", "2d ago").
+	 * Gets a relative time string from a timestamp (e.g. "just now", "5m ago", "2d ago").
 	 * Accepts both the app's dot-separated format ("YYYY.MM.DD HH:mm:ss") and ISO 8601
 	 * strings (containing 'T', e.g. "2024-01-15T10:30:00.000Z") so that all pages can
 	 * share a single implementation.
@@ -220,7 +220,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Returns the current country code stored in the static field.
+	 * Gets the current country code stored in the static field.
 	 *
 	 * @returns The country code string, or an empty string before detection runs.
 	 */
@@ -229,7 +229,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Check if the current user is alive (has a valid session).
+	 * Checks whether the current user is alive (has a valid session).
 	 *
 	 * @returns Whether the user is alive.
 	 */
@@ -238,7 +238,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Get an observable that emits whenever the user alive state changes.
+	 * Gets an observable that emits whenever the user alive state changes.
 	 * Subscribe to this in components that need to react immediately to
 	 * login/logout events without relying on zone-based change detection.
 	 *
@@ -320,7 +320,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Open a URL in a new tab using a temporary anchor element on the injected
+	 * Opens a URL in a new tab using a temporary anchor element on the injected
 	 * Document, avoiding any direct reference to the global window object.
 	 *
 	 * @param url - The fully-qualified URL to open.
@@ -496,7 +496,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Return true if the given string represents a finite number.
+	 * Returns true when the given string represents a finite number.
 	 * Useful for hiding numeric-only unit fields that carry no semantic meaning
 	 * (e.g. a user who typed "1" as a unit placeholder).
 	 *

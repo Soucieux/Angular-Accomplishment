@@ -15,7 +15,7 @@ export class SearchStreamService {
 	 *
 	 * @param message - The log message to add.
 	 */
-	public addSearchLog(message: string) {
+	public addSearchLog(message: string): void {
 		const currentLogs = this.searchLogsSubject.value;
 		this.searchLogsSubject.next([...currentLogs, message]);
 	}
@@ -26,7 +26,7 @@ export class SearchStreamService {
 	 * @returns RATE_INCREASED if the last log indicates an increase,
 	 *          RATE_DECREASED if it indicates a decrease, or false if neither.
 	 */
-	public checkLastLogDecreasedOrIncreased() {
+	public checkLastLogDecreasedOrIncreased(): string | false {
 		const lastLog = this.searchLogsSubject.value[this.searchLogsSubject.value.length - 1];
 		if (lastLog.includes(RATE_DECREASED)) {
 			return RATE_DECREASED;
@@ -40,7 +40,7 @@ export class SearchStreamService {
 	/**
 	 * Clears all search log entries.
 	 */
-	public clearSearchLogs() {
+	public clearSearchLogs(): void {
 		this.searchLogsSubject.next([]);
 	}
 }

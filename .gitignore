@@ -45,10 +45,16 @@ testem.log
 Thumbs.db
 
 # firebase
-.firebase
+.firebase/
 # Environment variables
 .env.local
 
+# codex
+.agents/
+.codex/
+
+# claude
 .claude/
 
+#mcp
 .mcp.json

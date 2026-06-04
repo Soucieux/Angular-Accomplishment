@@ -1,7 +1,5 @@
 # Accomplishment — Angular Project
 
-> **Coding style skill:** Always read and apply `.claude/skills/coding-style/SKILL.md` before writing any `.ts`, `.html`, or `.css` file. When the user says to record a coding style update, update that file immediately.
-
 ## Stack
 - Angular (latest), TypeScript strict
 - PrimeNG for UI components
@@ -20,7 +18,7 @@
 - `src/app/backend/` — services and backend logic
 
 ## Conventions
-All coding style, naming, JSDoc tone, and CSS conventions are in the `coding-style` skill (`.claude/skills/coding-style/SKILL.md`). That skill is the single source of truth — apply it for every `.ts`, `.html`, and `.css` edit.
+All coding style, naming, JSDoc tone, and CSS conventions are in the `coding-style` skill (`.claude/skills/coding-style/SKILL.md`). Apply it for every `.ts`, `.html`, and `.css` edit.
 
 ### New pages
 - When adding a new page, update the patch notes page list and `PatchComponent.components` dropdown in the same task

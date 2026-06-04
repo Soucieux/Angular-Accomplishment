@@ -90,7 +90,7 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 	standalone: true,
 	imports: [CommonModule, FormsModule, AutoComplete, AccessDeniedComponent],
 	templateUrl: './recipe.component.html',
-	styleUrl: './recipe.component.css'
+	styleUrls: ['../../common/glass-card.css', './recipe.component.css']
 })
 export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'RecipeComponent';
@@ -233,7 +233,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 			.querySelectorAll<HTMLElement>('.chips-scroll')
 			.forEach((el) => Utilities.attachScrollAutoHide(el));
 		document
-			.querySelectorAll<HTMLElement>('.container-recipe > .view')
+			.querySelectorAll<HTMLElement>('.container-recipe')
 			.forEach((el) => Utilities.attachScrollAutoHide(el));
 		if (this.pendingScrollToNewIngredient) {
 			this.pendingScrollToNewIngredient = false;

@@ -1,23 +1,24 @@
 :host {
 	--individual-item-width: 420px;
 	--individual-item-gap: 13px;
+	display: block;
 }
 
-.page-container {
-	margin-bottom: 10px;
+.container {
+	min-width: 100%;
+	min-height: calc(100dvh - 10px);
+	padding: 20px;
+}
+
+.access-denied-wrapper {
+	height: calc(100dvh - 10px);
 }
 
 /* ── Top Bar ──────────────────────────────────────────────────────────────── */
 .top-bar {
-	border-radius: 0 0 14px 14px;
-	background: rgba(255, 255, 255, 0.88);
-	backdrop-filter: blur(8px);
-	height: 72px;
-	padding: 0 10px;
 	display: flex;
 	align-items: center;
 	gap: 14px;
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
 }
 
 .top-bar-left {
@@ -694,6 +695,10 @@
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
+	.container {
+		padding: 20px 10px;
+	}
+
 	.info-swap {
 		height: 70%;
 	}

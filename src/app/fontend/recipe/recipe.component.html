@@ -1,6 +1,6 @@
 <ng-container #dialogComponentContainer></ng-container>
 @if (utilities.getIsUserAlive()) {
-	<div class="container container-recipe">
+	<div class="glass-card container-recipe">
 		<!-- ===================== VIEW 1: LIST ===================== -->
 		@if (currentView === RECIPE_VIEW_LIST) {
 			<section class="view">
@@ -494,5 +494,7 @@
 		}
 	</div>
 } @else {
-	<access-denied />
+	<div class="access-denied-wrapper">
+		<access-denied />
+	</div>
 }

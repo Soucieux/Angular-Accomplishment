@@ -110,12 +110,12 @@ mat-drawer-container {
 }
 
 .nav-active .nav-label {
-	font-weight: 600;
+	font-weight: 500;
 }
 
 .nav-icon {
 	font-size: 28px;
-	margin-left: 25px;
+	margin-left: 20px;
 	line-height: 1;
 	flex-shrink: 0;
 }
@@ -172,7 +172,7 @@ mat-drawer-content {
 }
 
 /* ─────────────────────────────────────────
-   Account menu footer (Variant D)
+   Account menu footer
 ───────────────────────────────────────── */
 .account-menu-container {
 	margin-top: auto;

@@ -69,7 +69,7 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		AccessDeniedComponent
 	],
 	templateUrl: './patch.component.html',
-	styleUrls: ['../../common/page.card.css', './patch.component.css']
+	styleUrls: ['../../common/glass-card.css', './patch.component.css']
 })
 export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private readonly className = 'PatchComponent';
@@ -196,7 +196,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	ngAfterViewChecked(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			document
-				.querySelectorAll<HTMLElement>('.container.page-card')
+				.querySelectorAll<HTMLElement>('.container-patch')
 				.forEach((el) => Utilities.attachScrollAutoHide(el));
 		}
 	}

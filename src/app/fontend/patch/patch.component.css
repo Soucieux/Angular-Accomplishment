@@ -3,42 +3,6 @@
 ───────────────────────────────────────── */
 :host {
 	display: block;
-	height: 100%;
-}
-
-/* ─────────────────────────────────────────
-   Container — fills viewport, scrolls internally.
-   Visual properties (glassmorphism, animation)
-   are provided by the global .page-card class.
-───────────────────────────────────────── */
-.container {
-	min-width: 100%;
-	height: calc(100dvh - 10px);
-	overflow-y: auto;
-	overflow-x: hidden;
-	scrollbar-width: thin;
-	scrollbar-color: transparent transparent;
-	transition: scrollbar-color 0.4s ease;
-}
-.container::-webkit-scrollbar {
-	width: 8px;
-}
-.container::-webkit-scrollbar-track {
-	background: transparent;
-}
-.container::-webkit-scrollbar-thumb {
-	background: transparent;
-	border-radius: 999px;
-	transition: background 0.4s ease;
-}
-.container.is-scrolling {
-	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
-}
-.container.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(213, 51, 105, 0.28);
-}
-.container.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #d53369;
 }
 
 /* ─────────────────────────────────────────
@@ -974,7 +938,7 @@
 		font-size: 15px;
 	}
 
-	.container {
+	.container-patch {
 		font-size: 13px;
 	}
 
@@ -1053,3 +1017,4 @@
 		display: none !important;
 	}
 }
+

@@ -1,7 +1,7 @@
 @let stats = statistics$ | async;
 @let selectedGenre = selectedGenres$ | async;
 @if (utilities.getIsUserAlive() && stats !== null) {
-	<div class="page-container">
+	<div class="container">
 		<div class="top-bar">
 			<div class="top-bar-left">
 				<h1 class="bar-title">{{ ENT_TITLE_PAGE }}</h1>
@@ -80,127 +80,130 @@
 				</button>
 			}
 		</div>
-	</div>
-	<div class="content-container">
-		@for (movie of filteredMovieList$ | async; track movie.getMovieId()) {
-			<div
-				class="individual-item"
-				[style.view-transition-name]="'movie-' + movie.getMovieId()"
-				[style.view-transition-class]="getMovieVtClass(movie)"
-				[ngClass]="{
-					'very-high-rate': movie.getMovieRate() >= 9,
-					'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,
-					'medium-rate': movie.getMovieRate() >= 7 && movie.getMovieRate() < 7.9,
-					'low-rate': movie.getMovieRate() < 7
-				}">
+
+		<div class="content-container">
+			@for (movie of filteredMovieList$ | async; track movie.getMovieId()) {
 				<div
-					class="image-container"
-					[ngStyle]="{
-						backgroundImage: 'url(' + movie.getMovieCoverImageDownloadableLink() + ')'
-					}"></div>
-				<div class="individual-item-content">
-					<div class="title-rate-row">
-						<span
-							class="title"
-							[style.font-size]="calculateFontSize(movie.getMovieName().length)">
-							{{ movie.getMovieName() }}
-						</span>
-					</div>
-					<div class="rate-row">
-						@if (movie.getMovieRate()) {
-							<span class="rate">{{ movie.getMovieRate().toFixed(1) }}</span>
-							<span class="rate-label">{{ getRateLabel(movie.getMovieRate()) }}</span>
-						} @else {
-							<span class="rate">{{ NO_RATE }}</span>
-						}
-					</div>
-					<div class="info-swap">
-						<div class="info-default">
-							<div class="rate-divider"></div>
-							<span class="text"
-								>类型:
-								@if (editedItems.has(movie.getMovieKey())) {
-									<p-select
-										[options]="genres"
-										optionLabel="genre"
-										optionValue="genre"
-										[appendTo]="'body'"
-										class="dropdown"
-										panelStyleClass="dropdown-panel"
-										[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
-								} @else {
-									{{ movie.getMovieGenre() }}
-								}
+					class="individual-item"
+					[style.view-transition-name]="'movie-' + movie.getMovieId()"
+					[style.view-transition-class]="getMovieVtClass(movie)"
+					[ngClass]="{
+						'very-high-rate': movie.getMovieRate() >= 9,
+						'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,
+						'medium-rate': movie.getMovieRate() >= 7 && movie.getMovieRate() < 7.9,
+						'low-rate': movie.getMovieRate() < 7
+					}">
+					<div
+						class="image-container"
+						[ngStyle]="{
+							backgroundImage: 'url(' + movie.getMovieCoverImageDownloadableLink() + ')'
+						}"></div>
+					<div class="individual-item-content">
+						<div class="title-rate-row">
+							<span
+								class="title"
+								[style.font-size]="calculateFontSize(movie.getMovieName().length)">
+								{{ movie.getMovieName() }}
 							</span>
-							<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
-							<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
-							<div class="buttons-group">
-								<a
-									class="douban-button"
-									[href]="'https://movie.douban.com/subject/' + movie.getMovieId()"
-									target="_blank"
-									rel="noopener noreferrer"
-									aria-label="Open on Douban">
-									<img src="./assets/douban.png" class="douban-icon" />
-								</a>
-								@if (editedItems.has(movie.getMovieKey())) {
-									<p-button
-										class="edit-button"
-										[rounded]="true"
-										[text]="true"
-										(onClick)="completeEdit(movie)">
-										<span class="material-icons edit-button-icon" style="color: white"
-											>check</span
-										>
-									</p-button>
-								} @else {
-									<p-button
-										class="edit-button"
-										[rounded]="true"
-										[text]="true"
-										(onClick)="startEdit(movie)">
-										<span class="material-icons edit-button-icon" style="color: white"
-											>edit</span
-										>
-									</p-button>
-								}
-								@if (movie.getIsFavourite()) {
-									<p-button
-										icon="pi pi-star-fill"
-										class="favourite"
-										[text]="true"
-										(onClick)="setIsFavourite(movie)">
-									</p-button>
-								} @else {
-									<p-button
-										icon="pi pi-star"
-										class="favourite"
-										[text]="true"
-										(onClick)="setIsFavourite(movie)">
-									</p-button>
-								}
-								<p-button
-									icon="pi pi-times"
-									class="delete-button"
-									[rounded]="true"
-									severity="danger"
-									(click)="openDeleteConfirmationDialog(movie)" />
-							</div>
 						</div>
-						<div class="info-hover">
-							@if (movie.getDescription()) {
-								<p class="hover-description">简介：{{ movie.getDescription() }}</p>
+						<div class="rate-row">
+							@if (movie.getMovieRate()) {
+								<span class="rate">{{ movie.getMovieRate().toFixed(1) }}</span>
+								<span class="rate-label">{{ getRateLabel(movie.getMovieRate()) }}</span>
+							} @else {
+								<span class="rate">{{ NO_RATE }}</span>
 							}
-							@if (movie.getActors()) {
-								<p class="hover-actors">演员：{{ movie.getActors() }}</p>
-							}
+						</div>
+						<div class="info-swap">
+							<div class="info-default">
+								<div class="rate-divider"></div>
+								<span class="text"
+									>类型:
+									@if (editedItems.has(movie.getMovieKey())) {
+										<p-select
+											[options]="genres"
+											optionLabel="genre"
+											optionValue="genre"
+											[appendTo]="'body'"
+											class="dropdown"
+											panelStyleClass="dropdown-panel"
+											[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
+									} @else {
+										{{ movie.getMovieGenre() }}
+									}
+								</span>
+								<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
+								<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
+								<div class="buttons-group">
+									<a
+										class="douban-button"
+										[href]="'https://movie.douban.com/subject/' + movie.getMovieId()"
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-label="Open on Douban">
+										<img src="./assets/douban.png" class="douban-icon" />
+									</a>
+									@if (editedItems.has(movie.getMovieKey())) {
+										<p-button
+											class="edit-button"
+											[rounded]="true"
+											[text]="true"
+											(onClick)="completeEdit(movie)">
+											<span class="material-icons edit-button-icon" style="color: white"
+												>check</span
+											>
+										</p-button>
+									} @else {
+										<p-button
+											class="edit-button"
+											[rounded]="true"
+											[text]="true"
+											(onClick)="startEdit(movie)">
+											<span class="material-icons edit-button-icon" style="color: white"
+												>edit</span
+											>
+										</p-button>
+									}
+									@if (movie.getIsFavourite()) {
+										<p-button
+											icon="pi pi-star-fill"
+											class="favourite"
+											[text]="true"
+											(onClick)="setIsFavourite(movie)">
+										</p-button>
+									} @else {
+										<p-button
+											icon="pi pi-star"
+											class="favourite"
+											[text]="true"
+											(onClick)="setIsFavourite(movie)">
+										</p-button>
+									}
+									<p-button
+										icon="pi pi-times"
+										class="delete-button"
+										[rounded]="true"
+										severity="danger"
+										(click)="openDeleteConfirmationDialog(movie)" />
+								</div>
+							</div>
+							<div class="info-hover">
+								@if (movie.getDescription()) {
+									<p class="hover-description">简介：{{ movie.getDescription() }}</p>
+								}
+								@if (movie.getActors()) {
+									<p class="hover-actors">演员：{{ movie.getActors() }}</p>
+								}
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
-		}
+			}
+		</div>
 	</div>
 	<ng-container #dialogComponentContainer></ng-container>
 } @else {
-	<access-denied />
+	<div class="access-denied-wrapper">
+		<access-denied />
+	</div>
 }

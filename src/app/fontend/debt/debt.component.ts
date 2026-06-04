@@ -1,5 +1,4 @@
 import {
-	AfterViewChecked,
 	ChangeDetectorRef,
 	Component,
 	Inject,
@@ -83,9 +82,9 @@ import { SegmentedPaginatorComponent } from './segmented-paginator/segmented-pag
 	selector: 'debt',
 	imports: [AsyncPipe, FormsModule, SkeletonModule, AccessDeniedComponent, SegmentedPaginatorComponent],
 	templateUrl: './debt.component.html',
-	styleUrls: ['../../common/page.card.css', './debt.component.css']
+	styleUrls: ['./debt.component.css']
 })
-export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class DebtComponent implements OnInit, OnDestroy {
 	private readonly className = 'DebtComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
@@ -155,16 +154,6 @@ export class DebtComponent implements OnInit, OnDestroy, AfterViewChecked {
 		protected utilities: Utilities
 	) {}
 
-	/**
-	 * Attaches the auto-hide scroll listener to the page container after each view check.
-	 */
-	ngAfterViewChecked(): void {
-		if (isPlatformBrowser(this.platformId)) {
-			document
-				.querySelectorAll<HTMLElement>('.container.page-card')
-				.forEach((el) => Utilities.attachScrollAutoHide(el));
-		}
-	}
 
 	/**
 	 * Initialises the component: checks hover capability and builds the Account

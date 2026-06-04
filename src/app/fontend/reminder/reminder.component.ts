@@ -98,7 +98,7 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		AccessDeniedComponent
 	],
 	templateUrl: './reminder.component.html',
-	styleUrl: './reminder.component.css'
+	styleUrls: ['../../common/glass-card.css', './reminder.component.css']
 })
 export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly className = 'ReminderComponent';

@@ -1,8 +1,6 @@
 <ng-container #dialogComponentContainer></ng-container>
-
 @if (utilities.getIsUserAlive()) {
-	<div class="rm-stage">
-		<div class="rm-panel" #reminderPanel>
+	<div class="glass-card container-reminder" #reminderPanel>
 			<!-- ── Masthead ───────────────────────────────────────────────── -->
 			<div class="rm-masthead">
 				<div class="rm-masthead-left">
@@ -308,7 +306,8 @@
 				</div>
 			</div>
 		</div>
-	</div>
 } @else {
-	<access-denied />
+	<div class="access-denied-wrapper">
+		<access-denied />
+	</div>
 }

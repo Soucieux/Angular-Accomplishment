@@ -14,13 +14,15 @@
 :host {
 	font-family: 'nlf';
 	display: block;
-	height: calc(100dvh - 10px);
 }
 
 .container {
+	min-width: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	min-height: calc(100dvh - 10px);
+	padding: 20px;
 }
 
 /* ─────────────────────────────────────────
@@ -400,6 +402,7 @@
    Quote card
 ───────────────────────────────────────── */
 .quote-card {
+	height: 100%;
 	border-radius: 16px;
 	position: relative;
 	transition:
@@ -600,8 +603,8 @@
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
-	:host {
-		padding: 22px 0px 40px;
+	.container {
+		padding: 20px 10px;
 	}
 
 	.page-title {

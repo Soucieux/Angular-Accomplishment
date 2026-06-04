@@ -2,12 +2,14 @@
    Page shell — transparent so the app's
    gradient shows through naturally
 ───────────────────────────────────────── */
-.about-page {
-	min-height: 100%;
+:host {
+	display: block;
 }
 
-.about-inner {
-	padding: 32px 40px 64px;
+.container {
+	min-width: 100%;
+	min-height: calc(100dvh - 10px);
+	padding: 20px;
 	box-sizing: border-box;
 }
 
@@ -315,8 +317,8 @@ p-chip.about-chip {
    Mobile
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
-	.about-inner {
-		padding: 20px 16px 48px;
+	.container {
+		padding: 20px 10px;
 	}
 
 	.about-h1 {

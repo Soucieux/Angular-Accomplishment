@@ -3,7 +3,6 @@
 ───────────────────────────────────────── */
 :host {
 	display: block;
-	height: 100%;
 
 	/* nlf covers English + numbers; cf covers Chinese.
 	   Browser falls through per-glyph, so mixed-script text renders correctly. */
@@ -68,70 +67,6 @@
 	--condiment-bd: #e8b090;
 }
 
-/* ─────────────────────────────────────────
-   Container
-───────────────────────────────────────── */
-.container {
-	min-width: 100%;
-	background: rgba(255, 255, 255, 0.92);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
-	border: 1px solid rgba(255, 255, 255, 0.8);
-	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
-	border-radius: 18px;
-	padding: 28px 32px 36px;
-	animation: containerReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.container-recipe {
-	height: calc(100dvh - 8px);
-	overflow: hidden;
-	display: flex;
-	flex-direction: column;
-}
-.container-recipe > .view {
-	flex: 1 1 auto;
-	min-height: 0;
-	overflow-y: auto;
-	overflow-x: hidden;
-	padding-top: 2px;
-	margin-left: -16px;
-	padding-left: 16px;
-	margin-right: -32px;
-	padding-right: 32px;
-	scrollbar-width: thin;
-	scrollbar-color: transparent transparent;
-	transition: scrollbar-color 0.4s ease;
-}
-.container-recipe > .view::-webkit-scrollbar {
-	width: 8px;
-}
-.container-recipe > .view::-webkit-scrollbar-track {
-	background: transparent;
-}
-.container-recipe > .view::-webkit-scrollbar-thumb {
-	background: transparent;
-	border-radius: 999px;
-	transition: background 0.4s ease;
-}
-.container-recipe > .view.is-scrolling {
-	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
-}
-.container-recipe > .view.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(213, 51, 105, 0.28);
-}
-.container-recipe > .view.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #d53369;
-}
-@keyframes containerReveal {
-	from {
-		opacity: 0;
-		transform: translateY(-8px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
 @keyframes cardReveal {
 	from {
 		opacity: 0;
@@ -2321,9 +2256,6 @@
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
-	.container {
-		padding: 10px 10px;
-	}
 	.recipe-card .name {
 		font-size: 18px;
 	}

@@ -1,4 +1,4 @@
-<div [class]="showDashboard ? 'container container-dashboard' : 'container'">
+<div class="container">
 	<!-- ── Not logged in → editorial landing ───────────────────────────── -->
 	@if (!showDashboard) {
 		<div class="logged-out-view" [class.fade-out]="transitioning">
@@ -14,7 +14,7 @@
 					</header>
 
 					<div class="ed-titlewrap">
-						<h1 class="ed-title">VISION<br >CANVAS</h1>
+						<h1 class="ed-title">VISION<br />CANVAS</h1>
 						<div class="ed-issue">
 							<span>A PERSONAL SECOND BRAIN</span>
 						</div>

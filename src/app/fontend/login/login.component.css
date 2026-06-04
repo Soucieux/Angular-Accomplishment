@@ -2,323 +2,412 @@
 	font-family: 'nlf';
 }
 
-.container {
+/* ─────────────────────────────────────────
+   Dark room
+───────────────────────────────────────── */
+.v-lamp {
+	--lamp-hue: 42;
+	--lamp-color: hsl(var(--lamp-hue) 88% 64%);
+	--lamp-soft: hsl(var(--lamp-hue) 80% 64% / 0.3);
+
+	position: fixed;
+	inset: 0;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
+	justify-content: center;
+	gap: clamp(16px, 2vw, 44px);
+	flex-wrap: wrap;
+	background: #121921;
+	color: #eaf0f6;
+	transition: background 0.6s ease;
+	overflow: hidden;
+}
+.v-lamp.is-on {
+	background: radial-gradient(120% 90% at 38% 22%, hsl(var(--lamp-hue) 40% 16%) 0%, #121921 60%);
 }
 
 /* ─────────────────────────────────────────
-   Header quotes
+   Light cone — trapezoid from lamp shade downward
 ───────────────────────────────────────── */
-.word-container {
+.lamp-cone {
+	position: absolute;
+	top: calc(50% - clamp(110px, 10vw, 160px));
+	left: 50%;
+	width: clamp(280px, 30vw, 520px);
+	height: clamp(230px, 25vw, 440px);
+	transform: translateX(-50%);
+	background: radial-gradient(60% 80% at 50% 0%, hsl(var(--lamp-hue) 80% 70% / 0.55) 0%, transparent 70%);
+	clip-path: polygon(40% 0, 60% 0, 100% 100%, 0% 100%);
+	opacity: 0;
+	transition: opacity 0.5s ease;
+	pointer-events: none;
+	filter: blur(2px);
+}
+.v-lamp.is-on .lamp-cone {
+	opacity: 1;
+}
+
+/* ─────────────────────────────────────────
+   Lamp stage
+───────────────────────────────────────── */
+.v-lamp-stage {
+	position: relative;
+	width: clamp(320px, 22.8vw, 400px);
+	aspect-ratio: 300 / 440;
+	flex-shrink: 0;
+	flex-grow: 0;
+}
+.lamp-svg {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+.lamp-shade {
+	fill: #263241;
+	transition: fill 0.5s ease;
+}
+.v-lamp.is-on .lamp-shade {
+	fill: hsl(var(--lamp-hue) 30% 32%);
+}
+.lamp-bulb {
+	fill: #2a3645;
+	transition: fill 0.5s ease;
+}
+.v-lamp.is-on .lamp-bulb {
+	fill: var(--lamp-color);
+	filter: drop-shadow(0 0 16px var(--lamp-color));
+}
+.lamp-metal {
+	fill: #38465a;
+}
+.lamp-base {
+	fill: #1c2632;
+}
+.lamp-eyes {
+	transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+	transform-box: fill-box;
+	transform-origin: center;
+}
+.lamp-eye {
+	fill: #0d1218;
+}
+.lamp-cord-line {
+	stroke: #5a6b80;
+	stroke-width: 2.4;
+	stroke-linecap: round;
+}
+.lamp-handle {
+	position: absolute;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 35% 30%, #e9eef5, #aebccd);
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+	border: 1.5px solid rgba(255, 255, 255, 0.25);
+	cursor: grab;
+	touch-action: none;
+}
+.lamp-handle:active {
+	cursor: grabbing;
+}
+.lamp-hint {
+	position: absolute;
+	left: 50%;
+	bottom: -10px;
+	transform: translateX(-50%);
+	font-size: 13px;
+	color: rgba(234, 240, 246, 0.4);
+	white-space: nowrap;
+	transition: opacity 0.4s;
+}
+.v-lamp.is-on .lamp-hint {
+	opacity: 0;
+}
+
+/* ─────────────────────────────────────────
+   Lit form
+───────────────────────────────────────── */
+.v-lamp-form {
+	width: clamp(264px, 22.9vw, 440px);
+	flex-shrink: 0;
+	flex-grow: 0;
+	padding: clamp(24px, 2.5vw, 48px) clamp(20px, 2vw, 40px);
+	border-radius: 22px;
+	background: rgba(255, 255, 255, 0.035);
+	border: 1.5px solid rgba(255, 255, 255, 0.08);
+	opacity: 0;
+	transform: scale(0.86) translateY(10px);
+	pointer-events: none;
+	transition:
+		opacity 0.5s ease,
+		transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+		box-shadow 0.6s ease,
+		border-color 0.6s ease;
+}
+.v-lamp.is-on .v-lamp-form {
+	opacity: 1;
+	transform: none;
+	pointer-events: auto;
+	backdrop-filter: blur(8px);
+	border-color: var(--lamp-color);
+	box-shadow:
+		0 0 0 1px var(--lamp-color),
+		0 18px 60px -10px var(--lamp-soft),
+		0 0 40px -6px var(--lamp-soft);
+}
+.v-lamp-head {
+	margin-bottom: 22px;
+}
+.v-lamp-head .h-cn {
+	font-family: 'cf';
+	font-size: clamp(18px, 1.8vw, 30px);
+	font-weight: 700;
+	color: #f3f7fb;
+}
+.v-lamp-head .h-en {
+	font-size: clamp(11px, 1vw, 17px);
+	color: rgba(234, 240, 246, 0.55);
+	margin-top: 4px;
+}
+
+/* ─────────────────────────────────────────
+   Form fields
+───────────────────────────────────────── */
+.lamp-fields {
 	display: flex;
 	flex-direction: column;
-	gap: 24px;
-	margin-top: 12%;
-	margin-bottom: 8%;
+	gap: clamp(10px, 1.2vw, 18px);
 }
-
-.title {
-	text-align: center;
-	font-size: 58px;
-	margin-top: 10vh;
-	margin-bottom: 6vh;
-	letter-spacing: 8px;
-	font-weight: 900;
-	/* Shimmer: warm-white to gold light sweep */
-	background: linear-gradient(
-		100deg,
-		rgba(255, 255, 255, 0.55) 0%,
-		#ffffff 28%,
-		rgba(255, 218, 120, 0.95) 48%,
-		#ffffff 68%,
-		rgba(255, 255, 255, 0.55) 100%
-	);
-	background-size: 260% 100%;
-	background-clip: text;
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	/* Entry first, then shimmer loop begins */
-	animation:
-		titleReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) both,
-		titleShimmer 5s ease-in-out 0.9s infinite;
-}
-
-@keyframes titleReveal {
-	from {
-		opacity: 0;
-		transform: translateY(-18px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-@keyframes titleShimmer {
-	0%,
-	100% {
-		background-position: 100% 0;
-	}
-	50% {
-		background-position: -80% 0;
-	}
-}
-
-/* Staggered quote reveal */
-.word-container > div:nth-child(2) {
-	animation: quoteReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
-}
-
-.word-container > div:nth-child(3) {
-	animation: quoteReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
-}
-
-@keyframes quoteReveal {
-	from {
-		opacity: 0;
-		transform: translateY(16px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-.quote-row {
+.input-field-container {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
 }
 
-.word {
-	font-family: 'cf';
-	text-align: center;
-	color: rgba(255, 255, 255, 0.88);
-	margin: 0;
+/* PrimeNG inputs lit by the lamp colour */
+::ng-deep .v-lamp-form .p-iftalabel {
+	width: 100%;
 }
-
-.en-word {
-	text-align: center;
-	color: rgba(255, 255, 255, 0.6);
-	margin: 0;
-	font-weight: 400;
-}
-
-/* ─────────────────────────────────────────
-   Form wrapper (animation target)
-───────────────────────────────────────── */
-.form-wrapper {
-	overflow: hidden;
-	animation: formReveal 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.68s both;
-}
-
-@keyframes formReveal {
-	from {
-		opacity: 0;
-		transform: translateY(22px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-/* ─────────────────────────────────────────
-   Form fields and inputs
-───────────────────────────────────────── */
-.field-container {
-	display: flex;
-	justify-content: center;
-	flex-direction: column;
-	align-items: center;
-	gap: 10px;
-}
-
-.input-field-container {
-	margin-bottom: 15px;
-}
-
-.input-field {
+::ng-deep .v-lamp-form .p-inputtext {
+	width: 100%;
+	height: clamp(44px, 3.5vw, 60px);
 	border-radius: 12px !important;
-	height: 47px;
-	width: 250px;
-}
-
-::ng-deep .input-field-container .p-inputtext {
-	background: rgba(255, 255, 255, 0.78) !important;
-	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
-	border-radius: 12px !important;
+	color: #eaf0f6 !important;
+	background: rgba(255, 255, 255, 0.05) !important;
+	border: 1.5px solid rgba(255, 255, 255, 0.13) !important;
 	box-shadow: none !important;
 	transition:
 		border-color 0.2s,
 		box-shadow 0.2s;
 }
-
-::ng-deep .input-field-container:hover .p-inputtext {
-	border-color: rgba(213, 51, 105, 0.35) !important;
-	box-shadow: none !important;
+::ng-deep .v-lamp-form .p-inputtext:hover {
+	border-color: var(--lamp-color) !important;
 }
-
-::ng-deep .input-field-container:focus-within .p-inputtext {
-	border-color: rgba(213, 51, 105, 0.6) !important;
-	box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.12) !important;
-	background: rgba(255, 255, 255, 0.92) !important;
+::ng-deep .v-lamp-form .p-inputtext:focus {
+	border-color: var(--lamp-color) !important;
+	box-shadow: 0 0 0 4px var(--lamp-soft) !important;
 }
-
-::ng-deep .input-field-container:focus-within label {
-	color: rgba(213, 51, 105, 0.85) !important;
+::ng-deep .v-lamp-form .p-iftalabel label {
+	color: rgba(220, 230, 240, 0.5) !important;
+}
+::ng-deep .v-lamp-form .p-iftalabel:focus-within label {
+	color: var(--lamp-color) !important;
 }
 
 /* ─────────────────────────────────────────
    Verification code row
 ───────────────────────────────────────── */
 .code-row {
-	margin-bottom: 15px;
-	gap: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
 }
-
-.code-row .p-message {
-	margin-top: 4px;
+.code-input-row {
+	display: flex;
+	width: 100%;
+	height: clamp(44px, 3.5vw, 60px);
 }
-
-::ng-deep .code-row .p-inputgroup .p-inputtext {
-	background: rgba(255, 255, 255, 0.78) !important;
-	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+::ng-deep .v-lamp-form .code-input-row .p-inputtext {
+	flex: 1;
+	height: 100% !important;
 	border-right: none !important;
 	border-radius: 12px 0 0 12px !important;
-	box-shadow: none !important;
 }
-
-::ng-deep .code-row .p-inputgroup-addon {
-	padding: 0 !important;
-	border: none !important;
-	background: transparent !important;
+::ng-deep .v-lamp-form .p-inputtext::placeholder {
+	color: rgba(220, 230, 240, 0.5) !important;
 }
-
-::ng-deep .code-row .p-inputgroup-addon .p-button {
-	background: rgba(255, 255, 255, 0.6) !important;
-	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
-	border-left: none !important;
-	border-radius: 0 12px 12px 0 !important;
-	color: rgba(40, 15, 35, 0.75) !important;
-	font-size: 13px !important;
-	height: 100% !important;
-	box-shadow: none !important;
+.get-code-button {
+	height: 100%;
+	min-width: 82px;
+	border-radius: 0 12px 12px 0;
+	border: 1.5px solid rgba(255, 255, 255, 0.13);
+	border-left: none;
+	background: rgba(255, 255, 255, 0.07);
+	color: #eaf0f6 !important;
+	font-size: clamp(12px, 1vw, 14px);
+	font-family: inherit;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.2s;
 }
-
-::ng-deep .code-row .p-inputgroup-addon .p-button:not(:disabled):hover {
-	background: rgba(255, 255, 255, 0.85) !important;
+.get-code-button:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.13);
 }
-
-::ng-deep .field-container .p-message {
-	margin-top: 4px;
+.get-code-button:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
 }
-
-.code-sent-row {
-	margin-bottom: 8px;
-}
-
 .code-sent-message {
-	color: rgba(255, 255, 255, 0.72);
-	font-size: 13px;
+	font-size: 12px;
+	color: var(--lamp-color);
 }
 
 /* ─────────────────────────────────────────
-   Mode toggle link
+   Forgot password
 ───────────────────────────────────────── */
-.toggle-row {
-	margin-bottom: 4px;
+.forgot-password-row {
+	display: flex;
+	justify-content: flex-end;
 }
-
-.toggle-link {
-	color: rgba(255, 255, 255, 0.7);
-	font-size: 14px;
+.forgot-password-link {
+	font-size: clamp(11px, 0.9vw, 13px);
+	color: rgba(220, 230, 240, 0.45);
 	cursor: pointer;
 	user-select: none;
 	transition: color 0.2s;
-	padding-bottom: 10px;
+}
+.forgot-password-link:hover {
+	color: var(--lamp-color);
 }
 
-.toggle-link:hover {
-	color: rgba(255, 255, 255, 0.95);
+/* ─────────────────────────────────────────
+   Toggle link
+───────────────────────────────────────── */
+.toggle-row {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 5px;
+	text-align: center;
 }
-
-/* ── Submit button ── */
-.login-button {
-	border-radius: 12px !important;
-	width: 250px;
-	height: 45px;
-	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
-	border: none !important;
-	color: white !important;
-	font-size: 16px !important;
-	font-weight: 600 !important;
+.toggle-row span {
+	font-size: clamp(12px, 1vw, 15px);
+}
+.toggle-text {
+	color: rgba(220, 230, 240, 0.55);
+}
+.toggle-link {
+	font-weight: 600;
+	color: var(--lamp-color);
 	cursor: pointer;
-	letter-spacing: 0.5px;
-	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.35);
+	user-select: none;
+	transition: filter 0.2s;
+}
+.toggle-link:hover {
+	filter: brightness(1.2);
+}
+
+/* ─────────────────────────────────────────
+   Submit button
+───────────────────────────────────────── */
+.login-button {
+	height: clamp(44px, 3.5vw, 60px);
+	width: 100%;
+	border: none !important;
+	border-radius: 12px !important;
+	color: #fff !important;
+	font-size: clamp(14px, 1.2vw, 19px) !important;
+	font-weight: 700 !important;
+	cursor: pointer;
+	background: linear-gradient(135deg, var(--lamp-color), hsl(var(--lamp-hue) 88% 74%)) !important;
+	box-shadow: 0 8px 22px var(--lamp-soft);
 	transition:
-		opacity 0.2s,
-		box-shadow 0.2s;
+		transform 0.15s,
+		filter 0.2s;
 }
-
 .login-button:hover {
-	opacity: 0.92;
-	box-shadow: 0 6px 20px rgba(213, 51, 105, 0.45);
+	transform: translateY(-1px);
+	filter: brightness(1.05);
 }
-
 .login-button:active {
-	opacity: 0.85;
-	box-shadow: 0 2px 8px rgba(213, 51, 105, 0.25);
 	transform: scale(0.98);
 }
 
-/* ── Divider ── */
+/* ─────────────────────────────────────────
+   Divider + Google
+───────────────────────────────────────── */
 .divider-row {
-	margin: 12px 0 4px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 2px 0;
 }
-
 .horizontal-line {
+	flex: 1;
 	height: 1px;
 	border: none;
-	background: rgba(255, 255, 255, 0.35);
-	margin-top: 8px;
-	width: 280px;
+	background: rgba(255, 255, 255, 0.12);
+}
+.divider-text {
+	font-size: 12px;
+	color: rgba(234, 240, 246, 0.4);
+	white-space: nowrap;
+}
+.google-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	width: 100%;
+	height: clamp(44px, 3.5vw, 60px);
+	background: rgba(255, 255, 255, 0.06);
+	border: 1.5px solid rgba(255, 255, 255, 0.13);
+	border-radius: 12px;
+	color: #ffffff !important;
+	font-size: clamp(13px, 1.1vw, 17px);
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+.google-button:hover {
+	background: rgba(255, 255, 255, 0.11);
+}
+.google-icon {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
 }
 
-/* ── Google button ── */
-::ng-deep .google-button .p-button {
-	background: rgba(255, 255, 255, 0.72) !important;
-	border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
-	color: rgba(40, 15, 35, 0.78) !important;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+/* ─────────────────────────────────────────
+   Bottom tagline
+───────────────────────────────────────── */
+.v-lamp-date {
+	position: absolute;
+	bottom: 20px;
+	left: 50dvw;
+	text-align: center;
+	font-size: 17px;
+	color: rgba(234, 240, 246, 0.3);
 }
 
-::ng-deep .google-button .p-button:hover {
-	background: rgba(255, 255, 255, 0.92) !important;
-}
-
-::ng-deep .google-button .p-button:active {
-	background: rgba(255, 255, 255, 0.78) !important;
-	transform: scale(0.98);
-}
-
-/* ── Toggle animations ── */
+/* ─────────────────────────────────────────
+   Mode-switch slide animations
+───────────────────────────────────────── */
 @keyframes slideOutLeft {
 	from {
 		transform: translateX(0);
 		opacity: 1;
 	}
 	to {
-		transform: translateX(-60px);
+		transform: translateX(-40px);
 		opacity: 0;
 	}
 }
-
 @keyframes slideInRight {
 	from {
-		transform: translateX(60px);
+		transform: translateX(40px);
 		opacity: 0;
 	}
 	to {
@@ -326,35 +415,33 @@
 		opacity: 1;
 	}
 }
-
 .slide-out-left {
 	animation: slideOutLeft 0.28s ease-in forwards;
 }
-
 .slide-in-right {
 	animation: slideInRight 0.3s ease-out forwards;
 }
 
 /* ─────────────────────────────────────────
-   Responsive ≤ 940 px (mobile)
+   Accessibility
+───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+	.lamp-eyes,
+	.v-lamp-form,
+	.lamp-cone,
+	.v-lamp {
+		transition-duration: 0.01ms;
+	}
+}
+
+/* ─────────────────────────────────────────
+   Mobile ≤ 940px
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
-	.title {
-		font-size: 35px;
-		letter-spacing: 5px;
+	.v-lamp {
+		gap: 0;
 	}
-
-	.word {
-		font-size: 20px;
-	}
-
-	.en-word {
-		font-size: 17px;
-	}
-
-	.word-container {
-		gap: 14px;
-		margin-top: 4%;
-		margin-bottom: 4%;
+	.v-lamp-stage {
+		transform: scale(0.85);
 	}
 }

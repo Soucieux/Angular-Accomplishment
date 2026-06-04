@@ -1,114 +1,126 @@
-<div class="container">
-	<div class="word-container">
-		<div>
-			<h1 class="title">VISION CANVAS</h1>
-		</div>
-		<div class="quote-row">
-			<h2 class="word">恭喜你找到了非常隐秘的小树洞</h2>
-			<h5 class="en-word">Welcome to the very hidden kingdom</h5>
-		</div>
-		<div class="quote-row">
-			<h2 class="word">一个可以回到过去的神秘领域</h2>
-			<h5 class="en-word">a mysterious place where you can go back in time</h5>
-		</div>
+<!--
+  The lamp scene. The form lives inside .v-lamp-form and is revealed (CSS spring)
+  only when lampOn is true. [style.--lamp-hue] drives every colour through CSS
+  custom properties; is-on flips the room, eyes, and light.
+-->
+<div class="v-lamp" [class.is-on]="lampOn" [style.--lamp-hue]="lampHue">
+	<div class="lamp-cone"></div>
+
+	<!-- ── lamp + draggable pull-cord ── -->
+	<div class="v-lamp-stage">
+		<svg class="lamp-svg" viewBox="0 0 300 440">
+			<ellipse class="lamp-base" cx="150" cy="416" rx="78" ry="12" />
+			<rect class="lamp-metal" x="116" y="398" width="68" height="14" rx="7" />
+			<path
+				d="M150 402 C 150 320, 150 300, 150 240"
+				fill="none"
+				stroke="#38465a"
+				stroke-width="9"
+				stroke-linecap="round" />
+			<path
+				d="M150 244 C 150 215, 150 200, 150 184"
+				fill="none"
+				stroke="#38465a"
+				stroke-width="9"
+				stroke-linecap="round" />
+			<circle class="lamp-metal" cx="150" cy="244" r="9" />
+			<path class="lamp-shade" d="M118 120 Q150 108 182 120 L206 174 Q150 188 94 174 Z" />
+			<ellipse class="lamp-bulb" cx="150" cy="176" rx="30" ry="9" />
+			<!-- eyes flip 180° when the lamp is off -->
+			<g class="lamp-eyes" [style.transform]="lampOn ? 'rotate(0deg)' : 'rotate(180deg)'">
+				<ellipse class="lamp-eye" cx="136" cy="150" rx="6" ry="8" />
+				<ellipse class="lamp-eye" cx="164" cy="150" rx="6" ry="8" />
+			</g>
+			<path #lampCord class="lamp-cord-line" fill="none"></path>
+		</svg>
+
+		<!-- GSAP Draggable target -->
+		<div #lampHandle class="lamp-handle" style="top: 51%; left: 50%"></div>
+		<div class="lamp-hint">↓ pull the cord 拉一下</div>
 	</div>
 
-	<div class="form-wrapper" [class.slide-out-left]="animating === 'out'" [class.slide-in-right]="animating === 'in'">
-		<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+	<!-- ── the lit form ── -->
+	<div class="v-lamp-form">
+		<div class="v-lamp-head">
+			<div class="h-cn">欢迎回来</div>
+			<div class="h-en">Welcome back to the hidden kingdom</div>
+		</div>
+
+		<form
+			class="lamp-fields"
+			[formGroup]="loginForm"
+			(ngSubmit)="onSubmit()"
+			[class.slide-out-left]="animating === 'out'"
+			[class.slide-in-right]="animating === 'in'">
 			<!-- Sign In: Username -->
 			@if (!isSignUp) {
-				<div class="input-field-container field-container">
+				<div class="input-field-container">
 					<p-iftalabel>
 						<input
 							class="input-field"
 							pInputText
 							type="text"
 							id="username"
-							name="username"
 							formControlName="username"
 							[invalid]="isInvalid('username')" />
 						<label for="username">Username</label>
-						@if (isInvalid('username')) {
-							<p-message severity="error" size="small" variant="simple">Username is required.</p-message>
-						}
 					</p-iftalabel>
+					@if (isInvalid('username')) {
+						<p-message severity="error" size="small" variant="simple"
+							>Username is required.</p-message
+						>
+					}
 				</div>
 			}
 
-			<!-- Sign Up: Email -->
+			<!-- Sign Up: Email + verification code + username -->
 			@if (isSignUp) {
-				<div class="input-field-container field-container">
+				<div class="input-field-container">
 					<p-iftalabel>
 						<input
 							class="input-field"
 							pInputText
 							type="text"
 							id="email"
-							name="email"
 							formControlName="email"
 							[invalid]="isInvalid('email')" />
 						<label for="email">Email</label>
-						@if (isInvalid('email')) {
-							<p-message severity="error" size="small" variant="simple">Email is required.</p-message>
-						}
 					</p-iftalabel>
+					@if (isInvalid('email')) {
+						<p-message severity="error" size="small" variant="simple"
+							>Email is required.</p-message
+						>
+					}
 				</div>
-			}
 
-			<!-- Password (Sign In) -->
-			@if (!isSignUp) {
-				<div class="input-field-container field-container">
-					<p-iftalabel>
-						<input
-							class="input-field"
-							pInputText
-							type="password"
-							id="password"
-							formControlName="password"
-							[invalid]="isInvalid('password')" />
-						<label for="password">Password</label>
-						@if (isInvalid('password')) {
-							<p-message severity="error" size="small" variant="simple">Password is required.</p-message>
-						}
-					</p-iftalabel>
-				</div>
-			}
-
-			<!-- Sign Up fields -->
-			@if (isSignUp) {
-				<!-- Verification Code -->
-				<div class="field-container code-row">
-					<p-inputgroup style="height: 45px; width: 250px">
+				<div class="code-row">
+					<div class="code-input-row">
 						<input
 							pInputText
 							type="text"
 							inputmode="numeric"
+							placeholder="Code"
 							formControlName="verificationCode"
 							[invalid]="isInvalid('verificationCode')" />
-						<p-inputgroup-addon>
-							<p-button
-								(click)="getVerificationCodeEmail()"
-								severity="secondary"
-								[disabled]="loginForm.get('email')?.value === '' || sendingCode"
-								[loading]="sendingCode">
-								<span pButtonLabel>Get Code</span>
-							</p-button>
-						</p-inputgroup-addon>
-					</p-inputgroup>
+						<button
+							type="button"
+							class="get-code-button"
+							(click)="getVerificationCodeEmail()"
+							[disabled]="loginForm.get('email')?.value === '' || sendingCode">
+							{{ sendingCode ? LOGIN_LABEL_LOADING : LOGIN_LABEL_GET_CODE }}
+						</button>
+					</div>
 					@if (isInvalid('verificationCode')) {
-						<p-message severity="error" size="small" variant="simple">Verification code is required.</p-message>
+						<p-message severity="error" size="small" variant="simple"
+							>Verification code is required.</p-message
+						>
+					}
+					@if (codeSent) {
+						<span class="code-sent-message">Code sent — check your email.</span>
 					}
 				</div>
 
-				<!-- Code sent message -->
-				@if (codeSent) {
-					<div class="field-container code-sent-row">
-						<span class="code-sent-message">Code sent! Please check your email.</span>
-					</div>
-				}
-
-				<!-- Username -->
-				<div class="input-field-container field-container">
+				<div class="input-field-container">
 					<p-iftalabel>
 						<input
 							class="input-field"
@@ -118,57 +130,78 @@
 							formControlName="username"
 							[invalid]="isInvalid('username')" />
 						<label for="signup-username">Username</label>
-						@if (isInvalid('username')) {
-							<p-message severity="error" size="small" variant="simple">Username is required.</p-message>
-						}
-					</p-iftalabel>
-				</div>
-
-				<!-- Password -->
-				<div class="input-field-container field-container">
-					<p-iftalabel>
-						<input
-							class="input-field"
-							pInputText
-							type="password"
-							id="signup-password"
-							formControlName="password"
-							[invalid]="isInvalid('password')" />
-						<label for="signup-password">Password</label>
-						@if (isInvalid('password')) {
-							<p-message severity="error" size="small" variant="simple">Password is required.</p-message>
-						}
 					</p-iftalabel>
 				</div>
 			}
 
-			<!-- Toggle mode link -->
-			<div class="field-container toggle-row">
-				<span class="toggle-link" (click)="toggleMode()" (keydown.enter)="toggleMode()" tabindex="0">
-					{{ isSignUp ? 'Already have an account?' : 'No account? Sign up now!' }}
-				</span>
+			<!-- Password (both modes) -->
+			<div class="input-field-container">
+				<p-iftalabel>
+					<input
+						pInputText
+						type="password"
+						id="password"
+						formControlName="password"
+						[invalid]="isInvalid('password')" />
+					<label for="password">Password</label>
+				</p-iftalabel>
+				@if (isInvalid('password')) {
+					<p-message severity="error" size="small" variant="simple"
+						>Password is required.</p-message
+					>
+				}
 			</div>
 
-			<!-- Submit button -->
-			<div class="field-container">
-				<button class="login-button" pButton type="submit">
-					<span pButtonLabel>{{ isSignUp ? 'Sign Up' : 'Sign In' }}</span>
-				</button>
-			</div>
-
-			<!-- Divider + Google (Sign In only) -->
+			<!-- Forgot password (Sign In only) -->
 			@if (!isSignUp) {
-				<div class="field-container divider-row">
+				<div class="forgot-password-row">
+					<span class="forgot-password-link">Forgot password?</span>
+				</div>
+			}
+
+			<!-- Submit -->
+			<button class="login-button" pButton type="submit">
+				<span pButtonLabel>{{ isSignUp ? LOGIN_LABEL_CREATE_ACCOUNT : LOGIN_LABEL_SIGN_IN }}</span>
+			</button>
+
+			<!-- Divider + Google + toggle (Sign In only) -->
+			@if (!isSignUp) {
+				<div class="divider-row">
+					<hr class="horizontal-line" />
+					<span class="divider-text">or</span>
 					<hr class="horizontal-line" />
 				</div>
-				<p-button
-					(click)="googleLogin()"
-					icon="pi pi-google"
-					[rounded]="true"
-					severity="secondary"
-					class="field-container google-button"></p-button>
+				<button class="google-button" type="button" (click)="googleLogin()">
+					<svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+						<path
+							d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+							fill="#4285F4" />
+						<path
+							d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+							fill="#34A853" />
+						<path
+							d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+							fill="#FBBC05" />
+						<path
+							d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+							fill="#EA4335" />
+					</svg>
+					<span>Continue with Google</span>
+				</button>
 			}
+
+			<!-- Toggle mode (always at bottom) -->
+			<div class="toggle-row">
+				<span class="toggle-text">{{
+					isSignUp ? 'Already have an account?' : 'No account yet?'
+				}}</span>
+				<span class="toggle-link" (click)="toggleMode()" (keydown.enter)="toggleMode()" tabindex="0">
+					{{ isSignUp ? 'Sign in' : 'Sign up now' }}
+				</span>
+			</div>
 		</form>
 	</div>
+
+	<div class="v-lamp-date">{{ today | date: 'MMMM d, yyyy' }} · pull the light to begin</div>
 	<ng-container #dialogComponentContainer></ng-container>
 </div>

@@ -88,6 +88,10 @@ export const LS_AUTH_HINT_KEY = 'auth_hint';
 export const LOGIN_URL_DEFAULT_RETURN = '/';
 export const LOGIN_ANIM_OUT = 'out';
 export const LOGIN_ANIM_IN = 'in';
+export const LOGIN_LABEL_CREATE_ACCOUNT = 'Create account';
+export const LOGIN_LABEL_GET_CODE = 'Get Code';
+export const LOGIN_LABEL_LOADING = '…';
+export const LOGIN_LABEL_SIGN_IN = 'Sign In';
 /** CloudBase role string that identifies an admin user. */
 export const ROLE_ADMIN = '管理员';
 /** CloudBase error code for an invalid request argument (e.g. wrong verification code). */

@@ -75,14 +75,23 @@ import {
 	TOAST_WARN
 } from '../../common/app.constant';
 import { AiTool, NexusCategory, NexusLink, NEXUS_AI_TOOLS, NEXUS_LOGO_FALLBACK_COLORS } from './nexus.model';
+import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
 	selector: 'nexus',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [CommonModule, FormsModule, DialogModule, TableModule, SkeletonModule, InputTextModule],
+	imports: [
+		AccessDeniedComponent,
+		CommonModule,
+		FormsModule,
+		DialogModule,
+		TableModule,
+		SkeletonModule,
+		InputTextModule
+	],
 	templateUrl: './nexus.component.html',
-	styleUrl: './nexus.component.css'
+	styleUrls: ['../../common/glass-card.css', './nexus.component.css']
 })
 export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private readonly className = 'NexusComponent';
@@ -213,13 +222,13 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Attaches the auto-hide scroll listener to the links grid after each view check.
+	 * Attaches the auto-hide scroll listener to the nexus container after each view check.
 	 * Uses a WeakSet internally so each element is bound exactly once.
 	 */
 	ngAfterViewChecked(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
 		document
-			.querySelectorAll<HTMLElement>('.links-grid')
+			.querySelectorAll<HTMLElement>('.container-nexus')
 			.forEach((el) => Utilities.attachScrollAutoHide(el));
 	}
 

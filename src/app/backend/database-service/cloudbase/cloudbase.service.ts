@@ -409,9 +409,9 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets the first reminder table details from CloudBase as a real-time observable.
+	 * Gets the date calculator table details from CloudBase as a real-time observable.
 	 *
-	 * @returns Reminder table details
+	 * @returns Date calculator table details.
 	 */
 	public getDateCalculatorTableDetails(): Observable<any[]> {
 		/* Date calculator rows are flat — emit as-is. Fallback to [] prevents
@@ -1080,9 +1080,9 @@ export class CloudbaseService extends DatabaseService {
 					if (result.code) throw new Error(result.message);
 				})
 			);
-			LOG.info(this.className, 'Reminder table has been updated');
+			LOG.info(this.className, 'Date calculator table has been updated');
 		} catch (error) {
-			LOG.error(this.className, 'Error while updating first reminder table', error as Error);
+			LOG.error(this.className, 'Error while updating date calculator table', error as Error);
 			throw error;
 		}
 	}

@@ -499,7 +499,7 @@ export const REMINDER_VALUE_KEY_LINK = 'link';
 /** CloudBase content entry key for the reminder tag. */
 export const REMINDER_VALUE_KEY_TAG = 'tag';
 
-/** Display name for the first reminder table — used in stat writes and the Recent Activity widget. */
+/** Display name for the date calculator table — used in stat writes and the Recent Activity widget. */
 export const REMINDER_TABLE_DATE_CALCULATOR = 'Date Calculator';
 /** Display name for the third reminder table — used in stat writes and the Recent Activity widget. */
 export const REMINDER_TABLE_MESSAGES = 'Messages';

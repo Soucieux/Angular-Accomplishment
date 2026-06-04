@@ -603,7 +603,7 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets the first reminder table details from Firebase as a reactive observable.
+	 * Gets the date calculator table details from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the date calculator table details.
 	 */
@@ -754,7 +754,7 @@ export class FirebaseService extends DatabaseService {
 				LOG.info(this.className, 'Table record has been updated');
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, 'Error while updating first reminder table', error);
+				LOG.error(this.className, 'Error while updating date calculator table', error);
 				throw error;
 			});
 	}

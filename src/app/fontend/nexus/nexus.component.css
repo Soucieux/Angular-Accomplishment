@@ -3,7 +3,6 @@
 ───────────────────────────────────────── */
 :host {
 	display: block;
-	height: 100%;
 }
 
 /* ─────────────────────────────────────────
@@ -347,39 +346,6 @@
 }
 
 /* ─────────────────────────────────────────
-   Container — mostly-opaque white card
-───────────────────────────────────────── */
-.container {
-	min-width: 100%;
-	background: rgba(255, 255, 255, 0.92);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
-	border: 1px solid rgba(255, 255, 255, 0.8);
-	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
-	border-radius: 18px;
-	padding: 10px;
-	animation: containerReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.container-nexus {
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
-}
-
-@keyframes containerReveal {
-	from {
-		opacity: 0;
-		transform: translateY(-8px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-/* ─────────────────────────────────────────
    Header
 ───────────────────────────────────────── */
 .page-header {
@@ -717,42 +683,11 @@
    Links grid
 ───────────────────────────────────────── */
 .links-grid {
-	flex: 1;
-	overflow-y: auto;
 	display: flex;
 	flex-wrap: wrap;
 	align-content: flex-start;
 	gap: 10px;
 	padding-right: 4px;
-	scrollbar-width: thin;
-	scrollbar-color: transparent transparent;
-	transition: scrollbar-color 0.4s ease;
-}
-
-.links-grid::-webkit-scrollbar {
-	width: 8px;
-}
-
-.links-grid::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-.links-grid::-webkit-scrollbar-thumb {
-	background: transparent;
-	border-radius: 999px;
-	transition: background 0.4s ease;
-}
-
-.links-grid.is-scrolling {
-	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
-}
-
-.links-grid.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(213, 51, 105, 0.28);
-}
-
-.links-grid.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #d53369;
 }
 
 /* ─────────────────────────────────────────
@@ -1423,7 +1358,6 @@
 	.links-grid {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
-		overflow-y: visible;
 	}
 
 	.link-card {
@@ -1445,3 +1379,4 @@
 		left: 0 !important;
 	}
 }
+

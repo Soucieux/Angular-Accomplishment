@@ -454,7 +454,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns all dated items for the reminder dashboard widget,
+	 * Gets all dated items for the reminder dashboard widget,
 	 * sorted ascending by date (most overdue first → soonest due).
 	 *
 	 * @returns Sorted array of all reminder items that have a date set.
@@ -794,7 +794,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns the hex color for a link's category, falling back to the neutral
+	 * Gets the hex color for a link's category, falling back to the neutral
 	 * sub-text colour when the category is not found.
 	 *
 	 * @param categoryId - The category _id stored on the link document.
@@ -818,7 +818,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns the tile background colour for a pinned tile at the given index,
+	 * Gets the tile background colour for a pinned tile at the given index,
 	 * cycling through the four pool-theme colours.
 	 *
 	 * @param index - The zero-based tile index.
@@ -829,7 +829,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Returns the CSS rotation for a pinned tile at the given index, giving the
+	 * Gets the CSS rotation for a pinned tile at the given index, giving the
 	 * sticker-stack tilt effect.
 	 *
 	 * @param index - The zero-based tile index.

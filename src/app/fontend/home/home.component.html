@@ -1,28 +1,51 @@
 <div [class]="showDashboard ? 'container container-dashboard' : 'container'">
-	<!-- ── Not logged in → original quote page ─────────────────────────── -->
+	<!-- ── Not logged in → editorial landing ───────────────────────────── -->
 	@if (!showDashboard) {
-		<div class="word-container" [class.fade-out]="transitioning">
-			<div>
-				<h1 class="title">VISION CANVAS</h1>
-			</div>
-			<div class="quote-block">
-				<h2 class="en-word">Yesterday is a history</h2>
-				<h2 class="word">往日已成历史</h2>
-			</div>
-			<div class="quote-block">
-				<h2 class="en-word">Tomorrow is a mystery</h2>
-				<h2 class="word">未来犹未可知</h2>
-			</div>
-			<div class="quote-block">
-				<h2 class="en-word">Only today is a present</h2>
-				<h2 class="word">唯有今日是最珍贵的礼物🎁</h2>
-			</div>
-			<div></div>
-			<div class="final-quote">
-				<h5 class="word">
-					昨天发生的已然发生，明日可能发生的还未可知，唯有今日才是自己决定的实时演出。
-				</h5>
-			</div>
+		<div class="logged-out-view" [class.fade-out]="transitioning">
+			<main class="ed">
+				<div class="ed-orb ed-orb-a"></div>
+				<div class="ed-orb ed-orb-b"></div>
+				<div class="ed-watermark">留存</div>
+
+				<div class="ed-stage">
+					<header class="ed-masthead">
+						<span class="ed-cn">愿景画布</span>
+						<span class="ed-est">EST. 2024</span>
+					</header>
+
+					<div class="ed-titlewrap">
+						<h1 class="ed-title">VISION<br >CANVAS</h1>
+						<div class="ed-issue">
+							<span>A PERSONAL SECOND BRAIN</span>
+						</div>
+					</div>
+
+					<div class="ed-body">
+						<div class="ed-line">
+							<div class="ed-en">Some memories are worth keeping.</div>
+							<div class="ed-cn">记忆值得温柔以待，故事值得用心书写。</div>
+						</div>
+						<div class="ed-line">
+							<div class="ed-en">So I made a place to keep them.</div>
+							<div class="ed-cn">在心间做匣，在梦里做城，收集那些舍不得的星光。</div>
+						</div>
+
+						<div class="ed-colophon">
+							<span>NEXUS</span>
+							<span class="ed-dot"></span>
+							<span>RESONANCE</span>
+							<span class="ed-dot"></span>
+							<span>RECIPES</span>
+							<span class="ed-dot"></span>
+							<span>ENTERTAINMENT</span>
+							<span class="ed-dot"></span>
+							<span>REMINDER</span>
+							<span class="ed-dot"></span>
+							<span>DEBT SONATA</span>
+						</div>
+					</div>
+				</div>
+			</main>
 		</div>
 	}
 

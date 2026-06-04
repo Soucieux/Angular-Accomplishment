@@ -7,14 +7,14 @@
 	position: relative;
 	overflow: hidden;
 	border-radius: 30px;
-	min-height: calc(100vh - 10px);
+	min-height: calc(100dvh - 10px);
 	min-width: 100%;
-	overflow-y: auto;
 }
 
 /* Dashboard-state override: exact height on large screens; fills viewport with no scrollbar */
 .container-dashboard {
-	height: calc(100vh - 10px);
+	height: calc(100dvh - 10px);
+	overflow-y: auto;
 }
 
 /* Floating orb top-right */
@@ -58,40 +58,17 @@
 }
 
 /* ─────────────────────────────────────────
-   Not-logged-in: quote page
+   Not-logged-in: editorial landing
 ───────────────────────────────────────── */
-.word-container {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	gap: 30px;
+.logged-out-view {
+	flex: 1;
 	position: relative;
-	z-index: 1;
-	width: 100%;
-	min-height: inherit;
-	box-sizing: border-box;
-}
-
-.word-container::before {
-	content: '';
-	position: absolute;
-	inset: 0;
-	left: -15px;
-	right: -15px;
-	background: rgba(255, 255, 255, 0.07);
-	backdrop-filter: blur(28px);
-	-webkit-backdrop-filter: blur(28px);
-	z-index: 0;
-	pointer-events: none;
-}
-
-.word-container > * {
-	position: relative;
+	min-width: 100%;
+	height: calc(100dvh - 10px);
 	z-index: 1;
 }
 
-/* Auth exit animation — plays when user logs in on the quote page */
+/* Auth exit animation — plays when user logs in */
 @keyframes quoteExit {
 	from {
 		opacity: 1;
@@ -108,40 +85,235 @@
 	pointer-events: none;
 }
 
-.quote-block {
-	animation: fadeSlideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.quote-block:nth-child(2) {
-	animation-delay: 0.12s;
-}
-.quote-block:nth-child(3) {
-	animation-delay: 0.26s;
-}
-.quote-block:nth-child(4) {
-	animation-delay: 0.4s;
+/* ─────────────────────────────────────────
+   Logged-out editorial view (ed-* prefixed)
+───────────────────────────────────────── */
+
+.ed {
+	position: absolute;
+	inset: 0;
+	color: #fff;
+	font-family: var(--font-en);
+	-webkit-font-smoothing: antialiased;
+	user-select: none;
+	isolation: isolate;
 }
 
-.final-quote {
-	width: fit-content;
-	max-width: min(850px, 95%);
-	margin: 0 auto;
-	padding: 14px 24px 14px 28px;
-	border-left: 3px solid rgba(255, 255, 255, 0.42);
-	border-radius: 0 14px 14px 0;
-	background: rgba(255, 255, 255, 0.08);
-	animation: fadeSlideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.54s both;
+.ed * {
+	box-sizing: border-box;
 }
 
-.final-quote .word {
-	color: rgba(255, 255, 255, 0.74);
-	font-style: italic;
-	line-height: 1.8;
-	text-shadow: 0 2px 14px rgba(0, 0, 0, 0.12);
+/* Printed inner frame */
+.ed::before {
+	content: '';
+	position: absolute;
+	inset: 2px;
+	border-radius: 1%;
+	border: 1px solid rgba(255, 255, 255, 0.42);
+	z-index: 4;
+	pointer-events: none;
 }
 
-.en-word {
-	text-align: center;
-	color: rgba(255, 255, 255, 0.58);
+/* ─────────────────────────────────────────
+   Drifting orbs
+───────────────────────────────────────── */
+.ed-orb {
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(52px);
+	z-index: 0;
+	pointer-events: none;
+}
+
+.ed-orb-a {
+	width: 60vw;
+	height: 60vw;
+	max-width: 440px;
+	max-height: 440px;
+	background: rgba(255, 215, 150, 0.45);
+	bottom: -14%;
+	right: -16%;
+	animation: edDrift 19s ease-in-out infinite;
+}
+
+.ed-orb-b {
+	width: 48vw;
+	height: 48vw;
+	max-width: 360px;
+	max-height: 360px;
+	background: rgba(255, 200, 220, 0.32);
+	top: -12%;
+	left: -14%;
+	animation: edDrift2 22s ease-in-out infinite;
+}
+
+@keyframes edDrift {
+	0%,
+	100% {
+		transform: translate(0, 0) scale(1);
+	}
+	50% {
+		transform: translate(-36px, -30px) scale(1.1);
+	}
+}
+
+@keyframes edDrift2 {
+	0%,
+	100% {
+		transform: translate(0, 0) scale(1);
+	}
+	50% {
+		transform: translate(34px, 30px) scale(1.08);
+	}
+}
+
+/* ─────────────────────────────────────────
+   Giant vertical watermark
+───────────────────────────────────────── */
+.ed-watermark {
+	position: absolute;
+	right: 4%;
+	top: 52%;
+	transform: translateY(-50%);
+	writing-mode: vertical-rl;
+	font-family: var(--font-cn);
+	font-weight: 700;
+	font-size: clamp(150px, 46vw, 320px);
+	line-height: 0.9;
+	color: rgba(255, 255, 255, 0.13);
+	letter-spacing: 0.04em;
+	z-index: 1;
+	user-select: none;
+	white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────
+   Content stage
+───────────────────────────────────────── */
+.ed-stage {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	display: flex;
+	flex-direction: column;
+	padding: clamp(20px, 9vw, 64px) clamp(36px, 8vw, 56px);
+}
+
+/* ─────────────────────────────────────────
+   Masthead
+───────────────────────────────────────── */
+.ed-masthead {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	font-size: clamp(11px, 3vw, 30px);
+	letter-spacing: 0.26em;
+	color: rgba(255, 255, 255, 0.82);
+}
+
+.ed-masthead .ed-cn {
+	font-family: var(--font-cn);
+	letter-spacing: 0.2em;
+}
+
+.ed-masthead .ed-est {
+	font-size: 20px;
+}
+
+/* ─────────────────────────────────────────
+   Title block
+───────────────────────────────────────── */
+.ed-titlewrap {
+	margin-top: clamp(40px, 11vw, 76px);
+}
+
+.ed-title {
+	font-size: clamp(52px, 16vw, 104px);
+	font-weight: 700;
+	line-height: 0.92;
+	letter-spacing: 0.03em;
+	color: #fff;
+	filter: drop-shadow(0 3px 20px rgba(120, 20, 55, 0.4));
+}
+
+.ed-issue {
+	margin-top: clamp(14px, 3.5vw, 20px);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: clamp(15px, 7vw, 20px);
+	letter-spacing: 0.22em;
+	color: rgba(255, 255, 255, 0.78);
+}
+
+/* ─────────────────────────────────────────
+   Body lines pinned to lower area
+───────────────────────────────────────── */
+.ed-body {
+	margin-top: auto;
+}
+
+.ed-line {
+	margin-bottom: clamp(14px, 3.6vw, 20px);
+}
+
+.ed-line .ed-en {
+	font-size: clamp(22px, 6.4vw, 32px);
+	line-height: 1.22;
+	color: #fff;
+	text-wrap: balance;
+}
+
+.ed-line .ed-cn {
+	font-family: var(--font-cn);
+	font-size: clamp(15px, 4.4vw, 19px);
+	color: rgba(255, 255, 255, 0.76);
+	letter-spacing: 0.14em;
+	margin-top: 5px;
+}
+
+/* ─────────────────────────────────────────
+   Footer colophon — app sections
+───────────────────────────────────────── */
+.ed-colophon {
+	margin-top: clamp(22px, 6vw, 34px);
+	padding-top: clamp(16px, 4vw, 20px);
+	border-top: 1px solid rgba(255, 255, 255, 0.3);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	font-size: clamp(10px, 2.8vw, 12px);
+	letter-spacing: 0.22em;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+.ed-dot {
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.7);
+	flex: none;
+}
+
+/* ─────────────────────────────────────────
+   Entrance animations
+   Base state stays visible for print / screenshot
+───────────────────────────────────────── */
+.ed-stage > * {
+	animation: fadeSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ed-stage .ed-masthead {
+	animation-delay: 0.04s;
+}
+
+.ed-stage .ed-titlewrap {
+	animation-delay: 0.1s;
+}
+
+.ed-stage .ed-body {
+	animation-delay: 0.18s;
 }
 
 /* ─────────────────────────────────────────
@@ -1617,12 +1789,45 @@
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
+	.ed-stage {
+		padding: 18px 18px 20px;
+	}
+
+	.ed-watermark {
+		right: 2%;
+		top: 54%;
+		font-size: clamp(100px, 36vw, 200px);
+	}
+
+	.ed-colophon {
+		gap: 8px;
+		letter-spacing: 0.14em;
+	}
+
+	.ed-masthead .ed-cn,
+	.ed-masthead .ed-est,
+	.ed-line .ed-en,
+	.ed-line .ed-cn {
+		font-size: clamp(11px, 4vw, 17px);
+	}
+
+	.ed-title {
+		font-size: clamp(20px, 8vw, 40px);
+	}
+
+	.ed-issue {
+		font-size: clamp(11px, 3vw, 13px);
+	}
+
 	.card-minimum-height {
 		min-height: 150px;
 	}
 
 	.container {
-		min-height: calc(100vh - 92px);
+		min-height: calc(100dvh - 10px);
+	}
+	.logged-out-view {
+		height: calc(100dvh - 10px);
 	}
 	.container-dashboard {
 		height: auto;
@@ -1702,9 +1907,6 @@
 	.clock-display {
 		font-size: 26px;
 	}
-	.en-word {
-		font-size: 20px;
-	}
 	.word {
 		font-size: 17px;
 	}
@@ -1714,7 +1916,6 @@
 	.weekday-number {
 		font-size: 14px;
 	}
-
 
 	.card-title {
 		font-size: 11px;

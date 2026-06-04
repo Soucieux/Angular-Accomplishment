@@ -11,6 +11,13 @@ body {
 	overflow: hidden;
 }
 
+/* Design token aliases used by the logged-out home component */
+:root {
+	--font-en: 'nlf';
+	--font-cn: 'cf';
+	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 /* All words are default to use English font */
 body {
 	font-family: 'nlf';

@@ -79,11 +79,6 @@
 	flex-shrink: 0;
 }
 
-.save-indicator-text {
-	font-size: 19px;
-	margin-left: 5px;
-}
-
 /* ─────────────────────────────────────────
    Month segmented toggle + Reset button
 ───────────────────────────────────────── */
@@ -94,7 +89,7 @@
 	padding: 11px 14px 0px 14px;
 }
 
-.date-calculator-seg-group {
+.date-calculator-segment-group {
 	display: flex;
 	border-radius: 8px;
 	overflow: hidden;
@@ -554,7 +549,7 @@
 	flex: 1;
 }
 
-.cat-tab {
+.category-tab {
 	display: flex;
 	align-items: center;
 	gap: 4px;
@@ -571,14 +566,14 @@
 	position: relative;
 }
 
-.cat-tab.active {
+.category-tab.active {
 	background: linear-gradient(135deg, #e91e8c 0%, #07db19 100%);
 	border-color: transparent;
 	color: #fff !important;
 	font-weight: 600;
 }
 
-.cat-tab:not(.active):hover {
+.category-tab:not(.active):hover {
 	border-color: rgba(213, 51, 105, 0.3);
 	color: #d53369;
 }
@@ -591,11 +586,11 @@
 	transition: opacity 0.15s;
 }
 
-.cat-tab:hover .category-edit-button {
+.category-tab:hover .category-edit-button {
 	opacity: 1;
 }
 
-.cat-tab.active .category-edit-button {
+.category-tab.active .category-edit-button {
 	opacity: 0.7;
 }
 
@@ -1267,7 +1262,7 @@
 /* ─────────────────────────────────────────
    Responsive — ≤ 800px mobile overrides for Date Calculator
 ───────────────────────────────────────── */
-@media (max-width: 800px) {
+@media (max-width: 940px) {
 	.header-wrapper {
 		flex-direction: column;
 	}
@@ -1359,9 +1354,6 @@
 		height: 18px;
 	}
 
-	.save-indicator-text {
-		font-size: 15px !important;
-	}
 }
 
 @media (max-width: 940px) {
@@ -1412,7 +1404,7 @@
 		display: none;
 	}
 
-	.cat-tab {
+	.category-tab {
 		flex-shrink: 0;
 	}
 

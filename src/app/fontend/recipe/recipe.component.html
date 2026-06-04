@@ -121,7 +121,7 @@
 							<span class="material-symbols-outlined">restaurant</span>
 							Serves {{ selectedRecipe.baseServings }}
 						</span>
-						<span class="meta-chip cat-chip">{{ selectedRecipe.category }}</span>
+						<span class="meta-chip category-chip">{{ selectedRecipe.category }}</span>
 					</div>
 					<div class="header-ornament"></div>
 				</div>
@@ -154,12 +154,12 @@
 												<span class="dot"></span>
 												<span class="iname">{{ it.name }}</span>
 												@if (formatQtyNum(it.baseQty)) {
-													<span class="iqty">
+													<span class="ingredient-quantity">
 														<span class="ingredient-quantity-number">{{
 															formatQtyNum(it.baseQty)
 														}}</span>
 														@if (it.unit && !isNumericUnit(it.unit)) {
-															<span class="iqty-unit">{{ it.unit }}</span>
+															<span class="ingredient-quantity-unit">{{ it.unit }}</span>
 														}
 													</span>
 												}
@@ -275,23 +275,23 @@
 							[class.open]="editorCategoryOpen">
 							<span class="material-symbols-outlined icon">restaurant</span>
 							<span
-								class="cat-trigger"
+								class="category-trigger"
 								role="button"
 								tabindex="0"
 								(click)="toggleCategoryDropdown($event)"
 								(keydown.enter)="toggleCategoryDropdown($event)"
 								(keydown.space)="toggleCategoryDropdown($event)">
-								<span [class.cat-placeholder]="!editorCategory">{{
+								<span [class.category-placeholder]="!editorCategory">{{
 									editorCategory || 'Choose category…'
 								}}</span>
 								<span class="material-symbols-outlined drop-arrow">expand_more</span>
 							</span>
 							@if (editorCategoryOpen) {
-								<div class="cat-panel">
+								<div class="category-panel">
 									@for (cat of RECIPE_EDITOR_CATEGORIES; track cat) {
 										<button
 											type="button"
-											class="cat-option"
+											class="category-option"
 											[class.selected]="editorCategory === cat"
 											(click)="selectCategoryOption(cat)">
 											{{ cat }}
@@ -343,7 +343,7 @@
 													[(ngModel)]="it.name"></textarea>
 												<div class="ing-qty-group">
 													<input
-														class="qty"
+														class="quantity"
 														type="text"
 														placeholder="qty"
 														[(ngModel)]="it.qty" />

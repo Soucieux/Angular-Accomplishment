@@ -19,12 +19,11 @@
 						@if (saveIndicators[DATABASE_DATE_CALCULATOR]) {
 							<div class="save-indicator">
 								<span class="save-indicator-spinner"></span>
-								<span class="save-indicator-text">Saving</span>
 							</div>
 						}
 					</div>
 					<div class="date-calculator-toggle-wrapper">
-						<div class="date-calculator-seg-group">
+						<div class="date-calculator-segment-group">
 							<button
 								class="date-calculator-segment-button"
 								[class.active]="!isNextMonth"
@@ -151,17 +150,17 @@
 			<div class="links-toolbar">
 				<div class="category-tabs">
 					<button
-						class="cat-tab"
+						class="category-tab"
 						[class.active]="selectedCategory === NEXUS_CATEGORY_ALL"
 						(click)="selectCategory(NEXUS_CATEGORY_ALL)">
 						All ({{ getLinkCount(NEXUS_CATEGORY_ALL) }})
 					</button>
 					@for (cat of categories; track cat._id) {
 						<button
-							class="cat-tab"
+							class="category-tab"
 							[class.active]="selectedCategory === cat._id"
 							(click)="selectCategory(cat._id)"
-							[style.--cat-color]="cat.color">
+							[style.--category-color]="cat.color">
 							{{ cat.name }} ({{ getLinkCount(cat._id) }})
 							<span class="category-edit-button"
 								(click)="openEditCategoryDialog(cat, $event)"

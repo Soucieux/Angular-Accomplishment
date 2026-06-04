@@ -765,7 +765,7 @@
 	padding: 0 12px;
 	font-size: 13px;
 }
-.detail-meta .cat-chip {
+.detail-meta .category-chip {
 	background: rgba(213, 51, 105, 0.08);
 	color: #d53369;
 	border-color: rgba(213, 51, 105, 0.3);
@@ -1135,7 +1135,7 @@
 	font-size: 17px;
 	white-space: pre-line;
 }
-.iqty {
+.ingredient-quantity {
 	display: inline-flex;
 	align-items: baseline;
 	gap: 5px;
@@ -1150,7 +1150,7 @@
 	font-weight: 700;
 	color: #d97706;
 }
-.iqty-unit {
+.ingredient-quantity-unit {
 	font-size: 12px;
 	color: var(--ink-muted);
 }
@@ -1527,7 +1527,7 @@
 	padding-right: 8px;
 	cursor: pointer;
 }
-.cat-trigger {
+.category-trigger {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
@@ -1536,18 +1536,18 @@
 	cursor: pointer;
 	user-select: none;
 }
-.cat-trigger .cat-placeholder {
+.category-trigger .category-placeholder {
 	color: var(--ink-muted);
 }
-.cat-trigger .drop-arrow {
+.category-trigger .drop-arrow {
 	font-size: 18px;
 	color: var(--ink-muted);
 	transition: transform 0.2s ease;
 }
-.select-chip.open .cat-trigger .drop-arrow {
+.select-chip.open .category-trigger .drop-arrow {
 	transform: rotate(180deg);
 }
-.cat-panel {
+.category-panel {
 	position: absolute;
 	top: calc(100% + 6px);
 	left: 0;
@@ -1570,7 +1570,7 @@
 		transform: translateY(0);
 	}
 }
-.cat-option {
+.category-option {
 	display: flex;
 	align-items: center;
 	width: 100%;
@@ -1586,11 +1586,11 @@
 		background 0.15s ease,
 		color 0.15s ease;
 }
-.cat-option:hover {
+.category-option:hover {
 	background: rgba(217, 119, 6, 0.1);
 	color: #d97706;
 }
-.cat-option.selected {
+.category-option.selected {
 	background: rgba(217, 119, 6, 0.1);
 	color: #d97706;
 	font-weight: 600;
@@ -2001,7 +2001,7 @@
 	align-items: center;
 	gap: 6px;
 }
-.ing-row .qty {
+.ing-row .quantity {
 	width: 5ch;
 	text-align: right;
 	color: #d97706;
@@ -2533,7 +2533,7 @@
 	}
 
 	/* Category dropdown — ensure panel doesn't overflow narrow screens */
-	.cat-panel {
+	.category-panel {
 		min-width: 140px;
 		left: 0;
 		right: auto;
@@ -2719,7 +2719,7 @@
  *      .detail-header .header-ornament
  *      .title-field / ::placeholder / :focus
  *      .editor-header .header-ornament
- *      .detail-meta .cat-chip
+ *      .detail-meta .category-chip
  *      .panel::before
  *      .panel-heading .material-symbols-outlined
  *      .panel-heading.collapsible:hover
@@ -2772,7 +2772,7 @@
 .view.band-quick .editor-header .header-ornament {
 	background: linear-gradient(90deg, #16a34a, #15803d);
 }
-.view.band-quick .detail-meta .cat-chip {
+.view.band-quick .detail-meta .category-chip {
 	background: rgba(22, 163, 74, 0.08);
 	color: #16a34a;
 	border-color: rgba(22, 163, 74, 0.3);
@@ -2867,7 +2867,7 @@
 .view.band-chinese .editor-header .header-ornament {
 	background: linear-gradient(90deg, #a855f7, #9333ea);
 }
-.view.band-chinese .detail-meta .cat-chip {
+.view.band-chinese .detail-meta .category-chip {
 	background: rgba(168, 85, 247, 0.08);
 	color: #a855f7;
 	border-color: rgba(168, 85, 247, 0.3);
@@ -2958,7 +2958,7 @@
 .view.band-western .editor-header .header-ornament {
 	background: linear-gradient(90deg, #d97706, #b45309);
 }
-.view.band-western .detail-meta .cat-chip {
+.view.band-western .detail-meta .category-chip {
 	background: rgba(217, 119, 6, 0.08);
 	color: #d97706;
 	border-color: rgba(217, 119, 6, 0.3);
@@ -3049,7 +3049,7 @@
 .view.band-dessert .editor-header .header-ornament {
 	background: linear-gradient(90deg, #db2777, #be185d);
 }
-.view.band-dessert .detail-meta .cat-chip {
+.view.band-dessert .detail-meta .category-chip {
 	background: rgba(219, 39, 119, 0.08);
 	color: #db2777;
 	border-color: rgba(219, 39, 119, 0.3);

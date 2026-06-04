@@ -1,4 +1,6 @@
-/* ── PrimeNG dialog shell ────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   PrimeNG dialog shell
+───────────────────────────────────────── */
 ::ng-deep .itype-dialog .p-dialog-content {
 	padding: 18px 24px 8px;
 }
@@ -8,8 +10,8 @@
 	gap: 10px;
 	padding: 14px 24px 16px;
 }
-::ng-deep .itype-dialog .dialog-cancel-btn,
-::ng-deep .itype-dialog .dialog-save-btn {
+::ng-deep .itype-dialog .dialog-cancel-button,
+::ng-deep .itype-dialog .dialog-save-button {
 	font: inherit;
 	font-size: 13px;
 	font-weight: 500;
@@ -18,24 +20,26 @@
 	cursor: pointer;
 	border: 1px solid transparent;
 }
-::ng-deep .itype-dialog .dialog-cancel-btn {
+::ng-deep .itype-dialog .dialog-cancel-button {
 	background: #fff;
 	color: #d53369;
 	border-color: rgba(213, 51, 105, 0.28);
 }
-::ng-deep .itype-dialog .dialog-cancel-btn:hover {
+::ng-deep .itype-dialog .dialog-cancel-button:hover {
 	background: rgba(213, 51, 105, 0.06);
 }
-::ng-deep .itype-dialog .dialog-save-btn {
+::ng-deep .itype-dialog .dialog-save-button {
 	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
 	color: #fff;
 	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
 }
-::ng-deep .itype-dialog .dialog-save-btn:hover {
+::ng-deep .itype-dialog .dialog-save-button:hover {
 	transform: translateY(-1px);
 }
 
-/* ── Template-owned elements ────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Template-owned elements
+───────────────────────────────────────── */
 .itype-body {
 	display: flex;
 	flex-direction: column;

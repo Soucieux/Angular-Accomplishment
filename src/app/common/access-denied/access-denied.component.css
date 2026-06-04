@@ -126,7 +126,7 @@
 	}
 }
 
-@media (max-width: 800px) {
+@media (max-width: 940px) {
 	.access-denied-card {
 		padding: 40px 32px;
 	}

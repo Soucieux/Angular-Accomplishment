@@ -35,10 +35,22 @@
 	gap: 14px !important;
 }
 
+::ng-deep .confirm-dialog .p-confirmdialog-content {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 100% !important;
+	gap: 6px !important;
+}
+
 ::ng-deep .confirm-dialog .p-confirmdialog-message {
 	font-size: 15px !important;
 	color: rgba(40, 15, 35, 0.82) !important;
 	line-height: 1.5 !important;
+	white-space: pre-line !important;
+	text-align: center !important;
+	width: 100% !important;
 }
 
 ::ng-deep .confirm-dialog .p-dialog-footer {
@@ -100,4 +112,3 @@
 		border-radius: 0 !important;
 	}
 }
-

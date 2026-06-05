@@ -20,7 +20,6 @@ import {
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_DEBT_SONATA,
-	DEBT_PAGE_SIZE,
 	DEBT_PROMPT_TIMEOUT_MS,
 	DEBT_CATEGORY_CARD,
 	DEBT_CATEGORY_HOME,
@@ -76,11 +75,9 @@ import { DebtCategoryDef, NewDebtData, PaymentEntry } from './debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
-import { SegmentedPaginatorComponent } from './segmented-paginator/segmented-paginator.component';
-
 @Component({
 	selector: 'debt',
-	imports: [AsyncPipe, FormsModule, SkeletonModule, AccessDeniedComponent, SegmentedPaginatorComponent],
+	imports: [AsyncPipe, FormsModule, SkeletonModule, AccessDeniedComponent],
 	templateUrl: './debt.component.html',
 	styleUrls: ['./debt.component.css']
 })
@@ -97,9 +94,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected readonly DEBT_EMPTY_STATE_BTN = DEBT_EMPTY_STATE_BTN;
 	protected readonly DEBT_CUSTOM_INPUT_PLACEHOLDER = DEBT_CUSTOM_INPUT_PLACEHOLDER;
 	protected readonly DEBT_LABEL_DELETE_CONFIRM = DEBT_LABEL_DELETE_CONFIRM;
-	protected readonly DEBT_PAGE_SIZE = DEBT_PAGE_SIZE;
 	protected loading = true;
-	protected currentPage = 0;
 	protected isHoverCapable!: boolean;
 	protected updatedDebtSonataItems: any[] = [];
 	protected originalDebtSonataItems!: any[];
@@ -181,11 +176,6 @@ export class DebtComponent implements OnInit, OnDestroy {
 								? (currentByKey.get(row.key) ?? structuredClone(row))
 								: structuredClone(row)
 						);
-						const maxPage = Math.max(
-							0,
-							Math.ceil(this.updatedDebtSonataItems.length / DEBT_PAGE_SIZE) - 1
-						);
-						if (this.currentPage > maxPage) this.currentPage = maxPage;
 						this.loading = false;
 						this.upcomingExpenses = rows
 							.filter((item: any) => item.date && !item.paid)
@@ -285,13 +275,16 @@ export class DebtComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Shows the custom-amount chip input for the given entry,
-	 * clearing any previous value.
+	 * Shows the custom-amount chip input for the given entry, clearing any previous
+	 * value, then focuses the input after Angular renders it into the DOM.
 	 *
 	 * @param entryKey - The unique key of the entry to show custom input for.
 	 */
 	protected toggleCustomInput(entryKey: string): void {
 		this.customInputState = { ...this.customInputState, [entryKey]: '' };
+		setTimeout(() => {
+			document.querySelector<HTMLInputElement>(`[data-pay-key="${entryKey}"]`)?.focus();
+		}, 0);
 	}
 
 	/**
@@ -632,17 +625,6 @@ export class DebtComponent implements OnInit, OnDestroy {
 	}
 
 	////////////////////// Below are Template helper methods for the HTML template ///////////////
-
-	/**
-	 * Gets the slice of Account Expenses items for the current page.
-	 * At most DEBT_PAGE_SIZE items are returned.
-	 *
-	 * @returns The subset of updatedDebtSonataItems visible on the current page.
-	 */
-	protected get pagedItems(): any[] {
-		const start = this.currentPage * DEBT_PAGE_SIZE;
-		return (this.updatedDebtSonataItems ?? []).slice(start, start + DEBT_PAGE_SIZE);
-	}
 
 	/**
 	 * Groups Account Expenses items by currency (CNY for Chinese names,

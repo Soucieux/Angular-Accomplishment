@@ -314,7 +314,7 @@ export const RESONANCE_MAX_QUOTE_LENGTH = 500;
 /** Confirm-discard title shown when the user clicks Cancel on the add-recipe screen. */
 export const RECIPE_DISCARD_TITLE = 'Discard Recipe';
 /** Confirm-discard message body for the add-recipe screen. */
-export const RECIPE_DISCARD_MESSAGE = 'Discard this recipe? Any changes will be lost.';
+export const RECIPE_DISCARD_MESSAGE = 'Discard this recipe?\nAny changes will be lost.';
 /** Confirm button label for the discard dialog. */
 export const RECIPE_DISCARD_BTN = 'Discard';
 /** Confirm-discard title shown when the user clicks back on the edit-recipe screen. */
@@ -324,7 +324,7 @@ export const RECIPE_DISCARD_CHANGES_MESSAGE = 'Unsaved changes will be lost.';
 /** Confirm-delete title shown when the user clicks Delete Recipe in edit mode. */
 export const RECIPE_DELETE_TITLE = 'Delete Recipe';
 /** Confirm-delete message body. */
-export const RECIPE_DELETE_MESSAGE = 'Delete this recipe permanently? This cannot be undone.';
+export const RECIPE_DELETE_MESSAGE = 'Proceed with deleting this recipe?\nThis cannot be undone.';
 /** Dialog title for the ingredient type manager in the editor. */
 export const RECIPE_ITYPE_DIALOG_TITLE = 'Manage Ingredient Types';
 export const RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = 'Some ingredients have a quantity but are missing a unit.';
@@ -391,6 +391,8 @@ export const RECIPE_DROP_BELOW = 'below';
 export const RECIPE_UNIT_OPTIONS: string[] = ['g', 'kg', 'oz', 'lb', 'tsp', 'tbsp', 'cup', 'ml', 'L'];
 export const RECIPE_MAX_BADGES = 4;
 export const RECIPE_MAX_NAME_CHARS = 9;
+/** Maximum number of recipe cards visible on a single paginated page. */
+export const RECIPE_PAGE_SIZE = 8;
 /** Maximum number of ingredient type tabs shown in the add/edit editor. */
 export const RECIPE_EDITOR_TYPE_MAX = 9;
 
@@ -423,7 +425,7 @@ export const NEXUS_MSG_LOAD_LINKS_FAILED = 'Failed to load useful links';
 export const NEXUS_MSG_LOAD_CATEGORIES_FAILED = 'Failed to load link categories';
 export const NEXUS_MSG_SAVE_LINK_FAILED = 'Failed to save link';
 export const NEXUS_MSG_SAVE_CATEGORY_FAILED = 'Failed to save category';
-export const NEXUS_MSG_RESET_CONFIRM = 'Are you sure you want to reset the dates?';
+export const NEXUS_MSG_RESET_CONFIRM = 'Proceed with resetting the dates?';
 
 /** Type value for a link document in the useful_links collection. */
 export const USEFUL_LINK_TYPE_LINK = 'link';
@@ -449,7 +451,7 @@ export const NEXUS_LABEL_CONFIRMED = 'confirmed';
 
 ////////////////////// Below are Reminder page constants /////////////////////////////
 /** Confirmation message shown before deleting a reminder entry. */
-export const REMINDER_MSG_DELETE_CONFIRM = 'Delete this entry? This cannot be undone.';
+export const REMINDER_MSG_DELETE_CONFIRM = 'Proceed with deleting this entry?\nThis cannot be undone.';
 /** Placeholder for the reminder message text input. */
 export const REMINDER_PLACEHOLDER_TEXT = 'What should we remind you about…';
 /** Placeholder for the link URL input inside the link popover. */
@@ -592,8 +594,6 @@ export const DEBT_VALUE_KEY_ORIGINAL = 'original';
 export const DEBT_TABLE_ACCOUNT_EXPENSES = 'Account Expenses';
 /** Fixed amount deducted from a second-table debt entry per payment cycle. */
 export const ACCOUNT_DEBT_DECREMENT = 998.05;
-/** Maximum number of Account Expenses cards visible on a single paginated page. */
-export const DEBT_PAGE_SIZE = 6;
 /** Small quick-pay preset amount for the Debt Sonata page. */
 export const DEBT_PRESET_SMALL = 100;
 /** Large quick-pay preset amount for the Debt Sonata page. */
@@ -620,7 +620,7 @@ export const DEBT_CATEGORY_GRADIENT_SHOPPING = 'linear-gradient(90deg,#8e54e9,#e
 export const DEBT_CATEGORY_GRADIENT_HOME = 'linear-gradient(90deg,#11998e,#38ef7d)';
 
 ////////////////////// Below are patch notes page constants //////////////////////////
-export const PATCH_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this note?';
+export const PATCH_MSG_DELETE_CONFIRM = 'Proceed with deleting this note?';
 
 export const STATUS_TODO = 'To Do';
 export const STATUS_IN_PROGRESS = 'In Progress';

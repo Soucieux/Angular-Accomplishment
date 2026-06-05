@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
-	selector: 'app-segmented-paginator',
+	selector: 'recipe-paginator',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	templateUrl: './segmented-paginator.component.html',
-	styleUrls: ['./segmented-paginator.component.css']
+	templateUrl: './recipe-paginator.component.html',
+	styleUrls: ['./recipe-paginator.component.css']
 })
-export class SegmentedPaginatorComponent {
+export class RecipePaginatorComponent {
 	/** Current page, 0-indexed. */
 	@Input() page = 0;
 
@@ -18,7 +18,7 @@ export class SegmentedPaginatorComponent {
 	@Input() totalItems?: number;
 
 	/** Items per page for count derivation when pageCount is omitted. */
-	@Input() perPage = 6;
+	@Input() perPage = 8;
 
 	/** Accessible label for the nav landmark. */
 	@Input() ariaLabel = 'Pagination';

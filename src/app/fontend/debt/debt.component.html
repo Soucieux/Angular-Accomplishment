@@ -130,7 +130,7 @@
 						</button>
 					</div>
 				} @else {
-					@for (item of pagedItems; track item.key) {
+					@for (item of updatedDebtSonataItems; track item.key) {
 						<div
 							class="debt-card"
 							[class.is-paid]="item.paid"
@@ -214,33 +214,34 @@
 									class="pay-chip"
 									[disabled]="isPayDisabled(item)"
 									(click)="payDebt(item.key, DEBT_PRESET_SMALL)">
-									−{{ formatCompact(DEBT_PRESET_SMALL, isCnyCurrency(item)) }}
+									<span class="pay-minus">−</span>{{ formatCompact(DEBT_PRESET_SMALL, isCnyCurrency(item)) }}
 								</button>
 								<button
 									class="pay-chip"
 									[disabled]="isPayDisabled(item)"
 									(click)="payDebt(item.key, DEBT_PRESET_LARGE)">
-									−{{ formatCompact(DEBT_PRESET_LARGE, isCnyCurrency(item)) }}
+									<span class="pay-minus">−</span>{{ formatCompact(DEBT_PRESET_LARGE, isCnyCurrency(item)) }}
 								</button>
 								@if (customInputState[item.key] == null) {
 									<button
 										class="pay-chip custom-chip"
 										[disabled]="isPayDisabled(item)"
 										(click)="toggleCustomInput(item.key)">
-										<span class="material-symbols-outlined" style="font-size: 13px"
-											>edit</span
-										>
+										<span class="material-symbols-outlined">edit</span>
 										Custom
 									</button>
 								} @else {
-									<input
-										class="custom-pay-input"
-										type="text"
-										inputmode="decimal"
-										[placeholder]="DEBT_CUSTOM_INPUT_PLACEHOLDER"
-										[(ngModel)]="customInputState[item.key]"
-										(keyup.enter)="submitCustomPay(item.key)"
-										(blur)="submitCustomPay(item.key)" />
+									<div class="custom-pay-wrapper">
+										<input
+											class="custom-pay-input"
+											type="text"
+											inputmode="decimal"
+											[attr.data-pay-key]="item.key"
+											[placeholder]="DEBT_CUSTOM_INPUT_PLACEHOLDER"
+											[(ngModel)]="customInputState[item.key]"
+											(keyup.enter)="submitCustomPay(item.key)"
+											(blur)="submitCustomPay(item.key)" />
+									</div>
 								}
 							</div>
 
@@ -335,15 +336,6 @@
 				}
 			</div>
 
-			@if (!loading && debtRows.length > DEBT_PAGE_SIZE) {
-				<div class="debts-paginator">
-					<app-segmented-paginator
-						[page]="currentPage"
-						[totalItems]="debtRows.length"
-						[perPage]="DEBT_PAGE_SIZE"
-						(pageChange)="currentPage = $event" />
-				</div>
-			}
 		</div>
 	</div>
 } @else {

@@ -3033,3 +3033,12 @@
 }
 .view.band-dessert .btn-primary:hover { box-shadow: 0 10px 22px rgba(219, 39, 119, 0.36); }
 
+/* ─────────────────────────────────────────
+   Pagination
+───────────────────────────────────────── */
+.recipes-paginator {
+	display: flex;
+	justify-content: center;
+	margin-top: 8px;
+}
+

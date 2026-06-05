@@ -1,11 +1,11 @@
 /* =============================================================================
-   Segmented-capsule paginator — self-contained component styles
-   Accent color matches the Debt Sonata page's orange brand (#f97316).
+   Recipe paginator — self-contained component styles
+   Accent color matches the Recipe page's green brand (#22c55e).
    The glass track is built for the page's warm gradient backdrop.
    ============================================================================= */
 
 :host {
-	--paginator-accent: #f97316;
+	--paginator-accent: #22c55e;
 	--paginator-radius: 9999px;
 	--paginator-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--paginator-duration: 150ms;

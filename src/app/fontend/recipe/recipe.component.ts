@@ -58,6 +58,7 @@ import {
 	RECIPE_VIEW_DETAIL,
 	RECIPE_VIEW_LIST,
 	RECIPE_BAND_DEFAULT,
+	RECIPE_PAGE_SIZE,
 	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
@@ -84,11 +85,12 @@ import {
 	TypeTab
 } from './recipe.model';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
+import { RecipePaginatorComponent } from './recipe-paginator/recipe-paginator.component';
 
 @Component({
 	selector: 'recipe',
 	standalone: true,
-	imports: [CommonModule, FormsModule, AutoComplete, AccessDeniedComponent],
+	imports: [CommonModule, FormsModule, AutoComplete, AccessDeniedComponent, RecipePaginatorComponent],
 	templateUrl: './recipe.component.html',
 	styleUrls: ['../../common/glass-card.css', './recipe.component.css']
 })
@@ -113,9 +115,11 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
 	protected readonly RECIPE_MSG_NAME_TOO_LONG = RECIPE_MSG_NAME_TOO_LONG;
 	protected readonly RECIPE_MSG_CATEGORY_REQUIRED = RECIPE_MSG_CATEGORY_REQUIRED;
+	protected readonly RECIPE_PAGE_SIZE = RECIPE_PAGE_SIZE;
 
 	private recipesSub?: Subscription;
 	protected currentView: string = RECIPE_VIEW_LIST;
+	protected currentPage = 0;
 	protected searchQuery = '';
 	protected selectedCategory: string = RECIPE_CATEGORY_ALL;
 
@@ -285,12 +289,23 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Sets the active category filter for the recipe list.
+	 * The slice of filtered recipes visible on the current page.
+	 *
+	 * @returns The recipes for the active page.
+	 */
+	protected get pagedRecipes(): Recipe[] {
+		const start = this.currentPage * RECIPE_PAGE_SIZE;
+		return this.filteredRecipes.slice(start, start + RECIPE_PAGE_SIZE);
+	}
+
+	/**
+	 * Sets the active category filter for the recipe list and resets to the first page.
 	 *
 	 * @param cat - The category string to activate (use {@link RECIPE_CATEGORY_ALL} to show all).
 	 */
 	protected selectCategory(cat: string): void {
 		this.selectedCategory = cat;
+		this.currentPage = 0;
 	}
 
 	/**

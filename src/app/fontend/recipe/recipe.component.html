@@ -1,6 +1,6 @@
 <ng-container #dialogComponentContainer></ng-container>
 @if (utilities.getIsUserAlive()) {
-	<div class="glass-card container-recipe">
+	<div class="glass-card">
 		<!-- ===================== VIEW 1: LIST ===================== -->
 		@if (currentView === RECIPE_VIEW_LIST) {
 			<section class="view">
@@ -14,7 +14,7 @@
 				<div class="toolbar">
 					<label class="search">
 						<span class="material-symbols-outlined">search</span>
-						<input type="text" placeholder="Search recipes…" [(ngModel)]="searchQuery" />
+						<input type="text" placeholder="Search recipes…" [(ngModel)]="searchQuery" (ngModelChange)="currentPage = 0" />
 					</label>
 					<button class="btn btn-primary" (click)="openAddView()">
 						<span class="material-symbols-outlined">add</span>
@@ -56,7 +56,7 @@
 					</div>
 				} @else {
 					<div class="grid">
-						@for (recipe of filteredRecipes; track recipe.id) {
+						@for (recipe of pagedRecipes; track recipe.id) {
 							<article class="recipe-card" [ngClass]="recipe.bandClass" (click)="openRecipe(recipe)">
 								<div class="band" [class]="recipe.bandClass">
 									<span class="category-tag">{{ recipe.category }}</span>
@@ -92,6 +92,15 @@
 							</article>
 						}
 					</div>
+					@if (filteredRecipes.length > RECIPE_PAGE_SIZE) {
+						<div class="recipes-paginator">
+							<recipe-paginator
+								[page]="currentPage"
+								[totalItems]="filteredRecipes.length"
+								[perPage]="RECIPE_PAGE_SIZE"
+								(pageChange)="currentPage = $event" />
+						</div>
+					}
 				}
 			</section>
 		}

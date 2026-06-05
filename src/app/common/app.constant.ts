@@ -85,6 +85,8 @@ export const LOGIN_MSG_SEND_CODE_FAILED = 'Failed to send verification code';
     CloudBase re-validates the real session in the background. The flag is
     written on login and removed on logout.   */
 export const LS_AUTH_HINT_KEY = 'auth_hint';
+/** localStorage key used to persist the nav sidebar collapsed state across page refreshes. */
+export const LS_NAV_COLLAPSED_KEY = 'nav_collapsed';
 export const LOGIN_URL_DEFAULT_RETURN = '/';
 export const LOGIN_ANIM_OUT = 'out';
 export const LOGIN_ANIM_IN = 'in';

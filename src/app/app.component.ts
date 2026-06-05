@@ -1,4 +1,4 @@
-import { Component, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, Component, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -10,7 +10,7 @@ import { LOG } from './common/app.logs';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
 import { Utilities } from './common/app.utilities';
-import { CN, COMPONENT_DESTROY, DIALOG_BTN_SIGN_OUT, DIALOG_HEADER_SIGN_OUT, MSG_LOGOUT_CONFIRM } from './common/app.constant';
+import { CN, COMPONENT_DESTROY, DIALOG_BTN_SIGN_OUT, DIALOG_CONFIRM, DIALOG_HEADER_SIGN_OUT, LS_NAV_COLLAPSED_KEY, MSG_LOGOUT_CONFIRM } from './common/app.constant';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -29,7 +29,7 @@ import { Observable } from 'rxjs';
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
 	private readonly className = 'AppComponent';
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
@@ -38,6 +38,8 @@ export class AppComponent {
 
 	protected currentUser$!: Observable<any>;
 	protected accountMenuOpen = false;
+	protected navCollapsed = false;
+	private drawerResizeObserver?: ResizeObserver;
 
 	constructor(
 		private authService: AuthService,
@@ -52,6 +54,7 @@ export class AppComponent {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
+			this.navCollapsed = localStorage.getItem(LS_NAV_COLLAPSED_KEY) === 'true';
 			if (Utilities.getCurrentCountry() === CN) {
 				this.currentUser$ = this.authService.cloudbaseGetCurrentUser();
 			} else {
@@ -61,9 +64,21 @@ export class AppComponent {
 	}
 
 	/**
-	 * Logs the component destruction event and clears the dialog container.
+	 * Attaches the ResizeObserver that syncs the drawer content margin to the
+	 * drawer width on every frame, so both panels animate simultaneously.
+	 */
+	ngAfterViewInit(): void {
+		if (isPlatformBrowser(this.platformId)) {
+			this.initDrawerResizeSync();
+		}
+	}
+
+	/**
+	 * Disconnects the drawer ResizeObserver, clears the dialog container,
+	 * and logs component teardown.
 	 */
 	ngOnDestroy(): void {
+		this.drawerResizeObserver?.disconnect();
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
@@ -106,6 +121,20 @@ export class AppComponent {
 	}
 
 	/**
+	 * Toggles the navigation sidebar between its expanded and icon-only collapsed states.
+	 * Persists the collapsed state to localStorage so it survives page reloads.
+	 */
+	protected toggleNav(): void {
+		this.navCollapsed = !this.navCollapsed;
+		if (this.navCollapsed) {
+			this.accountMenuOpen = false;
+		}
+		if (isPlatformBrowser(this.platformId)) {
+			localStorage.setItem(LS_NAV_COLLAPSED_KEY, String(this.navCollapsed));
+		}
+	}
+
+	/**
 	 * Returns true when the viewport width is at or below the mobile breakpoint
 	 * where the sidebar collapses to icon-only mode.
 	 *
@@ -116,14 +145,14 @@ export class AppComponent {
 	}
 
 	/**
-	 * Handles the account button click. On mobile, opens a sign-out confirmation
-	 * dialog instead of toggling the popover menu.
+	 * Handles the account button click. On mobile or when the nav is collapsed,
+	 * opens a sign-out confirmation dialog. Otherwise toggles the popover menu.
 	 */
 	protected handleAccountButtonClick(): void {
-		if (this.isMobileView()) {
+		if (this.isMobileView() || this.navCollapsed) {
 			this.dialogService.openDialog(
 				this.dialogComponentContainer,
-				'confirm',
+				DIALOG_CONFIRM,
 				() => this.logout(),
 				[MSG_LOGOUT_CONFIRM, DIALOG_HEADER_SIGN_OUT, DIALOG_BTN_SIGN_OUT]
 			);
@@ -155,5 +184,20 @@ export class AppComponent {
 	 */
 	protected getUserInitial(user: any): string {
 		return this.getUserDisplayName(user).charAt(0).toUpperCase();
+	}
+
+	/**
+	 * Attaches a ResizeObserver to the mat-drawer so mat-drawer-content margin-left
+	 * mirrors the drawer's animated width on every frame, making both panels slide
+	 * simultaneously instead of the content snapping after the drawer finishes.
+	 */
+	private initDrawerResizeSync(): void {
+		const drawer = document.querySelector('mat-drawer') as HTMLElement;
+		const content = document.querySelector('mat-drawer-content') as HTMLElement;
+		if (!drawer || !content) return;
+		this.drawerResizeObserver = new ResizeObserver(() => {
+			content.style.marginLeft = `${drawer.offsetWidth}px`;
+		});
+		this.drawerResizeObserver.observe(drawer);
 	}
 }

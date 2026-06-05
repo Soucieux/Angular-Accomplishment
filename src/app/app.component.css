@@ -1,34 +1,23 @@
 .nav-list {
 	list-style-type: none;
-	padding-left: 0;
+	padding: 0px;
 	display: flex;
 	flex-direction: column;
-	height: 100%;
+	height: calc(100% - 16px);
 }
 
 .nav-item {
-	padding-top: 5px;
+	margin-top: 5px;
 }
 
 mat-drawer-container {
 	background: linear-gradient(45deg, #fa61da 0%, #ff8891 50%, #ffcd5a 100%);
 	position: fixed;
 	inset: 0;
-	display: flex;
-	flex-direction: column;
-}
-
-.full-height-drawer {
-	display: flex;
-	flex-direction: column;
 }
 
 /* This is for mobile screen*/
 @media (max-width: 940px) {
-	/* Add height by 20px whenever a new button is added — currently 7 nav buttons (Home, Entertainment, Reminder, Patch Notes, Resonance, Nexus, About) */
-	mat-drawer {
-		width: 37px !important;
-	}
 	.nav-button {
 		width: 100% !important;
 		min-width: 0px !important;
@@ -91,11 +80,10 @@ mat-drawer-container {
 	display: flex !important;
 	align-items: center !important;
 	flex-direction: row;
-	height: 46px;
+	height: 43px;
 	padding: 0 14px;
-	margin: 2px 8px;
+	margin: 2px 3px;
 	border-radius: 12px;
-	width: calc(100% - 16px);
 	box-sizing: border-box;
 }
 
@@ -151,9 +139,7 @@ mat-drawer-container {
 mat-drawer {
 	text-align: center;
 	border-radius: 10px;
-	margin-top: 3px;
-	margin-left: 3px;
-	margin-bottom: 3px;
+	margin: 4px;
 	backdrop-filter: blur(50px);
 	background-color: rgb(243, 227, 243);
 	border: 0.8px solid rgb(255, 255, 255);
@@ -161,14 +147,8 @@ mat-drawer {
 }
 
 mat-drawer-content {
-	padding: 3px 3px 3px 6px;
-	overflow-x: hidden;
-}
-
-/* Angular Material wraps drawer content in .mat-drawer-inner-container with
-   overflow: auto by default — suppress its scrollbar so the sidebar never scrolls. */
-::ng-deep .full-height-drawer .mat-drawer-inner-container {
-	overflow: hidden !important;
+	padding: 4px 4px 4px 6px;
+	box-sizing: border-box;
 }
 
 /* ─────────────────────────────────────────
@@ -176,8 +156,6 @@ mat-drawer-content {
 ───────────────────────────────────────── */
 .account-menu-container {
 	margin-top: auto;
-	padding: 6px 8px 8px;
-	position: relative;
 }
 
 .account-row-wrapper {
@@ -189,7 +167,7 @@ mat-drawer-content {
 	align-items: center;
 	gap: 12px;
 	width: 100%;
-	padding: 8px 10px;
+	padding: 8px 15px;
 	border: none;
 	background: transparent;
 	border-radius: 12px;

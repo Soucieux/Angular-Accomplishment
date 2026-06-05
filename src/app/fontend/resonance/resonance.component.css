@@ -22,7 +22,7 @@
 	flex-direction: column;
 	align-items: center;
 	min-height: calc(100dvh - 10px);
-	padding: 20px;
+	padding: 20px 20px 10px;
 }
 
 /* ─────────────────────────────────────────
@@ -604,7 +604,7 @@
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
 	.container {
-		padding: 20px 10px;
+		padding: 20px 10px 10px;
 	}
 
 	.page-title {

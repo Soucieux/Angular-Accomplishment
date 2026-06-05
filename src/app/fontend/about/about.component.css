@@ -9,7 +9,7 @@
 .container {
 	min-width: 100%;
 	min-height: calc(100dvh - 10px);
-	padding: 20px;
+	padding: 20px 20px 10px;
 	box-sizing: border-box;
 }
 
@@ -318,7 +318,7 @@ p-chip.about-chip {
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
 	.container {
-		padding: 20px 10px;
+		padding: 20px 10px 10px;
 	}
 
 	.about-h1 {

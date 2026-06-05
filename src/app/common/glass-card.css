@@ -1,4 +1,12 @@
 /* Shared glassmorphism style — applied to .glass-card in components that import this file. */
+
+/* Components that import this file must have height: 100% on their host to complete the
+   height chain from mat-drawer-content down to .glass-card. */
+:host {
+	display: block;
+	height: 100%;
+}
+
 .glass-card {
 	background: rgba(255, 255, 255, 0.92);
 	backdrop-filter: blur(20px);
@@ -8,8 +16,8 @@
 	border-radius: 18px;
 	animation: containerReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 	min-width: 100%;
-	height: calc(100dvh - 10px);
-	padding: 20px;
+	height: 100%;
+	padding: 20px 20px 10px;
 	overflow-y: auto;
 	overflow-x: hidden;
 	scrollbar-width: thin;
@@ -60,6 +68,6 @@
 
 @media (max-width: 940px) {
 	.glass-card {
-		padding: 20px 10px;
+		padding: 20px 10px 10px;
 	}
 }

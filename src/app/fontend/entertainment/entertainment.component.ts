@@ -51,7 +51,6 @@ import {
 	ChangeDetectorRef,
 	Component,
 	ElementRef,
-	HostListener,
 	Inject,
 	OnDestroy,
 	OnInit,
@@ -61,7 +60,16 @@ import {
 	ViewContainerRef
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom, Observable, Subscription, timer, BehaviorSubject, combineLatest, map, take } from 'rxjs';
+import {
+	firstValueFrom,
+	Observable,
+	Subscription,
+	timer,
+	BehaviorSubject,
+	combineLatest,
+	map,
+	take
+} from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { DoubanService } from '../../backend/douban-service/douban.service';
 import { MovieItemVO } from './movieItem.vo';
@@ -139,6 +147,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	private latestMovieList: MovieItemVO[] = [];
 	private readonly vtClassMap = new Map<string, string>();
 	private movieListSub?: Subscription;
+	private gridResizeObserver?: ResizeObserver;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		@Inject(DOCUMENT) private doc: Document,
@@ -173,7 +182,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			await firstValueFrom(this.statistics$.pipe(take(1)));
 			// Below part will be executed only if there is no error reading data in the database
 			this.movieList$ = this.databaseService.getMovieList();
-			this.movieListSub = this.movieList$.subscribe(list => {
+			this.movieListSub = this.movieList$.subscribe((list) => {
 				this.latestMovieList = list;
 			});
 
@@ -203,7 +212,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				})
 			);
 
-			this.updateGridLayout();
+			const container = this.elRef.nativeElement.querySelector('.content-container') as HTMLElement | null;
+			if (container) {
+				this.gridResizeObserver = new ResizeObserver(() => this.updateGridLayout());
+				this.gridResizeObserver.observe(container);
+			}
 
 			/* If navigated from the home quick-action buttons, auto-open the relevant dialog.
 			   history.state retains the router state passed via Router.navigate({ state: ... }).
@@ -222,6 +235,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * resets the searching flag, and logs the component destruction event.
 	 */
 	ngOnDestroy() {
+		this.gridResizeObserver?.disconnect();
 		this.doc.getElementById(ENT_VTA_STYLE_ID)?.remove();
 		this.movieListSub?.unsubscribe();
 		this.selectedGenres$.complete();
@@ -229,17 +243,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		this.dialogComponentContainer?.clear();
 		this.isSearching = false;
 		LOG.info(this.className, COMPONENT_DESTROY);
-	}
-
-	/**
-	 * Handles the window resize event by recalculating the CSS grid layout
-	 * so that the content container always displays the optimal number of columns.
-	 */
-	@HostListener('window:resize')
-	protected onResize() {
-		if (isPlatformBrowser(this.platformId)) {
-			this.updateGridLayout();
-		}
 	}
 
 	/**
@@ -300,7 +303,10 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				searchCount++;
 			} catch (error) {
 				this.dialogService.handleError(this.dialogComponentContainer, error);
-				LOG.error(this.className, `${ENT_MSG_UPDATE_RATE_FAILED_PREFIX}${movieItemVO.getMovieName()}`);
+				LOG.error(
+					this.className,
+					`${ENT_MSG_UPDATE_RATE_FAILED_PREFIX}${movieItemVO.getMovieName()}`
+				);
 			}
 		}
 
@@ -515,8 +521,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				}
 				await this.getMovieCoverImageByLink(movieCoverImageLink, movieItemVO);
 			}
-        } catch (error) {
-            // For search dialog, record it inside.
+		} catch (error) {
+			// For search dialog, record it inside.
 			if (!retrieveOtherData && !retrieveYearAndTitle) {
 				if (error instanceof MovieFetchFailedError) {
 					this.searchStreamService.addSearchLog(
@@ -527,8 +533,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 						`${ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX}${movieItemVO.getMovieName()}. SKIPPING.`
 					);
 				}
-            } else {
-                // For other places, show the error dialog
+			} else {
+				// For other places, show the error dialog
 				if (error instanceof MovieFetchFailedError) {
 					this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 				} else {
@@ -602,7 +608,10 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param movieItemVO - The movie item on which to store the downloaded cover image.
 	 */
 	private async getMovieCoverImageByLink(movieCoverImageLink: string, movieItemVO: MovieItemVO) {
-		LOG.info(this.className, `${(this.platformId as unknown as string).toUpperCase()} is searching movie cover`);
+		LOG.info(
+			this.className,
+			`${(this.platformId as unknown as string).toUpperCase()} is searching movie cover`
+		);
 		try {
 			// searchMovieCover returns a Promise and we wait for the retrieval to complete
 			const movieCoverImage = await firstValueFrom(
@@ -700,7 +709,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @returns The highest count, or 1 when the map is empty.
 	 */
 	protected getCorkMax(genre: Record<string, number>): number {
-		const values = Object.values(genre ?? {}).map(Number).filter((n) => !isNaN(n));
+		const values = Object.values(genre ?? {})
+			.map(Number)
+			.filter((n) => !isNaN(n));
 		return values.length > 0 ? Math.max(...values) : 1;
 	}
 
@@ -807,7 +818,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			(document as Document & { startViewTransition: (cb: () => unknown) => void }).startViewTransition(
 				async () => {
 					toggle();
-					await new Promise<void>(resolve => setTimeout(resolve));
+					await new Promise<void>((resolve) => setTimeout(resolve));
 				}
 			);
 		} else {
@@ -887,7 +898,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param movieItemVO - The movie item to be deleted upon confirmation.
 	 */
 	protected openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, movieItemVO.getOpenId())) return;
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, movieItemVO.getOpenId()))
+			return;
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
@@ -898,7 +910,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
 			},
-			[`${ENT_MSG_DELETE_CONFIRM_PREFIX}${movieItemVO.getMovieName()}?`, ENT_DIALOG_TITLE_DELETE_MOVIE, DIALOG_BTN_DELETE]
+			[
+				`${ENT_MSG_DELETE_CONFIRM_PREFIX}${movieItemVO.getMovieName()}?`,
+				ENT_DIALOG_TITLE_DELETE_MOVIE,
+				DIALOG_BTN_DELETE
+			]
 		);
 	}
 

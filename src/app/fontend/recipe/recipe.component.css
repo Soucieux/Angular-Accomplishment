@@ -8,6 +8,9 @@
 	   Browser falls through per-glyph, so mixed-script text renders correctly. */
 	font-family: 'nlf', 'cf', sans-serif;
 
+	--individual-item-width: 360px;
+	--individual-item-gap: 18px;
+
 	--ink: #1a1a1a;
 	--ink-muted: rgba(30, 15, 35, 0.55);
 	--rose: #d53369;
@@ -287,8 +290,8 @@
 ───────────────────────────────────────── */
 .grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-	gap: 18px;
+	grid-template-columns: repeat(auto-fill, minmax(var(--individual-item-width), 1fr));
+	gap: var(--individual-item-gap);
 }
 
 /* Staggered entrance for up to 12 cards */

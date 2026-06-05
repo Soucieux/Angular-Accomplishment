@@ -1,5 +1,6 @@
 import {
 	AfterViewChecked,
+	AfterViewInit,
 	ChangeDetectorRef,
 	Component,
 	ElementRef,
@@ -9,6 +10,7 @@ import {
 	OnDestroy,
 	OnInit,
 	PLATFORM_ID,
+	Renderer2,
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
@@ -94,7 +96,7 @@ import { RecipePaginatorComponent } from './recipe-paginator/recipe-paginator.co
 	templateUrl: './recipe.component.html',
 	styleUrls: ['../../common/glass-card.css', './recipe.component.css']
 })
-export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, AfterViewInit {
 	private readonly className = 'RecipeComponent';
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
@@ -115,7 +117,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly RECIPE_MSG_INGREDIENT_UNIT_REQUIRED = RECIPE_MSG_INGREDIENT_UNIT_REQUIRED;
 	protected readonly RECIPE_MSG_NAME_TOO_LONG = RECIPE_MSG_NAME_TOO_LONG;
 	protected readonly RECIPE_MSG_CATEGORY_REQUIRED = RECIPE_MSG_CATEGORY_REQUIRED;
-	protected readonly RECIPE_PAGE_SIZE = RECIPE_PAGE_SIZE;
+	protected pageSize = RECIPE_PAGE_SIZE;
 
 	private recipesSub?: Subscription;
 	protected currentView: string = RECIPE_VIEW_LIST;
@@ -159,9 +161,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	protected recipes: Recipe[] = [];
 	protected isLoading = true;
+	private gridResizeObserver?: ResizeObserver;
 
 	constructor(
 		private cdr: ChangeDetectorRef,
+		private elRef: ElementRef,
+		private renderer: Renderer2,
 		private ngZone: NgZone,
 		private dialogService: DialogService,
 		private databaseService: DatabaseService,
@@ -208,10 +213,28 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
+	 * Attaches a ResizeObserver to the glass-card container so the grid layout
+	 * recalculates whenever the container width changes — including when the nav
+	 * panel collapses or expands.
+	 */
+	ngAfterViewInit(): void {
+		if (isPlatformBrowser(this.platformId)) {
+			const container = this.elRef.nativeElement.querySelector('.glass-card') as HTMLElement | null;
+			if (container) {
+				this.gridResizeObserver = new ResizeObserver(() =>
+					this.ngZone.run(() => this.updateGridLayout())
+				);
+				this.gridResizeObserver.observe(container);
+			}
+		}
+	}
+
+	/**
 	 * Unsubscribes from the recipes watcher, clears the dialog container,
 	 * and logs component teardown.
 	 */
 	ngOnDestroy(): void {
+		this.gridResizeObserver?.disconnect();
 		this.recipesSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
@@ -294,8 +317,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The recipes for the active page.
 	 */
 	protected get pagedRecipes(): Recipe[] {
-		const start = this.currentPage * RECIPE_PAGE_SIZE;
-		return this.filteredRecipes.slice(start, start + RECIPE_PAGE_SIZE);
+		const start = this.currentPage * this.pageSize;
+		return this.filteredRecipes.slice(start, start + this.pageSize);
 	}
 
 	/**
@@ -1157,5 +1180,43 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected getEditorBandClass(): string {
 		return Utilities.recipeBandClass(this.editorCategory) || RECIPE_BAND_DEFAULT;
+	}
+
+	/**
+	 * Recalculates {@link pageSize} based on the glass-card container width and the
+	 * CSS custom properties (--individual-item-width and --individual-item-gap).
+	 * Sets the page size to the smallest multiple of the column count that is ≥ the
+	 * base {@link RECIPE_PAGE_SIZE}, ensuring pages always end on a complete row.
+	 * Clamps {@link currentPage} if it would fall outside the new page range.
+	 */
+	private updateGridLayout(): void {
+		const host = this.elRef.nativeElement;
+		const style = getComputedStyle(host);
+		const itemWidthPx = parseInt(style.getPropertyValue('--individual-item-width'));
+		const itemGapPx = parseInt(style.getPropertyValue('--individual-item-gap'));
+
+		const contentContainer = host.querySelector('.glass-card') as HTMLElement | null;
+		if (contentContainer) {
+			const componentWidth = contentContainer.clientWidth;
+			const itemsPerRow = Math.max(
+				1,
+				Math.floor((componentWidth - itemGapPx) / (itemWidthPx + itemGapPx))
+			);
+			const grid = host.querySelector('.grid') as HTMLElement | null;
+			if (grid) {
+				this.renderer.setStyle(
+					grid,
+					'grid-template-columns',
+					`repeat(${itemsPerRow}, minmax(${itemWidthPx}px, 1fr))`
+				);
+			}
+			const newPageSize = itemsPerRow * Math.ceil(RECIPE_PAGE_SIZE / itemsPerRow);
+			const maxPage = Math.max(0, Math.ceil(this.filteredRecipes.length / newPageSize) - 1);
+			if (this.currentPage > maxPage) {
+				this.currentPage = maxPage;
+			}
+			this.pageSize = newPageSize;
+			this.cdr.markForCheck();
+		}
 	}
 }

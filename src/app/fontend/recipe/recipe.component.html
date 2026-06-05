@@ -92,12 +92,12 @@
 							</article>
 						}
 					</div>
-					@if (filteredRecipes.length > RECIPE_PAGE_SIZE) {
+					@if (filteredRecipes.length > pageSize) {
 						<div class="recipes-paginator">
 							<recipe-paginator
 								[page]="currentPage"
 								[totalItems]="filteredRecipes.length"
-								[perPage]="RECIPE_PAGE_SIZE"
+								[perPage]="pageSize"
 								(pageChange)="currentPage = $event" />
 						</div>
 					}

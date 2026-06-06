@@ -176,45 +176,12 @@
 }
 
 /* ─────────────────────────────────────────
-   Responsive column widths (≤ 1500 px)
-───────────────────────────────────────── */
-@media (max-width: 1500px) {
-	::ng-deep table {
-		max-width: 100% !important;
-	}
-
-	.component {
-		width: 13vw !important;
-	}
-
-	.element {
-		width: 13vw !important;
-	}
-
-	.details {
-		width: 13vw !important;
-	}
-
-	.status {
-		width: 12vw !important;
-	}
-
-	.timestamp {
-		width: 10vw !important;
-	}
-
-	.edit-button {
-		width: 5vw !important;
-	}
-}
-
-/* ─────────────────────────────────────────
    Table wrapper
 ───────────────────────────────────────── */
 .p-datatable {
 	border-radius: 14px;
 	overflow: hidden;
-	max-width: 1350px;
+	width: 100%;
 	margin-top: 12px;
 	font-size: 17px;
 	border: 1px solid rgba(0, 0, 0, 0.08);
@@ -923,43 +890,6 @@
 }
 
 /* ─────────────────────────────────────────
-   Mobile: ≤ 1100 px
-───────────────────────────────────────── */
-@media (max-width: 1100px) {
-	::ng-deep .p-datatable .p-datatable-tbody > tr > td,
-	::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
-		height: 8.8vh;
-	}
-	.page-title {
-		font-size: 28px; /* large-header mobile standard */
-	}
-
-	::ng-deep table {
-		font-size: 15px;
-	}
-
-	.container-patch {
-		font-size: 13px;
-	}
-
-	.tag {
-		font-size: 13px;
-	}
-
-	.details {
-		min-width: 15vw !important;
-	}
-
-	.status {
-		min-width: 15vw !important;
-	}
-
-	.timestamp {
-		min-width: 15vw !important;
-	}
-}
-
-/* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
@@ -1017,4 +947,3 @@
 		display: none !important;
 	}
 }
-

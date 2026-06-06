@@ -22,7 +22,7 @@
 					</div>
 				</div>
 				<div class="rm-due-card hide-on-mobile" [style.--due-color]="dueSoonCount > 0 ? '#c2410c' : '#94a3b8'">
-					<span class="rm-icon">notifications_active</span>
+					<span class="material-symbols-outlined rm-icon">notifications_active</span>
 					<div class="rm-due-number">{{ dueSoonCount }}</div>
 					<div class="rm-due-label">
 						{{ REMINDER_DUE_SOON_LABEL }}
@@ -85,7 +85,7 @@
 									[class.rm-checkbox-checked]="isDone(item.key)"
 									[style.--check-color]="tagColor(item.tag)"
 									(click)="toggleDone(item.key)">
-									<span class="rm-icon">check</span>
+									<span class="material-symbols-outlined rm-icon">check</span>
 								</div>
 								<div class="rm-card-meta">
 									<input
@@ -104,7 +104,7 @@
 							<div class="rm-card-bar">
 								@if (item.link) {
 									<span class="rm-link-chip" (click)="openLinkPopover($event, item)">
-										<span class="rm-icon" style="font-size: 15px; padding-top: 5px">link</span>
+										<span class="material-symbols-outlined rm-icon" style="font-size: 15px; padding-top: 5px">link</span>
 										{{ getLinkLabel(item) }}
 										<a
 											[href]="item.link"
@@ -112,19 +112,19 @@
 											rel="noopener noreferrer"
 											class="rm-chip-external"
 											(click)="$event.stopPropagation()">
-											<span class="rm-icon" style="font-size: 15px">open_in_new</span>
+											<span class="material-symbols-outlined rm-icon" style="font-size: 15px">open_in_new</span>
 										</a>
 										<button
 											class="rm-chip-remove"
 											(click)="$event.stopPropagation(); clearLink(item)">
-											<span class="rm-icon" style="font-size: 11px">close</span>
+											<span class="material-symbols-outlined rm-icon" style="font-size: 11px">close</span>
 										</button>
 									</span>
 								} @else {
 									<button
 										class="rm-add-field-button"
 										(click)="openLinkPopover($event, item)">
-										<span class="rm-icon" style="font-size: 13px">add_link</span>
+										<span class="material-symbols-outlined rm-icon" style="font-size: 13px">add_link</span>
 										{{ REMINDER_ADD_LINK_LABEL }}
 									</button>
 								}
@@ -134,26 +134,26 @@
 										class="rm-date-chip"
 										[style.background]="tagColor(item.tag) + '14'"
 										(click)="openDatePopover($event, item)">
-										<span class="rm-icon" style="font-size: 13px">calendar_today</span>
+										<span class="material-symbols-outlined rm-icon" style="font-size: 13px">calendar_today</span>
 										{{ formatDate(item.date) }}
 										<button
 											class="rm-chip-remove"
 											(click)="$event.stopPropagation(); clearDate(item)">
-											<span class="rm-icon" style="font-size: 11px">close</span>
+											<span class="material-symbols-outlined rm-icon" style="font-size: 11px">close</span>
 										</button>
 									</span>
 								} @else {
 									<button
 										class="rm-add-field-button"
 										(click)="openDatePopover($event, item)">
-										<span class="rm-icon" style="font-size: 13px">calendar_today</span>
+										<span class="material-symbols-outlined rm-icon" style="font-size: 13px">calendar_today</span>
 										{{ REMINDER_ADD_DATE_LABEL }}
 									</button>
 								}
 								<button
 									class="rm-delete-button"
 									(click)="openDeleteConfirmationDialog(item.key)">
-									<span class="rm-icon" style="font-size: 14px">delete</span>
+									<span class="material-symbols-outlined rm-icon" style="font-size: 14px">delete</span>
 								</button>
 							</div>
 						</div>
@@ -182,7 +182,7 @@
 			} @else if (showAddCard) {
 				<div class="rm-new-card" [style.--card-color]="tagColor(newItem.tag)">
 					<div class="rm-new-card-row1">
-						<span class="rm-icon rm-new-card-plus">add_circle</span>
+						<span class="material-symbols-outlined rm-icon rm-new-card-plus">add_circle</span>
 						<input
 							type="text"
 							class="rm-new-card-input"
@@ -205,11 +205,11 @@
 						}
 						<span class="rm-bar-spacer"></span>
 						<button class="rm-add-field-button" (click)="openLinkPopover($event)">
-							<span class="rm-icon" style="font-size: 13px">add_link</span>
+							<span class="material-symbols-outlined rm-icon" style="font-size: 13px">add_link</span>
 							{{ newItemLinkLabel || REMINDER_ADD_LINK_LABEL }}
 						</button>
 						<button class="rm-add-field-button" (click)="openDatePopover($event)">
-							<span class="rm-icon" style="font-size: 13px">calendar_today</span>
+							<span class="material-symbols-outlined rm-icon" style="font-size: 13px">calendar_today</span>
 							{{ newItemDateLabel || REMINDER_ADD_DATE_LABEL }}
 						</button>
 						<div class="rm-new-card-divider"></div>
@@ -218,7 +218,7 @@
 							[style.background]="tagColor(newItem.tag)"
 							[disabled]="!newItem.text.trim()"
 							(click)="addNewItemWithDateOrLink()">
-							<span class="rm-icon" style="font-size: 15px">check</span>
+							<span class="material-symbols-outlined rm-icon" style="font-size: 15px">check</span>
 							{{ REMINDER_ADD_BTN_LABEL }}
 						</button>
 					</div>
@@ -290,7 +290,7 @@
 				</div>
 				<div class="rm-paginator-controls">
 					<button class="rm-page-button" [disabled]="page === 0" (click)="prevPage()">
-						<span class="rm-icon">chevron_left</span>
+						<span class="material-symbols-outlined rm-icon">chevron_left</span>
 					</button>
 					@for (pageIndex of pagesArray; track pageIndex) {
 						<button
@@ -301,7 +301,7 @@
 						</button>
 					}
 					<button class="rm-page-button" [disabled]="page >= totalPages - 1" (click)="nextPage()">
-						<span class="rm-icon">chevron_right</span>
+						<span class="material-symbols-outlined rm-icon">chevron_right</span>
 					</button>
 				</div>
 			</div>

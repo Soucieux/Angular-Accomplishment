@@ -2,6 +2,7 @@
    Host — fill the drawer-content slot
 ───────────────────────────────────────── */
 :host {
+	font-family: 'app-font';
 	display: block;
 }
 
@@ -646,13 +647,6 @@
 	padding-left: 10px;
 	padding-right: 10px;
 	border: 1.5px solid #ee5a6f;
-}
-
-/* ─────────────────────────────────────────
-   Dropdown font override
-───────────────────────────────────────── */
-::ng-deep .dropdown-panel-font {
-	font-family: 'nlf';
 }
 
 /* ─────────────────────────────────────────

@@ -1,0 +1,256 @@
+@if (!stats) {
+	<div class="orbital-loading">
+		<div class="orbital-loading-ring"></div>
+		Loading…
+	</div>
+} @else {
+	<div class="orbital-root" [style.transform]="'scale(' + scale + ')'">
+		<!-- Decorative orbit rings -->
+		<div class="orbital-ring-inner"></div>
+		<div class="orbital-ring-outer"></div>
+
+		<!-- Brand -->
+		<div class="orbital-brand">ACCOMPLISHMENT</div>
+
+		<!-- Greeting + date -->
+		<div class="orbital-greeting">{{ d.greeting() }} · {{ d.dateLong() }}</div>
+
+		<!-- Quick-action pill buttons -->
+		<div class="orbital-quick-actions">
+			@for (action of QUICK_ACTIONS; track action.route) {
+				<button
+					class="orbital-quick-action-button"
+					[style.background]="action.gradient"
+					(click)="navigateTo(action)">
+					<span class="material-symbols-outlined">{{ action.icon }}</span>
+					{{ action.label }}
+				</button>
+			}
+		</div>
+
+		<!-- Quick-access links -->
+		<div class="orbital-links">
+			@for (link of quickLinks; track link._id) {
+				<div class="orbital-link" (click)="openLink(link)">
+					<div class="orbital-link-dot" [style.background]="getLinkColor(link)"></div>
+					{{ link.title }}
+				</div>
+			}
+		</div>
+
+		<!-- Central life-clock core -->
+		<div class="orbital-core">
+			<div style="text-align: center">
+				<div class="orbital-hour-minute">{{ d.hourMinute() }}</div>
+				<div class="orbital-seconds">{{ d.seconds() }}</div>
+				<div class="orbital-core-label">LIFE CLOCK</div>
+			</div>
+		</div>
+
+		<!-- Concentric progress rings around the core -->
+		<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)">
+			<vc-concentric [metrics]="d.progress()" [size]="376" [stroke]="12" [gap]="6"></vc-concentric>
+		</div>
+
+		<!-- Stat satellites -->
+		<div class="or-sats">
+			<div class="or-sat" style="transform: translateY(24px); animation-delay: 0s">
+				<div
+					class="or-sat-disc"
+					style="
+						box-shadow:
+							0 0 0 3px rgba(233, 30, 140, 0.2),
+							0 12px 28px rgba(120, 30, 70, 0.22),
+							inset 0 1px 0 rgba(255, 255, 255, 0.9)
+					">
+					<span class="material-symbols-outlined" style="color: #e91e8c">movie</span>
+					<div class="or-sat-number" style="color: #e91e8c">{{ stats.totalNumber ?? 0 }}</div>
+				</div>
+				<div class="or-sat-label">Movies</div>
+			</div>
+			<div class="or-sat" style="transform: translateY(8px); animation-delay: 0.08s">
+				<div
+					class="or-sat-disc"
+					style="
+						box-shadow:
+							0 0 0 3px rgba(167, 139, 250, 0.2),
+							0 12px 28px rgba(120, 30, 70, 0.22),
+							inset 0 1px 0 rgba(255, 255, 255, 0.9)
+					">
+					<span class="material-symbols-outlined" style="color: #a78bfa">notifications</span>
+					<div class="or-sat-number" style="color: #a78bfa">{{ stats.reminderTotal ?? 0 }}</div>
+				</div>
+				<div class="or-sat-label">Reminders</div>
+			</div>
+			<div class="or-sat" style="transform: translateY(8px); animation-delay: 0.16s">
+				<div
+					class="or-sat-disc"
+					style="
+						box-shadow:
+							0 0 0 3px rgba(56, 189, 248, 0.2),
+							0 12px 28px rgba(120, 30, 70, 0.22),
+							inset 0 1px 0 rgba(255, 255, 255, 0.9)
+					">
+					<span class="material-symbols-outlined" style="color: #38bdf8">format_quote</span>
+					<div class="or-sat-number" style="color: #38bdf8">{{ stats.totalQuotes ?? 0 }}</div>
+				</div>
+				<div class="or-sat-label">Voices</div>
+			</div>
+			<div class="or-sat" style="transform: translateY(24px); animation-delay: 0.24s">
+				<div
+					class="or-sat-disc"
+					style="
+						box-shadow:
+							0 0 0 3px rgba(249, 115, 22, 0.2),
+							0 12px 28px rgba(120, 30, 70, 0.22),
+							inset 0 1px 0 rgba(255, 255, 255, 0.9)
+					">
+					<span class="material-symbols-outlined" style="color: #f97316">restaurant</span>
+					<div class="or-sat-number" style="color: #f97316">{{ stats.totalRecipes ?? 0 }}</div>
+				</div>
+				<div class="or-sat-label">Recipes</div>
+			</div>
+		</div>
+
+		<!-- ── Entertainment panel (left top) ───────────────────────── -->
+		<div class="orbital-glass orbital-entertainment">
+			<div class="orbital-panel-header">
+				<span class="material-symbols-outlined orbital-panel-header-icon" style="color: #e91e8c"
+					>movie</span
+				>
+				<span class="orbital-panel-header-title">Entertainment</span>
+				<span class="orbital-panel-header-badge" style="color: #e91e8c">{{
+					stats.totalNumber ?? 0
+				}}</span>
+			</div>
+			@if (genreBars.length === 0) {
+				<div class="orbital-recipe-empty">No genre data yet</div>
+			} @else {
+				@for (bar of genreBars; track bar.label) {
+					<div class="orbital-bar-row">
+						<span class="orbital-bar-label">{{ bar.label }}</span>
+						<div class="orbital-bar-track">
+							<div
+								class="orbital-bar-fill"
+								[style.width.%]="bar.percentage"
+								[style.background]="bar.color"></div>
+						</div>
+						<span class="orbital-bar-value">{{ bar.count }}</span>
+					</div>
+				}
+			}
+		</div>
+
+		<!-- ── Reminders panel (right top) ──────────────────────────── -->
+		<div class="orbital-glass orbital-reminders">
+			<div class="orbital-panel-header">
+				<span class="material-symbols-outlined orbital-panel-header-icon" style="color: #a78bfa"
+					>notifications</span
+				>
+				<span class="orbital-panel-header-title">Reminders</span>
+				<span
+					class="orbital-panel-header-badge"
+					[style.color]="openReminderCount > 0 ? '#d53369' : '#22c55e'">
+					{{ openReminderCount }} open
+				</span>
+			</div>
+			@for (reminder of reminderRows; track reminder.id) {
+				<div class="orbital-reminder-row" (click)="d.toggle(reminder.id)">
+					<div
+						class="orbital-reminder-checkbox"
+						[style.background]="getCheckBackground(reminder)"
+						[style.border]="getCheckBorder(reminder)">
+						@if (d.isDone(reminder.id)) {
+							<span class="material-symbols-outlined" style="color: #fff">check</span>
+						}
+					</div>
+					<span class="orbital-reminder-name" [class.done]="d.isDone(reminder.id)">{{
+						reminder.name
+					}}</span>
+					<span
+						class="orbital-reminder-due-date"
+						[style.color]="reminder.overdue ? '#d53369' : '#22c55e'">
+						{{ reminder.dueLabel }}
+					</span>
+				</div>
+			}
+		</div>
+
+		<!-- ── Saved links panel (right middle) ────────────────────────── -->
+		<div class="orbital-glass orbital-saved-links">
+			<div class="orbital-panel-header">
+				<span class="material-symbols-outlined orbital-panel-header-icon" style="color: #22c55e"
+					>link</span
+				>
+				<span class="orbital-panel-header-title">Quick Links</span>
+				<span class="orbital-panel-header-badge" style="color: #22c55e">{{
+					quickLinks.length
+				}}</span>
+			</div>
+			@if (quickLinks.length === 0) {
+				<div class="orbital-recipe-empty">No links yet</div>
+			} @else {
+				@for (link of quickLinks; track link._id) {
+					<div class="orbital-saved-link-row" (click)="openLink(link)">
+						<div class="orbital-link-dot" [style.background]="getLinkColor(link)"></div>
+						<span class="orbital-saved-link-title">{{ link.title }}</span>
+					</div>
+				}
+			}
+		</div>
+
+		<!-- ── Activity panel (left bottom) ─────────────────────────── -->
+		<div class="orbital-glass orbital-activity">
+			<div class="orbital-panel-header">
+				<span class="material-symbols-outlined orbital-panel-header-icon" style="color: #38bdf8"
+					>history</span
+				>
+				<span class="orbital-panel-header-title">Activity</span>
+			</div>
+			@for (activity of activityRows; track activity.label + activity.time) {
+				<div class="orbital-activity-row">
+					<div class="orbital-activity-icon" [style.background]="getIconBackground(activity.color)">
+						<span class="material-symbols-outlined" [style.color]="activity.color">{{
+							activity.icon
+						}}</span>
+					</div>
+					<div class="orbital-activity-body">
+						<div class="orbital-activity-label">{{ activity.label }}</div>
+						<div class="orbital-activity-detail">{{ activity.detail }}</div>
+					</div>
+					<span class="orbital-activity-time">{{ activity.time }}</span>
+				</div>
+			}
+		</div>
+
+		<!-- ── Debt panel (right bottom) ────────────────────────────── -->
+		<div class="orbital-glass orbital-debt">
+			<div class="orbital-panel-header">
+				<span class="material-symbols-outlined orbital-panel-header-icon" style="color: #f97316"
+					>account_balance</span
+				>
+				<span class="orbital-panel-header-title">Debt Sonata</span>
+				<span class="orbital-panel-header-badge" style="color: #d53369">{{ DEBT_TOTAL }}</span>
+			</div>
+			@for (debt of DEBT_ITEMS; track debt.label) {
+				<div class="orbital-debt-row">
+					<div class="orbital-debt-row-header">
+						<span>{{ debt.label }}</span>
+						<span class="orbital-debt-amount" [style.color]="debt.color">{{ debt.amount }}</span>
+					</div>
+					<div class="orbital-bar-track">
+						<div
+							class="orbital-bar-fill"
+							[style.width.%]="debt.percentage"
+							[style.background]="debt.color"></div>
+					</div>
+				</div>
+			}
+		</div>
+
+		<!-- ── This-week agenda panel (bottom centre) ────────────────── -->
+		<div class="orbital-glass orbital-week">
+			<vc-week-agenda></vc-week-agenda>
+		</div>
+	</div>
+}

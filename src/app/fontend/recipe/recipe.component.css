@@ -6,7 +6,7 @@
 
 	/* nlf covers English + numbers; cf covers Chinese.
 	   Browser falls through per-glyph, so mixed-script text renders correctly. */
-	font-family: 'nlf', 'cf', sans-serif;
+	font-family: 'app-font';
 
 	--individual-item-width: 360px;
 	--individual-item-gap: 18px;
@@ -133,7 +133,6 @@
  * All pages: font-weight 500
  */
 .page-title {
-	font-family: 'nlf', 'cf', serif;
 	font-size: 44px;
 	font-weight: 500;
 	letter-spacing: 2px;
@@ -461,7 +460,6 @@
 	min-width: 0;
 }
 .recipe-card .name {
-	font-family: 'nlf', 'cf', serif;
 	font-weight: 500;
 	font-size: 22px;
 	letter-spacing: -0.2px;
@@ -753,7 +751,6 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	font-family: 'nlf', 'cf', serif;
 	font-weight: 500;
 	font-size: 22px;
 	color: var(--ink);
@@ -1271,7 +1268,6 @@
 	gap: 10px;
 	padding: 18px 24px;
 	color: var(--ink);
-	font-family: 'nlf', 'cf', serif;
 	font-size: 18px;
 	font-weight: 500;
 }
@@ -1295,7 +1291,6 @@
 	border-radius: 8px;
 	padding: 2px 18px 14px 60px;
 	position: relative;
-	font-family: 'nlf', 'cf', serif;
 	font-size: 19px;
 	line-height: 34px;
 	color: #3a2a1a;
@@ -1360,7 +1355,6 @@
 }
 .title-field {
 	width: 100%;
-	font-family: 'nlf', 'cf', serif;
 	font-size: 44px;
 	font-weight: 400;
 	letter-spacing: 2px;
@@ -1637,7 +1631,6 @@
 		border-color 0.2s ease,
 		background 0.2s ease;
 	user-select: none;
-	font-family: inherit;
 }
 .type-tab:hover {
 	transform: translateY(-1px);
@@ -1963,7 +1956,6 @@
 	box-shadow: none !important;
 	border-radius: 0 !important;
 	padding: 4px 2px !important;
-	font-family: 'nlf', 'cf', sans-serif !important;
 	font-size: 13px !important;
 	color: var(--ink-muted) !important;
 	width: 30px !important;
@@ -1971,7 +1963,6 @@
 }
 ::ng-deep .unit-ac .p-autocomplete-input::placeholder {
 	color: rgba(30, 15, 35, 0.35) !important;
-	font-family: 'nlf', 'cf', sans-serif !important;
 }
 ::ng-deep .unit-ac.required .p-autocomplete-input {
 	border-bottom: 1px solid #d97706 !important;
@@ -1982,7 +1973,6 @@
 }
 /* Overlay panel — appended to body, needs ::ng-deep */
 ::ng-deep .unit-ac-panel {
-	font-family: 'nlf', 'cf', sans-serif !important;
 	background: #fff !important;
 	border: 1px solid rgba(217, 119, 6, 0.18) !important;
 	border-radius: 12px !important;
@@ -1995,7 +1985,6 @@
 	padding: 0 !important;
 }
 ::ng-deep .unit-ac-panel .p-autocomplete-option {
-	font-family: 'nlf', 'cf', sans-serif !important;
 	font-size: 13px !important;
 	font-weight: 400 !important;
 	color: #1a1a1a !important;
@@ -2031,7 +2020,6 @@
 		opacity 0.2s ease,
 		background 0.2s ease,
 		color 0.2s ease;
-	font-family: inherit;
 }
 .ing-row:hover .remove,
 .step-card:hover .remove,
@@ -2053,7 +2041,6 @@
 	color: #d97706;
 	border-radius: 12px;
 	padding: 11px 16px;
-	font-family: inherit;
 	font-size: 13.5px;
 	font-weight: 500;
 	letter-spacing: 0.4px;
@@ -2242,7 +2229,6 @@
 		#fff;
 	border-radius: 8px;
 	padding: 2px 18px 14px 60px;
-	font-family: 'nlf', 'cf', serif;
 	font-size: 19px;
 	line-height: 34px;
 	color: #3a2a1a;

@@ -18,16 +18,9 @@
 
 	display: block;
 	width: 100%;
-	font-family: var(--font-en, 'nlf', sans-serif);
+	font-family: 'app-font';
 }
 
-.rm-icon {
-	font-family: 'Material Symbols Outlined';
-}
-
-.cf {
-	font-family: 'cf', sans-serif;
-}
 
 /* ── Masthead ────────────────────────────────────────────────────────────── */
 .rm-masthead {
@@ -129,7 +122,6 @@
 	display: block;
 	color: #94a3b8;
 	font-weight: 500;
-	font-family: var(--font-cn, 'cf', sans-serif);
 }
 
 /* ── Filter bar ──────────────────────────────────────────────────────────── */
@@ -155,7 +147,6 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 7px;
-	font-family: inherit;
 	font-size: 13px;
 	font-weight: 600;
 	padding: 6px 14px;
@@ -273,7 +264,6 @@
 	border: none;
 	outline: none;
 	background: transparent;
-	font-family: inherit;
 	font-size: 15px;
 	font-weight: 500;
 	color: #1f2937;
@@ -395,7 +385,6 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	font-family: inherit;
 	font-size: 12px;
 	font-weight: 500;
 	color: #94a3b8;
@@ -490,7 +479,6 @@
 	border: none;
 	outline: none;
 	background: transparent;
-	font-family: inherit;
 	font-size: 15.5px;
 	font-weight: 500;
 	color: #1f2937;
@@ -501,16 +489,10 @@
 	font-weight: 400;
 }
 
-.rm-card-title-input.cf,
-.rm-new-card-input.cf {
-	font-family: 'cf', sans-serif;
-}
-
 .rm-category-chip {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	font-family: inherit;
 	font-size: 12px;
 	font-weight: 600;
 	padding: 5px 11px;
@@ -543,7 +525,6 @@
 	border: none;
 	cursor: pointer;
 	color: #fff;
-	font-family: inherit;
 	font-size: 13px;
 	font-weight: 600;
 	padding: 10px 14px 5px 14px;
@@ -633,7 +614,6 @@
 	background: #fff;
 	color: #475569;
 	cursor: pointer;
-	font-family: inherit;
 	font-size: 14px;
 	font-weight: 600;
 	display: inline-flex;

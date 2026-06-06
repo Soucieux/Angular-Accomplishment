@@ -88,7 +88,6 @@ mat-drawer-content {
 	overflow: hidden;
 	background-color: transparent !important;
 	transition: background-color 0.2s ease;
-	font-family: inherit;
 	display: flex !important;
 	align-items: center !important;
 	flex-direction: row;
@@ -277,7 +276,6 @@ li:nth-child(10) .nav-icon {
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	font-family: inherit;
 }
 
 .account-menu-popover-name {
@@ -296,7 +294,6 @@ li:nth-child(10) .nav-icon {
 	background: transparent;
 	border-radius: 9px;
 	cursor: pointer;
-	font-family: inherit;
 	font-size: 13.5px;
 	text-align: left;
 	transition: background 0.15s;
@@ -336,7 +333,6 @@ li:nth-child(10) .nav-icon {
 	background: transparent;
 	border-radius: 12px;
 	cursor: pointer;
-	font-family: inherit;
 	text-align: left;
 	transition: background 0.2s;
 	box-sizing: border-box;
@@ -368,7 +364,6 @@ li:nth-child(10) .nav-icon {
 	align-items: center;
 	justify-content: center;
 	box-shadow: 0 3px 10px rgba(213, 51, 105, 0.28);
-	font-family: inherit;
 }
 
 .account-row-avatar--ghost {

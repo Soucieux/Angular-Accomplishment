@@ -11,27 +11,91 @@ body {
 	overflow: hidden;
 }
 
-/* Design token aliases used by the logged-out home component */
 :root {
-	--font-en: 'nlf';
-	--font-cn: 'cf';
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+	/* The indigo-pink prebuilt theme hard-codes Roboto on every component-level
+	   font token (e.g. --mat-button-text-label-text-font). Those tokens take
+	   precedence over the --mat-sys-* fallbacks, so we must override each one
+	   explicitly. All 44 tokens below come from the theme file — replaced with
+	   'app-font' so every Angular Material element uses the project font. */
+	--mat-badge-text-font: 'app-font';
+	--mat-bottom-sheet-container-text-font: 'app-font';
+	--mat-button-filled-label-text-font: 'app-font';
+	--mat-button-outlined-label-text-font: 'app-font';
+	--mat-button-protected-label-text-font: 'app-font';
+	--mat-button-text-label-text-font: 'app-font';
+	--mat-button-toggle-label-text-font: 'app-font';
+	--mat-button-toggle-legacy-label-text-font: 'app-font';
+	--mat-button-tonal-label-text-font: 'app-font';
+	--mat-card-subtitle-text-font: 'app-font';
+	--mat-card-title-text-font: 'app-font';
+	--mat-checkbox-label-text-font: 'app-font';
+	--mat-chip-label-text-font: 'app-font';
+	--mat-datepicker-calendar-text-font: 'app-font';
+	--mat-dialog-subhead-font: 'app-font';
+	--mat-dialog-supporting-text-font: 'app-font';
+	--mat-expansion-container-text-font: 'app-font';
+	--mat-expansion-header-text-font: 'app-font';
+	--mat-fab-extended-label-text-font: 'app-font';
+	--mat-form-field-container-text-font: 'app-font';
+	--mat-form-field-filled-label-text-font: 'app-font';
+	--mat-form-field-outlined-label-text-font: 'app-font';
+	--mat-form-field-subscript-text-font: 'app-font';
+	--mat-list-list-item-label-text-font: 'app-font';
+	--mat-list-list-item-supporting-text-font: 'app-font';
+	--mat-list-list-item-trailing-supporting-text-font: 'app-font';
+	--mat-menu-item-label-text-font: 'app-font';
+	--mat-optgroup-label-text-font: 'app-font';
+	--mat-option-label-text-font: 'app-font';
+	--mat-paginator-container-text-font: 'app-font';
+	--mat-radio-label-text-font: 'app-font';
+	--mat-select-trigger-text-font: 'app-font';
+	--mat-slide-toggle-label-text-font: 'app-font';
+	--mat-slider-label-label-text-font: 'app-font';
+	--mat-snack-bar-supporting-text-font: 'app-font';
+	--mat-stepper-container-text-font: 'app-font';
+	--mat-stepper-header-label-text-font: 'app-font';
+	--mat-tab-label-text-font: 'app-font';
+	--mat-table-footer-supporting-text-font: 'app-font';
+	--mat-table-header-headline-font: 'app-font';
+	--mat-table-row-item-label-text-font: 'app-font';
+	--mat-toolbar-title-text-font: 'app-font';
+	--mat-tooltip-supporting-text-font: 'app-font';
+	--mat-tree-node-text-font: 'app-font';
 }
 
-/* All words are default to use English font */
+/* English letters, digits, and standard punctuation (U+0020–007E = printable ASCII).
+   Any character in this range is rendered by the number-letter font. */
+@font-face {
+	font-family: 'app-font';
+	src: url('./assets/number-letter-font.ttf');
+	unicode-range: U+0020-007E;
+}
+
+/* CJK unified ideographs, CJK symbols/punctuation, and CJK compatibility forms.
+   Any character in these ranges is rendered by the chinese font. */
+@font-face {
+	font-family: 'app-font';
+	src: url('./assets/chinese-font.ttf');
+	unicode-range:
+		U+3000-9FFF,
+		/* CJK symbols, punctuation, and unified ideographs */ U+F900-FAFF,
+		/* CJK compatibility ideographs */ U+FE30-FE4F; /* CJK compatibility forms */
+}
+
 body {
-	font-family: 'nlf';
+	font-family: 'app-font';
 	user-select: none;
 }
 
-@font-face {
-	font-family: 'cf';
-	src: url('./assets/chinese-font.ttf');
-}
-
-@font-face {
-	font-family: 'nlf';
-	src: url('./assets/number-letter-font.ttf');
+/* Browser UA stylesheets reset font-family on form elements to the system font,
+   breaking CSS inheritance. This rule restores inheritance from body for all of them. */
+button,
+input,
+select,
+textarea {
+	font-family: inherit;
 }
 
 button,

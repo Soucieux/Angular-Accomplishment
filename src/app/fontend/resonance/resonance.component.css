@@ -12,7 +12,7 @@
 }
 
 :host {
-	font-family: 'nlf';
+	font-family: 'app-font';
 	display: block;
 }
 
@@ -148,7 +148,6 @@
 
 :host ::ng-deep .submit-card textarea {
 	font-size: 17px;
-	font-family: 'nlf', sans-serif;
 	color: rgba(0, 0, 0, 0.75);
 	padding: 0 0 8px 0;
 	line-height: 1.75;
@@ -183,7 +182,6 @@
 
 :host ::ng-deep .name-row input {
 	font-size: 14px;
-	font-family: 'nlf', sans-serif;
 }
 
 ::ng-deep .name-row .p-inputtext {

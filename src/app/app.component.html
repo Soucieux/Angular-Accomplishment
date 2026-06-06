@@ -1,5 +1,5 @@
 <mat-drawer-container hasBackdrop="false">
-	<mat-drawer mode="side" opened disableClose [class.nav-collapsed]="navCollapsed">
+	<mat-drawer mode="side" opened disableClose [class.nav-collapsed]="navCollapsed" [class.nav-no-transition]="!navReady">
 		<ul class="nav-list">
 			<li class="menu-group hide-on-mobile">
 				<button class="nav-toggle-btn" (click)="toggleNav()">

@@ -39,6 +39,7 @@ export class AppComponent implements AfterViewInit {
 	protected currentUser$!: Observable<any>;
 	protected accountMenuOpen = false;
 	protected navCollapsed = false;
+	protected navReady = false;
 	private drawerResizeObserver?: ResizeObserver;
 
 	constructor(
@@ -46,15 +47,20 @@ export class AppComponent implements AfterViewInit {
 		private dialogService: DialogService,
 		private router: Router,
 		@Inject(PLATFORM_ID) private platformId: object
-	) {}
+	) {
+		if (isPlatformBrowser(this.platformId)) {
+			this.navCollapsed = localStorage.getItem(LS_NAV_COLLAPSED_KEY) === 'true';
+		}
+	}
 
 	/**
-	 * Initialises the component, subscribes to the auth state observable,
-	 * and assigns the appropriate user stream based on the detected country.
+	 * Initialises the component and subscribes to the auth state observable,
+	 * assigning the appropriate user stream based on the detected country.
+	 * The nav-collapsed state is restored in the constructor so it applies
+	 * before the first render and avoids an expand-then-collapse flash.
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			this.navCollapsed = localStorage.getItem(LS_NAV_COLLAPSED_KEY) === 'true';
 			if (Utilities.getCurrentCountry() === CN) {
 				this.currentUser$ = this.authService.cloudbaseGetCurrentUser();
 			} else {
@@ -66,10 +72,15 @@ export class AppComponent implements AfterViewInit {
 	/**
 	 * Attaches the ResizeObserver that syncs the drawer content margin to the
 	 * drawer width on every frame, so both panels animate simultaneously.
+	 * Enables the nav width transition after the first frame so the initial
+	 * collapsed state is applied without animation on page load.
 	 */
 	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.initDrawerResizeSync();
+			setTimeout(() => {
+				this.navReady = true;
+			});
 		}
 	}
 
@@ -187,17 +198,20 @@ export class AppComponent implements AfterViewInit {
 	}
 
 	/**
-	 * Attaches a ResizeObserver to the mat-drawer so mat-drawer-content margin-left
-	 * mirrors the drawer's animated width on every frame, making both panels slide
-	 * simultaneously instead of the content snapping after the drawer finishes.
+	 * Attaches a ResizeObserver to the mat-drawer and writes the drawer's animated
+	 * width to the --drawer-width CSS custom property on document root each frame.
+	 * Placing the property on documentElement ensures it survives Angular HMR, which
+	 * clears inline styles on component DOM nodes during style reconciliation.
+	 * mat-drawer-content reads this via var() with !important, permanently beating
+	 * Material's own inline-style margin-left binding after auth state changes.
 	 */
 	private initDrawerResizeSync(): void {
 		const drawer = document.querySelector('mat-drawer') as HTMLElement;
-		const content = document.querySelector('mat-drawer-content') as HTMLElement;
-		if (!drawer || !content) return;
-		this.drawerResizeObserver = new ResizeObserver(() => {
-			content.style.marginLeft = `${drawer.offsetWidth}px`;
-		});
+		if (!drawer) return;
+		const sync = () => { document.documentElement.style.setProperty('--drawer-width', `${drawer.offsetWidth}px`); };
+		sync();
+		requestAnimationFrame(sync);
+		this.drawerResizeObserver = new ResizeObserver(sync);
 		this.drawerResizeObserver.observe(drawer);
 	}
 }

@@ -3,7 +3,7 @@ mat-drawer-container {
 	background: linear-gradient(45deg, #fa61da 0%, #ff8891 50%, #ffcd5a 100%);
 	position: relative;
 	width: 100%;
-	height: 100vh;
+	height: 100dvh;
 }
 
 mat-drawer {
@@ -20,6 +20,7 @@ mat-drawer {
 mat-drawer-content {
 	padding: 4px 4px 4px 6px;
 	box-sizing: border-box;
+	margin-left: var(--drawer-width, 226px) !important;
 	transition: margin-left 0s !important;
 }
 

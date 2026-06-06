@@ -50,12 +50,10 @@ import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
 	ChangeDetectorRef,
 	Component,
-	ElementRef,
 	Inject,
 	OnDestroy,
 	OnInit,
 	PLATFORM_ID,
-	Renderer2,
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
@@ -147,12 +145,10 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	private latestMovieList: MovieItemVO[] = [];
 	private readonly vtClassMap = new Map<string, string>();
 	private movieListSub?: Subscription;
-	private gridResizeObserver?: ResizeObserver;
+
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		@Inject(DOCUMENT) private doc: Document,
-		private elRef: ElementRef<HTMLElement>,
-		private renderer: Renderer2,
 		private cdr: ChangeDetectorRef,
 		private doubanService: DoubanService,
 		private databaseService: DatabaseService,
@@ -212,12 +208,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				})
 			);
 
-			const container = this.elRef.nativeElement.querySelector('.content-container') as HTMLElement | null;
-			if (container) {
-				this.gridResizeObserver = new ResizeObserver(() => this.updateGridLayout());
-				this.gridResizeObserver.observe(container);
-			}
-
 			/* If navigated from the home quick-action buttons, auto-open the relevant dialog.
 			   history.state retains the router state passed via Router.navigate({ state: ... }).
 			   Immediately clear the state so a page refresh does not re-trigger the dialog. */
@@ -235,7 +225,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * resets the searching flag, and logs the component destruction event.
 	 */
 	ngOnDestroy() {
-		this.gridResizeObserver?.disconnect();
 		this.doc.getElementById(ENT_VTA_STYLE_ID)?.remove();
 		this.movieListSub?.unsubscribe();
 		this.selectedGenres$.complete();
@@ -758,32 +747,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			return length <= 6 ? '21px' : String(18 - (length - 8) * 2 + 'px');
 		}
 		return length <= 7 ? '23px' : String(20 - (length - 8.5) * 2 + 'px');
-	}
-
-	/**
-	 * Recalculates the CSS grid column count for the content container based on
-	 * the current container width and the item dimensions defined in CSS custom
-	 * properties (--individual-item-width and --individual-item-gap). Ensures
-	 * the grid always fits as many columns as possible without overflow.
-	 */
-	private updateGridLayout() {
-		// Get item width and item gap from css
-		const host = this.elRef.nativeElement;
-		const itemsWidth = getComputedStyle(host).getPropertyValue('--individual-item-width').trim();
-		const itemsGap = getComputedStyle(host).getPropertyValue('--individual-item-gap').trim();
-
-		const contentContainer = host.querySelector('.content-container');
-		if (contentContainer) {
-			let componentWidth = contentContainer.clientWidth;
-			let itemsPerRow = Math.floor(
-				(componentWidth - parseInt(itemsGap)) / (parseInt(itemsWidth) + parseInt(itemsGap))
-			);
-			this.renderer.setStyle(
-				contentContainer,
-				'grid-template-columns',
-				`repeat(${itemsPerRow}, minmax(${parseInt(itemsWidth)}px, 1fr))`
-			);
-		}
 	}
 
 	/**

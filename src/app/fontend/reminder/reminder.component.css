@@ -13,6 +13,8 @@
 	--rm-accent: #1a6dff;
 	--rm-soft: rgba(26, 109, 255, 0.09);
 	--rm-glow: rgba(26, 109, 255, 0.28);
+	--individual-item-width: 360px;
+	--individual-item-gap: 16px;
 
 	display: block;
 	width: 100%;
@@ -190,10 +192,9 @@
 /* ── Card grid ───────────────────────────────────────────────────────────── */
 .rm-card-grid {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
 	grid-auto-rows: 115px;
 	align-content: start;
-	gap: 11px 16px;
+	gap: 11px var(--individual-item-gap);
 	margin-top: 14px;
 }
 

@@ -311,6 +311,7 @@ export const RESONANCE_AUTHOR_ANONYMOUS = 'Anonymous';
 export const RESONANCE_LABEL_VOICES = 'voices';
 /** Maximum character count allowed for a new quote submission. */
 export const RESONANCE_MAX_QUOTE_LENGTH = 500;
+export const RESONANCE_SKELETON_COUNT = 6;
 
 ////////////////////// Below are recipe page constants ///////////////////////////////
 /** Confirm-discard title shown when the user clicks Cancel on the add-recipe screen. */
@@ -395,6 +396,8 @@ export const RECIPE_MAX_BADGES = 4;
 export const RECIPE_MAX_NAME_CHARS = 9;
 /** Maximum number of recipe cards visible on a single paginated page. */
 export const RECIPE_PAGE_SIZE = 8;
+/** Number of rows displayed per paginated page in the recipe grid. */
+export const RECIPE_ROWS_PER_PAGE = 5;
 /** Maximum number of ingredient type tabs shown in the add/edit editor. */
 export const RECIPE_EDITOR_TYPE_MAX = 9;
 
@@ -507,8 +510,10 @@ export const REMINDER_VALUE_KEY_TAG = 'tag';
 export const REMINDER_TABLE_DATE_CALCULATOR = 'Date Calculator';
 /** Display name for the third reminder table — used in stat writes and the Recent Activity widget. */
 export const REMINDER_TABLE_MESSAGES = 'Messages';
-/** Items shown per page in the Reminder grid. */
+/** Items shown per page in the Reminder grid (default: 2 columns × 7 rows). */
 export const REMINDER_ITEMS_PER_PAGE = 14;
+/** Fixed number of rows per page in the Reminder grid — page size scales as itemsPerRow × this. */
+export const REMINDER_ROWS_PER_PAGE = 7;
 /** Reminder category label — Work. */
 export const REMINDER_CATEGORY_WORK = 'Work';
 /** Reminder category label — Personal. */
@@ -538,6 +543,7 @@ export const REMINDER_KNOWN_CATEGORIES = [
 export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;
 
 ////////////////////// Below are Debt Sonata page constants //////////////////////////
+export const DEBT_SKELETON_COUNT = 6;
 export const DEBT_DIALOG_TITLE = 'New debt';
 export const DEBT_DIALOG_PLACEHOLDER_NAME = 'e.g. Visa Platinum';
 export const DEBT_DIALOG_PLACEHOLDER_AMOUNT = '0';

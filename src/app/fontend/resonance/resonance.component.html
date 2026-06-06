@@ -96,11 +96,11 @@
 		}
 	} @else {
 		<div class="skeleton-grid">
-			@for (index of [0, 1, 2, 3, 4, 5]; track index) {
+			@for (_ of skeletonItems; track $index) {
 				<div
 					class="skeleton-card-wrapper"
-					[class.tilt-left]="index % 3 === 0"
-					[class.tilt-right]="index % 3 === 1">
+					[class.tilt-left]="$index % 3 === 0"
+					[class.tilt-right]="$index % 3 === 1">
 					<p-skeleton width="100%" height="180px" borderRadius="16px" />
 				</div>
 			}

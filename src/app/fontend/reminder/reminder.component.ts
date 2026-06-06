@@ -58,6 +58,7 @@ import {
 	REMINDER_GREETING_PLURAL,
 	REMINDER_GREETING_SINGULAR,
 	REMINDER_ITEMS_PER_PAGE,
+	REMINDER_ROWS_PER_PAGE,
 	REMINDER_ITEM_MESSAGE,
 	REMINDER_KNOWN_CATEGORIES,
 	REMINDER_MSG_DELETE_CONFIRM,
@@ -130,6 +131,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
 	protected readonly REMINDER_KNOWN_CATEGORIES = REMINDER_KNOWN_CATEGORIES;
 
+	private gridResizeObserver?: ResizeObserver;
+	private itemsPerPage = REMINDER_ITEMS_PER_PAGE;
 	private doneKeys = new Set<string>();
 	private readonly categoryColorMap: Record<string, string> = {
 		[REMINDER_CATEGORY_WORK]: REMINDER_CATEGORY_COLOR_WORK,
@@ -188,18 +191,25 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.loading = false;
 				// CloudBase subscription callbacks may emit outside Angular's zone — detectChanges ensures the template updates.
 				this.cdr.detectChanges();
+				// cardGrid becomes available after loading clears; apply the column layout immediately
+				// so the first render has the correct column count without waiting for a resize event.
+				this.updateGridLayout();
 			});
 		}
 	}
 
 	/**
-	 * Attaches the scroll auto-hide behaviour to the card grid outside Angular's zone
-	 * so that scroll and mouseenter events never trigger change detection.
-	 * Called once after the view is initialised.
+	 * Attaches the scroll auto-hide behaviour to the glass-card panel and wires up a
+	 * ResizeObserver so the grid column count recalculates whenever the container width
+	 * changes — including when the nav panel collapses or expands.
 	 */
 	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.ngZone.runOutsideAngular(() => Utilities.attachScrollAutoHide(this.reminderPanel?.nativeElement));
+			this.gridResizeObserver = new ResizeObserver(() =>
+				this.ngZone.run(() => this.updateGridLayout())
+			);
+			this.gridResizeObserver.observe(this.reminderPanel.nativeElement);
 		}
 	}
 
@@ -208,6 +218,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * clears the dialog container, and logs the component destruction event.
 	 */
 	ngOnDestroy(): void {
+		this.gridResizeObserver?.disconnect();
 		this.itemsSub?.unsubscribe();
 		Object.values(this.saveIndicatorTimeouts).forEach(clearTimeout);
 		this.dialogComponentContainer?.clear();
@@ -519,8 +530,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns The slice of filtered items for the current page.
 	 */
 	protected get pagedItems(): ReminderItem[] {
-		const start = this.page * REMINDER_ITEMS_PER_PAGE;
-		return this.filteredItems.slice(start, start + REMINDER_ITEMS_PER_PAGE);
+		const start = this.page * this.itemsPerPage;
+		return this.filteredItems.slice(start, start + this.itemsPerPage);
 	}
 
 	/**
@@ -541,7 +552,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected get totalPages(): number {
 		const count = this.filteredItems.length;
-		return Math.max(1, Math.ceil(count / REMINDER_ITEMS_PER_PAGE));
+		return Math.max(1, Math.ceil(count / this.itemsPerPage));
 	}
 
 	/**
@@ -677,7 +688,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				.catch(() => {});
 
 			// Step 5: Reset new-item state and navigate to last page
-			this.page = Math.max(0, Math.ceil((this.items.length + 1) / REMINDER_ITEMS_PER_PAGE) - 1);
+			this.page = Math.max(0, Math.ceil((this.items.length + 1) / this.itemsPerPage) - 1);
 			this.resetNewItem();
 			if (!textOnly) {
 				this.dateOrLinkPopover.hide();
@@ -751,7 +762,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns A 2-character padded string e.g. "01", "12".
 	 */
 	protected globalLabel(localIndex: number): string {
-		return String(this.page * REMINDER_ITEMS_PER_PAGE + localIndex + 1).padStart(2, '0');
+		return String(this.page * this.itemsPerPage + localIndex + 1).padStart(2, '0');
 	}
 
 	////////////////////// Below are card edit popover event handlers ////////////////////////
@@ -1090,7 +1101,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns The start index for the paginator range label.
 	 */
 	protected get rangeStart(): number {
-		return this.filteredItems.length === 0 ? 0 : this.page * REMINDER_ITEMS_PER_PAGE + 1;
+		return this.filteredItems.length === 0 ? 0 : this.page * this.itemsPerPage + 1;
 	}
 
 	/**
@@ -1099,7 +1110,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns The end index for the paginator range label.
 	 */
 	protected get rangeEnd(): number {
-		return Math.min((this.page + 1) * REMINDER_ITEMS_PER_PAGE, this.filteredItems.length);
+		return Math.min((this.page + 1) * this.itemsPerPage, this.filteredItems.length);
 	}
 
 	////////////////////// Below are utility counter getters used by the template //////////////
@@ -1111,5 +1122,45 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected get counterLabel(): string {
 		return String(this.items.length).padStart(2, '0');
+	}
+
+	/**
+	 * Returns an array of indices used to render skeleton loading cards,
+	 * sized to match the current items-per-page so the skeleton grid layout
+	 * is identical to the real card grid.
+	 *
+	 * @returns Array of 0-based indices with length equal to itemsPerPage.
+	 */
+	protected get skeletonItems(): number[] {
+		return Array.from({ length: this.itemsPerPage }, (_, i) => i);
+	}
+
+	////////////////////// Below are grid layout helpers /////////////////////////////////////
+
+	/**
+	 * Recalculates the grid column count and page size based on the current container
+	 * width and the CSS custom properties (--individual-item-width and
+	 * --individual-item-gap). Clamps the current page when the new page count shrinks.
+	 */
+	private updateGridLayout(): void {
+		const container = this.reminderPanel?.nativeElement;
+		const grid = this.cardGrid?.nativeElement;
+		if (!container || !grid) return;
+
+		const style = getComputedStyle(container);
+		const itemWidthPx = parseInt(style.getPropertyValue('--individual-item-width'));
+		const itemGapPx = parseInt(style.getPropertyValue('--individual-item-gap'));
+
+		const containerWidth = container.clientWidth;
+		const itemsPerRow = Math.max(
+			1,
+			Math.floor((containerWidth - itemGapPx) / (itemWidthPx + itemGapPx))
+		);
+		grid.style.gridTemplateColumns = `repeat(${itemsPerRow}, minmax(${itemWidthPx}px, 1fr))`;
+
+		const newPageSize = itemsPerRow * REMINDER_ROWS_PER_PAGE;
+		const maxPage = Math.max(0, Math.ceil(this.filteredItems.length / newPageSize) - 1);
+		if (this.page > maxPage) this.page = maxPage;
+		this.itemsPerPage = newPageSize;
 	}
 }

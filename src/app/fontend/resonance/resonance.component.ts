@@ -31,7 +31,8 @@ import {
 	RESONANCE_DIALOG_TITLE_DELETE,
 	RESONANCE_MSG_POSTED,
 	RESONANCE_LABEL_VOICES,
-	RESONANCE_MAX_QUOTE_LENGTH
+	RESONANCE_MAX_QUOTE_LENGTH,
+	RESONANCE_SKELETON_COUNT
 } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
 import { RESONANCE_GRADIENTS } from './resonance.model';
@@ -196,6 +197,16 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 */
 	protected get isOverLimit(): boolean {
 		return this.newQuoteText.length > RESONANCE_MAX_QUOTE_LENGTH;
+	}
+
+	/**
+	 * Returns the array of indices used to render skeleton loading cards,
+	 * sized to match the fixed skeleton count for this page.
+	 *
+	 * @returns Array of 0-based indices with length equal to RESONANCE_SKELETON_COUNT.
+	 */
+	protected get skeletonItems(): number[] {
+		return Array.from({ length: RESONANCE_SKELETON_COUNT }, (_, i) => i);
 	}
 
 	/**

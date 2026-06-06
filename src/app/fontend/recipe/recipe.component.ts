@@ -61,6 +61,7 @@ import {
 	RECIPE_VIEW_LIST,
 	RECIPE_BAND_DEFAULT,
 	RECIPE_PAGE_SIZE,
+	RECIPE_ROWS_PER_PAGE,
 	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
@@ -319,6 +320,17 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected get pagedRecipes(): Recipe[] {
 		const start = this.currentPage * this.pageSize;
 		return this.filteredRecipes.slice(start, start + this.pageSize);
+	}
+
+	/**
+	 * Returns an array of indices used to render skeleton loading cards,
+	 * sized to match the current page size so the skeleton grid layout
+	 * is identical to the real card grid.
+	 *
+	 * @returns Array of 0-based indices with length equal to pageSize.
+	 */
+	protected get skeletonItems(): number[] {
+		return Array.from({ length: this.pageSize }, (_, i) => i);
 	}
 
 	/**
@@ -1185,8 +1197,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	/**
 	 * Recalculates {@link pageSize} based on the glass-card container width and the
 	 * CSS custom properties (--individual-item-width and --individual-item-gap).
-	 * Sets the page size to the smallest multiple of the column count that is ≥ the
-	 * base {@link RECIPE_PAGE_SIZE}, ensuring pages always end on a complete row.
+	 * Sets the page size to exactly 5 rows (itemsPerRow × 5), keeping the number
+	 * of visible rows constant regardless of screen width.
 	 * Clamps {@link currentPage} if it would fall outside the new page range.
 	 */
 	private updateGridLayout(): void {
@@ -1210,7 +1222,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 					`repeat(${itemsPerRow}, minmax(${itemWidthPx}px, 1fr))`
 				);
 			}
-			const newPageSize = itemsPerRow * Math.ceil(RECIPE_PAGE_SIZE / itemsPerRow);
+			const newPageSize = itemsPerRow * RECIPE_ROWS_PER_PAGE;
 			const maxPage = Math.max(0, Math.ceil(this.filteredRecipes.length / newPageSize) - 1);
 			if (this.currentPage > maxPage) {
 				this.currentPage = maxPage;

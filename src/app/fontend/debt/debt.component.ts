@@ -69,7 +69,8 @@ import {
 	DEBT_CATEGORY_GRADIENT_CARD,
 	DEBT_CATEGORY_GRADIENT_PERSON,
 	DEBT_CATEGORY_GRADIENT_SHOPPING,
-	DEBT_CATEGORY_GRADIENT_HOME
+	DEBT_CATEGORY_GRADIENT_HOME,
+	DEBT_SKELETON_COUNT
 } from '../../common/app.constant';
 import { DebtCategoryDef, NewDebtData, PaymentEntry } from './debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
@@ -164,6 +165,15 @@ export class DebtComponent implements OnInit, OnDestroy {
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isHoverCapable = this.utilities.checkIfHoverCapable();
+
+			/* If navigated from the home quick-action buttons, auto-open the add dialog.
+			   history.state retains the router state passed via Router.navigate({ state: ... }).
+			   Immediately clear the state so a page refresh does not re-trigger the dialog. */
+			if (history.state?.openAddDialog) {
+				history.replaceState({}, '');
+				setTimeout(() => this.openNewDebtDialog(), 0);
+			}
+
 			this.debtItems$ = this.databaseService.getDebtSonataTableDetails().pipe(
 				tap((rows) => {
 					this.ngZone.run(() => {
@@ -632,6 +642,16 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 *
 	 * @returns An array of per-currency summary objects.
 	 */
+	/**
+	 * Returns the array of indices used to render skeleton loading cards,
+	 * sized to match the fixed skeleton count for this page.
+	 *
+	 * @returns Array of 0-based indices with length equal to DEBT_SKELETON_COUNT.
+	 */
+	protected get skeletonItems(): number[] {
+		return Array.from({ length: DEBT_SKELETON_COUNT }, (_, i) => i);
+	}
+
 	protected get currencyGroups(): {
 		code: string;
 		symbol: string;

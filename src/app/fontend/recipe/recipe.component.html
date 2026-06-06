@@ -37,7 +37,7 @@
 
 				@if (isLoading) {
 					<div class="grid">
-						@for (i of [1, 2, 3, 4, 5, 6]; track i) {
+						@for (_ of skeletonItems; track $index) {
 							<article class="recipe-card skeleton-card">
 								<div class="band skeleton-band"></div>
 								<div class="body">

@@ -112,7 +112,7 @@
 
 			<div class="debts-grid">
 				@if (loading) {
-					@for (_ of [0, 1, 2, 3, 4, 5]; track $index) {
+					@for (_ of skeletonItems; track $index) {
 						<div class="debt-card">
 							<p-skeleton height="22px" width="55%" />
 							<p-skeleton height="40px" width="50%" style="margin-top: 8px" />

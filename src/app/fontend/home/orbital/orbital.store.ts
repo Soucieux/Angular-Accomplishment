@@ -95,29 +95,6 @@ export class OrbitalStore implements OnDestroy {
 		});
 	});
 
-	// ── Local done-toggle for the reminder panel ──
-
-	private readonly _doneMap = signal<Record<string, boolean>>({});
-
-	/**
-	 * Toggles the local done state for a reminder item by its ID.
-	 *
-	 * @param id - The unique identifier of the reminder item.
-	 */
-	toggle(id: string): void {
-		this._doneMap.update((map) => ({ ...map, [id]: !map[id] }));
-	}
-
-	/**
-	 * Returns whether a reminder item has been locally marked done.
-	 *
-	 * @param id - The unique identifier of the reminder item.
-	 * @returns True if the item is toggled done in the local session.
-	 */
-	isDone(id: string): boolean {
-		return !!this._doneMap()[id];
-	}
-
 	/**
 	 * Clears the timer interval when the store is destroyed.
 	 */

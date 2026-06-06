@@ -1,3 +1,7 @@
+:host {
+	font-family: 'app-font';
+}
+
 /* ─────────────────────────────────────────
    Container — full viewport, flex column
 ───────────────────────────────────────── */
@@ -9,6 +13,14 @@
 	min-width: 100%;
 	min-height: calc(100dvh - 10px);
 	padding: 20px 20px 10px;
+	overflow: hidden;
+}
+
+.container:has(orbital) {
+	padding: 0;
+	border-radius: 0;
+	height: 100%;
+	width: 100%;
 }
 
 /* Floating orb top-right */
@@ -87,7 +99,6 @@
 	position: absolute;
 	inset: 0;
 	color: #fff;
-	font-family: var(--font-en);
 	-webkit-font-smoothing: antialiased;
 	user-select: none;
 	isolation: isolate;
@@ -170,7 +181,6 @@
 	top: 52%;
 	transform: translateY(-50%);
 	writing-mode: vertical-rl;
-	font-family: var(--font-cn);
 	font-weight: 700;
 	font-size: clamp(150px, 46vw, 320px);
 	line-height: 0.9;
@@ -206,7 +216,6 @@
 }
 
 .ed-masthead .ed-cn {
-	font-family: var(--font-cn);
 	letter-spacing: 0.2em;
 }
 
@@ -259,7 +268,6 @@
 }
 
 .ed-line .ed-cn {
-	font-family: var(--font-cn);
 	font-size: clamp(15px, 4.4vw, 19px);
 	color: rgba(255, 255, 255, 0.76);
 	letter-spacing: 0.14em;
@@ -331,7 +339,6 @@
 }
 
 .word {
-	font-family: 'cf';
 	text-align: center;
 	color: rgba(255, 255, 255, 0.92);
 }

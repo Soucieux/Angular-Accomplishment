@@ -3,18 +3,16 @@ import {
 	Component,
 	ElementRef,
 	EventEmitter,
-	HostListener,
 	Input,
 	NgZone,
 	OnChanges,
-	OnInit,
 	Output,
 	SimpleChanges,
 	inject
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { OrbitalStore } from './orbital.store';
-import { VcConcentric, VcWeekAgenda } from './shared.components';
+import { VcConcentric, VcWeekAgenda, hexToRgba } from './shared.components';
 import {
 	OrbitalAgendaItem,
 	OrbitalActivityRow,
@@ -30,6 +28,7 @@ import {
 	ResonanceActivityItem
 } from '../home.model';
 import { NexusCategory, NexusLink } from '../../nexus/nexus.model';
+import { Recipe } from '../../recipe/recipe.model';
 import { Utilities } from '../../../common/app.utilities';
 import {
 	ACTIVITY_TYPE_BUG_LOGGED,
@@ -38,7 +37,6 @@ import {
 	ACTIVITY_TYPE_UPDATED,
 	DAY_NAMES_SHORT,
 	GENRE_FAVOURITE,
-	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
 	HOME_ACTIVITY_COLOR_DELETED,
 	HOME_ACTIVITY_COLOR_MOVIE_ADDED,
@@ -101,7 +99,7 @@ interface DebtItem {
 	styleUrl: './orbital.component.css',
 	providers: [OrbitalStore]
 })
-export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
+export class OrbitalComponent implements AfterViewInit, OnChanges {
 	protected readonly d = inject(OrbitalStore);
 	private readonly router = inject(Router);
 	private readonly elementRef = inject(ElementRef);
@@ -110,6 +108,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	@Input() stats: HomeStats | null = null;
 	@Input() links: NexusLink[] = [];
 	@Input() dashCategories: NexusCategory[] = [];
+	@Input() recipes: Recipe[] = [];
 	@Output() readonly linkVisit = new EventEmitter<{ id: string; count: number }>();
 
 	protected readonly QUICK_ACTIONS: OrbitalQuickAction[] = [
@@ -163,24 +162,16 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 
 	protected readonly DEBT_TOTAL = '¥12,500';
 
-	protected scale = 1;
 	protected genreBars: { label: string; count: number; percentage: number; color: string }[] = [];
 	protected reminderRows: OrbitalReminderRow[] = [];
 	protected activityRows: OrbitalActivityRow[] = [];
-
-	/**
-	 * Initialises the artboard scale to fit the current viewport.
-	 */
-	ngOnInit(): void {
-		this.updateScale();
-	}
 
 	/**
 	 * Attaches the scroll auto-hide behaviour to all glass panel elements after the view renders.
 	 */
 	ngAfterViewInit(): void {
 		this.ngZone.runOutsideAngular(() => {
-			const panels = (this.elementRef.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.orbital-glass');
+			const panels = (this.elementRef.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.orbital-panel-scroll');
 			panels.forEach((panel) => Utilities.attachScrollAutoHide(panel));
 		});
 	}
@@ -200,39 +191,21 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	}
 
 	/**
-	 * Recalculates the artboard scale when the viewport is resized.
+	 * Gets links marked as pinned for display in the top quick-access strip.
+	 *
+	 * @returns NexusLink items where isPinned is true.
 	 */
-	@HostListener('window:resize')
-	protected onResize(): void {
-		this.updateScale();
+	protected get pinnedLinks(): NexusLink[] {
+		return this.links.filter((link) => link.isPinned === true);
 	}
 
 	/**
-	 * Gets the quick-access links slice (first 6 links).
+	 * Gets the number of upcoming reminder rows.
 	 *
-	 * @returns Up to 6 NexusLink items for the link strip.
-	 */
-	protected get quickLinks(): NexusLink[] {
-		return this.links.slice(0, 6);
-	}
-
-	/**
-	 * Gets the number of reminders that are not locally marked done.
-	 *
-	 * @returns The count of open (undone) reminder rows.
+	 * @returns The total count of reminder rows.
 	 */
 	protected get openReminderCount(): number {
-		return this.reminderRows.filter((reminder) => !this.d.isDone(reminder.id)).length;
-	}
-
-	/**
-	 * Gets the badge text for the week panel header: "X items" or "Clear".
-	 *
-	 * @returns A short summary string for the current week-agenda selection.
-	 */
-	protected get weekBadge(): string {
-		const count = this.d.agenda().length;
-		return count === 0 ? 'Clear' : `${count} item${count === 1 ? '' : 's'}`;
+		return this.reminderRows.length;
 	}
 
 	/**
@@ -274,45 +247,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	 * @returns A CSS rgba() colour string at 20% opacity.
 	 */
 	protected getIconBackground(color: string): string {
-		const red = parseInt(color.slice(1, 3), 16);
-		const green = parseInt(color.slice(3, 5), 16);
-		const blue = parseInt(color.slice(5, 7), 16);
-		return `rgba(${red},${green},${blue},0.2)`;
-	}
-
-	/**
-	 * Gets the background colour for a reminder checkbox.
-	 *
-	 * @param row - The reminder row being rendered.
-	 * @returns A CSS colour string — pink when done, transparent otherwise.
-	 */
-	protected getCheckBackground(row: OrbitalReminderRow): string {
-		return this.d.isDone(row.id) ? '#d53369' : 'transparent';
-	}
-
-	/**
-	 * Gets the border style for a reminder checkbox.
-	 *
-	 * @param row - The reminder row being rendered.
-	 * @returns A CSS border shorthand string.
-	 */
-	protected getCheckBorder(row: OrbitalReminderRow): string {
-		return this.d.isDone(row.id)
-			? '2px solid #d53369'
-			: `2px solid ${row.overdue ? '#d53369' : 'rgba(120,40,80,0.4)'}`;
-	}
-
-	/**
-	 * Recalculates the artboard scale factor based on the component container's actual
-	 * dimensions, scaling both up and down to preserve the 1240×900 ratio without clipping.
-	 */
-	private updateScale(): void {
-		const host = (this.elementRef.nativeElement as HTMLElement).getBoundingClientRect();
-		const width = host.width || window.innerWidth;
-		const height = host.height || window.innerHeight;
-		const scaleX = width / 1240;
-		const scaleY = height / 900;
-		this.scale = Math.min(scaleX, scaleY);
+		return hexToRgba(color, 0.2);
 	}
 
 	/**
@@ -326,7 +261,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		if (!raw) return [];
 		const entries = Object.entries(raw as Record<string, number>)
 			.filter(([key, value]) => key !== GENRE_FAVOURITE && (value as number) > 0)
-			.map(([label, count]) => ({ label, count: count as number, percentage: 0, color: '' }));
+			.map(([label, count]) => ({ label, count: count as number }));
 		if (!entries.length) return [];
 		entries.sort((a, b) => b.count - a.count);
 		const max = entries[0].count;
@@ -506,7 +441,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		const monToSunLabels = [...DAY_NAMES_SHORT.slice(1), DAY_NAMES_SHORT[0]];
 		const days: OrbitalWeekDay[] = monToSunLabels.map((label, dayIndex) => {
 			const dayDate = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + dayIndex);
-			const dateKey = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, '0')}-${String(dayDate.getDate()).padStart(2, '0')}`;
+			const dateKey = Utilities.formatDateForStorage(dayDate);
 			const dayReminders = rawReminders.filter((reminder) => {
 				if (!reminder.date) return false;
 				return Utilities.coerceDateToString(reminder.date) === dateKey;

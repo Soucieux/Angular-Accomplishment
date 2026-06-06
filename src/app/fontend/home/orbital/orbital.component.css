@@ -2,13 +2,13 @@
    Host
 ───────────────────────────────────────── */
 :host {
+	font-family: 'app-font';
 	display: flex;
 	width: 100%;
 	height: 100%;
 	align-items: center;
 	justify-content: center;
 	overflow: hidden;
-	border: 1px solid red;
 }
 
 /* ─────────────────────────────────────────
@@ -46,16 +46,14 @@
    Artboard root
 ───────────────────────────────────────── */
 .orbital-root {
-	width: 1240px;
-	height: 900px;
+	width: 100%;
+	height: 100%;
 	flex-shrink: 0;
 	position: relative;
-	font-family: var(--font-en);
 	color: #3a1226;
 	overflow: hidden;
 	background: transparent;
 	transform-origin: center center;
-	border: 1px solid red;
 }
 
 /* ─────────────────────────────────────────
@@ -63,8 +61,10 @@
 ───────────────────────────────────────── */
 .orbital-ring-inner {
 	position: absolute;
-	left: 320px;
-	top: 150px;
+	/* top and left places top-left corner, need transform to move back by half its value*/
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
 	width: 600px;
 	height: 600px;
 	border-radius: 50%;
@@ -74,8 +74,10 @@
 
 .orbital-ring-outer {
 	position: absolute;
-	left: 190px;
-	top: 20px;
+	/* top and left places top-left corner, need transform to move back by half its value*/
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
 	width: 860px;
 	height: 860px;
 	border-radius: 50%;
@@ -111,9 +113,10 @@
 ───────────────────────────────────────── */
 .orbital-quick-actions {
 	position: absolute;
-	top: 54px;
-	left: 240px;
-	width: 760px;
+	top: 120px;
+	left: 50%;
+	transform: translate(-50%);
+	width: 800px;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
@@ -128,10 +131,9 @@
 	border-radius: 99px;
 	border: none;
 	cursor: pointer;
-	color: #fff;
-	font-family: var(--font-en);
-	font-size: 11.5px;
-	font-weight: 700;
+	color: #fff !important;
+	font-size: 13px;
+	font-weight: 600;
 	box-shadow: 0 4px 14px rgba(120, 30, 70, 0.22);
 	transition:
 		opacity 0.15s,
@@ -156,8 +158,9 @@
 ───────────────────────────────────────── */
 .orbital-links {
 	position: absolute;
-	top: 96px;
-	left: 240px;
+	top: 190px;
+	left: 50%;
+	transform: translate(-50%);
 	width: 760px;
 	display: flex;
 	flex-wrap: wrap;
@@ -223,17 +226,18 @@
 /* ─────────────────────────────────────────
    Stat satellites — glass discs in a ∩ arc
 ───────────────────────────────────────── */
-.or-sats {
+.orbital-satellites {
 	position: absolute;
-	top: 150px;
-	left: 0;
+	top: 250px;
+	left: 50%;
+	transform: translate(-50%);
 	width: 1240px;
 	display: flex;
 	justify-content: center;
 	gap: 30px;
 }
 
-.or-sat {
+.orbital-satellite {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -241,7 +245,7 @@
 	animation: orSatIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.or-sat-disc {
+.orbital-satellite-disc {
 	position: relative;
 	width: 80px;
 	height: 80px;
@@ -258,12 +262,12 @@
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.or-sat-disc .material-symbols-outlined {
+.orbital-satellite-disc .material-symbols-outlined {
 	font-size: 15px;
 	line-height: 1;
 }
 
-.or-sat-number {
+.orbital-satellite-number {
 	font-size: 28px;
 	font-weight: 800;
 	line-height: 1;
@@ -271,13 +275,78 @@
 	font-variant-numeric: tabular-nums;
 }
 
-.or-sat-label {
+.orbital-satellite-label {
 	font-size: 10px;
 	font-weight: 800;
 	letter-spacing: 1.1px;
 	text-transform: uppercase;
 	color: #5a2440;
 	text-shadow: 0 1px 7px rgba(255, 255, 255, 0.7);
+}
+
+/* Per-satellite vertical offset and entry delay */
+.orbital-satellite:nth-child(1) {
+	transform: translateY(24px);
+	animation-delay: 0s;
+}
+.orbital-satellite:nth-child(2) {
+	transform: translateY(8px);
+	animation-delay: 0.08s;
+}
+.orbital-satellite:nth-child(3) {
+	transform: translateY(8px);
+	animation-delay: 0.16s;
+}
+.orbital-satellite:nth-child(4) {
+	transform: translateY(24px);
+	animation-delay: 0.24s;
+}
+
+/* Per-satellite disc glow */
+.orbital-satellite:nth-child(1) .orbital-satellite-disc {
+	box-shadow:
+		0 0 0 3px rgba(233, 30, 140, 0.2),
+		0 12px 28px rgba(120, 30, 70, 0.22),
+		inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.orbital-satellite:nth-child(2) .orbital-satellite-disc {
+	box-shadow:
+		0 0 0 3px rgba(167, 139, 250, 0.2),
+		0 12px 28px rgba(120, 30, 70, 0.22),
+		inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.orbital-satellite:nth-child(3) .orbital-satellite-disc {
+	box-shadow:
+		0 0 0 3px rgba(56, 189, 248, 0.2),
+		0 12px 28px rgba(120, 30, 70, 0.22),
+		inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.orbital-satellite:nth-child(4) .orbital-satellite-disc {
+	box-shadow:
+		0 0 0 3px rgba(249, 115, 22, 0.2),
+		0 12px 28px rgba(120, 30, 70, 0.22),
+		inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Per-satellite icon and number accent colour */
+.orbital-satellite:nth-child(1) .material-symbols-outlined,
+.orbital-satellite:nth-child(1) .orbital-satellite-number {
+	color: #e91e8c;
+}
+
+.orbital-satellite:nth-child(2) .material-symbols-outlined,
+.orbital-satellite:nth-child(2) .orbital-satellite-number {
+	color: #a78bfa;
+}
+
+.orbital-satellite:nth-child(3) .material-symbols-outlined,
+.orbital-satellite:nth-child(3) .orbital-satellite-number {
+	color: #38bdf8;
+}
+
+.orbital-satellite:nth-child(4) .material-symbols-outlined,
+.orbital-satellite:nth-child(4) .orbital-satellite-number {
+	color: #f97316;
 }
 
 @keyframes orSatIn {
@@ -294,8 +363,10 @@
 ───────────────────────────────────────── */
 .orbital-core {
 	position: absolute;
-	left: 502px;
-	top: 332px;
+	/* top and left places top-left corner, need transform to move back by half its value*/
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
 	width: 236px;
 	height: 236px;
 	border-radius: 50%;
@@ -332,6 +403,17 @@
 	margin-top: 3px;
 }
 
+.orbital-core-content {
+	text-align: center;
+}
+
+.orbital-concentric-wrapper {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
 /* ─────────────────────────────────────────
    Shared glass panel base
 ───────────────────────────────────────── */
@@ -346,80 +428,111 @@
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+}
+
+.orbital-panel-scroll {
+	flex: 1;
+	min-height: 0;
 	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 	scrollbar-width: thin;
 	scrollbar-color: transparent transparent;
 	transition: scrollbar-color 0.4s ease;
 }
 
-.orbital-glass::-webkit-scrollbar {
+.orbital-panel-scroll::-webkit-scrollbar {
 	width: 8px;
 }
 
-.orbital-glass::-webkit-scrollbar-track {
+.orbital-panel-scroll::-webkit-scrollbar-track {
 	background: transparent;
 }
 
-.orbital-glass::-webkit-scrollbar-thumb {
+.orbital-panel-scroll::-webkit-scrollbar-thumb {
 	background: transparent;
 	border-radius: 999px;
 	transition: background 0.4s ease;
 }
 
-.orbital-glass.is-scrolling {
+.orbital-panel-scroll.is-scrolling {
 	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
 }
 
-.orbital-glass.is-scrolling::-webkit-scrollbar-thumb {
+.orbital-panel-scroll.is-scrolling::-webkit-scrollbar-thumb {
 	background: rgba(213, 51, 105, 0.28);
 }
 
-.orbital-glass.is-scrolling::-webkit-scrollbar-thumb:hover {
+.orbital-panel-scroll.is-scrolling::-webkit-scrollbar-thumb:hover {
 	background: #d53369;
 }
 
 /* ─────────────────────────────────────────
    Glass panel positions
 ───────────────────────────────────────── */
+
+/* ─────────────────────────────────────────
+   First Row
+───────────────────────────────────────── */
 .orbital-entertainment {
-	left: 40px;
-	top: 150px;
-	width: 304px;
-	height: 191px;
+	left: calc(25% - 254px);
+	top: 270px;
+	width: 290px;
+	height: 250px;
 }
 
 .orbital-reminders {
-	right: 40px;
-	top: 150px;
-	width: 270px;
+	right: calc(25% - 258px);
+	top: 270px;
+	width: 290px;
+	height: 250px;
 }
 
-.orbital-saved-links {
-	right: 40px;
-	top: 326px;
-	width: 270px;
-}
+/* ─────────────────────────────────────────
+   Second Row
+───────────────────────────────────────── */
 
 .orbital-activity {
-	left: 40px;
-	bottom: 36px;
-	width: 250px;
+	left: calc(25% - 254px);
+	top: 600px;
+	width: 290px;
+	height: 250px;
 }
 
-.orbital-debt {
-	right: 40px;
-	bottom: 36px;
-	width: 270px;
+.orbital-quick-links {
+	right: calc(25% - 258px);
+	top: 600px;
+	width: 290px;
+	height: 250px;
+}
+
+/* ─────────────────────────────────────────
+   Third Row
+───────────────────────────────────────── */
+.orbital-recipes {
+	left: calc(25% - 254px);
+	top: 950px;
+	width: 290px;
+	height: 250px;
 }
 
 .orbital-week {
-	left: 385px;
-	top: 652px;
-	bottom: 30px;
-	width: 470px;
+	left: calc(50%);
+	transform: translate(-50%);
+	top: 950px;
+	height: 250px;
+	width: 460px;
 	gap: 9px;
 	padding: 15px 18px;
 	overflow: hidden;
+}
+
+.orbital-debt-sonata {
+	right: calc(25% - 258px);
+	top: 950px;
+	width: 290px;
+	height: 250px;
 }
 
 /* ─────────────────────────────────────────
@@ -429,6 +542,7 @@
 	display: flex;
 	align-items: center;
 	gap: 7px;
+	flex-shrink: 0;
 }
 
 .orbital-panel-header-icon {
@@ -448,6 +562,37 @@
 .orbital-panel-header-badge {
 	font-size: 10.5px;
 	font-weight: 800;
+}
+
+/* Per-panel header accent colours */
+.orbital-entertainment .orbital-panel-header-icon,
+.orbital-entertainment .orbital-panel-header-badge {
+	color: #e91e8c;
+}
+
+.orbital-reminders .orbital-panel-header-icon {
+	color: #a78bfa;
+}
+
+.orbital-quick-links .orbital-panel-header-icon,
+.orbital-quick-links .orbital-panel-header-badge {
+	color: #22c55e;
+}
+
+.orbital-activity .orbital-panel-header-icon {
+	color: #38bdf8;
+}
+
+.orbital-debt-sonata .orbital-panel-header-icon {
+	color: #f97316;
+}
+.orbital-debt-sonata .orbital-panel-header-badge {
+	color: #d53369;
+}
+
+.orbital-recipes .orbital-panel-header-icon,
+.orbital-recipes .orbital-panel-header-badge {
+	color: #ef4444;
 }
 
 /* ─────────────────────────────────────────
@@ -504,28 +649,42 @@
 }
 
 /* ─────────────────────────────────────────
+   Recipe panel rows
+───────────────────────────────────────── */
+.orbital-recipe-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 2px 0;
+}
+
+.orbital-recipe-row-name {
+	flex: 1;
+	font-size: 12px;
+	font-weight: 600;
+	color: #4a1730;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.orbital-recipe-row-category {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	color: #ef4444;
+	flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────
    Reminders panel
 ───────────────────────────────────────── */
 .orbital-reminder-row {
 	display: flex;
 	align-items: center;
 	gap: 9px;
-	cursor: pointer;
-}
-
-.orbital-reminder-checkbox {
-	width: 15px;
-	height: 15px;
-	border-radius: 5px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-	transition: background 0.15s;
-}
-
-.orbital-reminder-checkbox .material-symbols-outlined {
-	font-size: 11px;
 }
 
 .orbital-reminder-name {
@@ -533,11 +692,6 @@
 	font-size: 12.5px;
 	font-weight: 500;
 	color: #4a1730;
-}
-
-.orbital-reminder-name.done {
-	color: #b58aa3;
-	text-decoration: line-through;
 }
 
 .orbital-reminder-due-date {
@@ -687,9 +841,10 @@
 
 	.orbital-entertainment,
 	.orbital-reminders,
-	.orbital-saved-links,
+	.orbital-quick-links,
 	.orbital-activity,
-	.orbital-debt,
+	.orbital-recipes,
+	.orbital-debt-sonata,
 	.orbital-week {
 		left: auto;
 		right: auto;
@@ -697,14 +852,14 @@
 		bottom: auto;
 	}
 
-	.or-sats {
+	.orbital-satellites {
 		position: static;
 		width: 100%;
 		flex-wrap: wrap;
 		justify-content: center;
 	}
 
-	.or-sat {
+	.orbital-satellite {
 		transform: none !important;
 	}
 }

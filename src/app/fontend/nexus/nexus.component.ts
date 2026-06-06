@@ -168,6 +168,14 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
+			/* If navigated from the home quick-action buttons, auto-open the add-link dialog.
+			   history.state retains the router state passed via Router.navigate({ state: ... }).
+			   Immediately clear the state so a page refresh does not re-trigger the dialog. */
+			if (history.state?.openAddLinkDialog) {
+				history.replaceState({}, '');
+				setTimeout(() => this.openAddLinkDialog(), 0);
+			}
+
 			////////////////////// Below are subscriptions started on init //////////
 			this.currentDay = new Date().getDate();
 			const dateCalculatorObservable = this.databaseService.getDateCalculatorTableDetails();

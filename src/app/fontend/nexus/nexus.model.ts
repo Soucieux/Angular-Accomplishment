@@ -11,6 +11,7 @@ export interface NexusLink {
 	url: string;
 	title: string;
 	category: string;
+	isPinned?: boolean;
 	visitCount?: number;
 	lastVisited?: string;
 	createdAt?: string;

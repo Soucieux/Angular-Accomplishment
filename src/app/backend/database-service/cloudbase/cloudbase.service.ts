@@ -1399,6 +1399,7 @@ export class CloudbaseService extends DatabaseService {
 		category: string;
 		visitCount: number;
 		createdAt: string;
+		isPinned: boolean;
 	}): Promise<void> {
 		try {
 			const userId = CloudbaseService.getUseId() ? { _openid: CloudbaseService.getUseId() } : {};
@@ -1423,7 +1424,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateUsefulLink(
 		key: string,
-		updates: Partial<{ url: string; title: string; category: string }>
+		updates: Partial<{ url: string; title: string; category: string; isPinned: boolean }>
 	): Promise<void> {
 		try {
 			const result = await this.database

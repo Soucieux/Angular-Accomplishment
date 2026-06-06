@@ -45,6 +45,7 @@ import {
 	STATS_FIELD_RECENT_REMINDER,
 	NEXUS_DIALOG_TITLE_ADD_LINK,
 	NEXUS_DIALOG_TITLE_EDIT_LINK,
+	NEXUS_LABEL_PIN_TO_DASHBOARD,
 	NEXUS_DEFAULT_CATEGORY_COLOR,
 	NEXUS_MSG_CATEGORY_ADDED,
 	NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL,
@@ -101,6 +102,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private dialogComponentContainer!: ViewContainerRef;
 
 	protected readonly NEXUS_CATEGORY_ALL = NEXUS_CATEGORY_ALL;
+	protected readonly NEXUS_LABEL_PIN_TO_DASHBOARD = NEXUS_LABEL_PIN_TO_DASHBOARD;
 	protected readonly NEXUS_LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
 	protected readonly aiTools: AiTool[] = [...NEXUS_AI_TOOLS];
 	// Date Calculator constants re-exposed for the template
@@ -138,7 +140,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected showLinkDialog = false;
 	protected linkDialogTitle = NEXUS_DIALOG_TITLE_ADD_LINK;
 	protected editingLink: NexusLink | null = null;
-	protected linkForm = { url: '', title: '', category: '' };
+	protected linkForm = { url: '', title: '', category: '', isPinned: false };
 	protected linkFaviconPreview = '';
 	protected linkMetaLoading = false;
 
@@ -728,7 +730,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		this.linkForm = {
 			url: '',
 			title: '',
-			category: this.selectedCategory !== NEXUS_CATEGORY_ALL ? this.selectedCategory : ''
+			category: this.selectedCategory !== NEXUS_CATEGORY_ALL ? this.selectedCategory : '',
+			isPinned: false
 		};
 		this.linkFaviconPreview = '';
 		this.showLinkDialog = true;
@@ -744,7 +747,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		event.stopPropagation();
 		this.editingLink = link;
 		this.linkDialogTitle = NEXUS_DIALOG_TITLE_EDIT_LINK;
-		this.linkForm = { url: link.url, title: link.title, category: link.category ?? '' };
+		this.linkForm = { url: link.url, title: link.title, category: link.category ?? '', isPinned: link.isPinned ?? false };
 		this.linkFaviconPreview = Utilities.getFavicon(link.url);
 		this.showLinkDialog = true;
 	}
@@ -787,7 +790,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Shows a warning toast when required fields are missing.
 	 */
 	protected async saveLinkDialog(): Promise<void> {
-		const { url, title, category } = this.linkForm;
+		const { url, title, category, isPinned } = this.linkForm;
 		if (!url.trim() || !title.trim() || !category) {
 			this.dialogService.showToast(
 				TOAST_WARN,
@@ -802,7 +805,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 				await this.databaseService.updateUsefulLink(this.editingLink._id, {
 					url: finalUrl,
 					title: title.trim(),
-					category
+					category,
+					isPinned
 				});
 				LOG.info(this.className, `Link updated: ${finalUrl}`);
 				this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_UPDATED);
@@ -812,14 +816,16 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					title: title.trim(),
 					category,
 					visitCount: 0,
-					createdAt: new Date().toISOString()
+					createdAt: new Date().toISOString(),
+					isPinned
 				});
 				LOG.info(this.className, `Link saved: ${finalUrl}`);
 				this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_SAVED);
 			}
 			this.showLinkDialog = false;
-			// markForCheck required: async resolution runs outside Angular's zone.
-			this.cdr.markForCheck();
+			// detectChanges required: CloudBase async resolution escapes Angular's zone, so
+			// markForCheck alone never triggers a CD cycle — detectChanges forces it immediately.
+			this.cdr.detectChanges();
 		} catch (error) {
 			LOG.error(this.className, NEXUS_MSG_SAVE_LINK_FAILED, error as Error);
 			this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, NEXUS_MSG_LINK_SAVE_FAILED_DETAIL);

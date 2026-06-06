@@ -958,6 +958,7 @@ export class FirebaseService extends DatabaseService {
 		category: string;
 		visitCount: number;
 		createdAt: string;
+		isPinned: boolean;
 	}): Promise<void> {
 		return Promise.resolve();
 	}
@@ -970,7 +971,7 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public updateUsefulLink(
 		_key: string,
-		_updates: Partial<{ url: string; title: string; category: string }>
+		_updates: Partial<{ url: string; title: string; category: string; isPinned: boolean }>
 	): Promise<void> {
 		return Promise.resolve();
 	}

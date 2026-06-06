@@ -187,6 +187,7 @@ export const STATS_CAP_ACTIVITY_LOG = 24;
 
 ////////////////////// Below are home page constants /////////////////////////////////
 export const HOME_MSG_LOAD_STATISTICS_FAILED = 'Failed to load statistics';
+export const HOME_MSG_LOAD_RECIPES_FAILED = 'Failed to load recipes for dashboard';
 export const HOME_MSG_INCREMENT_VISIT_FAILED = 'Failed to increment link visit';
 
 /** Cycling colour palette for the four link tile colours on the Home dashboard. */
@@ -441,6 +442,8 @@ export const USEFUL_LINK_TYPE_CATEGORY = 'category';
 export const NEXUS_DIALOG_TITLE_ADD_LINK = 'Add Link';
 /** Dialog title when editing an existing link. */
 export const NEXUS_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
+/** Label for the isPinned checkbox in the add/edit link dialog. */
+export const NEXUS_LABEL_PIN_TO_DASHBOARD = 'Pin to dashboard';
 /** Sentinel value for the "show all categories" filter in the Nexus links panel. */
 export const NEXUS_CATEGORY_ALL = 'all';
 /** Default colour applied to new and un-styled link categories. */

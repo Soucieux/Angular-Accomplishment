@@ -315,6 +315,7 @@ export abstract class DatabaseService {
 		category: string;
 		visitCount: number;
 		createdAt: string;
+		isPinned: boolean;
 	}): Promise<void>;
 
 	/**
@@ -325,7 +326,7 @@ export abstract class DatabaseService {
 	 */
 	public abstract updateUsefulLink(
 		key: string,
-		updates: Partial<{ url: string; title: string; category: string }>
+		updates: Partial<{ url: string; title: string; category: string; isPinned: boolean }>
 	): Promise<void>;
 
 	/**

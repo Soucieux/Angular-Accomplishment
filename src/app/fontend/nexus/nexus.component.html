@@ -302,6 +302,14 @@
 				}
 			</select>
 		</div>
+		<div class="form-field form-field-checkbox">
+			<input
+				type="checkbox"
+				id="linkIsPinned"
+				class="form-checkbox"
+				[(ngModel)]="linkForm.isPinned" />
+			<label for="linkIsPinned" class="form-label form-label-checkbox">{{ NEXUS_LABEL_PIN_TO_DASHBOARD }}</label>
+		</div>
 	</div>
 
 	<ng-template pTemplate="footer">

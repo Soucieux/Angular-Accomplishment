@@ -144,11 +144,11 @@ describe('AuthService', () => {
         });
     });
 
-    // ── cloudbaseGetCurrentUser ──────────────────────────────────────────────
+    // ── getCurrentUser (CN context — delegates to CloudBase) ─────────────────
 
-    describe('cloudbaseGetCurrentUser', () => {
+    describe('getCurrentUser', () => {
         it('returns an observable', () => {
-            const result = service.cloudbaseGetCurrentUser();
+            const result = service.getCurrentUser();
             expect(result).toBeDefined();
             expect(typeof result.subscribe).toBe('function');
         });
@@ -157,7 +157,7 @@ describe('AuthService', () => {
             mockCloudbaseAuth.getUser.and.returnValue(
                 Promise.resolve({ data: { user: { id: 'uid', user_metadata: {} } } })
             );
-            const result = service.cloudbaseGetCurrentUser();
+            const result = service.getCurrentUser();
             let emitted: unknown;
             result.subscribe((v) => (emitted = v));
             await Promise.resolve(); // flush microtask
@@ -172,7 +172,7 @@ describe('AuthService', () => {
             mockCloudbaseAuth.getUser.and.returnValue(
                 Promise.resolve({ data: { user: mockUser } })
             );
-            const result = service.cloudbaseGetCurrentUser();
+            const result = service.getCurrentUser();
             let emitted: unknown;
             result.subscribe((v) => (emitted = v));
             await Promise.resolve();

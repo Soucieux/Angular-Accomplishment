@@ -14,13 +14,11 @@ describe('AppComponent', () => {
 
     beforeEach(async () => {
         mockAuth = jasmine.createSpyObj<AuthService>('AuthService', [
-            'cloudbaseGetCurrentUser',
-            'firebaseGetCurrentUser',
+            'getCurrentUser',
             'logout',
             'signOut'
         ]);
-        mockAuth.cloudbaseGetCurrentUser.and.returnValue(new BehaviorSubject(null).asObservable());
-        mockAuth.firebaseGetCurrentUser.and.returnValue(new BehaviorSubject(null).asObservable());
+        mockAuth.getCurrentUser.and.returnValue(new BehaviorSubject(null).asObservable());
         mockAuth.logout.and.stub();
         mockAuth.signOut.and.returnValue(Promise.resolve());
 

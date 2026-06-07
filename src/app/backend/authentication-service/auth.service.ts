@@ -40,6 +40,20 @@ export class AuthService {
 		}
 	}
 
+	////////////////////// Below are common methods //////////////////////
+
+	/**
+	 * Gets the current authenticated user as an observable, selecting the correct
+	 * auth provider (CloudBase for CN, Firebase otherwise).
+	 *
+	 * @returns An observable that emits the current user or null.
+	 */
+	public getCurrentUser(): Observable<any> {
+		return Utilities.getCurrentCountry() === CN
+			? this.cloudbaseGetCurrentUser()
+			: this.firebaseGetCurrentUser();
+	}
+
 	////////////////////// Below are Firebase authentication methods //////////////////////
 
 	/**
@@ -48,7 +62,7 @@ export class AuthService {
 	 *
 	 * @returns An observable that emits the current Firebase User or null.
 	 */
-	public firebaseGetCurrentUser(): Observable<User | null> {
+	private firebaseGetCurrentUser(): Observable<User | null> {
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
 		return new Observable((observer) => {
 			this.firebaseAuth = runInInjectionContext(this.ei, () => inject(Auth));
@@ -206,7 +220,7 @@ export class AuthService {
 	 *
 	 * @returns An observable that emits the current CloudBase user or null.
 	 */
-	public cloudbaseGetCurrentUser(): Observable<any> {
+	private cloudbaseGetCurrentUser(): Observable<any> {
 		this.cloudbaseAuth
 			.getUser()
 			.then((response: { data: { user: any } }) => {

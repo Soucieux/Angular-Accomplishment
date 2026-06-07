@@ -40,7 +40,8 @@
 }
 
 @keyframes block-spin {
-	to { transform: rotate(360deg); }
+	from { transform: translateZ(0) rotate(0deg); }
+	to { transform: translateZ(0) rotate(360deg); }
 }
 
 .blocking-spinner {

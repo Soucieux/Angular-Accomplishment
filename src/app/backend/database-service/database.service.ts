@@ -156,7 +156,7 @@ export abstract class DatabaseService {
 	public abstract removeSingleItemFromDatabase(name: string, key: string): Promise<void>;
 
 	/**
-	 * Removes a patch note and keeps the patchInProgress statistics field in sync.
+	 * Removes a patch note by key from the database.
 	 *
 	 * @param key - The document key of the patch note to remove.
 	 */

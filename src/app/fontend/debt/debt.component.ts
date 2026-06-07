@@ -47,8 +47,7 @@ import {
 	DIALOG_DEBT,
 	ERROR_PERMISSION_DENIED,
 	MONTH_NAMES_SHORT,
-	STATS_FIELD_RECENT_DEBT,
-	STATS_FIELD_REMINDER_UPCOMING,
+	STATS_FIELD_DEBT_UPCOMING,
 	DEBT_CATEGORY_LABEL_CARD,
 	DEBT_CATEGORY_LABEL_PERSON,
 	DEBT_CATEGORY_LABEL_SHOPPING,
@@ -274,14 +273,6 @@ export class DebtComponent implements OnInit, OnDestroy {
 			this.cdr.detectChanges();
 		}, 360);
 		this.resyncUpcomingFromLocalData();
-		this.databaseService
-			.appendToActivityLog(STATS_FIELD_RECENT_DEBT, {
-				type: ACTIVITY_TYPE_UPDATED,
-				table: DEBT_TABLE_ACCOUNT_EXPENSES,
-				text: item.name ?? '',
-				timestamp: Utilities.getCurrentFormattedTime(true)
-			})
-			.catch(() => {});
 	}
 
 	/**
@@ -566,7 +557,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		this.syncStatTimer = setTimeout(() => {
 			this.syncStatTimer = null;
 			this.databaseService.updateStatisticsFields({
-				[STATS_FIELD_REMINDER_UPCOMING]: [...this.upcomingExpenses]
+				[STATS_FIELD_DEBT_UPCOMING]: [...this.upcomingExpenses]
 			});
 		}, 0);
 	}

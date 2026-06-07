@@ -29,7 +29,6 @@ import {
 	REMINDER_TABLE_MESSAGES,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
-	STATS_FIELD_PATCH_IN_PROGRESS,
 	STATS_FIELD_RECENT_MOVIE,
 	STATS_FIELD_RECENT_PATCH,
 	STATS_FIELD_RECENT_REMINDER,
@@ -38,8 +37,7 @@ import {
 	STATUS_IN_PROGRESS,
 	ERROR_PERMISSION_DENIED,
 	ERROR_NO_DOCUMENT_UPDATED,
-	ROLE_ADMIN,
-	STATS_FIELD_RECENT_DEBT
+	ROLE_ADMIN
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
@@ -909,9 +907,6 @@ export class CloudbaseService extends DatabaseService {
 			});
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'New patch notes record has been added');
-			/* Sync patchInProgress so the home-page widget reflects the new note
-			   immediately without waiting for the subscription tap to run. */
-			this.syncPatchInProgressStat();
 		} catch (error) {
 			LOG.error(this.className, 'Error while adding new patch notes', error as Error);
 			throw error;
@@ -932,9 +927,6 @@ export class CloudbaseService extends DatabaseService {
 				.update({ ...updatedRecord });
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'Patch notes record has been updated');
-			/* Sync patchInProgress so status-change edits reflect on the home-page
-			   widget without waiting for the subscription tap. */
-			this.syncPatchInProgressStat();
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating patch notes record', error as Error);
 			throw error;
@@ -942,8 +934,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Removes a patch note by key and resyncs the patchInProgress statistics field.
-	 * so the home-page widget is up to date without waiting for the subscription tap.
+	 * Removes a patch note by key from the database.
 	 *
 	 * @param key - The document key of the patch note to remove.
 	 */
@@ -955,36 +946,10 @@ export class CloudbaseService extends DatabaseService {
 				.remove();
 			if (res.code) throw new Error(res.message);
 			LOG.info(this.className, `Record has been removed from ${DATABASE_PATCH_NOTES}`);
-			this.syncPatchInProgressStat();
 		} catch (error) {
 			LOG.error(this.className, `Error while removing patch note ${key}`, error as Error);
 			throw error;
 		}
-	}
-
-	/**
-	 * Queries all patch notes and rewrites the patchInProgress statistics field.
-	 * Called after any mutation (add, update, delete) so the home-page widget
-	 * always shows current data even when the Patch Notes page is not open.
-	 */
-	private syncPatchInProgressStat(): void {
-		this.database
-			.collection(DATABASE_PATCH_NOTES)
-			.limit(1000)
-			.get()
-			.then((result: any) => {
-				const allNotes: any[] = result.data ?? [];
-				const inProgress = allNotes
-					.filter((note: any) => note.status === STATUS_IN_PROGRESS)
-					.map((note: any) => ({
-						component: note.component,
-						element: note.element,
-						details: note.details,
-						isBug: !!note.isBug
-					}));
-				return this.statisticsRef.update({ [STATS_FIELD_PATCH_IN_PROGRESS]: inProgress });
-			})
-			.catch((err: any) => LOG.error(this.className, 'Failed to sync patchInProgress stat', err));
 	}
 
 	////////////////////// Below are Update methods for database table records /////////////////
@@ -1171,7 +1136,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new entry to add.
 	 */
 	public async addNewRecordToReminderTable(newRecord: any): Promise<void> {
-		this.addNewRecordToTable(DATABASE_REMINDER, STATS_FIELD_RECENT_REMINDER, newRecord);
+		this.addNewRecordToTable(DATABASE_REMINDER, newRecord, STATS_FIELD_RECENT_REMINDER);
 	}
 
 	/**
@@ -1180,16 +1145,17 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new entry to add.
 	 */
 	public async addNewRecordToDebtTable(newRecord: any): Promise<void> {
-		return this.addNewRecordToTable(DATABASE_DEBT_SONATA, STATS_FIELD_RECENT_DEBT, newRecord);
+		return this.addNewRecordToTable(DATABASE_DEBT_SONATA, newRecord);
 	}
 
 	/**
-	 * Adds a new entry to the specified database table.
+	 * Adds a new entry to the specified database table and optionally records an activity log entry.
 	 *
 	 * @param tableName - The corresponding collection name.
 	 * @param newRecord - The new entry to add.
+	 * @param statsField - The statistics field to append the activity entry to; omit to skip logging.
 	 */
-	private async addNewRecordToTable(tableName: string, statsField: string, newRecord: any): Promise<void> {
+	private async addNewRecordToTable(tableName: string, newRecord: any, statsField?: string): Promise<void> {
 		try {
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 			const result = await this.database.collection(tableName).add({
@@ -1198,13 +1164,13 @@ export class CloudbaseService extends DatabaseService {
 			});
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, `${tableName} table has been updated`);
-			/* Fire-and-forget: record table additions in stats so the
-			   home-page Recent Activity widget can surface them immediately. */
-			this.appendToActivityLog(statsField, {
-				type: HISTORY_STATUS_ADDED,
-				text: newRecord.text ?? '',
-				timestamp: Utilities.getCurrentFormattedTime(true)
-			}).catch(() => {});
+			if (statsField) {
+				this.appendToActivityLog(statsField, {
+					type: HISTORY_STATUS_ADDED,
+					text: newRecord.text ?? '',
+					timestamp: Utilities.getCurrentFormattedTime(true)
+				}).catch(() => {});
+			}
 		} catch (error) {
 			LOG.error(this.className, `Error while adding new record to ${tableName}`, error as Error);
 			throw error;
@@ -1251,11 +1217,7 @@ export class CloudbaseService extends DatabaseService {
 			});
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'New quote has been added');
-			// Update statistics: record latest quote and increment total count.
-			await this.statisticsRef.update({
-				latestQuote: { text, author, timestamp },
-				totalQuotes: this._.inc(1)
-			});
+			await this.statisticsRef.update({ totalQuotes: this._.inc(1) });
 			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
 				type: HISTORY_STATUS_ADDED,
 				author,
@@ -1284,18 +1246,9 @@ export class CloudbaseService extends DatabaseService {
 			} else {
 				await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
 			}
-			/* Re-query remaining quotes so that latestQuote always reflects
-			   the most recently added quote still in the collection. */
-			const remaining = await this.database.collection(DATABASE_QUOTES).limit(1000).get();
-			const quotes: any[] = remaining.data ?? [];
-			quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
-			const latest = quotes[0];
 			const deletedTimestamp = Utilities.getCurrentFormattedTime(true);
 			await this.statisticsRef.update({
 				totalQuotes: this._.inc(-1),
-				latestQuote: latest
-					? { text: latest.text, author: latest.author, timestamp: latest.timestamp }
-					: null,
 				lastQuoteDeleted: { text, author, timestamp: deletedTimestamp }
 			});
 			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {

@@ -790,10 +790,8 @@ export class FirebaseService extends DatabaseService {
 		try {
 			await push(dbRef(this.db, DATABASE_QUOTES), { text, author, timestamp });
 			LOG.info(this.className, 'New quote has been added');
-			// Update statistics: record latest quote and increment total count.
 			await runTransaction(this.statisticsRef, (currentData) => {
 				currentData = currentData ?? {};
-				currentData.latestQuote = { text, author, timestamp };
 				currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
 				return currentData;
 			});

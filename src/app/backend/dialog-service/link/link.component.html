@@ -1,0 +1,78 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	appendTo="body"
+	[resizable]="false"
+	[closable]="false"
+	(onHide)="onDialogClosed()"
+	styleClass="link-dialog">
+	<ng-template #header>
+		<span class="link-dialog-title">{{
+			isEditMode ? NEXUS_DIALOG_TITLE_EDIT_LINK : NEXUS_DIALOG_TITLE_ADD_LINK
+		}}</span>
+	</ng-template>
+
+	<div class="link-dialog-field">
+		<span class="link-dialog-label">URL *</span>
+		<input
+			type="url"
+			[(ngModel)]="url"
+			placeholder="https://example.com"
+			autocomplete="off"
+			(keyup.enter)="onUrlConfirm()"
+			(blur)="onUrlConfirm()" />
+	</div>
+
+	@if (faviconPreview) {
+		<div class="link-dialog-favicon-preview">
+			<img [src]="faviconPreview" alt="Site icon" class="link-dialog-favicon-image" />
+			<span class="link-dialog-favicon-label">{{ title || LINK_DIALOG_LABEL_TITLE_LOADING }}</span>
+		</div>
+	}
+
+	<div class="link-dialog-field">
+		<span class="link-dialog-label">
+			Title *
+			@if (metaLoading) {
+				<span class="link-dialog-meta-loading">fetching…</span>
+			}
+		</span>
+		<input
+			type="text"
+			[(ngModel)]="title"
+			placeholder="My favourite resource"
+			autocomplete="off" />
+	</div>
+
+	<div class="link-dialog-field">
+		<span class="link-dialog-label">Category *</span>
+		<p-select
+			[options]="categories"
+			optionLabel="name"
+			optionValue="_id"
+			[appendTo]="'body'"
+			placeholder="Select a category"
+			panelStyleClass="dropdown-panel-font"
+			[(ngModel)]="category" />
+	</div>
+
+	<div class="link-dialog-field link-dialog-field-checkbox">
+		<input
+			type="checkbox"
+			id="linkDialogIsPinned"
+			class="link-dialog-checkbox"
+			[(ngModel)]="isPinned" />
+		<label for="linkDialogIsPinned" class="link-dialog-label link-dialog-label-checkbox">
+			{{ NEXUS_LABEL_PIN_TO_DASHBOARD }}
+		</label>
+	</div>
+
+	<ng-template #footer>
+		<button class="link-dialog-button-ghost" (click)="onDialogClosed()">
+			{{ LINK_DIALOG_LABEL_CANCEL }}
+		</button>
+		<button class="link-dialog-button-gradient" [disabled]="!isValid" (click)="onSubmit()">
+			{{ isEditMode ? LINK_DIALOG_LABEL_SAVE : LINK_DIALOG_LABEL_ADD }}
+		</button>
+	</ng-template>
+</p-dialog>

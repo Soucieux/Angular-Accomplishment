@@ -15,6 +15,7 @@ import {
 	DIALOG_DEBT,
 	DIALOG_ERROR,
 	DIALOG_HISTORY,
+	DIALOG_LINK,
 	DIALOG_RECIPE_TYPE,
 	ERROR_PERMISSION_DENIED,
 	MSG_DIALOG_ALREADY_OPEN,
@@ -30,6 +31,8 @@ import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
 import { Utilities } from '../../common/app.utilities';
 import { AddDebtDialogComponent } from './debt/debt.component';
 import { NewDebtData } from '../../fontend/debt/debt.model';
+import { LinkDialogComponent } from './link/link.component';
+import { NewLinkData } from '../../fontend/nexus/nexus.model';
 @Injectable({
 	providedIn: 'root'
 })
@@ -63,6 +66,8 @@ export class DialogService {
 				return RecipeTypeDialogComponent;
 			case DIALOG_DEBT:
 				return AddDebtDialogComponent;
+			case DIALOG_LINK:
+				return LinkDialogComponent;
 			default:
 				throw new Error(MSG_INVALID_DIALOG_TYPE);
 		}
@@ -117,6 +122,13 @@ export class DialogService {
 		dialogType: 'debt',
 		submitCallback: (data: NewDebtData) => void,
 		prefillData: Partial<NewDebtData> | null
+	): void;
+
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'link',
+		submitCallback: (data: NewLinkData) => void,
+		prefillData: Partial<NewLinkData> | null
 	): void;
 
 	/**

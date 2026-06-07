@@ -27,6 +27,7 @@ import {
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_DATE_CALCULATOR,
+	DIALOG_BLOCK,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
 	DIALOG_CONFIRM,
@@ -44,9 +45,7 @@ import {
 	NEXUS_MSG_RESET_CONFIRM,
 	REMINDER_TABLE_DATE_CALCULATOR,
 	STATS_FIELD_RECENT_REMINDER,
-	NEXUS_DIALOG_TITLE_ADD_LINK,
-	NEXUS_DIALOG_TITLE_EDIT_LINK,
-	NEXUS_LABEL_PIN_TO_DASHBOARD,
+	DIALOG_LINK,
 	NEXUS_DEFAULT_CATEGORY_COLOR,
 	NEXUS_MSG_CATEGORY_ADDED,
 	NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL,
@@ -66,17 +65,16 @@ import {
 	NEXUS_MSG_LINK_UPDATED,
 	NEXUS_MSG_LOAD_CATEGORIES_FAILED,
 	NEXUS_MSG_LOAD_LINKS_FAILED,
-	NEXUS_MSG_MISSING_FIELDS,
-	NEXUS_MSG_MISSING_FIELDS_DETAIL,
 	NEXUS_MSG_NAME_REQUIRED,
 	NEXUS_MSG_SAVE_CATEGORY_FAILED,
 	NEXUS_MSG_SAVE_LINK_FAILED,
+	NEXUS_MSG_SAVING_LINK,
 	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
 	TOAST_WARN
 } from '../../common/app.constant';
-import { AiTool, NexusCategory, NexusLink, NEXUS_AI_TOOLS, NEXUS_LOGO_FALLBACK_COLORS } from './nexus.model';
+import { AiTool, NewLinkData, NexusCategory, NexusLink, NEXUS_AI_TOOLS, NEXUS_LOGO_FALLBACK_COLORS } from './nexus.model';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
@@ -104,7 +102,6 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private dialogComponentContainer!: ViewContainerRef;
 
 	protected readonly NEXUS_CATEGORY_ALL = NEXUS_CATEGORY_ALL;
-	protected readonly NEXUS_LABEL_PIN_TO_DASHBOARD = NEXUS_LABEL_PIN_TO_DASHBOARD;
 	protected readonly NEXUS_LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
 	protected readonly aiTools: AiTool[] = [...NEXUS_AI_TOOLS];
 	// Date Calculator constants re-exposed for the template
@@ -138,13 +135,6 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected selectedCategory = NEXUS_CATEGORY_ALL;
 	protected linkSearch = '';
 	protected linkSearchVisible = false;
-
-	protected showLinkDialog = false;
-	protected linkDialogTitle = NEXUS_DIALOG_TITLE_ADD_LINK;
-	protected editingLink: NexusLink | null = null;
-	protected linkForm = { url: '', title: '', category: '', isPinned: false };
-	protected linkFaviconPreview = '';
-	protected linkMetaLoading = false;
 
 	protected showCategoryDialog = false;
 	protected categoryForm = { name: '', color: NEXUS_DEFAULT_CATEGORY_COLOR };
@@ -724,114 +714,81 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Opens the Add Link dialog with a blank form.
+	 * Opens the Add Link dialog with a blank form via DialogService.
 	 */
 	protected openAddLinkDialog(): void {
-		this.editingLink = null;
-		this.linkDialogTitle = NEXUS_DIALOG_TITLE_ADD_LINK;
-		this.linkForm = {
-			url: '',
-			title: '',
-			category: this.selectedCategory !== NEXUS_CATEGORY_ALL ? this.selectedCategory : '',
-			isPinned: false
-		};
-		this.linkFaviconPreview = '';
-		this.showLinkDialog = true;
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_LINK,
+			(formData) => this.handleLinkSave(formData, null),
+			null
+		);
 	}
 
 	/**
-	 * Opens the Edit Link dialog pre-filled with an existing link's data.
+	 * Opens the Edit Link dialog pre-filled with the given link's data via DialogService.
 	 *
 	 * @param link - The link document to edit.
 	 * @param event - The click event, stopped to prevent the card click from firing.
 	 */
 	protected openEditLinkDialog(link: NexusLink, event: Event): void {
 		event.stopPropagation();
-		this.editingLink = link;
-		this.linkDialogTitle = NEXUS_DIALOG_TITLE_EDIT_LINK;
-		this.linkForm = { url: link.url, title: link.title, category: link.category ?? '', isPinned: link.isPinned ?? false };
-		this.linkFaviconPreview = Utilities.getFavicon(link.url);
-		this.showLinkDialog = true;
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_LINK,
+			(formData) => this.handleLinkSave(formData, link),
+			{ url: link.url, title: link.title, category: link.category ?? '', isPinned: link.isPinned ?? false }
+		);
 	}
 
 	/**
-	 * Normalizes the entered URL, updates the favicon preview, and fetches the page title
-	 * when the URL is confirmed via Enter key or focus leaving the field.
+	 * Persists a new or updated link to the database.
+	 * Runs inside a block dialog so the UI is locked during the async operation.
+	 *
+	 * @param formData - The validated link fields submitted by the dialog.
+	 * @param existingLink - The existing DB record when editing, or null when adding.
 	 */
-	protected onLinkUrlConfirm(): void {
-		const rawUrl = this.linkForm.url.trim();
-		if (!rawUrl) return;
-		const url = Utilities.normalizeUrl(rawUrl);
-		this.linkForm.url = url;
-		this.linkFaviconPreview = Utilities.getFavicon(url);
-		// Auto-fetch page title only when the user hasn't typed one yet — avoids overwriting manual input
-		if (this.linkForm.title) return;
-		if (this.linkMetaLoading) return;
-		this.linkMetaLoading = true;
-		this.databaseService
-			.proxyFetch(url)
-			.then((fetchResult) => {
-				// Extract the <title> tag value from the raw HTML; use it as a convenience pre-fill
-				const match = fetchResult.content?.match(/<title[^>]*>([^<]+)<\/title>/i);
-				if (match?.[1]) this.linkForm.title = match[1].trim();
-				this.linkMetaLoading = false;
-				// markForCheck required: .then() callback runs outside Angular's zone.
-				this.cdr.markForCheck();
-			})
-			.catch((error) => {
-				LOG.error(
-					this.className,
-					`Could not fetch page title for ${url}: ${Utilities.safeErrorMessage(error)}`
-				);
-				this.linkMetaLoading = false;
-			});
-	}
-
-	/**
-	 * Validates the link form and persists the add or update to CloudBase.
-	 * Shows a warning toast when required fields are missing.
-	 */
-	protected async saveLinkDialog(): Promise<void> {
-		const { url, title, category, isPinned } = this.linkForm;
-		if (!url.trim() || !title.trim() || !category) {
-			this.dialogService.showToast(
-				TOAST_WARN,
-				NEXUS_MSG_MISSING_FIELDS,
-				NEXUS_MSG_MISSING_FIELDS_DETAIL
-			);
-			return;
-		}
-		const finalUrl = Utilities.normalizeUrl(url.trim());
-		try {
-			if (this.editingLink) {
-				await this.databaseService.updateUsefulLink(this.editingLink._id, {
-					url: finalUrl,
-					title: title.trim(),
-					category,
-					isPinned
-				});
-				LOG.info(this.className, `Link updated: ${finalUrl}`);
-				this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_UPDATED);
-			} else {
-				await this.databaseService.addUsefulLink({
-					url: finalUrl,
-					title: title.trim(),
-					category,
-					visitCount: 0,
-					createdAt: new Date().toISOString(),
-					isPinned
-				});
-				LOG.info(this.className, `Link saved: ${finalUrl}`);
-				this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_SAVED);
+	private handleLinkSave(formData: NewLinkData, existingLink: NexusLink | null): void {
+		this.openBlockDialog(async () => {
+			const finalUrl = Utilities.normalizeUrl(formData.url);
+			try {
+				if (existingLink) {
+					await this.databaseService.updateUsefulLink(existingLink._id, {
+						url: finalUrl,
+						title: formData.title,
+						category: formData.category,
+						isPinned: formData.isPinned
+					});
+					LOG.info(this.className, `Link updated: ${finalUrl}`);
+					this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_UPDATED);
+				} else {
+					await this.databaseService.addUsefulLink({
+						url: finalUrl,
+						title: formData.title,
+						category: formData.category,
+						visitCount: 0,
+						createdAt: new Date().toISOString(),
+						isPinned: formData.isPinned
+					});
+					LOG.info(this.className, `Link saved: ${finalUrl}`);
+					this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_SAVED);
+				}
+			} catch (error) {
+				LOG.error(this.className, NEXUS_MSG_SAVE_LINK_FAILED, error as Error);
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, NEXUS_MSG_LINK_SAVE_FAILED_DETAIL);
 			}
-			this.showLinkDialog = false;
-			// detectChanges required: CloudBase async resolution escapes Angular's zone, so
-			// markForCheck alone never triggers a CD cycle — detectChanges forces it immediately.
-			this.cdr.detectChanges();
-		} catch (error) {
-			LOG.error(this.className, NEXUS_MSG_SAVE_LINK_FAILED, error as Error);
-			this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, NEXUS_MSG_LINK_SAVE_FAILED_DETAIL);
-		}
+		}, NEXUS_MSG_SAVING_LINK).catch(() => {});
+	}
+
+	/**
+	 * Opens a blocking progress dialog that prevents user interaction while the
+	 * given async callback executes. Used during link save and update flows.
+	 *
+	 * @param callback - The async operation to run while the dialog is shown.
+	 * @param message - The status message displayed inside the dialog.
+	 */
+	private openBlockDialog(callback: () => Promise<void>, message: string): Promise<void> {
+		return this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_BLOCK, callback, message);
 	}
 
 	/**
@@ -876,13 +833,6 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected selectCategory(categoryId: string): void {
 		this.selectedCategory = categoryId;
-	}
-
-	/**
-	 * Closes the Add/Edit Link dialog.
-	 */
-	protected closeLinkDialog(): void {
-		this.showLinkDialog = false;
 	}
 
 	/**

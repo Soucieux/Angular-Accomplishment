@@ -64,7 +64,9 @@
 }
 
 @keyframes nexus-save-spin {
-	to { transform: rotate(360deg); }
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .save-indicator-spinner {
@@ -1081,6 +1083,7 @@
 	letter-spacing: 0;
 	font-size: 13px;
 	cursor: pointer;
+	margin-bottom: 0;
 }
 
 .favicon-preview {
@@ -1295,7 +1298,6 @@
 		width: 18px;
 		height: 18px;
 	}
-
 }
 
 @media (max-width: 940px) {
@@ -1386,4 +1388,3 @@
 		left: 0 !important;
 	}
 }
-

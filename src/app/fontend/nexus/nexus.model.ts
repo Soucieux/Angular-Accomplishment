@@ -1,3 +1,11 @@
+/** Form data submitted when adding or editing a useful link. */
+export interface NewLinkData {
+	url: string;
+	title: string;
+	category: string;
+	isPinned: boolean;
+}
+
 export interface AiTool {
 	id: string;
 	name: string;

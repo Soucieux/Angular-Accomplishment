@@ -16,6 +16,7 @@ import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
@@ -89,7 +90,8 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		DialogModule,
 		TableModule,
 		SkeletonModule,
-		InputTextModule
+		InputTextModule,
+		SelectModule
 	],
 	templateUrl: './nexus.component.html',
 	styleUrls: ['../../common/glass-card.css', './nexus.component.css']

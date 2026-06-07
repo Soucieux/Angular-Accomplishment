@@ -157,6 +157,8 @@ export const CN = 'CN';
 export const SEARCH = 'search';
 export const SUCCESS = 'success';
 export const FAILURE = 'failure';
+/** Window target for opening links in a new browser tab. */
+export const LINK_TARGET_BLANK = '_blank';
 
 ////////////////////// Below are activity log type discriminator constants ////////////
 /* Type discriminators written into activity-log entries across all pages.
@@ -312,6 +314,14 @@ export const HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_TEXT_LIGHT = '#3a1226';
 export const HOME_WEEK_AGENDA_COLOR_DAY_TEXT_LIGHT = '#6a2a48';
 export const HOME_WEEK_AGENDA_COLOR_DOT_DARK = '#7dd3fc';
 export const HOME_WEEK_AGENDA_COLOR_DOT_LIGHT = '#d53369';
+export const HOME_WEEK_AGENDA_DUE_HEADER_COLOR = 'rgba(255,255,255,0.55)';
+export const HOME_WEEK_AGENDA_EMPTY_TEXT = 'Nothing due — an open day.';
+export const HOME_RING_GRADIENT_ID_PREFIX = 'rg';
+export const HOME_RING_TRACK_DEFAULT = 'rgba(255,255,255,0.12)';
+export const HOME_CONCENTRIC_TRACK_DEFAULT = 'rgba(255,255,255,0.10)';
+export const HOME_ORBITAL_PANEL_SCROLL_SELECTOR = '.orbital-panel-scroll';
+/** SimpleChanges key for the stats @Input on OrbitalComponent. */
+export const HOME_ORBITAL_CHANGES_KEY_STATS = 'stats';
 
 ////////////////////// Below are entertainment page constants ////////////////////////
 /** Prefix for the delete-movie confirm message; movie name is appended at the call site. */

@@ -16,13 +16,13 @@
 	display: block;
 }
 
-.container {
+.container-resonance {
 	min-width: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	min-height: calc(100dvh - 10px);
-	padding: 20px 20px 10px;
+	padding: 10px 20px;
 }
 
 /* ─────────────────────────────────────────
@@ -601,8 +601,8 @@
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
-	.container {
-		padding: 20px 10px 10px;
+	.container-resonance {
+		padding: 10px;
 	}
 
 	.page-title {

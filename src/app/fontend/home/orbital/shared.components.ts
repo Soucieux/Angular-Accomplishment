@@ -1,5 +1,8 @@
 import { Component, Input, ViewEncapsulation, inject } from '@angular/core';
 import {
+	HOME_CONCENTRIC_TRACK_DEFAULT,
+	HOME_RING_GRADIENT_ID_PREFIX,
+	HOME_RING_TRACK_DEFAULT,
 	HOME_WEEK_AGENDA_BORDER_COLOR_DARK,
 	HOME_WEEK_AGENDA_BORDER_COLOR_LIGHT,
 	HOME_WEEK_AGENDA_BORDER_TRANSPARENT,
@@ -19,6 +22,8 @@ import {
 	HOME_WEEK_AGENDA_COLOR_TEXT_DARK,
 	HOME_WEEK_AGENDA_COLOR_TEXT_LIGHT,
 	HOME_WEEK_AGENDA_COLOR_TODAY_TEXT,
+	HOME_WEEK_AGENDA_DUE_HEADER_COLOR,
+	HOME_WEEK_AGENDA_EMPTY_TEXT,
 	HOME_WEEK_AGENDA_GRADIENT_TODAY
 } from '../../../common/app.constant';
 import { OrbitalAgendaItem, OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
@@ -40,10 +45,10 @@ export function hexToRgba(hex: string, alpha: number): string {
 	return `rgba(${red},${green},${blue},${alpha})`;
 }
 
-////////////////////// Below is VcRing — single gradient SVG progress ring ///
+////////////////////// Below is Ring — single gradient SVG progress ring /////
 
 @Component({
-	selector: 'vc-ring',
+	selector: 'ring',
 	standalone: true,
 	template: `
 		<div class="wrap" [style.width.px]="size" [style.height.px]="size">
@@ -96,22 +101,22 @@ export function hexToRgba(hex: string, alpha: number): string {
 		`
 	]
 })
-export class VcRing {
-	readonly gradientId = 'rg' + ringIdCounter++;
+export class Ring {
+	protected readonly gradientId = HOME_RING_GRADIENT_ID_PREFIX + ringIdCounter++;
 
 	@Input() percentage = 0;
 	@Input() size = 120;
 	@Input() stroke = 10;
 	@Input() gradientStart = '#d53369';
 	@Input() gradientEnd = '#daae51';
-	@Input() track = 'rgba(255,255,255,0.12)';
+	@Input() track = HOME_RING_TRACK_DEFAULT;
 
 	/**
 	 * Gets the radius of the progress circle adjusted for stroke width.
 	 *
 	 * @returns The effective circle radius in pixels.
 	 */
-	get radius(): number {
+	protected get radius(): number {
 		return (this.size - this.stroke) / 2;
 	}
 
@@ -120,7 +125,7 @@ export class VcRing {
 	 *
 	 * @returns The circumference in pixels.
 	 */
-	get circumference(): number {
+	protected get circumference(): number {
 		return 2 * Math.PI * this.radius;
 	}
 
@@ -129,17 +134,17 @@ export class VcRing {
 	 *
 	 * @returns The dashoffset value for the SVG stroke animation.
 	 */
-	get dashOffset(): number {
+	protected get dashOffset(): number {
 		return this.circumference * (1 - Math.min(100, Math.max(0, this.percentage)) / 100);
 	}
 }
 
-////////////////////// Below is VcConcentric — stacked rings per metric //////
+////////////////////// Below is Concentric — stacked rings per metric ////////
 
 @Component({
-	selector: 'vc-concentric',
+	selector: 'concentric',
 	standalone: true,
-	imports: [VcRing],
+	imports: [Ring],
 	template: `
 		<div class="wrap" [style.width.px]="size" [style.height.px]="size">
 			@for (metric of metrics; track metric.key; let i = $index) {
@@ -147,13 +152,13 @@ export class VcRing {
 					class="ring"
 					[style.top.px]="(size - computeRingSize(i)) / 2"
 					[style.left.px]="(size - computeRingSize(i)) / 2">
-					<vc-ring
+					<ring
 						[percentage]="metric.percentage"
 						[size]="computeRingSize(i)"
 						[stroke]="stroke"
 						[gradientStart]="metric.gradientStart"
 						[gradientEnd]="metric.gradientEnd"
-						[track]="track"></vc-ring>
+						[track]="track"></ring>
 				</div>
 			}
 			<div class="center"><ng-content></ng-content></div>
@@ -180,12 +185,12 @@ export class VcRing {
 		`
 	]
 })
-export class VcConcentric {
+export class Concentric {
 	@Input() metrics: OrbitalProgressMetric[] = [];
 	@Input() size = 200;
 	@Input() stroke = 11;
 	@Input() gap = 5;
-	@Input() track = 'rgba(255,255,255,0.10)';
+	@Input() track = HOME_CONCENTRIC_TRACK_DEFAULT;
 
 	/**
 	 * Gets the pixel diameter of the ring at the given stack index.
@@ -198,10 +203,10 @@ export class VcConcentric {
 	}
 }
 
-////////////////////// Below is VcWeekAgenda — day strip and agenda list /////
+////////////////////// Below is WeekAgenda — day strip and agenda list ///////
 
 @Component({
-	selector: 'vc-week-agenda',
+	selector: 'week-agenda',
 	standalone: true,
 	encapsulation: ViewEncapsulation.None,
 	template: `
@@ -223,7 +228,7 @@ export class VcConcentric {
 			}
 		</div>
 		<div class="week-agenda-due">
-			<span class="week-agenda-due-header" style="color:rgba(255,255,255,0.55)">Due</span>
+			<span class="week-agenda-due-header" [style.color]="HOME_WEEK_AGENDA_DUE_HEADER_COLOR">Due</span>
 			<span class="week-agenda-due-date" [style.color]="getSubtitleColor()">{{
 				d.selectedDateLong()
 			}}</span>
@@ -231,7 +236,7 @@ export class VcConcentric {
 		<div class="week-agenda-list">
 			@if (d.agenda().length === 0) {
 				<div class="week-agenda-empty" [style.color]="getSubtitleColor()">
-					Nothing due — an open day.
+					{{ HOME_WEEK_AGENDA_EMPTY_TEXT }}
 				</div>
 			}
 			@for (agendaItem of d.agenda(); track agendaItem.name) {
@@ -253,7 +258,7 @@ export class VcConcentric {
 	`,
 	styles: [
 		`
-			vc-week-agenda {
+			week-agenda {
 				display: contents;
 			}
 			.week-agenda-strip {
@@ -351,8 +356,11 @@ export class VcConcentric {
 		`
 	]
 })
-export class VcWeekAgenda {
+export class WeekAgenda {
 	protected readonly d = inject(OrbitalStore);
+
+	protected readonly HOME_WEEK_AGENDA_DUE_HEADER_COLOR = HOME_WEEK_AGENDA_DUE_HEADER_COLOR;
+	protected readonly HOME_WEEK_AGENDA_EMPTY_TEXT = HOME_WEEK_AGENDA_EMPTY_TEXT;
 
 	@Input() dark = false;
 

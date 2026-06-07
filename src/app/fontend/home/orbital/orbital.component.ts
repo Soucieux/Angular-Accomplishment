@@ -16,7 +16,7 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../../backend/authentication-service/auth.service';
 import { OrbitalStore } from './orbital.store';
-import { VcConcentric, VcWeekAgenda, hexToRgba } from './shared.components';
+import { Concentric, WeekAgenda, hexToRgba } from './shared.components';
 import {
 	OrbitalAgendaItem,
 	OrbitalActivityRow,
@@ -106,7 +106,10 @@ import {
 	HOME_QUICK_ACTION_ROUTE_RECIPE,
 	HOME_QUICK_ACTION_ROUTE_REMINDER,
 	HOME_QUICK_ACTION_ROUTE_RESONANCE,
+	HOME_ORBITAL_CHANGES_KEY_STATS,
+	HOME_ORBITAL_PANEL_SCROLL_SELECTOR,
 	HOME_REMINDER_ROW_ID_PREFIX,
+	LINK_TARGET_BLANK,
 	SEARCH,
 	STATS_FIELD_DEBT_UPCOMING,
 	STATS_FIELD_GENRE,
@@ -120,7 +123,7 @@ import {
 @Component({
 	selector: 'orbital',
 	standalone: true,
-	imports: [VcConcentric, VcWeekAgenda, AsyncPipe],
+	imports: [Concentric, WeekAgenda, AsyncPipe],
 	templateUrl: './orbital.component.html',
 	styleUrl: './orbital.component.css',
 	providers: [OrbitalStore]
@@ -200,7 +203,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	ngAfterViewInit(): void {
 		this.ngZone.runOutsideAngular(() => {
 			const panels = (this.elementRef.nativeElement as HTMLElement).querySelectorAll<HTMLElement>(
-				'.orbital-panel-scroll'
+				HOME_ORBITAL_PANEL_SCROLL_SELECTOR
 			);
 			panels.forEach((panel) => Utilities.attachScrollAutoHide(panel));
 		});
@@ -212,7 +215,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	 * @param changes - The Angular change record for this cycle.
 	 */
 	ngOnChanges(changes: SimpleChanges): void {
-		if (changes['stats'] && this.stats) {
+		if (changes[HOME_ORBITAL_CHANGES_KEY_STATS] && this.stats) {
 			this.genreBars = this.buildGenreBars();
 			this.reminderRows = this.buildReminderRows();
 			this.debtRows = this.buildDebtRows();
@@ -265,7 +268,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	 * @param link - The NexusLink to open.
 	 */
 	protected openLink(link: NexusLink): void {
-		window.open(link.url, '_blank');
+		window.open(link.url, LINK_TARGET_BLANK);
 		this.linkVisit.emit({ id: link._id, count: (link.visitCount ?? 0) + 1 });
 	}
 
@@ -276,7 +279,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	 * @returns A CSS colour string from the category, or the fallback colour.
 	 */
 	protected getLinkColor(link: NexusLink): string {
-		const category = this.dashCategories.find((cat) => cat._id === link.category);
+		const category = this.dashCategories.find((dashCategory) => dashCategory._id === link.category);
 		return category?.color ?? HOME_LINKS_DOT_FALLBACK;
 	}
 

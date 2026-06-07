@@ -5,10 +5,10 @@
 	display: block;
 }
 
-.container {
+.container-entertainment {
 	min-width: 100%;
 	min-height: calc(100dvh - 10px);
-	padding: 20px 20px 10px;
+	padding: 10px 20px;
 }
 
 .access-denied-wrapper {
@@ -686,8 +686,8 @@
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
-	.container {
-		padding: 20px 10px 10px;
+	.container-entertainment {
+		padding: 10px;
 	}
 
 	.info-swap {

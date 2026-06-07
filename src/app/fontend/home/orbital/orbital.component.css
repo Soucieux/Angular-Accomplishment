@@ -226,7 +226,15 @@
 
 /* ─────────────────────────────────────────
    Stat satellites — glass discs in a ∩ arc
-───────────────────────────────────────── */
+   ───────────────────────────────────────── */
+.orbital-satellite {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 7px;
+	animation: orSatIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .orbital-satellites {
 	position: absolute;
 	top: 250px;
@@ -236,14 +244,6 @@
 	display: flex;
 	justify-content: center;
 	gap: 30px;
-}
-
-.orbital-satellite {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 7px;
-	animation: orSatIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .orbital-satellite-disc {
@@ -362,12 +362,21 @@
 /* ─────────────────────────────────────────
    Central life-clock core
 ───────────────────────────────────────── */
-.orbital-core {
-	position: absolute;
+.orbital-core-concentric-wrapper {
+	position: relative;
+	width: 400px;
+	height: 400px;
 	/* top and left places top-left corner, need transform to move back by half its value*/
 	left: 50%;
 	top: 50%;
 	transform: translate(-50%, -50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.orbital-core {
+	position: absolute;
 	width: 236px;
 	height: 236px;
 	border-radius: 50%;
@@ -408,11 +417,8 @@
 	text-align: center;
 }
 
-.orbital-concentric-wrapper {
+.orbital-concentric {
 	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
 }
 
 /* ─────────────────────────────────────────
@@ -756,18 +762,22 @@
 @media (max-width: 940px) {
 	:host {
 		align-items: flex-start;
-		overflow-y: auto;
-		overflow-x: hidden;
+	}
+
+	.orbital-loading {
+		align-self: center;
 	}
 
 	.orbital-root {
-		transform: none !important;
 		width: 100%;
 		height: 100%;
 		background: linear-gradient(160deg, var(--brand-a) 0%, var(--brand-b) 100%);
 		display: flex;
 		flex-direction: column;
+		align-items: center;
 		gap: 10px;
+		overflow-y: auto;
+		overflow-x: hidden;
 	}
 
 	.orbital-ring-inner,
@@ -779,52 +789,63 @@
 		position: static;
 		width: auto;
 		text-align: center;
-		font-size: 16px;
+		font-size: 22px;
 		letter-spacing: 3px;
 	}
 
 	.orbital-greeting {
 		position: static;
-		font-size: 12px;
+		font-size: 15px;
+		line-height: 1.8;
+		text-align: center;
 	}
 
 	.orbital-quick-actions {
 		position: static;
+		transform: none;
 		width: 100%;
-		justify-content: flex-start;
+		justify-content: center;
 		gap: 6px;
 		flex-wrap: wrap;
+		margin: 20px;
 	}
 
 	.orbital-links {
 		position: static;
+		transform: none;
+		justify-content: center;
 		width: 100%;
-		justify-content: flex-start;
 		gap: 6px;
 	}
 
-	.orbital-core {
-		position: static;
-		align-self: center;
-		width: 200px;
-		height: 200px;
-		margin: 8px 0;
-	}
-
 	.orbital-satellites {
+		position: static;
+		transform: none;
 		width: 100%;
+		margin: 20px 0;
 		flex-wrap: wrap;
 		justify-content: center;
 	}
 
-	.orbital-satellite {
-		transform: none !important;
+	.orbital-core-concentric-wrapper {
+		position: relative;
+		left: 0;
+		top: 0;
+		transform: none;
+		display: grid;
+	}
+
+	.orbital-core,
+	.orbital-concentric {
+		position: relative;
+		grid-area: 1 / 1;
+		place-self: center;
 	}
 
 	.orbital-glass {
 		position: static;
 		width: 100%;
-		height: auto;
+		height: 220px;
 	}
 
 	.orbital-entertainment,
@@ -838,5 +859,37 @@
 		right: auto;
 		top: auto;
 		bottom: auto;
+	}
+
+	.orbital-week {
+		transform: none;
+		overflow: visible;
+	}
+
+	/* Panel display order on mobile */
+	.orbital-week {
+		order: 1;
+	}
+	.orbital-reminders {
+		order: 2;
+	}
+	.orbital-debt-sonata {
+		order: 3;
+	}
+	.orbital-entertainment {
+		order: 4;
+	}
+	.orbital-recipes {
+		order: 5;
+	}
+	.orbital-quick-links {
+		order: 6;
+	}
+	.orbital-activity {
+		order: 7;
+	}
+
+	.orbital-quick-links .orbital-panel-scroll .orbital-saved-link-row:nth-child(n + 9) {
+		display: none;
 	}
 }

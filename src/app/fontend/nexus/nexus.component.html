@@ -295,12 +295,14 @@
 		</div>
 		<div class="form-field">
 			<label class="form-label">Category *</label>
-			<select class="form-select" [(ngModel)]="linkForm.category">
-				<option value="" disabled>Select a category</option>
-				@for (cat of categories; track cat._id) {
-					<option [value]="cat._id">{{ cat.name }}</option>
-				}
-			</select>
+			<p-select
+				[options]="categories"
+				optionLabel="name"
+				optionValue="_id"
+				[appendTo]="'body'"
+				placeholder="Select a category"
+				panelStyleClass="dropdown-panel-font"
+				[(ngModel)]="linkForm.category"></p-select>
 		</div>
 		<div class="form-field form-field-checkbox">
 			<input

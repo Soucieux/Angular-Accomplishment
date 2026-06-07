@@ -5,18 +5,18 @@
 /* ─────────────────────────────────────────
    Container — full viewport, flex column
 ───────────────────────────────────────── */
-.container {
+.container-home {
 	display: flex;
 	flex-direction: column;
 	position: relative;
 	border-radius: 10px;
 	min-width: 100%;
 	min-height: calc(100dvh - 10px);
-	padding: 20px 20px 10px;
+	padding: 10px 20px;
 	overflow: hidden;
 }
 
-.container:has(orbital) {
+.container-home:has(orbital) {
 	padding: 0;
 	border-radius: 0;
 	height: 100%;
@@ -24,7 +24,7 @@
 }
 
 /* Floating orb top-right */
-.container::before {
+.container-home::before {
 	content: '';
 	position: absolute;
 	width: 560px;
@@ -39,7 +39,7 @@
 }
 
 /* Floating orb bottom-left */
-.container::after {
+.container-home::after {
 	content: '';
 	position: absolute;
 	width: 440px;
@@ -336,8 +336,8 @@
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
-	.container {
-		padding: 20px 10px 10px;
+	.container-home {
+		padding: 10px;
 		min-height: calc(100dvh - 10px);
 	}
 

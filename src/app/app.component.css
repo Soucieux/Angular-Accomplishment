@@ -19,7 +19,7 @@ mat-drawer {
 }
 
 mat-drawer-content {
-	padding: 4px 4px 4px 6px;
+	padding: 4px 4px 4px 8px;
 	box-sizing: border-box;
 	margin-left: 226px !important;
 	transition: margin-left 0s !important;
@@ -38,7 +38,7 @@ mat-drawer-content {
 /* ── Nav list ────────────────────────────────────────────────────────────── */
 .nav-list {
 	list-style-type: none;
-	padding: 0px;
+	padding: 0;
 	display: flex;
 	flex-direction: column;
 	height: calc(100% - 16px);
@@ -474,7 +474,7 @@ mat-drawer.nav-collapsed {
 }
 
 .nav-collapsed .nav-title {
-	padding: 0px;
+	padding: 0;
 }
 
 .nav-collapsed .nav-toggle-btn {
@@ -484,7 +484,7 @@ mat-drawer.nav-collapsed {
 
 .nav-collapsed .nav-toggle-icon {
 	font-size: 24px;
-	margin: 0px;
+	margin: 0;
 }
 
 .nav-collapsed .nav-label,
@@ -538,7 +538,7 @@ mat-drawer.nav-collapsed {
    was collapsed or expanded before the viewport narrowed. The rules below
    mirror the .nav-collapsed rules above — one rule per element — so both
    paths reach the same visual result on mobile. */
-@media (max-width: 900px) {
+@media (max-width: 940px) {
 	mat-drawer {
 		width: 35px !important;
 	}
@@ -546,7 +546,7 @@ mat-drawer.nav-collapsed {
 	/* Derived from .nav-collapsed .nav-button */
 	.nav-button {
 		width: 100% !important;
-		min-width: 0px !important;
+		min-width: 0 !important;
 		padding: 0 !important;
 		margin: 2px 0 !important;
 	}
@@ -575,7 +575,7 @@ mat-drawer.nav-collapsed {
 	}
 
 	.account-menu-container {
-		padding: 0px !important;
+		padding: 0 !important;
 		height: 40px;
 		margin-bottom: 5px;
 	}

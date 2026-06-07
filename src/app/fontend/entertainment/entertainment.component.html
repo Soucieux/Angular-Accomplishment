@@ -1,7 +1,7 @@
 @let stats = statistics$ | async;
 @let selectedGenre = selectedGenres$ | async;
 @if (utilities.getIsUserAlive() && stats !== null) {
-	<div class="container">
+	<div class="container-entertainment">
 		<div class="top-bar">
 			<div class="top-bar-left">
 				<h1 class="bar-title">{{ ENT_TITLE_PAGE }}</h1>
@@ -126,7 +126,7 @@
 											optionValue="genre"
 											[appendTo]="'body'"
 											class="dropdown"
-											panelStyleClass="dropdown-panel"
+											panelStyleClass="dropdown-panel-font"
 											[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
 									} @else {
 										{{ movie.getMovieGenre() }}

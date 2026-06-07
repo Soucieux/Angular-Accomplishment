@@ -40,20 +40,6 @@
 			}
 		</div>
 
-		<!-- Central life-clock core -->
-		<div class="orbital-core">
-			<div class="orbital-core-content">
-				<div class="orbital-hour-minute">{{ d.hourMinute() }}</div>
-				<div class="orbital-seconds">{{ d.seconds() }}</div>
-				<div class="orbital-core-label">LIFE CLOCK</div>
-			</div>
-		</div>
-
-		<!-- Concentric progress rings around the core -->
-		<div class="orbital-concentric-wrapper">
-			<vc-concentric [metrics]="d.progress()" [size]="376" [stroke]="12" [gap]="6"></vc-concentric>
-		</div>
-
 		<!-- Stat satellites -->
 		<div class="orbital-satellites">
 			<div class="orbital-satellite">
@@ -84,6 +70,20 @@
 				</div>
 				<div class="orbital-satellite-label">Recipes</div>
 			</div>
+		</div>
+
+		<div class="orbital-core-concentric-wrapper">
+			<!-- Central life-clock core -->
+			<div class="orbital-core">
+				<div class="orbital-core-content">
+					<div class="orbital-hour-minute">{{ d.hourMinute() }}</div>
+					<div class="orbital-seconds">{{ d.seconds() }}</div>
+					<div class="orbital-core-label">LIFE CLOCK</div>
+				</div>
+			</div>
+
+			<!-- Concentric progress rings around the core -->
+			<concentric class="orbital-concentric" [metrics]="d.progress()" [size]="376" [stroke]="12" [gap]="6"></concentric>
 		</div>
 
 		<!-- ── Entertainment panel (left top) ───────────────────────── -->
@@ -237,7 +237,7 @@
 
 		<!-- ── This-week agenda panel (bottom centre) ────────────────── -->
 		<div class="orbital-glass orbital-week">
-			<vc-week-agenda></vc-week-agenda>
+			<week-agenda></week-agenda>
 		</div>
 	</div>
 }

@@ -17,7 +17,7 @@
 	animation: containerReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 	min-width: 100%;
 	height: 100%;
-	padding: 20px 20px 10px;
+	padding: 10px 20px;
 	overflow-y: auto;
 	overflow-x: hidden;
 	scrollbar-width: thin;
@@ -68,6 +68,6 @@
 
 @media (max-width: 940px) {
 	.glass-card {
-		padding: 20px 10px 10px;
+		padding: 10px;
 	}
 }

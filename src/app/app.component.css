@@ -7,6 +7,7 @@ mat-drawer-container {
 }
 
 mat-drawer {
+	width: 226px;
 	text-align: center;
 	border-radius: 10px;
 	margin: 4px;
@@ -20,8 +21,18 @@ mat-drawer {
 mat-drawer-content {
 	padding: 4px 4px 4px 6px;
 	box-sizing: border-box;
-	margin-left: var(--drawer-width, 226px) !important;
+	margin-left: 226px !important;
 	transition: margin-left 0s !important;
+}
+
+/* Content margin when the nav panel is collapsed to icon-only width */
+.nav-content-collapsed {
+	margin-left: 65px !important;
+}
+
+/* Content margin on mobile (≤ 900px) when the nav is expanded */
+.nav-content-mobile {
+	margin-left: 35px !important;
 }
 
 /* ── Nav list ────────────────────────────────────────────────────────────── */
@@ -31,6 +42,8 @@ mat-drawer-content {
 	display: flex;
 	flex-direction: column;
 	height: calc(100% - 16px);
+	position: relative;
+	width: 100%;
 }
 
 .nav-item {
@@ -221,10 +234,13 @@ li:nth-child(10) .nav-icon {
 /* ── Account section ─────────────────────────────────────────────────────── */
 .account-menu-container {
 	margin-top: auto;
+	position: relative;
+	width: 100%;
 }
 
 .account-row-wrapper {
 	position: relative;
+	width: 100%;
 }
 
 /* ── Account popover ─────────────────────────────────────────────────────── */
@@ -481,8 +497,8 @@ mat-drawer.nav-collapsed {
 }
 
 .nav-collapsed .nav-icon {
-	font-size: 22px;
-	margin-left: 8px;
+	font-size: 25px;
+	margin-left: 6px;
 }
 
 .nav-collapsed .nav-button {
@@ -518,24 +534,42 @@ mat-drawer.nav-collapsed {
 }
 
 /* ── Mobile ──────────────────────────────────────────────────────────────── */
-@media (max-width: 940px) {
+/* Mobile always renders the icon-only layout regardless of whether the panel
+   was collapsed or expanded before the viewport narrowed. The rules below
+   mirror the .nav-collapsed rules above — one rule per element — so both
+   paths reach the same visual result on mobile. */
+@media (max-width: 900px) {
+	mat-drawer {
+		width: 35px !important;
+	}
+
+	/* Derived from .nav-collapsed .nav-button */
 	.nav-button {
 		width: 100% !important;
 		min-width: 0px !important;
 		padding: 0 !important;
-		margin: 0 !important;
+		margin: 2px 0 !important;
 	}
 
+	/* Derived from .nav-collapsed .nav-icon */
 	.nav-icon {
-		font-size: 22px !important;
-		margin-left: 7px !important;
+		font-size: 25px !important;
+		margin-left: 6px !important;
+	}
+
+	/* Angular Material's mat-button wraps projected content in span.mdc-button__label.
+	   Our icon lives inside that span, so justify-content on .nav-button doesn't
+	   reach it directly. Center it here for both open and collapsed mobile states. */
+	::ng-deep .nav-button .mdc-button__label {
+		padding-right: 5px;
+		justify-content: center;
 	}
 
 	.nav-button:hover {
 		box-shadow: none !important;
 	}
 
-	/* Requirement 2 — remove the left-border active indicator on mobile */
+	/* Remove the left-border active indicator on mobile */
 	.nav-active {
 		box-shadow: none !important;
 	}
@@ -546,26 +580,34 @@ mat-drawer.nav-collapsed {
 		margin-bottom: 5px;
 	}
 
-	.account-row-avatar {
-		position: absolute !important;
-		width: 30px !important;
-		height: 30px !important;
-	}
-
+	/* Derived from .nav-collapsed .account-row-button */
 	.account-row-button {
-		justify-content: center !important;
-		padding: 5px !important;
 		gap: 0 !important;
-	}
-
-	/* Show the plain icon at nav-icon size */
-	.account-row-mobile-icon {
-		display: inline-flex !important;
-		margin-left: 7px !important;
+		padding: 0;
+		height: 43px;
 	}
 
 	.account-row-button:hover {
 		background-color: rgba(213, 51, 105, 0.12) !important;
 		box-shadow: none !important;
+	}
+
+	/* Derived from .nav-collapsed .account-row-mobile-icon */
+	.account-row-mobile-icon {
+		display: inline-flex !important;
+		position: absolute;
+		inset: 0;
+		margin: auto;
+		width: fit-content;
+		height: fit-content;
+	}
+
+	/* Derived from .nav-collapsed .account-row-login-icon */
+	.account-row-login-icon {
+		position: absolute;
+		inset: 0;
+		margin: auto;
+		width: fit-content;
+		height: fit-content;
 	}
 }

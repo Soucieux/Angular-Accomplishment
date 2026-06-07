@@ -44,11 +44,11 @@ export class Utilities {
 	/**
 	 * Checks whether the current device is a mobile device based on viewport width.
 	 *
-	 * @returns True if the viewport width is 800 px or below, false on the server.
+	 * @returns True if the viewport width is 900 px or below, false on the server.
 	 */
 	public isMobile() {
 		if (isPlatformBrowser(this.platformId)) {
-			return globalThis.innerWidth <= 800;
+			return globalThis.innerWidth <= 900;
 		}
 		return false;
 	}
@@ -226,6 +226,21 @@ export class Utilities {
 	 */
 	public static getCurrentCountry() {
 		return this.currentCountry;
+	}
+
+	/**
+	 * Gets the display name for an authenticated user, choosing the correct field
+	 * based on the current country locale (CN uses `user_metadata.username`,
+	 * all others use `displayName`).
+	 *
+	 * @param user - The authenticated user object from the auth observable.
+	 * @returns The user's display name, or an empty string if unavailable.
+	 */
+	public static getUserDisplayName(user: any): string {
+		if (Utilities.getCurrentCountry() === CN) {
+			return user.user_metadata?.username ?? '';
+		}
+		return user.displayName ?? '';
 	}
 
 	/**

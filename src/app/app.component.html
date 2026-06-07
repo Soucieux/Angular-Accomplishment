@@ -1,5 +1,10 @@
 <mat-drawer-container hasBackdrop="false">
-	<mat-drawer mode="side" opened disableClose [class.nav-collapsed]="navCollapsed" [class.nav-no-transition]="!navReady">
+	<mat-drawer
+		mode="side"
+		opened
+		disableClose
+		[class.nav-collapsed]="navCollapsed"
+		[class.nav-no-transition]="!navReady">
 		<ul class="nav-list">
 			<li class="menu-group hide-on-mobile">
 				<button class="nav-toggle-btn" (click)="toggleNav()">
@@ -143,7 +148,9 @@
 			}
 		</ul>
 	</mat-drawer>
-	<mat-drawer-content>
+	<mat-drawer-content
+		[class.nav-content-collapsed]="navCollapsed"
+		[class.nav-content-mobile]="navMobile">
 		<p-toast />
 		<router-outlet></router-outlet>
 	</mat-drawer-content>

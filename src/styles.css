@@ -87,6 +87,8 @@ body {
 body {
 	font-family: 'app-font';
 	user-select: none;
+	padding-top: env(safe-area-inset-top);
+	padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Browser UA stylesheets reset font-family on form elements to the system font,

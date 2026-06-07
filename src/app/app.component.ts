@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Inject, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, Component, HostListener, Inject, OnInit, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -10,7 +10,15 @@ import { LOG } from './common/app.logs';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
 import { Utilities } from './common/app.utilities';
-import { CN, COMPONENT_DESTROY, DIALOG_BTN_SIGN_OUT, DIALOG_CONFIRM, DIALOG_HEADER_SIGN_OUT, LS_NAV_COLLAPSED_KEY, MSG_LOGOUT_CONFIRM } from './common/app.constant';
+import {
+	CN,
+	COMPONENT_DESTROY,
+	DIALOG_BTN_SIGN_OUT,
+	DIALOG_CONFIRM,
+	DIALOG_HEADER_SIGN_OUT,
+	LS_NAV_COLLAPSED_KEY,
+	MSG_LOGOUT_CONFIRM
+} from './common/app.constant';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -29,23 +37,22 @@ import { Observable } from 'rxjs';
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
 })
-export class AppComponent implements AfterViewInit {
+export class AppComponent implements OnInit, AfterViewInit {
 	private readonly className = 'AppComponent';
-
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
-
 	protected currentUser$!: Observable<any>;
 	protected accountMenuOpen = false;
 	protected navCollapsed = false;
+	protected navMobile = false;
 	protected navReady = false;
-	private drawerResizeObserver?: ResizeObserver;
 
 	constructor(
 		private authService: AuthService,
 		private dialogService: DialogService,
 		private router: Router,
+		private utilities: Utilities,
 		@Inject(PLATFORM_ID) private platformId: object
 	) {
 		if (isPlatformBrowser(this.platformId)) {
@@ -54,30 +61,23 @@ export class AppComponent implements AfterViewInit {
 	}
 
 	/**
-	 * Initialises the component and subscribes to the auth state observable,
-	 * assigning the appropriate user stream based on the detected country.
+	 * Initialises the component and subscribes to the auth state observable.
 	 * The nav-collapsed state is restored in the constructor so it applies
 	 * before the first render and avoids an expand-then-collapse flash.
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			if (Utilities.getCurrentCountry() === CN) {
-				this.currentUser$ = this.authService.cloudbaseGetCurrentUser();
-			} else {
-				this.currentUser$ = this.authService.firebaseGetCurrentUser();
-			}
+			this.currentUser$ = this.authService.getCurrentUser();
+			this.navMobile = this.utilities.isMobile();
 		}
 	}
 
 	/**
-	 * Attaches the ResizeObserver that syncs the drawer content margin to the
-	 * drawer width on every frame, so both panels animate simultaneously.
 	 * Enables the nav width transition after the first frame so the initial
 	 * collapsed state is applied without animation on page load.
 	 */
 	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			this.initDrawerResizeSync();
 			setTimeout(() => {
 				this.navReady = true;
 			});
@@ -85,13 +85,24 @@ export class AppComponent implements AfterViewInit {
 	}
 
 	/**
-	 * Disconnects the drawer ResizeObserver, clears the dialog container,
-	 * and logs component teardown.
+	 * Clears the dialog container and logs component teardown.
 	 */
 	ngOnDestroy(): void {
-		this.drawerResizeObserver?.disconnect();
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
+	}
+
+	/**
+	 * Updates the mobile breakpoint flag on every window resize so the
+	 * content margin tracks the viewport width without relying on CSS @media
+	 * competing against Angular's scoped element selectors.
+	 */
+	@HostListener('window:resize')
+	protected onWindowResize(): void {
+		const isMobileWidth = this.utilities.isMobile();
+		if (isMobileWidth !== this.navMobile) {
+			this.navMobile = isMobileWidth;
+		}
 	}
 
 	/**
@@ -173,17 +184,13 @@ export class AppComponent implements AfterViewInit {
 	}
 
 	/**
-	 * Gets the display name for the signed-in user, using the CloudBase username
-	 * for CN users and the Firebase displayName otherwise.
+	 * Gets the display name for the signed-in user.
 	 *
 	 * @param user - The authenticated user object from the auth observable.
 	 * @returns The user's display name, or an empty string if unavailable.
 	 */
 	protected getUserDisplayName(user: any): string {
-		if (this.isCN()) {
-			return user.user_metadata?.username ?? '';
-		}
-		return user.displayName ?? '';
+		return Utilities.getUserDisplayName(user);
 	}
 
 	/**
@@ -194,24 +201,7 @@ export class AppComponent implements AfterViewInit {
 	 * @returns The uppercased first character of the display name, or an empty string.
 	 */
 	protected getUserInitial(user: any): string {
-		return this.getUserDisplayName(user).charAt(0).toUpperCase();
+		return Utilities.getUserDisplayName(user).charAt(0).toUpperCase();
 	}
 
-	/**
-	 * Attaches a ResizeObserver to the mat-drawer and writes the drawer's animated
-	 * width to the --drawer-width CSS custom property on document root each frame.
-	 * Placing the property on documentElement ensures it survives Angular HMR, which
-	 * clears inline styles on component DOM nodes during style reconciliation.
-	 * mat-drawer-content reads this via var() with !important, permanently beating
-	 * Material's own inline-style margin-left binding after auth state changes.
-	 */
-	private initDrawerResizeSync(): void {
-		const drawer = document.querySelector('mat-drawer') as HTMLElement;
-		if (!drawer) return;
-		const sync = () => { document.documentElement.style.setProperty('--drawer-width', `${drawer.offsetWidth}px`); };
-		sync();
-		requestAnimationFrame(sync);
-		this.drawerResizeObserver = new ResizeObserver(sync);
-		this.drawerResizeObserver.observe(drawer);
-	}
 }

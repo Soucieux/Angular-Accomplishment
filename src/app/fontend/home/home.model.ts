@@ -5,23 +5,6 @@ export interface HomeStats {
 	reminderTotal?: number;
 	totalQuotes?: number;
 	totalRecipes?: number;
-	latestQuote?: { text: string; author: string; timestamp: string } | null;
-}
-
-/** Shape of a reminder item used in the dashboard widget and week calendar. */
-export interface ReminderWidgetItem {
-	name: string;
-	date: string | null;
-	type: string;
-	link?: string;
-}
-
-/** Shape of a patch-in-progress item used in the dashboard patch widget. */
-export interface PatchInProgressItem {
-	[key: string]: unknown;
-	component?: string;
-	details?: string;
-	isBug?: boolean;
 }
 
 /** Shape of a movie activity entry from the recentMovieActivities statistics field. */
@@ -54,8 +37,3 @@ export interface ResonanceActivityItem {
 	timestamp?: string;
 }
 
-/** Shape of a last-added/last-deleted entry from the statistics document. */
-export interface LastMovieEntry {
-	title?: string;
-	timestamp?: string;
-}

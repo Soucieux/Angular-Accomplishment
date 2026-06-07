@@ -1,10 +1,38 @@
 import { Component, Input, ViewEncapsulation, inject } from '@angular/core';
+import {
+	HOME_WEEK_AGENDA_BORDER_COLOR_DARK,
+	HOME_WEEK_AGENDA_BORDER_COLOR_LIGHT,
+	HOME_WEEK_AGENDA_BORDER_TRANSPARENT,
+	HOME_WEEK_AGENDA_COLOR_DAY_DEFAULT_DARK,
+	HOME_WEEK_AGENDA_COLOR_DAY_DEFAULT_LIGHT,
+	HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_DARK,
+	HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_LIGHT,
+	HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_TEXT_LIGHT,
+	HOME_WEEK_AGENDA_COLOR_DAY_TEXT_DIM_DARK,
+	HOME_WEEK_AGENDA_COLOR_DAY_TEXT_LIGHT,
+	HOME_WEEK_AGENDA_COLOR_DOT_DARK,
+	HOME_WEEK_AGENDA_COLOR_DOT_LIGHT,
+	HOME_WEEK_AGENDA_COLOR_ROW_BG_DARK,
+	HOME_WEEK_AGENDA_COLOR_ROW_BG_LIGHT,
+	HOME_WEEK_AGENDA_COLOR_SUBTITLE_DARK,
+	HOME_WEEK_AGENDA_COLOR_SUBTITLE_LIGHT,
+	HOME_WEEK_AGENDA_COLOR_TEXT_DARK,
+	HOME_WEEK_AGENDA_COLOR_TEXT_LIGHT,
+	HOME_WEEK_AGENDA_COLOR_TODAY_TEXT,
+	HOME_WEEK_AGENDA_GRADIENT_TODAY
+} from '../../../common/app.constant';
 import { OrbitalAgendaItem, OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
 import { OrbitalStore } from './orbital.store';
 
 let ringIdCounter = 0;
 
-/** Converts a hex colour string and alpha value to an rgba() string. */
+/**
+ * Converts a hex colour string and alpha value to an rgba() string.
+ *
+ * @param hex - The six-digit hex colour string (e.g. '#d53369').
+ * @param alpha - The alpha channel value between 0 and 1.
+ * @returns A CSS rgba() colour string.
+ */
 export function hexToRgba(hex: string, alpha: number): string {
 	const red = parseInt(hex.slice(1, 3), 16);
 	const green = parseInt(hex.slice(3, 5), 16);
@@ -12,7 +40,8 @@ export function hexToRgba(hex: string, alpha: number): string {
 	return `rgba(${red},${green},${blue},${alpha})`;
 }
 
-/* ── VcRing — single gradient SVG progress ring ─────────────────────────── */
+////////////////////// Below is VcRing — single gradient SVG progress ring ///
+
 @Component({
 	selector: 'vc-ring',
 	standalone: true,
@@ -64,8 +93,8 @@ export function hexToRgba(hex: string, alpha: number): string {
 				align-items: center;
 				justify-content: center;
 			}
-		`,
-	],
+		`
+	]
 })
 export class VcRing {
 	readonly gradientId = 'rg' + ringIdCounter++;
@@ -105,7 +134,8 @@ export class VcRing {
 	}
 }
 
-/* ── VcConcentric — stacked rings, one per progress metric ──────────────── */
+////////////////////// Below is VcConcentric — stacked rings per metric //////
+
 @Component({
 	selector: 'vc-concentric',
 	standalone: true,
@@ -147,8 +177,8 @@ export class VcRing {
 				justify-content: center;
 				text-align: center;
 			}
-		`,
-	],
+		`
+	]
 })
 export class VcConcentric {
 	@Input() metrics: OrbitalProgressMetric[] = [];
@@ -163,12 +193,13 @@ export class VcConcentric {
 	 * @param ringIndex - The 0-based index of the ring (outermost = 0).
 	 * @returns The diameter in pixels for that ring.
 	 */
-	computeRingSize(ringIndex: number): number {
+	protected computeRingSize(ringIndex: number): number {
 		return this.size - ringIndex * (this.stroke + this.gap) * 2;
 	}
 }
 
-/* ── VcWeekAgenda — interactive day strip + agenda list ─────────────────── */
+////////////////////// Below is VcWeekAgenda — day strip and agenda list /////
+
 @Component({
 	selector: 'vc-week-agenda',
 	standalone: true,
@@ -193,19 +224,29 @@ export class VcConcentric {
 		</div>
 		<div class="week-agenda-due">
 			<span class="week-agenda-due-header" style="color:rgba(255,255,255,0.55)">Due</span>
-			<span class="week-agenda-due-date" [style.color]="getSubtitleColor()">{{ d.selectedDateLong() }}</span>
+			<span class="week-agenda-due-date" [style.color]="getSubtitleColor()">{{
+				d.selectedDateLong()
+			}}</span>
 		</div>
 		<div class="week-agenda-list">
 			@if (d.agenda().length === 0) {
-				<div class="week-agenda-empty" [style.color]="getSubtitleColor()">Nothing due — an open day.</div>
+				<div class="week-agenda-empty" [style.color]="getSubtitleColor()">
+					Nothing due — an open day.
+				</div>
 			}
 			@for (agendaItem of d.agenda(); track agendaItem.name) {
 				<div class="week-agenda-row" [style.background]="getRowBackground()">
 					<div class="week-agenda-icon" [style.background]="getIconBackground(agendaItem.color)">
-						<span class="material-symbols-outlined week-agenda-icon-symbol" [style.color]="agendaItem.color">{{ agendaItem.icon }}</span>
+						<span
+							class="material-symbols-outlined week-agenda-icon-symbol"
+							[style.color]="agendaItem.color"
+							>{{ agendaItem.icon }}</span
+						>
 					</div>
 					<span class="week-agenda-name" [style.color]="getTextColor()">{{ agendaItem.name }}</span>
-					<span class="week-agenda-tag" [style.color]="getSubtitleColor()">{{ agendaItem.tag }}</span>
+					<span class="week-agenda-tag" [style.color]="getSubtitleColor()">{{
+						agendaItem.tag
+					}}</span>
 				</div>
 			}
 		</div>
@@ -229,14 +270,14 @@ export class VcConcentric {
 				transition: background 0.15s;
 			}
 			.week-agenda-label {
-				font-size: 8px;
-				font-weight: 700;
+				font-size: 13px;
+				font-weight: 600;
 				letter-spacing: 0.3px;
 				opacity: 0.8;
 			}
 			.week-agenda-number {
-				font-size: 15px;
-				font-weight: 800;
+				font-size: 13px;
+				font-weight: 600;
 				margin-top: 1px;
 			}
 			.week-agenda-dot {
@@ -254,13 +295,13 @@ export class VcConcentric {
 				gap: 8px;
 			}
 			.week-agenda-due-header {
-				font-size: 10.5px;
-				font-weight: 800;
+				font-size: 13px;
+				font-weight: 600;
 				letter-spacing: 0.6px;
 				text-transform: uppercase;
 			}
 			.week-agenda-due-date {
-				font-size: 12.5px;
+				font-size: 13px;
 				font-weight: 600;
 			}
 			.week-agenda-list {
@@ -270,7 +311,8 @@ export class VcConcentric {
 				overflow: hidden;
 			}
 			.week-agenda-empty {
-				font-size: 12.5px;
+				font-size: 13px;
+				font-weight: 600;
 				padding: 6px 0;
 				font-style: italic;
 			}
@@ -302,12 +344,12 @@ export class VcConcentric {
 				text-overflow: ellipsis;
 			}
 			.week-agenda-tag {
-				font-size: 11px;
+				font-size: 13px;
 				font-weight: 600;
 				flex-shrink: 0;
 			}
-		`,
-	],
+		`
+	]
 })
 export class VcWeekAgenda {
 	protected readonly d = inject(OrbitalStore);
@@ -320,7 +362,7 @@ export class VcWeekAgenda {
 	 * @returns A CSS colour string.
 	 */
 	protected getTextColor(): string {
-		return this.dark ? '#e8eef3' : '#4a1730';
+		return this.dark ? HOME_WEEK_AGENDA_COLOR_TEXT_DARK : HOME_WEEK_AGENDA_COLOR_TEXT_LIGHT;
 	}
 
 	/**
@@ -329,7 +371,7 @@ export class VcWeekAgenda {
 	 * @returns A CSS colour string.
 	 */
 	protected getSubtitleColor(): string {
-		return this.dark ? 'rgba(255,255,255,0.5)' : '#9a6480';
+		return this.dark ? HOME_WEEK_AGENDA_COLOR_SUBTITLE_DARK : HOME_WEEK_AGENDA_COLOR_SUBTITLE_LIGHT;
 	}
 
 	/**
@@ -338,7 +380,7 @@ export class VcWeekAgenda {
 	 * @returns A CSS colour string.
 	 */
 	protected getRowBackground(): string {
-		return this.dark ? 'rgba(255,255,255,0.045)' : 'rgba(255,255,255,0.55)';
+		return this.dark ? HOME_WEEK_AGENDA_COLOR_ROW_BG_DARK : HOME_WEEK_AGENDA_COLOR_ROW_BG_LIGHT;
 	}
 
 	/**
@@ -358,10 +400,12 @@ export class VcWeekAgenda {
 	 * @returns A CSS colour string or gradient.
 	 */
 	protected getDayBackground(day: OrbitalWeekDay): string {
-		if (day.isToday) return 'var(--grad-brand)';
+		if (day.isToday) return HOME_WEEK_AGENDA_GRADIENT_TODAY;
 		if (this.d.selectedDayIndex() === day.dayIndex)
-			return this.dark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.9)';
-		return this.dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.4)';
+			return this.dark
+				? HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_DARK
+				: HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_LIGHT;
+		return this.dark ? HOME_WEEK_AGENDA_COLOR_DAY_DEFAULT_DARK : HOME_WEEK_AGENDA_COLOR_DAY_DEFAULT_LIGHT;
 	}
 
 	/**
@@ -372,8 +416,8 @@ export class VcWeekAgenda {
 	 */
 	protected getDayBorder(day: OrbitalWeekDay): string {
 		if (this.d.selectedDayIndex() === day.dayIndex && !day.isToday)
-			return `1px solid ${this.dark ? 'rgba(255,255,255,0.3)' : 'rgba(213,51,105,0.4)'}`;
-		return '1px solid transparent';
+			return `1px solid ${this.dark ? HOME_WEEK_AGENDA_BORDER_COLOR_DARK : HOME_WEEK_AGENDA_BORDER_COLOR_LIGHT}`;
+		return HOME_WEEK_AGENDA_BORDER_TRANSPARENT;
 	}
 
 	/**
@@ -383,9 +427,14 @@ export class VcWeekAgenda {
 	 * @returns A CSS colour string.
 	 */
 	protected getDayColor(day: OrbitalWeekDay): string {
-		if (day.isToday) return '#fff';
-		if (this.dark) return this.d.selectedDayIndex() === day.dayIndex ? '#fff' : 'rgba(255,255,255,0.72)';
-		return this.d.selectedDayIndex() === day.dayIndex ? '#3a1226' : '#6a2a48';
+		if (day.isToday) return HOME_WEEK_AGENDA_COLOR_TODAY_TEXT;
+		if (this.dark)
+			return this.d.selectedDayIndex() === day.dayIndex
+				? HOME_WEEK_AGENDA_COLOR_TODAY_TEXT
+				: HOME_WEEK_AGENDA_COLOR_DAY_TEXT_DIM_DARK;
+		return this.d.selectedDayIndex() === day.dayIndex
+			? HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_TEXT_LIGHT
+			: HOME_WEEK_AGENDA_COLOR_DAY_TEXT_LIGHT;
 	}
 
 	/**
@@ -405,6 +454,10 @@ export class VcWeekAgenda {
 	 * @returns A CSS colour string.
 	 */
 	protected getDotColor(day: OrbitalWeekDay): string {
-		return day.isToday ? '#fff' : this.dark ? '#7dd3fc' : '#d53369';
+		return day.isToday
+			? HOME_WEEK_AGENDA_COLOR_TODAY_TEXT
+			: this.dark
+				? HOME_WEEK_AGENDA_COLOR_DOT_DARK
+				: HOME_WEEK_AGENDA_COLOR_DOT_LIGHT;
 	}
 }

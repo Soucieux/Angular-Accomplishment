@@ -6,16 +6,21 @@ import {
 	Input,
 	NgZone,
 	OnChanges,
+	OnInit,
 	Output,
 	SimpleChanges,
 	inject
 } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { Observable } from 'rxjs';
+import { AuthService } from '../../../backend/authentication-service/auth.service';
 import { OrbitalStore } from './orbital.store';
 import { VcConcentric, VcWeekAgenda, hexToRgba } from './shared.components';
 import {
 	OrbitalAgendaItem,
 	OrbitalActivityRow,
+	OrbitalDebtRow,
 	OrbitalQuickAction,
 	OrbitalReminderRow,
 	OrbitalWeekDay
@@ -73,9 +78,38 @@ import {
 	HOME_ACTIVITY_LABEL_REMINDER_UPDATED,
 	HOME_ACTIVITY_LABEL_RESONANCE_ADDED,
 	HOME_ACTIVITY_LABEL_RESONANCE_REMOVED,
+	HOME_AGENDA_ICON_EVENT,
+	HOME_DEBT_ROW_ID_PREFIX,
 	HOME_GENRE_COLORS,
 	HOME_LINKS_DOT_FALLBACK,
+	HOME_QUICK_ACTION_GRADIENT_DEBT,
+	HOME_QUICK_ACTION_GRADIENT_LINK,
+	HOME_QUICK_ACTION_GRADIENT_MOVIE,
+	HOME_QUICK_ACTION_GRADIENT_QUOTE,
+	HOME_QUICK_ACTION_GRADIENT_RECIPE,
+	HOME_QUICK_ACTION_GRADIENT_REMINDER,
+	HOME_QUICK_ACTION_ICON_DEBT,
+	HOME_QUICK_ACTION_ICON_LINK,
+	HOME_QUICK_ACTION_ICON_MOVIE,
+	HOME_QUICK_ACTION_ICON_QUOTE,
+	HOME_QUICK_ACTION_ICON_RECIPE,
+	HOME_QUICK_ACTION_ICON_REMINDER,
+	HOME_QUICK_ACTION_LABEL_DEBT,
+	HOME_QUICK_ACTION_LABEL_LINK,
+	HOME_QUICK_ACTION_LABEL_MOVIE,
+	HOME_QUICK_ACTION_LABEL_QUOTE,
+	HOME_QUICK_ACTION_LABEL_RECIPE,
+	HOME_QUICK_ACTION_LABEL_REMINDER,
+	HOME_QUICK_ACTION_ROUTE_DEBT,
+	HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT,
+	HOME_QUICK_ACTION_ROUTE_NEXUS,
+	HOME_QUICK_ACTION_ROUTE_RECIPE,
+	HOME_QUICK_ACTION_ROUTE_REMINDER,
+	HOME_QUICK_ACTION_ROUTE_RESONANCE,
+	HOME_REMINDER_ROW_ID_PREFIX,
 	SEARCH,
+	STATS_FIELD_DEBT_UPCOMING,
+	STATS_FIELD_GENRE,
 	STATS_FIELD_RECENT_MOVIE,
 	STATS_FIELD_RECENT_PATCH,
 	STATS_FIELD_RECENT_REMINDER,
@@ -83,27 +117,20 @@ import {
 	STATS_FIELD_REMINDER_UPCOMING
 } from '../../../common/app.constant';
 
-/** Shape of one debt row in the debt panel. */
-interface DebtItem {
-	label: string;
-	amount: string;
-	percentage: number;
-	color: string;
-}
-
 @Component({
 	selector: 'orbital',
 	standalone: true,
-	imports: [VcConcentric, VcWeekAgenda],
+	imports: [VcConcentric, VcWeekAgenda, AsyncPipe],
 	templateUrl: './orbital.component.html',
 	styleUrl: './orbital.component.css',
 	providers: [OrbitalStore]
 })
-export class OrbitalComponent implements AfterViewInit, OnChanges {
+export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	protected readonly d = inject(OrbitalStore);
 	private readonly router = inject(Router);
 	private readonly elementRef = inject(ElementRef);
 	private readonly ngZone = inject(NgZone);
+	private readonly authService = inject(AuthService);
 
 	@Input() stats: HomeStats | null = null;
 	@Input() links: NexusLink[] = [];
@@ -113,65 +140,68 @@ export class OrbitalComponent implements AfterViewInit, OnChanges {
 
 	protected readonly QUICK_ACTIONS: OrbitalQuickAction[] = [
 		{
-			icon: 'movie',
-			label: 'Add Movie',
-			gradient: 'linear-gradient(135deg,#e91e8c,#f7971e)',
-			route: '/entertainment',
+			icon: HOME_QUICK_ACTION_ICON_MOVIE,
+			label: HOME_QUICK_ACTION_LABEL_MOVIE,
+			gradient: HOME_QUICK_ACTION_GRADIENT_MOVIE,
+			route: HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT,
 			state: { openAddDialog: true }
 		},
 		{
-			icon: 'format_quote',
-			label: 'Add Quote',
-			gradient: 'linear-gradient(135deg,#a78bfa,#ec4899)',
-			route: '/resonance'
+			icon: HOME_QUICK_ACTION_ICON_QUOTE,
+			label: HOME_QUICK_ACTION_LABEL_QUOTE,
+			gradient: HOME_QUICK_ACTION_GRADIENT_QUOTE,
+			route: HOME_QUICK_ACTION_ROUTE_RESONANCE
 		},
 		{
-			icon: 'restaurant',
-			label: 'Add Recipe',
-			gradient: 'linear-gradient(135deg,#f97316,#ef4444)',
-			route: '/recipe',
+			icon: HOME_QUICK_ACTION_ICON_RECIPE,
+			label: HOME_QUICK_ACTION_LABEL_RECIPE,
+			gradient: HOME_QUICK_ACTION_GRADIENT_RECIPE,
+			route: HOME_QUICK_ACTION_ROUTE_RECIPE,
 			state: { openAddView: true }
 		},
 		{
-			icon: 'account_balance',
-			label: 'Add Debt',
-			gradient: 'linear-gradient(135deg,#f97316,#fbbf24)',
-			route: '/debt',
+			icon: HOME_QUICK_ACTION_ICON_DEBT,
+			label: HOME_QUICK_ACTION_LABEL_DEBT,
+			gradient: HOME_QUICK_ACTION_GRADIENT_DEBT,
+			route: HOME_QUICK_ACTION_ROUTE_DEBT,
 			state: { openAddDialog: true }
 		},
 		{
-			icon: 'add_task',
-			label: 'Add Reminder',
-			gradient: 'linear-gradient(135deg,#38bdf8,#6366f1)',
-			route: '/reminder'
+			icon: HOME_QUICK_ACTION_ICON_REMINDER,
+			label: HOME_QUICK_ACTION_LABEL_REMINDER,
+			gradient: HOME_QUICK_ACTION_GRADIENT_REMINDER,
+			route: HOME_QUICK_ACTION_ROUTE_REMINDER
 		},
 		{
-			icon: 'add_link',
-			label: 'Add Quick Link',
-			gradient: 'linear-gradient(135deg,#22c55e,#06b6d4)',
-			route: '/nexus',
+			icon: HOME_QUICK_ACTION_ICON_LINK,
+			label: HOME_QUICK_ACTION_LABEL_LINK,
+			gradient: HOME_QUICK_ACTION_GRADIENT_LINK,
+			route: HOME_QUICK_ACTION_ROUTE_NEXUS,
 			state: { openAddLinkDialog: true }
 		}
 	];
 
-	protected readonly DEBT_ITEMS: DebtItem[] = [
-		{ label: 'Credit Card', amount: '¥2,400', percentage: 65, color: '#d53369' },
-		{ label: 'Student Loan', amount: '¥8,900', percentage: 82, color: '#f97316' },
-		{ label: 'Personal', amount: '¥1,200', percentage: 30, color: '#38bdf8' }
-	];
-
-	protected readonly DEBT_TOTAL = '¥12,500';
-
+	protected currentUser$!: Observable<any>;
 	protected genreBars: { label: string; count: number; percentage: number; color: string }[] = [];
 	protected reminderRows: OrbitalReminderRow[] = [];
+	protected debtRows: OrbitalDebtRow[] = [];
 	protected activityRows: OrbitalActivityRow[] = [];
+
+	/**
+	 * Subscribes to the auth state observable to keep the current user up to date.
+	 */
+	ngOnInit(): void {
+		this.currentUser$ = this.authService.getCurrentUser();
+	}
 
 	/**
 	 * Attaches the scroll auto-hide behaviour to all glass panel elements after the view renders.
 	 */
 	ngAfterViewInit(): void {
 		this.ngZone.runOutsideAngular(() => {
-			const panels = (this.elementRef.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.orbital-panel-scroll');
+			const panels = (this.elementRef.nativeElement as HTMLElement).querySelectorAll<HTMLElement>(
+				'.orbital-panel-scroll'
+			);
 			panels.forEach((panel) => Utilities.attachScrollAutoHide(panel));
 		});
 	}
@@ -185,6 +215,7 @@ export class OrbitalComponent implements AfterViewInit, OnChanges {
 		if (changes['stats'] && this.stats) {
 			this.genreBars = this.buildGenreBars();
 			this.reminderRows = this.buildReminderRows();
+			this.debtRows = this.buildDebtRows();
 			this.activityRows = this.buildActivityRows();
 			this.syncWeekData();
 		}
@@ -206,6 +237,15 @@ export class OrbitalComponent implements AfterViewInit, OnChanges {
 	 */
 	protected get openReminderCount(): number {
 		return this.reminderRows.length;
+	}
+
+	/**
+	 * Gets the number of upcoming debt rows.
+	 *
+	 * @returns The total count of debt rows.
+	 */
+	protected get openDebtCount(): number {
+		return this.debtRows.length;
 	}
 
 	/**
@@ -257,7 +297,7 @@ export class OrbitalComponent implements AfterViewInit, OnChanges {
 	 * @returns An array of genre bar descriptors for the recipes panel.
 	 */
 	private buildGenreBars(): { label: string; count: number; percentage: number; color: string }[] {
-		const raw = this.stats?.['genre'];
+		const raw = this.stats?.[STATS_FIELD_GENRE];
 		if (!raw) return [];
 		const entries = Object.entries(raw as Record<string, number>)
 			.filter(([key, value]) => key !== GENRE_FAVOURITE && (value as number) > 0)
@@ -298,9 +338,43 @@ export class OrbitalComponent implements AfterViewInit, OnChanges {
 				const reminder = item as { name?: string; date?: string | null };
 				const overdue = Utilities.isOverdue(reminder.date);
 				return {
-					id: `rem-${index}`,
+					id: `${HOME_REMINDER_ROW_ID_PREFIX}${index}`,
 					name: reminder.name ?? '',
 					dueLabel: Utilities.getDaysUntil(reminder.date),
+					overdue
+				};
+			});
+	}
+
+	/**
+	 * Builds the debt row data from the current stats, sorted by date ascending
+	 * and limited to the 4 nearest upcoming items.
+	 *
+	 * @returns An array of debt row descriptors for the debt-sonata panel.
+	 */
+	private buildDebtRows(): OrbitalDebtRow[] {
+		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_DEBT_UPCOMING]);
+		return raw
+			.filter((item) => {
+				const debt = item as { date?: string | null };
+				return debt.date && Utilities.coerceDateToString(debt.date);
+			})
+			.sort((a, b) => {
+				const toMs = (item: unknown) => {
+					const dateStr = Utilities.coerceDateToString((item as { date?: unknown }).date);
+					const [year, month, day] = dateStr.split('-').map(Number);
+					return new Date(year, month - 1, day).getTime();
+				};
+				return toMs(a) - toMs(b);
+			})
+			.slice(0, 4)
+			.map((item, index) => {
+				const debt = item as { name?: string; date?: string | null };
+				const overdue = Utilities.isOverdue(debt.date);
+				return {
+					id: `${HOME_DEBT_ROW_ID_PREFIX}${index}`,
+					name: debt.name ?? '',
+					dueLabel: Utilities.getDaysUntil(debt.date),
 					overdue
 				};
 			});
@@ -447,10 +521,10 @@ export class OrbitalComponent implements AfterViewInit, OnChanges {
 				return Utilities.coerceDateToString(reminder.date) === dateKey;
 			});
 			agenda[dayIndex] = dayReminders.map((reminder) => ({
-				icon: 'event',
+				icon: HOME_AGENDA_ICON_EVENT,
 				name: (reminder as { name?: string }).name ?? '',
 				tag: dateKey,
-				color: '#f59e0b'
+				color: HOME_ACTIVITY_COLOR_REMINDER
 			}));
 			const isToday = dayDate.toDateString() === today.toDateString();
 			const isPast = dayDate < today && !isToday;
@@ -466,5 +540,15 @@ export class OrbitalComponent implements AfterViewInit, OnChanges {
 		});
 
 		this.d.setWeekData(days, agenda);
+	}
+
+	/**
+	 * Gets the display name for the signed-in user.
+	 *
+	 * @param user - The authenticated user object from the auth observable.
+	 * @returns The user's display name, or an empty string if unavailable.
+	 */
+	protected getUserDisplayName(user: any): string {
+		return Utilities.getUserDisplayName(user);
 	}
 }

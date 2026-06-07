@@ -172,12 +172,12 @@ export const ACTIVITY_TYPE_EDITED = 'edited';
 export const STATS_FIELD_RECENT_MOVIE = 'recentMovieActivities';
 export const STATS_FIELD_RECENT_PATCH = 'recentPatchActivities';
 export const STATS_FIELD_RECENT_REMINDER = 'recentReminderActivities';
-export const STATS_FIELD_RECENT_DEBT = 'recentDebtActivities';
 export const STATS_FIELD_RECENT_RESONANCE = 'recentResonanceActivities';
-export const STATS_FIELD_PATCH_IN_PROGRESS = 'patchInProgress';
 export const STATS_FIELD_REMINDER_UPCOMING = 'reminderUpcoming';
 export const STATS_FIELD_REMINDER_TOTAL = 'reminderTotal';
+export const STATS_FIELD_DEBT_UPCOMING = 'debtUpcoming';
 export const STATS_FIELD_TOTAL_RECIPES = 'totalRecipes';
+export const STATS_FIELD_GENRE = 'genre';
 
 ////////////////////// Below are statistics display cap constants /////////////////////
 /* The combined recent-activity feed shows at most this many items.
@@ -235,6 +235,83 @@ export const HOME_ACTIVITY_COLOR_REMINDER = '#f59e0b';
 export const HOME_ACTIVITY_COLOR_RESONANCE = '#fda085';
 /** Shared delete color used for all activity-feed deleted events. */
 export const HOME_ACTIVITY_COLOR_DELETED = '#ef4444';
+
+export const HOME_GREETING_NIGHT = 'Good night';
+export const HOME_GREETING_MORNING = 'Good morning';
+export const HOME_GREETING_AFTERNOON = 'Good afternoon';
+export const HOME_GREETING_EVENING = 'Good evening';
+/** BCP-47 locale code used for date and time formatting on the Home dashboard. */
+export const HOME_LOCALE_EN_US = 'en-US';
+/** Progress ring key for the year ring in the life-clock widget. */
+export const HOME_PROGRESS_KEY_YEAR = 'year';
+/** Progress ring key for the month ring in the life-clock widget. */
+export const HOME_PROGRESS_KEY_MONTH = 'month';
+/** Progress ring key for the week ring in the life-clock widget. */
+export const HOME_PROGRESS_KEY_WEEK = 'week';
+/** Progress ring key for the day ring in the life-clock widget. */
+export const HOME_PROGRESS_KEY_DAY = 'day';
+/** Material icon name for a calendar reminder event in the week-agenda strip. */
+export const HOME_AGENDA_ICON_EVENT = 'event';
+/** ID prefix for reminder rows in the OrbitalComponent reminders panel. */
+export const HOME_REMINDER_ROW_ID_PREFIX = 'rem-';
+/** ID prefix for debt rows in the OrbitalComponent debt-sonata panel. */
+export const HOME_DEBT_ROW_ID_PREFIX = 'debt-';
+
+export const HOME_QUICK_ACTION_LABEL_MOVIE = 'Add Movie';
+export const HOME_QUICK_ACTION_LABEL_QUOTE = 'Add Quote';
+export const HOME_QUICK_ACTION_LABEL_RECIPE = 'Add Recipe';
+export const HOME_QUICK_ACTION_LABEL_DEBT = 'Add Debt';
+export const HOME_QUICK_ACTION_LABEL_REMINDER = 'Add Reminder';
+export const HOME_QUICK_ACTION_LABEL_LINK = 'Add Quick Link';
+
+export const HOME_QUICK_ACTION_ICON_MOVIE = 'movie';
+export const HOME_QUICK_ACTION_ICON_QUOTE = 'format_quote';
+export const HOME_QUICK_ACTION_ICON_RECIPE = 'restaurant';
+export const HOME_QUICK_ACTION_ICON_DEBT = 'account_balance';
+export const HOME_QUICK_ACTION_ICON_REMINDER = 'add_task';
+export const HOME_QUICK_ACTION_ICON_LINK = 'add_link';
+
+export const HOME_QUICK_ACTION_GRADIENT_MOVIE = 'linear-gradient(135deg,#e91e8c,#f7971e)';
+export const HOME_QUICK_ACTION_GRADIENT_QUOTE = 'linear-gradient(135deg,#a78bfa,#ec4899)';
+export const HOME_QUICK_ACTION_GRADIENT_RECIPE = 'linear-gradient(135deg,#f97316,#ef4444)';
+export const HOME_QUICK_ACTION_GRADIENT_DEBT = 'linear-gradient(135deg,#f97316,#fbbf24)';
+export const HOME_QUICK_ACTION_GRADIENT_REMINDER = 'linear-gradient(135deg,#38bdf8,#6366f1)';
+export const HOME_QUICK_ACTION_GRADIENT_LINK = 'linear-gradient(135deg,#22c55e,#06b6d4)';
+
+/** Route path for the quick-action button that opens the entertainment page. */
+export const HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT = '/entertainment';
+/** Route path for the quick-action button that opens the resonance page. */
+export const HOME_QUICK_ACTION_ROUTE_RESONANCE = '/resonance';
+/** Route path for the quick-action button that opens the recipe page. */
+export const HOME_QUICK_ACTION_ROUTE_RECIPE = '/recipe';
+/** Route path for the quick-action button that opens the debt sonata page. */
+export const HOME_QUICK_ACTION_ROUTE_DEBT = '/debt';
+/** Route path for the quick-action button that opens the reminder page. */
+export const HOME_QUICK_ACTION_ROUTE_REMINDER = '/reminder';
+/** Route path for the quick-action button that opens the nexus page. */
+export const HOME_QUICK_ACTION_ROUTE_NEXUS = '/nexus';
+
+// Week-agenda colour palette (light and dark mode)
+export const HOME_WEEK_AGENDA_COLOR_TEXT_LIGHT = '#4a1730';
+export const HOME_WEEK_AGENDA_COLOR_TEXT_DARK = '#e8eef3';
+export const HOME_WEEK_AGENDA_COLOR_SUBTITLE_LIGHT = '#9a6480';
+export const HOME_WEEK_AGENDA_COLOR_SUBTITLE_DARK = 'rgba(255,255,255,0.5)';
+export const HOME_WEEK_AGENDA_COLOR_ROW_BG_LIGHT = 'rgba(255,255,255,0.55)';
+export const HOME_WEEK_AGENDA_COLOR_ROW_BG_DARK = 'rgba(255,255,255,0.045)';
+export const HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_LIGHT = 'rgba(255,255,255,0.9)';
+export const HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_DARK = 'rgba(255,255,255,0.14)';
+export const HOME_WEEK_AGENDA_COLOR_DAY_DEFAULT_LIGHT = 'rgba(255,255,255,0.4)';
+export const HOME_WEEK_AGENDA_COLOR_DAY_DEFAULT_DARK = 'rgba(255,255,255,0.05)';
+export const HOME_WEEK_AGENDA_GRADIENT_TODAY = 'var(--grad-brand)';
+export const HOME_WEEK_AGENDA_COLOR_TODAY_TEXT = '#fff';
+export const HOME_WEEK_AGENDA_BORDER_COLOR_LIGHT = 'rgba(213,51,105,0.4)';
+export const HOME_WEEK_AGENDA_BORDER_COLOR_DARK = 'rgba(255,255,255,0.3)';
+export const HOME_WEEK_AGENDA_BORDER_TRANSPARENT = '1px solid transparent';
+export const HOME_WEEK_AGENDA_COLOR_DAY_TEXT_DIM_DARK = 'rgba(255,255,255,0.72)';
+export const HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_TEXT_LIGHT = '#3a1226';
+export const HOME_WEEK_AGENDA_COLOR_DAY_TEXT_LIGHT = '#6a2a48';
+export const HOME_WEEK_AGENDA_COLOR_DOT_DARK = '#7dd3fc';
+export const HOME_WEEK_AGENDA_COLOR_DOT_LIGHT = '#d53369';
 
 ////////////////////// Below are entertainment page constants ////////////////////////
 /** Prefix for the delete-movie confirm message; movie name is appended at the call site. */

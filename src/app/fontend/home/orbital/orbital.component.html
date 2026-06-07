@@ -9,11 +9,13 @@
 		<div class="orbital-ring-inner"></div>
 		<div class="orbital-ring-outer"></div>
 
-		<!-- Brand -->
-		<div class="orbital-brand">ACCOMPLISHMENT</div>
-
 		<!-- Greeting + date -->
-		<div class="orbital-greeting">{{ d.greeting() }} · {{ d.dateLong() }}</div>
+		<div class="orbital-greeting">
+			{{ d.greeting() }} · {{ getUserDisplayName(currentUser$ | async) }} · {{ d.dateLong() }}
+		</div>
+
+		<!-- Brand -->
+		<div class="orbital-brand">VISION CANVAS</div>
 
 		<!-- Quick-action pill buttons -->
 		<div class="orbital-quick-actions">
@@ -188,24 +190,26 @@
 			<div class="orbital-panel-header">
 				<span class="material-symbols-outlined orbital-panel-header-icon">account_balance</span>
 				<span class="orbital-panel-header-title">Debt Sonata</span>
-				<span class="orbital-panel-header-badge">{{ DEBT_TOTAL }}</span>
+				<span
+					class="orbital-panel-header-badge"
+					[style.color]="openDebtCount > 0 ? '#d53369' : '#22c55e'">
+					{{ openDebtCount }} due
+				</span>
 			</div>
 			<div class="orbital-panel-scroll">
-				@for (debt of DEBT_ITEMS; track debt.label) {
-					<div class="orbital-debt-row">
-						<div class="orbital-debt-row-header">
-							<span>{{ debt.label }}</span>
-							<span class="orbital-debt-amount" [style.color]="debt.color">{{
-								debt.amount
-							}}</span>
+				@if (debtRows.length === 0) {
+					<div class="orbital-recipe-empty">No upcoming payments</div>
+				} @else {
+					@for (debt of debtRows; track debt.id) {
+						<div class="orbital-reminder-row">
+							<span class="orbital-reminder-name">{{ debt.name }}</span>
+							<span
+								class="orbital-reminder-due-date"
+								[style.color]="debt.overdue ? '#d53369' : '#22c55e'">
+								{{ debt.dueLabel }}
+							</span>
 						</div>
-						<div class="orbital-bar-track">
-							<div
-								class="orbital-bar-fill"
-								[style.width.%]="debt.percentage"
-								[style.background]="debt.color"></div>
-						</div>
-					</div>
+					}
 				}
 			</div>
 		</div>

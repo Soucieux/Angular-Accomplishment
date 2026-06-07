@@ -33,6 +33,14 @@ export interface OrbitalReminderRow {
 	overdue: boolean;
 }
 
+/** Shape of one debt row in the debt-sonata glass panel. */
+export interface OrbitalDebtRow {
+	id: string;
+	name: string;
+	dueLabel: string;
+	overdue: boolean;
+}
+
 /** Shape of one activity row in the activity glass panel. */
 export interface OrbitalActivityRow {
 	icon: string;

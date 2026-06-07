@@ -128,9 +128,15 @@
 							type="text"
 							id="signup-username"
 							formControlName="username"
+							[maxlength]="LOGIN_MAX_USERNAME_LENGTH"
 							[invalid]="isInvalid('username')" />
 						<label for="signup-username">Username</label>
 					</p-iftalabel>
+					@if (isInvalid('username')) {
+						<p-message severity="error" size="small" variant="simple">{{
+							LOGIN_ERROR_USERNAME_TOO_LONG
+						}}</p-message>
+					}
 				</div>
 			}
 

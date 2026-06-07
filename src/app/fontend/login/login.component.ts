@@ -33,6 +33,8 @@ import {
 	LOGIN_LABEL_GET_CODE,
 	LOGIN_LABEL_LOADING,
 	LOGIN_LABEL_SIGN_IN,
+	LOGIN_ERROR_USERNAME_TOO_LONG,
+	LOGIN_MAX_USERNAME_LENGTH,
 	LOGIN_MSG_SEND_CODE_FAILED,
 	LOGIN_URL_DEFAULT_RETURN
 } from '../../common/app.constant';
@@ -63,10 +65,12 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	@ViewChild('lampHandle') private lampHandle!: ElementRef<HTMLElement>;
 	@ViewChild('lampCord') private lampCord!: ElementRef<SVGPathElement>;
 
+	protected readonly LOGIN_ERROR_USERNAME_TOO_LONG = LOGIN_ERROR_USERNAME_TOO_LONG;
 	protected readonly LOGIN_LABEL_CREATE_ACCOUNT = LOGIN_LABEL_CREATE_ACCOUNT;
 	protected readonly LOGIN_LABEL_GET_CODE = LOGIN_LABEL_GET_CODE;
 	protected readonly LOGIN_LABEL_LOADING = LOGIN_LABEL_LOADING;
 	protected readonly LOGIN_LABEL_SIGN_IN = LOGIN_LABEL_SIGN_IN;
+	protected readonly LOGIN_MAX_USERNAME_LENGTH = LOGIN_MAX_USERNAME_LENGTH;
 
 	protected loginForm!: FormGroup;
 	protected formSubmitted = false;
@@ -262,9 +266,11 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 			const codeControl = this.loginForm.get('verificationCode');
 
 			if (this.isSignUp) {
+				usernameControl?.setValidators([Validators.required, Validators.maxLength(LOGIN_MAX_USERNAME_LENGTH)]);
 				emailControl?.setValidators(Validators.required);
 				codeControl?.setValidators(Validators.required);
 			} else {
+				usernameControl?.setValidators(Validators.required);
 				emailControl?.clearValidators();
 				codeControl?.clearValidators();
 			}

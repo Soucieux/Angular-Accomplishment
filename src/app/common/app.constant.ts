@@ -56,6 +56,8 @@ export const DIALOG_BLOCK = 'block';
 export const DIALOG_DEBT = 'debt';
 /** Dialog type for the ingredient type manager in the editor. */
 export const DIALOG_RECIPE_TYPE = 'recipe-type';
+/** Dialog type for the add/edit link dialog on the Nexus page. */
+export const DIALOG_LINK = 'link';
 
 ////////////////////// Below are history dialog and style string constants ///////////
 /** History-entry status when a movie is added — appears in the history message text. */
@@ -94,6 +96,8 @@ export const LOGIN_LABEL_CREATE_ACCOUNT = 'Create account';
 export const LOGIN_LABEL_GET_CODE = 'Get Code';
 export const LOGIN_LABEL_LOADING = '…';
 export const LOGIN_LABEL_SIGN_IN = 'Sign In';
+export const LOGIN_MAX_USERNAME_LENGTH = 13;
+export const LOGIN_ERROR_USERNAME_TOO_LONG = 'Username must be 13 characters or fewer.';
 /** CloudBase role string that identifies an admin user. */
 export const ROLE_ADMIN = '管理员';
 /** CloudBase error code for an invalid request argument (e.g. wrong verification code). */
@@ -494,6 +498,7 @@ export const NEXUS_MSG_MISSING_FIELDS = 'Missing fields';
 export const NEXUS_MSG_MISSING_FIELDS_DETAIL = 'URL, title, and category are required';
 export const NEXUS_MSG_LINK_UPDATED = 'Link updated';
 export const NEXUS_MSG_LINK_SAVED = 'Link saved';
+export const NEXUS_MSG_SAVING_LINK = 'Saving link...';
 export const NEXUS_MSG_LINK_SAVE_FAILED_DETAIL = 'Could not save the link. Please try again.';
 export const NEXUS_MSG_LINK_DELETED = 'Link deleted';
 export const NEXUS_MSG_LINK_DELETE_FAILED_DETAIL = 'Could not delete the link. Please try again.';
@@ -531,6 +536,10 @@ export const NEXUS_DIALOG_TITLE_ADD_LINK = 'Add Link';
 export const NEXUS_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
 /** Label for the isPinned checkbox in the add/edit link dialog. */
 export const NEXUS_LABEL_PIN_TO_DASHBOARD = 'Pin to dashboard';
+export const LINK_DIALOG_LABEL_CANCEL = 'Cancel';
+export const LINK_DIALOG_LABEL_SAVE = 'Save';
+export const LINK_DIALOG_LABEL_ADD = 'Add Link';
+export const LINK_DIALOG_LABEL_TITLE_LOADING = 'Loading title…';
 /** Sentinel value for the "show all categories" filter in the Nexus links panel. */
 export const NEXUS_CATEGORY_ALL = 'all';
 /** Default colour applied to new and un-styled link categories. */

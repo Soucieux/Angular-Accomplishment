@@ -13,6 +13,8 @@ src/environment/environment.ts
 /node_modules
 npm-debug.log
 yarn-error.log
+package.json
+package-lock.json
 
 # IDEs and editors
 .idea/
@@ -52,9 +54,16 @@ Thumbs.db
 # codex
 .agents/
 .codex/
+AGENTS.md
 
 # claude
 .claude/
 
 #mcp
 .mcp.json
+
+# capacitor
+capacitor.config.ts
+
+# ios
+ios

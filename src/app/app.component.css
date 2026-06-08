@@ -40,6 +40,11 @@ mat-drawer-content {
 	padding-bottom: 130px;
 }
 
+/* In compact overlay mode the drawer floats above content — content takes full width */
+.nav-content-overlay {
+	margin-left: 4px !important;
+}
+
 /* ── Nav list ────────────────────────────────────────────────────────────── */
 .nav-list {
 	list-style-type: none;
@@ -409,7 +414,7 @@ li:nth-child(10) .nav-icon {
 	border: 2.5px solid rgb(243, 227, 243);
 }
 
-.account-row-mobile-icon {
+.account-row-narrow-icon {
 	display: none;
 	font-size: 22px;
 	background: none;
@@ -500,7 +505,7 @@ mat-drawer.nav-collapsed {
 	width: 65px;
 }
 
-/* This is minimum width. This is to avoid having the value still override what we have in mobile */
+/* Minimum width applies only above 940px to avoid overriding the narrow-viewport rules below */
 @media (min-width: 941px) {
 	mat-drawer-container:has(mat-drawer.nav-collapsed) mat-drawer-content {
 		/* With mat-drawer having 65px in width when collapsed and 4px margin on its left,
@@ -551,7 +556,7 @@ mat-drawer.nav-collapsed {
 	padding: 0;
 }
 
-.nav-collapsed .account-row-mobile-icon {
+.nav-collapsed .account-row-narrow-icon {
 	display: inline-flex !important;
 	position: absolute;
 	inset: 0;
@@ -569,18 +574,18 @@ mat-drawer.nav-collapsed {
 	height: fit-content;
 }
 
-/* ── Mobile ──────────────────────────────────────────────────────────────── */
-/* Mobile always renders the icon-only layout regardless of whether the panel
-   was collapsed or expanded before the viewport narrowed. The rules below
-   mirror the .nav-collapsed rules above — one rule per element — so both
-   paths reach the same visual result on mobile. */
+/* ── Narrow viewport ─────────────────────────────────────────────────────── */
+/* At narrow viewport widths (≤940px) the sidebar always renders the icon-only
+   layout regardless of whether the panel was collapsed or expanded before the
+   viewport narrowed. The rules below mirror the .nav-collapsed rules above —
+   one rule per element — so both paths reach the same visual result. */
 @media (max-width: 940px) {
 	mat-drawer {
 		width: 35px !important;
 	}
 
 	mat-drawer-content {
-		/* With mat-drawer having 35px in width on mobile and 4px margin on its left, we give at least 39px on the left to avoid overlap. */
+		/* With mat-drawer having 35px in width at narrow viewport and 4px margin on its left, we give at least 39px on the left to avoid overlap. */
 		margin-left: 43px !important;
 	}
 
@@ -600,7 +605,7 @@ mat-drawer.nav-collapsed {
 
 	/* Angular Material's mat-button wraps projected content in span.mdc-button__label.
 	   Our icon lives inside that span, so justify-content on .nav-button doesn't
-	   reach it directly. Center it here for both open and collapsed mobile states. */
+	   reach it directly. Center it here for both open and collapsed narrow states. */
 	::ng-deep .nav-button .mdc-button__label {
 		padding-right: 5px;
 		justify-content: center;
@@ -610,7 +615,7 @@ mat-drawer.nav-collapsed {
 		box-shadow: none !important;
 	}
 
-	/* Remove the left-border active indicator on mobile */
+	/* Remove the left-border active indicator at narrow viewport width */
 	.nav-active {
 		box-shadow: none !important;
 	}
@@ -633,8 +638,8 @@ mat-drawer.nav-collapsed {
 		box-shadow: none !important;
 	}
 
-	/* Derived from .nav-collapsed .account-row-mobile-icon */
-	.account-row-mobile-icon {
+	/* Derived from .nav-collapsed .account-row-narrow-icon */
+	.account-row-narrow-icon {
 		display: inline-flex !important;
 		position: absolute;
 		inset: 0;

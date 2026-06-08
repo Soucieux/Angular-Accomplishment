@@ -20,6 +20,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
 import { Utilities } from './common/app.utilities';
 import {
+	APP_BREAKPOINT_COMPACT,
+	APP_BREAKPOINT_NARROW,
 	CN,
 	COMPONENT_DESTROY,
 	DIALOG_BTN_SIGN_OUT,
@@ -31,7 +33,12 @@ import {
 import { Observable, filter } from 'rxjs';
 import { BottomNavComponent } from './fontend/navigation/bottom-nav.component';
 import { NavItem } from './fontend/navigation/bottom-nav.model';
-import { NAV_ID_TO_ROUTE, NAV_ITEMS, PRIMARY_IDS, ROUTE_TO_NAV_ID } from './fontend/navigation/bottom-nav.data';
+import {
+	NAV_ID_TO_ROUTE,
+	NAV_ITEMS,
+	PRIMARY_IDS,
+	ROUTE_TO_NAV_ID
+} from './fontend/navigation/bottom-nav.data';
 
 @Component({
 	selector: 'root',
@@ -60,9 +67,14 @@ export class AppComponent implements OnInit, AfterViewInit {
 	protected navCollapsed = false;
 	protected navMobile = false;
 	protected navReady = false;
+	protected navCompact = false;
+	protected navMode: 'side' | 'over' = 'side';
+	protected compactOverlayOpen = false;
 	protected readonly navItems: NavItem[] = NAV_ITEMS;
 	protected readonly primaryIds: string[] = PRIMARY_IDS;
 	protected activeRoute = '';
+	protected mobileSignedIn = false;
+	protected mobileUserName = '';
 
 	constructor(
 		private authService: AuthService,
@@ -73,7 +85,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	) {
 		if (isPlatformBrowser(this.platformId)) {
 			this.navCollapsed = localStorage.getItem(LS_NAV_COLLAPSED_KEY) === 'true';
-			this.navMobile = this.utilities.isMobile();
+			this.applyViewportState(window.innerWidth);
 		}
 	}
 
@@ -85,10 +97,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.currentUser$ = this.authService.getCurrentUser();
-			this.navMobile = this.utilities.isMobile();
-			this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {
+			this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
 				const url = (event as NavigationEnd).urlAfterRedirects.split('?')[0];
 				this.activeRoute = ROUTE_TO_NAV_ID[url] ?? '';
+			});
+			this.currentUser$.subscribe((user) => {
+				this.mobileSignedIn = !!user;
+				this.mobileUserName = Utilities.getUserDisplayName(user);
 			});
 		}
 	}
@@ -114,15 +129,37 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Updates the mobile breakpoint flag on every window resize so the
-	 * content margin tracks the viewport width without relying on CSS @media
-	 * competing against Angular's scoped element selectors.
+	 * Updates the navMobile flag and compact-mode state on every window resize
+	 * so the nav drawer and content margin track the viewport correctly.
 	 */
 	@HostListener('window:resize')
 	protected onWindowResize(): void {
-		const isMobileWidth = this.utilities.isMobile();
-		if (isMobileWidth !== this.navMobile) {
-			this.navMobile = isMobileWidth;
+		this.applyViewportState(window.innerWidth);
+	}
+
+	/**
+	 * Applies the correct nav mode for the given viewport width. Called on
+	 * construction and on every resize so both paths share the same logic.
+	 * navMobile reflects actual mobile-device detection (coarse pointer); compact
+	 * mode activates for narrow desktop viewports in the 941–1200px range.
+	 *
+	 * @param width - The current viewport width in pixels.
+	 */
+	private applyViewportState(width: number): void {
+		const isMobileDevice = this.utilities.isMobile();
+		const wasCompact = this.navCompact;
+		this.navMobile = isMobileDevice;
+		if (isMobileDevice || width > APP_BREAKPOINT_COMPACT) {
+			this.navCompact = false;
+			this.navMode = 'side';
+			this.compactOverlayOpen = false;
+		} else {
+			if (!wasCompact) {
+				this.navCollapsed = true;
+				this.navMode = 'side';
+				this.compactOverlayOpen = false;
+			}
+			this.navCompact = true;
 		}
 	}
 
@@ -164,27 +201,41 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Toggles the navigation sidebar between its expanded and icon-only collapsed states.
-	 * Persists the collapsed state to localStorage so it survives page reloads.
+	 * Toggles the sidebar. In compact mode (941–1200px), collapsed state stays as
+	 * mode="side" (65px strip); expanding switches to mode="over" (full overlay).
+	 * Outside compact mode, expands or collapses in-place and persists to localStorage.
 	 */
 	protected toggleNav(): void {
-		this.navCollapsed = !this.navCollapsed;
-		if (this.navCollapsed) {
-			this.accountMenuOpen = false;
-		}
-		if (isPlatformBrowser(this.platformId)) {
-			localStorage.setItem(LS_NAV_COLLAPSED_KEY, String(this.navCollapsed));
+		if (this.navCompact) {
+			if (this.navMode === 'over') {
+				this.navMode = 'side';
+				this.compactOverlayOpen = false;
+			} else {
+				this.navMode = 'over';
+				this.compactOverlayOpen = true;
+			}
+		} else {
+			this.navCollapsed = !this.navCollapsed;
+			if (this.navCollapsed) {
+				this.accountMenuOpen = false;
+			}
+			if (isPlatformBrowser(this.platformId)) {
+				localStorage.setItem(LS_NAV_COLLAPSED_KEY, String(this.navCollapsed));
+			}
 		}
 	}
 
 	/**
-	 * Returns true when the viewport width is at or below the mobile breakpoint
-	 * where the sidebar collapses to icon-only mode.
+	 * Handles the drawer opened-change event emitted by Angular Material.
+	 * Resets to side mode when the overlay is dismissed via backdrop or Escape.
 	 *
-	 * @returns True if the current viewport is mobile-width.
+	 * @param opened - The new opened state emitted by the drawer.
 	 */
-	protected isMobileView(): boolean {
-		return isPlatformBrowser(this.platformId) && window.innerWidth <= 1100;
+	protected handleDrawerOpenedChange(opened: boolean): void {
+		if (this.navMode === 'over' && !opened) {
+			this.navMode = 'side';
+			this.compactOverlayOpen = false;
+		}
 	}
 
 	/**
@@ -198,11 +249,12 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Handles the account button click. On mobile or when the nav is collapsed,
-	 * opens a sign-out confirmation dialog. Otherwise toggles the popover menu.
+	 * Handles the account button click. On mobile or when the nav is collapsed
+	 * outside of compact overlay mode, opens a sign-out confirmation dialog.
+	 * Otherwise toggles the popover menu.
 	 */
 	protected handleAccountButtonClick(): void {
-		if (this.isMobileView() || this.navCollapsed) {
+		if (this.navMobile || (this.navCollapsed && !this.navCompact)) {
 			this.dialogService.openDialog(
 				this.dialogComponentContainer,
 				DIALOG_CONFIRM,
@@ -212,6 +264,22 @@ export class AppComponent implements OnInit, AfterViewInit {
 			return;
 		}
 		this.toggleAccountMenu();
+	}
+
+	/**
+	 * Closes the account popover when focus moves outside the account row wrapper.
+	 * Compares the event's relatedTarget against the wrapper element so that
+	 * interactions within the popover (e.g. focusing the sign-out button) do not
+	 * trigger a close.
+	 *
+	 * @param event - The FocusEvent emitted when a child element loses focus.
+	 */
+	protected handleAccountMenuDismiss(event: FocusEvent): void {
+		if (!this.accountMenuOpen) return;
+		const wrapper = event.currentTarget as HTMLElement;
+		if (!wrapper.contains(event.relatedTarget as Node)) {
+			this.accountMenuOpen = false;
+		}
 	}
 
 	/**
@@ -233,5 +301,17 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 */
 	protected getUserInitial(user: any): string {
 		return Utilities.getUserDisplayName(user).charAt(0).toUpperCase();
+	}
+
+	/**
+	 * Opens a sign-out confirmation dialog from the mobile bottom-nav account
+	 * popover, matching the behaviour of the desktop sign-out flow.
+	 */
+	protected handleMobileSignOut(): void {
+		this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, () => this.logout(), [
+			MSG_LOGOUT_CONFIRM,
+			DIALOG_HEADER_SIGN_OUT,
+			DIALOG_BTN_SIGN_OUT
+		]);
 	}
 }

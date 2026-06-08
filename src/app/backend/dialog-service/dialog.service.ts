@@ -16,7 +16,7 @@ import {
 	DIALOG_ERROR,
 	DIALOG_HISTORY,
 	DIALOG_LINK,
-	DIALOG_RECIPE_TYPE,
+	DIALOG_INGREDIENT,
 	ERROR_PERMISSION_DENIED,
 	MSG_DIALOG_ALREADY_OPEN,
 	MSG_DIALOG_CONTAINER_NOT_FOUND,
@@ -26,7 +26,7 @@ import {
 	SEARCH
 } from '../../common/app.constant';
 import { MessageService } from 'primeng/api';
-import { RecipeTypeDialogComponent } from './recipe-type/recipe-type.component';
+import { IngredientDialogComponent } from './ingredient/ingredient.component';
 import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
 import { Utilities } from '../../common/app.utilities';
 import { AddDebtDialogComponent } from './debt/debt.component';
@@ -62,8 +62,8 @@ export class DialogService {
 				return ErrorDialogComponent;
 			case DIALOG_BLOCK:
 				return BlockDialogComponent;
-			case DIALOG_RECIPE_TYPE:
-				return RecipeTypeDialogComponent;
+			case DIALOG_INGREDIENT:
+				return IngredientDialogComponent;
 			case DIALOG_DEBT:
 				return AddDebtDialogComponent;
 			case DIALOG_LINK:
@@ -112,7 +112,7 @@ export class DialogService {
 
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
-		dialogType: 'recipe-type',
+		dialogType: 'ingredient',
 		applyCallback: (newIds: Set<IngredientType>) => void,
 		data: { masterTabs: TypeTab[]; enabledTypeIds: Set<IngredientType> }
 	): void;

@@ -2,18 +2,18 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RECIPE_EDITOR_TYPE_MAX, RECIPE_ITYPE_MEAT, RECIPE_ITYPE_VEGETABLE } from '../../../common/app.constant';
 import { IngredientType } from '../../../fontend/recipe/recipe.model';
-import { RecipeTypeDialogComponent } from './recipe-type.component';
+import { IngredientDialogComponent } from './ingredient.component';
 
-describe('RecipeTypeDialogComponent', () => {
-	let component: RecipeTypeDialogComponent;
-	let fixture: ComponentFixture<RecipeTypeDialogComponent>;
+describe('IngredientDialogComponent', () => {
+	let component: IngredientDialogComponent;
+	let fixture: ComponentFixture<IngredientDialogComponent>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			imports: [RecipeTypeDialogComponent]
+			imports: [IngredientDialogComponent]
 		}).compileComponents();
 
-		fixture = TestBed.createComponent(RecipeTypeDialogComponent);
+		fixture = TestBed.createComponent(IngredientDialogComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});

@@ -5,14 +5,14 @@ import { RECIPE_EDITOR_TYPE_MAX, RECIPE_ITYPE_DIALOG_TITLE } from '../../../comm
 import { IngredientType, TypeTab } from '../../../fontend/recipe/recipe.model';
 
 @Component({
-	selector: 'recipe-type-dialog',
+	selector: 'ingredient-dialog',
 	standalone: true,
 	imports: [CommonModule, DialogModule],
-	templateUrl: './recipe-type.component.html',
-	styleUrl: './recipe-type.component.css'
+	templateUrl: './ingredient.component.html',
+	styleUrl: './ingredient.component.css'
 })
-export class RecipeTypeDialogComponent {
-	@Output() closed$ = new EventEmitter<void>();
+export class IngredientDialogComponent {
+	@Output() public closed$ = new EventEmitter<void>();
 
 	protected readonly RECIPE_ITYPE_DIALOG_TITLE = RECIPE_ITYPE_DIALOG_TITLE;
 	protected readonly RECIPE_EDITOR_TYPE_MAX = RECIPE_EDITOR_TYPE_MAX;

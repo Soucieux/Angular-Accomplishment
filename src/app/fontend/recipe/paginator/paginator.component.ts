@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
-	selector: 'recipe-paginator',
+	selector: 'paginator',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	templateUrl: './recipe-paginator.component.html',
-	styleUrls: ['./recipe-paginator.component.css']
+	templateUrl: './paginator.component.html',
+	styleUrls: ['./paginator.component.css']
 })
-export class RecipePaginatorComponent {
+export class PaginatorComponent {
 	/** Current page, 0-indexed. */
 	@Input() page = 0;
 

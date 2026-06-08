@@ -65,22 +65,22 @@ export interface IngredientGroup {
 }
 
 export const MASTER_TYPE_TABS: TypeTab[] = [
-	{ id: RECIPE_ITYPE_VEGETABLE,       emoji: '🥬',  label: 'Vegetables' },
-	{ id: RECIPE_ITYPE_MEAT,      emoji: '🥩',  label: 'Meat'       },
-	{ id: RECIPE_ITYPE_SEASONING,      emoji: '🧂',  label: 'Seasoning'  },
-	{ id: RECIPE_ITYPE_DAIRY,     emoji: '🧈',  label: 'Dairy'      },
-	{ id: RECIPE_ITYPE_GRAIN,     emoji: '🌾',  label: 'Grain'      },
-	{ id: RECIPE_ITYPE_LIQUID,       emoji: '💧',  label: 'Liquid'     },
-	{ id: RECIPE_ITYPE_SPICE,     emoji: '🌶️', label: 'Spice'      },
-	{ id: RECIPE_ITYPE_SEAFOOD,   emoji: '🦐',  label: 'Seafood'    },
-	{ id: RECIPE_ITYPE_EGG,       emoji: '🥚',  label: 'Eggs'       },
-	{ id: RECIPE_ITYPE_NUT,       emoji: '🥜',  label: 'Nuts'       },
-	{ id: RECIPE_ITYPE_FRUIT,     emoji: '🍎',  label: 'Fruit'      },
-	{ id: RECIPE_ITYPE_OIL,       emoji: '🫙',  label: 'Oil'        },
-	{ id: RECIPE_ITYPE_HERB,      emoji: '🌿',  label: 'Herb'       },
-	{ id: RECIPE_ITYPE_FUNGI,     emoji: '🍄',  label: 'Fungi'      },
-	{ id: RECIPE_ITYPE_SWEET,     emoji: '🍯',  label: 'Sweetener'  },
-	{ id: RECIPE_ITYPE_CONDIMENT, emoji: '🥫',  label: 'Condiment'  },
+	{ id: RECIPE_ITYPE_VEGETABLE, emoji: '🥬', label: 'Vegetables' },
+	{ id: RECIPE_ITYPE_MEAT, emoji: '🥩', label: 'Meat' },
+	{ id: RECIPE_ITYPE_SEASONING, emoji: '🧂', label: 'Seasoning' },
+	{ id: RECIPE_ITYPE_DAIRY, emoji: '🧈', label: 'Dairy' },
+	{ id: RECIPE_ITYPE_GRAIN, emoji: '🌾', label: 'Grain' },
+	{ id: RECIPE_ITYPE_LIQUID, emoji: '💧', label: 'Liquid' },
+	{ id: RECIPE_ITYPE_SPICE, emoji: '🌶️', label: 'Spice' },
+	{ id: RECIPE_ITYPE_SEAFOOD, emoji: '🦐', label: 'Seafood' },
+	{ id: RECIPE_ITYPE_EGG, emoji: '🥚', label: 'Eggs' },
+	{ id: RECIPE_ITYPE_NUT, emoji: '🥜', label: 'Nuts' },
+	{ id: RECIPE_ITYPE_FRUIT, emoji: '🍎', label: 'Fruit' },
+	{ id: RECIPE_ITYPE_OIL, emoji: '🫙', label: 'Oil' },
+	{ id: RECIPE_ITYPE_HERB, emoji: '🌿', label: 'Herb' },
+	{ id: RECIPE_ITYPE_FUNGI, emoji: '🍄', label: 'Fungi' },
+	{ id: RECIPE_ITYPE_SWEET, emoji: '🍯', label: 'Sweetener' },
+	{ id: RECIPE_ITYPE_CONDIMENT, emoji: '🥫', label: 'Condiment' }
 ];
 
 export interface BadgeTag {
@@ -151,7 +151,7 @@ export const RECIPE_CATEGORIES: string[] = [
 	RECIPE_CATEGORY_CHINESE,
 	RECIPE_CATEGORY_WESTERN,
 	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_DESSERT,
+	RECIPE_CATEGORY_DESSERT
 ];
 
 /**
@@ -163,7 +163,7 @@ export const RECIPE_EDITOR_CATEGORIES: string[] = [
 	RECIPE_CATEGORY_CHINESE,
 	RECIPE_CATEGORY_WESTERN,
 	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_DESSERT,
+	RECIPE_CATEGORY_DESSERT
 ];
 
 /** The 7 ingredient types active in the editor by default when creating a new recipe. */
@@ -174,7 +174,7 @@ export const RECIPE_EDITOR_DEFAULT_TYPES: IngredientType[] = [
 	RECIPE_ITYPE_DAIRY,
 	RECIPE_ITYPE_GRAIN,
 	RECIPE_ITYPE_LIQUID,
-	RECIPE_ITYPE_SPICE,
+	RECIPE_ITYPE_SPICE
 ];
 
 /** Union of valid editing modes for the recipe editor. */

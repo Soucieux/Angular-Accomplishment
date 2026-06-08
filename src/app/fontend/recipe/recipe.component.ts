@@ -96,12 +96,12 @@ import {
 	TypeTab
 } from './recipe.model';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
-import { RecipePaginatorComponent } from './recipe-paginator/recipe-paginator.component';
+import { PaginatorComponent } from './paginator/paginator.component';
 
 @Component({
 	selector: 'recipe',
 	standalone: true,
-	imports: [CommonModule, FormsModule, AutoComplete, AccessDeniedComponent, RecipePaginatorComponent],
+	imports: [CommonModule, FormsModule, AutoComplete, AccessDeniedComponent, PaginatorComponent],
 	templateUrl: './recipe.component.html',
 	styleUrls: ['../../common/glass-card.css', './recipe.component.css']
 })

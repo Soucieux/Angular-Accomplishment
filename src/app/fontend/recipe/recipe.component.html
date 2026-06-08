@@ -73,7 +73,7 @@
 										@for (b of recipe.badges; track b.label) {
 											<span class="ipill" [class]="b.type"
 												>{{ b.emoji
-												}}<span class="hide-on-mobile"> {{ b.label }}</span></span
+												}}<span class="hide-on-narrow-or-mobile"> {{ b.label }}</span></span
 											>
 										}
 									</div>
@@ -82,7 +82,7 @@
 											<span class="material-symbols-outlined">schedule</span>
 											{{ recipe.cookTimeMin }} min
 										</span>
-										<span class="meta-chip hide-on-mobile">
+										<span class="meta-chip hide-on-narrow-or-mobile">
 											<span class="material-symbols-outlined">restaurant</span>
 											{{ recipe.baseServings }} servings
 										</span>
@@ -94,7 +94,7 @@
 					</div>
 					@if (filteredRecipes.length > pageSize) {
 						<div class="recipes-paginator">
-							<recipe-paginator
+							<paginator
 								[page]="currentPage"
 								[totalItems]="filteredRecipes.length"
 								[perPage]="pageSize"

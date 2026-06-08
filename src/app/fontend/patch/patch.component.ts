@@ -19,6 +19,7 @@ import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/app.utilities';
 import {
+	ACTIVITY_SOURCE_PATCH,
 	ACTIVITY_TYPE_BUG_LOGGED,
 	ACTIVITY_TYPE_EDITED,
 	ACTIVITY_TYPE_STATUS_CHANGED,
@@ -35,6 +36,8 @@ import {
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
 	PATCH_MSG_DELETE_CONFIRM,
+	STATS_FIELD_PATCH_NOTES_TOTAL,
+	STATS_FIELD_RECENT_ACTIVITIES,
 	TOAST_INFO,
 	TOAST_WARN,
 	SEVERITY_SUCCESS,
@@ -357,7 +360,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			const ts = Utilities.getCurrentFormattedTime(true);
 			if (changes.status) {
 				this.databaseService
-					.appendToPatchActivityLog({
+					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+						source: ACTIVITY_SOURCE_PATCH,
 						type: ACTIVITY_TYPE_STATUS_CHANGED,
 						component: row.component,
 						element: record.original.element,
@@ -369,7 +373,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 					.catch(() => {});
 			} else if (changes.details) {
 				this.databaseService
-					.appendToPatchActivityLog({
+					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+						source: ACTIVITY_SOURCE_PATCH,
 						type: ACTIVITY_TYPE_EDITED,
 						component: row.component,
 						element: record.original.element,
@@ -400,7 +405,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				/* Fire-and-forget: write the Recent Activity stat with the correct
 				   1-based index (patchNotesList doesn't include the new note yet). */
 				this.databaseService
-					.appendToPatchActivityLog({
+					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+						source: ACTIVITY_SOURCE_PATCH,
 						type: !!snapshot.isBug ? ACTIVITY_TYPE_BUG_LOGGED : HISTORY_STATUS_ADDED,
 						component: snapshot.component,
 						element: snapshot.element,
@@ -408,6 +414,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 						noteIndex,
 						timestamp: Utilities.getCurrentFormattedTime(true)
 					})
+					.catch(() => {});
+				this.databaseService
+					.updateStatisticsFields({ [STATS_FIELD_PATCH_NOTES_TOTAL]: noteIndex })
 					.catch(() => {});
 			})
 			.catch(() => this.dialogService.showUnexpectedError(this.dialogComponentContainer));
@@ -433,13 +442,17 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 					await this.databaseService.removePatchNote(key);
 					// Fire-and-forget: record the deletion in stats for the Recent Activity widget.
 					this.databaseService
-						.appendToPatchActivityLog({
+						.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+							source: ACTIVITY_SOURCE_PATCH,
 							type: HISTORY_STATUS_DELETED,
 							component: noteToDelete?.component ?? '',
 							element: noteToDelete?.element ?? '',
 							noteIndex,
 							timestamp: Utilities.getCurrentFormattedTime(true)
 						})
+						.catch(() => {});
+					this.databaseService
+						.updateStatisticsFields({ [STATS_FIELD_PATCH_NOTES_TOTAL]: this.patchNotesList.length - 1 })
 						.catch(() => {});
 				} catch (error) {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);

@@ -24,6 +24,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
+	ACTIVITY_SOURCE_LINK,
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_DATE_CALCULATOR,
@@ -43,8 +44,11 @@ import {
 	NEXUS_LABEL_NEXT_MONTH,
 	NEXUS_LABEL_RESET,
 	NEXUS_MSG_RESET_CONFIRM,
+	HISTORY_STATUS_ADDED,
+	HISTORY_STATUS_DELETED,
 	REMINDER_TABLE_DATE_CALCULATOR,
-	STATS_FIELD_RECENT_REMINDER,
+	ACTIVITY_SOURCE_REMINDER,
+	STATS_FIELD_RECENT_ACTIVITIES,
 	DIALOG_LINK,
 	NEXUS_DEFAULT_CATEGORY_COLOR,
 	NEXUS_MSG_CATEGORY_ADDED,
@@ -565,7 +569,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.triggerSaveIndicator(DATABASE_DATE_CALCULATOR);
 			// Fire-and-forget: surface this change in the Recent Activity widget.
 			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
+				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_REMINDER,
 					type: ACTIVITY_TYPE_UPDATED,
 					table: REMINDER_TABLE_DATE_CALCULATOR,
 					text: '',
@@ -752,6 +757,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		this.openBlockDialog(async () => {
 			const finalUrl = Utilities.normalizeUrl(formData.url);
 			try {
+				const domain = Utilities.getHostname(finalUrl);
+				const timestamp = Utilities.getCurrentFormattedTime(true);
 				if (existingLink) {
 					await this.databaseService.updateUsefulLink(existingLink._id, {
 						url: finalUrl,
@@ -761,6 +768,14 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					});
 					LOG.info(this.className, `Link updated: ${finalUrl}`);
 					this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_UPDATED);
+					this.databaseService
+						.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+							source: ACTIVITY_SOURCE_LINK,
+							type: ACTIVITY_TYPE_UPDATED,
+							domain,
+							timestamp
+						})
+						.catch(() => {});
 				} else {
 					await this.databaseService.addUsefulLink({
 						url: finalUrl,
@@ -772,6 +787,14 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					});
 					LOG.info(this.className, `Link saved: ${finalUrl}`);
 					this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_SAVED);
+					this.databaseService
+						.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+							source: ACTIVITY_SOURCE_LINK,
+							type: HISTORY_STATUS_ADDED,
+							domain,
+							timestamp
+						})
+						.catch(() => {});
 				}
 			} catch (error) {
 				LOG.error(this.className, NEXUS_MSG_SAVE_LINK_FAILED, error as Error);
@@ -803,11 +826,21 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			() => {
+				const domain = Utilities.getHostname(link.url);
+				const timestamp = Utilities.getCurrentFormattedTime(true);
 				this.databaseService
 					.removeUsefulLink(link._id)
 					.then(() => {
 						LOG.info(this.className, `Link deleted: ${link.title}`);
 						this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_LINK_DELETED);
+						this.databaseService
+							.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+								source: ACTIVITY_SOURCE_LINK,
+								type: HISTORY_STATUS_DELETED,
+								domain,
+								timestamp
+							})
+							.catch(() => {});
 					})
 					.catch((error: unknown) => {
 						LOG.error(this.className, `Failed to delete link: ${link.title}`, error as Error);

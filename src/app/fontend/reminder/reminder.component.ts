@@ -40,13 +40,13 @@ import {
 	REMINDER_AWAIT_SUFFIX_CN,
 	REMINDER_AWAIT_SUFFIX_EN,
 	REMINDER_CATEGORY_COLOR_DEFAULT,
-	REMINDER_CATEGORY_COLOR_HEALTH,
-	REMINDER_CATEGORY_COLOR_HOME,
+	REMINDER_CATEGORY_COLOR_OTHER,
 	REMINDER_CATEGORY_COLOR_PERSONAL,
+	REMINDER_CATEGORY_COLOR_UTILITY,
 	REMINDER_CATEGORY_COLOR_WORK,
-	REMINDER_CATEGORY_HEALTH,
-	REMINDER_CATEGORY_HOME,
+	REMINDER_CATEGORY_OTHER,
 	REMINDER_CATEGORY_PERSONAL,
+	REMINDER_CATEGORY_UTILITY,
 	REMINDER_CATEGORY_WORK,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
@@ -67,12 +67,13 @@ import {
 	REMINDER_PLACEHOLDER_TEXT,
 	REMINDER_SUBTITLE_CN,
 	REMINDER_SUBTITLE_EN,
-	REMINDER_TABLE_MESSAGES,
 	REMINDER_VALUE_KEY_DATE,
 	REMINDER_VALUE_KEY_LINK,
 	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
-	STATS_FIELD_RECENT_REMINDER,
+	ACTIVITY_SOURCE_REMINDER,
+	STATS_CAP_ACTIVITY_LOG,
+	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS
@@ -137,8 +138,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly categoryColorMap: Record<string, string> = {
 		[REMINDER_CATEGORY_WORK]: REMINDER_CATEGORY_COLOR_WORK,
 		[REMINDER_CATEGORY_PERSONAL]: REMINDER_CATEGORY_COLOR_PERSONAL,
-		[REMINDER_CATEGORY_HOME]: REMINDER_CATEGORY_COLOR_HOME,
-		[REMINDER_CATEGORY_HEALTH]: REMINDER_CATEGORY_COLOR_HEALTH
+		[REMINDER_CATEGORY_UTILITY]: REMINDER_CATEGORY_COLOR_UTILITY,
+		[REMINDER_CATEGORY_OTHER]: REMINDER_CATEGORY_COLOR_OTHER
 	};
 
 	protected loading = true;
@@ -205,7 +206,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			this.ngZone.runOutsideAngular(() => Utilities.attachScrollAutoHide(this.reminderPanel?.nativeElement));
+			this.ngZone.runOutsideAngular(() =>
+				Utilities.attachScrollAutoHide(this.reminderPanel?.nativeElement)
+			);
 			this.gridResizeObserver = new ResizeObserver(() =>
 				this.ngZone.run(() => this.updateGridLayout())
 			);
@@ -274,7 +277,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			}));
 		this.databaseService
 			.updateStatisticsFields({
-				[STATS_FIELD_REMINDER_UPCOMING]: upcoming,
+				[STATS_FIELD_REMINDER_UPCOMING]: upcoming.slice(0, STATS_CAP_ACTIVITY_LOG),
 				[STATS_FIELD_REMINDER_TOTAL]: this.items.length
 			})
 			.catch(() => {});
@@ -347,9 +350,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.triggerSaveIndicator();
 			// Step 3: Append the change to the activity log
 			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
+				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_REMINDER,
 					type: ACTIVITY_TYPE_UPDATED,
-					table: REMINDER_TABLE_MESSAGES,
 					text: this.items.find((item) => item.key === entryKey)?.text ?? '',
 					timestamp: Utilities.getCurrentFormattedTime(true)
 				})
@@ -378,9 +381,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			await this.databaseService.removeRecordFromReminderTable(entryKey);
 			this.triggerSaveIndicator();
 			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
+				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_REMINDER,
 					type: HISTORY_STATUS_DELETED,
-					table: REMINDER_TABLE_MESSAGES,
 					text: itemText,
 					timestamp: Utilities.getCurrentFormattedTime(true)
 				})
@@ -679,9 +682,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			// Step 4: Flash save indicator and append to the activity log
 			this.triggerSaveIndicator();
 			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
+				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_REMINDER,
 					type: HISTORY_STATUS_ADDED,
-					table: REMINDER_TABLE_MESSAGES,
 					text: newRecord.text ?? '',
 					timestamp: Utilities.getCurrentFormattedTime(true)
 				})
@@ -1152,10 +1155,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		const itemGapPx = parseInt(style.getPropertyValue('--individual-item-gap'));
 
 		const containerWidth = container.clientWidth;
-		const itemsPerRow = Math.max(
-			1,
-			Math.floor((containerWidth - itemGapPx) / (itemWidthPx + itemGapPx))
-		);
+		const itemsPerRow = Math.max(1, Math.floor((containerWidth - itemGapPx) / (itemWidthPx + itemGapPx)));
 		grid.style.gridTemplateColumns = `repeat(${itemsPerRow}, minmax(${itemWidthPx}px, 1fr))`;
 
 		const newPageSize = itemsPerRow * REMINDER_ROWS_PER_PAGE;

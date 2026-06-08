@@ -55,7 +55,7 @@ export const DIALOG_BLOCK = 'block';
 /** Dialog type for the debt dialog (add and edit modes share one dialog). */
 export const DIALOG_DEBT = 'debt';
 /** Dialog type for the ingredient type manager in the editor. */
-export const DIALOG_RECIPE_TYPE = 'recipe-type';
+export const DIALOG_INGREDIENT = 'ingredient';
 /** Dialog type for the add/edit link dialog on the Nexus page. */
 export const DIALOG_LINK = 'link';
 
@@ -168,28 +168,38 @@ export const LINK_TARGET_BLANK = '_blank';
 /* Type discriminators written into activity-log entries across all pages.
    Use HISTORY_STATUS_ADDED / HISTORY_STATUS_DELETED for 'added' / 'deleted'. */
 export const ACTIVITY_TYPE_UPDATED = 'updated';
+export const ACTIVITY_TYPE_RESET = 'reset';
 export const ACTIVITY_TYPE_BUG_LOGGED = 'bugLogged';
 export const ACTIVITY_TYPE_STATUS_CHANGED = 'statusChanged';
 export const ACTIVITY_TYPE_EDITED = 'edited';
+/** Source tag written into every recentActivities entry — identifies the originating page. */
+export const ACTIVITY_SOURCE_MOVIE = 'movie';
+export const ACTIVITY_SOURCE_REMINDER = 'reminder';
+export const ACTIVITY_SOURCE_RESONANCE = 'resonance';
+export const ACTIVITY_SOURCE_PATCH = 'patch';
+export const ACTIVITY_SOURCE_LINK = 'link';
+export const ACTIVITY_SOURCE_DEBT = 'debt';
+export const ACTIVITY_SOURCE_RECIPE = 'recipe';
 
 ////////////////////// Below are statistics document field name constants /////////////
 /* Single source of truth for every key read from or written to the statistics
    document. Use these constants everywhere — never inline the raw string. */
-export const STATS_FIELD_RECENT_MOVIE = 'recentMovieActivities';
-export const STATS_FIELD_RECENT_PATCH = 'recentPatchActivities';
-export const STATS_FIELD_RECENT_REMINDER = 'recentReminderActivities';
-export const STATS_FIELD_RECENT_RESONANCE = 'recentResonanceActivities';
+export const STATS_FIELD_RECENT_ACTIVITIES = 'recentActivities';
 export const STATS_FIELD_REMINDER_UPCOMING = 'reminderUpcoming';
 export const STATS_FIELD_REMINDER_TOTAL = 'reminderTotal';
+export const STATS_FIELD_PATCH_NOTES_TOTAL = 'patchNotesTotal';
 export const STATS_FIELD_DEBT_UPCOMING = 'debtUpcoming';
+/** Total count of all unpaid debts — written separately because debtUpcoming is capped at 20. */
+export const STATS_FIELD_DEBT_TOTAL = 'debtTotal';
 export const STATS_FIELD_TOTAL_RECIPES = 'totalRecipes';
+export const STATS_FIELD_RECIPE_LIST = 'recipeList';
 export const STATS_FIELD_GENRE = 'genre';
 
 ////////////////////// Below are statistics display cap constants /////////////////////
-/* The combined recent-activity feed shows at most this many items.
-   Each source array is also trimmed to this cap on write so CloudBase
-   never stores more than what the dashboard can ever display. */
-export const STATS_CAP_ACTIVITY_LOG = 24;
+/* All list-based stat arrays (recentActivities, reminderUpcoming, debtUpcoming,
+   recipeList) are capped at this many items on every write. Counters (reminderTotal,
+   debtTotal, totalRecipes) are always the uncapped true total. */
+export const STATS_CAP_ACTIVITY_LOG = 20;
 
 ////////////////////// Below are home page constants /////////////////////////////////
 export const HOME_MSG_LOAD_STATISTICS_FAILED = 'Failed to load statistics';
@@ -203,8 +213,8 @@ export const HOME_LINKS_DOT_FALLBACK = '#5a6878';
 export const HOME_GENRE_COLORS: string[] = ['#4776e6', '#e91e8c', '#f7971e', '#78d000', '#8e54e9', '#22d3ee'];
 
 export const HOME_ACTIVITY_ICON_MOVIE_ADDED = 'live_tv';
+export const HOME_ACTIVITY_ICON_MOVIE_UPDATED = 'edit_note';
 export const HOME_ACTIVITY_ICON_MOVIE_REMOVED = 'tv_off';
-export const HOME_ACTIVITY_ICON_MOVIE_RATED = 'star';
 export const HOME_ACTIVITY_ICON_MOVIE_SEARCHED = 'search';
 export const HOME_ACTIVITY_ICON_PATCH_ADDED = 'note_stack';
 export const HOME_ACTIVITY_ICON_PATCH_BUG = 'bug_report';
@@ -214,31 +224,53 @@ export const HOME_ACTIVITY_ICON_REMINDER_ADDED = 'note_add';
 export const HOME_ACTIVITY_ICON_REMINDER_UPDATED = 'edit_note';
 export const HOME_ACTIVITY_ICON_RESONANCE_ADDED = 'format_quote';
 export const HOME_ACTIVITY_ICON_RESONANCE_REMOVED = 'format_clear';
+export const HOME_ACTIVITY_ICON_LINK_ADDED = 'add_link';
+export const HOME_ACTIVITY_ICON_LINK_UPDATED = 'edit';
+export const HOME_ACTIVITY_ICON_LINK_REMOVED = 'link_off';
+export const HOME_ACTIVITY_ICON_DEBT_ADDED = 'account_balance';
+export const HOME_ACTIVITY_ICON_DEBT_UPDATED = 'currency_exchange';
+export const HOME_ACTIVITY_ICON_DEBT_RESET = 'restart_alt';
+export const HOME_ACTIVITY_ICON_DEBT_REMOVED = 'money_off';
+export const HOME_ACTIVITY_ICON_RECIPE_ADDED = 'restaurant';
+export const HOME_ACTIVITY_ICON_RECIPE_UPDATED = 'edit';
+export const HOME_ACTIVITY_ICON_RECIPE_REMOVED = 'no_meals';
 /** Shared delete icon used for all activity-feed deleted events. */
 export const HOME_ACTIVITY_ICON_DELETED = 'delete';
 
 export const HOME_ACTIVITY_LABEL_MOVIE_ADDED = 'Movie Added';
+export const HOME_ACTIVITY_LABEL_MOVIE_UPDATED = 'Movie Updated';
 export const HOME_ACTIVITY_LABEL_MOVIE_REMOVED = 'Movie Removed';
-export const HOME_ACTIVITY_LABEL_MOVIE_RATED = 'Movie Rated';
-export const HOME_ACTIVITY_LABEL_MOVIE_SEARCHED = 'Entertainment Rate Search';
-export const HOME_ACTIVITY_LABEL_PATCH_ADDED = 'Patch Notes Added';
-export const HOME_ACTIVITY_LABEL_PATCH_BUG = 'Patch Notes Bug Logged';
-export const HOME_ACTIVITY_LABEL_PATCH_STATUS = 'Patch Notes Status Changed';
-export const HOME_ACTIVITY_LABEL_PATCH_UPDATED = 'Patch Notes Updated';
-export const HOME_ACTIVITY_LABEL_PATCH_DELETED = 'Patch Notes Deleted';
+export const HOME_ACTIVITY_LABEL_MOVIE_SEARCHED = 'Movie Searched';
+export const HOME_ACTIVITY_LABEL_PATCH_ADDED = 'Patch Added';
+export const HOME_ACTIVITY_LABEL_PATCH_BUG = 'Bug Logged';
+export const HOME_ACTIVITY_LABEL_PATCH_STATUS = 'Status Changed';
+export const HOME_ACTIVITY_LABEL_PATCH_UPDATED = 'Patch Edited';
+export const HOME_ACTIVITY_LABEL_PATCH_DELETED = 'Patch Deleted';
 export const HOME_ACTIVITY_LABEL_REMINDER_ADDED = 'Reminder Added';
 export const HOME_ACTIVITY_LABEL_REMINDER_DELETED = 'Reminder Deleted';
 export const HOME_ACTIVITY_LABEL_REMINDER_UPDATED = 'Reminder Updated';
-export const HOME_ACTIVITY_LABEL_RESONANCE_ADDED = 'Resonance Quote Added';
-export const HOME_ACTIVITY_LABEL_RESONANCE_REMOVED = 'Resonance Quote Removed';
+export const HOME_ACTIVITY_LABEL_RESONANCE_ADDED = 'Quote Added';
+export const HOME_ACTIVITY_LABEL_RESONANCE_REMOVED = 'Quote Removed';
+export const HOME_ACTIVITY_LABEL_LINK_ADDED = 'Link Added';
+export const HOME_ACTIVITY_LABEL_LINK_UPDATED = 'Link Updated';
+export const HOME_ACTIVITY_LABEL_LINK_REMOVED = 'Link Removed';
+export const HOME_ACTIVITY_LABEL_DEBT_ADDED = 'Debt Added';
+export const HOME_ACTIVITY_LABEL_DEBT_UPDATED = 'Debt Updated';
+export const HOME_ACTIVITY_LABEL_DEBT_RESET = 'Debt Reset';
+export const HOME_ACTIVITY_LABEL_DEBT_REMOVED = 'Debt Removed';
+export const HOME_ACTIVITY_LABEL_RECIPE_ADDED = 'Recipe Added';
+export const HOME_ACTIVITY_LABEL_RECIPE_UPDATED = 'Recipe Updated';
+export const HOME_ACTIVITY_LABEL_RECIPE_REMOVED = 'Recipe Removed';
 
-export const HOME_ACTIVITY_COLOR_MOVIE_ADDED = '#e91e8c';
-export const HOME_ACTIVITY_COLOR_MOVIE_RATED = '#f7971e';
-export const HOME_ACTIVITY_COLOR_MOVIE_SEARCHED = '#4776e6';
+/** Shared entertainment teal colour for all non-deleted movie activity entries. */
+export const HOME_ACTIVITY_COLOR_MOVIE = '#11998e';
 export const HOME_ACTIVITY_COLOR_NEUTRAL = '#94a3b8';
 export const HOME_ACTIVITY_COLOR_PATCH = '#8e54e9';
 export const HOME_ACTIVITY_COLOR_REMINDER = '#f59e0b';
 export const HOME_ACTIVITY_COLOR_RESONANCE = '#fda085';
+export const HOME_ACTIVITY_COLOR_LINK = '#60a5fa';
+export const HOME_ACTIVITY_COLOR_DEBT = '#06b6d4';
+export const HOME_ACTIVITY_COLOR_RECIPE = '#22c55e';
 /** Shared delete color used for all activity-feed deleted events. */
 export const HOME_ACTIVITY_COLOR_DELETED = '#ef4444';
 
@@ -258,6 +290,16 @@ export const HOME_PROGRESS_KEY_WEEK = 'week';
 export const HOME_PROGRESS_KEY_DAY = 'day';
 /** Material icon name for a calendar reminder event in the week-agenda strip. */
 export const HOME_AGENDA_ICON_EVENT = 'event';
+/** Material icon name for a reminder item in the week-agenda strip — matches the reminders widget header. */
+export const HOME_AGENDA_ICON_REMINDER = 'notifications';
+/** Overflow-row label for the reminders panel. */
+export const HOME_OVERFLOW_LABEL_REMINDERS = 'View all in Reminders';
+/** Overflow-row label for the debt panel. */
+export const HOME_OVERFLOW_LABEL_DEBT = 'View all in Debt Sonata';
+/** Overflow-row label for the recipes panel. */
+export const HOME_OVERFLOW_LABEL_RECIPES = 'View all in Recipes';
+/** Overflow-row label for the quick links panel. */
+export const HOME_OVERFLOW_LABEL_LINKS = 'View all in Quick Links';
 /** ID prefix for reminder rows in the OrbitalComponent reminders panel. */
 export const HOME_REMINDER_ROW_ID_PREFIX = 'rem-';
 /** ID prefix for debt rows in the OrbitalComponent debt-sonata panel. */
@@ -617,26 +659,26 @@ export const REMINDER_ROWS_PER_PAGE = 7;
 export const REMINDER_CATEGORY_WORK = 'Work';
 /** Reminder category label — Personal. */
 export const REMINDER_CATEGORY_PERSONAL = 'Personal';
-/** Reminder category label — Home. */
-export const REMINDER_CATEGORY_HOME = 'Home';
-/** Reminder category label — Health. */
-export const REMINDER_CATEGORY_HEALTH = 'Health';
+/** Reminder category label — Utility. */
+export const REMINDER_CATEGORY_UTILITY = 'Utility';
+/** Reminder category label — Other. */
+export const REMINDER_CATEGORY_OTHER = 'Other';
 /** Accent color for the Work category. */
 export const REMINDER_CATEGORY_COLOR_WORK = '#1a6dff';
 /** Accent color for the Personal category. */
 export const REMINDER_CATEGORY_COLOR_PERSONAL = '#d53369';
-/** Accent color for the Home category. */
-export const REMINDER_CATEGORY_COLOR_HOME = '#c2820a';
-/** Accent color for the Health category. */
-export const REMINDER_CATEGORY_COLOR_HEALTH = '#0d9488';
+/** Accent color for the Utility category. */
+export const REMINDER_CATEGORY_COLOR_UTILITY = '#c2820a';
+/** Accent color for the Other category. */
+export const REMINDER_CATEGORY_COLOR_OTHER = '#0d9488';
 /** Fallback accent color for unrecognized or absent categories — matches the Reminder section accent. */
 export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
 /** Fixed ordered list of the four known Reminder categories, always shown in the filter bar and composer. */
 export const REMINDER_KNOWN_CATEGORIES = [
 	REMINDER_CATEGORY_PERSONAL,
 	REMINDER_CATEGORY_WORK,
-	REMINDER_CATEGORY_HOME,
-	REMINDER_CATEGORY_HEALTH
+	REMINDER_CATEGORY_UTILITY,
+	REMINDER_CATEGORY_OTHER
 ] as const;
 /** Number of days ahead treated as "due soon". */
 export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;

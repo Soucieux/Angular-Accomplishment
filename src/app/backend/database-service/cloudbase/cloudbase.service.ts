@@ -29,15 +29,16 @@ import {
 	REMINDER_TABLE_MESSAGES,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
-	STATS_FIELD_RECENT_MOVIE,
-	STATS_FIELD_RECENT_PATCH,
-	STATS_FIELD_RECENT_REMINDER,
-	STATS_FIELD_RECENT_RESONANCE,
+	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_TOTAL_RECIPES,
 	STATUS_IN_PROGRESS,
 	ERROR_PERMISSION_DENIED,
 	ERROR_NO_DOCUMENT_UPDATED,
-	ROLE_ADMIN
+	ROLE_ADMIN,
+	ACTIVITY_SOURCE_MOVIE,
+	ACTIVITY_SOURCE_REMINDER,
+	ACTIVITY_SOURCE_RESONANCE,
+	ACTIVITY_SOURCE_PATCH
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
@@ -562,17 +563,8 @@ export class CloudbaseService extends DatabaseService {
 
 				// Fire-and-forget: record this rate update in stats for Recent Activity.
 				const updatedTimestamp = Utilities.getCurrentFormattedTime(true);
-				this.statisticsRef
-					.update({
-						lastMovieUpdated: {
-							title: movieItemVO.getMovieName(),
-							timestamp: updatedTimestamp
-						}
-					})
-					.catch((err: any) =>
-						LOG.error(this.className, 'Failed to update lastMovieUpdated stat', err)
-					);
-				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
+				this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_MOVIE,
 					type: ACTIVITY_TYPE_UPDATED,
 					title: movieItemVO.getMovieName(),
 					timestamp: updatedTimestamp
@@ -693,11 +685,6 @@ export class CloudbaseService extends DatabaseService {
 			const updatedData: any = {};
 			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(1);
 			updatedData[`totalNumber`] = this._.inc(1);
-			updatedData['lastAdded'] = {
-				title: movieItemVO.getMovieName(),
-				genre: movieItemVO.getMovieGenre(),
-				timestamp
-			};
 
 			if (movieItemVO.getIsFavourite()) {
 				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(1);
@@ -708,10 +695,10 @@ export class CloudbaseService extends DatabaseService {
 			if (statRes.code) throw new Error(statRes.message);
 
 			// Append to activity log so multiple adds are all visible in Recent Activity
-			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
+			this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+				source: ACTIVITY_SOURCE_MOVIE,
 				type: HISTORY_STATUS_ADDED,
 				title: movieItemVO.getMovieName(),
-				genre: movieItemVO.getMovieGenre(),
 				timestamp
 			}).catch(() => {});
 
@@ -768,11 +755,6 @@ export class CloudbaseService extends DatabaseService {
 			const updatedData: any = {};
 			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(-1);
 			updatedData[`totalNumber`] = this._.inc(-1);
-			updatedData['lastDeleted'] = {
-				title: movieItemVO.getMovieName(),
-				genre: movieItemVO.getMovieGenre(),
-				timestamp
-			};
 
 			if (movieItemVO.getIsFavourite()) {
 				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
@@ -782,10 +764,10 @@ export class CloudbaseService extends DatabaseService {
 			if (statRes.code) throw new Error(statRes.message);
 
 			// Append to activity log so multiple deletes are all visible in Recent Activity
-			this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
+			this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+				source: ACTIVITY_SOURCE_MOVIE,
 				type: HISTORY_STATUS_DELETED,
 				title: movieItemVO.getMovieName(),
-				genre: movieItemVO.getMovieGenre(),
 				timestamp
 			}).catch(() => {});
 
@@ -875,11 +857,11 @@ export class CloudbaseService extends DatabaseService {
 				   (e.g. permission denied, document not found). */
 				if (result.code) throw new Error(result.message);
 
-				// Keep statistics in sync: record the most recent rate-search timestamp.
-				await this.statisticsRef.update({ lastRateSearch: { timestamp } });
-				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: SEARCH, timestamp }).catch(
-					() => {}
-				);
+				this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_MOVIE,
+					type: SEARCH,
+					timestamp
+				}).catch(() => {});
 			}
 			LOG.info(this.className, 'New history entry has been added');
 		} catch (error) {
@@ -1136,7 +1118,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new entry to add.
 	 */
 	public async addNewRecordToReminderTable(newRecord: any): Promise<void> {
-		this.addNewRecordToTable(DATABASE_REMINDER, newRecord, STATS_FIELD_RECENT_REMINDER);
+		this.addNewRecordToTable(DATABASE_REMINDER, newRecord, STATS_FIELD_RECENT_ACTIVITIES);
 	}
 
 	/**
@@ -1166,6 +1148,7 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, `${tableName} table has been updated`);
 			if (statsField) {
 				this.appendToActivityLog(statsField, {
+					source: ACTIVITY_SOURCE_REMINDER,
 					type: HISTORY_STATUS_ADDED,
 					text: newRecord.text ?? '',
 					timestamp: Utilities.getCurrentFormattedTime(true)
@@ -1218,7 +1201,8 @@ export class CloudbaseService extends DatabaseService {
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, 'New quote has been added');
 			await this.statisticsRef.update({ totalQuotes: this._.inc(1) });
-			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
+			this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+				source: ACTIVITY_SOURCE_RESONANCE,
 				type: HISTORY_STATUS_ADDED,
 				author,
 				timestamp
@@ -1233,8 +1217,8 @@ export class CloudbaseService extends DatabaseService {
 	 * Removes a quote from the database and updates statistics.
 	 *
 	 * @param key - The key of the quote to remove.
-	 * @param text - The text of the deleted quote (written to lastQuoteDeleted stat).
-	 * @param author - The author of the deleted quote (written to lastQuoteDeleted stat).
+	 * @param text - The text of the deleted quote.
+	 * @param author - The author of the deleted quote.
 	 */
 	public async removeQuote(key: string, text: string, author: string): Promise<void> {
 		try {
@@ -1248,10 +1232,10 @@ export class CloudbaseService extends DatabaseService {
 			}
 			const deletedTimestamp = Utilities.getCurrentFormattedTime(true);
 			await this.statisticsRef.update({
-				totalQuotes: this._.inc(-1),
-				lastQuoteDeleted: { text, author, timestamp: deletedTimestamp }
+				totalQuotes: this._.inc(-1)
 			});
-			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
+			this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+				source: ACTIVITY_SOURCE_RESONANCE,
 				type: HISTORY_STATUS_DELETED,
 				author,
 				timestamp: deletedTimestamp
@@ -1282,9 +1266,9 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Prepend a new entry to a named activity-log array in the statistics
+	 * Prepends a new entry to a named activity-log array in the statistics
 	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
-	 * Used for movie, patch, reminder and resonance activity feeds.
+	 * Used for the unified recentActivities feed and any legacy per-source fields.
 	 *
 	 * @param fieldName - The statistics field that holds the array — use a STATS_FIELD_* constant.
 	 * @param activity - The activity object to record.
@@ -1294,12 +1278,10 @@ export class CloudbaseService extends DatabaseService {
 			const doc = await this.database.collection(DATABASE_STATISTICS).doc(this.statId).get();
 			const raw = doc.data?.[0]?.[fieldName];
 			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
-			/* Dedup: remove any entries that share both type and timestamp with the new
-			   activity before prepending. Guards against the read-write race that can
-			   produce duplicate entries when two operations fire in the same second. */
-			const deduped = existing.filter(
-				(e) => !(e.type === activity.type && e.timestamp === activity.timestamp)
-			);
+			/* Dedup: remove any entry with the same timestamp before prepending.
+			   Guards against the read-write race that can produce duplicate entries
+			   when two operations fire in the same second. */
+			const deduped = existing.filter((e) => e.timestamp !== activity.timestamp);
 			// Prepend the new item and trim to the cap so CloudBase storage stays bounded.
 			const updated = [activity, ...deduped].slice(0, STATS_CAP_ACTIVITY_LOG);
 			const result = await this.statisticsRef.update({ [fieldName]: updated });
@@ -1311,16 +1293,6 @@ export class CloudbaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(this.className, 'Error while appending activity log', error as Error);
 		}
-	}
-
-	/**
-	 * Prepend a new entry to the `recentPatchActivities` list in the statistics
-	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
-	 *
-	 * @param activity - The activity object to record.
-	 */
-	public async appendToPatchActivityLog(activity: any): Promise<void> {
-		return this.appendToActivityLog(STATS_FIELD_RECENT_PATCH, activity);
 	}
 
 	/**

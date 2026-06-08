@@ -14,10 +14,11 @@ import {
 	REMINDER_TABLE_MESSAGES,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
-	STATS_FIELD_RECENT_MOVIE,
-	STATS_FIELD_RECENT_PATCH,
-	STATS_FIELD_RECENT_REMINDER,
-	STATS_FIELD_RECENT_RESONANCE
+	STATS_FIELD_RECENT_ACTIVITIES,
+	ACTIVITY_SOURCE_MOVIE,
+	ACTIVITY_SOURCE_REMINDER,
+	ACTIVITY_SOURCE_RESONANCE,
+	ACTIVITY_SOURCE_PATCH
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
@@ -435,20 +436,11 @@ export class FirebaseService extends DatabaseService {
 					message: this.buildHistoryMessage(status, timestamp, movieItemVO)
 				});
 
-				// Keep statistics in sync: record the most recently added movie.
 				if (status === HISTORY_STATUS_ADDED) {
-					await update(this.statisticsRef, {
-						lastAdded: {
-							title: movieItemVO.getMovieName(),
-							genre: movieItemVO.getMovieGenre(),
-							rate: movieItemVO.getMovieRate(),
-							timestamp
-						}
-					});
-					this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, {
+					this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+						source: ACTIVITY_SOURCE_MOVIE,
 						type: HISTORY_STATUS_ADDED,
 						title: movieItemVO.getMovieName(),
-						genre: movieItemVO.getMovieGenre(),
 						timestamp
 					}).catch(() => {});
 				}
@@ -458,11 +450,11 @@ export class FirebaseService extends DatabaseService {
 					message: this.buildHistoryMessage(status, timestamp)
 				});
 
-				// Keep statistics in sync: record the most recent rate-search timestamp.
-				await update(this.statisticsRef, { lastRateSearch: { timestamp } });
-				this.appendToActivityLog(STATS_FIELD_RECENT_MOVIE, { type: SEARCH, timestamp }).catch(
-					() => {}
-				);
+				this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_MOVIE,
+					type: SEARCH,
+					timestamp
+				}).catch(() => {});
 			}
 			LOG.info(this.className, 'New history entry has been added');
 		} catch (error) {
@@ -795,7 +787,8 @@ export class FirebaseService extends DatabaseService {
 				currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
 				return currentData;
 			});
-			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
+			this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+				source: ACTIVITY_SOURCE_RESONANCE,
 				type: HISTORY_STATUS_ADDED,
 				author,
 				timestamp
@@ -822,7 +815,8 @@ export class FirebaseService extends DatabaseService {
 				currentData.totalQuotes = Math.max(0, (currentData.totalQuotes ?? 1) - 1);
 				return currentData;
 			});
-			this.appendToActivityLog(STATS_FIELD_RECENT_RESONANCE, {
+			this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+				source: ACTIVITY_SOURCE_RESONANCE,
 				type: HISTORY_STATUS_DELETED,
 				author,
 				timestamp: deletedTimestamp
@@ -850,9 +844,9 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Prepend a new entry to a named activity-log array in the statistics
+	 * Prepends a new entry to a named activity-log array in the statistics
 	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
-	 * Used for movie, patch, reminder and resonance activity feeds.
+	 * Used for the unified recentActivities feed and any legacy per-source fields.
 	 *
 	 * @param fieldName - The statistics field that holds the array — use a STATS_FIELD_* constant.
 	 * @param activity - The activity object to record.
@@ -868,16 +862,6 @@ export class FirebaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(this.className, 'Error while appending activity log', error as Error);
 		}
-	}
-
-	/**
-	 * Prepend a new entry to the `recentPatchActivities` list in the statistics
-	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
-	 *
-	 * @param activity - The activity object to record.
-	 */
-	public async appendToPatchActivityLog(activity: any): Promise<void> {
-		return this.appendToActivityLog(STATS_FIELD_RECENT_PATCH, activity);
 	}
 
 	////////////////////// Below are Add methods for database table records ////////////////////
@@ -913,7 +897,8 @@ export class FirebaseService extends DatabaseService {
 			.then(() => {
 				LOG.info(this.className, 'Table record has been updated');
 				if (tableName === DATABASE_REMINDER) {
-					this.appendToActivityLog(STATS_FIELD_RECENT_REMINDER, {
+					this.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+						source: ACTIVITY_SOURCE_REMINDER,
 						type: HISTORY_STATUS_ADDED,
 						table: REMINDER_TABLE_MESSAGES,
 						text: newRecord.text ?? '',

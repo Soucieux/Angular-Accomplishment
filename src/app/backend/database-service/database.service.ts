@@ -280,14 +280,6 @@ export abstract class DatabaseService {
 	public abstract updateStatisticsFields(fields: Record<string, any>): Promise<void>;
 
 	/**
-	 * Prepends a new entry to the `recentPatchActivities` list in the statistics
-	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
-	 *
-	 * @param activity - The activity object to record.
-	 */
-	public abstract appendToPatchActivityLog(activity: any): Promise<void>;
-
-	/**
 	 * Prepends a new entry to a named activity-log array in the statistics
 	 * document, keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
 	 * Used for movie, patch, reminder and resonance activity feeds.

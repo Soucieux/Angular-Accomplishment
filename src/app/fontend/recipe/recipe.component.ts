@@ -25,10 +25,12 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
+	ACTIVITY_SOURCE_RECIPE,
+	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DIALOG_BTN_DELETE,
 	DIALOG_CONFIRM,
-	DIALOG_RECIPE_TYPE,
+	DIALOG_INGREDIENT,
 	MSG_DELETE_FAILED,
 	MSG_SAVE_FAILED,
 	RECIPE_CATEGORY_ALL,
@@ -62,6 +64,12 @@ import {
 	RECIPE_BAND_DEFAULT,
 	RECIPE_PAGE_SIZE,
 	RECIPE_ROWS_PER_PAGE,
+	HISTORY_STATUS_ADDED,
+	HISTORY_STATUS_DELETED,
+	STATS_CAP_ACTIVITY_LOG,
+	STATS_FIELD_RECENT_ACTIVITIES,
+	STATS_FIELD_RECIPE_LIST,
+	STATS_FIELD_TOTAL_RECIPES,
 	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
@@ -121,6 +129,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected pageSize = RECIPE_PAGE_SIZE;
 
 	private recipesSub?: Subscription;
+	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
 	protected currentView: string = RECIPE_VIEW_LIST;
 	protected currentPage = 0;
 	protected searchQuery = '';
@@ -188,6 +197,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 				next: (recipes) => {
 					this.ngZone.run(() => {
 						this.recipes = recipes;
+						this.syncStatistics(recipes);
 						this.isLoading = false;
 						if (this.pendingDetailName) {
 							const match = recipes.find((recipe) => recipe.name === this.pendingDetailName);
@@ -231,10 +241,33 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	}
 
 	/**
+	 * Writes the current recipe list summary and total count to the statistics
+	 * document so the home dashboard reads from one subscription.
+	 * Fire-and-forget — dashboard staleness on failure is acceptable.
+	 *
+	 * @param recipes - The full recipe array from the latest subscription emit.
+	 */
+	private syncStatistics(recipes: Recipe[]): void {
+		if (this.syncStatTimer !== null) clearTimeout(this.syncStatTimer);
+		this.syncStatTimer = setTimeout(() => {
+			this.syncStatTimer = null;
+			this.databaseService
+				.updateStatisticsFields({
+					[STATS_FIELD_RECIPE_LIST]: recipes
+						.map(({ id, name, category }) => ({ id, name, category }))
+						.slice(0, STATS_CAP_ACTIVITY_LOG),
+					[STATS_FIELD_TOTAL_RECIPES]: recipes.length
+				})
+				.catch(() => {});
+		}, 0);
+	}
+
+	/**
 	 * Unsubscribes from the recipes watcher, clears the dialog container,
 	 * and logs component teardown.
 	 */
 	ngOnDestroy(): void {
+		if (this.syncStatTimer !== null) clearTimeout(this.syncStatTimer);
 		this.gridResizeObserver?.disconnect();
 		this.recipesSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
@@ -490,7 +523,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected openTypeDialog(): void {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			DIALOG_RECIPE_TYPE,
+			DIALOG_INGREDIENT,
 			(newIds: Set<IngredientType>) => {
 				this.enabledTypeIds = newIds;
 				if (!this.enabledTypeIds.has(this.selectedEditorType)) {
@@ -630,6 +663,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * Only callable when {@link editingMode} is 'edit' and {@link editingRecipeId} is set.
 	 */
 	protected removeCurrentRecipe(): void {
+		const recipeName = this.selectedRecipe?.name ?? '';
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
@@ -642,6 +676,14 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 						LOG.info(this.className, `Recipe deleted: ${id}`);
 						this.dialogService.showToast(TOAST_INFO, RECIPE_MSG_DELETED);
 						this.transitionTo(RECIPE_VIEW_LIST);
+						this.databaseService
+							.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+								source: ACTIVITY_SOURCE_RECIPE,
+								type: HISTORY_STATUS_DELETED,
+								name: recipeName,
+								timestamp: Utilities.getCurrentFormattedTime(true)
+							})
+							.catch(() => {});
 					})
 					.catch((error: unknown) => {
 						LOG.error(this.className, MSG_DELETE_FAILED, error as Error);
@@ -1011,12 +1053,28 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 				LOG.info(this.className, `Recipe updated: ${recipe.id} "${recipe.name}"`);
 				this.dialogService.showToast(SUCCESS, RECIPE_MSG_UPDATED);
 				this.selectedRecipe = recipe;
+				this.databaseService
+					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+						source: ACTIVITY_SOURCE_RECIPE,
+						type: ACTIVITY_TYPE_UPDATED,
+						name: recipe.name,
+						timestamp: Utilities.getCurrentFormattedTime(true)
+					})
+					.catch(() => {});
 			} else {
 				await this.databaseService.addRecipe(recipe);
 				LOG.info(this.className, `Recipe created: "${recipe.name}"`);
 				this.dialogService.showToast(SUCCESS, RECIPE_MSG_ADDED);
 				this.pendingDetailName = recipe.name;
 				this.selectedRecipe = recipe;
+				this.databaseService
+					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+						source: ACTIVITY_SOURCE_RECIPE,
+						type: HISTORY_STATUS_ADDED,
+						name: recipe.name,
+						timestamp: Utilities.getCurrentFormattedTime(true)
+					})
+					.catch(() => {});
 			}
 			this.servings = recipe.baseServings || 1;
 			this.ingredientsCollapsed = false;

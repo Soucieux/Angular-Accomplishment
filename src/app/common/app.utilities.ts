@@ -42,13 +42,18 @@ export class Utilities {
 	}
 
 	/**
-	 * Checks whether the current device is a mobile device based on viewport width.
+	 * Checks whether the current device is a phone in portrait orientation, using
+	 * viewport width, aspect ratio, and input precision to distinguish real phones
+	 * from narrow desktop browser windows.
 	 *
-	 * @returns True if the viewport width is 900 px or below, false on the server.
+	 * @returns True when the viewport matches phone portrait dimensions and a coarse
+	 * touch pointer, false on the server or on desktop.
 	 */
 	public isMobile() {
 		if (isPlatformBrowser(this.platformId)) {
-			return globalThis.innerWidth <= 900;
+			return globalThis.matchMedia(
+				'(max-width: 900px) and (pointer: coarse)'
+			).matches;
 		}
 		return false;
 	}
@@ -443,6 +448,21 @@ export class Utilities {
 			return `https://${hostname}/favicon.ico`;
 		} catch {
 			return '';
+		}
+	}
+
+	/**
+	 * Extracts the hostname from a URL string. Falls back to the raw URL if
+	 * parsing fails so activity log entries always have a non-empty domain.
+	 *
+	 * @param url - The full URL string to parse.
+	 * @returns The hostname (e.g. `example.com`), or the raw URL on failure.
+	 */
+	public static getHostname(url: string): string {
+		try {
+			return new URL(url).hostname;
+		} catch {
+			return url;
 		}
 	}
 

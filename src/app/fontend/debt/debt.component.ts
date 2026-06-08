@@ -17,6 +17,8 @@ import { tap } from 'rxjs/operators';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
+	ACTIVITY_SOURCE_DEBT,
+	ACTIVITY_TYPE_RESET,
 	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_DEBT_SONATA,
@@ -47,7 +49,12 @@ import {
 	DIALOG_DEBT,
 	ERROR_PERMISSION_DENIED,
 	MONTH_NAMES_SHORT,
+	STATS_CAP_ACTIVITY_LOG,
+	HISTORY_STATUS_ADDED,
+	HISTORY_STATUS_DELETED,
+	STATS_FIELD_DEBT_TOTAL,
 	STATS_FIELD_DEBT_UPCOMING,
+	STATS_FIELD_RECENT_ACTIVITIES,
 	DEBT_CATEGORY_LABEL_CARD,
 	DEBT_CATEGORY_LABEL_PERSON,
 	DEBT_CATEGORY_LABEL_SHOPPING,
@@ -404,6 +411,14 @@ export class DebtComponent implements OnInit, OnDestroy {
 				[DEBT_VALUE_KEY_CURRENCY]: debtData.currency
 			});
 			this.triggerSaveIndicator();
+			this.databaseService
+				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_DEBT,
+					type: HISTORY_STATUS_ADDED,
+					name: debtData.name,
+					timestamp: Utilities.getCurrentFormattedTime(true)
+				})
+				.catch(() => {});
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
@@ -453,6 +468,14 @@ export class DebtComponent implements OnInit, OnDestroy {
 				[DEBT_VALUE_KEY_PAID]: newPaid
 			});
 			this.triggerSaveIndicator();
+			this.databaseService
+				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_DEBT,
+					type: ACTIVITY_TYPE_RESET,
+					name: item.name ?? '',
+					timestamp: Utilities.getCurrentFormattedTime(true)
+				})
+				.catch(() => {});
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		} finally {
@@ -469,8 +492,17 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param entryKey - The unique key of the entry to remove.
 	 */
 	private async removeDebt(entryKey: string): Promise<void> {
+		const debtName = this.findUpdatedItem(entryKey)?.name ?? '';
 		try {
 			await this.databaseService.removeRecordFromDebtTable(entryKey);
+			this.databaseService
+				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+					source: ACTIVITY_SOURCE_DEBT,
+					type: HISTORY_STATUS_DELETED,
+					name: debtName,
+					timestamp: Utilities.getCurrentFormattedTime(true)
+				})
+				.catch(() => {});
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
@@ -557,7 +589,8 @@ export class DebtComponent implements OnInit, OnDestroy {
 		this.syncStatTimer = setTimeout(() => {
 			this.syncStatTimer = null;
 			this.databaseService.updateStatisticsFields({
-				[STATS_FIELD_DEBT_UPCOMING]: [...this.upcomingExpenses]
+				[STATS_FIELD_DEBT_UPCOMING]: this.upcomingExpenses.slice(0, STATS_CAP_ACTIVITY_LOG),
+				[STATS_FIELD_DEBT_TOTAL]: this.upcomingExpenses.length
 			});
 		}, 0);
 	}
@@ -970,6 +1003,14 @@ export class DebtComponent implements OnInit, OnDestroy {
 			this.pendingWriteKeys.delete(entryKey);
 		}
 		this.resyncUpcomingFromLocalData();
+		this.databaseService
+			.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
+				source: ACTIVITY_SOURCE_DEBT,
+				type: ACTIVITY_TYPE_UPDATED,
+				name: item.name ?? '',
+				timestamp: Utilities.getCurrentFormattedTime(true)
+			})
+			.catch(() => {});
 		this.cdr.detectChanges();
 	}
 

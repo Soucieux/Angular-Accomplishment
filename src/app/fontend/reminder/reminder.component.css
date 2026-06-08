@@ -21,7 +21,6 @@
 	font-family: 'app-font';
 }
 
-
 /* ── Masthead ────────────────────────────────────────────────────────────── */
 .rm-masthead {
 	display: flex;
@@ -352,9 +351,10 @@
 	text-decoration: none;
 	display: grid;
 	place-items: center;
-	width: 16px;
-	height: 16px;
+	width: 18px;
+	height: 18px;
 	flex-shrink: 0;
+	margin-top: 5px;
 }
 
 .rm-chip-remove {
@@ -398,6 +398,7 @@
 		border-color 0.12s,
 		background 0.12s;
 	white-space: nowrap;
+	overflow: hidden;
 }
 
 .rm-add-field-button:hover {
@@ -659,4 +660,3 @@
 		grid-template-columns: 1fr;
 	}
 }
-

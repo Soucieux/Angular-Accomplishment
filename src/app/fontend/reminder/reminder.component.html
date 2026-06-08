@@ -1,311 +1,334 @@
 <ng-container #dialogComponentContainer></ng-container>
 @if (utilities.getIsUserAlive()) {
 	<div class="glass-card" #reminderPanel>
-			<!-- ── Masthead ───────────────────────────────────────────────── -->
-			<div class="rm-masthead">
-				<div class="rm-masthead-left">
-					<div class="rm-title-row">
-						<div class="rm-title">Reminder</div>
-						@if (saveIndicator) {
-							<div class="rm-save-indicator">
-								<span class="rm-spinner"></span>
-							</div>
-						}
-					</div>
-					<div class="rm-subtitle">
-						<span class="cf">{{ REMINDER_SUBTITLE_CN }}</span> {{ REMINDER_SUBTITLE_EN }}
-					</div>
-					<div class="rm-greeting">
-						{{ openCount }}
-						{{ openCount === 1 ? REMINDER_GREETING_SINGULAR : REMINDER_GREETING_PLURAL }}
-						{{ REMINDER_AWAIT_SUFFIX_EN }} <span class="cf">{{ REMINDER_AWAIT_SUFFIX_CN }}</span>
-					</div>
-				</div>
-				<div class="rm-due-card hide-on-mobile" [style.--due-color]="dueSoonCount > 0 ? '#c2410c' : '#94a3b8'">
-					<span class="material-symbols-outlined rm-icon">notifications_active</span>
-					<div class="rm-due-number">{{ dueSoonCount }}</div>
-					<div class="rm-due-label">
-						{{ REMINDER_DUE_SOON_LABEL }}
-						<span>{{ REMINDER_DUE_SOON_SUBTITLE }}</span>
-					</div>
-				</div>
-			</div>
-
-			<!-- ── Filter bar ─────────────────────────────────────────────── -->
-			<div class="rm-filter-bar">
-				<span class="rm-filter-label">{{ REMINDER_FILTER_LABEL }}</span>
-				<button
-					class="rm-filter-chip"
-					[class.rm-filter-chip-active]="tagFilter.size === 0"
-					(click)="clearTagFilter()">
-					{{ REMINDER_FILTER_ALL }}
-				</button>
-				@for (tag of REMINDER_KNOWN_CATEGORIES; track tag) {
-					<button
-						class="rm-filter-chip"
-						[style.background]="isTagSelected(tag) ? tagColor(tag) + '1f' : null"
-						[style.color]="isTagSelected(tag) ? tagColor(tag) : null"
-						[style.border-color]="isTagSelected(tag) ? 'transparent' : null"
-						(click)="toggleTagFilter(tag)">
-						<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
-						{{ tag }}
-					</button>
-				}
-			</div>
-
-			<!-- ── Card grid ──────────────────────────────────────────────── -->
-			<div class="rm-card-grid" #cardGrid>
-				@if (loading) {
-					@for (_ of skeletonItems; track $index) {
-						<div class="rm-card">
-							<div class="rm-card-top">
-								<p-skeleton
-									width="20px"
-									height="20px"
-									style="border-radius: 6px; flex-shrink: 0" />
-								<div style="flex: 1; min-width: 0">
-									<p-skeleton height="17px" width="70%" />
-									<p-skeleton height="11px" width="28%" style="margin-top: 6px" />
-								</div>
-							</div>
-							<p-skeleton height="1px" style="margin-top: 12px" />
-							<p-skeleton height="14px" style="margin-top: 8px" />
+		<!-- ── Masthead ───────────────────────────────────────────────── -->
+		<div class="rm-masthead">
+			<div class="rm-masthead-left">
+				<div class="rm-title-row">
+					<div class="rm-title">Reminder</div>
+					@if (saveIndicator) {
+						<div class="rm-save-indicator">
+							<span class="rm-spinner"></span>
 						</div>
 					}
-				} @else {
-					@for (item of pagedItems; track item.key) {
-						<div
-							class="rm-card"
-							[class.rm-card-done]="isDone(item.key)"
-							[style.--card-color]="tagColor(item.tag)">
-							<!-- Top: checkbox + title + category label -->
-							<div class="rm-card-top">
-								<div
-									class="rm-checkbox"
-									[class.rm-checkbox-checked]="isDone(item.key)"
-									[style.--check-color]="tagColor(item.tag)"
-									(click)="toggleDone(item.key)">
-									<span class="material-symbols-outlined rm-icon">check</span>
-								</div>
-								<div class="rm-card-meta">
-									<input
-										type="text"
-										class="rm-card-title-input"
-										[class.cf]="checkIfChinese(item.text)"
-										[placeholder]="REMINDER_PLACEHOLDER_TEXT"
-										[(ngModel)]="item.text"
-										(keyup.enter)="onCardTextUpdate(item)"
-										(blur)="onCardTextUpdate(item)" />
-									<div class="rm-card-category">{{ item.tag }}</div>
-								</div>
-							</div>
-
-							<!-- Bar: link · spacer · date · delete -->
-							<div class="rm-card-bar">
-								@if (item.link) {
-									<span class="rm-link-chip" (click)="openLinkPopover($event, item)">
-										<span class="material-symbols-outlined rm-icon" style="font-size: 15px; padding-top: 5px">link</span>
-										{{ getLinkLabel(item) }}
-										<a
-											[href]="item.link"
-											target="_blank"
-											rel="noopener noreferrer"
-											class="rm-chip-external"
-											(click)="$event.stopPropagation()">
-											<span class="material-symbols-outlined rm-icon" style="font-size: 15px">open_in_new</span>
-										</a>
-										<button
-											class="rm-chip-remove"
-											(click)="$event.stopPropagation(); clearLink(item)">
-											<span class="material-symbols-outlined rm-icon" style="font-size: 11px">close</span>
-										</button>
-									</span>
-								} @else {
-									<button
-										class="rm-add-field-button"
-										(click)="openLinkPopover($event, item)">
-										<span class="material-symbols-outlined rm-icon" style="font-size: 13px">add_link</span>
-										{{ REMINDER_ADD_LINK_LABEL }}
-									</button>
-								}
-								<span class="rm-bar-spacer"></span>
-								@if (item.date) {
-									<span
-										class="rm-date-chip"
-										[style.background]="tagColor(item.tag) + '14'"
-										(click)="openDatePopover($event, item)">
-										<span class="material-symbols-outlined rm-icon" style="font-size: 13px">calendar_today</span>
-										{{ formatDate(item.date) }}
-										<button
-											class="rm-chip-remove"
-											(click)="$event.stopPropagation(); clearDate(item)">
-											<span class="material-symbols-outlined rm-icon" style="font-size: 11px">close</span>
-										</button>
-									</span>
-								} @else {
-									<button
-										class="rm-add-field-button"
-										(click)="openDatePopover($event, item)">
-										<span class="material-symbols-outlined rm-icon" style="font-size: 13px">calendar_today</span>
-										{{ REMINDER_ADD_DATE_LABEL }}
-									</button>
-								}
-								<button
-									class="rm-delete-button"
-									(click)="openDeleteConfirmationDialog(item.key)">
-									<span class="material-symbols-outlined rm-icon" style="font-size: 14px">delete</span>
-								</button>
-							</div>
-						</div>
-					}
-				}
+				</div>
+				<div class="rm-subtitle">
+					<span class="cf">{{ REMINDER_SUBTITLE_CN }}</span> {{ REMINDER_SUBTITLE_EN }}
+				</div>
+				<div class="rm-greeting">
+					{{ openCount }}
+					{{ openCount === 1 ? REMINDER_GREETING_SINGULAR : REMINDER_GREETING_PLURAL }}
+					{{ REMINDER_AWAIT_SUFFIX_EN }} <span class="cf">{{ REMINDER_AWAIT_SUFFIX_CN }}</span>
+				</div>
 			</div>
-
-			<!-- ── New-reminder composer ──────────────────────────────────── -->
-			@if (loading) {
-				<div class="rm-new-card" style="--card-color: #e2e8f0">
-					<div class="rm-new-card-row1">
-						<p-skeleton width="22px" height="22px" style="border-radius: 6px; flex-shrink: 0" />
-						<p-skeleton height="17px" style="flex: 1" />
-					</div>
-					<div class="rm-new-card-row2">
-						<p-skeleton width="70px" height="28px" style="border-radius: 999px" />
-						<p-skeleton width="70px" height="28px" style="border-radius: 999px" />
-						<p-skeleton width="70px" height="28px" style="border-radius: 999px" />
-						<p-skeleton width="70px" height="28px" style="border-radius: 999px" />
-						<span class="rm-bar-spacer"></span>
-						<p-skeleton width="76px" height="28px" style="border-radius: 999px" />
-						<p-skeleton width="76px" height="28px" style="border-radius: 999px" />
-						<p-skeleton width="88px" height="30px" style="border-radius: 8px" />
-					</div>
-				</div>
-			} @else if (showAddCard) {
-				<div class="rm-new-card" [style.--card-color]="tagColor(newItem.tag)">
-					<div class="rm-new-card-row1">
-						<span class="material-symbols-outlined rm-icon rm-new-card-plus">add_circle</span>
-						<input
-							type="text"
-							class="rm-new-card-input"
-							[class.cf]="checkIfChinese(newItem.text)"
-							[placeholder]="REMINDER_PLACEHOLDER_TEXT"
-							[(ngModel)]="newItem.text"
-							(keyup.enter)="addNewTextOnly()" />
-					</div>
-					<div class="rm-new-card-row2">
-						@for (tag of REMINDER_KNOWN_CATEGORIES; track tag) {
-							<button
-								class="rm-category-chip"
-								[class.rm-category-chip-selected]="newItem.tag === tag"
-								[style.background]="newItem.tag === tag ? tagColor(tag) + '1f' : null"
-								[style.color]="newItem.tag === tag ? tagColor(tag) : null"
-								(click)="selectNewItemCategory(tag)">
-								<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
-								<span class="hide-on-mobile">{{ tag }}</span>
-							</button>
-						}
-						<span class="rm-bar-spacer"></span>
-						<button class="rm-add-field-button" (click)="openLinkPopover($event)">
-							<span class="material-symbols-outlined rm-icon" style="font-size: 13px">add_link</span>
-							{{ newItemLinkLabel || REMINDER_ADD_LINK_LABEL }}
-						</button>
-						<button class="rm-add-field-button" (click)="openDatePopover($event)">
-							<span class="material-symbols-outlined rm-icon" style="font-size: 13px">calendar_today</span>
-							{{ newItemDateLabel || REMINDER_ADD_DATE_LABEL }}
-						</button>
-						<div class="rm-new-card-divider"></div>
-						<button
-							class="rm-confirm-button"
-							[style.background]="tagColor(newItem.tag)"
-							[disabled]="!newItem.text.trim()"
-							(click)="addNewItemWithDateOrLink()">
-							<span class="material-symbols-outlined rm-icon" style="font-size: 15px">check</span>
-							{{ REMINDER_ADD_BTN_LABEL }}
-						</button>
-					</div>
-				</div>
-			}
-
-			<!-- ── Date / link popover ────────────────────────────────────── -->
-			<p-popover [focusOnShow]="false" #dateOrLinkPopover>
-				<div class="rm-popover-body">
-					<p-inputgroup class="rm-popover-inputgroup">
-						<p-inputgroup-addon>
-							@if (isDate) {
-								<i class="pi pi-calendar" style="color: #f7971e"></i>
-							} @else {
-								<i class="pi pi-link" style="color: #4776e6"></i>
-							}
-						</p-inputgroup-addon>
-						@if (isDate) {
-							@if (editingItem) {
-								<p-datepicker
-									#editingDatepicker
-									[appendTo]="'body'"
-									dateFormat="yy-mm-dd"
-									showTransitionOptions="0ms"
-									hideTransitionOptions="0ms"
-									[ngModel]="editingDateModel"
-									(onSelect)="onEditingDateSelected($event)">
-								</p-datepicker>
-							} @else {
-								<p-datepicker
-									#newItemDatepicker
-									[appendTo]="'body'"
-									dateFormat="yy-mm-dd"
-									showTransitionOptions="0ms"
-									hideTransitionOptions="0ms"
-									[(ngModel)]="newItem.date"
-									(onSelect)="closePopover()">
-								</p-datepicker>
-							}
-						} @else {
-							@if (editingItem) {
-								<input
-									type="text"
-									pInputText
-									[(ngModel)]="editingLink"
-									(blur)="onPopoverLinkUpdate()"
-									(keyup.enter)="onPopoverLinkUpdate()"
-									[placeholder]="REMINDER_PLACEHOLDER_LINK"
-									style="font-size: 14px" />
-							} @else {
-								<input
-									type="text"
-									pInputText
-									[(ngModel)]="newItem.link"
-									(blur)="closePopover()"
-									(keyup.enter)="closePopover()"
-									[placeholder]="REMINDER_PLACEHOLDER_LINK"
-									style="font-size: 14px" />
-							}
-						}
-					</p-inputgroup>
-				</div>
-			</p-popover>
-
-			<!-- ── Paginator ──────────────────────────────────────────────── -->
-			<div class="rm-paginator">
-				<div class="rm-paginator-info">
-					<b>{{ rangeStart }}–{{ rangeEnd }}</b> of {{ filteredItems.length }}
-				</div>
-				<div class="rm-paginator-controls">
-					<button class="rm-page-button" [disabled]="page === 0" (click)="prevPage()">
-						<span class="material-symbols-outlined rm-icon">chevron_left</span>
-					</button>
-					@for (pageIndex of pagesArray; track pageIndex) {
-						<button
-							class="rm-page-button"
-							[class.rm-page-button-active]="pageIndex === page"
-							(click)="goToPage(pageIndex)">
-							{{ pageIndex + 1 }}
-						</button>
-					}
-					<button class="rm-page-button" [disabled]="page >= totalPages - 1" (click)="nextPage()">
-						<span class="material-symbols-outlined rm-icon">chevron_right</span>
-					</button>
+			<div
+				class="rm-due-card hide-on-mobile"
+				[style.--due-color]="dueSoonCount > 0 ? '#c2410c' : '#94a3b8'">
+				<span class="material-symbols-outlined rm-icon">notifications_active</span>
+				<div class="rm-due-number">{{ dueSoonCount }}</div>
+				<div class="rm-due-label">
+					{{ REMINDER_DUE_SOON_LABEL }}
+					<span>{{ REMINDER_DUE_SOON_SUBTITLE }}</span>
 				</div>
 			</div>
 		</div>
+
+		<!-- ── Filter bar ─────────────────────────────────────────────── -->
+		<div class="rm-filter-bar">
+			<span class="rm-filter-label">{{ REMINDER_FILTER_LABEL }}</span>
+			<button
+				class="rm-filter-chip"
+				[class.rm-filter-chip-active]="tagFilter.size === 0"
+				(click)="clearTagFilter()">
+				{{ REMINDER_FILTER_ALL }}
+			</button>
+			@for (tag of REMINDER_KNOWN_CATEGORIES; track tag) {
+				<button
+					class="rm-filter-chip"
+					[style.background]="isTagSelected(tag) ? tagColor(tag) + '1f' : null"
+					[style.color]="isTagSelected(tag) ? tagColor(tag) : null"
+					[style.border-color]="isTagSelected(tag) ? 'transparent' : null"
+					(click)="toggleTagFilter(tag)">
+					<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
+					{{ tag }}
+				</button>
+			}
+		</div>
+
+		<!-- ── Card grid ──────────────────────────────────────────────── -->
+		<div class="rm-card-grid" #cardGrid>
+			@if (loading) {
+				@for (_ of skeletonItems; track $index) {
+					<div class="rm-card">
+						<div class="rm-card-top">
+							<p-skeleton
+								width="20px"
+								height="20px"
+								style="border-radius: 6px; flex-shrink: 0" />
+							<div style="flex: 1; min-width: 0">
+								<p-skeleton height="17px" width="70%" />
+								<p-skeleton height="11px" width="28%" style="margin-top: 6px" />
+							</div>
+						</div>
+						<p-skeleton height="1px" style="margin-top: 12px" />
+						<p-skeleton height="14px" style="margin-top: 8px" />
+					</div>
+				}
+			} @else {
+				@for (item of pagedItems; track item.key) {
+					<div
+						class="rm-card"
+						[class.rm-card-done]="isDone(item.key)"
+						[style.--card-color]="tagColor(item.tag)">
+						<!-- Top: checkbox + title + category label -->
+						<div class="rm-card-top">
+							<div
+								class="rm-checkbox"
+								[class.rm-checkbox-checked]="isDone(item.key)"
+								[style.--check-color]="tagColor(item.tag)"
+								(click)="toggleDone(item.key)">
+								<span class="material-symbols-outlined rm-icon">check</span>
+							</div>
+							<div class="rm-card-meta">
+								<input
+									type="text"
+									class="rm-card-title-input"
+									[class.cf]="checkIfChinese(item.text)"
+									[placeholder]="REMINDER_PLACEHOLDER_TEXT"
+									[(ngModel)]="item.text"
+									(keyup.enter)="onCardTextUpdate(item)"
+									(blur)="onCardTextUpdate(item)" />
+								<div class="rm-card-category">{{ item.tag }}</div>
+							</div>
+						</div>
+
+						<!-- Bar: link · spacer · date · delete -->
+						<div class="rm-card-bar">
+							@if (item.link) {
+								<span class="rm-link-chip" (click)="openLinkPopover($event, item)">
+									<span
+										class="material-symbols-outlined rm-icon"
+										style="font-size: 15px; padding-top: 5px"
+										>link</span
+									>
+									{{ getLinkLabel(item) }}
+
+									<button
+										class="rm-chip-remove"
+										(click)="$event.stopPropagation(); clearLink(item)">
+										<span
+											class="material-symbols-outlined rm-icon"
+											style="font-size: 11px"
+											>close</span
+										>
+									</button>
+								</span>
+								<a
+									[href]="item.link"
+									target="_blank"
+									rel="noopener noreferrer"
+									class="rm-chip-external"
+									(click)="$event.stopPropagation()">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 16px"
+										>open_in_new</span
+									>
+								</a>
+							} @else {
+								<button class="rm-add-field-button" (click)="openLinkPopover($event, item)">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+										>add_link</span
+									>
+									{{ REMINDER_ADD_LINK_LABEL }}
+								</button>
+							}
+							<span class="rm-bar-spacer"></span>
+							@if (item.date) {
+								<span
+									class="rm-date-chip"
+									[style.background]="tagColor(item.tag) + '14'"
+									(click)="openDatePopover($event, item)">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+										>calendar_today</span
+									>
+									{{ formatDate(item.date) }}
+									<button
+										class="rm-chip-remove"
+										(click)="$event.stopPropagation(); clearDate(item)">
+										<span
+											class="material-symbols-outlined rm-icon"
+											style="font-size: 11px"
+											>close</span
+										>
+									</button>
+								</span>
+							} @else {
+								<button class="rm-add-field-button" (click)="openDatePopover($event, item)">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+										>calendar_today</span
+									>
+									{{ REMINDER_ADD_DATE_LABEL }}
+								</button>
+							}
+							<button class="rm-delete-button" (click)="openDeleteConfirmationDialog(item.key)">
+								<span class="material-symbols-outlined rm-icon" style="font-size: 14px"
+									>delete</span
+								>
+							</button>
+						</div>
+					</div>
+				}
+			}
+		</div>
+
+		<!-- ── New-reminder composer ──────────────────────────────────── -->
+		@if (loading) {
+			<div class="rm-new-card" style="--card-color: #e2e8f0">
+				<div class="rm-new-card-row1">
+					<p-skeleton width="22px" height="22px" style="border-radius: 6px; flex-shrink: 0" />
+					<p-skeleton height="17px" style="flex: 1" />
+				</div>
+				<div class="rm-new-card-row2">
+					<p-skeleton width="70px" height="28px" style="border-radius: 999px" />
+					<p-skeleton width="70px" height="28px" style="border-radius: 999px" />
+					<p-skeleton width="70px" height="28px" style="border-radius: 999px" />
+					<p-skeleton width="70px" height="28px" style="border-radius: 999px" />
+					<span class="rm-bar-spacer"></span>
+					<p-skeleton width="76px" height="28px" style="border-radius: 999px" />
+					<p-skeleton width="76px" height="28px" style="border-radius: 999px" />
+					<p-skeleton width="88px" height="30px" style="border-radius: 8px" />
+				</div>
+			</div>
+		} @else if (showAddCard) {
+			<div class="rm-new-card" [style.--card-color]="tagColor(newItem.tag)">
+				<div class="rm-new-card-row1">
+					<span class="material-symbols-outlined rm-icon rm-new-card-plus">add_circle</span>
+					<input
+						type="text"
+						class="rm-new-card-input"
+						[class.cf]="checkIfChinese(newItem.text)"
+						[placeholder]="REMINDER_PLACEHOLDER_TEXT"
+						[(ngModel)]="newItem.text"
+						(keyup.enter)="addNewTextOnly()" />
+				</div>
+				<div class="rm-new-card-row2">
+					@for (tag of REMINDER_KNOWN_CATEGORIES; track tag) {
+						<button
+							class="rm-category-chip"
+							[class.rm-category-chip-selected]="newItem.tag === tag"
+							[style.background]="newItem.tag === tag ? tagColor(tag) + '1f' : null"
+							[style.color]="newItem.tag === tag ? tagColor(tag) : null"
+							(click)="selectNewItemCategory(tag)">
+							<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
+							<span class="hide-on-mobile">{{ tag }}</span>
+						</button>
+					}
+					<span class="rm-bar-spacer"></span>
+					<button class="rm-add-field-button" (click)="openLinkPopover($event)">
+						<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+							>add_link</span
+						>
+						{{ newItemLinkLabel || REMINDER_ADD_LINK_LABEL }}
+					</button>
+					<button class="rm-add-field-button" (click)="openDatePopover($event)">
+						<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+							>calendar_today</span
+						>
+						{{ newItemDateLabel || REMINDER_ADD_DATE_LABEL }}
+					</button>
+					<div class="rm-new-card-divider"></div>
+					<button
+						class="rm-confirm-button"
+						[style.background]="tagColor(newItem.tag)"
+						[disabled]="!newItem.text.trim()"
+						(click)="addNewItemWithDateOrLink()">
+						<span class="material-symbols-outlined rm-icon" style="font-size: 15px">check</span>
+						{{ REMINDER_ADD_BTN_LABEL }}
+					</button>
+				</div>
+			</div>
+		}
+
+		<!-- ── Date / link popover ────────────────────────────────────── -->
+		<p-popover [focusOnShow]="false" #dateOrLinkPopover>
+			<div class="rm-popover-body">
+				<p-inputgroup class="rm-popover-inputgroup">
+					<p-inputgroup-addon>
+						@if (isDate) {
+							<i class="pi pi-calendar" style="color: #f7971e"></i>
+						} @else {
+							<i class="pi pi-link" style="color: #4776e6"></i>
+						}
+					</p-inputgroup-addon>
+					@if (isDate) {
+						@if (editingItem) {
+							<p-datepicker
+								#editingDatepicker
+								[appendTo]="'body'"
+								dateFormat="yy-mm-dd"
+								showTransitionOptions="0ms"
+								hideTransitionOptions="0ms"
+								[ngModel]="editingDateModel"
+								(onSelect)="onEditingDateSelected($event)">
+							</p-datepicker>
+						} @else {
+							<p-datepicker
+								#newItemDatepicker
+								[appendTo]="'body'"
+								dateFormat="yy-mm-dd"
+								showTransitionOptions="0ms"
+								hideTransitionOptions="0ms"
+								[(ngModel)]="newItem.date"
+								(onSelect)="closePopover()">
+							</p-datepicker>
+						}
+					} @else {
+						@if (editingItem) {
+							<input
+								type="text"
+								pInputText
+								[(ngModel)]="editingLink"
+								(blur)="onPopoverLinkUpdate()"
+								(keyup.enter)="onPopoverLinkUpdate()"
+								[placeholder]="REMINDER_PLACEHOLDER_LINK"
+								style="font-size: 14px" />
+						} @else {
+							<input
+								type="text"
+								pInputText
+								[(ngModel)]="newItem.link"
+								(blur)="closePopover()"
+								(keyup.enter)="closePopover()"
+								[placeholder]="REMINDER_PLACEHOLDER_LINK"
+								style="font-size: 14px" />
+						}
+					}
+				</p-inputgroup>
+			</div>
+		</p-popover>
+
+		<!-- ── Paginator ──────────────────────────────────────────────── -->
+		<div class="rm-paginator">
+			<div class="rm-paginator-info">
+				<b>{{ rangeStart }}–{{ rangeEnd }}</b> of {{ filteredItems.length }}
+			</div>
+			<div class="rm-paginator-controls">
+				<button class="rm-page-button" [disabled]="page === 0" (click)="prevPage()">
+					<span class="material-symbols-outlined rm-icon">chevron_left</span>
+				</button>
+				@for (pageIndex of pagesArray; track pageIndex) {
+					<button
+						class="rm-page-button"
+						[class.rm-page-button-active]="pageIndex === page"
+						(click)="goToPage(pageIndex)">
+						{{ pageIndex + 1 }}
+					</button>
+				}
+				<button class="rm-page-button" [disabled]="page >= totalPages - 1" (click)="nextPage()">
+					<span class="material-symbols-outlined rm-icon">chevron_right</span>
+				</button>
+			</div>
+		</div>
+	</div>
 } @else {
 	<div class="access-denied-wrapper">
 		<access-denied />

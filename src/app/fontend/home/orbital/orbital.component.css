@@ -338,8 +338,8 @@
 ───────────────────────────────────────── */
 .orbital-core-concentric-wrapper {
 	position: relative;
-	width: 400px;
-	height: 400px;
+	width: 300px;
+	height: 300px;
 	/* top and left places top-left corner, need transform to move back by half its value*/
 	left: 50%;
 	top: 50%;
@@ -409,6 +409,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
+	height: 250px;
 }
 
 /* ─────────────────────────────────────────
@@ -565,49 +566,42 @@
 	left: calc(25% - 254px);
 	top: 270px;
 	width: 290px;
-	height: 250px;
 }
 
 .orbital-reminders {
 	right: calc(25% - 258px);
 	top: 270px;
 	width: 290px;
-	height: 250px;
 }
 
 .orbital-quick-links {
 	right: calc(25% - 258px);
 	top: 600px;
 	width: 290px;
-	height: 250px;
 }
 
 .orbital-activity {
 	left: calc(25% - 254px);
 	top: 600px;
 	width: 290px;
-	height: 250px;
 }
 
 .orbital-debt-sonata {
 	right: calc(25% - 258px);
 	top: 950px;
 	width: 290px;
-	height: 250px;
 }
 
 .orbital-recipes {
 	left: calc(25% - 254px);
 	top: 950px;
 	width: 290px;
-	height: 250px;
 }
 
 .orbital-week {
 	left: calc(50%);
 	transform: translate(-50%);
 	top: 950px;
-	height: 250px;
 	width: 460px;
 	gap: 9px;
 	padding: 15px 18px;
@@ -802,6 +796,11 @@
 		align-self: center;
 	}
 
+	.orbital-core {
+		width: 150px;
+		height: 150px;
+	}
+
 	.orbital-root {
 		width: 100%;
 		height: 100%;
@@ -880,6 +879,7 @@
 		position: static;
 		width: 100%;
 		height: 220px;
+		flex-shrink: 0;
 	}
 
 	.orbital-entertainment,
@@ -897,7 +897,6 @@
 
 	.orbital-week {
 		transform: none;
-		overflow: visible;
 	}
 
 	/* Panel display order on mobile */

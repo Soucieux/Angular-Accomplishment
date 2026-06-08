@@ -3,6 +3,7 @@ import {
 	Component,
 	ElementRef,
 	EventEmitter,
+	HostListener,
 	Input,
 	NgZone,
 	OnChanges,
@@ -136,6 +137,8 @@ import {
 	HOME_ORBITAL_CHANGES_KEY_STATS,
 	HOME_ORBITAL_PANEL_SCROLL_SELECTOR,
 	HOME_REMINDER_ROW_ID_PREFIX,
+	HOME_CONCENTRIC_SIZE_DEFAULT,
+	HOME_CONCENTRIC_SIZE_NARROW,
 	LINK_TARGET_BLANK,
 	SEARCH,
 	STATS_FIELD_DEBT_UPCOMING,
@@ -159,6 +162,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	private readonly elementRef = inject(ElementRef);
 	private readonly ngZone = inject(NgZone);
 	private readonly authService = inject(AuthService);
+	private readonly utilities = inject(Utilities);
 
 	@Input() stats: HomeStats | null = null;
 	@Input() links: NexusLink[] = [];
@@ -223,6 +227,9 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	protected recipeRows: OrbitalRecipeRow[] = [];
 	protected debtRows: OrbitalDebtRow[] = [];
 	protected activityRows: OrbitalActivityRow[] = [];
+	protected concentricSize = this.utilities.isNarrowViewport()
+		? HOME_CONCENTRIC_SIZE_NARROW
+		: HOME_CONCENTRIC_SIZE_DEFAULT;
 
 	/**
 	 * Subscribes to the auth state observable to keep the current user up to date.
@@ -260,12 +267,23 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	}
 
 	/**
-	 * Gets links marked as pinned for display in the top quick-access strip.
+	 * Updates the cached concentric ring diameter when the viewport is resized.
+	 */
+	@HostListener('window:resize')
+	protected onResize(): void {
+		this.concentricSize = this.utilities.isNarrowViewport()
+			? HOME_CONCENTRIC_SIZE_NARROW
+			: HOME_CONCENTRIC_SIZE_DEFAULT;
+	}
+
+	/**
+	 * Gets links marked as pinned for display in the top quick-access strip,
+	 * capped at the first six pinned items.
 	 *
-	 * @returns NexusLink items where isPinned is true.
+	 * @returns Up to six NexusLink items where isPinned is true.
 	 */
 	protected get pinnedLinks(): NexusLink[] {
-		return this.links.filter((link) => link.isPinned === true);
+		return this.links.filter((link) => link.isPinned === true).slice(0, 6);
 	}
 
 	/**

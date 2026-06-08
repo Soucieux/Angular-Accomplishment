@@ -1,5 +1,12 @@
-import { Component, Input, ViewEncapsulation, inject } from '@angular/core';
+import { Component, Input, OnChanges, ViewEncapsulation, inject } from '@angular/core';
 import {
+	HOME_CONCENTRIC_LEADER_BOUNDARY_MARGIN,
+	HOME_CONCENTRIC_LEADER_LINE_OFFSET_X,
+	HOME_CONCENTRIC_LEADER_LINE_OFFSET_Y,
+	HOME_CONCENTRIC_LEADER_MIN_GAP,
+	HOME_CONCENTRIC_LEADER_PCT_CAP,
+	HOME_CONCENTRIC_LEADER_SIDE_LEFT,
+	HOME_CONCENTRIC_LEADER_SIDE_RIGHT,
 	HOME_CONCENTRIC_TRACK_DEFAULT,
 	HOME_RING_GRADIENT_ID_PREFIX,
 	HOME_RING_TRACK_DEFAULT,
@@ -141,6 +148,14 @@ export class Ring {
 
 ////////////////////// Below is Concentric — stacked rings per metric ////////
 
+interface PlacedMetric extends OrbitalProgressMetric {
+	tipX: number;
+	tipY: number;
+	labelX: number;
+	labelY: number;
+	side: 'left' | 'right';
+}
+
 @Component({
 	selector: 'concentric',
 	standalone: true,
@@ -161,6 +176,46 @@ export class Ring {
 						[track]="track"></ring>
 				</div>
 			}
+
+			<svg class="concentric-svg" [attr.viewBox]="'0 0 ' + size + ' ' + size">
+				@for (p of placedMetrics; track p.key) {
+					<line
+						[attr.x1]="p.tipX"
+						[attr.y1]="p.tipY"
+						[attr.x2]="p.side === HOME_CONCENTRIC_LEADER_SIDE_RIGHT ? p.labelX - 2 : p.labelX + 2"
+						[attr.y2]="p.labelY"
+						[attr.stroke]="p.gradientEnd"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						opacity="0.7" />
+					<circle
+						[attr.cx]="p.tipX"
+						[attr.cy]="p.tipY"
+						r="3.5"
+						fill="#fff"
+						[attr.stroke]="p.gradientEnd"
+						stroke-width="2" />
+				}
+			</svg>
+
+			@for (p of placedMetrics; track p.key) {
+				<div
+					class="concentric-pill"
+					[style.left.%]="(p.labelX / size) * 100"
+					[style.top.%]="(p.labelY / size) * 100"
+					[style.transform]="
+						p.side === HOME_CONCENTRIC_LEADER_SIDE_RIGHT
+							? 'translate(0,-50%)'
+							: 'translate(-100%,-50%)'
+					">
+					<i
+						[style.background]="
+							'linear-gradient(90deg,' + p.gradientStart + ',' + p.gradientEnd + ')'
+						"></i>
+					{{ p.label }}&nbsp;<em>{{ p.percentage }}%</em>
+				</div>
+			}
+
 			<div class="center"><ng-content></ng-content></div>
 		</div>
 	`,
@@ -182,15 +237,58 @@ export class Ring {
 				justify-content: center;
 				text-align: center;
 			}
+			.concentric-svg {
+				position: absolute;
+				inset: 0;
+				overflow: visible;
+				pointer-events: none;
+			}
+			.concentric-pill {
+				position: absolute;
+				display: inline-flex;
+				align-items: center;
+				gap: 4px;
+				padding: 3px 8px;
+				border-radius: 9999px;
+				background: rgba(255, 255, 255, 0.97);
+				box-shadow: 0 2px 9px rgba(0, 0, 0, 0.18);
+				font-size: 13px;
+				font-weight: 800;
+				white-space: nowrap;
+				color: #2a1019;
+				letter-spacing: 0.3px;
+				pointer-events: none;
+			}
+			.concentric-pill i {
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				flex-shrink: 0;
+			}
+			.concentric-pill em {
+				font-style: normal;
+				color: #334155;
+			}
 		`
 	]
 })
-export class Concentric {
+export class Concentric implements OnChanges {
 	@Input() metrics: OrbitalProgressMetric[] = [];
 	@Input() size = 200;
 	@Input() stroke = 11;
 	@Input() gap = 5;
 	@Input() track = HOME_CONCENTRIC_TRACK_DEFAULT;
+
+	protected readonly HOME_CONCENTRIC_LEADER_SIDE_RIGHT = HOME_CONCENTRIC_LEADER_SIDE_RIGHT;
+
+	protected placedMetrics: PlacedMetric[] = [];
+
+	/**
+	 * Recomputes placed metrics whenever any input changes.
+	 */
+	ngOnChanges(): void {
+		this.placedMetrics = this.computePlaced();
+	}
 
 	/**
 	 * Gets the pixel diameter of the ring at the given stack index.
@@ -200,6 +298,70 @@ export class Concentric {
 	 */
 	protected computeRingSize(ringIndex: number): number {
 		return this.size - ringIndex * (this.stroke + this.gap) * 2;
+	}
+
+	/**
+	 * Gets the centre-to-stroke-centre radius for the ring at the given index.
+	 *
+	 * @param ringIndex - The 0-based index of the ring (outermost = 0).
+	 * @returns The radius in pixels.
+	 */
+	private computeRingRadius(ringIndex: number): number {
+		return this.computeRingSize(ringIndex) / 2 - this.stroke / 2;
+	}
+
+	/**
+	 * Computes smart-leader placement for each metric: arc-tip anchor (tipX, tipY),
+	 * pill anchor (labelX, labelY), and side. Applies a vertical anti-collision pass per
+	 * side so no two pills overlap regardless of percentage values.
+	 *
+	 * @returns An array of placed metrics ready for the template.
+	 */
+	private computePlaced(): PlacedMetric[] {
+		const center = this.size / 2;
+
+		const items: PlacedMetric[] = this.metrics.map((metric, i) => {
+			const radius = this.computeRingRadius(i);
+			const angle =
+				((-90 + Math.min(HOME_CONCENTRIC_LEADER_PCT_CAP, metric.percentage) * 3.6) * Math.PI) / 180;
+			const directionX = Math.cos(angle);
+			const directionY = Math.sin(angle);
+			const tipX = center + radius * directionX;
+			const tipY = center + radius * directionY;
+			return {
+				...metric,
+				tipX,
+				tipY,
+				labelX: tipX + directionX * HOME_CONCENTRIC_LEADER_LINE_OFFSET_X,
+				labelY: tipY + directionY * HOME_CONCENTRIC_LEADER_LINE_OFFSET_Y,
+				side: directionX >= 0 ? HOME_CONCENTRIC_LEADER_SIDE_RIGHT : HOME_CONCENTRIC_LEADER_SIDE_LEFT
+			};
+		});
+
+		([HOME_CONCENTRIC_LEADER_SIDE_LEFT, HOME_CONCENTRIC_LEADER_SIDE_RIGHT] as const).forEach((side) => {
+			const sameSideItems = items
+				.filter((placedItem) => placedItem.side === side)
+				.sort((a, b) => a.labelY - b.labelY);
+			for (let k = 1; k < sameSideItems.length; k++) {
+				if (sameSideItems[k].labelY < sameSideItems[k - 1].labelY + HOME_CONCENTRIC_LEADER_MIN_GAP) {
+					sameSideItems[k].labelY = sameSideItems[k - 1].labelY + HOME_CONCENTRIC_LEADER_MIN_GAP;
+				}
+			}
+			for (let k = sameSideItems.length - 1; k > 0; k--) {
+				if (sameSideItems[k].labelY > this.size - HOME_CONCENTRIC_LEADER_BOUNDARY_MARGIN) {
+					sameSideItems[k].labelY = this.size - HOME_CONCENTRIC_LEADER_BOUNDARY_MARGIN;
+					if (
+						sameSideItems[k - 1].labelY >
+						sameSideItems[k].labelY - HOME_CONCENTRIC_LEADER_MIN_GAP
+					) {
+						sameSideItems[k - 1].labelY =
+							sameSideItems[k].labelY - HOME_CONCENTRIC_LEADER_MIN_GAP;
+					}
+				}
+			}
+		});
+
+		return items;
 	}
 }
 
@@ -314,6 +476,8 @@ export class Concentric {
 				flex-direction: column;
 				gap: 6px;
 				overflow: hidden;
+				flex: 1;
+				min-height: 0;
 			}
 			.week-agenda-empty {
 				font-size: 13px;

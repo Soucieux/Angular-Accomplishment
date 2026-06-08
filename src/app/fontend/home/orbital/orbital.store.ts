@@ -8,7 +8,11 @@ import {
 	HOME_PROGRESS_KEY_DAY,
 	HOME_PROGRESS_KEY_MONTH,
 	HOME_PROGRESS_KEY_WEEK,
-	HOME_PROGRESS_KEY_YEAR
+	HOME_PROGRESS_KEY_YEAR,
+	HOME_PROGRESS_LABEL_DAY,
+	HOME_PROGRESS_LABEL_MONTH,
+	HOME_PROGRESS_LABEL_WEEK,
+	HOME_PROGRESS_LABEL_YEAR
 } from '../../../common/app.constant';
 import { OrbitalAgendaItem, OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
 
@@ -88,24 +92,28 @@ export class OrbitalStore implements OnDestroy {
 		return [
 			{
 				key: HOME_PROGRESS_KEY_YEAR,
+				label: HOME_PROGRESS_LABEL_YEAR,
 				percentage: Math.round((dayOfYear / daysInYear) * 100),
 				gradientStart: '#38bdf8',
 				gradientEnd: '#818cf8'
 			},
 			{
 				key: HOME_PROGRESS_KEY_MONTH,
+				label: HOME_PROGRESS_LABEL_MONTH,
 				percentage: Math.round((now.getDate() / daysInMonth) * 100),
 				gradientStart: '#f97316',
 				gradientEnd: '#fbbf24'
 			},
 			{
 				key: HOME_PROGRESS_KEY_WEEK,
+				label: HOME_PROGRESS_LABEL_WEEK,
 				percentage: Math.round((dayOfWeek / 7) * 100),
 				gradientStart: '#22c55e',
 				gradientEnd: '#059669'
 			},
 			{
 				key: HOME_PROGRESS_KEY_DAY,
+				label: HOME_PROGRESS_LABEL_DAY,
 				percentage: Math.round(dayPercentage),
 				gradientStart: '#a78bfa',
 				gradientEnd: '#ec4899'

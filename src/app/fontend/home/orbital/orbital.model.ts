@@ -1,6 +1,7 @@
 /** Shape of a single progress ring metric (year / month / week / day). */
 export interface OrbitalProgressMetric {
 	key: string;
+	label: string;
 	percentage: number;
 	gradientStart: string;
 	gradientEnd: string;

@@ -83,7 +83,12 @@
 			</div>
 
 			<!-- Concentric progress rings around the core -->
-			<concentric class="orbital-concentric" [metrics]="d.progress()" [size]="376" [stroke]="12" [gap]="6"></concentric>
+			<concentric
+				class="orbital-concentric"
+				[metrics]="d.progress()"
+				[size]="concentricSize"
+				[stroke]="12"
+				[gap]="6"></concentric>
 		</div>
 
 		<!-- ── Entertainment panel (left top) ───────────────────────── -->

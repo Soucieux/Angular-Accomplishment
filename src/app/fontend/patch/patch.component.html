@@ -37,13 +37,14 @@
 		<p-table
 			#t
 			[value]="(patchNotes$ | async) ?? []"
+			[totalRecords]="filteredTotal ?? statsTotal"
 			[paginator]="true"
 			[rows]="itemsPerPage"
 			[(first)]="indexOfFirstItem"
-			[showCurrentPageReport]="!isMobile"
+			[showCurrentPageReport]="!isNarrowViewport"
 			currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
 			[showFirstLastIcon]="true"
-			[showPageLinks]="!isMobile"
+			[showPageLinks]="!isNarrowViewport"
 			[loading]="loading"
 			[showLoader]="false"
 			[globalFilterFields]="['component', 'element', 'details']"
@@ -94,7 +95,7 @@
 						</p-columnFilter>
 					</th>
 					<th class="timestamp">TimeStamp</th>
-					<th class="edit-button hide-on-mobile">Edit</th>
+					<th class="edit-button hide-on-narrow-or-mobile">Edit</th>
 				</tr>
 			</ng-template>
 			<ng-template pTemplate="loadingbody">
@@ -105,7 +106,7 @@
 						<td><p-skeleton /></td>
 						<td><p-skeleton /></td>
 						<td><p-skeleton /></td>
-						@if (!isMobile) {
+						@if (!isNarrowViewport) {
 							<td><p-skeleton /></td>
 						}
 					</tr>
@@ -113,7 +114,7 @@
 			</ng-template>
 			<ng-template pTemplate="emptymessage">
 				<tr>
-					<td [attr.colspan]="isMobile ? 5 : 6">
+					<td [attr.colspan]="isNarrowViewport ? 5 : 6">
 						<div class="empty-state">
 							<span class="material-symbols-outlined empty-icon">note_stack</span>
 							<p>No patch notes match your search</p>
@@ -134,7 +135,7 @@
 								class="component">
 								<div class="component-content">
 									@if (getComponentOption(row.component); as opt) {
-										<span [class]="opt.iconClass + ' ' + opt.colorClass + ' hide-on-mobile'">{{
+										<span [class]="opt.iconClass + ' ' + opt.colorClass + ' hide-on-narrow-or-mobile'">{{
 											opt.icon
 										}}</span>
 									}
@@ -213,10 +214,13 @@
 						</td>
 
 						<td class="timestamp">
-							{{ row.timestamp }}
+							<div>{{ getTimestampDate(row.timestamp) }}</div>
+							@if (getTimestampTime(row.timestamp)) {
+								<div class="timestamp-time">{{ getTimestampTime(row.timestamp) }}</div>
+							}
 						</td>
 
-						<td class="edit-button hide-on-mobile">
+						<td class="edit-button hide-on-narrow-or-mobile">
 							@if (editedRows.has(row.key)) {
 								<div class="edit-button-group">
 									<p-button
@@ -243,7 +247,7 @@
 			</ng-template>
 			<ng-template pTemplate="footer">
 				@if (!loading && t.first && t.rows && t.first + t.rows > t.totalRecords - 1) {
-					<tr class="hide-on-mobile">
+					<tr class="hide-on-narrow-or-mobile">
 						<td class="component">
 							<p-select
 								[options]="components"

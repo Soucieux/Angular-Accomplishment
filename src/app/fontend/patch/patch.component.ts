@@ -80,6 +80,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
+
+	protected readonly Utilities = Utilities;
 	/**
 	 * All available components that can be selected in the add-entry dropdown.
 	 *
@@ -161,7 +163,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected patchNotes$!: Observable<any[]>;
 	protected indexOfFirstItem = 0;
 	protected itemsPerPage = 8;
-	protected isMobile!: boolean;
+	protected isNarrowViewport!: boolean;
 	protected skeletonRows = Array.from({ length: this.itemsPerPage });
 	protected editedRows = new Map<string, any>();
 	protected hoveredRowIndex: number | null = null;
@@ -185,6 +187,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private _isDataUpdate = false;
 	protected newRecord = this.emptyRecord();
 	protected searchQuery = '';
+	protected filteredTotal: number | null = null;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
@@ -212,12 +215,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
-			this.isMobile = this.utilities.isMobile();
+			this.isNarrowViewport = this.utilities.isNarrowViewport();
 
 			const getObservable$ = this.databaseService.getPatchNotes();
 			this.patchNotes$ = getObservable$.pipe(
 				map((data) => {
-					return this.isMobile ? data : [...data, { __dummy: true }];
+					return this.isNarrowViewport ? data : [...data, { __dummy: true }];
 				}),
 				tap((data) => {
 					this.ngZone.run(() => {
@@ -273,12 +276,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Updates the isMobile flag when the window is resized.
+	 * Updates the isNarrowViewport flag when the window is resized.
 	 */
 	@HostListener('window:resize')
 	protected onResize() {
 		if (isPlatformBrowser(this.platformId)) {
-			this.isMobile = this.utilities.isMobile();
+			this.isNarrowViewport = this.utilities.isNarrowViewport();
 		}
 	}
 
@@ -347,7 +350,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		}
 
 		if (Object.keys(changes).length > 0) {
-			changes.timestamp = Utilities.getCurrentFormattedTime(false);
+			changes.timestamp = Utilities.getCurrentFormattedTime(true);
 			try {
 				await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
 			} catch (error) {
@@ -394,7 +397,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * can include the correct noteIndex and metadata after the async add.
 	 */
 	protected submitNewRecord() {
-		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(false);
+		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(true);
 		this.newRecord.isBug =
 			this.newRecord.status === STATUS_DEBUG || this.newRecord.status === STATUS_RESOLVED;
 		const snapshot = { ...this.newRecord };
@@ -429,10 +432,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param key - The key of the patch note to remove.
 	 */
 	protected openDeleteConfirmationDialog(key: string) {
-		/* Capture note identity before the dialog opens — the list may have changed by
-		   the time the user confirms. */
+		/* Capture note identity and the projected total before the dialog opens — the list may have changed by
+		   the time the user confirms, and the CloudBase watcher may already have pushed the updated data before the remove promise resolves, making patchNotesList.length unreliable inside the callback. */
 		const noteToDelete = this.patchNotesList.find((note) => note.key === key);
 		const noteIndex = this.patchNotesList.findIndex((note) => note.key === key) + 1;
+
+		const newTotal = this.patchNotesList.length - 1;
 
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -452,7 +457,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 						})
 						.catch(() => {});
 					this.databaseService
-						.updateStatisticsFields({ [STATS_FIELD_PATCH_NOTES_TOTAL]: this.patchNotesList.length - 1 })
+						.updateStatisticsFields({ [STATS_FIELD_PATCH_NOTES_TOTAL]: newTotal })
 						.catch(() => {});
 				} catch (error) {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
@@ -488,6 +493,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * or "clip" entirely.
 	 */
 	protected onTableFilter() {
+		this.filteredTotal = this.table?.filteredValue?.length ?? null;
 		if (!this._isDataUpdate) return;
 
 		// Force the table instance AND the local index to match our source of truth
@@ -716,5 +722,25 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected getComponentOption(label: string | { label: string } | any) {
 		const key = typeof label === 'string' ? label : (label?.label ?? '');
 		return this.components.find((option) => option.label === key) ?? null;
+	}
+
+	/**
+	 * Gets the date portion of an app-format timestamp string.
+	 *
+	 * @param timestamp - The timestamp string in `'YYYY.MM.DD HH:mm:ss'` or `'YYYY.MM.DD'` format.
+	 * @returns The `YYYY.MM.DD` portion before the first space.
+	 */
+	protected getTimestampDate(timestamp: string): string {
+		return Utilities.getTimestampDate(timestamp);
+	}
+
+	/**
+	 * Gets the `HH:mm` portion of an app-format timestamp string.
+	 *
+	 * @param timestamp - The timestamp string in `'YYYY.MM.DD HH:mm:ss'` format.
+	 * @returns The hours and minutes, or an empty string if no time segment is present.
+	 */
+	protected getTimestampTime(timestamp: string): string {
+		return Utilities.getTimestampTime(timestamp);
 	}
 }

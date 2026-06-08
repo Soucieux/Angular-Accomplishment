@@ -796,6 +796,12 @@
 	max-width: 80px;
 }
 
+.timestamp-time {
+	font-size: 11px;
+	opacity: 0.6;
+	margin-top: 2px;
+}
+
 .p-datatable .edit-button {
 	text-align: center;
 	width: 45px;

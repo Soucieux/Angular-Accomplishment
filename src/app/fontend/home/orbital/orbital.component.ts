@@ -22,66 +22,93 @@ import {
 	OrbitalActivityRow,
 	OrbitalDebtRow,
 	OrbitalQuickAction,
+	OrbitalRecipeRow,
 	OrbitalReminderRow,
 	OrbitalWeekDay
 } from './orbital.model';
-import {
-	HomeStats,
-	MovieActivityItem,
-	PatchActivityItem,
-	ReminderActivityItem,
-	ResonanceActivityItem
-} from '../home.model';
+import { HomeStats, RecentActivityItem } from '../home.model';
 import { NexusCategory, NexusLink } from '../../nexus/nexus.model';
-import { Recipe } from '../../recipe/recipe.model';
 import { Utilities } from '../../../common/app.utilities';
 import {
+	ACTIVITY_SOURCE_DEBT,
+	ACTIVITY_SOURCE_LINK,
+	ACTIVITY_SOURCE_MOVIE,
+	ACTIVITY_SOURCE_PATCH,
+	ACTIVITY_SOURCE_RECIPE,
+	ACTIVITY_SOURCE_REMINDER,
+	ACTIVITY_SOURCE_RESONANCE,
 	ACTIVITY_TYPE_BUG_LOGGED,
 	ACTIVITY_TYPE_EDITED,
+	ACTIVITY_TYPE_RESET,
 	ACTIVITY_TYPE_STATUS_CHANGED,
 	ACTIVITY_TYPE_UPDATED,
 	DAY_NAMES_SHORT,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_DELETED,
+	HOME_ACTIVITY_COLOR_DEBT,
 	HOME_ACTIVITY_COLOR_DELETED,
-	HOME_ACTIVITY_COLOR_MOVIE_ADDED,
-	HOME_ACTIVITY_COLOR_MOVIE_RATED,
-	HOME_ACTIVITY_COLOR_MOVIE_SEARCHED,
+	HOME_ACTIVITY_COLOR_LINK,
+	HOME_ACTIVITY_COLOR_MOVIE,
 	HOME_ACTIVITY_COLOR_NEUTRAL,
 	HOME_ACTIVITY_COLOR_PATCH,
+	HOME_ACTIVITY_COLOR_RECIPE,
 	HOME_ACTIVITY_COLOR_REMINDER,
 	HOME_ACTIVITY_COLOR_RESONANCE,
+	HOME_ACTIVITY_ICON_DEBT_ADDED,
+	HOME_ACTIVITY_ICON_DEBT_REMOVED,
+	HOME_ACTIVITY_ICON_DEBT_RESET,
+	HOME_ACTIVITY_ICON_DEBT_UPDATED,
 	HOME_ACTIVITY_ICON_DELETED,
+	HOME_ACTIVITY_ICON_LINK_ADDED,
+	HOME_ACTIVITY_ICON_LINK_REMOVED,
+	HOME_ACTIVITY_ICON_LINK_UPDATED,
 	HOME_ACTIVITY_ICON_MOVIE_ADDED,
 	HOME_ACTIVITY_ICON_MOVIE_REMOVED,
-	HOME_ACTIVITY_ICON_MOVIE_RATED,
 	HOME_ACTIVITY_ICON_MOVIE_SEARCHED,
+	HOME_ACTIVITY_ICON_MOVIE_UPDATED,
 	HOME_ACTIVITY_ICON_PATCH_ADDED,
 	HOME_ACTIVITY_ICON_PATCH_BUG,
 	HOME_ACTIVITY_ICON_PATCH_STATUS,
 	HOME_ACTIVITY_ICON_PATCH_UPDATED,
+	HOME_ACTIVITY_ICON_RECIPE_ADDED,
+	HOME_ACTIVITY_ICON_RECIPE_REMOVED,
+	HOME_ACTIVITY_ICON_RECIPE_UPDATED,
 	HOME_ACTIVITY_ICON_REMINDER_ADDED,
 	HOME_ACTIVITY_ICON_REMINDER_UPDATED,
 	HOME_ACTIVITY_ICON_RESONANCE_ADDED,
 	HOME_ACTIVITY_ICON_RESONANCE_REMOVED,
+	HOME_ACTIVITY_LABEL_DEBT_ADDED,
+	HOME_ACTIVITY_LABEL_DEBT_REMOVED,
+	HOME_ACTIVITY_LABEL_DEBT_RESET,
+	HOME_ACTIVITY_LABEL_DEBT_UPDATED,
+	HOME_ACTIVITY_LABEL_LINK_ADDED,
+	HOME_ACTIVITY_LABEL_LINK_REMOVED,
+	HOME_ACTIVITY_LABEL_LINK_UPDATED,
 	HOME_ACTIVITY_LABEL_MOVIE_ADDED,
 	HOME_ACTIVITY_LABEL_MOVIE_REMOVED,
-	HOME_ACTIVITY_LABEL_MOVIE_RATED,
 	HOME_ACTIVITY_LABEL_MOVIE_SEARCHED,
+	HOME_ACTIVITY_LABEL_MOVIE_UPDATED,
 	HOME_ACTIVITY_LABEL_PATCH_ADDED,
 	HOME_ACTIVITY_LABEL_PATCH_BUG,
 	HOME_ACTIVITY_LABEL_PATCH_DELETED,
 	HOME_ACTIVITY_LABEL_PATCH_STATUS,
 	HOME_ACTIVITY_LABEL_PATCH_UPDATED,
+	HOME_ACTIVITY_LABEL_RECIPE_ADDED,
+	HOME_ACTIVITY_LABEL_RECIPE_REMOVED,
+	HOME_ACTIVITY_LABEL_RECIPE_UPDATED,
 	HOME_ACTIVITY_LABEL_REMINDER_ADDED,
 	HOME_ACTIVITY_LABEL_REMINDER_DELETED,
 	HOME_ACTIVITY_LABEL_REMINDER_UPDATED,
 	HOME_ACTIVITY_LABEL_RESONANCE_ADDED,
 	HOME_ACTIVITY_LABEL_RESONANCE_REMOVED,
-	HOME_AGENDA_ICON_EVENT,
+	HOME_AGENDA_ICON_REMINDER,
 	HOME_DEBT_ROW_ID_PREFIX,
 	HOME_GENRE_COLORS,
 	HOME_LINKS_DOT_FALLBACK,
+	HOME_OVERFLOW_LABEL_DEBT,
+	HOME_OVERFLOW_LABEL_LINKS,
+	HOME_OVERFLOW_LABEL_RECIPES,
+	HOME_OVERFLOW_LABEL_REMINDERS,
 	HOME_QUICK_ACTION_GRADIENT_DEBT,
 	HOME_QUICK_ACTION_GRADIENT_LINK,
 	HOME_QUICK_ACTION_GRADIENT_MOVIE,
@@ -113,10 +140,8 @@ import {
 	SEARCH,
 	STATS_FIELD_DEBT_UPCOMING,
 	STATS_FIELD_GENRE,
-	STATS_FIELD_RECENT_MOVIE,
-	STATS_FIELD_RECENT_PATCH,
-	STATS_FIELD_RECENT_REMINDER,
-	STATS_FIELD_RECENT_RESONANCE,
+	STATS_FIELD_RECENT_ACTIVITIES,
+	STATS_FIELD_RECIPE_LIST,
 	STATS_FIELD_REMINDER_UPCOMING
 } from '../../../common/app.constant';
 
@@ -138,8 +163,16 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	@Input() stats: HomeStats | null = null;
 	@Input() links: NexusLink[] = [];
 	@Input() dashCategories: NexusCategory[] = [];
-	@Input() recipes: Recipe[] = [];
 	@Output() readonly linkVisit = new EventEmitter<{ id: string; count: number }>();
+
+	protected readonly HOME_OVERFLOW_LABEL_REMINDERS = HOME_OVERFLOW_LABEL_REMINDERS;
+	protected readonly HOME_OVERFLOW_LABEL_DEBT = HOME_OVERFLOW_LABEL_DEBT;
+	protected readonly HOME_OVERFLOW_LABEL_RECIPES = HOME_OVERFLOW_LABEL_RECIPES;
+	protected readonly HOME_OVERFLOW_LABEL_LINKS = HOME_OVERFLOW_LABEL_LINKS;
+	protected readonly HOME_QUICK_ACTION_ROUTE_REMINDER = HOME_QUICK_ACTION_ROUTE_REMINDER;
+	protected readonly HOME_QUICK_ACTION_ROUTE_DEBT = HOME_QUICK_ACTION_ROUTE_DEBT;
+	protected readonly HOME_QUICK_ACTION_ROUTE_RECIPE = HOME_QUICK_ACTION_ROUTE_RECIPE;
+	protected readonly HOME_QUICK_ACTION_ROUTE_NEXUS = HOME_QUICK_ACTION_ROUTE_NEXUS;
 
 	protected readonly QUICK_ACTIONS: OrbitalQuickAction[] = [
 		{
@@ -187,6 +220,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	protected currentUser$!: Observable<any>;
 	protected genreBars: { label: string; count: number; percentage: number; color: string }[] = [];
 	protected reminderRows: OrbitalReminderRow[] = [];
+	protected recipeRows: OrbitalRecipeRow[] = [];
 	protected debtRows: OrbitalDebtRow[] = [];
 	protected activityRows: OrbitalActivityRow[] = [];
 
@@ -218,6 +252,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		if (changes[HOME_ORBITAL_CHANGES_KEY_STATS] && this.stats) {
 			this.genreBars = this.buildGenreBars();
 			this.reminderRows = this.buildReminderRows();
+			this.recipeRows = this.buildRecipeRows();
 			this.debtRows = this.buildDebtRows();
 			this.activityRows = this.buildActivityRows();
 			this.syncWeekData();
@@ -234,21 +269,34 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	}
 
 	/**
-	 * Gets the number of upcoming reminder rows.
+	 * Gets the true total number of open reminders from the statistics document.
+	 * Reads reminderTotal directly so the count is never limited by the 20-item
+	 * cap applied to the reminderUpcoming array.
 	 *
-	 * @returns The total count of reminder rows.
+	 * @returns The full reminder count from stats, or 0 if not yet loaded.
 	 */
 	protected get openReminderCount(): number {
-		return this.reminderRows.length;
+		return this.stats?.reminderTotal ?? 0;
 	}
 
 	/**
-	 * Gets the number of upcoming debt rows.
+	 * Gets the total number of patch notes from the statistics document.
 	 *
-	 * @returns The total count of debt rows.
+	 * @returns The patch notes count from stats, or 0 if not yet loaded.
+	 */
+	protected get patchNotesCount(): number {
+		return this.stats?.patchNotesTotal ?? 0;
+	}
+
+	/**
+	 * Gets the true total number of unpaid debts from the statistics document.
+	 * Reads debtTotal directly so the count is never limited by the 20-item
+	 * cap applied to the debtUpcoming array.
+	 *
+	 * @returns The full unpaid debt count from stats, or 0 if not yet loaded.
 	 */
 	protected get openDebtCount(): number {
-		return this.debtRows.length;
+		return this.stats?.debtTotal ?? 0;
 	}
 
 	/**
@@ -260,6 +308,16 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		this.router
 			.navigate([action.route], action.state ? { state: action.state } : undefined)
 			.catch(() => {});
+	}
+
+	/**
+	 * Navigates to a page by its route path. Used by overflow rows to send
+	 * the user to the full list when the panel cap has been reached.
+	 *
+	 * @param route - The route path to navigate to.
+	 */
+	protected navigateToPage(route: string): void {
+		this.router.navigate([route]).catch(() => {});
 	}
 
 	/**
@@ -316,8 +374,8 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	}
 
 	/**
-	 * Builds the reminder row data from the current stats, sorted by date ascending
-	 * and limited to the 4 nearest upcoming items.
+	 * Builds the reminder row data from the current stats, sorted by date ascending.
+	 * All stored items are shown; the stats array is already capped at 20 on write.
 	 *
 	 * @returns An array of reminder row descriptors for the reminders panel.
 	 */
@@ -336,7 +394,6 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 				};
 				return toMs(a) - toMs(b);
 			})
-			.slice(0, 4)
 			.map((item, index) => {
 				const reminder = item as { name?: string; date?: string | null };
 				const overdue = Utilities.isOverdue(reminder.date);
@@ -350,8 +407,25 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	}
 
 	/**
-	 * Builds the debt row data from the current stats, sorted by date ascending
-	 * and limited to the 4 nearest upcoming items.
+	 * Builds the recipe row data from the current stats.
+	 *
+	 * @returns An array of recipe row descriptors for the recipes panel.
+	 */
+	private buildRecipeRows(): OrbitalRecipeRow[] {
+		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_RECIPE_LIST]);
+		return raw.map((item) => {
+			const recipe = item as { id?: string; name?: string; category?: string };
+			return {
+				id: recipe.id ?? '',
+				name: recipe.name ?? '',
+				category: recipe.category ?? ''
+			};
+		});
+	}
+
+	/**
+	 * Builds the debt row data from the current stats, sorted by date ascending.
+	 * All stored items are shown; the stats array is already capped at 20 on write.
 	 *
 	 * @returns An array of debt row descriptors for the debt-sonata panel.
 	 */
@@ -370,7 +444,6 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 				};
 				return toMs(a) - toMs(b);
 			})
-			.slice(0, 4)
 			.map((item, index) => {
 				const debt = item as { name?: string; date?: string | null };
 				const overdue = Utilities.isOverdue(debt.date);
@@ -384,125 +457,134 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	}
 
 	/**
-	 * Builds the activity row data by aggregating all recent activity stats across
-	 * movies, patch notes, reminders, and resonance, sorted by timestamp descending.
+	 * Builds the activity row data from the unified recentActivities stats array.
+	 * Branches by source to apply the correct icon, label, colour, and detail
+	 * for all seven sources: movie, reminder, resonance, patch, link, debt, recipe.
+	 * The array is already sorted newest-first and capped at 20 on write.
 	 *
-	 * @returns An array of activity row descriptors limited to the 4 most recent events.
+	 * @returns An array of activity row descriptors for the activity panel.
 	 */
 	private buildActivityRows(): OrbitalActivityRow[] {
-		type RawEvent = OrbitalActivityRow & { raw: string };
-		const events: RawEvent[] = [];
+		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_ACTIVITIES]) as RecentActivityItem[];
+		const rows: OrbitalActivityRow[] = [];
 
-		for (const movie of Utilities.toArray(
-			this.stats?.[STATS_FIELD_RECENT_MOVIE]
-		) as MovieActivityItem[]) {
-			if (!movie.timestamp) continue;
-			let icon = HOME_ACTIVITY_ICON_MOVIE_ADDED,
-				label = HOME_ACTIVITY_LABEL_MOVIE_ADDED,
-				color = HOME_ACTIVITY_COLOR_MOVIE_ADDED;
-			if (movie.type === HISTORY_STATUS_DELETED) {
-				icon = HOME_ACTIVITY_ICON_MOVIE_REMOVED;
-				label = HOME_ACTIVITY_LABEL_MOVIE_REMOVED;
-				color = HOME_ACTIVITY_COLOR_NEUTRAL;
-			} else if (movie.type === ACTIVITY_TYPE_UPDATED) {
-				icon = HOME_ACTIVITY_ICON_MOVIE_RATED;
-				label = HOME_ACTIVITY_LABEL_MOVIE_RATED;
-				color = HOME_ACTIVITY_COLOR_MOVIE_RATED;
-			} else if (movie.type === SEARCH) {
-				icon = HOME_ACTIVITY_ICON_MOVIE_SEARCHED;
-				label = HOME_ACTIVITY_LABEL_MOVIE_SEARCHED;
-				color = HOME_ACTIVITY_COLOR_MOVIE_SEARCHED;
-			}
-			events.push({
-				icon,
-				label,
-				detail: Utilities.truncate(movie.title ?? '', 32),
-				time: Utilities.getRelativeTime(movie.timestamp),
-				color,
-				raw: movie.timestamp
-			});
-		}
+		for (const entry of raw) {
+			if (!entry.timestamp || !entry.source) continue;
 
-		for (const patch of Utilities.toArray(
-			this.stats?.[STATS_FIELD_RECENT_PATCH]
-		) as PatchActivityItem[]) {
-			if (!patch.timestamp) continue;
-			let icon = HOME_ACTIVITY_ICON_PATCH_ADDED,
-				label = HOME_ACTIVITY_LABEL_PATCH_ADDED,
-				color = HOME_ACTIVITY_COLOR_PATCH;
-			if (patch.type === ACTIVITY_TYPE_BUG_LOGGED) {
-				icon = HOME_ACTIVITY_ICON_PATCH_BUG;
-				label = HOME_ACTIVITY_LABEL_PATCH_BUG;
-			} else if (patch.type === ACTIVITY_TYPE_STATUS_CHANGED) {
-				icon = HOME_ACTIVITY_ICON_PATCH_STATUS;
-				label = HOME_ACTIVITY_LABEL_PATCH_STATUS;
-			} else if (patch.type === ACTIVITY_TYPE_EDITED) {
-				icon = HOME_ACTIVITY_ICON_PATCH_UPDATED;
-				label = HOME_ACTIVITY_LABEL_PATCH_UPDATED;
-			} else if (patch.type === HISTORY_STATUS_DELETED) {
-				icon = HOME_ACTIVITY_ICON_DELETED;
-				label = HOME_ACTIVITY_LABEL_PATCH_DELETED;
-				color = HOME_ACTIVITY_COLOR_DELETED;
-			}
-			events.push({
-				icon,
-				label,
-				detail: Utilities.truncate(`#${patch.noteIndex ?? '?'} ${patch.component ?? ''}`, 32),
-				time: Utilities.getRelativeTime(patch.timestamp),
-				color,
-				raw: patch.timestamp
-			});
-		}
+			let icon = HOME_ACTIVITY_ICON_MOVIE_ADDED;
+			let label = HOME_ACTIVITY_LABEL_MOVIE_ADDED;
+			let color = HOME_ACTIVITY_COLOR_MOVIE;
+			let detail = '';
 
-		for (const reminder of Utilities.toArray(
-			this.stats?.[STATS_FIELD_RECENT_REMINDER]
-		) as ReminderActivityItem[]) {
-			if (!reminder.timestamp) continue;
-			let icon = HOME_ACTIVITY_ICON_REMINDER_ADDED,
-				label = HOME_ACTIVITY_LABEL_REMINDER_ADDED,
+			if (entry.source === ACTIVITY_SOURCE_MOVIE) {
+				detail = Utilities.truncate(entry.title ?? '', 32);
+				if (entry.type === ACTIVITY_TYPE_UPDATED) {
+					icon = HOME_ACTIVITY_ICON_MOVIE_UPDATED;
+					label = HOME_ACTIVITY_LABEL_MOVIE_UPDATED;
+				} else if (entry.type === HISTORY_STATUS_DELETED) {
+					icon = HOME_ACTIVITY_ICON_MOVIE_REMOVED;
+					label = HOME_ACTIVITY_LABEL_MOVIE_REMOVED;
+					color = HOME_ACTIVITY_COLOR_DELETED;
+				} else if (entry.type === SEARCH) {
+					icon = HOME_ACTIVITY_ICON_MOVIE_SEARCHED;
+					label = HOME_ACTIVITY_LABEL_MOVIE_SEARCHED;
+					detail = '';
+				}
+			} else if (entry.source === ACTIVITY_SOURCE_REMINDER) {
+				icon = HOME_ACTIVITY_ICON_REMINDER_ADDED;
+				label = HOME_ACTIVITY_LABEL_REMINDER_ADDED;
 				color = HOME_ACTIVITY_COLOR_REMINDER;
-			if (reminder.type === HISTORY_STATUS_DELETED) {
-				icon = HOME_ACTIVITY_ICON_DELETED;
-				label = HOME_ACTIVITY_LABEL_REMINDER_DELETED;
-				color = HOME_ACTIVITY_COLOR_DELETED;
-			} else if (reminder.type === ACTIVITY_TYPE_UPDATED) {
-				icon = HOME_ACTIVITY_ICON_REMINDER_UPDATED;
-				label = HOME_ACTIVITY_LABEL_REMINDER_UPDATED;
+				detail = Utilities.truncate(entry.text ?? '', 32);
+				if (entry.type === ACTIVITY_TYPE_UPDATED) {
+					icon = HOME_ACTIVITY_ICON_REMINDER_UPDATED;
+					label = HOME_ACTIVITY_LABEL_REMINDER_UPDATED;
+				} else if (entry.type === HISTORY_STATUS_DELETED) {
+					icon = HOME_ACTIVITY_ICON_DELETED;
+					label = HOME_ACTIVITY_LABEL_REMINDER_DELETED;
+					color = HOME_ACTIVITY_COLOR_DELETED;
+				}
+			} else if (entry.source === ACTIVITY_SOURCE_RESONANCE) {
+				const isDeleted = entry.type === HISTORY_STATUS_DELETED;
+				icon = isDeleted ? HOME_ACTIVITY_ICON_RESONANCE_REMOVED : HOME_ACTIVITY_ICON_RESONANCE_ADDED;
+				label = isDeleted
+					? HOME_ACTIVITY_LABEL_RESONANCE_REMOVED
+					: HOME_ACTIVITY_LABEL_RESONANCE_ADDED;
+				color = isDeleted ? HOME_ACTIVITY_COLOR_DELETED : HOME_ACTIVITY_COLOR_RESONANCE;
+				detail = Utilities.truncate(entry.author ?? '', 32);
+			} else if (entry.source === ACTIVITY_SOURCE_PATCH) {
+				icon = HOME_ACTIVITY_ICON_PATCH_ADDED;
+				label = HOME_ACTIVITY_LABEL_PATCH_ADDED;
+				color = HOME_ACTIVITY_COLOR_PATCH;
+				detail = `#${entry.noteIndex ?? '?'} · ${entry.component ?? ''} · ${entry.element ?? ''}`;
+				if (entry.type === ACTIVITY_TYPE_BUG_LOGGED) {
+					icon = HOME_ACTIVITY_ICON_PATCH_BUG;
+					label = HOME_ACTIVITY_LABEL_PATCH_BUG;
+				} else if (entry.type === ACTIVITY_TYPE_STATUS_CHANGED) {
+					icon = HOME_ACTIVITY_ICON_PATCH_STATUS;
+					label = HOME_ACTIVITY_LABEL_PATCH_STATUS;
+				} else if (entry.type === ACTIVITY_TYPE_EDITED) {
+					icon = HOME_ACTIVITY_ICON_PATCH_UPDATED;
+					label = HOME_ACTIVITY_LABEL_PATCH_UPDATED;
+				} else if (entry.type === HISTORY_STATUS_DELETED) {
+					icon = HOME_ACTIVITY_ICON_DELETED;
+					label = HOME_ACTIVITY_LABEL_PATCH_DELETED;
+					color = HOME_ACTIVITY_COLOR_DELETED;
+				}
+			} else if (entry.source === ACTIVITY_SOURCE_LINK) {
+				icon = HOME_ACTIVITY_ICON_LINK_ADDED;
+				label = HOME_ACTIVITY_LABEL_LINK_ADDED;
+				color = HOME_ACTIVITY_COLOR_LINK;
+				detail = Utilities.truncate(entry.domain ?? '', 32);
+				if (entry.type === ACTIVITY_TYPE_UPDATED) {
+					icon = HOME_ACTIVITY_ICON_LINK_UPDATED;
+					label = HOME_ACTIVITY_LABEL_LINK_UPDATED;
+				} else if (entry.type === HISTORY_STATUS_DELETED) {
+					icon = HOME_ACTIVITY_ICON_LINK_REMOVED;
+					label = HOME_ACTIVITY_LABEL_LINK_REMOVED;
+					color = HOME_ACTIVITY_COLOR_DELETED;
+				}
+			} else if (entry.source === ACTIVITY_SOURCE_DEBT) {
+				icon = HOME_ACTIVITY_ICON_DEBT_ADDED;
+				label = HOME_ACTIVITY_LABEL_DEBT_ADDED;
+				color = HOME_ACTIVITY_COLOR_DEBT;
+				detail = Utilities.truncate(entry.name ?? '', 32);
+				if (entry.type === ACTIVITY_TYPE_UPDATED) {
+					icon = HOME_ACTIVITY_ICON_DEBT_UPDATED;
+					label = HOME_ACTIVITY_LABEL_DEBT_UPDATED;
+				} else if (entry.type === ACTIVITY_TYPE_RESET) {
+					icon = HOME_ACTIVITY_ICON_DEBT_RESET;
+					label = HOME_ACTIVITY_LABEL_DEBT_RESET;
+				} else if (entry.type === HISTORY_STATUS_DELETED) {
+					icon = HOME_ACTIVITY_ICON_DEBT_REMOVED;
+					label = HOME_ACTIVITY_LABEL_DEBT_REMOVED;
+					color = HOME_ACTIVITY_COLOR_DELETED;
+				}
+			} else if (entry.source === ACTIVITY_SOURCE_RECIPE) {
+				icon = HOME_ACTIVITY_ICON_RECIPE_ADDED;
+				label = HOME_ACTIVITY_LABEL_RECIPE_ADDED;
+				color = HOME_ACTIVITY_COLOR_RECIPE;
+				detail = Utilities.truncate(entry.name ?? '', 32);
+				if (entry.type === ACTIVITY_TYPE_UPDATED) {
+					icon = HOME_ACTIVITY_ICON_RECIPE_UPDATED;
+					label = HOME_ACTIVITY_LABEL_RECIPE_UPDATED;
+				} else if (entry.type === HISTORY_STATUS_DELETED) {
+					icon = HOME_ACTIVITY_ICON_RECIPE_REMOVED;
+					label = HOME_ACTIVITY_LABEL_RECIPE_REMOVED;
+					color = HOME_ACTIVITY_COLOR_DELETED;
+				}
+			} else {
+				continue;
 			}
-			events.push({
-				icon,
-				label,
-				detail: Utilities.truncate(reminder.text ?? '', 32),
-				time: Utilities.getRelativeTime(reminder.timestamp),
-				color,
-				raw: reminder.timestamp
-			});
+
+			rows.push({ icon, label, detail, time: Utilities.getRelativeTime(entry.timestamp), color });
 		}
 
-		for (const resonance of Utilities.toArray(
-			this.stats?.[STATS_FIELD_RECENT_RESONANCE]
-		) as ResonanceActivityItem[]) {
-			if (!resonance.timestamp) continue;
-			const removed = resonance.type === HISTORY_STATUS_DELETED;
-			events.push({
-				icon: removed ? HOME_ACTIVITY_ICON_RESONANCE_REMOVED : HOME_ACTIVITY_ICON_RESONANCE_ADDED,
-				label: removed ? HOME_ACTIVITY_LABEL_RESONANCE_REMOVED : HOME_ACTIVITY_LABEL_RESONANCE_ADDED,
-				detail: Utilities.truncate(resonance.author ?? '', 32),
-				time: Utilities.getRelativeTime(resonance.timestamp),
-				color: removed ? HOME_ACTIVITY_COLOR_DELETED : HOME_ACTIVITY_COLOR_RESONANCE,
-				raw: resonance.timestamp
-			});
-		}
-
-		return events
-			.sort((a, b) => (b.raw > a.raw ? 1 : -1))
-			.slice(0, 4)
-			.map(({ raw: _raw, ...rest }) => rest);
+		return rows;
 	}
 
 	/**
 	 * Populates the store with the current week's day descriptors and per-day agenda items
-	 * derived from the upcoming reminders in the stats payload.
+	 * derived from the upcoming reminders and debts in the stats payload.
 	 */
 	private syncWeekData(): void {
 		const today = new Date();
@@ -512,6 +594,11 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 
 		const rawReminders = Utilities.toArray(this.stats?.[STATS_FIELD_REMINDER_UPCOMING]) as {
 			date?: string | null;
+			name?: string;
+		}[];
+		const rawDebts = Utilities.toArray(this.stats?.[STATS_FIELD_DEBT_UPCOMING]) as {
+			date?: string | null;
+			name?: string;
 		}[];
 
 		const agenda: Record<number, OrbitalAgendaItem[]> = {};
@@ -519,16 +606,31 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		const days: OrbitalWeekDay[] = monToSunLabels.map((label, dayIndex) => {
 			const dayDate = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + dayIndex);
 			const dateKey = Utilities.formatDateForStorage(dayDate);
+
 			const dayReminders = rawReminders.filter((reminder) => {
 				if (!reminder.date) return false;
 				return Utilities.coerceDateToString(reminder.date) === dateKey;
 			});
-			agenda[dayIndex] = dayReminders.map((reminder) => ({
-				icon: HOME_AGENDA_ICON_EVENT,
-				name: (reminder as { name?: string }).name ?? '',
-				tag: dateKey,
-				color: HOME_ACTIVITY_COLOR_REMINDER
-			}));
+			const dayDebts = rawDebts.filter((debt) => {
+				if (!debt.date) return false;
+				return Utilities.coerceDateToString(debt.date) === dateKey;
+			});
+
+			agenda[dayIndex] = [
+				...dayReminders.map((reminder) => ({
+					icon: HOME_AGENDA_ICON_REMINDER,
+					name: reminder.name ?? '',
+					tag: dateKey,
+					color: HOME_ACTIVITY_COLOR_REMINDER
+				})),
+				...dayDebts.map((debt) => ({
+					icon: HOME_QUICK_ACTION_ICON_DEBT,
+					name: debt.name ?? '',
+					tag: dateKey,
+					color: HOME_ACTIVITY_COLOR_NEUTRAL
+				}))
+			];
+
 			const isToday = dayDate.toDateString() === today.toDateString();
 			const isPast = dayDate < today && !isToday;
 			return {
@@ -538,7 +640,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 				isToday,
 				isPast,
 				fullDate: dayDate,
-				count: dayReminders.length
+				count: dayReminders.length + dayDebts.length
 			};
 		});
 

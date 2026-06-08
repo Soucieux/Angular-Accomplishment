@@ -51,10 +51,10 @@
 			</div>
 			<div class="orbital-satellite">
 				<div class="orbital-satellite-disc">
-					<span class="material-symbols-outlined">notifications</span>
-					<div class="orbital-satellite-number">{{ stats.reminderTotal ?? 0 }}</div>
+					<span class="material-symbols-outlined">note_stack</span>
+					<div class="orbital-satellite-number">{{ patchNotesCount }}</div>
 				</div>
-				<div class="orbital-satellite-label">Reminders</div>
+				<div class="orbital-satellite-label">Patch Notes</div>
 			</div>
 			<div class="orbital-satellite">
 				<div class="orbital-satellite-disc">
@@ -95,18 +95,18 @@
 			</div>
 			<div class="orbital-panel-scroll">
 				@if (genreBars.length === 0) {
-					<div class="orbital-recipe-empty">No genre data yet</div>
+					<div class="orbital-panel-empty">No genre data yet</div>
 				} @else {
 					@for (bar of genreBars; track bar.label) {
-						<div class="orbital-bar-row">
-							<span class="orbital-bar-label">{{ bar.label }}</span>
-							<div class="orbital-bar-track">
+						<div class="orbital-entertainment-bar-row">
+							<span class="orbital-entertainment-bar-label">{{ bar.label }}</span>
+							<div class="orbital-entertainment-bar-track">
 								<div
-									class="orbital-bar-fill"
+									class="orbital-entertainment-bar-fill"
 									[style.width.%]="bar.percentage"
 									[style.background]="bar.color"></div>
 							</div>
-							<span class="orbital-bar-value">{{ bar.count }}</span>
+							<span class="orbital-entertainment-bar-value">{{ bar.count }}</span>
 						</div>
 					}
 				}
@@ -135,6 +135,15 @@
 						</span>
 					</div>
 				}
+				@if (openReminderCount > 20) {
+					<div
+						class="orbital-panel-overflow-row"
+						(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_REMINDER)">
+						<span class="material-symbols-outlined">open_in_new</span>
+						<span>{{ HOME_OVERFLOW_LABEL_REMINDERS }}</span>
+						<span class="material-symbols-outlined">chevron_right</span>
+					</div>
+				}
 			</div>
 		</div>
 
@@ -147,12 +156,21 @@
 			</div>
 			<div class="orbital-panel-scroll">
 				@if (links.length === 0) {
-					<div class="orbital-recipe-empty">No links yet</div>
+					<div class="orbital-panel-empty">No links yet</div>
 				} @else {
 					@for (link of links; track link._id) {
 						<div class="orbital-saved-link-row" (click)="openLink(link)">
 							<div class="orbital-link-dot" [style.background]="getLinkColor(link)"></div>
 							<span class="orbital-saved-link-title">{{ link.title }}</span>
+						</div>
+					}
+					@if (links.length > 20) {
+						<div
+							class="orbital-panel-overflow-row"
+							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_NEXUS)">
+							<span class="material-symbols-outlined">open_in_new</span>
+							<span>{{ HOME_OVERFLOW_LABEL_LINKS }}</span>
+							<span class="material-symbols-outlined">chevron_right</span>
 						</div>
 					}
 				}
@@ -198,7 +216,7 @@
 			</div>
 			<div class="orbital-panel-scroll">
 				@if (debtRows.length === 0) {
-					<div class="orbital-recipe-empty">No upcoming payments</div>
+					<div class="orbital-panel-empty">No upcoming payments</div>
 				} @else {
 					@for (debt of debtRows; track debt.id) {
 						<div class="orbital-reminder-row">
@@ -210,6 +228,15 @@
 							</span>
 						</div>
 					}
+					@if (openDebtCount > 20) {
+						<div
+							class="orbital-panel-overflow-row"
+							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_DEBT)">
+							<span class="material-symbols-outlined">open_in_new</span>
+							<span>{{ HOME_OVERFLOW_LABEL_DEBT }}</span>
+							<span class="material-symbols-outlined">chevron_right</span>
+						</div>
+					}
 				}
 			</div>
 		</div>
@@ -219,16 +246,25 @@
 			<div class="orbital-panel-header">
 				<span class="material-symbols-outlined orbital-panel-header-icon">restaurant</span>
 				<span class="orbital-panel-header-title">Recipes</span>
-				<span class="orbital-panel-header-badge">{{ recipes.length }}</span>
+				<span class="orbital-panel-header-badge">{{ stats.totalRecipes ?? 0 }}</span>
 			</div>
 			<div class="orbital-panel-scroll">
-				@if (recipes.length === 0) {
-					<div class="orbital-recipe-empty">No recipes yet</div>
+				@if (recipeRows.length === 0) {
+					<div class="orbital-panel-empty">No recipes yet</div>
 				} @else {
-					@for (recipe of recipes; track recipe.id) {
+					@for (recipe of recipeRows; track recipe.id) {
 						<div class="orbital-recipe-row">
 							<span class="orbital-recipe-row-name">{{ recipe.name }}</span>
 							<span class="orbital-recipe-row-category">{{ recipe.category }}</span>
+						</div>
+					}
+					@if ((stats.totalRecipes ?? 0) > 20) {
+						<div
+							class="orbital-panel-overflow-row"
+							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_RECIPE)">
+							<span class="material-symbols-outlined">open_in_new</span>
+							<span>{{ HOME_OVERFLOW_LABEL_RECIPES }}</span>
+							<span class="material-symbols-outlined">chevron_right</span>
 						</div>
 					}
 				}

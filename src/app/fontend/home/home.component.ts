@@ -6,19 +6,12 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { Utilities } from '../../common/app.utilities';
 import { LOG } from '../../common/app.logs';
 import { NexusCategory, NexusLink } from '../nexus/nexus.model';
-import { Recipe } from '../recipe/recipe.model';
 import { HomeStats } from './home.model';
 import {
 	COMPONENT_DESTROY,
 	HOME_MSG_INCREMENT_VISIT_FAILED,
-	HOME_MSG_LOAD_RECIPES_FAILED,
 	HOME_MSG_LOAD_STATISTICS_FAILED,
-	NEXUS_MSG_LOAD_CATEGORIES_FAILED,
-	STATS_CAP_ACTIVITY_LOG,
-	STATS_FIELD_RECENT_MOVIE,
-	STATS_FIELD_RECENT_PATCH,
-	STATS_FIELD_RECENT_REMINDER,
-	STATS_FIELD_RECENT_RESONANCE
+	NEXUS_MSG_LOAD_CATEGORIES_FAILED
 } from '../../common/app.constant';
 import { OrbitalComponent } from './orbital/orbital.component';
 
@@ -36,7 +29,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 	private loginSub?: Subscription;
 	private linksSub?: Subscription;
 	private categoriesSub?: Subscription;
-	private recipesSub?: Subscription;
 	private loadingTimer?: ReturnType<typeof setTimeout>;
 	private linksLoadingTimer?: ReturnType<typeof setTimeout>;
 	private dashboardTimer?: ReturnType<typeof setTimeout>;
@@ -48,7 +40,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 	protected transitioning = false;
 	protected dashLinks: NexusLink[] = [];
 	protected dashCategories: NexusCategory[] = [];
-	protected dashRecipes: Recipe[] = [];
 	protected dashLinksLoading = true;
 
 	constructor(
@@ -79,7 +70,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 						}
 					}, 5000);
 
-					let activityLogsCleaned = false;
 					this.linksLoadingTimer = setTimeout(() => {
 						if (this.dashLinksLoading) {
 							this.dashLinksLoading = false;
@@ -111,26 +101,12 @@ export class HomeComponent implements OnInit, OnDestroy {
 						}
 					});
 
-					this.recipesSub = this.databaseService.getRecipes().subscribe({
-						next: (data: Recipe[]) => {
-							this.dashRecipes = data;
-							this.cdr.detectChanges();
-						},
-						error: (error: unknown) => {
-							LOG.error(this.className, HOME_MSG_LOAD_RECIPES_FAILED, error as Error);
-						}
-					});
-
 					this.statsSub = this.databaseService.getStatistics().subscribe({
 						next: (data: HomeStats) => {
 							clearTimeout(this.loadingTimer);
 							this.stats = data;
 							this.loading = false;
 							this.cdr.detectChanges();
-							if (!activityLogsCleaned) {
-								activityLogsCleaned = true;
-								this.trimActivityLogs(data);
-							}
 						},
 						error: (error: unknown) => {
 							LOG.error(this.className, HOME_MSG_LOAD_STATISTICS_FAILED, error as Error);
@@ -154,11 +130,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 					this.statsSub?.unsubscribe();
 					this.linksSub?.unsubscribe();
 					this.categoriesSub?.unsubscribe();
-					this.recipesSub?.unsubscribe();
 					this.stats = null;
 					this.dashLinks = [];
 					this.dashCategories = [];
-					this.dashRecipes = [];
 					this.dashLinksLoading = true;
 					this.loading = true;
 					this.showDashboard = false;
@@ -180,7 +154,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 		this.statsSub?.unsubscribe();
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
-		this.recipesSub?.unsubscribe();
 		this.loginSub?.unsubscribe();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
@@ -197,50 +170,4 @@ export class HomeComponent implements OnInit, OnDestroy {
 			.catch((error: Error) => LOG.error(this.className, HOME_MSG_INCREMENT_VISIT_FAILED, error));
 	}
 
-	/**
-	 * Trims each activity-log array to only the items that would appear in the
-	 * combined top-24 feed. Removes stale entries that accumulated before the
-	 * per-array cap was enforced.
-	 *
-	 * @param data - The raw statistics document from the first watcher emission.
-	 */
-	private trimActivityLogs(data: HomeStats): void {
-		const fields = [
-			STATS_FIELD_RECENT_MOVIE,
-			STATS_FIELD_RECENT_PATCH,
-			STATS_FIELD_RECENT_REMINDER,
-			STATS_FIELD_RECENT_RESONANCE
-		];
-
-		const arrays: { timestamp?: string }[][] = fields.map(
-			(field) => Utilities.toArray(data?.[field]) as { timestamp?: string }[]
-		);
-
-		const flat: { fieldIndex: number; itemIndex: number; timestamp: string }[] = [];
-		for (let fieldIndex = 0; fieldIndex < arrays.length; fieldIndex++) {
-			for (let itemIndex = 0; itemIndex < arrays[fieldIndex].length; itemIndex++) {
-				const { timestamp } = arrays[fieldIndex][itemIndex] ?? {};
-				if (timestamp) flat.push({ fieldIndex, itemIndex, timestamp });
-			}
-		}
-
-		flat.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-		const keepSet = new Set<string>(
-			flat.slice(0, STATS_CAP_ACTIVITY_LOG).map((entry) => `${entry.fieldIndex}:${entry.itemIndex}`)
-		);
-
-		const updates: Record<string, { timestamp?: string }[]> = {};
-		for (let fieldIndex = 0; fieldIndex < arrays.length; fieldIndex++) {
-			const trimmed = arrays[fieldIndex].filter((_item, itemIndex) =>
-				keepSet.has(`${fieldIndex}:${itemIndex}`)
-			);
-			if (trimmed.length < arrays[fieldIndex].length) {
-				updates[fields[fieldIndex]] = trimmed;
-			}
-		}
-
-		if (Object.keys(updates).length > 0) {
-			this.databaseService.updateStatisticsFields(updates);
-		}
-	}
 }

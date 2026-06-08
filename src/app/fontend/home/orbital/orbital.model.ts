@@ -33,6 +33,13 @@ export interface OrbitalReminderRow {
 	overdue: boolean;
 }
 
+/** Shape of one recipe row in the recipes glass panel. */
+export interface OrbitalRecipeRow {
+	id: string;
+	name: string;
+	category: string;
+}
+
 /** Shape of one debt row in the debt-sonata glass panel. */
 export interface OrbitalDebtRow {
 	id: string;

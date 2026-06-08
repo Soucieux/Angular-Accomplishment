@@ -1,6 +1,15 @@
-import { AfterViewInit, Component, HostListener, Inject, OnInit, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
+import {
+	AfterViewInit,
+	Component,
+	HostListener,
+	Inject,
+	OnInit,
+	PLATFORM_ID,
+	ViewChild,
+	ViewContainerRef
+} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Router, RouterOutlet, RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
@@ -19,7 +28,10 @@ import {
 	LS_NAV_COLLAPSED_KEY,
 	MSG_LOGOUT_CONFIRM
 } from './common/app.constant';
-import { Observable } from 'rxjs';
+import { Observable, filter } from 'rxjs';
+import { BottomNavComponent } from './fontend/navigation/bottom-nav.component';
+import { NavItem } from './fontend/navigation/bottom-nav.model';
+import { NAV_ID_TO_ROUTE, NAV_ITEMS, PRIMARY_IDS, ROUTE_TO_NAV_ID } from './fontend/navigation/bottom-nav.data';
 
 @Component({
 	selector: 'root',
@@ -32,7 +44,8 @@ import { Observable } from 'rxjs';
 		MatButtonModule,
 		MatRippleModule,
 		MatIconModule,
-		ToastModule
+		ToastModule,
+		BottomNavComponent
 	],
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
@@ -47,6 +60,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 	protected navCollapsed = false;
 	protected navMobile = false;
 	protected navReady = false;
+	protected readonly navItems: NavItem[] = NAV_ITEMS;
+	protected readonly primaryIds: string[] = PRIMARY_IDS;
+	protected activeRoute = '';
 
 	constructor(
 		private authService: AuthService,
@@ -57,6 +73,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	) {
 		if (isPlatformBrowser(this.platformId)) {
 			this.navCollapsed = localStorage.getItem(LS_NAV_COLLAPSED_KEY) === 'true';
+			this.navMobile = this.utilities.isMobile();
 		}
 	}
 
@@ -69,6 +86,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (isPlatformBrowser(this.platformId)) {
 			this.currentUser$ = this.authService.getCurrentUser();
 			this.navMobile = this.utilities.isMobile();
+			this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {
+				const url = (event as NavigationEnd).urlAfterRedirects.split('?')[0];
+				this.activeRoute = ROUTE_TO_NAV_ID[url] ?? '';
+			});
 		}
 	}
 
@@ -167,6 +188,16 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
+	 * Navigates to the route mapped to the given bottom-nav item id.
+	 *
+	 * @param id - The bottom-nav item id emitted by the navigate event.
+	 */
+	protected navigateToRoute(id: string): void {
+		const path = NAV_ID_TO_ROUTE[id] ?? '';
+		this.router.navigateByUrl(path).catch(() => {});
+	}
+
+	/**
 	 * Handles the account button click. On mobile or when the nav is collapsed,
 	 * opens a sign-out confirmation dialog. Otherwise toggles the popover menu.
 	 */
@@ -203,5 +234,4 @@ export class AppComponent implements OnInit, AfterViewInit {
 	protected getUserInitial(user: any): string {
 		return Utilities.getUserDisplayName(user).charAt(0).toUpperCase();
 	}
-
 }

@@ -9,5 +9,15 @@
 	</head>
 	<body>
 		<root></root>
+		<script>
+			if (localStorage.getItem('nav_collapsed') === 'true') {
+				var drawer = document.querySelector('mat-drawer');
+				if (drawer) {
+					drawer.classList.add('nav-collapsed', 'nav-no-transition');
+					var toggleIcon = drawer.querySelector('.nav-toggle-icon');
+					if (toggleIcon) toggleIcon.textContent = 'menu';
+				}
+			}
+		</script>
 	</body>
 </html>

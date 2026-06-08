@@ -1,9 +1,18 @@
 /* ── Shell ───────────────────────────────────────────────────────────────── */
+
+/* Establishes the stacking context that vc-bottom-nav (position:absolute;inset:0)
+   pins itself to on phone portrait. */
+:host {
+	display: block;
+	position: relative;
+	height: 100%;
+}
+
 mat-drawer-container {
 	background: linear-gradient(45deg, #fa61da 0%, #ff8891 50%, #ffcd5a 100%);
 	position: relative;
 	width: 100%;
-	height: 100dvh;
+	height: 100%;
 }
 
 mat-drawer {
@@ -19,20 +28,16 @@ mat-drawer {
 }
 
 mat-drawer-content {
-	padding: 4px 4px 4px 8px;
+	/* Angular material has mat-drawer-content to set margin-left to 240px as default value when the left panel is opened */
+	margin: 4px 4px 4px 245px !important;
 	box-sizing: border-box;
-	margin-left: 226px !important;
 	transition: margin-left 0s !important;
 }
 
-/* Content margin when the nav panel is collapsed to icon-only width */
-.nav-content-collapsed {
-	margin-left: 65px !important;
-}
-
-/* Content margin on mobile (≤ 900px) when the nav is expanded */
+/* Content layout on phone portrait — no left nav, bottom padding clears the floating dock */
 .nav-content-mobile {
-	margin-left: 35px !important;
+	margin: 4px !important;
+	padding-bottom: 130px;
 }
 
 /* ── Nav list ────────────────────────────────────────────────────────────── */
@@ -438,6 +443,19 @@ li:nth-child(10) .nav-icon {
 	color: rgba(100, 116, 139, 0.85);
 }
 
+/* ── Phone portrait — bottom navigation ─────────────────────────────────── */
+@media (max-width: 900px) and (pointer: coarse) {
+	/* Hide the left nav before JS runs to prevent the SSR hydration flash */
+	mat-drawer {
+		display: none !important;
+	}
+
+	mat-drawer-content {
+		margin: 4px !important;
+		padding-bottom: 130px;
+	}
+}
+
 .account-row-chevron {
 	font-size: 23px;
 	flex-shrink: 0;
@@ -459,6 +477,15 @@ li:nth-child(10) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
+/* ── No-transition guard ─────────────────────────────────────────────────── */
+/* Applied on first load (navReady = false) to prevent CSS transitions from
+   running while Angular hydrates and applies the initial collapsed state.
+   Removed by ngAfterViewInit so user-triggered toggles animate normally. */
+mat-drawer.nav-no-transition,
+mat-drawer.nav-no-transition * {
+	transition: none !important;
+}
+
 /* ── Collapsed nav state ─────────────────────────────────────────────────── */
 @keyframes account-icon-fade-in {
 	from {
@@ -471,6 +498,15 @@ li:nth-child(10) .nav-icon {
 
 mat-drawer.nav-collapsed {
 	width: 65px;
+}
+
+/* This is minimum width. This is to avoid having the value still override what we have in mobile */
+@media (min-width: 941px) {
+	mat-drawer-container:has(mat-drawer.nav-collapsed) mat-drawer-content {
+		/* With mat-drawer having 65px in width when collapsed and 4px margin on its left,
+		   we give at least 69px on the left to avoid overlap. */
+		margin-left: 73px !important;
+	}
 }
 
 .nav-collapsed .nav-title {
@@ -541,6 +577,11 @@ mat-drawer.nav-collapsed {
 @media (max-width: 940px) {
 	mat-drawer {
 		width: 35px !important;
+	}
+
+	mat-drawer-content {
+		/* With mat-drawer having 35px in width on mobile and 4px margin on its left, we give at least 39px on the left to avoid overlap. */
+		margin-left: 43px !important;
 	}
 
 	/* Derived from .nav-collapsed .nav-button */

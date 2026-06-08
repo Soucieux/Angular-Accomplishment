@@ -1,0 +1,58 @@
+<div class="scrim" [class.show]="gridOpen()" (click)="gridOpen.set(false)" aria-hidden="true"></div>
+
+<div class="grid" [class.show]="gridOpen()" role="dialog" aria-modal="true" aria-label="All sections"
+	[cdkTrapFocus]="gridOpen()" [cdkTrapFocusAutoCapture]="gridOpen()">
+	<div class="grid-head">All sections</div>
+	<div class="grid-cells">
+		@for (navItem of items; track navItem.id) {
+			<button class="cell" type="button" [class.on]="activeId === navItem.id"
+				[attr.aria-current]="activeId === navItem.id ? 'page' : null"
+				[attr.aria-label]="navItem.label"
+				[attr.cdkFocusInitial]="activeId === navItem.id ? '' : null"
+				(click)="pick(navItem.id)">
+				<span class="cell-icon">
+					<span class="material-symbols-outlined gradient-icon"
+						[style.background]="navItem.grad || 'var(--vc-rose)'"
+						style="font-size:28px"
+						[style.font-variation-settings]="activeId === navItem.id ? &quot;'FILL' 1&quot; : &quot;'FILL' 0&quot;">{{ navItem.icon }}</span>
+					@if (navItem.badge != null) {
+						<span class="cell-badge">{{ navItem.badge }}</span>
+					}
+				</span>
+				<span class="cell-label">{{ navItem.label }}</span>
+			</button>
+		}
+	</div>
+</div>
+
+<div class="dock-wrap">
+	<div class="dock" role="tablist" aria-label="Primary navigation">
+		@for (navItem of primary; track navItem.id) {
+			<button class="item" type="button" role="tab"
+				[class.on]="activeId === navItem.id"
+				[attr.aria-selected]="activeId === navItem.id"
+				[attr.aria-label]="navItem.label"
+				[style.background]="activeId === navItem.id ? (navItem.grad || 'var(--vc-rose)') : 'transparent'"
+				[style.box-shadow]="activeId === navItem.id ? '0 4px 14px rgba(0,0,0,0.22)' : 'none'"
+				(click)="select(navItem.id)">
+				<span class="icon-wrap">
+					@if (activeId === navItem.id) {
+						<span class="material-symbols-outlined" style="color:#fff;font-size:25px;font-variation-settings:'FILL' 1">{{ navItem.icon }}</span>
+					} @else {
+						<span class="material-symbols-outlined gradient-icon" [style.background]="navItem.grad || 'var(--vc-rose)'" style="font-size:25px">{{ navItem.icon }}</span>
+					}
+					@if (navItem.badge != null && activeId !== navItem.id) {
+						<span class="dot"></span>
+					}
+				</span>
+				<span class="item-label">{{ navItem.label }}</span>
+			</button>
+		}
+		<button class="grid-button" type="button" [class.open]="gridOpen()"
+			aria-haspopup="dialog" [attr.aria-expanded]="gridOpen()"
+			[attr.aria-label]="gridOpen() ? 'Close all sections' : 'Show all sections'"
+			(click)="toggleGrid()">
+			<span class="material-symbols-outlined" style="color:var(--vc-rose);font-size:25px">{{ gridOpen() ? 'close' : 'grid_view' }}</span>
+		</button>
+	</div>
+</div>

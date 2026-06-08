@@ -1,0 +1,310 @@
+/* ─────────────────────────────────────────
+   Host
+───────────────────────────────────────── */
+
+/* The host is a non-interactive layer pinned over the app; only the dock and
+   overlay capture pointer events so the page behind stays scrollable. */
+:host {
+	display: block;
+	position: absolute;
+	inset: 0;
+	z-index: 40;
+	pointer-events: none;
+	--vc-rose: var(--rose, #d53369);
+	--vc-rose-soft: var(--rose-soft, rgba(213, 51, 105, 0.10));
+	--vc-ink-muted: var(--ink-muted, #64748b);
+	--vc-ink-soft: var(--ink-soft, #334155);
+	--vc-ease: var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+	font-family: var(--font-en, system-ui, sans-serif);
+}
+
+/* ─────────────────────────────────────────
+   Icon helpers
+───────────────────────────────────────── */
+.gradient-icon {
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	line-height: 1;
+}
+
+/* ─────────────────────────────────────────
+   Scrim
+───────────────────────────────────────── */
+.scrim {
+	position: absolute;
+	inset: 0;
+	background: rgba(20, 8, 20, 0.34);
+	backdrop-filter: blur(3px);
+	-webkit-backdrop-filter: blur(3px);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.32s var(--vc-ease);
+}
+
+.scrim.show {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* ─────────────────────────────────────────
+   All-sections overlay
+───────────────────────────────────────── */
+.grid {
+	position: absolute;
+	left: 16px;
+	right: 16px;
+	bottom: 96px;
+	transform-origin: bottom right;
+	transform: scale(0.4);
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1),
+		opacity 0.3s;
+	background: rgba(255, 255, 255, 0.9);
+	backdrop-filter: blur(30px) saturate(180%);
+	-webkit-backdrop-filter: blur(30px) saturate(180%);
+	border-radius: 28px;
+	padding: 20px 18px;
+	box-shadow: 0 16px 50px rgba(0, 0, 0, 0.24);
+	border: 0.5px solid rgba(255, 255, 255, 0.95);
+}
+
+.grid.show {
+	transform: scale(1);
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.grid-head {
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 1px;
+	color: var(--vc-ink-muted);
+	text-transform: uppercase;
+	margin: 0 2px 16px;
+}
+
+.grid-cells {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	row-gap: 18px;
+	column-gap: 8px;
+}
+
+/* ─────────────────────────────────────────
+   Grid cells
+───────────────────────────────────────── */
+.cell {
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	padding: 2px 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 7px;
+	transition: transform 0.18s var(--vc-ease);
+}
+
+.cell:active {
+	transform: scale(0.9);
+}
+
+.cell-icon {
+	position: relative;
+	width: 54px;
+	height: 54px;
+	border-radius: 17px;
+	display: grid;
+	place-items: center;
+	background: #fff;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.10);
+	transition: box-shadow 0.2s var(--vc-ease);
+}
+
+.cell.on .cell-icon {
+	box-shadow: 0 0 0 2px var(--vc-rose), 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.cell-label {
+	font-size: 11.5px;
+	font-weight: 500;
+	color: var(--vc-ink-soft);
+	text-align: center;
+	line-height: 1.15;
+}
+
+.cell.on .cell-label {
+	font-weight: 700;
+}
+
+.cell:focus-visible {
+	outline: none;
+}
+
+.cell:focus-visible .cell-icon {
+	box-shadow: 0 0 0 2px var(--vc-rose), 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.cell-badge {
+	position: absolute;
+	top: -5px;
+	right: -5px;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 5px;
+	border-radius: 999px;
+	background: var(--vc-rose);
+	color: #fff;
+	font-size: 10.5px;
+	font-weight: 700;
+	display: grid;
+	place-items: center;
+	box-shadow: 0 0 0 2px #fff;
+	line-height: 1;
+}
+
+/* ─────────────────────────────────────────
+   Floating dock
+───────────────────────────────────────── */
+.dock-wrap {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 30px;
+	padding-bottom: env(safe-area-inset-bottom, 0px);
+	display: flex;
+	justify-content: center;
+	pointer-events: none;
+}
+
+.dock {
+	pointer-events: auto;
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	padding: 6px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.72);
+	backdrop-filter: blur(24px) saturate(180%);
+	-webkit-backdrop-filter: blur(24px) saturate(180%);
+	border: 0.5px solid rgba(255, 255, 255, 0.9);
+	box-shadow: 0 10px 34px rgba(0, 0, 0, 0.20);
+}
+
+/* ─────────────────────────────────────────
+   Dock items
+───────────────────────────────────────── */
+.item {
+	height: 48px;
+	min-width: 48px;
+	flex-shrink: 0;
+	border-radius: 999px;
+	border: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0;
+	padding: 0;
+	transition:
+		gap 0.35s var(--vc-ease),
+		padding 0.35s var(--vc-ease),
+		transform 0.18s var(--vc-ease);
+}
+
+.item:active {
+	transform: scale(0.92);
+}
+
+.item.on {
+	gap: 7px;
+	padding: 0 15px 0 13px;
+}
+
+.item:focus-visible {
+	outline: 2px solid var(--vc-rose);
+	outline-offset: 3px;
+}
+
+.icon-wrap {
+	position: relative;
+	display: grid;
+	place-items: center;
+}
+
+.dot {
+	position: absolute;
+	top: -3px;
+	right: -3px;
+	width: 9px;
+	height: 9px;
+	border-radius: 999px;
+	background: var(--vc-rose);
+	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92);
+}
+
+.item-label {
+	color: #fff;
+	font-size: 14px;
+	font-weight: 700;
+	white-space: nowrap;
+	overflow: hidden;
+	max-width: 0;
+	opacity: 0;
+	transition:
+		max-width 0.38s var(--vc-ease),
+		opacity 0.3s;
+}
+
+.item.on .item-label {
+	max-width: 140px;
+	opacity: 1;
+}
+
+/* ─────────────────────────────────────────
+   Grid button
+───────────────────────────────────────── */
+.grid-button {
+	width: 48px;
+	height: 48px;
+	flex-shrink: 0;
+	border-radius: 50%;
+	border: none;
+	cursor: pointer;
+	display: grid;
+	place-items: center;
+	background: transparent;
+	transition:
+		background 0.2s,
+		transform 0.18s var(--vc-ease);
+}
+
+.grid-button:active {
+	transform: scale(0.92);
+}
+
+.grid-button.open {
+	background: var(--vc-rose-soft);
+}
+
+.grid-button:focus-visible {
+	outline: 2px solid var(--vc-rose);
+	outline-offset: 3px;
+}
+
+/* ─────────────────────────────────────────
+   Reduced motion
+───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+	.scrim,
+	.grid,
+	.item,
+	.item-label,
+	.cell,
+	.grid-button {
+		transition-duration: 0.01ms !important;
+	}
+}

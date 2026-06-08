@@ -18,7 +18,6 @@ import {
 } from './app.constant';
 
 describe('Utilities', () => {
-
 	// ── getRelativeTime ────────────────────────────────────────────────────
 
 	describe('getRelativeTime', () => {
@@ -243,7 +242,7 @@ describe('Utilities', () => {
 		it('sorts items by order ascending', () => {
 			const items = [{ order: 3 }, { order: 1 }, { order: 2 }];
 			const sorted = Utilities.sortByOrder(items);
-			expect(sorted.map(i => i.order)).toEqual([1, 2, 3]);
+			expect(sorted.map((i) => i.order)).toEqual([1, 2, 3]);
 		});
 
 		it('does not mutate the original array', () => {
@@ -303,7 +302,9 @@ describe('Utilities', () => {
 
 	describe('getFavicon', () => {
 		it('returns the favicon.ico URL for a valid URL', () => {
-			expect(Utilities.getFavicon('https://github.com/user/repo')).toBe('https://github.com/favicon.ico');
+			expect(Utilities.getFavicon('https://github.com/user/repo')).toBe(
+				'https://github.com/favicon.ico'
+			);
 		});
 
 		it('returns empty string for an invalid URL', () => {
@@ -497,5 +498,4 @@ describe('Utilities', () => {
 			expect(() => Utilities.checkMovieItemVO(vo)).toThrow();
 		});
 	});
-
 });

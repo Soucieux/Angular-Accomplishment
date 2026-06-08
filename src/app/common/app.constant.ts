@@ -74,6 +74,10 @@ export const HISTORY_STYLE_ADDED = 'solid green';
 export const HISTORY_STYLE_DELETED = 'solid red';
 
 ////////////////////// Below are application lifecycle constants //////////////////////
+/** Layout breakpoint for compact overlay nav: below this width the drawer switches to overlay mode. */
+export const APP_BREAKPOINT_COMPACT = 1200;
+/** Layout breakpoint for narrow viewport mode: below this width the sidebar collapses to an icon-only strip and nav labels are hidden. */
+export const APP_BREAKPOINT_NARROW = 940;
 export const COMPONENT_DESTROY = 'Component Destroyed';
 export const UTILITIES_LOG_COUNTRY_FAILED = 'Country detection failed';
 export const UTILITIES_LOG_DEFAULT_COUNTRY = 'Use default country: ';
@@ -89,6 +93,9 @@ export const LOGIN_MSG_SEND_CODE_FAILED = 'Failed to send verification code';
 export const LS_AUTH_HINT_KEY = 'auth_hint';
 /** localStorage key used to persist the nav sidebar collapsed state across page refreshes. */
 export const LS_NAV_COLLAPSED_KEY = 'nav_collapsed';
+export const NAV_AVATAR_FALLBACK_INITIAL = '?';
+/** Fallback background gradient for the avatar element when no user-specific colour is set. */
+export const NAV_AVATAR_GRADIENT = 'linear-gradient(135deg,#d53369,#daae51)';
 export const LOGIN_URL_DEFAULT_RETURN = '/';
 export const LOGIN_ANIM_OUT = 'out';
 export const LOGIN_ANIM_IN = 'in';
@@ -288,6 +295,28 @@ export const HOME_PROGRESS_KEY_MONTH = 'month';
 export const HOME_PROGRESS_KEY_WEEK = 'week';
 /** Progress ring key for the day ring in the life-clock widget. */
 export const HOME_PROGRESS_KEY_DAY = 'day';
+/** Display label for the year progress ring. */
+export const HOME_PROGRESS_LABEL_YEAR = 'Year';
+/** Display label for the month progress ring. */
+export const HOME_PROGRESS_LABEL_MONTH = 'Month';
+/** Display label for the week progress ring. */
+export const HOME_PROGRESS_LABEL_WEEK = 'Week';
+/** Display label for the day progress ring. */
+export const HOME_PROGRESS_LABEL_DAY = 'Day';
+/** Sentinel value for the left placement side in the concentric smart-leader algorithm. */
+export const HOME_CONCENTRIC_LEADER_SIDE_LEFT = 'left';
+/** Sentinel value for the right placement side in the concentric smart-leader algorithm. */
+export const HOME_CONCENTRIC_LEADER_SIDE_RIGHT = 'right';
+/** Minimum vertical pixel gap between two pills on the same side of the concentric rings. */
+export const HOME_CONCENTRIC_LEADER_MIN_GAP = 26;
+/** Horizontal pixel extension from the arc tip to the pill anchor point. */
+export const HOME_CONCENTRIC_LEADER_LINE_OFFSET_X = 20;
+/** Vertical pixel extension from the arc tip to the pill anchor point. */
+export const HOME_CONCENTRIC_LEADER_LINE_OFFSET_Y = 16;
+/** Maximum percentage value before arc-angle conversion — prevents a full-circle arc at 100%. */
+export const HOME_CONCENTRIC_LEADER_PCT_CAP = 99.9;
+/** Pixel margin from the stage boundary used to keep pills inside the visible area. */
+export const HOME_CONCENTRIC_LEADER_BOUNDARY_MARGIN = 4;
 /** Material icon name for a calendar reminder event in the week-agenda strip. */
 export const HOME_AGENDA_ICON_EVENT = 'event';
 /** Material icon name for a reminder item in the week-agenda strip — matches the reminders widget header. */
@@ -365,6 +394,10 @@ export const HOME_WEEK_AGENDA_EMPTY_TEXT = 'Nothing due — an open day.';
 export const HOME_RING_GRADIENT_ID_PREFIX = 'rg';
 export const HOME_RING_TRACK_DEFAULT = 'rgba(255,255,255,0.12)';
 export const HOME_CONCENTRIC_TRACK_DEFAULT = 'rgba(255,255,255,0.10)';
+/** Concentric ring diameter in pixels on viewports wider than the narrow breakpoint. */
+export const HOME_CONCENTRIC_SIZE_DEFAULT = 376;
+/** Concentric ring diameter in pixels on narrow viewports (≤940px). */
+export const HOME_CONCENTRIC_SIZE_NARROW = 300;
 export const HOME_ORBITAL_PANEL_SCROLL_SELECTOR = '.orbital-panel-scroll';
 /** SimpleChanges key for the stats @Input on OrbitalComponent. */
 export const HOME_ORBITAL_CHANGES_KEY_STATS = 'stats';

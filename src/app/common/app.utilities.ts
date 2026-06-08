@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
 import { LOG } from './app.logs';
 import {
+	APP_BREAKPOINT_NARROW,
 	CN,
 	LS_AUTH_HINT_KEY,
 	UTILITIES_LOG_COUNTRY_FAILED,
@@ -51,9 +52,22 @@ export class Utilities {
 	 */
 	public isMobile() {
 		if (isPlatformBrowser(this.platformId)) {
-			return globalThis.matchMedia(
-				'(max-width: 900px) and (pointer: coarse)'
-			).matches;
+			return globalThis.matchMedia('(max-width: 900px) and (pointer: coarse)').matches;
+		}
+		return false;
+	}
+
+	/**
+	 * Checks whether the current viewport is at or below the narrow breakpoint
+	 * (≤940px), regardless of device type. Use this for layout decisions that
+	 * depend on viewport width — not on whether the device is a phone.
+	 *
+	 * @returns True when the viewport width is at or below APP_BREAKPOINT_NARROW,
+	 * false on the server.
+	 */
+	public isNarrowViewport(): boolean {
+		if (isPlatformBrowser(this.platformId)) {
+			return window.innerWidth <= APP_BREAKPOINT_NARROW;
 		}
 		return false;
 	}
@@ -84,6 +98,27 @@ export class Utilities {
 				.padStart(2, '0')}` + formattedTime;
 
 		return formattedDate;
+	}
+
+	/**
+	 * Gets the date segment of an app-format timestamp string.
+	 *
+	 * @param timestamp - The timestamp string in `'YYYY.MM.DD HH:mm:ss'` or `'YYYY.MM.DD'` format.
+	 * @returns The `YYYY.MM.DD` portion before the first space.
+	 */
+	public static getTimestampDate(timestamp: string): string {
+		return timestamp.split(' ')[0];
+	}
+
+	/**
+	 * Gets the `HH:mm` portion of an app-format timestamp string.
+	 *
+	 * @param timestamp - The timestamp string in `'YYYY.MM.DD HH:mm:ss'` format.
+	 * @returns The hours and minutes, or an empty string if no time segment is present.
+	 */
+	public static getTimestampTime(timestamp: string): string {
+		const time = timestamp.split(' ')[1];
+		return time ? time.slice(0, 5) : '';
 	}
 
 	/**
@@ -138,7 +173,10 @@ export class Utilities {
 			let ms: number | null = null;
 			if (typeof date === 'number') {
 				ms = date;
-			} else if (date instanceof Date || typeof (date as Record<string, unknown>)['getTime'] === 'function') {
+			} else if (
+				date instanceof Date ||
+				typeof (date as Record<string, unknown>)['getTime'] === 'function'
+			) {
 				ms = (date as Date).getTime();
 			} else if (typeof date === 'object' && date !== null) {
 				const d = date as Record<string, unknown>;
@@ -167,8 +205,8 @@ export class Utilities {
 		} catch {
 			return '';
 		}
-    }
-    
+	}
+
 	/**
 	 * Capitalizes the first letter of each word in the given string.
 	 *
@@ -666,11 +704,16 @@ export class Utilities {
 	 */
 	public static recipeBandClass(category: string): string {
 		switch (category) {
-			case RECIPE_CATEGORY_CHINESE: return RECIPE_BAND_CHINESE;
-			case RECIPE_CATEGORY_WESTERN: return RECIPE_BAND_WESTERN;
-			case RECIPE_CATEGORY_QUICK:   return RECIPE_BAND_QUICK;
-			case RECIPE_CATEGORY_DESSERT: return RECIPE_BAND_DESSERT;
-			default:                      return '';
+			case RECIPE_CATEGORY_CHINESE:
+				return RECIPE_BAND_CHINESE;
+			case RECIPE_CATEGORY_WESTERN:
+				return RECIPE_BAND_WESTERN;
+			case RECIPE_CATEGORY_QUICK:
+				return RECIPE_BAND_QUICK;
+			case RECIPE_CATEGORY_DESSERT:
+				return RECIPE_BAND_DESSERT;
+			default:
+				return '';
 		}
 	}
 }

@@ -33,12 +33,12 @@
 						<p-skeleton height="34px" width="180px" style="margin-top: 8px" />
 						<p-skeleton
 							height="8px"
-							[width]="utilities.isMobile() ? '100%' : '421px'"
+							[width]="utilities.isNarrowViewport() ? '100%' : '421px'"
 							style="margin-top: 10px" />
 						<p-skeleton height="18px" min-width="100%" style="margin-top: 6px" />
 					}
 				</div>
-				<div class="summary-right hide-on-mobile">
+				<div class="summary-right hide-on-narrow-or-mobile">
 					<div class="stat-grid">
 						@for (_ of [0, 1, 2, 3, 4, 5]; track $index) {
 							<div class="stat-cell">
@@ -70,7 +70,7 @@
 						</div>
 					}
 				</div>
-				<div class="summary-right hide-on-mobile">
+				<div class="summary-right hide-on-narrow-or-mobile">
 					<div class="stat-grid">
 						<div class="stat-cell">
 							<span class="stat-number">{{ debtRows.length }}</span>
@@ -265,7 +265,7 @@
 									{{ isPromptedReset[item.key] ? 'Restore?' : 'Reset' }}
 								</button>
 								<button
-									class="footer-icon-button lock-button hide-on-mobile"
+									class="footer-icon-button lock-button hide-on-narrow-or-mobile"
 									[class.is-locked]="isItemPermanent(item)"
 									(click)="toggleLock(item.key)"
 									[title]="
@@ -279,7 +279,7 @@
 								</button>
 								@if (!isItemPermanent(item)) {
 									<button
-										class="footer-icon-button danger-button hide-on-mobile"
+										class="footer-icon-button danger-button hide-on-narrow-or-mobile"
 										[class.is-prompted]="isPromptedDelete[item.key]"
 										(click)="promptOrConfirmDelete(item.key)">
 										<span class="material-symbols-outlined" style="font-size: 15px">{{

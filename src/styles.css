@@ -105,8 +105,10 @@ button,
 	color: black !important;
 }
 
+/* Hides elements at narrow viewport widths (≤940px) — applies to both actual
+   mobile devices and narrow desktop browser windows. */
 @media (max-width: 940px) {
-	.hide-on-mobile {
+	.hide-on-narrow-or-mobile {
 		display: none !important;
 	}
 }

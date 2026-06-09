@@ -9,7 +9,7 @@
 	[cdkTrapFocus]="gridOpen()"
 	[cdkTrapFocusAutoCapture]="gridOpen()">
 	<div class="grid-head">All sections</div>
-	<div class="grid-cells">
+	<div class="grid-cells" #gridCells>
 		@for (navItem of items; track navItem.id) {
 			<button
 				class="cell"
@@ -49,11 +49,7 @@
 	[cdkTrapFocusAutoCapture]="accountOpen()">
 	@if (signedIn) {
 		<div class="account-popover-header">
-			<span
-				class="account-popover-avatar"
-				[style.background]="NAV_AVATAR_GRADIENT"
-				>{{ initial }}</span
-			>
+			<span class="account-popover-avatar" [style.background]="NAV_AVATAR_GRADIENT">{{ initial }}</span>
 			<span class="account-popover-meta">
 				<span class="account-popover-name">{{ userName }}</span>
 				<span class="account-popover-status"
@@ -148,9 +144,7 @@
 			[attr.aria-label]="signedIn ? 'Account: ' + userName : 'Sign in'"
 			(click)="toggleAccount()">
 			@if (signedIn) {
-				<span
-					class="avatar"
-					[style.background]="NAV_AVATAR_GRADIENT"
+				<span class="avatar" [style.background]="NAV_AVATAR_GRADIENT"
 					>{{ initial }}<span class="presence"></span
 				></span>
 			} @else {

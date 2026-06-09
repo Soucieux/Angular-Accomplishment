@@ -11,7 +11,7 @@
 	z-index: 40;
 	pointer-events: none;
 	--vc-rose: var(--rose, #d53369);
-	--vc-rose-soft: var(--rose-soft, rgba(213, 51, 105, 0.10));
+	--vc-rose-soft: var(--rose-soft, rgba(213, 51, 105, 0.1));
 	--vc-ink-muted: var(--ink-muted, #64748b);
 	--vc-ink-soft: var(--ink-soft, #334155);
 	--vc-ease: var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
@@ -54,7 +54,7 @@
 	position: absolute;
 	left: 16px;
 	right: 16px;
-	bottom: 96px;
+	bottom: 83px;
 	transform-origin: bottom right;
 	transform: scale(0.4);
 	opacity: 0;
@@ -83,7 +83,7 @@
 	letter-spacing: 1px;
 	color: var(--vc-ink-muted);
 	text-transform: uppercase;
-	margin: 0 2px 16px;
+	margin: 0 2px 10px;
 }
 
 .grid-cells {
@@ -91,6 +91,37 @@
 	grid-template-columns: repeat(4, 1fr);
 	row-gap: 18px;
 	column-gap: 8px;
+	max-height: 202px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.4s ease;
+}
+
+.grid-cells::-webkit-scrollbar {
+	width: 8px;
+}
+
+.grid-cells::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.grid-cells::-webkit-scrollbar-thumb {
+	background: transparent;
+	border-radius: 999px;
+	transition: background 0.4s ease;
+}
+
+.grid-cells.is-scrolling {
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+}
+
+.grid-cells.is-scrolling::-webkit-scrollbar-thumb {
+	background: rgba(213, 51, 105, 0.28);
+}
+
+.grid-cells.is-scrolling::-webkit-scrollbar-thumb:hover {
+	background: #d53369;
 }
 
 /* ─────────────────────────────────────────
@@ -120,12 +151,14 @@
 	display: grid;
 	place-items: center;
 	background: #fff;
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.10);
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 	transition: box-shadow 0.2s var(--vc-ease);
 }
 
 .cell.on .cell-icon {
-	box-shadow: 0 0 0 2px var(--vc-rose), 0 4px 12px rgba(0, 0, 0, 0.12);
+	box-shadow:
+		0 0 0 2px var(--vc-rose),
+		0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .cell-label {
@@ -145,7 +178,9 @@
 }
 
 .cell:focus-visible .cell-icon {
-	box-shadow: 0 0 0 2px var(--vc-rose), 0 4px 12px rgba(0, 0, 0, 0.12);
+	box-shadow:
+		0 0 0 2px var(--vc-rose),
+		0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .cell-badge {
@@ -173,8 +208,7 @@
 	position: absolute;
 	left: 0;
 	right: 0;
-	bottom: 30px;
-	padding-bottom: env(safe-area-inset-bottom, 0px);
+	bottom: 15px;
 	display: flex;
 	justify-content: center;
 	pointer-events: none;
@@ -191,7 +225,7 @@
 	backdrop-filter: blur(24px) saturate(180%);
 	-webkit-backdrop-filter: blur(24px) saturate(180%);
 	border: 0.5px solid rgba(255, 255, 255, 0.9);
-	box-shadow: 0 10px 34px rgba(0, 0, 0, 0.20);
+	box-shadow: 0 10px 34px rgba(0, 0, 0, 0.2);
 }
 
 /* ─────────────────────────────────────────
@@ -219,9 +253,6 @@
 	transform: scale(0.92);
 }
 
-.item.on {
-}
-
 .item:focus-visible {
 	outline: 2px solid var(--vc-rose);
 	outline-offset: 3px;
@@ -243,7 +274,6 @@
 	background: var(--vc-rose);
 	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92);
 }
-
 
 /* ─────────────────────────────────────────
    Grid button
@@ -354,7 +384,7 @@
 .account-popover {
 	position: absolute;
 	right: 14px;
-	bottom: 96px;
+	bottom: 84px;
 	width: 236px;
 	transform-origin: bottom right;
 	transform: scale(0.55) translateY(8px);

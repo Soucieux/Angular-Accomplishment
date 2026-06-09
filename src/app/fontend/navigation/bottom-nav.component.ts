@@ -1,15 +1,23 @@
 import { A11yModule } from '@angular/cdk/a11y';
 import {
+	AfterViewInit,
 	ChangeDetectionStrategy,
 	Component,
+	ElementRef,
 	EventEmitter,
 	HostListener,
+	Inject,
 	Input,
+	NgZone,
 	Output,
+	PLATFORM_ID,
+	ViewChild,
 	signal
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { NAV_AVATAR_FALLBACK_INITIAL, NAV_AVATAR_GRADIENT } from '../../common/app.constant';
 import { NavItem } from './bottom-nav.model';
+import { Utilities } from '../../common/app.utilities';
 
 @Component({
 	selector: 'bottom-nav',
@@ -19,7 +27,9 @@ import { NavItem } from './bottom-nav.model';
 	templateUrl: './bottom-nav.component.html',
 	styleUrl: './bottom-nav.component.css'
 })
-export class BottomNavComponent {
+export class BottomNavComponent implements AfterViewInit {
+	@ViewChild('gridCells') private gridCells!: ElementRef<HTMLElement>;
+
 	@Output() public readonly activeIdChange = new EventEmitter<string>();
 	@Output() public readonly navigate = new EventEmitter<string>();
 	@Output() public readonly signIn = new EventEmitter<void>();
@@ -35,6 +45,19 @@ export class BottomNavComponent {
 
 	protected readonly gridOpen = signal(false);
 	protected readonly accountOpen = signal(false);
+
+	constructor(private ngZone: NgZone, @Inject(PLATFORM_ID) private platformId: object) {}
+
+	/**
+	 * Attaches the scroll auto-hide behaviour to the all-sections grid cells container.
+	 */
+	ngAfterViewInit(): void {
+		if (isPlatformBrowser(this.platformId)) {
+			this.ngZone.runOutsideAngular(() =>
+				Utilities.attachScrollAutoHide(this.gridCells?.nativeElement)
+			);
+		}
+	}
 
 	/**
 	 * Gets the dock items resolved in `primaryIds` order, falling back to the

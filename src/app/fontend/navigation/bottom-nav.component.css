@@ -220,8 +220,6 @@
 }
 
 .item.on {
-	gap: 7px;
-	padding: 0 15px 0 13px;
 }
 
 .item:focus-visible {
@@ -246,23 +244,6 @@
 	box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92);
 }
 
-.item-label {
-	color: #fff;
-	font-size: 14px;
-	font-weight: 700;
-	white-space: nowrap;
-	overflow: hidden;
-	max-width: 0;
-	opacity: 0;
-	transition:
-		max-width 0.38s var(--vc-ease),
-		opacity 0.3s;
-}
-
-.item.on .item-label {
-	max-width: 140px;
-	opacity: 1;
-}
 
 /* ─────────────────────────────────────────
    Grid button

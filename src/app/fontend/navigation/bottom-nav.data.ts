@@ -33,7 +33,7 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 /** The destinations promoted to the always-visible dock (in display order). */
-export const PRIMARY_IDS: string[] = ['nexus', 'home', 'reminder', 'debt'];
+export const PRIMARY_IDS: string[] = ['home', 'nexus', 'reminder', 'debt'];
 
 /** Maps Angular router URL paths to bottom-nav item ids. */
 export const ROUTE_TO_NAV_ID: Record<string, string> = {

@@ -2240,7 +2240,6 @@
 	font-style: italic;
 }
 
-
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
@@ -2343,6 +2342,7 @@
 		scrollbar-width: thin;
 		scrollbar-color: transparent transparent;
 		transition: scrollbar-color 0.4s ease;
+		padding-bottom: 8px;
 	}
 	.type-tabs::-webkit-scrollbar {
 		height: 3px;
@@ -2360,9 +2360,12 @@
 	.type-tabs.is-scrolling::-webkit-scrollbar-thumb {
 		background: rgba(217, 119, 6, 0.28);
 	}
-	.type-tab,
+	.type-tab {
+		flex: none;
+	}
 	.type-tabs .manage-button {
 		flex: none;
+		width: 50px;
 	}
 	.ing-row .remove,
 	.step-card .remove,
@@ -2535,24 +2538,38 @@
 /* ─────────────────────────────────────────
    Add-screen default theme (rose — app accent, no category chosen yet)
 ───────────────────────────────────────── */
-.view.band-default { background: transparent; }
-.view.band-default .back-button { color: #d53369 !important; }
-.view.band-default .back-button:hover { color: #b82d5a !important; }
+.view.band-default {
+	background: transparent;
+}
+.view.band-default .back-button {
+	color: #d53369 !important;
+}
+.view.band-default .back-button:hover {
+	color: #b82d5a !important;
+}
 .view.band-default .title-field {
 	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
 	-webkit-background-clip: text;
 	background-clip: text;
 }
-.view.band-default .title-field::placeholder { -webkit-text-fill-color: rgba(213, 51, 105, 0.4); }
-.view.band-default .title-field:focus { border-bottom-color: rgba(213, 51, 105, 0.5); }
+.view.band-default .title-field::placeholder {
+	-webkit-text-fill-color: rgba(213, 51, 105, 0.4);
+}
+.view.band-default .title-field:focus {
+	border-bottom-color: rgba(213, 51, 105, 0.5);
+}
 .view.band-default .editor-header .header-ornament {
 	background: linear-gradient(90deg, #d53369, #b82d5a);
 }
 .view.band-default .panel::before {
 	background: linear-gradient(90deg, #d53369, #b82d5a, transparent 80%);
 }
-.view.band-default .panel-heading .material-symbols-outlined { color: #d53369; }
-.view.band-default .panel-heading.collapsible:hover { background: rgba(213, 51, 105, 0.05); }
+.view.band-default .panel-heading .material-symbols-outlined {
+	color: #d53369;
+}
+.view.band-default .panel-heading.collapsible:hover {
+	background: rgba(213, 51, 105, 0.05);
+}
 .view.band-default .manage-button {
 	border-color: rgba(213, 51, 105, 0.3);
 	color: #d53369;
@@ -2561,8 +2578,12 @@
 	background: rgba(213, 51, 105, 0.08);
 	border-color: #d53369;
 }
-.view.band-default .manage-button .material-symbols-outlined { color: #d53369; }
-.view.band-default .notes-header .material-symbols-outlined { color: #d53369; }
+.view.band-default .manage-button .material-symbols-outlined {
+	color: #d53369;
+}
+.view.band-default .notes-header .material-symbols-outlined {
+	color: #d53369;
+}
 .view.band-default .btn-secondary {
 	color: #d53369 !important;
 	border-color: rgba(213, 51, 105, 0.35);
@@ -2575,7 +2596,9 @@
 	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
 	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
 }
-.view.band-default .btn-primary:hover { box-shadow: 0 10px 22px rgba(213, 51, 105, 0.36); }
+.view.band-default .btn-primary:hover {
+	box-shadow: 0 10px 22px rgba(213, 51, 105, 0.36);
+}
 
 /* ─────────────────────────────────────────
    Category accent overrides
@@ -2655,8 +2678,12 @@
  */
 
 /* band-quick — fresh green */
-.recipe-card.band-quick { background: rgba(22, 163, 74, 0.04); }
-.view.band-quick { background: transparent; }
+.recipe-card.band-quick {
+	background: rgba(22, 163, 74, 0.04);
+}
+.view.band-quick {
+	background: transparent;
+}
 .recipe-card.band-quick:hover {
 	box-shadow:
 		0 4px 8px rgba(0, 0, 0, 0.05),
@@ -2671,8 +2698,12 @@
 .recipe-card.band-quick:hover .view-recipe {
 	background: linear-gradient(to right, transparent, rgba(22, 163, 74, 0.06));
 }
-.view.band-quick .back-button { color: #16a34a !important; }
-.view.band-quick .back-button:hover { color: #15803d !important; }
+.view.band-quick .back-button {
+	color: #16a34a !important;
+}
+.view.band-quick .back-button:hover {
+	color: #15803d !important;
+}
 .view.band-quick .detail-title {
 	background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
 	-webkit-background-clip: text;
@@ -2688,8 +2719,12 @@
 	-webkit-background-clip: text;
 	background-clip: text;
 }
-.view.band-quick .title-field::placeholder { -webkit-text-fill-color: rgba(22, 163, 74, 0.4); }
-.view.band-quick .title-field:focus { border-bottom-color: rgba(22, 163, 74, 0.5); }
+.view.band-quick .title-field::placeholder {
+	-webkit-text-fill-color: rgba(22, 163, 74, 0.4);
+}
+.view.band-quick .title-field:focus {
+	border-bottom-color: rgba(22, 163, 74, 0.5);
+}
 .view.band-quick .editor-header .header-ornament {
 	background: linear-gradient(90deg, #16a34a, #15803d);
 }
@@ -2701,8 +2736,12 @@
 .view.band-quick .panel::before {
 	background: linear-gradient(90deg, #16a34a, #15803d, transparent 80%);
 }
-.view.band-quick .panel-heading .material-symbols-outlined { color: #16a34a; }
-.view.band-quick .panel-heading.collapsible:hover { background: rgba(22, 163, 74, 0.05); }
+.view.band-quick .panel-heading .material-symbols-outlined {
+	color: #16a34a;
+}
+.view.band-quick .panel-heading.collapsible:hover {
+	background: rgba(22, 163, 74, 0.05);
+}
 .view.band-quick .manage-button {
 	border-color: rgba(22, 163, 74, 0.3);
 	color: #16a34a;
@@ -2711,15 +2750,21 @@
 	background: rgba(22, 163, 74, 0.08);
 	border-color: #16a34a;
 }
-.view.band-quick .manage-button .material-symbols-outlined { color: #16a34a; }
-.view.band-quick .step { border-left-color: #16a34a; }
+.view.band-quick .manage-button .material-symbols-outlined {
+	color: #16a34a;
+}
+.view.band-quick .step {
+	border-left-color: #16a34a;
+}
 .view.band-quick .step:hover {
 	box-shadow:
 		0 4px 14px rgba(0, 0, 0, 0.06),
 		0 8px 24px rgba(22, 163, 74, 0.09);
 	border-left-color: #15803d;
 }
-.view.band-quick .step.done { border-left-color: rgba(22, 163, 74, 0.25); }
+.view.band-quick .step.done {
+	border-left-color: rgba(22, 163, 74, 0.25);
+}
 .view.band-quick .steps::before {
 	background: linear-gradient(
 		to bottom,
@@ -2729,8 +2774,12 @@
 		transparent
 	);
 }
-.view.band-quick .substep::before { background: #16a34a; }
-.view.band-quick .notes-header .material-symbols-outlined { color: #16a34a; }
+.view.band-quick .substep::before {
+	background: #16a34a;
+}
+.view.band-quick .notes-header .material-symbols-outlined {
+	color: #16a34a;
+}
 .view.band-quick .btn-secondary {
 	color: #16a34a !important;
 	border-color: rgba(22, 163, 74, 0.35);
@@ -2743,15 +2792,25 @@
 	background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
 	box-shadow: 0 6px 18px rgba(22, 163, 74, 0.28);
 }
-.view.band-quick .btn-primary:hover { box-shadow: 0 10px 22px rgba(22, 163, 74, 0.36); }
+.view.band-quick .btn-primary:hover {
+	box-shadow: 0 10px 22px rgba(22, 163, 74, 0.36);
+}
 
 /* band-spicy — warm orange */
-.recipe-card.band-spicy { background: rgba(194, 90, 30, 0.04); }
-.view.band-spicy { background: transparent; }
+.recipe-card.band-spicy {
+	background: rgba(194, 90, 30, 0.04);
+}
+.view.band-spicy {
+	background: transparent;
+}
 
 /* band-chinese — light purple */
-.recipe-card.band-chinese { background: rgba(168, 85, 247, 0.04); }
-.view.band-chinese { background: transparent; }
+.recipe-card.band-chinese {
+	background: rgba(168, 85, 247, 0.04);
+}
+.view.band-chinese {
+	background: transparent;
+}
 .recipe-card.band-chinese:hover {
 	box-shadow:
 		0 4px 8px rgba(0, 0, 0, 0.05),
@@ -2766,8 +2825,12 @@
 .recipe-card.band-chinese:hover .view-recipe {
 	background: linear-gradient(to right, transparent, rgba(168, 85, 247, 0.06));
 }
-.view.band-chinese .back-button { color: #a855f7 !important; }
-.view.band-chinese .back-button:hover { color: #9333ea !important; }
+.view.band-chinese .back-button {
+	color: #a855f7 !important;
+}
+.view.band-chinese .back-button:hover {
+	color: #9333ea !important;
+}
 .view.band-chinese .detail-title {
 	background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
 	-webkit-background-clip: text;
@@ -2783,8 +2846,12 @@
 	-webkit-background-clip: text;
 	background-clip: text;
 }
-.view.band-chinese .title-field::placeholder { -webkit-text-fill-color: rgba(168, 85, 247, 0.4); }
-.view.band-chinese .title-field:focus { border-bottom-color: rgba(168, 85, 247, 0.5); }
+.view.band-chinese .title-field::placeholder {
+	-webkit-text-fill-color: rgba(168, 85, 247, 0.4);
+}
+.view.band-chinese .title-field:focus {
+	border-bottom-color: rgba(168, 85, 247, 0.5);
+}
 .view.band-chinese .editor-header .header-ornament {
 	background: linear-gradient(90deg, #a855f7, #9333ea);
 }
@@ -2796,8 +2863,12 @@
 .view.band-chinese .panel::before {
 	background: linear-gradient(90deg, #a855f7, #9333ea, transparent 80%);
 }
-.view.band-chinese .panel-heading .material-symbols-outlined { color: #a855f7; }
-.view.band-chinese .panel-heading.collapsible:hover { background: rgba(168, 85, 247, 0.05); }
+.view.band-chinese .panel-heading .material-symbols-outlined {
+	color: #a855f7;
+}
+.view.band-chinese .panel-heading.collapsible:hover {
+	background: rgba(168, 85, 247, 0.05);
+}
 .view.band-chinese .manage-button {
 	border-color: rgba(168, 85, 247, 0.3);
 	color: #a855f7;
@@ -2806,15 +2877,21 @@
 	background: rgba(168, 85, 247, 0.08);
 	border-color: #a855f7;
 }
-.view.band-chinese .manage-button .material-symbols-outlined { color: #a855f7; }
-.view.band-chinese .step { border-left-color: #a855f7; }
+.view.band-chinese .manage-button .material-symbols-outlined {
+	color: #a855f7;
+}
+.view.band-chinese .step {
+	border-left-color: #a855f7;
+}
 .view.band-chinese .step:hover {
 	box-shadow:
 		0 4px 14px rgba(0, 0, 0, 0.06),
 		0 8px 24px rgba(168, 85, 247, 0.09);
 	border-left-color: #9333ea;
 }
-.view.band-chinese .step.done { border-left-color: rgba(168, 85, 247, 0.25); }
+.view.band-chinese .step.done {
+	border-left-color: rgba(168, 85, 247, 0.25);
+}
 .view.band-chinese .steps::before {
 	background: linear-gradient(
 		to bottom,
@@ -2824,8 +2901,12 @@
 		transparent
 	);
 }
-.view.band-chinese .substep::before { background: #a855f7; }
-.view.band-chinese .notes-header .material-symbols-outlined { color: #a855f7; }
+.view.band-chinese .substep::before {
+	background: #a855f7;
+}
+.view.band-chinese .notes-header .material-symbols-outlined {
+	color: #a855f7;
+}
 .view.band-chinese .btn-secondary {
 	color: #a855f7 !important;
 	border-color: rgba(168, 85, 247, 0.35);
@@ -2838,11 +2919,17 @@
 	background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
 	box-shadow: 0 6px 18px rgba(168, 85, 247, 0.28);
 }
-.view.band-chinese .btn-primary:hover { box-shadow: 0 10px 22px rgba(168, 85, 247, 0.36); }
+.view.band-chinese .btn-primary:hover {
+	box-shadow: 0 10px 22px rgba(168, 85, 247, 0.36);
+}
 
 /* band-western — warm amber */
-.recipe-card.band-western { background: rgba(217, 119, 6, 0.04); }
-.view.band-western { background: transparent; }
+.recipe-card.band-western {
+	background: rgba(217, 119, 6, 0.04);
+}
+.view.band-western {
+	background: transparent;
+}
 .recipe-card.band-western:hover {
 	box-shadow:
 		0 4px 8px rgba(0, 0, 0, 0.05),
@@ -2857,8 +2944,12 @@
 .recipe-card.band-western:hover .view-recipe {
 	background: linear-gradient(to right, transparent, rgba(217, 119, 6, 0.06));
 }
-.view.band-western .back-button { color: #d97706 !important; }
-.view.band-western .back-button:hover { color: #b45309 !important; }
+.view.band-western .back-button {
+	color: #d97706 !important;
+}
+.view.band-western .back-button:hover {
+	color: #b45309 !important;
+}
 .view.band-western .detail-title {
 	background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 	-webkit-background-clip: text;
@@ -2874,8 +2965,12 @@
 	-webkit-background-clip: text;
 	background-clip: text;
 }
-.view.band-western .title-field::placeholder { -webkit-text-fill-color: rgba(217, 119, 6, 0.4); }
-.view.band-western .title-field:focus { border-bottom-color: rgba(217, 119, 6, 0.5); }
+.view.band-western .title-field::placeholder {
+	-webkit-text-fill-color: rgba(217, 119, 6, 0.4);
+}
+.view.band-western .title-field:focus {
+	border-bottom-color: rgba(217, 119, 6, 0.5);
+}
 .view.band-western .editor-header .header-ornament {
 	background: linear-gradient(90deg, #d97706, #b45309);
 }
@@ -2887,8 +2982,12 @@
 .view.band-western .panel::before {
 	background: linear-gradient(90deg, #d97706, #b45309, transparent 80%);
 }
-.view.band-western .panel-heading .material-symbols-outlined { color: #d97706; }
-.view.band-western .panel-heading.collapsible:hover { background: rgba(217, 119, 6, 0.05); }
+.view.band-western .panel-heading .material-symbols-outlined {
+	color: #d97706;
+}
+.view.band-western .panel-heading.collapsible:hover {
+	background: rgba(217, 119, 6, 0.05);
+}
 .view.band-western .manage-button {
 	border-color: rgba(217, 119, 6, 0.3);
 	color: #d97706;
@@ -2897,15 +2996,21 @@
 	background: rgba(217, 119, 6, 0.08);
 	border-color: #d97706;
 }
-.view.band-western .manage-button .material-symbols-outlined { color: #d97706; }
-.view.band-western .step { border-left-color: #d97706; }
+.view.band-western .manage-button .material-symbols-outlined {
+	color: #d97706;
+}
+.view.band-western .step {
+	border-left-color: #d97706;
+}
 .view.band-western .step:hover {
 	box-shadow:
 		0 4px 14px rgba(0, 0, 0, 0.06),
 		0 8px 24px rgba(217, 119, 6, 0.09);
 	border-left-color: #b45309;
 }
-.view.band-western .step.done { border-left-color: rgba(217, 119, 6, 0.25); }
+.view.band-western .step.done {
+	border-left-color: rgba(217, 119, 6, 0.25);
+}
 .view.band-western .steps::before {
 	background: linear-gradient(
 		to bottom,
@@ -2915,8 +3020,12 @@
 		transparent
 	);
 }
-.view.band-western .substep::before { background: #d97706; }
-.view.band-western .notes-header .material-symbols-outlined { color: #d97706; }
+.view.band-western .substep::before {
+	background: #d97706;
+}
+.view.band-western .notes-header .material-symbols-outlined {
+	color: #d97706;
+}
 .view.band-western .btn-secondary {
 	color: #d97706 !important;
 	border-color: rgba(217, 119, 6, 0.35);
@@ -2929,11 +3038,17 @@
 	background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 	box-shadow: 0 6px 18px rgba(217, 119, 6, 0.28);
 }
-.view.band-western .btn-primary:hover { box-shadow: 0 10px 22px rgba(217, 119, 6, 0.36); }
+.view.band-western .btn-primary:hover {
+	box-shadow: 0 10px 22px rgba(217, 119, 6, 0.36);
+}
 
 /* band-dessert — warm pink */
-.recipe-card.band-dessert { background: rgba(219, 39, 119, 0.04); }
-.view.band-dessert { background: transparent; }
+.recipe-card.band-dessert {
+	background: rgba(219, 39, 119, 0.04);
+}
+.view.band-dessert {
+	background: transparent;
+}
 .recipe-card.band-dessert:hover {
 	box-shadow:
 		0 4px 8px rgba(0, 0, 0, 0.05),
@@ -2948,8 +3063,12 @@
 .recipe-card.band-dessert:hover .view-recipe {
 	background: linear-gradient(to right, transparent, rgba(219, 39, 119, 0.06));
 }
-.view.band-dessert .back-button { color: #db2777 !important; }
-.view.band-dessert .back-button:hover { color: #be185d !important; }
+.view.band-dessert .back-button {
+	color: #db2777 !important;
+}
+.view.band-dessert .back-button:hover {
+	color: #be185d !important;
+}
 .view.band-dessert .detail-title {
 	background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
 	-webkit-background-clip: text;
@@ -2965,8 +3084,12 @@
 	-webkit-background-clip: text;
 	background-clip: text;
 }
-.view.band-dessert .title-field::placeholder { -webkit-text-fill-color: rgba(219, 39, 119, 0.4); }
-.view.band-dessert .title-field:focus { border-bottom-color: rgba(219, 39, 119, 0.5); }
+.view.band-dessert .title-field::placeholder {
+	-webkit-text-fill-color: rgba(219, 39, 119, 0.4);
+}
+.view.band-dessert .title-field:focus {
+	border-bottom-color: rgba(219, 39, 119, 0.5);
+}
 .view.band-dessert .editor-header .header-ornament {
 	background: linear-gradient(90deg, #db2777, #be185d);
 }
@@ -2978,8 +3101,12 @@
 .view.band-dessert .panel::before {
 	background: linear-gradient(90deg, #db2777, #be185d, transparent 80%);
 }
-.view.band-dessert .panel-heading .material-symbols-outlined { color: #db2777; }
-.view.band-dessert .panel-heading.collapsible:hover { background: rgba(219, 39, 119, 0.05); }
+.view.band-dessert .panel-heading .material-symbols-outlined {
+	color: #db2777;
+}
+.view.band-dessert .panel-heading.collapsible:hover {
+	background: rgba(219, 39, 119, 0.05);
+}
 .view.band-dessert .manage-button {
 	border-color: rgba(219, 39, 119, 0.3);
 	color: #db2777;
@@ -2988,15 +3115,21 @@
 	background: rgba(219, 39, 119, 0.08);
 	border-color: #db2777;
 }
-.view.band-dessert .manage-button .material-symbols-outlined { color: #db2777; }
-.view.band-dessert .step { border-left-color: #db2777; }
+.view.band-dessert .manage-button .material-symbols-outlined {
+	color: #db2777;
+}
+.view.band-dessert .step {
+	border-left-color: #db2777;
+}
 .view.band-dessert .step:hover {
 	box-shadow:
 		0 4px 14px rgba(0, 0, 0, 0.06),
 		0 8px 24px rgba(219, 39, 119, 0.09);
 	border-left-color: #be185d;
 }
-.view.band-dessert .step.done { border-left-color: rgba(219, 39, 119, 0.25); }
+.view.band-dessert .step.done {
+	border-left-color: rgba(219, 39, 119, 0.25);
+}
 .view.band-dessert .steps::before {
 	background: linear-gradient(
 		to bottom,
@@ -3006,8 +3139,12 @@
 		transparent
 	);
 }
-.view.band-dessert .substep::before { background: #db2777; }
-.view.band-dessert .notes-header .material-symbols-outlined { color: #db2777; }
+.view.band-dessert .substep::before {
+	background: #db2777;
+}
+.view.band-dessert .notes-header .material-symbols-outlined {
+	color: #db2777;
+}
 .view.band-dessert .btn-secondary {
 	color: #db2777 !important;
 	border-color: rgba(219, 39, 119, 0.35);
@@ -3020,7 +3157,9 @@
 	background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
 	box-shadow: 0 6px 18px rgba(219, 39, 119, 0.28);
 }
-.view.band-dessert .btn-primary:hover { box-shadow: 0 10px 22px rgba(219, 39, 119, 0.36); }
+.view.band-dessert .btn-primary:hover {
+	box-shadow: 0 10px 22px rgba(219, 39, 119, 0.36);
+}
 
 /* ─────────────────────────────────────────
    Pagination
@@ -3030,4 +3169,3 @@
 	justify-content: center;
 	margin-top: 8px;
 }
-

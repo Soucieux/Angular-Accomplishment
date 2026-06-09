@@ -129,38 +129,6 @@ export const DATABASE_USEFUL_LINKS = 'useful_links'; // stores both links (type:
 ////////////////////// Below are shared UI constants /////////////////////////////////
 // Layout responsive breakpoints
 export const BREAKPOINT_MOBILE = '(max-width: 800px)';
-export const BREAKPOINT_MID = '(max-width: 1100px)';
-export const BREAKPOINT_LARGE = '(max-width: 1500px)';
-// Dialog panels have a narrower breakpoint — they are floating overlays, not full pages.
-export const BREAKPOINT_DIALOG = '(max-width: 580px)';
-
-/** Full weekday names, Sunday-first, for calendar and clock displays. */
-export const DAY_NAMES_LONG: string[] = [
-	'Sunday',
-	'Monday',
-	'Tuesday',
-	'Wednesday',
-	'Thursday',
-	'Friday',
-	'Saturday'
-];
-/** Short weekday names, Sunday-first, for compact calendar strips. */
-export const DAY_NAMES_SHORT: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-/** Short month names, January-first, for clock and date displays. */
-export const MONTH_NAMES_SHORT: string[] = [
-	'Jan',
-	'Feb',
-	'Mar',
-	'Apr',
-	'May',
-	'Jun',
-	'Jul',
-	'Aug',
-	'Sep',
-	'Oct',
-	'Nov',
-	'Dec'
-];
 
 export const SEARCH_COMPLETE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
@@ -210,14 +178,8 @@ export const STATS_CAP_ACTIVITY_LOG = 20;
 
 ////////////////////// Below are home page constants /////////////////////////////////
 export const HOME_MSG_LOAD_STATISTICS_FAILED = 'Failed to load statistics';
-export const HOME_MSG_LOAD_RECIPES_FAILED = 'Failed to load recipes for dashboard';
 export const HOME_MSG_INCREMENT_VISIT_FAILED = 'Failed to increment link visit';
-
-/** Cycling colour palette for the four link tile colours on the Home dashboard. */
-export const HOME_LINKS_TILE_COLORS: string[] = ['#6aa9d6', '#f0b88a', '#a8d4c2', '#d4a4c8'];
 export const HOME_LINKS_DOT_FALLBACK = '#5a6878';
-/** Cycling colour palette for the genre bar chart on the Home dashboard. */
-export const HOME_GENRE_COLORS: string[] = ['#4776e6', '#e91e8c', '#f7971e', '#78d000', '#8e54e9', '#22d3ee'];
 
 export const HOME_ACTIVITY_ICON_MOVIE_ADDED = 'live_tv';
 export const HOME_ACTIVITY_ICON_MOVIE_UPDATED = 'edit_note';
@@ -281,28 +243,6 @@ export const HOME_ACTIVITY_COLOR_RECIPE = '#22c55e';
 /** Shared delete color used for all activity-feed deleted events. */
 export const HOME_ACTIVITY_COLOR_DELETED = '#ef4444';
 
-export const HOME_GREETING_NIGHT = 'Good night';
-export const HOME_GREETING_MORNING = 'Good morning';
-export const HOME_GREETING_AFTERNOON = 'Good afternoon';
-export const HOME_GREETING_EVENING = 'Good evening';
-/** BCP-47 locale code used for date and time formatting on the Home dashboard. */
-export const HOME_LOCALE_EN_US = 'en-US';
-/** Progress ring key for the year ring in the life-clock widget. */
-export const HOME_PROGRESS_KEY_YEAR = 'year';
-/** Progress ring key for the month ring in the life-clock widget. */
-export const HOME_PROGRESS_KEY_MONTH = 'month';
-/** Progress ring key for the week ring in the life-clock widget. */
-export const HOME_PROGRESS_KEY_WEEK = 'week';
-/** Progress ring key for the day ring in the life-clock widget. */
-export const HOME_PROGRESS_KEY_DAY = 'day';
-/** Display label for the year progress ring. */
-export const HOME_PROGRESS_LABEL_YEAR = 'Year';
-/** Display label for the month progress ring. */
-export const HOME_PROGRESS_LABEL_MONTH = 'Month';
-/** Display label for the week progress ring. */
-export const HOME_PROGRESS_LABEL_WEEK = 'Week';
-/** Display label for the day progress ring. */
-export const HOME_PROGRESS_LABEL_DAY = 'Day';
 /** Sentinel value for the left placement side in the concentric smart-leader algorithm. */
 export const HOME_CONCENTRIC_LEADER_SIDE_LEFT = 'left';
 /** Sentinel value for the right placement side in the concentric smart-leader algorithm. */
@@ -317,8 +257,6 @@ export const HOME_CONCENTRIC_LEADER_LINE_OFFSET_Y = 16;
 export const HOME_CONCENTRIC_LEADER_PCT_CAP = 99.9;
 /** Pixel margin from the stage boundary used to keep pills inside the visible area. */
 export const HOME_CONCENTRIC_LEADER_BOUNDARY_MARGIN = 4;
-/** Material icon name for a calendar reminder event in the week-agenda strip. */
-export const HOME_AGENDA_ICON_EVENT = 'event';
 /** Material icon name for a reminder item in the week-agenda strip — matches the reminders widget header. */
 export const HOME_AGENDA_ICON_REMINDER = 'notifications';
 /** Overflow-row label for the reminders panel. */
@@ -334,31 +272,6 @@ export const HOME_REMINDER_ROW_ID_PREFIX = 'rem-';
 /** ID prefix for debt rows in the OrbitalComponent debt-sonata panel. */
 export const HOME_DEBT_ROW_ID_PREFIX = 'debt-';
 
-export const HOME_QUICK_ACTION_LABEL_MOVIE = 'Add Movie';
-export const HOME_QUICK_ACTION_LABEL_QUOTE = 'Add Quote';
-export const HOME_QUICK_ACTION_LABEL_RECIPE = 'Add Recipe';
-export const HOME_QUICK_ACTION_LABEL_DEBT = 'Add Debt';
-export const HOME_QUICK_ACTION_LABEL_REMINDER = 'Add Reminder';
-export const HOME_QUICK_ACTION_LABEL_LINK = 'Add Quick Link';
-
-export const HOME_QUICK_ACTION_ICON_MOVIE = 'movie';
-export const HOME_QUICK_ACTION_ICON_QUOTE = 'format_quote';
-export const HOME_QUICK_ACTION_ICON_RECIPE = 'restaurant';
-export const HOME_QUICK_ACTION_ICON_DEBT = 'account_balance';
-export const HOME_QUICK_ACTION_ICON_REMINDER = 'add_task';
-export const HOME_QUICK_ACTION_ICON_LINK = 'add_link';
-
-export const HOME_QUICK_ACTION_GRADIENT_MOVIE = 'linear-gradient(135deg,#e91e8c,#f7971e)';
-export const HOME_QUICK_ACTION_GRADIENT_QUOTE = 'linear-gradient(135deg,#a78bfa,#ec4899)';
-export const HOME_QUICK_ACTION_GRADIENT_RECIPE = 'linear-gradient(135deg,#f97316,#ef4444)';
-export const HOME_QUICK_ACTION_GRADIENT_DEBT = 'linear-gradient(135deg,#f97316,#fbbf24)';
-export const HOME_QUICK_ACTION_GRADIENT_REMINDER = 'linear-gradient(135deg,#38bdf8,#6366f1)';
-export const HOME_QUICK_ACTION_GRADIENT_LINK = 'linear-gradient(135deg,#22c55e,#06b6d4)';
-
-/** Route path for the quick-action button that opens the entertainment page. */
-export const HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT = '/entertainment';
-/** Route path for the quick-action button that opens the resonance page. */
-export const HOME_QUICK_ACTION_ROUTE_RESONANCE = '/resonance';
 /** Route path for the quick-action button that opens the recipe page. */
 export const HOME_QUICK_ACTION_ROUTE_RECIPE = '/recipe';
 /** Route path for the quick-action button that opens the debt sonata page. */
@@ -432,18 +345,6 @@ export const ENT_SEARCH_PLACEHOLDER = 'Search movies...';
 export const ENT_LABEL_FILMS = 'films';
 /** Secondary label on each category card (e.g. "10 to watch"). */
 export const ENT_LABEL_TO_WATCH = 'to watch';
-/** Pushpin colours for corkboard category cards, cycling by card index. */
-export const ENT_CORK_PIN_COLORS: string[] = [
-	'#ef4444',
-	'#3b82f6',
-	'#22c55e',
-	'#f59e0b',
-	'#8b5cf6',
-	'#ec4899',
-	'#14b8a6'
-];
-/** Rotation amounts (degrees) for corkboard category cards, cycling by card index. */
-export const ENT_CORK_ROTATIONS: number[] = [-2.4, 1.9, -1.3, 2.6, -0.7, 1.5, -2.1];
 /** Number of progress-bar blocks per category card. */
 export const ENT_CORK_BLOCKS = 8;
 /** ID of the programmatically injected View Transition style element. */
@@ -461,14 +362,6 @@ export const GENRE_FAVOURITE = '特别关注';
 export const NO_RATE = '-1';
 export const RATE_DECREASED = 'decreased';
 export const RATE_INCREASED = 'increased';
-export const MOVIE_GENRES = [
-	{ genre: '刑侦' },
-	{ genre: '古装' },
-	{ genre: '悬疑' },
-	{ genre: '校园' },
-	{ genre: '现代' },
-	{ genre: '谍战' }
-];
 
 ////////////////////// Below are Resonance page constants ////////////////////////////
 export const RESONANCE_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this quote?';
@@ -524,20 +417,6 @@ export const RECIPE_CATEGORY_DESSERT = 'Dessert';
 
 export const RECIPE_ITYPE_VEGETABLE = 'veg';
 export const RECIPE_ITYPE_MEAT = 'meat';
-export const RECIPE_ITYPE_SEASONING = 'seas';
-export const RECIPE_ITYPE_DAIRY = 'dairy';
-export const RECIPE_ITYPE_GRAIN = 'grain';
-export const RECIPE_ITYPE_LIQUID = 'liq';
-export const RECIPE_ITYPE_SPICE = 'spice';
-export const RECIPE_ITYPE_SEAFOOD = 'seafood';
-export const RECIPE_ITYPE_EGG = 'egg';
-export const RECIPE_ITYPE_NUT = 'nut';
-export const RECIPE_ITYPE_FRUIT = 'fruit';
-export const RECIPE_ITYPE_OIL = 'oil';
-export const RECIPE_ITYPE_HERB = 'herb';
-export const RECIPE_ITYPE_FUNGI = 'fungi';
-export const RECIPE_ITYPE_SWEET = 'sweet';
-export const RECIPE_ITYPE_CONDIMENT = 'condiment';
 
 ////////////////////// Below are recipe band CSS class name constants ////////////////
 /* Each band pairs with a RECIPE_CATEGORY_* constant above and a full CSS
@@ -552,13 +431,11 @@ export const RECIPE_BAND_CHINESE = 'band-chinese';
 export const RECIPE_BAND_WESTERN = 'band-western';
 export const RECIPE_BAND_QUICK = 'band-quick';
 export const RECIPE_BAND_DESSERT = 'band-dessert';
-export const RECIPE_BAND_SPICY = 'band-spicy'; // reserved — CSS rules not yet added
 export const RECIPE_BAND_DEFAULT = 'band-default';
 
 export const RECIPE_DROP_ABOVE = 'above';
 export const RECIPE_DROP_BELOW = 'below';
 
-export const RECIPE_UNIT_OPTIONS: string[] = ['g', 'kg', 'oz', 'lb', 'tsp', 'tbsp', 'cup', 'ml', 'L'];
 export const RECIPE_MAX_BADGES = 4;
 export const RECIPE_MAX_NAME_CHARS = 9;
 /** Maximum number of recipe cards visible on a single paginated page. */
@@ -569,8 +446,6 @@ export const RECIPE_ROWS_PER_PAGE = 5;
 export const RECIPE_EDITOR_TYPE_MAX = 9;
 
 ////////////////////// Below are Nexus page constants ////////////////////////////////
-export const NEXUS_MSG_MISSING_FIELDS = 'Missing fields';
-export const NEXUS_MSG_MISSING_FIELDS_DETAIL = 'URL, title, and category are required';
 export const NEXUS_MSG_LINK_UPDATED = 'Link updated';
 export const NEXUS_MSG_LINK_SAVED = 'Link saved';
 export const NEXUS_MSG_SAVING_LINK = 'Saving link...';
@@ -706,13 +581,6 @@ export const REMINDER_CATEGORY_COLOR_UTILITY = '#c2820a';
 export const REMINDER_CATEGORY_COLOR_OTHER = '#0d9488';
 /** Fallback accent color for unrecognized or absent categories — matches the Reminder section accent. */
 export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
-/** Fixed ordered list of the four known Reminder categories, always shown in the filter bar and composer. */
-export const REMINDER_KNOWN_CATEGORIES = [
-	REMINDER_CATEGORY_PERSONAL,
-	REMINDER_CATEGORY_WORK,
-	REMINDER_CATEGORY_UTILITY,
-	REMINDER_CATEGORY_OTHER
-] as const;
 /** Number of days ahead treated as "due soon". */
 export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;
 
@@ -774,8 +642,6 @@ export const DEBT_VALUE_KEY_ORIGINAL = 'original';
 
 /** Display name for the Debt Sonata page — used in stat writes and the Recent Activity widget. */
 export const DEBT_TABLE_ACCOUNT_EXPENSES = 'Account Expenses';
-/** Fixed amount deducted from a second-table debt entry per payment cycle. */
-export const ACCOUNT_DEBT_DECREMENT = 998.05;
 /** Small quick-pay preset amount for the Debt Sonata page. */
 export const DEBT_PRESET_SMALL = 100;
 /** Large quick-pay preset amount for the Debt Sonata page. */

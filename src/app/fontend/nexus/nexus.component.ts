@@ -78,7 +78,7 @@ import {
 	TOAST_INFO,
 	TOAST_WARN
 } from '../../common/app.constant';
-import { AiTool, NewLinkData, NexusCategory, NexusLink, NEXUS_AI_TOOLS, NEXUS_LOGO_FALLBACK_COLORS } from './nexus.model';
+import { AiTool, NewLinkData, NexusCategory, NexusLink, NEXUS_AI_TOOLS, NEXUS_DATE_CALCULATOR_FIELDS, NEXUS_LOGO_FALLBACK_COLORS } from './nexus.model';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
@@ -125,7 +125,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected updatedDateCalculatorRows!: any[];
 	protected confirmedCount = 0;
 	protected currentDay!: number;
-	protected fields: Array<string> = ['first', 'second', 'third', 'fourth'];
+	protected readonly fields = NEXUS_DATE_CALCULATOR_FIELDS;
 	private dateCalculatorSub?: Subscription;
 	protected saveIndicators: Record<string, boolean> = { [DATABASE_DATE_CALCULATOR]: false };
 	private saveIndicatorTimeouts: Record<string, any> = {};

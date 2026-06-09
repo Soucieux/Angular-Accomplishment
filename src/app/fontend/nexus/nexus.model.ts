@@ -33,6 +33,9 @@ export interface NexusCategory {
 	order?: number;
 }
 
+/** Column field names for date-calculator rows, used to iterate per-row slot values. */
+export const NEXUS_DATE_CALCULATOR_FIELDS: string[] = ['first', 'second', 'third', 'fourth'];
+
 /** Brand accent colours for the initial-letter fallback circle, keyed by tool ID. */
 export const NEXUS_LOGO_FALLBACK_COLORS: Record<string, string> = {
 	chatgpt: '#10a37f',

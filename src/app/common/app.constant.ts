@@ -563,22 +563,8 @@ export const REMINDER_TABLE_MESSAGES = 'Messages';
 export const REMINDER_ITEMS_PER_PAGE = 14;
 /** Fixed number of rows per page in the Reminder grid — page size scales as itemsPerRow × this. */
 export const REMINDER_ROWS_PER_PAGE = 7;
-/** Reminder category label — Work. */
-export const REMINDER_CATEGORY_WORK = 'Work';
-/** Reminder category label — Personal. */
+/** Reminder category label — Personal (used as the default tag for new items). */
 export const REMINDER_CATEGORY_PERSONAL = 'Personal';
-/** Reminder category label — Utility. */
-export const REMINDER_CATEGORY_UTILITY = 'Utility';
-/** Reminder category label — Other. */
-export const REMINDER_CATEGORY_OTHER = 'Other';
-/** Accent color for the Work category. */
-export const REMINDER_CATEGORY_COLOR_WORK = '#1a6dff';
-/** Accent color for the Personal category. */
-export const REMINDER_CATEGORY_COLOR_PERSONAL = '#d53369';
-/** Accent color for the Utility category. */
-export const REMINDER_CATEGORY_COLOR_UTILITY = '#c2820a';
-/** Accent color for the Other category. */
-export const REMINDER_CATEGORY_COLOR_OTHER = '#0d9488';
 /** Fallback accent color for unrecognized or absent categories — matches the Reminder section accent. */
 export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
 /** Number of days ahead treated as "due soon". */
@@ -602,10 +588,6 @@ export const DEBT_CUSTOM_INPUT_PLACEHOLDER = '−0.00';
 export const DEBT_DIALOG_LABEL_EDIT = 'Set debt';
 export const DEBT_DIALOG_LABEL_SAVE = 'Set';
 export const DEBT_DIALOG_LABEL_BALANCE = 'New amount';
-export const DEBT_CATEGORY_LABEL_CARD = 'Credit card';
-export const DEBT_CATEGORY_LABEL_PERSON = 'Personal';
-export const DEBT_CATEGORY_LABEL_SHOPPING = 'Financing';
-export const DEBT_CATEGORY_LABEL_HOME = 'Mortgage';
 export const DEBT_DUE_LABEL_NONE = 'No due date';
 export const DEBT_DUE_LABEL_TODAY = 'Due today';
 export const DEBT_DUE_LABEL_TOMORROW = 'Due tomorrow';
@@ -616,14 +598,6 @@ export const DEBT_ITEM_EXPENSE = 'expense';
 export const DEBT_TYPE_TEMP = 'temporary';
 /** Debt record type for a permanent account protected from deletion. */
 export const DEBT_TYPE_PERMANENT = 'permanent';
-/** Category key for credit-card debts. */
-export const DEBT_CATEGORY_CARD = 'card';
-/** Category key for personal debts. */
-export const DEBT_CATEGORY_PERSON = 'person';
-/** Category key for financing / shopping debts. */
-export const DEBT_CATEGORY_SHOPPING = 'shopping';
-/** Category key for mortgage debts. */
-export const DEBT_CATEGORY_HOME = 'home';
 
 /** CloudBase content entry key for the paid flag in the debt collection. */
 export const DEBT_VALUE_KEY_PAID = 'paid';
@@ -658,14 +632,6 @@ export const DEBT_DUE_CLASS_OVERDUE = 'is-over';
 export const DEBT_DUE_CLASS_SOON = 'is-soon';
 export const DEBT_DUE_ICON_OVERDUE = 'error';
 export const DEBT_DUE_ICON_DEFAULT = 'event';
-export const DEBT_CATEGORY_ICON_CARD = 'credit_card';
-export const DEBT_CATEGORY_ICON_PERSON = 'handshake';
-export const DEBT_CATEGORY_ICON_SHOPPING = 'shopping_bag';
-export const DEBT_CATEGORY_ICON_HOME = 'home';
-export const DEBT_CATEGORY_GRADIENT_CARD = 'linear-gradient(90deg,#e91e8c,#f7971e)';
-export const DEBT_CATEGORY_GRADIENT_PERSON = 'linear-gradient(90deg,#fda085,#f6d365)';
-export const DEBT_CATEGORY_GRADIENT_SHOPPING = 'linear-gradient(90deg,#8e54e9,#e91e8c)';
-export const DEBT_CATEGORY_GRADIENT_HOME = 'linear-gradient(90deg,#11998e,#38ef7d)';
 
 ////////////////////// Below are patch notes page constants //////////////////////////
 export const PATCH_MSG_DELETE_CONFIRM = 'Proceed with deleting this note?';

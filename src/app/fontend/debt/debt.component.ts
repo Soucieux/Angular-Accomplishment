@@ -23,10 +23,6 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_DEBT_SONATA,
 	DEBT_PROMPT_TIMEOUT_MS,
-	DEBT_CATEGORY_CARD,
-	DEBT_CATEGORY_HOME,
-	DEBT_CATEGORY_PERSON,
-	DEBT_CATEGORY_SHOPPING,
 	DEBT_CURRENCY_CAD,
 	DEBT_CURRENCY_CNY,
 	DEBT_EMPTY_STATE_BTN,
@@ -54,10 +50,6 @@ import {
 	STATS_FIELD_DEBT_TOTAL,
 	STATS_FIELD_DEBT_UPCOMING,
 	STATS_FIELD_RECENT_ACTIVITIES,
-	DEBT_CATEGORY_LABEL_CARD,
-	DEBT_CATEGORY_LABEL_PERSON,
-	DEBT_CATEGORY_LABEL_SHOPPING,
-	DEBT_CATEGORY_LABEL_HOME,
 	DEBT_DUE_LABEL_NONE,
 	DEBT_DUE_LABEL_TODAY,
 	DEBT_DUE_LABEL_TOMORROW,
@@ -67,17 +59,9 @@ import {
 	DEBT_DUE_CLASS_SOON,
 	DEBT_DUE_ICON_OVERDUE,
 	DEBT_DUE_ICON_DEFAULT,
-	DEBT_CATEGORY_ICON_CARD,
-	DEBT_CATEGORY_ICON_PERSON,
-	DEBT_CATEGORY_ICON_SHOPPING,
-	DEBT_CATEGORY_ICON_HOME,
-	DEBT_CATEGORY_GRADIENT_CARD,
-	DEBT_CATEGORY_GRADIENT_PERSON,
-	DEBT_CATEGORY_GRADIENT_SHOPPING,
-	DEBT_CATEGORY_GRADIENT_HOME,
 	DEBT_SKELETON_COUNT
 } from '../../common/app.constant';
-import { DebtCategoryDef, MONTH_NAMES_SHORT, NewDebtData, PaymentEntry } from './debt.model';
+import { DEBT_CATEGORY_DEFS, DebtCategoryDef, MONTH_NAMES_SHORT, NewDebtData, PaymentEntry } from './debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
@@ -119,32 +103,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	private balanceBumpTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private saveIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
-	private readonly categoryDefs: DebtCategoryDef[] = [
-		{
-			key: DEBT_CATEGORY_CARD,
-			icon: DEBT_CATEGORY_ICON_CARD,
-			label: DEBT_CATEGORY_LABEL_CARD,
-			gradient: DEBT_CATEGORY_GRADIENT_CARD
-		},
-		{
-			key: DEBT_CATEGORY_PERSON,
-			icon: DEBT_CATEGORY_ICON_PERSON,
-			label: DEBT_CATEGORY_LABEL_PERSON,
-			gradient: DEBT_CATEGORY_GRADIENT_PERSON
-		},
-		{
-			key: DEBT_CATEGORY_SHOPPING,
-			icon: DEBT_CATEGORY_ICON_SHOPPING,
-			label: DEBT_CATEGORY_LABEL_SHOPPING,
-			gradient: DEBT_CATEGORY_GRADIENT_SHOPPING
-		},
-		{
-			key: DEBT_CATEGORY_HOME,
-			icon: DEBT_CATEGORY_ICON_HOME,
-			label: DEBT_CATEGORY_LABEL_HOME,
-			gradient: DEBT_CATEGORY_GRADIENT_HOME
-		}
-	];
+	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,

@@ -37,3 +37,11 @@ export interface NewItem {
 
 /** Tag categories available for reminder items. */
 export const REMINDER_KNOWN_CATEGORIES = ['Personal', 'Work', 'Utility', 'Other'] as const;
+
+/** Maps each reminder tag category to its display colour. */
+export const REMINDER_CATEGORY_COLOR_MAP: Record<string, string> = {
+	Work: '#1a6dff',
+	Personal: '#d53369',
+	Utility: '#c2820a',
+	Other: '#0d9488'
+};

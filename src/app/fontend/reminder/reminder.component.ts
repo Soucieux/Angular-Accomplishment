@@ -40,14 +40,7 @@ import {
 	REMINDER_AWAIT_SUFFIX_CN,
 	REMINDER_AWAIT_SUFFIX_EN,
 	REMINDER_CATEGORY_COLOR_DEFAULT,
-	REMINDER_CATEGORY_COLOR_OTHER,
-	REMINDER_CATEGORY_COLOR_PERSONAL,
-	REMINDER_CATEGORY_COLOR_UTILITY,
-	REMINDER_CATEGORY_COLOR_WORK,
-	REMINDER_CATEGORY_OTHER,
 	REMINDER_CATEGORY_PERSONAL,
-	REMINDER_CATEGORY_UTILITY,
-	REMINDER_CATEGORY_WORK,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
 	REMINDER_DUE_SOON_LABEL,
@@ -77,7 +70,7 @@ import {
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS
 } from '../../common/app.constant';
-import { NewItem, REMINDER_KNOWN_CATEGORIES, ReminderDbRecord, ReminderValueKey, ReminderItem, TagEditSession } from './reminder.model';
+import { NewItem, REMINDER_CATEGORY_COLOR_MAP, REMINDER_KNOWN_CATEGORIES, ReminderDbRecord, ReminderValueKey, ReminderItem, TagEditSession } from './reminder.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
@@ -130,17 +123,10 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_AWAIT_SUFFIX_CN = REMINDER_AWAIT_SUFFIX_CN;
 	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
 	protected readonly REMINDER_KNOWN_CATEGORIES = REMINDER_KNOWN_CATEGORIES;
-
+	private readonly categoryColorMap = REMINDER_CATEGORY_COLOR_MAP;
 	private gridResizeObserver?: ResizeObserver;
 	private itemsPerPage = REMINDER_ITEMS_PER_PAGE;
 	private doneKeys = new Set<string>();
-	private readonly categoryColorMap: Record<string, string> = {
-		[REMINDER_CATEGORY_WORK]: REMINDER_CATEGORY_COLOR_WORK,
-		[REMINDER_CATEGORY_PERSONAL]: REMINDER_CATEGORY_COLOR_PERSONAL,
-		[REMINDER_CATEGORY_UTILITY]: REMINDER_CATEGORY_COLOR_UTILITY,
-		[REMINDER_CATEGORY_OTHER]: REMINDER_CATEGORY_COLOR_OTHER
-	};
-
 	protected loading = true;
 	protected items: ReminderItem[] = [];
 	protected page = 0;

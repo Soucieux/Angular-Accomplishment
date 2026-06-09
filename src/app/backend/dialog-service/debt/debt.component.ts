@@ -19,8 +19,7 @@ import {
 	DEBT_DIALOG_PLACEHOLDER_NAME,
 	DEBT_DIALOG_TITLE
 } from '../../../common/app.constant';
-import { NewDebtData } from '../../../fontend/debt/debt.model';
-import { CATEGORY_OPTIONS } from './debt.model';
+import { DEBT_CATEGORY_DEFS, NewDebtData } from '../../../fontend/debt/debt.model';
 
 @Component({
 	selector: 'add-debt-dialog',
@@ -46,7 +45,7 @@ export class AddDebtDialogComponent {
 	protected readonly DEBT_DIALOG_LABEL_CURRENCY_CAD = DEBT_DIALOG_LABEL_CURRENCY_CAD;
 	protected readonly DEBT_CURRENCY_CNY = DEBT_CURRENCY_CNY;
 	protected readonly DEBT_CURRENCY_CAD = DEBT_CURRENCY_CAD;
-	protected readonly CATEGORY_OPTIONS = CATEGORY_OPTIONS;
+	protected readonly DEBT_CATEGORY_DEFS = DEBT_CATEGORY_DEFS;
 
 	protected isEditMode = false;
 	protected visible = false;

@@ -800,7 +800,7 @@
 	animation: histIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .history-panel::-webkit-scrollbar {
-	width: 7px;
+	width: 8px;
 }
 .history-panel::-webkit-scrollbar-track {
 	background: transparent;

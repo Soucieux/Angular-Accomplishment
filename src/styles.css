@@ -87,8 +87,13 @@ body {
 body {
 	font-family: 'app-font';
 	user-select: none;
-	padding-top: env(safe-area-inset-top);
-	padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (display-mode: standalone) and (max-width: 900px) and (pointer: coarse) {
+	body {
+		padding-bottom: env(safe-area-inset-bottom);
+		background: linear-gradient(45deg, #fa61da 0%, #ff8891 50%, #ffcd5a 100%);
+	}
 }
 
 /* Browser UA stylesheets reset font-family on form elements to the system font,

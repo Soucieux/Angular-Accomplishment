@@ -1,3 +1,12 @@
+/** Shape of a quote record fetched from the database. */
+export interface QuoteRecord {
+	_openid?: string;
+	key?: string;
+	text?: string;
+	author?: string;
+	timestamp?: string;
+}
+
 /** Gradient pairs cycled through quote cards in the Resonance view. */
 export const RESONANCE_GRADIENTS: { from: string; to: string }[] = [
 	{ from: '#fdf2f4', to: '#fce4ec' },

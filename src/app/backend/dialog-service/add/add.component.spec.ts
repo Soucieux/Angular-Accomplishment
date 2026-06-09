@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 
-import { MOVIE_GENRES } from '../../../common/app.constant';
+import { MOVIE_GENRES } from '../../../fontend/entertainment/entertainment.model';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { AddDialogComponent } from './add.component';
 

@@ -35,15 +35,7 @@ import {
 	RESONANCE_SKELETON_COUNT
 } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
-import { RESONANCE_GRADIENTS } from './resonance.model';
-
-interface QuoteRecord {
-	_openid?: string;
-	key?: string;
-	text?: string;
-	author?: string;
-	timestamp?: string;
-}
+import { RESONANCE_GRADIENTS, QuoteRecord } from './resonance.model';
 
 @Component({
 	selector: 'resonance',

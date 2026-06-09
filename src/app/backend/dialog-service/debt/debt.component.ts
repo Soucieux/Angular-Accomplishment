@@ -4,10 +4,6 @@ import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Utilities } from '../../../common/app.utilities';
 import {
-	DEBT_CATEGORY_CARD,
-	DEBT_CATEGORY_HOME,
-	DEBT_CATEGORY_PERSON,
-	DEBT_CATEGORY_SHOPPING,
 	DEBT_CURRENCY_CAD,
 	DEBT_CURRENCY_CNY,
 	DEBT_DIALOG_LABEL_ADD,
@@ -21,21 +17,10 @@ import {
 	DEBT_DIALOG_LABEL_SAVE,
 	DEBT_DIALOG_PLACEHOLDER_AMOUNT,
 	DEBT_DIALOG_PLACEHOLDER_NAME,
-	DEBT_DIALOG_TITLE,
-	DEBT_CATEGORY_LABEL_CARD,
-	DEBT_CATEGORY_LABEL_PERSON,
-	DEBT_CATEGORY_LABEL_SHOPPING,
-	DEBT_CATEGORY_LABEL_HOME,
-	DEBT_CATEGORY_ICON_CARD,
-	DEBT_CATEGORY_ICON_PERSON,
-	DEBT_CATEGORY_ICON_SHOPPING,
-	DEBT_CATEGORY_ICON_HOME,
-	DEBT_CATEGORY_GRADIENT_CARD,
-	DEBT_CATEGORY_GRADIENT_PERSON,
-	DEBT_CATEGORY_GRADIENT_SHOPPING,
-	DEBT_CATEGORY_GRADIENT_HOME
+	DEBT_DIALOG_TITLE
 } from '../../../common/app.constant';
-import { DebtCategoryDef, NewDebtData } from '../../../fontend/debt/debt.model';
+import { NewDebtData } from '../../../fontend/debt/debt.model';
+import { CATEGORY_OPTIONS } from './debt.model';
 
 @Component({
 	selector: 'add-debt-dialog',
@@ -61,37 +46,12 @@ export class AddDebtDialogComponent {
 	protected readonly DEBT_DIALOG_LABEL_CURRENCY_CAD = DEBT_DIALOG_LABEL_CURRENCY_CAD;
 	protected readonly DEBT_CURRENCY_CNY = DEBT_CURRENCY_CNY;
 	protected readonly DEBT_CURRENCY_CAD = DEBT_CURRENCY_CAD;
-	protected readonly categoryOptions: DebtCategoryDef[] = [
-		{
-			key: DEBT_CATEGORY_CARD,
-			icon: DEBT_CATEGORY_ICON_CARD,
-			label: DEBT_CATEGORY_LABEL_CARD,
-			gradient: DEBT_CATEGORY_GRADIENT_CARD
-		},
-		{
-			key: DEBT_CATEGORY_PERSON,
-			icon: DEBT_CATEGORY_ICON_PERSON,
-			label: DEBT_CATEGORY_LABEL_PERSON,
-			gradient: DEBT_CATEGORY_GRADIENT_PERSON
-		},
-		{
-			key: DEBT_CATEGORY_SHOPPING,
-			icon: DEBT_CATEGORY_ICON_SHOPPING,
-			label: DEBT_CATEGORY_LABEL_SHOPPING,
-			gradient: DEBT_CATEGORY_GRADIENT_SHOPPING
-		},
-		{
-			key: DEBT_CATEGORY_HOME,
-			icon: DEBT_CATEGORY_ICON_HOME,
-			label: DEBT_CATEGORY_LABEL_HOME,
-			gradient: DEBT_CATEGORY_GRADIENT_HOME
-		}
-	];
+	protected readonly CATEGORY_OPTIONS = CATEGORY_OPTIONS;
 
 	protected isEditMode = false;
 	protected visible = false;
 	protected name = '';
-	protected selectedCategoryKey = DEBT_CATEGORY_CARD;
+	protected selectedCategoryKey = 'card';
 	protected amount = '';
 	protected dueDateModel: Date | null = null;
 	protected selectedCurrency = '';
@@ -133,7 +93,7 @@ export class AddDebtDialogComponent {
 		} else {
 			// Add mode: reset all fields and default due date to 30 days from now
 			this.name = '';
-			this.selectedCategoryKey = DEBT_CATEGORY_CARD;
+			this.selectedCategoryKey = 'card';
 			this.amount = '';
 			this.dueDateModel = new Date(Date.now() + 30 * 86400000);
 			this.selectedCurrency = '';

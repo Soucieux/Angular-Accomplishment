@@ -15,7 +15,6 @@ import {
 	NO_RATE,
 	GENRE_FAVOURITE,
 	SEARCH,
-	MOVIE_GENRES,
 	DIALOG_BTN_DELETE,
 	ENT_MSG_DELETE_CONFIRM_PREFIX,
 	ENT_DIALOG_TITLE_DELETE_MOVIE,
@@ -29,8 +28,6 @@ import {
 	ENT_SEARCH_PLACEHOLDER,
 	ENT_LABEL_FILMS,
 	ENT_LABEL_TO_WATCH,
-	ENT_CORK_PIN_COLORS,
-	ENT_CORK_ROTATIONS,
 	ENT_CORK_BLOCKS,
 	ENT_VTA_STYLE_ID,
 	ENT_VT_CLASS_LEAVING,
@@ -46,6 +43,7 @@ import {
 	ENT_LOG_UPDATE_FAVOURITE_FAILED
 } from '../../common/app.constant';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
+import { ENT_CORK_PIN_COLORS, ENT_CORK_ROTATIONS, MOVIE_GENRES } from './entertainment.model';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
 	ChangeDetectorRef,

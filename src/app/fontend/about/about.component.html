@@ -47,7 +47,7 @@
 		<!-- Section heading -->
 		<div class="section-head">
 			<h2 class="section-title">The Long Way Here</h2>
-			<span class="section-meta">{{ timeline.length }} milestones</span>
+			<span class="section-meta">{{ TIMELINE.length }} milestones</span>
 		</div>
 
 		<!-- Timeline -->
@@ -55,7 +55,7 @@
 			<div class="rail-bg"></div>
 			<div class="rail-fill" [style.height]="fillHeight()"></div>
 
-			@for (item of timeline; track item.date; let index = $index) {
+			@for (item of TIMELINE; track item.date; let index = $index) {
 				<div
 					#tlEntry
 					class="tl-entry"

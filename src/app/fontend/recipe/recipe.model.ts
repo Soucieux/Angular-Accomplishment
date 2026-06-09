@@ -1,48 +1,20 @@
-import {
-	RECIPE_CATEGORY_ALL,
-	RECIPE_CATEGORY_CHINESE,
-	RECIPE_CATEGORY_DESSERT,
-	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_WESTERN,
-	RECIPE_DROP_ABOVE,
-	RECIPE_DROP_BELOW,
-	RECIPE_EDITING_MODE_CREATE,
-	RECIPE_EDITING_MODE_EDIT,
-	RECIPE_ITYPE_CONDIMENT,
-	RECIPE_ITYPE_DAIRY,
-	RECIPE_ITYPE_EGG,
-	RECIPE_ITYPE_FRUIT,
-	RECIPE_ITYPE_FUNGI,
-	RECIPE_ITYPE_GRAIN,
-	RECIPE_ITYPE_HERB,
-	RECIPE_ITYPE_LIQUID,
-	RECIPE_ITYPE_MEAT,
-	RECIPE_ITYPE_NUT,
-	RECIPE_ITYPE_OIL,
-	RECIPE_ITYPE_SEAFOOD,
-	RECIPE_ITYPE_SEASONING,
-	RECIPE_ITYPE_SPICE,
-	RECIPE_ITYPE_SWEET,
-	RECIPE_ITYPE_VEGETABLE
-} from '../../common/app.constant';
-
 export type IngredientType =
-	| typeof RECIPE_ITYPE_VEGETABLE
-	| typeof RECIPE_ITYPE_MEAT
-	| typeof RECIPE_ITYPE_SEASONING
-	| typeof RECIPE_ITYPE_DAIRY
-	| typeof RECIPE_ITYPE_GRAIN
-	| typeof RECIPE_ITYPE_LIQUID
-	| typeof RECIPE_ITYPE_SPICE
-	| typeof RECIPE_ITYPE_SEAFOOD
-	| typeof RECIPE_ITYPE_EGG
-	| typeof RECIPE_ITYPE_NUT
-	| typeof RECIPE_ITYPE_FRUIT
-	| typeof RECIPE_ITYPE_OIL
-	| typeof RECIPE_ITYPE_HERB
-	| typeof RECIPE_ITYPE_FUNGI
-	| typeof RECIPE_ITYPE_SWEET
-	| typeof RECIPE_ITYPE_CONDIMENT;
+	| 'veg'
+	| 'meat'
+	| 'seas'
+	| 'dairy'
+	| 'grain'
+	| 'liq'
+	| 'spice'
+	| 'seafood'
+	| 'egg'
+	| 'nut'
+	| 'fruit'
+	| 'oil'
+	| 'herb'
+	| 'fungi'
+	| 'sweet'
+	| 'condiment';
 
 export interface TypeTab {
 	id: IngredientType;
@@ -63,25 +35,6 @@ export interface IngredientGroup {
 	label: string;
 	items: Ingredient[];
 }
-
-export const MASTER_TYPE_TABS: TypeTab[] = [
-	{ id: RECIPE_ITYPE_VEGETABLE, emoji: '🥬', label: 'Vegetables' },
-	{ id: RECIPE_ITYPE_MEAT, emoji: '🥩', label: 'Meat' },
-	{ id: RECIPE_ITYPE_SEASONING, emoji: '🧂', label: 'Seasoning' },
-	{ id: RECIPE_ITYPE_DAIRY, emoji: '🧈', label: 'Dairy' },
-	{ id: RECIPE_ITYPE_GRAIN, emoji: '🌾', label: 'Grain' },
-	{ id: RECIPE_ITYPE_LIQUID, emoji: '💧', label: 'Liquid' },
-	{ id: RECIPE_ITYPE_SPICE, emoji: '🌶️', label: 'Spice' },
-	{ id: RECIPE_ITYPE_SEAFOOD, emoji: '🦐', label: 'Seafood' },
-	{ id: RECIPE_ITYPE_EGG, emoji: '🥚', label: 'Eggs' },
-	{ id: RECIPE_ITYPE_NUT, emoji: '🥜', label: 'Nuts' },
-	{ id: RECIPE_ITYPE_FRUIT, emoji: '🍎', label: 'Fruit' },
-	{ id: RECIPE_ITYPE_OIL, emoji: '🫙', label: 'Oil' },
-	{ id: RECIPE_ITYPE_HERB, emoji: '🌿', label: 'Herb' },
-	{ id: RECIPE_ITYPE_FUNGI, emoji: '🍄', label: 'Fungi' },
-	{ id: RECIPE_ITYPE_SWEET, emoji: '🍯', label: 'Sweetener' },
-	{ id: RECIPE_ITYPE_CONDIMENT, emoji: '🥫', label: 'Condiment' }
-];
 
 export interface BadgeTag {
 	type: IngredientType;
@@ -140,45 +93,54 @@ export interface EditorGroup {
 	items: EditorIngredient[];
 }
 
+/** Union of valid editing modes for the recipe editor. */
+export type EditingMode = 'create' | 'edit';
+
+/** Union of valid drag-drop target positions. */
+export type DropPosition = 'above' | 'below';
+
+export const MASTER_TYPE_TABS: TypeTab[] = [
+	{ id: 'veg', emoji: '🥬', label: 'Vegetables' },
+	{ id: 'meat', emoji: '🥩', label: 'Meat' },
+	{ id: 'seas', emoji: '🧂', label: 'Seasoning' },
+	{ id: 'dairy', emoji: '🧈', label: 'Dairy' },
+	{ id: 'grain', emoji: '🌾', label: 'Grain' },
+	{ id: 'liq', emoji: '💧', label: 'Liquid' },
+	{ id: 'spice', emoji: '🌶️', label: 'Spice' },
+	{ id: 'seafood', emoji: '🦐', label: 'Seafood' },
+	{ id: 'egg', emoji: '🥚', label: 'Eggs' },
+	{ id: 'nut', emoji: '🥜', label: 'Nuts' },
+	{ id: 'fruit', emoji: '🍎', label: 'Fruit' },
+	{ id: 'oil', emoji: '🫙', label: 'Oil' },
+	{ id: 'herb', emoji: '🌿', label: 'Herb' },
+	{ id: 'fungi', emoji: '🍄', label: 'Fungi' },
+	{ id: 'sweet', emoji: '🍯', label: 'Sweetener' },
+	{ id: 'condiment', emoji: '🥫', label: 'Condiment' }
+];
+
 /**
  * All category options used by the list-view filter chips (includes "All").
- * When adding a new category, append its RECIPE_CATEGORY_* constant here
- * and also to RECIPE_EDITOR_CATEGORIES below.
- * See the full checklist in the RECIPE_BAND_* block inside app.constant.ts.
+ * When adding a new category, append its value here and also to
+ * RECIPE_EDITOR_CATEGORIES below.
  */
-export const RECIPE_CATEGORIES: string[] = [
-	RECIPE_CATEGORY_ALL,
-	RECIPE_CATEGORY_CHINESE,
-	RECIPE_CATEGORY_WESTERN,
-	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_DESSERT
-];
+export const RECIPE_CATEGORIES: string[] = ['All', 'Chinese', 'Western', 'Quick', 'Dessert'];
 
 /**
  * Category options available in the recipe editor dropdown (excludes "All").
- * Keep in sync with RECIPE_CATEGORIES above — every entry here must also
- * appear there (without RECIPE_CATEGORY_ALL).
+ * Keep in sync with RECIPE_CATEGORIES above.
  */
-export const RECIPE_EDITOR_CATEGORIES: string[] = [
-	RECIPE_CATEGORY_CHINESE,
-	RECIPE_CATEGORY_WESTERN,
-	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_DESSERT
-];
+export const RECIPE_EDITOR_CATEGORIES: string[] = ['Chinese', 'Western', 'Quick', 'Dessert'];
 
 /** The 7 ingredient types active in the editor by default when creating a new recipe. */
 export const RECIPE_EDITOR_DEFAULT_TYPES: IngredientType[] = [
-	RECIPE_ITYPE_VEGETABLE,
-	RECIPE_ITYPE_MEAT,
-	RECIPE_ITYPE_SEASONING,
-	RECIPE_ITYPE_DAIRY,
-	RECIPE_ITYPE_GRAIN,
-	RECIPE_ITYPE_LIQUID,
-	RECIPE_ITYPE_SPICE
+	'veg',
+	'meat',
+	'seas',
+	'dairy',
+	'grain',
+	'liq',
+	'spice'
 ];
 
-/** Union of valid editing modes for the recipe editor. */
-export type EditingMode = typeof RECIPE_EDITING_MODE_CREATE | typeof RECIPE_EDITING_MODE_EDIT;
-
-/** Union of valid drag-drop target positions. */
-export type DropPosition = typeof RECIPE_DROP_ABOVE | typeof RECIPE_DROP_BELOW;
+/** Available unit options for ingredient quantity input in the recipe editor. */
+export const RECIPE_UNIT_OPTIONS: string[] = ['g', 'kg', 'oz', 'lb', 'tsp', 'tbsp', 'cup', 'ml', 'L'];

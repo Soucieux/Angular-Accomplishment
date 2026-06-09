@@ -2,7 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
-import { RECIPE_CATEGORY_ALL, RECIPE_ITYPE_VEGETABLE, RECIPE_ITYPE_MEAT, RECIPE_UNIT_OPTIONS } from '../../common/app.constant';
+import { RECIPE_CATEGORY_ALL, RECIPE_ITYPE_VEGETABLE, RECIPE_ITYPE_MEAT } from '../../common/app.constant';
+import { RECIPE_UNIT_OPTIONS } from './recipe.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { IngredientType } from './recipe.model';
 import { RecipeComponent } from './recipe.component';

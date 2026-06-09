@@ -8,13 +8,14 @@
 	styleClass="itype-dialog"
 	appendTo="body"
 	(onHide)="onDialogClosed()">
-
 	<div class="itype-body">
 		<div class="itype-counter" [class.at-cap]="!canAddMore()">
 			<span class="material-symbols-outlined">category</span>
 			{{ draft.size }} / {{ RECIPE_EDITOR_TYPE_MAX }} selected
 		</div>
-		<p class="itype-hint">Choose which ingredient types appear in the recipe editor. At least one must be selected.</p>
+		<p class="itype-hint">
+			Choose which ingredient types appear in the recipe editor. At least one must be selected.
+		</p>
 		<div class="itype-grid">
 			@for (tab of masterTabs; track tab.id) {
 				@let isSelected = draft.has(tab.id);

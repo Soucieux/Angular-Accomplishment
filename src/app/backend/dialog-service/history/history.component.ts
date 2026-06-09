@@ -21,13 +21,7 @@ import {
 	HISTORY_STYLE_DELETED
 } from '../../../common/app.constant';
 import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';
-
-interface HistoryEntry {
-	key?: string;
-	id?: number;
-	message?: string;
-	status?: string;
-}
+import { HistoryEntry } from './history.model';
 
 @Component({
 	selector: 'history-dialog',

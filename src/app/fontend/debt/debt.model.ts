@@ -22,3 +22,9 @@ export interface DebtCategoryDef {
 	label: string;
 	gradient: string;
 }
+
+/** Short month names, January-first, for date formatting in the debt view. */
+export const MONTH_NAMES_SHORT: string[] = [
+	'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+	'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];

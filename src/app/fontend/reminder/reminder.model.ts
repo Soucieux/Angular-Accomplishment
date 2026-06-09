@@ -34,3 +34,6 @@ export interface NewItem {
 	link: string;
 	tag: string;
 }
+
+/** Tag categories available for reminder items. */
+export const REMINDER_KNOWN_CATEGORIES = ['Personal', 'Work', 'Utility', 'Other'] as const;

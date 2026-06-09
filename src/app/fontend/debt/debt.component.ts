@@ -48,7 +48,6 @@ import {
 	DEBT_VALUE_KEY_TYPE,
 	DIALOG_DEBT,
 	ERROR_PERMISSION_DENIED,
-	MONTH_NAMES_SHORT,
 	STATS_CAP_ACTIVITY_LOG,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
@@ -78,7 +77,7 @@ import {
 	DEBT_CATEGORY_GRADIENT_HOME,
 	DEBT_SKELETON_COUNT
 } from '../../common/app.constant';
-import { DebtCategoryDef, NewDebtData, PaymentEntry } from './debt.model';
+import { DebtCategoryDef, MONTH_NAMES_SHORT, NewDebtData, PaymentEntry } from './debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';

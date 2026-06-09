@@ -21,7 +21,7 @@ describe('AboutComponent', () => {
     });
 
     it('timeline contains 6 entries', () => {
-        expect((component as any).timeline.length).toBe(6);
+        expect((component as any).TIMELINE.length).toBe(6);
     });
 
     // ── fillHeight ─────────────────────────────────────────────────────────
@@ -39,14 +39,14 @@ describe('AboutComponent', () => {
 
         it('scales with the number of visible entries', () => {
             (component as any).maxSeen = 3;
-            (component as any).timeline = new Array(6);
+            (component as any).TIMELINE = new Array(6);
             const result = (component as any).fillHeight();
             // 3/6 = 0.5
             expect(result).toContain('0.5');
         });
 
         it('returns 1 proportion when all entries are visible', () => {
-            const count = (component as any).timeline.length;
+            const count = (component as any).TIMELINE.length;
             (component as any).maxSeen = count;
             const result = (component as any).fillHeight();
             expect(result).toContain('* 1');

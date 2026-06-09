@@ -1,19 +1,4 @@
 import { Injectable, OnDestroy, computed, signal } from '@angular/core';
-import {
-	HOME_GREETING_AFTERNOON,
-	HOME_GREETING_EVENING,
-	HOME_GREETING_MORNING,
-	HOME_GREETING_NIGHT,
-	HOME_LOCALE_EN_US,
-	HOME_PROGRESS_KEY_DAY,
-	HOME_PROGRESS_KEY_MONTH,
-	HOME_PROGRESS_KEY_WEEK,
-	HOME_PROGRESS_KEY_YEAR,
-	HOME_PROGRESS_LABEL_DAY,
-	HOME_PROGRESS_LABEL_MONTH,
-	HOME_PROGRESS_LABEL_WEEK,
-	HOME_PROGRESS_LABEL_YEAR
-} from '../../../common/app.constant';
 import { OrbitalAgendaItem, OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
 
 @Injectable()
@@ -55,12 +40,12 @@ export class OrbitalStore implements OnDestroy {
 	readonly greeting = computed(() => {
 		const hour = this.now().getHours();
 		return hour < 5
-			? HOME_GREETING_NIGHT
+			? 'Good night'
 			: hour < 12
-				? HOME_GREETING_MORNING
+				? 'Good morning'
 				: hour < 18
-					? HOME_GREETING_AFTERNOON
-					: HOME_GREETING_EVENING;
+					? 'Good afternoon'
+					: 'Good evening';
 	});
 
 	/**
@@ -69,7 +54,7 @@ export class OrbitalStore implements OnDestroy {
 	 * @returns A locale-formatted date string such as "Monday, June 6".
 	 */
 	readonly dateLong = computed(() =>
-		this.now().toLocaleDateString(HOME_LOCALE_EN_US, { weekday: 'long', month: 'long', day: 'numeric' })
+		this.now().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 	);
 
 	////////////////////// Below are progress ring computed values ////////////////
@@ -91,29 +76,29 @@ export class OrbitalStore implements OnDestroy {
 			((now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()) / 86400) * 100;
 		return [
 			{
-				key: HOME_PROGRESS_KEY_YEAR,
-				label: HOME_PROGRESS_LABEL_YEAR,
+				key: 'year',
+				label: 'Year',
 				percentage: Math.round((dayOfYear / daysInYear) * 100),
 				gradientStart: '#38bdf8',
 				gradientEnd: '#818cf8'
 			},
 			{
-				key: HOME_PROGRESS_KEY_MONTH,
-				label: HOME_PROGRESS_LABEL_MONTH,
+				key: 'month',
+				label: 'Month',
 				percentage: Math.round((now.getDate() / daysInMonth) * 100),
 				gradientStart: '#f97316',
 				gradientEnd: '#fbbf24'
 			},
 			{
-				key: HOME_PROGRESS_KEY_WEEK,
-				label: HOME_PROGRESS_LABEL_WEEK,
+				key: 'week',
+				label: 'Week',
 				percentage: Math.round((dayOfWeek / 7) * 100),
 				gradientStart: '#22c55e',
 				gradientEnd: '#059669'
 			},
 			{
-				key: HOME_PROGRESS_KEY_DAY,
-				label: HOME_PROGRESS_LABEL_DAY,
+				key: 'day',
+				label: 'Day',
 				percentage: Math.round(dayPercentage),
 				gradientStart: '#a78bfa',
 				gradientEnd: '#ec4899'
@@ -190,7 +175,7 @@ export class OrbitalStore implements OnDestroy {
 	readonly selectedDateLong = computed(() => {
 		const day = this._weekData()[this.selectedDayIndex()];
 		if (!day) return '';
-		return day.fullDate.toLocaleDateString(HOME_LOCALE_EN_US, {
+		return day.fullDate.toLocaleDateString('en-US', {
 			weekday: 'long',
 			month: 'short',
 			day: 'numeric'

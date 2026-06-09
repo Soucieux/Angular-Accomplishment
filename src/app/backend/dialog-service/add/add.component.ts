@@ -21,14 +21,9 @@ import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exi
 import { LOG } from '../../../common/app.logs';
 import { Checkbox } from 'primeng/checkbox';
 import { DialogService } from '../dialog.service';
-import { DIALOG_ERROR, ENT_MSG_ADD_DIALOG_SEARCH_FAILED, MOVIE_GENRES } from '../../../common/app.constant';
-
-interface AddMovieFormValue {
-	movieName?: string;
-	id?: string;
-	years?: string;
-	genres?: { genre: string };
-}
+import { DIALOG_ERROR, ENT_MSG_ADD_DIALOG_SEARCH_FAILED } from '../../../common/app.constant';
+import { AddMovieFormValue } from './add.model';
+import { MOVIE_GENRES } from '../../../fontend/entertainment/entertainment.model';
 
 @Component({
 	selector: 'add-dialog',

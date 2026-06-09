@@ -60,7 +60,6 @@ import {
 	REMINDER_ITEMS_PER_PAGE,
 	REMINDER_ROWS_PER_PAGE,
 	REMINDER_ITEM_MESSAGE,
-	REMINDER_KNOWN_CATEGORIES,
 	REMINDER_MSG_DELETE_CONFIRM,
 	REMINDER_PLACEHOLDER_LINK,
 	REMINDER_PLACEHOLDER_TAG,
@@ -78,7 +77,7 @@ import {
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS
 } from '../../common/app.constant';
-import { NewItem, ReminderDbRecord, ReminderValueKey, ReminderItem, TagEditSession } from './reminder.model';
+import { NewItem, REMINDER_KNOWN_CATEGORIES, ReminderDbRecord, ReminderValueKey, ReminderItem, TagEditSession } from './reminder.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';

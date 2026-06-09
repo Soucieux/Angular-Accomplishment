@@ -37,7 +37,6 @@ mat-drawer-content {
 /* Content layout on phone portrait — no left nav, bottom padding clears the floating dock */
 .nav-content-mobile {
 	margin: 4px !important;
-	padding-bottom: 130px;
 }
 
 /* In compact overlay mode the drawer floats above content — content takes full width */

@@ -6,148 +6,180 @@
 			[disableClose]="navMode === 'side' || navCompact"
 			[class.nav-collapsed]="navCollapsed && navMode !== 'over'"
 			[class.nav-no-transition]="!navReady">
-		<ul class="nav-list">
-			<li class="menu-group hide-on-narrow-or-mobile">
-				<button class="nav-toggle-btn" (click)="toggleNav()">
-					<span class="material-symbols-outlined nav-toggle-icon">
-						{{ (navCompact && compactOverlayOpen) ? 'close' : (navCollapsed ? 'menu' : 'menu_open') }}
-					</span>
-				</button>
-				<span class="nav-title hide-on-narrow-or-mobile">Menu</span>
-			</li>
-			<li class="nav-item">
-				<a
-					mat-button
-					class="nav-button"
-					matRipple
-					routerLink=""
-					routerLinkActive="nav-active"
-					[routerLinkActiveOptions]="{ exact: true }">
-					<span class="material-symbols-outlined nav-icon">home_app_logo</span>
-					<span class="nav-label hide-on-narrow-or-mobile">Home</span>
-				</a>
-			</li>
-			<li class="nav-item">
-				<a mat-button class="nav-button" matRipple routerLink="/nexus" routerLinkActive="nav-active">
-					<span class="material-symbols-outlined nav-icon">neurology</span>
-					<span class="nav-label hide-on-narrow-or-mobile">Nexus</span>
-				</a>
-			</li>
-			<li class="nav-item">
-				<a
-					mat-button
-					class="nav-button"
-					matRipple
-					routerLink="/resonance"
-					routerLinkActive="nav-active">
-					<span class="material-symbols-outlined nav-icon">format_quote</span>
-					<span class="nav-label hide-on-narrow-or-mobile">Resonance</span>
-				</a>
-			</li>
-			<li class="nav-item">
-				<a mat-button class="nav-button" matRipple routerLink="/recipe" routerLinkActive="nav-active">
-					<span class="material-symbols-outlined nav-icon">menu_book</span>
-					<span class="nav-label hide-on-narrow-or-mobile">Recipes</span>
-				</a>
-			</li>
-			<li class="nav-item">
-				<a
-					mat-button
-					class="nav-button"
-					matRipple
-					routerLink="/entertainment"
-					routerLinkActive="nav-active">
-					<span class="material-symbols-outlined nav-icon">live_tv</span>
-					<span class="nav-label hide-on-narrow-or-mobile">Entertainment</span>
-				</a>
-			</li>
-			<li class="nav-item">
-				<a
-					mat-button
-					class="nav-button"
-					matRipple
-					routerLink="/reminder"
-					routerLinkActive="nav-active">
-					<span class="material-symbols-outlined nav-icon">alarm</span>
-					<span class="nav-label hide-on-narrow-or-mobile">Reminder</span>
-				</a>
-			</li>
-			<li class="nav-item">
-				<a mat-button class="nav-button" matRipple routerLink="/debt" routerLinkActive="nav-active">
-					<span class="material-symbols-outlined nav-icon">account_balance</span>
-					<span class="nav-label hide-on-narrow-or-mobile">Debt Sonata</span>
-				</a>
-			</li>
-			<li class="nav-item">
-				<a mat-button class="nav-button" matRipple routerLink="/patch" routerLinkActive="nav-active">
-					<span class="material-symbols-outlined nav-icon">note_stack</span>
-					<span class="nav-label hide-on-narrow-or-mobile">Patch Notes</span>
-				</a>
-			</li>
-			<li class="nav-item">
-				<a mat-button class="nav-button" matRipple routerLink="/about" routerLinkActive="nav-active">
-					<span class="material-symbols-outlined nav-icon">badge</span>
-					<span class="nav-label hide-on-narrow-or-mobile">About</span>
-				</a>
-			</li>
-			@if (currentUser$ | async; as user) {
-				<li class="account-menu-container">
-					<div class="account-row-wrapper" (focusout)="handleAccountMenuDismiss($event)">
-						@if (accountMenuOpen) {
-							<div class="account-menu-popover hide-on-narrow-or-mobile">
-								<div class="account-menu-popover-header">
-									<span class="account-menu-popover-avatar">{{
-										getUserInitial(user)
-									}}</span>
-									<div class="account-menu-popover-name">
-										{{ getUserDisplayName(user) }}
-									</div>
-								</div>
-								<button
-									class="account-menu-popover-item account-menu-popover-item--danger"
-									(click)="logout()">
-									<span class="material-symbols-outlined">logout</span>Sign out
-								</button>
-							</div>
-						}
-						<button
-							class="account-row-button"
-							[class.account-row-button--open]="accountMenuOpen"
-							(click)="handleAccountButtonClick()">
-							<span class="account-row-avatar-wrapper hide-on-narrow-or-mobile">
-								<span class="account-row-avatar">{{ getUserInitial(user) }}</span>
-								<span class="account-row-presence-dot"></span>
-							</span>
-							<span class="material-symbols-outlined account-row-narrow-icon">logout</span>
-							<span class="account-row-meta hide-on-narrow-or-mobile">
-								<span class="account-row-name">{{ getUserDisplayName(user) }}</span>
-								<span class="account-row-status">Online</span>
-							</span>
-							<span class="material-symbols-outlined account-row-chevron hide-on-narrow-or-mobile">{{
-								accountMenuOpen ? 'expand_more' : 'expand_less'
-							}}</span>
-						</button>
-					</div>
-				</li>
-			} @else {
-				<li class="account-menu-container">
-					<button
-						class="account-row-button account-row-button--signed-out"
-						(click)="navigateToLogin()">
-						<span class="account-row-avatar-wrapper hide-on-narrow-or-mobile">
-							<span class="account-row-avatar account-row-avatar--ghost">
-								<span class="material-symbols-outlined">person</span>
-							</span>
+			<ul class="nav-list">
+				<li class="menu-group hide-on-narrow-or-mobile">
+					<button class="nav-toggle-btn" (click)="toggleNav()">
+						<span class="material-symbols-outlined nav-toggle-icon">
+							{{
+								navCompact && compactOverlayOpen
+									? 'close'
+									: navCollapsed
+										? 'menu'
+										: 'menu_open'
+							}}
 						</span>
-						<span class="account-row-meta hide-on-narrow-or-mobile">
-							<span class="account-row-name">Sign in</span>
-							<span class="account-row-status">Offline</span>
-						</span>
-						<span class="material-symbols-outlined account-row-login-icon">login</span>
 					</button>
+					<span class="nav-title hide-on-narrow-or-mobile">Menu</span>
 				</li>
-			}
-		</ul>
+				<li class="nav-item">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink=""
+						routerLinkActive="nav-active"
+						[routerLinkActiveOptions]="{ exact: true }">
+						<span class="material-symbols-outlined nav-icon">home_app_logo</span>
+						<span class="nav-label hide-on-narrow-or-mobile">Home</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/nexus"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">neurology</span>
+						<span class="nav-label hide-on-narrow-or-mobile">Nexus</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/resonance"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">format_quote</span>
+						<span class="nav-label hide-on-narrow-or-mobile">Resonance</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/recipe"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">menu_book</span>
+						<span class="nav-label hide-on-narrow-or-mobile">Recipes</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/entertainment"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">live_tv</span>
+						<span class="nav-label hide-on-narrow-or-mobile">Entertainment</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/reminder"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">alarm</span>
+						<span class="nav-label hide-on-narrow-or-mobile">Reminder</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/debt"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">account_balance</span>
+						<span class="nav-label hide-on-narrow-or-mobile">Debt Sonata</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/patch"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">note_stack</span>
+						<span class="nav-label hide-on-narrow-or-mobile">Patch Notes</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/about"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">badge</span>
+						<span class="nav-label hide-on-narrow-or-mobile">About</span>
+					</a>
+				</li>
+				@if (currentUser$ | async; as user) {
+					<li class="account-menu-container">
+						<div class="account-row-wrapper" (focusout)="handleAccountMenuDismiss($event)">
+							@if (accountMenuOpen) {
+								<div class="account-menu-popover hide-on-narrow-or-mobile">
+									<div class="account-menu-popover-header">
+										<span class="account-menu-popover-avatar">{{
+											getUserInitial(user)
+										}}</span>
+										<div class="account-menu-popover-name">
+											{{ getUserDisplayName(user) }}
+										</div>
+									</div>
+									<button
+										class="account-menu-popover-item account-menu-popover-item--danger"
+										(click)="logout()">
+										<span class="material-symbols-outlined">logout</span>Sign out
+									</button>
+								</div>
+							}
+							<button
+								class="account-row-button"
+								[class.account-row-button--open]="accountMenuOpen"
+								(click)="handleAccountButtonClick()">
+								<span class="account-row-avatar-wrapper hide-on-narrow-or-mobile">
+									<span class="account-row-avatar">{{ getUserInitial(user) }}</span>
+									<span class="account-row-presence-dot"></span>
+								</span>
+								<span class="material-symbols-outlined account-row-narrow-icon">logout</span>
+								<span class="account-row-meta hide-on-narrow-or-mobile">
+									<span class="account-row-name">{{ getUserDisplayName(user) }}</span>
+									<span class="account-row-status">Online</span>
+								</span>
+								<span
+									class="material-symbols-outlined account-row-chevron hide-on-narrow-or-mobile"
+									>{{ accountMenuOpen ? 'expand_more' : 'expand_less' }}</span
+								>
+							</button>
+						</div>
+					</li>
+				} @else {
+					<li class="account-menu-container">
+						<button
+							class="account-row-button account-row-button--signed-out"
+							(click)="navigateToLogin()">
+							<span class="account-row-avatar-wrapper hide-on-narrow-or-mobile">
+								<span class="account-row-avatar account-row-avatar--ghost">
+									<span class="material-symbols-outlined">person</span>
+								</span>
+							</span>
+							<span class="account-row-meta hide-on-narrow-or-mobile">
+								<span class="account-row-name">Sign in</span>
+								<span class="account-row-status">Offline</span>
+							</span>
+							<span class="material-symbols-outlined account-row-login-icon">login</span>
+						</button>
+					</li>
+				}
+			</ul>
 		</mat-drawer>
 	}
 	<mat-drawer-content

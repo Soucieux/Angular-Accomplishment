@@ -3,6 +3,7 @@ import {
 	ChangeDetectionStrategy,
 	ChangeDetectorRef,
 	Component,
+	ElementRef,
 	Inject,
 	OnDestroy,
 	OnInit,
@@ -72,6 +73,7 @@ import {
 	NEXUS_MSG_NAME_REQUIRED,
 	NEXUS_MSG_SAVE_CATEGORY_FAILED,
 	NEXUS_MSG_SAVE_LINK_FAILED,
+	NEXUS_MSG_SAVING_CATEGORY,
 	NEXUS_MSG_SAVING_LINK,
 	SUCCESS,
 	TOAST_ERROR,
@@ -104,6 +106,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
+	@ViewChild('categoryTabs') private categoryTabsEl?: ElementRef<HTMLElement>;
 
 	protected readonly NEXUS_CATEGORY_ALL = NEXUS_CATEGORY_ALL;
 	protected readonly NEXUS_LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
@@ -236,6 +239,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		document
 			.querySelectorAll<HTMLElement>('.container-nexus')
 			.forEach((el) => Utilities.attachScrollAutoHide(el));
+		Utilities.attachScrollAutoHide(this.categoryTabsEl?.nativeElement);
 	}
 
 	/**
@@ -805,7 +809,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	/**
 	 * Opens a blocking progress dialog that prevents user interaction while the
-	 * given async callback executes. Used during link save and update flows.
+	 * given async callback executes. Used during link save, update, and category save flows.
 	 *
 	 * @param callback - The async operation to run while the dialog is shown.
 	 * @param message - The status message displayed inside the dialog.
@@ -898,37 +902,40 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Validates the category form and persists the add or update to CloudBase.
+	 * Validates the category form, closes the inline dialog, then delegates the
+	 * add or update to CloudBase inside a block dialog to prevent duplicate submissions.
 	 * Shows a warning toast when the name field is empty.
 	 */
-	protected async saveCategoryDialog(): Promise<void> {
+	protected saveCategoryDialog(): void {
 		const { name, color } = this.categoryForm;
 		if (!name.trim()) {
 			this.dialogService.showToast(TOAST_WARN, NEXUS_MSG_NAME_REQUIRED);
 			return;
 		}
-		try {
-			if (this.editingCategory) {
-				await this.databaseService.updateLinkCategory(this.editingCategory._id, {
-					name: name.trim(),
-					color
-				});
-				LOG.info(this.className, `Category updated: ${name}`);
-				this.dialogService.showToast(SUCCESS, NEXUS_MSG_CATEGORY_UPDATED);
-			} else {
-				await this.databaseService.addLinkCategory({
-					name: name.trim(),
-					color,
-					order: this.categories.length
-				});
-				LOG.info(this.className, `Category added: ${name}`);
-				this.dialogService.showToast(SUCCESS, NEXUS_MSG_CATEGORY_ADDED);
+		this.showCategoryDialog = false;
+		this.openBlockDialog(async () => {
+			try {
+				if (this.editingCategory) {
+					await this.databaseService.updateLinkCategory(this.editingCategory._id, {
+						name: name.trim(),
+						color
+					});
+					LOG.info(this.className, `Category updated: ${name}`);
+					this.dialogService.showToast(SUCCESS, NEXUS_MSG_CATEGORY_UPDATED);
+				} else {
+					await this.databaseService.addLinkCategory({
+						name: name.trim(),
+						color,
+						order: this.categories.length
+					});
+					LOG.info(this.className, `Category added: ${name}`);
+					this.dialogService.showToast(SUCCESS, NEXUS_MSG_CATEGORY_ADDED);
+				}
+			} catch (error) {
+				LOG.error(this.className, NEXUS_MSG_SAVE_CATEGORY_FAILED, error as Error);
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL);
 			}
-			this.showCategoryDialog = false;
-		} catch (error) {
-			LOG.error(this.className, NEXUS_MSG_SAVE_CATEGORY_FAILED, error as Error);
-			this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL);
-		}
+		}, NEXUS_MSG_SAVING_CATEGORY).catch(() => {});
 	}
 
 	/**

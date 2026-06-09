@@ -449,6 +449,7 @@ export const RECIPE_EDITOR_TYPE_MAX = 9;
 export const NEXUS_MSG_LINK_UPDATED = 'Link updated';
 export const NEXUS_MSG_LINK_SAVED = 'Link saved';
 export const NEXUS_MSG_SAVING_LINK = 'Saving link...';
+export const NEXUS_MSG_SAVING_CATEGORY = 'Saving category...';
 export const NEXUS_MSG_LINK_SAVE_FAILED_DETAIL = 'Could not save the link. Please try again.';
 export const NEXUS_MSG_LINK_DELETED = 'Link deleted';
 export const NEXUS_MSG_LINK_DELETE_FAILED_DETAIL = 'Could not delete the link. Please try again.';

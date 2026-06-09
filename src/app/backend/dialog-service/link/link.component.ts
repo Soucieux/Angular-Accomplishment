@@ -156,13 +156,14 @@ export class LinkDialogComponent implements OnInit, OnDestroy {
 	 */
 	protected onSubmit(): void {
 		if (!this.isValid) return;
-		this.submitCallback?.({
+		const formData: NewLinkData = {
 			url: Utilities.normalizeUrl(this.url),
 			title: this.title.trim(),
 			category: this.category,
 			isPinned: this.isPinned
-		});
+		};
 		this.onDialogClosed();
+		this.submitCallback?.(formData);
 	}
 
 	/**

@@ -174,7 +174,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	 * Subscribes to the auth state observable to keep the current user up to date.
 	 */
 	ngOnInit(): void {
-		this.currentUser$ = this.authService.getCurrentUser();
+		this.currentUser$ = this.authService.currentUser$;
 	}
 
 	/**

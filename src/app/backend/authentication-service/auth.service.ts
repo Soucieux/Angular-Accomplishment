@@ -27,6 +27,10 @@ export class AuthService {
 	private cloudbaseAuth: any;
 	private firebaseAuth!: Auth;
 	private cloudbaseUserSubject = new BehaviorSubject<any>(null);
+	private firebaseUserSubject = new BehaviorSubject<User | null>(null);
+	public readonly currentUser$: Observable<any> = Utilities.getCurrentCountry() === CN
+		? this.cloudbaseUserSubject.asObservable()
+		: this.firebaseUserSubject.asObservable();
 	constructor(
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
 		private router: Router,
@@ -69,7 +73,12 @@ export class AuthService {
 
 			// onAuthStateChanged emits the user continuously
 			const unsubscribe = onAuthStateChanged(this.firebaseAuth, (user) => {
-				if (user) this.utilities.setIsUserAlive(true);
+				if (user) {
+					this.utilities.setIsUserAlive(true);
+				} else {
+					this.ngZone.run(() => this.utilities.setIsUserAlive(false));
+				}
+				this.firebaseUserSubject.next(user);
 				observer.next(user);
 			});
 
@@ -240,6 +249,7 @@ export class AuthService {
 					// Anonymous or missing user — ensure dashboard stays hidden.
 					this.cloudbaseUserSubject.next(null);
 					CloudbaseService.setLoginState(false);
+					this.ngZone.run(() => this.utilities.setIsUserAlive(false));
 				}
 			})
 			.catch(() => {
@@ -247,6 +257,7 @@ export class AuthService {
 				this.cloudbaseUserSubject.next(null);
 				CloudbaseService.markAuthReady();
 				CloudbaseService.setLoginState(false);
+				this.ngZone.run(() => this.utilities.setIsUserAlive(false));
 			});
 		return this.cloudbaseUserSubject.asObservable();
 	}

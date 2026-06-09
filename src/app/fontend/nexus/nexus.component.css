@@ -1334,11 +1334,36 @@
 		width: 100%;
 		overflow-x: auto;
 		flex-wrap: nowrap;
-		scrollbar-width: none;
+		padding-bottom: 8px;
+		scrollbar-width: thin;
+		scrollbar-color: transparent transparent;
+		transition: scrollbar-color 0.4s ease;
 	}
 
 	.category-tabs::-webkit-scrollbar {
-		display: none;
+		height: 3px;
+	}
+
+	.category-tabs::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.category-tabs::-webkit-scrollbar-thumb {
+		background: transparent;
+		border-radius: 999px;
+		transition: background 0.4s ease;
+	}
+
+	.category-tabs.is-scrolling {
+		scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+	}
+
+	.category-tabs.is-scrolling::-webkit-scrollbar-thumb {
+		background: rgba(213, 51, 105, 0.28);
+	}
+
+	.category-tabs.is-scrolling::-webkit-scrollbar-thumb:hover {
+		background: #d53369;
 	}
 
 	.category-tab {

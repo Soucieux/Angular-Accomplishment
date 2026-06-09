@@ -207,9 +207,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 */
 	protected toggleNav(): void {
 		if (this.navCompact) {
-			if (this.navMode === 'over') {
+			if (this.compactOverlayOpen) {
 				this.navMode = 'side';
 				this.compactOverlayOpen = false;
+				this.accountMenuOpen = false;
 			} else {
 				this.navMode = 'over';
 				this.compactOverlayOpen = true;
@@ -226,15 +227,17 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Handles the drawer opened-change event emitted by Angular Material.
-	 * Resets to side mode when the overlay is dismissed via backdrop or Escape.
+	 * Handles clicks on the drawer container. When the compact overlay is open and
+	 * the click lands on the Material backdrop element, delegates to toggleNav so
+	 * the drawer transitions back to the collapsed side strip — identical to pressing
+	 * the top menu button.
 	 *
-	 * @param opened - The new opened state emitted by the drawer.
+	 * @param event - The MouseEvent from the container click.
 	 */
-	protected handleDrawerOpenedChange(opened: boolean): void {
-		if (this.navMode === 'over' && !opened) {
-			this.navMode = 'side';
-			this.compactOverlayOpen = false;
+	protected onContainerClick(event: MouseEvent): void {
+		if (!this.navCompact || !this.compactOverlayOpen) return;
+		if ((event.target as HTMLElement).classList.contains('mat-drawer-backdrop')) {
+			this.toggleNav();
 		}
 	}
 

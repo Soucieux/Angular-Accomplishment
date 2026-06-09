@@ -448,7 +448,7 @@ li:nth-child(10) .nav-icon {
 	color: rgba(100, 116, 139, 0.85);
 }
 
-/* ── Phone portrait — bottom navigation ─────────────────────────────────── */
+/* ── Mobile only bottom navigation ─────────────────────────────────── */
 @media (max-width: 900px) and (pointer: coarse) {
 	/* Hide the left nav before JS runs to prevent the SSR hydration flash */
 	mat-drawer {
@@ -457,7 +457,13 @@ li:nth-child(10) .nav-icon {
 
 	mat-drawer-content {
 		margin: 4px !important;
-		padding-bottom: 130px;
+	}
+}
+
+/* ── iOS PWA — extend gradient behind the status-bar notch ──────────── */
+@media (display-mode: standalone) and (max-width: 900px) and (pointer: coarse) {
+	mat-drawer-container {
+		padding-top: env(safe-area-inset-top);
 	}
 }
 

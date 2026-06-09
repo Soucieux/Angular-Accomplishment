@@ -1,17 +1,16 @@
-<mat-drawer-container [hasBackdrop]="navMode === 'over'">
+<mat-drawer-container [hasBackdrop]="navMode === 'over'" (click)="onContainerClick($event)">
 	@if (!navMobile) {
 		<mat-drawer
 			[mode]="navMode"
 			[opened]="navMode === 'side' || compactOverlayOpen"
-			(openedChange)="handleDrawerOpenedChange($event)"
-			[disableClose]="navMode === 'side'"
+			[disableClose]="navMode === 'side' || navCompact"
 			[class.nav-collapsed]="navCollapsed && navMode !== 'over'"
 			[class.nav-no-transition]="!navReady">
 		<ul class="nav-list">
 			<li class="menu-group hide-on-narrow-or-mobile">
 				<button class="nav-toggle-btn" (click)="toggleNav()">
 					<span class="material-symbols-outlined nav-toggle-icon">
-						{{ (navCompact && navMode === 'over') ? 'close' : (navCollapsed ? 'menu' : 'menu_open') }}
+						{{ (navCompact && compactOverlayOpen) ? 'close' : (navCollapsed ? 'menu' : 'menu_open') }}
 					</span>
 				</button>
 				<span class="nav-title hide-on-narrow-or-mobile">Menu</span>

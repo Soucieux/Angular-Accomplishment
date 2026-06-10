@@ -9,6 +9,7 @@ import {
 	REMINDER_VALUE_KEY_LINK,
 	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
+	REMINDER_CATEGORY_PERSONAL,
 	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING
 } from '../../common/app.constant';
@@ -21,9 +22,9 @@ function makeRecord(
 	text = 'hello',
 	date: string | null = null,
 	link: string | null = null,
-	tags: string[] = []
+	tag = ''
 ) {
-	return { key, _openid: 'uid1', text, date, link, tags };
+	return { key, _openid: 'uid1', text, date, link, tag };
 }
 
 /** Minimal view-model item factory. */
@@ -32,9 +33,9 @@ function makeItem(
 	text = 'hello',
 	date: string | null = null,
 	link: string | null = null,
-	tags: string[] = []
+	tag = ''
 ): ReminderItem {
-	return { key, _openid: 'uid1', text, date, link, tags };
+	return { key, _openid: 'uid1', text, date, link, tag };
 }
 
 describe('ReminderComponent', () => {
@@ -89,31 +90,14 @@ describe('ReminderComponent', () => {
 		component = fixture.componentInstance;
 	});
 
-	// ── allTags ──────────────────────────────────────────────────────────────
-
-	describe('allTags', () => {
-		it('returns empty array when no items have tags', () => {
-			(component as any).items = [makeItem('k1')];
-			expect(component['allTags']).toEqual([]);
-		});
-
-		it('returns sorted deduplicated tags across all items', () => {
-			(component as any).items = [
-				makeItem('k1', 'a', null, null, ['banana', 'apple']),
-				makeItem('k2', 'b', null, null, ['apple', 'cherry'])
-			];
-			expect(component['allTags']).toEqual(['apple', 'banana', 'cherry']);
-		});
-	});
-
 	// ── filteredItems ─────────────────────────────────────────────────────────
 
 	describe('filteredItems', () => {
 		beforeEach(() => {
 			(component as any).items = [
-				makeItem('k1', 'a', null, null, ['work']),
-				makeItem('k2', 'b', null, null, ['personal']),
-				makeItem('k3', 'c', null, null, ['work', 'personal'])
+				makeItem('k1', 'a', null, null, 'work'),
+				makeItem('k2', 'b', null, null, 'personal'),
+				makeItem('k3', 'c', null, null, 'work')
 			];
 		});
 
@@ -311,7 +295,7 @@ describe('ReminderComponent', () => {
 
 	describe('filteredCountLabel', () => {
 		it('returns zero-padded filtered item count', () => {
-			(component as any).items = [makeItem('k1', 'a', null, null, ['work']), makeItem('k2', 'b')];
+			(component as any).items = [makeItem('k1', 'a', null, null, 'work'), makeItem('k2', 'b')];
 			(component as any).tagFilter = new Set(['work']);
 			expect(component['filteredCountLabel']).toBe('01');
 		});
@@ -360,15 +344,15 @@ describe('ReminderComponent', () => {
 		});
 
 		it('resets newItem after a successful add', async () => {
-			(component as any).newItem = { text: 'hello', date: null, link: '', tags: ['tag1'] };
+			(component as any).newItem = { text: 'hello', date: null, link: '', tag: 'tag1' };
 			await (component as any).addNewTextOnly();
 			expect((component as any).newItem.text).toBe('');
-			expect((component as any).newItem.tags).toEqual([]);
+			expect((component as any).newItem.tag).toBe(REMINDER_CATEGORY_PERSONAL);
 		});
 
 		it('calls handleError when the database throws', async () => {
 			mockDb.addNewRecordToReminderTable.and.returnValue(Promise.reject(new Error('fail')));
-			(component as any).newItem = { text: 'hello', date: null, link: '', tags: [] };
+			(component as any).newItem = { text: 'hello', date: null, link: '', tag: '' };
 			await (component as any).addNewTextOnly();
 			expect(mockDialogService.handleError).toHaveBeenCalled();
 		});
@@ -467,7 +451,7 @@ describe('ReminderComponent', () => {
 
 	describe('startTagEdit', () => {
 		it('opens a tag-edit session for an existing tag', () => {
-			const item = makeItem('k1', 'text', null, null, ['work']);
+			const item = makeItem('k1', 'text', null, null, 'work');
 			(component as any).startTagEdit(item, 0);
 			expect((component as any).tagEditSession).toEqual(
 				jasmine.objectContaining({ item, index: 0, tagText: 'work', isNewItem: false })
@@ -520,42 +504,36 @@ describe('ReminderComponent', () => {
 	});
 
 	describe('onTagUpdate', () => {
-		it('adds a new tag when index is -1 and text is non-empty', async () => {
+		it('sets the tag when index is -1 and text is non-empty', async () => {
 			(component as any).items = [makeItem('k1')];
 			const item = (component as any).items[0];
 			(component as any).tagEditSession = { item, index: -1, isNewItem: false, tagText: 'newtag' };
 			await (component as any).onTagUpdate();
-			expect(item.tags).toContain('newtag');
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
-				'k1',
-				REMINDER_VALUE_KEY_TAG,
-				jasmine.arrayContaining(['newtag'])
-			);
+			expect(item.tag).toBe('newtag');
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, 'newtag');
 		});
 
-		it('removes a tag when editing text is empty', async () => {
-			(component as any).items = [makeItem('k1', 'text', null, null, ['work', 'personal'])];
+		it('clears the tag when editing text is empty', async () => {
+			(component as any).items = [makeItem('k1', 'text', null, null, 'work')];
 			const item = (component as any).items[0];
 			(component as any).tagEditSession = { item, index: 0, isNewItem: false, tagText: '' };
 			await (component as any).onTagUpdate();
-			expect(item.tags).not.toContain('work');
+			expect(item.tag).toBe('');
 		});
 	});
 
 	describe('removeExistingCardTag', () => {
-		it('removes the tag at the given index and persists to DB', async () => {
-			(component as any).items = [makeItem('k1', 'text', null, null, ['work', 'personal'])];
+		it('clears the tag and persists to DB', async () => {
+			(component as any).items = [makeItem('k1', 'text', null, null, 'work')];
 			const item = (component as any).items[0];
 			await (component as any).removeExistingCardTag(0, item);
-			expect(item.tags).toEqual(['personal']);
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, [
-				'personal'
-			]);
+			expect(item.tag).toBe('');
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, '');
 		});
 
 		it('does nothing when permission is denied', async () => {
 			mockDialogService.ensurePermission.and.returnValue(false);
-			(component as any).items = [makeItem('k1', 'text', null, null, ['work'])];
+			(component as any).items = [makeItem('k1', 'text', null, null, 'work')];
 			const item = (component as any).items[0];
 			await (component as any).removeExistingCardTag(0, item);
 			expect(mockDb.updateReminderTable).not.toHaveBeenCalled();
@@ -566,7 +544,7 @@ describe('ReminderComponent', () => {
 
 	describe('startNewItemTagEdit', () => {
 		it('opens a new-item tag-edit session', () => {
-			(component as any).newItem = { text: '', date: null, link: '', tags: ['work'] };
+			(component as any).newItem = { text: '', date: null, link: '', tag: 'work' };
 			(component as any).startNewItemTagEdit(0);
 			expect((component as any).tagEditSession).toEqual(
 				jasmine.objectContaining({ isNewItem: true, index: 0, tagText: 'work' })
@@ -590,9 +568,9 @@ describe('ReminderComponent', () => {
 
 	describe('removeNewItemTag', () => {
 		it('removes the tag at the given index from newItem', () => {
-			(component as any).newItem = { text: '', date: null, link: '', tags: ['work', 'personal'] };
+			(component as any).newItem = { text: '', date: null, link: '', tag: 'work' };
 			(component as any).removeNewItemTag(0);
-			expect((component as any).newItem.tags).toEqual(['personal']);
+			expect((component as any).newItem.tag).toBe('');
 		});
 	});
 

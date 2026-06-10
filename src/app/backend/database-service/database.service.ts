@@ -24,7 +24,7 @@ export abstract class DatabaseService {
 	 */
 	protected buildHistoryMessage(status: string, timestamp: string, movieItemVO?: MovieItemVO): string {
 		if (movieItemVO) {
-			const rate = movieItemVO.getMovieRate() == 0 ? NO_RATE : movieItemVO.getMovieRate();
+			const rate = movieItemVO.getMovieRate() === 0 ? NO_RATE : movieItemVO.getMovieRate();
 			return `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${rate}) was ${status} on ${timestamp}`;
 		}
 		return `New rate search was started on ${timestamp}`;

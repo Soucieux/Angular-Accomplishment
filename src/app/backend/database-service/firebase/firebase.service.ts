@@ -17,8 +17,7 @@ import {
 	STATS_FIELD_RECENT_ACTIVITIES,
 	ACTIVITY_SOURCE_MOVIE,
 	ACTIVITY_SOURCE_REMINDER,
-	ACTIVITY_SOURCE_RESONANCE,
-	ACTIVITY_SOURCE_PATCH
+	ACTIVITY_SOURCE_RESONANCE
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';

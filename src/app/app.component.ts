@@ -21,7 +21,6 @@ import { ToastModule } from 'primeng/toast';
 import { Utilities } from './common/app.utilities';
 import {
 	APP_BREAKPOINT_COMPACT,
-	APP_BREAKPOINT_NARROW,
 	CN,
 	COMPONENT_DESTROY,
 	DIALOG_BTN_SIGN_OUT,

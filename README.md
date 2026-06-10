@@ -3,9 +3,9 @@
 > A private, self-designed personal management suite built with **Angular 21** — centralizing entertainment tracking, financial reminders, development logging, and daily life analytics in one cohesive, secure interface.
 
 [![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)](https://angular.dev)
-[![Firebase](https://img.shields.io/badge/Firebase-11-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Firebase](https://img.shields.io/badge/Firebase-12-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Cloudbase](https://img.shields.io/badge/Tencent_Cloudbase-3.x-00A3FF)](https://cloudbase.net)
-[![PrimeNG](https://img.shields.io/badge/PrimeNG-20-7C3AED)](https://primeng.org)
+[![PrimeNG](https://img.shields.io/badge/PrimeNG-21-7C3AED)](https://primeng.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 
 ---
@@ -133,10 +133,10 @@ src/app/
 | `@angular/forms` | ^21.x | Reactive and template-driven forms |
 | `@angular/animations` | ^21.x | Animation engine |
 | `@angular/ssr` | ^21.x | Server-side rendering |
-| `@angular/material` | ^20.x | UI components (drawer, buttons, ripple) |
-| `@angular/cdk` | ^20.x | Component Dev Kit primitives |
-| `primeng` | ^20.x | Advanced UI (tables, dialogs, toast, calendar) |
-| `@primeng/themes` | ^20.x | PrimeNG design tokens and theming |
+| `@angular/material` | ^21.x | UI components (drawer, buttons, ripple) |
+| `@angular/cdk` | ^21.x | Component Dev Kit primitives |
+| `primeng` | ^21.x | Advanced UI (tables, dialogs, toast, calendar) |
+| `@primeuix/themes` | ^2.x | PrimeNG design tokens and theming |
 | `primeicons` | ^7.x | PrimeNG icon set |
 | `bootstrap` | ^5.3.x | Grid system and utility classes |
 | `rxjs` | ~7.8.x | Reactive streams and async data flows |
@@ -146,10 +146,10 @@ src/app/
 
 | Package | Version | Purpose |
 | :--- | :--- | :--- |
-| `firebase` | ^11.x | Auth, Firestore, Cloud Functions, Storage |
+| `firebase` | ^12.x | Auth, Firestore, Cloud Functions, Storage |
 | `@angular/fire` | ^20.x | Angular Firebase SDK integration |
-| `@cloudbase/js-sdk` | ^2.x | Tencent Cloudbase (CN region auth and storage) |
-| `@cloudbase/types` | ^2.x | Cloudbase TypeScript type definitions |
+| `@cloudbase/js-sdk` | ^3.x | Tencent Cloudbase (CN region auth and storage) |
+| `@cloudbase/types` | ^3.x | Cloudbase TypeScript type definitions |
 | `http-proxy-middleware` | ^3.x | Proxy layer for Douban API calls |
 
 ---

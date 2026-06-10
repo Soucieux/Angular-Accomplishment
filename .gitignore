@@ -44,6 +44,10 @@ Thumbs.db
 
 # firebase
 .firebase/
+firebase.json
+
+# local-only config
+tsconfig.app.json
 # Environment variables
 .env.local
 

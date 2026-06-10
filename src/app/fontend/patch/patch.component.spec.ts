@@ -304,13 +304,13 @@ describe('PatchComponent — submitNewRecord isBug derivation', () => {
 		mockDb = jasmine.createSpyObj('DatabaseService', [
 			'getPatchNotes',
 			'addNewRecordToPatchNotes',
-			'appendToPatchActivityLog',
+			'appendToActivityLog',
 			'updateExistingRecordToPatchNotes',
 			'removePatchNote'
 		]);
 		mockDb.getPatchNotes.and.returnValue(of([]));
 		mockDb.addNewRecordToPatchNotes.and.returnValue(Promise.resolve());
-		mockDb.appendToPatchActivityLog.and.returnValue(Promise.resolve());
+		mockDb.appendToActivityLog.and.returnValue(Promise.resolve());
 
 		await TestBed.configureTestingModule({
 			imports: [PatchComponent],
@@ -330,11 +330,11 @@ describe('PatchComponent — submitNewRecord isBug derivation', () => {
 	 * microtasks so the .then() chain runs synchronously.
 	 *
 	 * @param statusValue - The status severity string to submit.
-	 * @returns The activity log snapshot passed to appendToPatchActivityLog.
+	 * @returns The activity log snapshot passed to appendToActivityLog.
 	 */
 	function submitWithStatus(statusValue: string): any {
 		let capturedSnapshot: any;
-		mockDb.appendToPatchActivityLog.and.callFake((s: any) => {
+		mockDb.appendToActivityLog.and.callFake((s: any) => {
 			capturedSnapshot = s;
 			return Promise.resolve();
 		});

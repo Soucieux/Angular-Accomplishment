@@ -33,7 +33,7 @@ import {
 	HOME_WEEK_AGENDA_EMPTY_TEXT,
 	HOME_WEEK_AGENDA_GRADIENT_TODAY
 } from '../../../common/app.constant';
-import { OrbitalAgendaItem, OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
+import { OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
 import { OrbitalStore } from './orbital.store';
 
 let ringIdCounter = 0;

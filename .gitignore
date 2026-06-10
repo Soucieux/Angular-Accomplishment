@@ -48,6 +48,7 @@ firebase.json
 
 # local-only config
 tsconfig.app.json
+tsconfig.spec.json
 # Environment variables
 .env.local
 
@@ -58,6 +59,7 @@ AGENTS.md
 
 # claude
 .claude/
+docs/
 
 #mcp
 .mcp.json

@@ -554,14 +554,10 @@ export const REMINDER_DUE_SOON_SUBTITLE = '未来七天';
 export const REMINDER_GREETING_SINGULAR = 'reminder';
 /** Plural reminder unit used in the open-item greeting. */
 export const REMINDER_GREETING_PLURAL = 'reminders';
-/** Trailing phrase appended to the open-item greeting. */
-export const REMINDER_AWAIT_SUFFIX = 'await · 静候处理';
 /** English segment of the open-item greeting suffix. */
 export const REMINDER_AWAIT_SUFFIX_EN = 'await ·';
 /** Chinese segment of the open-item greeting suffix. */
 export const REMINDER_AWAIT_SUFFIX_CN = '静候处理';
-/** Page subtitle shown below the Reminder title. */
-export const REMINDER_SUBTITLE = '日程 · things to do, dated or not';
 /** Chinese segment of the page subtitle. */
 export const REMINDER_SUBTITLE_CN = '日程 ·';
 /** English segment of the page subtitle. */
@@ -639,8 +635,6 @@ export const DEBT_VALUE_KEY_CATEGORY = 'category';
 /** CloudBase content entry key for the original (total) amount in the debt sonata table. */
 export const DEBT_VALUE_KEY_ORIGINAL = 'original';
 
-/** Display name for the Debt Sonata page — used in stat writes and the Recent Activity widget. */
-export const DEBT_TABLE_ACCOUNT_EXPENSES = 'Account Expenses';
 /** Small quick-pay preset amount for the Debt Sonata page. */
 export const DEBT_PRESET_SMALL = 100;
 /** Large quick-pay preset amount for the Debt Sonata page. */

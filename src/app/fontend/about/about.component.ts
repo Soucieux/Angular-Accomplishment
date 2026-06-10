@@ -14,7 +14,7 @@ import { ChipModule } from 'primeng/chip';
 import { TagModule } from 'primeng/tag';
 import { COMPONENT_DESTROY } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
-import { TIMELINE, TimelineItem } from './about.model';
+import { TIMELINE } from './about.model';
 
 @Component({
 	selector: 'about',

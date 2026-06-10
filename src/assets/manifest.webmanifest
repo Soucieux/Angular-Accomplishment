@@ -5,15 +5,9 @@
 	"display": "standalone",
 	"icons": [
 		{
-			"src": "android.png",
-			"sizes": "192x192",
-			"type": "image/png"
-		},
-		{
 			"src": "android-dark.png",
 			"sizes": "192x192",
-			"type": "image/png",
-			"media": "(prefers-color-scheme: dark)"
+			"type": "image/png"
 		}
 	]
 }

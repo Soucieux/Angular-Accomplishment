@@ -1,4 +1,5 @@
 ////////////////////// Below are shared user-facing messages /////////////////////////
+
 /** Confirmation message shown when the user attempts to sign out. */
 export const MSG_LOGOUT_CONFIRM = 'Are you sure you want to sign out?';
 /** Header for the sign-out confirmation dialog. */
@@ -27,8 +28,11 @@ export const ERROR_DIALOG_HEADER = 'Error';
 export const ERROR_DIALOG_ICON_CLASS = 'pi pi-times-circle text-red-500';
 export const ERROR_DIALOG_BTN_LABEL = 'OK';
 export const ERROR_DIALOG_MSG_CLASS = 'error-dialog-message';
+export const SEARCH_COMPLETE = 'Search complete';
+export const SEARCH_CANCEL = 'Search cancelled';
 
 ////////////////////// Below are toast severity string constants //////////////////////
+
 export const TOAST_INFO = 'info';
 export const TOAST_WARN = 'warn';
 export const TOAST_ERROR = 'error';
@@ -42,6 +46,7 @@ export const PATCH_SEVERITY_ICON_DEBUG = 'pi pi-exclamation-circle';
 export const PATCH_SEVERITY_ICON_DRAFT = 'pi pi-file-edit';
 
 ////////////////////// Below are dialog type discriminator constants /////////////////
+
 /** Dialog type for a yes/no confirmation prompt. */
 export const DIALOG_CONFIRM = 'confirm';
 /** Dialog type for the add-movie flow. */
@@ -60,6 +65,7 @@ export const DIALOG_INGREDIENT = 'ingredient';
 export const DIALOG_LINK = 'link';
 
 ////////////////////// Below are history dialog and style string constants ///////////
+
 /** History-entry status when a movie is added — appears in the history message text. */
 export const HISTORY_STATUS_ADDED = 'added';
 /** History-entry status when a movie is deleted — appears in the history message text. */
@@ -74,6 +80,7 @@ export const HISTORY_STYLE_ADDED = 'solid green';
 export const HISTORY_STYLE_DELETED = 'solid red';
 
 ////////////////////// Below are application lifecycle constants //////////////////////
+
 /** Layout breakpoint for compact overlay nav: below this width the drawer switches to overlay mode. */
 export const APP_BREAKPOINT_COMPACT = 1200;
 /** Layout breakpoint for narrow viewport mode: below this width the sidebar collapses to an icon-only strip and nav labels are hidden. */
@@ -81,8 +88,15 @@ export const APP_BREAKPOINT_NARROW = 940;
 export const COMPONENT_DESTROY = 'Component Destroyed';
 export const UTILITIES_LOG_COUNTRY_FAILED = 'Country detection failed';
 export const UTILITIES_LOG_DEFAULT_COUNTRY = 'Use default country: ';
+/** Country code for mainland China — drives Cloudbase backend selection at startup. */
+export const CN = 'CN';
+/** Country code for all non-CN regions — drives Firebase backend selection at startup. */
+export const OVERSEAS = 'INTL';
+/** IANA timezone identifiers for mainland China — used by the timezone-based region detector. */
+export const CN_TIMEZONES = ['Asia/Shanghai', 'Asia/Urumqi'];
 
 ////////////////////// Below are auth and login constants ////////////////////////////
+
 export const LOGIN_MSG_SEND_CODE_FAILED = 'Failed to send verification code';
 /* Stored in localStorage to avoid the Access Denied flicker on page refresh.
     The value '1' is a lightweight presence flag — it carries no user identity,
@@ -115,6 +129,7 @@ export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';
 export const ERROR_NO_DOCUMENT_UPDATED = 'DATABASE_NO_DOCUMENT_UPDATED';
 
 ////////////////////// Below are database collection name constants ///////////////////
+
 export const DATABASE_HISTORY = 'history';
 export const DATABASE_MOVIES = 'movies';
 export const DATABASE_RECIPES = 'recipes';
@@ -127,12 +142,10 @@ export const DATABASE_STATISTICS = 'statistics';
 export const DATABASE_USEFUL_LINKS = 'useful_links'; // stores both links (type:'link') and categories (type:'category')
 
 ////////////////////// Below are shared UI constants /////////////////////////////////
+
 // Layout responsive breakpoints
 export const BREAKPOINT_MOBILE = '(max-width: 800px)';
 
-export const SEARCH_COMPLETE = 'Search complete';
-export const SEARCH_CANCEL = 'Search cancelled';
-export const CN = 'CN';
 export const SEARCH = 'search';
 export const SUCCESS = 'success';
 export const FAILURE = 'failure';
@@ -140,6 +153,7 @@ export const FAILURE = 'failure';
 export const LINK_TARGET_BLANK = '_blank';
 
 ////////////////////// Below are activity log type discriminator constants ////////////
+
 /* Type discriminators written into activity-log entries across all pages.
    Use HISTORY_STATUS_ADDED / HISTORY_STATUS_DELETED for 'added' / 'deleted'. */
 export const ACTIVITY_TYPE_UPDATED = 'updated';
@@ -157,6 +171,7 @@ export const ACTIVITY_SOURCE_DEBT = 'debt';
 export const ACTIVITY_SOURCE_RECIPE = 'recipe';
 
 ////////////////////// Below are statistics document field name constants /////////////
+
 /* Single source of truth for every key read from or written to the statistics
    document. Use these constants everywhere — never inline the raw string. */
 export const STATS_FIELD_RECENT_ACTIVITIES = 'recentActivities';
@@ -171,12 +186,14 @@ export const STATS_FIELD_RECIPE_LIST = 'recipeList';
 export const STATS_FIELD_GENRE = 'genre';
 
 ////////////////////// Below are statistics display cap constants /////////////////////
+
 /* All list-based stat arrays (recentActivities, reminderUpcoming, debtUpcoming,
    recipeList) are capped at this many items on every write. Counters (reminderTotal,
    debtTotal, totalRecipes) are always the uncapped true total. */
 export const STATS_CAP_ACTIVITY_LOG = 20;
 
 ////////////////////// Below are home page constants /////////////////////////////////
+
 export const HOME_MSG_LOAD_STATISTICS_FAILED = 'Failed to load statistics';
 export const HOME_MSG_INCREMENT_VISIT_FAILED = 'Failed to increment link visit';
 export const HOME_LINKS_DOT_FALLBACK = '#5a6878';
@@ -316,6 +333,7 @@ export const HOME_ORBITAL_PANEL_SCROLL_SELECTOR = '.orbital-panel-scroll';
 export const HOME_ORBITAL_CHANGES_KEY_STATS = 'stats';
 
 ////////////////////// Below are entertainment page constants ////////////////////////
+
 /** Prefix for the delete-movie confirm message; movie name is appended at the call site. */
 export const ENT_MSG_DELETE_CONFIRM_PREFIX = 'Are you sure you want to delete ';
 export const ENT_DIALOG_TITLE_DELETE_MOVIE = 'Delete Movie';
@@ -364,6 +382,7 @@ export const RATE_DECREASED = 'decreased';
 export const RATE_INCREASED = 'increased';
 
 ////////////////////// Below are Resonance page constants ////////////////////////////
+
 export const RESONANCE_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this quote?';
 export const RESONANCE_DIALOG_TITLE_DELETE = 'Delete Quote';
 export const RESONANCE_MSG_POSTED = 'Posted';
@@ -374,6 +393,7 @@ export const RESONANCE_MAX_QUOTE_LENGTH = 500;
 export const RESONANCE_SKELETON_COUNT = 6;
 
 ////////////////////// Below are recipe page constants ///////////////////////////////
+
 /** Confirm-discard title shown when the user clicks Cancel on the add-recipe screen. */
 export const RECIPE_DISCARD_TITLE = 'Discard Recipe';
 /** Confirm-discard message body for the add-recipe screen. */
@@ -419,6 +439,7 @@ export const RECIPE_ITYPE_VEGETABLE = 'veg';
 export const RECIPE_ITYPE_MEAT = 'meat';
 
 ////////////////////// Below are recipe band CSS class name constants ////////////////
+
 /* Each band pairs with a RECIPE_CATEGORY_* constant above and a full CSS
    section in recipe.component.css.  When adding a new band:
      1. Add RECIPE_CATEGORY_<NAME> above
@@ -446,6 +467,7 @@ export const RECIPE_ROWS_PER_PAGE = 5;
 export const RECIPE_EDITOR_TYPE_MAX = 9;
 
 ////////////////////// Below are Nexus page constants ////////////////////////////////
+
 export const NEXUS_MSG_LINK_UPDATED = 'Link updated';
 export const NEXUS_MSG_LINK_SAVED = 'Link saved';
 export const NEXUS_MSG_SAVING_LINK = 'Saving link...';
@@ -505,6 +527,7 @@ export const NEXUS_LABEL_CELL_TODAY = 'Today';
 export const NEXUS_LABEL_CONFIRMED = 'confirmed';
 
 ////////////////////// Below are Reminder page constants /////////////////////////////
+
 /** Confirmation message shown before deleting a reminder entry. */
 export const REMINDER_MSG_DELETE_CONFIRM = 'Proceed with deleting this entry?\nThis cannot be undone.';
 /** Placeholder for the reminder message text input. */
@@ -572,6 +595,7 @@ export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
 export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;
 
 ////////////////////// Below are Debt Sonata page constants //////////////////////////
+
 export const DEBT_SKELETON_COUNT = 6;
 export const DEBT_DIALOG_TITLE = 'New debt';
 export const DEBT_DIALOG_PLACEHOLDER_NAME = 'e.g. Visa Platinum';
@@ -635,6 +659,7 @@ export const DEBT_DUE_ICON_OVERDUE = 'error';
 export const DEBT_DUE_ICON_DEFAULT = 'event';
 
 ////////////////////// Below are patch notes page constants //////////////////////////
+
 export const PATCH_MSG_DELETE_CONFIRM = 'Proceed with deleting this note?';
 
 export const STATUS_TODO = 'To Do';

@@ -7,6 +7,8 @@ import { LOG } from './app.logs';
 import {
 	APP_BREAKPOINT_NARROW,
 	CN,
+	CN_TIMEZONES,
+	OVERSEAS,
 	LS_AUTH_HINT_KEY,
 	UTILITIES_LOG_COUNTRY_FAILED,
 	UTILITIES_LOG_DEFAULT_COUNTRY,
@@ -280,6 +282,7 @@ export class Utilities {
 	 * @returns The user's display name, or an empty string if unavailable.
 	 */
 	public static getUserDisplayName(user: any): string {
+		if (!user) return '';
 		if (Utilities.getCurrentCountry() === CN) {
 			return user.user_metadata?.username ?? '';
 		}
@@ -665,12 +668,17 @@ export class Utilities {
 	}
 
 	/**
-	 * Checks and stores the current country code in the static field.
+	 * Checks and stores the current country code in the static field using the
+	 * browser timezone as a region signal. Mainland-China timezones resolve to CN;
+	 * all other timezones resolve to OVERSEAS.
 	 * Only bootstraps should call this method — it must run before any component initialises.
 	 */
 	public static checkCurrentCountry(): void {
 		try {
+			// TODO Dont delete the below code for now, they will be worked on later
 			this.currentCountry = CN;
+			// const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			// this.currentCountry = CN_TIMEZONES.includes(timezone) ? CN : OVERSEAS;
 		} catch (error: unknown) {
 			LOG.error(this.className, UTILITIES_LOG_COUNTRY_FAILED, error as Error);
 			this.currentCountry = CN;

@@ -56,6 +56,7 @@ export interface OrbitalActivityRow {
 	detail: string;
 	time: string;
 	color: string;
+	timestamp: string;
 }
 
 /** Shape of one quick-action pill button at the top of the orbital layout. */

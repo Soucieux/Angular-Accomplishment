@@ -64,7 +64,7 @@
 	position: absolute;
 	/* top and left places top-left corner, need transform to move back by half its value*/
 	left: 50%;
-	top: 50%;
+	top: 650px;
 	transform: translate(-50%, -50%);
 	width: 600px;
 	height: 600px;
@@ -77,7 +77,7 @@
 	position: absolute;
 	/* top and left places top-left corner, need transform to move back by half its value*/
 	left: 50%;
-	top: 50%;
+	top: 650px;
 	transform: translate(-50%, -50%);
 	width: 860px;
 	height: 860px;
@@ -342,7 +342,7 @@
 	height: 300px;
 	/* top and left places top-left corner, need transform to move back by half its value*/
 	left: 50%;
-	top: 50%;
+	top: 630px;
 	transform: translate(-50%, -50%);
 	display: flex;
 	align-items: center;

@@ -533,7 +533,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 				continue;
 			}
 
-			rows.push({ icon, label, detail, time: Utilities.getRelativeTime(entry.timestamp), color });
+			rows.push({ icon, label, detail, time: Utilities.getRelativeTime(entry.timestamp), color, timestamp: entry.timestamp });
 		}
 
 		return rows;

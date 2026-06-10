@@ -189,7 +189,7 @@
 				<span class="orbital-panel-header-title">Activity</span>
 			</div>
 			<div class="orbital-panel-scroll">
-				@for (activity of activityRows; track activity.label + activity.time) {
+				@for (activity of activityRows; track activity.timestamp) {
 					<div class="orbital-activity-row">
 						<div
 							class="orbital-activity-icon"

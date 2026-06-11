@@ -3,7 +3,6 @@ import {
 	Component,
 	ElementRef,
 	EventEmitter,
-	HostListener,
 	Input,
 	NgZone,
 	OnChanges,
@@ -15,6 +14,7 @@ import {
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../../backend/authentication-service/auth.service';
 import { OrbitalStore } from './orbital.store';
 import { Concentric, WeekAgenda, hexToRgba } from './shared.components';
@@ -32,6 +32,7 @@ import {
 } from './orbital.model';
 import { HomeStats, RecentActivityItem } from '../home.model';
 import { NexusCategory, NexusLink } from '../../nexus/nexus.model';
+import { DEBT_CATEGORY_DEFS } from '../../debt/debt.model';
 import { Utilities } from '../../../common/app.utilities';
 import {
 	ACTIVITY_SOURCE_DEBT,
@@ -72,6 +73,8 @@ import {
 	HOME_ACTIVITY_ICON_LINK_ADDED,
 	HOME_ACTIVITY_ICON_LINK_REMOVED,
 	HOME_ACTIVITY_ICON_LINK_UPDATED,
+	HOME_ACTIVITY_FOOTER_EN,
+	HOME_ACTIVITY_FOOTER_ZH,
 	HOME_ACTIVITY_ICON_MOVIE_ADDED,
 	HOME_ACTIVITY_ICON_MOVIE_REMOVED,
 	HOME_ACTIVITY_ICON_MOVIE_SEARCHED,
@@ -113,7 +116,6 @@ import {
 	HOME_ACTIVITY_LABEL_RESONANCE_REMOVED,
 	HOME_AGENDA_ICON_REMINDER,
 	HOME_CONCENTRIC_SIZE_DEFAULT,
-	HOME_CONCENTRIC_SIZE_NARROW,
 	HOME_DEBT_ROW_ID_PREFIX,
 	HOME_LINKS_DOT_FALLBACK,
 	HOME_ORBITAL_CHANGES_KEY_STATS,
@@ -123,6 +125,7 @@ import {
 	HOME_OVERFLOW_LABEL_RECIPES,
 	HOME_OVERFLOW_LABEL_REMINDERS,
 	HOME_QUICK_ACTION_ROUTE_DEBT,
+	HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT,
 	HOME_QUICK_ACTION_ROUTE_NEXUS,
 	HOME_QUICK_ACTION_ROUTE_RECIPE,
 	HOME_QUICK_ACTION_ROUTE_REMINDER,
@@ -132,7 +135,7 @@ import {
 @Component({
 	selector: 'orbital',
 	standalone: true,
-	imports: [Concentric, WeekAgenda, AsyncPipe],
+	imports: [Concentric, WeekAgenda, AsyncPipe, TooltipModule],
 	templateUrl: './orbital.component.html',
 	styleUrl: './orbital.component.css',
 	providers: [OrbitalStore]
@@ -143,32 +146,33 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	private readonly elementRef = inject(ElementRef);
 	private readonly ngZone = inject(NgZone);
 	private readonly authService = inject(AuthService);
-	private readonly utilities = inject(Utilities);
 
 	@Input() stats: HomeStats | null = null;
 	@Input() links: NexusLink[] = [];
 	@Input() dashCategories: NexusCategory[] = [];
 	@Output() readonly linkVisit = new EventEmitter<{ id: string; count: number }>();
 
+	protected readonly HOME_ACTIVITY_FOOTER_ZH = HOME_ACTIVITY_FOOTER_ZH;
+	protected readonly HOME_ACTIVITY_FOOTER_EN = HOME_ACTIVITY_FOOTER_EN;
+	protected readonly HOME_CONCENTRIC_SIZE_DEFAULT = HOME_CONCENTRIC_SIZE_DEFAULT;
 	protected readonly QUICK_ACTIONS = QUICK_ACTIONS;
 	protected readonly HOME_OVERFLOW_LABEL_REMINDERS = HOME_OVERFLOW_LABEL_REMINDERS;
 	protected readonly HOME_OVERFLOW_LABEL_DEBT = HOME_OVERFLOW_LABEL_DEBT;
 	protected readonly HOME_OVERFLOW_LABEL_RECIPES = HOME_OVERFLOW_LABEL_RECIPES;
 	protected readonly HOME_OVERFLOW_LABEL_LINKS = HOME_OVERFLOW_LABEL_LINKS;
+	protected readonly HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT = HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT;
 	protected readonly HOME_QUICK_ACTION_ROUTE_REMINDER = HOME_QUICK_ACTION_ROUTE_REMINDER;
 	protected readonly HOME_QUICK_ACTION_ROUTE_DEBT = HOME_QUICK_ACTION_ROUTE_DEBT;
 	protected readonly HOME_QUICK_ACTION_ROUTE_RECIPE = HOME_QUICK_ACTION_ROUTE_RECIPE;
 	protected readonly HOME_QUICK_ACTION_ROUTE_NEXUS = HOME_QUICK_ACTION_ROUTE_NEXUS;
-
 	protected currentUser$!: Observable<any>;
 	protected genreBars: { label: string; count: number; percentage: number; color: string }[] = [];
 	protected reminderRows: OrbitalReminderRow[] = [];
 	protected recipeRows: OrbitalRecipeRow[] = [];
 	protected debtRows: OrbitalDebtRow[] = [];
 	protected activityRows: OrbitalActivityRow[] = [];
-	protected concentricSize = this.utilities.isNarrowViewport()
-		? HOME_CONCENTRIC_SIZE_NARROW
-		: HOME_CONCENTRIC_SIZE_DEFAULT;
+	protected addedThisWeek = 0;
+	protected reminderOnTimeRate = 100;
 
 	/**
 	 * Subscribes to the auth state observable to keep the current user up to date.
@@ -198,21 +202,13 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		if (changes[HOME_ORBITAL_CHANGES_KEY_STATS] && this.stats) {
 			this.genreBars = this.buildGenreBars();
 			this.reminderRows = this.buildReminderRows();
+			this.reminderOnTimeRate = this.buildReminderOnTimeRate();
 			this.recipeRows = this.buildRecipeRows();
 			this.debtRows = this.buildDebtRows();
 			this.activityRows = this.buildActivityRows();
+			this.addedThisWeek = this.buildAddedThisWeek();
 			this.syncWeekData();
 		}
-	}
-
-	/**
-	 * Updates the cached concentric ring diameter when the viewport is resized.
-	 */
-	@HostListener('window:resize')
-	protected onResize(): void {
-		this.concentricSize = this.utilities.isNarrowViewport()
-			? HOME_CONCENTRIC_SIZE_NARROW
-			: HOME_CONCENTRIC_SIZE_DEFAULT;
 	}
 
 	/**
@@ -254,6 +250,44 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	 */
 	protected get openDebtCount(): number {
 		return this.stats?.debtTotal ?? 0;
+	}
+
+	/**
+	 * Builds the reminder on-time rate as a whole-number percentage.
+	 * Computes from the already-built reminderRows, where each row carries
+	 * a pre-calculated overdue flag. Returns 100 when no dated reminders exist.
+	 *
+	 * @returns Percentage of dated reminders that are not yet overdue (0–100).
+	 */
+	private buildReminderOnTimeRate(): number {
+		if (!this.reminderRows.length) return 100;
+		const overdueCount = this.reminderRows.filter((r) => r.overdue).length;
+		return Math.round(((this.reminderRows.length - overdueCount) / this.reminderRows.length) * 100);
+	}
+
+	/**
+	 * Builds the count of activity entries recorded in the last seven days.
+	 * Parses each entry's timestamp from the app dot-separated format
+	 * ("YYYY.MM.DD HH:mm:ss") or ISO 8601. The recentActivities array is
+	 * capped at 20, so this value saturates at 20 for very active weeks.
+	 *
+	 * @returns Number of activity log entries with a timestamp within the past 7 days.
+	 */
+	private buildAddedThisWeek(): number {
+		const raw = Utilities.toArray(
+			this.stats?.[STATS_FIELD_RECENT_ACTIVITIES]
+		) as RecentActivityItem[];
+		if (!raw.length) return 0;
+		const cutoff = new Date();
+		cutoff.setDate(cutoff.getDate() - 7);
+		cutoff.setHours(0, 0, 0, 0);
+		return raw.filter((entry) => {
+			if (!entry.timestamp) return false;
+			if (entry.timestamp.includes('T')) return new Date(entry.timestamp) >= cutoff;
+			const [datePart] = entry.timestamp.split(' ');
+			const [year, month, day] = datePart.split('.');
+			return new Date(+year, +month - 1, +day) >= cutoff;
+		}).length;
 	}
 
 	/**
@@ -402,13 +436,26 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 				return toMs(a) - toMs(b);
 			})
 			.map((item, index) => {
-				const debt = item as { name?: string; date?: string | null };
+				const debt = item as {
+					name?: string;
+					date?: string | null;
+					debt?: number;
+					original?: number;
+					category?: string;
+				};
 				const overdue = Utilities.isOverdue(debt.date);
+				const remaining = debt.debt ?? 0;
+				const original = debt.original ?? 0;
+				const percentage = original > 0 ? Math.round(((original - remaining) / original) * 100) : 0;
+				const categoryDef = DEBT_CATEGORY_DEFS.find((d) => d.key === debt.category);
+				const barColor = categoryDef?.gradient ?? 'linear-gradient(90deg,#d53163,#f7971e)';
 				return {
 					id: `${HOME_DEBT_ROW_ID_PREFIX}${index}`,
 					name: debt.name ?? '',
 					dueLabel: Utilities.getDaysUntil(debt.date),
-					overdue
+					overdue,
+					percentage,
+					barColor
 				};
 			});
 	}
@@ -533,7 +580,14 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 				continue;
 			}
 
-			rows.push({ icon, label, detail, time: Utilities.getRelativeTime(entry.timestamp), color, timestamp: entry.timestamp });
+			rows.push({
+				icon,
+				label,
+				detail,
+				time: Utilities.getRelativeTime(entry.timestamp),
+				color,
+				timestamp: entry.timestamp
+			});
 		}
 
 		return rows;

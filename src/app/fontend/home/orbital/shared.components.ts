@@ -269,6 +269,12 @@ interface PlacedMetric extends OrbitalProgressMetric {
 				font-style: normal;
 				color: #334155;
 			}
+			@media (max-width: 940px) {
+				.concentric-svg,
+				.concentric-pill {
+					display: none;
+				}
+			}
 		`
 	]
 })

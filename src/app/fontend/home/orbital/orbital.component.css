@@ -94,9 +94,9 @@
 	position: absolute;
 	top: 20px;
 	left: 38px;
-	font-size: 20px;
+	font-size: 22px;
+	letter-spacing: 0.5px;
 	font-weight: 600;
-	letter-spacing: 4px;
 	color: rgba(255, 255, 255, 0.85);
 	animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
@@ -119,17 +119,17 @@
 	top: 100px;
 	left: 50%;
 	transform: translate(-50%);
-	width: 100%;
-	display: flex;
-	flex-wrap: wrap;
+	width: max-content;
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
 	gap: 12px;
-	justify-content: center;
 	animation: orFadeUpCenterX 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.34s both;
 }
 
 .orbital-quick-action-button {
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	gap: 6px;
 	padding: 8px 15px;
 	border-radius: 10px;
@@ -177,13 +177,13 @@
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	padding: 6px 12px;
+	padding: 8px 12px;
 	border-radius: 99px;
 	background: rgba(255, 255, 255, 0.08);
 	border: 1px solid rgba(255, 255, 255, 0.15);
 	backdrop-filter: blur(12px);
 	cursor: pointer;
-	font-size: 12px;
+	font-size: 14px;
 	font-weight: 700;
 	color: #fff;
 	transition:
@@ -945,14 +945,13 @@
 		position: static;
 		width: 100%;
 		font-size: 20px;
-		letter-spacing: 3px;
 		text-align: center;
 	}
 
 	.orbital-greeting {
 		position: static;
 		width: 100%;
-		font-size: 14px;
+		font-size: 18px;
 		text-align: center;
 	}
 
@@ -1042,8 +1041,8 @@
 	.orbital-quick-actions {
 		position: static;
 		transform: none;
-		justify-content: center;
-		flex-wrap: wrap;
+		grid-template-columns: repeat(3, 1fr);
+		margin: 0 auto;
 		animation-name: orFadeUp;
 	}
 
@@ -1118,7 +1117,7 @@
 	}
 
 	.orbital-greeting {
-		font-size: 12px;
+		font-size: 14px;
 		text-align: left;
 		margin-top: -10px;
 	}

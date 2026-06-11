@@ -179,19 +179,20 @@
 	gap: 6px;
 	padding: 6px 12px;
 	border-radius: 99px;
-	background: rgba(255, 255, 255, 0.55);
-	backdrop-filter: blur(8px);
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	backdrop-filter: blur(12px);
 	cursor: pointer;
 	font-size: 12px;
 	font-weight: 700;
-	color: #5a2440;
+	color: #fff;
 	transition:
 		background 0.15s,
 		transform 0.15s;
 }
 
 .orbital-link:hover {
-	background: rgba(255, 255, 255, 0.75);
+	background: rgba(255, 255, 255, 0.15);
 	transform: translateY(-1px);
 }
 
@@ -1091,6 +1092,10 @@
 /* ── Mobile only bottom navigation ─────────────────────────────────── */
 @media (max-width: 900px) and (pointer: coarse) {
 	.orbital-quick-actions {
+		display: none;
+	}
+
+	.orbital-links {
 		display: none;
 	}
 

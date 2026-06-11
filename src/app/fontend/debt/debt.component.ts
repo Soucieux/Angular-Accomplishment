@@ -152,11 +152,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 						this.loading = false;
 						this.upcomingExpenses = rows
 							.filter((item: any) => item.date && !item.paid)
-							.map((item: any) => ({
-								type: DEBT_ITEM_EXPENSE,
-								name: item.name,
-								date: item.date
-							}));
+							.map((item: any) => this.toUpcomingExpense(item));
 						this.syncStatistics();
 					});
 				})
@@ -553,17 +549,30 @@ export class DebtComponent implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Maps a raw database row to the upcoming-expense shape used by the statistics sync.
+	 *
+	 * @param item - The raw debt record from the database.
+	 * @returns The normalized upcoming-expense object.
+	 */
+	private toUpcomingExpense(item: any): { type: string; name: string; date: string; debt: number; original: number; category: string } {
+		return {
+			type: DEBT_ITEM_EXPENSE,
+			name: item.name,
+			date: item.date,
+			debt: item.debt ?? 0,
+			original: item.original ?? 0,
+			category: item.category ?? ''
+		};
+	}
+
+	/**
 	 * Recomputes upcoming expenses from local data and syncs to statistics
 	 * without waiting for a CloudBase subscription callback.
 	 */
 	private resyncUpcomingFromLocalData(): void {
 		this.upcomingExpenses = (this.updatedDebtSonataItems ?? [])
 			.filter((item: any) => item.date && !item.paid)
-			.map((item: any) => ({
-				type: DEBT_ITEM_EXPENSE,
-				name: item.name,
-				date: item.date
-			}));
+			.map((item: any) => this.toUpcomingExpense(item));
 		this.syncStatistics();
 	}
 

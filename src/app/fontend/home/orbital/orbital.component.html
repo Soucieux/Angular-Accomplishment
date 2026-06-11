@@ -9,52 +9,35 @@
 		<div class="orbital-ring-inner"></div>
 		<div class="orbital-ring-outer"></div>
 
-		<!-- Greeting + date -->
-		<div class="orbital-greeting">
-			{{ d.greeting() }} · {{ getUserDisplayName(currentUser$ | async) }} · {{ d.dateLong() }}
-		</div>
-
 		<!-- Brand -->
 		<div class="orbital-brand">VISION CANVAS</div>
 
-		<!-- Quick-action pill buttons -->
-		<div class="orbital-quick-actions">
-			@for (action of QUICK_ACTIONS; track action.route) {
-				<button
-					class="orbital-quick-action-button"
-					[style.background]="action.gradient"
-					(click)="navigateTo(action)">
-					<span class="material-symbols-outlined">{{ action.icon }}</span>
-					{{ action.label }}
-				</button>
-			}
-		</div>
-
-		<!-- Quick-access links -->
-		<div class="orbital-links">
-			@for (link of pinnedLinks; track link._id) {
-				<div class="orbital-link" (click)="openLink(link)">
-					<div class="orbital-link-dot" [style.background]="getLinkColor(link)"></div>
-					{{ link.title }}
-				</div>
-			}
+		<!-- Greeting + date -->
+		<div class="orbital-greeting">
+			<span class="orbital-greeting-main"
+				>{{ d.greeting() }} · {{ getUserDisplayName(currentUser$ | async) }}</span
+			><span class="orbital-greeting-sep"> · </span
+			><span class="orbital-greeting-date">{{ d.dateLong() }}</span>
 		</div>
 
 		<!-- Stat satellites -->
 		<div class="orbital-satellites">
-			<div class="orbital-satellite">
+			<div
+				class="orbital-satellite"
+				pTooltip="% of upcoming reminders not yet overdue"
+				tooltipPosition="top">
 				<div class="orbital-satellite-disc">
-					<span class="material-symbols-outlined">movie</span>
-					<div class="orbital-satellite-number">{{ stats.totalNumber ?? 0 }}</div>
+					<span class="material-symbols-outlined">task_alt</span>
+					<div class="orbital-satellite-number">{{ reminderOnTimeRate }}%</div>
 				</div>
-				<div class="orbital-satellite-label">Movies</div>
+				<div class="orbital-satellite-label">Streak</div>
 			</div>
 			<div class="orbital-satellite">
 				<div class="orbital-satellite-disc">
 					<span class="material-symbols-outlined">note_stack</span>
 					<div class="orbital-satellite-number">{{ patchNotesCount }}</div>
 				</div>
-				<div class="orbital-satellite-label">Patch Notes</div>
+				<div class="orbital-satellite-label">Patch</div>
 			</div>
 			<div class="orbital-satellite">
 				<div class="orbital-satellite-disc">
@@ -63,12 +46,15 @@
 				</div>
 				<div class="orbital-satellite-label">Voices</div>
 			</div>
-			<div class="orbital-satellite">
+			<div
+				class="orbital-satellite"
+				pTooltip="Activity entries added in the past 7 days"
+				tooltipPosition="top">
 				<div class="orbital-satellite-disc">
-					<span class="material-symbols-outlined">restaurant</span>
-					<div class="orbital-satellite-number">{{ stats.totalRecipes ?? 0 }}</div>
+					<span class="material-symbols-outlined">trending_up</span>
+					<div class="orbital-satellite-number">{{ addedThisWeek }}</div>
 				</div>
-				<div class="orbital-satellite-label">Recipes</div>
+				<div class="orbital-satellite-label">This Week</div>
 			</div>
 		</div>
 
@@ -86,16 +72,181 @@
 			<concentric
 				class="orbital-concentric"
 				[metrics]="d.progress()"
-				[size]="concentricSize"
+				[size]="HOME_CONCENTRIC_SIZE_DEFAULT"
 				[stroke]="12"
 				[gap]="6"></concentric>
+		</div>
+
+		<!-- Quick-access links -->
+		<div class="orbital-links">
+			@for (link of pinnedLinks; track link._id) {
+				<div class="orbital-link" (click)="openLink(link)">
+					<div class="orbital-link-dot" [style.background]="getLinkColor(link)"></div>
+					{{ link.title }}
+				</div>
+			}
+		</div>
+
+		<!-- Quick-action pill buttons -->
+		<div class="orbital-quick-actions">
+			@for (action of QUICK_ACTIONS; track action.route) {
+				<button
+					class="orbital-quick-action-button"
+					[style.background]="action.gradient"
+					(click)="navigateTo(action)">
+					<span class="material-symbols-outlined">{{ action.icon }}</span>
+					{{ action.label }}
+				</button>
+			}
+		</div>
+
+		<!-- ── Progress cards (narrow viewport only, replaces concentric) ── -->
+		<div class="orbital-progress-cards">
+			@for (metric of d.progress(); track metric.key) {
+				<div class="orbital-progress-card">
+					<span class="orbital-progress-dot" [style.background]="metric.gradientStart"></span>
+					<span class="orbital-progress-pct">{{ metric.percentage }}%</span>
+					<span class="orbital-progress-label">{{ metric.label }}</span>
+				</div>
+			}
+		</div>
+
+		<!-- ── This-week agenda panel (bottom centre) ────────────────── -->
+		<div class="orbital-glass orbital-week">
+			<week-agenda></week-agenda>
+		</div>
+
+		<!-- ── Reminders panel (right top) ──────────────────────────── -->
+		<div class="orbital-glass orbital-reminders">
+			<div class="orbital-panel-header">
+				<span class="material-symbols-outlined orbital-panel-header-icon">notifications</span>
+				<span
+					class="orbital-panel-header-title orbital-panel-header-nav"
+					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_REMINDER)"
+					>Reminders</span
+				>
+				<span
+					class="orbital-panel-header-badge"
+					[style.color]="openReminderCount > 0 ? '#d53369' : '#22c55e'">
+					{{ openReminderCount }} open
+				</span>
+			</div>
+			<div class="orbital-panel-scroll">
+				@for (reminder of reminderRows; track reminder.id) {
+					<div class="orbital-reminder-row">
+						<span class="orbital-row-dot" aria-hidden="true"></span>
+						<span class="orbital-reminder-name">{{ reminder.name }}</span>
+						<span
+							class="orbital-reminder-due-date"
+							[style.color]="reminder.overdue ? '#d53369' : '#1a6dff'">
+							{{ reminder.dueLabel }}
+						</span>
+					</div>
+				}
+				@if (reminderRows.length === 20) {
+					<div
+						class="orbital-panel-overflow-row"
+						(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_REMINDER)">
+						<span class="material-symbols-outlined">open_in_new</span>
+						<span>{{ HOME_OVERFLOW_LABEL_REMINDERS }}</span>
+						<span class="material-symbols-outlined">chevron_right</span>
+					</div>
+				}
+			</div>
+		</div>
+
+		<!-- ── Saved links panel (right middle) ────────────────────────── -->
+		<div class="orbital-glass orbital-shortcuts">
+			<div class="orbital-panel-header">
+				<span class="material-symbols-outlined orbital-panel-header-icon">link</span>
+				<span
+					class="orbital-panel-header-title orbital-panel-header-nav"
+					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_NEXUS)"
+					>Shortcuts</span
+				>
+				<span class="orbital-panel-header-badge">{{ links.length }}</span>
+			</div>
+			<div class="orbital-panel-scroll">
+				@if (links.length === 0) {
+					<div class="orbital-panel-empty">No links yet</div>
+				} @else {
+					@for (link of links; track link._id) {
+						<div class="orbital-saved-link-row" (click)="openLink(link)">
+							<div class="orbital-link-dot" [style.background]="getLinkColor(link)"></div>
+							<span class="orbital-saved-link-title">{{ link.title }}</span>
+						</div>
+					}
+					@if (links.length === 20) {
+						<div
+							class="orbital-panel-overflow-row"
+							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_NEXUS)">
+							<span class="material-symbols-outlined">open_in_new</span>
+							<span>{{ HOME_OVERFLOW_LABEL_LINKS }}</span>
+							<span class="material-symbols-outlined">chevron_right</span>
+						</div>
+					}
+				}
+			</div>
+		</div>
+
+		<!-- ── Debt panel (right bottom) ────────────────────────────── -->
+		<div class="orbital-glass orbital-debt-sonata">
+			<div class="orbital-panel-header">
+				<span class="material-symbols-outlined orbital-panel-header-icon">account_balance</span>
+				<span
+					class="orbital-panel-header-title orbital-panel-header-nav"
+					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_DEBT)"
+					>Debt Sonata</span
+				>
+				<span
+					class="orbital-panel-header-badge"
+					[style.color]="openDebtCount > 0 ? '#d53369' : '#22c55e'">
+					{{ openDebtCount }} due
+				</span>
+			</div>
+			<div class="orbital-panel-scroll">
+				@if (debtRows.length === 0) {
+					<div class="orbital-panel-empty">No upcoming payments</div>
+				} @else {
+					@for (debt of debtRows; track debt.id) {
+						<div class="orbital-debt-bar-row">
+							<div class="orbital-debt-bar-header">
+								<span class="orbital-debt-bar-label">{{ debt.name }}</span>
+								<span
+									class="orbital-debt-bar-due"
+									[style.color]="debt.overdue ? '#d53369' : '#f97316'">
+									({{ debt.percentage }}%) {{ debt.dueLabel }}
+								</span>
+							</div>
+							<div
+								class="orbital-entertainment-bar-track"
+								[style.--debt-bar-color]="debt.barColor">
+								<div class="orbital-debt-bar-fill" [style.width.%]="debt.percentage"></div>
+							</div>
+						</div>
+					}
+					@if (debtRows.length === 20) {
+						<div
+							class="orbital-panel-overflow-row"
+							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_DEBT)">
+							<span class="material-symbols-outlined">open_in_new</span>
+							<span>{{ HOME_OVERFLOW_LABEL_DEBT }}</span>
+							<span class="material-symbols-outlined">chevron_right</span>
+						</div>
+					}
+				}
+			</div>
 		</div>
 
 		<!-- ── Entertainment panel (left top) ───────────────────────── -->
 		<div class="orbital-glass orbital-entertainment">
 			<div class="orbital-panel-header">
 				<span class="material-symbols-outlined orbital-panel-header-icon">movie</span>
-				<span class="orbital-panel-header-title">Entertainment</span>
+				<span
+					class="orbital-panel-header-title orbital-panel-header-nav"
+					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT)"
+					>Entertainment</span
+				>
 				<span class="orbital-panel-header-badge">{{ stats.totalNumber ?? 0 }}</span>
 			</div>
 			<div class="orbital-panel-scroll">
@@ -118,63 +269,34 @@
 			</div>
 		</div>
 
-		<!-- ── Reminders panel (right top) ──────────────────────────── -->
-		<div class="orbital-glass orbital-reminders">
+		<!-- ── Recipe panel (left bottom) ──────────────────────────── -->
+		<div class="orbital-glass orbital-recipes">
 			<div class="orbital-panel-header">
-				<span class="material-symbols-outlined orbital-panel-header-icon">notifications</span>
-				<span class="orbital-panel-header-title">Reminders</span>
+				<span class="material-symbols-outlined orbital-panel-header-icon">restaurant</span>
 				<span
-					class="orbital-panel-header-badge"
-					[style.color]="openReminderCount > 0 ? '#d53369' : '#22c55e'">
-					{{ openReminderCount }} open
-				</span>
+					class="orbital-panel-header-title orbital-panel-header-nav"
+					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_RECIPE)"
+					>Recipes</span
+				>
+				<span class="orbital-panel-header-badge">{{ stats.totalRecipes ?? 0 }}</span>
 			</div>
 			<div class="orbital-panel-scroll">
-				@for (reminder of reminderRows; track reminder.id) {
-					<div class="orbital-reminder-row">
-						<span class="orbital-reminder-name">{{ reminder.name }}</span>
-						<span
-							class="orbital-reminder-due-date"
-							[style.color]="reminder.overdue ? '#d53369' : '#22c55e'">
-							{{ reminder.dueLabel }}
-						</span>
-					</div>
-				}
-				@if (openReminderCount > 20) {
-					<div
-						class="orbital-panel-overflow-row"
-						(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_REMINDER)">
-						<span class="material-symbols-outlined">open_in_new</span>
-						<span>{{ HOME_OVERFLOW_LABEL_REMINDERS }}</span>
-						<span class="material-symbols-outlined">chevron_right</span>
-					</div>
-				}
-			</div>
-		</div>
-
-		<!-- ── Saved links panel (right middle) ────────────────────────── -->
-		<div class="orbital-glass orbital-quick-links">
-			<div class="orbital-panel-header">
-				<span class="material-symbols-outlined orbital-panel-header-icon">link</span>
-				<span class="orbital-panel-header-title">Quick Links</span>
-				<span class="orbital-panel-header-badge">{{ links.length }}</span>
-			</div>
-			<div class="orbital-panel-scroll">
-				@if (links.length === 0) {
-					<div class="orbital-panel-empty">No links yet</div>
+				@if (recipeRows.length === 0) {
+					<div class="orbital-panel-empty">No recipes yet</div>
 				} @else {
-					@for (link of links; track link._id) {
-						<div class="orbital-saved-link-row" (click)="openLink(link)">
-							<div class="orbital-link-dot" [style.background]="getLinkColor(link)"></div>
-							<span class="orbital-saved-link-title">{{ link.title }}</span>
+					@for (recipe of recipeRows; track recipe.id) {
+						<div class="orbital-recipe-row">
+							<span class="orbital-row-dot" aria-hidden="true"></span>
+							<span class="orbital-recipe-row-name">{{ recipe.name }}</span>
+							<span class="orbital-recipe-row-category">{{ recipe.category }}</span>
 						</div>
 					}
-					@if (links.length > 20) {
+					@if (recipeRows.length === 20) {
 						<div
 							class="orbital-panel-overflow-row"
-							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_NEXUS)">
+							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_RECIPE)">
 							<span class="material-symbols-outlined">open_in_new</span>
-							<span>{{ HOME_OVERFLOW_LABEL_LINKS }}</span>
+							<span>{{ HOME_OVERFLOW_LABEL_RECIPES }}</span>
 							<span class="material-symbols-outlined">chevron_right</span>
 						</div>
 					}
@@ -207,78 +329,9 @@
 				}
 			</div>
 		</div>
-
-		<!-- ── Debt panel (right bottom) ────────────────────────────── -->
-		<div class="orbital-glass orbital-debt-sonata">
-			<div class="orbital-panel-header">
-				<span class="material-symbols-outlined orbital-panel-header-icon">account_balance</span>
-				<span class="orbital-panel-header-title">Debt Sonata</span>
-				<span
-					class="orbital-panel-header-badge"
-					[style.color]="openDebtCount > 0 ? '#d53369' : '#22c55e'">
-					{{ openDebtCount }} due
-				</span>
-			</div>
-			<div class="orbital-panel-scroll">
-				@if (debtRows.length === 0) {
-					<div class="orbital-panel-empty">No upcoming payments</div>
-				} @else {
-					@for (debt of debtRows; track debt.id) {
-						<div class="orbital-reminder-row">
-							<span class="orbital-reminder-name">{{ debt.name }}</span>
-							<span
-								class="orbital-reminder-due-date"
-								[style.color]="debt.overdue ? '#d53369' : '#22c55e'">
-								{{ debt.dueLabel }}
-							</span>
-						</div>
-					}
-					@if (openDebtCount > 20) {
-						<div
-							class="orbital-panel-overflow-row"
-							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_DEBT)">
-							<span class="material-symbols-outlined">open_in_new</span>
-							<span>{{ HOME_OVERFLOW_LABEL_DEBT }}</span>
-							<span class="material-symbols-outlined">chevron_right</span>
-						</div>
-					}
-				}
-			</div>
-		</div>
-
-		<!-- ── Recipe panel (left bottom) ──────────────────────────── -->
-		<div class="orbital-glass orbital-recipes">
-			<div class="orbital-panel-header">
-				<span class="material-symbols-outlined orbital-panel-header-icon">restaurant</span>
-				<span class="orbital-panel-header-title">Recipes</span>
-				<span class="orbital-panel-header-badge">{{ stats.totalRecipes ?? 0 }}</span>
-			</div>
-			<div class="orbital-panel-scroll">
-				@if (recipeRows.length === 0) {
-					<div class="orbital-panel-empty">No recipes yet</div>
-				} @else {
-					@for (recipe of recipeRows; track recipe.id) {
-						<div class="orbital-recipe-row">
-							<span class="orbital-recipe-row-name">{{ recipe.name }}</span>
-							<span class="orbital-recipe-row-category">{{ recipe.category }}</span>
-						</div>
-					}
-					@if ((stats.totalRecipes ?? 0) > 20) {
-						<div
-							class="orbital-panel-overflow-row"
-							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_RECIPE)">
-							<span class="material-symbols-outlined">open_in_new</span>
-							<span>{{ HOME_OVERFLOW_LABEL_RECIPES }}</span>
-							<span class="material-symbols-outlined">chevron_right</span>
-						</div>
-					}
-				}
-			</div>
-		</div>
-
-		<!-- ── This-week agenda panel (bottom centre) ────────────────── -->
-		<div class="orbital-glass orbital-week">
-			<week-agenda></week-agenda>
+		<div class="orbital-activity-footer">
+			<span class="orbital-activity-footer-zh">{{ HOME_ACTIVITY_FOOTER_ZH }}</span>
+			<span class="orbital-activity-footer-en">{{ HOME_ACTIVITY_FOOTER_EN }}</span>
 		</div>
 	</div>
 }

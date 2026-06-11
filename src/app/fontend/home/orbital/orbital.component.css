@@ -8,7 +8,7 @@
 	height: 100%;
 	align-items: center;
 	justify-content: center;
-	overflow: hidden;
+	overflow: auto;
 }
 
 /* ─────────────────────────────────────────
@@ -49,12 +49,11 @@
 	width: 100%;
 	height: 100%;
 	flex-shrink: 0;
-	position: relative;
+	overflow-x: hidden;
+	overflow-y: auto;
+	position: absolute;
 	color: #3a1226;
-	overflow: hidden;
 	background: transparent;
-	transform-origin: center center;
-	padding: 20px 20px 10px;
 }
 
 /* ─────────────────────────────────────────
@@ -71,6 +70,7 @@
 	border-radius: 50%;
 	border: 1.5px dashed rgba(255, 255, 255, 0.28);
 	pointer-events: none;
+	animation: orSatIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .orbital-ring-outer {
@@ -84,6 +84,7 @@
 	border-radius: 50%;
 	border: 1.5px dashed rgba(255, 255, 255, 0.28);
 	pointer-events: none;
+	animation: orSatIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
 }
 
 /* ─────────────────────────────────────────
@@ -91,22 +92,23 @@
 ───────────────────────────────────────── */
 .orbital-greeting {
 	position: absolute;
-	top: 30px;
+	top: 20px;
 	left: 38px;
-	font-size: 18px;
+	font-size: 20px;
 	font-weight: 600;
 	letter-spacing: 4px;
-	color: #fff;
-	text-shadow: 0 2px 14px rgba(255, 255, 255, 0.4);
+	color: rgba(255, 255, 255, 0.85);
+	animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
 
 .orbital-brand {
 	position: absolute;
-	top: 30px;
+	top: 20px;
 	right: 40px;
-	font-size: 25px;
+	font-size: 23px;
 	font-weight: 600;
 	color: rgba(255, 255, 255, 0.85);
+	animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
 }
 
 /* ─────────────────────────────────────────
@@ -114,26 +116,27 @@
 ───────────────────────────────────────── */
 .orbital-quick-actions {
 	position: absolute;
-	top: 120px;
+	top: 100px;
 	left: 50%;
 	transform: translate(-50%);
-	width: 800px;
+	width: 100%;
 	display: flex;
 	flex-wrap: wrap;
-	gap: 8px;
+	gap: 12px;
 	justify-content: center;
+	animation: orFadeUpCenterX 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.34s both;
 }
 
 .orbital-quick-action-button {
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	padding: 8px 13px;
-	border-radius: 99px;
+	padding: 8px 15px;
+	border-radius: 10px;
 	border: none;
 	cursor: pointer;
 	color: #fff !important;
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 600;
 	box-shadow: 0 4px 14px rgba(120, 30, 70, 0.22);
 	transition:
@@ -159,14 +162,15 @@
 ───────────────────────────────────────── */
 .orbital-links {
 	position: absolute;
-	top: 190px;
+	top: 170px;
 	left: 50%;
 	transform: translate(-50%);
-	width: 760px;
+	width: 100%;
 	display: flex;
 	flex-wrap: wrap;
-	gap: 7px;
+	gap: 12px;
 	justify-content: center;
+	animation: orFadeUpCenterX 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.38s both;
 }
 
 .orbital-link {
@@ -178,7 +182,7 @@
 	background: rgba(255, 255, 255, 0.55);
 	backdrop-filter: blur(8px);
 	cursor: pointer;
-	font-size: 11.5px;
+	font-size: 12px;
 	font-weight: 700;
 	color: #5a2440;
 	transition:
@@ -209,7 +213,7 @@
 	width: 1240px;
 	display: flex;
 	justify-content: center;
-	gap: 30px;
+	gap: 40px;
 }
 
 .orbital-satellite {
@@ -238,12 +242,12 @@
 }
 
 .orbital-satellite-disc .material-symbols-outlined {
-	font-size: 15px;
+	font-size: 24px;
 	line-height: 1;
 }
 
 .orbital-satellite-number {
-	font-size: 28px;
+	font-size: 20px;
 	font-weight: 800;
 	line-height: 1;
 	margin-top: 1px;
@@ -251,7 +255,7 @@
 }
 
 .orbital-satellite-label {
-	font-size: 10px;
+	font-size: 12px;
 	font-weight: 800;
 	letter-spacing: 1.1px;
 	text-transform: uppercase;
@@ -261,7 +265,7 @@
 
 /* Per-satellite vertical offset and entry delay */
 .orbital-satellite:nth-child(1) {
-	transform: translateY(24px);
+	transform: translateY(34px);
 	animation-delay: 0s;
 }
 .orbital-satellite:nth-child(2) {
@@ -273,7 +277,7 @@
 	animation-delay: 0.16s;
 }
 .orbital-satellite:nth-child(4) {
-	transform: translateY(24px);
+	transform: translateY(34px);
 	animation-delay: 0.24s;
 }
 
@@ -333,20 +337,43 @@
 	}
 }
 
+@keyframes orFadeUp {
+	from {
+		opacity: 0;
+		transform: translateY(18px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes orFadeUpCenterX {
+	from {
+		opacity: 0;
+		transform: translate(-50%, 18px);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, 0);
+	}
+}
+
 /* ─────────────────────────────────────────
    Central life-clock core
 ───────────────────────────────────────── */
 .orbital-core-concentric-wrapper {
 	position: relative;
-	width: 300px;
-	height: 300px;
+	width: fit-content;
+	height: fit-content;
 	/* top and left places top-left corner, need transform to move back by half its value*/
 	left: 50%;
-	top: 630px;
+	top: 650px;
 	transform: translate(-50%, -50%);
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	animation: orSatIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
 }
 
 .orbital-core {
@@ -354,25 +381,24 @@
 	width: 236px;
 	height: 236px;
 	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.92);
 	box-shadow:
 		0 20px 60px rgba(120, 20, 60, 0.35),
-		inset 0 0 0 1px #fff;
+		inset -5px -5px 10px 0px #fff;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
 .orbital-hour-minute {
-	font-size: 33px;
+	font-size: 45px;
 	font-weight: 800;
 	letter-spacing: 0.5px;
-	color: #2a1019;
+	color: white;
 	font-variant-numeric: tabular-nums;
 }
 
 .orbital-seconds {
-	font-size: 13px;
+	font-size: 16px;
 	font-weight: 700;
 	color: #d53369;
 	letter-spacing: 2px;
@@ -380,10 +406,10 @@
 }
 
 .orbital-core-label {
-	font-size: 9.5px;
+	font-size: 12.5px;
 	font-weight: 700;
 	letter-spacing: 1px;
-	color: #a8849a;
+	color: white;
 	margin-top: 3px;
 }
 
@@ -409,7 +435,9 @@
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
-	height: 250px;
+	height: 270px;
+	width: clamp(330px, 20vw, 450px);
+	animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* ─────────────────────────────────────────
@@ -421,7 +449,7 @@
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	justify-content: space-evenly;
 	scrollbar-width: thin;
 	scrollbar-color: transparent transparent;
 	transition: scrollbar-color 0.4s ease;
@@ -477,6 +505,15 @@
 	flex: 1;
 }
 
+.orbital-panel-header-nav {
+	cursor: pointer;
+	transition: color 0.15s ease;
+}
+
+.orbital-panel-header-nav:hover {
+	color: #d53163;
+}
+
 .orbital-panel-header-badge {
 	font-size: 14px;
 	font-weight: 600;
@@ -485,16 +522,16 @@
 /* Per-panel header accent colours */
 .orbital-entertainment .orbital-panel-header-icon,
 .orbital-entertainment .orbital-panel-header-badge {
-	color: #e91e8c;
+	color: #4ade80;
 }
 
 .orbital-reminders .orbital-panel-header-icon {
-	color: #a78bfa;
+	color: #1a6dff;
 }
 
-.orbital-quick-links .orbital-panel-header-icon,
-.orbital-quick-links .orbital-panel-header-badge {
-	color: #22c55e;
+.orbital-shortcuts .orbital-panel-header-icon,
+.orbital-shortcuts .orbital-panel-header-badge {
+	color: #a3e635;
 }
 
 .orbital-activity .orbital-panel-header-icon {
@@ -510,20 +547,23 @@
 
 .orbital-recipes .orbital-panel-header-icon,
 .orbital-recipes .orbital-panel-header-badge {
-	color: #ef4444;
+	color: #d53369;
 }
 
 /* ─────────────────────────────────────────
    Shared panel empty state
 ───────────────────────────────────────── */
 .orbital-panel-empty {
-	font-size: 13px;
-	font-weight: 600;
-	color: #9a6480;
-	font-style: italic;
 	flex: 1;
 	display: flex;
 	align-items: center;
+	justify-content: center;
+	text-align: center;
+	font-size: 15px;
+	font-weight: 800;
+	font-style: italic;
+	color: var(--panel-accent, rgba(0, 0, 0, 0.4));
+	letter-spacing: 0.3px;
 }
 
 /* ─────────────────────────────────────────
@@ -563,49 +603,55 @@
    Panel positions
 ───────────────────────────────────────── */
 .orbital-entertainment {
+	--panel-accent: #4ade80;
 	left: calc(25% - 254px);
 	top: 270px;
-	width: 290px;
+	animation-delay: 0.42s;
 }
 
 .orbital-reminders {
+	--panel-accent: #1a6dff;
 	right: calc(25% - 258px);
 	top: 270px;
-	width: 290px;
+	animation-delay: 0.47s;
 }
 
-.orbital-quick-links {
+.orbital-shortcuts {
+	--panel-accent: #a3e635;
 	right: calc(25% - 258px);
-	top: 600px;
-	width: 290px;
+	top: clamp(570px, 45dvh, 600px);
+	animation-delay: 0.52s;
 }
 
 .orbital-activity {
-	left: calc(25% - 254px);
-	top: 600px;
-	width: 290px;
+	right: calc(25% - 258px);
+	top: clamp(870px, 70dvh, 900px);
+	animation-delay: 0.57s;
 }
 
 .orbital-debt-sonata {
-	right: calc(25% - 258px);
-	top: 950px;
-	width: 290px;
+	--panel-accent: #f97316;
+	left: calc(25% - 254px);
+	top: clamp(570px, 45dvh, 600px);
+	animation-delay: 0.62s;
 }
 
 .orbital-recipes {
+	--panel-accent: #d53369;
 	left: calc(25% - 254px);
-	top: 950px;
-	width: 290px;
+	top: clamp(870px, 70dvh, 900px);
+	animation-delay: 0.67s;
 }
 
 .orbital-week {
 	left: calc(50%);
 	transform: translate(-50%);
-	top: 950px;
-	width: 460px;
+	top: clamp(870px, 70dvh, 900px);
+	width: clamp(460px, 25vw, 730px);
 	gap: 9px;
 	padding: 15px 18px;
 	overflow: hidden;
+	animation: orFadeUpCenterX 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.72s both;
 }
 
 /* ─────────────────────────────────────────
@@ -654,8 +700,56 @@
 }
 
 /* ─────────────────────────────────────────
+   Debt Sonata bar rows
+───────────────────────────────────────── */
+.orbital-debt-bar-row {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.orbital-debt-bar-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.orbital-debt-bar-label {
+	font-size: 13px;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	flex: 1;
+	min-width: 0;
+	margin-right: 8px;
+}
+
+.orbital-debt-bar-due {
+	font-size: 12px;
+	font-weight: 600;
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+.orbital-debt-bar-fill {
+	height: 100%;
+	border-radius: 5px;
+	background: var(--debt-bar-color, linear-gradient(90deg, #d53163, #f7971e));
+	transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─────────────────────────────────────────
    Reminders panel
 ───────────────────────────────────────── */
+.orbital-row-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #d53369;
+	flex-shrink: 0;
+}
+
 .orbital-reminder-row {
 	display: flex;
 	align-items: center;
@@ -675,7 +769,7 @@
 }
 
 /* ─────────────────────────────────────────
-   Quick Links panel
+   Shortcuts panel
 ───────────────────────────────────────── */
 .orbital-saved-link-row {
 	display: flex;
@@ -785,6 +879,38 @@
 }
 
 /* ─────────────────────────────────────────
+   Progress cards (narrow viewport only)
+───────────────────────────────────────── */
+.orbital-progress-cards {
+	display: none;
+}
+
+/* ─────────────────────────────────────────
+   Activity panel footer
+───────────────────────────────────────── */
+.orbital-activity-footer {
+	position: absolute;
+	width: 100%;
+	padding: 6px 0 2px;
+	font-size: 15px;
+	display: flex;
+	flex-direction: column;
+	text-align: center;
+	top: clamp(1180px, 95dvh, 1200px);
+	animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+}
+
+.orbital-activity-footer-zh {
+	font-weight: 800;
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.orbital-activity-footer-en {
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+/* ─────────────────────────────────────────
    Mobile — stack panels vertically
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
@@ -794,11 +920,6 @@
 
 	.orbital-loading {
 		align-self: center;
-	}
-
-	.orbital-core {
-		width: 150px;
-		height: 150px;
 	}
 
 	.orbital-root {
@@ -811,6 +932,7 @@
 		gap: 10px;
 		overflow-y: auto;
 		overflow-x: hidden;
+		padding: 0 10px 10px 10px;
 	}
 
 	.orbital-ring-inner,
@@ -820,50 +942,46 @@
 
 	.orbital-brand {
 		position: static;
-		width: auto;
-		text-align: center;
-		font-size: 22px;
+		width: 100%;
+		font-size: 20px;
 		letter-spacing: 3px;
+		text-align: center;
 	}
 
 	.orbital-greeting {
 		position: static;
-		font-size: 15px;
-		line-height: 1.8;
+		width: 100%;
+		font-size: 14px;
 		text-align: center;
 	}
 
-	.orbital-quick-actions {
-		position: static;
-		transform: none;
-		width: 100%;
-		justify-content: center;
-		gap: 6px;
-		flex-wrap: wrap;
-		margin: 20px;
+	.orbital-greeting-sep {
+		display: none;
 	}
 
-	.orbital-links {
-		position: static;
-		transform: none;
-		justify-content: center;
-		width: 100%;
-		gap: 6px;
+	.orbital-greeting-date {
+		display: block;
 	}
 
 	.orbital-satellites {
 		position: static;
 		transform: none;
 		width: 100%;
-		margin: 20px 0;
+		margin: 0;
 		flex-wrap: wrap;
 		justify-content: center;
 	}
 
+	.orbital-satellite {
+		transform: none !important;
+	}
+
+	.orbital-hour-minute {
+		font-size: 38px;
+	}
+
 	.orbital-core-concentric-wrapper {
-		position: relative;
-		left: 0;
-		top: 0;
+		position: static;
 		transform: none;
 		display: grid;
 	}
@@ -875,6 +993,71 @@
 		place-self: center;
 	}
 
+	.orbital-progress-cards {
+		display: flex;
+		width: 100%;
+		gap: 8px;
+		flex-shrink: 0;
+		box-sizing: border-box;
+		animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+	}
+
+	.orbital-progress-card {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 10px 0;
+		gap: 5px;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 14px;
+		backdrop-filter: blur(12px);
+	}
+
+	.orbital-progress-dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.orbital-progress-pct {
+		font-size: 22px;
+		font-weight: 700;
+		color: #fff;
+		letter-spacing: -0.5px;
+		line-height: 1;
+	}
+
+	.orbital-progress-label {
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 1.5px;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.55);
+	}
+
+	.orbital-quick-actions {
+		position: static;
+		transform: none;
+		justify-content: center;
+		flex-wrap: wrap;
+		animation-name: orFadeUp;
+	}
+
+	.orbital-links {
+		position: static;
+		transform: none;
+		justify-content: center;
+		gap: 6px;
+		animation-name: orFadeUp;
+	}
+
+	.orbital-activity-footer {
+		position: static;
+	}
+
 	.orbital-glass {
 		position: static;
 		width: 100%;
@@ -884,7 +1067,7 @@
 
 	.orbital-entertainment,
 	.orbital-reminders,
-	.orbital-quick-links,
+	.orbital-shortcuts,
 	.orbital-activity,
 	.orbital-recipes,
 	.orbital-debt-sonata,
@@ -897,32 +1080,45 @@
 
 	.orbital-week {
 		transform: none;
+		animation-name: orFadeUp;
 	}
 
-	/* Panel display order on mobile */
-	.orbital-week {
-		order: 1;
-	}
-	.orbital-reminders {
-		order: 2;
-	}
-	.orbital-debt-sonata {
-		order: 3;
-	}
-	.orbital-entertainment {
-		order: 4;
-	}
-	.orbital-recipes {
-		order: 5;
-	}
-	.orbital-quick-links {
-		order: 6;
-	}
-	.orbital-activity {
-		order: 7;
-	}
-
-	.orbital-quick-links .orbital-panel-scroll .orbital-saved-link-row:nth-child(n + 9) {
+	.orbital-shortcuts .orbital-panel-scroll .orbital-saved-link-row:nth-child(n + 9) {
 		display: none;
+	}
+}
+
+/* ── Mobile only bottom navigation ─────────────────────────────────── */
+@media (max-width: 900px) and (pointer: coarse) {
+	.orbital-quick-actions {
+		display: none;
+	}
+
+	.orbital-satellites {
+		display: none;
+	}
+
+	.orbital-progress-dot {
+		width: 8px;
+		height: 8px;
+	}
+
+	.orbital-progress-pct {
+		font-size: 16px;
+	}
+
+	.orbital-brand {
+		font-size: 20px;
+		text-align: left;
+	}
+
+	.orbital-greeting {
+		font-size: 12px;
+		text-align: left;
+		margin-top: -10px;
+	}
+
+	.orbital-core-concentric-wrapper {
+		zoom: 0.75;
 	}
 }

@@ -47,6 +47,8 @@ export interface OrbitalDebtRow {
 	name: string;
 	dueLabel: string;
 	overdue: boolean;
+	percentage: number;
+	barColor: string;
 }
 
 /** Shape of one activity row in the activity glass panel. */
@@ -79,40 +81,40 @@ export const QUICK_ACTIONS: OrbitalQuickAction[] = [
 	{
 		icon: 'movie',
 		label: 'Add Movie',
-		gradient: 'linear-gradient(135deg,#e91e8c,#f7971e)',
+		gradient: 'linear-gradient(135deg,#4ade80,#22c55e)',
 		route: '/entertainment',
 		state: { openAddDialog: true }
 	},
 	{
 		icon: 'format_quote',
 		label: 'Add Quote',
-		gradient: 'linear-gradient(135deg,#a78bfa,#ec4899)',
+		gradient: 'linear-gradient(135deg,#f59e0b,#d97706)',
 		route: '/resonance'
 	},
 	{
 		icon: 'restaurant',
 		label: 'Add Recipe',
-		gradient: 'linear-gradient(135deg,#f97316,#ef4444)',
+		gradient: 'linear-gradient(135deg,#d53369,#b82d5a)',
 		route: '/recipe',
 		state: { openAddView: true }
 	},
 	{
 		icon: 'account_balance',
 		label: 'Add Debt',
-		gradient: 'linear-gradient(135deg,#f97316,#fbbf24)',
+		gradient: 'linear-gradient(135deg,#f97316,#e879f9)',
 		route: '/debt',
 		state: { openAddDialog: true }
 	},
 	{
 		icon: 'add_task',
 		label: 'Add Reminder',
-		gradient: 'linear-gradient(135deg,#38bdf8,#6366f1)',
+		gradient: 'linear-gradient(135deg,#1a6dff,#00d2ff)',
 		route: '/reminder'
 	},
 	{
 		icon: 'add_link',
-		label: 'Add Quick Link',
-		gradient: 'linear-gradient(135deg,#22c55e,#06b6d4)',
+		label: 'Add Shortcut',
+		gradient: 'linear-gradient(135deg,#a3e635,#84cc16)',
 		route: '/nexus',
 		state: { openAddLinkDialog: true }
 	}

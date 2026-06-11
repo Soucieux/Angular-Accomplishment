@@ -2,7 +2,7 @@ import { NavItem } from './bottom-nav.model';
 
 export const NAV_ITEMS: NavItem[] = [
 	{ id: 'home', label: 'Home', icon: 'home_app_logo', grad: 'linear-gradient(135deg,#ff6b35,#ffd700)' },
-	{ id: 'nexus', label: 'Nexus', icon: 'neurology', grad: 'linear-gradient(135deg,#e91e8c,#07db19)' },
+	{ id: 'nexus', label: 'Portal', icon: 'language', grad: 'linear-gradient(135deg,#a3e635,#84cc16)' },
 	{
 		id: 'resonance',
 		label: 'Resonance',

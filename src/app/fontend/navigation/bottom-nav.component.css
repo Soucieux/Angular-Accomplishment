@@ -15,7 +15,7 @@
 	--vc-ink-muted: var(--ink-muted, #64748b);
 	--vc-ink-soft: var(--ink-soft, #334155);
 	--vc-ease: var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
-	font-family: var(--font-en, system-ui, sans-serif);
+	font-family: 'app-font';
 }
 
 /* ─────────────────────────────────────────

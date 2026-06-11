@@ -1,5 +1,4 @@
 /* You can add global styles to this file, and also import other style files */
-@import 'bootstrap/dist/css/bootstrap.css';
 @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
 @import 'primeicons/primeicons.css';
 @import 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined';
@@ -84,7 +83,21 @@ body {
 		/* CJK compatibility ideographs */ U+FE30-FE4F; /* CJK compatibility forms */
 }
 
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+/* Anchors the height chain inside Angular Material's mat-drawer so that
+   height: 100% on descendants resolves to the drawer height, not content height. */
+.mat-drawer-inner-container {
+	display: flex;
+	flex-direction: column;
+}
+
 body {
+	margin: 0;
 	font-family: 'app-font';
 	user-select: none;
 }

@@ -50,7 +50,9 @@ mat-drawer-content {
 	padding: 0;
 	display: flex;
 	flex-direction: column;
-	height: calc(100% - 16px);
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
 	position: relative;
 	width: 100%;
 }
@@ -353,7 +355,7 @@ li:nth-child(10) .nav-icon {
 	align-items: center;
 	gap: 12px;
 	width: 100%;
-	padding: 5px 28px;
+	padding: 5px;
 	border: none;
 	background: transparent;
 	border-radius: 12px;

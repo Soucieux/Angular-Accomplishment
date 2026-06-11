@@ -76,9 +76,12 @@ p-chip.about-chip {
 }
 
 /* ─────────────────────────────────────────
-   Quick stats — Bootstrap handles flex/gap/wrap
+   Quick stats
 ───────────────────────────────────────── */
 .about-stats {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
 	margin-top: 32px;
 }
 

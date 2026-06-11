@@ -176,9 +176,9 @@ li:nth-child(2) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Nexus — hot pink → green */
+/* Nexus — acid lime */
 li:nth-child(3) .nav-icon {
-	background: linear-gradient(135deg, #e91e8c, #07db19);
+	background: linear-gradient(135deg, #a3e635, #84cc16);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -200,9 +200,9 @@ li:nth-child(5) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Entertainment — teal → green */
+/* Entertainment — vivid spring */
 li:nth-child(6) .nav-icon {
-	background: linear-gradient(135deg, #11998e, #38ef7d);
+	background: linear-gradient(135deg, #4ade80, #22c55e);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;

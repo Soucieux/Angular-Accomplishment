@@ -61,7 +61,7 @@ export const DIALOG_BLOCK = 'block';
 export const DIALOG_DEBT = 'debt';
 /** Dialog type for the ingredient type manager in the editor. */
 export const DIALOG_INGREDIENT = 'ingredient';
-/** Dialog type for the add/edit link dialog on the Nexus page. */
+/** Dialog type for the add/edit link dialog on the Portal page. */
 export const DIALOG_LINK = 'link';
 
 ////////////////////// Below are history dialog and style string constants ///////////
@@ -282,8 +282,8 @@ export const HOME_OVERFLOW_LABEL_REMINDERS = 'View all in Reminders';
 export const HOME_OVERFLOW_LABEL_DEBT = 'View all in Debt Sonata';
 /** Overflow-row label for the recipes panel. */
 export const HOME_OVERFLOW_LABEL_RECIPES = 'View all in Recipes';
-/** Overflow-row label for the quick links panel. */
-export const HOME_OVERFLOW_LABEL_LINKS = 'View all in Quick Links';
+/** Overflow-row label for the shortcuts panel. */
+export const HOME_OVERFLOW_LABEL_LINKS = 'View all in Shortcuts';
 /** ID prefix for reminder rows in the OrbitalComponent reminders panel. */
 export const HOME_REMINDER_ROW_ID_PREFIX = 'rem-';
 /** ID prefix for debt rows in the OrbitalComponent debt-sonata panel. */
@@ -297,6 +297,8 @@ export const HOME_QUICK_ACTION_ROUTE_DEBT = '/debt';
 export const HOME_QUICK_ACTION_ROUTE_REMINDER = '/reminder';
 /** Route path for the quick-action button that opens the nexus page. */
 export const HOME_QUICK_ACTION_ROUTE_NEXUS = '/nexus';
+/** Route path for the panel header that opens the entertainment page. */
+export const HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT = '/entertainment';
 
 // Week-agenda colour palette (light and dark mode)
 export const HOME_WEEK_AGENDA_COLOR_TEXT_LIGHT = '#4a1730';
@@ -325,12 +327,14 @@ export const HOME_RING_GRADIENT_ID_PREFIX = 'rg';
 export const HOME_RING_TRACK_DEFAULT = 'rgba(255,255,255,0.12)';
 export const HOME_CONCENTRIC_TRACK_DEFAULT = 'rgba(255,255,255,0.10)';
 /** Concentric ring diameter in pixels on viewports wider than the narrow breakpoint. */
-export const HOME_CONCENTRIC_SIZE_DEFAULT = 376;
-/** Concentric ring diameter in pixels on narrow viewports (≤940px). */
-export const HOME_CONCENTRIC_SIZE_NARROW = 300;
+export const HOME_CONCENTRIC_SIZE_DEFAULT = 400;
 export const HOME_ORBITAL_PANEL_SCROLL_SELECTOR = '.orbital-panel-scroll';
 /** SimpleChanges key for the stats @Input on OrbitalComponent. */
 export const HOME_ORBITAL_CHANGES_KEY_STATS = 'stats';
+/** Chinese portion of the activity panel footer quote (narrow viewport only). */
+export const HOME_ACTIVITY_FOOTER_ZH = '往日已成历史';
+/** English portion of the activity panel footer quote (narrow viewport only). */
+export const HOME_ACTIVITY_FOOTER_EN = 'Yesterday is history';
 
 ////////////////////// Below are entertainment page constants ////////////////////////
 
@@ -466,7 +470,7 @@ export const RECIPE_ROWS_PER_PAGE = 5;
 /** Maximum number of ingredient type tabs shown in the add/edit editor. */
 export const RECIPE_EDITOR_TYPE_MAX = 9;
 
-////////////////////// Below are Nexus page constants ////////////////////////////////
+////////////////////// Below are Portal page constants ////////////////////////////////
 
 export const NEXUS_MSG_LINK_UPDATED = 'Link updated';
 export const NEXUS_MSG_LINK_SAVED = 'Link saved';
@@ -483,13 +487,13 @@ export const NEXUS_MSG_CATEGORY_DELETED = 'Category deleted';
 export const NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL = 'Could not delete the category. Please try again.';
 export const NEXUS_MSG_DELETE_LINK_TITLE = 'Delete Link';
 export const NEXUS_MSG_DELETE_CATEGORY_TITLE = 'Delete Category';
-/** Confirm-delete message prefix for a Nexus link; link title is appended at the call site. */
+/** Confirm-delete message prefix for a Portal link; link title is appended at the call site. */
 export const NEXUS_MSG_DELETE_LINK_CONFIRM_PREFIX = 'Are you sure you want to delete "';
-/** Confirm-delete message suffix for a Nexus link. */
+/** Confirm-delete message suffix for a Portal link. */
 export const NEXUS_MSG_DELETE_LINK_CONFIRM_SUFFIX = '"?';
-/** Confirm-delete message prefix for a Nexus category; category name is appended at the call site. */
+/** Confirm-delete message prefix for a Portal category; category name is appended at the call site. */
 export const NEXUS_MSG_DELETE_CATEGORY_CONFIRM_PREFIX = 'Are you sure you want to delete category "';
-/** Confirm-delete message suffix for a Nexus category. */
+/** Confirm-delete message suffix for a Portal category. */
 export const NEXUS_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX =
 	'"? Links in this category will become uncategorised.';
 export const NEXUS_MSG_LOAD_LINKS_FAILED = 'Failed to load useful links';
@@ -513,7 +517,7 @@ export const LINK_DIALOG_LABEL_CANCEL = 'Cancel';
 export const LINK_DIALOG_LABEL_SAVE = 'Save';
 export const LINK_DIALOG_LABEL_ADD = 'Add Link';
 export const LINK_DIALOG_LABEL_TITLE_LOADING = 'Loading title…';
-/** Sentinel value for the "show all categories" filter in the Nexus links panel. */
+/** Sentinel value for the "show all categories" filter in the Portal links panel. */
 export const NEXUS_CATEGORY_ALL = 'all';
 /** Default colour applied to new and un-styled link categories. */
 export const NEXUS_DEFAULT_CATEGORY_COLOR = '#d53369';

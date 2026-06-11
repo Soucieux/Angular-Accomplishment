@@ -20,24 +20,25 @@ import {
 	ACTIVITY_SOURCE_RESONANCE
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
-import { EnvironmentInjector, Inject, Injectable, runInInjectionContext } from '@angular/core';
-import { Storage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from '@angular/fire/storage';
+import { Inject, Injectable } from '@angular/core';
+import { FirebaseStorage, ref as storageRef, getDownloadURL, uploadBytes, deleteObject } from 'firebase/storage';
 import { LOG } from '../../../common/app.logs';
 import {
 	Database,
+	DataSnapshot,
+	Query,
 	ref as dbRef,
-	list,
 	onValue,
 	runTransaction,
 	update,
 	remove,
 	get,
 	push
-} from '@angular/fire/database';
+} from 'firebase/database';
 import { Observable, map, of } from 'rxjs';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
-import { DatabaseService } from '../database.service';
+import { DatabaseService, FIREBASE_DATABASE, FIREBASE_STORAGE } from '../database.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -48,14 +49,45 @@ export class FirebaseService extends DatabaseService {
 	private statisticsRef: any;
 
 	constructor(
-		@Inject(Storage) private storage: Storage,
-		@Inject(Database) private db: Database,
-		@Inject(EnvironmentInjector) private environmentInjector: EnvironmentInjector,
+		@Inject(FIREBASE_STORAGE) private storage: FirebaseStorage,
+		@Inject(FIREBASE_DATABASE) private db: Database,
 		private searchStreamService: SearchStreamService
 	) {
 		super();
 		this.moviesRef = dbRef(this.db, 'movies');
 		this.statisticsRef = dbRef(this.db, 'statistics');
+	}
+
+	/**
+	 * Gets a reactive observable of the child snapshots under the given query.
+	 * Replaces the RxFire list() helper that was removed alongside @angular/fire —
+	 * wraps onValue and re-emits all children as snapshot rows on every change.
+	 *
+	 * {@link getMovieList} - Streams the movies collection into MovieItemVO rows.
+	 * {@link getHistory} - Streams the history collection newest-first.
+	 * {@link getPatchNotes} - Streams the patch notes sorted by timestamp.
+	 * {@link getDebtSonataTableDetails} - Streams the Account Expenses table rows.
+	 * {@link getReminderTableDetails} - Streams the reminder table rows.
+	 * {@link getQuotes} - Streams the quotes sorted newest-first.
+	 *
+	 * @param query - The database query or reference to observe.
+	 * @returns An observable that emits the array of child snapshots.
+	 */
+	private listAsObservable(query: Query): Observable<DataSnapshot[]> {
+		return new Observable((observer) => {
+			const unsubscribe = onValue(
+				query,
+				(snapshot) => {
+					const rows: DataSnapshot[] = [];
+					snapshot.forEach((child) => {
+						rows.push(child);
+					});
+					observer.next(rows);
+				},
+				(error) => observer.error(error)
+			);
+			return () => unsubscribe();
+		});
 	}
 
 	/**
@@ -91,31 +123,29 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the movie list.
 	 */
 	public getMovieList(): Observable<MovieItemVO[]> {
-		return runInInjectionContext(this.environmentInjector, () =>
-			list(this.moviesRef).pipe(
-				map((snapshots: any[]) =>
-					snapshots.map((snapshot: any) => {
-						const movie = snapshot.snapshot.val();
-						const movieItemVO = new MovieItemVO(movie.title, Number(movie.year));
-						movieItemVO.setMovieKey(snapshot.snapshot.key);
-						movieItemVO.setMovieId(movie.id);
-						movieItemVO.setMovieGenre(movie.genre);
-						movieItemVO.setMovieRate(movie.rate);
-						movieItemVO.setMovieCoverImageDownloadableLink(movie.coverImageLink);
-						movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
-						movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
-						movieItemVO.setIsFavourite(movie.isFavourite);
-						movieItemVO.setDescription(movie.description);
-						movieItemVO.setActors(movie.actors);
-						return movieItemVO;
-					})
-				),
-				map((movies) =>
-					/* Sort movies by first release date
-					   Note: By using this method, make sure the first release date has the format of YYYY.MM.DD */
-					movies.sort((a, b) =>
-						a.getMovieFirstReleaseDate().localeCompare(b.getMovieFirstReleaseDate())
-					)
+		return this.listAsObservable(this.moviesRef).pipe(
+			map((snapshots: any[]) =>
+				snapshots.map((snapshot: any) => {
+					const movie = snapshot.val();
+					const movieItemVO = new MovieItemVO(movie.title, Number(movie.year));
+					movieItemVO.setMovieKey(snapshot.key);
+					movieItemVO.setMovieId(movie.id);
+					movieItemVO.setMovieGenre(movie.genre);
+					movieItemVO.setMovieRate(movie.rate);
+					movieItemVO.setMovieCoverImageDownloadableLink(movie.coverImageLink);
+					movieItemVO.setMovieFirstReleaseDate(movie.firstReleaseDate);
+					movieItemVO.setMovieEpisodeNumber(movie.episodeNumber);
+					movieItemVO.setIsFavourite(movie.isFavourite);
+					movieItemVO.setDescription(movie.description);
+					movieItemVO.setActors(movie.actors);
+					return movieItemVO;
+				})
+			),
+			map((movies) =>
+				/* Sort movies by first release date
+				   Note: By using this method, make sure the first release date has the format of YYYY.MM.DD */
+				movies.sort((a, b) =>
+					a.getMovieFirstReleaseDate().localeCompare(b.getMovieFirstReleaseDate())
 				)
 			)
 		);
@@ -128,12 +158,12 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getStatistics(): Observable<any> {
 		return new Observable((observer) => {
-			runInInjectionContext(this.environmentInjector, () => {
-				const unsub = onValue(this.statisticsRef, (snapshot) => {
-					observer.next(snapshot.val());
-				});
-				return () => unsub();
-			});
+			const unsub = onValue(
+				this.statisticsRef,
+				(snapshot) => observer.next(snapshot.val()),
+				(error) => observer.error(error)
+			);
+			return () => unsub();
 		});
 	}
 
@@ -393,7 +423,7 @@ export class FirebaseService extends DatabaseService {
 		movieId: number
 	): Promise<boolean> {
 		try {
-			const snapshot = await runInInjectionContext(this.environmentInjector, () => get(this.moviesRef));
+			const snapshot = await get(this.moviesRef);
 			/* Firebase Realtime DB does not support server-side .where() queries
 			   like CloudBase, so we must iterate all movies to check for duplicates. */
 			const allMovies = snapshot.val();
@@ -468,16 +498,14 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the history list.
 	 */
 	public getHistory(): Observable<any[]> {
-		return runInInjectionContext(this.environmentInjector, () =>
-			list(dbRef(this.db, DATABASE_HISTORY)).pipe(
-				map((snapshots: any[]) =>
-					snapshots
-						.map((snapshot: any) => ({
-							key: snapshot.snapshot.key,
-							...snapshot.snapshot.val()
-						}))
-						.reverse()
-				)
+		return this.listAsObservable(dbRef(this.db, DATABASE_HISTORY)).pipe(
+			map((snapshots: any[]) =>
+				snapshots
+					.map((snapshot: any) => ({
+						key: snapshot.key,
+						...snapshot.val()
+					}))
+					.reverse()
 			)
 		);
 	}
@@ -530,29 +558,27 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the patch notes.
 	 */
 	public getPatchNotes(): Observable<any[]> {
-		return runInInjectionContext(this.environmentInjector, () =>
-			list(dbRef(this.db, DATABASE_PATCH_NOTES)).pipe(
-				map((snapshots: any[]) =>
-					snapshots
-						.map(
-							(snapshot: any) =>
-								({
-									key: snapshot.snapshot.key,
-									...snapshot.snapshot.val()
-								}) as {
-									key: string;
-									component: string;
-									element: string;
-									details: string;
-									status: string;
-									timestamp: string;
-									isBug: boolean;
-								}
-						)
-						/* Sort by timestamp ascending — list() returns insertion order,
-						   not timestamp order, so an explicit sort is needed. */
-						.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
-				)
+		return this.listAsObservable(dbRef(this.db, DATABASE_PATCH_NOTES)).pipe(
+			map((snapshots: any[]) =>
+				snapshots
+					.map(
+						(snapshot: any) =>
+							({
+								key: snapshot.key,
+								...snapshot.val()
+							}) as {
+								key: string;
+								component: string;
+								element: string;
+								details: string;
+								status: string;
+								timestamp: string;
+								isBug: boolean;
+							}
+					)
+					/* Sort by timestamp ascending — onValue returns insertion order,
+					   not timestamp order, so an explicit sort is needed. */
+					.sort((a, b) => a.timestamp.localeCompare(b.timestamp))
 			)
 		);
 	}
@@ -600,15 +626,17 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getDateCalculatorTableDetails(): Observable<any[]> {
 		return new Observable((observer) => {
-			runInInjectionContext(this.environmentInjector, () => {
-				const unsub = onValue(dbRef(this.db, DATABASE_DATE_CALCULATOR), (snapshot) => {
+			const unsub = onValue(
+				dbRef(this.db, DATABASE_DATE_CALCULATOR),
+				(snapshot) => {
 					const data = snapshot.val();
 					/* Firebase stores the collection as an object keyed by push ID;
 					   Object.values() converts it to an array for PrimeNG table binding. */
 					observer.next(data ? Object.values(data) : []);
-				});
-				return () => unsub();
-			});
+				},
+				(error) => observer.error(error)
+			);
+			return () => unsub();
 		});
 	}
 
@@ -618,27 +646,25 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the Account Expenses table details.
 	 */
 	public getDebtSonataTableDetails(): Observable<any[]> {
-		return runInInjectionContext(this.environmentInjector, () =>
-			/* list() reads once + subscribes to changes; pipe+map transforms
-			   each snapshot into {key, ...fields} for the table component. */
-			list(dbRef(this.db, DATABASE_DEBT_SONATA)).pipe(
-				map((snapshots: any[]) =>
-					snapshots.map((snapshot: any) => {
-						return {
-							key: snapshot.snapshot.key,
-							...snapshot.snapshot.val()
-						} as {
-							key: string;
-							name: string;
-							content: {
-								date: string;
-								debt: number;
-								original: number;
-								paid: boolean;
-							};
+		/* listAsObservable() reads once + subscribes to changes; pipe+map transforms
+		   each snapshot into {key, ...fields} for the table component. */
+		return this.listAsObservable(dbRef(this.db, DATABASE_DEBT_SONATA)).pipe(
+			map((snapshots: any[]) =>
+				snapshots.map((snapshot: any) => {
+					return {
+						key: snapshot.key,
+						...snapshot.val()
+					} as {
+						key: string;
+						name: string;
+						content: {
+							date: string;
+							debt: number;
+							original: number;
+							paid: boolean;
 						};
-					})
-				)
+					};
+				})
 			)
 		);
 	}
@@ -649,22 +675,20 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the reminder table details.
 	 */
 	public getReminderTableDetails(): Observable<any[]> {
-		return runInInjectionContext(this.environmentInjector, () =>
-			// Content shape is {text, date, link}.
-			list(dbRef(this.db, DATABASE_REMINDER)).pipe(
-				map((snapshots: any[]) =>
-					snapshots.map((snapshot: any) => {
-						return {
-							key: snapshot.snapshot.key,
-							...snapshot.snapshot.val()
-						} as {
-							key: string;
-							content: string;
-							date: string;
-							link: string;
-						};
-					})
-				)
+		// Content shape is {text, date, link}.
+		return this.listAsObservable(dbRef(this.db, DATABASE_REMINDER)).pipe(
+			map((snapshots: any[]) =>
+				snapshots.map((snapshot: any) => {
+					return {
+						key: snapshot.key,
+						...snapshot.val()
+					} as {
+						key: string;
+						content: string;
+						date: string;
+						link: string;
+					};
+				})
 			)
 		);
 	}
@@ -756,16 +780,14 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the quotes list.
 	 */
 	public getQuotes(): Observable<any[]> {
-		return runInInjectionContext(this.environmentInjector, () =>
-			list(dbRef(this.db, DATABASE_QUOTES)).pipe(
-				map((snapshots: any[]) =>
-					snapshots
-						.map((snapshot: any) => ({
-							key: snapshot.snapshot.key,
-							...snapshot.snapshot.val()
-						}))
-						.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp))
-				)
+		return this.listAsObservable(dbRef(this.db, DATABASE_QUOTES)).pipe(
+			map((snapshots: any[]) =>
+				snapshots
+					.map((snapshot: any) => ({
+						key: snapshot.key,
+						...snapshot.val()
+					}))
+					.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp))
 			)
 		);
 	}

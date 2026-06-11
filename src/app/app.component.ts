@@ -254,12 +254,12 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Handles the account button click. On mobile or when the nav is collapsed
-	 * outside of compact overlay mode, opens a sign-out confirmation dialog.
-	 * Otherwise toggles the popover menu.
+	 * Handles the account button click. On mobile, when the nav is collapsed,
+	 * or when the viewport is in compact mode, opens a sign-out confirmation
+	 * dialog. Otherwise toggles the popover menu.
 	 */
 	protected handleAccountButtonClick(): void {
-		if (this.navMobile || (this.navCollapsed && !this.navCompact)) {
+		if (this.navMobile || this.navCollapsed || this.navCompact) {
 			this.dialogService.openDialog(
 				this.dialogComponentContainer,
 				DIALOG_CONFIRM,

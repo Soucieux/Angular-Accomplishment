@@ -355,7 +355,7 @@ li:nth-child(10) .nav-icon {
 	align-items: center;
 	gap: 12px;
 	width: 100%;
-	padding: 5px;
+	padding: 5px 15px;
 	border: none;
 	background: transparent;
 	border-radius: 12px;

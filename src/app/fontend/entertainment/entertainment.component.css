@@ -36,15 +36,15 @@
  * All pages: font-weight 500
  */
 /* PAGE ACCENT COLOR — Entertainment
- * Deep Purple  primary #11998e   rgba(74, 29, 150)
- *              accent  #38ef7d   rgba(109, 40, 217)
+ * Vivid Spring  primary #4ade80   rgba(74, 222, 128)
+ *               dark    #22c55e   rgba(34, 197, 94)
  * Applied to: bar-title text, count-pill, active-chip background
- * To change: replace all #11998e and #38ef7d throughout this file.
+ * To change: replace all #4ade80 and #22c55e throughout this file.
  */
 .bar-title {
 	font-size: 44px;
 	font-weight: 500;
-	color: #11998e;
+	color: #4ade80;
 	letter-spacing: -0.5px;
 	margin: 0;
 	padding: 0;
@@ -54,9 +54,10 @@
 .count-pill {
 	font-size: 15px;
 	font-weight: 700;
-	color: #6d28d9;
-	background: rgba(109, 40, 217, 0.1);
+	color: #15803d;
+	background: rgba(74, 222, 128, 0.1);
 	border-radius: 20px;
+	margin-top: 10px;
 	padding: 5px 12px;
 	white-space: nowrap;
 }
@@ -135,7 +136,7 @@
 }
 
 .add-button {
-	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+	background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%) !important;
 }
 
 .history-button {
@@ -681,6 +682,18 @@
 ::ng-deep .dropdown .p-select-label {
 	padding: 5px 10px; /* Adjust these values as needed */
 }
+
+/* ─────────────────────────────────────────
+   Entrance animations
+───────────────────────────────────────── */
+@keyframes entReveal {
+	from { opacity: 0; transform: translateY(14px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.top-bar           { animation: entReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.category-row      { animation: entReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
+.content-container { animation: entReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both; }
 
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)

@@ -3,7 +3,13 @@ import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
 import { Utilities } from './app/common/app.utilities';
 import { CN } from './app/common/app.constant';
-import { CLOUDBASE, DatabaseService } from './app/backend/database-service/database.service';
+import {
+	CLOUDBASE,
+	DatabaseService,
+	FIREBASE_AUTH,
+	FIREBASE_DATABASE,
+	FIREBASE_STORAGE
+} from './app/backend/database-service/database.service';
 import { CloudbaseService } from './app/backend/database-service/cloudbase/cloudbase.service';
 import { FirebaseService } from './app/backend/database-service/firebase/firebase.service';
 import { LOG } from './app/common/app.logs';
@@ -33,16 +39,20 @@ void (async () => {
 
 		providers.push({ provide: CLOUDBASE, useValue: app });
 	} else {
-		const { provideFirebaseApp, initializeApp } = await import('@angular/fire/app');
-		const { provideAuth, getAuth } = await import('@angular/fire/auth');
-		const { provideDatabase, getDatabase } = await import('@angular/fire/database');
-		const { provideStorage, getStorage } = await import('@angular/fire/storage');
+		const [{ initializeApp }, { getAuth }, { getDatabase }, { getStorage }] = await Promise.all([
+			import('firebase/app'),
+			import('firebase/auth'),
+			import('firebase/database'),
+			import('firebase/storage')
+		]);
 
+		/* useFactory keeps each Firebase service lazy — getAuth() in particular starts
+		   auth-state restoration, so it should only run when the token is first injected. */
+		const app = initializeApp(environment.firebase);
 		providers.push(
-			provideFirebaseApp(() => initializeApp(environment.firebase)),
-			provideStorage(() => getStorage()),
-			provideAuth(() => getAuth()),
-			provideDatabase(() => getDatabase())
+			{ provide: FIREBASE_STORAGE, useFactory: () => getStorage(app) },
+			{ provide: FIREBASE_AUTH, useFactory: () => getAuth(app) },
+			{ provide: FIREBASE_DATABASE, useFactory: () => getDatabase(app) }
 		);
 	}
 	LOG.info(className, 'All startup completed');

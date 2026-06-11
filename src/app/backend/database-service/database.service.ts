@@ -5,8 +5,14 @@ import { Recipe } from '../../fontend/recipe/recipe.model';
 import { InjectionToken } from '@angular/core';
 import { NO_RATE } from '../../common/app.constant';
 import type cloudbase from '@cloudbase/js-sdk';
+import type { Auth } from 'firebase/auth';
+import type { Database } from 'firebase/database';
+import type { FirebaseStorage } from 'firebase/storage';
 export type CloudbaseApp = ReturnType<typeof cloudbase.init>;
 export const CLOUDBASE = new InjectionToken<CloudbaseApp>('CLOUDBASE');
+export const FIREBASE_AUTH = new InjectionToken<Auth>('FIREBASE_AUTH');
+export const FIREBASE_DATABASE = new InjectionToken<Database>('FIREBASE_DATABASE');
+export const FIREBASE_STORAGE = new InjectionToken<FirebaseStorage>('FIREBASE_STORAGE');
 
 @Injectable({ providedIn: 'root' })
 export abstract class DatabaseService {

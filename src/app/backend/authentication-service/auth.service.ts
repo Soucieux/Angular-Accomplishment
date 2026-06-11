@@ -1,4 +1,4 @@
-import { EnvironmentInjector, inject, Inject, Injectable, NgZone, runInInjectionContext } from '@angular/core';
+import { EnvironmentInjector, Inject, Injectable, NgZone } from '@angular/core';
 import {
 	GoogleAuthProvider,
 	signInWithEmailAndPassword,
@@ -7,11 +7,11 @@ import {
 	User,
 	signOut,
 	onAuthStateChanged
-} from '@angular/fire/auth';
+} from 'firebase/auth';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { LOG } from '../../common/app.logs';
-import { DatabaseService } from '../database-service/database.service';
+import { DatabaseService, FIREBASE_AUTH } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/app.utilities';
 import { CLOUDBASE_ERROR_INVALID_ARGUMENT, CLOUDBASE_ERROR_INVALID_CREDENTIALS, CN, MSG_UNEXPECTED_ERROR } from '../../common/app.constant';
@@ -69,7 +69,7 @@ export class AuthService {
 	private firebaseGetCurrentUser(): Observable<User | null> {
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
 		return new Observable((observer) => {
-			this.firebaseAuth = runInInjectionContext(this.ei, () => inject(Auth));
+			this.firebaseAuth = this.ei.get(FIREBASE_AUTH);
 
 			// onAuthStateChanged emits the user continuously
 			const unsubscribe = onAuthStateChanged(this.firebaseAuth, (user) => {

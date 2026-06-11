@@ -152,6 +152,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.navCompact = false;
 			this.navMode = 'side';
 			this.compactOverlayOpen = false;
+			if (wasCompact) {
+				this.navCollapsed = false;
+			}
 		} else {
 			if (!wasCompact) {
 				this.navCollapsed = true;

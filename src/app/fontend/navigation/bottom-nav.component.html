@@ -60,15 +60,15 @@
 		@if (notifSupported) {
 			<button
 				class="account-popover-item"
-				[class.account-popover-item--primary]="notificationPermission() !== 'granted'"
+				[class.account-popover-item--primary]="!notifSubscribed()"
 				type="button"
 				[disabled]="notificationPermission() === 'denied'"
 				(click)="toggleNotification()">
 				<span class="material-symbols-outlined" style="font-size: 20px">{{
-					notificationPermission() === 'granted' ? 'notifications_off' : 'notifications'
+					notifSubscribed() ? 'notifications_off' : 'notifications'
 				}}</span>
 				{{
-					notificationPermission() === 'granted'
+					notifSubscribed()
 						? NAV_NOTIF_LABEL_DISABLE
 						: notificationPermission() === 'denied'
 							? NAV_NOTIF_LABEL_BLOCKED

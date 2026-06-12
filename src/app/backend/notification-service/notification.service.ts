@@ -1,11 +1,21 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { SwPush } from '@angular/service-worker';
+import { map, Observable } from 'rxjs';
 import { DatabaseService } from '../database-service/database.service';
 import { environment } from '../../../environment/environment';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
+	/**
+	 * Emits true when a push subscription is active in the browser,
+	 * false when unsubscribed. Distinct from notification permission —
+	 * permission stays 'granted' even after unsubscribing.
+	 */
+	public readonly isSubscribed$: Observable<boolean> = this.swPush.subscription.pipe(
+		map(sub => sub !== null)
+	);
+
 	constructor(
 		private readonly swPush: SwPush,
 		private readonly databaseService: DatabaseService,
@@ -19,7 +29,7 @@ export class NotificationService {
 	 * @returns True when push notifications can be requested on this device.
 	 */
 	public isSupported(): boolean {
-		return isPlatformBrowser(this.platformId) && this.swPush.isEnabled && 'Notification' in window;
+		return this.isBrowserWithNotifications && this.swPush.isEnabled;
 	}
 
 	/**
@@ -28,10 +38,18 @@ export class NotificationService {
 	 * @returns The NotificationPermission value, or 'denied' on unsupported platforms.
 	 */
 	public getPermission(): NotificationPermission {
-		if (!isPlatformBrowser(this.platformId) || !('Notification' in window)) {
-			return 'denied';
-		}
+		if (!this.isBrowserWithNotifications) return 'denied';
 		return Notification.permission;
+	}
+
+	/**
+	 * Gets whether this code is running in a browser that supports the
+	 * Notification API. Guards both {@link isSupported} and {@link getPermission}.
+	 *
+	 * @returns True on browser platforms with Notification API support.
+	 */
+	private get isBrowserWithNotifications(): boolean {
+		return isPlatformBrowser(this.platformId) && 'Notification' in window;
 	}
 
 	/**

@@ -15,6 +15,7 @@ import {
 	signal
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { LOG } from '../../common/app.logs';
 import {
 	NAV_AVATAR_FALLBACK_INITIAL,
@@ -59,6 +60,8 @@ export class BottomNavComponent implements AfterViewInit {
 	protected readonly gridOpen = signal(false);
 	protected readonly accountOpen = signal(false);
 	protected readonly notificationPermission = signal<NotificationPermission>('default');
+	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, { initialValue: false });
+	protected readonly notifSupported = this.notificationService.isSupported();
 
 	constructor(
 		private ngZone: NgZone,
@@ -168,24 +171,13 @@ export class BottomNavComponent implements AfterViewInit {
 	}
 
 	/**
-	 * Gets whether Web Push notifications are supported on this device and
-	 * browser. Returns false in dev mode (service worker disabled) and on
-	 * unsupported browsers.
-	 *
-	 * @returns True when the notification toggle should be shown.
-	 */
-	protected get notifSupported(): boolean {
-		return this.notificationService.isSupported();
-	}
-
-	/**
 	 * Subscribes to push notifications when not yet granted, or unsubscribes
 	 * when already granted. Always refreshes the permission signal regardless
 	 * of whether the operation succeeds or fails.
 	 */
 	protected async toggleNotification(): Promise<void> {
 		try {
-			if (this.notificationPermission() === 'granted') {
+			if (this.notifSubscribed()) {
 				await this.notificationService.unsubscribe();
 			} else {
 				await this.notificationService.subscribe();

@@ -1089,7 +1089,7 @@ export class FirebaseService extends DatabaseService {
 		await set(ref, {
 			endpoint: subscription.endpoint,
 			keys: subscription.keys,
-			createdAt: new Date().toISOString()
+			createdAt: Utilities.getCurrentFormattedTime(true)
 		});
 	}
 

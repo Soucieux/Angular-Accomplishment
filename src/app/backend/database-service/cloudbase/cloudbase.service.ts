@@ -1629,10 +1629,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async savePushSubscription(subscription: PushSubscriptionJSON): Promise<void> {
 		try {
-			const existing = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).get();
-			if (existing.data?.length > 0) {
-				await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).doc(existing.data[0]._id).remove();
-			}
+			await this.deleteExistingSubscription();
 			const result = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).add({
 				endpoint: subscription.endpoint,
 				keys: subscription.keys,
@@ -1641,7 +1638,7 @@ export class CloudbaseService extends DatabaseService {
 			if (result.code) throw new Error(result.message);
 			LOG.info(this.className, `Push subscription saved`);
 		} catch (error: unknown) {
-			LOG.error(this.className, `Error saving push subscription`, error instanceof Error ? error : new Error('Unexpected error'));
+			LOG.error(this.className, `Error saving push subscription`, error as Error);
 			throw error;
 		}
 	}
@@ -1651,14 +1648,25 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async deletePushSubscription(): Promise<void> {
 		try {
-			const existing = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).get();
-			if (existing.data?.length > 0) {
-				await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).doc(existing.data[0]._id).remove();
-			}
+			await this.deleteExistingSubscription();
 			LOG.info(this.className, `Push subscription deleted`);
 		} catch (error: unknown) {
-			LOG.error(this.className, `Error deleting push subscription`, error instanceof Error ? error : new Error('Unexpected error'));
+			LOG.error(this.className, `Error deleting push subscription`, error as Error);
 			throw error;
+		}
+	}
+
+	/**
+	 * Fetches the current user's push subscription document (if any) and removes it.
+	 * Limits the fetch to one record to avoid an unbounded read.
+	 *
+	 * {@link savePushSubscription} - Calls this before adding a new subscription to ensure at most one record.
+	 * {@link deletePushSubscription} - Calls this to remove the active subscription on sign-out.
+	 */
+	private async deleteExistingSubscription(): Promise<void> {
+		const existing = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).limit(1).get();
+		if (existing.data?.length > 0) {
+			await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).doc(existing.data[0]._id).remove();
 		}
 	}
 }

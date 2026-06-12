@@ -208,7 +208,7 @@
 	position: absolute;
 	left: 0;
 	right: 0;
-	bottom: 15px;
+	bottom: 20px;
 	display: flex;
 	justify-content: center;
 	pointer-events: none;
@@ -448,6 +448,7 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	text-transform: capitalize;
 }
 
 .account-popover-status {
@@ -508,6 +509,12 @@
 .account-popover-item:focus-visible {
 	outline: 2px solid var(--vc-rose);
 	outline-offset: -2px;
+}
+
+.account-popover-item:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+	pointer-events: none;
 }
 
 /* ─────────────────────────────────────────

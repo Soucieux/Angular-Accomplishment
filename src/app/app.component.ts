@@ -15,6 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
 import { AuthService } from './backend/authentication-service/auth.service';
 import { DialogService } from './backend/dialog-service/dialog.service';
+import { NotificationService } from './backend/notification-service/notification.service';
 import { LOG } from './common/app.logs';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
@@ -78,6 +79,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	constructor(
 		private authService: AuthService,
 		private dialogService: DialogService,
+		private notificationService: NotificationService,
 		private router: Router,
 		private utilities: Utilities,
 		@Inject(PLATFORM_ID) private platformId: object
@@ -174,11 +176,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Signs the current user out using the appropriate service based on the
-	 * detected country (CloudBase for CN, Firebase otherwise).
+	 * Removes the push subscription then signs the current user out using the
+	 * appropriate service based on the detected country (CloudBase for CN,
+	 * Firebase otherwise).
 	 */
 	protected async logout(): Promise<void> {
 		this.accountMenuOpen = false;
+		await this.notificationService.unsubscribe().catch(() => {});
 		if (Utilities.getCurrentCountry() === CN) {
 			await this.authService.signOut();
 		} else {

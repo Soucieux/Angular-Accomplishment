@@ -403,6 +403,20 @@ export abstract class DatabaseService {
 	public abstract removeRecipe(recipeId: string): Promise<void>;
 
 	/**
+	 * Saves the user's Web Push subscription to the database so the server-side
+	 * notification function can dispatch push messages on their behalf.
+	 *
+	 * @param subscription - The serialised PushSubscription from the browser Push API.
+	 */
+	public abstract savePushSubscription(subscription: PushSubscriptionJSON): Promise<void>;
+
+	/**
+	 * Removes the current user's push subscription from the database, stopping
+	 * future notifications until the user re-subscribes.
+	 */
+	public abstract deletePushSubscription(): Promise<void>;
+
+	/**
 	 * Proxies an HTTP GET request through the `fetchUrl` CloudBase function,
 	 * bypassing browser CORS restrictions. Used for RSS news feeds and
 	 * link-title auto-fetch on the Nexus page.

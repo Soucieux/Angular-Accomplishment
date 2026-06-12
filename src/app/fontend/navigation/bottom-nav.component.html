@@ -57,6 +57,25 @@
 				>
 			</span>
 		</div>
+		@if (notifSupported) {
+			<button
+				class="account-popover-item"
+				[class.account-popover-item--primary]="notificationPermission() !== 'granted'"
+				type="button"
+				[disabled]="notificationPermission() === 'denied'"
+				(click)="toggleNotification()">
+				<span class="material-symbols-outlined" style="font-size: 20px">{{
+					notificationPermission() === 'granted' ? 'notifications_off' : 'notifications'
+				}}</span>
+				{{
+					notificationPermission() === 'granted'
+						? NAV_NOTIF_LABEL_DISABLE
+						: notificationPermission() === 'denied'
+							? NAV_NOTIF_LABEL_BLOCKED
+							: NAV_NOTIF_LABEL_ENABLE
+				}}
+			</button>
+		}
 		<button
 			class="account-popover-item account-popover-item--danger"
 			type="button"

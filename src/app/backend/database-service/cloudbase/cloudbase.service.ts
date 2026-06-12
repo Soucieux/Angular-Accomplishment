@@ -18,6 +18,7 @@ import {
 	DATABASE_STATISTICS,
 	DATABASE_RECIPES,
 	DATABASE_USEFUL_LINKS,
+	DATABASE_PUSH_SUBSCRIPTIONS,
 	USEFUL_LINK_TYPE_LINK,
 	USEFUL_LINK_TYPE_CATEGORY,
 	ACTIVITY_TYPE_UPDATED,
@@ -1616,6 +1617,47 @@ export class CloudbaseService extends DatabaseService {
 			this.statisticsRef.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(-1) }).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, `Error while removing recipe ${recipeId}`, error as Error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Saves the user's Web Push subscription to the push_subscriptions collection,
+	 * replacing any existing document so there is always at most one per user.
+	 *
+	 * @param subscription - The serialised PushSubscription from the browser Push API.
+	 */
+	public async savePushSubscription(subscription: PushSubscriptionJSON): Promise<void> {
+		try {
+			const existing = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).get();
+			if (existing.data?.length > 0) {
+				await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).doc(existing.data[0]._id).remove();
+			}
+			const result = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).add({
+				endpoint: subscription.endpoint,
+				keys: subscription.keys,
+				createdAt: Utilities.getCurrentFormattedTime(true)
+			});
+			if (result.code) throw new Error(result.message);
+			LOG.info(this.className, `Push subscription saved`);
+		} catch (error: unknown) {
+			LOG.error(this.className, `Error saving push subscription`, error instanceof Error ? error : new Error('Unexpected error'));
+			throw error;
+		}
+	}
+
+	/**
+	 * Removes the current user's push subscription from the push_subscriptions collection.
+	 */
+	public async deletePushSubscription(): Promise<void> {
+		try {
+			const existing = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).get();
+			if (existing.data?.length > 0) {
+				await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).doc(existing.data[0]._id).remove();
+			}
+			LOG.info(this.className, `Push subscription deleted`);
+		} catch (error: unknown) {
+			LOG.error(this.className, `Error deleting push subscription`, error instanceof Error ? error : new Error('Unexpected error'));
 			throw error;
 		}
 	}

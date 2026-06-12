@@ -15,7 +15,15 @@ import {
 	signal
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { NAV_AVATAR_FALLBACK_INITIAL, NAV_AVATAR_GRADIENT } from '../../common/app.constant';
+import { LOG } from '../../common/app.logs';
+import {
+	NAV_AVATAR_FALLBACK_INITIAL,
+	NAV_AVATAR_GRADIENT,
+	NAV_NOTIF_LABEL_BLOCKED,
+	NAV_NOTIF_LABEL_DISABLE,
+	NAV_NOTIF_LABEL_ENABLE
+} from '../../common/app.constant';
+import { NotificationService } from '../../backend/notification-service/notification.service';
 import { NavItem } from './bottom-nav.model';
 import { Utilities } from '../../common/app.utilities';
 
@@ -41,21 +49,33 @@ export class BottomNavComponent implements AfterViewInit {
 	@Input() public signedIn = false;
 	@Input() public userName = '';
 
+	private readonly className = 'BottomNavComponent';
+
 	protected readonly NAV_AVATAR_GRADIENT = NAV_AVATAR_GRADIENT;
+	protected readonly NAV_NOTIF_LABEL_ENABLE = NAV_NOTIF_LABEL_ENABLE;
+	protected readonly NAV_NOTIF_LABEL_DISABLE = NAV_NOTIF_LABEL_DISABLE;
+	protected readonly NAV_NOTIF_LABEL_BLOCKED = NAV_NOTIF_LABEL_BLOCKED;
 
 	protected readonly gridOpen = signal(false);
 	protected readonly accountOpen = signal(false);
+	protected readonly notificationPermission = signal<NotificationPermission>('default');
 
-	constructor(private ngZone: NgZone, @Inject(PLATFORM_ID) private platformId: object) {}
+	constructor(
+		private ngZone: NgZone,
+		private notificationService: NotificationService,
+		@Inject(PLATFORM_ID) private platformId: object
+	) {}
 
 	/**
-	 * Attaches the scroll auto-hide behaviour to the all-sections grid cells container.
+	 * Attaches the scroll auto-hide behaviour to the all-sections grid cells container
+	 * and seeds the notification permission signal with the current browser state.
 	 */
 	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.ngZone.runOutsideAngular(() =>
 				Utilities.attachScrollAutoHide(this.gridCells?.nativeElement)
 			);
+			this.notificationPermission.set(this.notificationService.getPermission());
 		}
 	}
 
@@ -145,6 +165,36 @@ export class BottomNavComponent implements AfterViewInit {
 	protected doSignOut(): void {
 		this.accountOpen.set(false);
 		this.signOut.emit();
+	}
+
+	/**
+	 * Gets whether Web Push notifications are supported on this device and
+	 * browser. Returns false in dev mode (service worker disabled) and on
+	 * unsupported browsers.
+	 *
+	 * @returns True when the notification toggle should be shown.
+	 */
+	protected get notifSupported(): boolean {
+		return this.notificationService.isSupported();
+	}
+
+	/**
+	 * Subscribes to push notifications when not yet granted, or unsubscribes
+	 * when already granted. Always refreshes the permission signal regardless
+	 * of whether the operation succeeds or fails.
+	 */
+	protected async toggleNotification(): Promise<void> {
+		try {
+			if (this.notificationPermission() === 'granted') {
+				await this.notificationService.unsubscribe();
+			} else {
+				await this.notificationService.subscribe();
+			}
+		} catch (error: unknown) {
+			LOG.error(this.className, 'Error toggling push notification', error instanceof Error ? error : new Error('Unexpected error'));
+		} finally {
+			this.notificationPermission.set(this.notificationService.getPermission());
+		}
 	}
 
 	/**

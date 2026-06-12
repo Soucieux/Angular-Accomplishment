@@ -33,12 +33,14 @@ import {
 	update,
 	remove,
 	get,
-	push
+	push,
+	set
 } from 'firebase/database';
+import type { Auth } from 'firebase/auth';
 import { Observable, map, of } from 'rxjs';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
-import { DatabaseService, FIREBASE_DATABASE, FIREBASE_STORAGE } from '../database.service';
+import { DatabaseService, FIREBASE_AUTH, FIREBASE_DATABASE, FIREBASE_STORAGE } from '../database.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -51,6 +53,7 @@ export class FirebaseService extends DatabaseService {
 	constructor(
 		@Inject(FIREBASE_STORAGE) private storage: FirebaseStorage,
 		@Inject(FIREBASE_DATABASE) private db: Database,
+		@Inject(FIREBASE_AUTH) private firebaseAuth: Auth,
 		private searchStreamService: SearchStreamService
 	) {
 		super();
@@ -1069,5 +1072,35 @@ export class FirebaseService extends DatabaseService {
 	/** @inheritdoc */
 	public removeRecipe(_recipeId: string): Promise<void> {
 		return Promise.resolve();
+	}
+
+	////////////////////// Below are Push Notification stubs ////////////////////
+
+	/**
+	 * Saves the Web Push subscription for the signed-in user at
+	 * push_subscriptions/{uid}, overwriting any previous document.
+	 *
+	 * @param subscription - The serialised PushSubscription from the browser.
+	 */
+	public async savePushSubscription(subscription: PushSubscriptionJSON): Promise<void> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return;
+		const ref = dbRef(this.db, `push_subscriptions/${uid}`);
+		await set(ref, {
+			endpoint: subscription.endpoint,
+			keys: subscription.keys,
+			createdAt: new Date().toISOString()
+		});
+	}
+
+	/**
+	 * Removes the Web Push subscription for the signed-in user from
+	 * push_subscriptions/{uid}.
+	 */
+	public async deletePushSubscription(): Promise<void> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return;
+		const ref = dbRef(this.db, `push_subscriptions/${uid}`);
+		await remove(ref);
 	}
 }

@@ -110,6 +110,9 @@ export const LS_NAV_COLLAPSED_KEY = 'nav_collapsed';
 export const NAV_AVATAR_FALLBACK_INITIAL = '?';
 /** Fallback background gradient for the avatar element when no user-specific colour is set. */
 export const NAV_AVATAR_GRADIENT = 'linear-gradient(135deg,#d53369,#daae51)';
+export const NAV_NOTIF_LABEL_ENABLE = 'Enable notifications';
+export const NAV_NOTIF_LABEL_DISABLE = 'Disable notifications';
+export const NAV_NOTIF_LABEL_BLOCKED = 'Notifications blocked';
 export const LOGIN_URL_DEFAULT_RETURN = '/';
 export const LOGIN_ANIM_OUT = 'out';
 export const LOGIN_ANIM_IN = 'in';
@@ -140,6 +143,7 @@ export const DATABASE_DEBT_SONATA = 'debt_sonata';
 export const DATABASE_REMINDER = 'reminder';
 export const DATABASE_STATISTICS = 'statistics';
 export const DATABASE_USEFUL_LINKS = 'useful_links'; // stores both links (type:'link') and categories (type:'category')
+export const DATABASE_PUSH_SUBSCRIPTIONS = 'push_subscriptions';
 
 ////////////////////// Below are shared UI constants /////////////////////////////////
 

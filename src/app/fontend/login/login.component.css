@@ -507,7 +507,38 @@
 }
 
 /* ─────────────────────────────────────────
-   Mobile ≤ 900px — "Retreat" layout
+   Browser — v-lamp-date override
+───────────────────────────────────────── */
+@media (display-mode: browser) and (max-width: 900px) {
+	.lamp-cone {
+		top: 15%;
+		width: 280px;
+		height: 320px;
+	}
+
+	.v-lamp.is-on .v-lamp-stage {
+		top: -8%;
+		transform: translate(-50%, 0) scale(0.7);
+	}
+
+	.v-lamp-form {
+		position: absolute;
+		top: 29%;
+		/* clamp preferred value (22.9vw) is ≤215px here, always hits the 264px floor */
+		width: min(300px, calc(100% - 32px));
+	}
+
+	.v-lamp-date {
+		bottom: 12%;
+		left: 50%;
+		width: 100%;
+		transform: translateX(-50%);
+		transition: opacity 0.4s ease;
+	}
+}
+
+/* ─────────────────────────────────────────
+   Mobile ≤ 900px — "Retreat" layout for web app
 ───────────────────────────────────────── */
 @media (display-mode: standalone) and (max-width: 900px) and (pointer: coarse) {
 	.lamp-cone {
@@ -529,7 +560,6 @@
 	}
 
 	.v-lamp-date {
-		position: absolute;
 		bottom: 15%;
 		left: 50%;
 		width: 100%;

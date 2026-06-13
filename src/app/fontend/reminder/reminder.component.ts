@@ -41,6 +41,7 @@ import {
 	REMINDER_AWAIT_SUFFIX_EN,
 	REMINDER_CATEGORY_COLOR_DEFAULT,
 	REMINDER_CATEGORY_PERSONAL,
+	REMINDER_CHIP_CUSTOM,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
 	REMINDER_DUE_SOON_LABEL,
@@ -100,6 +101,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	@ViewChild('reminderPanel') private reminderPanel!: ElementRef<HTMLElement>;
 	@ViewChild('cardGrid') private cardGrid!: ElementRef<HTMLElement>;
 	@ViewChild('dateOrLinkPopover') private dateOrLinkPopover!: Popover;
+	@ViewChild('tagPickerPopover') private tagPickerPopover?: Popover;
 	@ViewChild('editingDatepicker') private editingDatepicker?: DatePicker;
 	@ViewChild('newItemDatepicker') private newItemDatepicker?: DatePicker;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
@@ -122,8 +124,10 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_GREETING_PLURAL = REMINDER_GREETING_PLURAL;
 	protected readonly REMINDER_AWAIT_SUFFIX_CN = REMINDER_AWAIT_SUFFIX_CN;
 	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
-	protected readonly REMINDER_KNOWN_CATEGORIES = REMINDER_KNOWN_CATEGORIES;
+	protected readonly REMINDER_CHIP_CUSTOM = REMINDER_CHIP_CUSTOM;
 	private readonly categoryColorMap = REMINDER_CATEGORY_COLOR_MAP;
+	private readonly baseCategories: readonly string[] = REMINDER_KNOWN_CATEGORIES;
+	private readonly customTagColorCache = new Map<string, string>();
 	private gridResizeObserver?: ResizeObserver;
 	private itemsPerPage = REMINDER_ITEMS_PER_PAGE;
 	private doneKeys = new Set<string>();
@@ -138,6 +142,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected saveIndicator = false;
 	protected tagFilter = new Set<string>();
 	protected tagEditSession: TagEditSession | null = null;
+	protected tagPickerCustomMode = false;
 	private originalItems: ReminderDbRecord[] = [];
 	private itemsSub?: Subscription;
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
@@ -389,15 +394,38 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are category, done state, and due-soon helpers //////////////
 
 	/**
-	 * Gets the accent color for a tag, falling back to the default neutral when
-	 * the tag is absent or does not match a known category.
+	 * Gets the accent color for a tag. Known categories use their fixed palette
+	 * color; custom tags derive a deterministic HSL color from a hash of the
+	 * tag string so each custom tag always renders the same distinct hue.
 	 *
 	 * @param tag - The tag string to look up, or undefined when the item has no tag.
-	 * @returns A CSS hex color string.
+	 * @returns A CSS color string.
 	 */
 	protected tagColor(tag: string | undefined): string {
 		if (!tag) return REMINDER_CATEGORY_COLOR_DEFAULT;
-		return this.categoryColorMap[tag] ?? REMINDER_CATEGORY_COLOR_DEFAULT;
+		if (this.categoryColorMap[tag]) return this.categoryColorMap[tag];
+		const cached = this.customTagColorCache.get(tag);
+		if (cached) return cached;
+		let hash = 0;
+		for (let i = 0; i < tag.length; i++) {
+			hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+		}
+		const color = `hsl(${Math.abs(hash) % 360}, 60%, 42%)`;
+		this.customTagColorCache.set(tag, color);
+		return color;
+	}
+
+	/**
+	 * Gets the ordered list of tags for the filter bar: the four base categories
+	 * first, followed by any unique custom tags found across all current items.
+	 *
+	 * @returns The ordered array of tag strings with base categories leading.
+	 */
+	protected get filterBarTags(): string[] {
+		const custom = [
+			...new Set(this.items.map((item) => item.tag).filter((tag) => tag && !this.baseCategories.includes(tag)))
+		];
+		return [...this.baseCategories, ...custom];
 	}
 
 	/**
@@ -458,13 +486,16 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are tag filter methods for the item list ////////////////////
 
 	/**
-	 * Gets the items matching the selected tag filters (OR logic) or all items when no tags are selected.
+	 * Gets the non-blank items matching the selected tag filters (OR logic) or all non-blank items when
+	 * no tags are selected. Blank-text records are excluded so the paginator count and grid both reflect
+	 * only real items.
 	 *
-	 * @returns Filtered subset of items.
+	 * @returns The filtered subset of items with non-empty text.
 	 */
 	protected get filteredItems(): ReminderItem[] {
-		if (this.tagFilter.size === 0) return this.items;
-		return this.items.filter((item) => this.tagFilter.has(item.tag));
+		const nonBlank = this.items.filter((item) => item.text.trim() !== '');
+		if (this.tagFilter.size === 0) return nonBlank;
+		return nonBlank.filter((item) => this.tagFilter.has(item.tag));
 	}
 
 	/**
@@ -844,6 +875,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		const tagText = session.tagText.trim();
 		if (tagText) item.tag = tagText;
 		else if (session.index !== -1) item.tag = '';
+		this.tagPickerPopover?.hide();
 		this.cancelTagEdit();
 		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAG, item.tag);
 	}
@@ -868,53 +900,23 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Removes a tag from the new-item card. Local state update only — no DB write.
+	 * Gets the tag text currently being typed, returning an empty string when no
+	 * session is active so template bindings never evaluate against null.
 	 *
-	 * @param index - The 0-based index of the tag to remove.
+	 * @returns The current tag input text, or an empty string.
 	 */
-	protected removeNewItemTag(index: number): void {
-		this.newItem.tag = '';
+	protected get tagSessionText(): string {
+		return this.tagEditSession?.tagText ?? '';
 	}
 
 	/**
-	 * Removes a tag from an existing card and persists the updated tags array to CloudBase.
+	 * Sets the tag text on the active session. No-op when no session is active,
+	 * which prevents two-way binding crashes during the session teardown cycle.
 	 *
-	 * @param index - The 0-based index of the tag to remove.
-	 * @param item - The card whose tag is being removed.
+	 * @param value - The new tag input text.
 	 */
-	protected async removeExistingCardTag(index: number, item: ReminderItem): Promise<void> {
-		const returnCode = this.dialogService.ensurePermission(
-			this.dialogComponentContainer,
-			this.getOpenId(item.key)
-		)
-			? SUCCESS
-			: FAILURE;
-		if (returnCode === FAILURE) return;
-		item.tag = '';
-		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAG, item.tag);
-	}
-
-	/**
-	 * Returns whether a specific tag cell is in edit mode.
-	 *
-	 * @param item - The card to check.
-	 * @param index - The tag index to check.
-	 * @returns True when that exact tag cell is being edited.
-	 */
-	protected isEditingTag(item: ReminderItem, index: number): boolean {
-		const session = this.tagEditSession;
-		return session !== null && !session.isNewItem && session.item === item && session.index === index;
-	}
-
-	/**
-	 * Returns whether the new-tag input is open for a given card.
-	 *
-	 * @param item - The card to check.
-	 * @returns True when the add-new-tag input is open for this card.
-	 */
-	protected isAddingTag(item: ReminderItem): boolean {
-		const session = this.tagEditSession;
-		return session !== null && !session.isNewItem && session.item === item && session.index === -1;
+	protected set tagSessionText(value: string) {
+		if (this.tagEditSession) this.tagEditSession = { ...this.tagEditSession, tagText: value };
 	}
 
 	////////////////////// Below are tag editing handlers for the new-item card ////////////////
@@ -932,17 +934,6 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			isNewItem: true,
 			tagText: index === -1 ? '' : this.newItem.tag
 		};
-	}
-
-	/**
-	 * Returns whether a specific new-item tag cell is in edit mode.
-	 *
-	 * @param index - The tag index to check.
-	 * @returns True when that exact tag cell is being edited.
-	 */
-	protected isEditingNewTag(index: number): boolean {
-		const session = this.tagEditSession;
-		return session !== null && session.isNewItem && session.index === index;
 	}
 
 	/**
@@ -1055,6 +1046,16 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	////////////////////// Below are new-item category selection and paginator helpers ///////
 
 	/**
+	 * Returns true when the given tag is one of the four built-in categories.
+	 *
+	 * @param tag - The tag string to test.
+	 * @returns True when the tag is a known base category.
+	 */
+	protected isKnownCategory(tag: string): boolean {
+		return this.baseCategories.includes(tag);
+	}
+
+	/**
 	 * Sets the selected category for the new-item card. Clicking the same category
 	 * a second time deselects it (clears the tags array).
 	 *
@@ -1062,6 +1063,54 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected selectNewItemCategory(tag: string): void {
 		this.newItem.tag = tag;
+	}
+
+	/**
+	 * Selects a category chip for an existing card, persists the change, and
+	 * closes the tag picker popover. No-op when no session is active or the tag
+	 * is already set to the selected value.
+	 *
+	 * @param tag - The tag string to apply.
+	 */
+	protected async onSelectItemCategory(tag: string): Promise<void> {
+		const item = this.tagEditSession?.item;
+		if (!item) return;
+		if (item.tag === tag) {
+			this.tagPickerPopover?.hide();
+			return;
+		}
+		this.tagEditSession = { item, index: 0, isNewItem: false, tagText: tag };
+		await this.onTagUpdate();
+	}
+
+	/**
+	 * Opens the tag picker popover anchored to the clicked tag label.
+	 *
+	 * @param event - The click event used to position the popover.
+	 * @param item - The card whose tag will be edited.
+	 */
+	protected openTagPicker(event: Event, item: ReminderItem): void {
+		this.tagPickerCustomMode = false;
+		this.startTagEdit(item, 0);
+		this.tagPickerPopover?.show(event);
+	}
+
+	/**
+	 * Clears the tag picker state when the popover closes for any reason.
+	 */
+	protected onTagPickerHide(): void {
+		this.tagPickerCustomMode = false;
+		this.tagEditSession = null;
+	}
+
+	/**
+	 * Switches the tag picker popover from chip-selection mode to free-text input mode.
+	 */
+	protected startTagPickerCustomInput(): void {
+		this.tagPickerCustomMode = true;
+		if (this.tagEditSession) {
+			this.tagEditSession = { ...this.tagEditSession, index: -1, tagText: '' };
+		}
 	}
 
 	/**

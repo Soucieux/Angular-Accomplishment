@@ -22,7 +22,7 @@
 				</div>
 			</div>
 			<div
-				class="rm-due-card hide-on-mobile"
+				class="rm-due-card hide-on-narrow-or-mobile"
 				[style.--due-color]="dueSoonCount > 0 ? '#c2410c' : '#94a3b8'">
 				<span class="material-symbols-outlined rm-icon">notifications_active</span>
 				<div class="rm-due-number">{{ dueSoonCount }}</div>
@@ -42,7 +42,7 @@
 				(click)="clearTagFilter()">
 				{{ REMINDER_FILTER_ALL }}
 			</button>
-			@for (tag of REMINDER_KNOWN_CATEGORIES; track tag) {
+			@for (tag of filterBarTags; track tag) {
 				<button
 					class="rm-filter-chip"
 					[style.background]="isTagSelected(tag) ? tagColor(tag) + '1f' : null"
@@ -98,7 +98,11 @@
 									[(ngModel)]="item.text"
 									(keyup.enter)="onCardTextUpdate(item)"
 									(blur)="onCardTextUpdate(item)" />
-								<div class="rm-card-category">{{ item.tag }}</div>
+								<div
+									class="rm-card-category rm-card-category-clickable"
+									(click)="openTagPicker($event, item)">
+									{{ item.tag || REMINDER_CHIP_CUSTOM }}
+								</div>
 							</div>
 						</div>
 
@@ -211,15 +215,39 @@
 						(keyup.enter)="addNewTextOnly()" />
 				</div>
 				<div class="rm-new-card-row2">
-					@for (tag of REMINDER_KNOWN_CATEGORIES; track tag) {
+					@if (isAddingNewTag()) {
+						<div class="rm-tag-custom-row">
+							<input
+								class="rm-tag-inline-input"
+								type="text"
+								[placeholder]="REMINDER_PLACEHOLDER_TAG"
+								[(ngModel)]="tagSessionText"
+								(keyup.enter)="onNewItemTagUpdate()"
+								(blur)="onNewItemTagUpdate()" />
+							<button class="rm-chip-remove" (click)="cancelTagEdit()">
+								<span class="material-symbols-outlined rm-icon" style="font-size: 11px">close</span>
+							</button>
+						</div>
+					} @else {
+						@for (tag of filterBarTags; track tag) {
+							<button
+								class="rm-category-chip"
+								[class.rm-category-chip-selected]="newItem.tag === tag"
+								[style.background]="newItem.tag === tag ? tagColor(tag) + '1f' : null"
+								[style.color]="newItem.tag === tag ? tagColor(tag) : null"
+								(click)="selectNewItemCategory(tag)">
+								<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
+								<span class="hide-on-narrow-or-mobile">{{ tag }}</span>
+							</button>
+						}
 						<button
 							class="rm-category-chip"
-							[class.rm-category-chip-selected]="newItem.tag === tag"
-							[style.background]="newItem.tag === tag ? tagColor(tag) + '1f' : null"
-							[style.color]="newItem.tag === tag ? tagColor(tag) : null"
-							(click)="selectNewItemCategory(tag)">
-							<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
-							<span class="hide-on-mobile">{{ tag }}</span>
+							[class.rm-category-chip-selected]="newItem.tag && !isKnownCategory(newItem.tag)"
+							[style.background]="newItem.tag && !isKnownCategory(newItem.tag) ? tagColor(newItem.tag) + '1f' : null"
+							[style.color]="newItem.tag && !isKnownCategory(newItem.tag) ? tagColor(newItem.tag) : null"
+							(click)="startNewItemTagEdit(-1)">
+							<span class="rm-filter-dot" [style.background]="newItem.tag && !isKnownCategory(newItem.tag) ? tagColor(newItem.tag) : '#94a3b8'"></span>
+							{{ newItem.tag && !isKnownCategory(newItem.tag) ? newItem.tag : REMINDER_CHIP_CUSTOM }}
 						</button>
 					}
 					<span class="rm-bar-spacer"></span>
@@ -303,6 +331,41 @@
 						}
 					}
 				</p-inputgroup>
+			</div>
+		</p-popover>
+
+		<!-- ── Tag picker popover ────────────────────────────────────── -->
+		<p-popover [focusOnShow]="false" #tagPickerPopover (onHide)="onTagPickerHide()">
+			<div class="rm-tag-picker-popover">
+				@if (!tagPickerCustomMode) {
+					@for (tag of filterBarTags; track tag) {
+						<button
+							class="rm-category-chip"
+							[class.rm-category-chip-selected]="tagEditSession?.item?.tag === tag"
+							[style.background]="tagEditSession?.item?.tag === tag ? tagColor(tag) + '1f' : null"
+							[style.color]="tagEditSession?.item?.tag === tag ? tagColor(tag) : null"
+							(click)="onSelectItemCategory(tag)">
+							<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
+							{{ tag }}
+						</button>
+					}
+					<button
+						class="rm-category-chip rm-chip-custom"
+						(click)="startTagPickerCustomInput()">
+						<span class="material-symbols-outlined rm-icon" style="font-size: 13px">add</span>
+						{{ REMINDER_CHIP_CUSTOM }}
+					</button>
+				} @else {
+					<div class="rm-tag-picker-input-row">
+						<input
+							class="rm-tag-picker-input"
+							type="text"
+							[placeholder]="REMINDER_PLACEHOLDER_TAG"
+							[(ngModel)]="tagSessionText"
+							(keyup.enter)="onTagUpdate()"
+							(blur)="onTagUpdate()" />
+					</div>
+				}
 			</div>
 		</p-popover>
 

@@ -292,6 +292,73 @@
 	margin-top: 3px;
 }
 
+.rm-card-category-clickable {
+	cursor: pointer;
+}
+
+.rm-card-category-clickable:hover {
+	opacity: 0.7;
+}
+
+.rm-chip-custom {
+	color: #64748b;
+	border-style: dashed;
+}
+
+.rm-tag-picker-popover {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	max-width: 250px;
+}
+
+::ng-deep .p-popover .p-popover-content {
+	padding: 12px !important;
+}
+
+.rm-tag-picker-input-row {
+	display: flex;
+	align-items: center;
+	width: 120px;
+}
+
+.rm-tag-picker-input {
+	flex: 1;
+	border: none;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+	outline: none;
+	background: transparent;
+	font-size: 13px;
+	padding: 4px 2px;
+	width: 120px;
+}
+
+.rm-tag-picker-input::placeholder {
+	color: #9aa3af;
+}
+
+.rm-tag-custom-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.rm-tag-inline-input {
+	width: 90px;
+	min-width: 60px;
+	border: none;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+	outline: none;
+	background: transparent;
+	font-size: 12px;
+	padding: 4px 2px;
+}
+
+.rm-tag-inline-input::placeholder {
+	color: #9aa3af;
+}
+
 /* ── Card bottom bar ─────────────────────────────────────────────────────── */
 .rm-card-bar {
 	display: flex;
@@ -653,13 +720,25 @@
    Entrance animations
 ───────────────────────────────────────── */
 @keyframes rmReveal {
-	from { opacity: 0; transform: translateY(14px); }
-	to   { opacity: 1; transform: translateY(0); }
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
-.rm-masthead   { animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.rm-filter-bar { animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
-.rm-card-grid  { animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both; }
+.rm-masthead {
+	animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rm-filter-bar {
+	animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+.rm-card-grid {
+	animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
 
 /* ─────────────────────────────────────────
    Responsive ≤ 940px (mobile)

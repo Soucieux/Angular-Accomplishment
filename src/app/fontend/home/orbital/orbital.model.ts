@@ -32,6 +32,7 @@ export interface OrbitalReminderRow {
 	name: string;
 	dueLabel: string;
 	overdue: boolean;
+	daysUntilDue: number;
 }
 
 /** Shape of one recipe row in the recipes glass panel. */
@@ -47,8 +48,18 @@ export interface OrbitalDebtRow {
 	name: string;
 	dueLabel: string;
 	overdue: boolean;
+	daysUntilDue: number;
 	percentage: number;
 	barColor: string;
+}
+
+/** Shape of one chip in the urgency strip shown on the orbital dashboard. */
+export interface OrbitalUrgentItem {
+	id: string;
+	name: string;
+	daysUntilDue: number;
+	dueLabel: string;
+	type: 'reminder' | 'debt';
 }
 
 /** Shape of one activity row in the activity glass panel. */

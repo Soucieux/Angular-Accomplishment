@@ -113,6 +113,74 @@
 }
 
 /* ─────────────────────────────────────────
+   Urgency strip (desktop only)
+───────────────────────────────────────── */
+.orbital-urgency-strip {
+	position: absolute;
+	top: 60px;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 2px 16px;
+	background: linear-gradient(135deg, #ef4444, #dc2626);
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	border-radius: 999px;
+	box-shadow: 0 4px 20px rgba(239, 68, 68, 0.45);
+	white-space: nowrap;
+	z-index: 10;
+	animation:
+		urgency-appear 0.4s cubic-bezier(0.22, 1, 0.36, 1) both,
+		urgency-pulse 2s ease-in-out 0.6s infinite;
+}
+
+.orbital-urgency-warning-icon {
+	padding-bottom: 5px;
+	font-size: 23px;
+	color: #fff;
+	flex-shrink: 0;
+}
+
+.orbital-urgency-chip {
+	display: inline-flex;
+	align-items: center;
+	max-width: 480px;
+	overflow: hidden;
+}
+
+.orbital-urgency-chip-label {
+	font-size: 14px;
+	font-weight: 600;
+	color: #fff;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@keyframes urgency-appear {
+	from {
+		opacity: 0;
+		transform: translateX(-50%) translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(-50%) translateY(0);
+	}
+}
+
+@keyframes urgency-pulse {
+	0%, 100% {
+		opacity: 1;
+		box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
+	}
+	50% {
+		opacity: 0.38;
+		box-shadow: 0 4px 8px rgba(239, 68, 68, 0.15);
+	}
+}
+
+/* ─────────────────────────────────────────
    Quick actions row
 ───────────────────────────────────────── */
 .orbital-quick-actions {
@@ -209,7 +277,7 @@
 ───────────────────────────────────────── */
 .orbital-satellites {
 	position: absolute;
-	top: 250px;
+	top: 240px;
 	left: 50%;
 	transform: translate(-50%);
 	width: 1240px;
@@ -606,41 +674,41 @@
 ───────────────────────────────────────── */
 .orbital-entertainment {
 	--panel-accent: #4ade80;
-	left: calc(25% - 254px);
+	left: calc(24% - 254px);
 	top: 270px;
 	animation-delay: 0.42s;
 }
 
 .orbital-reminders {
 	--panel-accent: #1a6dff;
-	right: calc(25% - 258px);
+	right: calc(24% - 258px);
 	top: 270px;
 	animation-delay: 0.47s;
 }
 
 .orbital-shortcuts {
 	--panel-accent: #a3e635;
-	right: calc(25% - 258px);
+	right: calc(24% - 258px);
 	top: clamp(570px, 45dvh, 600px);
 	animation-delay: 0.52s;
 }
 
 .orbital-activity {
-	right: calc(25% - 258px);
+	right: calc(24% - 258px);
 	top: clamp(870px, 70dvh, 900px);
 	animation-delay: 0.57s;
 }
 
 .orbital-debt-sonata {
 	--panel-accent: #f97316;
-	left: calc(25% - 254px);
+	left: calc(24% - 254px);
 	top: clamp(570px, 45dvh, 600px);
 	animation-delay: 0.62s;
 }
 
 .orbital-recipes {
 	--panel-accent: #d53369;
-	left: calc(25% - 254px);
+	left: calc(24% - 254px);
 	top: clamp(870px, 70dvh, 900px);
 	animation-delay: 0.67s;
 }

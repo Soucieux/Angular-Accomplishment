@@ -24,11 +24,11 @@
 		<div class="orbital-satellites">
 			<div
 				class="orbital-satellite"
-				pTooltip="% of upcoming reminders not yet overdue"
+				[pTooltip]="HOME_SATELLITE_TOOLTIP_STREAK"
 				tooltipPosition="top">
 				<div class="orbital-satellite-disc">
-					<span class="material-symbols-outlined">task_alt</span>
-					<div class="orbital-satellite-number">{{ reminderOnTimeRate }}%</div>
+					<span class="material-symbols-outlined">local_fire_department</span>
+					<div class="orbital-satellite-number">{{ activityStreak }}</div>
 				</div>
 				<div class="orbital-satellite-label">Streak</div>
 			</div>
@@ -86,6 +86,16 @@
 				</div>
 			}
 		</div>
+
+		<!-- ── Urgency strip (desktop only, items due within 3 days) ──────── -->
+		@if (urgentItems.length > 0) {
+			<div class="orbital-urgency-strip hide-on-narrow-or-mobile">
+				<span class="material-symbols-outlined orbital-urgency-warning-icon">warning</span>
+				<div class="orbital-urgency-chip">
+					<span class="orbital-urgency-chip-label">{{ urgentSummary }}</span>
+				</div>
+			</div>
+		}
 
 		<!-- Quick-action pill buttons -->
 		<div class="orbital-quick-actions">

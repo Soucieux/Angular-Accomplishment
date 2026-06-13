@@ -82,7 +82,7 @@ export const HISTORY_STYLE_DELETED = 'solid red';
 ////////////////////// Below are application lifecycle constants //////////////////////
 
 /** Layout breakpoint for compact overlay nav: below this width the drawer switches to overlay mode. */
-export const APP_BREAKPOINT_COMPACT = 1200;
+export const APP_BREAKPOINT_COMPACT = 1300;
 /** Layout breakpoint for narrow viewport mode: below this width the sidebar collapses to an icon-only strip and nav labels are hidden. */
 export const APP_BREAKPOINT_NARROW = 940;
 export const COMPONENT_DESTROY = 'Component Destroyed';
@@ -339,6 +339,26 @@ export const HOME_ORBITAL_CHANGES_KEY_STATS = 'stats';
 export const HOME_ACTIVITY_FOOTER_ZH = '往日已成历史';
 /** English portion of the activity panel footer quote (narrow viewport only). */
 export const HOME_ACTIVITY_FOOTER_EN = 'Yesterday is history';
+/** Tooltip shown on the Streak satellite on the orbital dashboard. */
+export const HOME_SATELLITE_TOOLTIP_STREAK = 'Consecutive days with at least one activity logged';
+/** Number of days within which a reminder or debt item triggers the urgency strip. */
+export const ORBITAL_URGENCY_WINDOW_DAYS = 3;
+/** Type discriminator for reminder chips in the urgency strip. */
+export const ORBITAL_URGENCY_CHIP_TYPE_REMINDER = 'reminder';
+/** Type discriminator for debt chips in the urgency strip. */
+export const ORBITAL_URGENCY_CHIP_TYPE_DEBT = 'debt';
+/** Separator between name and dueLabel within one urgency strip item (e.g. "Pay bill · Tomorrow"). */
+export const ORBITAL_URGENCY_ITEM_SEPARATOR = ' · ';
+/** Separator between distinct items in the combined urgency strip summary. */
+export const ORBITAL_URGENCY_GROUP_SEPARATOR = '  |  ';
+/** Maximum characters shown for a single item name in the urgency strip before truncation. */
+export const ORBITAL_URGENCY_TEXT_MAX_CHARS = 30;
+/** Plural label used when multiple reminders appear in the urgency strip. */
+export const ORBITAL_URGENCY_LABEL_REMINDERS = 'reminders';
+/** Plural label used when multiple debts appear in the urgency strip. */
+export const ORBITAL_URGENCY_LABEL_DEBTS = 'debts';
+/** Appended after the closest due date when multiple items have different due dates in the urgency strip. */
+export const ORBITAL_URGENCY_LABEL_VARIOUS = 'Various';
 
 ////////////////////// Below are entertainment page constants ////////////////////////
 
@@ -597,6 +617,8 @@ export const REMINDER_CATEGORY_PERSONAL = 'Personal';
 export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
 /** Number of days ahead treated as "due soon". */
 export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;
+/** Label for the chip that opens the free-text custom tag input. */
+export const REMINDER_CHIP_CUSTOM = 'Custom';
 
 ////////////////////// Below are Debt Sonata page constants //////////////////////////
 

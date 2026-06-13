@@ -27,6 +27,7 @@ import {
 	OrbitalQuickAction,
 	OrbitalRecipeRow,
 	OrbitalReminderRow,
+	OrbitalUrgentItem,
 	OrbitalWeekDay,
 	QUICK_ACTIONS
 } from './orbital.model';
@@ -129,7 +130,17 @@ import {
 	HOME_QUICK_ACTION_ROUTE_NEXUS,
 	HOME_QUICK_ACTION_ROUTE_RECIPE,
 	HOME_QUICK_ACTION_ROUTE_REMINDER,
-	HOME_REMINDER_ROW_ID_PREFIX
+	HOME_REMINDER_ROW_ID_PREFIX,
+	HOME_SATELLITE_TOOLTIP_STREAK,
+	ORBITAL_URGENCY_CHIP_TYPE_DEBT,
+	ORBITAL_URGENCY_CHIP_TYPE_REMINDER,
+	ORBITAL_URGENCY_GROUP_SEPARATOR,
+	ORBITAL_URGENCY_ITEM_SEPARATOR,
+	ORBITAL_URGENCY_LABEL_DEBTS,
+	ORBITAL_URGENCY_LABEL_REMINDERS,
+	ORBITAL_URGENCY_LABEL_VARIOUS,
+	ORBITAL_URGENCY_TEXT_MAX_CHARS,
+	ORBITAL_URGENCY_WINDOW_DAYS
 } from '../../../common/app.constant';
 
 @Component({
@@ -165,6 +176,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	protected readonly HOME_QUICK_ACTION_ROUTE_DEBT = HOME_QUICK_ACTION_ROUTE_DEBT;
 	protected readonly HOME_QUICK_ACTION_ROUTE_RECIPE = HOME_QUICK_ACTION_ROUTE_RECIPE;
 	protected readonly HOME_QUICK_ACTION_ROUTE_NEXUS = HOME_QUICK_ACTION_ROUTE_NEXUS;
+	protected readonly HOME_SATELLITE_TOOLTIP_STREAK = HOME_SATELLITE_TOOLTIP_STREAK;
 	protected currentUser$!: Observable<any>;
 	protected genreBars: { label: string; count: number; percentage: number; color: string }[] = [];
 	protected reminderRows: OrbitalReminderRow[] = [];
@@ -172,7 +184,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	protected debtRows: OrbitalDebtRow[] = [];
 	protected activityRows: OrbitalActivityRow[] = [];
 	protected addedThisWeek = 0;
-	protected reminderOnTimeRate = 100;
+	protected activityStreak = 0;
 
 	/**
 	 * Subscribes to the auth state observable to keep the current user up to date.
@@ -202,7 +214,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		if (changes[HOME_ORBITAL_CHANGES_KEY_STATS] && this.stats) {
 			this.genreBars = this.buildGenreBars();
 			this.reminderRows = this.buildReminderRows();
-			this.reminderOnTimeRate = this.buildReminderOnTimeRate();
+			this.activityStreak = this.buildActivityStreak();
 			this.recipeRows = this.buildRecipeRows();
 			this.debtRows = this.buildDebtRows();
 			this.activityRows = this.buildActivityRows();
@@ -253,16 +265,137 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	}
 
 	/**
-	 * Builds the reminder on-time rate as a whole-number percentage.
-	 * Computes from the already-built reminderRows, where each row carries
-	 * a pre-calculated overdue flag. Returns 100 when no dated reminders exist.
+	 * Gets the list of reminder and debt items due within the urgency window,
+	 * sorted by ascending days until due so the most urgent appears first.
 	 *
-	 * @returns Percentage of dated reminders that are not yet overdue (0–100).
+	 * @returns Merged, sorted array of urgent items for the urgency strip.
 	 */
-	private buildReminderOnTimeRate(): number {
-		if (!this.reminderRows.length) return 100;
-		const overdueCount = this.reminderRows.filter((r) => r.overdue).length;
-		return Math.round(((this.reminderRows.length - overdueCount) / this.reminderRows.length) * 100);
+	protected get urgentItems(): OrbitalUrgentItem[] {
+		return [
+			...this.buildUrgentItems(this.reminderRows, ORBITAL_URGENCY_CHIP_TYPE_REMINDER as 'reminder'),
+			...this.buildUrgentItems(this.debtRows, ORBITAL_URGENCY_CHIP_TYPE_DEBT as 'debt')
+		].sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+	}
+
+	/**
+	 * Gets the urgency strip summary string. Reminders and debts are each
+	 * built via {@link buildGroupSummary} and joined with the group separator.
+	 *
+	 * @returns Combined urgency summary string for the strip label.
+	 */
+	protected get urgentSummary(): string {
+		const items = this.urgentItems;
+		return [
+			this.buildGroupSummary(
+				items.filter((item) => item.type === ORBITAL_URGENCY_CHIP_TYPE_REMINDER),
+				ORBITAL_URGENCY_LABEL_REMINDERS
+			),
+			this.buildGroupSummary(
+				items.filter((item) => item.type === ORBITAL_URGENCY_CHIP_TYPE_DEBT),
+				ORBITAL_URGENCY_LABEL_DEBTS
+			)
+		]
+			.filter((part): part is string => part !== null)
+			.join(ORBITAL_URGENCY_GROUP_SEPARATOR);
+	}
+
+	/**
+	 * Filters a row array to items within the urgency window and maps each to
+	 * an OrbitalUrgentItem with the given type literal.
+	 *
+	 * {@link urgentItems} - Builds the merged urgent list from reminders and debts.
+	 *
+	 * @param rows - The source rows, each carrying at minimum id, name, daysUntilDue, and dueLabel.
+	 * @param type - The type literal to stamp on every produced item.
+	 * @returns Filtered and mapped urgent items for the given source.
+	 */
+	private buildUrgentItems(
+		rows: { id: string; name: string; daysUntilDue: number; dueLabel: string }[],
+		type: OrbitalUrgentItem['type']
+	): OrbitalUrgentItem[] {
+		return rows
+			.filter((row) => row.daysUntilDue <= ORBITAL_URGENCY_WINDOW_DAYS)
+			.map((row) => ({ id: row.id, name: row.name, daysUntilDue: row.daysUntilDue, dueLabel: row.dueLabel, type }));
+	}
+
+	/**
+	 * Formats one category group (reminders or debts) into a single summary
+	 * segment. Returns null when the group is empty so callers can filter it out.
+	 * Single items show the truncated name; multiple items show a count with the
+	 * closest due date, appending "Various" when due dates differ.
+	 *
+	 * {@link urgentSummary} - Calls this for the reminder group and the debt group.
+	 *
+	 * @param items - The pre-filtered items for this group, sorted by daysUntilDue ascending.
+	 * @param groupLabel - The plural label to display when there are multiple items.
+	 * @returns A formatted string segment, or null when the group is empty.
+	 */
+	private buildGroupSummary(items: OrbitalUrgentItem[], groupLabel: string): string | null {
+		if (!items.length) return null;
+		if (items.length === 1) {
+			return `${Utilities.truncate(items[0].name, ORBITAL_URGENCY_TEXT_MAX_CHARS)}${ORBITAL_URGENCY_ITEM_SEPARATOR}${items[0].dueLabel}`;
+		}
+		const allSameDate = items.every((item) => item.daysUntilDue === items[0].daysUntilDue);
+		const dateLabel = allSameDate
+			? items[0].dueLabel
+			: `${items[0].dueLabel}${ORBITAL_URGENCY_ITEM_SEPARATOR}${ORBITAL_URGENCY_LABEL_VARIOUS}`;
+		return `${items.length} ${groupLabel}${ORBITAL_URGENCY_ITEM_SEPARATOR}${dateLabel}`;
+	}
+
+	/**
+	 * Parses a timestamp string in either ISO-8601 or dot-separated format into a
+	 * "YYYY-MM-DD" date string.
+	 *
+	 * @param timestamp - The timestamp to parse ("YYYY-MM-DDTHH:mm:ss" or "YYYY.MM.DD HH:mm").
+	 * @returns The date portion as a "YYYY-MM-DD" string.
+	 */
+	private parseDateToISODate(timestamp: string): string {
+		if (timestamp.includes('T')) return timestamp.slice(0, 10);
+		const [datePart] = timestamp.split(' ');
+		const [year, month, day] = datePart.split('.');
+		return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+	}
+
+	/**
+	 * Builds the number of consecutive calendar days, ending on or within one day
+	 * of today, on which at least one activity entry was logged. Returns 0 when
+	 * the most recent activity is two or more days old. Limited to the depth of
+	 * recentActivities (capped at 20 entries by the DB layer), so long streaks
+	 * saturate at the number of unique days present in that array.
+	 *
+	 * @returns The consecutive-day activity streak count.
+	 */
+	private buildActivityStreak(): number {
+		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_ACTIVITIES]) as RecentActivityItem[];
+		if (!raw.length) return 0;
+
+		const dateSet = new Set<string>();
+		for (const entry of raw) {
+			if (!entry.timestamp) continue;
+			dateSet.add(this.parseDateToISODate(entry.timestamp));
+		}
+
+		const sortedDates = [...dateSet].sort().reverse();
+		if (!sortedDates.length) return 0;
+
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		const mostRecent = new Date(sortedDates[0] + 'T00:00');
+		const gapToToday = Math.round((today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24));
+		if (gapToToday > 1) return 0;
+
+		let streak = 1;
+		for (let i = 1; i < sortedDates.length; i++) {
+			const previous = new Date(sortedDates[i - 1] + 'T00:00');
+			const current = new Date(sortedDates[i] + 'T00:00');
+			const dayDiff = Math.round((previous.getTime() - current.getTime()) / (1000 * 60 * 60 * 24));
+			if (dayDiff === 1) {
+				streak++;
+			} else {
+				break;
+			}
+		}
+		return streak;
 	}
 
 	/**
@@ -283,10 +416,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		cutoff.setHours(0, 0, 0, 0);
 		return raw.filter((entry) => {
 			if (!entry.timestamp) return false;
-			if (entry.timestamp.includes('T')) return new Date(entry.timestamp) >= cutoff;
-			const [datePart] = entry.timestamp.split(' ');
-			const [year, month, day] = datePart.split('.');
-			return new Date(+year, +month - 1, +day) >= cutoff;
+			return new Date(this.parseDateToISODate(entry.timestamp) + 'T00:00') >= cutoff;
 		}).length;
 	}
 
@@ -392,7 +522,8 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 					id: `${HOME_REMINDER_ROW_ID_PREFIX}${index}`,
 					name: reminder.name ?? '',
 					dueLabel: Utilities.getDaysUntil(reminder.date),
-					overdue
+					overdue,
+					daysUntilDue: Utilities.getDaysUntilNumber(reminder.date) ?? 9999
 				};
 			});
 	}
@@ -454,6 +585,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 					name: debt.name ?? '',
 					dueLabel: Utilities.getDaysUntil(debt.date),
 					overdue,
+					daysUntilDue: Utilities.getDaysUntilNumber(debt.date) ?? 9999,
 					percentage,
 					barColor
 				};

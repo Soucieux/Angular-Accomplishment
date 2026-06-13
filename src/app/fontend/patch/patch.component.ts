@@ -49,7 +49,7 @@ import {
 	PATCH_SEVERITY_ICON_DEBUG,
 	PATCH_SEVERITY_ICON_DRAFT
 } from '../../common/app.constant';
-import { map, Observable, tap } from 'rxjs';
+import { firstValueFrom, Observable, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
@@ -187,7 +187,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private _isDataUpdate = false;
 	protected newRecord = this.emptyRecord();
 	protected searchQuery = '';
-	protected filteredTotal: number | null = null;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
@@ -209,9 +208,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Initialises the component: detects mobile layout, builds the patch-notes
-	 * observable (with a dummy-row appended for desktop to keep the add-entry row
-	 * visible), populates the severity option lists, and sets up the subscription
-	 * tap that keeps `patchNotesList`, and page-index state.
+	 * observable, populates the severity option lists, and sets up the subscription
+	 * tap that keeps `patchNotesList` and page-index state.
 	 */
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
@@ -219,9 +217,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 			const getObservable$ = this.databaseService.getPatchNotes();
 			this.patchNotes$ = getObservable$.pipe(
-				map((data) => {
-					return this.isNarrowViewport ? data : [...data, { __dummy: true }];
-				}),
 				tap((data) => {
 					this.ngZone.run(() => {
 						this.loading = false;
@@ -257,7 +252,14 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 						this._isDataUpdate = true;
 
 						// 3. Keep a local ordered copy for look-ups in edit/delete stats writes.
-						this.patchNotesList = data.filter((note: any) => !note.__dummy);
+						this.patchNotesList = data;
+
+						/* 4. On first load, heal the denormalised patchNotesTotal statistic.
+						   The Home dashboard satellite reads patchNotesTotal directly, so any
+						   out-of-band insert (e.g. the seeding script) leaves it stale. */
+						if (prevLength === null) {
+							this.reconcilePatchNotesTotal(this.patchNotesList.length).catch(() => {});
+						}
 					});
 				})
 			);
@@ -493,7 +495,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * or "clip" entirely.
 	 */
 	protected onTableFilter() {
-		this.filteredTotal = this.table?.filteredValue?.length ?? null;
 		if (!this._isDataUpdate) return;
 
 		// Force the table instance AND the local index to match our source of truth
@@ -504,6 +505,26 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 		// Reset the flag so manual user filtering works as intended
 		this._isDataUpdate = false;
+	}
+
+	/**
+	 * Reconciles the stored patchNotesTotal statistic with the true number of
+	 * loaded patch notes. The Home dashboard satellite reads patchNotesTotal
+	 * directly, so any insert made outside the add/delete flow (e.g. the seeding
+	 * script) leaves the counter stale. Reading the real list length here and
+	 * correcting only on drift keeps the dashboard count permanently honest.
+	 *
+	 * @param actualTotal - The true count of patch notes currently loaded.
+	 * @returns A void promise settling once any required correction is written.
+	 */
+	private async reconcilePatchNotesTotal(actualTotal: number): Promise<void> {
+		const stats = await firstValueFrom(this.databaseService.getStatistics());
+		const storedTotal = stats?.[STATS_FIELD_PATCH_NOTES_TOTAL] ?? 0;
+		if (storedTotal !== actualTotal) {
+			await this.databaseService.updateStatisticsFields({
+				[STATS_FIELD_PATCH_NOTES_TOTAL]: actualTotal
+			});
+		}
 	}
 
 	/**
@@ -681,9 +702,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Gets the total number of patch notes currently loaded (excluding the dummy row).
+	 * Gets the total number of patch notes currently loaded.
 	 *
-	 * @returns The count of real patch-note records.
+	 * @returns The count of patch-note records.
 	 */
 	protected get statsTotal(): number {
 		return this.patchNotesList.length;

@@ -37,7 +37,7 @@
 		<p-table
 			#t
 			[value]="(patchNotes$ | async) ?? []"
-			[totalRecords]="filteredTotal ?? statsTotal"
+			[totalRecords]="statsTotal"
 			[paginator]="true"
 			[rows]="itemsPerPage"
 			[(first)]="indexOfFirstItem"
@@ -123,12 +123,11 @@
 				</tr>
 			</ng-template>
 			<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
-				@if (!row.__dummy) {
-					<tr
-						(mouseenter)="hoveredRowIndex = rowIndex"
-						(mouseleave)="hoveredRowIndex = null"
-						[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
-						[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
+				<tr
+					(mouseenter)="hoveredRowIndex = rowIndex"
+					(mouseleave)="hoveredRowIndex = null"
+					[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
+					[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
 						@if (shouldShowComponent(getRenderedData(t), rowIndex)) {
 							<td
 								[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
@@ -242,11 +241,10 @@
 									(click)="startEdit(row)"></p-button>
 							}
 						</td>
-					</tr>
-				}
+				</tr>
 			</ng-template>
 			<ng-template pTemplate="footer">
-				@if (!loading && t.first && t.rows && t.first + t.rows > t.totalRecords - 1) {
+				@if (!loading && t.rows && (t.first ?? 0) + t.rows > t.totalRecords - 1) {
 					<tr class="hide-on-narrow-or-mobile">
 						<td class="component">
 							<p-select

@@ -21,7 +21,7 @@ export const NAV_ITEMS: NavItem[] = [
 		id: 'debt',
 		label: 'Debt Sonata',
 		icon: 'account_balance',
-		grad: 'linear-gradient(135deg,#f97316,#e879f9)'
+		grad: 'linear-gradient(135deg,#0d9488,#134e4a)'
 	},
 	{
 		id: 'patch',

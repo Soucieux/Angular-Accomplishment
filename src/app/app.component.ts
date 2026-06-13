@@ -142,7 +142,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 * Applies the correct nav mode for the given viewport width. Called on
 	 * construction and on every resize so both paths share the same logic.
 	 * navMobile reflects actual mobile-device detection (coarse pointer); compact
-	 * mode activates for narrow desktop viewports in the 941–1200px range.
+	 * mode activates for narrow desktop viewports in the 941–1300px range.
+	 * When crossing the compact threshold in either direction, the resulting
+	 * navCollapsed state is persisted to localStorage so a refresh reflects it.
 	 *
 	 * @param width - The current viewport width in pixels.
 	 */
@@ -156,12 +158,18 @@ export class AppComponent implements OnInit, AfterViewInit {
 			this.compactOverlayOpen = false;
 			if (wasCompact) {
 				this.navCollapsed = false;
+				if (isPlatformBrowser(this.platformId)) {
+					localStorage.setItem(LS_NAV_COLLAPSED_KEY, 'false');
+				}
 			}
 		} else {
 			if (!wasCompact) {
 				this.navCollapsed = true;
 				this.navMode = 'side';
 				this.compactOverlayOpen = false;
+				if (isPlatformBrowser(this.platformId)) {
+					localStorage.setItem(LS_NAV_COLLAPSED_KEY, 'true');
+				}
 			}
 			this.navCompact = true;
 		}
@@ -207,7 +215,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Toggles the sidebar. In compact mode (941–1200px), collapsed state stays as
+	 * Toggles the sidebar. In compact mode (941–1300px), collapsed state stays as
 	 * mode="side" (65px strip); expanding switches to mode="over" (full overlay).
 	 * Outside compact mode, expands or collapses in-place and persists to localStorage.
 	 */
@@ -258,12 +266,14 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Handles the account button click. On mobile, when the nav is collapsed,
-	 * or when the viewport is in compact mode, opens a sign-out confirmation
-	 * dialog. Otherwise toggles the popover menu.
+	 * Handles the account button click. Opens a sign-out confirmation dialog when
+	 * the account row is shown in its collapsed icon form — on mobile, when the nav
+	 * is collapsed, or in the compact side strip. When the compact overlay is open
+	 * the row is fully expanded, so it toggles the popover menu like the wide-screen
+	 * expanded panel.
 	 */
 	protected handleAccountButtonClick(): void {
-		if (this.navMobile || this.navCollapsed || this.navCompact) {
+		if (!this.compactOverlayOpen && (this.navMobile || this.navCollapsed || this.navCompact)) {
 			this.dialogService.openDialog(
 				this.dialogComponentContainer,
 				DIALOG_CONFIRM,

@@ -72,6 +72,12 @@ mat-drawer-content {
 .nav-toggle-btn {
 	border: none;
 	background: transparent;
+	cursor: pointer;
+}
+
+.nav-toggle-btn:hover .nav-toggle-icon {
+	transform: scale(1.18);
+	opacity: 0.72;
 }
 
 .nav-toggle-icon {
@@ -87,7 +93,9 @@ mat-drawer-content {
 	-webkit-text-fill-color: transparent;
 	transition:
 		font-size 0.25s var(--ease-out),
-		margin 0.25s var(--ease-out);
+		margin 0.25s var(--ease-out),
+		transform 0.2s var(--ease-out),
+		opacity 0.2s var(--ease-out);
 }
 
 .nav-title {
@@ -186,17 +194,17 @@ li:nth-child(3) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Resonance — pale gold → deep amber */
+/* Resonance — amber gold */
 li:nth-child(4) .nav-icon {
-	background: linear-gradient(135deg, #fde68a, #b45309);
+	background: linear-gradient(135deg, #f59e0b, #d97706);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
-/* Recipes — blush → deep crimson */
+/* Recipes — rose */
 li:nth-child(5) .nav-icon {
-	background: linear-gradient(135deg, #fda4af, #9f1239);
+	background: linear-gradient(135deg, #d53369, #b82d5a);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -218,25 +226,25 @@ li:nth-child(7) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Debt Sonata — coral → fuchsia */
+/* Debt Sonata — dark teal → deep ocean */
 li:nth-child(8) .nav-icon {
-	background: linear-gradient(135deg, #f97316, #e879f9);
+	background: linear-gradient(135deg, #0d9488, #134e4a);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
-/* Patch Notes — periwinkle → deep indigo */
+/* Patch Notes — indigo */
 li:nth-child(9) .nav-icon {
-	background: linear-gradient(135deg, #a5b4fc, #3730a3);
+	background: linear-gradient(135deg, #667eea, #764ba2);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
-/* About — orchid → deep purple */
+/* About — green → purple */
 li:nth-child(10) .nav-icon {
-	background: linear-gradient(135deg, #f0abfc, #7e22ce);
+	background: linear-gradient(135deg, #4ade80, #9c27b0);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;

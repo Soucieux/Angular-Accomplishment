@@ -1,6 +1,11 @@
 /* ─────────────────────────────────────────
    PrimeNG dialog shell
 ───────────────────────────────────────── */
+::ng-deep .itype-dialog .p-dialog-header {
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
+	padding: 20px 24px 16px !important;
+	border-radius: 20px 20px 0 0 !important;
+}
 ::ng-deep .itype-dialog .p-dialog-content {
 	padding: 18px 24px 8px;
 }
@@ -14,16 +19,17 @@
 ::ng-deep .itype-dialog .dialog-save-button {
 	font: inherit;
 	font-size: 13px;
-	font-weight: 500;
-	padding: 8px 18px;
-	border-radius: 999px;
+	font-weight: 600;
+	height: 32px;
+	padding: 0 14px;
+	border-radius: 9px;
 	cursor: pointer;
 	border: 1px solid transparent;
 }
 ::ng-deep .itype-dialog .dialog-cancel-button {
-	background: #fff;
-	color: #d53369;
-	border-color: rgba(213, 51, 105, 0.28);
+	background: transparent;
+	color: rgba(213, 51, 105, 0.85);
+	border: 1.5px solid rgba(213, 51, 105, 0.4);
 }
 ::ng-deep .itype-dialog .dialog-cancel-button:hover {
 	background: rgba(213, 51, 105, 0.06);

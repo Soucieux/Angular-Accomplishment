@@ -28,7 +28,7 @@
 }
 
 ::ng-deep .error-dialog .p-dialog-content {
-	padding: 24px 24px 16px !important;
+	padding: 24px 35px 16px 24px !important;
 	background: transparent !important;
 	display: flex !important;
 	align-items: center !important;
@@ -52,7 +52,7 @@
 	border: none !important;
 	border-radius: 9px !important;
 	height: 32px !important;
-	padding: 0 28px !important;
+	padding: 0 14px !important;
 	font-size: 13px !important;
 	font-weight: 600 !important;
 }

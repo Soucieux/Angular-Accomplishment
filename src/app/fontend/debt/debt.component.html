@@ -214,13 +214,15 @@
 									class="pay-chip"
 									[disabled]="isPayDisabled(item)"
 									(click)="payDebt(item.key, DEBT_PRESET_SMALL)">
-									<span class="pay-minus">−</span>{{ formatCompact(DEBT_PRESET_SMALL, isCnyCurrency(item)) }}
+									<span class="pay-minus">−</span
+									>{{ formatCompact(DEBT_PRESET_SMALL, isCnyCurrency(item)) }}
 								</button>
 								<button
 									class="pay-chip"
 									[disabled]="isPayDisabled(item)"
 									(click)="payDebt(item.key, DEBT_PRESET_LARGE)">
-									<span class="pay-minus">−</span>{{ formatCompact(DEBT_PRESET_LARGE, isCnyCurrency(item)) }}
+									<span class="pay-minus">−</span
+									>{{ formatCompact(DEBT_PRESET_LARGE, isCnyCurrency(item)) }}
 								</button>
 								@if (customInputState[item.key] == null) {
 									<button
@@ -293,7 +295,7 @@
 								<button class="footer-history-btn" (click)="toggleHistory(item.key)">
 									History
 									<span class="history-count-chip">{{
-										getHistoryForItem(item.key).length
+										getHistoryEntries(item.key).length
 									}}</span>
 									<span class="material-symbols-outlined" style="font-size: 20px">{{
 										expandedItems[item.key] ? 'expand_less' : 'expand_more'
@@ -304,28 +306,46 @@
 							<!-- History panel -->
 							@if (expandedItems[item.key]) {
 								<div class="history-panel">
-									@if (getHistoryForItem(item.key).length === 0) {
+									@if (getHistoryEntries(item.key).length === 0) {
 										<p class="history-empty">No payments yet — chip away at it above.</p>
 									} @else {
-										@for (entry of getHistoryForItem(item.key); track entry.timestamp) {
-											<div class="history-row">
+										@for (entry of getHistoryEntries(item.key); track entry.index) {
+											<div
+												class="history-row"
+												[class.is-clickable]="isOwner(item)"
+												(click)="onHistoryRowClick(item, entry)">
 												<span class="history-dot"></span>
-												<span class="history-timestamp">{{
-													formatTimestamp(entry.timestamp)
-												}}</span>
-												<span class="history-amount"
-													>−{{
-														formatMoney(entry.amount, isCnyCurrency(item))
-													}}</span
-												>
-												<span class="history-balance">
+												<span class="history-timestamp">
+													<span class="history-timestamp-date">{{
+														formatTimestampDate(entry.value.timestamp)
+													}}</span>
+													<span class="history-timestamp-time">{{
+														formatTimestampTime(entry.value.timestamp)
+													}}</span>
+												</span>
+												<div class="history-row-content">
+													<span class="history-amount"
+														>−{{
+															formatMoney(
+																entry.value.amount,
+																isCnyCurrency(item)
+															)
+														}}</span
+													>
 													<span
 														class="history-arrow material-symbols-outlined"
-														style="font-size: 16px"
+														style="font-size: 20px"
 														>arrow_right_alt</span
 													>
-													{{ formatMoney(entry.balance, isCnyCurrency(item)) }}
-												</span>
+													<span class="history-balance">
+														{{
+															formatMoney(
+																entry.value.balance,
+																isCnyCurrency(item)
+															)
+														}}
+													</span>
+												</div>
 											</div>
 										}
 									}
@@ -335,7 +355,6 @@
 					}
 				}
 			</div>
-
 		</div>
 	</div>
 } @else {

@@ -253,12 +253,13 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	margin: 10px 2px 0;
+	line-height: 1;
 }
 
 .debts-title {
 	font-size: 20px;
 	font-weight: 700;
+	margin: 18px 2px;
 	color: #fff;
 	text-shadow: 0 1px 8px rgba(0, 0, 0, 0.16);
 }
@@ -613,9 +614,9 @@
 	gap: 1px;
 	padding: 0 8px;
 	border: 1px solid #0d9488;
-	background: rgba(255, 255, 255, 0.80);
+	background: rgba(255, 255, 255, 0.8);
 	border-radius: 8px;
-	box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.10);
+	box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
 }
 .custom-pay-input {
 	width: 100%;
@@ -833,15 +834,21 @@
 }
 
 .history-row {
-	display: grid;
-	grid-template-columns: auto 1fr auto auto;
+	display: flex;
 	align-items: center;
-	gap: 10px;
-	padding: 8px 6px;
+	justify-content: left;
+	gap: 5px;
+	padding: 5px 3px;
 	border-radius: 8px;
 	font-size: 13px;
 }
-.history-row:hover {
+
+.history-row.is-clickable {
+	cursor: pointer;
+	transition: background 0.15s;
+}
+
+.history-row.is-clickable:hover {
 	background: #f8fafc;
 }
 
@@ -854,24 +861,46 @@
 }
 
 .history-timestamp {
+	display: flex;
+	flex-direction: column;
+	text-align: center;
 	color: #64748b;
 	font-variant-numeric: tabular-nums;
+	padding: 0px 5px;
 }
+.history-timestamp-date {
+	font-size: 13px;
+	font-weight: 800;
+}
+.history-timestamp-time {
+	font-size: 11px;
+	opacity: 0.6;
+	margin-top: 2px;
+}
+
+.history-row-content {
+	display: flex;
+	padding: 0px 5px;
+	flex: 1;
+	justify-content: space-evenly;
+}
+
 .history-amount {
-	font-weight: 700;
+	font-size: 14px;
+	font-weight: 800;
 	color: #0d9488;
 	font-variant-numeric: tabular-nums;
 }
 .history-balance {
-	display: inline-flex;
-	align-items: center;
+	display: flex;
 	gap: 2px;
 	color: #334155;
-	font-weight: 600;
+	font-weight: 800;
 	font-variant-numeric: tabular-nums;
+	font-size: 14px;
 }
 .history-arrow {
-	font-size: 16px;
+	padding: 0px 5px;
 	color: #94a3b8;
 }
 

@@ -2,9 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, BehaviorSubject, ReplaySubject } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
+import { DEBT_CURRENCY_CNY, DEBT_VALUE_KEY_CURRENCY } from '../../common/app.constant';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
+import { Utilities } from '../../common/app.utilities';
 import { DebtComponent } from './debt.component';
 
 /** Minimal Account Expenses row factory. */
@@ -29,17 +31,19 @@ describe('DebtComponent', () => {
 	beforeEach(async () => {
 		mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
 			'getDebtSonataTableDetails',
-			'updateDebtTable',
+			'updateSingleValueForDebtTable',
+			'updateDebtFields',
+			'resetDebtRecord',
 			'removeRecordFromDebtTable',
-			'addNewRecordToDebtTable',
-			'appendToActivityLog',
+			'addNewRecordToDebt',
 			'updateStatisticsFields'
 		]);
 		mockDb.getDebtSonataTableDetails.and.returnValue(of([]));
-		mockDb.updateDebtTable.and.returnValue(Promise.resolve());
+		mockDb.updateSingleValueForDebtTable.and.returnValue(Promise.resolve());
+		mockDb.updateDebtFields.and.returnValue(Promise.resolve());
+		mockDb.resetDebtRecord.and.returnValue(Promise.resolve());
 		mockDb.removeRecordFromDebtTable.and.returnValue(Promise.resolve());
-		mockDb.addNewRecordToDebtTable.and.returnValue(Promise.resolve());
-		mockDb.appendToActivityLog.and.returnValue(Promise.resolve());
+		mockDb.addNewRecordToDebt.and.returnValue(Promise.resolve());
 		mockDb.updateStatisticsFields.and.returnValue(Promise.resolve());
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
@@ -49,7 +53,9 @@ describe('DebtComponent', () => {
 			'showUnexpectedError'
 		]);
 		mockDialogService.ensurePermission.and.returnValue(true);
-		mockDialogService.openDialog.and.stub();
+		mockDialogService.openDialog.and.callFake(async (_container: any, type: string, callback: any) => {
+			if (type === 'block' && typeof callback === 'function') await callback();
+		});
 		mockDialogService.handleError.and.stub();
 
 		await TestBed.configureTestingModule({
@@ -76,18 +82,6 @@ describe('DebtComponent', () => {
 
 	it('should create', () => {
 		expect(component).toBeTruthy();
-	});
-
-	// ── checkIfChinese ────────────────────────────────────────────────────
-
-	describe('checkIfChinese', () => {
-		it('returns true for a string containing Chinese characters', () => {
-			expect((component as any).checkIfChinese('你好')).toBeTrue();
-		});
-
-		it('returns false for a string without Chinese characters', () => {
-			expect((component as any).checkIfChinese('hello')).toBeFalse();
-		});
 	});
 
 	// ── isHoverCapable ────────────────────────────────────────────────────
@@ -120,13 +114,13 @@ describe('DebtComponent', () => {
 
 		it('does nothing when the entry key does not exist', async () => {
 			await (component as any).payDebt('nonexistent', 100);
-			expect(mockDb.updateDebtTable).not.toHaveBeenCalled();
+			expect(mockDb.updateDebtFields).not.toHaveBeenCalled();
 		});
 
 		it('does nothing when the item is already paid', async () => {
 			(component as any).updatedDebtSonataItems[0].paid = true;
 			await (component as any).payDebt('k1', 100);
-			expect(mockDb.updateDebtTable).not.toHaveBeenCalled();
+			expect(mockDb.updateDebtFields).not.toHaveBeenCalled();
 		});
 
 		it('marks as paid when balance reaches zero', async () => {
@@ -137,7 +131,7 @@ describe('DebtComponent', () => {
 		it('does nothing when permission is denied', async () => {
 			mockDialogService.ensurePermission.and.returnValue(false);
 			await (component as any).payDebt('k1', 200);
-			expect(mockDb.updateDebtTable).not.toHaveBeenCalled();
+			expect(mockDb.updateDebtFields).not.toHaveBeenCalled();
 		});
 	});
 
@@ -157,7 +151,7 @@ describe('DebtComponent', () => {
 
 		it('does nothing when the entry key does not exist', async () => {
 			await (component as any).resetDebt('nonexistent');
-			expect(mockDb.updateDebtTable).not.toHaveBeenCalled();
+			expect(mockDb.resetDebtRecord).not.toHaveBeenCalled();
 		});
 	});
 
@@ -171,19 +165,91 @@ describe('DebtComponent', () => {
 
 		it('calls databaseService.updateDebtTable when value changed', async () => {
 			await (component as any).updateTableSingleValue('k1', 'debt');
-			expect(mockDb.updateDebtTable).toHaveBeenCalledWith('k1', 'debt', 200);
+			expect(mockDb.updateSingleValueForDebtTable).toHaveBeenCalledWith('k1', 'debt', 200, 'Row name');
 		});
 
 		it('does not call the database when updated and original values are the same', async () => {
 			(component as any).updatedDebtSonataItems[0].debt = 100;
 			await (component as any).updateTableSingleValue('k1', 'debt');
-			expect(mockDb.updateDebtTable).not.toHaveBeenCalled();
+			expect(mockDb.updateSingleValueForDebtTable).not.toHaveBeenCalled();
 		});
 
 		it('calls handleError when the database throws', async () => {
-			mockDb.updateDebtTable.and.returnValue(Promise.reject(new Error('fail')));
+			mockDb.updateSingleValueForDebtTable.and.returnValue(Promise.reject(new Error('fail')));
 			await (component as any).updateTableSingleValue('k1', 'debt');
 			expect(mockDialogService.handleError).toHaveBeenCalled();
+		});
+	});
+
+	// ── isOwner ───────────────────────────────────────────────────────────
+
+	describe('isOwner', () => {
+		it('returns true when the item openid matches the current user', () => {
+			CloudbaseService.setUseId('uid1');
+			const item = makeDebtSonataRow();
+			expect((component as any).isOwner(item)).toBeTrue();
+		});
+
+		it('returns false when the item openid does not match the current user', () => {
+			CloudbaseService.setUseId('other-user');
+			const item = makeDebtSonataRow();
+			expect((component as any).isOwner(item)).toBeFalse();
+		});
+	});
+
+	// ── formatTimestampDate ───────────────────────────────────────────────
+
+	describe('formatTimestampDate', () => {
+		it('delegates to Utilities.getTimestampMonthDay and returns a non-empty string', () => {
+			spyOn(Utilities, 'getTimestampMonthDay').and.returnValue('Jun 13');
+			const result = (component as any).formatTimestampDate('2026.06.13 09:27:00');
+			expect(Utilities.getTimestampMonthDay).toHaveBeenCalledWith('2026.06.13 09:27:00');
+			expect(result).toBe('Jun 13');
+		});
+
+		it('returns empty string for an empty timestamp', () => {
+			const result = (component as any).formatTimestampDate('');
+			expect(typeof result).toBe('string');
+		});
+	});
+
+	// ── formatTimestampTime ───────────────────────────────────────────────
+
+	describe('formatTimestampTime', () => {
+		it('delegates to Utilities.getTimestampTime and returns the HH:mm portion', () => {
+			spyOn(Utilities, 'getTimestampTime').and.returnValue('09:27');
+			const result = (component as any).formatTimestampTime('2026.06.13 09:27:00');
+			expect(Utilities.getTimestampTime).toHaveBeenCalledWith('2026.06.13 09:27:00');
+			expect(result).toBe('09:27');
+		});
+
+		it('returns empty string for an empty timestamp', () => {
+			const result = (component as any).formatTimestampTime('');
+			expect(typeof result).toBe('string');
+		});
+	});
+
+	// ── isCnyCurrency ─────────────────────────────────────────────────────
+
+	describe('isCnyCurrency', () => {
+		it('returns true when the stored currency field is CNY', () => {
+			const item = { ...makeDebtSonataRow(), [DEBT_VALUE_KEY_CURRENCY]: DEBT_CURRENCY_CNY };
+			expect((component as any).isCnyCurrency(item)).toBeTrue();
+		});
+
+		it('returns false when the stored currency field is not CNY', () => {
+			const item = { ...makeDebtSonataRow(), [DEBT_VALUE_KEY_CURRENCY]: 'CAD' };
+			expect((component as any).isCnyCurrency(item)).toBeFalse();
+		});
+
+		it('falls back to Chinese-character detection when no currency field is stored', () => {
+			const item = { ...makeDebtSonataRow(), name: '房租' };
+			expect((component as any).isCnyCurrency(item)).toBeTrue();
+		});
+
+		it('returns false for a Latin-only name when no currency field is stored', () => {
+			const item = { ...makeDebtSonataRow(), name: 'Rent' };
+			expect((component as any).isCnyCurrency(item)).toBeFalse();
 		});
 	});
 });

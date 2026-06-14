@@ -2,7 +2,7 @@
 export interface PaymentEntry {
 	amount: number;
 	balance: number;
-	timestamp: number;
+	timestamp: string;
 }
 
 /** Submitted form data returned by the add-debt dialog to its caller. */

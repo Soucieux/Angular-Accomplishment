@@ -15,7 +15,7 @@ export const loginGuard: CanMatchFn = () => {
 		const router = inject(Router);
 
 		// Navigates to the Home page and ensures no history entry of login
-		return CloudbaseService.getUseId() ? router.parseUrl('/') : true;
+		return CloudbaseService.getUserId() ? router.parseUrl('/') : true;
 	}
 	return true;
 };

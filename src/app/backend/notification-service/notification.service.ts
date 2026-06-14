@@ -13,7 +13,7 @@ export class NotificationService {
 	 * permission stays 'granted' even after unsubscribing.
 	 */
 	public readonly isSubscribed$: Observable<boolean> = this.swPush.subscription.pipe(
-		map(sub => sub !== null)
+		map((sub) => sub !== null)
 	);
 
 	constructor(
@@ -60,7 +60,7 @@ export class NotificationService {
 		const sub = await this.swPush.requestSubscription({
 			serverPublicKey: environment.vapidPublicKey
 		});
-		await this.databaseService.savePushSubscription(sub.toJSON() as PushSubscriptionJSON);
+		await this.databaseService.addPushSubscription(sub.toJSON() as PushSubscriptionJSON);
 	}
 
 	/**

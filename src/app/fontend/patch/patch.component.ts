@@ -19,14 +19,8 @@ import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/app.utilities';
 import {
-	ACTIVITY_SOURCE_PATCH,
-	ACTIVITY_TYPE_BUG_LOGGED,
-	ACTIVITY_TYPE_EDITED,
-	ACTIVITY_TYPE_STATUS_CHANGED,
 	COMPONENT_DESTROY,
 	DIALOG_CONFIRM,
-	HISTORY_STATUS_ADDED,
-	HISTORY_STATUS_DELETED,
 	STATUS_COMPLETED,
 	STATUS_DEBUG,
 	STATUS_DRAFT,
@@ -37,10 +31,9 @@ import {
 	DIALOG_BTN_DELETE,
 	PATCH_MSG_DELETE_CONFIRM,
 	STATS_FIELD_PATCH_NOTES_TOTAL,
-	STATS_FIELD_RECENT_ACTIVITIES,
 	TOAST_INFO,
 	TOAST_WARN,
-	SEVERITY_SUCCESS,
+	SUCCESS,
 	SEVERITY_DANGER,
 	SEVERITY_SECONDARY,
 	PATCH_SEVERITY_ICON_TODO,
@@ -354,39 +347,15 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (Object.keys(changes).length > 0) {
 			changes.timestamp = Utilities.getCurrentFormattedTime(true);
 			try {
-				await this.databaseService.updateExistingRecordToPatchNotes(row.key, changes);
+				const noteIndex = this.patchNotesList.findIndex((note) => note.key === row.key) + 1;
+				if (changes.status) {
+					await this.databaseService.updateStatusForOnePatchNote(row.key, changes, row.component, row.element, noteIndex);
+				} else if (changes.details) {
+					await this.databaseService.updateDetailsForOnePatchNote(row.key, changes, row.component, row.element, noteIndex);
+				}
 			} catch (error) {
 				this.dialogService.handleError(this.dialogComponentContainer, error);
 				return;
-			}
-
-			// Fire-and-forget: record the edit type in stats for the Recent Activity widget.
-			const noteIndex = this.patchNotesList.findIndex((note) => note.key === row.key) + 1;
-			const ts = Utilities.getCurrentFormattedTime(true);
-			if (changes.status) {
-				this.databaseService
-					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-						source: ACTIVITY_SOURCE_PATCH,
-						type: ACTIVITY_TYPE_STATUS_CHANGED,
-						component: row.component,
-						element: record.original.element,
-						fromStatus: record.original.status,
-						toStatus: changes.status,
-						noteIndex,
-						timestamp: ts
-					})
-					.catch(() => {});
-			} else if (changes.details) {
-				this.databaseService
-					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-						source: ACTIVITY_SOURCE_PATCH,
-						type: ACTIVITY_TYPE_EDITED,
-						component: row.component,
-						element: record.original.element,
-						noteIndex,
-						timestamp: ts
-					})
-					.catch(() => {});
 			}
 		}
 
@@ -402,24 +371,11 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(true);
 		this.newRecord.isBug =
 			this.newRecord.status === STATUS_DEBUG || this.newRecord.status === STATUS_RESOLVED;
-		const snapshot = { ...this.newRecord };
 		const noteIndex = this.patchNotesList.length + 1;
+		const snapshot = { ...this.newRecord, noteIndex };
 		this.databaseService
 			.addNewRecordToPatchNotes(snapshot)
 			.then(() => {
-				/* Fire-and-forget: write the Recent Activity stat with the correct
-				   1-based index (patchNotesList doesn't include the new note yet). */
-				this.databaseService
-					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-						source: ACTIVITY_SOURCE_PATCH,
-						type: !!snapshot.isBug ? ACTIVITY_TYPE_BUG_LOGGED : HISTORY_STATUS_ADDED,
-						component: snapshot.component,
-						element: snapshot.element,
-						isBug: !!snapshot.isBug,
-						noteIndex,
-						timestamp: Utilities.getCurrentFormattedTime(true)
-					})
-					.catch(() => {});
 				this.databaseService
 					.updateStatisticsFields({ [STATS_FIELD_PATCH_NOTES_TOTAL]: noteIndex })
 					.catch(() => {});
@@ -446,18 +402,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			DIALOG_CONFIRM,
 			async () => {
 				try {
-					await this.databaseService.removePatchNote(key);
-					// Fire-and-forget: record the deletion in stats for the Recent Activity widget.
-					this.databaseService
-						.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-							source: ACTIVITY_SOURCE_PATCH,
-							type: HISTORY_STATUS_DELETED,
-							component: noteToDelete?.component ?? '',
-							element: noteToDelete?.element ?? '',
-							noteIndex,
-							timestamp: Utilities.getCurrentFormattedTime(true)
-						})
-						.catch(() => {});
+					await this.databaseService.removePatchNote(
+						key,
+						noteToDelete?.component ?? '',
+						noteToDelete?.element ?? '',
+						noteIndex
+					);
 					this.databaseService
 						.updateStatisticsFields({ [STATS_FIELD_PATCH_NOTES_TOTAL]: newTotal })
 						.catch(() => {});
@@ -667,7 +617,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				return TOAST_WARN;
 			case STATUS_COMPLETED:
 			case STATUS_RESOLVED:
-				return SEVERITY_SUCCESS;
+				return SUCCESS;
 			case STATUS_DEBUG:
 				return SEVERITY_DANGER;
 			case STATUS_DRAFT:
@@ -745,23 +695,4 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		return this.components.find((option) => option.label === key) ?? null;
 	}
 
-	/**
-	 * Gets the date portion of an app-format timestamp string.
-	 *
-	 * @param timestamp - The timestamp string in `'YYYY.MM.DD HH:mm:ss'` or `'YYYY.MM.DD'` format.
-	 * @returns The `YYYY.MM.DD` portion before the first space.
-	 */
-	protected getTimestampDate(timestamp: string): string {
-		return Utilities.getTimestampDate(timestamp);
-	}
-
-	/**
-	 * Gets the `HH:mm` portion of an app-format timestamp string.
-	 *
-	 * @param timestamp - The timestamp string in `'YYYY.MM.DD HH:mm:ss'` format.
-	 * @returns The hours and minutes, or an empty string if no time segment is present.
-	 */
-	protected getTimestampTime(timestamp: string): string {
-		return Utilities.getTimestampTime(timestamp);
-	}
 }

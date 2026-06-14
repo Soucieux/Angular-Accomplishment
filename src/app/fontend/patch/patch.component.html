@@ -213,9 +213,9 @@
 						</td>
 
 						<td class="timestamp">
-							<div>{{ getTimestampDate(row.timestamp) }}</div>
-							@if (getTimestampTime(row.timestamp)) {
-								<div class="timestamp-time">{{ getTimestampTime(row.timestamp) }}</div>
+							<div>{{ Utilities.getTimestampDate(row.timestamp) }}</div>
+							@if (Utilities.getTimestampTime(row.timestamp)) {
+								<div class="timestamp-time">{{ Utilities.getTimestampTime(row.timestamp) }}</div>
 							}
 						</td>
 

@@ -2,11 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
-import {
-	NEXUS_CATEGORY_ALL,
-	NEXUS_DIALOG_TITLE_ADD_LINK,
-	NEXUS_DIALOG_TITLE_EDIT_LINK
-} from '../../common/app.constant';
+import { NEXUS_CATEGORY_ALL } from '../../common/app.constant';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { NexusComponent } from './nexus.component';
@@ -35,13 +31,11 @@ describe('NexusComponent', () => {
 			'getLinkCategories',
 			'getDateCalculatorTableDetails',
 			'updateDateCalculatorTable',
-			'appendToActivityLog'
 		]);
 		mockDb.getUsefulLinks.and.returnValue(of([]));
 		mockDb.getLinkCategories.and.returnValue(of([]));
 		mockDb.getDateCalculatorTableDetails.and.returnValue(of([]));
 		mockDb.updateDateCalculatorTable.and.returnValue(Promise.resolve());
-		mockDb.appendToActivityLog.and.returnValue(Promise.resolve());
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
 			'ensurePermission',
@@ -322,53 +316,34 @@ describe('NexusComponent', () => {
 	// ── openAddLinkDialog ──────────────────────────────────────────────────
 
 	describe('openAddLinkDialog', () => {
-		it('sets showLinkDialog to true', () => {
+		it('delegates to dialogService.openDialog', () => {
 			(component as any).openAddLinkDialog();
-			expect((component as any).showLinkDialog).toBeTrue();
+			expect(mockDialogService.openDialog).toHaveBeenCalled();
 		});
 
-		it('sets the dialog title to the add-link constant', () => {
+		it('passes the link dialog type to dialogService.openDialog', () => {
 			(component as any).openAddLinkDialog();
-			expect((component as any).linkDialogTitle).toBe(NEXUS_DIALOG_TITLE_ADD_LINK);
-		});
-
-		it('resets editingLink to null', () => {
-			(component as any).editingLink = { _id: 'x' };
-			(component as any).openAddLinkDialog();
-			expect((component as any).editingLink).toBeNull();
-		});
-
-		it('resets the link form fields to empty strings', () => {
-			(component as any).linkForm = { url: 'old', title: 'old', category: 'old' };
-			(component as any).openAddLinkDialog();
-			expect((component as any).linkForm.url).toBe('');
-			expect((component as any).linkForm.title).toBe('');
+			const args = mockDialogService.openDialog.calls.mostRecent().args;
+			expect(args[1]).toBe('link');
 		});
 	});
 
 	// ── openEditLinkDialog ─────────────────────────────────────────────────
 
 	describe('openEditLinkDialog', () => {
-		it('pre-fills the link form from the existing link', () => {
+		it('delegates to dialogService.openDialog', () => {
 			const link = { _id: '1', url: 'https://example.com', title: 'Example', category: 'dev' };
 			const event = jasmine.createSpyObj<Event>('Event', ['stopPropagation']);
 			(component as any).openEditLinkDialog(link, event);
-			expect((component as any).linkForm.url).toBe('https://example.com');
-			expect((component as any).linkForm.title).toBe('Example');
+			expect(mockDialogService.openDialog).toHaveBeenCalled();
 		});
 
-		it('sets the dialog title to the edit-link constant', () => {
+		it('passes the link dialog type to dialogService.openDialog', () => {
 			const link = { _id: '1', url: 'https://example.com', title: 'Example', category: 'dev' };
 			const event = jasmine.createSpyObj<Event>('Event', ['stopPropagation']);
 			(component as any).openEditLinkDialog(link, event);
-			expect((component as any).linkDialogTitle).toBe(NEXUS_DIALOG_TITLE_EDIT_LINK);
-		});
-
-		it('sets editingLink to the provided link', () => {
-			const link = { _id: '1', url: 'https://example.com', title: 'Example', category: 'dev' };
-			const event = jasmine.createSpyObj<Event>('Event', ['stopPropagation']);
-			(component as any).openEditLinkDialog(link, event);
-			expect((component as any).editingLink).toBe(link);
+			const args = mockDialogService.openDialog.calls.mostRecent().args;
+			expect(args[1]).toBe('link');
 		});
 
 		it('stops event propagation', () => {

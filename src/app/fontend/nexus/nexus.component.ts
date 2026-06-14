@@ -25,8 +25,6 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
-	ACTIVITY_SOURCE_LINK,
-	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_DATE_CALCULATOR,
 	DIALOG_BLOCK,
@@ -45,11 +43,6 @@ import {
 	NEXUS_LABEL_NEXT_MONTH,
 	NEXUS_LABEL_RESET,
 	NEXUS_MSG_RESET_CONFIRM,
-	HISTORY_STATUS_ADDED,
-	HISTORY_STATUS_DELETED,
-	REMINDER_TABLE_DATE_CALCULATOR,
-	ACTIVITY_SOURCE_REMINDER,
-	STATS_FIELD_RECENT_ACTIVITIES,
 	DIALOG_LINK,
 	NEXUS_DEFAULT_CATEGORY_COLOR,
 	NEXUS_MSG_CATEGORY_ADDED,
@@ -80,7 +73,15 @@ import {
 	TOAST_INFO,
 	TOAST_WARN
 } from '../../common/app.constant';
-import { AiTool, NewLinkData, NexusCategory, NexusLink, NEXUS_AI_TOOLS, NEXUS_DATE_CALCULATOR_FIELDS, NEXUS_LOGO_FALLBACK_COLORS } from './nexus.model';
+import {
+	AiTool,
+	NewLinkData,
+	NexusCategory,
+	NexusLink,
+	NEXUS_AI_TOOLS,
+	NEXUS_DATE_CALCULATOR_FIELDS,
+	NEXUS_LOGO_FALLBACK_COLORS
+} from './nexus.model';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
@@ -183,8 +184,9 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.dateCalculatorSub = dateCalculatorObservable.subscribe(async (rows) => {
 				// Need deep copy here so that we are not copying references
 				this.originalDateCalculatorRows = structuredClone(rows);
-				this.updatedDateCalculatorRows = structuredClone(rows).slice(0, -1);
-				this.isNextMonth = this.originalDateCalculatorRows[5]['isNextMonth'];
+				// Identify rows by content — CloudBase watch() does not guarantee insertion order.
+				this.updatedDateCalculatorRows = structuredClone(rows).filter((row: any) => 'first' in row);
+				this.isNextMonth = rows.find((row: any) => 'isNextMonth' in row)?.isNextMonth ?? false;
 				this.dateCalculatorLoading = false;
 				if (!this.chargedCellsInitialized) {
 					await this.updateChargedCells();
@@ -297,7 +299,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			if (
 				!this.dialogService.ensurePermission(
 					this.dialogComponentContainer,
-					CloudbaseService.getUseId() ?? ''
+					CloudbaseService.getUserId() ?? ''
 				)
 			) {
 				setTimeout(() => {
@@ -366,7 +368,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		if (
 			!this.dialogService.ensurePermission(
 				this.dialogComponentContainer,
-				CloudbaseService.getUseId() ?? ''
+				CloudbaseService.getUserId() ?? ''
 			)
 		) {
 			this.updatedDateCalculatorRows[rowIndex][field].value = originalValue;
@@ -495,7 +497,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		if (
 			!this.dialogService.ensurePermission(
 				this.dialogComponentContainer,
-				CloudbaseService.getUseId() ?? ''
+				CloudbaseService.getUserId() ?? ''
 			)
 		)
 			return;
@@ -515,7 +517,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		if (
 			!this.dialogService.ensurePermission(
 				this.dialogComponentContainer,
-				CloudbaseService.getUseId() ?? ''
+				CloudbaseService.getUserId() ?? ''
 			)
 		)
 			return;
@@ -539,7 +541,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		// Default sequence: day 1 → 3 → 9 → 11 → 17 (matches the standard payment schedule)
 		const values = [1, 3, 9, 11, 17];
 		this.updatedDateCalculatorRows = this.originalDateCalculatorRows
-			.slice(0, 5)
+			.filter((row: any) => 'first' in row)
 			.map((original, index) => ({
 				_id: original._id,
 				_openid: original._openid,
@@ -559,28 +561,19 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	private async updateDateCalculatorSingleValue(): Promise<void> {
 		try {
-			/* Row 6 (index 5) is the metadata row storing only isNextMonth — appended so the
-			   database update covers all rows including the flag in one call */
+			/* The metadata row stores only isNextMonth — locate it by content so the
+			   lookup survives watch() returning documents in any order. */
+			const metaRow = this.originalDateCalculatorRows.find((row: any) => 'isNextMonth' in row);
 			const payload = [
 				...this.updatedDateCalculatorRows,
 				{
-					_id: this.originalDateCalculatorRows[5]._id,
-					_openid: this.originalDateCalculatorRows[5]._openid,
+					_id: metaRow._id,
+					_openid: metaRow._openid,
 					isNextMonth: this.isNextMonth
 				}
 			];
 			await this.databaseService.updateDateCalculatorTable(payload);
 			this.triggerSaveIndicator(DATABASE_DATE_CALCULATOR);
-			// Fire-and-forget: surface this change in the Recent Activity widget.
-			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-					source: ACTIVITY_SOURCE_REMINDER,
-					type: ACTIVITY_TYPE_UPDATED,
-					table: REMINDER_TABLE_DATE_CALCULATOR,
-					text: '',
-					timestamp: Utilities.getCurrentFormattedTime(true)
-				})
-				.catch(() => {});
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
@@ -746,7 +739,12 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.dialogComponentContainer,
 			DIALOG_LINK,
 			(formData) => this.handleLinkSave(formData, link),
-			{ url: link.url, title: link.title, category: link.category ?? '', isPinned: link.isPinned ?? false }
+			{
+				url: link.url,
+				title: link.title,
+				category: link.category ?? '',
+				isPinned: link.isPinned ?? false
+			}
 		);
 	}
 
@@ -761,25 +759,16 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		this.openBlockDialog(async () => {
 			const finalUrl = Utilities.normalizeUrl(formData.url);
 			try {
-				const domain = Utilities.getHostname(finalUrl);
-				const timestamp = Utilities.getCurrentFormattedTime(true);
+				const domain = Utilities.getDomain(finalUrl);
 				if (existingLink) {
 					await this.databaseService.updateUsefulLink(existingLink._id, {
 						url: finalUrl,
 						title: formData.title,
 						category: formData.category,
 						isPinned: formData.isPinned
-					});
+					}, domain);
 					LOG.info(this.className, `Link updated: ${finalUrl}`);
 					this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_UPDATED);
-					this.databaseService
-						.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-							source: ACTIVITY_SOURCE_LINK,
-							type: ACTIVITY_TYPE_UPDATED,
-							domain,
-							timestamp
-						})
-						.catch(() => {});
 				} else {
 					await this.databaseService.addUsefulLink({
 						url: finalUrl,
@@ -791,14 +780,6 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 					});
 					LOG.info(this.className, `Link saved: ${finalUrl}`);
 					this.dialogService.showToast(SUCCESS, NEXUS_MSG_LINK_SAVED);
-					this.databaseService
-						.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-							source: ACTIVITY_SOURCE_LINK,
-							type: HISTORY_STATUS_ADDED,
-							domain,
-							timestamp
-						})
-						.catch(() => {});
 				}
 			} catch (error) {
 				LOG.error(this.className, NEXUS_MSG_SAVE_LINK_FAILED, error as Error);
@@ -830,21 +811,12 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			() => {
-				const domain = Utilities.getHostname(link.url);
-				const timestamp = Utilities.getCurrentFormattedTime(true);
+				const domain = Utilities.getDomain(link.url);
 				this.databaseService
-					.removeUsefulLink(link._id)
+					.removeUsefulLink(link._id, domain)
 					.then(() => {
 						LOG.info(this.className, `Link deleted: ${link.title}`);
 						this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_LINK_DELETED);
-						this.databaseService
-							.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-								source: ACTIVITY_SOURCE_LINK,
-								type: HISTORY_STATUS_DELETED,
-								domain,
-								timestamp
-							})
-							.catch(() => {});
 					})
 					.catch((error: unknown) => {
 						LOG.error(this.className, `Failed to delete link: ${link.title}`, error as Error);
@@ -916,10 +888,11 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 		this.openBlockDialog(async () => {
 			try {
 				if (this.editingCategory) {
-					await this.databaseService.updateLinkCategory(this.editingCategory._id, {
-						name: name.trim(),
-						color
-					});
+					await this.databaseService.updateLinkCategory(
+						this.editingCategory._id,
+						{ name: name.trim(), color },
+						name.trim()
+					);
 					LOG.info(this.className, `Category updated: ${name}`);
 					this.dialogService.showToast(SUCCESS, NEXUS_MSG_CATEGORY_UPDATED);
 				} else {
@@ -933,7 +906,11 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 				}
 			} catch (error) {
 				LOG.error(this.className, NEXUS_MSG_SAVE_CATEGORY_FAILED, error as Error);
-				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL);
+				this.dialogService.showToast(
+					TOAST_ERROR,
+					MSG_SAVE_FAILED,
+					NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL
+				);
 			}
 		}, NEXUS_MSG_SAVING_CATEGORY).catch(() => {});
 	}
@@ -951,7 +928,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 			DIALOG_CONFIRM,
 			() => {
 				this.databaseService
-					.removeLinkCategory(category._id)
+					.removeLinkCategory(category._id, category.name)
 					.then(() => {
 						LOG.info(this.className, `Category deleted: ${category.name}`);
 						this.dialogService.showToast(TOAST_INFO, NEXUS_MSG_CATEGORY_DELETED);

@@ -77,7 +77,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		private authService: AuthService,
-		private cdr: ChangeDetectorRef
+		private cdr: ChangeDetectorRef,
+		protected utilities: Utilities
 	) {}
 
 	/**
@@ -85,7 +86,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			if (!CloudbaseService.getUseId()) {
+			if (!CloudbaseService.getUserId()) {
 				/* Wait for anonymous sign-in before starting the watcher —
 				   the CloudBase WebSocket needs valid credentials to connect. */
 				this.authService
@@ -133,16 +134,6 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Gets a human-readable relative time string from a timestamp.
-	 *
-	 * @param timestamp - The timestamp string in "YYYY.MM.DD HH:mm:ss" format.
-	 * @returns A relative time string (e.g. "just now", "5m ago", "2d ago").
-	 */
-	protected getRelativeTime(timestamp: string | undefined): string {
-		return Utilities.getRelativeTime(timestamp ?? '');
-	}
-
-	/**
 	 * Gets the display name of a quote's author, falling back to 'Anonymous'.
 	 *
 	 * @param quote - The quote object.
@@ -179,7 +170,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @returns true if a user ID is present, otherwise false.
 	 */
 	protected get isSignedIn(): boolean {
-		return !!CloudbaseService.getUseId();
+		return !!CloudbaseService.getUserId();
 	}
 
 	/**
@@ -264,11 +255,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			DIALOG_CONFIRM,
 			async () => {
 				try {
-					await this.databaseService.removeQuote(
-						quote.key ?? '',
-						quote.text ?? '',
-						quote.author ?? ''
-					);
+					await this.databaseService.removeQuote(quote.key ?? '', quote.author ?? '');
 				} catch {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}

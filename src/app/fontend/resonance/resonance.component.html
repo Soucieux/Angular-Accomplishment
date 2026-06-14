@@ -69,7 +69,7 @@
 								<span class="author-name">{{ getAuthorName(quote) }}</span>
 							</div>
 							<div class="quote-actions">
-								<span class="quote-time">{{ getRelativeTime(quote.timestamp) }}</span>
+								<span class="quote-time">{{ utilities.getRelativeTime(quote.timestamp) }}</span>
 								@if (isAdmin) {
 									<button
 										class="delete-button"

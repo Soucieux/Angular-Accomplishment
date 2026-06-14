@@ -4,6 +4,7 @@ import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { Utilities } from '../../common/app.utilities';
 import { ResonanceComponent } from './resonance.component';
 import { RESONANCE_MAX_QUOTE_LENGTH } from '../../common/app.constant';
 
@@ -19,12 +20,16 @@ describe('ResonanceComponent', () => {
 		mockAuth.signInAnonymously.and.returnValue(Promise.resolve());
 		mockAuth.signOut.and.returnValue(Promise.resolve());
 
+		const mockUtilities = jasmine.createSpyObj<Utilities>('Utilities', ['getRelativeTime']);
+		mockUtilities.getRelativeTime.and.returnValue('');
+
 		await TestBed.configureTestingModule({
 			imports: [ResonanceComponent],
 			providers: [
 				MessageService,
 				{ provide: DatabaseService, useValue: mockDb },
-				{ provide: AuthService, useValue: mockAuth }
+				{ provide: AuthService, useValue: mockAuth },
+				{ provide: Utilities, useValue: mockUtilities }
 			]
 		}).compileComponents();
 

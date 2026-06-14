@@ -1029,7 +1029,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 					await this.databaseService.updateMovieGenre(
 						movie.getMovieKey(),
 						genreData.originalGenre,
-						genreData.genre
+						genreData.genre,
+						movie.getMovieName()
 					);
 				}
 				this.editedItems.delete(movie.getMovieKey());
@@ -1050,7 +1051,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		try {
 			/* Toggle: pass the inverse of the current state. If currently true, set false;
 			   if currently false, set true. The database only stores the final boolean. */
-			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite());
+			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite(), movie.getMovieName());
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 			LOG.error(this.className, ENT_LOG_UPDATE_FAVOURITE_FAILED);

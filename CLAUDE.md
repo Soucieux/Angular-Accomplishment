@@ -31,7 +31,7 @@ All coding style, naming, JSDoc tone, and CSS conventions are in the `coding-sty
 - Do not self-commit — wait for the user to say "commit".
 
 ## Commit Format
-- Format: `R1 - <Area> - <Description>`
+- Format: `R2 - <Area> - <Description>`
 - Areas: All Pages, Home, Nexus, Resonance, Recipe, Entertainment, Reminder, Debt Sonata, Patch Notes, About, Login
 - One concise line only — no multi-line body
 - **Maximum 70 characters total (including spaces) — no exceptions**

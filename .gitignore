@@ -69,3 +69,9 @@ capacitor.config.ts
 
 # ios
 ios
+
+# tauri (desktop) — built locally, .dmg uploaded to releases manually
+/src-tauri/
+
+# Assets
+src/assets/icons/

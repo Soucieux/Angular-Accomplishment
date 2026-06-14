@@ -129,7 +129,7 @@ export const CLOUDBASE_ERROR_INVALID_ARGUMENT = 'INVALID_ARGUMENT';
 /** CloudBase error category returned when credentials are wrong. */
 export const CLOUDBASE_ERROR_INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
 export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';
-export const ERROR_NO_DOCUMENT_UPDATED = 'DATABASE_NO_DOCUMENT_UPDATED';
+export const ERROR_NO_DOCUMENT_UPDATED = 'No document was updated';
 
 ////////////////////// Below are database collection name constants ///////////////////
 
@@ -142,7 +142,9 @@ export const DATABASE_DATE_CALCULATOR = 'date_calculator';
 export const DATABASE_DEBT_SONATA = 'debt_sonata';
 export const DATABASE_REMINDER = 'reminder';
 export const DATABASE_STATISTICS = 'statistics';
-export const DATABASE_USEFUL_LINKS = 'useful_links'; // stores both links (type:'link') and categories (type:'category')
+
+// stores both links (type:'link') and categories (type:'category')
+export const DATABASE_USEFUL_LINKS = 'useful_links';
 export const DATABASE_PUSH_SUBSCRIPTIONS = 'push_subscriptions';
 
 ////////////////////// Below are shared UI constants /////////////////////////////////
@@ -165,6 +167,15 @@ export const ACTIVITY_TYPE_RESET = 'reset';
 export const ACTIVITY_TYPE_BUG_LOGGED = 'bugLogged';
 export const ACTIVITY_TYPE_STATUS_CHANGED = 'statusChanged';
 export const ACTIVITY_TYPE_EDITED = 'edited';
+export const ACTIVITY_TYPE_RATE_UPDATED = 'rateUpdated';
+export const ACTIVITY_TYPE_GENRE_UPDATED = 'genreUpdated';
+export const ACTIVITY_TYPE_FAVOURITE_UPDATED = 'favouriteUpdated';
+export const ACTIVITY_TYPE_CATEGORY_UPDATED = 'categoryUpdated';
+export const ACTIVITY_TYPE_CATEGORY_DELETED = 'categoryDeleted';
+export const ACTIVITY_TYPE_PAYMENT_REMOVED = 'paymentRemoved';
+export const ACTIVITY_TYPE_CATEGORY_ADDED = 'categoryAdded';
+export const ACTIVITY_TYPE_CALCULATOR_UPDATED = 'calculatorUpdated';
+export const ACTIVITY_TYPE_LOCK_UPDATED = 'lockUpdated';
 /** Source tag written into every recentActivities entry — identifies the originating page. */
 export const ACTIVITY_SOURCE_MOVIE = 'movie';
 export const ACTIVITY_SOURCE_REMINDER = 'reminder';
@@ -173,6 +184,7 @@ export const ACTIVITY_SOURCE_PATCH = 'patch';
 export const ACTIVITY_SOURCE_LINK = 'link';
 export const ACTIVITY_SOURCE_DEBT = 'debt';
 export const ACTIVITY_SOURCE_RECIPE = 'recipe';
+export const ACTIVITY_SOURCE_DEFAULT = 'default';
 
 ////////////////////// Below are statistics document field name constants /////////////
 
@@ -233,11 +245,11 @@ export const HOME_ACTIVITY_LABEL_MOVIE_REMOVED = 'Movie Removed';
 export const HOME_ACTIVITY_LABEL_MOVIE_SEARCHED = 'Movie Searched';
 export const HOME_ACTIVITY_LABEL_PATCH_ADDED = 'Patch Added';
 export const HOME_ACTIVITY_LABEL_PATCH_BUG = 'Bug Logged';
-export const HOME_ACTIVITY_LABEL_PATCH_STATUS = 'Status Changed';
+export const HOME_ACTIVITY_LABEL_PATCH_STATUS = 'Patch Status Changed';
 export const HOME_ACTIVITY_LABEL_PATCH_UPDATED = 'Patch Edited';
 export const HOME_ACTIVITY_LABEL_PATCH_DELETED = 'Patch Deleted';
 export const HOME_ACTIVITY_LABEL_REMINDER_ADDED = 'Reminder Added';
-export const HOME_ACTIVITY_LABEL_REMINDER_DELETED = 'Reminder Deleted';
+export const HOME_ACTIVITY_LABEL_REMINDER_DELETED = 'Reminder Removed';
 export const HOME_ACTIVITY_LABEL_REMINDER_UPDATED = 'Reminder Updated';
 export const HOME_ACTIVITY_LABEL_RESONANCE_ADDED = 'Quote Added';
 export const HOME_ACTIVITY_LABEL_RESONANCE_REMOVED = 'Quote Removed';
@@ -251,6 +263,15 @@ export const HOME_ACTIVITY_LABEL_DEBT_REMOVED = 'Debt Removed';
 export const HOME_ACTIVITY_LABEL_RECIPE_ADDED = 'Recipe Added';
 export const HOME_ACTIVITY_LABEL_RECIPE_UPDATED = 'Recipe Updated';
 export const HOME_ACTIVITY_LABEL_RECIPE_REMOVED = 'Recipe Removed';
+export const HOME_ACTIVITY_LABEL_MOVIE_RATE_UPDATED = 'Movie Rate Updated';
+export const HOME_ACTIVITY_LABEL_MOVIE_GENRE_UPDATED = 'Movie Genre Updated';
+export const HOME_ACTIVITY_LABEL_MOVIE_FAVOURITE_UPDATED = 'Movie Favourite Updated';
+export const HOME_ACTIVITY_LABEL_LINK_CATEGORY_UPDATED = 'Link Category Updated';
+export const HOME_ACTIVITY_LABEL_LINK_CATEGORY_REMOVED = 'Link Category Removed';
+export const HOME_ACTIVITY_LABEL_DEBT_PAYMENT_REMOVED = 'Debt Payment Entry Removed';
+export const HOME_ACTIVITY_LABEL_LINK_CATEGORY_ADDED = 'Link Category Added';
+export const HOME_ACTIVITY_LABEL_DATE_CALCULATOR_UPDATED = 'Date Calculator Updated';
+export const HOME_ACTIVITY_LABEL_DEBT_LOCK_UPDATED = 'Debt Lock Updated';
 
 /** Shared entertainment teal colour for all non-deleted movie activity entries. */
 export const HOME_ACTIVITY_COLOR_MOVIE = '#11998e';
@@ -603,8 +624,6 @@ export const REMINDER_VALUE_KEY_LINK = 'link';
 /** CloudBase content entry key for the reminder tag. */
 export const REMINDER_VALUE_KEY_TAG = 'tag';
 
-/** Display name for the date calculator table — used in stat writes and the Recent Activity widget. */
-export const REMINDER_TABLE_DATE_CALCULATOR = 'Date Calculator';
 /** Display name for the third reminder table — used in stat writes and the Recent Activity widget. */
 export const REMINDER_TABLE_MESSAGES = 'Messages';
 /** Items shown per page in the Reminder grid (default: 2 columns × 7 rows). */
@@ -635,7 +654,13 @@ export const DEBT_DIALOG_LABEL_CURRENCY_CAD = '$ CAD';
 export const DEBT_EMPTY_STATE_MSG = 'No debts here. Add one to start tracking — or enjoy being debt-free.';
 export const DEBT_EMPTY_STATE_BTN = 'Add a debt';
 export const DEBT_LABEL_DELETE_CONFIRM = 'Delete?';
+export const DEBT_CONFIRM_DELETE_PAYMENT_MSG = 'Remove this payment?';
+export const DEBT_CONFIRM_DELETE_PAYMENT_HEADER = 'Remove payment';
+export const DEBT_CONFIRM_DELETE_PAYMENT_BTN = 'Remove';
 export const DEBT_CUSTOM_INPUT_PLACEHOLDER = '−0.00';
+export const DEBT_MSG_PAYING = 'Saving payment...';
+export const DEBT_MSG_DELETING_PAYMENT = 'Removing payment...';
+export const DEBT_MSG_RESETTING = 'Resetting debt...';
 export const DEBT_DIALOG_LABEL_EDIT = 'Set debt';
 export const DEBT_DIALOG_LABEL_SAVE = 'Set';
 export const DEBT_DIALOG_LABEL_BALANCE = 'New amount';
@@ -664,6 +689,8 @@ export const DEBT_VALUE_KEY_CURRENCY = 'currency';
 export const DEBT_VALUE_KEY_CATEGORY = 'category';
 /** CloudBase content entry key for the original (total) amount in the debt sonata table. */
 export const DEBT_VALUE_KEY_ORIGINAL = 'original';
+/** CloudBase content entry key for the payment history record in the debt sonata table. */
+export const DEBT_VALUE_KEY_PAYMENTS = 'payments';
 
 /** Small quick-pay preset amount for the Debt Sonata page. */
 export const DEBT_PRESET_SMALL = 100;

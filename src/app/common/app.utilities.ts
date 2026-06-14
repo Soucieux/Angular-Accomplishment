@@ -122,6 +122,20 @@ export class Utilities {
 	}
 
 	/**
+	 * Gets the short month-day display string from an app-format timestamp string.
+	 *
+	 * @param timestamp - The timestamp string in `'YYYY.MM.DD HH:mm:ss'` format.
+	 * @returns A formatted date string such as "Jun 13".
+	 */
+	public static getTimestampMonthDay(timestamp: string): string {
+		const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+		// Isolate the date segment ('YYYY.MM.DD') and split into components
+		const datePart = timestamp.split(' ')[0];
+		const [, monthStr, dayStr] = datePart.split('.');
+		return `${months[Number(monthStr) - 1]} ${Number(dayStr)}`;
+	}
+
+	/**
 	 * Gets a relative time string from a timestamp (e.g. "just now", "5m ago", "2d ago").
 	 * Accepts both the app's dot-separated format ("YYYY.MM.DD HH:mm:ss") and ISO 8601
 	 * strings (containing 'T', e.g. "2024-01-15T10:30:00.000Z") so that all pages can
@@ -363,7 +377,7 @@ export class Utilities {
 	public static checkPermission(openid: string): boolean {
 		try {
 			if (CloudbaseService.userHasAllRights()) return true;
-			return openid === CloudbaseService.getUseId();
+			return openid === CloudbaseService.getUserId();
 		} catch {
 			return false;
 		}
@@ -475,6 +489,19 @@ export class Utilities {
 	}
 
 	/**
+	 * Parses a project timestamp string in either ISO-8601 or dot-separated format
+	 * into a "YYYY-MM-DD" date string, delegating the final formatting to
+	 * {@link formatDateForStorage}.
+	 *
+	 * @param timestamp - The timestamp to parse ("YYYY-MM-DDTHH:mm:ss" or "YYYY.MM.DD HH:mm:ss").
+	 * @returns The date portion as a "YYYY-MM-DD" string.
+	 */
+	public static parseDateToISODate(timestamp: string): string {
+		const iso = timestamp.includes('T') ? timestamp : timestamp.replace(/\./g, '-').replace(' ', 'T');
+		return Utilities.formatDateForStorage(new Date(iso));
+	}
+
+	/**
 	 * Extract a favicon URL from any site URL by reading the hostname and
 	 * constructing the conventional /favicon.ico path.
 	 *
@@ -487,21 +514,6 @@ export class Utilities {
 			return `https://${hostname}/favicon.ico`;
 		} catch {
 			return '';
-		}
-	}
-
-	/**
-	 * Extracts the hostname from a URL string. Falls back to the raw URL if
-	 * parsing fails so activity log entries always have a non-empty domain.
-	 *
-	 * @param url - The full URL string to parse.
-	 * @returns The hostname (e.g. `example.com`), or the raw URL on failure.
-	 */
-	public static getHostname(url: string): string {
-		try {
-			return new URL(url).hostname;
-		} catch {
-			return url;
 		}
 	}
 
@@ -549,6 +561,36 @@ export class Utilities {
 	 */
 	public getDaysUntil(dateStr: unknown): string {
 		return Utilities.getDaysUntil(dateStr);
+	}
+
+	/**
+	 * Instance wrapper around {@link Utilities.checkIfChinese} for use in Angular templates.
+	 *
+	 * @param text - The text string to check.
+	 * @returns True if the text contains at least one Chinese character.
+	 */
+	public checkIfChinese(text: string | null | undefined): boolean {
+		return Utilities.checkIfChinese(text);
+	}
+
+	/**
+	 * Instance wrapper around {@link Utilities.capitalizeFirstLetterOnEachWord} for use in Angular templates.
+	 *
+	 * @param string - The string to capitalize.
+	 * @returns The capitalized string, or an empty string if the input is falsy.
+	 */
+	public capitalizeFirstLetterOnEachWord(string: string | null | undefined): string {
+		return Utilities.capitalizeFirstLetterOnEachWord(string);
+	}
+
+	/**
+	 * Instance wrapper around {@link Utilities.getRelativeTime} for use in Angular templates.
+	 *
+	 * @param timestamp - The timestamp string, or undefined for an empty result.
+	 * @returns A human-readable relative time string, or an empty string.
+	 */
+	public getRelativeTime(timestamp: string | undefined): string {
+		return Utilities.getRelativeTime(timestamp ?? '');
 	}
 
 	/**

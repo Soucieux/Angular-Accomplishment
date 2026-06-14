@@ -198,7 +198,7 @@
 										@for (tok of step.text; track $index) {
 											@if (tok.kind === 'pill') {
 												<span class="ipill tiny" [class]="tok.pillType ?? ''">{{
-													titleCase(tok.text)
+													utilities.capitalizeFirstLetterOnEachWord(tok.text)
 												}}</span>
 											} @else {
 												<span>{{ tok.text }}</span>

@@ -25,8 +25,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/app.utilities';
 import {
-	ACTIVITY_SOURCE_RECIPE,
-	ACTIVITY_TYPE_UPDATED,
+
 	COMPONENT_DESTROY,
 	DIALOG_BTN_DELETE,
 	DIALOG_CONFIRM,
@@ -63,10 +62,7 @@ import {
 	RECIPE_BAND_DEFAULT,
 	RECIPE_PAGE_SIZE,
 	RECIPE_ROWS_PER_PAGE,
-	HISTORY_STATUS_ADDED,
-	HISTORY_STATUS_DELETED,
 	STATS_CAP_ACTIVITY_LOG,
-	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_RECIPE_LIST,
 	STATS_FIELD_TOTAL_RECIPES,
 	SUCCESS,
@@ -305,28 +301,6 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 				lastRow.querySelector<HTMLTextAreaElement>('textarea.name')?.focus();
 			}
 		}
-	}
-
-	/**
-	 * Checks whether a string contains at least one Chinese character.
-	 * Delegates to {@link Utilities#checkIfChinese}.
-	 *
-	 * @param text - The string to inspect.
-	 * @returns True if the text contains a Chinese character, false otherwise.
-	 */
-	protected hasChinese(text: string | null | undefined): boolean {
-		return Utilities.checkIfChinese(text);
-	}
-
-	/**
-	 * Converts a string to title case (first letter of every word capitalised).
-	 * Delegates to {@link Utilities#capitalizeFirstLetterOnEachWord}.
-	 *
-	 * @param text - The string to convert.
-	 * @returns The title-cased string, or an empty string for falsy input.
-	 */
-	protected titleCase(text: string | null | undefined): string {
-		return Utilities.capitalizeFirstLetterOnEachWord(text);
 	}
 
 	/**
@@ -671,19 +645,11 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 				if (!this.editingRecipeId) return;
 				const id = this.editingRecipeId;
 				this.databaseService
-					.removeRecipe(id)
+					.removeRecipe(id, recipeName)
 					.then(() => {
 						LOG.info(this.className, `Recipe deleted: ${id}`);
 						this.dialogService.showToast(TOAST_INFO, RECIPE_MSG_DELETED);
 						this.transitionTo(RECIPE_VIEW_LIST);
-						this.databaseService
-							.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-								source: ACTIVITY_SOURCE_RECIPE,
-								type: HISTORY_STATUS_DELETED,
-								name: recipeName,
-								timestamp: Utilities.getCurrentFormattedTime(true)
-							})
-							.catch(() => {});
 					})
 					.catch((error: unknown) => {
 						LOG.error(this.className, MSG_DELETE_FAILED, error as Error);
@@ -1034,7 +1000,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		const isEdit = this.editingMode === RECIPE_EDITING_MODE_EDIT && !!this.editingRecipeId;
 		const recipe: Recipe = {
 			id: isEdit ? this.editingRecipeId! : '',
-			openid: isEdit ? (this.selectedRecipe?.openid ?? '') : (CloudbaseService.getUseId() ?? ''),
+			openid: isEdit ? (this.selectedRecipe?.openid ?? '') : (CloudbaseService.getUserId() ?? ''),
 			name: this.editorName.trim(),
 			detailName: this.editorName.trim(),
 			category: this.editorCategory,
@@ -1053,28 +1019,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 				LOG.info(this.className, `Recipe updated: ${recipe.id} "${recipe.name}"`);
 				this.dialogService.showToast(SUCCESS, RECIPE_MSG_UPDATED);
 				this.selectedRecipe = recipe;
-				this.databaseService
-					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-						source: ACTIVITY_SOURCE_RECIPE,
-						type: ACTIVITY_TYPE_UPDATED,
-						name: recipe.name,
-						timestamp: Utilities.getCurrentFormattedTime(true)
-					})
-					.catch(() => {});
 			} else {
 				await this.databaseService.addRecipe(recipe);
 				LOG.info(this.className, `Recipe created: "${recipe.name}"`);
 				this.dialogService.showToast(SUCCESS, RECIPE_MSG_ADDED);
 				this.pendingDetailName = recipe.name;
 				this.selectedRecipe = recipe;
-				this.databaseService
-					.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-						source: ACTIVITY_SOURCE_RECIPE,
-						type: HISTORY_STATUS_ADDED,
-						name: recipe.name,
-						timestamp: Utilities.getCurrentFormattedTime(true)
-					})
-					.catch(() => {});
 			}
 			this.servings = recipe.baseServings || 1;
 			this.ingredientsCollapsed = false;

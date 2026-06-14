@@ -26,14 +26,11 @@ import { Subscription, firstValueFrom, timer } from 'rxjs';
 import { Utilities } from '../../common/app.utilities';
 import { LOG } from '../../common/app.logs';
 import {
-	ACTIVITY_TYPE_UPDATED,
 	COMPONENT_DESTROY,
 	DATABASE_REMINDER,
 	DIALOG_CONFIRM,
 	ERROR_PERMISSION_DENIED,
 	FAILURE,
-	HISTORY_STATUS_ADDED,
-	HISTORY_STATUS_DELETED,
 	REMINDER_ADD_BTN_LABEL,
 	REMINDER_ADD_DATE_LABEL,
 	REMINDER_ADD_LINK_LABEL,
@@ -64,14 +61,20 @@ import {
 	REMINDER_VALUE_KEY_LINK,
 	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
-	ACTIVITY_SOURCE_REMINDER,
 	STATS_CAP_ACTIVITY_LOG,
-	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS
 } from '../../common/app.constant';
-import { NewItem, REMINDER_CATEGORY_COLOR_MAP, REMINDER_KNOWN_CATEGORIES, ReminderDbRecord, ReminderValueKey, ReminderItem, TagEditSession } from './reminder.model';
+import {
+	NewItem,
+	REMINDER_CATEGORY_COLOR_MAP,
+	REMINDER_KNOWN_CATEGORIES,
+	ReminderDbRecord,
+	ReminderValueKey,
+	ReminderItem,
+	TagEditSession
+} from './reminder.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
@@ -335,18 +338,15 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	): Promise<void> {
 		try {
 			// Step 1: Persist the single-value change to CloudBase
-			await this.databaseService.updateReminderTable(entryKey, valueKey, singleValue);
+			await this.databaseService.updateReminderTable(
+				entryKey,
+				valueKey,
+				singleValue,
+				this.items.find((item) => item.key === entryKey)?.text ?? ''
+			);
+
 			// Step 2: Flash the save indicator
 			this.triggerSaveIndicator();
-			// Step 3: Append the change to the activity log
-			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-					source: ACTIVITY_SOURCE_REMINDER,
-					type: ACTIVITY_TYPE_UPDATED,
-					text: this.items.find((item) => item.key === entryKey)?.text ?? '',
-					timestamp: Utilities.getCurrentFormattedTime(true)
-				})
-				.catch(() => {});
 		} catch (error) {
 			// Roll back the local single value if the server denied permission, then show error dialog
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
@@ -368,16 +368,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private async removeRecordFromDatabase(entryKey: string): Promise<void> {
 		const itemText = this.items.find((item) => item.key === entryKey)?.text ?? '';
 		try {
-			await this.databaseService.removeRecordFromReminderTable(entryKey);
+			await this.databaseService.removeRecordFromReminderTable(entryKey, itemText);
 			this.triggerSaveIndicator();
-			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-					source: ACTIVITY_SOURCE_REMINDER,
-					type: HISTORY_STATUS_DELETED,
-					text: itemText,
-					timestamp: Utilities.getCurrentFormattedTime(true)
-				})
-				.catch(() => {});
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
@@ -423,7 +415,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected get filterBarTags(): string[] {
 		const custom = [
-			...new Set(this.items.map((item) => item.tag).filter((tag) => tag && !this.baseCategories.includes(tag)))
+			...new Set(
+				this.items.map((item) => item.tag).filter((tag) => tag && !this.baseCategories.includes(tag))
+			)
 		];
 		return [...this.baseCategories, ...custom];
 	}
@@ -693,18 +687,10 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		try {
 			// Step 3: Persist to the database
-			await this.databaseService.addNewRecordToReminderTable(newRecord);
+			await this.databaseService.addNewRecordToReminder(newRecord);
 
-			// Step 4: Flash save indicator and append to the activity log
+			// Step 4: Flash save indicator
 			this.triggerSaveIndicator();
-			this.databaseService
-				.appendToActivityLog(STATS_FIELD_RECENT_ACTIVITIES, {
-					source: ACTIVITY_SOURCE_REMINDER,
-					type: HISTORY_STATUS_ADDED,
-					text: newRecord.text ?? '',
-					timestamp: Utilities.getCurrentFormattedTime(true)
-				})
-				.catch(() => {});
 
 			// Step 5: Reset new-item state and navigate to last page
 			this.page = Math.max(0, Math.ceil((this.items.length + 1) / this.itemsPerPage) - 1);
@@ -1020,16 +1006,6 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected formatDate(date: unknown): string {
 		return Utilities.coerceDateToString(date).replace(/-/g, '.');
-	}
-
-	/**
-	 * Returns whether the given text contains Chinese characters.
-	 *
-	 * @param text - The text to check.
-	 * @returns True when at least one Chinese character is present.
-	 */
-	protected checkIfChinese(text: string): boolean {
-		return Utilities.checkIfChinese(text);
 	}
 
 	/**

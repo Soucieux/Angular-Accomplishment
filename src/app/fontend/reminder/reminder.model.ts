@@ -13,7 +13,7 @@ export type ReminderValueKey = 'text' | 'date' | 'link' | 'tag';
 export interface ReminderDbRecord {
 	key: string;
 	_openid: string;
-	text?: string;
+	text: string;
 	date?: unknown;
 	link?: string | null;
 	tag: string;

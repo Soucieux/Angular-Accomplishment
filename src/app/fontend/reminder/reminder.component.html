@@ -93,7 +93,7 @@
 								<input
 									type="text"
 									class="rm-card-title-input"
-									[class.cf]="checkIfChinese(item.text)"
+									[class.cf]="utilities.checkIfChinese(item.text)"
 									[placeholder]="REMINDER_PLACEHOLDER_TEXT"
 									[(ngModel)]="item.text"
 									(keyup.enter)="onCardTextUpdate(item)"
@@ -209,7 +209,7 @@
 					<input
 						type="text"
 						class="rm-new-card-input"
-						[class.cf]="checkIfChinese(newItem.text)"
+						[class.cf]="utilities.checkIfChinese(newItem.text)"
 						[placeholder]="REMINDER_PLACEHOLDER_TEXT"
 						[(ngModel)]="newItem.text"
 						(keyup.enter)="addNewTextOnly()" />

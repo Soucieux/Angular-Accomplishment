@@ -50,15 +50,13 @@ describe('ReminderComponent', () => {
 			'getReminderTableDetails',
 			'updateReminderTable',
 			'removeRecordFromReminderTable',
-			'addNewRecordToReminderTable',
-			'appendToActivityLog',
+			'addNewRecordToReminder',
 			'updateStatisticsFields'
 		]);
 		mockDb.getReminderTableDetails.and.returnValue(of([]));
 		mockDb.updateReminderTable.and.returnValue(Promise.resolve());
 		mockDb.removeRecordFromReminderTable.and.returnValue(Promise.resolve());
-		mockDb.addNewRecordToReminderTable.and.returnValue(Promise.resolve());
-		mockDb.appendToActivityLog.and.returnValue(Promise.resolve());
+		mockDb.addNewRecordToReminder.and.returnValue(Promise.resolve());
 		mockDb.updateStatisticsFields.and.returnValue(Promise.resolve());
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
@@ -332,13 +330,13 @@ describe('ReminderComponent', () => {
 		it('does not call the database when text is empty', async () => {
 			(component as any).newItem = { text: '   ', date: null, link: '', tags: [] };
 			await (component as any).addNewTextOnly();
-			expect(mockDb.addNewRecordToReminderTable).not.toHaveBeenCalled();
+			expect(mockDb.addNewRecordToReminder).not.toHaveBeenCalled();
 		});
 
 		it('calls addNewRecordToReminderTable with the trimmed text', async () => {
 			(component as any).newItem = { text: 'hello', date: null, link: '', tags: [] };
 			await (component as any).addNewTextOnly();
-			expect(mockDb.addNewRecordToReminderTable).toHaveBeenCalledWith(
+			expect(mockDb.addNewRecordToReminder).toHaveBeenCalledWith(
 				jasmine.objectContaining({ text: 'hello' })
 			);
 		});
@@ -351,7 +349,7 @@ describe('ReminderComponent', () => {
 		});
 
 		it('calls handleError when the database throws', async () => {
-			mockDb.addNewRecordToReminderTable.and.returnValue(Promise.reject(new Error('fail')));
+			mockDb.addNewRecordToReminder.and.returnValue(Promise.reject(new Error('fail')));
 			(component as any).newItem = { text: 'hello', date: null, link: '', tag: '' };
 			await (component as any).addNewTextOnly();
 			expect(mockDialogService.handleError).toHaveBeenCalled();
@@ -371,6 +369,7 @@ describe('ReminderComponent', () => {
 			expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
 				'k1',
 				REMINDER_VALUE_KEY_TEXT,
+				'updated text',
 				'updated text'
 			);
 		});
@@ -415,7 +414,7 @@ describe('ReminderComponent', () => {
 			const item = (component as any).items[0];
 			await (component as any).clearDate(item);
 			expect(item.date).toBeNull();
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_DATE, null);
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_DATE, null, 'text');
 		});
 
 		it('does nothing when permission is denied', async () => {
@@ -435,7 +434,7 @@ describe('ReminderComponent', () => {
 			const item = (component as any).items[0];
 			await (component as any).clearLink(item);
 			expect(item.link).toBeNull();
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_LINK, null);
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_LINK, null, 'text');
 		});
 
 		it('does nothing when permission is denied', async () => {
@@ -510,7 +509,7 @@ describe('ReminderComponent', () => {
 			(component as any).tagEditSession = { item, index: -1, isNewItem: false, tagText: 'newtag' };
 			await (component as any).onTagUpdate();
 			expect(item.tag).toBe('newtag');
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, 'newtag');
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, 'newtag', 'hello');
 		});
 
 		it('clears the tag when editing text is empty', async () => {
@@ -528,7 +527,7 @@ describe('ReminderComponent', () => {
 			const item = (component as any).items[0];
 			await (component as any).removeExistingCardTag(0, item);
 			expect(item.tag).toBe('');
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, '');
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, '', 'text');
 		});
 
 		it('does nothing when permission is denied', async () => {
@@ -586,16 +585,6 @@ describe('ReminderComponent', () => {
 		it('returns empty string for a falsy input', () => {
 			expect((component as any).formatDate(null)).toBe('');
 			expect((component as any).formatDate('')).toBe('');
-		});
-	});
-
-	describe('checkIfChinese', () => {
-		it('returns true for a string containing Chinese characters', () => {
-			expect((component as any).checkIfChinese('你好')).toBeTrue();
-		});
-
-		it('returns false for a string without Chinese characters', () => {
-			expect((component as any).checkIfChinese('hello')).toBeFalse();
 		});
 	});
 

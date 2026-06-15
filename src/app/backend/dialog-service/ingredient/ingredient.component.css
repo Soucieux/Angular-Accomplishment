@@ -6,6 +6,12 @@
 	padding: 20px 24px 16px !important;
 	border-radius: 20px 20px 0 0 !important;
 }
+.itype-dialog-title {
+	font-size: 20px;
+	font-weight: 700;
+	color: #fff;
+}
+
 ::ng-deep .itype-dialog .p-dialog-content {
 	padding: 18px 24px 8px;
 }

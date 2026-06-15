@@ -74,6 +74,7 @@ export const HISTORY_STATUS_ADDED = 'added';
 export const HISTORY_STATUS_DELETED = 'deleted';
 export const HISTORY_MSG_UNDO_CONFIRM = 'Undo this deletion?';
 export const HISTORY_DIALOG_UNDO_BTN = 'Undo';
+export const HISTORY_DIALOG_TITLE = 'Activities';
 /** Sentinel movie ID string used when a history entry has no valid numeric ID. */
 export const HISTORY_MOVIE_ID_UNKNOWN = 'unknown';
 /** Inline border style for an "added" history entry. */
@@ -392,6 +393,8 @@ export const ORBITAL_URGENCY_LABEL_VARIOUS = 'Various';
 
 /** Prefix for the delete-movie confirm message; movie name is appended at the call site. */
 export const ENT_MSG_DELETE_CONFIRM_PREFIX = 'Are you sure you want to delete ';
+export const ENT_DIALOG_TITLE_ADD_MOVIE = 'Add New Movie';
+export const ENT_DIALOG_TITLE_SEARCH = 'Searching latest rate for each movie...';
 export const ENT_DIALOG_TITLE_DELETE_MOVIE = 'Delete Movie';
 export const ENT_MSG_ADDING = 'Adding movie...';
 export const ENT_MSG_RESTORING = 'Restoring movie...';

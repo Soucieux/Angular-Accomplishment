@@ -12,6 +12,7 @@ import {
 	DIALOG_CONFIRM,
 	DIALOG_ERROR,
 	ENT_MSG_ADD_DIALOG_SEARCH_FAILED,
+	HISTORY_DIALOG_TITLE,
 	HISTORY_DIALOG_UNDO_BTN,
 	HISTORY_MOVIE_ID_UNKNOWN,
 	HISTORY_MSG_UNDO_CONFIRM,
@@ -31,6 +32,7 @@ import { HistoryEntry } from './history.model';
 })
 export class HistoryDialogComponent implements OnDestroy {
 	private readonly className = 'HistoryDialogComponent';
+	protected readonly HISTORY_DIALOG_TITLE = HISTORY_DIALOG_TITLE;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;

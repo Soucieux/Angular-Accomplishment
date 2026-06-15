@@ -1,5 +1,4 @@
 <p-dialog
-	[header]="RECIPE_ITYPE_DIALOG_TITLE"
 	[(visible)]="visible"
 	[modal]="true"
 	[closable]="true"
@@ -8,6 +7,7 @@
 	styleClass="itype-dialog"
 	appendTo="body"
 	(onHide)="onDialogClosed()">
+	<ng-template #header><span class="itype-dialog-title">{{ RECIPE_ITYPE_DIALOG_TITLE }}</span></ng-template>
 	<div class="itype-body">
 		<div class="itype-counter" [class.at-cap]="!canAddMore()">
 			<span class="material-symbols-outlined">category</span>

@@ -3,7 +3,7 @@ import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
-import { SEARCH_CANCEL, SEARCH_COMPLETE } from '../../../common/app.constant';
+import { ENT_DIALOG_TITLE_SEARCH, SEARCH_CANCEL, SEARCH_COMPLETE } from '../../../common/app.constant';
 
 @Component({
 	selector: 'search-dialog',
@@ -14,6 +14,7 @@ import { SEARCH_CANCEL, SEARCH_COMPLETE } from '../../../common/app.constant';
 export class SearchDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	@ViewChild('logContainer') logContainer!: ElementRef<HTMLDivElement>;
+	protected readonly ENT_DIALOG_TITLE_SEARCH = ENT_DIALOG_TITLE_SEARCH;
 	protected visible: boolean = false;
 	protected searchCompleteOrInterrupted: boolean = false;
 	private stopCallback?: () => void;

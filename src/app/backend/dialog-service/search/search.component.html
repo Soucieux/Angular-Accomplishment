@@ -1,5 +1,4 @@
 <p-dialog
-	header="Searching latest rate for each movie..."
 	[(visible)]="visible"
 	[modal]="true"
 	[appendTo]="'body'"
@@ -7,6 +6,7 @@
 	[closable]="false"
 	styleClass="dialog"
 	(onHide)="onDialogClosed()">
+	<ng-template #header><span class="dialog-title">{{ ENT_DIALOG_TITLE_SEARCH }}</span></ng-template>
 	<div class="logs" #logContainer>
 		@for (searchLog of searchLogs; track $index) {
 		<div [innerHTML]="searchLog"></div>

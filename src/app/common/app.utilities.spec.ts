@@ -276,25 +276,21 @@ describe('Utilities', () => {
 		it('returns falsy input as-is', () => {
 			expect(Utilities.normalizeUrl('')).toBe('');
 		});
-	});
 
-	// ── normalizeWebUrl ────────────────────────────────────────────────────
-
-	describe('normalizeWebUrl', () => {
-		it('prepends https:// to www. prefixed URLs', () => {
-			expect(Utilities.normalizeWebUrl('www.example.com')).toBe('https://www.example.com');
+		it('prepends https:// to www. prefixed URLs with withWww', () => {
+			expect(Utilities.normalizeUrl('www.example.com', true)).toBe('https://www.example.com');
 		});
 
-		it('prepends https://www. to bare domain names', () => {
-			expect(Utilities.normalizeWebUrl('example.com')).toBe('https://www.example.com');
+		it('prepends https://www. to bare domain names with withWww', () => {
+			expect(Utilities.normalizeUrl('example.com', true)).toBe('https://www.example.com');
 		});
 
-		it('leaves https:// URLs unchanged (lowercased)', () => {
-			expect(Utilities.normalizeWebUrl('https://Example.com')).toBe('https://example.com');
+		it('lowercases and preserves https:// URLs with withWww', () => {
+			expect(Utilities.normalizeUrl('https://Example.com', true)).toBe('https://example.com');
 		});
 
-		it('returns falsy input as-is', () => {
-			expect(Utilities.normalizeWebUrl('')).toBe('');
+		it('returns falsy input as-is with withWww', () => {
+			expect(Utilities.normalizeUrl('', true)).toBe('');
 		});
 	});
 

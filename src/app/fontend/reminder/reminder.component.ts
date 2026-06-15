@@ -681,7 +681,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				newRecord.date = Utilities.formatDateForStorage(this.newItem.date);
 			}
 			if (this.newItem.link.trim()) {
-				newRecord.link = Utilities.normalizeWebUrl(this.newItem.link.trim());
+				newRecord.link = Utilities.normalizeUrl(this.newItem.link.trim(), true);
 			}
 		}
 
@@ -815,7 +815,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				: FAILURE;
 			if (returnCode === FAILURE) return;
 			const trimmedLink = this.editingLink.trim();
-			this.editingItem.link = trimmedLink ? Utilities.normalizeWebUrl(trimmedLink) : null;
+			this.editingItem.link = trimmedLink ? Utilities.normalizeUrl(trimmedLink, true) : null;
 			await this.updateTableSingleValue(
 				this.editingItem.key,
 				REMINDER_VALUE_KEY_LINK,
@@ -992,7 +992,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected get newItemLinkLabel(): string {
 		if (!this.newItem.link.trim()) return '';
-		return Utilities.getDomain(Utilities.normalizeWebUrl(this.newItem.link.trim()));
+		return Utilities.getDomain(Utilities.normalizeUrl(this.newItem.link.trim(), true));
 	}
 
 	////////////////////// Below are display helper methods used by the card template /////////

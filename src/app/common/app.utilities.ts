@@ -447,35 +447,20 @@ export class Utilities {
 	}
 
 	/**
-	 * Ensure a URL has an explicit protocol prefix so the browser treats it as an
-	 * absolute URL. Returns the value unchanged if it already starts with
-	 * `http://` or `https://`; otherwise prepends `https://`.
+	 * Ensures a URL has an explicit protocol prefix so the browser treats it as
+	 * an absolute URL. When withWww is true, also lowercases the value and
+	 * prepends `https://www.` to bare domains (used for contact / reminder links).
 	 *
 	 * @param url - The raw URL string (may or may not have a protocol).
+	 * @param withWww - The flag to prepend www and lowercase the value.
 	 * @returns A URL string guaranteed to begin with a valid protocol.
 	 */
-	public static normalizeUrl(url: string): string {
+	public static normalizeUrl(url: string, withWww = false): string {
 		if (!url) return url;
-		if (url.startsWith('http://') || url.startsWith('https://')) return url;
-		return 'https://' + url;
-	}
-
-	/**
-	 * Normalise a raw user-entered link to a full HTTPS URL. Adds `https://www.`
-	 * when no protocol or subdomain is present, and `https://` when the value
-	 * already starts with `www.`. This www-aware variant is used for contact /
-	 * reminder links (compare {@link normalizeUrl} which only prepends the protocol).
-	 *
-	 * @param link - The raw link string entered by the user.
-	 * @returns A normalised URL string beginning with http(s)://, or the original
-	 *          value when it is falsy.
-	 */
-	public static normalizeWebUrl(link: string): string {
-		if (!link) return link;
-		const lower = link.toLowerCase();
-		if (lower.startsWith('www.')) return 'https://' + lower;
-		if (lower.startsWith('https://') || lower.startsWith('http://')) return lower;
-		return 'https://www.' + lower;
+		const value = withWww ? url.toLowerCase() : url;
+		if (value.startsWith('http://') || value.startsWith('https://')) return value;
+		if (value.startsWith('www.')) return 'https://' + value;
+		return withWww ? 'https://www.' + value : 'https://' + value;
 	}
 
 	/**
@@ -624,21 +609,15 @@ export class Utilities {
 	}
 
 	/**
-	 * Compute how many days remain until a `YYYY-MM-DD` date string, returning
-	 * a short human-readable label ("Today", "Tomorrow", "in Xd", or "Xd overdue").
+	 * Computes a short human-readable countdown label from a date string.
+	 * Delegates the day-diff calculation to {@link getDaysUntilNumber}.
 	 *
 	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
 	 * @returns A countdown label, or an empty string if no date is provided.
 	 */
 	public static getDaysUntil(dateStr: unknown): string {
-		if (!dateStr) return '';
-		const str = Utilities.coerceDateToString(dateStr);
-		if (!str) return '';
-		const [year, month, day] = str.split('-').map(Number);
-		const target = new Date(year, month - 1, day);
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+		const diff = Utilities.getDaysUntilNumber(dateStr);
+		if (diff === null) return '';
 		if (diff < 0) return `${Math.abs(diff)}d overdue`;
 		if (diff === 0) return 'Today';
 		if (diff === 1) return 'Tomorrow';
@@ -665,20 +644,14 @@ export class Utilities {
 
 	/**
 	 * Returns `true` if the given date is strictly before today (i.e. the item
-	 * is past due). Accepts any form understood by {@link coerceDateToString}.
+	 * is past due). Delegates the day-diff calculation to {@link getDaysUntilNumber}.
 	 *
 	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
 	 * @returns `true` if the date is in the past, `false` otherwise.
 	 */
 	public static isOverdue(dateStr: unknown): boolean {
-		if (!dateStr) return false;
-		const str = Utilities.coerceDateToString(dateStr);
-		if (!str) return false;
-		const [year, month, day] = str.split('-').map(Number);
-		const target = new Date(year, month - 1, day);
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		return target < today;
+		const diff = Utilities.getDaysUntilNumber(dateStr);
+		return diff !== null && diff < 0;
 	}
 
 	/**

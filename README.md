@@ -26,16 +26,16 @@
 
 | Module | Description | Status |
 | :--- | :--- | :---: |
-| **Vision Home** | Orbital dashboard centred on a Life Clock displaying real-time hour, minute, and second with concentric progress rings for year, month, week, and day. Satellite stat discs show live counts for movies, patch notes, quotes, and recipes. Glass widget panels surface upcoming reminders, debt payments, recent activity, entertainment genre breakdown, a recipe list, saved link chips, and a week agenda — all reachable via quick-action pill buttons. | Active |
-| **Entertainment Hub** | Track movies and TV dramas with Douban API metadata lookup, Firebase/Cloudbase image management, category filtering, favourites, rating system, and full addition/deletion history. | Stable |
-| **Reminder Suite** | Account expense tracker with inline editing, colour-coded status indicators, and persistent cloud sync. | Active |
-| **Nexus** | Personal AI search hub with chip-based query filters, a saved link management panel, and an integrated Date Calculator for date-range arithmetic. | Beta |
-| **Debt Sonata** | Debt tracking canvas — card-based ledger with CNY/CAD currency, payment chips, progress bars, paid-off ribbon, summary totals, and a full payment history timeline per entry. | Active |
-| **Resonance** | Personal quote vault with author attribution, timestamps, and anonymous browsing support. | Active |
-| **Recipe Vault** | Personal cookbook with category filtering, ingredient groups with type badges, step-by-step instructions, and a live servings scaler. Each category applies a distinct colour theme (rose · green · purple · amber · pink) across cards, panels, and action buttons. Ingredient names support both Chinese characters and English — enter each language on a separate line; the first line is used as the coloured pill label shown on the right side of steps. | Active |
-| **Patch Notes** | Internal development log with add/edit/delete, bug flagging per component, status filters, and pagination. | Active |
-| **Secure Entry** | Auth page with Google Sign-In, email/password login, and user sign-up — with route guards protecting all authenticated pages. Sidebar features a presence row with avatar, online status, and an account menu popover (desktop) or confirm dialog (mobile). | Stable |
-| **About** | Professional history timeline with animated visual background. | Stable |
+| **Home** | **Orbital dashboard** built around a *Life Clock* displaying the current time in real-time.<br>- Concentric progress rings for **year, month, week, and day**<br>- **Satellite stat discs** with live counts for movies, patch notes, quotes, and recipes<br>- Glass widget panels: upcoming reminders, debt payments, recent activity, entertainment genre breakdown, a recipe list, and saved link chips<br>- **Week agenda** view and quick-action pill buttons<br>- Fully responsive mobile layout | Active |
+| **Entertainment** | Media tracker for **movies and TV dramas** with rich metadata support.<br>- **Douban API** lookup for title, genre, cast, and cover image<br>- Firebase / Cloudbase image storage and CDN delivery<br>- Category filtering, favourites toggle, and **colour-coded rating indicators**<br>- Full add / deletion history with timestamps | Stable |
+| **Reminder** | Account expense tracker with real-time cloud sync.<br>- **Inline cell editing** with keyboard confirm flow<br>- Colour-coded active, overdue, and paid-off status indicators<br>- Persistent per-user state | Active |
+| **Nexus** | Personal AI search hub and link manager.<br>- **Chip-based category filters** for AI tool discovery<br>- Saved link management with category assignment and logo auto-fetch<br>- **Date Calculator** — date-range arithmetic with CloudBase persistence<br>- Fallback colour avatars when logo fetch fails | Beta |
+| **Debt Sonata** | Debt tracking canvas with full payment history.<br>- **Card-based ledger** supporting CNY and CAD currencies<br>- Preset and custom **payment chips** with per-card progress bar<br>- Paid-off ribbon state and coral card styling<br>- Summary card with per-currency totals<br>- Full payment history timeline per entry | Active |
+| **Resonance** | Personal quote vault.<br>- Author attribution and timestamps<br>- **Anonymous browsing** support for public quotes<br>- Ownership-based edit and delete permissions | Active |
+| **Recipe** | Personal cookbook with per-category colour theming.<br>- List, detail, and editor views<br>- **Ingredient groups** with type badges and bilingual name support *(Chinese + English)*<br>- Live **servings scaler** and step-by-step instruction view<br>- Category colour themes — *rose · green · purple · amber · pink*<br>- Drag-to-reorder steps | Active |
+| **Patch Notes** | Internal development log.<br>- Add, edit, and delete entries per component<br>- **Bug flag** per entry with status filter (Active / Resolved)<br>- Paginated view with correct rowspan recalculation after date sorting | Active |
+| **Login** | Authentication entry point.<br>- **Google Sign-In** and email / password login<br>- Sign-up flow for new user registration<br>- Route guards protecting all authenticated pages<br>- Post-login redirect to last-visited route<br>- Sidebar presence row: avatar, online status, and account menu popover | Stable |
+| **About** | Professional history timeline.<br>- Interactive milestone entries<br>- **Animated gradient background** | Stable |
 
 ---
 
@@ -47,7 +47,7 @@
 
 | Period | Milestone |
 | :--- | :--- |
-| **January 2024** | - Angular workspace initialized; project scaffolding and directory structure established |
+| **January 2024** | - Angular workspace initialized<br>- Project scaffolding and directory structure established |
 | **February 2024** | - Basic component skeletons created<br>- Navigation drawer shell added with routing stubs and home icon<br>- Multiple project setup iterations committed |
 | **June 2024** | - Navigation drawer and home page icon added<br>- Client-side router fully configured with **page transition animations**<br>- Google Fonts and Material Symbols icon set integrated<br>- First wave of Dependabot security dependency bumps merged |
 | **July 2024** | - **Firebase Hosting** deployment pipeline established<br>- Build scripts configured; a failed deployment reverted and re-applied cleanly |
@@ -59,19 +59,19 @@
 
 | Period | Milestone |
 | :--- | :--- |
-| **February 2025** | - Firestore database and Home page scaffolded<br>- **Entertainment Hub** initialized — TV Shows grid layout built<br>- Douban API proxy server configured to bypass CORS<br>- Firebase Storage image retrieval pipeline established<br>- Movie data model refactored; image upload to Firebase implemented |
-| **March 2025** | - **Full mobile layout** for iPhone 16 Pro and Samsung Galaxy<br>- Genre category chip system with dynamic counts per category<br>- Per-card entrance animations; access-denied page for unauthenticated users<br>- Login and logout integrated directly into Entertainment<br>- Multiple Firebase Cloud Function instances deployed for **parallel image serving**<br>- Complete visual overhaul — new colour palette, typography, and card design language |
+| **February 2025** | - Firestore database and Home page scaffolded<br>- **Entertainment** initialized — TV Shows grid layout built<br>- Douban API proxy server configured to bypass CORS<br>- Firebase Storage image retrieval pipeline established<br>- Movie data model refactored; image upload to Firebase implemented |
+| **March 2025** | - Full **mobile layout** for iPhone 16 Pro and Samsung Galaxy<br>- Genre category chip system with dynamic counts per category<br>- Per-card entrance animations; access-denied page for unauthenticated users<br>- Login and logout integrated directly into Entertainment<br>- Multiple Firebase Cloud Function instances deployed for **parallel image serving**<br>- Complete visual overhaul — new colour palette, typography, and card design language |
 | **June 2025** | - PrimeNG dialog and message service compatibility conflict resolved<br>- Movie list state management bug fixed when adding a new entry to an existing list |
 | **September 2025** | - **Add-movie dialog** built with live Douban metadata search, real-time cover preview, and submit-disable guard<br>- Image and metadata upload to Firebase Storage and Firestore<br>- Cascading Storage deletion on movie removal; statistics chip updated after deletion<br>- Movie list sorted by first release date |
 | **October 2025** | - Error dialogs for network failures and invalid movie ID searches<br>- Confirmation dialog for destructive retrieval actions; animated progress bar in the upload flow<br>- History dialog initialized to log all add operations<br>- **`*ngIf` / `*ngFor` fully migrated** to Angular 17+ `@if` / `@for` control-flow syntax across the entire codebase |
-| **November 2025** | - **Login page** built with email/password sign-in and route guard<br>- Post-login redirect to last-visited route; mobile-responsive login layout<br>- Logout button repositioned into the navigation drawer<br>- Website title and icon updated globally; home page slogan refreshed |
-| **December 2025** | - Entertainment: favourite/unfavourite toggle; **colour-coded rating indicators** (up / down); all dialogs made fully mobile-compatible; history dialog records deletion metadata<br>- **Patch Notes** module launched — expandable table rows per component; status dropdown (Active / Resolved); full add/edit/delete flow with dedicated dialogs; bug-flag checkbox per entry |
-| **January 2026** | - **About** page launched with animated gradient background and interactive professional history timeline<br>- Patch Notes: pagination with correct rowspan recalculation after date sorting<br>- **Reminder** module built across three tables in a single sprint:<br>  &nbsp;&nbsp;• *Date Calculator* — Firestore persistence, reset, colour-coded save indicators<br>  &nbsp;&nbsp;• *Account Expense Ledger* — per-cell inline editing, checkbox confirmation flow<br>  &nbsp;&nbsp;• *Bank Debt Tracker* — paginator, mobile tooltips, delete flow, overdue/active colour states |
+| **November 2025** | - **Login** page built with email / password sign-in and route guard<br>- Post-login redirect to last-visited route; mobile-responsive login layout<br>- Logout button repositioned into the navigation drawer<br>- Website title and icon updated globally; home page slogan refreshed |
+| **December 2025** | - Entertainment: favourite / unfavourite toggle; **colour-coded rating indicators**; all dialogs made fully mobile-compatible; history dialog records deletion metadata<br>- **Patch Notes** module launched — expandable table rows per component; status dropdown (Active / Resolved); full add / edit / delete flow with dedicated dialogs; bug-flag checkbox per entry |
+| **January 2026** | - **About** page launched with animated gradient background and interactive professional history timeline<br>- Patch Notes: pagination with correct rowspan recalculation after date sorting<br>- **Reminder** module built across two tables in a single sprint:<br>&nbsp;&nbsp;• *Account Expense Ledger* — per-cell inline editing, checkbox confirmation flow<br>&nbsp;&nbsp;• *Bank Debt Tracker* — paginator, mobile tooltips, delete flow, overdue / active colour states |
 | **February 2026** | - Genre editing added to Entertainment — reassign a movie to a different genre post-upload<br>- isFavourite feature refined with improved state handling<br>- Second Entertainment mobile compatibility pass; package dependencies updated |
 | **March 2026** | - **Abstract base class** introduced to unify Firebase and Tencent Cloudbase under a shared service API<br>- **Dual-backend dynamic loading** based on detected user region at startup<br>- `_openid` ownership field on every document; admin vs. regular user permission model enforced across all modules<br>- CN-region login via Tencent Cloudbase credentials; country detection at startup<br>- Application-wide constants extracted to `app.constant.ts`; login state removed from local storage |
 | **April 2026** | - Entertainment images migrated to **Tencent Cloudbase CDN** for CN-region performance<br>- **SSRF security vulnerability** identified and patched<br>- Reminder currency icon updated; disabled-cell field and IP-lookup features removed |
-| **May 2026** | - Seven sequential UI style passes (Parts I–VII) across the entire app — Entertainment, Home, Patch Notes, Reminder, and global navigation systematically polished<br>- **Vision Home** orbital dashboard launched: *Life Clock* with real-time display and concentric year / month / week / day progress rings; satellite stat discs; quick-action pill buttons; mobile-responsive layout<br>- Login page entrance animations added; **sign-up flow** completed for new user registration<br>- **Recipe Vault** launched: personal cookbook with list / detail / editor views; ingredient groups with type classification and colour-coded badges; live servings scaler; step-by-step instructions; category chip filtering; drag-to-reorder steps<br>- **Resonance** module launched: personal quote vault with author attribution, timestamps, and anonymous browsing support<br>- **Nexus** module built: AI search hub with chip-based category filters, search history, and saved link management panel<br>- Search feature added to Entertainment with dedicated search dialog<br>- Full JSDoc documentation and access modifier pass across all services and components; environment template added for safer onboarding |
-| **June 2026** | - **Debt Sonata** page launched: card-based debt ledger with CNY / CAD currency; preset and custom payment chips; paid-off ribbon; summary card with per-currency progress bars; all edits routed through dialogs<br>- Date Calculator extracted from Reminder and integrated into **Nexus**<br>- Sidebar account row redesigned — *desktop* popover with avatar, name, online status, sign-out; *mobile* collapses to a confirm dialog<br>- Ownership-based permission checks added across Entertainment, Resonance, and Nexus<br>- **Three-mode navigation**: desktop (≥1300px) collapsible side drawer; compact overlay (941–1300px) with floating hamburger and full-width backdrop; mobile (≤940px) bottom nav bar<br>- Account actions (avatar, online status, sign-out) added to the **mobile bottom nav**<br>- Vision Home expanded with new panels: week calendar, activity feed, debt tracker, recipe list, quick-access link chips; concentric ring sizing made responsive<br>- **PWA support** added — installable on iOS and Android with web manifest, themed status bar, and safe-area insets for notched devices<br>- **Web push notifications** — users subscribe via the account popover; daily digest fires at 09:00 CST via CloudBase scheduled function; subscription state stored per-user, cleared on sign-out |
+| **May 2026** | - Seven sequential UI style passes (Parts I–VII) across the entire app — Entertainment, Home, Patch Notes, Reminder, and global navigation systematically polished<br>- **Home** orbital dashboard launched: *Life Clock* with real-time display and concentric year / month / week / day progress rings; satellite stat discs; quick-action pill buttons; mobile-responsive layout<br>- Login page entrance animations added; **sign-up flow** completed for new user registration<br>- **Recipe** launched: personal cookbook with list / detail / editor views; ingredient groups with type classification and colour-coded badges; live servings scaler; step-by-step instructions; category chip filtering; drag-to-reorder steps<br>- **Resonance** module launched: personal quote vault with author attribution, timestamps, and anonymous browsing support<br>- **Nexus** module built: AI search hub with chip-based category filters, search history, and saved link management panel<br>- Search feature added to Entertainment with dedicated search dialog<br>- Full JSDoc documentation and access modifier pass across all services and components; environment template added for safer onboarding |
+| **June 2026** | - **Debt Sonata** page launched: card-based debt ledger with CNY / CAD currency; preset and custom payment chips; paid-off ribbon; summary card with per-currency progress bars; all edits routed through dialogs<br>- Date Calculator extracted from Reminder and integrated into **Nexus**<br>- Sidebar account row redesigned — *desktop* popover with avatar, name, online status, sign-out; *mobile* collapses to a confirm dialog<br>- Ownership-based permission checks added across Entertainment, Resonance, and Nexus<br>- **Three-mode navigation**: desktop (≥1300px) collapsible side drawer; compact overlay (941–1300px) with floating hamburger and full-width backdrop; mobile (≤940px) bottom nav bar<br>- Account actions (avatar, online status, sign-out) added to the **mobile bottom nav**<br>- Home expanded with new panels: week calendar, activity feed, debt tracker, recipe list, quick-access link chips; concentric ring sizing made responsive<br>- **PWA support** added — installable on iOS and Android with web manifest, themed status bar, and safe-area insets for notched devices<br>- **Web push notifications** — users subscribe via the account popover; daily digest fires at 09:00 CST via CloudBase scheduled function; subscription state stored per-user, cleared on sign-out |
 
 ---
 
@@ -103,13 +103,15 @@ src/app/
 │   ├── authentication-service/   # Firebase + Cloudbase auth abstraction
 │   ├── database-service/         # Unified database interface (dual-backend)
 │   ├── dialog-service/           # Global dialog management
-│   └── douban-service/           # Douban API proxy client
+│   ├── douban-service/           # Douban API proxy client
+│   └── notification-service/     # Web push notification subscription management
 │
 ├── common/                   # Shared utilities and value objects
 │   ├── app.constant.ts           # Application-wide constants
 │   ├── app.logs.ts               # Logging helpers
 │   ├── app.utilities.ts          # General utility functions
 │   ├── movieitem.vo.ts           # Movie value object definition
+│   ├── access-denied/            # Access-denied UI component
 │   └── error/                    # Shared error UI components
 │
 └── fontend/                  # Feature pages (all standalone components)
@@ -119,8 +121,10 @@ src/app/
     ├── nexus/                    # AI search hub
     ├── recipe/                   # Personal cookbook vault
     ├── resonance/                # Quote vault
+    ├── debt/                     # Debt Sonata — debt tracking canvas
     ├── patch/                    # Patch notes / internal dev log
     ├── about/                    # Professional history timeline
+    ├── navigation/               # Bottom nav bar component and data
     └── login/                    # Authentication entry point
 ```
 
@@ -142,16 +146,16 @@ src/app/
 | `primeng` | ^21.x | Advanced UI (tables, dialogs, toast, calendar) |
 | `@primeuix/themes` | ^2.x | PrimeNG design tokens and theming |
 | `primeicons` | ^7.x | PrimeNG icon set |
-| `bootstrap` | ^5.3.x | Grid system and utility classes |
+| `gsap` | ^3.x | Animation library for smooth UI transitions |
 | `rxjs` | ~7.8.x | Reactive streams and async data flows |
 | `date-fns` | ^4.x | Date formatting and calculations |
+| `@capacitor/core` | ^8.x | Native iOS / Android packaging |
 
 ### Backend & Services
 
 | Package | Version | Purpose |
 | :--- | :--- | :--- |
 | `firebase` | ^12.x | Auth, Firestore, Cloud Functions, Storage |
-| `@angular/fire` | ^20.x | Angular Firebase SDK integration |
 | `@cloudbase/js-sdk` | ^3.x | Tencent Cloudbase (CN region auth and storage) |
 | `@cloudbase/types` | ^3.x | Cloudbase TypeScript type definitions |
 | `http-proxy-middleware` | ^3.x | Proxy layer for Douban API calls |

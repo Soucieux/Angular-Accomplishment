@@ -32,7 +32,7 @@ import { Utilities } from '../../common/app.utilities';
 import { AddDebtDialogComponent } from './debt/debt.component';
 import { NewDebtData } from '../../fontend/debt/debt.model';
 import { LinkDialogComponent } from './link/link.component';
-import { NewLinkData } from '../../fontend/nexus/nexus.model';
+import { NewLinkData } from '../../fontend/portal/portal.model';
 @Injectable({
 	providedIn: 'root'
 })

@@ -7,7 +7,7 @@ import { PatchComponent } from './fontend/patch/patch.component';
 import { ReminderComponent } from './fontend/reminder/reminder.component';
 import { AboutComponent } from './fontend/about/about.component';
 import { ResonanceComponent } from './fontend/resonance/resonance.component';
-import { NexusComponent } from './fontend/nexus/nexus.component';
+import { PortalComponent } from './fontend/portal/portal.component';
 import { RecipeComponent } from './fontend/recipe/recipe.component';
 import { DebtComponent } from './fontend/debt/debt.component';
 
@@ -19,7 +19,7 @@ export const routes: Routes = [
 	{ path: 'reminder', component: ReminderComponent },
 	{ path: 'about', component: AboutComponent },
 	{ path: 'resonance', component: ResonanceComponent },
-	{ path: 'nexus', component: NexusComponent },
+	{ path: 'portal', component: PortalComponent },
 	{ path: 'recipe', component: RecipeComponent },
 	{ path: 'debt', component: DebtComponent }
 ];

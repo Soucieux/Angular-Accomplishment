@@ -103,7 +103,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				label: 'Portal',
 				icon: 'language',
 				iconClass: 'material-symbols-outlined',
-				colorClass: 'icon-nexus'
+				colorClass: 'icon-portal'
 			},
 			{
 				label: 'Resonance',

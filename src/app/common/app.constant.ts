@@ -325,8 +325,8 @@ export const HOME_QUICK_ACTION_ROUTE_RECIPE = '/recipe';
 export const HOME_QUICK_ACTION_ROUTE_DEBT = '/debt';
 /** Route path for the quick-action button that opens the reminder page. */
 export const HOME_QUICK_ACTION_ROUTE_REMINDER = '/reminder';
-/** Route path for the quick-action button that opens the nexus page. */
-export const HOME_QUICK_ACTION_ROUTE_NEXUS = '/nexus';
+/** Route path for the quick-action button that opens the portal page. */
+export const HOME_QUICK_ACTION_ROUTE_PORTAL = '/portal';
 /** Route path for the panel header that opens the entertainment page. */
 export const HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT = '/entertainment';
 
@@ -522,35 +522,35 @@ export const RECIPE_EDITOR_TYPE_MAX = 9;
 
 ////////////////////// Below are Portal page constants ////////////////////////////////
 
-export const NEXUS_MSG_LINK_UPDATED = 'Link updated';
-export const NEXUS_MSG_LINK_SAVED = 'Link saved';
-export const NEXUS_MSG_SAVING_LINK = 'Saving link...';
-export const NEXUS_MSG_SAVING_CATEGORY = 'Saving category...';
-export const NEXUS_MSG_LINK_SAVE_FAILED_DETAIL = 'Could not save the link. Please try again.';
-export const NEXUS_MSG_LINK_DELETED = 'Link deleted';
-export const NEXUS_MSG_LINK_DELETE_FAILED_DETAIL = 'Could not delete the link. Please try again.';
-export const NEXUS_MSG_NAME_REQUIRED = 'Name required';
-export const NEXUS_MSG_CATEGORY_UPDATED = 'Category updated';
-export const NEXUS_MSG_CATEGORY_ADDED = 'Category added';
-export const NEXUS_MSG_CATEGORY_SAVE_FAILED_DETAIL = 'Could not save the category. Please try again.';
-export const NEXUS_MSG_CATEGORY_DELETED = 'Category deleted';
-export const NEXUS_MSG_CATEGORY_DELETE_FAILED_DETAIL = 'Could not delete the category. Please try again.';
-export const NEXUS_MSG_DELETE_LINK_TITLE = 'Delete Link';
-export const NEXUS_MSG_DELETE_CATEGORY_TITLE = 'Delete Category';
+export const PORTAL_MSG_LINK_UPDATED = 'Link updated';
+export const PORTAL_MSG_LINK_SAVED = 'Link saved';
+export const PORTAL_MSG_SAVING_LINK = 'Saving link...';
+export const PORTAL_MSG_SAVING_CATEGORY = 'Saving category...';
+export const PORTAL_MSG_LINK_SAVE_FAILED_DETAIL = 'Could not save the link. Please try again.';
+export const PORTAL_MSG_LINK_DELETED = 'Link deleted';
+export const PORTAL_MSG_LINK_DELETE_FAILED_DETAIL = 'Could not delete the link. Please try again.';
+export const PORTAL_MSG_NAME_REQUIRED = 'Name required';
+export const PORTAL_MSG_CATEGORY_UPDATED = 'Category updated';
+export const PORTAL_MSG_CATEGORY_ADDED = 'Category added';
+export const PORTAL_MSG_CATEGORY_SAVE_FAILED_DETAIL = 'Could not save the category. Please try again.';
+export const PORTAL_MSG_CATEGORY_DELETED = 'Category deleted';
+export const PORTAL_MSG_CATEGORY_DELETE_FAILED_DETAIL = 'Could not delete the category. Please try again.';
+export const PORTAL_MSG_DELETE_LINK_TITLE = 'Delete Link';
+export const PORTAL_MSG_DELETE_CATEGORY_TITLE = 'Delete Category';
 /** Confirm-delete message prefix for a Portal link; link title is appended at the call site. */
-export const NEXUS_MSG_DELETE_LINK_CONFIRM_PREFIX = 'Are you sure you want to delete "';
+export const PORTAL_MSG_DELETE_LINK_CONFIRM_PREFIX = 'Are you sure you want to delete "';
 /** Confirm-delete message suffix for a Portal link. */
-export const NEXUS_MSG_DELETE_LINK_CONFIRM_SUFFIX = '"?';
+export const PORTAL_MSG_DELETE_LINK_CONFIRM_SUFFIX = '"?';
 /** Confirm-delete message prefix for a Portal category; category name is appended at the call site. */
-export const NEXUS_MSG_DELETE_CATEGORY_CONFIRM_PREFIX = 'Are you sure you want to delete category "';
+export const PORTAL_MSG_DELETE_CATEGORY_CONFIRM_PREFIX = 'Are you sure you want to delete category "';
 /** Confirm-delete message suffix for a Portal category. */
-export const NEXUS_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX =
+export const PORTAL_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX =
 	'"? Links in this category will become uncategorised.';
-export const NEXUS_MSG_LOAD_LINKS_FAILED = 'Failed to load useful links';
-export const NEXUS_MSG_LOAD_CATEGORIES_FAILED = 'Failed to load link categories';
-export const NEXUS_MSG_SAVE_LINK_FAILED = 'Failed to save link';
-export const NEXUS_MSG_SAVE_CATEGORY_FAILED = 'Failed to save category';
-export const NEXUS_MSG_RESET_CONFIRM = 'Proceed with resetting the dates?';
+export const PORTAL_MSG_LOAD_LINKS_FAILED = 'Failed to load useful links';
+export const PORTAL_MSG_LOAD_CATEGORIES_FAILED = 'Failed to load link categories';
+export const PORTAL_MSG_SAVE_LINK_FAILED = 'Failed to save link';
+export const PORTAL_MSG_SAVE_CATEGORY_FAILED = 'Failed to save category';
+export const PORTAL_MSG_RESET_CONFIRM = 'Proceed with resetting the dates?';
 
 /** Type value for a link document in the useful_links collection. */
 export const USEFUL_LINK_TYPE_LINK = 'link';
@@ -558,27 +558,27 @@ export const USEFUL_LINK_TYPE_LINK = 'link';
 export const USEFUL_LINK_TYPE_CATEGORY = 'category';
 
 /** Dialog title when adding a new link. */
-export const NEXUS_DIALOG_TITLE_ADD_LINK = 'Add Link';
+export const PORTAL_DIALOG_TITLE_ADD_LINK = 'Add Link';
 /** Dialog title when editing an existing link. */
-export const NEXUS_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
+export const PORTAL_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
 /** Label for the isPinned checkbox in the add/edit link dialog. */
-export const NEXUS_LABEL_PIN_TO_DASHBOARD = 'Pin to dashboard';
+export const PORTAL_LABEL_PIN_TO_DASHBOARD = 'Pin to dashboard';
 export const LINK_DIALOG_LABEL_CANCEL = 'Cancel';
 export const LINK_DIALOG_LABEL_SAVE = 'Save';
 export const LINK_DIALOG_LABEL_ADD = 'Add Link';
 export const LINK_DIALOG_LABEL_TITLE_LOADING = 'Loading title…';
 /** Sentinel value for the "show all categories" filter in the Portal links panel. */
-export const NEXUS_CATEGORY_ALL = 'all';
+export const PORTAL_CATEGORY_ALL = 'all';
 /** Default colour applied to new and un-styled link categories. */
-export const NEXUS_DEFAULT_CATEGORY_COLOR = '#d53369';
-export const NEXUS_DIALOG_RESET_BTN = 'Reset';
-export const NEXUS_LABEL_CURRENT_MONTH = 'Current Month';
-export const NEXUS_LABEL_NEXT_MONTH = 'Next Month';
-export const NEXUS_LABEL_RESET = 'Reset';
-export const NEXUS_LABEL_CELL_CONFIRM = 'Confirm';
-export const NEXUS_LABEL_CELL_DONE = 'Done';
-export const NEXUS_LABEL_CELL_TODAY = 'Today';
-export const NEXUS_LABEL_CONFIRMED = 'confirmed';
+export const PORTAL_DEFAULT_CATEGORY_COLOR = '#d53369';
+export const PORTAL_DIALOG_RESET_BTN = 'Reset';
+export const PORTAL_LABEL_CURRENT_MONTH = 'Current Month';
+export const PORTAL_LABEL_NEXT_MONTH = 'Next Month';
+export const PORTAL_LABEL_RESET = 'Reset';
+export const PORTAL_LABEL_CELL_CONFIRM = 'Confirm';
+export const PORTAL_LABEL_CELL_DONE = 'Done';
+export const PORTAL_LABEL_CELL_TODAY = 'Today';
+export const PORTAL_LABEL_CONFIRMED = 'confirmed';
 
 ////////////////////// Below are Reminder page constants /////////////////////////////
 

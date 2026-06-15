@@ -2,10 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
-import { NEXUS_CATEGORY_ALL } from '../../common/app.constant';
+import { PORTAL_CATEGORY_ALL } from '../../common/app.constant';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-import { NexusComponent } from './nexus.component';
+import { PortalComponent } from './portal.component';
 
 /** Minimal date calculator row factory. */
 function makeFirstRow(value = 5, isCharged = false) {
@@ -19,9 +19,9 @@ function makeFirstRow(value = 5, isCharged = false) {
 	};
 }
 
-describe('NexusComponent', () => {
-	let component: NexusComponent;
-	let fixture: ComponentFixture<NexusComponent>;
+describe('PortalComponent', () => {
+	let component: PortalComponent;
+	let fixture: ComponentFixture<PortalComponent>;
 	let mockDb: jasmine.SpyObj<DatabaseService>;
 	let mockDialogService: jasmine.SpyObj<DialogService>;
 
@@ -48,7 +48,7 @@ describe('NexusComponent', () => {
 		mockDialogService.handleError.and.stub();
 
 		await TestBed.configureTestingModule({
-			imports: [NexusComponent],
+			imports: [PortalComponent],
 			providers: [
 				MessageService,
 				{ provide: DatabaseService, useValue: mockDb },
@@ -56,7 +56,7 @@ describe('NexusComponent', () => {
 			]
 		}).compileComponents();
 
-		fixture = TestBed.createComponent(NexusComponent);
+		fixture = TestBed.createComponent(PortalComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});
@@ -253,7 +253,7 @@ describe('NexusComponent', () => {
 				{ _id: '1', title: 'Angular', category: 'dev' },
 				{ _id: '2', title: 'Vue', category: 'dev' }
 			];
-			(component as any).selectedCategory = NEXUS_CATEGORY_ALL;
+			(component as any).selectedCategory = PORTAL_CATEGORY_ALL;
 			(component as any).linkSearch = '';
 			expect((component as any).filteredLinks.length).toBe(2);
 		});
@@ -274,7 +274,7 @@ describe('NexusComponent', () => {
 				{ _id: '1', title: 'Angular Docs', category: 'dev' },
 				{ _id: '2', title: 'Vue Guide', category: 'dev' }
 			];
-			(component as any).selectedCategory = NEXUS_CATEGORY_ALL;
+			(component as any).selectedCategory = PORTAL_CATEGORY_ALL;
 			(component as any).linkSearch = 'angular';
 			expect((component as any).filteredLinks.length).toBe(1);
 		});
@@ -283,7 +283,7 @@ describe('NexusComponent', () => {
 			(component as any).links = [
 				{ _id: '1', title: 'Angular Docs', category: 'dev' }
 			];
-			(component as any).selectedCategory = NEXUS_CATEGORY_ALL;
+			(component as any).selectedCategory = PORTAL_CATEGORY_ALL;
 			(component as any).linkSearch = 'xyz';
 			expect((component as any).filteredLinks.length).toBe(0);
 		});
@@ -300,8 +300,8 @@ describe('NexusComponent', () => {
 			];
 		});
 
-		it('returns total link count for NEXUS_CATEGORY_ALL', () => {
-			expect((component as any).getLinkCount(NEXUS_CATEGORY_ALL)).toBe(3);
+		it('returns total link count for PORTAL_CATEGORY_ALL', () => {
+			expect((component as any).getLinkCount(PORTAL_CATEGORY_ALL)).toBe(3);
 		});
 
 		it('returns the count for a specific category', () => {

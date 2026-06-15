@@ -10,11 +10,11 @@ import {
 	LINK_DIALOG_LABEL_CANCEL,
 	LINK_DIALOG_LABEL_SAVE,
 	LINK_DIALOG_LABEL_TITLE_LOADING,
-	NEXUS_DIALOG_TITLE_ADD_LINK,
-	NEXUS_DIALOG_TITLE_EDIT_LINK,
-	NEXUS_LABEL_PIN_TO_DASHBOARD
+	PORTAL_DIALOG_TITLE_ADD_LINK,
+	PORTAL_DIALOG_TITLE_EDIT_LINK,
+	PORTAL_LABEL_PIN_TO_DASHBOARD
 } from '../../../common/app.constant';
-import { NexusCategory, NewLinkData } from '../../../fontend/nexus/nexus.model';
+import { PortalCategory, NewLinkData } from '../../../fontend/portal/portal.model';
 
 @Component({
 	selector: 'link-dialog',
@@ -31,13 +31,13 @@ export class LinkDialogComponent implements OnInit, OnDestroy {
 	protected readonly LINK_DIALOG_LABEL_CANCEL = LINK_DIALOG_LABEL_CANCEL;
 	protected readonly LINK_DIALOG_LABEL_SAVE = LINK_DIALOG_LABEL_SAVE;
 	protected readonly LINK_DIALOG_LABEL_TITLE_LOADING = LINK_DIALOG_LABEL_TITLE_LOADING;
-	protected readonly NEXUS_DIALOG_TITLE_ADD_LINK = NEXUS_DIALOG_TITLE_ADD_LINK;
-	protected readonly NEXUS_DIALOG_TITLE_EDIT_LINK = NEXUS_DIALOG_TITLE_EDIT_LINK;
-	protected readonly NEXUS_LABEL_PIN_TO_DASHBOARD = NEXUS_LABEL_PIN_TO_DASHBOARD;
+	protected readonly PORTAL_DIALOG_TITLE_ADD_LINK = PORTAL_DIALOG_TITLE_ADD_LINK;
+	protected readonly PORTAL_DIALOG_TITLE_EDIT_LINK = PORTAL_DIALOG_TITLE_EDIT_LINK;
+	protected readonly PORTAL_LABEL_PIN_TO_DASHBOARD = PORTAL_LABEL_PIN_TO_DASHBOARD;
 
 	protected isEditMode = false;
 	protected visible = false;
-	protected categories: NexusCategory[] = [];
+	protected categories: PortalCategory[] = [];
 	protected faviconPreview = '';
 	protected metaLoading = false;
 	protected url = '';
@@ -60,7 +60,7 @@ export class LinkDialogComponent implements OnInit, OnDestroy {
 	ngOnInit(): void {
 		this.categoriesSub = this.databaseService.getLinkCategories().subscribe({
 			next: (categories) => {
-				this.categories = Utilities.sortByOrder(categories) as NexusCategory[];
+				this.categories = Utilities.sortByOrder(categories) as PortalCategory[];
 				this.cdr.markForCheck();
 			}
 		});

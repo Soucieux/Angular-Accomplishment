@@ -32,7 +32,7 @@ import {
 	QUICK_ACTIONS
 } from './orbital.model';
 import { HomeStats, RecentActivityItem } from '../home.model';
-import { NexusCategory, NexusLink } from '../../nexus/nexus.model';
+import { PortalCategory, PortalLink } from '../../portal/portal.model';
 import { DEBT_CATEGORY_DEFS } from '../../debt/debt.model';
 import { Utilities } from '../../../common/app.utilities';
 import {
@@ -147,7 +147,7 @@ import {
 	HOME_OVERFLOW_LABEL_REMINDERS,
 	HOME_QUICK_ACTION_ROUTE_DEBT,
 	HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT,
-	HOME_QUICK_ACTION_ROUTE_NEXUS,
+	HOME_QUICK_ACTION_ROUTE_PORTAL,
 	HOME_QUICK_ACTION_ROUTE_RECIPE,
 	HOME_QUICK_ACTION_ROUTE_REMINDER,
 	HOME_REMINDER_ROW_ID_PREFIX,
@@ -195,8 +195,8 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	private readonly authService = inject(AuthService);
 
 	@Input() stats: HomeStats | null = null;
-	@Input() links: NexusLink[] = [];
-	@Input() dashCategories: NexusCategory[] = [];
+	@Input() links: PortalLink[] = [];
+	@Input() dashCategories: PortalCategory[] = [];
 	@Output() readonly linkVisit = new EventEmitter<{ id: string; count: number }>();
 
 	protected readonly HOME_ACTIVITY_FOOTER_ZH = HOME_ACTIVITY_FOOTER_ZH;
@@ -211,7 +211,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	protected readonly HOME_QUICK_ACTION_ROUTE_REMINDER = HOME_QUICK_ACTION_ROUTE_REMINDER;
 	protected readonly HOME_QUICK_ACTION_ROUTE_DEBT = HOME_QUICK_ACTION_ROUTE_DEBT;
 	protected readonly HOME_QUICK_ACTION_ROUTE_RECIPE = HOME_QUICK_ACTION_ROUTE_RECIPE;
-	protected readonly HOME_QUICK_ACTION_ROUTE_NEXUS = HOME_QUICK_ACTION_ROUTE_NEXUS;
+	protected readonly HOME_QUICK_ACTION_ROUTE_PORTAL = HOME_QUICK_ACTION_ROUTE_PORTAL;
 	protected readonly HOME_SATELLITE_TOOLTIP_STREAK = HOME_SATELLITE_TOOLTIP_STREAK;
 	protected currentUser$!: Observable<any>;
 	protected genreBars: { label: string; count: number; percentage: number; color: string }[] = [];
@@ -451,9 +451,9 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	 * Gets links marked as pinned for display in the top quick-access strip,
 	 * capped at the first six pinned items.
 	 *
-	 * @returns Up to six NexusLink items where isPinned is true.
+	 * @returns Up to six PortalLink items where isPinned is true.
 	 */
-	protected get pinnedLinks(): NexusLink[] {
+	protected get pinnedLinks(): PortalLink[] {
 		return this.links.filter((link) => link.isPinned === true).slice(0, 6);
 	}
 
@@ -616,9 +616,9 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	/**
 	 * Opens a useful link in a new tab and emits a linkVisit event with the updated count.
 	 *
-	 * @param link - The NexusLink to open.
+	 * @param link - The PortalLink to open.
 	 */
-	protected openLink(link: NexusLink): void {
+	protected openLink(link: PortalLink): void {
 		window.open(link.url, LINK_TARGET_BLANK);
 		this.linkVisit.emit({ id: link._id, count: (link.visitCount ?? 0) + 1 });
 	}
@@ -626,10 +626,10 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	/**
 	 * Gets the dot colour for a quick-access link derived from its category.
 	 *
-	 * @param link - The NexusLink whose colour is needed.
+	 * @param link - The PortalLink whose colour is needed.
 	 * @returns A CSS colour string from the category, or the fallback colour.
 	 */
-	protected getLinkColor(link: NexusLink): string {
+	protected getLinkColor(link: PortalLink): string {
 		const category = this.dashCategories.find((dashCategory) => dashCategory._id === link.category);
 		return category?.color ?? HOME_LINKS_DOT_FALLBACK;
 	}

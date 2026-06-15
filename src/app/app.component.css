@@ -186,7 +186,7 @@ li:nth-child(2) .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
-/* Nexus — acid lime */
+/* Portal — acid lime */
 li:nth-child(3) .nav-icon {
 	background: linear-gradient(135deg, #a3e635, #84cc16);
 	background-clip: text;

@@ -126,7 +126,7 @@ export const QUICK_ACTIONS: OrbitalQuickAction[] = [
 		icon: 'add_link',
 		label: 'Add Shortcut',
 		gradient: 'linear-gradient(135deg,#a3e635,#84cc16)',
-		route: '/nexus',
+		route: '/portal',
 		state: { openAddLinkDialog: true }
 	}
 ];

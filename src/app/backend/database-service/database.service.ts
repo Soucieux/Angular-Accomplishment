@@ -499,7 +499,7 @@ export abstract class DatabaseService {
 
 	/**
 	 * Proxies an HTTP GET request to bypass browser CORS restrictions.
-	 * Used for RSS news feeds and link-title auto-fetch on the Nexus page.
+	 * Used for RSS news feeds and link-title auto-fetch on the Portal page.
 	 *
 	 * @param url - The fully-qualified http/https URL to fetch.
 	 * @returns The response body as a string and its Content-Type header value.

@@ -1,5 +1,5 @@
 @if (utilities.getIsUserAlive()) {
-	<div class="glass-card container-nexus">
+	<div class="glass-card container-portal">
 		<!-- ── Header ───────────────────────────────────────────────── -->
 		<div class="page-header">
 			<div class="page-title-row">
@@ -29,21 +29,21 @@
 									[class.active]="!isNextMonth"
 									[attr.aria-pressed]="!isNextMonth"
 									(click)="setMonth(false)">
-									{{ NEXUS_LABEL_CURRENT_MONTH }}
+									{{ PORTAL_LABEL_CURRENT_MONTH }}
 								</button>
 								<button
 									class="date-calculator-segment-button"
 									[class.active]="isNextMonth"
 									[attr.aria-pressed]="isNextMonth"
 									(click)="setMonth(true)">
-									{{ NEXUS_LABEL_NEXT_MONTH }}
+									{{ PORTAL_LABEL_NEXT_MONTH }}
 								</button>
 							</div>
 							<button
 								class="date-calculator-reset-button"
 								(click)="openResetConfirmationDialog()">
 								<span class="pi pi-refresh"></span>
-								{{ NEXUS_LABEL_RESET }}
+								{{ PORTAL_LABEL_RESET }}
 							</button>
 						</div>
 					</div>
@@ -102,10 +102,10 @@
 												}
 												{{
 													row[field].isCharged
-														? NEXUS_LABEL_CELL_DONE
+														? PORTAL_LABEL_CELL_DONE
 														: row[field].value === currentDay
-															? NEXUS_LABEL_CELL_TODAY
-															: NEXUS_LABEL_CELL_CONFIRM
+															? PORTAL_LABEL_CELL_TODAY
+															: PORTAL_LABEL_CELL_CONFIRM
 												}}
 											</button>
 										</div>
@@ -117,38 +117,15 @@
 					<div class="date-calculator-footer">
 						<div class="date-calculator-footer-left">
 							<span class="date-calculator-footer-dot"></span>
-							{{ confirmedCount }} of {{ totalCount }} {{ NEXUS_LABEL_CONFIRMED }}
+							{{ confirmedCount }} of {{ totalCount }} {{ PORTAL_LABEL_CONFIRMED }}
 						</div>
 						<span class="date-calculator-footer-right">
-							{{ isNextMonth ? NEXUS_LABEL_NEXT_MONTH : NEXUS_LABEL_CURRENT_MONTH }}
+							{{ isNextMonth ? PORTAL_LABEL_NEXT_MONTH : PORTAL_LABEL_CURRENT_MONTH }}
 						</span>
 					</div>
 				</div>
 			</div>
 		}
-
-		<!-- ── AI Tools launcher ─────────────────────────────────────── -->
-		<div class="ai-tools-section">
-			<span class="section-label">AI Tools</span>
-			<div class="ai-tools-row">
-				@for (tool of aiTools; track tool.id) {
-					<button class="ai-tile" (click)="openAiTool(tool)" [title]="'Open ' + tool.name">
-						@if (!failedLogos.has(tool.id)) {
-							<img
-								[src]="tool.logo"
-								[alt]="tool.name"
-								class="ai-tile-logo"
-								(error)="onLogoError(tool.id)" />
-						} @else {
-							<span class="ai-tile-initial" [style.background]="getLogoFallbackColor(tool.id)">
-								{{ tool.name[0] }}
-							</span>
-						}
-						<span class="ai-tile-name">{{ tool.name }}</span>
-					</button>
-				}
-			</div>
-		</div>
 
 		<!-- ── Links library ─────────────────────────────────────────── -->
 		<div class="links-section">
@@ -158,9 +135,9 @@
 					<div class="category-tabs" #categoryTabs>
 						<button
 							class="category-tab"
-							[class.active]="selectedCategory === NEXUS_CATEGORY_ALL"
-							(click)="selectCategory(NEXUS_CATEGORY_ALL)">
-							All ({{ getLinkCount(NEXUS_CATEGORY_ALL) }})
+							[class.active]="selectedCategory === PORTAL_CATEGORY_ALL"
+							(click)="selectCategory(PORTAL_CATEGORY_ALL)">
+							All ({{ getLinkCount(PORTAL_CATEGORY_ALL) }})
 						</button>
 						@for (cat of categories; track cat._id) {
 							<button

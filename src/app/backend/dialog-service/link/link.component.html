@@ -8,7 +8,7 @@
 	styleClass="link-dialog">
 	<ng-template #header>
 		<span class="link-dialog-title">{{
-			isEditMode ? NEXUS_DIALOG_TITLE_EDIT_LINK : NEXUS_DIALOG_TITLE_ADD_LINK
+			isEditMode ? PORTAL_DIALOG_TITLE_EDIT_LINK : PORTAL_DIALOG_TITLE_ADD_LINK
 		}}</span>
 	</ng-template>
 
@@ -63,7 +63,7 @@
 			class="link-dialog-checkbox"
 			[(ngModel)]="isPinned" />
 		<label for="linkDialogIsPinned" class="link-dialog-label link-dialog-label-checkbox">
-			{{ NEXUS_LABEL_PIN_TO_DASHBOARD }}
+			{{ PORTAL_LABEL_PIN_TO_DASHBOARD }}
 		</label>
 	</div>
 

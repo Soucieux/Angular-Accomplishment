@@ -5,13 +5,13 @@ import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { Utilities } from '../../common/app.utilities';
 import { LOG } from '../../common/app.logs';
-import { NexusCategory, NexusLink } from '../nexus/nexus.model';
+import { PortalCategory, PortalLink } from '../portal/portal.model';
 import { HomeStats } from './home.model';
 import {
 	COMPONENT_DESTROY,
 	HOME_MSG_INCREMENT_VISIT_FAILED,
 	HOME_MSG_LOAD_STATISTICS_FAILED,
-	NEXUS_MSG_LOAD_CATEGORIES_FAILED
+	PORTAL_MSG_LOAD_CATEGORIES_FAILED
 } from '../../common/app.constant';
 import { OrbitalComponent } from './orbital/orbital.component';
 
@@ -38,8 +38,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 	protected loggedIn = false;
 	protected showDashboard = false;
 	protected transitioning = false;
-	protected dashLinks: NexusLink[] = [];
-	protected dashCategories: NexusCategory[] = [];
+	protected dashLinks: PortalLink[] = [];
+	protected dashCategories: PortalCategory[] = [];
 	protected dashLinksLoading = true;
 
 	constructor(
@@ -78,7 +78,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 					}, 4000);
 
 					this.linksSub = this.databaseService.getUsefulLinks().subscribe({
-						next: (data: NexusLink[]) => {
+						next: (data: PortalLink[]) => {
 							clearTimeout(this.linksLoadingTimer);
 							this.dashLinks = data;
 							this.dashLinksLoading = false;
@@ -92,12 +92,12 @@ export class HomeComponent implements OnInit, OnDestroy {
 					});
 
 					this.categoriesSub = this.databaseService.getLinkCategories().subscribe({
-						next: (data: NexusCategory[]) => {
+						next: (data: PortalCategory[]) => {
 							this.dashCategories = Utilities.sortByOrder(data);
 							this.cdr.detectChanges();
 						},
 						error: (error: unknown) => {
-							LOG.error(this.className, NEXUS_MSG_LOAD_CATEGORIES_FAILED, error as Error);
+							LOG.error(this.className, PORTAL_MSG_LOAD_CATEGORIES_FAILED, error as Error);
 						}
 					});
 

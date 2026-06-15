@@ -5,13 +5,13 @@ import { of } from 'rxjs';
 import { OrbitalComponent } from './orbital.component';
 import { OrbitalStore } from './orbital.store';
 import { AuthService } from '../../../backend/authentication-service/auth.service';
-import { NexusCategory, NexusLink } from '../../nexus/nexus.model';
+import { PortalCategory, PortalLink } from '../../portal/portal.model';
 
-function makeLink(id: string, category: string, isPinned = false): NexusLink {
+function makeLink(id: string, category: string, isPinned = false): PortalLink {
 	return { _id: id, _openid: 'uid1', title: id, url: 'https://example.com', category, isPinned };
 }
 
-function makeCategory(id: string, color: string): NexusCategory {
+function makeCategory(id: string, color: string): PortalCategory {
 	return { _id: id, _openid: 'uid1', name: id, color, order: 0 };
 }
 

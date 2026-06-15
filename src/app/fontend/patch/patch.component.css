@@ -23,7 +23,7 @@
 
 /* PAGE-TITLE SIZE STANDARD
  * Compact-header pages (Entertainment): 28px desktop / 15px mobile
- * Large-header pages  (Nexus, Resonance, Patch Notes, Recipe): 44px desktop / 28px mobile
+ * Large-header pages  (Portal, Resonance, Patch Notes, Recipe): 44px desktop / 28px mobile
  * All pages: font-weight 500
  */
 /* PAGE ACCENT COLOR — Patch Notes
@@ -828,7 +828,7 @@
 	-webkit-text-fill-color: transparent;
 }
 
-.icon-nexus {
+.icon-portal {
 	background: linear-gradient(135deg, #e91e8c, #07db19);
 	background-clip: text;
 	-webkit-background-clip: text;

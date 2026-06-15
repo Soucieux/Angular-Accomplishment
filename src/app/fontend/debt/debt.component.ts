@@ -102,7 +102,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected isPromptedReset: Record<string, boolean> = {};
 	protected isPromptedDelete: Record<string, boolean> = {};
 	protected customInputState: Record<string, string | null> = {};
-	protected saveIndicators: boolean = false;
+	protected saveIndicator = false;
 	protected debtItems$!: Observable<any[]>;
 	private upcomingExpenses: any[] = [];
 	private paymentsData: Record<string, Record<number, PaymentEntry>> = {};
@@ -110,7 +110,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	private promptedResetTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private promptedDeleteTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private balanceBumpTimers: Record<string, ReturnType<typeof setTimeout>> = {};
-	private saveIndicatorTimeout: ReturnType<typeof setTimeout> | null = null;
+	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
 	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS;
 
@@ -745,17 +745,15 @@ export class DebtComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Shows a save-confirmation indicator for the given table and hides
-	 * it after one second. Clears any active timeout before starting a new one.
+	 * Shows the save-confirmation indicator and hides it after one second.
+	 * Clears any active timeout before restarting so rapid saves do not flash.
 	 */
 	private triggerSaveIndicator(): void {
-		this.saveIndicators = true;
+		this.saveIndicator = true;
 		this.cdr.detectChanges();
-		if (this.saveIndicatorTimeout) {
-			clearTimeout(this.saveIndicatorTimeout);
-		}
-		this.saveIndicatorTimeout = setTimeout(() => {
-			this.saveIndicators = false;
+		if (this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA]) clearTimeout(this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA]);
+		this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA] = setTimeout(() => {
+			this.saveIndicator = false;
 			this.cdr.detectChanges();
 		}, 1000);
 	}

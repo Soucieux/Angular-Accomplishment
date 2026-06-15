@@ -34,8 +34,7 @@
 
 .page-title-row {
 	display: flex;
-	align-items: center;
-	gap: 10px;
+	gap: 15px;
 }
 
 .page-title {
@@ -45,11 +44,14 @@
 	line-height: 1.04;
 	letter-spacing: -0.5px;
 	text-shadow: 0 2px 14px rgba(0, 0, 0, 0.18);
+	margin: 0;
+	padding: 10px 0;
 }
 
 /* translateZ forces a separate GPU compositing layer, keeping the spinner
    visually stable next to the text-shadowed title on mobile WebKit. */
 .save-indicator {
+	padding-top: 10px;
 	display: flex;
 	align-items: center;
 	color: #94a3b8;
@@ -64,8 +66,8 @@
 
 .save-spinner {
 	display: block;
-	width: 24px;
-	height: 24px;
+	width: 30px;
+	height: 30px;
 	border: 3px solid rgba(148, 163, 184, 0.3);
 	border-top-color: #94a3b8;
 	border-radius: 50%;

@@ -44,6 +44,7 @@ import {
 	PORTAL_LABEL_RESET,
 	PORTAL_MSG_RESET_CONFIRM,
 	DIALOG_LINK,
+	DIALOG_MULTI_LINK,
 	PORTAL_DEFAULT_CATEGORY_COLOR,
 	PORTAL_MSG_CATEGORY_ADDED,
 	PORTAL_MSG_CATEGORY_DELETE_FAILED_DETAIL,
@@ -68,6 +69,9 @@ import {
 	PORTAL_MSG_SAVE_LINK_FAILED,
 	PORTAL_MSG_SAVING_CATEGORY,
 	PORTAL_MSG_SAVING_LINK,
+	PORTAL_MSG_MULTI_LINK_SAVED,
+	PORTAL_MSG_SAVING_LINKS,
+	PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL,
 	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
@@ -678,6 +682,19 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
+	 * Opens the Multi Link dialog with category names via DialogService.
+	 */
+	protected openMultiLinkDialog(): void {
+		const categoryNames = this.categories.map(c => c.name);
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_MULTI_LINK,
+			(links) => this.handleMultiLinkSave(links),
+			categoryNames
+		);
+	}
+
+	/**
 	 * Opens the Edit Link dialog pre-filled with the given link's data via DialogService.
 	 *
 	 * @param link - The link document to edit.
@@ -736,6 +753,35 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, PORTAL_MSG_LINK_SAVE_FAILED_DETAIL);
 			}
 		}, PORTAL_MSG_SAVING_LINK).catch(() => {});
+	}
+
+	/**
+	 * Persists a batch of new links to the database.
+	 * Runs inside a block dialog so the UI is locked during the async operation.
+	 *
+	 * @param links - The batch of validated link data submitted by the multi-link dialog.
+	 */
+	private handleMultiLinkSave(links: NewLinkData[]): void {
+		this.openBlockDialog(async () => {
+			try {
+				await Promise.all(links.map(formData => {
+					const finalUrl = Utilities.normalizeUrl(formData.url);
+					return this.databaseService.addUsefulLink({
+						url: finalUrl,
+						title: formData.title,
+						category: formData.category,
+						visitCount: 0,
+						createdAt: new Date().toISOString(),
+						isPinned: formData.isPinned
+					});
+				}));
+				LOG.info(this.className, `${links.length} links saved`);
+				this.dialogService.showToast(SUCCESS, PORTAL_MSG_MULTI_LINK_SAVED);
+			} catch (error) {
+				LOG.error(this.className, PORTAL_MSG_SAVE_LINK_FAILED, error as Error);
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL);
+			}
+		}, PORTAL_MSG_SAVING_LINKS).catch(() => {});
 	}
 
 	/**

@@ -1,0 +1,120 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	appendTo="body"
+	[resizable]="false"
+	[closable]="false"
+	(onHide)="onDialogClosed()"
+	styleClass="multi-link-dialog">
+	<ng-template #header>
+		<span class="multi-link-dialog-title">{{ MULTI_LINK_DIALOG_TITLE }}</span>
+		<span class="multi-link-dialog-subtitle">{{ MULTI_LINK_DIALOG_SUBTITLE }}</span>
+	</ng-template>
+
+	<!-- Shared category -->
+	<section class="multi-link-category">
+		<div class="multi-link-category-label">
+			<span class="material-symbols-outlined">folder</span>
+			{{ MULTI_LINK_LABEL_CATEGORY }}
+			@if (count > 0) {
+				<em>{{ MULTI_LINK_LABEL_APPLIES_PREFIX }}{{ count }} {{ linkLabel }}</em>
+			}
+		</div>
+		<div class="multi-link-category-pills">
+			@for (cat of categoryOptions; track cat) {
+				<button
+					class="multi-link-pill"
+					[class.is-selected]="selectedCategory === cat"
+					(click)="selectedCategory = cat">
+					{{ cat }}
+				</button>
+			}
+		</div>
+	</section>
+
+	<!-- Split body -->
+	<section class="multi-link-body-split">
+		<div class="multi-link-split-left">
+			<span class="multi-link-section-label">{{ MULTI_LINK_LABEL_PASTE }}</span>
+			<textarea
+				class="multi-link-textarea"
+				rows="10"
+				spellcheck="false"
+				[placeholder]="MULTI_LINK_PLACEHOLDER_PASTE"
+				[(ngModel)]="rawText"
+				(ngModelChange)="onRawChange($event)"></textarea>
+		</div>
+
+		<div class="multi-link-split-right">
+			<span class="multi-link-section-label">
+				@if (count > 0) {
+					{{ count }} {{ linkFoundLabel }}
+				} @else {
+					{{ MULTI_LINK_LABEL_EMPTY }}
+				}
+			</span>
+
+			@if (count === 0) {
+				<div class="multi-link-empty">
+					<span class="material-symbols-outlined">travel_explore</span>
+					<p>{{ MULTI_LINK_LABEL_EMPTY_HINT }}</p>
+				</div>
+			} @else {
+				<div class="multi-link-rows" #rowsContainer>
+					@for (link of links; track link.id) {
+						<div class="multi-link-row">
+							<div class="multi-link-favicon">
+								@if (link.status === 'loading') {
+									<span class="multi-link-spin"></span>
+								}
+								<img
+									class="multi-link-favicon-img"
+									[class.is-ready]="link.status === 'ready'"
+									[src]="link.icon"
+									alt=""
+									(load)="onIconLoad(link)"
+									(error)="onIconError(link)" />
+								@if (link.status === 'error') {
+									<span class="multi-link-favicon-letter" [style.background]="link.color">{{ link.name.charAt(0) }}</span>
+								}
+							</div>
+
+							<div class="multi-link-row-main">
+								<input
+									class="multi-link-name"
+									spellcheck="false"
+									[ngModel]="link.name"
+									(ngModelChange)="updateName(link, $event)" />
+								<span class="multi-link-row-url">{{ link.host }}</span>
+							</div>
+
+							<button class="multi-link-row-remove" (click)="removeLink(link)">
+								<span class="material-symbols-outlined">close</span>
+							</button>
+						</div>
+					}
+				</div>
+			}
+		</div>
+	</section>
+
+	<ng-template #footer>
+		<div class="multi-link-footer-status">
+			@if (count > 0) {
+				<span class="multi-link-count" [class.ready]="allReady">
+					<span class="material-symbols-outlined">{{ allReady ? 'check_circle' : 'progress_activity' }}</span>
+					{{ count }} {{ linkLabel }}
+					{{ MULTI_LINK_LABEL_ARROW }} <strong>{{ selectedCategory }}</strong>
+				</span>
+			}
+		</div>
+		<div class="multi-link-footer-actions">
+			<button class="multi-link-button-ghost" (click)="onDialogClosed()">
+				{{ MULTI_LINK_LABEL_CANCEL }}
+			</button>
+			<button class="multi-link-button-gradient" [disabled]="count === 0" (click)="onSubmit()">
+				{{ MULTI_LINK_LABEL_ADD_PREFIX }}{{ count || '' }} {{ linkLabel }}
+			</button>
+		</div>
+	</ng-template>
+</p-dialog>

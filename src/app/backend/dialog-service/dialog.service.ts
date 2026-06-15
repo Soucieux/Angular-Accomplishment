@@ -16,6 +16,7 @@ import {
 	DIALOG_ERROR,
 	DIALOG_HISTORY,
 	DIALOG_LINK,
+	DIALOG_MULTI_LINK,
 	DIALOG_INGREDIENT,
 	ERROR_PERMISSION_DENIED,
 	MSG_DIALOG_ALREADY_OPEN,
@@ -29,10 +30,12 @@ import { MessageService } from 'primeng/api';
 import { IngredientDialogComponent } from './ingredient/ingredient.component';
 import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
 import { Utilities } from '../../common/app.utilities';
-import { AddDebtDialogComponent } from './debt/debt.component';
+import { AddDebtDialogComponent } from './add-debt/add-debt.component';
 import { NewDebtData } from '../../fontend/debt/debt.model';
-import { LinkDialogComponent } from './link/link.component';
+import { AddLinkDialogComponent } from './add-link/add-link.component';
+import { MultiLinkDialogComponent } from './multi-link/multi-link.component';
 import { NewLinkData } from '../../fontend/portal/portal.model';
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -67,7 +70,9 @@ export class DialogService {
 			case DIALOG_DEBT:
 				return AddDebtDialogComponent;
 			case DIALOG_LINK:
-				return LinkDialogComponent;
+				return AddLinkDialogComponent;
+			case DIALOG_MULTI_LINK:
+				return MultiLinkDialogComponent;
 			default:
 				throw new Error(MSG_INVALID_DIALOG_TYPE);
 		}
@@ -129,6 +134,13 @@ export class DialogService {
 		dialogType: 'link',
 		submitCallback: (data: NewLinkData) => void,
 		prefillData: Partial<NewLinkData> | null
+	): void;
+
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'multi-link',
+		submitCallback: (links: NewLinkData[]) => void,
+		categories: string[]
 	): void;
 
 	/**

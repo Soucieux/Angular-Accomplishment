@@ -63,6 +63,8 @@ export const DIALOG_DEBT = 'debt';
 export const DIALOG_INGREDIENT = 'ingredient';
 /** Dialog type for the add/edit link dialog on the Portal page. */
 export const DIALOG_LINK = 'link';
+/** Dialog type for the multi-link batch-add dialog on the Portal page. */
+export const DIALOG_MULTI_LINK = 'multi-link';
 
 ////////////////////// Below are history dialog and style string constants ///////////
 
@@ -579,6 +581,25 @@ export const PORTAL_LABEL_CELL_CONFIRM = 'Confirm';
 export const PORTAL_LABEL_CELL_DONE = 'Done';
 export const PORTAL_LABEL_CELL_TODAY = 'Today';
 export const PORTAL_LABEL_CONFIRMED = 'confirmed';
+
+export const MULTI_LINK_DIALOG_TITLE = 'Add multiple links';
+export const MULTI_LINK_DIALOG_SUBTITLE = 'Paste a batch of URLs — we\'ll fetch each icon automatically.';
+export const MULTI_LINK_LABEL_CATEGORY = 'Category';
+export const MULTI_LINK_LABEL_APPLIES_PREFIX = '· applies to all ';
+export const MULTI_LINK_LABEL_LINK = 'link';
+export const MULTI_LINK_LABEL_LINKS = 'links';
+export const MULTI_LINK_LABEL_PASTE = 'Paste links';
+export const MULTI_LINK_PLACEHOLDER_PASTE = 'Paste your links here — one per line, comma, or semicolon\n\nhttps://github.com\nfigma.com\nlinear.app';
+export const MULTI_LINK_LABEL_LINK_FOUND = 'link found';
+export const MULTI_LINK_LABEL_LINKS_FOUND = 'links found';
+export const MULTI_LINK_LABEL_EMPTY = 'Links will appear here';
+export const MULTI_LINK_LABEL_EMPTY_HINT = 'Paste URLs on the left to preview them with fetched icons.';
+export const MULTI_LINK_LABEL_CANCEL = 'Cancel';
+export const MULTI_LINK_LABEL_ADD_PREFIX = 'Add ';
+export const MULTI_LINK_LABEL_ARROW = '→';
+export const PORTAL_MSG_MULTI_LINK_SAVED = 'Links saved';
+export const PORTAL_MSG_SAVING_LINKS = 'Saving links...';
+export const PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL = 'Could not save the links. Please try again.';
 
 ////////////////////// Below are Reminder page constants /////////////////////////////
 

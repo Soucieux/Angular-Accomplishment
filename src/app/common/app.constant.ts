@@ -185,6 +185,7 @@ export const ACTIVITY_SOURCE_LINK = 'link';
 export const ACTIVITY_SOURCE_DEBT = 'debt';
 export const ACTIVITY_SOURCE_RECIPE = 'recipe';
 export const ACTIVITY_SOURCE_DEFAULT = 'default';
+export const ACTIVITY_SOURCE_DATE_CALCULATOR = 'date_calculator';
 
 ////////////////////// Below are statistics document field name constants /////////////
 
@@ -200,6 +201,8 @@ export const STATS_FIELD_DEBT_TOTAL = 'debtTotal';
 export const STATS_FIELD_TOTAL_RECIPES = 'totalRecipes';
 export const STATS_FIELD_RECIPE_LIST = 'recipeList';
 export const STATS_FIELD_GENRE = 'genre';
+export const STATS_FIELD_ACTIVITY_STREAK = 'activityStreak';
+export const STATS_FIELD_ACTIVITY_STREAK_DATE = 'activityStreakLastDate';
 
 ////////////////////// Below are statistics display cap constants /////////////////////
 
@@ -238,6 +241,7 @@ export const HOME_ACTIVITY_ICON_RECIPE_UPDATED = 'edit';
 export const HOME_ACTIVITY_ICON_RECIPE_REMOVED = 'no_meals';
 /** Shared delete icon used for all activity-feed deleted events. */
 export const HOME_ACTIVITY_ICON_DELETED = 'delete';
+export const HOME_ACTIVITY_ICON_DATE_CALCULATOR_UPDATED = 'calculate';
 
 export const HOME_ACTIVITY_LABEL_MOVIE_ADDED = 'Movie Added';
 export const HOME_ACTIVITY_LABEL_MOVIE_UPDATED = 'Movie Updated';
@@ -277,11 +281,12 @@ export const HOME_ACTIVITY_LABEL_DEBT_LOCK_UPDATED = 'Debt Lock Updated';
 export const HOME_ACTIVITY_COLOR_MOVIE = '#11998e';
 export const HOME_ACTIVITY_COLOR_NEUTRAL = '#94a3b8';
 export const HOME_ACTIVITY_COLOR_PATCH = '#8e54e9';
-export const HOME_ACTIVITY_COLOR_REMINDER = '#f59e0b';
-export const HOME_ACTIVITY_COLOR_RESONANCE = '#fda085';
+export const HOME_ACTIVITY_COLOR_REMINDER = '#14b8a6';
+export const HOME_ACTIVITY_COLOR_RESONANCE = '#d946ef';
 export const HOME_ACTIVITY_COLOR_LINK = '#60a5fa';
 export const HOME_ACTIVITY_COLOR_DEBT = '#06b6d4';
 export const HOME_ACTIVITY_COLOR_RECIPE = '#22c55e';
+export const HOME_ACTIVITY_COLOR_DATE_CALCULATOR = '#6366f1';
 /** Shared delete color used for all activity-feed deleted events. */
 export const HOME_ACTIVITY_COLOR_DELETED = '#ef4444';
 

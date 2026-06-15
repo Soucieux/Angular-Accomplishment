@@ -29,6 +29,8 @@ import {
 	RATE_INCREASED,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
+	STATS_FIELD_ACTIVITY_STREAK,
+	STATS_FIELD_ACTIVITY_STREAK_DATE,
 	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_TOTAL_RECIPES,
 	ROLE_ADMIN,
@@ -44,6 +46,7 @@ import {
 	DEBT_VALUE_KEY_DEBT,
 	DEBT_VALUE_KEY_PAID,
 	DEBT_VALUE_KEY_PAYMENTS,
+	ACTIVITY_SOURCE_DATE_CALCULATOR,
 	ACTIVITY_SOURCE_DEFAULT,
 	ERROR_NO_DOCUMENT_UPDATED,
 	ACTIVITY_TYPE_STATUS_CHANGED,
@@ -598,7 +601,7 @@ export class CloudbaseService extends DatabaseService {
 			);
 			LOG.info(this.className, 'Date calculator has been updated');
 			this.appendToActivityLog({
-				source: ACTIVITY_SOURCE_REMINDER,
+				source: ACTIVITY_SOURCE_DATE_CALCULATOR,
 				type: ACTIVITY_TYPE_CALCULATOR_UPDATED
 			}).catch(() => {});
 		} catch (error) {
@@ -1708,7 +1711,8 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Performs the actual read-then-write for a single activity log entry.
-	 * Prepends the entry to the stored array and trims to STATS_CAP_ACTIVITY_LOG.
+	 * Prepends the entry to the stored array, trims to STATS_CAP_ACTIVITY_LOG,
+	 * and updates the persistent activity streak stored in the same document.
 	 *
 	 * {@link appendToActivityLog} - The queue wrapper that serializes all calls here.
 	 *
@@ -1723,7 +1727,23 @@ export class CloudbaseService extends DatabaseService {
 			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
 			// Prepend the new item and trim to the cap so CloudBase storage stays bounded.
 			const updated = [entry, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
-			const result = await this.statisticsRef.update({ [STATS_FIELD_RECENT_ACTIVITIES]: updated });
+			// Compute the updated streak against today's local date.
+			const today = Utilities.formatDateForStorage(new Date());
+			const storedStreak = (doc.data?.[0]?.[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
+			const storedDate = (doc.data?.[0]?.[STATS_FIELD_ACTIVITY_STREAK_DATE] as string) ?? '';
+			let newStreak: number;
+			if (storedDate === today) {
+				newStreak = storedStreak;
+			} else {
+				const yesterday = new Date();
+				yesterday.setDate(yesterday.getDate() - 1);
+				newStreak = storedDate === Utilities.formatDateForStorage(yesterday) ? storedStreak + 1 : 1;
+			}
+			const result = await this.statisticsRef.update({
+				[STATS_FIELD_RECENT_ACTIVITIES]: updated,
+				[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
+				[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
+			});
 			if (result.code) throw new Error(result.message ?? 'Recent activity data update failed');
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating activity data', error as Error);

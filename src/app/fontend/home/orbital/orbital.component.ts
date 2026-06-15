@@ -36,6 +36,7 @@ import { NexusCategory, NexusLink } from '../../nexus/nexus.model';
 import { DEBT_CATEGORY_DEFS } from '../../debt/debt.model';
 import { Utilities } from '../../../common/app.utilities';
 import {
+	ACTIVITY_SOURCE_DATE_CALCULATOR,
 	ACTIVITY_SOURCE_DEBT,
 	ACTIVITY_SOURCE_LINK,
 	ACTIVITY_SOURCE_MOVIE,
@@ -55,7 +56,6 @@ import {
 	ACTIVITY_TYPE_CATEGORY_DELETED,
 	ACTIVITY_TYPE_PAYMENT_REMOVED,
 	ACTIVITY_TYPE_CATEGORY_ADDED,
-	ACTIVITY_TYPE_CALCULATOR_UPDATED,
 	ACTIVITY_TYPE_LOCK_UPDATED,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_DELETED,
@@ -66,6 +66,7 @@ import {
 	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_RECIPE_LIST,
 	STATS_FIELD_REMINDER_UPCOMING,
+	HOME_ACTIVITY_COLOR_DATE_CALCULATOR,
 	HOME_ACTIVITY_COLOR_DEBT,
 	HOME_ACTIVITY_COLOR_DELETED,
 	HOME_ACTIVITY_COLOR_LINK,
@@ -79,6 +80,7 @@ import {
 	HOME_ACTIVITY_ICON_DEBT_REMOVED,
 	HOME_ACTIVITY_ICON_DEBT_RESET,
 	HOME_ACTIVITY_ICON_DEBT_UPDATED,
+	HOME_ACTIVITY_ICON_DATE_CALCULATOR_UPDATED,
 	HOME_ACTIVITY_ICON_DELETED,
 	HOME_ACTIVITY_ICON_LINK_ADDED,
 	HOME_ACTIVITY_ICON_LINK_REMOVED,
@@ -150,6 +152,7 @@ import {
 	HOME_QUICK_ACTION_ROUTE_REMINDER,
 	HOME_REMINDER_ROW_ID_PREFIX,
 	HOME_SATELLITE_TOOLTIP_STREAK,
+	STATS_FIELD_ACTIVITY_STREAK,
 	ORBITAL_URGENCY_CHIP_TYPE_DEBT,
 	ORBITAL_URGENCY_CHIP_TYPE_REMINDER,
 	ORBITAL_URGENCY_GROUP_SEPARATOR,
@@ -277,17 +280,19 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 					icon: HOME_ACTIVITY_ICON_REMINDER_UPDATED,
 					label: HOME_ACTIVITY_LABEL_REMINDER_UPDATED
 				},
-				[ACTIVITY_TYPE_CALCULATOR_UPDATED]: {
-					icon: HOME_ACTIVITY_ICON_REMINDER_UPDATED,
-					label: HOME_ACTIVITY_LABEL_DATE_CALCULATOR_UPDATED,
-					getDetail: () => ''
-				},
 				[HISTORY_STATUS_DELETED]: {
 					icon: HOME_ACTIVITY_ICON_DELETED,
 					label: HOME_ACTIVITY_LABEL_REMINDER_DELETED,
 					color: HOME_ACTIVITY_COLOR_DELETED
 				}
 			}
+		},
+		[ACTIVITY_SOURCE_DATE_CALCULATOR]: {
+			icon: HOME_ACTIVITY_ICON_DATE_CALCULATOR_UPDATED,
+			label: HOME_ACTIVITY_LABEL_DATE_CALCULATOR_UPDATED,
+			color: HOME_ACTIVITY_COLOR_DATE_CALCULATOR,
+			getDetail: () => '',
+			types: {}
 		},
 		[ACTIVITY_SOURCE_RESONANCE]: {
 			icon: HOME_ACTIVITY_ICON_RESONANCE_ADDED,
@@ -433,7 +438,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		if (changes[HOME_ORBITAL_CHANGES_KEY_STATS] && this.stats) {
 			this.genreBars = this.buildGenreBars();
 			this.reminderRows = this.buildReminderRows();
-			this.activityStreak = this.buildActivityStreak();
+			this.activityStreak = (this.stats?.[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
 			this.recipeRows = this.buildRecipeRows();
 			this.debtRows = this.buildDebtRows();
 			this.activityRows = this.buildActivityRows();
@@ -565,51 +570,6 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 			? items[0].dueLabel
 			: `${items[0].dueLabel}${ORBITAL_URGENCY_ITEM_SEPARATOR}${ORBITAL_URGENCY_LABEL_VARIOUS}`;
 		return `${items.length} ${groupLabel}${ORBITAL_URGENCY_ITEM_SEPARATOR}${dateLabel}`;
-	}
-
-	/**
-	 * Builds the number of consecutive calendar days, ending on or within one day
-	 * of today, on which at least one activity entry was logged. Returns 0 when
-	 * the most recent activity is two or more days old. Limited to the depth of
-	 * recentActivities (capped at 20 entries by the DB layer), so long streaks
-	 * saturate at the number of unique days present in that array.
-	 *
-	 * @returns The consecutive-day activity streak count.
-	 */
-	private buildActivityStreak(): number {
-		// Step 1 : Collect unique activity dates from the recent activities array
-		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_ACTIVITIES]) as RecentActivityItem[];
-		if (!raw.length) return 0;
-
-		const dateSet = new Set<string>();
-		for (const entry of raw) {
-			if (!entry.timestamp) continue;
-			dateSet.add(Utilities.parseDateToISODate(entry.timestamp));
-		}
-
-		const sortedDates = [...dateSet].sort().reverse();
-		if (!sortedDates.length) return 0;
-
-		// Step 2 : Verify the most recent activity is within 1 day of today
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		const mostRecent = new Date(sortedDates[0] + 'T00:00');
-		const gapToToday = Math.round((today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24));
-		if (gapToToday > 1) return 0;
-
-		// Step 3 : Count consecutive days walking backwards through the sorted dates
-		let streak = 1;
-		for (let i = 1; i < sortedDates.length; i++) {
-			const previous = new Date(sortedDates[i - 1] + 'T00:00');
-			const current = new Date(sortedDates[i] + 'T00:00');
-			const dayDiff = Math.round((previous.getTime() - current.getTime()) / (1000 * 60 * 60 * 24));
-			if (dayDiff === 1) {
-				streak++;
-			} else {
-				break;
-			}
-		}
-		return streak;
 	}
 
 	/**

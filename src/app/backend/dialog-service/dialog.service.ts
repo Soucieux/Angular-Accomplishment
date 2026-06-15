@@ -1,6 +1,6 @@
 import { ComponentRef, Injectable, Type, ViewContainerRef } from '@angular/core';
 import { ConfirmDialogComponent } from './confirm/confirm.component';
-import { AddDialogComponent } from './add/add.component';
+import { AddDialogComponent } from './add-movie/add-movie.component';
 import { LOG } from '../../common/app.logs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { HistoryDialogComponent } from './history/history.component';

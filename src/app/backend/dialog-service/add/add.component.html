@@ -8,7 +8,7 @@
 	(onHide)="onDialogClosed()"
 	styleClass="add-dialog">
 	<p class="dialog-subtitle">Enter either Name or ID to start searching</p>
-	<div class="form-image-container">
+	<div class="form-body-container">
 		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 			<div class="form-row">
 				<label for="movieName">{{ movieName.value || year.value ? 'Name*' : 'Name' }}</label>
@@ -84,9 +84,9 @@
 	</div>
 	<!-- progress bar inside the dialog when loading -->
 	@if (isLoading) {
-	<div class="loading-overlay">
-		<p-progressbar mode="indeterminate" [style]="{ height: '8px' }" />
-	</div>
+		<div class="loading-overlay">
+			<p-progressbar mode="indeterminate" [style]="{ height: '8px' }" />
+		</div>
 	}
 	<!-- #footer -->
 	<ng-template #footer>

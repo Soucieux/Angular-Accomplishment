@@ -46,14 +46,16 @@
 }
 
 /* Inputs */
-::ng-deep .add-dialog .p-inputtext {
-	height: 38px !important;
+::ng-deep .add-dialog [pinputtext] {
+	height: 35px !important;
 	border-radius: 10px !important;
 	border: 1.5px solid rgba(213, 51, 105, 0.25) !important;
 	background: rgba(255, 255, 255, 0.8) !important;
 	font-size: 14px !important;
 	padding: 0 12px !important;
-	transition: border-color 0.2s, box-shadow 0.2s !important;
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s !important;
 	width: 100% !important;
 	box-sizing: border-box !important;
 
@@ -72,7 +74,7 @@
 
 /* Dropdowns */
 ::ng-deep .add-dialog .p-select {
-	height: 38px !important;
+	height: 35px !important;
 	border-radius: 10px !important;
 	border: 1.5px solid rgba(213, 51, 105, 0.25) !important;
 	background: rgba(255, 255, 255, 0.8) !important;
@@ -127,16 +129,15 @@
 	text-align: center;
 }
 
-.form-image-container {
+.form-body-container {
 	display: flex;
 	gap: 20px;
-	align-items: flex-start;
 }
 
 .form-grid {
 	display: grid;
-	grid-template-columns: 52px 1fr;
-	gap: 14px 12px;
+	grid-template-columns: auto 1fr;
+	gap: 1rem 1.5rem;
 	align-items: center;
 	flex: 1;
 	min-width: 0;
@@ -147,9 +148,6 @@
 }
 
 .form-grid label {
-	font-size: 13px;
-	font-weight: 600;
-	color: rgba(40, 15, 35, 0.6);
 	text-align: right;
 	padding-right: 4px;
 }
@@ -203,7 +201,7 @@
 	}
 
 	/* Stack the form full-width; poster moves below Genre */
-	.form-image-container {
+	.form-body-container {
 		flex: 1;
 		flex-direction: column;
 		align-items: center;

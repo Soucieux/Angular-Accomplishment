@@ -1,255 +1,275 @@
 @if (utilities.getIsUserAlive()) {
-<div class="glass-card container-nexus">
-
-	<!-- ── Header ───────────────────────────────────────────────── -->
-	<div class="page-header">
-		<h1 class="page-title">Portal</h1>
-		<p class="page-subtitle">Your links & resources command center</p>
-		<div class="header-ornament"></div>
-	</div>
-
-	<!-- ── Date Calculator ───────────────────────────────────────── -->
-	@if (utilities.getIsUserAlive()) {
-		<div class="date-calculator-section">
-			<div class="table-wrapper">
-				<div class="header-wrapper">
-					<div class="header-main">
-						<h4>Date Calculator</h4>
-						@if (saveIndicators[DATABASE_DATE_CALCULATOR]) {
-							<div class="save-indicator">
-								<span class="save-indicator-spinner"></span>
-							</div>
-						}
+	<div class="glass-card container-nexus">
+		<!-- ── Header ───────────────────────────────────────────────── -->
+		<div class="page-header">
+			<div class="page-title-row">
+				<h1 class="page-title">Portal</h1>
+				@if (saveIndicator) {
+					<div class="save-indicator">
+						<span class="save-indicator-spinner"></span>
 					</div>
-					<div class="date-calculator-toggle-wrapper">
-						<div class="date-calculator-segment-group">
+				}
+			</div>
+			<p class="page-subtitle">Your links & resources command center</p>
+			<div class="header-ornament"></div>
+		</div>
+
+		<!-- ── Date Calculator ───────────────────────────────────────── -->
+		@if (utilities.getIsUserAlive()) {
+			<div class="date-calculator-section">
+				<div class="table-wrapper">
+					<div class="header-wrapper">
+						<div class="header-main">
+							<h4>Date Calculator</h4>
+						</div>
+						<div class="date-calculator-toggle-wrapper">
+							<div class="date-calculator-segment-group">
+								<button
+									class="date-calculator-segment-button"
+									[class.active]="!isNextMonth"
+									[attr.aria-pressed]="!isNextMonth"
+									(click)="setMonth(false)">
+									{{ NEXUS_LABEL_CURRENT_MONTH }}
+								</button>
+								<button
+									class="date-calculator-segment-button"
+									[class.active]="isNextMonth"
+									[attr.aria-pressed]="isNextMonth"
+									(click)="setMonth(true)">
+									{{ NEXUS_LABEL_NEXT_MONTH }}
+								</button>
+							</div>
 							<button
-								class="date-calculator-segment-button"
-								[class.active]="!isNextMonth"
-								[attr.aria-pressed]="!isNextMonth"
-								(click)="setMonth(false)">
-								{{ NEXUS_LABEL_CURRENT_MONTH }}
-							</button>
-							<button
-								class="date-calculator-segment-button"
-								[class.active]="isNextMonth"
-								[attr.aria-pressed]="isNextMonth"
-								(click)="setMonth(true)">
-								{{ NEXUS_LABEL_NEXT_MONTH }}
+								class="date-calculator-reset-button"
+								(click)="openResetConfirmationDialog()">
+								<span class="pi pi-refresh"></span>
+								{{ NEXUS_LABEL_RESET }}
 							</button>
 						</div>
-						<button class="date-calculator-reset-button" (click)="openResetConfirmationDialog()">
-							<span class="pi pi-refresh"></span>
-							{{ NEXUS_LABEL_RESET }}
-						</button>
 					</div>
-				</div>
-				<p-table [value]="updatedDateCalculatorRows" [loading]="dateCalculatorLoading" [showLoader]="false" class="date-calculator-table">
-					<ng-template pTemplate="header">
-						<tr>
-							<th class="header">First</th>
-							<th class="header">Second</th>
-							<th class="header">Third</th>
-							<th class="header">Fourth</th>
-						</tr>
-					</ng-template>
-					<ng-template pTemplate="loadingbody">
-						@for (_ of [0, 1, 2, 3, 4]; track $index) {
+					<p-table
+						[value]="updatedDateCalculatorRows"
+						[loading]="dateCalculatorLoading"
+						[showLoader]="false"
+						class="date-calculator-table">
+						<ng-template pTemplate="header">
 							<tr>
-								<td class="skeleton-row"><p-skeleton /></td>
-								<td class="skeleton-row"><p-skeleton /></td>
-								<td class="skeleton-row"><p-skeleton /></td>
-								<td class="skeleton-row"><p-skeleton /></td>
+								<th class="header">First</th>
+								<th class="header">Second</th>
+								<th class="header">Third</th>
+								<th class="header">Fourth</th>
 							</tr>
-						}
-					</ng-template>
-					<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
-						<tr>
-							@for (field of fields; let index = $index; track field) {
-								<td>
-									<div
-										class="date-calculator-cell"
-										[class.charged]="row[field].isCharged"
-										[class.today]="!row[field].isCharged && row[field].value === currentDay"
-										[class.disabled]="!isNextMonth && isDisabled(rowIndex, field)">
-										<input
-											pInputText
-											type="text"
-											inputmode="numeric"
-											[(ngModel)]="row[field].value"
-											class="date-calculator-cell-input"
-											(keydown)="onNumberChange($event)"
-											(blur)="onValueChange(rowIndex, field)"
-											(keyup.enter)="onValueChange(rowIndex, field)" />
-										<button
-											class="date-calculator-cell-button"
+						</ng-template>
+						<ng-template pTemplate="loadingbody">
+							@for (_ of [0, 1, 2, 3, 4]; track $index) {
+								<tr>
+									<td class="skeleton-row"><p-skeleton /></td>
+									<td class="skeleton-row"><p-skeleton /></td>
+									<td class="skeleton-row"><p-skeleton /></td>
+									<td class="skeleton-row"><p-skeleton /></td>
+								</tr>
+							}
+						</ng-template>
+						<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+							<tr>
+								@for (field of fields; let index = $index; track field) {
+									<td>
+										<div
+											class="date-calculator-cell"
 											[class.charged]="row[field].isCharged"
 											[class.today]="
 												!row[field].isCharged && row[field].value === currentDay
 											"
-											(click)="setIsCharged(rowIndex, field)">
-											@if (row[field].isCharged) {
-												<span class="pi pi-check"></span>
-											}
-											{{
-												row[field].isCharged
-													? NEXUS_LABEL_CELL_DONE
-													: row[field].value === currentDay
-														? NEXUS_LABEL_CELL_TODAY
-														: NEXUS_LABEL_CELL_CONFIRM
-											}}
-										</button>
-									</div>
-								</td>
-							}
-						</tr>
-					</ng-template>
-				</p-table>
-				<div class="date-calculator-footer">
-					<div class="date-calculator-footer-left">
-						<span class="date-calculator-footer-dot"></span>
-						{{ confirmedCount }} of {{ totalCount }} {{ NEXUS_LABEL_CONFIRMED }}
-					</div>
-					<span class="date-calculator-footer-right">
-						{{ isNextMonth ? NEXUS_LABEL_NEXT_MONTH : NEXUS_LABEL_CURRENT_MONTH }}
-					</span>
-				</div>
-			</div>
-		</div>
-	}
-
-	<!-- ── AI Tools launcher ─────────────────────────────────────── -->
-	<div class="ai-tools-section">
-		<span class="section-label">AI Tools</span>
-		<div class="ai-tools-row">
-			@for (tool of aiTools; track tool.id) {
-				<button class="ai-tile" (click)="openAiTool(tool)" [title]="'Open ' + tool.name">
-					@if (!failedLogos.has(tool.id)) {
-						<img
-							[src]="tool.logo"
-							[alt]="tool.name"
-							class="ai-tile-logo"
-							(error)="onLogoError(tool.id)" />
-					} @else {
-						<span class="ai-tile-initial" [style.background]="getLogoFallbackColor(tool.id)">
-							{{ tool.name[0] }}
-						</span>
-					}
-					<span class="ai-tile-name">{{ tool.name }}</span>
-				</button>
-			}
-		</div>
-	</div>
-
-	<!-- ── Links library ─────────────────────────────────────────── -->
-	<div class="links-section">
-		@if (utilities.getIsUserAlive()) {
-
-			<!-- Toolbar -->
-			<div class="links-toolbar">
-				<div class="category-tabs" #categoryTabs>
-					<button
-						class="category-tab"
-						[class.active]="selectedCategory === NEXUS_CATEGORY_ALL"
-						(click)="selectCategory(NEXUS_CATEGORY_ALL)">
-						All ({{ getLinkCount(NEXUS_CATEGORY_ALL) }})
-					</button>
-					@for (cat of categories; track cat._id) {
-						<button
-							class="category-tab"
-							[class.active]="selectedCategory === cat._id"
-							(click)="selectCategory(cat._id)"
-							[style.--category-color]="cat.color">
-							{{ cat.name }} ({{ getLinkCount(cat._id) }})
-							<span class="category-edit-button"
-								(click)="openEditCategoryDialog(cat, $event)"
-								title="Edit category">✎</span>
-						</button>
-					}
-					<button class="category-add-button" (click)="openAddCategoryDialog()" title="New category">
-						<span class="material-symbols-outlined">add</span>
-					</button>
-				</div>
-				<div class="toolbar-right">
-					@if (linkSearchVisible) {
-						<input
-							class="links-search-input"
-							type="text"
-							placeholder="Search links…"
-							[(ngModel)]="linkSearch"
-							(blur)="onLinkSearchExit($event)" />
-					}
-					<button
-						class="icon-button"
-						[class.active]="linkSearchVisible"
-						(click)="toggleLinkSearch()"
-						title="Search links">
-						<span class="material-symbols-outlined">search</span>
-					</button>
-					<button class="add-link-button" (click)="openAddLinkDialog()">
-						<span class="material-symbols-outlined">add</span>
-						Add Link
-					</button>
-				</div>
-			</div>
-
-			<!-- Link grid -->
-			@if (linksLoading) {
-				<div class="links-grid">
-					@for (i of [1,2,3,4,5,6,7,8]; track i) {
-						<div class="link-card skeleton-card"></div>
-					}
-				</div>
-			} @else if (filteredLinks.length === 0) {
-				<div class="links-empty">
-					<span class="material-symbols-outlined empty-icon">link</span>
-					<p>No links here yet</p>
-					<button class="add-link-button" (click)="openAddLinkDialog()">
-						<span class="material-symbols-outlined">add</span>
-						Add Link
-					</button>
-				</div>
-			} @else {
-				<div class="links-grid">
-					@for (link of filteredLinks; track link._id) {
-						<div class="link-card" (click)="openLink(link)" [title]="link.url">
-							<div class="link-card-inner">
-								@if (faviconFailedIds.has(link._id)) {
-									<div class="link-favicon-fallback">{{ link.title.charAt(0).toUpperCase() }}</div>
-								} @else {
-									<img
-										class="link-favicon"
-										[src]="utilities.getFavicon(link.url)"
-										[alt]="link.title"
-										(error)="onFaviconError(link)"
-										loading="lazy" />
+											[class.disabled]="!isNextMonth && isDisabled(rowIndex, field)">
+											<input
+												pInputText
+												type="text"
+												inputmode="numeric"
+												[(ngModel)]="row[field].value"
+												class="date-calculator-cell-input"
+												(keydown)="onNumberChange($event)"
+												(blur)="onValueChange(rowIndex, field)"
+												(keyup.enter)="onValueChange(rowIndex, field)" />
+											<button
+												class="date-calculator-cell-button"
+												[class.charged]="row[field].isCharged"
+												[class.today]="
+													!row[field].isCharged && row[field].value === currentDay
+												"
+												(click)="setIsCharged(rowIndex, field)">
+												@if (row[field].isCharged) {
+													<span class="pi pi-check"></span>
+												}
+												{{
+													row[field].isCharged
+														? NEXUS_LABEL_CELL_DONE
+														: row[field].value === currentDay
+															? NEXUS_LABEL_CELL_TODAY
+															: NEXUS_LABEL_CELL_CONFIRM
+												}}
+											</button>
+										</div>
+									</td>
 								}
-								<div class="link-info">
-									<p class="link-title">{{ link.title }}</p>
-									<span class="link-domain">{{ utilities.getDomain(link.url) }}</span>
-								</div>
-								@if (link.visitCount) {
-									<span class="link-visits-badge">{{ link.visitCount }}</span>
-								}
-								<div class="link-actions">
-									<button class="link-action-button" (click)="openEditLinkDialog(link, $event)" title="Edit">
-										<span class="material-symbols-outlined">edit</span>
-									</button>
-									<button class="link-action-button danger" (click)="openDeleteLinkDialog(link, $event)" title="Delete">
-										<span class="material-symbols-outlined">delete</span>
-									</button>
-								</div>
-							</div>
+							</tr>
+						</ng-template>
+					</p-table>
+					<div class="date-calculator-footer">
+						<div class="date-calculator-footer-left">
+							<span class="date-calculator-footer-dot"></span>
+							{{ confirmedCount }} of {{ totalCount }} {{ NEXUS_LABEL_CONFIRMED }}
 						</div>
-					}
+						<span class="date-calculator-footer-right">
+							{{ isNextMonth ? NEXUS_LABEL_NEXT_MONTH : NEXUS_LABEL_CURRENT_MONTH }}
+						</span>
+					</div>
 				</div>
-			}
+			</div>
 		}
 
-	</div>
+		<!-- ── AI Tools launcher ─────────────────────────────────────── -->
+		<div class="ai-tools-section">
+			<span class="section-label">AI Tools</span>
+			<div class="ai-tools-row">
+				@for (tool of aiTools; track tool.id) {
+					<button class="ai-tile" (click)="openAiTool(tool)" [title]="'Open ' + tool.name">
+						@if (!failedLogos.has(tool.id)) {
+							<img
+								[src]="tool.logo"
+								[alt]="tool.name"
+								class="ai-tile-logo"
+								(error)="onLogoError(tool.id)" />
+						} @else {
+							<span class="ai-tile-initial" [style.background]="getLogoFallbackColor(tool.id)">
+								{{ tool.name[0] }}
+							</span>
+						}
+						<span class="ai-tile-name">{{ tool.name }}</span>
+					</button>
+				}
+			</div>
+		</div>
 
-</div>
-<ng-container #dialogComponentContainer></ng-container>
+		<!-- ── Links library ─────────────────────────────────────────── -->
+		<div class="links-section">
+			@if (utilities.getIsUserAlive()) {
+				<!-- Toolbar -->
+				<div class="links-toolbar">
+					<div class="category-tabs" #categoryTabs>
+						<button
+							class="category-tab"
+							[class.active]="selectedCategory === NEXUS_CATEGORY_ALL"
+							(click)="selectCategory(NEXUS_CATEGORY_ALL)">
+							All ({{ getLinkCount(NEXUS_CATEGORY_ALL) }})
+						</button>
+						@for (cat of categories; track cat._id) {
+							<button
+								class="category-tab"
+								[class.active]="selectedCategory === cat._id"
+								(click)="selectCategory(cat._id)"
+								[style.--category-color]="cat.color">
+								{{ cat.name }} ({{ getLinkCount(cat._id) }})
+								<span
+									class="category-edit-button"
+									(click)="openEditCategoryDialog(cat, $event)"
+									title="Edit category"
+									>✎</span
+								>
+							</button>
+						}
+						<button
+							class="category-add-button"
+							(click)="openAddCategoryDialog()"
+							title="New category">
+							<span class="material-symbols-outlined">add</span>
+						</button>
+					</div>
+					<div class="toolbar-right">
+						@if (linkSearchVisible) {
+							<input
+								class="links-search-input"
+								type="text"
+								placeholder="Search links…"
+								[(ngModel)]="linkSearch"
+								(blur)="onLinkSearchExit($event)" />
+						}
+						<button
+							class="icon-button"
+							[class.active]="linkSearchVisible"
+							(click)="toggleLinkSearch()"
+							title="Search links">
+							<span class="material-symbols-outlined">search</span>
+						</button>
+						<button class="add-link-button" (click)="openAddLinkDialog()">
+							<span class="material-symbols-outlined">add</span>
+							Add Link
+						</button>
+					</div>
+				</div>
+
+				<!-- Link grid -->
+				@if (linksLoading) {
+					<div class="links-grid">
+						@for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+							<div class="link-card skeleton-card"></div>
+						}
+					</div>
+				} @else if (filteredLinks.length === 0) {
+					<div class="links-empty">
+						<span class="material-symbols-outlined empty-icon">link</span>
+						<p>No links here yet</p>
+						<button class="add-link-button" (click)="openAddLinkDialog()">
+							<span class="material-symbols-outlined">add</span>
+							Add Link
+						</button>
+					</div>
+				} @else {
+					<div class="links-grid">
+						@for (link of filteredLinks; track link._id) {
+							<div class="link-card" (click)="openLink(link)" [title]="link.url">
+								<div class="link-card-inner">
+									@if (faviconFailedIds.has(link._id)) {
+										<div class="link-favicon-fallback">
+											{{ link.title.charAt(0).toUpperCase() }}
+										</div>
+									} @else {
+										<img
+											class="link-favicon"
+											[src]="utilities.getFavicon(link.url)"
+											[alt]="link.title"
+											(error)="onFaviconError(link)"
+											loading="lazy" />
+									}
+									<div class="link-info">
+										<p class="link-title">{{ link.title }}</p>
+										<span class="link-domain">{{ utilities.getDomain(link.url) }}</span>
+									</div>
+									@if (link.visitCount) {
+										<span class="link-visits-badge">{{ link.visitCount }}</span>
+									}
+									<div class="link-actions">
+										<button
+											class="link-action-button"
+											(click)="openEditLinkDialog(link, $event)"
+											title="Edit">
+											<span class="material-symbols-outlined">edit</span>
+										</button>
+										<button
+											class="link-action-button danger"
+											(click)="openDeleteLinkDialog(link, $event)"
+											title="Delete">
+											<span class="material-symbols-outlined">delete</span>
+										</button>
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				}
+			}
+		</div>
+	</div>
+	<ng-container #dialogComponentContainer></ng-container>
 } @else {
 	<div class="access-denied-wrapper">
 		<access-denied />
@@ -265,7 +285,6 @@
 	[style]="{ width: '360px' }"
 	styleClass="category-dialog"
 	appendTo="body">
-
 	<div class="dialog-form">
 		<div class="form-field">
 			<label class="form-label">Name *</label>
@@ -285,7 +304,9 @@
 		</div>
 		@if (editingCategory) {
 			<div class="danger-zone">
-				<button class="delete-category-button" (click)="openDeleteCategoryDialog(editingCategory, $event)">
+				<button
+					class="delete-category-button"
+					(click)="openDeleteCategoryDialog(editingCategory, $event)">
 					Delete this category
 				</button>
 			</div>

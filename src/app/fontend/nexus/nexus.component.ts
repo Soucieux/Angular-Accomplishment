@@ -112,8 +112,6 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly NEXUS_CATEGORY_ALL = NEXUS_CATEGORY_ALL;
 	protected readonly NEXUS_LOGO_FALLBACK_COLORS = NEXUS_LOGO_FALLBACK_COLORS;
 	protected readonly aiTools: AiTool[] = [...NEXUS_AI_TOOLS];
-	// Date Calculator constants re-exposed for the template
-	protected readonly DATABASE_DATE_CALCULATOR = DATABASE_DATE_CALCULATOR;
 	protected readonly NEXUS_LABEL_CURRENT_MONTH = NEXUS_LABEL_CURRENT_MONTH;
 	protected readonly NEXUS_LABEL_NEXT_MONTH = NEXUS_LABEL_NEXT_MONTH;
 	protected readonly NEXUS_LABEL_RESET = NEXUS_LABEL_RESET;
@@ -131,8 +129,8 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected currentDay!: number;
 	protected readonly fields = NEXUS_DATE_CALCULATOR_FIELDS;
 	private dateCalculatorSub?: Subscription;
-	protected saveIndicators: Record<string, boolean> = { [DATABASE_DATE_CALCULATOR]: false };
-	private saveIndicatorTimeouts: Record<string, any> = {};
+	protected saveIndicator = false;
+	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 	private chargedCellsInitialized = false;
 	protected isNextMonth!: boolean;
 	protected dateCalculatorLoading = true;
@@ -573,7 +571,7 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 				}
 			];
 			await this.databaseService.updateDateCalculatorTable(payload);
-			this.triggerSaveIndicator(DATABASE_DATE_CALCULATOR);
+			this.triggerSaveIndicator();
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
@@ -582,26 +580,15 @@ export class NexusComponent implements OnInit, AfterViewChecked, OnDestroy {
 	////////////////////// Below are shared utility methods //////////////////////////////
 
 	/**
-	 * Shows a save-confirmation indicator for the given table and automatically
-	 * hides it after one second. If a previous timeout for the same table is
-	 * still active, it is cleared and restarted to avoid overlapping triggers.
-	 *
-	 * @param tableName - The name of the table for which to show the indicator.
+	 * Shows the save-confirmation indicator and hides it after one second.
+	 * Clears any active timeout before restarting so rapid saves do not flash.
 	 */
-	private triggerSaveIndicator(tableName: string): void {
-		this.saveIndicators[tableName] = true;
-		// markForCheck must be called immediately before the setTimeout delay begins.
+	private triggerSaveIndicator(): void {
+		this.saveIndicator = true;
 		this.cdr.markForCheck();
-
-		/* Clear any previous timeout before setting a new one — rapid successive
-		   saves should restart the indicator timer rather than flash on/off. */
-		if (this.saveIndicatorTimeouts[tableName]) {
-			clearTimeout(this.saveIndicatorTimeouts[tableName]);
-		}
-
-		this.saveIndicatorTimeouts[tableName] = setTimeout(() => {
-			this.saveIndicators[tableName] = false;
-			// setTimeout runs outside Angular's zone — markForCheck required to hide the indicator.
+		if (this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR]) clearTimeout(this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR]);
+		this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR] = setTimeout(() => {
+			this.saveIndicator = false;
 			this.cdr.markForCheck();
 		}, 1000);
 	}

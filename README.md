@@ -118,7 +118,7 @@ src/app/
     ├── home/                     # Vision Home dashboard
     ├── entertainment/            # Entertainment tracking hub
     ├── reminder/                 # Expense and date reminder tables
-    ├── portal/                    # AI search hub
+    ├── portal/                   # AI search hub
     ├── recipe/                   # Personal cookbook vault
     ├── resonance/                # Quote vault
     ├── debt/                     # Debt Sonata — debt tracking canvas

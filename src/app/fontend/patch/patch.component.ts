@@ -679,6 +679,15 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
+	 * Gets the number of bug entries that have been resolved.
+	 *
+	 * @returns The count of resolved bug records.
+	 */
+	protected get statsResolved(): number {
+		return this.patchNotesList.filter((note: any) => note.status === STATUS_RESOLVED).length;
+	}
+
+	/**
 	 * Looks up a component option object by label string.
 	 *
 	 * Accepts both a plain string and a full option object because PrimeNG's

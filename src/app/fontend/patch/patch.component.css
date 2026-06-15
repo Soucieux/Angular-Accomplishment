@@ -146,6 +146,10 @@
 	color: #ee5a6f;
 }
 
+.stat-number.stat-resolved {
+	color: #22c55e;
+}
+
 .stat-divider {
 	color: rgba(30, 15, 35, 0.25);
 }

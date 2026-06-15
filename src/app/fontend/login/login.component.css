@@ -189,7 +189,7 @@
 ::ng-deep .v-lamp-form .p-iftalabel {
 	width: 100%;
 }
-::ng-deep .v-lamp-form .p-inputtext {
+::ng-deep .v-lamp-form [pinputtext] {
 	width: 100%;
 	height: clamp(44px, 3.5vw, 60px);
 	border-radius: 12px !important;
@@ -201,10 +201,10 @@
 		border-color 0.2s,
 		box-shadow 0.2s;
 }
-::ng-deep .v-lamp-form .p-inputtext:hover {
+::ng-deep .v-lamp-form [pinputtext]:hover {
 	border-color: var(--lamp-color) !important;
 }
-::ng-deep .v-lamp-form .p-inputtext:focus {
+::ng-deep .v-lamp-form [pinputtext]:focus {
 	border-color: var(--lamp-color) !important;
 	box-shadow: 0 0 0 4px var(--lamp-soft) !important;
 }
@@ -228,13 +228,13 @@
 	width: 100%;
 	height: clamp(44px, 3.5vw, 60px);
 }
-::ng-deep .v-lamp-form .code-input-row .p-inputtext {
+::ng-deep .v-lamp-form .code-input-row [pinputtext] {
 	flex: 1;
 	height: 100% !important;
 	border-right: none !important;
 	border-radius: 12px 0 0 12px !important;
 }
-::ng-deep .v-lamp-form .p-inputtext::placeholder {
+::ng-deep .v-lamp-form [pinputtext]::placeholder {
 	color: rgba(220, 230, 240, 0.5) !important;
 }
 .get-code-button {

@@ -290,7 +290,7 @@
 	width: 100%;
 }
 
-::ng-deep .p-datatable .p-inputtext {
+::ng-deep .p-datatable [pinputtext] {
 	border-radius: 8px !important;
 	border: 1.5px solid rgba(0, 0, 0, 0.14) !important;
 	background: #ffffff !important;
@@ -299,7 +299,7 @@
 		box-shadow 0.2s !important;
 }
 
-::ng-deep .p-datatable .p-inputtext:focus {
+::ng-deep .p-datatable [pinputtext]:focus {
 	border-color: #667eea !important;
 	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12) !important;
 	outline: none !important;

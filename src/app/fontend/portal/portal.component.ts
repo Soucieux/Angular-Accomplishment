@@ -171,6 +171,9 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			if (history.state?.openAddLinkDialog) {
 				history.replaceState({}, '');
 				setTimeout(() => this.openAddLinkDialog(), 0);
+			} else if (history.state?.openMultiLinkDialog) {
+				history.replaceState({}, '');
+				setTimeout(() => this.openMultiLinkDialog(), 0);
 			}
 
 			////////////////////// Below are subscriptions started on init //////////

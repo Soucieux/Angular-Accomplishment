@@ -127,6 +127,6 @@ export const QUICK_ACTIONS: OrbitalQuickAction[] = [
 		label: 'Add Shortcut',
 		gradient: 'linear-gradient(135deg,#a3e635,#84cc16)',
 		route: '/portal',
-		state: { openAddLinkDialog: true }
+		state: { openMultiLinkDialog: true }
 	}
 ];

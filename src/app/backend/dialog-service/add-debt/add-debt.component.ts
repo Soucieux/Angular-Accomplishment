@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -24,9 +24,10 @@ import { DEBT_CATEGORY_DEFS, NewDebtData } from '../../../fontend/debt/debt.mode
 @Component({
 	selector: 'add-debt-dialog',
 	standalone: true,
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [DialogModule, FormsModule, DatePickerModule],
-	templateUrl: './debt.component.html',
-	styleUrl: './debt.component.scss'
+	templateUrl: './add-debt.component.html',
+	styleUrl: './add-debt.component.scss'
 })
 export class AddDebtDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();

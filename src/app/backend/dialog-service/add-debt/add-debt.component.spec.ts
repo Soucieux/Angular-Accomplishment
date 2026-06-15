@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AddDebtDialogComponent } from './debt.component';
+import { AddDebtDialogComponent } from './add-debt.component';
 import { NewDebtData } from '../../../fontend/debt/debt.model';
 
 describe('AddDebtDialogComponent', () => {

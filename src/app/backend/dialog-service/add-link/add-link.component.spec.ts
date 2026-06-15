@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
-import { LinkDialogComponent } from './link.component';
+import { AddLinkDialogComponent } from './add-link.component';
 import { DatabaseService } from '../../database-service/database.service';
 
-describe('LinkDialogComponent', () => {
-	let component: LinkDialogComponent;
-	let fixture: ComponentFixture<LinkDialogComponent>;
+describe('AddLinkDialogComponent', () => {
+	let component: AddLinkDialogComponent;
+	let fixture: ComponentFixture<AddLinkDialogComponent>;
 	let mockDb: jasmine.SpyObj<DatabaseService>;
 
 	beforeEach(async () => {
@@ -18,13 +18,13 @@ describe('LinkDialogComponent', () => {
 		mockDb.proxyFetch.and.returnValue(Promise.resolve({ content: '' }));
 
 		await TestBed.configureTestingModule({
-			imports: [LinkDialogComponent],
+			imports: [AddLinkDialogComponent],
 			providers: [
 				{ provide: DatabaseService, useValue: mockDb }
 			]
 		}).compileComponents();
 
-		fixture = TestBed.createComponent(LinkDialogComponent);
+		fixture = TestBed.createComponent(AddLinkDialogComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});

@@ -17,14 +17,14 @@ import {
 import { PortalCategory, NewLinkData } from '../../../fontend/portal/portal.model';
 
 @Component({
-	selector: 'link-dialog',
+	selector: 'add-link-dialog',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [DialogModule, FormsModule, SelectModule],
-	templateUrl: './link.component.html',
-	styleUrl: './link.component.scss'
+	templateUrl: './add-link.component.html',
+	styleUrl: './add-link.component.scss'
 })
-export class LinkDialogComponent implements OnInit, OnDestroy {
+export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	@Output() closed$ = new EventEmitter<void>();
 
 	protected readonly LINK_DIALOG_LABEL_ADD = LINK_DIALOG_LABEL_ADD;

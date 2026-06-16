@@ -255,7 +255,6 @@
 	background: #ffffff;
 	padding: 0.375rem 0.375rem 0.375rem 0;
 	overflow: hidden;
-	box-sizing: border-box;
 	transition:
 		background 0.18s,
 		border-color 0.18s;
@@ -969,7 +968,6 @@
 		border-color 0.2s,
 		box-shadow 0.2s;
 	width: 100%;
-	box-sizing: border-box;
 }
 
 .form-input:focus {

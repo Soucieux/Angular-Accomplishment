@@ -104,9 +104,6 @@
 	isolation: isolate;
 }
 
-.ed * {
-	box-sizing: border-box;
-}
 
 /* Printed inner frame */
 .ed::before {

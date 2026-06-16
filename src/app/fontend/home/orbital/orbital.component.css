@@ -1072,7 +1072,6 @@
 		width: 100%;
 		gap: 8px;
 		flex-shrink: 0;
-		box-sizing: border-box;
 		animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
 	}
 

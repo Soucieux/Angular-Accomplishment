@@ -28,7 +28,9 @@ import {
 	DIALOG_CONFIRM,
 	DIALOG_HEADER_SIGN_OUT,
 	LS_NAV_COLLAPSED_KEY,
-	MSG_LOGOUT_CONFIRM
+	MSG_LOGOUT_CONFIRM,
+	TAURI_CMD_START_DRAGGING,
+	TAURI_MODE_CLASS
 } from './common/app.constant';
 import { Observable, filter } from 'rxjs';
 import { BottomNavComponent } from './fontend/navigation/bottom-nav.component';
@@ -70,6 +72,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 	protected navCompact = false;
 	protected navMode: 'side' | 'over' = 'side';
 	protected compactOverlayOpen = false;
+	protected isTauriApp = false;
 	protected readonly navItems: NavItem[] = NAV_ITEMS;
 	protected readonly primaryIds: string[] = PRIMARY_IDS;
 	protected activeRoute = '';
@@ -87,6 +90,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (isPlatformBrowser(this.platformId)) {
 			this.navCollapsed = localStorage.getItem(LS_NAV_COLLAPSED_KEY) === 'true';
 			this.applyViewportState(window.innerWidth);
+			this.isTauriApp = '__TAURI_INTERNALS__' in window;
+			if (this.isTauriApp) {
+				document.body.classList.add(TAURI_MODE_CLASS);
+			}
 		}
 	}
 
@@ -302,6 +309,34 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
+	 * Initiates a native window drag when the user presses the left mouse button
+	 * on a designated drag surface in the Tauri desktop app. Uses the Tauri v2
+	 * internal invoke directly because the attribute-based data-tauri-drag-region
+	 * mechanism is unreliable inside Angular's zone.js event loop on repeat clicks.
+	 *
+	 * @param event - The MouseEvent from the mousedown binding on the drag surface.
+	 */
+	protected startWindowDrag(event: MouseEvent): void {
+		if (event.button !== 0) return;
+		(window as unknown as { __TAURI_INTERNALS__: { invoke: (cmd: string) => Promise<unknown> } })
+			.__TAURI_INTERNALS__.invoke(TAURI_CMD_START_DRAGGING).catch(() => {});
+	}
+
+	/**
+	 * Opens a sign-out confirmation dialog from the mobile bottom-nav account
+	 * popover, matching the behaviour of the desktop sign-out flow.
+	 */
+	protected handleMobileSignOut(): void {
+		this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, () => this.logout(), [
+			MSG_LOGOUT_CONFIRM,
+			DIALOG_HEADER_SIGN_OUT,
+			DIALOG_BTN_SIGN_OUT
+		]);
+	}
+
+	// ── Template helpers ──────────────────────────────────────────────────────
+
+	/**
 	 * Gets the display name for the signed-in user.
 	 *
 	 * @param user - The authenticated user object from the auth observable.
@@ -320,17 +355,5 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 */
 	protected getUserInitial(user: any): string {
 		return Utilities.getUserDisplayName(user).charAt(0).toUpperCase();
-	}
-
-	/**
-	 * Opens a sign-out confirmation dialog from the mobile bottom-nav account
-	 * popover, matching the behaviour of the desktop sign-out flow.
-	 */
-	protected handleMobileSignOut(): void {
-		this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, () => this.logout(), [
-			MSG_LOGOUT_CONFIRM,
-			DIALOG_HEADER_SIGN_OUT,
-			DIALOG_BTN_SIGN_OUT
-		]);
 	}
 }

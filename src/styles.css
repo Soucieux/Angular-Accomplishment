@@ -91,9 +91,12 @@ html {
 		/* CJK compatibility ideographs */ U+FE30-FE4F; /* CJK compatibility forms */
 }
 
-*,
-*::before,
-*::after {
+/* Global box-sizing reset — single source of truth for the entire project.
+   Every element and pseudo-element uses border-box so padding and border are
+   included in the declared width/height rather than added on top of it.
+   Do NOT add box-sizing: border-box to individual rules — this reset already
+   covers all elements and any per-element declaration is redundant noise. */
+*, *::before, *::after {
 	box-sizing: border-box;
 }
 
@@ -109,7 +112,6 @@ body {
 	font-family: 'app-font';
 	user-select: none;
 }
-
 
 /* Browser UA stylesheets reset font-family on form elements to the system font,
    breaking CSS inheritance. This rule restores inheritance from body for all of them. */
@@ -131,4 +133,32 @@ button,
 	.hide-on-narrow-or-mobile {
 		display: none !important;
 	}
+}
+
+/* ── Tauri app — glass card top-section coverage ────────────────────────────
+   The glass card uses a negative margin equal to mat-drawer-content's padding-top
+   so it rises to cover the header zone while staying within the container's box.
+   No overflow override is needed, preserving mat-drawer-content's scroll ability.
+   padding-top is raised to 40px (30px header + 10px original) so content
+   inside stays at the same screen position. Only affects the Tauri app. */
+body.tauri-mode .container-home,
+body.tauri-mode .container-entertainment,
+body.tauri-mode .container-resonance,
+body.tauri-mode .container-debt,
+body.tauri-mode .container-about {
+	min-height: calc(100dvh - 40px);
+}
+
+/* access-denied-wrapper uses height: calc(100dvh - 10px) to centre the message.
+   In Tauri mode the full height chain eats 58px: 8px mat-drawer-content margin +
+   30px header padding + 20px container or glass-card top+bottom padding. */
+body.tauri-mode .access-denied-wrapper {
+	height: calc(100dvh - 58px);
+}
+
+body.tauri-mode .glass-card {
+	margin-top: -30px;
+	height: calc(100% + 30px);
+	padding-top: 40px;
+	border-radius: 0 0 18px 18px;
 }

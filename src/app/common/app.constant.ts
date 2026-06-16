@@ -88,6 +88,10 @@ export const HISTORY_STYLE_DELETED = 'solid red';
 export const APP_BREAKPOINT_COMPACT = 1300;
 /** Layout breakpoint for narrow viewport mode: below this width the sidebar collapses to an icon-only strip and nav labels are hidden. */
 export const APP_BREAKPOINT_NARROW = 940;
+/** CSS class added to &lt;body&gt; when running inside the Tauri desktop app — scopes Tauri-only global styles. */
+export const TAURI_MODE_CLASS = 'tauri-mode';
+/** Tauri v2 IPC command that initiates native window dragging via the plugin:window plugin. */
+export const TAURI_CMD_START_DRAGGING = 'plugin:window|start_dragging';
 export const COMPONENT_DESTROY = 'Component Destroyed';
 export const UTILITIES_LOG_COUNTRY_FAILED = 'Country detection failed';
 export const UTILITIES_LOG_DEFAULT_COUNTRY = 'Use default country: ';
@@ -396,6 +400,7 @@ export const ENT_MSG_DELETE_CONFIRM_PREFIX = 'Are you sure you want to delete ';
 export const ENT_DIALOG_TITLE_ADD_MOVIE = 'Add New Movie';
 export const ENT_DIALOG_TITLE_SEARCH = 'Searching latest rate for each movie...';
 export const ENT_DIALOG_TITLE_DELETE_MOVIE = 'Delete Movie';
+export const ENT_MSG_LOADING = 'Loading movies...';
 export const ENT_MSG_ADDING = 'Adding movie...';
 export const ENT_MSG_RESTORING = 'Restoring movie...';
 export const ENT_MSG_ADD_DIALOG_SEARCH_FAILED = 'Error while searching new movie from add dialog';

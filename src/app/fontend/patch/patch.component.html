@@ -1,12 +1,20 @@
 @if (utilities.getIsUserAlive()) {
 	<div class="glass-card container-patch">
-		<div class="page-header">
-			<div class="eyebrow">Progress Tracker</div>
-			<h1 class="page-title">Patch Notes</h1>
-			<p class="page-subtitle">Development history and open items</p>
-			<div class="header-ornament"></div>
+		<div class="page-header-row">
+			<div class="page-header">
+				<div class="eyebrow">Progress Tracker</div>
+				<h1 class="page-title">{{ currentView === PATCH_VIEW_PATCH ? PATCH_LABEL_PATCH_NOTES : PATCH_LABEL_RELEASE_NOTES }}</h1>
+				<p class="page-subtitle">{{ currentView === PATCH_VIEW_PATCH ? PATCH_SUBTITLE_PATCH_NOTES : PATCH_SUBTITLE_RELEASE_NOTES }}</p>
+				<div class="header-ornament"></div>
+			</div>
+			<div class="view-switch">
+				<span class="view-switch__thumb" [class.is-release]="currentView === PATCH_VIEW_RELEASE"></span>
+				<button type="button" class="view-switch__button" [class.is-active]="currentView === PATCH_VIEW_PATCH" (click)="selectView(PATCH_VIEW_PATCH)">{{ PATCH_LABEL_PATCH_NOTES }}</button>
+				<button type="button" class="view-switch__button" [class.is-active]="currentView === PATCH_VIEW_RELEASE" (click)="selectView(PATCH_VIEW_RELEASE)">{{ PATCH_LABEL_RELEASE_NOTES }}</button>
+			</div>
 		</div>
 
+		@if (currentView === 'patch') {
 		<div class="toolbar">
 			<label class="search">
 				<span class="material-symbols-outlined">search</span>
@@ -339,6 +347,9 @@
 				}
 			</ng-template>
 		</p-table>
+		} @else {
+			<div class="release-placeholder"></div>
+		}
 		<ng-container #dialogComponentContainer></ng-container>
 	</div>
 } @else {

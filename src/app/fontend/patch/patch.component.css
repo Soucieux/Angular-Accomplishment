@@ -9,8 +9,83 @@
 /* ─────────────────────────────────────────
    Page header
 ───────────────────────────────────────── */
-.page-header {
+.page-header-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
 	margin-bottom: 14px;
+}
+
+.page-header {
+	margin-bottom: 0;
+}
+
+/* ─────────────────────────────────────────
+   View switch — sliding thumb (inline)
+───────────────────────────────────────── */
+.view-switch {
+	--view-switch-width: 150px;
+	position: relative;
+	display: inline-flex;
+	flex-shrink: 0;
+	align-self: flex-start;
+	background: #ece9f8;
+	padding: 5px;
+	border-radius: 13px;
+	border: 1px solid #e0dbf3;
+}
+
+.view-switch__thumb {
+	position: absolute;
+	top: 3px;
+	bottom: 3px;
+	left: 4px;
+	width: var(--view-switch-width);
+	border-radius: 10px;
+	background: linear-gradient(135deg, #7a7cf0, #9a6ae6);
+	box-shadow: 0 4px 12px rgba(124, 108, 240, 0.35);
+	transition: transform 0.25s ease;
+}
+
+.view-switch__thumb.is-release {
+	transform: translateX(var(--view-switch-width));
+}
+
+.view-switch__button {
+	position: relative;
+	z-index: 1;
+	width: var(--view-switch-width);
+	padding: 10px 0;
+	text-align: center;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	font: inherit;
+	font-size: 15px;
+	font-weight: 700;
+	white-space: nowrap;
+	color: #8b84a0;
+	transition: color 0.25s ease;
+}
+
+.view-switch__button.is-active {
+	color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.view-switch__thumb,
+	.view-switch__button {
+		transition: none;
+	}
+}
+
+/* ─────────────────────────────────────────
+   Release Notes placeholder
+───────────────────────────────────────── */
+.release-placeholder {
+	flex: 1;
+	min-height: 400px;
 }
 
 .eyebrow {
@@ -909,7 +984,7 @@
 	}
 }
 
-.page-header {
+.page-header-row {
 	animation: pnReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .toolbar {

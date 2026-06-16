@@ -753,3 +753,10 @@ export const STATUS_COMPLETED = 'Completed';
 export const STATUS_DEBUG = 'Debug';
 export const STATUS_DRAFT = 'Draft';
 export const STATUS_RESOLVED = 'Resolved';
+
+export const PATCH_LABEL_PATCH_NOTES = 'Patch Notes';
+export const PATCH_LABEL_RELEASE_NOTES = 'Release Notes';
+export const PATCH_SUBTITLE_PATCH_NOTES = 'Development history and open items';
+export const PATCH_SUBTITLE_RELEASE_NOTES = 'Published versions and release history';
+export const PATCH_VIEW_PATCH = 'patch';
+export const PATCH_VIEW_RELEASE = 'release';

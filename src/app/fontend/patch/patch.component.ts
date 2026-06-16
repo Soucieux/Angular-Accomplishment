@@ -40,7 +40,13 @@ import {
 	PATCH_SEVERITY_ICON_IN_PROGRESS,
 	PATCH_SEVERITY_ICON_COMPLETED,
 	PATCH_SEVERITY_ICON_DEBUG,
-	PATCH_SEVERITY_ICON_DRAFT
+	PATCH_SEVERITY_ICON_DRAFT,
+	PATCH_LABEL_PATCH_NOTES,
+	PATCH_LABEL_RELEASE_NOTES,
+	PATCH_SUBTITLE_PATCH_NOTES,
+	PATCH_SUBTITLE_RELEASE_NOTES,
+	PATCH_VIEW_PATCH,
+	PATCH_VIEW_RELEASE
 } from '../../common/app.constant';
 import { firstValueFrom, Observable, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -75,6 +81,13 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private dialogComponentContainer!: ViewContainerRef;
 
 	protected readonly Utilities = Utilities;
+	protected readonly PATCH_VIEW_PATCH = PATCH_VIEW_PATCH;
+	protected readonly PATCH_VIEW_RELEASE = PATCH_VIEW_RELEASE;
+	protected readonly PATCH_LABEL_PATCH_NOTES = PATCH_LABEL_PATCH_NOTES;
+	protected readonly PATCH_LABEL_RELEASE_NOTES = PATCH_LABEL_RELEASE_NOTES;
+	protected readonly PATCH_SUBTITLE_PATCH_NOTES = PATCH_SUBTITLE_PATCH_NOTES;
+	protected readonly PATCH_SUBTITLE_RELEASE_NOTES = PATCH_SUBTITLE_RELEASE_NOTES;
+	protected currentView: 'patch' | 'release' = PATCH_VIEW_PATCH;
 	/**
 	 * All available components that can be selected in the add-entry dropdown.
 	 *
@@ -288,6 +301,15 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	ngOnDestroy() {
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
+	}
+
+	/**
+	 * Switches the active view between Patch Notes and Release Notes.
+	 *
+	 * @param view - The view identifier to activate.
+	 */
+	protected selectView(view: 'patch' | 'release'): void {
+		this.currentView = view;
 	}
 
 	/**

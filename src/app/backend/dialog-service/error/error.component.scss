@@ -1,3 +1,6 @@
+/* ─────────────────────────────────────────
+   p-dialog shell overrides
+───────────────────────────────────────── */
 ::ng-deep .error-dialog {
 	width: 380px;
 	border-radius: 20px !important;
@@ -61,6 +64,9 @@
 	display: none !important;
 }
 
+/* ─────────────────────────────────────────
+   Error message
+───────────────────────────────────────── */
 ::ng-deep .error-dialog-message {
 	text-align: center;
 	display: flex;
@@ -72,6 +78,9 @@
 	color: rgba(40, 15, 35, 0.8);
 }
 
+/* ─────────────────────────────────────────
+   Responsive ≤ 580 px (mobile)
+───────────────────────────────────────── */
 @media (max-width: 580px) {
 	::ng-deep .error-dialog {
 		min-width: 100% !important;

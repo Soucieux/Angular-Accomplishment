@@ -1,3 +1,6 @@
+/* ─────────────────────────────────────────
+   p-dialog shell overrides
+───────────────────────────────────────── */
 ::ng-deep .confirm-dialog {
 	width: 380px;
 	border-radius: 20px !important;
@@ -93,6 +96,9 @@
 	font-weight: 600 !important;
 }
 
+/* ─────────────────────────────────────────
+   Responsive ≤ 580 px (mobile)
+───────────────────────────────────────── */
 @media (max-width: 580px) {
 	::ng-deep .confirm-dialog {
 		min-width: 100% !important;

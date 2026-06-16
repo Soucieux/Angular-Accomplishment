@@ -1,4 +1,6 @@
-/* ── p-dialog shell overrides ───────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   p-dialog shell overrides
+───────────────────────────────────────── */
 ::ng-deep .add-debt-dialog {
 	width: 440px;
 	border-radius: 20px !important;
@@ -33,14 +35,18 @@
 	gap: 10px !important;
 }
 
-/* ── Dialog title ───────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Dialog title
+───────────────────────────────────────── */
 .add-debt-dialog-title {
 	font-size: 20px;
 	font-weight: 700;
 	color: #fff !important;
 }
 
-/* ── Form field ─────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Form field
+───────────────────────────────────────── */
 .add-debt-field {
 	display: flex;
 	flex-direction: column;
@@ -84,7 +90,9 @@
 	gap: 14px;
 }
 
-/* ── Category grid ──────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Category grid
+───────────────────────────────────────── */
 .add-debt-category-grid {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
@@ -146,7 +154,9 @@
 	color: #d53369;
 }
 
-/* ── Currency picker ────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Currency picker
+───────────────────────────────────────── */
 .add-debt-currency-picker {
 	display: flex;
 	gap: 8px;
@@ -187,7 +197,9 @@
 	}
 }
 
-/* ── Permanent toggle ───────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Permanent toggle
+───────────────────────────────────────── */
 .add-debt-permanent-toggle {
 	display: flex;
 	align-items: center;
@@ -273,7 +285,9 @@
 	transform: translateX(18px);
 }
 
-/* ── Footer buttons ─────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Footer buttons
+───────────────────────────────────────── */
 .add-debt-button-ghost {
 	border: 1.5px solid rgba(213, 51, 105, 0.4);
 	background: transparent;
@@ -316,7 +330,9 @@
 	}
 }
 
-/* ── Responsive ≤ 940 px (mobile) ───────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Responsive ≤ 940 px (mobile)
+───────────────────────────────────────── */
 @media (max-width: 940px) {
 	::ng-deep .add-debt-dialog {
 		width: 100% !important;

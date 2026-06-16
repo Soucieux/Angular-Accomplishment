@@ -1,3 +1,6 @@
+/* ─────────────────────────────────────────
+   p-dialog shell overrides
+───────────────────────────────────────── */
 ::ng-deep .blocking-dialog {
 	width: min(380px, calc(100dvw - 2rem));
 	border-radius: 20px !important;
@@ -32,6 +35,9 @@
 	display: none !important;
 }
 
+/* ─────────────────────────────────────────
+   Component styles
+───────────────────────────────────────── */
 .blocking-content {
 	display: flex;
 	flex-direction: column;

@@ -1,3 +1,6 @@
+/* ─────────────────────────────────────────
+   p-dialog shell overrides
+───────────────────────────────────────── */
 ::ng-deep .add-dialog {
 	width: 560px;
 	border-radius: 20px !important;
@@ -44,7 +47,9 @@
 	bottom: 0 !important;
 }
 
-/* Inputs */
+/* ─────────────────────────────────────────
+   Inputs
+───────────────────────────────────────── */
 ::ng-deep .add-dialog [pinputtext] {
 	height: 35px !important;
 	border-radius: 10px !important;
@@ -71,7 +76,9 @@
 	}
 }
 
-/* Dropdowns */
+/* ─────────────────────────────────────────
+   Dropdowns
+───────────────────────────────────────── */
 ::ng-deep .add-dialog .p-select {
 	height: 35px !important;
 	border-radius: 10px !important;
@@ -91,7 +98,9 @@
 	}
 }
 
-/* Footer buttons — shared compact sizing */
+/* ─────────────────────────────────────────
+   Footer buttons — shared compact sizing
+───────────────────────────────────────── */
 ::ng-deep .add-dialog .p-dialog-footer .p-button {
 	height: 32px !important;
 	padding: 0 14px !important;
@@ -99,21 +108,27 @@
 	border-radius: 9px !important;
 }
 
-/* Search button */
+/* ─────────────────────────────────────────
+   Search button
+───────────────────────────────────────── */
 ::ng-deep .add-dialog .p-dialog-footer .p-button[severity='primary'] {
 	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 	border: none !important;
 	color: white !important;
 }
 
-/* Cancel button */
+/* ─────────────────────────────────────────
+   Cancel button
+───────────────────────────────────────── */
 ::ng-deep .add-dialog .p-dialog-footer .p-button[severity='secondary'] {
 	background: transparent !important;
 	border: 1.5px solid rgba(213, 51, 105, 0.4) !important;
 	color: rgba(213, 51, 105, 0.85) !important;
 }
 
-/* Submit button */
+/* ─────────────────────────────────────────
+   Submit button
+───────────────────────────────────────── */
 ::ng-deep .add-dialog .p-dialog-footer .submit-button .p-button {
 	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
 	border: none !important;
@@ -121,6 +136,9 @@
 	font-weight: 600 !important;
 }
 
+/* ─────────────────────────────────────────
+   Component styles
+───────────────────────────────────────── */
 .dialog-subtitle {
 	font-size: 13px;
 	color: rgba(40, 15, 35, 0.5);
@@ -178,6 +196,9 @@
 	margin-bottom: 0;
 }
 
+/* ─────────────────────────────────────────
+   Responsive ≤ 580 px (mobile)
+───────────────────────────────────────── */
 @media (max-width: 580px) {
 	::ng-deep .add-dialog {
 		min-width: 100% !important;

@@ -348,7 +348,84 @@
 			</ng-template>
 		</p-table>
 		} @else {
-			<div class="release-placeholder"></div>
+			@if (releaseNotes$ | async; as notes) {
+				@if (notes[0]; as latest) {
+					<section class="release-hero">
+						<div class="hero-body">
+							<span class="release-badge">{{ latest.badge }} &middot; {{ latest.version }}</span>
+							<h2 class="hero-title">{{ latest.title }}</h2>
+							<div class="hero-date">{{ latest.date }}</div>
+							<p class="hero-summary">{{ latest.summary }}</p>
+							<div class="release-sections">
+								@for (section of latest.sections; track section.heading) {
+									@if (section.items.length > 0) {
+										<div class="release-section">
+											<div class="section-heading">{{ section.heading }}</div>
+											<ul class="section-items">
+												@for (item of section.items; track item) {
+													<li class="section-item">{{ item }}</li>
+												}
+											</ul>
+										</div>
+									}
+								}
+							</div>
+							<div class="chips">
+								@for (section of latest.sections; track section.heading) {
+									<span class="chip">
+										<span class="dot"></span>{{ section.items.length }} {{ section.heading }}
+									</span>
+								}
+							</div>
+						</div>
+					</section>
+					@if (notes.length > 1) {
+						<div class="previous-label">Previous releases</div>
+						<div class="release-list">
+							@for (rel of notes.slice(1); track rel.version) {
+								<div class="release-row">
+									<span class="rel-version">{{ rel.version }}</span>
+									<div class="rel-main">
+										<div class="rel-title">{{ rel.title }}</div>
+										<div class="rel-summary">{{ rel.summary }}</div>
+									</div>
+									<div class="rel-counts">
+										@for (section of rel.sections.slice(0, 3); track section.heading) {
+											<span class="count">{{ section.items.length }} {{ section.heading }}</span>
+										}
+									</div>
+									<span class="rel-date">{{ rel.date }}</span>
+								</div>
+							}
+						</div>
+					}
+				}
+			} @else {
+				<section class="release-hero">
+					<div class="hero-body">
+						<div class="hero-skeleton-row"><p-skeleton width="9rem" height="1.25rem" borderRadius="999px" /></div>
+						<div class="hero-skeleton-row"><p-skeleton width="20rem" height="2.25rem" /></div>
+						<div class="hero-skeleton-row"><p-skeleton width="7rem" height="0.9rem" /></div>
+						<div class="hero-skeleton-row"><p-skeleton width="100%" height="1rem" /></div>
+						<div class="hero-skeleton-row"><p-skeleton width="80%" height="1rem" /></div>
+						<div class="release-sections">
+							@for (_ of [0, 1, 2]; track $index) {
+								<div class="release-section">
+									<div class="hero-skeleton-row"><p-skeleton width="4rem" height="0.75rem" /></div>
+									<div class="hero-skeleton-row"><p-skeleton width="100%" height="0.85rem" /></div>
+									<div class="hero-skeleton-row"><p-skeleton width="90%" height="0.85rem" /></div>
+									<div class="hero-skeleton-row"><p-skeleton width="95%" height="0.85rem" /></div>
+								</div>
+							}
+						</div>
+						<div class="chips">
+							@for (_ of [0, 1, 2, 3]; track $index) {
+								<p-skeleton width="5.5rem" height="2rem" borderRadius="999px" />
+							}
+						</div>
+					</div>
+				</section>
+			}
 		}
 		<ng-container #dialogComponentContainer></ng-container>
 	</div>

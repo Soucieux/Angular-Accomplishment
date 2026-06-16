@@ -144,6 +144,7 @@ export const DATABASE_HISTORY = 'history';
 export const DATABASE_MOVIES = 'movies';
 export const DATABASE_RECIPES = 'recipes';
 export const DATABASE_PATCH_NOTES = 'patch_notes';
+export const DATABASE_RELEASE_NOTES = 'release_notes';
 export const DATABASE_QUOTES = 'quotes';
 export const DATABASE_DATE_CALCULATOR = 'date_calculator';
 export const DATABASE_DEBT_SONATA = 'debt_sonata';

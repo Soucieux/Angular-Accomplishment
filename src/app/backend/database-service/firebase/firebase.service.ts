@@ -264,6 +264,15 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Gets the release notes. Firebase is not used in production; returns an empty list.
+	 *
+	 * @returns An observable that immediately emits an empty array.
+	 */
+	public getReleaseNotes(): Observable<any[]> {
+		return of([]);
+	}
+
+	/**
 	 * Gets the patch notes from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the patch notes.

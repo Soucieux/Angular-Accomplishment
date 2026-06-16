@@ -13,6 +13,7 @@ import {
 	DATABASE_HISTORY,
 	DATABASE_MOVIES,
 	DATABASE_PATCH_NOTES,
+	DATABASE_RELEASE_NOTES,
 	DATABASE_QUOTES,
 	DATABASE_REMINDER,
 	DATABASE_STATISTICS,
@@ -447,6 +448,31 @@ export class CloudbaseService extends DatabaseService {
 				};
 			})
 		);
+	}
+
+	/**
+	 * Gets the release notes from CloudBase as a one-shot observable, ordered newest first.
+	 *
+	 * @returns An observable that emits the release notes list once and completes.
+	 */
+	public getReleaseNotes(): Observable<any[]> {
+		return new Observable<any[]>((observer) => {
+			CloudbaseService.authReady$.pipe(take(1)).subscribe(() => {
+				this.database
+					.collection(DATABASE_RELEASE_NOTES)
+					.orderBy('order', 'desc')
+					.get()
+					.then((res: any) => {
+						const docs: any[] = res.data ?? [];
+						observer.next(docs.map((doc: any) => {
+							const { _id, _openid, order, ...rest } = doc;
+							return rest;
+						}));
+						observer.complete();
+					})
+					.catch((error: unknown) => observer.error(error));
+			});
+		}).pipe(shareReplay(1));
 	}
 
 	/**

@@ -97,6 +97,13 @@ export abstract class DatabaseService {
 	 */
 	public abstract getPatchNotes(): Observable<any[]>;
 
+	/**
+	 * Gets the release notes from the database as a one-shot observable, ordered newest first.
+	 *
+	 * @returns An observable that emits the release notes list.
+	 */
+	public abstract getReleaseNotes(): Observable<any[]>;
+
 	////////////////////// Below are Update methods for database records /////////////////////
 
 	/**

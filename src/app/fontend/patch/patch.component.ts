@@ -48,7 +48,8 @@ import {
 	PATCH_VIEW_PATCH,
 	PATCH_VIEW_RELEASE
 } from '../../common/app.constant';
-import { firstValueFrom, Observable, tap } from 'rxjs';
+import { ReleaseNote } from './patch.model';
+import { Observable, catchError, defer, firstValueFrom, of, startWith, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
@@ -88,6 +89,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly PATCH_SUBTITLE_PATCH_NOTES = PATCH_SUBTITLE_PATCH_NOTES;
 	protected readonly PATCH_SUBTITLE_RELEASE_NOTES = PATCH_SUBTITLE_RELEASE_NOTES;
 	protected currentView: 'patch' | 'release' = PATCH_VIEW_PATCH;
+	protected readonly releaseNotes$ = defer(() =>
+		this.databaseService.getReleaseNotes()
+	).pipe(
+		startWith(null as ReleaseNote[] | null),
+		catchError(() => of([] as ReleaseNote[]))
+	);
 	/**
 	 * All available components that can be selected in the add-entry dropdown.
 	 *

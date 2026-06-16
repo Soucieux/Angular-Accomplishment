@@ -18,6 +18,7 @@ import {
 	DIALOG_BTN_DELETE,
 	ENT_MSG_DELETE_CONFIRM_PREFIX,
 	ENT_DIALOG_TITLE_DELETE_MOVIE,
+	ENT_MSG_LOADING,
 	ENT_MSG_ADDING,
 	ENT_MSG_RESTORING,
 	CN,
@@ -127,8 +128,10 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected readonly ENT_TOOLTIP_HISTORY = ENT_TOOLTIP_HISTORY;
 	protected readonly ENT_TITLE_PAGE = ENT_TITLE_PAGE;
 	protected readonly ENT_SEARCH_PLACEHOLDER = ENT_SEARCH_PLACEHOLDER;
+	protected readonly ENT_MSG_LOADING = ENT_MSG_LOADING;
 	protected readonly ENT_LABEL_FILMS = ENT_LABEL_FILMS;
 	protected readonly ENT_LABEL_TO_WATCH = ENT_LABEL_TO_WATCH;
+	protected isMoviesLoading = true;
 	protected isSearching: boolean = false;
 	private sessionId: number = 0;
 	protected movieList$!: Observable<MovieItemVO[]>;
@@ -173,11 +176,17 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			this.statistics$ = this.databaseService.getStatistics();
 
 			// One-time pre-check to make sure user have permission to read data in the database
-			await firstValueFrom(this.statistics$.pipe(take(1)));
+			try {
+				await firstValueFrom(this.statistics$.pipe(take(1)));
+			} catch {
+				this.isMoviesLoading = false;
+				return;
+			}
 			// Below part will be executed only if there is no error reading data in the database
 			this.movieList$ = this.databaseService.getMovieList();
 			this.movieListSub = this.movieList$.subscribe((list) => {
 				this.latestMovieList = list;
+				if (this.isMoviesLoading) this.isMoviesLoading = false;
 			});
 
 			// Create a filter that reacts to genre selection and text search simultaneously

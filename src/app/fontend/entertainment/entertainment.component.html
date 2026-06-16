@@ -82,6 +82,12 @@
 		</div>
 
 		<div class="content-container">
+			@if (isMoviesLoading) {
+				<div class="movies-loading">
+					<span class="movies-loading-spinner"></span>
+					<span class="movies-loading-text">{{ ENT_MSG_LOADING }}</span>
+				</div>
+			}
 			@for (movie of filteredMovieList$ | async; track movie.getMovieId()) {
 				<div
 					class="individual-item"
@@ -201,9 +207,9 @@
 			}
 		</div>
 	</div>
-	<ng-container #dialogComponentContainer></ng-container>
 } @else {
 	<div class="access-denied-wrapper">
 		<access-denied />
 	</div>
 }
+<ng-container #dialogComponentContainer></ng-container>

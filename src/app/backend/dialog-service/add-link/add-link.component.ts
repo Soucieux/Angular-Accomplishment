@@ -4,7 +4,7 @@ import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../database-service/database.service';
-import { Utilities } from '../../../common/app.utilities';
+import { Utilities } from '../../../common/utilities/app.utilities';
 import {
 	LINK_DIALOG_LABEL_ADD,
 	LINK_DIALOG_LABEL_CANCEL,

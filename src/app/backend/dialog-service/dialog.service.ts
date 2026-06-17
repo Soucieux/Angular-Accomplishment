@@ -32,7 +32,7 @@ import {
 import { MessageService } from 'primeng/api';
 import { IngredientDialogComponent } from './ingredient/ingredient.component';
 import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 import { AddDebtDialogComponent } from './add-debt/add-debt.component';
 import { NewDebtData } from '../../fontend/debt/debt.model';
 import { AddLinkDialogComponent } from './add-link/add-link.component';

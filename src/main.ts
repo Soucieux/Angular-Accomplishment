@@ -1,7 +1,7 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
-import { Utilities } from './app/common/app.utilities';
+import { Utilities } from './app/common/utilities/app.utilities';
 import { CN } from './app/common/app.constant';
 import {
 	CLOUDBASE,
@@ -14,6 +14,10 @@ import { CloudbaseService } from './app/backend/database-service/cloudbase/cloud
 import { FirebaseService } from './app/backend/database-service/firebase/firebase.service';
 import { LOG } from './app/common/app.logs';
 import { environment } from './environment/environment';
+
+if ('__TAURI_INTERNALS__' in window) {
+	document.addEventListener('contextmenu', (e) => e.preventDefault(), true);
+}
 
 void (async () => {
 	const className = 'Main';

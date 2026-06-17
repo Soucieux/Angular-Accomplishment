@@ -1,6 +1,6 @@
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 import { SearchStreamService } from '../../backend/dialog-service/search/search-stream.service';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	COMPONENT_DESTROY,
 	DIALOG_ADD,

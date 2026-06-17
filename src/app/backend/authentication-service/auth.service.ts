@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 import { LOG } from '../../common/app.logs';
 import { DatabaseService, FIREBASE_AUTH } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 import { CLOUDBASE_ERROR_INVALID_ARGUMENT, CLOUDBASE_ERROR_INVALID_CREDENTIALS, CN, MSG_UNEXPECTED_ERROR } from '../../common/app.constant';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { wrongVerificationCodeError } from '../../common/error/wrong-verification-code';

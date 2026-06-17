@@ -4,7 +4,7 @@ import { MessageService } from 'primeng/api';
 import { BehaviorSubject, ReplaySubject } from 'rxjs';
 
 import { CN } from './common/app.constant';
-import { Utilities } from './common/app.utilities';
+import { Utilities } from './common/utilities/app.utilities';
 import { AppComponent } from './app.component';
 import { AuthService } from './backend/authentication-service/auth.service';
 import { CloudbaseService } from './backend/database-service/cloudbase/cloudbase.service';

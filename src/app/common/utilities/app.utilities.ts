@@ -2,8 +2,8 @@ import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { format } from 'date-fns';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
-import { LOG } from './app.logs';
+import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
+import { LOG } from '../app.logs';
 import {
 	APP_BREAKPOINT_NARROW,
 	CN,
@@ -22,8 +22,8 @@ import {
 	RECIPE_CATEGORY_DESSERT,
 	RECIPE_CATEGORY_QUICK,
 	RECIPE_CATEGORY_WESTERN
-} from './app.constant';
-import { CloudbaseService } from '../backend/database-service/cloudbase/cloudbase.service';
+} from '../app.constant';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {

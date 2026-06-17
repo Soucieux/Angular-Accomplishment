@@ -1,4 +1,4 @@
-import { Utilities } from '../../../common/app.utilities';
+import { Utilities } from '../../../common/utilities/app.utilities';
 import {
 	DATABASE_DATE_CALCULATOR,
 	DATABASE_DEBT_SONATA,

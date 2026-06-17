@@ -6,7 +6,7 @@ import { DEBT_CURRENCY_CNY, DEBT_VALUE_KEY_CURRENCY } from '../../common/app.con
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 import { DebtComponent } from './debt.component';
 
 /** Minimal Account Expenses row factory. */

@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	REMINDER_VALUE_KEY_DATE,
 	REMINDER_VALUE_KEY_LINK,

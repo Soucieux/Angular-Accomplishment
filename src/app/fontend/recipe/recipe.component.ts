@@ -23,7 +23,7 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 import {
 
 	COMPONENT_DESTROY,

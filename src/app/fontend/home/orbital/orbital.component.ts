@@ -34,7 +34,7 @@ import {
 import { HomeStats, RecentActivityItem } from '../home.model';
 import { PortalCategory, PortalLink } from '../../portal/portal.model';
 import { DEBT_CATEGORY_DEFS } from '../../debt/debt.model';
-import { Utilities } from '../../../common/app.utilities';
+import { Utilities } from '../../../common/utilities/app.utilities';
 import {
 	ACTIVITY_SOURCE_DATE_CALCULATOR,
 	ACTIVITY_SOURCE_DEBT,

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { MovieItemVO } from '../fontend/entertainment/movieItem.vo';
+import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 
 import { Utilities } from './app.utilities';
 import {
@@ -15,7 +15,7 @@ import {
 	RECIPE_CATEGORY_DESSERT,
 	RECIPE_CATEGORY_QUICK,
 	RECIPE_CATEGORY_WESTERN
-} from './app.constant';
+} from '../app.constant';
 
 describe('Utilities', () => {
 	// ── getRelativeTime ────────────────────────────────────────────────────

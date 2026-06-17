@@ -7,7 +7,7 @@ import { BehaviorSubject, of, ReplaySubject } from 'rxjs';
 import { AuthService } from './auth.service';
 import { DatabaseService } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 import { CN, CLOUDBASE_ERROR_INVALID_CREDENTIALS } from '../../common/app.constant';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 

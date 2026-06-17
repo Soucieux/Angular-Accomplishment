@@ -5,7 +5,7 @@ import { shareReplay, switchMap, take, filter } from 'rxjs/operators';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
 import { LOG } from '../../../common/app.logs';
-import { Utilities } from '../../../common/app.utilities';
+import { Utilities } from '../../../common/utilities/app.utilities';
 import { environment } from '../../../../environment/environment';
 import {
 	DATABASE_DATE_CALCULATOR,

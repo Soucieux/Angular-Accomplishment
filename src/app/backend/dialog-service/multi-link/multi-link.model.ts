@@ -1,4 +1,4 @@
-import { Utilities } from '../../../common/app.utilities';
+import { Utilities } from '../../../common/utilities/app.utilities';
 
 /** Status of favicon fetch for a single parsed link. */
 export type LinkStatus = 'loading' | 'ready' | 'error';

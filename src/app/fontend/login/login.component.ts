@@ -22,7 +22,7 @@ import { Draggable } from 'gsap/Draggable';
 
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	CN,
 	COMPONENT_DESTROY,

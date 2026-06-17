@@ -155,10 +155,9 @@
 									<span class="account-row-name">{{ getUserDisplayName(user) }}</span>
 									<span class="account-row-status">Online</span>
 								</span>
-								<span
-									class="material-symbols-outlined account-row-chevron"
-									>{{ accountMenuOpen ? 'expand_more' : 'expand_less' }}</span
-								>
+								<span class="material-symbols-outlined account-row-chevron">{{
+									accountMenuOpen ? 'expand_more' : 'expand_less'
+								}}</span>
 							</button>
 						</div>
 					</li>
@@ -207,5 +206,11 @@
 		<div class="traffic-lights-spacer" (mousedown)="startWindowDrag($event)"></div>
 		<div class="header-drag-fill" (mousedown)="startWindowDrag($event)"></div>
 	</div>
+	<desktop-context-menu
+		[visible]="ctxVisible"
+		[x]="ctxX"
+		[y]="ctxY"
+		[actions]="ctxActions"
+		(close)="closeCtxMenu()" />
 }
 <ng-container #dialogComponentContainer></ng-container>

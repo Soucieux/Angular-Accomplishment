@@ -19,11 +19,26 @@ import { NotificationService } from './backend/notification-service/notification
 import { LOG } from './common/app.logs';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastModule } from 'primeng/toast';
-import { Utilities } from './common/app.utilities';
+import { Utilities } from './common/utilities/app.utilities';
 import {
 	APP_BREAKPOINT_COMPACT,
 	CN,
 	COMPONENT_DESTROY,
+	CTX_COLOR_CLIPBOARD,
+	CTX_COLOR_SIGN_IN,
+	CTX_COLOR_SIGN_OUT,
+	CTX_ICON_COPY,
+	CTX_ICON_CUT,
+	CTX_ICON_PASTE,
+	CTX_ICON_SELECT_ALL,
+	CTX_ICON_SIGN_IN,
+	CTX_ICON_SIGN_OUT,
+	CTX_LABEL_COPY,
+	CTX_LABEL_CUT,
+	CTX_LABEL_PASTE,
+	CTX_LABEL_SELECT_ALL,
+	CTX_LABEL_SIGN_IN,
+	CTX_LABEL_SIGN_OUT,
 	DIALOG_BTN_SIGN_OUT,
 	DIALOG_CONFIRM,
 	DIALOG_HEADER_SIGN_OUT,
@@ -32,15 +47,17 @@ import {
 	TAURI_CMD_START_DRAGGING,
 	TAURI_MODE_CLASS
 } from './common/app.constant';
+import { ContextMenuAction, DesktopContextMenuComponent } from './fontend/desktop-context-menu/context-menu.component';
+import { readText } from '@tauri-apps/plugin-clipboard-manager';
 import { Observable, filter } from 'rxjs';
-import { BottomNavComponent } from './fontend/navigation/bottom-nav.component';
-import { NavItem } from './fontend/navigation/bottom-nav.model';
+import { BottomNavComponent } from './fontend/mobile-bottom-nav/bottom-nav.component';
+import { NavItem } from './fontend/mobile-bottom-nav/bottom-nav.model';
 import {
 	NAV_ID_TO_ROUTE,
 	NAV_ITEMS,
 	PRIMARY_IDS,
 	ROUTE_TO_NAV_ID
-} from './fontend/navigation/bottom-nav.data';
+} from './fontend/mobile-bottom-nav/bottom-nav.data';
 
 @Component({
 	selector: 'root',
@@ -54,7 +71,8 @@ import {
 		MatRippleModule,
 		MatIconModule,
 		ToastModule,
-		BottomNavComponent
+		BottomNavComponent,
+		DesktopContextMenuComponent
 	],
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
@@ -73,6 +91,12 @@ export class AppComponent implements OnInit, AfterViewInit {
 	protected navMode: 'side' | 'over' = 'side';
 	protected compactOverlayOpen = false;
 	protected isTauriApp = false;
+	protected ctxVisible = false;
+	protected ctxX = 0;
+	protected ctxY = 0;
+	protected ctxActions: ContextMenuAction[] = [];
+	private ctxSavedSelection: { el: HTMLInputElement | HTMLTextAreaElement; start: number | null; end: number | null } | null = null;
+	private readonly ctxNavItems = NAV_ITEMS.filter((item) => ['home', 'reminder'].includes(item.id));
 	protected readonly navItems: NavItem[] = NAV_ITEMS;
 	protected readonly primaryIds: string[] = PRIMARY_IDS;
 	protected activeRoute = '';
@@ -143,6 +167,112 @@ export class AppComponent implements OnInit, AfterViewInit {
 	@HostListener('window:resize')
 	protected onWindowResize(): void {
 		this.applyViewportState(window.innerWidth);
+	}
+
+	/**
+	 * Saves the current selection state of an input or textarea on right-click
+	 * mousedown, before WKWebView's native auto-select fires and changes it.
+	 * Stored so onContextMenu can restore the original cursor position.
+	 *
+	 * @param event - The MouseEvent from the document mousedown listener.
+	 */
+	@HostListener('document:mousedown', ['$event'])
+	protected onRightMouseDown(event: MouseEvent): void {
+		if (!this.isTauriApp || event.button !== 2) return;
+		const target = event.target as HTMLElement;
+		if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+			this.ctxSavedSelection = { el: target, start: target.selectionStart, end: target.selectionEnd };
+		}
+	}
+
+	/**
+	 * Intercepts the native browser context menu on right-click and replaces it
+	 * with the custom overlay. Active only when running inside Tauri. Builds
+	 * clipboard actions when the right-clicked target is an input or textarea
+	 * (paste uses the Tauri clipboard plugin to avoid the macOS native confirmation
+	 * popup), appends Home and Reminder nav shortcuts, and ends with a sign-in or
+	 * sign-out action.
+	 *
+	 * @param event - The MouseEvent from the document contextmenu listener.
+	 */
+	@HostListener('document:contextmenu', ['$event'])
+	protected onContextMenu(event: MouseEvent): void {
+		if (!this.isTauriApp) return;
+		event.preventDefault();
+		const target = event.target as HTMLElement;
+		const isInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+		if (this.ctxSavedSelection) {
+			const { el, start, end } = this.ctxSavedSelection;
+			el.selectionStart = start;
+			el.selectionEnd = end;
+			this.ctxSavedSelection = null;
+		}
+		const actions: ContextMenuAction[] = [];
+		if (isInput) {
+			const inputEl = target as HTMLInputElement | HTMLTextAreaElement;
+			actions.push(
+				{ label: CTX_LABEL_COPY, icon: CTX_ICON_COPY, color: CTX_COLOR_CLIPBOARD, execute: () => document.execCommand('copy') },
+				{ label: CTX_LABEL_CUT, icon: CTX_ICON_CUT, color: CTX_COLOR_CLIPBOARD, execute: () => document.execCommand('cut') },
+				{
+					label: CTX_LABEL_PASTE,
+					icon: CTX_ICON_PASTE,
+					color: CTX_COLOR_CLIPBOARD,
+					execute: () =>
+						readText()
+							.then((text) => {
+								const start = inputEl.selectionStart ?? inputEl.value.length;
+								const end = inputEl.selectionEnd ?? start;
+								inputEl.value = inputEl.value.slice(0, start) + text + inputEl.value.slice(end);
+								inputEl.selectionStart = inputEl.selectionEnd = start + text.length;
+								inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+							})
+							.catch(() => {})
+				},
+				{ label: CTX_LABEL_SELECT_ALL, icon: CTX_ICON_SELECT_ALL, color: CTX_COLOR_CLIPBOARD, execute: () => inputEl.select() }
+			);
+		}
+		for (const [i, item] of this.ctxNavItems.entries()) {
+			actions.push({
+				label: item.label,
+				icon: item.icon,
+				color: item.grad!,
+				execute: () => this.navigateToRoute(item.id),
+				separator: isInput && i === 0 ? true : undefined
+			});
+		}
+		if (this.mobileSignedIn) {
+			actions.push({
+				label: CTX_LABEL_SIGN_OUT,
+				icon: CTX_ICON_SIGN_OUT,
+				color: CTX_COLOR_SIGN_OUT,
+				execute: () =>
+					this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, () => this.logout(), [
+						MSG_LOGOUT_CONFIRM,
+						DIALOG_HEADER_SIGN_OUT,
+						DIALOG_BTN_SIGN_OUT
+					]),
+				separator: true
+			});
+		} else {
+			actions.push({
+				label: CTX_LABEL_SIGN_IN,
+				icon: CTX_ICON_SIGN_IN,
+				color: CTX_COLOR_SIGN_IN,
+				execute: () => this.navigateToLogin(),
+				separator: true
+			});
+		}
+		this.ctxX = Math.min(event.clientX, window.innerWidth - 220);
+		this.ctxY = Math.min(event.clientY, window.innerHeight - 280);
+		this.ctxActions = actions;
+		this.ctxVisible = true;
+	}
+
+	/**
+	 * Closes the custom context menu overlay.
+	 */
+	protected closeCtxMenu(): void {
+		this.ctxVisible = false;
 	}
 
 	/**

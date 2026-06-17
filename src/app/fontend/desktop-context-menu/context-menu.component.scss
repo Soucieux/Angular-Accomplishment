@@ -1,0 +1,110 @@
+/* ── Context menu container ──────────────────────────────────────────────── */
+
+.ctx-menu {
+	position: fixed;
+	z-index: 9999;
+	min-width: 200px;
+	background: #ffffff;
+	border-radius: 10px;
+	box-shadow:
+		0 8px 24px rgba(0, 0, 0, 0.12),
+		0 2px 8px rgba(0, 0, 0, 0.08);
+	border: 1px solid rgba(0, 0, 0, 0.07);
+	overflow: hidden;
+	user-select: none;
+}
+
+/* ── Search row ──────────────────────────────────────────────────────────── */
+
+.ctx-search-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 12px 8px;
+}
+
+.ctx-search-icon {
+	font-size: 16px;
+	color: #aaa;
+	flex-shrink: 0;
+}
+
+.ctx-search-input {
+	flex: 1;
+	border: none;
+	outline: none;
+	background: transparent;
+	font-size: 13px;
+	color: #222;
+	font-family: inherit;
+
+	&::placeholder {
+		color: #bbb;
+	}
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+
+.ctx-divider {
+	height: 1px;
+	background: rgba(0, 0, 0, 0.07);
+	margin: 0;
+}
+
+/* ── Item list ───────────────────────────────────────────────────────────── */
+
+.ctx-list {
+	list-style: none;
+	margin: 0;
+	padding: 4px 0;
+}
+
+.ctx-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 14px;
+	cursor: pointer;
+	transition: background 0.12s;
+
+	&:hover {
+		background: #f4f4f8;
+	}
+
+	&:active {
+		background: #ececf2;
+	}
+}
+
+.ctx-item-icon {
+	font-size: 17px;
+	flex-shrink: 0;
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.ctx-item-label {
+	font-size: 13px;
+	color: #222;
+	font-weight: 500;
+}
+
+/* ── In-list separator ───────────────────────────────────────────────────── */
+
+.ctx-separator {
+	height: 1px;
+	background: rgba(0, 0, 0, 0.07);
+	margin: 4px 0;
+	pointer-events: none;
+	list-style: none;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+
+.ctx-empty {
+	padding: 10px 14px;
+	font-size: 12px;
+	color: #bbb;
+}
+

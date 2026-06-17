@@ -781,3 +781,24 @@ export const PATCH_SUBTITLE_PATCH_NOTES = 'Development history and open items';
 export const PATCH_SUBTITLE_RELEASE_NOTES = 'Published versions and release history';
 export const PATCH_VIEW_PATCH = 'patch';
 export const PATCH_VIEW_RELEASE = 'release';
+
+/* ─────────────────────────────────────────
+   Context menu
+───────────────────────────────────────── */
+
+export const CTX_LABEL_COPY = 'Copy';
+export const CTX_LABEL_CUT = 'Cut';
+export const CTX_LABEL_PASTE = 'Paste';
+export const CTX_LABEL_SELECT_ALL = 'Select All';
+export const CTX_LABEL_SIGN_OUT = 'Sign out';
+export const CTX_LABEL_SIGN_IN = 'Sign in';
+export const CTX_ICON_COPY = 'content_copy';
+export const CTX_ICON_CUT = 'content_cut';
+export const CTX_ICON_PASTE = 'content_paste';
+export const CTX_ICON_SELECT_ALL = 'select_all';
+export const CTX_ICON_SIGN_OUT = 'logout';
+export const CTX_ICON_SIGN_IN = 'login';
+export const CTX_COLOR_CLIPBOARD = 'linear-gradient(135deg, #d53369, #daae51)';
+export const CTX_COLOR_SIGN_OUT = 'linear-gradient(135deg, #d53369, #b82d5a)';
+export const CTX_COLOR_SIGN_IN = 'linear-gradient(135deg, #1a6dff, #00d2ff)';
+export const CTX_SEARCH_PLACEHOLDER = 'Search…';

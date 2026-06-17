@@ -4,8 +4,8 @@ import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-import { LoadingTimeoutService } from '../../common/loading-timeout.service';
-import { Utilities } from '../../common/app.utilities';
+import { TimeoutService } from '../../common/timeout/timeout.service';
+import { Utilities } from '../../common/utilities/app.utilities';
 import { LOG } from '../../common/app.logs';
 import { PortalCategory, PortalLink } from '../portal/portal.model';
 import { HomeStats } from './home.model';
@@ -51,7 +51,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
-		private loadingTimeoutService: LoadingTimeoutService,
+		private timeoutService: TimeoutService,
 		private cdr: ChangeDetectorRef,
 		protected utilities: Utilities
 	) {}
@@ -70,7 +70,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 				if (loggedIn && !wasLoggedIn) {
 					this.loading = true;
-					this.loadingTimeoutService.start(TIMEOUT_KEY_HOME, () => {
+					this.timeoutService.start(TIMEOUT_KEY_HOME, () => {
 						this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
 					});
 
@@ -107,14 +107,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 					this.statsSub = this.databaseService.getStatistics().subscribe({
 						next: (data: HomeStats) => {
-							this.loadingTimeoutService.clear(TIMEOUT_KEY_HOME);
+							this.timeoutService.clear(TIMEOUT_KEY_HOME);
 							this.stats = data;
 							this.loading = false;
 							this.cdr.detectChanges();
 						},
 						error: (error: unknown) => {
 							LOG.error(this.className, HOME_MSG_LOAD_STATISTICS_FAILED, error as Error);
-							this.loadingTimeoutService.clear(TIMEOUT_KEY_HOME);
+							this.timeoutService.clear(TIMEOUT_KEY_HOME);
 							this.loading = false;
 							this.cdr.detectChanges();
 						}
@@ -128,7 +128,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 						this.cdr.detectChanges();
 					}, 600);
 				} else if (!loggedIn) {
-					this.loadingTimeoutService.clear(TIMEOUT_KEY_HOME);
+					this.timeoutService.clear(TIMEOUT_KEY_HOME);
 					clearTimeout(this.linksLoadingTimer);
 					clearTimeout(this.dashboardTimer);
 					this.statsSub?.unsubscribe();
@@ -152,7 +152,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 * Clears all timers, unsubscribes from all observables, and logs destruction.
 	 */
 	ngOnDestroy(): void {
-		this.loadingTimeoutService.clear(TIMEOUT_KEY_HOME);
+		this.timeoutService.clear(TIMEOUT_KEY_HOME);
 		clearTimeout(this.linksLoadingTimer);
 		clearTimeout(this.dashboardTimer);
 		this.statsSub?.unsubscribe();

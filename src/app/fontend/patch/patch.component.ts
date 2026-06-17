@@ -17,7 +17,7 @@ import { InputText } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	COMPONENT_DESTROY,
 	DIALOG_CONFIRM,
@@ -58,7 +58,7 @@ import { Observable, catchError, firstValueFrom, of, startWith, tap } from 'rxjs
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-import { LoadingTimeoutService } from '../../common/loading-timeout.service';
+import { TimeoutService } from '../../common/timeout/timeout.service';
 import { PaginatorModule } from 'primeng/paginator';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
@@ -209,7 +209,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
-		private loadingTimeoutService: LoadingTimeoutService,
+		private timeoutService: TimeoutService,
 		protected utilities: Utilities,
 		private ngZone: NgZone
 	) {}
@@ -233,19 +233,19 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isNarrowViewport = this.utilities.isNarrowViewport();
-			this.loadingTimeoutService.start(TIMEOUT_KEY_PATCH, () => this.onLoadingTimeout());
+			this.timeoutService.start(TIMEOUT_KEY_PATCH, () => this.onLoadingTimeout());
 
 			this.releaseNotes$ = this.databaseService.getReleaseNotes().pipe(
 				startWith(null as ReleaseNote[] | null),
 				tap((data) => {
 					if (data !== null) {
 						this.releaseNotesLoaded = true;
-						this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
+						this.timeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
 					}
 				}),
 				catchError(() => {
 					this.releaseNotesLoaded = true;
-					this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
+					this.timeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
 					return of([] as ReleaseNote[]);
 				})
 			);
@@ -254,7 +254,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			this.patchNotes$ = getObservable$.pipe(
 				tap((data) => {
 					this.ngZone.run(() => {
-						this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH);
+						this.timeoutService.clear(TIMEOUT_KEY_PATCH);
 						this.loading = false;
 						const prevLength = this.previousDataLength;
 						this.previousDataLength = data.length;
@@ -329,8 +329,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * CloudBase watcher automatically when the view is destroyed.
 	 */
 	ngOnDestroy() {
-		this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH);
-		this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
+		this.timeoutService.clear(TIMEOUT_KEY_PATCH);
+		this.timeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
@@ -346,17 +346,17 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (view === this.currentView) return;
 
 		if (this.currentView === PATCH_VIEW_PATCH) {
-			this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH);
+			this.timeoutService.clear(TIMEOUT_KEY_PATCH);
 		} else {
-			this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
+			this.timeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
 		}
 
 		this.currentView = view;
 
 		if (view === PATCH_VIEW_PATCH && this.loading) {
-			this.loadingTimeoutService.start(TIMEOUT_KEY_PATCH, () => this.onLoadingTimeout());
+			this.timeoutService.start(TIMEOUT_KEY_PATCH, () => this.onLoadingTimeout());
 		} else if (view === PATCH_VIEW_RELEASE && !this.releaseNotesLoaded) {
-			this.loadingTimeoutService.start(TIMEOUT_KEY_PATCH_RELEASE, () => this.onLoadingTimeout());
+			this.timeoutService.start(TIMEOUT_KEY_PATCH_RELEASE, () => this.onLoadingTimeout());
 		}
 	}
 

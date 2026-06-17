@@ -26,7 +26,7 @@ import {
 } from '../../common/app.constant';
 import { NotificationService } from '../../backend/notification-service/notification.service';
 import { NavItem } from './bottom-nav.model';
-import { Utilities } from '../../common/app.utilities';
+import { Utilities } from '../../common/utilities/app.utilities';
 
 @Component({
 	selector: 'bottom-nav',

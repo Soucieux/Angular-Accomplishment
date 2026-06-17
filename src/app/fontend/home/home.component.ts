@@ -1,8 +1,10 @@
-import { ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild, ViewContainerRef } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { LoadingTimeoutService } from '../../common/loading-timeout.service';
 import { Utilities } from '../../common/app.utilities';
 import { LOG } from '../../common/app.logs';
 import { PortalCategory, PortalLink } from '../portal/portal.model';
@@ -11,7 +13,8 @@ import {
 	COMPONENT_DESTROY,
 	HOME_MSG_INCREMENT_VISIT_FAILED,
 	HOME_MSG_LOAD_STATISTICS_FAILED,
-	PORTAL_MSG_LOAD_CATEGORIES_FAILED
+	PORTAL_MSG_LOAD_CATEGORIES_FAILED,
+	TIMEOUT_KEY_HOME
 } from '../../common/app.constant';
 import { OrbitalComponent } from './orbital/orbital.component';
 
@@ -24,12 +27,14 @@ import { OrbitalComponent } from './orbital/orbital.component';
 })
 export class HomeComponent implements OnInit, OnDestroy {
 	private readonly className = 'HomeComponent';
+	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
+	private dialogComponentContainer!: ViewContainerRef;
 
 	private statsSub?: Subscription;
 	private loginSub?: Subscription;
 	private linksSub?: Subscription;
 	private categoriesSub?: Subscription;
-	private loadingTimer?: ReturnType<typeof setTimeout>;
 	private linksLoadingTimer?: ReturnType<typeof setTimeout>;
 	private dashboardTimer?: ReturnType<typeof setTimeout>;
 
@@ -45,6 +50,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
+		private dialogService: DialogService,
+		private loadingTimeoutService: LoadingTimeoutService,
 		private cdr: ChangeDetectorRef,
 		protected utilities: Utilities
 	) {}
@@ -63,12 +70,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 				if (loggedIn && !wasLoggedIn) {
 					this.loading = true;
-					this.loadingTimer = setTimeout(() => {
-						if (this.loading) {
-							this.loading = false;
-							this.cdr.detectChanges();
-						}
-					}, 5000);
+					this.loadingTimeoutService.start(TIMEOUT_KEY_HOME, () => {
+						this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
+					});
 
 					this.linksLoadingTimer = setTimeout(() => {
 						if (this.dashLinksLoading) {
@@ -103,14 +107,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 					this.statsSub = this.databaseService.getStatistics().subscribe({
 						next: (data: HomeStats) => {
-							clearTimeout(this.loadingTimer);
+							this.loadingTimeoutService.clear(TIMEOUT_KEY_HOME);
 							this.stats = data;
 							this.loading = false;
 							this.cdr.detectChanges();
 						},
 						error: (error: unknown) => {
 							LOG.error(this.className, HOME_MSG_LOAD_STATISTICS_FAILED, error as Error);
-							clearTimeout(this.loadingTimer);
+							this.loadingTimeoutService.clear(TIMEOUT_KEY_HOME);
 							this.loading = false;
 							this.cdr.detectChanges();
 						}
@@ -124,7 +128,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 						this.cdr.detectChanges();
 					}, 600);
 				} else if (!loggedIn) {
-					clearTimeout(this.loadingTimer);
+					this.loadingTimeoutService.clear(TIMEOUT_KEY_HOME);
 					clearTimeout(this.linksLoadingTimer);
 					clearTimeout(this.dashboardTimer);
 					this.statsSub?.unsubscribe();
@@ -148,7 +152,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 * Clears all timers, unsubscribes from all observables, and logs destruction.
 	 */
 	ngOnDestroy(): void {
-		clearTimeout(this.loadingTimer);
+		this.loadingTimeoutService.clear(TIMEOUT_KEY_HOME);
 		clearTimeout(this.linksLoadingTimer);
 		clearTimeout(this.dashboardTimer);
 		this.statsSub?.unsubscribe();

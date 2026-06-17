@@ -1,0 +1,12 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	[closable]="false"
+	[dismissableMask]="false"
+	[appendTo]="'body'"
+	styleClass="retry-dialog">
+	<div class="blocking-content">
+		<span class="blocking-message">{{ message }}</span>
+		<p-button class="retry-button" icon="pi pi-refresh" (onClick)="onRetry()" />
+	</div>
+</p-dialog>

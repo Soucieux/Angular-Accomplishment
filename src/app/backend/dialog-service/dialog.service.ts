@@ -8,6 +8,7 @@ import { SearchDialogComponent } from './search/search.component';
 import { Observable, take } from 'rxjs';
 import { ErrorDialogComponent } from './error/error.component';
 import { BlockDialogComponent } from './block/block.component';
+import { RetryDialogComponent } from './retry/retry.component';
 import {
 	DIALOG_ADD,
 	DIALOG_BLOCK,
@@ -18,12 +19,14 @@ import {
 	DIALOG_LINK,
 	DIALOG_MULTI_LINK,
 	DIALOG_INGREDIENT,
+	DIALOG_RETRY,
 	ERROR_PERMISSION_DENIED,
 	MSG_DIALOG_ALREADY_OPEN,
 	MSG_DIALOG_CONTAINER_NOT_FOUND,
 	MSG_INVALID_DIALOG_TYPE,
 	MSG_PERMISSION_DENIED,
 	MSG_UNEXPECTED_ERROR,
+	RETRY_DIALOG_MSG,
 	SEARCH
 } from '../../common/app.constant';
 import { MessageService } from 'primeng/api';
@@ -42,6 +45,7 @@ import { NewLinkData } from '../../fontend/portal/portal.model';
 export class DialogService {
 	private readonly className = 'DialogService';
 	private openedDialogs = new Map<string, ComponentRef<any>>();
+	private readonly stackableDialogTypes = new Set([DIALOG_ERROR, DIALOG_BLOCK, DIALOG_RETRY]);
 
 	constructor(private messageService: MessageService) {}
 
@@ -73,6 +77,8 @@ export class DialogService {
 				return AddLinkDialogComponent;
 			case DIALOG_MULTI_LINK:
 				return MultiLinkDialogComponent;
+			case DIALOG_RETRY:
+				return RetryDialogComponent;
 			default:
 				throw new Error(MSG_INVALID_DIALOG_TYPE);
 		}
@@ -143,6 +149,8 @@ export class DialogService {
 		categories: string[]
 	): void;
 
+	public openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'retry', message: string): void;
+
 	/**
 	 * Opens a dialog
 	 *
@@ -164,10 +172,10 @@ export class DialogService {
 			throw error;
 		}
 
-		/* Block and error dialogs are allowed to stack (multiple can be open at once);
+		/* Block, error, and retry dialogs are allowed to stack (multiple can be open at once);
 		   all other dialog types enforce a single-instance rule to prevent duplicates. */
 		if (this.openedDialogs.has(dialogType)) {
-			if (dialogType === DIALOG_ERROR || dialogType === DIALOG_BLOCK) return;
+			if (this.stackableDialogTypes.has(dialogType)) return;
 			const error = new Error(MSG_DIALOG_ALREADY_OPEN);
 			LOG.error(this.className, error.message);
 			throw error;
@@ -184,7 +192,7 @@ export class DialogService {
 			/* SEARCH and error dialogs only need one callback/data argument;
 			   block dialogs return a promise so callers can await task completion;
 			   all other dialogs receive two arguments (prefill/callback or two callbacks). */
-			if (dialogType === SEARCH || dialogType === DIALOG_ERROR) {
+			if (dialogType === SEARCH || dialogType === DIALOG_ERROR || dialogType === DIALOG_RETRY) {
 				dialogComponentRef.instance.openDialog(dataOrCallback1);
 			} else if (dialogType === DIALOG_BLOCK) {
 				blockPromise = dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
@@ -210,6 +218,15 @@ export class DialogService {
 			LOG.error(this.className, (error as Error).message);
 			throw error;
 		}
+	}
+
+	/**
+	 * Shows the loading-timeout retry dialog with the standard message.
+	 *
+	 * @param container - The ViewContainerRef to attach the dialog to.
+	 */
+	public showLoadingTimeout(container: ViewContainerRef): void {
+		this.openDialog(container, 'retry', RETRY_DIALOG_MSG);
 	}
 
 	/**

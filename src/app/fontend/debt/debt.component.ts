@@ -59,7 +59,8 @@ import {
 	DEBT_MSG_RESETTING,
 	DEBT_CONFIRM_DELETE_PAYMENT_MSG,
 	DEBT_CONFIRM_DELETE_PAYMENT_HEADER,
-	DEBT_CONFIRM_DELETE_PAYMENT_BTN
+	DEBT_CONFIRM_DELETE_PAYMENT_BTN,
+	TIMEOUT_KEY_DEBT
 } from '../../common/app.constant';
 import {
 	DEBT_CATEGORY_DEFS,
@@ -69,6 +70,7 @@ import {
 	PaymentEntry
 } from './debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { LoadingTimeoutService } from '../../common/loading-timeout.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 @Component({
@@ -117,6 +119,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private dialogService: DialogService,
+		private loadingTimeoutService: LoadingTimeoutService,
 		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,
 		private ngZone: NgZone,
@@ -136,6 +139,10 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 */
 	ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
+			this.loadingTimeoutService.start(TIMEOUT_KEY_DEBT, () => {
+				this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
+			});
+
 			// Step 1 : Check device hover capability
 			this.isHoverCapable = this.utilities.checkIfHoverCapable();
 
@@ -160,6 +167,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 								? (currentByKey.get(row.key) ?? structuredClone(row))
 								: structuredClone(row)
 						);
+						this.loadingTimeoutService.clear(TIMEOUT_KEY_DEBT);
 						this.loading = false;
 						this.paymentsData = rows.reduce(
 							(acc: Record<string, Record<number, PaymentEntry>>, item: any) => ({
@@ -185,6 +193,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * prompted-button and balance-bump timers.
 	 */
 	ngOnDestroy() {
+		this.loadingTimeoutService.clear(TIMEOUT_KEY_DEBT);
 		this.dialogComponentContainer?.clear();
 		Object.values(this.promptedResetTimers).forEach(clearTimeout);
 		Object.values(this.promptedDeleteTimers).forEach(clearTimeout);

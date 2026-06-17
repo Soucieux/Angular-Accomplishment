@@ -77,12 +77,7 @@ import {
 	TOAST_INFO,
 	TOAST_WARN
 } from '../../common/app.constant';
-import {
-	NewLinkData,
-	PortalCategory,
-	PortalLink,
-	PORTAL_DATE_CALCULATOR_FIELDS
-} from './portal.model';
+import { NewLinkData, PortalCategory, PortalLink, PORTAL_DATE_CALCULATOR_FIELDS } from './portal.model';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
@@ -586,7 +581,8 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private triggerSaveIndicator(): void {
 		this.saveIndicator = true;
 		this.cdr.markForCheck();
-		if (this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR]) clearTimeout(this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR]);
+		if (this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR])
+			clearTimeout(this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR]);
 		this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR] = setTimeout(() => {
 			this.saveIndicator = false;
 			this.cdr.markForCheck();
@@ -688,7 +684,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Opens the Multi Link dialog with category names via DialogService.
 	 */
 	protected openMultiLinkDialog(): void {
-		const categoryNames = this.categories.map(c => c.name);
+		const categoryNames = this.categories.map((c) => c.name);
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_MULTI_LINK,
@@ -731,12 +727,16 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			try {
 				const domain = Utilities.getDomain(finalUrl);
 				if (existingLink) {
-					await this.databaseService.updateUsefulLink(existingLink._id, {
-						url: finalUrl,
-						title: formData.title,
-						category: formData.category,
-						isPinned: formData.isPinned
-					}, domain);
+					await this.databaseService.updateUsefulLink(
+						existingLink._id,
+						{
+							url: finalUrl,
+							title: formData.title,
+							category: formData.category,
+							isPinned: formData.isPinned
+						},
+						domain
+					);
 					LOG.info(this.className, `Link updated: ${finalUrl}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_LINK_UPDATED);
 				} else {
@@ -753,7 +753,11 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				}
 			} catch (error) {
 				LOG.error(this.className, PORTAL_MSG_SAVE_LINK_FAILED, error as Error);
-				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, PORTAL_MSG_LINK_SAVE_FAILED_DETAIL);
+				this.dialogService.showToast(
+					TOAST_ERROR,
+					MSG_SAVE_FAILED,
+					PORTAL_MSG_LINK_SAVE_FAILED_DETAIL
+				);
 			}
 		}, PORTAL_MSG_SAVING_LINK).catch(() => {});
 	}
@@ -767,22 +771,28 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private handleMultiLinkSave(links: NewLinkData[]): void {
 		this.openBlockDialog(async () => {
 			try {
-				await Promise.all(links.map(formData => {
-					const finalUrl = Utilities.normalizeUrl(formData.url);
-					return this.databaseService.addUsefulLink({
-						url: finalUrl,
-						title: formData.title,
-						category: formData.category,
-						visitCount: 0,
-						createdAt: new Date().toISOString(),
-						isPinned: formData.isPinned
-					});
-				}));
+				await Promise.all(
+					links.map((formData) => {
+						const finalUrl = Utilities.normalizeUrl(formData.url);
+						return this.databaseService.addUsefulLink({
+							url: finalUrl,
+							title: formData.title,
+							category: formData.category,
+							visitCount: 0,
+							createdAt: new Date().toISOString(),
+							isPinned: formData.isPinned
+						});
+					})
+				);
 				LOG.info(this.className, `${links.length} links saved`);
 				this.dialogService.showToast(SUCCESS, PORTAL_MSG_MULTI_LINK_SAVED);
 			} catch (error) {
 				LOG.error(this.className, PORTAL_MSG_SAVE_LINK_FAILED, error as Error);
-				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL);
+				this.dialogService.showToast(
+					TOAST_ERROR,
+					MSG_SAVE_FAILED,
+					PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL
+				);
 			}
 		}, PORTAL_MSG_SAVING_LINKS).catch(() => {});
 	}

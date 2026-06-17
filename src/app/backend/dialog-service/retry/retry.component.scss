@@ -1,0 +1,85 @@
+/* ─────────────────────────────────────────
+   p-dialog shell overrides
+───────────────────────────────────────── */
+
+::ng-deep .retry-dialog {
+	width: min(380px, calc(100dvw - 2rem));
+	border-radius: 20px !important;
+	overflow: hidden !important;
+	background: rgba(255, 255, 255, 0.96) !important;
+	backdrop-filter: blur(24px);
+	border: 1px solid rgba(255, 255, 255, 0.7) !important;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24) !important;
+	user-select: none;
+}
+
+::ng-deep .retry-dialog .p-dialog-header {
+	padding: 0 !important;
+	height: 0 !important;
+	min-height: 0 !important;
+	border: none !important;
+}
+
+::ng-deep .retry-dialog .p-dialog-content {
+	padding: 36px 24px !important;
+	background: transparent !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+::ng-deep .retry-dialog .p-resizable-handle {
+	display: none !important;
+}
+
+/* ─────────────────────────────────────────
+   Component styles
+───────────────────────────────────────── */
+
+.blocking-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 15px;
+}
+
+.blocking-message {
+	font-size: 17px;
+	color: rgba(40, 15, 35, 0.8);
+	text-align: center;
+	line-height: 1.6;
+}
+
+::ng-deep .retry-dialog .retry-button .p-button {
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
+	border: none !important;
+    outline:none !important;
+	border-radius: 9px !important;
+	height: 32px !important;
+	width: 72px !important;
+	padding: 0 !important;
+	font-size: 16px !important;
+	font-weight: 600 !important;
+	color: #fff !important;
+	transition: filter 0.15s ease !important;
+}
+
+::ng-deep .retry-dialog .retry-button .p-button:hover {
+	filter: brightness(1.12) !important;
+}
+
+::ng-deep .retry-dialog .retry-button .p-button:focus,
+::ng-deep .retry-dialog .retry-button .p-button:focus-visible {
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+/* ─────────────────────────────────────────
+   Mobile
+───────────────────────────────────────── */
+
+@media (max-width: 940px) {
+	::ng-deep .retry-dialog {
+		width: min(340px, calc(100dvw - 1.5rem));
+	}
+}

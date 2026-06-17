@@ -64,7 +64,8 @@ import {
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING,
-	SUCCESS
+	SUCCESS,
+	TIMEOUT_KEY_REMINDER
 } from '../../common/app.constant';
 import {
 	NewItem,
@@ -77,6 +78,7 @@ import {
 } from './reminder.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { LoadingTimeoutService } from '../../common/loading-timeout.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
@@ -154,6 +156,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		@Inject(PLATFORM_ID) private readonly platformId: object,
 		private readonly databaseService: DatabaseService,
 		private readonly dialogService: DialogService,
+		private readonly loadingTimeoutService: LoadingTimeoutService,
 		private readonly cdr: ChangeDetectorRef,
 		private readonly ngZone: NgZone,
 		protected utilities: Utilities
@@ -166,6 +169,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
+			this.loadingTimeoutService.start(TIMEOUT_KEY_REMINDER, () => {
+				this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
+			});
 			this.itemsSub = this.databaseService.getReminderTableDetails().subscribe((raw) => {
 				// Step 1: Parse raw DB records into ReminderItem view models
 				const records = raw as ReminderDbRecord[];
@@ -182,6 +188,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.removeStaleTag();
 				// Step 3: Sync upcoming items to the statistics collection
 				this.updateUpcomingToStatistics();
+				this.loadingTimeoutService.clear(TIMEOUT_KEY_REMINDER);
 				this.loading = false;
 				// CloudBase subscription callbacks may emit outside Angular's zone — detectChanges ensures the template updates.
 				this.cdr.detectChanges();
@@ -214,6 +221,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * clears the dialog container, and logs the component destruction event.
 	 */
 	ngOnDestroy(): void {
+		this.loadingTimeoutService.clear(TIMEOUT_KEY_REMINDER);
 		this.gridResizeObserver?.disconnect();
 		this.itemsSub?.unsubscribe();
 		Object.values(this.saveIndicatorTimeouts).forEach(clearTimeout);

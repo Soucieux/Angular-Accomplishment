@@ -30,6 +30,8 @@ export const ERROR_DIALOG_BTN_LABEL = 'OK';
 export const ERROR_DIALOG_MSG_CLASS = 'error-dialog-message';
 export const SEARCH_COMPLETE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
+/** Message shown in the retry dialog when a page data load exceeds the timeout. */
+export const RETRY_DIALOG_MSG = 'Connection Lost...';
 
 ////////////////////// Below are toast severity string constants //////////////////////
 
@@ -65,6 +67,8 @@ export const DIALOG_INGREDIENT = 'ingredient';
 export const DIALOG_LINK = 'link';
 /** Dialog type for the multi-link batch-add dialog on the Portal page. */
 export const DIALOG_MULTI_LINK = 'multi-link';
+/** Dialog type for the loading-timeout retry overlay. */
+export const DIALOG_RETRY = 'retry';
 
 ////////////////////// Below are history dialog and style string constants ///////////
 
@@ -92,6 +96,18 @@ export const APP_BREAKPOINT_NARROW = 940;
 export const TAURI_MODE_CLASS = 'tauri-mode';
 /** Tauri v2 IPC command that initiates native window dragging via the plugin:window plugin. */
 export const TAURI_CMD_START_DRAGGING = 'plugin:window|start_dragging';
+/** Milliseconds before the loading-timeout retry dialog appears when a page is stuck loading. */
+export const LOADING_TIMEOUT_MS = 7000;
+/** Timeout key for the Home page loading guard. */
+export const TIMEOUT_KEY_HOME = 'home';
+/** Timeout key for the Reminder page loading guard. */
+export const TIMEOUT_KEY_REMINDER = 'reminder';
+/** Timeout key for the Debt Sonata page loading guard. */
+export const TIMEOUT_KEY_DEBT = 'debt';
+/** Timeout key for the Patch Notes tab loading guard. */
+export const TIMEOUT_KEY_PATCH = 'patch';
+/** Timeout key for the Release Notes tab loading guard. */
+export const TIMEOUT_KEY_PATCH_RELEASE = 'patch-release';
 export const COMPONENT_DESTROY = 'Component Destroyed';
 export const UTILITIES_LOG_COUNTRY_FAILED = 'Country detection failed';
 export const UTILITIES_LOG_DEFAULT_COUNTRY = 'Use default country: ';
@@ -592,13 +608,14 @@ export const PORTAL_LABEL_CELL_TODAY = 'Today';
 export const PORTAL_LABEL_CONFIRMED = 'confirmed';
 
 export const MULTI_LINK_DIALOG_TITLE = 'Add multiple links';
-export const MULTI_LINK_DIALOG_SUBTITLE = 'Paste a batch of URLs — we\'ll fetch each icon automatically.';
+export const MULTI_LINK_DIALOG_SUBTITLE = "Paste a batch of URLs — we'll fetch each icon automatically.";
 export const MULTI_LINK_LABEL_CATEGORY = 'Category';
 export const MULTI_LINK_LABEL_APPLIES_PREFIX = '· applies to all ';
 export const MULTI_LINK_LABEL_LINK = 'link';
 export const MULTI_LINK_LABEL_LINKS = 'links';
 export const MULTI_LINK_LABEL_PASTE = 'Paste links';
-export const MULTI_LINK_PLACEHOLDER_PASTE = 'Paste your links here — one per line, comma, or semicolon\n\nhttps://github.com\nfigma.com\nlinear.app';
+export const MULTI_LINK_PLACEHOLDER_PASTE =
+	'Paste your links here — one per line, comma, or semicolon\n\nhttps://github.com\nfigma.com\nlinear.app';
 export const MULTI_LINK_LABEL_LINK_FOUND = 'link found';
 export const MULTI_LINK_LABEL_LINKS_FOUND = 'links found';
 export const MULTI_LINK_LABEL_EMPTY = 'Links will appear here';
@@ -755,8 +772,11 @@ export const STATUS_DEBUG = 'Debug';
 export const STATUS_DRAFT = 'Draft';
 export const STATUS_RESOLVED = 'Resolved';
 
-export const PATCH_LABEL_PATCH_NOTES = 'Patch Notes';
+export const PATCH_LABEL_PATCH_NOTES = 'Sprint Notes';
 export const PATCH_LABEL_RELEASE_NOTES = 'Release Notes';
+export const PATCH_SWITCH_PREFIX_SPRINT = 'Sprint';
+export const PATCH_SWITCH_PREFIX_RELEASE = 'Release';
+export const PATCH_SWITCH_NOTES = 'Notes';
 export const PATCH_SUBTITLE_PATCH_NOTES = 'Development history and open items';
 export const PATCH_SUBTITLE_RELEASE_NOTES = 'Published versions and release history';
 export const PATCH_VIEW_PATCH = 'patch';

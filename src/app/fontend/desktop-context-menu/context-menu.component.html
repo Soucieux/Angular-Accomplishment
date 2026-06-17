@@ -16,8 +16,15 @@
 					@if (action.separator) {
 						<li class="ctx-separator" aria-hidden="true"></li>
 					}
-					<li class="ctx-item" (mousedown)="$event.stopPropagation(); $event.preventDefault()" (click)="selectAction(action)">
-						<span class="material-symbols-outlined ctx-item-icon" [style.backgroundImage]="action.color">{{ action.icon }}</span>
+					<li
+						class="ctx-item"
+						(mousedown)="$event.stopPropagation(); $event.preventDefault()"
+						(click)="selectAction(action)">
+						<span
+							class="material-symbols-outlined ctx-item-icon"
+							[style.backgroundImage]="action.color"
+							>{{ action.icon }}</span
+						>
 						<span class="ctx-item-label">{{ action.label }}</span>
 					</li>
 				}

@@ -22,12 +22,11 @@ describe('BottomNavComponent', () => {
 			isEnabled: false
 		});
 
-		mockNotif = jasmine.createSpyObj<NotificationService>('NotificationService', [
-			'isSupported',
-			'getPermission',
-			'subscribe',
-			'unsubscribe'
-		], { isSubscribed$: of(false) });
+		mockNotif = jasmine.createSpyObj<NotificationService>(
+			'NotificationService',
+			['isSupported', 'getPermission', 'subscribe', 'unsubscribe'],
+			{ isSubscribed$: of(false) }
+		);
 		mockNotif.isSupported.and.returnValue(false);
 		mockNotif.getPermission.and.returnValue('default');
 
@@ -54,8 +53,11 @@ describe('BottomNavComponent', () => {
 	describe('primary', () => {
 		it('falls back to the first four items when primaryIds is empty', () => {
 			component.items = [
-				makeNavItem('a'), makeNavItem('b'), makeNavItem('c'),
-				makeNavItem('d'), makeNavItem('e')
+				makeNavItem('a'),
+				makeNavItem('b'),
+				makeNavItem('c'),
+				makeNavItem('d'),
+				makeNavItem('e')
 			];
 			component.primaryIds = [];
 			expect((component as any).primary.map((i: NavItem) => i.id)).toEqual(['a', 'b', 'c', 'd']);

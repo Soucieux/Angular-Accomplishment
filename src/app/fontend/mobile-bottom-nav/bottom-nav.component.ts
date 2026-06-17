@@ -60,7 +60,9 @@ export class BottomNavComponent implements AfterViewInit {
 	protected readonly gridOpen = signal(false);
 	protected readonly accountOpen = signal(false);
 	protected readonly notificationPermission = signal<NotificationPermission>('default');
-	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, { initialValue: false });
+	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, {
+		initialValue: false
+	});
 	protected readonly notifSupported = this.notificationService.isSupported();
 
 	constructor(
@@ -89,8 +91,10 @@ export class BottomNavComponent implements AfterViewInit {
 	 * @returns The ordered list of `NavItem` entries shown in the floating dock.
 	 */
 	protected get primary(): NavItem[] {
-		const ids = this.primaryIds.length ? this.primaryIds : this.items.slice(0, 4).map(item => item.id);
-		return ids.map(id => this.items.find(navItem => navItem.id === id)).filter((navItem): navItem is NavItem => !!navItem);
+		const ids = this.primaryIds.length ? this.primaryIds : this.items.slice(0, 4).map((item) => item.id);
+		return ids
+			.map((id) => this.items.find((navItem) => navItem.id === id))
+			.filter((navItem): navItem is NavItem => !!navItem);
 	}
 
 	/**
@@ -131,7 +135,7 @@ export class BottomNavComponent implements AfterViewInit {
 	 * popover when the grid opens.
 	 */
 	protected toggleGrid(): void {
-		this.gridOpen.update(open => !open);
+		this.gridOpen.update((open) => !open);
 		if (this.gridOpen()) this.accountOpen.set(false);
 	}
 
@@ -140,7 +144,7 @@ export class BottomNavComponent implements AfterViewInit {
 	 * when the account popover opens.
 	 */
 	protected toggleAccount(): void {
-		this.accountOpen.update(open => !open);
+		this.accountOpen.update((open) => !open);
 		if (this.accountOpen()) this.gridOpen.set(false);
 	}
 
@@ -183,7 +187,11 @@ export class BottomNavComponent implements AfterViewInit {
 				await this.notificationService.subscribe();
 			}
 		} catch (error: unknown) {
-			LOG.error(this.className, 'Error toggling push notification', error instanceof Error ? error : new Error('Unexpected error'));
+			LOG.error(
+				this.className,
+				'Error toggling push notification',
+				error instanceof Error ? error : new Error('Unexpected error')
+			);
 		} finally {
 			this.notificationPermission.set(this.notificationService.getPermission());
 		}

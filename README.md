@@ -33,7 +33,7 @@
 | **Debt Sonata** | Debt tracking canvas with full payment history.<br>- **Card-based ledger** supporting CNY and CAD currencies<br>- Preset and custom **payment chips** with per-card progress bar<br>- Paid-off ribbon state and coral card styling<br>- Summary card with per-currency totals<br>- Full payment history timeline per entry | Active |
 | **Resonance** | Personal quote vault.<br>- Author attribution and timestamps<br>- **Anonymous browsing** support for public quotes<br>- Ownership-based edit and delete permissions | Active |
 | **Recipe** | Personal cookbook with per-category colour theming.<br>- List, detail, and editor views<br>- **Ingredient groups** with type badges and bilingual name support *(Chinese + English)*<br>- Live **servings scaler** and step-by-step instruction view<br>- Category colour themes — *rose · green · purple · amber · pink*<br>- Drag-to-reorder steps | Active |
-| **Patch Notes** | Internal development log.<br>- Add, edit, and delete entries per component<br>- **Bug flag** per entry with status filter (Active / Resolved)<br>- Paginated view with correct rowspan recalculation after date sorting | Active |
+| **Patch Notes** | Internal development log with two views.<br>- *Patch Notes* — add, edit, and delete entries per component; bug flag per entry; status filter (Active / Resolved); paginated with correct rowspan recalculation after date sorting<br>- *Release Notes* — versioned release cards with section headings, badge chips, and summaries | Active |
 | **Login** | Authentication entry point.<br>- **Google Sign-In** and email / password login<br>- Sign-up flow for new user registration<br>- Route guards protecting all authenticated pages<br>- Post-login redirect to last-visited route<br>- Sidebar presence row: avatar, online status, and account menu popover | Stable |
 | **About** | Professional history timeline.<br>- Interactive milestone entries<br>- **Animated gradient background** | Stable |
 
@@ -79,7 +79,7 @@
 
 | Period | Milestone |
 | :--- | :--- |
-| **June 2026** | - Phase R2 begins — R1 feature set complete and stable |
+| **June 2026** | - Phase R2 begins — R1 feature set complete and stable<br>- **Desktop right-click context menu** — custom overlay with clipboard actions (copy / cut / paste / select-all), nav shortcuts, and sign-in / sign-out; uses Tauri clipboard plugin to bypass macOS native paste confirmation<br>- Codebase restructured: `LoadingTimeoutService` renamed to `TimeoutService` and moved into `common/timeout/`; utilities moved into `common/utilities/`; `navigation/` folder renamed to `mobile-bottom-nav/`; `context-menu` component renamed and moved to `fontend/desktop-context-menu/` |
 
 ---
 
@@ -109,10 +109,10 @@ src/app/
 ├── common/                   # Shared utilities and value objects
 │   ├── app.constant.ts           # Application-wide constants
 │   ├── app.logs.ts               # Logging helpers
-│   ├── app.utilities.ts          # General utility functions
-│   ├── movieitem.vo.ts           # Movie value object definition
 │   ├── access-denied/            # Access-denied UI component
-│   └── error/                    # Shared error UI components
+│   ├── error/                    # Shared error UI components
+│   ├── timeout/                  # Loading timeout service and tests
+│   └── utilities/                # General utility functions and tests
 │
 └── fontend/                  # Feature pages (all standalone components)
     ├── home/                     # Vision Home dashboard
@@ -124,7 +124,8 @@ src/app/
     ├── debt/                     # Debt Sonata — debt tracking canvas
     ├── patch/                    # Patch notes / internal dev log
     ├── about/                    # Professional history timeline
-    ├── navigation/               # Bottom nav bar component and data
+    ├── desktop-context-menu/     # Right-click overlay menu (desktop app only)
+    ├── mobile-bottom-nav/        # Bottom nav bar component and data
     └── login/                    # Authentication entry point
 ```
 
@@ -150,6 +151,8 @@ src/app/
 | `rxjs` | ~7.8.x | Reactive streams and async data flows |
 | `date-fns` | ^4.x | Date formatting and calculations |
 | `@capacitor/core` | ^8.x | Native iOS / Android packaging |
+| `@tauri-apps/cli` | ^2.x | Desktop app bundler (macOS / Windows / Linux) |
+| `@tauri-apps/plugin-clipboard-manager` | ^2.x | Native clipboard access in the desktop app |
 
 ### Backend & Services
 

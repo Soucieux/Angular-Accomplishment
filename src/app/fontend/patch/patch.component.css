@@ -26,7 +26,9 @@
 ───────────────────────────────────────── */
 .view-switch {
 	--view-switch-width: 150px;
-	position: relative;
+	position: absolute;
+	top: 10px;
+	right: 10px;
 	display: inline-flex;
 	flex-shrink: 0;
 	align-self: flex-start;
@@ -87,14 +89,27 @@
 	background: linear-gradient(135deg, #ffffff 0%, #fbf2fb 100%);
 	border: 1px solid #efe2ef;
 	border-radius: 20px;
-	padding: 32px;
+	padding: 30px;
 	box-shadow: 0 4px 16px rgba(60, 20, 50, 0.07);
-	margin-bottom: 30px;
+	margin-bottom: 10px;
+}
+
+.release-hero--loading {
+	min-height: calc(100dvh - 210px);
+	display: flex;
+	flex-direction: column;
+}
+
+.release-hero--loading .hero-body {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
 }
 
 .release-badge {
 	display: inline-block;
-	padding: 4px 13px;
+	padding: 3px 13px;
 	border-radius: 999px;
 	font-size: 11px;
 	font-weight: 700;
@@ -152,14 +167,34 @@
 	border-radius: 50%;
 }
 
-.chip:nth-child(1) { background: #dcfce7; color: #15803d; }
-.chip:nth-child(1) .dot { background: #16a34a; }
-.chip:nth-child(2) { background: #fef3c7; color: #b45309; }
-.chip:nth-child(2) .dot { background: #d97706; }
-.chip:nth-child(3) { background: #fee2e2; color: #b91c1c; }
-.chip:nth-child(3) .dot { background: #dc2626; }
-.chip:nth-child(4) { background: #eff6ff; color: #1d4ed8; }
-.chip:nth-child(4) .dot { background: #3b82f6; }
+.chip:nth-child(1) {
+	background: #dcfce7;
+	color: #15803d;
+}
+.chip:nth-child(1) .dot {
+	background: #16a34a;
+}
+.chip:nth-child(2) {
+	background: #fef3c7;
+	color: #b45309;
+}
+.chip:nth-child(2) .dot {
+	background: #d97706;
+}
+.chip:nth-child(3) {
+	background: #fee2e2;
+	color: #b91c1c;
+}
+.chip:nth-child(3) .dot {
+	background: #dc2626;
+}
+.chip:nth-child(4) {
+	background: #eff6ff;
+	color: #1d4ed8;
+}
+.chip:nth-child(4) .dot {
+	background: #3b82f6;
+}
 
 .release-sections {
 	display: flex;
@@ -173,12 +208,18 @@
 	padding-left: 14px;
 }
 
-.release-section:nth-child(1) { border-left-color: #16a34a; }
-.release-section:nth-child(2) { border-left-color: #d97706; }
-.release-section:nth-child(3) { border-left-color: #64748b; }
+.release-section:nth-child(1) {
+	border-left-color: #16a34a;
+}
+.release-section:nth-child(2) {
+	border-left-color: #d97706;
+}
+.release-section:nth-child(3) {
+	border-left-color: #64748b;
+}
 
 .section-heading {
-	font-size: 13px;
+	font-size: 15px;
 	font-weight: 700;
 	letter-spacing: 0.5px;
 	text-transform: uppercase;
@@ -186,9 +227,15 @@
 	margin-bottom: 8px;
 }
 
-.release-section:nth-child(1) .section-heading { color: #15803d; }
-.release-section:nth-child(2) .section-heading { color: #b45309; }
-.release-section:nth-child(3) .section-heading { color: #475569; }
+.release-section:nth-child(1) .section-heading {
+	color: #15803d;
+}
+.release-section:nth-child(2) .section-heading {
+	color: #b45309;
+}
+.release-section:nth-child(3) .section-heading {
+	color: #475569;
+}
 
 .section-items {
 	margin: 0;
@@ -214,9 +261,15 @@
 	font-weight: 700;
 }
 
-.release-section:nth-child(1) .section-item::before { color: #16a34a; }
-.release-section:nth-child(2) .section-item::before { color: #d97706; }
-.release-section:nth-child(3) .section-item::before { color: #64748b; }
+.release-section:nth-child(1) .section-item::before {
+	color: #16a34a;
+}
+.release-section:nth-child(2) .section-item::before {
+	color: #d97706;
+}
+.release-section:nth-child(3) .section-item::before {
+	color: #64748b;
+}
 
 /* ─────────────────────────────────────────
    Release Notes — previous releases list
@@ -249,7 +302,7 @@
 }
 
 .rel-version {
-	font-size: 14px;
+	font-size: 16px;
 	font-weight: 800;
 	color: #764ba2;
 	min-width: 60px;
@@ -267,7 +320,7 @@
 }
 
 .rel-summary {
-	font-size: 14px;
+	font-size: 16px;
 	color: #6f6075;
 	line-height: 1.5;
 	margin-top: 3px;
@@ -329,7 +382,7 @@
 
 .page-subtitle {
 	color: rgba(30, 15, 35, 0.55);
-	font-size: 14px;
+	font-size: 16px;
 	margin: 0;
 }
 
@@ -379,7 +432,7 @@
 	background: #fff;
 	padding: 0 18px 0 44px;
 	font: inherit;
-	font-size: 14px;
+	font-size: 16px;
 	color: rgba(30, 15, 35, 0.88);
 	outline: none;
 	transition:
@@ -863,7 +916,7 @@
 
 ::ng-deep .p-tag .pi {
 	padding-right: 15px !important;
-	font-size: 14px;
+	font-size: 16px;
 }
 
 /* ─────────────────────────────────────────
@@ -969,7 +1022,7 @@
 }
 
 ::ng-deep .p-datatable .p-select .component-option .pi {
-	font-size: 14px;
+	font-size: 16px;
 	width: 20px;
 	text-align: center;
 	flex-shrink: 0;
@@ -1205,6 +1258,19 @@
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
+	.page-title {
+		font-size: 28px;
+	}
+
+	.view-switch {
+		--view-switch-width: 50px;
+		top: 0%;
+	}
+
+	.view-switch__suffix {
+		display: none;
+	}
+
 	.component {
 		min-width: 150px !important;
 	}
@@ -1219,6 +1285,10 @@
 
 	.status {
 		min-width: 130px !important;
+	}
+
+	::ng-deep .p-datatable .p-datatable-tbody > tr > td:not(.status) {
+		font-size: 13px !important;
 	}
 
 	::ng-deep .p-datatable .p-datatable-thead > tr > th.status {
@@ -1259,12 +1329,45 @@
 		display: none !important;
 	}
 
+	/* ─────────────────────────────────────────
+   Release Notes
+───────────────────────────────────────── */
+	.view-switch__button {
+		padding: 10px 0;
+		font-size: 11px;
+	}
+
+	.hero-title {
+		font-size: 25px;
+	}
+
 	.release-hero {
-		padding: 22px;
+		padding: 15px;
+	}
+
+	.release-hero--loading {
+		min-height: calc(100dvh - 200px);
 	}
 
 	.rel-date {
 		text-align: left;
 		min-width: unset;
+	}
+
+	.chips {
+		display: flex;
+		justify-content: center;
+		gap: 5px;
+		margin-top: 10px;
+	}
+
+	.chip {
+		margin-top: 5px;
+		padding: 3px 11px;
+		font-size: 11px;
+	}
+
+	.stat-mobile-hidden {
+		display: none;
 	}
 }

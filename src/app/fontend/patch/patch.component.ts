@@ -46,13 +46,19 @@ import {
 	PATCH_SUBTITLE_PATCH_NOTES,
 	PATCH_SUBTITLE_RELEASE_NOTES,
 	PATCH_VIEW_PATCH,
-	PATCH_VIEW_RELEASE
+	PATCH_VIEW_RELEASE,
+	PATCH_SWITCH_PREFIX_SPRINT,
+	PATCH_SWITCH_PREFIX_RELEASE,
+	PATCH_SWITCH_NOTES,
+	TIMEOUT_KEY_PATCH,
+	TIMEOUT_KEY_PATCH_RELEASE
 } from '../../common/app.constant';
 import { ReleaseNote } from './patch.model';
-import { Observable, catchError, defer, firstValueFrom, of, startWith, tap } from 'rxjs';
+import { Observable, catchError, firstValueFrom, of, startWith, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { LoadingTimeoutService } from '../../common/loading-timeout.service';
 import { PaginatorModule } from 'primeng/paginator';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
@@ -84,17 +90,16 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly Utilities = Utilities;
 	protected readonly PATCH_VIEW_PATCH = PATCH_VIEW_PATCH;
 	protected readonly PATCH_VIEW_RELEASE = PATCH_VIEW_RELEASE;
+	protected readonly PATCH_SWITCH_PREFIX_SPRINT = PATCH_SWITCH_PREFIX_SPRINT;
+	protected readonly PATCH_SWITCH_PREFIX_RELEASE = PATCH_SWITCH_PREFIX_RELEASE;
+	protected readonly PATCH_SWITCH_NOTES = PATCH_SWITCH_NOTES;
 	protected readonly PATCH_LABEL_PATCH_NOTES = PATCH_LABEL_PATCH_NOTES;
 	protected readonly PATCH_LABEL_RELEASE_NOTES = PATCH_LABEL_RELEASE_NOTES;
 	protected readonly PATCH_SUBTITLE_PATCH_NOTES = PATCH_SUBTITLE_PATCH_NOTES;
 	protected readonly PATCH_SUBTITLE_RELEASE_NOTES = PATCH_SUBTITLE_RELEASE_NOTES;
 	protected currentView: 'patch' | 'release' = PATCH_VIEW_PATCH;
-	protected readonly releaseNotes$ = defer(() =>
-		this.databaseService.getReleaseNotes()
-	).pipe(
-		startWith(null as ReleaseNote[] | null),
-		catchError(() => of([] as ReleaseNote[]))
-	);
+	protected releaseNotes$!: Observable<ReleaseNote[] | null>;
+	private releaseNotesLoaded = false;
 	/**
 	 * All available components that can be selected in the add-entry dropdown.
 	 *
@@ -204,6 +209,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
+		private loadingTimeoutService: LoadingTimeoutService,
 		protected utilities: Utilities,
 		private ngZone: NgZone
 	) {}
@@ -227,11 +233,28 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
 			this.isNarrowViewport = this.utilities.isNarrowViewport();
+			this.loadingTimeoutService.start(TIMEOUT_KEY_PATCH, () => this.onLoadingTimeout());
+
+			this.releaseNotes$ = this.databaseService.getReleaseNotes().pipe(
+				startWith(null as ReleaseNote[] | null),
+				tap((data) => {
+					if (data !== null) {
+						this.releaseNotesLoaded = true;
+						this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
+					}
+				}),
+				catchError(() => {
+					this.releaseNotesLoaded = true;
+					this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
+					return of([] as ReleaseNote[]);
+				})
+			);
 
 			const getObservable$ = this.databaseService.getPatchNotes();
 			this.patchNotes$ = getObservable$.pipe(
 				tap((data) => {
 					this.ngZone.run(() => {
+						this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH);
 						this.loading = false;
 						const prevLength = this.previousDataLength;
 						this.previousDataLength = data.length;
@@ -306,17 +329,44 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * CloudBase watcher automatically when the view is destroyed.
 	 */
 	ngOnDestroy() {
+		this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH);
+		this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	/**
 	 * Switches the active view between Patch Notes and Release Notes.
+	 * Cancels the outgoing tab's timer and starts the incoming tab's timer
+	 * if that tab is still in a loading state.
 	 *
 	 * @param view - The view identifier to activate.
 	 */
 	protected selectView(view: 'patch' | 'release'): void {
+		if (view === this.currentView) return;
+
+		if (this.currentView === PATCH_VIEW_PATCH) {
+			this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH);
+		} else {
+			this.loadingTimeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
+		}
+
 		this.currentView = view;
+
+		if (view === PATCH_VIEW_PATCH && this.loading) {
+			this.loadingTimeoutService.start(TIMEOUT_KEY_PATCH, () => this.onLoadingTimeout());
+		} else if (view === PATCH_VIEW_RELEASE && !this.releaseNotesLoaded) {
+			this.loadingTimeoutService.start(TIMEOUT_KEY_PATCH_RELEASE, () => this.onLoadingTimeout());
+		}
+	}
+
+	/**
+	 * Delegates to DialogService to show the loading-timeout retry dialog,
+	 * using this component's dialog container. Used as the timeout callback
+	 * for both patch-notes and release-notes timers.
+	 */
+	private onLoadingTimeout(): void {
+		this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
 	}
 
 	/**
@@ -378,9 +428,21 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			try {
 				const noteIndex = this.patchNotesList.findIndex((note) => note.key === row.key) + 1;
 				if (changes.status) {
-					await this.databaseService.updateStatusForOnePatchNote(row.key, changes, row.component, row.element, noteIndex);
+					await this.databaseService.updateStatusForOnePatchNote(
+						row.key,
+						changes,
+						row.component,
+						row.element,
+						noteIndex
+					);
 				} else if (changes.details) {
-					await this.databaseService.updateDetailsForOnePatchNote(row.key, changes, row.component, row.element, noteIndex);
+					await this.databaseService.updateDetailsForOnePatchNote(
+						row.key,
+						changes,
+						row.component,
+						row.element,
+						noteIndex
+					);
 				}
 			} catch (error) {
 				this.dialogService.handleError(this.dialogComponentContainer, error);
@@ -732,5 +794,4 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const key = typeof label === 'string' ? label : (label?.label ?? '');
 		return this.components.find((option) => option.label === key) ?? null;
 	}
-
 }

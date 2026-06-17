@@ -3,152 +3,182 @@
 		<div class="page-header-row">
 			<div class="page-header">
 				<div class="eyebrow">Progress Tracker</div>
-				<h1 class="page-title">{{ currentView === PATCH_VIEW_PATCH ? PATCH_LABEL_PATCH_NOTES : PATCH_LABEL_RELEASE_NOTES }}</h1>
-				<p class="page-subtitle">{{ currentView === PATCH_VIEW_PATCH ? PATCH_SUBTITLE_PATCH_NOTES : PATCH_SUBTITLE_RELEASE_NOTES }}</p>
+				<h1 class="page-title">
+					{{
+						currentView === PATCH_VIEW_PATCH ? PATCH_LABEL_PATCH_NOTES : PATCH_LABEL_RELEASE_NOTES
+					}}
+				</h1>
+				<p class="page-subtitle">
+					{{
+						currentView === PATCH_VIEW_PATCH
+							? PATCH_SUBTITLE_PATCH_NOTES
+							: PATCH_SUBTITLE_RELEASE_NOTES
+					}}
+				</p>
 				<div class="header-ornament"></div>
 			</div>
 			<div class="view-switch">
-				<span class="view-switch__thumb" [class.is-release]="currentView === PATCH_VIEW_RELEASE"></span>
-				<button type="button" class="view-switch__button" [class.is-active]="currentView === PATCH_VIEW_PATCH" (click)="selectView(PATCH_VIEW_PATCH)">{{ PATCH_LABEL_PATCH_NOTES }}</button>
-				<button type="button" class="view-switch__button" [class.is-active]="currentView === PATCH_VIEW_RELEASE" (click)="selectView(PATCH_VIEW_RELEASE)">{{ PATCH_LABEL_RELEASE_NOTES }}</button>
+				<span
+					class="view-switch__thumb"
+					[class.is-release]="currentView === PATCH_VIEW_RELEASE"></span>
+				<button
+					type="button"
+					class="view-switch__button"
+					[class.is-active]="currentView === PATCH_VIEW_PATCH"
+					(click)="selectView(PATCH_VIEW_PATCH)">
+					{{ PATCH_SWITCH_PREFIX_SPRINT }}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
+				</button>
+				<button
+					type="button"
+					class="view-switch__button"
+					[class.is-active]="currentView === PATCH_VIEW_RELEASE"
+					(click)="selectView(PATCH_VIEW_RELEASE)">
+					{{ PATCH_SWITCH_PREFIX_RELEASE }}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
+				</button>
 			</div>
 		</div>
 
 		@if (currentView === 'patch') {
-		<div class="toolbar">
-			<label class="search">
-				<span class="material-symbols-outlined">search</span>
-				<input
-					type="text"
-					placeholder="Search patch notes…"
-					[(ngModel)]="searchQuery"
-					(ngModelChange)="t.filterGlobal($event, 'contains')" />
-			</label>
-		</div>
-
-		@if (!loading) {
-			<div class="stats-strip">
-				<span class="stat-chip">
-					<span class="stat-number">{{ statsTotal }}</span> total
-				</span>
-				<span class="stat-divider">·</span>
-				<span class="stat-chip">
-					<span class="stat-number stat-resolved">{{ statsResolved }}</span> bugs resolved
-				</span>
-				<span class="stat-divider">·</span>
-				<span class="stat-chip">
-					<span class="stat-number stat-progress">{{ statsInProgress }}</span> in progress
-				</span>
-				<span class="stat-divider">·</span>
-				<span class="stat-chip">
-					<span class="stat-number stat-bug">{{ statsOpenBugs }}</span> open bugs
-				</span>
+			<div class="toolbar">
+				<label class="search">
+					<span class="material-symbols-outlined">search</span>
+					<input
+						type="text"
+						placeholder="Search patch notes…"
+						[(ngModel)]="searchQuery"
+						(ngModelChange)="t.filterGlobal($event, 'contains')" />
+				</label>
 			</div>
-		}
 
-		<p-table
-			#t
-			[value]="(patchNotes$ | async) ?? []"
-			[totalRecords]="statsTotal"
-			[paginator]="true"
-			[rows]="itemsPerPage"
-			[(first)]="indexOfFirstItem"
-			[showCurrentPageReport]="!isNarrowViewport"
-			currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-			[showFirstLastIcon]="true"
-			[showPageLinks]="!isNarrowViewport"
-			[loading]="loading"
-			[showLoader]="false"
-			[globalFilterFields]="['component', 'element', 'details']"
-			(onPage)="pageChange($event)"
-			(onFilter)="onTableFilter()">
-			<ng-template pTemplate="header">
-				<tr>
-					<th class="component">Component</th>
-					<th class="element">Element</th>
-					<th class="details">Details</th>
-					<th class="status">
-						Status
-						<p-columnFilter
-							class="column-filter"
-							#columnFilter
-							display="menu"
-							field="status"
-							matchMode="equals"
-							[showOperator]="false"
-							[showMatchModes]="false"
-							[showAddButton]="false"
-							[showApplyButton]="false"
-							[showClearButton]="false">
-							<ng-template pTemplate="filtericon">
-								<i class="pi pi-filter custom-filter-icon"></i>
-							</ng-template>
-							<ng-template #filter let-value let-filter="filterCallback">
-								<div class="status-filter">
-									@for (s of allSeverity; track s.severity) {
-										<p-tag
-											[value]="s.severity"
-											[icon]="getSeverityIcon(s.severity)"
-											[severity]="getSeverity(s.severity)"
-											[class.selected]="value === s.severity"
-											(click)="filter(s.severity)">
-										</p-tag>
-									}
-								</div>
-								<!-- Custom clear -->
-								<p-tag
-									value="Clear Filter"
-									icon="pi pi-times"
-									severity="secondary"
-									class="clear-tag"
-									(click)="filter(null); columnFilter.hide()">
-								</p-tag>
-							</ng-template>
-						</p-columnFilter>
-					</th>
-					<th class="timestamp">TimeStamp</th>
-					<th class="edit-button hide-on-narrow-or-mobile">Edit</th>
-				</tr>
-			</ng-template>
-			<ng-template pTemplate="loadingbody">
-				@for (_ of skeletonRows; track $index) {
-					<tr class="skeleton-row">
-						<td><p-skeleton /></td>
-						<td><p-skeleton /></td>
-						<td><p-skeleton /></td>
-						<td><p-skeleton /></td>
-						<td><p-skeleton /></td>
-						@if (!isNarrowViewport) {
-							<td><p-skeleton /></td>
-						}
+			@if (!loading) {
+				<div class="stats-strip">
+					<span class="stat-chip">
+						<span class="stat-number">{{ statsTotal }}</span> total
+					</span>
+					<span class="stat-divider">·</span>
+					<span class="stat-chip">
+						<span class="stat-number stat-resolved">{{ statsResolved }}</span> bugs resolved
+					</span>
+					<span class="stat-divider stat-mobile-hidden">·</span>
+					<span class="stat-chip stat-mobile-hidden">
+						<span class="stat-number stat-progress">{{ statsInProgress }}</span> in progress
+					</span>
+					<span class="stat-divider stat-mobile-hidden">·</span>
+					<span class="stat-chip stat-mobile-hidden">
+						<span class="stat-number stat-bug">{{ statsOpenBugs }}</span> open bugs
+					</span>
+				</div>
+			}
+
+			<p-table
+				#t
+				[value]="(patchNotes$ | async) ?? []"
+				[totalRecords]="statsTotal"
+				[paginator]="true"
+				[rows]="itemsPerPage"
+				[(first)]="indexOfFirstItem"
+				[showCurrentPageReport]="!isNarrowViewport"
+				currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+				[showFirstLastIcon]="true"
+				[showPageLinks]="!isNarrowViewport"
+				[loading]="loading"
+				[showLoader]="false"
+				[globalFilterFields]="['component', 'element', 'details']"
+				(onPage)="pageChange($event)"
+				(onFilter)="onTableFilter()">
+				<ng-template pTemplate="header">
+					<tr>
+						<th class="component">Component</th>
+						<th class="element">Element</th>
+						<th class="details">Details</th>
+						<th class="status">
+							Status
+							<p-columnFilter
+								class="column-filter"
+								#columnFilter
+								display="menu"
+								field="status"
+								matchMode="equals"
+								[showOperator]="false"
+								[showMatchModes]="false"
+								[showAddButton]="false"
+								[showApplyButton]="false"
+								[showClearButton]="false">
+								<ng-template pTemplate="filtericon">
+									<i class="pi pi-filter custom-filter-icon"></i>
+								</ng-template>
+								<ng-template #filter let-value let-filter="filterCallback">
+									<div class="status-filter">
+										@for (s of allSeverity; track s.severity) {
+											<p-tag
+												[value]="s.severity"
+												[icon]="getSeverityIcon(s.severity)"
+												[severity]="getSeverity(s.severity)"
+												[class.selected]="value === s.severity"
+												(click)="filter(s.severity)">
+											</p-tag>
+										}
+									</div>
+									<!-- Custom clear -->
+									<p-tag
+										value="Clear Filter"
+										icon="pi pi-times"
+										severity="secondary"
+										class="clear-tag"
+										(click)="filter(null); columnFilter.hide()">
+									</p-tag>
+								</ng-template>
+							</p-columnFilter>
+						</th>
+						<th class="timestamp">TimeStamp</th>
+						<th class="edit-button hide-on-narrow-or-mobile">Edit</th>
 					</tr>
-				}
-			</ng-template>
-			<ng-template pTemplate="emptymessage">
-				<tr>
-					<td [attr.colspan]="isNarrowViewport ? 5 : 6">
-						<div class="empty-state">
-							<span class="material-symbols-outlined empty-icon">note_stack</span>
-							<p>No patch notes match your search</p>
-						</div>
-					</td>
-				</tr>
-			</ng-template>
-			<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
-				<tr
-					(mouseenter)="hoveredRowIndex = rowIndex"
-					(mouseleave)="hoveredRowIndex = null"
-					[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
-					[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
+				</ng-template>
+				<ng-template pTemplate="loadingbody">
+					@for (_ of skeletonRows; track $index) {
+						<tr class="skeleton-row">
+							<td><p-skeleton /></td>
+							<td><p-skeleton /></td>
+							<td><p-skeleton /></td>
+							<td><p-skeleton /></td>
+							<td><p-skeleton /></td>
+							@if (!isNarrowViewport) {
+								<td><p-skeleton /></td>
+							}
+						</tr>
+					}
+				</ng-template>
+				<ng-template pTemplate="emptymessage">
+					<tr>
+						<td [attr.colspan]="isNarrowViewport ? 5 : 6">
+							<div class="empty-state">
+								<span class="material-symbols-outlined empty-icon">note_stack</span>
+								<p>No patch notes match your search</p>
+							</div>
+						</td>
+					</tr>
+				</ng-template>
+				<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+					<tr
+						(mouseenter)="hoveredRowIndex = rowIndex"
+						(mouseleave)="hoveredRowIndex = null"
+						[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
+						[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
 						@if (shouldShowComponent(getRenderedData(t), rowIndex)) {
 							<td
 								[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
 								class="component">
 								<div class="component-content">
 									@if (getComponentOption(row.component); as opt) {
-										<span [class]="opt.iconClass + ' ' + opt.colorClass + ' hide-on-narrow-or-mobile'">{{
-											opt.icon
-										}}</span>
+										<span
+											[class]="
+												opt.iconClass +
+												' ' +
+												opt.colorClass +
+												' hide-on-narrow-or-mobile'
+											"
+											>{{ opt.icon }}</span
+										>
 									}
 									<span>{{ row.component }}</span>
 								</div>
@@ -227,7 +257,9 @@
 						<td class="timestamp">
 							<div>{{ Utilities.getTimestampDate(row.timestamp) }}</div>
 							@if (Utilities.getTimestampTime(row.timestamp)) {
-								<div class="timestamp-time">{{ Utilities.getTimestampTime(row.timestamp) }}</div>
+								<div class="timestamp-time">
+									{{ Utilities.getTimestampTime(row.timestamp) }}
+								</div>
 							}
 						</td>
 
@@ -253,106 +285,112 @@
 									(click)="startEdit(row)"></p-button>
 							}
 						</td>
-				</tr>
-			</ng-template>
-			<ng-template pTemplate="footer">
-				@if (!loading && t.rows && (t.first ?? 0) + t.rows > t.totalRecords - 1) {
-					<tr class="hide-on-narrow-or-mobile">
-						<td class="component">
-							<p-select
-								[options]="components"
-								optionLabel="label"
-								optionValue="label"
-								placeholder="Component"
-								[appendTo]="'body'"
-								panelStyleClass="dropdown-panel-font component-dropdown-panel"
-								[(ngModel)]="newRecord.component"
-								class="input">
-								<ng-template #selectedItem let-value>
-									@if (getComponentOption(value); as opt) {
+					</tr>
+				</ng-template>
+				<ng-template pTemplate="footer">
+					@if (!loading && t.rows && (t.first ?? 0) + t.rows > t.totalRecords - 1) {
+						<tr class="hide-on-narrow-or-mobile">
+							<td class="component">
+								<p-select
+									[options]="components"
+									optionLabel="label"
+									optionValue="label"
+									placeholder="Component"
+									[appendTo]="'body'"
+									panelStyleClass="dropdown-panel-font component-dropdown-panel"
+									[(ngModel)]="newRecord.component"
+									class="input">
+									<ng-template #selectedItem let-value>
+										@if (getComponentOption(value); as opt) {
+											<div class="component-option">
+												<span [class]="opt.iconClass + ' ' + opt.colorClass">{{
+													opt.icon
+												}}</span>
+												<span>{{ opt.label }}</span>
+											</div>
+										}
+									</ng-template>
+									<ng-template #item let-opt>
 										<div class="component-option">
-											<span [class]="opt.iconClass + ' ' + opt.colorClass">{{ opt.icon }}</span>
+											<span [class]="opt.iconClass + ' ' + opt.colorClass">{{
+												opt.icon
+											}}</span>
 											<span>{{ opt.label }}</span>
 										</div>
-									}
-								</ng-template>
-								<ng-template #item let-opt>
-									<div class="component-option">
-										<span [class]="opt.iconClass + ' ' + opt.colorClass">{{ opt.icon }}</span>
-										<span>{{ opt.label }}</span>
-									</div>
-								</ng-template>
-							</p-select>
-						</td>
-						<td class="element">
-							<input
-								pInputText
-								type="text"
-								placeholder="Element"
-								[(ngModel)]="newRecord.element"
-								class="input"
-								(keyup.enter)="submitNewRecord()" />
-						</td>
-						<td class="details">
-							<textarea
-								pTextarea
-								variant="filled"
-								fluid
-								placeholder="Details"
-								[(ngModel)]="newRecord.details"
-								class="input textarea-input"
-								(keyup.enter)="submitNewRecord()"></textarea>
-						</td>
-						<td class="status">
-							<p-select
-								optionLabel="severity"
-								optionValue="severity"
-								[options]="allSeverity"
-								[appendTo]="'body'"
-								panelStyleClass="dropdown-panel-font"
-								[(ngModel)]="newRecord.status"
-								class="input"
-								(keyup.enter)="submitNewRecord()">
-								<ng-template #selectedItem let-value>
-									@if (value) {
+									</ng-template>
+								</p-select>
+							</td>
+							<td class="element">
+								<input
+									pInputText
+									type="text"
+									placeholder="Element"
+									[(ngModel)]="newRecord.element"
+									class="input"
+									(keyup.enter)="submitNewRecord()" />
+							</td>
+							<td class="details">
+								<textarea
+									pTextarea
+									variant="filled"
+									fluid
+									placeholder="Details"
+									[(ngModel)]="newRecord.details"
+									class="input textarea-input"
+									(keyup.enter)="submitNewRecord()"></textarea>
+							</td>
+							<td class="status">
+								<p-select
+									optionLabel="severity"
+									optionValue="severity"
+									[options]="allSeverity"
+									[appendTo]="'body'"
+									panelStyleClass="dropdown-panel-font"
+									[(ngModel)]="newRecord.status"
+									class="input"
+									(keyup.enter)="submitNewRecord()">
+									<ng-template #selectedItem let-value>
+										@if (value) {
+											<div class="status-option">
+												<i [class]="getSeverityIcon(value.severity)"></i>
+												<span>{{ value.severity }}</span>
+											</div>
+										}
+									</ng-template>
+									<ng-template #item let-opt>
 										<div class="status-option">
-											<i [class]="getSeverityIcon(value.severity)"></i>
-											<span>{{ value.severity }}</span>
+											<i [class]="getSeverityIcon(opt.severity)"></i>
+											<span>{{ opt.severity }}</span>
 										</div>
-									}
-								</ng-template>
-								<ng-template #item let-opt>
-									<div class="status-option">
-										<i [class]="getSeverityIcon(opt.severity)"></i>
-										<span>{{ opt.severity }}</span>
-									</div>
-								</ng-template>
-							</p-select>
-						</td>
-						<td class="timeStamp" colspan="2">
-							<p-button
-								label="Add"
-								icon="pi pi-plus"
-								severity="secondary"
-								[disabled]="
-									!newRecord.component.trim() ||
-									!newRecord.details.trim() ||
-									!newRecord.element.trim() ||
-									!newRecord.status
-								"
-								(onClick)="submitNewRecord()"
-								styleClass="input"></p-button>
-						</td>
-					</tr>
-				}
-			</ng-template>
-		</p-table>
+									</ng-template>
+								</p-select>
+							</td>
+							<td class="timeStamp" colspan="2">
+								<p-button
+									label="Add"
+									icon="pi pi-plus"
+									severity="secondary"
+									[disabled]="
+										!newRecord.component.trim() ||
+										!newRecord.details.trim() ||
+										!newRecord.element.trim() ||
+										!newRecord.status
+									"
+									(onClick)="submitNewRecord()"
+									styleClass="input"></p-button>
+							</td>
+						</tr>
+					}
+				</ng-template>
+			</p-table>
 		} @else {
 			@if (releaseNotes$ | async; as notes) {
 				@if (notes[0]; as latest) {
 					<section class="release-hero">
 						<div class="hero-body">
-							<span class="release-badge">{{ latest.badge }} &middot; {{ latest.version }}</span>
+							<span class="release-badge"
+								>{{ latest.badge }} &middot; {{ latest.version }}</span
+							>
 							<h2 class="hero-title">{{ latest.title }}</h2>
 							<div class="hero-date">{{ latest.date }}</div>
 							<p class="hero-summary">{{ latest.summary }}</p>
@@ -373,7 +411,8 @@
 							<div class="chips">
 								@for (section of latest.sections; track section.heading) {
 									<span class="chip">
-										<span class="dot"></span>{{ section.items.length }} {{ section.heading }}
+										<span class="dot"></span>{{ section.items.length }}
+										{{ section.heading }}
 									</span>
 								}
 							</div>
@@ -391,7 +430,9 @@
 									</div>
 									<div class="rel-counts">
 										@for (section of rel.sections.slice(0, 3); track section.heading) {
-											<span class="count">{{ section.items.length }} {{ section.heading }}</span>
+											<span class="count"
+												>{{ section.items.length }} {{ section.heading }}</span
+											>
 										}
 									</div>
 									<span class="rel-date">{{ rel.date }}</span>
@@ -401,20 +442,37 @@
 					}
 				}
 			} @else {
-				<section class="release-hero">
+				<section class="release-hero release-hero--loading">
 					<div class="hero-body">
-						<div class="hero-skeleton-row"><p-skeleton width="9rem" height="1.25rem" borderRadius="999px" /></div>
+						<div class="hero-skeleton-row">
+							<p-skeleton width="9rem" height="1.25rem" borderRadius="999px" />
+						</div>
 						<div class="hero-skeleton-row"><p-skeleton width="20rem" height="2.25rem" /></div>
 						<div class="hero-skeleton-row"><p-skeleton width="7rem" height="0.9rem" /></div>
 						<div class="hero-skeleton-row"><p-skeleton width="100%" height="1rem" /></div>
-						<div class="hero-skeleton-row"><p-skeleton width="80%" height="1rem" /></div>
+						<div class="hero-skeleton-row"><p-skeleton width="85%" height="1rem" /></div>
+						<div class="hero-skeleton-row"><p-skeleton width="70%" height="1rem" /></div>
 						<div class="release-sections">
-							@for (_ of [0, 1, 2]; track $index) {
+							@for (_ of [0, 1, 2, 3, 4]; track $index) {
 								<div class="release-section">
-									<div class="hero-skeleton-row"><p-skeleton width="4rem" height="0.75rem" /></div>
-									<div class="hero-skeleton-row"><p-skeleton width="100%" height="0.85rem" /></div>
-									<div class="hero-skeleton-row"><p-skeleton width="90%" height="0.85rem" /></div>
-									<div class="hero-skeleton-row"><p-skeleton width="95%" height="0.85rem" /></div>
+									<div class="hero-skeleton-row">
+										<p-skeleton width="4rem" height="0.75rem" />
+									</div>
+									<div class="hero-skeleton-row">
+										<p-skeleton width="100%" height="0.85rem" />
+									</div>
+									<div class="hero-skeleton-row">
+										<p-skeleton width="88%" height="0.85rem" />
+									</div>
+									<div class="hero-skeleton-row">
+										<p-skeleton width="95%" height="0.85rem" />
+									</div>
+									<div class="hero-skeleton-row">
+										<p-skeleton width="75%" height="0.85rem" />
+									</div>
+									<div class="hero-skeleton-row">
+										<p-skeleton width="92%" height="0.85rem" />
+									</div>
 								</div>
 							}
 						</div>

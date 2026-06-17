@@ -230,7 +230,6 @@ describe('PatchComponent', () => {
 		});
 	});
 
-
 	// ── isInSameComponentGroup ─────────────────────────────────────────────
 
 	describe('isInSameComponentGroup', () => {
@@ -258,19 +257,28 @@ describe('PatchComponent', () => {
 	describe('isInSameElementGroup', () => {
 		it('returns false when hoveredRowIndex is null', () => {
 			(component as any).hoveredRowIndex = null;
-			const data = [{ component: 'A', element: 'x' }, { component: 'A', element: 'x' }];
+			const data = [
+				{ component: 'A', element: 'x' },
+				{ component: 'A', element: 'x' }
+			];
 			expect((component as any).isInSameElementGroup(data, 0)).toBeFalse();
 		});
 
 		it('returns true when component and element both match the hovered row', () => {
 			(component as any).hoveredRowIndex = 0;
-			const data = [{ component: 'A', element: 'x' }, { component: 'A', element: 'x' }];
+			const data = [
+				{ component: 'A', element: 'x' },
+				{ component: 'A', element: 'x' }
+			];
 			expect((component as any).isInSameElementGroup(data, 1)).toBeTrue();
 		});
 
 		it('returns false when the element differs from the hovered row', () => {
 			(component as any).hoveredRowIndex = 0;
-			const data = [{ component: 'A', element: 'x' }, { component: 'A', element: 'y' }];
+			const data = [
+				{ component: 'A', element: 'x' },
+				{ component: 'A', element: 'y' }
+			];
 			expect((component as any).isInSameElementGroup(data, 1)).toBeFalse();
 		});
 	});
@@ -314,10 +322,7 @@ describe('PatchComponent — submitNewRecord isBug derivation', () => {
 
 		await TestBed.configureTestingModule({
 			imports: [PatchComponent],
-			providers: [
-				MessageService,
-				{ provide: DatabaseService, useValue: mockDb }
-			]
+			providers: [MessageService, { provide: DatabaseService, useValue: mockDb }]
 		}).compileComponents();
 
 		const fixture = TestBed.createComponent(PatchComponent);
@@ -334,8 +339,13 @@ describe('PatchComponent — submitNewRecord isBug derivation', () => {
 	 */
 	function submitWithStatus(statusValue: string): any {
 		(component as any).newRecord = {
-			key: '', component: 'Home', element: 'Test', details: 'Detail',
-			status: statusValue, timestamp: '', isBug: false
+			key: '',
+			component: 'Home',
+			element: 'Test',
+			details: 'Detail',
+			status: statusValue,
+			timestamp: '',
+			isBug: false
 		};
 		(component as any).submitNewRecord();
 		flushMicrotasks();

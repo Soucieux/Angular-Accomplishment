@@ -700,7 +700,7 @@
 .content-container { animation: entReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both; }
 
 /* ─────────────────────────────────────────
-   Responsive ≤ 940 px (mobile)
+   Responsive ≤ 940 px (narrow viewport)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
 	.container-entertainment {

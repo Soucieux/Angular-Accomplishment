@@ -150,7 +150,7 @@
 }
 .page-subtitle {
 	color: var(--ink-muted);
-	font-size: 14px;
+	font-size: 16px;
 	margin: 0;
 }
 .header-ornament {
@@ -199,7 +199,7 @@
 	background: #fff;
 	padding: 0 18px 0 44px;
 	font: inherit;
-	font-size: 14px;
+	font-size: 16px;
 	color: var(--ink);
 	outline: none;
 	transition:
@@ -226,7 +226,7 @@
 	padding: 0 22px;
 	border-radius: 999px;
 	font: inherit;
-	font-size: 14px;
+	font-size: 16px;
 	font-weight: 500;
 	border: 1px solid transparent;
 	cursor: pointer;
@@ -491,7 +491,7 @@
 	font-weight: 500;
 }
 .meta-chip .material-symbols-outlined {
-	font-size: 14px;
+	font-size: 16px;
 }
 .view-recipe {
 	grid-row: 2;
@@ -1081,7 +1081,7 @@
 	white-space: nowrap;
 }
 .ingredient-quantity-number {
-	font-size: 14px;
+	font-size: 16px;
 	font-weight: 700;
 	color: #d97706;
 }
@@ -1452,7 +1452,7 @@
 	color: var(--rose);
 }
 .field-error .material-symbols-outlined {
-	font-size: 14px;
+	font-size: 16px;
 }
 .editor-meta-chip.select-chip {
 	position: relative;
@@ -1613,7 +1613,7 @@
 	margin-left: 0;
 }
 .type-tabs .manage-button .material-symbols-outlined {
-	font-size: 14px;
+	font-size: 16px;
 }
 .type-tab {
 	display: inline-flex;
@@ -1636,7 +1636,7 @@
 	transform: translateY(-1px);
 }
 .type-tab .emo {
-	font-size: 14px;
+	font-size: 16px;
 	line-height: 1;
 }
 .type-tab.veg {
@@ -2241,7 +2241,7 @@
 }
 
 /* ─────────────────────────────────────────
-   Responsive ≤ 940 px (mobile)
+   Responsive ≤ 940 px (narrow viewport)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
 	.recipe-card .name {

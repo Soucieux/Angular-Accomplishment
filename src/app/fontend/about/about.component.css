@@ -316,7 +316,7 @@ p-chip.about-chip {
 }
 
 /* ────────────────────────────────────────
-   Mobile
+   Narrow viewport
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
 	.container-about {

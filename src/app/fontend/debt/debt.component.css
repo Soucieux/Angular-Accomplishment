@@ -76,7 +76,7 @@
 }
 
 .page-subtitle {
-	font-size: 15px;
+	font-size: 16px;
 	color: rgba(255, 255, 255, 0.78);
 	margin: 3px 0 0;
 }
@@ -90,7 +90,7 @@
 	color: #fff !important;
 	border: none;
 	border-radius: 9999px;
-	font-size: 15px;
+	font-size: 16px;
 	font-weight: 600;
 	cursor: pointer;
 	white-space: nowrap;
@@ -930,7 +930,7 @@
 
 .debts-empty-message {
 	color: #334155;
-	font-size: 15px;
+	font-size: 16px;
 	max-width: 380px;
 }
 
@@ -1025,9 +1025,6 @@
 		font-size: 28px;
 	}
 
-	.page-subtitle {
-		font-size: 13px;
-	}
 
 	.new-debt-button {
 		padding: 5px 10px 5px 8px;

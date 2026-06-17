@@ -598,7 +598,7 @@
 }
 
 /* ─────────────────────────────────────────
-   Responsive ≤ 940 px (mobile)
+   Responsive ≤ 940 px (narrow viewport)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
 	.container-resonance {

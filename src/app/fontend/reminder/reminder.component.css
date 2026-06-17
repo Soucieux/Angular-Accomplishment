@@ -742,7 +742,7 @@
 }
 
 /* ─────────────────────────────────────────
-   Responsive ≤ 940px (mobile)
+   Responsive ≤ 940px (narrow viewport)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
 	.rm-title {

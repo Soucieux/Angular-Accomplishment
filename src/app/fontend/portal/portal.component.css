@@ -384,7 +384,7 @@
 
 .page-subtitle {
 	color: rgba(30, 15, 35, 0.55);
-	font-size: 14px;
+	font-size: 16px;
 	margin: 0;
 	font-weight: 400;
 }
@@ -646,7 +646,7 @@
 	border-radius: 6px;
 	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 	color: #fff;
-	font-size: 14px;
+	font-size: 16px;
 	font-weight: 700;
 	display: flex;
 	align-items: center;
@@ -731,7 +731,7 @@
 }
 
 .link-action-button .material-symbols-outlined {
-	font-size: 14px;
+	font-size: 16px;
 }
 
 /* ─────────────────────────────────────────
@@ -960,7 +960,7 @@
 	border: 1.5px solid rgba(0, 0, 0, 0.12);
 	border-radius: 10px;
 	padding: 10px 12px;
-	font-size: 14px;
+	font-size: 16px;
 	color: #1a1a1a;
 	background: rgba(255, 255, 255, 0.8);
 	outline: none;
@@ -1137,16 +1137,25 @@
 }
 
 /* ─────────────────────────────────────────
-   Responsive ≤ 940 px (mobile)
+   Responsive ≤ 940 px (narrow viewport)
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
+	.header-wrapper {
+		flex-direction: column;
+	}
+
 	.header-main {
 		width: fit-content;
 	}
 
+	.header-main h4 {
+		margin: 5px 0;
+		font-size: 22px;
+	}
+
 	.date-calculator-toggle-wrapper {
-		justify-content: flex-end;
-		width: fit-content;
+		padding: 5px 14px;
+		justify-content: end;
 	}
 
 	.date-calculator-segment-button {
@@ -1209,7 +1218,7 @@
 
 	.date-calculator-cell-button:not(.charged):not(.today)::before {
 		content: '+';
-		font-size: 14px;
+		font-size: 16px;
 		font-weight: 700;
 		line-height: 1;
 		color: #4776e6 !important;

@@ -4,6 +4,7 @@ import {
 	ElementRef,
 	HostListener,
 	Inject,
+	NgZone,
 	OnInit,
 	PLATFORM_ID,
 	ViewChild,
@@ -40,6 +41,7 @@ import {
 	CTX_LABEL_SELECT_ALL,
 	CTX_LABEL_SIGN_IN,
 	CTX_LABEL_SIGN_OUT,
+	ACCOUNT_TITLE_PAGE,
 	DIALOG_BTN_SIGN_OUT,
 	DIALOG_CONFIRM,
 	DIALOG_HEADER_SIGN_OUT,
@@ -107,6 +109,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		end: number | null;
 	} | null = null;
 	private readonly ctxNavItems = NAV_ITEMS.filter((item) => ['home', 'reminder'].includes(item.id));
+	protected readonly ACCOUNT_TITLE_PAGE = ACCOUNT_TITLE_PAGE;
 	protected readonly navItems: NavItem[] = NAV_ITEMS;
 	protected readonly primaryIds: string[] = PRIMARY_IDS;
 	protected activeRoute = '';
@@ -118,6 +121,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		private dialogService: DialogService,
 		private notificationService: NotificationService,
 		private router: Router,
+		private ngZone: NgZone,
 		private utilities: Utilities,
 		@Inject(PLATFORM_ID) private platformId: object
 	) {
@@ -152,6 +156,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 				this.mobileSignedIn = !!user;
 				this.mobileUserName = Utilities.getUserDisplayName(user);
 			});
+			this.ngZone.runOutsideAngular(() => {
+				document.addEventListener('scroll', () => {
+					if (this.ctxVisible) this.ngZone.run(() => this.closeCtxMenu());
+				}, { capture: true, passive: true });
+			});
 		}
 	}
 
@@ -185,7 +194,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Closes the account popover when a mousedown lands outside the account row wrapper.
+	 * Handles all document mousedown events. Closes the account popover when a
+	 * left-click lands outside the account row wrapper, and saves the current text
+	 * selection state before a right-click fires so onContextMenu can restore the
+	 * cursor position after WKWebView's native auto-select fires.
 	 *
 	 * @param event - The MouseEvent from the document mousedown listener.
 	 */
@@ -195,21 +207,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 			!this.accountRowWrapper.nativeElement.contains(event.target as Node)) {
 			this.accountMenuOpen = false;
 		}
-	}
-
-	/**
-	 * Saves the current selection state of an input or textarea on right-click
-	 * mousedown, before WKWebView's native auto-select fires and changes it.
-	 * Stored so onContextMenu can restore the original cursor position.
-	 *
-	 * @param event - The MouseEvent from the document mousedown listener.
-	 */
-	@HostListener('document:mousedown', ['$event'])
-	protected onRightMouseDown(event: MouseEvent): void {
-		if (!this.isTauriApp || event.button !== 2) return;
-		const target = event.target as HTMLElement;
-		if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
-			this.ctxSavedSelection = { el: target, start: target.selectionStart, end: target.selectionEnd };
+		if (this.isTauriApp && event.button === 2) {
+			const target = event.target as HTMLElement;
+			if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+				this.ctxSavedSelection = { el: target, start: target.selectionStart, end: target.selectionEnd };
+			}
 		}
 	}
 
@@ -321,14 +323,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Closes the custom context menu overlay when the page is scrolled.
-	 */
-	@HostListener('window:scroll')
-	protected onWindowScroll(): void {
-		if (this.ctxVisible) this.closeCtxMenu();
-	}
-
-	/**
 	 * Applies the correct nav mode for the given viewport width. Called on
 	 * construction and on every resize so both paths share the same logic.
 	 * navMobile reflects actual mobile-device detection (coarse pointer); compact
@@ -363,6 +357,14 @@ export class AppComponent implements OnInit, AfterViewInit {
 			}
 			this.navCompact = true;
 		}
+	}
+
+	/**
+	 * Navigates to the account page and closes the account popover.
+	 */
+	protected navigateToAccount(): void {
+		this.accountMenuOpen = false;
+		this.router.navigate(['/account']).catch(() => {});
 	}
 
 	/**

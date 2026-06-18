@@ -29,7 +29,13 @@ export const NAV_ITEMS: NavItem[] = [
 		icon: 'note_stack',
 		grad: 'linear-gradient(135deg,#a5b4fc,#3730a3)'
 	},
-	{ id: 'about', label: 'About', icon: 'badge', grad: 'linear-gradient(135deg,#f0abfc,#7e22ce)' }
+	{ id: 'about', label: 'About', icon: 'badge', grad: 'linear-gradient(135deg,#f0abfc,#7e22ce)' },
+	{
+		id: 'account',
+		label: 'Account',
+		icon: 'manage_accounts',
+		grad: 'linear-gradient(135deg,#1e3a8a,#7dd3fc)'
+	}
 ];
 
 /** The destinations promoted to the always-visible dock (in display order). */
@@ -45,7 +51,8 @@ export const ROUTE_TO_NAV_ID: Record<string, string> = {
 	'/reminder': 'reminder',
 	'/debt': 'debt',
 	'/patch': 'patch',
-	'/about': 'about'
+	'/about': 'about',
+	'/account': 'account'
 };
 
 /** Maps bottom-nav item ids to Angular router URL paths. */
@@ -58,5 +65,6 @@ export const NAV_ID_TO_ROUTE: Record<string, string> = {
 	reminder: '/reminder',
 	debt: '/debt',
 	patch: '/patch',
-	about: '/about'
+	about: '/about',
+	account: '/account'
 };

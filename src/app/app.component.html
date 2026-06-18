@@ -136,6 +136,11 @@
 										</div>
 									</div>
 									<button
+										class="account-menu-popover-item"
+										(click)="navigateToAccount()">
+										<span class="material-symbols-outlined">manage_accounts</span>{{ ACCOUNT_TITLE_PAGE }}
+									</button>
+									<button
 										class="account-menu-popover-item account-menu-popover-item--danger"
 										(click)="logout()">
 										<span class="material-symbols-outlined">logout</span>Sign out

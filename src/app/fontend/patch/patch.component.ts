@@ -172,7 +172,13 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-about'
 			},
-			{ label: 'Login', icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' } // pi icon — CSS only, no ligature text
+			{ label: 'Login', icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' }, // pi icon — CSS only, no ligature text
+			{
+				label: 'Account',
+				icon: 'manage_accounts',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-account'
+			}
 		];
 	protected loading = true;
 	protected severity: { severity: string }[] | undefined;

@@ -1230,6 +1230,13 @@
 	-webkit-text-fill-color: transparent;
 }
 
+.icon-account {
+	background: linear-gradient(135deg, #1e3a8a, #7dd3fc);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
 /* ─────────────────────────────────────────
    Entrance animations
 ───────────────────────────────────────── */

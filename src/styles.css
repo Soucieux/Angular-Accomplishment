@@ -122,6 +122,11 @@ textarea {
 	font-family: inherit;
 }
 
+/* Placeholder text does not inherit font-family in most browsers — force it. */
+::placeholder {
+	font-family: inherit;
+}
+
 button,
 .mat-button {
 	color: black !important;

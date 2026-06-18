@@ -94,8 +94,6 @@ export const APP_BREAKPOINT_COMPACT = 1300;
 export const APP_BREAKPOINT_NARROW = 940;
 /** CSS class added to &lt;body&gt; when running inside the Tauri desktop app — scopes Tauri-only global styles. */
 export const TAURI_MODE_CLASS = 'tauri-mode';
-/** Tauri v2 IPC command that initiates native window dragging via the plugin:window plugin. */
-export const TAURI_CMD_START_DRAGGING = 'plugin:window|start_dragging';
 /** Milliseconds before the loading-timeout retry dialog appears when a page is stuck loading. */
 export const LOADING_TIMEOUT_MS = 7000;
 /** Timeout key for the Home page loading guard. */

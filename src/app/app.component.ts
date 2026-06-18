@@ -44,11 +44,13 @@ import {
 	DIALOG_HEADER_SIGN_OUT,
 	LS_NAV_COLLAPSED_KEY,
 	MSG_LOGOUT_CONFIRM,
-	TAURI_CMD_START_DRAGGING,
 	TAURI_MODE_CLASS
 } from './common/app.constant';
-import { ContextMenuAction, DesktopContextMenuComponent } from './fontend/desktop-context-menu/context-menu.component';
-import { readText } from '@tauri-apps/plugin-clipboard-manager';
+import {
+	ContextMenuAction,
+	DesktopContextMenuComponent
+} from './fontend/desktop-context-menu/context-menu.component';
+import { readText } from '@tauri-apps/api/clipboard';
 import { Observable, filter } from 'rxjs';
 import { BottomNavComponent } from './fontend/mobile-bottom-nav/bottom-nav.component';
 import { NavItem } from './fontend/mobile-bottom-nav/bottom-nav.model';
@@ -91,11 +93,16 @@ export class AppComponent implements OnInit, AfterViewInit {
 	protected navMode: 'side' | 'over' = 'side';
 	protected compactOverlayOpen = false;
 	protected isTauriApp = false;
+	private tauriAppWindow: { startDragging: () => Promise<void> } | null = null;
 	protected ctxVisible = false;
 	protected ctxX = 0;
 	protected ctxY = 0;
 	protected ctxActions: ContextMenuAction[] = [];
-	private ctxSavedSelection: { el: HTMLInputElement | HTMLTextAreaElement; start: number | null; end: number | null } | null = null;
+	private ctxSavedSelection: {
+		el: HTMLInputElement | HTMLTextAreaElement;
+		start: number | null;
+		end: number | null;
+	} | null = null;
 	private readonly ctxNavItems = NAV_ITEMS.filter((item) => ['home', 'reminder'].includes(item.id));
 	protected readonly navItems: NavItem[] = NAV_ITEMS;
 	protected readonly primaryIds: string[] = PRIMARY_IDS;
@@ -114,7 +121,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (isPlatformBrowser(this.platformId)) {
 			this.navCollapsed = localStorage.getItem(LS_NAV_COLLAPSED_KEY) === 'true';
 			this.applyViewportState(window.innerWidth);
-			this.isTauriApp = '__TAURI_INTERNALS__' in window;
+			this.isTauriApp = '__TAURI__' in window;
 			if (this.isTauriApp) {
 				document.body.classList.add(TAURI_MODE_CLASS);
 			}
@@ -128,6 +135,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
+			if (this.isTauriApp) {
+				import('@tauri-apps/api/window').then(({ appWindow }) => {
+					this.tauriAppWindow = appWindow;
+				});
+			}
 			this.currentUser$ = this.authService.getCurrentUser();
 			this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
 				const url = (event as NavigationEnd).urlAfterRedirects.split('?')[0];
@@ -211,8 +223,18 @@ export class AppComponent implements OnInit, AfterViewInit {
 		if (isInput) {
 			const inputEl = target as HTMLInputElement | HTMLTextAreaElement;
 			actions.push(
-				{ label: CTX_LABEL_COPY, icon: CTX_ICON_COPY, color: CTX_COLOR_CLIPBOARD, execute: () => document.execCommand('copy') },
-				{ label: CTX_LABEL_CUT, icon: CTX_ICON_CUT, color: CTX_COLOR_CLIPBOARD, execute: () => document.execCommand('cut') },
+				{
+					label: CTX_LABEL_COPY,
+					icon: CTX_ICON_COPY,
+					color: CTX_COLOR_CLIPBOARD,
+					execute: () => document.execCommand('copy')
+				},
+				{
+					label: CTX_LABEL_CUT,
+					icon: CTX_ICON_CUT,
+					color: CTX_COLOR_CLIPBOARD,
+					execute: () => document.execCommand('cut')
+				},
 				{
 					label: CTX_LABEL_PASTE,
 					icon: CTX_ICON_PASTE,
@@ -222,13 +244,19 @@ export class AppComponent implements OnInit, AfterViewInit {
 							.then((text) => {
 								const start = inputEl.selectionStart ?? inputEl.value.length;
 								const end = inputEl.selectionEnd ?? start;
-								inputEl.value = inputEl.value.slice(0, start) + text + inputEl.value.slice(end);
-								inputEl.selectionStart = inputEl.selectionEnd = start + text.length;
+								inputEl.value =
+									inputEl.value.slice(0, start) + text + inputEl.value.slice(end);
+								inputEl.selectionStart = inputEl.selectionEnd = start + (text ?? "").length;
 								inputEl.dispatchEvent(new Event('input', { bubbles: true }));
 							})
 							.catch(() => {})
 				},
-				{ label: CTX_LABEL_SELECT_ALL, icon: CTX_ICON_SELECT_ALL, color: CTX_COLOR_CLIPBOARD, execute: () => inputEl.select() }
+				{
+					label: CTX_LABEL_SELECT_ALL,
+					icon: CTX_ICON_SELECT_ALL,
+					color: CTX_COLOR_CLIPBOARD,
+					execute: () => inputEl.select()
+				}
 			);
 		}
 		for (const [i, item] of this.ctxNavItems.entries()) {
@@ -246,11 +274,12 @@ export class AppComponent implements OnInit, AfterViewInit {
 				icon: CTX_ICON_SIGN_OUT,
 				color: CTX_COLOR_SIGN_OUT,
 				execute: () =>
-					this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, () => this.logout(), [
-						MSG_LOGOUT_CONFIRM,
-						DIALOG_HEADER_SIGN_OUT,
-						DIALOG_BTN_SIGN_OUT
-					]),
+					this.dialogService.openDialog(
+						this.dialogComponentContainer,
+						DIALOG_CONFIRM,
+						() => this.logout(),
+						[MSG_LOGOUT_CONFIRM, DIALOG_HEADER_SIGN_OUT, DIALOG_BTN_SIGN_OUT]
+					),
 				separator: true
 			});
 		} else {
@@ -440,16 +469,15 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	/**
 	 * Initiates a native window drag when the user presses the left mouse button
-	 * on a designated drag surface in the Tauri desktop app. Uses the Tauri v2
-	 * internal invoke directly because the attribute-based data-tauri-drag-region
-	 * mechanism is unreliable inside Angular's zone.js event loop on repeat clicks.
+	 * on a designated drag surface in the Tauri desktop app. Delegates to the
+	 * pre-cached appWindow reference loaded in ngOnInit, avoiding per-call import
+	 * overhead and the unreliable attribute-based data-tauri-drag-region mechanism.
 	 *
 	 * @param event - The MouseEvent from the mousedown binding on the drag surface.
 	 */
 	protected startWindowDrag(event: MouseEvent): void {
 		if (event.button !== 0) return;
-		(window as unknown as { __TAURI_INTERNALS__: { invoke: (cmd: string) => Promise<unknown> } })
-			.__TAURI_INTERNALS__.invoke(TAURI_CMD_START_DRAGGING).catch(() => {});
+		this.tauriAppWindow?.startDragging().catch(() => {});
 	}
 
 	/**

@@ -234,6 +234,11 @@
 	border-right: none !important;
 	border-radius: 12px 0 0 12px !important;
 }
+::ng-deep .v-lamp-form [pinputtext][type='password'] {
+	font-family: caption;
+	font-size: 20px;
+	letter-spacing: 1.5px;
+}
 ::ng-deep .v-lamp-form [pinputtext]::placeholder {
 	color: rgba(220, 230, 240, 0.5) !important;
 }

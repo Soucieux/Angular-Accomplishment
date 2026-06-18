@@ -800,3 +800,36 @@ export const CTX_COLOR_CLIPBOARD = 'linear-gradient(135deg, #d53369, #daae51)';
 export const CTX_COLOR_SIGN_OUT = 'linear-gradient(135deg, #d53369, #b82d5a)';
 export const CTX_COLOR_SIGN_IN = 'linear-gradient(135deg, #1a6dff, #00d2ff)';
 export const CTX_SEARCH_PLACEHOLDER = 'Search…';
+
+/* ─────────────────────────────────────────
+   Account page
+───────────────────────────────────────── */
+
+export const ACCOUNT_TITLE_PAGE = 'My Account';
+export const ACCOUNT_LABEL_PROFILE_TAGLINE = 'Living intentionally, one entry at a time.';
+export const ACCOUNT_LABEL_MEMBER_SINCE = 'Member since Feb 2025';
+export const ACCOUNT_LABEL_STREAK_SUFFIX = ' day streak';
+export const ACCOUNT_LABEL_VERIFIED = 'Verified';
+export const ACCOUNT_LABEL_IDENTITY_TITLE = 'Identity & Security';
+export const ACCOUNT_LABEL_SECOND_BRAIN_TITLE = 'Second Brain';
+export const ACCOUNT_LABEL_MILESTONES_TITLE = 'Milestones';
+export const ACCOUNT_LABEL_DANGER_ZONE_TITLE = 'Danger Zone';
+export const ACCOUNT_LABEL_USERNAME = 'Username';
+export const ACCOUNT_LABEL_EMAIL = 'Email';
+export const ACCOUNT_LABEL_CHANGE_PASSWORD = 'Change Password';
+export const ACCOUNT_LABEL_NEW_PASSWORD = 'New password';
+export const ACCOUNT_LABEL_CONFIRM_PASSWORD = 'Confirm password';
+export const ACCOUNT_LABEL_SAVE = 'Save';
+export const ACCOUNT_LABEL_DELETE_ACCOUNT = 'Delete Account';
+export const ACCOUNT_LABEL_DELETE_DESCRIPTION =
+	'Permanently removes your account and all data.\nThis cannot be undone.';
+export const ACCOUNT_MSG_USERNAME_UPDATED = 'Username updated';
+export const ACCOUNT_MSG_PASSWORD_UPDATED = 'Password updated';
+export const ACCOUNT_MSG_USERNAME_TOO_SHORT = 'Username must be at least 3 characters.';
+export const ACCOUNT_MSG_PASSWORD_TOO_SHORT = 'Password must be at least 6 characters.';
+export const ACCOUNT_MSG_PASSWORD_MISMATCH = 'Passwords do not match.';
+export const ACCOUNT_MSG_DELETE_CONFIRMED = 'Account deletion requested';
+export const ACCOUNT_DIALOG_DELETE_MSG =
+	'This will permanently delete your account and all associated data. This action cannot be undone.';
+export const ACCOUNT_DIALOG_DELETE_HEADER = 'Delete Account';
+export const ACCOUNT_DIALOG_DELETE_BTN = 'Delete';

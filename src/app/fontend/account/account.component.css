@@ -1,0 +1,549 @@
+/* ─────────────────────────────────────────
+   Outer glass-card layout
+───────────────────────────────────────── */
+
+.glass-card {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* ─────────────────────────────────────────
+   Profile header
+───────────────────────────────────────── */
+
+.profile-header {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	padding: 20px 24px;
+	background: linear-gradient(135deg, rgba(30, 58, 138, 0.13) 0%, rgba(125, 211, 252, 0.07) 100%);
+	border: 1px solid rgba(30, 58, 138, 0.12);
+	border-radius: 12px;
+}
+
+.profile-avatar {
+	flex-shrink: 0;
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #1e3a8a 0%, #7dd3fc 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24px;
+	font-weight: 700;
+	color: #fff;
+	letter-spacing: 1px;
+}
+
+.profile-info {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.profile-name {
+	margin: 0;
+	font-size: 22px;
+	font-weight: 700;
+	color: rgba(0, 0, 0, 0.82);
+	line-height: 1.2;
+}
+
+.profile-tagline {
+	margin: 0;
+	font-size: 13px;
+	color: rgba(0, 0, 0, 0.45);
+}
+
+.profile-chips {
+	display: flex;
+	gap: 8px;
+	margin-top: 6px;
+	flex-wrap: wrap;
+}
+
+.profile-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 10px;
+	border-radius: 999px;
+	background: rgba(30, 58, 138, 0.09);
+	border: 1px solid rgba(30, 58, 138, 0.2);
+	font-size: 12px;
+	color: #1e3a8a;
+}
+
+.profile-chip .material-symbols-outlined {
+	font-size: 14px;
+}
+
+/* ─────────────────────────────────────────
+   2×2 card grid
+───────────────────────────────────────── */
+
+.account-grid {
+	flex: 1;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 1fr 1fr;
+	gap: 14px;
+	min-height: 0;
+}
+
+/* ─────────────────────────────────────────
+   Inner cards
+───────────────────────────────────────── */
+
+.account-card {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 15px 18px;
+	background: rgba(0, 0, 0, 0.03);
+	border: 1px solid rgba(0, 0, 0, 0.07);
+	border-radius: 12px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.4s ease;
+}
+
+.account-card::-webkit-scrollbar {
+	width: 8px;
+}
+.account-card::-webkit-scrollbar-track {
+	background: transparent;
+}
+.account-card::-webkit-scrollbar-thumb {
+	background: transparent;
+	border-radius: 999px;
+	transition: background 0.4s ease;
+}
+.account-card.is-scrolling {
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+}
+.account-card.is-scrolling::-webkit-scrollbar-thumb {
+	background: rgba(213, 51, 105, 0.28);
+}
+.account-card.is-scrolling::-webkit-scrollbar-thumb:hover {
+	background: #d53369;
+}
+
+.card-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+
+.card-icon {
+	font-size: 24px;
+	color: rgba(0, 0, 0, 0.35);
+}
+
+.card-title {
+	font-size: 18px;
+	font-weight: 600;
+	color: rgba(0, 0, 0, 0.75);
+	letter-spacing: 0.3px;
+}
+
+/* ─────────────────────────────────────────
+   Identity & Security card
+───────────────────────────────────────── */
+
+.field-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.field-label {
+	font-size: 12px;
+	font-weight: 500;
+	color: rgba(0, 0, 0, 0.38);
+	text-transform: uppercase;
+	letter-spacing: 0.6px;
+}
+
+.field-row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.account-input {
+	flex: 1;
+	background: rgba(0, 0, 0, 0.05);
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-radius: 8px;
+	padding: 8px 12px;
+	color: #1a1a2e;
+	font-size: 14px;
+	outline: none;
+	transition: border-color 0.2s ease;
+}
+
+.account-input:focus {
+	border-color: rgba(30, 58, 138, 0.45);
+}
+
+.account-input::placeholder {
+	color: rgba(0, 0, 0, 0.28);
+}
+
+.save-button {
+	padding: 8px 14px;
+	border-radius: 8px;
+	border: 1px solid rgba(30, 58, 138, 0.3);
+	background: rgba(30, 58, 138, 0.09);
+	color: #1e3a8a;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		background 0.2s ease,
+		border-color 0.2s ease;
+	flex-shrink: 0;
+}
+
+.save-button:hover {
+	background: rgba(30, 58, 138, 0.16);
+	border-color: rgba(30, 58, 138, 0.5);
+}
+
+.email-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.email-value {
+	font-size: 14px;
+	color: rgba(0, 0, 0, 0.6);
+}
+
+.verified-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-size: 12px;
+	color: #16a34a;
+	font-weight: 500;
+}
+
+.verified-badge .material-symbols-outlined {
+	font-size: 14px;
+}
+
+.password-input-wrapper {
+	display: flex;
+	align-items: center;
+	background: rgba(0, 0, 0, 0.05);
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-radius: 8px;
+	transition: border-color 0.2s ease;
+}
+
+.password-input-wrapper:focus-within {
+	border-color: rgba(30, 58, 138, 0.45);
+}
+
+.password-input-wrapper .account-input {
+	border: none;
+	background: transparent;
+	border-radius: 8px 0 0 8px;
+}
+
+.password-input-wrapper .account-input:focus {
+	border-color: transparent;
+}
+
+input[type='password'] {
+	font-family: caption;
+	font-size: 16px;
+	letter-spacing: 1.5px;
+}
+
+input[type='password']::placeholder {
+	font-family: 'app-font';
+	font-size: 14px;
+	letter-spacing: normal;
+}
+
+.visibility-button {
+	padding: 0 10px;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: rgba(0, 0, 0, 0.32);
+	display: flex;
+	align-items: center;
+	transition: color 0.2s ease;
+	flex-shrink: 0;
+}
+
+.visibility-button:hover {
+	color: rgba(0, 0, 0, 0.65);
+}
+
+.visibility-button .material-symbols-outlined {
+	font-size: 18px;
+}
+
+.strength-meter {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.strength-segment {
+	flex: 1;
+	height: 4px;
+	border-radius: 999px;
+	transition: background 0.3s ease;
+}
+
+.strength-label {
+	font-size: 11px;
+	font-weight: 600;
+	margin-left: 6px;
+	white-space: nowrap;
+	transition: color 0.3s ease;
+}
+
+/* ─────────────────────────────────────────
+   Second Brain card
+───────────────────────────────────────── */
+
+.stat-list {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+	gap: 10px;
+	height: 100%;
+}
+
+.stat-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.stat-icon-tile {
+	flex-shrink: 0;
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.stat-icon-tile .material-symbols-outlined {
+	font-size: 18px;
+	color: #fff;
+}
+
+.stat-label {
+	flex: 1;
+	font-size: 14px;
+	color: rgba(0, 0, 0, 0.58);
+}
+
+.stat-value {
+	font-size: 18px;
+	font-weight: 700;
+	color: #1a1a2e;
+	line-height: 1;
+}
+
+/* ─────────────────────────────────────────
+   Milestones card
+───────────────────────────────────────── */
+
+.milestone-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.milestone-row {
+	display: flex;
+	gap: 14px;
+	position: relative;
+}
+
+.milestone-dot {
+	flex-shrink: 0;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #1e3a8a;
+	margin-top: 5px;
+	position: relative;
+	z-index: 1;
+}
+
+/* Vertical connector line between milestone dots */
+.milestone-row:not(:last-child)::before {
+	content: '';
+	position: absolute;
+	left: 4px;
+	top: 15px;
+	width: 2px;
+	bottom: -10px;
+	background: rgba(30, 58, 138, 0.2);
+}
+
+.milestone-content {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding-bottom: 14px;
+}
+
+.milestone-title {
+	font-size: 14px;
+	font-weight: 700;
+	color: rgba(0, 0, 0, 0.82);
+}
+
+.milestone-date {
+	font-size: 12px;
+	color: #1e3a8a;
+	font-weight: 500;
+}
+
+.milestone-note {
+	font-size: 12px;
+	color: rgba(0, 0, 0, 0.42);
+	font-style: italic;
+}
+
+/* ─────────────────────────────────────────
+   Danger Zone card
+───────────────────────────────────────── */
+
+.account-card--danger {
+	background: rgba(239, 68, 68, 0.07);
+	border-color: rgba(239, 68, 68, 0.2);
+}
+
+.account-card--danger .card-icon,
+.account-card--danger .card-title {
+	color: #dc2626;
+}
+
+.danger-content {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.danger-action-row {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 14px 16px;
+	border-radius: 10px;
+	border: 1px solid rgba(239, 68, 68, 0.18);
+	background: rgba(239, 68, 68, 0.05);
+}
+
+.danger-action-info {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.danger-action-name {
+	font-size: 14px;
+	font-weight: 600;
+	color: #dc2626;
+}
+
+.danger-action-description {
+	font-size: 12px;
+	color: rgba(0, 0, 0, 0.5);
+	line-height: 1.4;
+	white-space: pre-line;
+}
+
+.delete-account-button {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 14px;
+	border-radius: 8px;
+	border: 1px solid rgba(239, 68, 68, 0.35);
+	background: rgba(239, 68, 68, 0.1);
+	color: #dc2626;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		background 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.delete-account-button:hover {
+	background: rgba(239, 68, 68, 0.2);
+	border-color: rgba(239, 68, 68, 0.55);
+}
+
+.delete-account-button .material-symbols-outlined {
+	font-size: 16px;
+}
+
+/* ─────────────────────────────────────────
+   Narrow viewport (≤ 940px)
+───────────────────────────────────────── */
+
+@media (max-width: 940px) {
+	/* Override glass-card.css's mobile padding-bottom (designed for single full-page cards) */
+	.glass-card {
+		padding-bottom: 80px;
+	}
+
+	.card-icon {
+		font-size: 20px;
+	}
+
+	.card-title {
+		font-size: 15px;
+	}
+
+	.account-grid {
+		grid-template-columns: 1fr;
+		grid-template-rows: auto;
+		flex: none;
+	}
+
+	.profile-header {
+		padding: 16px;
+	}
+
+	.profile-avatar {
+		width: 48px;
+		height: 48px;
+		font-size: 18px;
+	}
+
+	.profile-name {
+		font-size: 18px;
+	}
+
+	.danger-action-row {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}

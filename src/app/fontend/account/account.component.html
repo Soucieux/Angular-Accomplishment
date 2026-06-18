@@ -1,0 +1,174 @@
+<ng-template #dialogComponentContainer></ng-template>
+
+@if (currentUser$ | async; as user) {
+	<div class="glass-card">
+		<!-- Profile header -->
+		<div class="profile-header">
+			<div class="profile-avatar">{{ getUserInitials(user) }}</div>
+			<div class="profile-info">
+				<h1 class="profile-name">{{ getUserDisplayName(user) }}</h1>
+				<p class="profile-tagline">{{ ACCOUNT_LABEL_PROFILE_TAGLINE }}</p>
+				<div class="profile-chips">
+					<span class="profile-chip">
+						<span class="material-symbols-outlined">calendar_month</span>
+						{{ ACCOUNT_LABEL_MEMBER_SINCE }}
+					</span>
+					<span class="profile-chip">
+						<span class="material-symbols-outlined">local_fire_department</span>
+						{{ getStreakDayCount() }}{{ ACCOUNT_LABEL_STREAK_SUFFIX }}
+					</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- 2×2 card grid -->
+		<div class="account-grid">
+			<!-- Identity & Security -->
+			<div class="account-card">
+				<div class="card-header">
+					<span class="material-symbols-outlined card-icon">shield_person</span>
+					<span class="card-title">{{ ACCOUNT_LABEL_IDENTITY_TITLE }}</span>
+				</div>
+
+				<div class="field-group">
+					<label class="field-label">{{ ACCOUNT_LABEL_USERNAME }}</label>
+					<div class="field-row">
+						<input
+							class="account-input"
+							type="text"
+							[(ngModel)]="usernameInput"
+							(keyup.enter)="updateUsername()" />
+						<button class="save-button" (click)="updateUsername()">
+							{{ ACCOUNT_LABEL_SAVE }}
+						</button>
+					</div>
+				</div>
+
+				<div class="field-group">
+					<label class="field-label">{{ ACCOUNT_LABEL_EMAIL }}</label>
+					<div class="email-row">
+						<span class="email-value">{{ getUserEmail(user) }}</span>
+						<span class="verified-badge">
+							<span class="material-symbols-outlined">verified</span>
+							{{ ACCOUNT_LABEL_VERIFIED }}
+						</span>
+					</div>
+				</div>
+
+				<div class="field-group">
+					<label class="field-label">{{ ACCOUNT_LABEL_CHANGE_PASSWORD }}</label>
+					<div class="password-input-wrapper">
+						<input
+							class="account-input"
+							[type]="showNewPassword ? 'text' : 'password'"
+							[(ngModel)]="newPasswordInput"
+							[placeholder]="ACCOUNT_LABEL_NEW_PASSWORD"
+							(keyup.enter)="updatePassword()" />
+						<button
+							type="button"
+							class="visibility-button"
+							(click)="toggleNewPasswordVisibility()">
+							<span class="material-symbols-outlined">{{
+								showNewPassword ? 'visibility_off' : 'visibility'
+							}}</span>
+						</button>
+					</div>
+					<div class="strength-meter">
+						@for (segment of [1, 2, 3, 4]; track segment) {
+							<div
+								class="strength-segment"
+								[style.background]="
+									segment <= getPasswordStrengthIndex(newPasswordInput)
+										? getStrengthColor(newPasswordInput)
+										: 'rgba(0,0,0,0.1)'
+								"></div>
+						}
+						<span class="strength-label" [style.color]="getStrengthColor(newPasswordInput)">{{
+							getStrengthLabel(newPasswordInput)
+						}}</span>
+					</div>
+					<div class="password-input-wrapper">
+						<input
+							class="account-input"
+							[type]="showConfirmPassword ? 'text' : 'password'"
+							[(ngModel)]="confirmPasswordInput"
+							[placeholder]="ACCOUNT_LABEL_CONFIRM_PASSWORD"
+							(keyup.enter)="updatePassword()" />
+						<button
+							type="button"
+							class="visibility-button"
+							(click)="toggleConfirmPasswordVisibility()">
+							<span class="material-symbols-outlined">{{
+								showConfirmPassword ? 'visibility_off' : 'visibility'
+							}}</span>
+						</button>
+					</div>
+					<button class="save-button" (click)="updatePassword()">
+						{{ ACCOUNT_LABEL_SAVE }}
+					</button>
+				</div>
+			</div>
+
+			<!-- Second Brain -->
+			<div class="account-card">
+				<div class="card-header">
+					<span class="material-symbols-outlined card-icon">hub</span>
+					<span class="card-title">{{ ACCOUNT_LABEL_SECOND_BRAIN_TITLE }}</span>
+				</div>
+				<div class="stat-list">
+					@for (stat of ACCOUNT_STATS; track stat.label) {
+						<div class="stat-row">
+							<div class="stat-icon-tile" [style.background]="stat.gradient">
+								<span class="material-symbols-outlined">{{ stat.icon }}</span>
+							</div>
+							<span class="stat-label">{{ stat.label }}</span>
+							<span class="stat-value">{{ stat.value }}</span>
+						</div>
+					}
+				</div>
+			</div>
+
+			<!-- Milestones -->
+			<div class="account-card">
+				<div class="card-header">
+					<span class="material-symbols-outlined card-icon">flag</span>
+					<span class="card-title">{{ ACCOUNT_LABEL_MILESTONES_TITLE }}</span>
+				</div>
+				<div class="milestone-list">
+					@for (milestone of ACCOUNT_MILESTONES; track milestone.title) {
+						<div class="milestone-row">
+							<div class="milestone-dot"></div>
+							<div class="milestone-content">
+								<div class="milestone-title">{{ milestone.title }}</div>
+								<div class="milestone-date">{{ milestone.date }}</div>
+								<div class="milestone-note">{{ milestone.note }}</div>
+							</div>
+						</div>
+					}
+				</div>
+			</div>
+
+			<!-- Danger Zone -->
+			<div class="account-card account-card--danger">
+				<div class="card-header">
+					<span class="material-symbols-outlined card-icon">warning</span>
+					<span class="card-title">{{ ACCOUNT_LABEL_DANGER_ZONE_TITLE }}</span>
+				</div>
+				<div class="danger-content">
+					<div class="danger-action-row">
+						<div class="danger-action-info">
+							<span class="danger-action-name">{{ ACCOUNT_LABEL_DELETE_ACCOUNT }}</span>
+							<span class="danger-action-description">{{
+								ACCOUNT_LABEL_DELETE_DESCRIPTION
+							}}</span>
+						</div>
+						<button class="delete-account-button" (click)="openDeleteConfirmationDialog()">
+							<span class="material-symbols-outlined">delete_forever</span>
+							{{ ACCOUNT_LABEL_DELETE_ACCOUNT }}
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}

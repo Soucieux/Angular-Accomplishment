@@ -73,6 +73,7 @@ ios
 # tauri (desktop) — built locally, .dmg uploaded to releases manually
 /src-tauri/capabilities
 /src-tauri/src
+/src-tauri/dist
 
 # Assets
 src/assets/icons/

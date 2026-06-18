@@ -1,6 +1,7 @@
 import {
 	AfterViewInit,
 	Component,
+	ElementRef,
 	HostListener,
 	Inject,
 	OnInit,
@@ -84,6 +85,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
+	@ViewChild('accountRowWrapper')
+	private accountRowWrapper?: ElementRef<HTMLElement>;
 	protected currentUser$!: Observable<any>;
 	protected accountMenuOpen = false;
 	protected navCollapsed = false;
@@ -138,7 +141,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 			if (this.isTauriApp) {
 				import('@tauri-apps/api/window').then(({ appWindow }) => {
 					this.tauriAppWindow = appWindow;
-				});
+				}).catch(() => {});
 			}
 			this.currentUser$ = this.authService.getCurrentUser();
 			this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
@@ -179,6 +182,19 @@ export class AppComponent implements OnInit, AfterViewInit {
 	@HostListener('window:resize')
 	protected onWindowResize(): void {
 		this.applyViewportState(window.innerWidth);
+	}
+
+	/**
+	 * Closes the account popover when a mousedown lands outside the account row wrapper.
+	 *
+	 * @param event - The MouseEvent from the document mousedown listener.
+	 */
+	@HostListener('document:mousedown', ['$event'])
+	protected onDocumentMouseDown(event: MouseEvent): void {
+		if (this.accountMenuOpen && this.accountRowWrapper &&
+			!this.accountRowWrapper.nativeElement.contains(event.target as Node)) {
+			this.accountMenuOpen = false;
+		}
 	}
 
 	/**
@@ -302,6 +318,14 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 */
 	protected closeCtxMenu(): void {
 		this.ctxVisible = false;
+	}
+
+	/**
+	 * Closes the custom context menu overlay when the page is scrolled.
+	 */
+	@HostListener('window:scroll')
+	protected onWindowScroll(): void {
+		if (this.ctxVisible) this.closeCtxMenu();
 	}
 
 	/**

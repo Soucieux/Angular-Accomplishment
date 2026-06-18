@@ -124,7 +124,7 @@
 				</li>
 				@if (currentUser$ | async; as user) {
 					<li class="account-menu-container">
-						<div class="account-row-wrapper" (focusout)="handleAccountMenuDismiss($event)">
+						<div #accountRowWrapper class="account-row-wrapper" (focusout)="handleAccountMenuDismiss($event)">
 							@if (accountMenuOpen) {
 								<div class="account-menu-popover">
 									<div class="account-menu-popover-header">

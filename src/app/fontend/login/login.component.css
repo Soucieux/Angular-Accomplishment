@@ -161,12 +161,12 @@
 	margin-bottom: 22px;
 }
 .v-lamp-head .h-cn {
-	font-size: clamp(18px, 1.8vw, 30px);
+	font-size: clamp(20px, 1.8vw, 30px);
 	font-weight: 700;
 	color: #f3f7fb;
 }
 .v-lamp-head .h-en {
-	font-size: clamp(11px, 1vw, 17px);
+	font-size: clamp(15px, 1vw, 17px);
 	color: rgba(234, 240, 246, 0.55);
 	margin-top: 4px;
 }
@@ -275,7 +275,7 @@
 	justify-content: flex-end;
 }
 .forgot-password-link {
-	font-size: clamp(11px, 0.9vw, 13px);
+	font-size: clamp(13px, 0.9vw, 15px);
 	color: rgba(220, 230, 240, 0.45);
 	cursor: pointer;
 	user-select: none;
@@ -296,7 +296,7 @@
 	text-align: center;
 }
 .toggle-row span {
-	font-size: clamp(12px, 1vw, 15px);
+	font-size: clamp(13px, 1vw, 15px);
 }
 .toggle-text {
 	color: rgba(220, 230, 240, 0.55);
@@ -354,7 +354,7 @@
 	background: rgba(255, 255, 255, 0.12);
 }
 .divider-text {
-	font-size: 12px;
+	font-size: 13px;
 	color: rgba(234, 240, 246, 0.4);
 	white-space: nowrap;
 }

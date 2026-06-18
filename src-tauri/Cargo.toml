@@ -1,0 +1,21 @@
+[package]
+name = "vision-canvas"
+version = "0.0.0"
+description = "Vision Canvas desktop app"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1", features = [] }
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
+
+[dependencies]
+tauri = { version = "1", features = [ "window-start-dragging", "clipboard-all"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

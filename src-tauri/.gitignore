@@ -1,0 +1,8 @@
+# Rust build output
+/target
+
+# Tauri-generated schemas and platform projects
+/gen
+
+# Generated app icons (run `npm run tauri:icon` to regenerate)
+/icons

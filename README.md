@@ -34,6 +34,7 @@
 | **Resonance** | Personal quote vault.<br>- Author attribution and timestamps<br>- **Anonymous browsing** support for public quotes<br>- Ownership-based edit and delete permissions | Active |
 | **Recipe** | Personal cookbook with per-category colour theming.<br>- List, detail, and editor views<br>- **Ingredient groups** with type badges and bilingual name support *(Chinese + English)*<br>- Live **servings scaler** and step-by-step instruction view<br>- Category colour themes — *rose · green · purple · amber · pink*<br>- Drag-to-reorder steps | Active |
 | **Patch Notes** | Internal development log with two views.<br>- *Patch Notes* — add, edit, and delete entries per component; bug flag per entry; status filter (Active / Resolved); paginated with correct rowspan recalculation after date sorting<br>- *Release Notes* — versioned release cards with section headings, badge chips, and summaries | Active |
+| **Account** | Personal account management hub with navy sky theme.<br>- Identity card — username editing and email display with verified badge<br>- Password change with strength meter and visibility toggle<br>- **Second Brain stats** — live counts for movies, reminders, debts, and recipes<br>- Milestone timeline with connector lines and colour-coded dates<br>- Danger zone card for account deletion with confirmation guard | Active |
 | **Login** | Authentication entry point.<br>- **Google Sign-In** and email / password login<br>- Sign-up flow for new user registration<br>- Route guards protecting all authenticated pages<br>- Post-login redirect to last-visited route<br>- Sidebar presence row: avatar, online status, and account menu popover | Stable |
 | **About** | Professional history timeline.<br>- Interactive milestone entries<br>- **Animated gradient background** | Stable |
 
@@ -79,7 +80,7 @@
 
 | Period | Milestone |
 | :--- | :--- |
-| **June 2026** | - Phase R2 begins — R1 feature set complete and stable<br>- **Desktop right-click context menu** — custom overlay with clipboard actions (copy / cut / paste / select-all), nav shortcuts, and sign-in / sign-out; uses Tauri clipboard plugin to bypass macOS native paste confirmation<br>- Codebase restructured: `LoadingTimeoutService` renamed to `TimeoutService` and moved into `common/timeout/`; utilities moved into `common/utilities/`; `navigation/` folder renamed to `mobile-bottom-nav/`; `context-menu` component renamed and moved to `fontend/desktop-context-menu/` |
+| **June 2026** | - Phase R2 begins — R1 feature set complete and stable<br>- **Desktop right-click context menu** — custom overlay with clipboard actions (copy / cut / paste / select-all), nav shortcuts, and sign-in / sign-out; uses Tauri clipboard plugin to bypass macOS native paste confirmation<br>- Codebase restructured: `LoadingTimeoutService` renamed to `TimeoutService` and moved into `common/timeout/`; utilities moved into `common/utilities/`; `navigation/` folder renamed to `mobile-bottom-nav/`; `context-menu` component renamed and moved to `fontend/desktop-context-menu/`<br>- **Account** page launched with navy sky theme (`#1e3a8a → #7dd3fc`): identity card with username / password editing, Second Brain stats panel, milestone timeline, and danger zone for account deletion; wired into route, nav bar, and account popover button<br>- Global placeholder font inheritance fix — all inputs now correctly inherit the app font |
 
 ---
 
@@ -124,6 +125,7 @@ src/app/
     ├── debt/                     # Debt Sonata — debt tracking canvas
     ├── patch/                    # Patch notes / internal dev log
     ├── about/                    # Professional history timeline
+    ├── account/                  # Account management hub (identity, stats, milestones, danger zone)
     ├── desktop-context-menu/     # Right-click overlay menu (desktop app only)
     ├── mobile-bottom-nav/        # Bottom nav bar component and data
     └── login/                    # Authentication entry point

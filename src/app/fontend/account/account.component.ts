@@ -1,5 +1,6 @@
 import {
-	AfterViewChecked,
+	AfterViewInit,
+	ChangeDetectorRef,
 	Component,
 	Inject,
 	OnDestroy,
@@ -10,8 +11,9 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, Observable, Subscription } from 'rxjs';
 import { AuthService } from '../../backend/authentication-service/auth.service';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
@@ -30,7 +32,7 @@ import {
 	ACCOUNT_LABEL_NEW_PASSWORD,
 	ACCOUNT_LABEL_PROFILE_TAGLINE,
 	ACCOUNT_LABEL_SAVE,
-	ACCOUNT_LABEL_SECOND_BRAIN_TITLE,
+	ACCOUNT_LABEL_INNER_WORLD_TITLE,
 	ACCOUNT_LABEL_STREAK_SUFFIX,
 	ACCOUNT_LABEL_USERNAME,
 	ACCOUNT_LABEL_VERIFIED,
@@ -41,10 +43,11 @@ import {
 	ACCOUNT_MSG_USERNAME_TOO_SHORT,
 	ACCOUNT_MSG_USERNAME_UPDATED,
 	ACCOUNT_TITLE_PAGE,
+	STATS_FIELD_ACTIVITY_STREAK,
 	SUCCESS,
 	TOAST_WARN
 } from '../../common/app.constant';
-import { ACCOUNT_MILESTONES, ACCOUNT_STATS, ACCOUNT_STRENGTH_LEVELS } from './account.model';
+import { AccountStat, ACCOUNT_MILESTONES, ACCOUNT_STATS, ACCOUNT_STRENGTH_LEVELS } from './account.model';
 
 @Component({
 	selector: 'app-account',
@@ -53,7 +56,7 @@ import { ACCOUNT_MILESTONES, ACCOUNT_STATS, ACCOUNT_STRENGTH_LEVELS } from './ac
 	templateUrl: './account.component.html',
 	styleUrls: ['../../common/glass-card.css', './account.component.css']
 })
-export class AccountComponent implements OnInit, AfterViewChecked, OnDestroy {
+export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
@@ -65,7 +68,7 @@ export class AccountComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly ACCOUNT_LABEL_STREAK_SUFFIX = ACCOUNT_LABEL_STREAK_SUFFIX;
 	protected readonly ACCOUNT_LABEL_VERIFIED = ACCOUNT_LABEL_VERIFIED;
 	protected readonly ACCOUNT_LABEL_IDENTITY_TITLE = ACCOUNT_LABEL_IDENTITY_TITLE;
-	protected readonly ACCOUNT_LABEL_SECOND_BRAIN_TITLE = ACCOUNT_LABEL_SECOND_BRAIN_TITLE;
+	protected readonly ACCOUNT_LABEL_INNER_WORLD_TITLE = ACCOUNT_LABEL_INNER_WORLD_TITLE;
 	protected readonly ACCOUNT_LABEL_MILESTONES_TITLE = ACCOUNT_LABEL_MILESTONES_TITLE;
 	protected readonly ACCOUNT_LABEL_DANGER_ZONE_TITLE = ACCOUNT_LABEL_DANGER_ZONE_TITLE;
 	protected readonly ACCOUNT_LABEL_USERNAME = ACCOUNT_LABEL_USERNAME;
@@ -76,21 +79,25 @@ export class AccountComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly ACCOUNT_LABEL_SAVE = ACCOUNT_LABEL_SAVE;
 	protected readonly ACCOUNT_LABEL_DELETE_ACCOUNT = ACCOUNT_LABEL_DELETE_ACCOUNT;
 	protected readonly ACCOUNT_LABEL_DELETE_DESCRIPTION = ACCOUNT_LABEL_DELETE_DESCRIPTION;
-	protected readonly ACCOUNT_STATS = ACCOUNT_STATS;
 	protected readonly ACCOUNT_MILESTONES = ACCOUNT_MILESTONES;
 	protected readonly ACCOUNT_STRENGTH_LEVELS = ACCOUNT_STRENGTH_LEVELS;
 
 	// ── Mutable state ─────────────────────────────────────────────────────────
+	protected userStats: AccountStat[] = ACCOUNT_STATS.map((stat) => ({ ...stat }));
+	protected streakCount = 0;
 	protected currentUser$!: Observable<any>;
 	protected usernameInput = '';
 	protected newPasswordInput = '';
 	protected confirmPasswordInput = '';
 	protected showNewPassword = false;
 	protected showConfirmPassword = false;
+	private statsSub?: Subscription;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private authService: AuthService,
+		private cdr: ChangeDetectorRef,
+		private cloudbaseService: CloudbaseService,
 		private dialogService: DialogService
 	) {}
 
@@ -105,13 +112,23 @@ export class AccountComponent implements OnInit, AfterViewChecked, OnDestroy {
 				if (user) this.usernameInput = Utilities.getUserDisplayName(user);
 			})
 			.catch(() => {});
+		this.cloudbaseService.ensureUserStatsExist().catch(() => {});
+		this.statsSub = this.cloudbaseService.getUserStats().subscribe((doc) => {
+			if (!doc) return;
+			this.userStats = this.userStats.map((stat) => ({
+				...stat,
+				value: (doc[stat.field] as number) ?? 0
+			}));
+			this.streakCount = (doc[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
+			this.cdr.detectChanges();
+		});
 	}
 
 	/**
-	 * Attaches the scroll auto-hide behaviour to every account card after each change detection cycle.
+	 * Attaches the scroll auto-hide behaviour to every account card once after the view renders.
 	 * Skipped during SSR prerendering where document is unavailable.
 	 */
-	ngAfterViewChecked(): void {
+	ngAfterViewInit(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
 		document
 			.querySelectorAll<HTMLElement>('.account-card')
@@ -122,6 +139,7 @@ export class AccountComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Clears the dialog container on component teardown.
 	 */
 	ngOnDestroy(): void {
+		this.statsSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
 	}
 
@@ -246,15 +264,10 @@ export class AccountComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Gets the one-or-two-letter initials from the user's display name for the avatar circle.
 	 *
 	 * @param user - The authenticated user object from the auth observable.
-	 * @returns The uppercased initials string.
+	 * @returns The uppercased initials string, or '?' when no display name is available.
 	 */
 	protected getUserInitials(user: any): string {
-		const displayName = Utilities.getUserDisplayName(user);
-		if (!displayName) return '?';
-		const parts = displayName.trim().split(' ');
-		return parts.length >= 2
-			? (parts[0][0] + parts[1][0]).toUpperCase()
-			: displayName.slice(0, 2).toUpperCase();
+		return Utilities.getUserInitials(user);
 	}
 
 	/**
@@ -263,6 +276,6 @@ export class AccountComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @returns The current streak day count.
 	 */
 	protected getStreakDayCount(): number {
-		return ACCOUNT_STATS[ACCOUNT_STATS.length - 1].value;
+		return this.streakCount;
 	}
 }

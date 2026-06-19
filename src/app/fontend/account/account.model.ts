@@ -3,6 +3,8 @@ export interface AccountStat {
 	gradient: string;
 	label: string;
 	value: number;
+	unit: string;
+	field: string;
 }
 
 export interface AccountMilestone {
@@ -22,27 +24,49 @@ export const ACCOUNT_STATS: AccountStat[] = [
 		icon: 'live_tv',
 		gradient: 'linear-gradient(135deg,#11998e,#38ef7d)',
 		label: 'Films logged',
-		value: 42
+		value: 0,
+		unit: 'film',
+		field: 'totalFilms'
 	},
 	{
 		icon: 'format_quote',
 		gradient: 'linear-gradient(135deg,#fde68a,#b45309)',
-		label: 'Voices kept',
-		value: 28
+		label: 'Quotes',
+		value: 0,
+		unit: 'quote',
+		field: 'totalQuotes'
 	},
-	{ icon: 'menu_book', gradient: 'linear-gradient(135deg,#fda4af,#9f1239)', label: 'Recipes', value: 15 },
-	{ icon: 'alarm', gradient: 'linear-gradient(135deg,#1a6dff,#00d2ff)', label: 'Reminders', value: 7 },
+	{
+		icon: 'menu_book',
+		gradient: 'linear-gradient(135deg,#fda4af,#9f1239)',
+		label: 'Recipes',
+		value: 0,
+		unit: 'recipe',
+		field: 'totalRecipes'
+	},
+	{
+		icon: 'alarm',
+		gradient: 'linear-gradient(135deg,#1a6dff,#00d2ff)',
+		label: 'Reminders',
+		value: 0,
+		unit: 'reminder',
+		field: 'reminderTotal'
+	},
 	{
 		icon: 'account_balance',
 		gradient: 'linear-gradient(135deg,#0d9488,#134e4a)',
 		label: 'Debts tracked',
-		value: 3
+		value: 0,
+		unit: 'debt',
+		field: 'debtTotal'
 	},
 	{
-		icon: 'local_fire_department',
-		gradient: 'linear-gradient(135deg,#d53369,#daae51)',
-		label: 'Day streak',
-		value: 128
+		icon: 'link',
+		gradient: 'linear-gradient(135deg,#6366f1,#a855f7)',
+		label: 'Links saved',
+		value: 0,
+		unit: 'link',
+		field: 'totalLinks'
 	}
 ];
 

@@ -109,20 +109,22 @@
 				</div>
 			</div>
 
-			<!-- Second Brain -->
+			<!-- Inner World -->
 			<div class="account-card">
 				<div class="card-header">
 					<span class="material-symbols-outlined card-icon">hub</span>
-					<span class="card-title">{{ ACCOUNT_LABEL_SECOND_BRAIN_TITLE }}</span>
+					<span class="card-title">{{ ACCOUNT_LABEL_INNER_WORLD_TITLE }}</span>
 				</div>
 				<div class="stat-list">
-					@for (stat of ACCOUNT_STATS; track stat.label) {
+					@for (stat of userStats; track stat.label) {
 						<div class="stat-row">
 							<div class="stat-icon-tile" [style.background]="stat.gradient">
 								<span class="material-symbols-outlined">{{ stat.icon }}</span>
 							</div>
 							<span class="stat-label">{{ stat.label }}</span>
-							<span class="stat-value">{{ stat.value }}</span>
+							<span class="stat-value"
+								>{{ stat.value }} {{ stat.value === 1 ? stat.unit : stat.unit + 's' }}</span
+							>
 						</div>
 					}
 				</div>

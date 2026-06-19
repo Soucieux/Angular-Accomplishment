@@ -319,7 +319,7 @@ input[type='password']::placeholder {
 }
 
 /* ─────────────────────────────────────────
-   Second Brain card
+   Inner World card
 ───────────────────────────────────────── */
 
 .stat-list {
@@ -358,7 +358,7 @@ input[type='password']::placeholder {
 }
 
 .stat-value {
-	font-size: 18px;
+	font-size: 15px;
 	font-weight: 700;
 	color: #1a1a2e;
 	line-height: 1;

@@ -489,6 +489,43 @@ export class Utilities {
 	}
 
 	/**
+	 * Formats a date as "MMM yyyy" for human-readable month-year display (e.g. "Jun 2026").
+	 *
+	 * @param date - The date to format.
+	 * @returns The formatted month-year string.
+	 */
+	public static formatMonthYear(date: Date): string {
+		return format(date, 'MMM yyyy');
+	}
+
+	/**
+	 * Converts a storage date string in "YYYY-MM-DD" format to a human-readable
+	 * "MMM yyyy" string (e.g. "2026-06-19" → "Jun 2026").
+	 *
+	 * @param dateStr - The storage date string to convert.
+	 * @returns The month-year display string.
+	 */
+	public static storageDateToDisplayMonth(dateStr: string): string {
+		const [year, month] = dateStr.split('-').map(Number);
+		return Utilities.formatMonthYear(new Date(year, month - 1, 1));
+	}
+
+	/**
+	 * Gets the milestone key for a given domain and count, or null if the count is
+	 * not a milestone threshold. Thresholds are count === 1 ("1st") and every
+	 * multiple of 5 ("5th", "10th", etc.).
+	 *
+	 * @param domain - The milestone domain prefix (e.g. "film", "streak").
+	 * @param count - The new count value to evaluate.
+	 * @returns The milestone key (e.g. "film1st", "film5th") or null.
+	 */
+	public static getMilestoneKey(domain: string, count: number): string | null {
+		if (count === 1) return `${domain}1st`;
+		if (count % 5 === 0) return `${domain}${count}th`;
+		return null;
+	}
+
+	/**
 	 * Parses a project timestamp string in either ISO-8601 or dot-separated format
 	 * into a "YYYY-MM-DD" date string, delegating the final formatting to
 	 * {@link formatDateForStorage}.

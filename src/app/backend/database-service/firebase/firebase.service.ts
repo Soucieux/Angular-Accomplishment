@@ -93,6 +93,16 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Gets the current user's per-user stats document as a real-time observable.
+	 * Firebase deployment does not use per-user stat documents — returns an empty observable.
+	 *
+	 * @returns An observable that never emits.
+	 */
+	public getUserStats(): Observable<any> {
+		return of(null);
+	}
+
+	/**
 	 * Gets the date calculator table details from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the date calculator table details.
@@ -807,7 +817,7 @@ export class FirebaseService extends DatabaseService {
 							? currentData.genre[GENRE_FAVOURITE] - 1
 							: 0;
 				}
-				currentData.totalNumber = currentData.totalNumber - 1 > 0 ? currentData.totalNumber - 1 : 0;
+				currentData.totalFilms = currentData.totalFilms - 1 > 0 ? currentData.totalFilms - 1 : 0;
 				return currentData;
 			});
 			this.appendToActivityLog({
@@ -1035,7 +1045,7 @@ export class FirebaseService extends DatabaseService {
 					currentData.genre[GENRE_FAVOURITE] = (currentData.genre[GENRE_FAVOURITE] ?? 0) + 1;
 				}
 
-				currentData.totalNumber = (currentData.totalNumber ?? 0) + 1;
+				currentData.totalFilms = (currentData.totalFilms ?? 0) + 1;
 				return currentData;
 			});
 			LOG.info(this.className, `Movie added and statistics have been updated`);

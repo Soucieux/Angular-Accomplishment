@@ -215,11 +215,11 @@ export const ACTIVITY_SOURCE_DATE_CALCULATOR = 'date_calculator';
    document. Use these constants everywhere — never inline the raw string. */
 export const STATS_FIELD_RECENT_ACTIVITIES = 'recentActivities';
 export const STATS_FIELD_REMINDER_UPCOMING = 'reminderUpcoming';
-export const STATS_FIELD_REMINDER_TOTAL = 'reminderTotal';
-export const STATS_FIELD_PATCH_NOTES_TOTAL = 'patchNotesTotal';
+export const STATS_FIELD_TOTAL_REMINDERS = 'totalReminders';
+export const STATS_FIELD_TOTAL_PATCH_NOTES = 'totalPatchNotes';
 export const STATS_FIELD_DEBT_UPCOMING = 'debtUpcoming';
 /** Total count of all unpaid debts — written separately because debtUpcoming is capped at 20. */
-export const STATS_FIELD_DEBT_TOTAL = 'debtTotal';
+export const STATS_FIELD_TOTAL_DEBTS = 'totalDebts';
 export const STATS_FIELD_TOTAL_RECIPES = 'totalRecipes';
 export const STATS_FIELD_RECIPE_LIST = 'recipeList';
 export const STATS_FIELD_GENRE = 'genre';
@@ -229,12 +229,13 @@ export const STATS_FIELD_IS_USER_STATS = 'isUserStats';
 export const STATS_FIELD_TOTAL_FILMS = 'totalFilms';
 export const STATS_FIELD_TOTAL_LINKS = 'totalLinks';
 export const STATS_FIELD_TOTAL_QUOTES = 'totalQuotes';
+export const STATS_FIELD_MILESTONES = 'milestones';
 
 ////////////////////// Below are statistics display cap constants /////////////////////
 
 /* All list-based stat arrays (recentActivities, reminderUpcoming, debtUpcoming,
-   recipeList) are capped at this many items on every write. Counters (reminderTotal,
-   debtTotal, totalRecipes) are always the uncapped true total. */
+   recipeList) are capped at this many items on every write. Counters (totalReminders,
+   totalDebts, totalRecipes) are always the uncapped true total. */
 export const STATS_CAP_ACTIVITY_LOG = 20;
 
 ////////////////////// Below are home page constants /////////////////////////////////
@@ -814,13 +815,22 @@ export const CTX_SEARCH_PLACEHOLDER = 'Search…';
 
 export const ACCOUNT_TITLE_PAGE = 'My Account';
 export const ACCOUNT_LABEL_PROFILE_TAGLINE = 'Living intentionally, one entry at a time.';
-export const ACCOUNT_LABEL_MEMBER_SINCE = 'Member since Feb 2025';
-export const ACCOUNT_LABEL_STREAK_SUFFIX = ' day streak';
+export const ACCOUNT_LABEL_MEMBER_SINCE = 'Member Since';
+export const ACCOUNT_LABEL_STREAK_SUFFIX = ' Day Streak';
 export const ACCOUNT_LABEL_VERIFIED = 'Verified';
 export const ACCOUNT_LABEL_IDENTITY_TITLE = 'Identity & Security';
 export const ACCOUNT_LABEL_INNER_WORLD_TITLE = 'Inner World';
 export const ACCOUNT_LABEL_MILESTONES_TITLE = 'Milestones';
+export const MILESTONE_KEY_ACCOUNT_CREATED = 'accountCreated';
+export const MILESTONE_DOMAIN_FILM = 'film';
+export const MILESTONE_DOMAIN_QUOTE = 'quote';
+export const MILESTONE_DOMAIN_RECIPE = 'recipe';
+export const MILESTONE_DOMAIN_REMINDER = 'reminder';
+export const MILESTONE_DOMAIN_DEBT = 'debt';
+export const MILESTONE_DOMAIN_LINK = 'link';
+export const MILESTONE_DOMAIN_STREAK = 'streak';
 export const ACCOUNT_LABEL_DANGER_ZONE_TITLE = 'Danger Zone';
+export const ACCOUNT_MSG_COMING_SOON = 'This will be available in a future release.';
 export const ACCOUNT_LABEL_USERNAME = 'Username';
 export const ACCOUNT_LABEL_EMAIL = 'Email';
 export const ACCOUNT_LABEL_CHANGE_PASSWORD = 'Change Password';

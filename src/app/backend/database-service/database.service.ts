@@ -28,6 +28,13 @@ export abstract class DatabaseService {
 	public abstract getStatistics(): Observable<any>;
 
 	/**
+	 * Gets the current user's per-user stats document as a real-time observable.
+	 *
+	 * @returns An observable that emits the user's stats document, or undefined when absent.
+	 */
+	public abstract getUserStats(): Observable<any>;
+
+	/**
 	 * Gets the date calculator table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the date calculator table details.

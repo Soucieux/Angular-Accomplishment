@@ -9,14 +9,25 @@
 				<h1 class="profile-name">{{ getUserDisplayName(user) }}</h1>
 				<p class="profile-tagline">{{ ACCOUNT_LABEL_PROFILE_TAGLINE }}</p>
 				<div class="profile-chips">
-					<span class="profile-chip">
-						<span class="material-symbols-outlined">calendar_month</span>
-						{{ ACCOUNT_LABEL_MEMBER_SINCE }}
-					</span>
-					<span class="profile-chip">
-						<span class="material-symbols-outlined">local_fire_department</span>
-						{{ getStreakDayCount() }}{{ ACCOUNT_LABEL_STREAK_SUFFIX }}
-					</span>
+					@if (isStatsLoaded) {
+						<span class="profile-chip">
+							<span class="material-symbols-outlined">calendar_month</span>
+							{{ ACCOUNT_LABEL_MEMBER_SINCE }} {{ memberSince }}
+						</span>
+						<span class="profile-chip">
+							<span class="material-symbols-outlined">local_fire_department</span>
+							{{ streakCount }}{{ ACCOUNT_LABEL_STREAK_SUFFIX }}
+						</span>
+					} @else {
+						<span class="profile-chip">
+							<span class="material-symbols-outlined">calendar_month</span>
+							<span class="skeleton skeleton-chip-text"></span>
+						</span>
+						<span class="profile-chip">
+							<span class="material-symbols-outlined">local_fire_department</span>
+							<span class="skeleton skeleton-chip-text"></span>
+						</span>
+					}
 				</div>
 			</div>
 		</div>
@@ -116,16 +127,27 @@
 					<span class="card-title">{{ ACCOUNT_LABEL_INNER_WORLD_TITLE }}</span>
 				</div>
 				<div class="stat-list">
-					@for (stat of userStats; track stat.label) {
-						<div class="stat-row">
-							<div class="stat-icon-tile" [style.background]="stat.gradient">
-								<span class="material-symbols-outlined">{{ stat.icon }}</span>
+					@if (isStatsLoaded) {
+						@for (stat of userStats; track stat.label) {
+							<div class="stat-row">
+								<div class="stat-icon-tile" [style.background]="stat.gradient">
+									<span class="material-symbols-outlined">{{ stat.icon }}</span>
+								</div>
+								<span class="stat-label">{{ stat.label }}</span>
+								<span class="stat-value"
+									>{{ stat.value }}
+									{{ stat.value === 1 ? stat.unit : stat.unit + 's' }}</span
+								>
 							</div>
-							<span class="stat-label">{{ stat.label }}</span>
-							<span class="stat-value"
-								>{{ stat.value }} {{ stat.value === 1 ? stat.unit : stat.unit + 's' }}</span
-							>
-						</div>
+						}
+					} @else {
+						@for (i of [1, 2, 3, 4, 5, 6]; track i) {
+							<div class="stat-row">
+								<div class="skeleton stat-icon-tile"></div>
+								<span class="skeleton skeleton-stat-label"></span>
+								<span class="skeleton skeleton-stat-value"></span>
+							</div>
+						}
 					}
 				</div>
 			</div>
@@ -136,18 +158,33 @@
 					<span class="material-symbols-outlined card-icon">flag</span>
 					<span class="card-title">{{ ACCOUNT_LABEL_MILESTONES_TITLE }}</span>
 				</div>
-				<div class="milestone-list">
-					@for (milestone of ACCOUNT_MILESTONES; track milestone.title) {
-						<div class="milestone-row">
-							<div class="milestone-dot"></div>
-							<div class="milestone-content">
-								<div class="milestone-title">{{ milestone.title }}</div>
-								<div class="milestone-date">{{ milestone.date }}</div>
-								<div class="milestone-note">{{ milestone.note }}</div>
+				@if (isStatsLoaded) {
+					<div class="milestone-list">
+						@for (milestone of milestoneList; track milestone.title) {
+							<div class="milestone-row">
+								<div class="milestone-dot"></div>
+								<div class="milestone-content">
+									<div class="milestone-title">{{ milestone.title }}</div>
+									<div class="milestone-date">{{ milestone.date }}</div>
+									<div class="milestone-note">{{ milestone.note }}</div>
+								</div>
 							</div>
-						</div>
-					}
-				</div>
+						}
+					</div>
+				} @else {
+					<div class="milestone-skeleton-list">
+						@for (i of [1, 2, 3, 4, 5]; track i) {
+							<div class="milestone-row">
+								<div class="milestone-dot skeleton-dot"></div>
+								<div class="milestone-content">
+									<span class="skeleton skeleton-milestone-title"></span>
+									<span class="skeleton skeleton-milestone-date"></span>
+									<span class="skeleton skeleton-milestone-date"></span>
+								</div>
+							</div>
+						}
+					</div>
+				}
 			</div>
 
 			<!-- Danger Zone -->
@@ -164,11 +201,12 @@
 								ACCOUNT_LABEL_DELETE_DESCRIPTION
 							}}</span>
 						</div>
-						<button class="delete-account-button" (click)="openDeleteConfirmationDialog()">
+						<button class="delete-account-button" disabled>
 							<span class="material-symbols-outlined">delete_forever</span>
 							{{ ACCOUNT_LABEL_DELETE_ACCOUNT }}
 						</button>
 					</div>
+					<span class="coming-soon-message">{{ ACCOUNT_MSG_COMING_SOON }}</span>
 				</div>
 			</div>
 		</div>

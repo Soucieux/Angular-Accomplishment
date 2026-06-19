@@ -23,7 +23,7 @@ export const ACCOUNT_STATS: AccountStat[] = [
 	{
 		icon: 'live_tv',
 		gradient: 'linear-gradient(135deg,#11998e,#38ef7d)',
-		label: 'Films logged',
+		label: 'Films Logged',
 		value: 0,
 		unit: 'film',
 		field: 'totalFilms'
@@ -50,33 +50,46 @@ export const ACCOUNT_STATS: AccountStat[] = [
 		label: 'Reminders',
 		value: 0,
 		unit: 'reminder',
-		field: 'reminderTotal'
+		field: 'totalReminders'
 	},
 	{
 		icon: 'account_balance',
 		gradient: 'linear-gradient(135deg,#0d9488,#134e4a)',
-		label: 'Debts tracked',
+		label: 'Debts Tracked',
 		value: 0,
 		unit: 'debt',
-		field: 'debtTotal'
+		field: 'totalDebts'
 	},
 	{
 		icon: 'link',
 		gradient: 'linear-gradient(135deg,#6366f1,#a855f7)',
-		label: 'Links saved',
+		label: 'Links Saved',
 		value: 0,
 		unit: 'link',
 		field: 'totalLinks'
 	}
 ];
 
-export const ACCOUNT_MILESTONES: AccountMilestone[] = [
-	{ title: 'Account Created', date: 'Feb 2025', note: 'Welcome to the beginning.' },
-	{ title: 'First Movie Logged', date: 'Mar 2025', note: 'The cinephile journey begins.' },
-	{ title: 'First Recipe Added', date: 'Apr 2025', note: 'Cooking gets tracked.' },
-	{ title: '100 Day Streak', date: 'May 2025', note: 'Consistent and committed.' },
-	{ title: 'R2 Launch', date: 'Jun 2026', note: 'Phase 2 of the journey.' }
-];
+export const MILESTONE_LABELS: Record<string, { title: string; note: string }> = {
+	accountCreated: { title: 'Account Created', note: 'Welcome to Inner World.' },
+	film1st:        { title: 'First Film Logged',    note: 'The cinephile journey begins.' },
+	quote1st:       { title: 'First Quote Saved',    note: 'A mind full of words.' },
+	recipe1st:      { title: 'First Recipe Created', note: 'Cooking gets tracked.' },
+	reminder1st:    { title: 'First Reminder Set',   note: 'Never miss a thing.' },
+	debt1st:        { title: 'First Debt Tracked',   note: 'Financial clarity starts here.' },
+	link1st:        { title: 'First Link Saved',     note: 'The first breadcrumb.' },
+	streak1st:      { title: 'First Day Active',     note: 'Every journey starts here.' }
+};
+
+export const MILESTONE_DOMAIN_DISPLAY: Record<string, string> = {
+	film:     ' Films Logged',
+	quote:    ' Quotes Saved',
+	recipe:   ' Recipes Created',
+	reminder: ' Reminders Set',
+	debt:     ' Debts Tracked',
+	link:     ' Links Saved',
+	streak:   '-Day Streak'
+};
 
 export const ACCOUNT_STRENGTH_LEVELS: AccountStrengthLevel[] = [
 	{ label: 'Too short', color: '#94a3b8', minLength: 0 },

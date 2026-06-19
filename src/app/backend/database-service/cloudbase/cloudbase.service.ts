@@ -32,10 +32,10 @@ import {
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_ACTIVITY_STREAK,
 	STATS_FIELD_ACTIVITY_STREAK_DATE,
-	STATS_FIELD_DEBT_TOTAL,
 	STATS_FIELD_IS_USER_STATS,
 	STATS_FIELD_RECENT_ACTIVITIES,
-	STATS_FIELD_REMINDER_TOTAL,
+	STATS_FIELD_TOTAL_DEBTS,
+	STATS_FIELD_TOTAL_REMINDERS,
 	STATS_FIELD_TOTAL_FILMS,
 	STATS_FIELD_TOTAL_LINKS,
 	STATS_FIELD_TOTAL_QUOTES,
@@ -66,7 +66,16 @@ import {
 	ACTIVITY_TYPE_PAYMENT_REMOVED,
 	ACTIVITY_TYPE_CATEGORY_ADDED,
 	ACTIVITY_TYPE_CALCULATOR_UPDATED,
-	ACTIVITY_TYPE_LOCK_UPDATED
+	ACTIVITY_TYPE_LOCK_UPDATED,
+	STATS_FIELD_MILESTONES,
+	MILESTONE_KEY_ACCOUNT_CREATED,
+	MILESTONE_DOMAIN_FILM,
+	MILESTONE_DOMAIN_QUOTE,
+	MILESTONE_DOMAIN_RECIPE,
+	MILESTONE_DOMAIN_REMINDER,
+	MILESTONE_DOMAIN_DEBT,
+	MILESTONE_DOMAIN_LINK,
+	MILESTONE_DOMAIN_STREAK
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
@@ -1197,7 +1206,7 @@ export class CloudbaseService extends DatabaseService {
 			// Step 4: Decrement statistics (single call — no race condition with watcher)
 			const updatedData: any = {};
 			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(-1);
-			updatedData[`totalNumber`] = this._.inc(-1);
+			updatedData[STATS_FIELD_TOTAL_FILMS] = this._.inc(-1);
 
 			if (movieItemVO.getIsFavourite()) {
 				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
@@ -1233,7 +1242,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async removeRecordFromReminderTable(key: string, text: string): Promise<void> {
 		await this.removeRecordFromDB(DATABASE_REMINDER, { entryKey: key, text });
-		this.updateUserStatCount(STATS_FIELD_REMINDER_TOTAL, -1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_REMINDERS, -1).catch(() => {});
 	}
 
 	/**
@@ -1244,7 +1253,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async removeRecordFromDebtTable(key: string, name: string): Promise<void> {
 		await this.removeRecordFromDB(DATABASE_DEBT_SONATA, { entryKey: key, name });
-		this.updateUserStatCount(STATS_FIELD_DEBT_TOTAL, -1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_DEBTS, -1).catch(() => {});
 	}
 
 	/**
@@ -1363,7 +1372,9 @@ export class CloudbaseService extends DatabaseService {
 	 * @param link - The link object to add.
 	 */
 	public async addUsefulLink(link: any): Promise<void> {
-		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, 1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, 1)
+			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_LINKS, MILESTONE_DOMAIN_LINK))
+			.catch(() => {});
 		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, { type: USEFUL_LINK_TYPE_LINK, ...link });
 	}
 
@@ -1386,7 +1397,9 @@ export class CloudbaseService extends DatabaseService {
 	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		this.addNewRecordToDB(DATABASE_QUOTES, { text, author, timestamp });
 		await this.statisticsRef.update({ [STATS_FIELD_TOTAL_QUOTES]: this._.inc(1) });
-		this.updateUserStatCount(STATS_FIELD_TOTAL_QUOTES, 1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_QUOTES, 1)
+			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_QUOTES, MILESTONE_DOMAIN_QUOTE))
+			.catch(() => {});
 	}
 
 	/**
@@ -1402,7 +1415,9 @@ export class CloudbaseService extends DatabaseService {
 			steps: payload.steps.map((step) => ({ ...step, done: false }))
 		});
 		this.statisticsRef.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(1) }).catch(() => {});
-		this.updateUserStatCount(STATS_FIELD_TOTAL_RECIPES, 1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_RECIPES, 1)
+			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_RECIPES, MILESTONE_DOMAIN_RECIPE))
+			.catch(() => {});
 	}
 
 	/**
@@ -1438,7 +1453,7 @@ export class CloudbaseService extends DatabaseService {
 			// Step 3 : Update movie statistics (single call — no race condition with watcher)
 			const updatedData: any = {};
 			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(1);
-			updatedData[`totalNumber`] = this._.inc(1);
+			updatedData[STATS_FIELD_TOTAL_FILMS] = this._.inc(1);
 
 			if (movieItemVO.getIsFavourite()) {
 				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(1);
@@ -1453,7 +1468,9 @@ export class CloudbaseService extends DatabaseService {
 				type: HISTORY_STATUS_ADDED,
 				title: movieItemVO.getMovieName()
 			}).catch(() => {});
-			this.updateUserStatCount(STATS_FIELD_TOTAL_FILMS, 1).catch(() => {});
+			this.updateUserStatCount(STATS_FIELD_TOTAL_FILMS, 1)
+				.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_FILMS, MILESTONE_DOMAIN_FILM))
+				.catch(() => {});
 
 			LOG.info(this.className, `Movie added and statistics have been updated`);
 		} catch (error) {
@@ -1488,7 +1505,7 @@ export class CloudbaseService extends DatabaseService {
 				/* CloudBase returns a non-empty result.code when the operation failed
 				   (e.g. permission denied, document not found). */
 				if (result.code) throw new Error(result.message);
-				/* lastAdded / lastDeleted are updated together with genre/totalNumber
+				/* lastAdded / lastDeleted are updated together with genre/totalFilms
 				   in the calling function (single statisticsRef.update call) to avoid
 				   triggering the CloudBase watcher twice per operation. */
 			} else {
@@ -1520,7 +1537,9 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new record to add.
 	 */
 	public async addNewRecordToReminder(newRecord: any): Promise<void> {
-		this.updateUserStatCount(STATS_FIELD_REMINDER_TOTAL, 1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_REMINDERS, 1)
+			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER))
+			.catch(() => {});
 		return this.addNewRecordToDB(DATABASE_REMINDER, newRecord);
 	}
 
@@ -1530,7 +1549,9 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new record to add.
 	 */
 	public async addNewRecordToDebt(newRecord: any): Promise<void> {
-		this.updateUserStatCount(STATS_FIELD_DEBT_TOTAL, 1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_DEBTS, 1)
+			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_DEBTS, MILESTONE_DOMAIN_DEBT))
+			.catch(() => {});
 		return this.addNewRecordToDB(DATABASE_DEBT_SONATA, newRecord);
 	}
 
@@ -1783,8 +1804,8 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Performs the actual read-then-write for a single activity log entry.
-	 * Prepends the entry to the stored array, trims to STATS_CAP_ACTIVITY_LOG,
-	 * and updates the persistent activity streak stored in the same document.
+	 * Prepends the entry to the stored array and trims to STATS_CAP_ACTIVITY_LOG.
+	 * Reads and updates the persistent activity streak in the per-user stats document.
 	 *
 	 * {@link appendToActivityLog} - The queue wrapper that serializes all calls here.
 	 *
@@ -1794,15 +1815,21 @@ export class CloudbaseService extends DatabaseService {
 		const timestamp = Utilities.getCurrentFormattedTime(true);
 		const entry = { ...activity, timestamp };
 		try {
-			const doc = await this.database.collection(DATABASE_STATISTICS).doc(this.statId).get();
-			const raw = doc.data?.[0]?.[STATS_FIELD_RECENT_ACTIVITIES];
+			const [generalDoc, userStatsRes] = await Promise.all([
+				this.database.collection(DATABASE_STATISTICS).doc(this.statId).get(),
+				this.database.collection(DATABASE_STATISTICS).where(this.getUserStatsFilter()).get()
+			]);
+			const raw = generalDoc.data?.[0]?.[STATS_FIELD_RECENT_ACTIVITIES];
 			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
 			// Prepend the new item and trim to the cap so CloudBase storage stays bounded.
 			const updated = [entry, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
-			// Compute the updated streak against today's local date.
+			const result = await this.statisticsRef.update({ [STATS_FIELD_RECENT_ACTIVITIES]: updated });
+			if (result.code) throw new Error(result.message ?? 'Recent activity data update failed');
+			// Compute and persist the updated streak to the per-user stats doc (source of truth).
 			const today = Utilities.formatDateForStorage(new Date());
-			const storedStreak = (doc.data?.[0]?.[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
-			const storedDate = (doc.data?.[0]?.[STATS_FIELD_ACTIVITY_STREAK_DATE] as string) ?? '';
+			const userDoc = userStatsRes.data?.[0];
+			const storedStreak = (userDoc?.[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
+			const storedDate = (userDoc?.[STATS_FIELD_ACTIVITY_STREAK_DATE] as string) ?? '';
 			let newStreak: number;
 			if (storedDate === today) {
 				newStreak = storedStreak;
@@ -1811,13 +1838,6 @@ export class CloudbaseService extends DatabaseService {
 				yesterday.setDate(yesterday.getDate() - 1);
 				newStreak = storedDate === Utilities.formatDateForStorage(yesterday) ? storedStreak + 1 : 1;
 			}
-			const result = await this.statisticsRef.update({
-				[STATS_FIELD_RECENT_ACTIVITIES]: updated,
-				[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
-				[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
-			});
-			if (result.code) throw new Error(result.message ?? 'Recent activity data update failed');
-			// Mirror streak to per-user doc so the account page shows the same value.
 			this.database
 				.collection(DATABASE_STATISTICS)
 				.where(this.getUserStatsFilter())
@@ -1826,6 +1846,7 @@ export class CloudbaseService extends DatabaseService {
 					[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
 				})
 				.catch(() => {});
+			this.checkAndWriteCountMilestone(MILESTONE_DOMAIN_STREAK, newStreak, userDoc).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating activity data', error as Error);
 			throw error;
@@ -1888,13 +1909,17 @@ export class CloudbaseService extends DatabaseService {
 				.get()
 		]);
 		const payload = {
+			_openid: userId,
 			[STATS_FIELD_IS_USER_STATS]: true,
 			[STATS_FIELD_TOTAL_FILMS]: films.data?.length ?? 0,
 			[STATS_FIELD_TOTAL_QUOTES]: quotes.data?.length ?? 0,
 			[STATS_FIELD_TOTAL_RECIPES]: recipes.data?.length ?? 0,
-			[STATS_FIELD_REMINDER_TOTAL]: reminders.data?.length ?? 0,
-			[STATS_FIELD_DEBT_TOTAL]: debts.data?.length ?? 0,
-			[STATS_FIELD_TOTAL_LINKS]: links.data?.length ?? 0
+			[STATS_FIELD_TOTAL_REMINDERS]: reminders.data?.length ?? 0,
+			[STATS_FIELD_TOTAL_DEBTS]: debts.data?.length ?? 0,
+			[STATS_FIELD_TOTAL_LINKS]: links.data?.length ?? 0,
+			[STATS_FIELD_ACTIVITY_STREAK]: 0,
+			[STATS_FIELD_ACTIVITY_STREAK_DATE]: '',
+			[STATS_FIELD_MILESTONES]: { [MILESTONE_KEY_ACCOUNT_CREATED]: Utilities.formatDateForStorage(new Date()) }
 		};
 		try {
 			const result = await this.database.collection(DATABASE_STATISTICS).add(payload);
@@ -1989,6 +2014,43 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	private getUserStatsFilter(): Record<string, unknown> {
 		return { _openid: CloudbaseService.getUserId(), [STATS_FIELD_IS_USER_STATS]: true };
+	}
+
+	/**
+	 * Reads the current per-user stats doc, derives the count from `field`, then delegates
+	 * to {@link checkAndWriteCountMilestone} to record the milestone if the threshold is met.
+	 * Called fire-and-forget after each domain stat increment via a `.then()` chain.
+	 *
+	 * @param field - The per-user stats field to read the count from.
+	 * @param domain - The milestone domain prefix (e.g. MILESTONE_DOMAIN_FILM).
+	 */
+	private async checkAndWriteDomainMilestone(field: string, domain: string): Promise<void> {
+		const res = await this.database.collection(DATABASE_STATISTICS).where(this.getUserStatsFilter()).get();
+		const doc = res?.data?.[0];
+		if (!doc) return;
+		const count = (doc[field] as number) ?? 0;
+		await this.checkAndWriteCountMilestone(domain, count, doc);
+	}
+
+	/**
+	 * Checks whether `count` is a milestone threshold (count === 1 or multiple of 5) and,
+	 * if the key is not already in the per-user milestones map, writes the current date.
+	 *
+	 * {@link checkAndWriteDomainMilestone} - Calls this after reading the count from the doc.
+	 *
+	 * @param domain - The milestone domain prefix (e.g. "film", "streak").
+	 * @param count - The new count value to evaluate.
+	 * @param doc - Pre-loaded per-user stats document.
+	 */
+	private async checkAndWriteCountMilestone(domain: string, count: number, doc: any): Promise<void> {
+		const key = Utilities.getMilestoneKey(domain, count);
+		if (!key || !doc) return;
+		const milestones = (doc[STATS_FIELD_MILESTONES] as Record<string, string>) ?? {};
+		if (milestones[key]) return;
+		await this.database
+			.collection(DATABASE_STATISTICS)
+			.where(this.getUserStatsFilter())
+			.update({ [`${STATS_FIELD_MILESTONES}.${key}`]: Utilities.formatDateForStorage(new Date()) });
 	}
 
 	/**

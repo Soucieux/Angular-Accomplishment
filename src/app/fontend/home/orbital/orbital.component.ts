@@ -6,6 +6,7 @@ import {
 	Input,
 	NgZone,
 	OnChanges,
+	OnDestroy,
 	OnInit,
 	Output,
 	SimpleChanges,
@@ -13,7 +14,8 @@ import {
 } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
+import { DatabaseService } from '../../../backend/database-service/database.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../../backend/authentication-service/auth.service';
 import { OrbitalStore } from './orbital.store';
@@ -187,12 +189,13 @@ type OrbitalActivitySourceDef = {
 	styleUrl: './orbital.component.css',
 	providers: [OrbitalStore]
 })
-export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
+export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
 	protected readonly d = inject(OrbitalStore);
 	private readonly router = inject(Router);
 	private readonly elementRef = inject(ElementRef);
 	private readonly ngZone = inject(NgZone);
 	private readonly authService = inject(AuthService);
+	private readonly databaseService = inject(DatabaseService);
 
 	@Input() stats: HomeStats | null = null;
 	@Input() links: PortalLink[] = [];
@@ -221,6 +224,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	protected activityRows: OrbitalActivityRow[] = [];
 	protected addedThisWeek = 0;
 	protected activityStreak = 0;
+	private userStatsSub?: Subscription;
 
 	/**
 	 * Truncates a detail string to 32 characters for activity row display.
@@ -411,10 +415,21 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	};
 
 	/**
-	 * Subscribes to the auth state observable to keep the current user up to date.
+	 * Subscribes to the auth state and per-user stats observables.
 	 */
 	ngOnInit(): void {
 		this.currentUser$ = this.authService.currentUser$;
+		this.userStatsSub = this.databaseService.getUserStats().subscribe((doc) => {
+			if (!doc) return;
+			this.activityStreak = (doc[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
+		});
+	}
+
+	/**
+	 * Cleans up the per-user stats subscription on component teardown.
+	 */
+	ngOnDestroy(): void {
+		this.userStatsSub?.unsubscribe();
 	}
 
 	/**
@@ -438,7 +453,6 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 		if (changes[HOME_ORBITAL_CHANGES_KEY_STATS] && this.stats) {
 			this.genreBars = this.buildGenreBars();
 			this.reminderRows = this.buildReminderRows();
-			this.activityStreak = (this.stats?.[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
 			this.recipeRows = this.buildRecipeRows();
 			this.debtRows = this.buildDebtRows();
 			this.activityRows = this.buildActivityRows();
@@ -459,13 +473,13 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 
 	/**
 	 * Gets the true total number of open reminders from the statistics document.
-	 * Reads reminderTotal directly so the count is never limited by the 20-item
+	 * Reads totalReminders directly so the count is never limited by the 20-item
 	 * cap applied to the reminderUpcoming array.
 	 *
 	 * @returns The full reminder count from stats, or 0 if not yet loaded.
 	 */
 	protected get openReminderCount(): number {
-		return this.stats?.reminderTotal ?? 0;
+		return this.stats?.totalReminders ?? 0;
 	}
 
 	/**
@@ -474,18 +488,18 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	 * @returns The patch notes count from stats, or 0 if not yet loaded.
 	 */
 	protected get patchNotesCount(): number {
-		return this.stats?.patchNotesTotal ?? 0;
+		return this.stats?.totalPatchNotes ?? 0;
 	}
 
 	/**
 	 * Gets the true total number of unpaid debts from the statistics document.
-	 * Reads debtTotal directly so the count is never limited by the 20-item
+	 * Reads totalDebts directly so the count is never limited by the 20-item
 	 * cap applied to the debtUpcoming array.
 	 *
 	 * @returns The full unpaid debt count from stats, or 0 if not yet loaded.
 	 */
 	protected get openDebtCount(): number {
-		return this.stats?.debtTotal ?? 0;
+		return this.stats?.totalDebts ?? 0;
 	}
 
 	/**

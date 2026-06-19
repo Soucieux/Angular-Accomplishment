@@ -41,7 +41,7 @@ import {
 	DIALOG_DEBT,
 	ERROR_PERMISSION_DENIED,
 	STATS_CAP_ACTIVITY_LOG,
-	STATS_FIELD_DEBT_TOTAL,
+	STATS_FIELD_TOTAL_DEBTS,
 	STATS_FIELD_DEBT_UPCOMING,
 	DEBT_DUE_LABEL_NONE,
 	DEBT_DUE_LABEL_TODAY,
@@ -713,7 +713,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 			this.syncStatTimer = null;
 			this.databaseService.updateStatisticsFields({
 				[STATS_FIELD_DEBT_UPCOMING]: this.upcomingExpenses.slice(0, STATS_CAP_ACTIVITY_LOG),
-				[STATS_FIELD_DEBT_TOTAL]: this.upcomingExpenses.length
+				[STATS_FIELD_TOTAL_DEBTS]: this.upcomingExpenses.length
 			});
 		}, 0);
 	}

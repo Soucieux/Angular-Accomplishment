@@ -1,12 +1,12 @@
 /** Known fields on the statistics document accessed directly in the template. */
 export interface HomeStats {
 	[key: string]: unknown;
-	totalNumber?: number;
-	reminderTotal?: number;
-	patchNotesTotal?: number;
+	totalFilms?: number;
+	totalReminders?: number;
+	totalPatchNotes?: number;
 	totalQuotes?: number;
 	totalRecipes?: number;
-	debtTotal?: number;
+	totalDebts?: number;
 	recipeList?: { id: string; name: string; category: string }[];
 }
 

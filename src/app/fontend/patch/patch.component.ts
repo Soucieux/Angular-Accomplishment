@@ -30,7 +30,7 @@ import {
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
 	PATCH_MSG_DELETE_CONFIRM,
-	STATS_FIELD_PATCH_NOTES_TOTAL,
+	STATS_FIELD_TOTAL_PATCH_NOTES,
 	TOAST_INFO,
 	TOAST_WARN,
 	SUCCESS,
@@ -296,8 +296,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 						// 3. Keep a local ordered copy for look-ups in edit/delete stats writes.
 						this.patchNotesList = data;
 
-						/* 4. On first load, heal the denormalised patchNotesTotal statistic.
-						   The Home dashboard satellite reads patchNotesTotal directly, so any
+						/* 4. On first load, heal the denormalised totalPatchNotes statistic.
+						   The Home dashboard satellite reads totalPatchNotes directly, so any
 						   out-of-band insert (e.g. the seeding script) leaves it stale. */
 						if (prevLength === null) {
 							this.reconcilePatchNotesTotal(this.patchNotesList.length).catch(() => {});
@@ -474,7 +474,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			.addNewRecordToPatchNotes(snapshot)
 			.then(() => {
 				this.databaseService
-					.updateStatisticsFields({ [STATS_FIELD_PATCH_NOTES_TOTAL]: noteIndex })
+					.updateStatisticsFields({ [STATS_FIELD_TOTAL_PATCH_NOTES]: noteIndex })
 					.catch(() => {});
 			})
 			.catch(() => this.dialogService.showUnexpectedError(this.dialogComponentContainer));
@@ -506,7 +506,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 						noteIndex
 					);
 					this.databaseService
-						.updateStatisticsFields({ [STATS_FIELD_PATCH_NOTES_TOTAL]: newTotal })
+						.updateStatisticsFields({ [STATS_FIELD_TOTAL_PATCH_NOTES]: newTotal })
 						.catch(() => {});
 				} catch (error) {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
@@ -555,8 +555,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
-	 * Reconciles the stored patchNotesTotal statistic with the true number of
-	 * loaded patch notes. The Home dashboard satellite reads patchNotesTotal
+	 * Reconciles the stored totalPatchNotes statistic with the true number of
+	 * loaded patch notes. The Home dashboard satellite reads totalPatchNotes
 	 * directly, so any insert made outside the add/delete flow (e.g. the seeding
 	 * script) leaves the counter stale. Reading the real list length here and
 	 * correcting only on drift keeps the dashboard count permanently honest.
@@ -566,10 +566,10 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	private async reconcilePatchNotesTotal(actualTotal: number): Promise<void> {
 		const stats = await firstValueFrom(this.databaseService.getStatistics());
-		const storedTotal = stats?.[STATS_FIELD_PATCH_NOTES_TOTAL] ?? 0;
+		const storedTotal = stats?.[STATS_FIELD_TOTAL_PATCH_NOTES] ?? 0;
 		if (storedTotal !== actualTotal) {
 			await this.databaseService.updateStatisticsFields({
-				[STATS_FIELD_PATCH_NOTES_TOTAL]: actualTotal
+				[STATS_FIELD_TOTAL_PATCH_NOTES]: actualTotal
 			});
 		}
 	}

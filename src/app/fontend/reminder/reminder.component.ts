@@ -62,7 +62,7 @@ import {
 	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
 	STATS_CAP_ACTIVITY_LOG,
-	STATS_FIELD_REMINDER_TOTAL,
+	STATS_FIELD_TOTAL_REMINDERS,
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS,
 	TIMEOUT_KEY_REMINDER
@@ -279,7 +279,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.databaseService
 			.updateStatisticsFields({
 				[STATS_FIELD_REMINDER_UPCOMING]: upcoming.slice(0, STATS_CAP_ACTIVITY_LOG),
-				[STATS_FIELD_REMINDER_TOTAL]: this.items.length
+				[STATS_FIELD_TOTAL_REMINDERS]: this.items.length
 			})
 			.catch(() => {});
 	}

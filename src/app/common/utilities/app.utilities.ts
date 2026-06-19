@@ -302,6 +302,21 @@ export class Utilities {
 	}
 
 	/**
+	 * Gets the one-or-two-letter initials from the user's display name for avatar circles.
+	 *
+	 * @param user - The authenticated user object from the auth observable.
+	 * @returns The uppercased initials string, or '?' when no display name is available.
+	 */
+	public static getUserInitials(user: any): string {
+		const displayName = Utilities.getUserDisplayName(user);
+		if (!displayName) return '?';
+		const parts = displayName.trim().split(' ');
+		return parts.length >= 2
+			? (parts[0][0] + parts[1][0]).toUpperCase()
+			: displayName.slice(0, 2).toUpperCase();
+	}
+
+	/**
 	 * Checks whether the current user is alive (has a valid session).
 	 *
 	 * @returns Whether the user is alive.

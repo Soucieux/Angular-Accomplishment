@@ -32,7 +32,13 @@ import {
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_ACTIVITY_STREAK,
 	STATS_FIELD_ACTIVITY_STREAK_DATE,
+	STATS_FIELD_DEBT_TOTAL,
+	STATS_FIELD_IS_USER_STATS,
 	STATS_FIELD_RECENT_ACTIVITIES,
+	STATS_FIELD_REMINDER_TOTAL,
+	STATS_FIELD_TOTAL_FILMS,
+	STATS_FIELD_TOTAL_LINKS,
+	STATS_FIELD_TOTAL_QUOTES,
 	STATS_FIELD_TOTAL_RECIPES,
 	ROLE_ADMIN,
 	ACTIVITY_SOURCE_DEBT,
@@ -229,6 +235,20 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getStatistics(): Observable<any> {
 		return this.watchCollection(DATABASE_STATISTICS, (docs) => docs[0]);
+	}
+
+	/**
+	 * Gets the current user's per-user stats document as a real-time observable.
+	 *
+	 * @returns An observable that emits the user's stats document, or undefined when absent.
+	 */
+	public getUserStats(): Observable<any> {
+		return this.watchCollection(
+			DATABASE_STATISTICS,
+			(docs) => docs[0],
+			false,
+			(col) => col.where(this.getUserStatsFilter())
+		);
 	}
 
 	/**
@@ -464,10 +484,12 @@ export class CloudbaseService extends DatabaseService {
 					.get()
 					.then((res: any) => {
 						const docs: any[] = res.data ?? [];
-						observer.next(docs.map((doc: any) => {
-							const { _id, _openid, order, ...rest } = doc;
-							return rest;
-						}));
+						observer.next(
+							docs.map((doc: any) => {
+								const { _id, _openid, order, ...rest } = doc;
+								return rest;
+							})
+						);
 						observer.complete();
 					})
 					.catch((error: unknown) => observer.error(error));
@@ -952,7 +974,14 @@ export class CloudbaseService extends DatabaseService {
 		element: string,
 		noteIndex: number
 	): Promise<void> {
-		await this.updateOnePatchNote(key, updatedRecord, component, element, noteIndex, ACTIVITY_TYPE_STATUS_CHANGED);
+		await this.updateOnePatchNote(
+			key,
+			updatedRecord,
+			component,
+			element,
+			noteIndex,
+			ACTIVITY_TYPE_STATUS_CHANGED
+		);
 	}
 
 	/**
@@ -972,7 +1001,14 @@ export class CloudbaseService extends DatabaseService {
 		element: string,
 		noteIndex: number
 	): Promise<void> {
-		await this.updateOnePatchNote(key, updatedRecord, component, element, noteIndex, ACTIVITY_TYPE_EDITED);
+		await this.updateOnePatchNote(
+			key,
+			updatedRecord,
+			component,
+			element,
+			noteIndex,
+			ACTIVITY_TYPE_EDITED
+		);
 	}
 
 	/**
@@ -1075,6 +1111,7 @@ export class CloudbaseService extends DatabaseService {
 			type: HISTORY_STATUS_DELETED,
 			domain
 		});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, -1).catch(() => {});
 	}
 
 	/**
@@ -1100,9 +1137,8 @@ export class CloudbaseService extends DatabaseService {
 	public async removeQuote(entryKey: string, author: string): Promise<void> {
 		this.removeRecordFromDB(DATABASE_QUOTES, { entryKey, author });
 
-		await this.statisticsRef.update({
-			totalQuotes: this._.inc(-1)
-		});
+		await this.statisticsRef.update({ [STATS_FIELD_TOTAL_QUOTES]: this._.inc(-1) });
+		this.updateUserStatCount(STATS_FIELD_TOTAL_QUOTES, -1).catch(() => {});
 	}
 
 	/**
@@ -1117,6 +1153,7 @@ export class CloudbaseService extends DatabaseService {
 
 		// Fire-and-forget: keep totalRecipes in sync so the home stat chip updates in realtime.
 		this.statisticsRef.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(-1) }).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_RECIPES, -1).catch(() => {});
 	}
 
 	/**
@@ -1175,6 +1212,7 @@ export class CloudbaseService extends DatabaseService {
 				type: HISTORY_STATUS_DELETED,
 				title: movieItemVO.getMovieName()
 			}).catch(() => {});
+			this.updateUserStatCount(STATS_FIELD_TOTAL_FILMS, -1).catch(() => {});
 
 			LOG.info(this.className, `Statistics updated after removing ${movieItemVO.getMovieName()}`);
 		} catch (error) {
@@ -1195,6 +1233,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async removeRecordFromReminderTable(key: string, text: string): Promise<void> {
 		await this.removeRecordFromDB(DATABASE_REMINDER, { entryKey: key, text });
+		this.updateUserStatCount(STATS_FIELD_REMINDER_TOTAL, -1).catch(() => {});
 	}
 
 	/**
@@ -1205,6 +1244,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async removeRecordFromDebtTable(key: string, name: string): Promise<void> {
 		await this.removeRecordFromDB(DATABASE_DEBT_SONATA, { entryKey: key, name });
+		this.updateUserStatCount(STATS_FIELD_DEBT_TOTAL, -1).catch(() => {});
 	}
 
 	/**
@@ -1323,6 +1363,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param link - The link object to add.
 	 */
 	public async addUsefulLink(link: any): Promise<void> {
+		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, 1).catch(() => {});
 		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, { type: USEFUL_LINK_TYPE_LINK, ...link });
 	}
 
@@ -1344,7 +1385,8 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		this.addNewRecordToDB(DATABASE_QUOTES, { text, author, timestamp });
-		await this.statisticsRef.update({ totalQuotes: this._.inc(1) });
+		await this.statisticsRef.update({ [STATS_FIELD_TOTAL_QUOTES]: this._.inc(1) });
+		this.updateUserStatCount(STATS_FIELD_TOTAL_QUOTES, 1).catch(() => {});
 	}
 
 	/**
@@ -1360,6 +1402,7 @@ export class CloudbaseService extends DatabaseService {
 			steps: payload.steps.map((step) => ({ ...step, done: false }))
 		});
 		this.statisticsRef.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(1) }).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_RECIPES, 1).catch(() => {});
 	}
 
 	/**
@@ -1410,6 +1453,7 @@ export class CloudbaseService extends DatabaseService {
 				type: HISTORY_STATUS_ADDED,
 				title: movieItemVO.getMovieName()
 			}).catch(() => {});
+			this.updateUserStatCount(STATS_FIELD_TOTAL_FILMS, 1).catch(() => {});
 
 			LOG.info(this.className, `Movie added and statistics have been updated`);
 		} catch (error) {
@@ -1476,6 +1520,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new record to add.
 	 */
 	public async addNewRecordToReminder(newRecord: any): Promise<void> {
+		this.updateUserStatCount(STATS_FIELD_REMINDER_TOTAL, 1).catch(() => {});
 		return this.addNewRecordToDB(DATABASE_REMINDER, newRecord);
 	}
 
@@ -1485,6 +1530,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new record to add.
 	 */
 	public async addNewRecordToDebt(newRecord: any): Promise<void> {
+		this.updateUserStatCount(STATS_FIELD_DEBT_TOTAL, 1).catch(() => {});
 		return this.addNewRecordToDB(DATABASE_DEBT_SONATA, newRecord);
 	}
 
@@ -1771,8 +1817,91 @@ export class CloudbaseService extends DatabaseService {
 				[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
 			});
 			if (result.code) throw new Error(result.message ?? 'Recent activity data update failed');
+			// Mirror streak to per-user doc so the account page shows the same value.
+			this.database
+				.collection(DATABASE_STATISTICS)
+				.where(this.getUserStatsFilter())
+				.update({
+					[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
+					[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
+				})
+				.catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating activity data', error as Error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Atomically increments or decrements a single counter field on the current user's
+	 * stats document in the statistics collection. Errors are logged but not propagated —
+	 * all callers treat stat updates as fire-and-forget.
+	 *
+	 * @param field - The field name constant to update (e.g. STATS_FIELD_TOTAL_FILMS).
+	 * @param delta - The amount to change the counter — pass 1 to increment, -1 to decrement.
+	 * @returns A promise that resolves when the update completes.
+	 */
+	public async updateUserStatCount(field: string, delta: 1 | -1): Promise<void> {
+		const result = await this.database
+			.collection(DATABASE_STATISTICS)
+			.where(this.getUserStatsFilter())
+			.update({ [field]: this._.inc(delta) });
+		if (result.code) {
+			LOG.error(this.className, result.message ?? 'User stat update failed');
+		}
+	}
+
+	/**
+	 * Checks whether a per-user stats document exists and seeds it if absent.
+	 * Uses a one-time `.get()` so the check is not watcher-dependent — safe to call on every
+	 * page load because it exits immediately when the doc already exists.
+	 *
+	 * @returns A promise that resolves when the check (and optional seed) completes.
+	 */
+	public async ensureUserStatsExist(): Promise<void> {
+		const result = await this.database
+			.collection(DATABASE_STATISTICS)
+			.where(this.getUserStatsFilter())
+			.get();
+		if (!result.data?.length) {
+			await this.seedUserStats();
+		}
+	}
+
+	/**
+	 * Seeds the current user's per-user stats document with live counts from each collection.
+	 * Intended to be called once from the browser to initialise the stats doc, then removed.
+	 *
+	 * @returns A promise that resolves when the seed write completes.
+	 */
+	public async seedUserStats(): Promise<void> {
+		const userId = CloudbaseService.getUserId();
+		const [films, quotes, recipes, reminders, debts, links] = await Promise.all([
+			this.database.collection(DATABASE_MOVIES).where({ _openid: userId }).get(),
+			this.database.collection(DATABASE_QUOTES).where({ _openid: userId }).get(),
+			this.database.collection(DATABASE_RECIPES).where({ _openid: userId }).get(),
+			this.database.collection(DATABASE_REMINDER).where({ _openid: userId }).get(),
+			this.database.collection(DATABASE_DEBT_SONATA).where({ _openid: userId }).get(),
+			this.database
+				.collection(DATABASE_USEFUL_LINKS)
+				.where({ _openid: userId, type: USEFUL_LINK_TYPE_LINK })
+				.get()
+		]);
+		const payload = {
+			[STATS_FIELD_IS_USER_STATS]: true,
+			[STATS_FIELD_TOTAL_FILMS]: films.data?.length ?? 0,
+			[STATS_FIELD_TOTAL_QUOTES]: quotes.data?.length ?? 0,
+			[STATS_FIELD_TOTAL_RECIPES]: recipes.data?.length ?? 0,
+			[STATS_FIELD_REMINDER_TOTAL]: reminders.data?.length ?? 0,
+			[STATS_FIELD_DEBT_TOTAL]: debts.data?.length ?? 0,
+			[STATS_FIELD_TOTAL_LINKS]: links.data?.length ?? 0
+		};
+		try {
+			const result = await this.database.collection(DATABASE_STATISTICS).add(payload);
+			if (result.code) throw new Error(result.message ?? 'Seed user stats failed');
+			LOG.info(this.className, 'User stats seeded successfully');
+		} catch (error) {
+			LOG.error(this.className, 'Error while seeding user stats', error as Error);
 			throw error;
 		}
 	}
@@ -1850,6 +1979,16 @@ export class CloudbaseService extends DatabaseService {
 		return CloudbaseService.userHasAllRights()
 			? { _id: id }
 			: { _id: id, _openid: CloudbaseService.getUserId() };
+	}
+
+	/**
+	 * Gets the CloudBase where-clause object that identifies the current user's stats document.
+	 * Used by all per-user stats reads and writes to ensure consistency.
+	 *
+	 * @returns The where-clause object with _openid and isUserStats fields.
+	 */
+	private getUserStatsFilter(): Record<string, unknown> {
+		return { _openid: CloudbaseService.getUserId(), [STATS_FIELD_IS_USER_STATS]: true };
 	}
 
 	/**

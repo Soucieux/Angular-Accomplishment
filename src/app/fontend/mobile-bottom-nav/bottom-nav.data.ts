@@ -29,13 +29,7 @@ export const NAV_ITEMS: NavItem[] = [
 		icon: 'note_stack',
 		grad: 'linear-gradient(135deg,#a5b4fc,#3730a3)'
 	},
-	{ id: 'about', label: 'About', icon: 'badge', grad: 'linear-gradient(135deg,#f0abfc,#7e22ce)' },
-	{
-		id: 'account',
-		label: 'Account',
-		icon: 'manage_accounts',
-		grad: 'linear-gradient(135deg,#1e3a8a,#7dd3fc)'
-	}
+	{ id: 'about', label: 'About', icon: 'badge', grad: 'linear-gradient(135deg,#f0abfc,#7e22ce)' }
 ];
 
 /** The destinations promoted to the always-visible dock (in display order). */

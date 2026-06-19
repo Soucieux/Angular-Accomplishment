@@ -18,6 +18,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { LOG } from '../../common/app.logs';
 import {
+	ACCOUNT_TITLE_PAGE,
 	NAV_AVATAR_FALLBACK_INITIAL,
 	NAV_AVATAR_GRADIENT,
 	NAV_NOTIF_LABEL_BLOCKED,
@@ -52,6 +53,7 @@ export class BottomNavComponent implements AfterViewInit {
 
 	private readonly className = 'BottomNavComponent';
 
+	protected readonly ACCOUNT_TITLE_PAGE = ACCOUNT_TITLE_PAGE;
 	protected readonly NAV_AVATAR_GRADIENT = NAV_AVATAR_GRADIENT;
 	protected readonly NAV_NOTIF_LABEL_ENABLE = NAV_NOTIF_LABEL_ENABLE;
 	protected readonly NAV_NOTIF_LABEL_DISABLE = NAV_NOTIF_LABEL_DISABLE;
@@ -154,6 +156,14 @@ export class BottomNavComponent implements AfterViewInit {
 	protected closeAll(): void {
 		this.gridOpen.set(false);
 		this.accountOpen.set(false);
+	}
+
+	/**
+	 * Closes the account popover and emits a navigate event to the account page.
+	 */
+	protected doNavigateToAccount(): void {
+		this.accountOpen.set(false);
+		this.navigate.emit('account');
 	}
 
 	/**

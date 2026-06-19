@@ -27,16 +27,19 @@ import {
 	CN,
 	COMPONENT_DESTROY,
 	CTX_COLOR_CLIPBOARD,
+	CTX_COLOR_MY_ACCOUNT,
 	CTX_COLOR_SIGN_IN,
 	CTX_COLOR_SIGN_OUT,
 	CTX_ICON_COPY,
 	CTX_ICON_CUT,
+	CTX_ICON_MY_ACCOUNT,
 	CTX_ICON_PASTE,
 	CTX_ICON_SELECT_ALL,
 	CTX_ICON_SIGN_IN,
 	CTX_ICON_SIGN_OUT,
 	CTX_LABEL_COPY,
 	CTX_LABEL_CUT,
+	CTX_LABEL_MY_ACCOUNT,
 	CTX_LABEL_PASTE,
 	CTX_LABEL_SELECT_ALL,
 	CTX_LABEL_SIGN_IN,
@@ -287,19 +290,27 @@ export class AppComponent implements OnInit, AfterViewInit {
 			});
 		}
 		if (this.mobileSignedIn) {
-			actions.push({
-				label: CTX_LABEL_SIGN_OUT,
-				icon: CTX_ICON_SIGN_OUT,
-				color: CTX_COLOR_SIGN_OUT,
-				execute: () =>
-					this.dialogService.openDialog(
-						this.dialogComponentContainer,
-						DIALOG_CONFIRM,
-						() => this.logout(),
-						[MSG_LOGOUT_CONFIRM, DIALOG_HEADER_SIGN_OUT, DIALOG_BTN_SIGN_OUT]
-					),
-				separator: true
-			});
+			actions.push(
+				{
+					label: CTX_LABEL_MY_ACCOUNT,
+					icon: CTX_ICON_MY_ACCOUNT,
+					color: CTX_COLOR_MY_ACCOUNT,
+					execute: () => this.router.navigate(['/account']).catch(() => {}),
+					separator: true
+				},
+				{
+					label: CTX_LABEL_SIGN_OUT,
+					icon: CTX_ICON_SIGN_OUT,
+					color: CTX_COLOR_SIGN_OUT,
+					execute: () =>
+						this.dialogService.openDialog(
+							this.dialogComponentContainer,
+							DIALOG_CONFIRM,
+							() => this.logout(),
+							[MSG_LOGOUT_CONFIRM, DIALOG_HEADER_SIGN_OUT, DIALOG_BTN_SIGN_OUT]
+						)
+				}
+			);
 		} else {
 			actions.push({
 				label: CTX_LABEL_SIGN_IN,

@@ -157,7 +157,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 			});
 			this.currentUser$.subscribe((user) => {
 				this.mobileSignedIn = !!user;
-				this.mobileUserName = Utilities.getUserDisplayName(user);
+				this.mobileUserName = Utilities.capitalizeFirstLetterOnEachWord(Utilities.getUserDisplayName(user));
 			});
 			this.ngZone.runOutsideAngular(() => {
 				document.addEventListener('scroll', () => {
@@ -542,13 +542,13 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Gets the first character of the user's display name, uppercased, for use
-	 * as an avatar monogram.
+	 * Gets the first character of the user's display name, uppercased,
+	 * for use as an avatar monogram.
 	 *
 	 * @param user - The authenticated user object from the auth observable.
-	 * @returns The uppercased first character of the display name, or an empty string.
+	 * @returns The uppercased first character, or an empty string.
 	 */
 	protected getUserInitial(user: any): string {
-		return Utilities.getUserDisplayName(user).charAt(0).toUpperCase();
+		return Utilities.capitalizeFirstLetterOnEachWord(Utilities.getUserDisplayName(user)).charAt(0).toUpperCase();
 	}
 }

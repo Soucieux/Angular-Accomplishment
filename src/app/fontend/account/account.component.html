@@ -41,83 +41,118 @@
 					<span class="card-title">{{ ACCOUNT_LABEL_IDENTITY_TITLE }}</span>
 				</div>
 
-				<div class="field-group">
-					<label class="field-label">{{ ACCOUNT_LABEL_USERNAME }}</label>
-					<div class="field-row">
-						<input
-							class="account-input"
-							type="text"
-							[(ngModel)]="usernameInput"
-							(keyup.enter)="updateUsername()" />
-						<button class="save-button" (click)="updateUsername()">
-							{{ ACCOUNT_LABEL_SAVE }}
-						</button>
+				@if (isStatsLoaded) {
+					<div class="field-group">
+						<label class="field-label">{{ ACCOUNT_LABEL_USERNAME }}</label>
+						<div class="field-row">
+							<input
+								class="account-input"
+								type="text"
+								[(ngModel)]="usernameInput"
+								[placeholder]="ACCOUNT_PLACEHOLDER_USERNAME"
+								(keyup.enter)="updateUsername()" />
+							<button class="save-button" (click)="updateUsername()">
+								{{ ACCOUNT_LABEL_UPDATE_USERNAME }}
+							</button>
+						</div>
 					</div>
-				</div>
 
-				<div class="field-group">
-					<label class="field-label">{{ ACCOUNT_LABEL_EMAIL }}</label>
-					<div class="email-row">
-						<span class="email-value">{{ getUserEmail(user) }}</span>
-						<span class="verified-badge">
-							<span class="material-symbols-outlined">verified</span>
-							{{ ACCOUNT_LABEL_VERIFIED }}
-						</span>
+					<div class="field-group">
+						<label class="field-label">{{ ACCOUNT_LABEL_EMAIL }}</label>
+						<div class="email-row">
+							<span class="email-value">{{ getUserEmail(user) }}</span>
+							<span class="verified-badge">
+								<span class="material-symbols-outlined">verified</span>
+								{{ ACCOUNT_LABEL_VERIFIED }}
+							</span>
+						</div>
 					</div>
-				</div>
 
-				<div class="field-group">
-					<label class="field-label">{{ ACCOUNT_LABEL_CHANGE_PASSWORD }}</label>
-					<div class="password-input-wrapper">
-						<input
-							class="account-input"
-							[type]="showNewPassword ? 'text' : 'password'"
-							[(ngModel)]="newPasswordInput"
-							[placeholder]="ACCOUNT_LABEL_NEW_PASSWORD"
-							(keyup.enter)="updatePassword()" />
-						<button
-							type="button"
-							class="visibility-button"
-							(click)="toggleNewPasswordVisibility()">
-							<span class="material-symbols-outlined">{{
-								showNewPassword ? 'visibility_off' : 'visibility'
+					<div class="field-group">
+						<label class="field-label">{{ ACCOUNT_LABEL_CHANGE_PASSWORD }}</label>
+						<div class="password-input-wrapper">
+							<input
+								class="account-input"
+								[type]="showOldPassword ? 'text' : 'password'"
+								[(ngModel)]="oldPasswordInput"
+								[placeholder]="ACCOUNT_LABEL_OLD_PASSWORD"
+								(keyup.enter)="updatePassword()" />
+							<button
+								type="button"
+								class="visibility-button"
+								(click)="toggleOldPasswordVisibility()">
+								<span class="material-symbols-outlined">{{
+									showOldPassword ? 'visibility_off' : 'visibility'
+								}}</span>
+							</button>
+						</div>
+						<div class="password-input-wrapper">
+							<input
+								class="account-input"
+								[type]="showNewPassword ? 'text' : 'password'"
+								[(ngModel)]="newPasswordInput"
+								[placeholder]="ACCOUNT_LABEL_NEW_PASSWORD"
+								(keyup.enter)="updatePassword()" />
+							<button
+								type="button"
+								class="visibility-button"
+								(click)="toggleNewPasswordVisibility()">
+								<span class="material-symbols-outlined">{{
+									showNewPassword ? 'visibility_off' : 'visibility'
+								}}</span>
+							</button>
+						</div>
+						<div class="strength-meter">
+							@for (segment of [1, 2, 3, 4]; track segment) {
+								<div
+									class="strength-segment"
+									[style.background]="
+										segment <= getPasswordStrengthIndex(newPasswordInput)
+											? getStrengthColor(newPasswordInput)
+											: 'rgba(0,0,0,0.1)'
+									"></div>
+							}
+							<span class="strength-label" [style.color]="getStrengthColor(newPasswordInput)">{{
+								getStrengthLabel(newPasswordInput)
 							}}</span>
+						</div>
+						<div class="password-input-wrapper">
+							<input
+								class="account-input"
+								[type]="showConfirmPassword ? 'text' : 'password'"
+								[(ngModel)]="confirmPasswordInput"
+								[placeholder]="ACCOUNT_LABEL_CONFIRM_PASSWORD"
+								(keyup.enter)="updatePassword()" />
+							<button
+								type="button"
+								class="visibility-button"
+								(click)="toggleConfirmPasswordVisibility()">
+								<span class="material-symbols-outlined">{{
+									showConfirmPassword ? 'visibility_off' : 'visibility'
+								}}</span>
+							</button>
+						</div>
+						<button class="save-button" (click)="updatePassword()">
+							{{ ACCOUNT_LABEL_UPDATE_PASSWORD }}
 						</button>
 					</div>
-					<div class="strength-meter">
-						@for (segment of [1, 2, 3, 4]; track segment) {
-							<div
-								class="strength-segment"
-								[style.background]="
-									segment <= getPasswordStrengthIndex(newPasswordInput)
-										? getStrengthColor(newPasswordInput)
-										: 'rgba(0,0,0,0.1)'
-								"></div>
-						}
-						<span class="strength-label" [style.color]="getStrengthColor(newPasswordInput)">{{
-							getStrengthLabel(newPasswordInput)
-						}}</span>
+				} @else {
+					<div class="field-group">
+						<span class="skeleton skeleton-identity-label"></span>
+						<div class="skeleton skeleton-identity-input"></div>
 					</div>
-					<div class="password-input-wrapper">
-						<input
-							class="account-input"
-							[type]="showConfirmPassword ? 'text' : 'password'"
-							[(ngModel)]="confirmPasswordInput"
-							[placeholder]="ACCOUNT_LABEL_CONFIRM_PASSWORD"
-							(keyup.enter)="updatePassword()" />
-						<button
-							type="button"
-							class="visibility-button"
-							(click)="toggleConfirmPasswordVisibility()">
-							<span class="material-symbols-outlined">{{
-								showConfirmPassword ? 'visibility_off' : 'visibility'
-							}}</span>
-						</button>
+					<div class="field-group">
+						<span class="skeleton skeleton-identity-label"></span>
+						<div class="skeleton skeleton-identity-email"></div>
 					</div>
-					<button class="save-button" (click)="updatePassword()">
-						{{ ACCOUNT_LABEL_SAVE }}
-					</button>
-				</div>
+					<div class="field-group">
+						<span class="skeleton skeleton-identity-label"></span>
+						<div class="skeleton skeleton-identity-input"></div>
+						<div class="skeleton skeleton-identity-input"></div>
+						<div class="skeleton skeleton-identity-input"></div>
+						<div class="skeleton skeleton-identity-btn"></div>
+					</div>
+				}
 			</div>
 
 			<!-- Inner World -->
@@ -183,6 +218,31 @@
 								</div>
 							</div>
 						}
+					</div>
+				}
+			</div>
+
+			<!-- Security -->
+			<div class="account-card account-card--security">
+				<div class="card-header">
+					<span class="material-symbols-outlined card-icon">lock_clock</span>
+					<span class="card-title">{{ ACCOUNT_LABEL_SECURITY_TITLE }}</span>
+				</div>
+				@if (isStatsLoaded) {
+					<div class="security-log-entries">
+						<div class="security-log-row">
+							<span class="security-log-label">{{ ACCOUNT_LABEL_USERNAME_CHANGED }}</span>
+							<span class="security-log-value">{{ usernameChangedDate || '—' }}</span>
+						</div>
+						<div class="security-log-row">
+							<span class="security-log-label">{{ ACCOUNT_LABEL_PASSWORD_CHANGED }}</span>
+							<span class="security-log-value">{{ passwordChangedDate || '—' }}</span>
+						</div>
+					</div>
+				} @else {
+					<div class="security-log-entries">
+						<div class="skeleton skeleton-security-log-row"></div>
+						<div class="skeleton skeleton-security-log-row"></div>
 					</div>
 				}
 			</div>

@@ -1070,6 +1070,26 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Updates specific fields in the current user's per-user stats document.
+	 * Targets the document matched by {@link getUserStatsFilter} (owned by the current user,
+	 * flagged with `isUserStats: true`) — distinct from the shared statistics document.
+	 *
+	 * @param fields - Fields to merge into the per-user stats document.
+	 * @returns A promise that resolves when the update completes.
+	 */
+	public async updateUserStatsFields(fields: Record<string, any>): Promise<void> {
+		try {
+			const result = await this.database
+				.collection(DATABASE_STATISTICS)
+				.where(this.getUserStatsFilter())
+				.update(fields);
+			if (result.code) throw new Error(result.message ?? 'Failed to update user stats document');
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating user stats fields', error as Error);
+		}
+	}
+
+	/**
 	 * Updates multiple fields in a single table record in one round-trip.
 	 *
 	 * {@link updateDateCalculatorTable} - Each individual row update delegates here.

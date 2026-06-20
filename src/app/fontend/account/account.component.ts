@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, Subscription } from 'rxjs';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
+import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
@@ -20,6 +21,7 @@ import {
 	ACCOUNT_DIALOG_DELETE_HEADER,
 	ACCOUNT_DIALOG_DELETE_MSG,
 	ACCOUNT_LABEL_CHANGE_PASSWORD,
+	ACCOUNT_LABEL_OLD_PASSWORD,
 	ACCOUNT_LABEL_CONFIRM_PASSWORD,
 	ACCOUNT_LABEL_DANGER_ZONE_TITLE,
 	ACCOUNT_MSG_COMING_SOON,
@@ -31,20 +33,28 @@ import {
 	ACCOUNT_LABEL_MILESTONES_TITLE,
 	ACCOUNT_LABEL_NEW_PASSWORD,
 	ACCOUNT_LABEL_PROFILE_TAGLINE,
-	ACCOUNT_LABEL_SAVE,
+	ACCOUNT_LABEL_UPDATE_PASSWORD,
 	ACCOUNT_LABEL_INNER_WORLD_TITLE,
 	ACCOUNT_LABEL_STREAK_SUFFIX,
 	ACCOUNT_LABEL_USERNAME,
+	ACCOUNT_LABEL_SECURITY_TITLE,
+	ACCOUNT_LABEL_USERNAME_CHANGED,
+	ACCOUNT_LABEL_PASSWORD_CHANGED,
+	ACCOUNT_LABEL_UPDATE_USERNAME,
+	ACCOUNT_PLACEHOLDER_USERNAME,
+	ACCOUNT_MSG_USERNAME_UPDATED,
 	ACCOUNT_LABEL_VERIFIED,
 	ACCOUNT_MSG_DELETE_CONFIRMED,
+	ACCOUNT_MSG_INVALID_NEW_PASSWORD,
+	ACCOUNT_MSG_INVALID_OLD_PASSWORD,
 	ACCOUNT_MSG_PASSWORD_MISMATCH,
 	ACCOUNT_MSG_PASSWORD_TOO_SHORT,
 	ACCOUNT_MSG_PASSWORD_UPDATED,
-	ACCOUNT_MSG_USERNAME_TOO_SHORT,
-	ACCOUNT_MSG_USERNAME_UPDATED,
 	MILESTONE_KEY_ACCOUNT_CREATED,
 	STATS_FIELD_ACTIVITY_STREAK,
 	STATS_FIELD_MILESTONES,
+	STATS_FIELD_USERNAME_CHANGED,
+	STATS_FIELD_PASSWORD_CHANGED,
 	SUCCESS,
 	TOAST_WARN
 } from '../../common/app.constant';
@@ -56,6 +66,8 @@ import {
 	MILESTONE_DOMAIN_DISPLAY,
 	MILESTONE_LABELS
 } from './account.model';
+import { PasswordTooWeakError } from '../../common/error/password-too-weak.error';
+import { WrongOldPasswordError } from '../../common/error/wrong-old-password.error';
 
 @Component({
 	selector: 'app-account',
@@ -79,11 +91,17 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_LABEL_MILESTONES_TITLE = ACCOUNT_LABEL_MILESTONES_TITLE;
 	protected readonly ACCOUNT_LABEL_DANGER_ZONE_TITLE = ACCOUNT_LABEL_DANGER_ZONE_TITLE;
 	protected readonly ACCOUNT_LABEL_USERNAME = ACCOUNT_LABEL_USERNAME;
+	protected readonly ACCOUNT_LABEL_SECURITY_TITLE = ACCOUNT_LABEL_SECURITY_TITLE;
+	protected readonly ACCOUNT_LABEL_USERNAME_CHANGED = ACCOUNT_LABEL_USERNAME_CHANGED;
+	protected readonly ACCOUNT_LABEL_PASSWORD_CHANGED = ACCOUNT_LABEL_PASSWORD_CHANGED;
+	protected readonly ACCOUNT_LABEL_UPDATE_USERNAME = ACCOUNT_LABEL_UPDATE_USERNAME;
+	protected readonly ACCOUNT_PLACEHOLDER_USERNAME = ACCOUNT_PLACEHOLDER_USERNAME;
 	protected readonly ACCOUNT_LABEL_EMAIL = ACCOUNT_LABEL_EMAIL;
 	protected readonly ACCOUNT_LABEL_CHANGE_PASSWORD = ACCOUNT_LABEL_CHANGE_PASSWORD;
+	protected readonly ACCOUNT_LABEL_OLD_PASSWORD = ACCOUNT_LABEL_OLD_PASSWORD;
 	protected readonly ACCOUNT_LABEL_NEW_PASSWORD = ACCOUNT_LABEL_NEW_PASSWORD;
 	protected readonly ACCOUNT_LABEL_CONFIRM_PASSWORD = ACCOUNT_LABEL_CONFIRM_PASSWORD;
-	protected readonly ACCOUNT_LABEL_SAVE = ACCOUNT_LABEL_SAVE;
+	protected readonly ACCOUNT_LABEL_UPDATE_PASSWORD = ACCOUNT_LABEL_UPDATE_PASSWORD;
 	protected readonly ACCOUNT_LABEL_DELETE_ACCOUNT = ACCOUNT_LABEL_DELETE_ACCOUNT;
 	protected readonly ACCOUNT_LABEL_DELETE_DESCRIPTION = ACCOUNT_LABEL_DELETE_DESCRIPTION;
 	protected readonly ACCOUNT_MSG_COMING_SOON = ACCOUNT_MSG_COMING_SOON;
@@ -95,10 +113,14 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected memberSince = '';
 	protected milestoneList: AccountMilestone[] = [];
 	protected isStatsLoaded = false;
+	protected usernameChangedDate = '';
+	protected passwordChangedDate = '';
 	protected currentUser$!: Observable<any>;
 	protected usernameInput = '';
+	protected oldPasswordInput = '';
 	protected newPasswordInput = '';
 	protected confirmPasswordInput = '';
+	protected showOldPassword = false;
 	protected showNewPassword = false;
 	protected showConfirmPassword = false;
 	private statsSub?: Subscription;
@@ -106,24 +128,25 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private authService: AuthService,
-		private cloudbaseService: CloudbaseService,
+		private databaseService: DatabaseService,
 		private dialogService: DialogService
 	) {}
 
 	/**
-	 * Initialises the current-user observable and pre-fills the username input
-	 * from the already-cached authentication session.
+	 * Initialises the current-user observable and database subscriptions.
+	 * Skips database setup when running server-side so SSR prerendering does not
+	 * try to call CloudBase methods before the browser bootstrap completes.
 	 */
 	ngOnInit(): void {
+		if (!isPlatformBrowser(this.platformId)) return;
 		this.currentUser$ = this.authService.getCurrentUser();
 		firstValueFrom(this.currentUser$)
 			.then((user) => {
 				if (!user) return;
-				this.usernameInput = Utilities.getUserDisplayName(user);
-				this.cloudbaseService.ensureUserStatsExist().catch(() => {});
+				(this.databaseService as CloudbaseService).ensureUserStatsExist().catch(() => {});
 			})
 			.catch(() => {});
-		this.statsSub = this.cloudbaseService.getUserStats().subscribe((doc) => {
+		this.statsSub = (this.databaseService as CloudbaseService).getUserStats().subscribe((doc) => {
 			if (!doc) return;
 			this.userStats = this.userStats.map((stat) => ({
 				...stat,
@@ -135,6 +158,8 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 				? Utilities.storageDateToDisplayMonth(milestones[MILESTONE_KEY_ACCOUNT_CREATED])
 				: '';
 			this.milestoneList = this.buildMilestoneList(milestones);
+			this.usernameChangedDate = (doc[STATS_FIELD_USERNAME_CHANGED] as string) ?? '';
+			this.passwordChangedDate = (doc[STATS_FIELD_PASSWORD_CHANGED] as string) ?? '';
 			this.isStatsLoaded = true;
 		});
 	}
@@ -161,21 +186,30 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── User action handlers ──────────────────────────────────────────────────
 
 	/**
-	 * Validates and applies the updated username client-side, showing a toast result.
+	 * Submits the username update to CloudBase. Shows a success toast on success
+	 * or opens the unexpected error dialog if the service throws.
 	 */
-	protected updateUsername(): void {
-		if (this.usernameInput.trim().length < 3) {
-			this.dialogService.showToast(TOAST_WARN, ACCOUNT_MSG_USERNAME_TOO_SHORT);
-			return;
+	protected async updateUsername(): Promise<void> {
+		try {
+			await this.authService.updateUsername(this.usernameInput.trim());
+			(this.databaseService as CloudbaseService)
+				.updateUserStatsFields({
+					[STATS_FIELD_USERNAME_CHANGED]: Utilities.formatDateForStorage(new Date())
+				})
+				.catch(() => {});
+			this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_USERNAME_UPDATED);
+		} catch {
+			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 		}
-		this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_USERNAME_UPDATED);
 	}
 
 	/**
-	 * Validates the new and confirm password fields and shows a toast result.
-	 * Clears both fields on a successful match.
+	 * Validates the password fields locally, then calls CloudBase to change the password.
+	 * Shows a contextual warn toast for known errors (wrong current password, weak new
+	 * password) and opens the unexpected-error dialog for all other failures.
+	 * Clears all three password fields on success.
 	 */
-	protected updatePassword(): void {
+	protected async updatePassword(): Promise<void> {
 		if (this.newPasswordInput.length < 6) {
 			this.dialogService.showToast(TOAST_WARN, ACCOUNT_MSG_PASSWORD_TOO_SHORT);
 			return;
@@ -184,9 +218,33 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.dialogService.showToast(TOAST_WARN, ACCOUNT_MSG_PASSWORD_MISMATCH);
 			return;
 		}
-		this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_PASSWORD_UPDATED);
-		this.newPasswordInput = '';
-		this.confirmPasswordInput = '';
+		try {
+			await this.authService.changePassword(this.oldPasswordInput, this.newPasswordInput);
+			(this.databaseService as CloudbaseService)
+				.updateUserStatsFields({
+					[STATS_FIELD_PASSWORD_CHANGED]: Utilities.formatDateForStorage(new Date())
+				})
+				.catch(() => {});
+			this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_PASSWORD_UPDATED);
+			this.oldPasswordInput = '';
+			this.newPasswordInput = '';
+			this.confirmPasswordInput = '';
+		} catch (error: unknown) {
+			if (error instanceof WrongOldPasswordError) {
+				this.dialogService.openDialog(this.dialogComponentContainer, 'error', ACCOUNT_MSG_INVALID_OLD_PASSWORD);
+			} else if (error instanceof PasswordTooWeakError) {
+				this.dialogService.openDialog(this.dialogComponentContainer, 'error', ACCOUNT_MSG_INVALID_NEW_PASSWORD);
+			} else {
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+			}
+		}
+	}
+
+	/**
+	 * Toggles the old-password field between masked and plain-text display.
+	 */
+	protected toggleOldPasswordVisibility(): void {
+		this.showOldPassword = !this.showOldPassword;
 	}
 
 	/**
@@ -223,16 +281,16 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Converts the raw milestones map from the per-user stats doc into a sorted
-	 * list of AccountMilestone objects. Entries are sorted chronologically by
-	 * their storage date (YYYY-MM-DD), and the date is converted to a human-readable
+	 * list of AccountMilestone objects. Entries are sorted newest first by their
+	 * storage date (YYYY-MM-DD), and the date is converted to a human-readable
 	 * "MMM yyyy" string for display.
 	 *
 	 * @param raw - The raw milestones map keyed by milestone key (e.g. "film1st").
-	 * @returns The sorted list of AccountMilestone display objects.
+	 * @returns The sorted list of AccountMilestone display objects, newest first.
 	 */
 	private buildMilestoneList(raw: Record<string, string>): AccountMilestone[] {
 		return Object.entries(raw)
-			.sort(([, dateA], [, dateB]) => dateA.localeCompare(dateB))
+			.sort(([, dateA], [, dateB]) => dateB.localeCompare(dateA))
 			.map(([key, storageDate]) => {
 				const label = MILESTONE_LABELS[key];
 				if (label) {
@@ -318,5 +376,4 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected getUserInitials(user: any): string {
 		return Utilities.getUserInitials(user);
 	}
-
 }

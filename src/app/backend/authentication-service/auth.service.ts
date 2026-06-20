@@ -14,7 +14,16 @@ import { LOG } from '../../common/app.logs';
 import { DatabaseService, FIREBASE_AUTH } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/utilities/app.utilities';
-import { CLOUDBASE_ERROR_INVALID_ARGUMENT, CLOUDBASE_ERROR_INVALID_CREDENTIALS, CN, MSG_UNEXPECTED_ERROR } from '../../common/app.constant';
+import {
+	CLOUDBASE_ERR_INVALID_PASSWORD,
+	CLOUDBASE_ERR_PASSWORD_TOO_WEAK,
+	CLOUDBASE_ERROR_INVALID_ARGUMENT,
+	CLOUDBASE_ERROR_INVALID_CREDENTIALS,
+	CN,
+	MSG_UNEXPECTED_ERROR
+} from '../../common/app.constant';
+import { PasswordTooWeakError } from '../../common/error/password-too-weak.error';
+import { WrongOldPasswordError } from '../../common/error/wrong-old-password.error';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { wrongVerificationCodeError } from '../../common/error/wrong-verification-code';
 
@@ -28,9 +37,10 @@ export class AuthService {
 	private firebaseAuth!: Auth;
 	private cloudbaseUserSubject = new BehaviorSubject<any>(null);
 	private firebaseUserSubject = new BehaviorSubject<User | null>(null);
-	public readonly currentUser$: Observable<any> = Utilities.getCurrentCountry() === CN
-		? this.cloudbaseUserSubject.asObservable()
-		: this.firebaseUserSubject.asObservable();
+	public readonly currentUser$: Observable<any> =
+		Utilities.getCurrentCountry() === CN
+			? this.cloudbaseUserSubject.asObservable()
+			: this.firebaseUserSubject.asObservable();
 	constructor(
 		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
 		private router: Router,
@@ -44,7 +54,7 @@ export class AuthService {
 		}
 	}
 
-	////////////////////// Below are common methods //////////////////////
+	// ── Common methods ───────────────────────────────────────────────────────
 
 	/**
 	 * Gets the current authenticated user as an observable, selecting the correct
@@ -58,7 +68,7 @@ export class AuthService {
 			: this.firebaseGetCurrentUser();
 	}
 
-	////////////////////// Below are Firebase authentication methods //////////////////////
+	// ── Firebase authentication methods ─────────────────────────────────────
 
 	/**
 	 * Gets the current Firebase user as an observable. Wraps onAuthStateChanged
@@ -140,7 +150,7 @@ export class AuthService {
 			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
 	}
 
-	////////////////////// Below are CloudBase authentication methods /////////////////////
+	// ── CloudBase authentication methods ─────────────────────────────────────
 
 	/**
 	 * Signs in anonymously via CloudBase. Grants read-only access to public
@@ -169,7 +179,12 @@ export class AuthService {
 	 * @param username - The desired username.
 	 * @param verificationCode - The numeric code sent to the email.
 	 */
-	public async signUp(email: string, password: string, username: string, verificationCode: number): Promise<void> {
+	public async signUp(
+		email: string,
+		password: string,
+		username: string,
+		verificationCode: number
+	): Promise<void> {
 		try {
 			/* Two-step flow: first get the verification token from the code,
 			   then call signUp with the token to create the account. */
@@ -260,6 +275,47 @@ export class AuthService {
 				this.ngZone.run(() => this.utilities.setIsUserAlive(false));
 			});
 		return this.cloudbaseUserSubject.asObservable();
+	}
+
+	/**
+	 * Updates the username of the currently signed-in CloudBase user
+	 * and refreshes the user subject so all subscribers receive the updated data.
+	 *
+	 * @param name - The new username to set.
+	 */
+	public async updateUsername(name: string): Promise<void> {
+		const { error } = await this.cloudbaseAuth.updateUser({ username: name });
+		if (error) throw new Error(MSG_UNEXPECTED_ERROR);
+		this.cloudbaseGetCurrentUser();
+	}
+
+	/**
+	 * Changes the password of the currently signed-in CloudBase user.
+	 * Handles both the CloudBase returned-error pattern and thrown-exception pattern,
+	 * mapping known error codes to typed error classes so callers can use instanceof.
+	 *
+	 * @param oldPassword - The user's current password.
+	 * @param newPassword - The new password to set.
+	 * @throws WrongOldPasswordError when the old password is incorrect.
+	 * @throws PasswordTooWeakError when the new password fails CloudBase strength requirements.
+	 * @throws Error with MSG_UNEXPECTED_ERROR for all other failures.
+	 */
+	public async changePassword(oldPassword: string, newPassword: string): Promise<void> {
+		let caughtError: unknown;
+		try {
+			const { error } = await this.cloudbaseAuth.resetPasswordForOld({
+				new_password: newPassword,
+				old_password: oldPassword
+			});
+			if (!error) return;
+			caughtError = error;
+		} catch (thrown: unknown) {
+			caughtError = thrown;
+		}
+		const status = (caughtError as { status?: string }).status;
+		if (status === CLOUDBASE_ERR_INVALID_PASSWORD) throw new WrongOldPasswordError();
+		if (status === CLOUDBASE_ERR_PASSWORD_TOO_WEAK) throw new PasswordTooWeakError();
+		throw new Error(MSG_UNEXPECTED_ERROR);
 	}
 
 	/**

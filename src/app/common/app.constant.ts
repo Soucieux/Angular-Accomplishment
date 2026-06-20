@@ -230,6 +230,8 @@ export const STATS_FIELD_TOTAL_FILMS = 'totalFilms';
 export const STATS_FIELD_TOTAL_LINKS = 'totalLinks';
 export const STATS_FIELD_TOTAL_QUOTES = 'totalQuotes';
 export const STATS_FIELD_MILESTONES = 'milestones';
+export const STATS_FIELD_USERNAME_CHANGED = 'usernameChangedDate';
+export const STATS_FIELD_PASSWORD_CHANGED = 'passwordChangedDate';
 
 ////////////////////// Below are statistics display cap constants /////////////////////
 
@@ -832,20 +834,29 @@ export const MILESTONE_DOMAIN_STREAK = 'streak';
 export const ACCOUNT_LABEL_DANGER_ZONE_TITLE = 'Danger Zone';
 export const ACCOUNT_MSG_COMING_SOON = 'This will be available in a future release.';
 export const ACCOUNT_LABEL_USERNAME = 'Username';
+export const ACCOUNT_LABEL_SECURITY_TITLE = 'Security';
+export const ACCOUNT_LABEL_USERNAME_CHANGED = 'Username last changed';
+export const ACCOUNT_LABEL_PASSWORD_CHANGED = 'Password last changed';
+export const ACCOUNT_LABEL_UPDATE_USERNAME = 'Update Username';
+export const ACCOUNT_PLACEHOLDER_USERNAME = 'Enter your username';
+export const ACCOUNT_MSG_USERNAME_UPDATED = 'Username updated';
 export const ACCOUNT_LABEL_EMAIL = 'Email';
 export const ACCOUNT_LABEL_CHANGE_PASSWORD = 'Change Password';
+export const ACCOUNT_LABEL_OLD_PASSWORD = 'Current password';
 export const ACCOUNT_LABEL_NEW_PASSWORD = 'New password';
 export const ACCOUNT_LABEL_CONFIRM_PASSWORD = 'Confirm password';
-export const ACCOUNT_LABEL_SAVE = 'Save';
+export const ACCOUNT_LABEL_UPDATE_PASSWORD = 'Update Password';
 export const ACCOUNT_LABEL_DELETE_ACCOUNT = 'Delete Account';
 export const ACCOUNT_LABEL_DELETE_DESCRIPTION =
 	'Permanently removes your account and all data.\nThis cannot be undone.';
-export const ACCOUNT_MSG_USERNAME_UPDATED = 'Username updated';
 export const ACCOUNT_MSG_PASSWORD_UPDATED = 'Password updated';
-export const ACCOUNT_MSG_USERNAME_TOO_SHORT = 'Username must be at least 3 characters.';
 export const ACCOUNT_MSG_PASSWORD_TOO_SHORT = 'Password must be at least 6 characters.';
 export const ACCOUNT_MSG_PASSWORD_MISMATCH = 'Passwords do not match.';
 export const ACCOUNT_MSG_DELETE_CONFIRMED = 'Account deletion requested';
+export const ACCOUNT_MSG_INVALID_OLD_PASSWORD = 'Current password is incorrect.';
+export const ACCOUNT_MSG_INVALID_NEW_PASSWORD = 'New password is not strong enough.';
+export const CLOUDBASE_ERR_INVALID_PASSWORD = 'invalid_password';
+export const CLOUDBASE_ERR_PASSWORD_TOO_WEAK = 'password_too_weak';
 export const ACCOUNT_DIALOG_DELETE_MSG =
 	'This will permanently delete your account and all associated data. This action cannot be undone.';
 export const ACCOUNT_DIALOG_DELETE_HEADER = 'Delete Account';

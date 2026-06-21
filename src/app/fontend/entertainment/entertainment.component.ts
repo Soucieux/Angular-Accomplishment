@@ -167,29 +167,34 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		/* Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		   Only logged in user can access the movie list */
 		if (isPlatformBrowser(this.platformId)) {
+
+			// Step 1: Inject View Transition animation styles into <head> at runtime.
+			/* ViewEncapsulation.Emulated would prefix ::view-transition-* selectors with
+			   an attribute hash, breaking the browser-generated pseudo-elements on the root. */
 			const vtaStyle = this.doc.createElement('style');
 			vtaStyle.id = ENT_VTA_STYLE_ID;
 			vtaStyle.textContent = ENT_VTA_CSS;
 			this.doc.head.appendChild(vtaStyle);
 
-			// Get the movie list (Observable) and statistics (Observable) from firebase or cloudbase
+			// Step 2: Wire statistics and do a permission pre-check before subscribing to the movie list.
+			/* Statistics is read first as a one-shot probe — if the database rejects the read
+			   (e.g. unauthenticated user), we bail early before subscribing to the live movie stream. */
 			this.statistics$ = this.databaseService.getStatistics();
-
-			// One-time pre-check to make sure user have permission to read data in the database
 			try {
 				await firstValueFrom(this.statistics$.pipe(take(1)));
 			} catch {
 				this.isMoviesLoading = false;
 				return;
 			}
-			// Below part will be executed only if there is no error reading data in the database
+
+			// Step 3: Subscribe to the live movie list and cache the latest snapshot for VTA class computation.
 			this.movieList$ = this.databaseService.getMovieList();
 			this.movieListSub = this.movieList$.subscribe((list) => {
 				this.latestMovieList = list;
 				if (this.isMoviesLoading) this.isMoviesLoading = false;
 			});
 
-			// Create a filter that reacts to genre selection and text search simultaneously
+			// Step 4: Build the combined filter stream that reacts to genre selection and text search simultaneously.
 			this.filteredMovieList$ = combineLatest([
 				this.movieList$,
 				this.selectedGenres$,
@@ -215,9 +220,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				})
 			);
 
-			/* If navigated from the home quick-action buttons, auto-open the relevant dialog.
+			/* Step 5: If navigated from the home quick-action buttons, auto-open the relevant dialog.
 			   history.state retains the router state passed via Router.navigate({ state: ... }).
-			   Immediately clear the state so a page refresh does not re-trigger the dialog. */
+			   The state is cleared immediately so a page refresh does not re-trigger the dialog.
+			   setTimeout defers the dialog open by one tick, giving the view time to initialise
+			   ViewContainerRef before DialogService tries to render into it. */
 			const navState = history.state;
 			if (navState?.openAddDialog || navState?.openSearchDialog) {
 				history.replaceState({}, '');
@@ -777,13 +784,23 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param genre The genre string whose category card was clicked.
 	 */
 	protected filterByGenre(genre: string): void {
+
+		// Step 1: Determine the next genre value (clicking the active genre deselects it).
 		const currentGenre = this.selectedGenres$.getValue();
 		const newGenre = currentGenre === genre ? '' : genre;
+
+		/* Step 2: Pre-compute which cards are leaving / entering BEFORE the transition snapshot.
+		   detectChanges flushes the vtClassMap to the DOM so the browser can read the
+		   view-transition-class attributes during the snapshot phase. */
 		this.computeVtClassMap(currentGenre, newGenre);
 		this.cdr.detectChanges();
 		const toggle = () => {
 			this.selectedGenres$.next(newGenre);
 		};
+
+		// Step 3: Run the genre change inside a View Transition if the API is available, otherwise apply it directly.
+		/* The inner await new Promise gives Angular one microtask to propagate the
+		   BehaviorSubject emission to the template before the browser captures the new state. */
 		if ('startViewTransition' in document) {
 			(document as Document & { startViewTransition: (cb: () => unknown) => void }).startViewTransition(
 				async () => {
@@ -805,7 +822,13 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param newGenre - The genre filter that will be active after the transition.
 	 */
 	private computeVtClassMap(currentGenre: string, newGenre: string): void {
+
+		// Step 1: Reset the map so stale transition classes from a previous filter do not bleed through.
 		this.vtClassMap.clear();
+
+		// Step 2: Classify each movie as leaving, entering, or staying (no entry = default FLIP crossfade).
+		/* Movies visible in both the old and new genre are intentionally omitted — they use
+		   the browser's built-in FLIP crossfade and do not need an explicit class. */
 		for (const movie of this.latestMovieList) {
 			const inCurrent = this.isMovieInGenre(movie, currentGenre);
 			const inNew = this.isMovieInGenre(movie, newGenre);
@@ -944,8 +967,10 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @throws MovieAlreadyExistsError if the movie is already in the database.
 	 */
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob | null> {
-		/* Check for duplicates BEFORE searching — avoids unnecessary API calls
-		   for movies already in the database. */
+
+		/* Step 1: Guard against duplicates BEFORE hitting the Douban API.
+		   The check uses name, year, AND ID so that re-adding a deleted movie
+		   with a known ID is blocked just as reliably as a name-only match. */
 		if (
 			await this.databaseService.isMovieAlreadyAdded(
 				newMovieItemVO.getMovieName(),
@@ -955,8 +980,12 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		) {
 			throw new MovieAlreadyExistsError(newMovieItemVO.getMovieName());
 		}
+
+		// Step 2: Fetch full movie data (rating, cover, release date, etc.) from Douban.
 		await this.searchNewMovie(newMovieItemVO);
 		LOG.info(this.className, ENT_LOG_MOVIE_DETAILS_RETRIEVED);
+
+		// Step 3: Return the cover image Blob so the dialog can render a preview before the user submits.
 		return newMovieItemVO.getMovieCoverImage();
 	}
 
@@ -974,14 +1003,17 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 *                         name and year to search with.
 	 */
 	private async searchNewMovie(newMovieItemVO: MovieItemVO) {
-		// Condition 1
+
+		/* Branch A: No Douban ID supplied (sentinel value -1) — resolve the ID from name + year first.
+		   getNewMovieDataGivenYearAndTitle is called after, NOT getNewMovieDataGivenMovieId, because
+		   the ID was resolved from the search index and the year/title on the VO are already correct. */
 		if (newMovieItemVO.getMovieId() === -1) {
 			LOG.info(this.className, `Movie ID not given, start searching for it.`);
 			await this.getMovieId(newMovieItemVO);
 			await this.getNewMovieDataGivenYearAndTitle(newMovieItemVO);
 		}
 
-		// Condition 2
+		// Branch B: Douban ID already provided — fetch full data directly by ID (overwrites name and year from API).
 		else {
 			await this.getNewMovieDataGivenMovieId(newMovieItemVO);
 		}
@@ -1031,9 +1063,15 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param movie - The movie whose genre edit is being completed.
 	 */
 	protected async completeEdit(movie: MovieItemVO) {
+
+		// Step 1: Retrieve the snapshot captured when the user opened the genre dropdown.
 		const genreData = this.editedItems.get(movie.getMovieKey());
 		try {
 			if (genreData) {
+
+				// Step 2: Only write to the database if the genre value actually changed.
+				/* Skipping the write when nothing changed avoids a redundant network call
+				   and prevents an unnecessary activity log entry in the database. */
 				if (genreData.originalGenre !== genreData.genre) {
 					await this.databaseService.updateMovieGenre(
 						movie.getMovieKey(),
@@ -1042,6 +1080,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 						movie.getMovieName()
 					);
 				}
+
+				// Step 3: Remove the edit entry regardless of whether a write occurred.
 				this.editedItems.delete(movie.getMovieKey());
 			}
 		} catch (error) {

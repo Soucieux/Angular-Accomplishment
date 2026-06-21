@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ViewContainerRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
-import { DIALOG_CONFIRM, ERROR_PERMISSION_DENIED } from '../../common/app.constant';
+import { DIALOG_CONFIRM } from '../../common/app.constant';
 import { DialogService } from './dialog.service';
 
 describe('DialogService', () => {
@@ -51,20 +51,12 @@ describe('DialogService', () => {
 
 		beforeEach(() => {
 			mockContainer = jasmine.createSpyObj('ViewContainerRef', ['createComponent']);
-			spyOn(service, 'showPermissionError');
 			spyOn(service, 'showUnexpectedError');
-		});
-
-		it('calls showPermissionError when the error message is ERROR_PERMISSION_DENIED', () => {
-			service.handleError(mockContainer, new Error(ERROR_PERMISSION_DENIED));
-			expect(service.showPermissionError).toHaveBeenCalledWith(mockContainer);
-			expect(service.showUnexpectedError).not.toHaveBeenCalled();
 		});
 
 		it('calls showUnexpectedError for any other error', () => {
 			service.handleError(mockContainer, new Error('Something went wrong'));
 			expect(service.showUnexpectedError).toHaveBeenCalledWith(mockContainer);
-			expect(service.showPermissionError).not.toHaveBeenCalled();
 		});
 
 		it('calls showUnexpectedError for non-Error thrown values', () => {
@@ -80,7 +72,7 @@ describe('DialogService', () => {
 
 		beforeEach(() => {
 			mockContainer = jasmine.createSpyObj('ViewContainerRef', ['createComponent']);
-			spyOn(service, 'showPermissionError');
+			spyOn(service as any, 'showPermissionError');
 		});
 
 		it('returns false and shows permission error when permission is denied', () => {
@@ -88,7 +80,7 @@ describe('DialogService', () => {
 			// checkPermission returns false when no user is signed in
 			const result = service.ensurePermission(mockContainer, 'some-other-user-id');
 			expect(result).toBeFalse();
-			expect(service.showPermissionError).toHaveBeenCalledWith(mockContainer);
+			expect((service as any).showPermissionError).toHaveBeenCalledWith(mockContainer);
 		});
 	});
 

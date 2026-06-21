@@ -3,6 +3,7 @@ import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TimeoutService } from '../../common/timeout/timeout.service';
 import { Utilities } from '../../common/utilities/app.utilities';
@@ -89,10 +90,11 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 					// Step 3: Subscribe to portal links and categories independently so a
 					// failure in one stream does not prevent the other from rendering
+					const userId = CloudbaseService.getUserId();
 					this.linksSub = this.databaseService.getUsefulLinks().subscribe({
 						next: (data: PortalLink[]) => {
 							clearTimeout(this.linksLoadingTimer);
-							this.dashLinks = data;
+							this.dashLinks = data.filter(link => link._openid === userId);
 							this.dashLinksLoading = false;
 							this.cdr.detectChanges();
 						},

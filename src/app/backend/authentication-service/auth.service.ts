@@ -23,6 +23,7 @@ import {
 	CLOUDBASE_ERR_PASSWORD_TOO_WEAK,
 	CLOUDBASE_ERR_PERMISSION_DENIED,
 	CLOUDBASE_ERR_RATE_LIMIT_EXCEEDED,
+	CLOUDBASE_ERR_NOT_FOUND,
 	CLOUDBASE_ERR_USER_NOT_FOUND,
 	CLOUDBASE_ERROR_INVALID_ARGUMENT,
 	CLOUDBASE_ERROR_INVALID_CREDENTIALS,
@@ -456,17 +457,19 @@ export class AuthService {
 			this.passwordResetData = data;
 			return;
 		}
-		switch (error.code) {
+		const status = (error as { status?: string }).status;
+		switch (status) {
 			case CLOUDBASE_ERR_INVALID_EMAIL:
 				throw new InvalidEmailError();
 			case CLOUDBASE_ERR_EMAIL_NOT_VERIFIED:
 				throw new EmailNotVerifiedError();
 			case CLOUDBASE_ERR_RATE_LIMIT_EXCEEDED:
 				throw new AccountRateLimitedError();
+			case CLOUDBASE_ERR_NOT_FOUND:
 			case CLOUDBASE_ERR_USER_NOT_FOUND:
 				throw new UserNotFoundError();
 			default:
-				throw new Error(error.message ?? MSG_UNEXPECTED_ERROR);
+				throw new Error(MSG_UNEXPECTED_ERROR);
 		}
 	}
 
@@ -490,15 +493,17 @@ export class AuthService {
 			this.router.navigate([returnUrl]).catch(() => {});
 			return;
 		}
-		switch (error.code) {
+		const status = (error as { status?: string }).status;
+		switch (status) {
 			case CLOUDBASE_ERR_INVALID_VERIFICATION_CODE:
 				throw new WrongVerificationCodeError();
 			case CLOUDBASE_ERR_INVALID_PASSWORD:
 				throw new PasswordTooWeakError();
+			case CLOUDBASE_ERR_NOT_FOUND:
 			case CLOUDBASE_ERR_USER_NOT_FOUND:
 				throw new UserNotFoundError();
 			default:
-				throw new Error(error.message ?? MSG_UNEXPECTED_ERROR);
+				throw new Error(MSG_UNEXPECTED_ERROR);
 		}
 	}
 }

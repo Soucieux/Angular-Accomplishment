@@ -32,8 +32,6 @@ export const SEARCH_COMPLETE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
 /** Message shown in the retry dialog when a page data load exceeds the timeout. */
 export const RETRY_DIALOG_MSG = 'Connection Lost...';
-/** Message shown in the retry dialog when the user's session has expired. */
-export const RETRY_DIALOG_SESSION_EXPIRED_MSG = 'Your session has expired. Please sign in again.';
 
 ////////////////////// Below are toast severity string constants //////////////////////
 
@@ -73,6 +71,8 @@ export const DIALOG_MULTI_LINK = 'multi-link';
 export const DIALOG_RETRY = 'retry';
 /** Dialog type for the account deletion confirmation dialog. */
 export const DIALOG_DELETE_ACCOUNT = 'delete-account';
+/** Dialog type for the add/edit category dialog on the Portal page. */
+export const DIALOG_CATEGORY = 'category';
 
 ////////////////////// Below are history dialog and style string constants ///////////
 
@@ -162,10 +162,9 @@ export const LOGIN_LABEL_BACK_TO_SIGN_IN = 'Back to sign in';
 /** CloudBase role string that identifies an admin user. */
 export const ROLE_ADMIN = 'administrator';
 /** CloudBase error code for an invalid request argument (e.g. wrong verification code). */
-export const CLOUDBASE_ERROR_INVALID_ARGUMENT = 'INVALID_ARGUMENT';
+export const CLOUDBASE_ERROR_INVALID_ARGUMENT = 'invalid_argument';
 /** CloudBase error category returned when credentials are wrong. */
 export const CLOUDBASE_ERROR_INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
-export const ERROR_PERMISSION_DENIED = 'DATABASE_PERMISSION_DENIED';
 export const ERROR_NO_DOCUMENT_UPDATED = 'No document was updated';
 
 ////////////////////// Below are database collection name constants ///////////////////
@@ -609,8 +608,24 @@ export const USEFUL_LINK_TYPE_CATEGORY = 'category';
 export const PORTAL_DIALOG_TITLE_ADD_LINK = 'Add Link';
 /** Dialog title when editing an existing link. */
 export const PORTAL_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
+/** Dialog title when adding a new category. */
+export const PORTAL_CATEGORY_DIALOG_TITLE_ADD = 'New Category';
+/** Dialog title when editing an existing category. */
+export const PORTAL_CATEGORY_DIALOG_TITLE_EDIT = 'Edit Category';
+/** Label for the name input in the add/edit category dialog. */
+export const PORTAL_CATEGORY_DIALOG_LABEL_NAME = 'Name';
+/** Placeholder for the category name input field. */
+export const PORTAL_CATEGORY_DIALOG_PLACEHOLDER_NAME = 'e.g. Study, Tools, Dev';
+/** Cancel button label in the add/edit category dialog. */
+export const PORTAL_CATEGORY_DIALOG_LABEL_CANCEL = 'Cancel';
+/** Save button label in the add/edit category dialog. */
+export const PORTAL_CATEGORY_DIALOG_LABEL_SAVE = 'Save';
+/** Delete button label shown in edit mode in the category dialog. */
+export const PORTAL_CATEGORY_DIALOG_LABEL_DELETE = 'Delete';
 /** Label for the isPinned checkbox in the add/edit link dialog. */
 export const PORTAL_LABEL_PIN_TO_DASHBOARD = 'Pin to dashboard';
+/** Label for the isShared checkbox in the add link dialog. */
+export const PORTAL_LABEL_SHARED_LINK = 'Shared link (visible to all users)';
 /** Section header label for links visible to all users. */
 export const PORTAL_SECTION_SHARED = 'Shared';
 /** Section header label for links belonging to the current user. */
@@ -891,10 +906,10 @@ export const CLOUDBASE_ERR_INVALID_STATUS = 'invalid_status';
 export const CLOUDBASE_ERR_PERMISSION_DENIED = 'permission_denied';
 export const CLOUDBASE_ERR_INVALID_EMAIL = 'invalid_email';
 export const CLOUDBASE_ERR_EMAIL_NOT_VERIFIED = 'email_not_verified';
-export const CLOUDBASE_ERR_RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded';
+export const CLOUDBASE_ERR_RATE_LIMIT_EXCEEDED = 'resource_exhausted';
+export const CLOUDBASE_ERR_NOT_FOUND = 'not_found';
 export const CLOUDBASE_ERR_INVALID_VERIFICATION_CODE = 'invalid_verification_code';
 export const ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER = 'Enter your password to confirm';
-export const ACCOUNT_DIALOG_DELETE_ERROR_WRONG_PWD = 'Incorrect password. Please try again.';
 export const ACCOUNT_DIALOG_DELETE_MSG =
 	'This will permanently delete your account and all associated data. This action cannot be undone.';
 export const ACCOUNT_DIALOG_DELETE_HEADER = 'Delete Account';

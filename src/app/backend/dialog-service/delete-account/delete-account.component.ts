@@ -7,7 +7,6 @@ import { WrongOldPasswordError } from '../../../common/error/wrong-old-password.
 import {
 	ACCOUNT_DIALOG_DELETE_BTN,
 	ACCOUNT_DIALOG_DELETE_CANCEL_BTN,
-	ACCOUNT_DIALOG_DELETE_ERROR_WRONG_PWD,
 	ACCOUNT_DIALOG_DELETE_HEADER,
 	ACCOUNT_DIALOG_DELETE_MSG,
 	ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER,
@@ -86,7 +85,7 @@ export class DeleteAccountDialogComponent {
 			// reset here (not in finally) because the success path closes before this branch runs
 			this.isSubmitting = false;
 			if (error instanceof WrongOldPasswordError) {
-				this.errorMessage = ACCOUNT_DIALOG_DELETE_ERROR_WRONG_PWD;
+				this.errorMessage = (error as Error).message;
 			} else if (error instanceof AccountRateLimitedError) {
 				this.errorMessage = (error as Error).message;
 			} else if (error instanceof SessionExpiredError) {

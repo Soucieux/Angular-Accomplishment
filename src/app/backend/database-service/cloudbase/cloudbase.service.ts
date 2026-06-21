@@ -81,6 +81,7 @@ import {
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
 import { SessionExpiredError } from '../../../common/error/session-expired.error';
+import { UnexpectedError } from '../../../common/error/unexpected.error';
 
 @Injectable({ providedIn: 'root' })
 export class CloudbaseService extends DatabaseService {
@@ -225,7 +226,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns True if the user is an administrator, otherwise false.
 	 */
 	public static userHasAllRights() {
-		return this.userRole?.some(r => r.includes(ROLE_ADMIN)) ?? false;
+		return this.userRole?.some((r) => r.includes(ROLE_ADMIN)) ?? false;
 	}
 
 	/**
@@ -672,7 +673,7 @@ export class CloudbaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating date calculator table', error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -791,7 +792,7 @@ export class CloudbaseService extends DatabaseService {
 			}
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating movie rate', error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -835,7 +836,7 @@ export class CloudbaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating movie genre', error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -876,7 +877,7 @@ export class CloudbaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating movie favourite', error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1075,7 +1076,7 @@ export class CloudbaseService extends DatabaseService {
 		if (!this.statId) return;
 		try {
 			const result = await this.statisticsRef.update(fields);
-			this.throwIfCloudbaseError(result, 'Failed to update statistics collection');
+			this.throwIfCloudbaseError(result);
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating statistics fields', error as Error);
 		}
@@ -1095,7 +1096,7 @@ export class CloudbaseService extends DatabaseService {
 				.collection(DATABASE_STATISTICS)
 				.where(this.getUserStatsFilter())
 				.update(fields);
-			this.throwIfCloudbaseError(result, 'Failed to update user stats document');
+			this.throwIfCloudbaseError(result);
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating user stats fields', error as Error);
 		}
@@ -1134,7 +1135,7 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, `Record on ${tableName} has been updated`);
 		} catch (error) {
 			LOG.error(this.className, `Error while updating ${tableName}`, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1176,7 +1177,7 @@ export class CloudbaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, `Error while removing a record from ${DATABASE_USEFUL_LINKS}`);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1273,7 +1274,7 @@ export class CloudbaseService extends DatabaseService {
 				`Error while removing movie ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1389,7 +1390,7 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, `Push subscription deleted`);
 		} catch (error: unknown) {
 			LOG.error(this.className, `Error deleting push subscription`, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1411,17 +1412,20 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Adds a new useful link to the database.
+	 * Omits _openid for shared links so they are visible to all users; personal links
+	 * carry the owner's _openid so CloudBase security rules scope them correctly.
 	 *
-	 * @param link - The link object to add.
+	 * @param link - The link object to add. When link.isShared is true, _openid is omitted.
 	 */
 	public async addUsefulLink(link: any): Promise<void> {
 		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, 1)
 			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_LINKS, MILESTONE_DOMAIN_LINK))
 			.catch(() => {});
+		const { isShared, ...linkData } = link;
 		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, {
-			_openid: CloudbaseService.getUserId(),
+			...(isShared ? {} : { _openid: CloudbaseService.getUserId() }),
 			type: USEFUL_LINK_TYPE_LINK,
-			...link
+			...linkData
 		});
 	}
 
@@ -1528,7 +1532,7 @@ export class CloudbaseService extends DatabaseService {
 				`Error while adding new movie data for ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1578,7 +1582,7 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, 'New history entry has been added');
 		} catch (error) {
 			LOG.error(this.className, 'Error while adding new history entry', error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1644,7 +1648,7 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, `Push subscription saved`);
 		} catch (error: unknown) {
 			LOG.error(this.className, `Error saving push subscription`, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1690,7 +1694,7 @@ export class CloudbaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, `Error while adding new record to ${tableName}`, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1764,7 +1768,7 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, 'Link visit count has been incremented');
 		} catch (error) {
 			LOG.error(this.className, `Error while incrementing visit count for link ${key}`, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1895,7 +1899,7 @@ export class CloudbaseService extends DatabaseService {
 			// Prepend the new item and trim to the cap so CloudBase storage stays bounded.
 			const updated = [entry, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
 			const result = await this.statisticsRef.update({ [STATS_FIELD_RECENT_ACTIVITIES]: updated });
-			this.throwIfCloudbaseError(result, 'Recent activity data update failed');
+			this.throwIfCloudbaseError(result);
 
 			/* Step 3: Compute the new streak value.
 			   If the stored date is today, the streak is unchanged (multiple activities on the same day count once).
@@ -1925,7 +1929,7 @@ export class CloudbaseService extends DatabaseService {
 			this.checkAndWriteCountMilestone(MILESTONE_DOMAIN_STREAK, newStreak, userDoc).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating activity data', error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -2009,11 +2013,11 @@ export class CloudbaseService extends DatabaseService {
 		// Step 3: Write the document; fail loudly so the caller knows seeding did not complete
 		try {
 			const result = await this.database.collection(DATABASE_STATISTICS).add(payload);
-			this.throwIfCloudbaseError(result, 'Seed user stats failed');
+			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, 'User stats seeded successfully');
 		} catch (error) {
 			LOG.error(this.className, 'Error while seeding user stats', error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -2072,7 +2076,7 @@ export class CloudbaseService extends DatabaseService {
 			};
 		} catch (error) {
 			LOG.error(this.className, `Error while proxying fetch for ${url}`, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -2151,14 +2155,24 @@ export class CloudbaseService extends DatabaseService {
 	/**
 	 * Throws a typed error when a CloudBase result object signals a failure.
 	 * Maps permission_denied to SessionExpiredError so callers get the correct
-	 * retry dialog; all other error codes produce a generic Error.
+	 * retry dialog; all other error codes throw UnexpectedError.
 	 *
 	 * @param result - The CloudBase SDK result object to inspect.
-	 * @param fallback - Fallback message used when result.message is absent.
 	 */
-	private throwIfCloudbaseError(result: { code?: string; message?: string }, fallback?: string): void {
+	private throwIfCloudbaseError(result: { code?: string; message?: string }): void {
 		if (result.code === CLOUDBASE_ERR_PERMISSION_DENIED) throw new SessionExpiredError();
-		if (result.code) throw new Error(result.message ?? fallback);
+		if (result.code) throw new UnexpectedError();
+	}
+
+	/**
+	 * Re-throws SessionExpiredError as-is so callers can handle it; wraps
+	 * everything else in UnexpectedError to avoid leaking raw SDK errors.
+	 *
+	 * @param error - The caught value from a catch block.
+	 */
+	private rethrowCaught(error: unknown): never {
+		if (error instanceof SessionExpiredError) throw error;
+		throw new UnexpectedError();
 	}
 
 	/**

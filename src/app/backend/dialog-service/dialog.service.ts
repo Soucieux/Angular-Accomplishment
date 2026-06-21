@@ -12,6 +12,7 @@ import { RetryDialogComponent } from './retry/retry.component';
 import {
 	DIALOG_ADD,
 	DIALOG_BLOCK,
+	DIALOG_CATEGORY,
 	DIALOG_CONFIRM,
 	DIALOG_DEBT,
 	DIALOG_DELETE_ACCOUNT,
@@ -21,14 +22,12 @@ import {
 	DIALOG_MULTI_LINK,
 	DIALOG_INGREDIENT,
 	DIALOG_RETRY,
-	ERROR_PERMISSION_DENIED,
 	MSG_DIALOG_ALREADY_OPEN,
 	MSG_DIALOG_CONTAINER_NOT_FOUND,
 	MSG_INVALID_DIALOG_TYPE,
 	MSG_PERMISSION_DENIED,
 	MSG_UNEXPECTED_ERROR,
 	RETRY_DIALOG_MSG,
-	RETRY_DIALOG_SESSION_EXPIRED_MSG,
 	SEARCH
 } from '../../common/app.constant';
 import { MessageService } from 'primeng/api';
@@ -39,7 +38,8 @@ import { AddDebtDialogComponent } from './add-debt/add-debt.component';
 import { NewDebtData } from '../../fontend/debt/debt.model';
 import { AddLinkDialogComponent } from './add-link/add-link.component';
 import { MultiLinkDialogComponent } from './multi-link/multi-link.component';
-import { NewLinkData } from '../../fontend/portal/portal.model';
+import { CategoryDialogComponent } from './category/category.component';
+import { NewCategoryData, NewLinkData } from '../../fontend/portal/portal.model';
 import { DeleteAccountDialogComponent } from './delete-account/delete-account.component';
 import { SessionExpiredError } from '../../common/error/session-expired.error';
 
@@ -85,6 +85,8 @@ export class DialogService {
 				return RetryDialogComponent;
 			case DIALOG_DELETE_ACCOUNT:
 				return DeleteAccountDialogComponent;
+			case DIALOG_CATEGORY:
+				return CategoryDialogComponent;
 			default:
 				throw new Error(MSG_INVALID_DIALOG_TYPE);
 		}
@@ -161,6 +163,13 @@ export class DialogService {
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'delete-account',
 		submitCallback: (password: string) => Promise<void>
+	): void;
+
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'category',
+		submitCallback: (data: NewCategoryData) => void,
+		options: { prefillData: Partial<NewCategoryData> | null; onDelete?: () => void }
 	): void;
 
 	/**
@@ -256,7 +265,7 @@ export class DialogService {
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
 	public showSessionExpired(container: ViewContainerRef): void {
-		this.openDialog(container, 'retry', RETRY_DIALOG_SESSION_EXPIRED_MSG);
+		this.openDialog(container, 'retry', new SessionExpiredError().message);
 	}
 
 	/**
@@ -264,7 +273,7 @@ export class DialogService {
 	 *
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
-	public showPermissionError(container: ViewContainerRef) {
+	private showPermissionError(container: ViewContainerRef) {
 		this.openDialog(container, DIALOG_ERROR, MSG_PERMISSION_DENIED);
 	}
 
@@ -304,8 +313,6 @@ export class DialogService {
 	public handleError(container: ViewContainerRef, error: unknown): void {
 		if (error instanceof SessionExpiredError) {
 			this.showSessionExpired(container);
-		} else if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
-			this.showPermissionError(container);
 		} else {
 			this.showUnexpectedError(container);
 		}

@@ -16,6 +16,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { SessionExpiredError } from '../../common/error/session-expired.error';
 import {
 	COMPONENT_DESTROY,
 	DATABASE_DEBT_SONATA,
@@ -39,7 +40,6 @@ import {
 	DEBT_VALUE_KEY_PAID,
 	DEBT_VALUE_KEY_TYPE,
 	DIALOG_DEBT,
-	ERROR_PERMISSION_DENIED,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_TOTAL_DEBTS,
 	STATS_FIELD_DEBT_UPCOMING,
@@ -656,9 +656,9 @@ export class DebtComponent implements OnInit, OnDestroy {
 				this.triggerSaveIndicator();
 			}
 		} catch (error) {
-			/* Restore the previous value only on a permission error — other errors indicate a server failure
+			/* Restore the previous value only if the session expired — other errors indicate a server failure
 			   and the local state is still the intended value the user wanted. */
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+			if (error instanceof SessionExpiredError) {
 				updatedItem[valueKey] = oldValue;
 			}
 			this.dialogService.handleError(this.dialogComponentContainer, error);

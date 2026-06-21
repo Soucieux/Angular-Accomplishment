@@ -591,8 +591,6 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 				error instanceof PasswordTooWeakError
 			) {
 				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
-			} else if (error instanceof Error) {
-				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 			} else {
 				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}

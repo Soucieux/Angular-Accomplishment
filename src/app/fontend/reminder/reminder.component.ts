@@ -24,12 +24,12 @@ import { DatePickerModule, DatePicker } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subscription, firstValueFrom, timer } from 'rxjs';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { SessionExpiredError } from '../../common/error/session-expired.error';
 import { LOG } from '../../common/app.logs';
 import {
 	COMPONENT_DESTROY,
 	DATABASE_REMINDER,
 	DIALOG_CONFIRM,
-	ERROR_PERMISSION_DENIED,
 	FAILURE,
 	REMINDER_ADD_BTN_LABEL,
 	REMINDER_ADD_DATE_LABEL,
@@ -356,8 +356,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			// Step 2: Flash the save indicator
 			this.triggerSaveIndicator();
 		} catch (error) {
-			// Roll back the local single value if the server denied permission, then show error dialog
-			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+			// Roll back the local single value if the session expired, then show error dialog
+			if (error instanceof SessionExpiredError) {
 				const item = this.items.find((candidate) => candidate.key === entryKey);
 				const originalRecord = this.originalItems.find((candidate) => candidate.key === entryKey);
 				if (item && originalRecord) {

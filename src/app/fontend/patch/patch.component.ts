@@ -238,9 +238,14 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	async ngOnInit() {
 		if (isPlatformBrowser(this.platformId)) {
+
+			// Step 1: Detect layout and arm the loading-timeout watchdog
 			this.isNarrowViewport = this.utilities.isNarrowViewport();
 			this.timeoutService.start(TIMEOUT_KEY_PATCH, () => this.onLoadingTimeout());
 
+			/* Step 2: Build the release-notes observable with lazy-load semantics.
+			   startWith(null) lets the template distinguish "not yet arrived" from
+			   an empty array, so the skeleton is shown until the first emission. */
 			this.releaseNotes$ = this.databaseService.getReleaseNotes().pipe(
 				startWith(null as ReleaseNote[] | null),
 				tap((data) => {
@@ -256,6 +261,10 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				})
 			);
 
+			/* Step 3: Build the patch-notes observable with a tap that manages pagination
+			   state on every CloudBase push. The tap runs inside ngZone.run() because
+			   CloudBase callbacks arrive outside the Angular zone and would otherwise
+			   not trigger change detection. */
 			const getObservable$ = this.databaseService.getPatchNotes();
 			this.patchNotes$ = getObservable$.pipe(
 				tap((data) => {
@@ -307,6 +316,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			);
 		}
 
+		// Step 4: Populate the severity option lists used by the status dropdowns
 		this.severity = [
 			{ severity: STATUS_TODO },
 			{ severity: STATUS_IN_PROGRESS },
@@ -351,14 +361,21 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected selectView(view: 'patch' | 'release'): void {
 		if (view === this.currentView) return;
 
+		// Step 1: Cancel the outgoing tab's timer before switching views
 		if (this.currentView === PATCH_VIEW_PATCH) {
 			this.timeoutService.clear(TIMEOUT_KEY_PATCH);
 		} else {
 			this.timeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
 		}
 
+		// Step 2: Activate the new view
 		this.currentView = view;
 
+		/*
+		 * Step 3: Start the incoming tab's timer only if that tab is still loading.
+		 * Each view tracks its own loaded flag independently — release notes are
+		 * lazy-fetched so they may still be pending when the user first switches to them.
+		 */
 		if (view === PATCH_VIEW_PATCH && this.loading) {
 			this.timeoutService.start(TIMEOUT_KEY_PATCH, () => this.onLoadingTimeout());
 		} else if (view === PATCH_VIEW_RELEASE && !this.releaseNotesLoaded) {
@@ -420,6 +437,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected async completeEdit(row: any) {
 		const record = this.editedRows.get(row.key);
 		if (!record) return;
+
+		// Step 1: Diff the snapshot against the edited state to find what actually changed
 		const changes: any = {};
 
 		if (record.original.details !== record.updated.details.trim()) {
@@ -429,6 +448,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			changes.status = record.updated.status;
 		}
 
+		/* Step 2: Persist only if something changed.
+		   status and details route to separate database methods because each one
+		   triggers a different activity-log entry — they must not be combined. */
 		if (Object.keys(changes).length > 0) {
 			changes.timestamp = Utilities.getCurrentFormattedTime(true);
 			try {
@@ -456,6 +478,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			}
 		}
 
+		// Step 3: Remove from editing state regardless of whether a write occurred
 		this.editedRows.delete(row.key);
 	}
 
@@ -465,11 +488,21 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * can include the correct noteIndex and metadata after the async add.
 	 */
 	protected submitNewRecord() {
+
+		// Step 1: Stamp the record with time and derive the isBug flag from the chosen status
 		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(true);
 		this.newRecord.isBug =
 			this.newRecord.status === STATUS_DEBUG || this.newRecord.status === STATUS_RESOLVED;
+
+		/* Step 2: Snapshot the record before resetting the form.
+		   noteIndex is calculated here because patchNotesList.length may have changed
+		   by the time the async add resolves and the stats write fires. */
 		const noteIndex = this.patchNotesList.length + 1;
 		const snapshot = { ...this.newRecord, noteIndex };
+
+		/* Step 3: Fire-and-forget add; update the running total on success.
+		   The form is reset immediately — the UI does not wait for the write — so
+		   the user can continue adding entries without blocking. */
 		this.databaseService
 			.addNewRecordToPatchNotes(snapshot)
 			.then(() => {
@@ -487,13 +520,15 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param key - The key of the patch note to remove.
 	 */
 	protected openDeleteConfirmationDialog(key: string) {
-		/* Capture note identity and the projected total before the dialog opens — the list may have changed by
-		   the time the user confirms, and the CloudBase watcher may already have pushed the updated data before the remove promise resolves, making patchNotesList.length unreliable inside the callback. */
+
+		/* Step 1: Capture note identity and the projected total before the dialog opens.
+		   The CloudBase watcher may push updated data before the user confirms, making
+		   patchNotesList.length unreliable inside the async callback. */
 		const noteToDelete = this.patchNotesList.find((note) => note.key === key);
 		const noteIndex = this.patchNotesList.findIndex((note) => note.key === key) + 1;
-
 		const newTotal = this.patchNotesList.length - 1;
 
+		// Step 2: Open the confirmation dialog; the async callback runs only if the user confirms
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
@@ -565,8 +600,13 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns A void promise settling once any required correction is written.
 	 */
 	private async reconcilePatchNotesTotal(actualTotal: number): Promise<void> {
+
+		// Step 1: Fetch the current stored statistic as a one-shot value
 		const stats = await firstValueFrom(this.databaseService.getStatistics());
 		const storedTotal = stats?.[STATS_FIELD_TOTAL_PATCH_NOTES] ?? 0;
+
+		/* Step 2: Write a correction only on drift — avoids a redundant database
+		   write on every page load when the counter is already accurate. */
 		if (storedTotal !== actualTotal) {
 			await this.databaseService.updateStatisticsFields({
 				[STATS_FIELD_TOTAL_PATCH_NOTES]: actualTotal

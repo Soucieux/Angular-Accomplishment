@@ -85,7 +85,11 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * Sets up the anonymous authentication session and subscribes to the quotes observable.
 	 */
 	ngOnInit(): void {
+
+		// Step 1: Only run live data logic in a browser — SSR has no CloudBase WebSocket
 		if (isPlatformBrowser(this.platformId)) {
+
+			// Step 2: If no session exists, start an anonymous one before subscribing
 			if (!CloudbaseService.getUserId()) {
 				/* Wait for anonymous sign-in before starting the watcher —
 				   the CloudBase WebSocket needs valid credentials to connect. */
@@ -93,18 +97,24 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 					.signInAnonymously()
 					.then(() => {
 						this.signedInAnonymously = true;
-						// Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
+
+						// Step 2.1: Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
 						CloudbaseService.markAuthReady();
 						this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
+
 						/* Promise callback fires outside Angular's zone; detectChanges() is
 						   required to bind the newly assigned quotes$ Observable in the template. */
 						this.cdr.detectChanges();
 					})
 					.catch(() => {});
 			} else {
+
+				// Step 2.2: Session already active — subscribe directly without re-authenticating
 				this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
 			}
 		} else {
+
+			// Step 3: SSR path — emit an empty array so the template has a valid Observable immediately
 			this.quotes$ = of([]);
 		}
 	}
@@ -114,11 +124,18 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * clears the dialog container, resets the flag, and logs the component destruction event.
 	 */
 	ngOnDestroy(): void {
+
+		// Step 1: Cancel any pending success-chip timer so it cannot fire after the component is gone
 		if (this.postSuccessTimer !== null) clearTimeout(this.postSuccessTimer);
+
+		/* Step 2: Sign out only if this component opened the anonymous session —
+		   avoids signing out a legitimate named-user session on other pages. */
 		if (this.signedInAnonymously) {
 			this.authService.signOut().catch(() => {});
 		}
 		this.signedInAnonymously = false;
+
+		// Step 3: Release the dialog view container and log the teardown event
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
@@ -210,20 +227,28 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * otherwise falls back to the manually entered author name or 'Anonymous'.
 	 */
 	protected async submitQuote(): Promise<void> {
+
+		// Step 1: Guard — reject blank input before touching any state
 		const text = this.newQuoteText.trim();
 		if (!text) return;
 
 		this.submitting = true;
 		try {
-			/* Name resolution chain: signed-in user → CloudBase username;
-			   not signed in → manually entered name; fallback → 'Anonymous'. */
+
+			/* Step 2: Resolve the author name.
+			   Signed-in user → CloudBase username; anonymous → manually entered name; fallback → 'Anonymous'. */
 			const name = this.isSignedIn
 				? CloudbaseService.getUserName() || RESONANCE_AUTHOR_ANONYMOUS
 				: this.authorName.trim() || RESONANCE_AUTHOR_ANONYMOUS;
 			const timestamp = Utilities.getCurrentFormattedTime(true);
+
+			// Step 3: Persist the quote, then reset the form fields
 			await this.databaseService.addQuote(text, name, timestamp);
 			this.newQuoteText = '';
 			this.authorName = '';
+
+			/* Step 4: Show the success chip and schedule its dismissal.
+			   The existing timer is cancelled first to prevent double-fire if the user submits again quickly. */
 			this.postSuccess = true;
 			if (this.postSuccessTimer !== null) clearTimeout(this.postSuccessTimer);
 			this.postSuccessTimer = setTimeout(() => {
@@ -233,8 +258,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 				   required to hide the success chip immediately after the delay. */
 				this.cdr.detectChanges();
 			}, 2000);
-		} catch {
-			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+		} catch (error) {
+			this.dialogService.handleError(this.dialogComponentContainer, error);
 		} finally {
 			this.submitting = false;
 			/* async/await finally block may resume outside Angular's zone; detectChanges()

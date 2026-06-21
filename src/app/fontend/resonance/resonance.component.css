@@ -532,6 +532,12 @@
 	width: 28px !important;
 	height: 28px !important;
 	padding: 0 !important;
+	opacity: 0;
+	transition: opacity 0.15s;
+}
+
+.quote-card:hover ::ng-deep .delete-button.p-button.p-button-text {
+	opacity: 1;
 }
 
 ::ng-deep .delete-button.p-button.p-button-text:hover {

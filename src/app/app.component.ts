@@ -145,24 +145,43 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
+			// Step 1: Lazily import the Tauri window API so the bundle stays tree-shakeable
+			// in browser builds — the import resolves after init, so drag is unavailable for
+			// the first few ms but that is acceptable (no synchronous Tauri calls occur on load).
 			if (this.isTauriApp) {
-				import('@tauri-apps/api/window').then(({ appWindow }) => {
-					this.tauriAppWindow = appWindow;
-				}).catch(() => {});
+				import('@tauri-apps/api/window')
+					.then(({ appWindow }) => {
+						this.tauriAppWindow = appWindow;
+					})
+					.catch(() => {});
 			}
+
+			// Step 2: Wire the auth observable and track the active route for the bottom nav
 			this.currentUser$ = this.authService.getCurrentUser();
 			this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
 				const url = (event as NavigationEnd).urlAfterRedirects.split('?')[0];
 				this.activeRoute = ROUTE_TO_NAV_ID[url] ?? '';
 			});
+
+			// Step 3: Mirror auth state into plain fields used by the mobile nav template
 			this.currentUser$.subscribe((user) => {
 				this.mobileSignedIn = !!user;
-				this.mobileUserName = Utilities.capitalizeFirstLetterOnEachWord(Utilities.getUserDisplayName(user));
+				this.mobileUserName = Utilities.capitalizeFirstLetterOnEachWord(
+					Utilities.getUserDisplayName(user)
+				);
 			});
+
+			/* Step 4: Register a capture-phase scroll listener outside Angular's zone so it
+			   does not trigger change detection on every scroll tick; re-enters the zone only
+			   when the context menu is actually open and needs to be dismissed. */
 			this.ngZone.runOutsideAngular(() => {
-				document.addEventListener('scroll', () => {
-					if (this.ctxVisible) this.ngZone.run(() => this.closeCtxMenu());
-				}, { capture: true, passive: true });
+				document.addEventListener(
+					'scroll',
+					() => {
+						if (this.ctxVisible) this.ngZone.run(() => this.closeCtxMenu());
+					},
+					{ capture: true, passive: true }
+				);
 			});
 		}
 	}
@@ -198,22 +217,41 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	/**
 	 * Handles all document mousedown events. Closes the account popover when a
-	 * left-click lands outside the account row wrapper, and saves the current text
-	 * selection state before a right-click fires so onContextMenu can restore the
-	 * cursor position after WKWebView's native auto-select fires.
+	 * left-click lands outside the account row wrapper, initiates a native window
+	 * drag when a left-click lands in the 30px header zone (so drag works even when
+	 * a modal mask covers the header), and saves the current text selection state
+	 * before a right-click fires so onContextMenu can restore the cursor position
+	 * after WKWebView's native auto-select fires.
 	 *
 	 * @param event - The MouseEvent from the document mousedown listener.
 	 */
 	@HostListener('document:mousedown', ['$event'])
 	protected onDocumentMouseDown(event: MouseEvent): void {
-		if (this.accountMenuOpen && this.accountRowWrapper &&
-			!this.accountRowWrapper.nativeElement.contains(event.target as Node)) {
+		// Step 1: Collapse the account popover on any outside left-click
+		if (
+			this.accountMenuOpen &&
+			this.accountRowWrapper &&
+			!this.accountRowWrapper.nativeElement.contains(event.target as Node)
+		) {
 			this.accountMenuOpen = false;
 		}
+
+		// Step 2: Trigger native window drag when the user presses in the 30px title-bar zone
+		if (this.isTauriApp && event.button === 0 && event.clientY < 30) {
+			this.tauriAppWindow?.startDragging().catch(() => {});
+		}
+
+		/* Step 3: Snapshot the text-field selection BEFORE the right-click fires so it can
+		   be restored in onContextMenu — WKWebView auto-selects the word under the pointer
+		   on right-click, which loses the user's original cursor position. */
 		if (this.isTauriApp && event.button === 2) {
 			const target = event.target as HTMLElement;
 			if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
-				this.ctxSavedSelection = { el: target, start: target.selectionStart, end: target.selectionEnd };
+				this.ctxSavedSelection = {
+					el: target,
+					start: target.selectionStart,
+					end: target.selectionEnd
+				};
 			}
 		}
 	}
@@ -234,13 +272,23 @@ export class AppComponent implements OnInit, AfterViewInit {
 		event.preventDefault();
 		const target = event.target as HTMLElement;
 		const isInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+
+		/* Step 1: Restore the pre-right-click selection that was snapshotted in
+		   onDocumentMouseDown — must happen before building actions so that execCommand
+		   operations run against the correct range. */
 		if (this.ctxSavedSelection) {
 			const { el, start, end } = this.ctxSavedSelection;
 			el.selectionStart = start;
 			el.selectionEnd = end;
 			this.ctxSavedSelection = null;
 		}
+
 		const actions: ContextMenuAction[] = [];
+
+		/* Step 2: Add clipboard actions when the target is an editable field.
+		   Paste uses the Tauri clipboard API instead of document.execCommand because
+		   macOS WKWebView blocks execCommand('paste') and shows a system permission
+		   dialog — reading from the Tauri plugin bypasses that prompt entirely. */
 		if (isInput) {
 			const inputEl = target as HTMLInputElement | HTMLTextAreaElement;
 			actions.push(
@@ -267,7 +315,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 								const end = inputEl.selectionEnd ?? start;
 								inputEl.value =
 									inputEl.value.slice(0, start) + text + inputEl.value.slice(end);
-								inputEl.selectionStart = inputEl.selectionEnd = start + (text ?? "").length;
+								inputEl.selectionStart = inputEl.selectionEnd = start + (text ?? '').length;
 								inputEl.dispatchEvent(new Event('input', { bubbles: true }));
 							})
 							.catch(() => {})
@@ -280,6 +328,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 				}
 			);
 		}
+
+		// Step 3: Append quick-nav shortcuts (Home, Reminder); the first one gets a separator
+		// when clipboard actions precede it so the groups are visually distinct.
 		for (const [i, item] of this.ctxNavItems.entries()) {
 			actions.push({
 				label: item.label,
@@ -289,6 +340,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 				separator: isInput && i === 0 ? true : undefined
 			});
 		}
+
+		// Step 4: Append the auth action — My Account + Sign Out when signed in, Sign In otherwise
 		if (this.mobileSignedIn) {
 			actions.push(
 				{
@@ -320,6 +373,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 				separator: true
 			});
 		}
+
+		/* Step 5: Clamp the menu position so it never overflows the viewport edge —
+		   220px and 280px are the approximate max width and height of the overlay. */
 		this.ctxX = Math.min(event.clientX, window.innerWidth - 220);
 		this.ctxY = Math.min(event.clientY, window.innerHeight - 280);
 		this.ctxActions = actions;
@@ -344,10 +400,15 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 * @param width - The current viewport width in pixels.
 	 */
 	private applyViewportState(width: number): void {
+		// Step 1: Capture current compact state before mutating so transition guards work correctly
 		const isMobileDevice = this.utilities.isMobile();
 		const wasCompact = this.navCompact;
 		this.navMobile = isMobileDevice;
+
 		if (isMobileDevice || width > APP_BREAKPOINT_COMPACT) {
+			// Step 2: Exit compact mode — reset overlay and mode, then expand the nav if it was
+			// previously auto-collapsed by compact mode (wasCompact guard prevents overwriting a
+			// user-intentional collapse that happened while already in wide/mobile mode).
 			this.navCompact = false;
 			this.navMode = 'side';
 			this.compactOverlayOpen = false;
@@ -358,6 +419,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 				}
 			}
 		} else {
+			/* Step 3: Enter compact mode — auto-collapse and persist only on the first crossing
+			   (!wasCompact) so that subsequent resize events within the compact range do not
+			   fight the user if they manually expanded the overlay. */
 			if (!wasCompact) {
 				this.navCollapsed = true;
 				this.navMode = 'side';
@@ -392,8 +456,15 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 * Firebase otherwise).
 	 */
 	protected async logout(): Promise<void> {
+		// Step 1: Close the account popover immediately so the UI does not appear frozen
 		this.accountMenuOpen = false;
+
+		// Step 2: Remove the push subscription before signing out — errors are silently ignored
+		// because a stale subscription is harmless and must not block the sign-out flow.
 		await this.notificationService.unsubscribe().catch(() => {});
+
+		/* Step 3: Route to the correct sign-out method based on region — CloudBase (CN)
+		   uses an async signOut(); Firebase uses a synchronous-style logout() wrapper. */
 		if (Utilities.getCurrentCountry() === CN) {
 			await this.authService.signOut();
 		} else {
@@ -424,6 +495,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 */
 	protected toggleNav(): void {
 		if (this.navCompact) {
+			/* Step 1 (compact mode): Switch between the collapsed side-strip (mode="side") and
+			   the full-width overlay (mode="over") instead of changing navCollapsed — the strip
+			   always stays visible at 65px, so "collapsed" has no meaning here. The account
+			   popover is also closed because it would render off-screen under the closed strip. */
 			if (this.compactOverlayOpen) {
 				this.navMode = 'side';
 				this.compactOverlayOpen = false;
@@ -433,6 +508,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 				this.compactOverlayOpen = true;
 			}
 		} else {
+			// Step 2 (normal mode): Toggle collapsed state and persist it so a page refresh
+			// restores the user's preferred width without a layout flash.
 			this.navCollapsed = !this.navCollapsed;
 			if (this.navCollapsed) {
 				this.accountMenuOpen = false;
@@ -542,6 +619,16 @@ export class AppComponent implements OnInit, AfterViewInit {
 	}
 
 	/**
+	 * Gets the avatar image URL from the user object, checking both CloudBase fields.
+	 *
+	 * @param user - The authenticated user object from the auth observable.
+	 * @returns The avatar URL string, or an empty string if no photo is set.
+	 */
+	protected getUserAvatarUrl(user: any): string {
+		return Utilities.getUserAvatarUrl(user);
+	}
+
+	/**
 	 * Gets the first character of the user's display name, uppercased,
 	 * for use as an avatar monogram.
 	 *
@@ -549,6 +636,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 	 * @returns The uppercased first character, or an empty string.
 	 */
 	protected getUserInitial(user: any): string {
-		return Utilities.capitalizeFirstLetterOnEachWord(Utilities.getUserDisplayName(user)).charAt(0).toUpperCase();
+		return Utilities.getUserInitials(user).charAt(0);
 	}
 }

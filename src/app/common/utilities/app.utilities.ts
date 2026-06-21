@@ -81,9 +81,10 @@ export class Utilities {
 	public static getCurrentFormattedTime(isTimeIncluded: boolean): string {
 		const now = new Date();
 
-		let formattedTime = '';
+		// Step 1: Build the optional time segment with a leading space separator
 		/* Leading space separates date from time when time is included;
 		   when isTimeIncluded=false, formattedTime stays empty → no separator needed. */
+		let formattedTime = '';
 		if (isTimeIncluded) {
 			formattedTime = ` ${now.getHours().toString().padStart(2, '0')}:${now
 				.getMinutes()
@@ -91,6 +92,7 @@ export class Utilities {
 				.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 		}
 
+		// Step 2: Concatenate the dot-separated date with the (possibly empty) time segment
 		const formattedDate =
 			`${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now
 				.getDate()
@@ -146,6 +148,8 @@ export class Utilities {
 	 */
 	public static getRelativeTime(timestamp: string): string {
 		if (!timestamp) return '';
+
+		// Step 1: Parse the timestamp into a Date — strategy differs by format
 		let date: Date;
 		if (timestamp.includes('T')) {
 			// ISO 8601 format — let the Date constructor parse it directly.
@@ -158,12 +162,15 @@ export class Utilities {
 			const [hours, minutes, seconds] = (timePart || '00:00:00').split(':');
 			date = new Date(+year, +month - 1, +day, +hours, +minutes, +seconds);
 		}
+
+		// Step 2: Compute time deltas at each granularity level
 		const now = new Date();
 		const diffSecs = Math.floor((now.getTime() - date.getTime()) / 1000);
 		const diffMins = Math.floor(diffSecs / 60);
 		const diffHours = Math.floor(diffMins / 60);
 		const diffDays = Math.floor(diffHours / 24);
 
+		// Step 3: Return the coarsest label that fits — fall back to absolute date beyond 7 days
 		if (diffSecs < 60) return 'just now';
 		if (diffMins < 60) return `${diffMins}m ago`;
 		if (diffHours < 24) return `${diffHours}h ago`;
@@ -181,9 +188,11 @@ export class Utilities {
 	 * @returns A "YYYY-MM-DD" string, or '' if the value is falsy or unparseable.
 	 */
 	public static coerceDateToString(date: unknown): string {
+		// Step 1: Fast-exit for falsy values and plain strings — no conversion needed
 		if (!date) return '';
 		if (typeof date === 'string') return date;
 		try {
+			// Step 2: Resolve the value to a milliseconds timestamp, handling each known type
 			let ms: number | null = null;
 			if (typeof date === 'number') {
 				ms = date;
@@ -193,6 +202,8 @@ export class Utilities {
 			) {
 				ms = (date as Date).getTime();
 			} else if (typeof date === 'object' && date !== null) {
+				/* Step 2.1: Probe object fields in priority order — $date wins because it is the
+				   canonical MongoDB/CloudBase wire format; time and seconds are legacy fallbacks. */
 				const d = date as Record<string, unknown>;
 				// CloudBase/MongoDB: { $date: ms } or { $date: { $numberLong: "ms" } }
 				if (d['$date'] !== undefined) {
@@ -209,9 +220,13 @@ export class Utilities {
 					ms = Number(d['seconds']) * 1000;
 				}
 			}
+
+			// Step 3: Last-resort — attempt native Date parsing; NaN guard catches junk values
 			if (ms === null) ms = Number(new Date(date as string));
 			const d = new Date(ms);
 			if (isNaN(d.getTime())) return '';
+
+			// Step 4: Format the resolved Date into a "YYYY-MM-DD" storage string
 			const y = d.getFullYear();
 			const m = String(d.getMonth() + 1).padStart(2, '0');
 			const day = String(d.getDate()).padStart(2, '0');
@@ -317,6 +332,16 @@ export class Utilities {
 	}
 
 	/**
+	 * Gets the avatar image URL from the user object, checking both CloudBase fields.
+	 *
+	 * @param user - The authenticated user object from the auth observable.
+	 * @returns The avatar URL string, or an empty string if no photo is set.
+	 */
+	public static getUserAvatarUrl(user: any): string {
+		return user?.user_metadata?.avatarUrl ?? user?.user_metadata?.picture ?? '';
+	}
+
+	/**
 	 * Checks whether the current user is alive (has a valid session).
 	 *
 	 * @returns Whether the user is alive.
@@ -345,6 +370,9 @@ export class Utilities {
 	 * @param isUserAlive - Whether the user is alive.
 	 */
 	public setIsUserAlive(isUserAlive: boolean): void {
+		/* Step 1: Persist the hint to localStorage so the next page load can restore UI state
+		   immediately, before the auth SDK fires its first async callback.
+		   The guard is required because localStorage is unavailable during SSR. */
 		if (isPlatformBrowser(this.platformId)) {
 			if (isUserAlive) {
 				localStorage.setItem(LS_AUTH_HINT_KEY, '1');
@@ -352,6 +380,8 @@ export class Utilities {
 				localStorage.removeItem(LS_AUTH_HINT_KEY);
 			}
 		}
+
+		// Step 2: Notify all reactive subscribers — must happen after the localStorage write
 		this.isUserAliveSubject.next(isUserAlive);
 	}
 
@@ -408,12 +438,19 @@ export class Utilities {
 	}
 
 	/**
-	 * Opens a URL in a new tab using a temporary anchor element on the injected
-	 * Document, avoiding any direct reference to the global window object.
+	 * Opens a URL in the system browser. In a Tauri desktop build, delegates to
+	 * the Tauri shell plugin so the link opens outside the webview; in a regular
+	 * browser context, falls back to a temporary anchor click.
 	 *
 	 * @param url - The fully-qualified URL to open.
 	 */
 	public openInNewTab(url: string): void {
+		/* `window.__TAURI__` is injected by the Tauri runtime only inside the desktop app.
+		   When present, use the shell plugin — anchor clicks open inside the webview instead. */
+		if ((window as unknown as { __TAURI__?: unknown }).__TAURI__) {
+			import('@tauri-apps/api/shell').then(({ open }) => open(url)).catch(() => {});
+			return;
+		}
 		const a = this.document.createElement('a');
 		a.href = url;
 		a.target = '_blank';
@@ -684,11 +721,17 @@ export class Utilities {
 	 * @returns The number of whole days until the date, or null when no date is provided.
 	 */
 	public static getDaysUntilNumber(dateStr: unknown): number | null {
+		// Step 1: Coerce any date representation to a "YYYY-MM-DD" string; bail on falsy input
 		if (!dateStr) return null;
 		const str = Utilities.coerceDateToString(dateStr);
 		if (!str) return null;
+
+		// Step 2: Build a midnight-local Date for the target — constructor overload avoids UTC shift
 		const [year, month, day] = str.split('-').map(Number);
 		const target = new Date(year, month - 1, day);
+
+		/* Step 3: Zero today's time component so the diff is in whole calendar days,
+		   not hours-since-midnight (which would make "today" return a small positive fraction). */
 		const today = new Date();
 		today.setHours(0, 0, 0, 0);
 		return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -715,8 +758,14 @@ export class Utilities {
 	 * @param el - The scrollable DOM element to observe, or undefined to skip.
 	 */
 	public static attachScrollAutoHide(el?: HTMLElement): void {
+		/* Step 1: Guard — skip undefined elements and elements already wired up.
+		   WeakSet membership check is O(1) and avoids stacking duplicate listeners
+		   when a component's ngAfterViewInit re-runs (e.g. after a tab switch). */
 		if (!el || Utilities.boundScrollEls.has(el)) return;
 		Utilities.boundScrollEls.add(el);
+
+		/* Step 2: Define the reveal closure that adds the CSS class and debounces removal.
+		   WeakMap is used so the timer ref is GC-eligible when the element is destroyed. */
 		const reveal = () => {
 			el.classList.add('is-scrolling');
 			const prev = Utilities.scrollTimers.get(el);
@@ -726,8 +775,11 @@ export class Utilities {
 				setTimeout(() => el.classList.remove('is-scrolling'), 700)
 			);
 		};
+
+		// Step 3: Attach listeners — scroll fires during drag; mouseenter handles hover-over-rest
 		el.addEventListener('scroll', reveal, { passive: true });
 		el.addEventListener('mouseenter', () => {
+			// Only reveal on hover if the element actually has overflow to scroll
 			if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) reveal();
 		});
 	}

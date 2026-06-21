@@ -361,6 +361,11 @@ li:nth-child(10) .nav-icon {
 	flex-shrink: 0;
 }
 
+.account-menu-popover-avatar--photo {
+	object-fit: cover;
+	background: none;
+}
+
 .account-menu-popover-name {
 	font-size: 14px;
 	font-weight: 600;
@@ -446,6 +451,12 @@ li:nth-child(10) .nav-icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	box-shadow: 0 3px 10px rgba(213, 51, 105, 0.28);
+}
+
+.account-row-avatar--photo {
+	object-fit: cover;
+	background: none;
 	box-shadow: 0 3px 10px rgba(213, 51, 105, 0.28);
 }
 

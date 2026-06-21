@@ -32,6 +32,8 @@ export const SEARCH_COMPLETE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
 /** Message shown in the retry dialog when a page data load exceeds the timeout. */
 export const RETRY_DIALOG_MSG = 'Connection Lost...';
+/** Message shown in the retry dialog when the user's session has expired. */
+export const RETRY_DIALOG_SESSION_EXPIRED_MSG = 'Your session has expired. Please sign in again.';
 
 ////////////////////// Below are toast severity string constants //////////////////////
 
@@ -69,6 +71,8 @@ export const DIALOG_LINK = 'link';
 export const DIALOG_MULTI_LINK = 'multi-link';
 /** Dialog type for the loading-timeout retry overlay. */
 export const DIALOG_RETRY = 'retry';
+/** Dialog type for the account deletion confirmation dialog. */
+export const DIALOG_DELETE_ACCOUNT = 'delete-account';
 
 ////////////////////// Below are history dialog and style string constants ///////////
 
@@ -143,8 +147,20 @@ export const LOGIN_LABEL_LOADING = '…';
 export const LOGIN_LABEL_SIGN_IN = 'Sign In';
 export const LOGIN_MAX_USERNAME_LENGTH = 13;
 export const LOGIN_ERROR_USERNAME_TOO_LONG = 'Username must be 13 characters or fewer.';
+export const LOGIN_LABEL_PWD_REQ_LENGTH = 'At least 8 characters';
+export const LOGIN_LABEL_PWD_REQ_TYPES = 'At least 3 of the following character types:';
+export const LOGIN_LABEL_PWD_REQ_UPPERCASE = 'Uppercase letter (A–Z)';
+export const LOGIN_LABEL_PWD_REQ_LOWERCASE = 'Lowercase letter (a–z)';
+export const LOGIN_LABEL_PWD_REQ_DIGIT = 'Number (0–9)';
+export const LOGIN_LABEL_PWD_REQ_SPECIAL = 'Special character (e.g. ! @ # $)';
+export const LOGIN_LABEL_CODE_COUNTDOWN_SUFFIX = 'seconds';
+export const LOGIN_MSG_CODE_SENT = 'Code sent — check your email.';
+export const LOGIN_LABEL_FORGOT_PASSWORD = 'Forgot password?';
+export const LOGIN_LABEL_SEND_RESET_CODE = 'Send reset code';
+export const LOGIN_LABEL_RESET_PASSWORD = 'Reset password';
+export const LOGIN_LABEL_BACK_TO_SIGN_IN = 'Back to sign in';
 /** CloudBase role string that identifies an admin user. */
-export const ROLE_ADMIN = '管理员';
+export const ROLE_ADMIN = 'administrator';
 /** CloudBase error code for an invalid request argument (e.g. wrong verification code). */
 export const CLOUDBASE_ERROR_INVALID_ARGUMENT = 'INVALID_ARGUMENT';
 /** CloudBase error category returned when credentials are wrong. */
@@ -595,6 +611,18 @@ export const PORTAL_DIALOG_TITLE_ADD_LINK = 'Add Link';
 export const PORTAL_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
 /** Label for the isPinned checkbox in the add/edit link dialog. */
 export const PORTAL_LABEL_PIN_TO_DASHBOARD = 'Pin to dashboard';
+/** Section header label for links visible to all users. */
+export const PORTAL_SECTION_SHARED = 'Shared';
+/** Section header label for links belonging to the current user. */
+export const PORTAL_SECTION_MY_LINKS = 'My Links';
+/** Section meta suffix for the Shared links row count. */
+export const PORTAL_SECTION_SHARED_SUFFIX = 'links · visible to everyone';
+/** Section meta suffix for the My Links row count. */
+export const PORTAL_SECTION_MY_LINKS_SUFFIX = 'links · only you can see these';
+/** Empty-state message shown when the Shared section has no links. */
+export const PORTAL_SECTION_SHARED_EMPTY = 'No shared links here yet';
+/** Empty-state message shown when the My Links section has no links. */
+export const PORTAL_SECTION_MY_LINKS_EMPTY = 'No links here yet';
 export const LINK_DIALOG_LABEL_CANCEL = 'Cancel';
 export const LINK_DIALOG_LABEL_SAVE = 'Save';
 export const LINK_DIALOG_LABEL_ADD = 'Add Link';
@@ -820,6 +848,7 @@ export const ACCOUNT_LABEL_PROFILE_TAGLINE = 'Living intentionally, one entry at
 export const ACCOUNT_LABEL_MEMBER_SINCE = 'Member Since';
 export const ACCOUNT_LABEL_STREAK_SUFFIX = ' Day Streak';
 export const ACCOUNT_LABEL_VERIFIED = 'Verified';
+export const ACCOUNT_MSG_NO_EMAIL = 'No email address';
 export const ACCOUNT_LABEL_IDENTITY_TITLE = 'Identity & Security';
 export const ACCOUNT_LABEL_INNER_WORLD_TITLE = 'Inner World';
 export const ACCOUNT_LABEL_MILESTONES_TITLE = 'Milestones';
@@ -835,6 +864,7 @@ export const ACCOUNT_LABEL_DANGER_ZONE_TITLE = 'Danger Zone';
 export const ACCOUNT_MSG_COMING_SOON = 'This will be available in a future release.';
 export const ACCOUNT_LABEL_USERNAME = 'Username';
 export const ACCOUNT_LABEL_SECURITY_TITLE = 'Security';
+export const ACCOUNT_LABEL_LAST_LOGIN = 'Last sign-in';
 export const ACCOUNT_LABEL_USERNAME_CHANGED = 'Username last changed';
 export const ACCOUNT_LABEL_PASSWORD_CHANGED = 'Password last changed';
 export const ACCOUNT_LABEL_UPDATE_USERNAME = 'Update Username';
@@ -853,11 +883,20 @@ export const ACCOUNT_MSG_PASSWORD_UPDATED = 'Password updated';
 export const ACCOUNT_MSG_PASSWORD_TOO_SHORT = 'Password must be at least 6 characters.';
 export const ACCOUNT_MSG_PASSWORD_MISMATCH = 'Passwords do not match.';
 export const ACCOUNT_MSG_DELETE_CONFIRMED = 'Account deletion requested';
-export const ACCOUNT_MSG_INVALID_OLD_PASSWORD = 'Current password is incorrect.';
-export const ACCOUNT_MSG_INVALID_NEW_PASSWORD = 'New password is not strong enough.';
+export const ACCOUNT_MSG_DELETING_ACCOUNT = 'Deleting account...';
 export const CLOUDBASE_ERR_INVALID_PASSWORD = 'invalid_password';
 export const CLOUDBASE_ERR_PASSWORD_TOO_WEAK = 'password_too_weak';
+export const CLOUDBASE_ERR_USER_NOT_FOUND = 'user_not_found';
+export const CLOUDBASE_ERR_INVALID_STATUS = 'invalid_status';
+export const CLOUDBASE_ERR_PERMISSION_DENIED = 'permission_denied';
+export const CLOUDBASE_ERR_INVALID_EMAIL = 'invalid_email';
+export const CLOUDBASE_ERR_EMAIL_NOT_VERIFIED = 'email_not_verified';
+export const CLOUDBASE_ERR_RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded';
+export const CLOUDBASE_ERR_INVALID_VERIFICATION_CODE = 'invalid_verification_code';
+export const ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER = 'Enter your password to confirm';
+export const ACCOUNT_DIALOG_DELETE_ERROR_WRONG_PWD = 'Incorrect password. Please try again.';
 export const ACCOUNT_DIALOG_DELETE_MSG =
 	'This will permanently delete your account and all associated data. This action cannot be undone.';
 export const ACCOUNT_DIALOG_DELETE_HEADER = 'Delete Account';
 export const ACCOUNT_DIALOG_DELETE_BTN = 'Delete';
+export const ACCOUNT_DIALOG_DELETE_CANCEL_BTN = 'Cancel';

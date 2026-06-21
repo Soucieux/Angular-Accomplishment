@@ -96,7 +96,9 @@ html {
    included in the declared width/height rather than added on top of it.
    Do NOT add box-sizing: border-box to individual rules — this reset already
    covers all elements and any per-element declaration is redundant noise. */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
 	box-sizing: border-box;
 }
 
@@ -167,3 +169,4 @@ body.tauri-mode .glass-card {
 	padding-top: 40px;
 	border-radius: 0 0 18px 18px;
 }
+

@@ -128,9 +128,11 @@
 							@if (accountMenuOpen) {
 								<div class="account-menu-popover">
 									<div class="account-menu-popover-header">
-										<span class="account-menu-popover-avatar">{{
-											getUserInitial(user)
-										}}</span>
+										@if (getUserAvatarUrl(user)) {
+											<img class="account-menu-popover-avatar account-menu-popover-avatar--photo" [src]="getUserAvatarUrl(user)" [alt]="getUserDisplayName(user)" />
+										} @else {
+											<span class="account-menu-popover-avatar">{{ getUserInitial(user) }}</span>
+										}
 										<div class="account-menu-popover-name">
 											{{ getUserDisplayName(user) }}
 										</div>
@@ -152,7 +154,11 @@
 								[class.account-row-button--open]="accountMenuOpen"
 								(click)="handleAccountButtonClick()">
 								<span class="account-row-avatar-wrapper">
-									<span class="account-row-avatar">{{ getUserInitial(user) }}</span>
+									@if (getUserAvatarUrl(user)) {
+										<img class="account-row-avatar account-row-avatar--photo" [src]="getUserAvatarUrl(user)" [alt]="getUserDisplayName(user)" />
+									} @else {
+										<span class="account-row-avatar">{{ getUserInitial(user) }}</span>
+									}
 									<span class="account-row-presence-dot"></span>
 								</span>
 								<span class="material-symbols-outlined account-row-narrow-icon">logout</span>

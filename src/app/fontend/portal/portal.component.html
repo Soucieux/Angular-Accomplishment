@@ -143,8 +143,7 @@
 							<button
 								class="category-tab"
 								[class.active]="selectedCategory === cat._id"
-								(click)="selectCategory(cat._id)"
-								[style.--category-color]="cat.color">
+								(click)="selectCategory(cat._id)">
 								{{ cat.name }} ({{ getLinkCount(cat._id) }})
 								<span
 									class="category-edit-button"
@@ -162,21 +161,6 @@
 						</button>
 					</div>
 					<div class="toolbar-right">
-						@if (linkSearchVisible) {
-							<input
-								class="links-search-input"
-								type="text"
-								placeholder="Search links…"
-								[(ngModel)]="linkSearch"
-								(blur)="onLinkSearchExit($event)" />
-						}
-						<button
-							class="icon-button"
-							[class.active]="linkSearchVisible"
-							(click)="toggleLinkSearch()"
-							title="Search links">
-							<span class="material-symbols-outlined">search</span>
-						</button>
 						<button class="add-link-button" (click)="openMultiLinkDialog()">
 							<span class="material-symbols-outlined">playlist_add</span>
 							Batch
@@ -189,63 +173,144 @@
 				</div>
 
 				<!-- Link grid -->
-				@if (linksLoading) {
-					<div class="links-grid">
-						@for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+				<ng-template #skeletonGrid>
+					<div class="links-grid links-grid--skeleton">
+						@for (i of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; track i) {
 							<div class="link-card skeleton-card"></div>
 						}
 					</div>
-				} @else if (filteredLinks.length === 0) {
-					<div class="links-empty">
-						<span class="material-symbols-outlined empty-icon">link</span>
-						<p>No links here yet</p>
-						<button class="add-link-button" (click)="openAddLinkDialog()">
-							<span class="material-symbols-outlined">add</span>
-							Add Link
-						</button>
-					</div>
-				} @else {
-					<div class="links-grid">
-						@for (link of filteredLinks; track link._id) {
-							<div class="link-card" (click)="openLink(link)" [title]="link.url">
-								<div class="link-card-inner">
-									@if (faviconFailedIds.has(link._id)) {
-										<div class="link-favicon-fallback">
-											{{ link.title.charAt(0).toUpperCase() }}
-										</div>
-									} @else {
-										<img
-											class="link-favicon"
-											[src]="utilities.getFavicon(link.url)"
-											[alt]="link.title"
-											(error)="onFaviconError(link)"
-											loading="lazy" />
-									}
-									<div class="link-info">
-										<p class="link-title">{{ link.title }}</p>
-										<span class="link-domain">{{ utilities.getDomain(link.url) }}</span>
-									</div>
-									@if (link.visitCount) {
-										<span class="link-visits-badge">{{ link.visitCount }}</span>
-									}
-									<div class="link-actions">
-										<button
-											class="link-action-button"
-											(click)="openEditLinkDialog(link, $event)"
-											title="Edit">
-											<span class="material-symbols-outlined">edit</span>
-										</button>
-										<button
-											class="link-action-button danger"
-											(click)="openDeleteLinkDialog(link, $event)"
-											title="Delete">
-											<span class="material-symbols-outlined">delete</span>
-										</button>
-									</div>
+				</ng-template>
+				<ng-template #linkCard let-link let-showActions="showActions">
+					@let faviconUrl = utilities.getFavicon(link.url);
+					<div
+						class="card-wrapper"
+						(mouseenter)="hoveredLinkId = link._id"
+						(mouseleave)="hoveredLinkId = null">
+						<div
+							class="link-card"
+							(click)="openLink(link)"
+							[title]="link.url"
+							[style.background]="getLinkCardColor(link)">
+							<img
+								class="ghost-icon"
+								[src]="faviconUrl"
+								alt="" />
+							<div class="gradient-overlay"></div>
+							@if (faviconFailedIds.has(link._id)) {
+								<div class="link-favicon-fallback">
+									{{ link.title.charAt(0).toUpperCase() }}
 								</div>
+							} @else {
+								<img
+									class="link-favicon"
+									[src]="faviconUrl"
+									[alt]="link.title"
+									(error)="onFaviconError(link)"
+									loading="lazy"
+									width="30"
+									height="30" />
+							}
+							<div class="card-text">
+								<p class="card-title">{{ link.title }}</p>
+								<span class="card-domain">{{
+									utilities.getDomain(link.url)
+								}}</span>
+							</div>
+							@if (link.visitCount) {
+								<span class="link-visits-badge">{{ link.visitCount }}</span>
+							}
+						</div>
+						@if (showActions) {
+							<div class="card-actions" [class.visible]="hoveredLinkId === link._id">
+								<button
+									class="action-btn"
+									(click)="openEditLinkDialog(link, $event)"
+									title="Edit">
+									<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+										<path
+											d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z"
+											stroke="#444"
+											stroke-width="1.4"
+											stroke-linejoin="round" />
+									</svg>
+								</button>
+								<button
+									class="action-btn action-btn--delete"
+									(click)="openDeleteLinkDialog(link, $event)"
+									title="Delete">
+									<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+										<path
+											d="M2 3h8M5 3V2h2v1M4 3v7h4V3"
+											stroke="#dc2626"
+											stroke-width="1.4"
+											stroke-linejoin="round"
+											stroke-linecap="round" />
+									</svg>
+								</button>
 							</div>
 						}
 					</div>
+				</ng-template>
+				@if (linksLoading) {
+					<div class="links-section-header">
+						<span class="links-section-title">{{ PORTAL_SECTION_SHARED }}</span>
+					</div>
+					<ng-container *ngTemplateOutlet="skeletonGrid" />
+					<div class="links-divider"></div>
+					<div class="links-section-header">
+						<span class="links-section-title">{{ PORTAL_SECTION_MY_LINKS }}</span>
+					</div>
+					<ng-container *ngTemplateOutlet="skeletonGrid" />
+				} @else {
+					<!-- Shared section — always visible; shows empty state when no links match -->
+					<div class="links-section-header">
+						<span class="links-section-title">{{ PORTAL_SECTION_SHARED }}</span>
+						@if (sharedFilteredLinks.length > 0) {
+							<span class="links-section-meta"
+								>{{ sharedFilteredLinks.length }} {{ PORTAL_SECTION_SHARED_SUFFIX }}</span
+							>
+						}
+					</div>
+					@if (sharedFilteredLinks.length === 0) {
+						<div class="links-empty links-empty--section">
+							<span class="material-symbols-outlined empty-icon">link</span>
+							<p>{{ PORTAL_SECTION_SHARED_EMPTY }}</p>
+						</div>
+					} @else {
+						<div class="links-grid">
+							@for (link of sharedFilteredLinks; track link._id) {
+								<ng-container *ngTemplateOutlet="linkCard; context: {$implicit: link, showActions: isAdmin}" />
+							}
+						</div>
+					}
+
+					<div class="links-divider"></div>
+
+					<!-- My Links section — always visible; shows empty state + add button when no links match -->
+					<div class="links-section-header">
+						<span class="links-section-title">{{ PORTAL_SECTION_MY_LINKS }}</span>
+						@if (personalFilteredLinks.length > 0) {
+							<span class="links-section-meta"
+								>{{ personalFilteredLinks.length }} {{ PORTAL_SECTION_MY_LINKS_SUFFIX }}</span
+							>
+						}
+					</div>
+					@if (personalFilteredLinks.length === 0) {
+						<div class="links-empty links-empty--section">
+							<span class="material-symbols-outlined empty-icon">link</span>
+							<p>{{ PORTAL_SECTION_MY_LINKS_EMPTY }}</p>
+							<button class="add-link-button" (click)="openAddLinkDialog()">
+								<span class="material-symbols-outlined">add</span>
+								Add Link
+							</button>
+						</div>
+					} @else {
+						<div class="links-grid">
+							@for (link of personalFilteredLinks; track link._id) {
+								<ng-container *ngTemplateOutlet="linkCard; context: {$implicit: link, showActions: true}" />
+							}
+						</div>
+					}
 				}
 			}
 		</div>
@@ -275,26 +340,16 @@
 				placeholder="e.g. Study, Tools, Dev"
 				[(ngModel)]="categoryForm.name" />
 		</div>
-		<div class="form-field">
-			<label class="form-label">Color</label>
-			<div class="color-row">
-				<input type="color" [(ngModel)]="categoryForm.color" class="color-picker" />
-				<span class="color-preview" [style.background]="categoryForm.color"></span>
-				<span class="color-hex">{{ categoryForm.color }}</span>
-			</div>
-		</div>
-		@if (editingCategory) {
-			<div class="danger-zone">
-				<button
-					class="delete-category-button"
-					(click)="openDeleteCategoryDialog(editingCategory, $event)">
-					Delete this category
-				</button>
-			</div>
-		}
 	</div>
 
 	<ng-template pTemplate="footer">
+		@if (editingCategory) {
+			<button
+				class="delete-category-button"
+				(click)="openDeleteCategoryDialog(editingCategory, $event)">
+				Delete
+			</button>
+		}
 		<button class="dialog-cancel-button" (click)="closeCategoryDialog()">Cancel</button>
 		<button class="dialog-save-button" (click)="saveCategoryDialog()">Save</button>
 	</ng-template>

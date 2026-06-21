@@ -24,6 +24,7 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { SessionExpiredError } from '../../common/error/session-expired.error';
 import {
 	COMPONENT_DESTROY,
 	DATABASE_DATE_CALCULATOR,
@@ -45,7 +46,6 @@ import {
 	PORTAL_MSG_RESET_CONFIRM,
 	DIALOG_LINK,
 	DIALOG_MULTI_LINK,
-	PORTAL_DEFAULT_CATEGORY_COLOR,
 	PORTAL_MSG_CATEGORY_ADDED,
 	PORTAL_MSG_CATEGORY_DELETE_FAILED_DETAIL,
 	PORTAL_MSG_CATEGORY_DELETED,
@@ -72,12 +72,18 @@ import {
 	PORTAL_MSG_MULTI_LINK_SAVED,
 	PORTAL_MSG_SAVING_LINKS,
 	PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL,
+	PORTAL_SECTION_MY_LINKS,
+	PORTAL_SECTION_MY_LINKS_EMPTY,
+	PORTAL_SECTION_MY_LINKS_SUFFIX,
+	PORTAL_SECTION_SHARED,
+	PORTAL_SECTION_SHARED_EMPTY,
+	PORTAL_SECTION_SHARED_SUFFIX,
 	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
 	TOAST_WARN
 } from '../../common/app.constant';
-import { NewLinkData, PortalCategory, PortalLink, PORTAL_DATE_CALCULATOR_FIELDS } from './portal.model';
+import { NewLinkData, PortalCategory, PortalLink, PORTAL_DATE_CALCULATOR_FIELDS, PORTAL_LINK_CARD_PALETTE } from './portal.model';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
@@ -113,6 +119,12 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly PORTAL_LABEL_CELL_DONE = PORTAL_LABEL_CELL_DONE;
 	protected readonly PORTAL_LABEL_CELL_TODAY = PORTAL_LABEL_CELL_TODAY;
 	protected readonly PORTAL_LABEL_CONFIRMED = PORTAL_LABEL_CONFIRMED;
+	protected readonly PORTAL_SECTION_SHARED = PORTAL_SECTION_SHARED;
+	protected readonly PORTAL_SECTION_MY_LINKS = PORTAL_SECTION_MY_LINKS;
+	protected readonly PORTAL_SECTION_SHARED_SUFFIX = PORTAL_SECTION_SHARED_SUFFIX;
+	protected readonly PORTAL_SECTION_MY_LINKS_SUFFIX = PORTAL_SECTION_MY_LINKS_SUFFIX;
+	protected readonly PORTAL_SECTION_SHARED_EMPTY = PORTAL_SECTION_SHARED_EMPTY;
+	protected readonly PORTAL_SECTION_MY_LINKS_EMPTY = PORTAL_SECTION_MY_LINKS_EMPTY;
 	////////////////////// Below are Date Calculator state fields ////////////////////
 	private chargedCells = new Set<string>();
 	protected originalDateCalculatorRows!: any[];
@@ -131,14 +143,16 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected categories: PortalCategory[] = [];
 	protected faviconFailedIds = new Set<string>();
 	protected selectedCategory = PORTAL_CATEGORY_ALL;
-	protected linkSearch = '';
-	protected linkSearchVisible = false;
 
 	protected showCategoryDialog = false;
-	protected categoryForm = { name: '', color: PORTAL_DEFAULT_CATEGORY_COLOR };
+	protected categoryForm = { name: '' };
 	protected editingCategory: PortalCategory | null = null;
 
 	protected linksLoading = true;
+	protected hoveredLinkId: string | null = null;
+	protected readonly isAdmin = CloudbaseService.userHasAllRights();
+	protected sharedFilteredLinks: PortalLink[] = [];
+	protected personalFilteredLinks: PortalLink[] = [];
 
 	private linksSub?: Subscription;
 	private categoriesSub?: Subscription;
@@ -194,6 +208,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.linksSub = this.databaseService.getUsefulLinks().subscribe({
 				next: (data) => {
 					this.links = data as PortalLink[];
+					this.updateFilteredLinks();
 					this.linksLoading = false;
 					// markForCheck required: OnPush component receives data outside Angular's zone.
 					this.cdr.markForCheck();
@@ -287,7 +302,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Persists the change to the database when called after initialisation.
 	 */
 	protected async updateChargedCells(): Promise<void> {
-		// On init (chargedCellsInitialized === false) skip permission check — this is a read-only state setup
+		// Step 1: Permission gate — skipped on first-run (init is a read-only state hydration, not a user action)
 		if (this.chargedCellsInitialized) {
 			if (
 				!this.dialogService.ensurePermission(
@@ -295,6 +310,8 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 					CloudbaseService.getUserId() ?? ''
 				)
 			) {
+				/* Revert isNextMonth in the next microtask so the toggle button snaps back
+				   without triggering a second updateChargedCells call synchronously. */
 				setTimeout(() => {
 					this.isNextMonth = !this.isNextMonth;
 				});
@@ -302,11 +319,12 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			}
 		}
 
-		// Switching to next-month view resets all charged state since next month has no past days
+		// Step 2: Clear charged state when switching to next month — future days have no past-due cells
 		if (this.isNextMonth) {
 			this.chargedCells.clear();
 		}
 
+		// Step 3: Classify every cell as greyed-out (past day, current month) or uncharged
 		for (let index = 0; index < this.updatedDateCalculatorRows.length; index++) {
 			for (const field of this.fields) {
 				if (this.isNextMonth && this.chargedCellsInitialized) {
@@ -323,6 +341,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			}
 		}
 
+		// Step 4: Refresh counter and persist — skip persist on first call (rows not yet user-modified)
 		this.refreshConfirmedCount();
 		if (this.chargedCellsInitialized) {
 			await this.updateDateCalculatorSingleValue();
@@ -355,7 +374,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected async onValueChange(rowIndex: number, field: string): Promise<void> {
 		const originalValue = this.originalDateCalculatorRows[rowIndex][field].value;
 
-		// Do nothing if the value does not change
+		// Step 1: Early exits — no-op on unchanged value, no permission, or out-of-range input
 		if (this.updatedDateCalculatorRows[rowIndex][field].value == originalValue) return;
 
 		if (
@@ -367,12 +386,13 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			this.updatedDateCalculatorRows[rowIndex][field].value = originalValue;
 			return;
 		}
-		// Reset value if it exceeds the maximum day threshold
+
 		if (Number(this.updatedDateCalculatorRows[rowIndex][field].value) > 31) {
 			this.updatedDateCalculatorRows[rowIndex][field].value = originalValue;
 			return;
 		}
 
+		// Step 2: Enforce minimum row gap — rows alternate between 2-day and 6-day spacing
 		if (rowIndex !== 0) {
 			const previousValue = this.updatedDateCalculatorRows[rowIndex - 1][field].value;
 
@@ -395,15 +415,13 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			}
 		}
 
-		// Convert it to number
+		// Step 3: Commit the new value and cascade to downstream rows in the same column
 		this.updatedDateCalculatorRows[rowIndex][field].value = Number(
 			this.updatedDateCalculatorRows[rowIndex][field].value
 		);
 
-		// Mark it as uncharged
 		this.updatedDateCalculatorRows[rowIndex][field].isCharged = false;
 
-		// Update other values in the same column
 		for (let index = rowIndex; index < this.updatedDateCalculatorRows.length - 1; index++) {
 			if (index == 0 || index == 2) {
 				this.twoDayDiff(index, field);
@@ -412,7 +430,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			}
 		}
 
-		/* Re-evaluate grey background for every cell in this column —
+		/* Step 4: Re-evaluate the grey background for every cell in this column —
 		   cascading may have shifted values above or below currentDay. */
 		for (let i = 0; i < this.updatedDateCalculatorRows.length; i++) {
 			const key = `${i}-${field}`;
@@ -423,6 +441,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			}
 		}
 
+		// Step 5: Persist the updated column to the database
 		await this.updateDateCalculatorSingleValue();
 	}
 
@@ -531,8 +550,12 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * state to the database.
 	 */
 	private async setDateCalculatorDefaults(): Promise<void> {
-		// Default sequence: day 1 → 3 → 9 → 11 → 17 (matches the standard payment schedule)
+		// Step 1: Build the canonical 5-row schedule (day 1 → 3 → 9 → 11 → 17)
 		const values = [1, 3, 9, 11, 17];
+
+		/* Step 2: Reconstruct updatedDateCalculatorRows from originalDateCalculatorRows —
+		   filter to data rows only (the meta row carries isNextMonth, not 'first'),
+		   then stamp all four column values and clear the isCharged flag on every cell. */
 		this.updatedDateCalculatorRows = this.originalDateCalculatorRows
 			.filter((row: any) => 'first' in row)
 			.map((original, index) => ({
@@ -543,6 +566,8 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				third: { value: values[index], isCharged: false },
 				fourth: { value: values[index], isCharged: false }
 			}));
+
+		// Step 3: Sync the confirmed counter and flush to the database
 		this.refreshConfirmedCount();
 		await this.updateDateCalculatorSingleValue();
 	}
@@ -554,9 +579,11 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	private async updateDateCalculatorSingleValue(): Promise<void> {
 		try {
-			/* The metadata row stores only isNextMonth — locate it by content so the
-			   lookup survives watch() returning documents in any order. */
+			/* Step 1: Locate the metadata row by field presence — CloudBase watch() delivers
+			   documents in arbitrary order so positional access (rows[5]) is unreliable. */
 			const metaRow = this.originalDateCalculatorRows.find((row: any) => 'isNextMonth' in row);
+
+			// Step 2: Build the full payload (data rows + updated meta row)
 			const payload = [
 				...this.updatedDateCalculatorRows,
 				{
@@ -565,6 +592,8 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 					isNextMonth: this.isNextMonth
 				}
 			];
+
+			// Step 3: Persist and flash the save indicator on success
 			await this.databaseService.updateDateCalculatorTable(payload);
 			this.triggerSaveIndicator();
 		} catch (error) {
@@ -579,10 +608,17 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Clears any active timeout before restarting so rapid saves do not flash.
 	 */
 	private triggerSaveIndicator(): void {
+		// Step 1: Show the indicator immediately and mark OnPush for re-render
 		this.saveIndicator = true;
 		this.cdr.markForCheck();
+
+		/* Step 2: Cancel any pending hide timeout before scheduling a new one —
+		   without this, rapid saves would queue multiple hides and the indicator
+		   could vanish before the last save's 1 s window expires. */
 		if (this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR])
 			clearTimeout(this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR]);
+
+		// Step 3: Hide the indicator after 1 s and re-render
 		this.saveIndicatorTimeouts[DATABASE_DATE_CALCULATOR] = setTimeout(() => {
 			this.saveIndicator = false;
 			this.cdr.markForCheck();
@@ -591,44 +627,6 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	////////////////////// Below are links handlers ////////////////////////////////////
 
-	/**
-	 * Toggles the link search input visibility.
-	 * Clears the search query when collapsing.
-	 */
-	protected toggleLinkSearch(): void {
-		this.linkSearchVisible = !this.linkSearchVisible;
-		if (!this.linkSearchVisible) this.linkSearch = '';
-	}
-
-	/**
-	 * Collapses the link search input when the user exits the field and the query is empty.
-	 * Skips the collapse when focus moves to the search-toggle icon button so
-	 * that the subsequent click handler can toggle the visibility itself,
-	 * avoiding the blur-then-click race that would reopen a just-closed input.
-	 *
-	 * @param event - The FocusEvent whose relatedTarget identifies where focus went.
-	 */
-	protected onLinkSearchExit(event: FocusEvent): void {
-		const focusTarget = event.relatedTarget as HTMLElement | null;
-		if (focusTarget?.closest('.icon-button')) return;
-		if (!this.linkSearch.trim()) this.linkSearchVisible = false;
-	}
-
-	/**
-	 * Returns the subset of links that match the active category tab and the
-	 * current search string. Used directly by the template as a getter.
-	 *
-	 * @returns The filtered array of link documents.
-	 */
-	protected get filteredLinks(): PortalLink[] {
-		return this.links.filter((link) => {
-			const matchesCategory =
-				this.selectedCategory === PORTAL_CATEGORY_ALL || link.category === this.selectedCategory;
-			const matchesSearch =
-				!this.linkSearch.trim() || link.title.toLowerCase().includes(this.linkSearch.toLowerCase());
-			return matchesCategory && matchesSearch;
-		});
-	}
 
 	/**
 	 * Marks the link as having a failed favicon so the initial-letter fallback is displayed.
@@ -723,9 +721,12 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	private handleLinkSave(formData: NewLinkData, existingLink: PortalLink | null): void {
 		this.openBlockDialog(async () => {
+			// Step 1: Normalise the URL before any read or write (adds https:// if scheme is absent)
 			const finalUrl = Utilities.normalizeUrl(formData.url);
 			try {
 				const domain = Utilities.getDomain(finalUrl);
+
+				// Step 2: Branch on add vs. edit — existingLink is null for new links
 				if (existingLink) {
 					await this.databaseService.updateUsefulLink(
 						existingLink._id,
@@ -752,12 +753,17 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_LINK_SAVED);
 				}
 			} catch (error) {
-				LOG.error(this.className, PORTAL_MSG_SAVE_LINK_FAILED, error as Error);
-				this.dialogService.showToast(
-					TOAST_ERROR,
-					MSG_SAVE_FAILED,
-					PORTAL_MSG_LINK_SAVE_FAILED_DETAIL
-				);
+				if (error instanceof SessionExpiredError) {
+					this.dialogService.handleError(this.dialogComponentContainer, error);
+				} else {
+					// Step 3: Surface a user-facing error toast — do not swallow the failure silently
+					LOG.error(this.className, PORTAL_MSG_SAVE_LINK_FAILED, error as Error);
+					this.dialogService.showToast(
+						TOAST_ERROR,
+						MSG_SAVE_FAILED,
+						PORTAL_MSG_LINK_SAVE_FAILED_DETAIL
+					);
+				}
 			}
 		}, PORTAL_MSG_SAVING_LINK).catch(() => {});
 	}
@@ -771,6 +777,8 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private handleMultiLinkSave(links: NewLinkData[]): void {
 		this.openBlockDialog(async () => {
 			try {
+				/* Step 1: Fan out all writes in parallel — Promise.all rejects at the first failure,
+				   so a partial batch is never silently committed without an error toast. */
 				await Promise.all(
 					links.map((formData) => {
 						const finalUrl = Utilities.normalizeUrl(formData.url);
@@ -784,15 +792,22 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 						});
 					})
 				);
+
+				// Step 2: Confirm all writes succeeded with a single success toast
 				LOG.info(this.className, `${links.length} links saved`);
 				this.dialogService.showToast(SUCCESS, PORTAL_MSG_MULTI_LINK_SAVED);
 			} catch (error) {
-				LOG.error(this.className, PORTAL_MSG_SAVE_LINK_FAILED, error as Error);
-				this.dialogService.showToast(
-					TOAST_ERROR,
-					MSG_SAVE_FAILED,
-					PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL
-				);
+				if (error instanceof SessionExpiredError) {
+					this.dialogService.handleError(this.dialogComponentContainer, error);
+				} else {
+					// Step 3: Surface a user-facing error toast on any failure
+					LOG.error(this.className, PORTAL_MSG_SAVE_LINK_FAILED, error as Error);
+					this.dialogService.showToast(
+						TOAST_ERROR,
+						MSG_SAVE_FAILED,
+						PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL
+					);
+				}
 			}
 		}, PORTAL_MSG_SAVING_LINKS).catch(() => {});
 	}
@@ -815,11 +830,15 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param event - The click event, stopped to prevent the card click from firing.
 	 */
 	protected openDeleteLinkDialog(link: PortalLink, event: Event): void {
+		// Step 1: Prevent the link card click handler from firing underneath the delete button
 		event.stopPropagation();
+
+		// Step 2: Open the confirmation dialog; the delete runs only if the user confirms
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			() => {
+				// Step 3: On confirmation, delete the link and show result toast
 				const domain = Utilities.getDomain(link.url);
 				this.databaseService
 					.removeUsefulLink(link._id, domain)
@@ -852,6 +871,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected selectCategory(categoryId: string): void {
 		this.selectedCategory = this.selectedCategory === categoryId ? PORTAL_CATEGORY_ALL : categoryId;
+		this.updateFilteredLinks();
 	}
 
 	/**
@@ -866,7 +886,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected openAddCategoryDialog(): void {
 		this.editingCategory = null;
-		this.categoryForm = { name: '', color: PORTAL_DEFAULT_CATEGORY_COLOR };
+		this.categoryForm = { name: '' };
 		this.showCategoryDialog = true;
 	}
 
@@ -879,7 +899,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected openEditCategoryDialog(category: PortalCategory, event: Event): void {
 		event.stopPropagation();
 		this.editingCategory = category;
-		this.categoryForm = { name: category.name, color: category.color ?? PORTAL_DEFAULT_CATEGORY_COLOR };
+		this.categoryForm = { name: category.name };
 		this.showCategoryDialog = true;
 	}
 
@@ -889,18 +909,25 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Shows a warning toast when the name field is empty.
 	 */
 	protected saveCategoryDialog(): void {
-		const { name, color } = this.categoryForm;
+		// Step 1: Validate — name is the only required field; warn and abort if blank
+		const { name } = this.categoryForm;
 		if (!name.trim()) {
 			this.dialogService.showToast(TOAST_WARN, PORTAL_MSG_NAME_REQUIRED);
 			return;
 		}
+
+		/* Step 2: Dismiss the inline category dialog before opening the block dialog —
+		   both dialogs use the same ViewContainerRef so they cannot coexist. */
 		this.showCategoryDialog = false;
+
+		// Step 3: Persist inside a block dialog to prevent duplicate submissions
 		this.openBlockDialog(async () => {
 			try {
+				// Step 3.1: Branch on edit vs. add — editingCategory is null for new categories
 				if (this.editingCategory) {
 					await this.databaseService.updateLinkCategory(
 						this.editingCategory._id,
-						{ name: name.trim(), color },
+						{ name: name.trim() },
 						name.trim()
 					);
 					LOG.info(this.className, `Category updated: ${name}`);
@@ -908,21 +935,71 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				} else {
 					await this.databaseService.addLinkCategory({
 						name: name.trim(),
-						color,
 						order: this.categories.length
 					});
 					LOG.info(this.className, `Category added: ${name}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_CATEGORY_ADDED);
 				}
 			} catch (error) {
-				LOG.error(this.className, PORTAL_MSG_SAVE_CATEGORY_FAILED, error as Error);
-				this.dialogService.showToast(
-					TOAST_ERROR,
-					MSG_SAVE_FAILED,
-					PORTAL_MSG_CATEGORY_SAVE_FAILED_DETAIL
-				);
+				if (error instanceof SessionExpiredError) {
+					this.dialogService.handleError(this.dialogComponentContainer, error);
+				} else {
+					// Step 3.2: Surface a user-facing error toast on failure
+					LOG.error(this.className, PORTAL_MSG_SAVE_CATEGORY_FAILED, error as Error);
+					this.dialogService.showToast(
+						TOAST_ERROR,
+						MSG_SAVE_FAILED,
+						PORTAL_MSG_CATEGORY_SAVE_FAILED_DETAIL
+					);
+				}
 			}
 		}, PORTAL_MSG_SAVING_CATEGORY).catch(() => {});
+	}
+
+	// ── Private helpers ───────────────────────────────────────────────────────
+
+	/**
+	 * Partitions `this.links` in a single pass, updating both the shared and personal
+	 * filtered-link caches. Shared links have no `_openid`; personal links belong to the
+	 * signed-in user and are additionally filtered by the active category when one is set.
+	 *
+	 * {@link selectCategory} - Updates both caches whenever the active category changes.
+	 */
+	private updateFilteredLinks(): void {
+		const userId = CloudbaseService.getUserId();
+		const shared: PortalLink[] = [];
+		const personal: PortalLink[] = [];
+		for (const link of this.links) {
+			if (!link._openid) {
+				shared.push(link);
+			} else if (link._openid === userId) {
+				personal.push(link);
+			}
+		}
+		this.sharedFilteredLinks = shared;
+		this.personalFilteredLinks =
+			this.selectedCategory === PORTAL_CATEGORY_ALL
+				? personal
+				: personal.filter(l => l.category === this.selectedCategory);
+	}
+
+	// ── Template helper methods ───────────────────────────────────────────────
+
+	/**
+	 * Gets the background color for a link tile card.
+	 * Hashes the link's domain with djb2 to select a deterministic palette entry,
+	 * so each unique site always renders with the same hue.
+	 *
+	 * @param link - The link document whose tile color is being computed.
+	 * @returns A CSS color string for the tile background.
+	 */
+	protected getLinkCardColor(link: PortalLink): string {
+		const domain = Utilities.getDomain(link.url);
+		let hash = 5381;
+		for (let i = 0; i < domain.length; i++) {
+			hash = ((hash << 5) + hash) ^ domain.charCodeAt(i);
+		}
+		return PORTAL_LINK_CARD_PALETTE[Math.abs(hash) % PORTAL_LINK_CARD_PALETTE.length];
 	}
 
 	/**
@@ -933,6 +1010,13 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected openDeleteCategoryDialog(category: PortalCategory, event: Event): void {
 		event.stopPropagation();
+
+		/* Close the category dialog before opening the confirm dialog.
+		   The confirm dialog is created in the component view; leaving the PrimeNG
+		   modal open would place its backdrop above the confirm overlay, making it
+		   invisible and unclickable. */
+		this.showCategoryDialog = false;
+
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
@@ -942,8 +1026,6 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 					.then(() => {
 						LOG.info(this.className, `Category deleted: ${category.name}`);
 						this.dialogService.showToast(TOAST_INFO, PORTAL_MSG_CATEGORY_DELETED);
-						this.showCategoryDialog = false;
-						// markForCheck required: .then() callback runs outside Angular's zone.
 						this.cdr.markForCheck();
 					})
 					.catch((error: unknown) => {

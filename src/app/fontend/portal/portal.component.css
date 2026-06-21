@@ -507,29 +507,6 @@
 	flex-shrink: 0;
 }
 
-.links-search-input {
-	border: 1.5px solid rgba(163, 230, 53, 0.35);
-	border-radius: 50px;
-	outline: none;
-	background: rgba(255, 255, 255, 0.8);
-	font-size: 12px;
-	color: #1a1a1a;
-	padding: 4px 12px;
-	width: 140px;
-	transition:
-		border-color 0.2s,
-		box-shadow 0.2s;
-}
-
-.links-search-input:focus {
-	border-color: #a3e635;
-	box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.1);
-}
-
-.links-search-input::placeholder {
-	color: rgba(0, 0, 0, 0.3);
-}
-
 .icon-button {
 	display: flex;
 	align-items: center;
@@ -590,155 +567,212 @@
 }
 
 /* ─────────────────────────────────────────
-   Links grid
+   Links section headers (Shared / My Links)
 ───────────────────────────────────────── */
-.links-grid {
+.links-section-header {
 	display: flex;
-	flex-wrap: wrap;
-	align-content: flex-start;
-	gap: 10px;
-	padding-right: 4px;
+	align-items: baseline;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+.links-section-title {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.8px;
+	text-transform: uppercase;
+	color: rgba(0, 0, 0, 0.5);
+}
+
+.links-section-meta {
+	font-size: 10.5px;
+	color: rgba(0, 0, 0, 0.32);
+}
+
+.links-divider {
+	height: 1px;
+	background: rgba(0, 0, 0, 0.07);
+	margin: 18px 0;
 }
 
 /* ─────────────────────────────────────────
-   Link card
+   Links grid
+───────────────────────────────────────── */
+.links-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 10px;
+}
+
+/* ─────────────────────────────────────────
+   Card wrapper (hover scope for actions)
+───────────────────────────────────────── */
+.card-wrapper {
+	position: relative;
+	border-radius: 14px;
+}
+
+/* ─────────────────────────────────────────
+   Link card — colored tile
 ───────────────────────────────────────── */
 .link-card {
-	width: 150px;
-	background: rgba(255, 255, 255, 0.7);
-	border: 1px solid rgba(0, 0, 0, 0.07);
-	border-radius: 12px;
-	padding: 10px;
-	cursor: pointer;
-	transition:
-		box-shadow 0.2s,
-		transform 0.2s;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	height: 130px;
+	padding: 14px;
+	border-radius: 14px;
 	position: relative;
 	overflow: hidden;
+	cursor: pointer;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+	transition:
+		transform 0.16s,
+		box-shadow 0.16s;
 }
 
 .link-card:hover {
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-	transform: translateY(-2px);
+	transform: translateY(-3px);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
-.link-card:hover .link-actions {
-	opacity: 1;
+/* Large ghost favicon — top-right watermark */
+.ghost-icon {
+	position: absolute;
+	top: -10px;
+	right: -8px;
+	width: 88px;
+	height: 88px;
+	opacity: 0.08;
+	filter: brightness(0) invert(1);
+	pointer-events: none;
 }
 
-.link-card-inner {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	height: 100%;
+/* Dark vignette bottom gradient */
+.gradient-overlay {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(160deg, transparent 40%, rgba(0, 0, 0, 0.28) 100%);
+	border-radius: inherit;
+	pointer-events: none;
 }
 
+/* Small favicon — top-left */
 .link-favicon {
-	width: 32px;
-	height: 32px;
+	border-radius: 7px;
+	display: block;
+	position: relative;
+	z-index: 1;
+	flex-shrink: 0;
 	object-fit: contain;
-	border-radius: 6px;
 }
 
 .link-favicon-fallback {
-	width: 32px;
-	height: 32px;
-	border-radius: 6px;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	width: 30px;
+	height: 30px;
+	border-radius: 7px;
+	background: rgba(255, 255, 255, 0.25);
 	color: #fff;
-	font-size: 16px;
+	font-size: 14px;
 	font-weight: 700;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
+	position: relative;
+	z-index: 1;
 }
 
-.link-info {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
+/* Title + domain — bottom of tile */
+.card-text {
+	position: relative;
+	z-index: 1;
 }
 
-.link-title {
-	font-size: 12px;
-	color: #1a1a1a;
-	margin: 0;
-	line-height: 1.35;
-	display: -webkit-box;
-	line-clamp: 2;
-	-webkit-line-clamp: 2;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
-	font-weight: 500;
-}
-
-.link-domain {
-	font-size: 10px;
-	color: rgba(0, 0, 0, 0.38);
+.card-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: white;
+	letter-spacing: -0.2px;
+	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	white-space: nowrap;
+	line-height: 1.2;
+	margin: 0;
 }
 
+.card-domain {
+	font-size: 9.5px;
+	color: rgba(255, 255, 255, 0.55);
+	margin-top: 2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Visit count badge — bottom-right overlay */
 .link-visits-badge {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	align-self: flex-start;
-	font-size: 10px;
-	font-weight: 600;
-	color: rgba(213, 51, 105, 0.75);
-	background: rgba(213, 51, 105, 0.08);
-	border: 1px solid rgba(213, 51, 105, 0.18);
+	position: absolute;
+	bottom: 9px;
+	right: 9px;
+	z-index: 1;
+	font-size: 9px;
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.7);
+	background: rgba(0, 0, 0, 0.25);
 	border-radius: 999px;
-	padding: 1px 7px;
+	padding: 1px 6px;
 	line-height: 1.6;
 }
 
-.link-actions {
+/* ─────────────────────────────────────────
+   Card actions — hover-reveal edit/delete
+───────────────────────────────────────── */
+.card-actions {
+	position: absolute;
+	top: 8px;
+	right: 8px;
 	display: flex;
 	gap: 4px;
+	z-index: 20;
 	opacity: 0;
-	transition: opacity 0.2s;
+	transition: opacity 0.14s;
+	pointer-events: none;
 }
 
-.link-action-button {
+.card-actions.visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.action-btn {
+	width: 27px;
+	height: 27px;
+	background: rgba(255, 255, 255, 0.92);
+	border: none;
+	border-radius: 7px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 24px;
-	height: 24px;
-	border-radius: 6px;
-	border: none;
-	background: rgba(0, 0, 0, 0.06);
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
 	cursor: pointer;
-	color: rgba(0, 0, 0, 0.5);
-	transition:
-		background 0.15s,
-		color 0.15s;
+	transition: background 0.1s;
 }
 
-.link-action-button:hover {
-	background: rgba(0, 0, 0, 0.12);
-	color: #1a1a1a;
-}
-
-.link-action-button.danger:hover {
-	background: rgba(213, 51, 105, 0.12);
-	color: #d53369;
-}
-
-.link-action-button .material-symbols-outlined {
-	font-size: 16px;
+.action-btn:hover {
+	background: white;
 }
 
 /* ─────────────────────────────────────────
    Skeleton
 ───────────────────────────────────────── */
+.links-grid--skeleton {
+	max-height: 130px;
+	overflow: hidden;
+}
+
 .skeleton-card {
-	height: 110px;
+	height: 130px;
 	background: linear-gradient(
 		90deg,
 		rgba(0, 0, 0, 0.06) 25%,
@@ -780,6 +814,17 @@
 .links-empty p {
 	font-size: 13px;
 	margin: 0;
+}
+
+/* Compact variant used inside each section instead of full-height page empty state */
+.links-empty--section {
+	flex: unset;
+	padding: 20px 0;
+	gap: 6px;
+}
+
+.links-empty--section .empty-icon {
+	font-size: 28px;
 }
 
 /* ─────────────────────────────────────────
@@ -1031,40 +1076,6 @@
 	margin-left: 6px;
 }
 
-.color-row {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-}
-
-.color-picker {
-	width: 40px;
-	height: 32px;
-	border: none;
-	border-radius: 8px;
-	cursor: pointer;
-	padding: 0;
-}
-
-.color-preview {
-	width: 32px;
-	height: 32px;
-	border-radius: 8px;
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	flex-shrink: 0;
-}
-
-.color-hex {
-	font-size: 13px;
-	color: rgba(0, 0, 0, 0.5);
-}
-
-.danger-zone {
-	margin-top: 4px;
-	padding-top: 12px;
-	border-top: 1px solid rgba(213, 51, 105, 0.15);
-}
-
 .delete-category-button {
 	background: none;
 	border: 1px solid rgba(213, 51, 105, 0.3);
@@ -1074,6 +1085,7 @@
 	padding: 5px 14px;
 	cursor: pointer;
 	transition: all 0.2s;
+	margin-right: auto;
 }
 
 .delete-category-button:hover {
@@ -1302,10 +1314,6 @@
 		justify-content: flex-end;
 	}
 
-	.links-search-input {
-		width: 120px;
-	}
-
 	.add-link-button {
 		justify-content: center;
 	}
@@ -1319,8 +1327,10 @@
 		width: 100%;
 	}
 
-	.link-actions {
+	/* Touch devices never fire mouseenter — keep actions always reachable on mobile. */
+	.card-actions {
 		opacity: 1;
+		pointer-events: auto;
 	}
 
 	::ng-deep .link-dialog,

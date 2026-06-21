@@ -142,7 +142,7 @@ export abstract class DatabaseService {
 	 */
 	public abstract updateLinkCategory(
 		key: string,
-		updates: Partial<{ name: string; color: string; order: number }>,
+		updates: Partial<{ name: string; order: number }>,
 		name: string
 	): Promise<void>;
 
@@ -416,7 +416,7 @@ export abstract class DatabaseService {
 	 *
 	 * @param category - The category object to add.
 	 */
-	public abstract addLinkCategory(category: { name: string; color: string; order: number }): Promise<void>;
+	public abstract addLinkCategory(category: { name: string; order: number }): Promise<void>;
 
 	/**
 	 * Adds a new quote to the database.

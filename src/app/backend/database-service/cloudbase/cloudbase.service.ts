@@ -75,10 +75,12 @@ import {
 	MILESTONE_DOMAIN_REMINDER,
 	MILESTONE_DOMAIN_DEBT,
 	MILESTONE_DOMAIN_LINK,
-	MILESTONE_DOMAIN_STREAK
+	MILESTONE_DOMAIN_STREAK,
+	CLOUDBASE_ERR_PERMISSION_DENIED
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
+import { SessionExpiredError } from '../../../common/error/session-expired.error';
 
 @Injectable({ providedIn: 'root' })
 export class CloudbaseService extends DatabaseService {
@@ -86,7 +88,7 @@ export class CloudbaseService extends DatabaseService {
 	private database: any;
 	private statId: any;
 	private static userId: string;
-	private static userRole: string;
+	private static userRole: string[];
 	private static userName: string;
 	// '_' is a reserved keyword in the CloudBase SDK used to access its command builder
 	private _!: any;
@@ -195,7 +197,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param userRole - The user role to set.
 	 */
-	public static setUserRole(userRole: string) {
+	public static setUserRole(userRole: string[]) {
 		this.userRole = userRole;
 	}
 
@@ -206,15 +208,6 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public static setUserName(userName: string) {
 		this.userName = userName;
-	}
-
-	/**
-	 * Shorthand reference to the single statistics document.
-	 * All stat reads and writes should go through this getter so the collection
-	 * name and document ID never need to be repeated across methods.
-	 */
-	private get statisticsRef() {
-		return this.database.collection(DATABASE_STATISTICS).doc(this.statId);
 	}
 
 	/**
@@ -232,7 +225,16 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns True if the user is an administrator, otherwise false.
 	 */
 	public static userHasAllRights() {
-		return this.userRole === ROLE_ADMIN;
+		return this.userRole?.some(r => r.includes(ROLE_ADMIN)) ?? false;
+	}
+
+	/**
+	 * Shorthand reference to the single statistics document.
+	 * All stat reads and writes should go through this getter so the collection
+	 * name and document ID never need to be repeated across methods.
+	 */
+	private get statisticsRef() {
+		return this.database.collection(DATABASE_STATISTICS).doc(this.statId);
 	}
 
 	////////////////////// Below are Retrieval methods for database records ////////////////
@@ -277,15 +279,16 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the useful links list.
 	 */
 	public getUsefulLinks(): Observable<any[]> {
-		// Filter to link-type documents only (excludes category docs in the same collection)
+		/* No _openid filter: returns both shared docs (no _openid) and the user's own docs.
+		   Security rules at the database level enforce what each user may read.
+		   The portal component splits the result into Shared / My Links by _openid presence. */
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
 			(docs) =>
 				docs
 					.filter((doc: any) => doc.type !== USEFUL_LINK_TYPE_CATEGORY)
 					.map((doc: any) => ({ ...doc })),
-			true,
-			(col) => col.where({ _openid: CloudbaseService.getUserId() })
+			true
 		);
 	}
 
@@ -295,15 +298,16 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the link categories list.
 	 */
 	public getLinkCategories(): Observable<any[]> {
-		// Filter to category-type documents only (shares collection with links)
+		/* No _openid filter: a user-created category may be saved without an explicit _openid
+		   (addNewRecordToDB omits it for non-admin users). The database security rules
+		   already scope the result to what the current user may read. */
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
 			(docs) =>
 				docs
 					.filter((doc: any) => doc.type === USEFUL_LINK_TYPE_CATEGORY)
 					.map((doc: any) => ({ ...doc })),
-			true,
-			(col) => col.where({ _openid: CloudbaseService.getUserId() })
+			true
 		);
 	}
 
@@ -316,10 +320,13 @@ export class CloudbaseService extends DatabaseService {
 		return this.watchCollection(
 			DATABASE_QUOTES,
 			(docs) => {
+				// Step 1: Remap CloudBase _id → key so templates can trackBy without touching private fields
 				const quotes = docs.map((doc: any) => {
 					const { _id, ...rest } = doc;
 					return { key: _id, ...rest };
 				});
+
+				// Step 2: Sort newest-first — CloudBase watch() emits in insertion order, not timestamp order
 				quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
 				return quotes;
 			},
@@ -371,6 +378,7 @@ export class CloudbaseService extends DatabaseService {
 						new Observable<MovieItemVO[]>((observer) => {
 							const watcher = this.database.collection(DATABASE_MOVIES).watch({
 								onChange: (snapshot: any) => {
+									// Step 1: Map raw CloudBase docs to typed MovieItemVO instances
 									const movies = snapshot.docs.map((doc: any) => {
 										const movieItemVO = new MovieItemVO(doc.title, Number(doc.year));
 										movieItemVO.setMovieKey(doc._id);
@@ -389,13 +397,14 @@ export class CloudbaseService extends DatabaseService {
 										return movieItemVO;
 									});
 
+									// Step 2: Sort by release date — watcher emits in insertion order
 									movies.sort((a: MovieItemVO, b: MovieItemVO) =>
 										a
 											.getMovieFirstReleaseDate()
 											.localeCompare(b.getMovieFirstReleaseDate())
 									);
 
-									// Resolve any Cloud IDs to signed temp URLs before emitting to the component
+									// Step 3: Resolve cloud:// file IDs to signed temp URLs before emitting
 									this.resolveMovieCoverUrls(movies)
 										.then((resolvedMovies) => observer.next(resolvedMovies))
 										.catch((err) => {
@@ -653,7 +662,7 @@ export class CloudbaseService extends DatabaseService {
 						.collection(DATABASE_DATE_CALCULATOR)
 						.where(this.buildWhereClause(_id))
 						.update(rest);
-					if (result.code) throw new Error(result.message);
+					this.throwIfCloudbaseError(result);
 				})
 			);
 			LOG.info(this.className, 'Date calculator has been updated');
@@ -696,7 +705,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateLinkCategory(
 		entryKey: string,
-		updates: Partial<{ name: string; color: string; order: number }>,
+		updates: Partial<{ name: string; order: number }>,
 		name: string
 	): Promise<void> {
 		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, entryKey, { ...updates });
@@ -739,6 +748,8 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
 		try {
+			/* Step 1: Fetch the current rate — must read before write so we can detect
+			   a no-op (same rate) and compute the delta for the search stream log. */
 			// Use .where() so the query satisfies the "doc._openid == auth.uid" security rule.
 			const movieRef = this.database
 				.collection(DATABASE_MOVIES)
@@ -749,15 +760,16 @@ export class CloudbaseService extends DatabaseService {
 				throw new Error(`Movie document not found for key ${movieItemVO.getMovieKey()}`);
 
 			if (oldRate !== movieItemVO.getMovieRate()) {
+				// Step 2: Persist the new rate only when it has actually changed
 				const result = await movieRef.update({
 					rate: movieItemVO.getMovieRate()
 				});
 
 				/* CloudBase returns a non-empty result.code when the operation failed
 				   (e.g. permission denied, document not found). */
-				if (result.code) throw new Error(result.message);
+				this.throwIfCloudbaseError(result);
 
-				// Fire-and-forget: record this rate update in stats for Recent Activity.
+				// Step 3: Record the change in the activity log and push a diff message to the search stream
 				this.appendToActivityLog({
 					source: ACTIVITY_SOURCE_MOVIE,
 					type: ACTIVITY_TYPE_RATE_UPDATED,
@@ -805,7 +817,7 @@ export class CloudbaseService extends DatabaseService {
 				.collection(DATABASE_MOVIES)
 				.where(this.buildWhereClause(movieKey))
 				.update({ genre: newGenre });
-			if (movieRes.code) throw new Error(movieRes.message);
+			this.throwIfCloudbaseError(movieRes);
 			LOG.info(this.className, `Movie genre has been updated`);
 
 			// Step 2 : Update movie statistics
@@ -813,7 +825,7 @@ export class CloudbaseService extends DatabaseService {
 				[`genre.${oldGenre}`]: this._.inc(-1),
 				[`genre.${newGenre}`]: this._.inc(1)
 			});
-			if (statRes.code) throw new Error(statRes.message);
+			this.throwIfCloudbaseError(statRes);
 			LOG.info(this.className, `Movie statistics have been updated`);
 
 			this.appendToActivityLog({
@@ -843,7 +855,7 @@ export class CloudbaseService extends DatabaseService {
 				.collection(DATABASE_MOVIES)
 				.where(this.buildWhereClause(movieKey))
 				.update({ isFavourite });
-			if (movieRes.code) throw new Error(movieRes.message);
+			this.throwIfCloudbaseError(movieRes);
 			LOG.info(this.className, `Movie favourite tag has been updated`);
 
 			// Step 2 : Update movie statistics
@@ -854,7 +866,7 @@ export class CloudbaseService extends DatabaseService {
 				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
 			}
 			const statRes = await this.statisticsRef.update(updatedData);
-			if (statRes.code) throw new Error(statRes.message);
+			this.throwIfCloudbaseError(statRes);
 			LOG.info(this.className, `Movie statistics have been updated`);
 
 			this.appendToActivityLog({
@@ -1063,7 +1075,7 @@ export class CloudbaseService extends DatabaseService {
 		if (!this.statId) return;
 		try {
 			const result = await this.statisticsRef.update(fields);
-			if (result.code) throw new Error(result.message ?? 'Failed to update statistics collection');
+			this.throwIfCloudbaseError(result, 'Failed to update statistics collection');
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating statistics fields', error as Error);
 		}
@@ -1083,7 +1095,7 @@ export class CloudbaseService extends DatabaseService {
 				.collection(DATABASE_STATISTICS)
 				.where(this.getUserStatsFilter())
 				.update(fields);
-			if (result.code) throw new Error(result.message ?? 'Failed to update user stats document');
+			this.throwIfCloudbaseError(result, 'Failed to update user stats document');
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating user stats fields', error as Error);
 		}
@@ -1118,7 +1130,7 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(entryKey))
 				.update(fields);
 			if (result.updated === 0) throw new Error(ERROR_NO_DOCUMENT_UPDATED);
-			else if (result.code) throw new Error(result.message);
+			else this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `Record on ${tableName} has been updated`);
 		} catch (error) {
 			LOG.error(this.className, `Error while updating ${tableName}`, error as Error);
@@ -1150,11 +1162,22 @@ export class CloudbaseService extends DatabaseService {
 	 * @param name - The category name, recorded in the activity log.
 	 */
 	public async removeLinkCategory(key: string, name: string): Promise<void> {
-		await this.removeRecordFromDB(DATABASE_USEFUL_LINKS, {
-			entryKey: key,
-			type: ACTIVITY_TYPE_CATEGORY_DELETED,
-			domain: name
-		});
+		try {
+			/* Delete by _id only — categories created before the _openid fix have no _openid field,
+			   so the standard buildWhereClause (which adds _openid for non-admin users) would
+			   match zero rows and silently skip the delete. doc(key).remove() avoids that. */
+			const result = await this.database.collection(DATABASE_USEFUL_LINKS).doc(key).remove();
+			this.throwIfCloudbaseError(result);
+			LOG.info(this.className, `Record has been removed from ${DATABASE_USEFUL_LINKS}`);
+			this.appendToActivityLog({
+				source: ACTIVITY_SOURCE_LINK,
+				domain: name,
+				type: ACTIVITY_TYPE_CATEGORY_DELETED
+			}).catch(() => {});
+		} catch (error) {
+			LOG.error(this.className, `Error while removing a record from ${DATABASE_USEFUL_LINKS}`);
+			throw error;
+		}
 	}
 
 	/**
@@ -1198,7 +1221,7 @@ export class CloudbaseService extends DatabaseService {
 				.collection(DATABASE_MOVIES)
 				.where(this.buildWhereClause(movieItemVO.getMovieKey()))
 				.remove();
-			if (removeRes.code) throw new Error(removeRes.message);
+			this.throwIfCloudbaseError(removeRes);
 
 			LOG.info(this.className, `Movie document removed for ${movieItemVO.getMovieName()}`);
 
@@ -1233,7 +1256,7 @@ export class CloudbaseService extends DatabaseService {
 			}
 
 			const statRes = await this.statisticsRef.update(updatedData);
-			if (statRes.code) throw new Error(statRes.message);
+			this.throwIfCloudbaseError(statRes);
 
 			// Append to activity log so multiple deletes are all visible in Recent Activity
 			this.appendToActivityLog({
@@ -1344,7 +1367,7 @@ export class CloudbaseService extends DatabaseService {
 				.collection(tableName)
 				.where(this.buildWhereClause(newRecord.entryKey))
 				.remove();
-			if (result.code) throw new Error(result.message);
+			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `Record has been removed from ${tableName}`);
 			this.appendToActivityLog({
 				...this.getRecentActivitySubtitle(tableName, newRecord),
@@ -1395,7 +1418,11 @@ export class CloudbaseService extends DatabaseService {
 		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, 1)
 			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_LINKS, MILESTONE_DOMAIN_LINK))
 			.catch(() => {});
-		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, { type: USEFUL_LINK_TYPE_LINK, ...link });
+		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, {
+			_openid: CloudbaseService.getUserId(),
+			type: USEFUL_LINK_TYPE_LINK,
+			...link
+		});
 	}
 
 	/**
@@ -1403,8 +1430,12 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param category - The category object to add.
 	 */
-	public async addLinkCategory(category: { name: string; color: string; order: number }): Promise<void> {
-		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, { type: USEFUL_LINK_TYPE_CATEGORY, ...category });
+	public async addLinkCategory(category: { name: string; order: number }): Promise<void> {
+		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, {
+			_openid: CloudbaseService.getUserId(),
+			type: USEFUL_LINK_TYPE_CATEGORY,
+			...category
+		});
 	}
 
 	/**
@@ -1463,9 +1494,7 @@ export class CloudbaseService extends DatabaseService {
 				description: movieItemVO.getDescription(),
 				actors: movieItemVO.getActors()
 			});
-			if (addMovieRes.code) {
-				throw new Error(addMovieRes.message);
-			}
+			this.throwIfCloudbaseError(addMovieRes);
 
 			// Step 2 : Add history entry
 			await this.addNewHistoryEntry(HISTORY_STATUS_ADDED, movieItemVO);
@@ -1480,7 +1509,7 @@ export class CloudbaseService extends DatabaseService {
 			}
 
 			const statRes = await this.statisticsRef.update(updatedData);
-			if (statRes.code) throw new Error(statRes.message);
+			this.throwIfCloudbaseError(statRes);
 
 			// Append to activity log so multiple adds are all visible in Recent Activity
 			this.appendToActivityLog({
@@ -1516,6 +1545,7 @@ export class CloudbaseService extends DatabaseService {
 			   and in the statistics update below (no need to parse it back from the string). */
 			const timestamp = Utilities.getCurrentFormattedTime(true);
 			if (movieItemVO) {
+				// Step 1 (movie path): Write the history doc with full movie metadata
 				const result = await this.database.collection(DATABASE_HISTORY).add({
 					...userId,
 					id: movieItemVO.getMovieId(),
@@ -1524,12 +1554,12 @@ export class CloudbaseService extends DatabaseService {
 				});
 				/* CloudBase returns a non-empty result.code when the operation failed
 				   (e.g. permission denied, document not found). */
-				if (result.code) throw new Error(result.message);
+				this.throwIfCloudbaseError(result);
 				/* lastAdded / lastDeleted are updated together with genre/totalFilms
 				   in the calling function (single statisticsRef.update call) to avoid
 				   triggering the CloudBase watcher twice per operation. */
 			} else {
-				// No movie VO means this is a search activity — record without movie metadata
+				// Step 1 (search path): Write a lightweight history doc with no movie metadata
 				const result = await this.database.collection(DATABASE_HISTORY).add({
 					...userId,
 					status: status,
@@ -1537,8 +1567,9 @@ export class CloudbaseService extends DatabaseService {
 				});
 				/* CloudBase returns a non-empty result.code when the operation failed
 				   (e.g. permission denied, document not found). */
-				if (result.code) throw new Error(result.message);
+				this.throwIfCloudbaseError(result);
 
+				// Step 2 (search path): Also append a search activity entry — callers for movie adds/removes do this themselves
 				this.appendToActivityLog({
 					source: ACTIVITY_SOURCE_MOVIE,
 					type: SEARCH
@@ -1558,7 +1589,9 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async addNewRecordToReminder(newRecord: any): Promise<void> {
 		this.updateUserStatCount(STATS_FIELD_TOTAL_REMINDERS, 1)
-			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER))
+			.then(() =>
+				this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER)
+			)
 			.catch(() => {});
 		return this.addNewRecordToDB(DATABASE_REMINDER, newRecord);
 	}
@@ -1596,13 +1629,18 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async addPushSubscription(subscription: PushSubscriptionJSON): Promise<void> {
 		try {
+			/* Step 1: Delete any existing subscription first — a user can only hold one active
+			   subscription record. Without this, repeated calls would accumulate stale rows
+			   pointing to old browser endpoints that the push server would then fail to reach. */
 			await this.deleteExistingSubscription();
+
+			// Step 2: Write the new subscription document
 			const result = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).add({
 				endpoint: subscription.endpoint,
 				keys: subscription.keys,
 				createdAt: Utilities.getCurrentFormattedTime(true)
 			});
-			if (result.code) throw new Error(result.message);
+			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `Push subscription saved`);
 		} catch (error: unknown) {
 			LOG.error(this.className, `Error saving push subscription`, error as Error);
@@ -1626,16 +1664,20 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	private async addNewRecordToDB(tableName: string, newRecord: any): Promise<void> {
 		try {
+			/* Step 1: Inject _openid only for admin users — non-admin users let CloudBase set it
+			   automatically from auth context. Manually overriding for admins allows inserting
+			   records on behalf of another user without breaking ownership queries. */
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 			const result = await this.database.collection(tableName).add({
 				...userId,
 				...newRecord
 			});
-			if (result.code) throw new Error(result.message);
+			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `${tableName} has been updated`);
 
-			/* Links and categories share the same collection — detect a category add by
-			   checking the type is not a plain link, so the activity log gets the right discriminator. */
+			/* Step 2: Derive the correct activity type before enqueueing the log entry.
+			   Links and categories share the same collection — detect a category add by checking
+			   the type field, so the activity log gets the right discriminator instead of ADDED. */
 			const isCategoryAdd =
 				tableName === DATABASE_USEFUL_LINKS && newRecord.type !== USEFUL_LINK_TYPE_LINK;
 			this.appendToActivityLog({
@@ -1718,7 +1760,7 @@ export class CloudbaseService extends DatabaseService {
 				.collection(DATABASE_USEFUL_LINKS)
 				.where({ _id: key, _openid: CloudbaseService.getUserId() })
 				.update({ visitCount: currentCount + 1, lastVisited: new Date().toISOString() });
-			if (result.code) throw new Error(result.message);
+			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, 'Link visit count has been incremented');
 		} catch (error) {
 			LOG.error(this.className, `Error while incrementing visit count for link ${key}`, error as Error);
@@ -1778,9 +1820,12 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
 		try {
-			// Convert Blob to a raw base64 string (no data-URL prefix) for the function payload
+			/* Step 1: Convert the Blob to a raw base64 string.
+			   The cloud function cannot receive a binary Blob over HTTP — base64 is the
+			   only format that survives JSON serialisation without data loss. */
 			const base64 = await this.blobToBase64(coverImage);
 
+			// Step 2: Invoke the cloud function to upload the image to CloudBase Storage server-side
 			const result: any = await this.cloudbase.callFunction({
 				name: 'uploadCoverImage',
 				data: {
@@ -1796,7 +1841,7 @@ export class CloudbaseService extends DatabaseService {
 
 			LOG.info(this.className, `Movie cover image uploaded successfully for ${movieName}`);
 
-			// Return the cloud:// file ID; the display layer resolves it to a temp URL
+			// Step 3: Return the cloud:// file ID — callers resolve it to a signed temp URL via resolveMovieCoverUrls()
 			return result.result.fileID;
 		} catch (error: any) {
 			LOG.error(
@@ -1835,17 +1880,26 @@ export class CloudbaseService extends DatabaseService {
 		const timestamp = Utilities.getCurrentFormattedTime(true);
 		const entry = { ...activity, timestamp };
 		try {
+			/* Step 1: Fetch both documents in parallel — the shared stats doc (for the activity array)
+			   and the per-user stats doc (for the streak). Parallel fetch avoids two sequential round-trips. */
 			const [generalDoc, userStatsRes] = await Promise.all([
 				this.database.collection(DATABASE_STATISTICS).doc(this.statId).get(),
 				this.database.collection(DATABASE_STATISTICS).where(this.getUserStatsFilter()).get()
 			]);
+
+			/* Step 2: Prepend the new entry and trim to the cap.
+			   CloudBase may return the array as an object (numeric keys) after update() merges it — hence
+			   the Object.values() fallback to re-hydrate a true array before slicing. */
 			const raw = generalDoc.data?.[0]?.[STATS_FIELD_RECENT_ACTIVITIES];
 			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
 			// Prepend the new item and trim to the cap so CloudBase storage stays bounded.
 			const updated = [entry, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
 			const result = await this.statisticsRef.update({ [STATS_FIELD_RECENT_ACTIVITIES]: updated });
-			if (result.code) throw new Error(result.message ?? 'Recent activity data update failed');
-			// Compute and persist the updated streak to the per-user stats doc (source of truth).
+			this.throwIfCloudbaseError(result, 'Recent activity data update failed');
+
+			/* Step 3: Compute the new streak value.
+			   If the stored date is today, the streak is unchanged (multiple activities on the same day count once).
+			   If it was yesterday, the streak extends. Otherwise a break is detected and the streak resets to 1. */
 			const today = Utilities.formatDateForStorage(new Date());
 			const userDoc = userStatsRes.data?.[0];
 			const storedStreak = (userDoc?.[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
@@ -1858,6 +1912,8 @@ export class CloudbaseService extends DatabaseService {
 				yesterday.setDate(yesterday.getDate() - 1);
 				newStreak = storedDate === Utilities.formatDateForStorage(yesterday) ? storedStreak + 1 : 1;
 			}
+
+			// Step 4: Persist the streak and check whether a streak milestone was just hit
 			this.database
 				.collection(DATABASE_STATISTICS)
 				.where(this.getUserStatsFilter())
@@ -1916,6 +1972,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise that resolves when the seed write completes.
 	 */
 	public async seedUserStats(): Promise<void> {
+		// Step 1: Fetch live counts from all collections in parallel to avoid sequential round-trips
 		const userId = CloudbaseService.getUserId();
 		const [films, quotes, recipes, reminders, debts, links] = await Promise.all([
 			this.database.collection(DATABASE_MOVIES).where({ _openid: userId }).get(),
@@ -1928,6 +1985,11 @@ export class CloudbaseService extends DatabaseService {
 				.where({ _openid: userId, type: USEFUL_LINK_TYPE_LINK })
 				.get()
 		]);
+
+		/* Step 2: Build the seed payload.
+		   Links are filtered to USEFUL_LINK_TYPE_LINK only (categories share the collection).
+		   MILESTONE_KEY_ACCOUNT_CREATED is seeded with today so the account-creation milestone
+		   is visible immediately without waiting for the first stat increment. */
 		const payload = {
 			_openid: userId,
 			[STATS_FIELD_IS_USER_STATS]: true,
@@ -1939,11 +2001,15 @@ export class CloudbaseService extends DatabaseService {
 			[STATS_FIELD_TOTAL_LINKS]: links.data?.length ?? 0,
 			[STATS_FIELD_ACTIVITY_STREAK]: 0,
 			[STATS_FIELD_ACTIVITY_STREAK_DATE]: '',
-			[STATS_FIELD_MILESTONES]: { [MILESTONE_KEY_ACCOUNT_CREATED]: Utilities.formatDateForStorage(new Date()) }
+			[STATS_FIELD_MILESTONES]: {
+				[MILESTONE_KEY_ACCOUNT_CREATED]: Utilities.formatDateForStorage(new Date())
+			}
 		};
+
+		// Step 3: Write the document; fail loudly so the caller knows seeding did not complete
 		try {
 			const result = await this.database.collection(DATABASE_STATISTICS).add(payload);
-			if (result.code) throw new Error(result.message ?? 'Seed user stats failed');
+			this.throwIfCloudbaseError(result, 'Seed user stats failed');
 			LOG.info(this.className, 'User stats seeded successfully');
 		} catch (error) {
 			LOG.error(this.className, 'Error while seeding user stats', error as Error);
@@ -2045,7 +2111,10 @@ export class CloudbaseService extends DatabaseService {
 	 * @param domain - The milestone domain prefix (e.g. MILESTONE_DOMAIN_FILM).
 	 */
 	private async checkAndWriteDomainMilestone(field: string, domain: string): Promise<void> {
-		const res = await this.database.collection(DATABASE_STATISTICS).where(this.getUserStatsFilter()).get();
+		const res = await this.database
+			.collection(DATABASE_STATISTICS)
+			.where(this.getUserStatsFilter())
+			.get();
 		const doc = res?.data?.[0];
 		if (!doc) return;
 		const count = (doc[field] as number) ?? 0;
@@ -2063,14 +2132,33 @@ export class CloudbaseService extends DatabaseService {
 	 * @param doc - Pre-loaded per-user stats document.
 	 */
 	private async checkAndWriteCountMilestone(domain: string, count: number, doc: any): Promise<void> {
+		// Step 1: Derive the milestone key — returns null when count is not a milestone threshold
 		const key = Utilities.getMilestoneKey(domain, count);
 		if (!key || !doc) return;
+
+		/* Step 2: Guard against duplicate writes — if the key already exists in the milestones map,
+		   the milestone was already reached on a prior action and must not be overwritten. */
 		const milestones = (doc[STATS_FIELD_MILESTONES] as Record<string, string>) ?? {};
 		if (milestones[key]) return;
+
+		// Step 3: Write only the new milestone key using dot-notation to avoid overwriting sibling keys
 		await this.database
 			.collection(DATABASE_STATISTICS)
 			.where(this.getUserStatsFilter())
 			.update({ [`${STATS_FIELD_MILESTONES}.${key}`]: Utilities.formatDateForStorage(new Date()) });
+	}
+
+	/**
+	 * Throws a typed error when a CloudBase result object signals a failure.
+	 * Maps permission_denied to SessionExpiredError so callers get the correct
+	 * retry dialog; all other error codes produce a generic Error.
+	 *
+	 * @param result - The CloudBase SDK result object to inspect.
+	 * @param fallback - Fallback message used when result.message is absent.
+	 */
+	private throwIfCloudbaseError(result: { code?: string; message?: string }, fallback?: string): void {
+		if (result.code === CLOUDBASE_ERR_PERMISSION_DENIED) throw new SessionExpiredError();
+		if (result.code) throw new Error(result.message ?? fallback);
 	}
 
 	/**

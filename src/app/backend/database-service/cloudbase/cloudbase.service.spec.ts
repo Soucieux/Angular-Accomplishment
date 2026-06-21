@@ -42,17 +42,33 @@ describe('CloudbaseService', () => {
 	// ── Role and permissions ───────────────────────────────────────────────────
 
 	describe('userHasAllRights', () => {
-		it('returns true when role is ROLE_ADMIN', () => {
+		it('returns true when role array contains ROLE_ADMIN', () => {
 			// Arrange / Act
-			CloudbaseService.setUserRole(ROLE_ADMIN);
+			CloudbaseService.setUserRole([ROLE_ADMIN]);
 
 			// Assert
 			expect(CloudbaseService.userHasAllRights()).toBeTrue();
 		});
 
-		it('returns false when role is not ROLE_ADMIN', () => {
+		it('returns true when role array contains ROLE_ADMIN alongside other roles', () => {
 			// Arrange / Act
-			CloudbaseService.setUserRole('viewer');
+			CloudbaseService.setUserRole(['internaluser', ROLE_ADMIN]);
+
+			// Assert
+			expect(CloudbaseService.userHasAllRights()).toBeTrue();
+		});
+
+		it('returns false when role array does not contain ROLE_ADMIN', () => {
+			// Arrange / Act
+			CloudbaseService.setUserRole(['viewer']);
+
+			// Assert
+			expect(CloudbaseService.userHasAllRights()).toBeFalse();
+		});
+
+		it('returns false when role array is empty', () => {
+			// Arrange / Act
+			CloudbaseService.setUserRole([]);
 
 			// Assert
 			expect(CloudbaseService.userHasAllRights()).toBeFalse();

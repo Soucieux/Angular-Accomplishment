@@ -1,5 +1,5 @@
-export class wrongVerificationCodeError extends Error {
+export class WrongVerificationCodeError extends Error {
 	constructor() {
-		super(`Verification code is incorrect or expired`);
+		super('Verification code is incorrect or expired');
 	}
 }

@@ -297,7 +297,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		const raw = this.customInputState[entryKey] ?? '';
 		const amount = parseFloat(raw);
 		if (amount > 0) {
-			this.payDebt(entryKey, amount).catch(() => {});
+			this.payDebt(entryKey, amount);
 		}
 		this.cancelCustomPay(entryKey);
 	}
@@ -331,7 +331,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		if (this.isPromptedReset[entryKey]) {
 			clearTimeout(this.promptedResetTimers[entryKey]);
 			this.isPromptedReset = { ...this.isPromptedReset, [entryKey]: false };
-			this.resetDebt(entryKey).catch(() => {});
+			this.resetDebt(entryKey);
 		} else {
 			this.isPromptedReset = { ...this.isPromptedReset, [entryKey]: true };
 			this.promptedResetTimers[entryKey] = setTimeout(() => {
@@ -358,7 +358,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		if (this.isPromptedDelete[entryKey]) {
 			clearTimeout(this.promptedDeleteTimers[entryKey]);
 			this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: false };
-			this.removeDebt(entryKey).catch(() => {});
+			this.removeDebt(entryKey);
 		} else {
 			this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: true };
 			this.promptedDeleteTimers[entryKey] = setTimeout(() => {
@@ -405,7 +405,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'confirm',
-			() => this.deletePaymentEntry(item.key, entry.index).catch(() => {}),
+			() => this.deletePaymentEntry(item.key, entry.index),
 			[
 				DEBT_CONFIRM_DELETE_PAYMENT_MSG,
 				DEBT_CONFIRM_DELETE_PAYMENT_HEADER,
@@ -472,7 +472,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_DEBT,
-			(debtData: NewDebtData) => this.addNewDebt(debtData).catch(() => {}),
+			(debtData: NewDebtData) => this.addNewDebt(debtData),
 			null
 		);
 	}
@@ -502,7 +502,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_DEBT,
-			(data: NewDebtData) => this.setDebtForNewCycle(entryKey, data).catch(() => {}),
+			(data: NewDebtData) => this.setDebtForNewCycle(entryKey, data),
 			prefillData
 		);
 	}
@@ -565,16 +565,23 @@ export class DebtComponent implements OnInit, OnDestroy {
 		const item = this.findUpdatedItem(entryKey);
 		const original = this.findOriginalItem(entryKey);
 		if (!item || !original) return;
+
+		// Step 1: Resolve the target amount and guard against a no-op write
+		/* original.original is the true ceiling; item.original is the in-session fallback for
+		   records that arrived before the field was written to the server. */
 		const originalAmount: number = original.original ?? item.original ?? 0;
 
 		// Guard: skip DB write when debt is already at original and no payments exist
 		const hasPayments = Object.keys(this.paymentsData[entryKey] ?? {}).length > 0;
 		if (!hasPayments && (item.debt ?? 0) === originalAmount) return;
 
+		// Step 2: Snapshot rollback targets before the block dialog opens — subscription callbacks may replace arrays mid-await
 		const newPaid = this.isDebtFullySettled(originalAmount);
 		const previousDebt = item.debt ?? 0;
 		const previousPaid = item.paid ?? false;
 		const previousPayments = { ...(this.paymentsData[entryKey] ?? {}) };
+
+		// Step 3: Apply local mutation, persist to DB, and roll back on failure
 		await this.openBlockDialog(async () => {
 			this.activeWriteKeys.add(entryKey);
 			item.debt = originalAmount;
@@ -596,6 +603,8 @@ export class DebtComponent implements OnInit, OnDestroy {
 				this.activeWriteKeys.delete(entryKey);
 			}
 		}, DEBT_MSG_RESETTING);
+
+		// Step 4: Wipe the in-session payment cache and refresh upcoming stats after the write settles
 		this.paymentsData = { ...this.paymentsData, [entryKey]: {} };
 		this.resyncUpcomingFromLocalData();
 		this.cdr.detectChanges();
@@ -633,15 +642,22 @@ export class DebtComponent implements OnInit, OnDestroy {
 		const updatedItem = this.findUpdatedItem(entryKey);
 		const originalItem = this.findOriginalItem(entryKey);
 		if (!updatedItem || !originalItem) return;
+
+		// Step 1: Capture old and new values before the first await to prevent subscription callbacks from corrupting the comparison
 		const updatedValue = updatedItem[valueKey];
 		const oldValue = originalItem[valueKey];
+
+		// Step 2: Guard the entry against subscription overwrites for the duration of the DB write
 		this.activeWriteKeys.add(entryKey);
 		try {
+			// Step 3: Skip the round-trip when the value has not changed — avoids unnecessary DB writes on toggle flicker
 			if (updatedValue !== oldValue) {
 				await this.databaseService.updateSingleValueForDebtTable(entryKey, valueKey, updatedValue, updatedItem.name);
 				this.triggerSaveIndicator();
 			}
 		} catch (error) {
+			/* Restore the previous value only on a permission error — other errors indicate a server failure
+			   and the local state is still the intended value the user wanted. */
 			if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 				updatedItem[valueKey] = oldValue;
 			}
@@ -708,9 +724,13 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * Called after subscription emits. Fire-and-forget.
 	 */
 	private syncStatistics(): void {
+		/* Debounce via a zero-delay timer so that rapid subscription callbacks (e.g. batch DB writes)
+		   coalesce into one stat update rather than hammering the statistics collection on every emission. */
 		if (this.syncStatTimer !== null) clearTimeout(this.syncStatTimer);
 		this.syncStatTimer = setTimeout(() => {
 			this.syncStatTimer = null;
+
+			// Cap the upcoming list to the activity-log limit — the stats collection has a fixed document size
 			this.databaseService.updateStatisticsFields({
 				[STATS_FIELD_DEBT_UPCOMING]: this.upcomingExpenses.slice(0, STATS_CAP_ACTIVITY_LOG),
 				[STATS_FIELD_TOTAL_DEBTS]: this.upcomingExpenses.length
@@ -758,9 +778,14 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * Clears any active timeout before restarting so rapid saves do not flash.
 	 */
 	private triggerSaveIndicator(): void {
+		// Step 1: Show the indicator immediately and force a paint — the component uses OnPush so explicit detectChanges is required
 		this.saveIndicator = true;
 		this.cdr.detectChanges();
+
+		// Step 2: Cancel any in-flight hide timer so rapid consecutive saves do not race-dismiss the indicator early
 		if (this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA]) clearTimeout(this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA]);
+
+		// Step 3: Schedule the hide after 1 s and trigger another paint when it fires
 		this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA] = setTimeout(() => {
 			this.saveIndicator = false;
 			this.cdr.detectChanges();
@@ -777,10 +802,18 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 */
 	private getCategoryIndexForItem(item: any): number {
 		const name: string = item.name ?? '';
+
+		// Step 1: Compute a polynomial rolling hash over the item name characters
+		/* Multiplier 31 is a standard prime used in Java's String.hashCode — small enough
+		   to limit magnitude growth while spreading character codes across the range.
+		   The bitwise OR 0 truncates to a signed 32-bit integer on every iteration to
+		   prevent the accumulator from exceeding safe integer bounds mid-loop. */
 		let hash = 0;
 		for (let i = 0; i < name.length; i++) {
 			hash = (hash * 31 + name.charCodeAt(i)) | 0;
 		}
+
+		// Step 2: Map the hash to a valid categoryDefs index — Math.abs guards against negative signed-int results
 		return Math.abs(hash) % this.categoryDefs.length;
 	}
 
@@ -868,12 +901,19 @@ export class DebtComponent implements OnInit, OnDestroy {
 	): Record<string, unknown> {
 		const fields: Record<string, unknown> = {};
 		const amountChanged = data.amount !== original.debt;
+
+		// Currency is compared first because the currency symbol affects how all monetary values display
 		if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY])
 			fields[DEBT_VALUE_KEY_CURRENCY] = data.currency;
+
+		/* Payments must be wiped in the same atomic update as the balance change so no orphaned
+		   history entries linger for a balance the user never actually reached. */
 		if (amountChanged) {
 			fields[DEBT_VALUE_KEY_DEBT] = data.amount;
 			fields[DEBT_VALUE_KEY_PAYMENTS] = {};
 		}
+
+		// original ceiling is updated independently — it may differ from the current debt when the user re-uses the dialog without changing the amount
 		if (data.amount !== original.original) fields[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
 		if (original.paid !== newPaid) fields[DEBT_VALUE_KEY_PAID] = newPaid;
 		if (data.dueDate !== original.date) fields[DEBT_VALUE_KEY_DATE] = data.dueDate;
@@ -906,6 +946,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		paid: number;
 		pct: number;
 	}[] {
+		// Step 1: Accumulate owed and original totals per currency — two-pass avoided by mutating in-place here
 		const groups: Record<string, { owed: number; original: number }> = {};
 		for (const item of this.updatedDebtSonataItems ?? []) {
 			const code = this.isCnyCurrency(item) ? 'CNY' : 'CAD';
@@ -913,6 +954,10 @@ export class DebtComponent implements OnInit, OnDestroy {
 			groups[code].owed += item.debt ?? 0;
 			groups[code].original += item.original ?? 0;
 		}
+
+		// Step 2: Derive paid amount and progress percentage per currency group
+		/* paidAmount is clamped to 0 to avoid a negative "paid" value when overpayments push debt below zero.
+		   pct is clamped to 100 so the progress bar never overflows its container. */
 		return Object.entries(groups).map(([code, g]) => {
 			const paidAmount = Math.max(0, g.original - g.owed);
 			const pct = g.original > 0 ? Math.min(100, Math.round((paidAmount / g.original) * 100)) : 0;
@@ -1007,13 +1052,21 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected getDueLabelForItem(item: any): string {
 		const dateStr: string | null | undefined = item.date;
 		if (!dateStr) return DEBT_DUE_LABEL_NONE;
+
+		// Step 1: Resolve the signed day-difference — null means the date string is unparseable
 		const diffDays = Utilities.getDaysUntilNumber(dateStr);
 		if (diffDays === null) return DEBT_DUE_LABEL_NONE;
+
+		// Step 2: Return the most specific short label for near-term dates
 		if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`;
 		if (diffDays === 0) return DEBT_DUE_LABEL_TODAY;
 		if (diffDays === 1) return DEBT_DUE_LABEL_TOMORROW;
 		if (diffDays <= 30) return `${diffDays}d left`;
-		// More than 30 days out — show the full calendar date instead of a relative count
+
+		/* Step 3: More than 30 days out — switch to a full calendar date so the chip does not
+		   show an unwieldy "183d left" string that is hard to read at a glance.
+		   Append 'T00:00' to force local-midnight parsing; omitting the time token causes
+		   Date to interpret the string as UTC, shifting the displayed date by the local timezone offset. */
 		const due = new Date(dateStr + 'T00:00');
 		const m = MONTH_NAMES_SHORT[due.getMonth()];
 		return `${m} ${due.getDate()}, ${due.getFullYear()}`;

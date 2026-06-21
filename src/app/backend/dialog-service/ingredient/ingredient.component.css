@@ -19,7 +19,7 @@
 	display: flex;
 	justify-content: flex-end;
 	gap: 10px;
-	padding: 14px 24px 16px;
+	padding: 12px 24px 16px;
 }
 ::ng-deep .itype-dialog .dialog-cancel-button,
 ::ng-deep .itype-dialog .dialog-save-button {

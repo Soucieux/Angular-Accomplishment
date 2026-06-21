@@ -52,8 +52,131 @@
 			(ngSubmit)="onSubmit()"
 			[class.slide-out-left]="animating === 'out'"
 			[class.slide-in-right]="animating === 'in'">
+			<!-- Forgot Password: Step 1 — email -->
+			@if (isForgotPassword && forgotPasswordStep === 1) {
+				<div class="input-field-container">
+					<p-iftalabel>
+						<input
+							class="input-field"
+							pInputText
+							type="text"
+							id="reset-email"
+							formControlName="email"
+							[invalid]="isInvalid('email')"
+							(keyup.enter)="onSubmit()" />
+						<label for="reset-email">Email</label>
+					</p-iftalabel>
+					@if (formSubmitted && loginForm.get('email')?.hasError('required')) {
+						<p-message severity="error" size="small" variant="simple"
+							>Email is required.</p-message
+						>
+					} @else if (formSubmitted && loginForm.get('email')?.hasError('email')) {
+						<p-message severity="error" size="small" variant="simple"
+							>Enter a valid email address.</p-message
+						>
+					}
+				</div>
+			}
+
+			<!-- Forgot Password: Step 2 — code + new password -->
+			@if (isForgotPassword && forgotPasswordStep === 2) {
+				<div class="input-field-container">
+					<p-iftalabel>
+						<input
+							class="input-field"
+							pInputText
+							type="text"
+							inputmode="numeric"
+							id="reset-code"
+							formControlName="verificationCode"
+							[invalid]="isInvalid('verificationCode')"
+							(keyup.enter)="onSubmit()" />
+						<label for="reset-code">Code</label>
+					</p-iftalabel>
+					@if (isInvalid('verificationCode')) {
+						<p-message severity="error" size="small" variant="simple"
+							>Verification code is required.</p-message
+						>
+					}
+				</div>
+				<div class="input-field-container">
+					<p-iftalabel>
+						<input
+							pInputText
+							type="password"
+							id="reset-password"
+							formControlName="password"
+							[invalid]="isInvalid('password')"
+							(keyup.enter)="onSubmit()" />
+						<label for="reset-password">New password</label>
+					</p-iftalabel>
+					@if (isInvalid('password')) {
+						<p-message severity="error" size="small" variant="simple"
+							>Password is required.</p-message
+						>
+					}
+				</div>
+				@let pc = passwordChecks;
+				<div class="password-requirements">
+					<div
+						class="req-row"
+						[class.req-met]="pc.meetsLength"
+						[class.req-unmet]="formSubmitted && !pc.meetsLength">
+						<span class="material-symbols-outlined req-icon">{{
+							pc.meetsLength ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_LENGTH }}</span>
+					</div>
+					<div
+						class="req-row"
+						[class.req-met]="pc.typesMet"
+						[class.req-unmet]="formSubmitted && !pc.typesMet">
+						<span class="material-symbols-outlined req-icon">{{
+							pc.typesMet ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_TYPES }}</span>
+					</div>
+					<div
+						class="req-row req-row--indented"
+						[class.req-met]="pc.hasUppercase"
+						[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasUppercase">
+						<span class="material-symbols-outlined req-icon">{{
+							pc.hasUppercase ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_UPPERCASE }}</span>
+					</div>
+					<div
+						class="req-row req-row--indented"
+						[class.req-met]="pc.hasLowercase"
+						[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasLowercase">
+						<span class="material-symbols-outlined req-icon">{{
+							pc.hasLowercase ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_LOWERCASE }}</span>
+					</div>
+					<div
+						class="req-row req-row--indented"
+						[class.req-met]="pc.hasDigit"
+						[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasDigit">
+						<span class="material-symbols-outlined req-icon">{{
+							pc.hasDigit ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_DIGIT }}</span>
+					</div>
+					<div
+						class="req-row req-row--indented"
+						[class.req-met]="pc.hasSpecial"
+						[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasSpecial">
+						<span class="material-symbols-outlined req-icon">{{
+							pc.hasSpecial ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_SPECIAL }}</span>
+					</div>
+				</div>
+			}
+
 			<!-- Sign In: Username -->
-			@if (!isSignUp) {
+			@if (!isSignUp && !isForgotPassword) {
 				<div class="input-field-container">
 					<p-iftalabel>
 						<input
@@ -75,7 +198,7 @@
 			}
 
 			<!-- Sign Up: Email + verification code + username -->
-			@if (isSignUp) {
+			@if (isSignUp && !isForgotPassword) {
 				<div class="input-field-container">
 					<p-iftalabel>
 						<input
@@ -107,8 +230,10 @@
 							type="button"
 							class="get-code-button"
 							(click)="getVerificationCodeEmail()"
-							[disabled]="loginForm.get('email')?.value === '' || sendingCode">
-							{{ sendingCode ? LOGIN_LABEL_LOADING : LOGIN_LABEL_GET_CODE }}
+							[disabled]="
+								loginForm.get('email')?.value === '' || sendingCode || codeCountdown > 0
+							">
+							{{ LOGIN_LABEL_GET_CODE }}
 						</button>
 					</div>
 					@if (isInvalid('verificationCode')) {
@@ -117,7 +242,12 @@
 						>
 					}
 					@if (codeSent) {
-						<span class="code-sent-message">Code sent — check your email.</span>
+						<span class="code-sent-message"
+							>{{ LOGIN_MSG_CODE_SENT }}
+							@if (codeCountdown > 0) {
+								<span>({{ codeCountdown }} {{ LOGIN_LABEL_CODE_COUNTDOWN_SUFFIX }})</span>
+							}
+						</span>
 					}
 				</div>
 
@@ -141,38 +271,115 @@
 				</div>
 			}
 
-			<!-- Password (both modes) -->
-			<div class="input-field-container">
-				<p-iftalabel>
-					<input
-						pInputText
-						type="password"
-						id="password"
-						formControlName="password"
-						[invalid]="isInvalid('password')" />
-					<label for="password">Password</label>
-				</p-iftalabel>
-				@if (isInvalid('password')) {
-					<p-message severity="error" size="small" variant="simple"
-						>Password is required.</p-message
-					>
+			<!-- Password (sign-in and sign-up only — forgot-password step 2 has its own field above) -->
+			@if (!isForgotPassword) {
+				<div class="input-field-container">
+					<p-iftalabel>
+						<input
+							pInputText
+							type="password"
+							id="password"
+							formControlName="password"
+							[invalid]="isInvalid('password')" />
+						<label for="password">Password</label>
+					</p-iftalabel>
+					@if (isInvalid('password')) {
+						<p-message severity="error" size="small" variant="simple"
+							>Password is required.</p-message
+						>
+					}
+				</div>
+
+				<!-- Password requirements (Sign Up only) -->
+				@if (isSignUp) {
+					@let pc = passwordChecks;
+					<div class="password-requirements">
+						<div
+							class="req-row"
+							[class.req-met]="pc.meetsLength"
+							[class.req-unmet]="formSubmitted && !pc.meetsLength">
+							<span class="material-symbols-outlined req-icon">{{
+								pc.meetsLength ? 'check_circle' : 'radio_button_unchecked'
+							}}</span>
+							<span>{{ LOGIN_LABEL_PWD_REQ_LENGTH }}</span>
+						</div>
+						<div
+							class="req-row"
+							[class.req-met]="pc.typesMet"
+							[class.req-unmet]="formSubmitted && !pc.typesMet">
+							<span class="material-symbols-outlined req-icon">{{
+								pc.typesMet ? 'check_circle' : 'radio_button_unchecked'
+							}}</span>
+							<span>{{ LOGIN_LABEL_PWD_REQ_TYPES }}</span>
+						</div>
+						<div
+							class="req-row req-row--indented"
+							[class.req-met]="pc.hasUppercase"
+							[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasUppercase">
+							<span class="material-symbols-outlined req-icon">{{
+								pc.hasUppercase ? 'check_circle' : 'radio_button_unchecked'
+							}}</span>
+							<span>{{ LOGIN_LABEL_PWD_REQ_UPPERCASE }}</span>
+						</div>
+						<div
+							class="req-row req-row--indented"
+							[class.req-met]="pc.hasLowercase"
+							[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasLowercase">
+							<span class="material-symbols-outlined req-icon">{{
+								pc.hasLowercase ? 'check_circle' : 'radio_button_unchecked'
+							}}</span>
+							<span>{{ LOGIN_LABEL_PWD_REQ_LOWERCASE }}</span>
+						</div>
+						<div
+							class="req-row req-row--indented"
+							[class.req-met]="pc.hasDigit"
+							[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasDigit">
+							<span class="material-symbols-outlined req-icon">{{
+								pc.hasDigit ? 'check_circle' : 'radio_button_unchecked'
+							}}</span>
+							<span>{{ LOGIN_LABEL_PWD_REQ_DIGIT }}</span>
+						</div>
+						<div
+							class="req-row req-row--indented"
+							[class.req-met]="pc.hasSpecial"
+							[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasSpecial">
+							<span class="material-symbols-outlined req-icon">{{
+								pc.hasSpecial ? 'check_circle' : 'radio_button_unchecked'
+							}}</span>
+							<span>{{ LOGIN_LABEL_PWD_REQ_SPECIAL }}</span>
+						</div>
+					</div>
 				}
-			</div>
+			}
 
 			<!-- Forgot password (Sign In only) -->
-			@if (!isSignUp) {
+			@if (!isSignUp && !isForgotPassword) {
 				<div class="forgot-password-row">
-					<span class="forgot-password-link">Forgot password?</span>
+					<span
+						class="forgot-password-link"
+						(click)="toggleForgotPassword()"
+						(keydown.enter)="toggleForgotPassword()"
+						tabindex="0"
+						>{{ LOGIN_LABEL_FORGOT_PASSWORD }}</span
+					>
 				</div>
 			}
 
 			<!-- Submit -->
 			<button class="login-button" pButton type="submit">
-				<span pButtonLabel>{{ isSignUp ? LOGIN_LABEL_CREATE_ACCOUNT : LOGIN_LABEL_SIGN_IN }}</span>
+				<span pButtonLabel>{{
+					isForgotPassword && forgotPasswordStep === 1
+						? LOGIN_LABEL_SEND_RESET_CODE
+						: isForgotPassword && forgotPasswordStep === 2
+							? LOGIN_LABEL_RESET_PASSWORD
+							: isSignUp
+								? LOGIN_LABEL_CREATE_ACCOUNT
+								: LOGIN_LABEL_SIGN_IN
+				}}</span>
 			</button>
 
-			<!-- Divider + Google + toggle (Sign In only) -->
-			@if (!isSignUp) {
+			<!-- Divider + Google (Sign In only) -->
+			@if (!isSignUp && !isForgotPassword) {
 				<div class="divider-row">
 					<hr class="horizontal-line" />
 					<span class="divider-text">or</span>
@@ -199,12 +406,26 @@
 
 			<!-- Toggle mode (always at bottom) -->
 			<div class="toggle-row">
-				<span class="toggle-text">{{
-					isSignUp ? 'Already have an account?' : 'No account yet?'
-				}}</span>
-				<span class="toggle-link" (click)="toggleMode()" (keydown.enter)="toggleMode()" tabindex="0">
-					{{ isSignUp ? 'Sign in' : 'Sign up now' }}
-				</span>
+				@if (isForgotPassword) {
+					<span
+						class="toggle-link"
+						(click)="backToSignIn()"
+						(keydown.enter)="backToSignIn()"
+						tabindex="0"
+						>{{ LOGIN_LABEL_BACK_TO_SIGN_IN }}</span
+					>
+				} @else {
+					<span class="toggle-text">{{
+						isSignUp ? 'Already have an account?' : 'No account yet?'
+					}}</span>
+					<span
+						class="toggle-link"
+						(click)="toggleMode()"
+						(keydown.enter)="toggleMode()"
+						tabindex="0"
+						>{{ isSignUp ? 'Sign in' : 'Sign up now' }}</span
+					>
+				}
 			</div>
 		</form>
 	</div>

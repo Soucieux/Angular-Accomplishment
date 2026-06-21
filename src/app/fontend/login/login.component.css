@@ -268,6 +268,41 @@
 }
 
 /* ─────────────────────────────────────────
+   Password requirements
+───────────────────────────────────────── */
+.password-requirements {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.req-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.78rem;
+	color: rgba(234, 240, 246, 0.55);
+	transition: color 0.2s ease;
+}
+
+.req-row--indented {
+	padding-left: 20px;
+}
+
+.req-icon {
+	font-size: 0.9rem;
+	flex-shrink: 0;
+}
+
+.req-met {
+	color: #4ade80;
+}
+
+.req-unmet {
+	color: #f87171;
+}
+
+/* ─────────────────────────────────────────
    Forgot password
 ───────────────────────────────────────── */
 .forgot-password-row {
@@ -454,7 +489,7 @@
 	.v-lamp-stage {
 		position: absolute;
 		top: 50%;
-		left: 50%;
+		left: 55%;
 		transform-origin: top center;
 		transform: translate(-50%, -50%) scale(0.92);
 		transition:
@@ -464,7 +499,7 @@
 
 	.v-lamp.is-on .v-lamp-stage {
 		top: 10%;
-		left: 50%;
+		left: 55%;
 		transform: translate(-50%, 0) scale(0.9);
 	}
 
@@ -479,6 +514,7 @@
 	/* cone follows the lamp up to its header position */
 	.lamp-cone {
 		top: 28%;
+		left: 55%;
 		width: 300px;
 		height: 420px;
 	}
@@ -486,7 +522,7 @@
 	/* form: parked below the bottom edge → slides up when lit */
 	.v-lamp-form {
 		position: absolute;
-		left: 50%;
+		left: 55%;
 		top: 40%;
 		/* clamp preferred value (22.9vw) is ≤215px here, always hits the 264px floor */
 		width: min(320px, calc(100% - 32px));
@@ -504,7 +540,7 @@
 
 	/* date sits below the dark lamp, fades out once lit */
 	.v-lamp-date {
-		bottom: 10px;
+		bottom: 0;
 		left: 50px;
 		right: 0;
 		transition: opacity 0.4s ease;
@@ -512,22 +548,31 @@
 }
 
 /* ─────────────────────────────────────────
-   Browser — v-lamp-date override
+  "Retreat" layout for MOBILE WEB BROWSER
 ───────────────────────────────────────── */
-@media (display-mode: browser) and (max-width: 900px) {
+@media (display-mode: browser) and (max-width: 900px) and (pointer: coarse) {
+	.v-lamp-stage {
+		left: 50%;
+	}
+
 	.lamp-cone {
 		top: 15%;
+		left: 50%;
 		width: 280px;
 		height: 320px;
 	}
 
 	.v-lamp.is-on .v-lamp-stage {
 		top: -8%;
+		left: 50%;
 		transform: translate(-50%, 0) scale(0.7);
 	}
 
 	.v-lamp-form {
 		position: absolute;
+		left: 50%;
+		max-height: 55dvh;
+		overflow-y: auto;
 		top: 29%;
 		/* clamp preferred value (22.9vw) is ≤215px here, always hits the 264px floor */
 		width: min(300px, calc(100% - 32px));
@@ -543,29 +588,38 @@
 }
 
 /* ─────────────────────────────────────────
-   Mobile ≤ 900px — "Retreat" layout for web app
+ "Retreat" layout for MOBILE WEB APP
 ───────────────────────────────────────── */
 @media (display-mode: standalone) and (max-width: 900px) and (pointer: coarse) {
+	.v-lamp-stage {
+		left: 50%;
+	}
+
 	.lamp-cone {
 		top: 20%;
+		left: 50%;
 		width: 280px;
 		height: 320px;
 	}
 
 	.v-lamp.is-on .v-lamp-stage {
 		top: 0%;
+		left: 50%;
 		transform: translate(-50%, 0) scale(0.7);
 	}
 
 	.v-lamp-form {
 		position: absolute;
+		left: 50%;
+		max-height: 55dvh;
+		overflow-y: auto;
 		top: 32%;
 		/* clamp preferred value (22.9vw) is ≤215px here, always hits the 264px floor */
 		width: min(300px, calc(100% - 32px));
 	}
 
 	.v-lamp-date {
-		bottom: 15%;
+		bottom: 10%;
 		left: 50%;
 		width: 100%;
 		transform: translateX(-50%);

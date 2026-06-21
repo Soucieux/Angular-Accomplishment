@@ -36,12 +36,29 @@ import {
 	LOGIN_ERROR_USERNAME_TOO_LONG,
 	LOGIN_MAX_USERNAME_LENGTH,
 	LOGIN_MSG_SEND_CODE_FAILED,
-	LOGIN_URL_DEFAULT_RETURN
+	LOGIN_URL_DEFAULT_RETURN,
+	LOGIN_LABEL_PWD_REQ_LENGTH,
+	LOGIN_LABEL_PWD_REQ_TYPES,
+	LOGIN_LABEL_PWD_REQ_UPPERCASE,
+	LOGIN_LABEL_PWD_REQ_LOWERCASE,
+	LOGIN_LABEL_PWD_REQ_DIGIT,
+	LOGIN_LABEL_PWD_REQ_SPECIAL,
+	LOGIN_LABEL_CODE_COUNTDOWN_SUFFIX,
+	LOGIN_MSG_CODE_SENT,
+	LOGIN_LABEL_FORGOT_PASSWORD,
+	LOGIN_LABEL_SEND_RESET_CODE,
+	LOGIN_LABEL_RESET_PASSWORD,
+	LOGIN_LABEL_BACK_TO_SIGN_IN
 } from '../../common/app.constant';
 import { LOG } from '../../common/app.logs';
+import { AccountRateLimitedError } from '../../common/error/account-rate-limited.error';
+import { EmailNotVerifiedError } from '../../common/error/email-not-verified.error';
+import { InvalidEmailError } from '../../common/error/invalid-email.error';
+import { PasswordTooWeakError } from '../../common/error/password-too-weak.error';
+import { UserNotFoundError } from '../../common/error/user-not-found.error';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { WrongParametersError } from '../../common/error/wrong-parameters.error';
-import { wrongVerificationCodeError } from '../../common/error/wrong-verification-code';
+import { WrongVerificationCodeError } from '../../common/error/wrong-verification-code';
 
 @Component({
 	selector: 'login',
@@ -71,19 +88,36 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly LOGIN_LABEL_LOADING = LOGIN_LABEL_LOADING;
 	protected readonly LOGIN_LABEL_SIGN_IN = LOGIN_LABEL_SIGN_IN;
 	protected readonly LOGIN_MAX_USERNAME_LENGTH = LOGIN_MAX_USERNAME_LENGTH;
+	protected readonly LOGIN_LABEL_PWD_REQ_LENGTH = LOGIN_LABEL_PWD_REQ_LENGTH;
+	protected readonly LOGIN_LABEL_PWD_REQ_TYPES = LOGIN_LABEL_PWD_REQ_TYPES;
+	protected readonly LOGIN_LABEL_PWD_REQ_UPPERCASE = LOGIN_LABEL_PWD_REQ_UPPERCASE;
+	protected readonly LOGIN_LABEL_PWD_REQ_LOWERCASE = LOGIN_LABEL_PWD_REQ_LOWERCASE;
+	protected readonly LOGIN_LABEL_PWD_REQ_DIGIT = LOGIN_LABEL_PWD_REQ_DIGIT;
+	protected readonly LOGIN_LABEL_PWD_REQ_SPECIAL = LOGIN_LABEL_PWD_REQ_SPECIAL;
+	protected readonly LOGIN_LABEL_CODE_COUNTDOWN_SUFFIX = LOGIN_LABEL_CODE_COUNTDOWN_SUFFIX;
+	protected readonly LOGIN_MSG_CODE_SENT = LOGIN_MSG_CODE_SENT;
+	protected readonly LOGIN_LABEL_FORGOT_PASSWORD = LOGIN_LABEL_FORGOT_PASSWORD;
+	protected readonly LOGIN_LABEL_SEND_RESET_CODE = LOGIN_LABEL_SEND_RESET_CODE;
+	protected readonly LOGIN_LABEL_RESET_PASSWORD = LOGIN_LABEL_RESET_PASSWORD;
+	protected readonly LOGIN_LABEL_BACK_TO_SIGN_IN = LOGIN_LABEL_BACK_TO_SIGN_IN;
 
 	protected loginForm!: FormGroup;
 	protected formSubmitted = false;
 	protected isSignUp = false;
+	protected isForgotPassword = false;
+	protected forgotPasswordStep: 1 | 2 = 1;
 	protected animating: 'out' | 'in' | '' = '';
 	protected codeSent = false;
+	protected codeCountdown = 0;
 	protected sendingCode = false;
 	protected lampOn = false;
 	protected lampHue = 42;
 	/** Gets the current date, evaluated on each change-detection cycle. */
-	protected get today(): Date { return new Date(); }
+	protected get today(): Date {
+		return new Date();
+	}
 
-	private codeSentTimeout: ReturnType<typeof setTimeout> | null = null;
+	private codeCountdownInterval: ReturnType<typeof setInterval> | null = null;
 	private returnUrl: string = LOGIN_URL_DEFAULT_RETURN;
 	private dragInstance: Draggable | null = null;
 	private audioCtx: AudioContext | null = null;
@@ -129,19 +163,32 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngAfterViewInit(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
+
+		// Step 1: Register the GSAP Draggable plugin and grab the DOM references
 		gsap.registerPlugin(Draggable);
 		const handle = this.lampHandle.nativeElement;
 		const cord = this.lampCord.nativeElement;
 
+		/* Step 2: Define the rope state object and its draw function.
+		   cx drifts left/right during the wobble; y tracks vertical drag offset.
+		   The quadratic bezier midpoint is the arithmetic mean of ANCHOR_Y and endY
+		   so the curve always passes naturally between the two endpoints. */
 		const rope = { cx: 150, y: 0 };
 		const draw = (): void => {
 			const endY = this.CORD_REST_END_Y + rope.y;
-			cord.setAttribute('d', `M150 ${this.ANCHOR_Y} Q ${rope.cx} ${(this.ANCHOR_Y + endY) / 2} 150 ${endY}`);
+			cord.setAttribute(
+				'd',
+				`M150 ${this.ANCHOR_Y} Q ${rope.cx} ${(this.ANCHOR_Y + endY) / 2} 150 ${endY}`
+			);
 		};
 
+		// Step 3: Place the handle at its rest position and render the initial cord shape
 		gsap.set(handle, { xPercent: -50, y: 0 });
 		draw();
 
+		/* Step 4: Wire the Draggable instance.
+		   `self` is captured here because GSAP callbacks run with `this` bound to the
+		   Draggable instance, so the component reference would otherwise be lost. */
 		const self = this;
 		this.dragInstance = Draggable.create(handle, {
 			type: 'y',
@@ -149,6 +196,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 			cursor: 'grab',
 			activeCursor: 'grabbing',
 			onPress() {
+				// Kill any in-progress spring so a new pull starts from the current position
 				gsap.killTweensOf(rope);
 			},
 			onDrag() {
@@ -156,6 +204,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 				draw();
 			},
 			onDragEnd() {
+				// Step 4.1: Toggle the lamp if the user pulled far enough, then spring the handle back
 				if (this['y'] > self.PULL_THRESHOLD) self.toggleLamp();
 				const dir = Math.random() > 0.5 ? 1 : -1;
 				gsap.to(rope, {
@@ -167,6 +216,10 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 						draw();
 					}
 				});
+
+				/* Step 4.2: Animate the horizontal cx wobble independently of y.
+				   Two separate tweens let each axis use its own elastic parameters,
+				   producing a more organic swinging-rope feel. */
 				gsap.fromTo(
 					rope,
 					{ cx: 150 + 32 * dir },
@@ -181,9 +234,9 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * context, clears the dialog container, and logs the destruction event.
 	 */
 	ngOnDestroy(): void {
-		if (this.codeSentTimeout) {
-			clearTimeout(this.codeSentTimeout);
-			this.codeSentTimeout = null;
+		if (this.codeCountdownInterval) {
+			clearInterval(this.codeCountdownInterval);
+			this.codeCountdownInterval = null;
 		}
 		this.dragInstance?.kill();
 		this.audioCtx?.close();
@@ -209,19 +262,38 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	private playClick(): void {
 		try {
-			const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+			/* Step 1: Resolve the AudioContext constructor across browsers.
+			   Safari shipped it as webkitAudioContext for years; the fallback prevents
+			   a ReferenceError on older WebKit builds. The instance is lazily created
+			   and reused — constructing a new context per click would exhaust the
+			   browser's context limit (~6 on Chrome). */
+			const Ctx =
+				window.AudioContext ||
+				(window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
 			this.audioCtx ??= new Ctx();
 			const a = this.audioCtx;
+
+			// Step 2: Resume the context if it was suspended by autoplay policy
 			if (a.state === 'suspended') a.resume().catch(() => {});
 			const t = a.currentTime;
 			const osc = a.createOscillator();
 			const gain = a.createGain();
+
+			/* Step 3: Shape the oscillator's pitch envelope to mimic a mechanical click.
+			   High-frequency square wave drops sharply to a thud — the 840→170 Hz ramp
+			   over 50 ms approximates the transient of a physical switch. */
 			osc.type = 'square';
 			osc.frequency.setValueAtTime(840, t);
 			osc.frequency.exponentialRampToValueAtTime(170, t + 0.05);
+
+			/* Step 4: Shape the gain envelope — fast attack, short decay.
+			   The initial value must be non-zero (0.0001) because exponentialRamp
+			   is undefined for zero and will throw on some browsers. */
 			gain.gain.setValueAtTime(0.0001, t);
 			gain.gain.exponentialRampToValueAtTime(0.2, t + 0.004);
 			gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+
+			// Step 5: Connect the graph and schedule the one-shot sound
 			osc.connect(gain).connect(a.destination);
 			osc.start(t);
 			osc.stop(t + 0.11);
@@ -247,26 +319,38 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * verification code fields depending on the selected mode.
 	 */
 	protected toggleMode(): void {
+		// Step 1: Trigger the slide-out animation before mutating any state
 		this.animating = LOGIN_ANIM_OUT;
 
+		/* Step 2: Defer state changes until the CSS transition has finished (~280 ms).
+		   Mutating isSignUp before the animation completes would cause the form fields
+		   to re-render mid-transition, producing a visible flash. */
 		setTimeout(() => {
+			// Step 2.1: Flip mode and clear all transient form state
 			this.isSignUp = !this.isSignUp;
+			this.isForgotPassword = false;
+			this.forgotPasswordStep = 1;
 			this.formSubmitted = false;
 			this.codeSent = false;
-			if (this.codeSentTimeout) {
-				clearTimeout(this.codeSentTimeout);
-				this.codeSentTimeout = null;
+			this.codeCountdown = 0;
+			if (this.codeCountdownInterval) {
+				clearInterval(this.codeCountdownInterval);
+				this.codeCountdownInterval = null;
 			}
 
 			this.loginForm.reset();
 
+			// Step 2.2: Reconfigure validators to match the new mode
 			const usernameControl = this.loginForm.get('username');
 			const emailControl = this.loginForm.get('email');
 			const passwordControl = this.loginForm.get('password');
 			const codeControl = this.loginForm.get('verificationCode');
 
 			if (this.isSignUp) {
-				usernameControl?.setValidators([Validators.required, Validators.maxLength(LOGIN_MAX_USERNAME_LENGTH)]);
+				usernameControl?.setValidators([
+					Validators.required,
+					Validators.maxLength(LOGIN_MAX_USERNAME_LENGTH)
+				]);
 				emailControl?.setValidators(Validators.required);
 				codeControl?.setValidators(Validators.required);
 			} else {
@@ -275,6 +359,84 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 				codeControl?.clearValidators();
 			}
 
+			/* Step 2.3: Sync validity state after changing validators.
+			   updateValueAndValidity must be called on every control even if its
+			   validators did not change — Angular requires an explicit refresh to
+			   reflect the new validation rules in the form's valid/invalid state. */
+			usernameControl?.updateValueAndValidity();
+			emailControl?.updateValueAndValidity();
+			passwordControl?.updateValueAndValidity();
+			codeControl?.updateValueAndValidity();
+
+			// Step 3: Trigger the slide-in animation and push changes to the view
+			this.animating = LOGIN_ANIM_IN;
+			this.cdr.detectChanges();
+		}, 280);
+	}
+
+	/**
+	 * Enters forgot-password mode from sign-in. Slides the form out, resets
+	 * transient state, and sets the email validator for step 1.
+	 */
+	protected toggleForgotPassword(): void {
+		this.animating = LOGIN_ANIM_OUT;
+		setTimeout(() => {
+			this.isForgotPassword = true;
+			this.forgotPasswordStep = 1;
+			this.formSubmitted = false;
+			this.codeSent = false;
+			this.codeCountdown = 0;
+			if (this.codeCountdownInterval) {
+				clearInterval(this.codeCountdownInterval);
+				this.codeCountdownInterval = null;
+			}
+			this.loginForm.reset();
+
+			const emailControl = this.loginForm.get('email');
+			const usernameControl = this.loginForm.get('username');
+			const passwordControl = this.loginForm.get('password');
+			const codeControl = this.loginForm.get('verificationCode');
+			emailControl?.setValidators([Validators.required, Validators.email]);
+			usernameControl?.clearValidators();
+			passwordControl?.clearValidators();
+			codeControl?.clearValidators();
+			emailControl?.updateValueAndValidity();
+			usernameControl?.updateValueAndValidity();
+			passwordControl?.updateValueAndValidity();
+			codeControl?.updateValueAndValidity();
+
+			this.animating = LOGIN_ANIM_IN;
+			this.cdr.detectChanges();
+		}, 280);
+	}
+
+	/**
+	 * Returns to the sign-in form from forgot-password mode without toggling
+	 * isSignUp. Resets all transient state and restores sign-in validators.
+	 */
+	protected backToSignIn(): void {
+		this.animating = LOGIN_ANIM_OUT;
+		setTimeout(() => {
+			this.isForgotPassword = false;
+			this.forgotPasswordStep = 1;
+			this.isSignUp = false;
+			this.formSubmitted = false;
+			this.codeSent = false;
+			this.codeCountdown = 0;
+			if (this.codeCountdownInterval) {
+				clearInterval(this.codeCountdownInterval);
+				this.codeCountdownInterval = null;
+			}
+			this.loginForm.reset();
+
+			const usernameControl = this.loginForm.get('username');
+			const emailControl = this.loginForm.get('email');
+			const passwordControl = this.loginForm.get('password');
+			const codeControl = this.loginForm.get('verificationCode');
+			usernameControl?.setValidators(Validators.required);
+			emailControl?.clearValidators();
+			passwordControl?.setValidators(Validators.required);
+			codeControl?.clearValidators();
 			usernameControl?.updateValueAndValidity();
 			emailControl?.updateValueAndValidity();
 			passwordControl?.updateValueAndValidity();
@@ -291,22 +453,53 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * The code-sent indicator auto-clears after 4 seconds.
 	 */
 	protected async getVerificationCodeEmail(): Promise<void> {
-		if (this.sendingCode) return;
+		// Step 1: Debounce — block if a send is already in flight or still cooling down
+		if (this.sendingCode || this.codeCountdown > 0) return;
 		this.sendingCode = true;
-		this.codeSent = true;
+
+		/* Step 2: Start the countdown before the network call so the button is
+		   disabled immediately, preventing double-taps on slow connections. */
+		this.startCodeCountdown();
 		try {
 			await this.authService.getVerificationCodeEmail(this.loginForm.value['email']);
-			if (this.codeSentTimeout) clearTimeout(this.codeSentTimeout);
-			this.codeSentTimeout = setTimeout(() => {
-				this.codeSent = false;
-				this.codeSentTimeout = null;
-			}, 4000);
 		} catch (error: unknown) {
+			// Step 3: On failure, roll back the countdown state so the user can retry
 			this.codeSent = false;
+			this.codeCountdown = 0;
+			if (this.codeCountdownInterval) {
+				clearInterval(this.codeCountdownInterval);
+				this.codeCountdownInterval = null;
+			}
 			LOG.error(this.className, LOGIN_MSG_SEND_CODE_FAILED, error as Error);
 		} finally {
 			this.sendingCode = false;
 		}
+	}
+
+	/**
+	 * Starts a 10-second countdown after a verification code is successfully sent.
+	 * Disables the Get Code button and shows the remaining seconds until the button re-enables.
+	 * Calls detectChanges on each tick because setInterval runs outside Angular's zone.
+	 */
+	private startCodeCountdown(): void {
+		// Step 1: Show the "code sent" banner and seed the counter, then push to the view immediately
+		this.codeSent = true;
+		this.codeCountdown = 10;
+		this.cdr.detectChanges();
+
+		/* Step 2: Tick the counter every second.
+		   setInterval runs outside Angular's zone, so detectChanges() is required on
+		   every tick — otherwise the template counter would not update until the next
+		   user interaction triggered change detection naturally. */
+		this.codeCountdownInterval = setInterval(() => {
+			this.codeCountdown--;
+			if (this.codeCountdown <= 0) {
+				this.codeCountdown = 0;
+				clearInterval(this.codeCountdownInterval!);
+				this.codeCountdownInterval = null;
+			}
+			this.cdr.detectChanges();
+		}, 1000);
 	}
 
 	/**
@@ -315,11 +508,48 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * on the current mode and the user's country.
 	 */
 	protected async onSubmit(): Promise<void> {
+		// Step 1: Mark the form as submitted so validation errors become visible in the template
 		this.formSubmitted = true;
 		if (!this.loginForm.valid) return;
 
 		try {
+			if (this.isForgotPassword) {
+				if (this.forgotPasswordStep === 1) {
+					// Step 2c (forgot — step 1): Advance to step 2 immediately to block
+					// duplicate sends, then fire the API call. Revert on failure.
+					this.forgotPasswordStep = 2;
+					this.formSubmitted = false;
+					const passwordControl = this.loginForm.get('password');
+					const codeControl = this.loginForm.get('verificationCode');
+					passwordControl?.setValidators(Validators.required);
+					codeControl?.setValidators(Validators.required);
+					passwordControl?.updateValueAndValidity();
+					codeControl?.updateValueAndValidity();
+					this.cdr.detectChanges();
+					try {
+						await this.authService.sendPasswordResetEmail(this.loginForm.value['email']);
+					} catch (sendError) {
+						this.forgotPasswordStep = 1;
+						passwordControl?.clearValidators();
+						codeControl?.clearValidators();
+						passwordControl?.updateValueAndValidity();
+						codeControl?.updateValueAndValidity();
+						this.cdr.detectChanges();
+						throw sendError;
+					}
+				} else {
+					// Step 2d (forgot — step 2): Verify code and set new password
+					await this.authService.resetPassword(
+						this.loginForm.value['verificationCode'],
+						this.loginForm.value['password'],
+						this.returnUrl
+					);
+				}
+				return;
+			}
+
 			if (this.isSignUp) {
+				// Step 2a: Sign-up path — requires email, password, username, and verification code
 				await this.authService.signUp(
 					this.loginForm.value['email'],
 					this.loginForm.value['password'],
@@ -327,6 +557,10 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 					this.loginForm.value['verificationCode']
 				);
 			} else {
+				/* Step 2b: Sign-in path — route to the country-appropriate auth method.
+				   CN users go through the CloudBase signIn() flow; all others use the
+				   Firebase emailPasswordLogin() flow. The check is at the call site
+				   rather than inside the service so the service stays stateless. */
 				if (Utilities.getCurrentCountry() === CN) {
 					await this.authService.signIn(
 						this.loginForm.value['username'],
@@ -342,11 +576,22 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 				}
 			}
 		} catch (error: unknown) {
+			/* Step 3: Distinguish user-facing errors from unexpected ones.
+			   Known error types carry a human-readable message suitable for the dialog;
+			   anything else falls back to the generic unexpected-error dialog to avoid
+			   leaking internal details. */
 			if (
 				error instanceof WrongCredentialsError ||
 				error instanceof WrongParametersError ||
-				error instanceof wrongVerificationCodeError
+				error instanceof WrongVerificationCodeError ||
+				error instanceof InvalidEmailError ||
+				error instanceof UserNotFoundError ||
+				error instanceof EmailNotVerifiedError ||
+				error instanceof AccountRateLimitedError ||
+				error instanceof PasswordTooWeakError
 			) {
+				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
+			} else if (error instanceof Error) {
 				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 			} else {
 				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
@@ -359,5 +604,30 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected googleLogin(): void {
 		this.authService.googleLogin();
+	}
+
+	// ── Template helper methods ───────────────────────────────────────────────
+
+	/**
+	 * Gets the full set of password requirement check results in one pass over the form value.
+	 * Bound via `@let pc = passwordChecks` in the template so Angular evaluates this once
+	 * per change-detection cycle regardless of how many bindings reference it.
+	 *
+	 * @returns An object with named boolean flags for each requirement and the combined typesMet gate.
+	 */
+	protected get passwordChecks() {
+		const v = (this.loginForm.get('password')?.value as string) ?? '';
+		const upper = /[A-Z]/.test(v);
+		const lower = /[a-z]/.test(v);
+		const digit = /[0-9]/.test(v);
+		const special = /[^A-Za-z0-9]/.test(v);
+		return {
+			meetsLength: v.length >= 8,
+			hasUppercase: upper,
+			hasLowercase: lower,
+			hasDigit: digit,
+			hasSpecial: special,
+			typesMet: [upper, lower, digit, special].filter(Boolean).length >= 3
+		};
 	}
 }

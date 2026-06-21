@@ -1,0 +1,38 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	appendTo="body"
+	[resizable]="false"
+	[closable]="false"
+	(onHide)="onDialogClosed()"
+	styleClass="category-dialog">
+	<ng-template #header>
+		<span class="category-dialog-title">{{
+			isEditMode ? PORTAL_CATEGORY_DIALOG_TITLE_EDIT : PORTAL_CATEGORY_DIALOG_TITLE_ADD
+		}}</span>
+	</ng-template>
+
+	<div class="category-dialog-field">
+		<span class="category-dialog-label">{{ PORTAL_CATEGORY_DIALOG_LABEL_NAME }}</span>
+		<input
+			type="text"
+			[(ngModel)]="name"
+			[placeholder]="PORTAL_CATEGORY_DIALOG_PLACEHOLDER_NAME"
+			(keyup.enter)="onSubmit()"
+			autocomplete="off" />
+	</div>
+
+	<ng-template #footer>
+		@if (isEditMode) {
+			<button class="category-dialog-button-delete" (click)="onDeleteRequested()">
+				{{ PORTAL_CATEGORY_DIALOG_LABEL_DELETE }}
+			</button>
+		}
+		<button class="category-dialog-button-ghost" (click)="onDialogClosed()">
+			{{ PORTAL_CATEGORY_DIALOG_LABEL_CANCEL }}
+		</button>
+		<button class="category-dialog-button-gradient" [disabled]="!isValid" (click)="onSubmit()">
+			{{ PORTAL_CATEGORY_DIALOG_LABEL_SAVE }}
+		</button>
+	</ng-template>
+</p-dialog>

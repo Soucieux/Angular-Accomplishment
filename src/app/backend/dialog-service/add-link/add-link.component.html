@@ -67,6 +67,19 @@
 		</label>
 	</div>
 
+	@if (!isEditMode) {
+		<div class="link-dialog-field link-dialog-field-checkbox">
+			<input
+				type="checkbox"
+				id="linkDialogIsShared"
+				class="link-dialog-checkbox"
+				[(ngModel)]="isShared" />
+			<label for="linkDialogIsShared" class="link-dialog-label link-dialog-label-checkbox">
+				{{ PORTAL_LABEL_SHARED_LINK }}
+			</label>
+		</div>
+	}
+
 	<ng-template #footer>
 		<button class="link-dialog-button-ghost" (click)="onDialogClosed()">
 			{{ LINK_DIALOG_LABEL_CANCEL }}

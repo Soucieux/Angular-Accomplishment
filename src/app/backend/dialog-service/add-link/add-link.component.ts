@@ -12,7 +12,8 @@ import {
 	LINK_DIALOG_LABEL_TITLE_LOADING,
 	PORTAL_DIALOG_TITLE_ADD_LINK,
 	PORTAL_DIALOG_TITLE_EDIT_LINK,
-	PORTAL_LABEL_PIN_TO_DASHBOARD
+	PORTAL_LABEL_PIN_TO_DASHBOARD,
+	PORTAL_LABEL_SHARED_LINK
 } from '../../../common/app.constant';
 import { PortalCategory, NewLinkData } from '../../../fontend/portal/portal.model';
 
@@ -34,6 +35,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	protected readonly PORTAL_DIALOG_TITLE_ADD_LINK = PORTAL_DIALOG_TITLE_ADD_LINK;
 	protected readonly PORTAL_DIALOG_TITLE_EDIT_LINK = PORTAL_DIALOG_TITLE_EDIT_LINK;
 	protected readonly PORTAL_LABEL_PIN_TO_DASHBOARD = PORTAL_LABEL_PIN_TO_DASHBOARD;
+	protected readonly PORTAL_LABEL_SHARED_LINK = PORTAL_LABEL_SHARED_LINK;
 
 	protected isEditMode = false;
 	protected visible = false;
@@ -44,6 +46,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	protected title = '';
 	protected category = '';
 	protected isPinned = false;
+	protected isShared = false;
 	private submitCallback?: (formData: NewLinkData) => void;
 	private categoriesSub?: Subscription;
 	private lastFetchedUrl = '';
@@ -97,6 +100,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 			this.title = prefillData.title ?? '';
 			this.category = prefillData.category ?? '';
 			this.isPinned = prefillData.isPinned ?? false;
+			this.isShared = prefillData.isShared ?? false;
 			this.faviconPreview = this.url ? Utilities.getFavicon(this.url) : '';
 		}
 
@@ -115,6 +119,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 		this.title = '';
 		this.category = '';
 		this.isPinned = false;
+		this.isShared = false;
 		this.faviconPreview = '';
 		this.lastFetchedUrl = '';
 	}
@@ -181,7 +186,8 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 			url: Utilities.normalizeUrl(this.url),
 			title: this.title.trim(),
 			category: this.category,
-			isPinned: this.isPinned
+			isPinned: this.isPinned,
+			isShared: this.isShared
 		};
 
 		/*

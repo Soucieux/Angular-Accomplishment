@@ -148,9 +148,9 @@
 								<span
 									class="category-edit-button"
 									(click)="openEditCategoryDialog(cat, $event)"
-									title="Edit category"
-									>✎</span
-								>
+									title="Edit category">
+									<span class="material-symbols-outlined">edit</span>
+								</span>
 							</button>
 						}
 						<button
@@ -191,10 +191,11 @@
 							(click)="openLink(link)"
 							[title]="link.url"
 							[style.background]="getLinkCardColor(link)">
-							<img
-								class="ghost-icon"
-								[src]="faviconUrl"
-								alt="" />
+							@if (faviconFailedIds.has(link._id)) {
+								<div class="ghost-initial">{{ link.title.charAt(0).toUpperCase() }}</div>
+							} @else {
+								<img class="ghost-icon" [src]="faviconUrl" alt="" />
+							}
 							<div class="gradient-overlay"></div>
 							@if (faviconFailedIds.has(link._id)) {
 								<div class="link-favicon-fallback">
@@ -212,9 +213,7 @@
 							}
 							<div class="card-text">
 								<p class="card-title">{{ link.title }}</p>
-								<span class="card-domain">{{
-									utilities.getDomain(link.url)
-								}}</span>
+								<span class="card-domain">{{ utilities.getDomain(link.url) }}</span>
 							</div>
 							@if (link.visitCount) {
 								<span class="link-visits-badge">{{ link.visitCount }}</span>
@@ -279,7 +278,11 @@
 					} @else {
 						<div class="links-grid">
 							@for (link of sharedFilteredLinks; track link._id) {
-								<ng-container *ngTemplateOutlet="linkCard; context: {$implicit: link, showActions: isAdmin}" />
+								<ng-container
+									*ngTemplateOutlet="
+										linkCard;
+										context: { $implicit: link, showActions: isAdmin }
+									" />
 							}
 						</div>
 					}
@@ -307,7 +310,11 @@
 					} @else {
 						<div class="links-grid">
 							@for (link of personalFilteredLinks; track link._id) {
-								<ng-container *ngTemplateOutlet="linkCard; context: {$implicit: link, showActions: true}" />
+								<ng-container
+									*ngTemplateOutlet="
+										linkCard;
+										context: { $implicit: link, showActions: true }
+									" />
 							}
 						</div>
 					}
@@ -322,35 +329,3 @@
 	</div>
 }
 
-<!-- ── Add / Edit Category Dialog ───────────────────────────── -->
-<p-dialog
-	[(visible)]="showCategoryDialog"
-	[header]="editingCategory ? 'Edit Category' : 'New Category'"
-	[modal]="true"
-	[closable]="true"
-	[style]="{ width: '360px' }"
-	styleClass="category-dialog"
-	appendTo="body">
-	<div class="dialog-form">
-		<div class="form-field">
-			<label class="form-label">Name *</label>
-			<input
-				class="form-input"
-				type="text"
-				placeholder="e.g. Study, Tools, Dev"
-				[(ngModel)]="categoryForm.name" />
-		</div>
-	</div>
-
-	<ng-template pTemplate="footer">
-		@if (editingCategory) {
-			<button
-				class="delete-category-button"
-				(click)="openDeleteCategoryDialog(editingCategory, $event)">
-				Delete
-			</button>
-		}
-		<button class="dialog-cancel-button" (click)="closeCategoryDialog()">Cancel</button>
-		<button class="dialog-save-button" (click)="saveCategoryDialog()">Save</button>
-	</ng-template>
-</p-dialog>

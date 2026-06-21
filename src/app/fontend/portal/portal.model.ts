@@ -1,9 +1,15 @@
+/** Form data submitted when adding or editing a link category. */
+export interface NewCategoryData {
+	name: string;
+}
+
 /** Form data submitted when adding or editing a useful link. */
 export interface NewLinkData {
 	url: string;
 	title: string;
 	category: string;
 	isPinned: boolean;
+	isShared?: boolean;
 }
 
 /** Shape of a useful-link document returned from the useful_links collection. */

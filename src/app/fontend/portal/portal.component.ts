@@ -13,7 +13,6 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { InputTextModule } from 'primeng/inputtext';
@@ -44,6 +43,7 @@ import {
 	PORTAL_LABEL_NEXT_MONTH,
 	PORTAL_LABEL_RESET,
 	PORTAL_MSG_RESET_CONFIRM,
+	DIALOG_CATEGORY,
 	DIALOG_LINK,
 	DIALOG_MULTI_LINK,
 	PORTAL_MSG_CATEGORY_ADDED,
@@ -64,7 +64,6 @@ import {
 	PORTAL_MSG_LINK_UPDATED,
 	PORTAL_MSG_LOAD_CATEGORIES_FAILED,
 	PORTAL_MSG_LOAD_LINKS_FAILED,
-	PORTAL_MSG_NAME_REQUIRED,
 	PORTAL_MSG_SAVE_CATEGORY_FAILED,
 	PORTAL_MSG_SAVE_LINK_FAILED,
 	PORTAL_MSG_SAVING_CATEGORY,
@@ -80,10 +79,9 @@ import {
 	PORTAL_SECTION_SHARED_SUFFIX,
 	SUCCESS,
 	TOAST_ERROR,
-	TOAST_INFO,
-	TOAST_WARN
+	TOAST_INFO
 } from '../../common/app.constant';
-import { NewLinkData, PortalCategory, PortalLink, PORTAL_DATE_CALCULATOR_FIELDS, PORTAL_LINK_CARD_PALETTE } from './portal.model';
+import { NewCategoryData, NewLinkData, PortalCategory, PortalLink, PORTAL_DATE_CALCULATOR_FIELDS, PORTAL_LINK_CARD_PALETTE } from './portal.model';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
@@ -94,7 +92,6 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		AccessDeniedComponent,
 		CommonModule,
 		FormsModule,
-		DialogModule,
 		TableModule,
 		SkeletonModule,
 		InputTextModule,
@@ -143,10 +140,6 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected categories: PortalCategory[] = [];
 	protected faviconFailedIds = new Set<string>();
 	protected selectedCategory = PORTAL_CATEGORY_ALL;
-
-	protected showCategoryDialog = false;
-	protected categoryForm = { name: '' };
-	protected editingCategory: PortalCategory | null = null;
 
 	protected linksLoading = true;
 	protected hoveredLinkId: string | null = null;
@@ -875,82 +868,58 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Closes the Add/Edit Category dialog.
-	 */
-	protected closeCategoryDialog(): void {
-		this.showCategoryDialog = false;
-	}
-
-	/**
-	 * Opens the Add Category dialog with a blank form.
+	 * Opens the Add Category dialog with a blank form via DialogService.
 	 */
 	protected openAddCategoryDialog(): void {
-		this.editingCategory = null;
-		this.categoryForm = { name: '' };
-		this.showCategoryDialog = true;
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_CATEGORY,
+			(data) => this.handleCategorySave(data, null),
+			{ prefillData: null }
+		);
 	}
 
 	/**
-	 * Opens the Edit Category dialog pre-filled with an existing category's data.
+	 * Opens the Edit Category dialog pre-filled with an existing category's data via DialogService.
 	 *
 	 * @param category - The category document to edit.
 	 * @param event - The click event, stopped to prevent the tab switch from firing.
 	 */
 	protected openEditCategoryDialog(category: PortalCategory, event: Event): void {
 		event.stopPropagation();
-		this.editingCategory = category;
-		this.categoryForm = { name: category.name };
-		this.showCategoryDialog = true;
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_CATEGORY,
+			(data) => this.handleCategorySave(data, category),
+			{ prefillData: { name: category.name }, onDelete: () => this.openDeleteCategoryDialog(category) }
+		);
 	}
 
 	/**
-	 * Validates the category form, closes the inline dialog, then delegates the
-	 * add or update to CloudBase inside a block dialog to prevent duplicate submissions.
-	 * Shows a warning toast when the name field is empty.
+	 * Persists a new or updated category to the database.
+	 * Runs inside a block dialog so the UI is locked during the async operation.
+	 *
+	 * @param data - The validated category fields submitted by the dialog.
+	 * @param existing - The existing DB record when editing, or null when adding.
 	 */
-	protected saveCategoryDialog(): void {
-		// Step 1: Validate — name is the only required field; warn and abort if blank
-		const { name } = this.categoryForm;
-		if (!name.trim()) {
-			this.dialogService.showToast(TOAST_WARN, PORTAL_MSG_NAME_REQUIRED);
-			return;
-		}
-
-		/* Step 2: Dismiss the inline category dialog before opening the block dialog —
-		   both dialogs use the same ViewContainerRef so they cannot coexist. */
-		this.showCategoryDialog = false;
-
-		// Step 3: Persist inside a block dialog to prevent duplicate submissions
+	private handleCategorySave(data: NewCategoryData, existing: PortalCategory | null): void {
 		this.openBlockDialog(async () => {
 			try {
-				// Step 3.1: Branch on edit vs. add — editingCategory is null for new categories
-				if (this.editingCategory) {
-					await this.databaseService.updateLinkCategory(
-						this.editingCategory._id,
-						{ name: name.trim() },
-						name.trim()
-					);
-					LOG.info(this.className, `Category updated: ${name}`);
+				if (existing) {
+					await this.databaseService.updateLinkCategory(existing._id, { name: data.name }, data.name);
+					LOG.info(this.className, `Category updated: ${data.name}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_CATEGORY_UPDATED);
 				} else {
-					await this.databaseService.addLinkCategory({
-						name: name.trim(),
-						order: this.categories.length
-					});
-					LOG.info(this.className, `Category added: ${name}`);
+					await this.databaseService.addLinkCategory({ name: data.name, order: this.categories.length });
+					LOG.info(this.className, `Category added: ${data.name}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_CATEGORY_ADDED);
 				}
 			} catch (error) {
 				if (error instanceof SessionExpiredError) {
 					this.dialogService.handleError(this.dialogComponentContainer, error);
 				} else {
-					// Step 3.2: Surface a user-facing error toast on failure
 					LOG.error(this.className, PORTAL_MSG_SAVE_CATEGORY_FAILED, error as Error);
-					this.dialogService.showToast(
-						TOAST_ERROR,
-						MSG_SAVE_FAILED,
-						PORTAL_MSG_CATEGORY_SAVE_FAILED_DETAIL
-					);
+					this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, PORTAL_MSG_CATEGORY_SAVE_FAILED_DETAIL);
 				}
 			}
 		}, PORTAL_MSG_SAVING_CATEGORY).catch(() => {});
@@ -1004,19 +973,12 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	/**
 	 * Opens a confirmation dialog and removes the category from CloudBase on confirmation.
+	 * Called by the delete callback passed to the category dialog, which closes itself first
+	 * so the confirm dialog can open without z-index conflicts.
 	 *
 	 * @param category - The category document to delete.
-	 * @param event - The click event, stopped to prevent the tab switch from firing.
 	 */
-	protected openDeleteCategoryDialog(category: PortalCategory, event: Event): void {
-		event.stopPropagation();
-
-		/* Close the category dialog before opening the confirm dialog.
-		   The confirm dialog is created in the component view; leaving the PrimeNG
-		   modal open would place its backdrop above the confirm overlay, making it
-		   invisible and unclickable. */
-		this.showCategoryDialog = false;
-
+	private openDeleteCategoryDialog(category: PortalCategory): void {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,

@@ -278,6 +278,9 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 */
 	ngAfterViewChecked(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
+
+		// Step 1: Attach auto-hide scroll behaviour to every scrollable panel — WeakSet inside the
+		// utility guards against double-binding when this hook fires multiple times per cycle.
 		Utilities.attachScrollAutoHide(this.stepsScrollEl?.nativeElement);
 		Utilities.attachScrollAutoHide(this.ingredientsScrollEl?.nativeElement);
 		document
@@ -292,6 +295,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		document
 			.querySelectorAll<HTMLElement>('.container-recipe')
 			.forEach((el) => Utilities.attachScrollAutoHide(el));
+
+		/* Step 2: Scroll the newly added ingredient row into view and focus its name textarea.
+		   Done here rather than in addEditorIngredient because the DOM row does not exist until
+		   after Angular has completed the current change-detection pass. */
 		if (this.pendingScrollToNewIngredient) {
 			this.pendingScrollToNewIngredient = false;
 			const rows = document.querySelectorAll<HTMLElement>(`.ing-row.${this.selectedEditorType}`);
@@ -421,9 +428,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * @returns The scaled, formatted quantity string, or an empty string if no recipe is selected.
 	 */
 	protected formatQty(base: number, unit: string): string {
+		// Step 1: Guard — nothing to show if no recipe is selected or the base qty is zero/falsy.
 		if (!this.selectedRecipe) return '';
 		if (!base) return '';
+
+		// Step 2: Scale the base quantity proportionally to the current servings count.
 		const scaled = base * (this.servings / this.selectedRecipe.baseServings);
+
+		/* Step 3: Format the number — show as an integer when exact, otherwise one decimal place.
+		   The /\.0$/ strip turns "2.0" back into "2" after toFixed(1). */
 		const rounded =
 			scaled === Math.round(scaled) ? String(scaled) : scaled.toFixed(1).replace(/\.0$/, '');
 		return unit ? `${rounded} ${unit}` : rounded;
@@ -547,6 +560,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * @param recipe - The recipe whose data should be loaded into the editor.
 	 */
 	private loadRecipeIntoEditor(recipe: Recipe): void {
+		// Step 1: Populate scalar editor fields and reset all validation error flags.
 		this.editorName = recipe.detailName;
 		this.editorCookTime = recipe.cookTimeMin || null;
 		this.editorServings = recipe.baseServings;
@@ -557,6 +571,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		this.editorCategoryInvalid = false;
 		this.editorIngredientInvalid = false;
 
+		/* Step 2: Flatten the saved ingredient groups into the flat EditorIngredient list.
+		   baseQty is stored as a number; convert to string so the template input binds correctly. */
 		this.editorIngredients = recipe.groups.flatMap((group) =>
 			group.items.map((item) => ({
 				type: group.type,
@@ -566,19 +582,21 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			}))
 		);
 
-		/* Sync type tabs to match exactly the types present in this recipe so the
+		/* Step 3: Sync the type-tab set to exactly the types present in this recipe so the
 		   user sees the right tabs without having to open the filter dialog manually. */
 		const recipeTypes = recipe.groups.map((group) => group.type);
 		if (recipeTypes.length > 0) {
 			this.enabledTypeIds = new Set(recipeTypes);
 		}
 
-		// Default editor type tab to the first group present, or veg if empty
+		// Step 4: Set the active type tab to the first group's type; guarantee at least one blank row.
 		this.selectedEditorType = recipe.groups[0]?.type ?? RECIPE_ITYPE_VEGETABLE;
 		if (this.editorIngredients.length === 0) {
 			this.editorIngredients = [{ type: RECIPE_ITYPE_VEGETABLE, name: '', qty: '', unit: '' }];
 		}
 
+		/* Step 5: Convert saved StepToken arrays back to plain text strings for the editor textarea,
+		   then guarantee at least one blank step row exists. */
 		this.editorSteps = recipe.steps.map((recipeStep) => ({
 			text: recipeStep.text.map((token) => token.text).join(''),
 			subs: recipeStep.substeps.map((text) => ({ text }))
@@ -587,6 +605,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			this.editorSteps = [{ text: '', subs: [] }];
 		}
 
+		// Step 6: Capture a clean snapshot so isEditorDirty can detect any subsequent change.
 		this.initialEditorSnapshot = this.snapshotEditorState();
 	}
 
@@ -597,6 +616,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * shows a confirm-discard dialog first.
 	 */
 	protected cancelAdd(): void {
+		// Step 1: Edit mode — skip the dialog entirely if nothing was changed, otherwise confirm.
 		if (this.editingMode === RECIPE_EDITING_MODE_EDIT) {
 			if (!this.isEditorDirty) {
 				this.transitionTo(RECIPE_VIEW_DETAIL);
@@ -610,6 +630,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			);
 			return;
 		}
+
+		/* Step 2: Create mode — determine whether any data has been entered.
+		   Checks name, category, every ingredient name, every step text and sub-point, and notes
+		   so a truly blank form exits without a confirmation prompt. */
 		const empty =
 			!this.editorName.trim() &&
 			!this.editorCategory &&
@@ -619,6 +643,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 					!editorStep.text.trim() && editorStep.subs.every((subpoint) => !subpoint.text.trim())
 			) &&
 			!this.editorNotes.trim();
+
+		// Step 3: Exit silently if blank; otherwise prompt the user before discarding.
 		if (empty) {
 			this.transitionTo(RECIPE_VIEW_LIST);
 			return;
@@ -638,12 +664,18 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 */
 	protected removeCurrentRecipe(): void {
 		const recipeName = this.selectedRecipe?.name ?? '';
+
+		// Step 1: Show confirmation dialog before any destructive database call.
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			() => {
+				// Step 2: Re-guard inside the callback — the ID could theoretically be cleared
+				// between the dialog opening and the user confirming.
 				if (!this.editingRecipeId) return;
 				const id = this.editingRecipeId;
+
+				// Step 3: Delete from the database; navigate to the list on success, toast on failure.
 				this.databaseService
 					.removeRecipe(id, recipeName)
 					.then(() => {
@@ -950,10 +982,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * The recipe watcher keeps the local list in sync automatically.
 	 */
 	protected async saveRecipe(): Promise<void> {
+		// Step 1: Short-circuit in edit mode when nothing was changed — no database call needed.
 		if (this.editingMode === RECIPE_EDITING_MODE_EDIT && !this.isEditorDirty) {
 			this.transitionTo(RECIPE_VIEW_DETAIL);
 			return;
 		}
+
+		/* Step 2: Validate all required fields and surface error states.
+		   chineseCharWidth counts CJK characters as double-width so the cap is consistent
+		   with how the name is displayed in the list card. */
 		this.editorNameInvalid = !this.editorName.trim();
 		this.editorNameTooLong =
 			!!this.editorName.trim() &&
@@ -968,6 +1005,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		)
 			return;
 
+		// Step 3: Strip blank ingredient rows and rebuild the grouped structure for the database.
 		const validIngredients = this.editorIngredients.filter((ingredient) => ingredient.name.trim());
 
 		const groups: IngredientGroup[] = MASTER_TYPE_TABS.flatMap((tab) => {
@@ -981,6 +1019,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: tab.label, items }];
 		});
 
+		/* Step 4: Convert editor step rows to RecipeStep objects, running autoPillStepText
+		   so ingredient mentions are immediately highlighted in the read view after saving. */
 		const steps: RecipeStep[] = this.editorSteps
 			.filter(
 				(editorStep) =>
@@ -992,11 +1032,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 				done: false
 			}));
 
+		// Step 5: Derive badge tags from which ingredient types are actually present; cap to max.
 		const presentTypes = new Set(validIngredients.map((ingredient) => ingredient.type));
 		const badges: BadgeTag[] = MASTER_TYPE_TABS.filter((tab) => presentTypes.has(tab.id))
 			.slice(0, RECIPE_MAX_BADGES)
 			.map((tab) => ({ type: tab.id, emoji: tab.emoji, label: tab.label }));
 
+		/* Step 6: Assemble the final Recipe object.
+		   For edits, preserve the existing id and openid; for creates, openid comes from the
+		   authenticated user so ownership is recorded at creation time. */
 		const isEdit = this.editingMode === RECIPE_EDITING_MODE_EDIT && !!this.editingRecipeId;
 		const recipe: Recipe = {
 			id: isEdit ? this.editingRecipeId! : '',
@@ -1013,6 +1057,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			notes: this.editorNotes.trim()
 		};
 
+		// Step 7: Persist and navigate to the detail view; toast and log on both success and failure.
 		try {
 			if (isEdit) {
 				await this.databaseService.updateRecipe(recipe);
@@ -1023,6 +1068,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 				await this.databaseService.addRecipe(recipe);
 				LOG.info(this.className, `Recipe created: "${recipe.name}"`);
 				this.dialogService.showToast(SUCCESS, RECIPE_MSG_ADDED);
+				/* pendingDetailName lets the subscription callback select the newly created recipe
+				   automatically once the database emits it with its generated id. */
 				this.pendingDetailName = recipe.name;
 				this.selectedRecipe = recipe;
 			}
@@ -1050,6 +1097,9 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	private autoPillStepText(text: string, ingredients: EditorIngredient[]): StepToken[] {
 		if (!text) return [{ kind: 'text', text: '' }];
 
+		// Step 1: Build a lowercase name → type map using only the first line of each ingredient name.
+		// Bilingual entries store both languages separated by \n; matching on line 0 avoids
+		// accidentally wrapping a translated word that the step author didn't write.
 		const nameMap = new Map<string, IngredientType>();
 		ingredients.forEach((ingredient) => {
 			const name = ingredient.name.split('\n')[0].trim().toLowerCase();
@@ -1057,10 +1107,14 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		});
 		if (nameMap.size === 0) return [{ kind: 'text', text }];
 
+		/* Step 2: Build a single alternation regex from all ingredient names, sorted longest-first.
+		   Without length ordering, "soy sauce" would match "soy" first, leaving " sauce" as a plain
+		   text fragment. The 'gi' flags make matching case-insensitive and global for exec looping. */
 		const sortedNames = [...nameMap.keys()].sort((a, b) => b.length - a.length);
 		const escaped = sortedNames.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 		const regex = new RegExp(`(${escaped.join('|')})`, 'gi');
 
+		// Step 3: Walk the text left-to-right, alternating plain text and pill tokens at each match.
 		const tokens: StepToken[] = [];
 		let lastIndex = 0;
 		let match: RegExpExecArray | null;
@@ -1074,6 +1128,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			tokens.push({ kind: 'pill', text: labeled, pillType: type });
 			lastIndex = match.index + matched.length;
 		}
+
+		// Step 4: Flush any trailing text after the last match, then guard against an empty token array.
 		if (lastIndex < text.length) {
 			tokens.push({ kind: 'text', text: text.slice(lastIndex) });
 		}
@@ -1093,6 +1149,11 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		this.draggingStep = step;
 		event.dataTransfer?.setData('text/plain', String(this.editorSteps.indexOf(step)));
 		if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+
+		/* Override the default drag ghost with the full card element.
+		   Without setDragImage the browser clones just the drag handle icon, which looks
+		   detached. The offset is computed from the pointer's position within the card so
+		   the ghost appears anchored where the user grabbed it. */
 		const card = (event.target as HTMLElement).closest('.step-card') as HTMLElement;
 		if (card && event.dataTransfer) {
 			const rect = card.getBoundingClientRect();
@@ -1152,11 +1213,16 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 */
 	protected onStepDrop(target: EditorStep, event: DragEvent): void {
 		event.preventDefault();
+
+		// Step 1: Guard against a drop onto itself or a stale drag state (e.g. dragged from outside).
 		const dragged = this.draggingStep;
 		if (!dragged || dragged === target) {
 			this.onStepDragEnd();
 			return;
 		}
+
+		// Step 2: Recalculate the above/below split at drop time — dragover's dropPosition can
+		// disagree with the final pointer position if the card scrolled between events.
 		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
 		const before = event.clientY - rect.top < rect.height / 2;
 		const fromIndex = this.editorSteps.indexOf(dragged);
@@ -1164,10 +1230,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			this.onStepDragEnd();
 			return;
 		}
+
+		/* Step 3: Remove the dragged step first, then resolve the target index in the shortened array.
+		   The +1 offset is applied only for "drop below" because splice inserts before the given index. */
 		const moved = this.editorSteps.splice(fromIndex, 1)[0];
 		let toIndex = this.editorSteps.indexOf(target);
 		if (!before) toIndex += 1;
 		this.editorSteps.splice(toIndex, 0, moved);
+
+		// Step 4: Always clean up drag state so no card stays highlighted after the drop.
 		this.onStepDragEnd();
 	}
 
@@ -1210,6 +1281,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * Clamps {@link currentPage} if it would fall outside the new page range.
 	 */
 	private updateGridLayout(): void {
+		/* Step 1: Read the card dimensions from CSS custom properties rather than hardcoding them.
+		   This keeps the JS in sync with the CSS automatically when breakpoint values change. */
 		const host = this.elRef.nativeElement;
 		const style = getComputedStyle(host);
 		const itemWidthPx = parseInt(style.getPropertyValue('--individual-item-width'));
@@ -1217,11 +1290,17 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 
 		const contentContainer = host.querySelector('.glass-card') as HTMLElement | null;
 		if (contentContainer) {
+			/* Step 2: Calculate how many cards fit per row using the container's current pixel width.
+			   The formula mirrors CSS grid's auto-fill logic: subtract one gap for the left margin,
+			   then divide by (item + gap) so every slot accounts for its trailing gap. */
 			const componentWidth = contentContainer.clientWidth;
 			const itemsPerRow = Math.max(
 				1,
 				Math.floor((componentWidth - itemGapPx) / (itemWidthPx + itemGapPx))
 			);
+
+			// Step 3: Apply the column count imperatively via Renderer2 so Angular's encapsulation
+			// does not strip the inline style and the grid adapts without a stylesheet change.
 			const grid = host.querySelector('.grid') as HTMLElement | null;
 			if (grid) {
 				this.renderer.setStyle(
@@ -1230,6 +1309,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 					`repeat(${itemsPerRow}, minmax(${itemWidthPx}px, 1fr))`
 				);
 			}
+
+			/* Step 4: Recalculate pageSize and clamp currentPage.
+			   The page must be clamped before pageSize is updated; computing maxPage against
+			   the old pageSize would give a stale upper bound. */
 			const newPageSize = itemsPerRow * RECIPE_ROWS_PER_PAGE;
 			const maxPage = Math.max(0, Math.ceil(this.filteredRecipes.length / newPageSize) - 1);
 			if (this.currentPage > maxPage) {

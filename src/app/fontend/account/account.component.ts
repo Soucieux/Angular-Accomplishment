@@ -1,5 +1,6 @@
 import {
 	AfterViewInit,
+	ChangeDetectorRef,
 	Component,
 	Inject,
 	OnDestroy,
@@ -11,20 +12,17 @@ import {
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, Subscription } from 'rxjs';
+import { Router } from '@angular/router';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
-	ACCOUNT_DIALOG_DELETE_BTN,
-	ACCOUNT_DIALOG_DELETE_HEADER,
-	ACCOUNT_DIALOG_DELETE_MSG,
 	ACCOUNT_LABEL_CHANGE_PASSWORD,
 	ACCOUNT_LABEL_OLD_PASSWORD,
 	ACCOUNT_LABEL_CONFIRM_PASSWORD,
 	ACCOUNT_LABEL_DANGER_ZONE_TITLE,
-	ACCOUNT_MSG_COMING_SOON,
 	ACCOUNT_LABEL_DELETE_ACCOUNT,
 	ACCOUNT_LABEL_DELETE_DESCRIPTION,
 	ACCOUNT_LABEL_EMAIL,
@@ -38,15 +36,15 @@ import {
 	ACCOUNT_LABEL_STREAK_SUFFIX,
 	ACCOUNT_LABEL_USERNAME,
 	ACCOUNT_LABEL_SECURITY_TITLE,
+	ACCOUNT_LABEL_LAST_LOGIN,
 	ACCOUNT_LABEL_USERNAME_CHANGED,
 	ACCOUNT_LABEL_PASSWORD_CHANGED,
 	ACCOUNT_LABEL_UPDATE_USERNAME,
+	ACCOUNT_MSG_DELETING_ACCOUNT,
 	ACCOUNT_PLACEHOLDER_USERNAME,
 	ACCOUNT_MSG_USERNAME_UPDATED,
 	ACCOUNT_LABEL_VERIFIED,
-	ACCOUNT_MSG_DELETE_CONFIRMED,
-	ACCOUNT_MSG_INVALID_NEW_PASSWORD,
-	ACCOUNT_MSG_INVALID_OLD_PASSWORD,
+	ACCOUNT_MSG_NO_EMAIL,
 	ACCOUNT_MSG_PASSWORD_MISMATCH,
 	ACCOUNT_MSG_PASSWORD_TOO_SHORT,
 	ACCOUNT_MSG_PASSWORD_UPDATED,
@@ -86,12 +84,14 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_LABEL_MEMBER_SINCE = ACCOUNT_LABEL_MEMBER_SINCE;
 	protected readonly ACCOUNT_LABEL_STREAK_SUFFIX = ACCOUNT_LABEL_STREAK_SUFFIX;
 	protected readonly ACCOUNT_LABEL_VERIFIED = ACCOUNT_LABEL_VERIFIED;
+	protected readonly ACCOUNT_MSG_NO_EMAIL = ACCOUNT_MSG_NO_EMAIL;
 	protected readonly ACCOUNT_LABEL_IDENTITY_TITLE = ACCOUNT_LABEL_IDENTITY_TITLE;
 	protected readonly ACCOUNT_LABEL_INNER_WORLD_TITLE = ACCOUNT_LABEL_INNER_WORLD_TITLE;
 	protected readonly ACCOUNT_LABEL_MILESTONES_TITLE = ACCOUNT_LABEL_MILESTONES_TITLE;
 	protected readonly ACCOUNT_LABEL_DANGER_ZONE_TITLE = ACCOUNT_LABEL_DANGER_ZONE_TITLE;
 	protected readonly ACCOUNT_LABEL_USERNAME = ACCOUNT_LABEL_USERNAME;
 	protected readonly ACCOUNT_LABEL_SECURITY_TITLE = ACCOUNT_LABEL_SECURITY_TITLE;
+	protected readonly ACCOUNT_LABEL_LAST_LOGIN = ACCOUNT_LABEL_LAST_LOGIN;
 	protected readonly ACCOUNT_LABEL_USERNAME_CHANGED = ACCOUNT_LABEL_USERNAME_CHANGED;
 	protected readonly ACCOUNT_LABEL_PASSWORD_CHANGED = ACCOUNT_LABEL_PASSWORD_CHANGED;
 	protected readonly ACCOUNT_LABEL_UPDATE_USERNAME = ACCOUNT_LABEL_UPDATE_USERNAME;
@@ -104,7 +104,6 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_LABEL_UPDATE_PASSWORD = ACCOUNT_LABEL_UPDATE_PASSWORD;
 	protected readonly ACCOUNT_LABEL_DELETE_ACCOUNT = ACCOUNT_LABEL_DELETE_ACCOUNT;
 	protected readonly ACCOUNT_LABEL_DELETE_DESCRIPTION = ACCOUNT_LABEL_DELETE_DESCRIPTION;
-	protected readonly ACCOUNT_MSG_COMING_SOON = ACCOUNT_MSG_COMING_SOON;
 	protected readonly ACCOUNT_STRENGTH_LEVELS = ACCOUNT_STRENGTH_LEVELS;
 
 	// ── Mutable state ─────────────────────────────────────────────────────────
@@ -113,6 +112,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected memberSince = '';
 	protected milestoneList: AccountMilestone[] = [];
 	protected isStatsLoaded = false;
+	protected lastLoginDate = '';
 	protected usernameChangedDate = '';
 	protected passwordChangedDate = '';
 	protected currentUser$!: Observable<any>;
@@ -127,9 +127,11 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
+		private router: Router,
 		private authService: AuthService,
 		private databaseService: DatabaseService,
-		private dialogService: DialogService
+		private dialogService: DialogService,
+		private cdr: ChangeDetectorRef
 	) {}
 
 	/**
@@ -139,13 +141,28 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngOnInit(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
+
+		// Step 1: Wire up the current-user observable used by the template
 		this.currentUser$ = this.authService.getCurrentUser();
+
+		// Step 2: Once the first user emission resolves, seed stats and fetch the last-login date
 		firstValueFrom(this.currentUser$)
 			.then((user) => {
 				if (!user) return;
 				(this.databaseService as CloudbaseService).ensureUserStatsExist().catch(() => {});
+				this.authService
+					.getLastLoginTimestamp()
+					.then((date) => {
+						this.lastLoginDate = date;
+						this.cdr.detectChanges();
+					})
+					.catch(() => {});
 			})
 			.catch(() => {});
+
+		/* Step 3: Subscribe to the live stats document and project all derived display fields.
+		   detectChanges is called explicitly here because this subscription fires outside the
+		   Angular zone (CloudBase SDK callbacks are not zone-patched). */
 		this.statsSub = (this.databaseService as CloudbaseService).getUserStats().subscribe((doc) => {
 			if (!doc) return;
 			this.userStats = this.userStats.map((stat) => ({
@@ -161,6 +178,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.usernameChangedDate = (doc[STATS_FIELD_USERNAME_CHANGED] as string) ?? '';
 			this.passwordChangedDate = (doc[STATS_FIELD_PASSWORD_CHANGED] as string) ?? '';
 			this.isStatsLoaded = true;
+			this.cdr.detectChanges();
 		});
 	}
 
@@ -192,11 +210,16 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected async updateUsername(): Promise<void> {
 		try {
 			await this.authService.updateUsername(this.usernameInput.trim());
+
+			/* Record the change timestamp in the stats doc as a fire-and-forget write.
+			   It is intentionally not awaited — a failure here must not block the success toast. */
 			(this.databaseService as CloudbaseService)
 				.updateUserStatsFields({
 					[STATS_FIELD_USERNAME_CHANGED]: Utilities.formatDateForStorage(new Date())
 				})
 				.catch(() => {});
+
+			// Confirm success to the user only after the auth update resolves
 			this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_USERNAME_UPDATED);
 		} catch {
 			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
@@ -210,6 +233,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Clears all three password fields on success.
 	 */
 	protected async updatePassword(): Promise<void> {
+		// Step 1: Validate new password locally before making any network call
 		if (this.newPasswordInput.length < 6) {
 			this.dialogService.showToast(TOAST_WARN, ACCOUNT_MSG_PASSWORD_TOO_SHORT);
 			return;
@@ -219,21 +243,31 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			return;
 		}
 		try {
+			// Step 2: Attempt the credential change — requires the current password for re-authentication
 			await this.authService.changePassword(this.oldPasswordInput, this.newPasswordInput);
+
+			/* Step 3: Record the change timestamp as a fire-and-forget write — same non-blocking
+			   pattern as updateUsername so a stats failure cannot suppress the success toast. */
 			(this.databaseService as CloudbaseService)
 				.updateUserStatsFields({
 					[STATS_FIELD_PASSWORD_CHANGED]: Utilities.formatDateForStorage(new Date())
 				})
 				.catch(() => {});
+
+			// Step 4: Confirm success and clear all password fields to prevent accidental re-submission
 			this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_PASSWORD_UPDATED);
 			this.oldPasswordInput = '';
 			this.newPasswordInput = '';
 			this.confirmPasswordInput = '';
 		} catch (error: unknown) {
-			if (error instanceof WrongOldPasswordError) {
-				this.dialogService.openDialog(this.dialogComponentContainer, 'error', ACCOUNT_MSG_INVALID_OLD_PASSWORD);
-			} else if (error instanceof PasswordTooWeakError) {
-				this.dialogService.openDialog(this.dialogComponentContainer, 'error', ACCOUNT_MSG_INVALID_NEW_PASSWORD);
+			/* Step 5: Surface known error types with contextual messages; fall back to the generic
+			   unexpected-error dialog for anything else to avoid leaking internal error details. */
+			if (error instanceof WrongOldPasswordError || error instanceof PasswordTooWeakError) {
+				this.dialogService.openDialog(
+					this.dialogComponentContainer,
+					'error',
+					(error as Error).message
+				);
 			} else {
 				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
@@ -264,16 +298,31 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── Dialog opener methods ─────────────────────────────────────────────────
 
 	/**
-	 * Opens the confirm dialog for account deletion and shows a success toast on confirmation.
+	 * Opens the delete-account dialog. On password confirmation, calls CloudBase to
+	 * permanently delete the account, then signs out and navigates to the home route.
 	 */
 	protected openDeleteConfirmationDialog(): void {
+		/* Step 1: Open the password-confirmation dialog. The callback only fires when the user
+		   submits a valid password — cancellation silently closes with no side effects. */
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			'confirm',
-			() => {
-				this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_DELETE_CONFIRMED);
-			},
-			[ACCOUNT_DIALOG_DELETE_MSG, ACCOUNT_DIALOG_DELETE_HEADER, ACCOUNT_DIALOG_DELETE_BTN]
+			'delete-account',
+			async (password: string) => {
+				/* Step 2: Replace the confirmation dialog with a blocking spinner while deletion runs.
+				   The block dialog must wrap both deleteUser and signOut — if it only wrapped deleteUser,
+				   the user could interact with the page between deletion and navigation. */
+				await this.dialogService.openDialog(
+					this.dialogComponentContainer,
+					'block',
+					async () => {
+						// Step 3: Delete the account, sign out, then navigate away — order is mandatory
+						await this.authService.deleteUser(password);
+						await this.authService.signOut();
+						this.router.navigate(['/']).catch(() => {});
+					},
+					ACCOUNT_MSG_DELETING_ACCOUNT
+				);
+			}
 		);
 	}
 
@@ -289,26 +338,35 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns The sorted list of AccountMilestone display objects, newest first.
 	 */
 	private buildMilestoneList(raw: Record<string, string>): AccountMilestone[] {
-		return Object.entries(raw)
-			.sort(([, dateA], [, dateB]) => dateB.localeCompare(dateA))
-			.map(([key, storageDate]) => {
-				const label = MILESTONE_LABELS[key];
-				if (label) {
-					return {
-						title: label.title,
-						date: Utilities.storageDateToDisplayMonth(storageDate),
-						note: label.note
-					};
-				}
-				const match = key.match(/^([a-z]+?)(\d+)(st|th)$/);
-				if (!match) return null;
-				const [, domain, count] = match;
-				const domainLabel = MILESTONE_DOMAIN_DISPLAY[domain];
-				if (!domainLabel) return null;
-				const title = `${count}${domainLabel}`;
-				return { title, date: Utilities.storageDateToDisplayMonth(storageDate), note: '' };
-			})
-			.filter((m): m is AccountMilestone => m !== null);
+		return (
+			Object.entries(raw)
+				// Step 1: Sort newest first — localeCompare works here because dates are stored as YYYY-MM-DD
+				.sort(([, dateA], [, dateB]) => dateB.localeCompare(dateA))
+				.map(([key, storageDate]) => {
+					// Step 2a: Named milestones (e.g. account-created) resolve directly from the label map
+					const label = MILESTONE_LABELS[key];
+					if (label) {
+						return {
+							title: label.title,
+							date: Utilities.storageDateToDisplayMonth(storageDate),
+							note: label.note
+						};
+					}
+
+					/* Step 2b: Counted milestones use a key pattern like "film3rd" or "recipe10th".
+				   The regex captures domain prefix, numeric count, and ordinal suffix separately
+				   so both the count and the human-readable domain label can be composed at runtime. */
+					const match = key.match(/^([a-z]+?)(\d+)(st|th)$/);
+					if (!match) return null;
+					const [, domain, count] = match;
+					const domainLabel = MILESTONE_DOMAIN_DISPLAY[domain];
+					if (!domainLabel) return null;
+					const title = `${count}${domainLabel}`;
+					return { title, date: Utilities.storageDateToDisplayMonth(storageDate), note: '' };
+				})
+				// Step 3: Drop nulls produced by unrecognised key shapes — typed predicate keeps the array type clean
+				.filter((m): m is AccountMilestone => m !== null)
+		);
 	}
 
 	// ── Template helper methods ───────────────────────────────────────────────
@@ -365,6 +423,16 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected getUserDisplayName(user: any): string {
 		return Utilities.capitalizeFirstLetterOnEachWord(Utilities.getUserDisplayName(user));
+	}
+
+	/**
+	 * Gets the avatar image URL from the user object, checking both CloudBase fields.
+	 *
+	 * @param user - The authenticated user object from the auth observable.
+	 * @returns The avatar URL string, or an empty string if no photo is set.
+	 */
+	protected getUserAvatarUrl(user: any): string {
+		return Utilities.getUserAvatarUrl(user);
 	}
 
 	/**

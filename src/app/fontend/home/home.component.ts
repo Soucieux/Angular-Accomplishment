@@ -69,11 +69,17 @@ export class HomeComponent implements OnInit, OnDestroy {
 				this.loggedIn = loggedIn;
 
 				if (loggedIn && !wasLoggedIn) {
+					// Step 1: Start the global loading timeout so a dialog appears if data never arrives
 					this.loading = true;
 					this.timeoutService.start(TIMEOUT_KEY_HOME, () => {
 						this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
 					});
 
+					/*
+					 * Step 2: Guard against links that never resolve — after 4 s hide the
+					 * skeleton regardless, so the rest of the dashboard is not blocked by a
+					 * slow or failed links stream.
+					 */
 					this.linksLoadingTimer = setTimeout(() => {
 						if (this.dashLinksLoading) {
 							this.dashLinksLoading = false;
@@ -81,6 +87,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 						}
 					}, 4000);
 
+					// Step 3: Subscribe to portal links and categories independently so a
+					// failure in one stream does not prevent the other from rendering
 					this.linksSub = this.databaseService.getUsefulLinks().subscribe({
 						next: (data: PortalLink[]) => {
 							clearTimeout(this.linksLoadingTimer);
@@ -105,6 +113,12 @@ export class HomeComponent implements OnInit, OnDestroy {
 						}
 					});
 
+					/*
+					 * Step 4: Subscribe to statistics last — its arrival is the signal that
+					 * critical data is ready, so it clears the global timeout and lifts the
+					 * loading flag. Cancelling the timeout in the error handler prevents the
+					 * timeout dialog from opening on top of an already-failed state.
+					 */
 					this.statsSub = this.databaseService.getStatistics().subscribe({
 						next: (data: HomeStats) => {
 							this.timeoutService.clear(TIMEOUT_KEY_HOME);
@@ -120,6 +134,12 @@ export class HomeComponent implements OnInit, OnDestroy {
 						}
 					});
 
+					/*
+					 * Step 5: Trigger the CSS enter-transition for the dashboard panel.
+					 * The 600 ms delay lets the transitioning flag drive an animation before
+					 * showDashboard switches the panel into the DOM — skipping the delay
+					 * would cause the element to appear without the transition playing.
+					 */
 					this.transitioning = true;
 					this.cdr.detectChanges();
 					this.dashboardTimer = setTimeout(() => {
@@ -128,6 +148,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 						this.cdr.detectChanges();
 					}, 600);
 				} else if (!loggedIn) {
+					// Step 6: Tear down all active timers and subscriptions on logout so
+					// stale data is never shown when a different user signs in later
 					this.timeoutService.clear(TIMEOUT_KEY_HOME);
 					clearTimeout(this.linksLoadingTimer);
 					clearTimeout(this.dashboardTimer);

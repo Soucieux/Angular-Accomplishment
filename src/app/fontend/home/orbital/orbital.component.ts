@@ -575,10 +575,16 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	 * @returns A formatted string segment, or null when the group is empty.
 	 */
 	private buildGroupSummary(items: OrbitalUrgentItem[], groupLabel: string): string | null {
+		// Step 1: Empty group produces no segment — caller filters nulls before joining
 		if (!items.length) return null;
+
+		// Step 2: Single item — show truncated name and its own due label directly
 		if (items.length === 1) {
 			return `${Utilities.truncate(items[0].name, ORBITAL_URGENCY_TEXT_MAX_CHARS)}${ORBITAL_URGENCY_ITEM_SEPARATOR}${items[0].dueLabel}`;
 		}
+
+		/* Step 3: Multiple items — show count + group label. Append "Various" when items span
+		   different due dates; items are pre-sorted ascending so [0] is always the nearest. */
 		const allSameDate = items.every((item) => item.daysUntilDue === items[0].daysUntilDue);
 		const dateLabel = allSameDate
 			? items[0].dueLabel
@@ -597,9 +603,14 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	private buildAddedThisWeek(): number {
 		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_RECENT_ACTIVITIES]) as RecentActivityItem[];
 		if (!raw.length) return 0;
+
+		// Step 1: Compute the midnight boundary 7 days ago; zeroing hours makes the comparison date-only
 		const cutoff = new Date();
 		cutoff.setDate(cutoff.getDate() - 7);
 		cutoff.setHours(0, 0, 0, 0);
+
+		/* Step 2: Parse each timestamp with parseDateToISODate before constructing a Date — the app uses
+		   a dot-separated format ("YYYY.MM.DD HH:mm") that the Date constructor cannot parse cross-browser. */
 		return raw.filter((entry) => {
 			if (!entry.timestamp) return false;
 			return new Date(Utilities.parseDateToISODate(entry.timestamp) + 'T00:00') >= cutoff;
@@ -667,12 +678,18 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	private buildGenreBars(): { label: string; count: number; percentage: number; color: string }[] {
 		const raw = this.stats?.[STATS_FIELD_GENRE];
 		if (!raw) return [];
+
+		// Step 1: Strip the synthetic "Favourite" key and zero-count entries so only real genres appear
 		const entries = Object.entries(raw as Record<string, number>)
 			.filter(([key, value]) => key !== GENRE_FAVOURITE && (value as number) > 0)
 			.map(([label, count]) => ({ label, count: count as number }));
 		if (!entries.length) return [];
+
+		// Step 2: Sort descending and capture the top count for relative-percentage calculation
 		entries.sort((a, b) => b.count - a.count);
 		const max = entries[0].count;
+
+		// Step 3: Cap at 5 bars and assign percentage + cycling color index
 		return entries.slice(0, 5).map((genre, index) => ({
 			...genre,
 			percentage: Math.round((genre.count / max) * 100),
@@ -688,11 +705,16 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	 */
 	private buildReminderRows(): OrbitalReminderRow[] {
 		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_REMINDER_UPCOMING]);
+
+		// Step 1: Drop entries without a parseable date so sort arithmetic is always valid
 		return raw
 			.filter((item) => {
 				const reminder = item as { date?: string | null };
 				return reminder.date && Utilities.coerceDateToString(reminder.date);
 			})
+
+			/* Step 2: Sort ascending by calendar date. The date string may be in app dot-format
+			   or ISO 8601, so coerceDateToString normalises it before constructing the timestamp. */
 			.sort((a, b) => {
 				const toMs = (item: unknown) => {
 					const dateStr = Utilities.coerceDateToString((item as { date?: unknown }).date);
@@ -701,6 +723,8 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 				};
 				return toMs(a) - toMs(b);
 			})
+
+			// Step 3: Map each item to a typed row; 9999 sentinel pushes undated items to the end of urgency sorts
 			.map((item, index) => {
 				const reminder = item as { name?: string; date?: string | null };
 				const overdue = Utilities.isOverdue(reminder.date);
@@ -739,11 +763,16 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	 */
 	private buildDebtRows(): OrbitalDebtRow[] {
 		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_DEBT_UPCOMING]);
+
+		// Step 1: Drop entries without a parseable date so sort arithmetic is always valid
 		return raw
 			.filter((item) => {
 				const debt = item as { date?: string | null };
 				return debt.date && Utilities.coerceDateToString(debt.date);
 			})
+
+			/* Step 2: Sort ascending by calendar date. coerceDateToString normalises both
+			   app dot-format and ISO 8601 before the millisecond comparison. */
 			.sort((a, b) => {
 				const toMs = (item: unknown) => {
 					const dateStr = Utilities.coerceDateToString((item as { date?: unknown }).date);
@@ -752,6 +781,8 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 				};
 				return toMs(a) - toMs(b);
 			})
+
+			// Step 3: Map to typed row; derive repayment percentage and category gradient for the progress bar
 			.map((item, index) => {
 				const debt = item as {
 					name?: string;
@@ -763,6 +794,8 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 				const overdue = Utilities.isOverdue(debt.date);
 				const remaining = debt.debt ?? 0;
 				const original = debt.original ?? 0;
+
+				// Guard against division by zero when no original amount is recorded
 				const percentage = original > 0 ? Math.round(((original - remaining) / original) * 100) : 0;
 				const categoryDef = DEBT_CATEGORY_DEFS.find((d) => d.key === debt.category);
 				const barColor = categoryDef?.gradient ?? 'linear-gradient(90deg,#d53163,#f7971e)';
@@ -793,9 +826,15 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 		const rows: OrbitalActivityRow[] = [];
 
 		for (const entry of raw) {
+			// Step 1: Skip malformed entries — source and timestamp are both required for a valid row
 			if (!entry.timestamp || !entry.source) continue;
+
+			// Step 2: Resolve the source definition; unknown sources are silently skipped rather than erroring
 			const def = defs[entry.source];
 			if (!def) continue;
+
+			/* Step 3: Apply per-type overrides — only the fields that differ from the source default
+			   are overridden; getDetail falls back to the source-level function when the override omits it. */
 			const ov = def.types[entry.type ?? ''];
 			rows.push({
 				icon: ov?.icon ?? def.icon,

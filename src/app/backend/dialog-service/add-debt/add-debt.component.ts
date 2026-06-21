@@ -82,16 +82,19 @@ export class AddDebtDialogComponent {
 		submitCallback: (data: NewDebtData) => void,
 		prefillData: Partial<NewDebtData> | null
 	): void {
+		// Step 1: Register the callback and derive the mode from whether prefill data was supplied
 		this.submitCallback = submitCallback;
 		this.isEditMode = prefillData !== null;
+
 		if (prefillData) {
-			/* Edit mode: only populate the fields the user can change (balance, due date, currency);
-			   name, category, and permanent toggle are hidden in this mode */
+			/* Step 2 (edit mode): Populate only the editable fields — balance, due date, and currency.
+			   The 'T00:00' suffix forces local-midnight parsing; omitting it causes a UTC offset
+			   that shifts the displayed date by one day in negative-offset timezones. */
 			this.amount = String(prefillData.amount ?? '');
 			this.dueDateModel = prefillData.dueDate ? new Date(prefillData.dueDate + 'T00:00') : null;
 			this.selectedCurrency = prefillData.currency ?? DEBT_CURRENCY_CNY;
 		} else {
-			// Add mode: reset all fields and default due date to 30 days from now
+			// Step 2 (add mode): Reset every field and seed due date 30 days out as a sensible default
 			this.name = '';
 			this.selectedCategoryKey = 'card';
 			this.amount = '';
@@ -99,6 +102,8 @@ export class AddDebtDialogComponent {
 			this.selectedCurrency = '';
 			this.isPermanent = false;
 		}
+
+		// Step 3: Make the dialog visible only after state is fully initialised to avoid a blank flash
 		this.visible = true;
 	}
 
@@ -107,7 +112,12 @@ export class AddDebtDialogComponent {
 	 * debt data, and closes the dialog.
 	 */
 	protected onSubmit(): void {
+		// Step 1: Guard — the template disables the button, but this prevents keyboard/programmatic bypass
 		if (!this.isValid) return;
+
+		/* Step 2: Build the payload and invoke the caller's callback.
+		   dueDate falls back to an empty string (not null) so the database field stays consistent
+		   across records regardless of whether the user set a date. */
 		this.submitCallback?.({
 			name: this.name.trim(),
 			amount: parseFloat(this.amount),
@@ -116,6 +126,8 @@ export class AddDebtDialogComponent {
 			category: this.selectedCategoryKey,
 			currency: this.selectedCurrency
 		});
+
+		// Step 3: Close after the callback so the caller receives data before the component tears down
 		this.onDialogClosed();
 	}
 

@@ -1,0 +1,175 @@
+/* ─────────────────────────────────────────
+   p-dialog shell overrides
+───────────────────────────────────────── */
+::ng-deep .delete-account-dialog {
+	width: 420px;
+	border-radius: 20px !important;
+	overflow: hidden !important;
+	background: rgba(255, 255, 255, 0.96) !important;
+	backdrop-filter: blur(24px);
+	border: 1px solid rgba(255, 255, 255, 0.7) !important;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24) !important;
+	user-select: none;
+}
+
+::ng-deep .delete-account-dialog .p-dialog-header {
+	background: linear-gradient(135deg, #dc2626 0%, #9b1c1c 100%) !important;
+	padding: 20px 24px 16px !important;
+	border-radius: 20px 20px 0 0 !important;
+}
+
+::ng-deep .delete-account-dialog .p-dialog-content {
+	padding: 20px 24px 8px !important;
+	background: transparent !important;
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 16px !important;
+}
+
+::ng-deep .delete-account-dialog .p-dialog-footer {
+	padding: 12px 24px 16px !important;
+	background: transparent !important;
+	border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
+	display: flex !important;
+	justify-content: flex-end !important;
+	gap: 10px !important;
+}
+
+/* ─────────────────────────────────────────
+   Header title
+───────────────────────────────────────── */
+.delete-account-dialog-title {
+	font-size: 20px;
+	font-weight: 700;
+	color: #fff;
+}
+
+/* ─────────────────────────────────────────
+   Warning text
+───────────────────────────────────────── */
+.delete-account-warning {
+	font-size: 14px;
+	color: #334155;
+	line-height: 1.55;
+	margin: 0;
+}
+
+/* ─────────────────────────────────────────
+   Password field
+───────────────────────────────────────── */
+.delete-account-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.delete-account-field input[type='password'] {
+	font-size: 15px;
+	color: #1a1a1a;
+	background: rgba(255, 255, 255, 0.8);
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-radius: 12px;
+	padding: 11px 14px;
+	outline: none;
+	width: 100%;
+	box-sizing: border-box;
+	transition:
+		border-color 150ms,
+		box-shadow 150ms;
+	font-family: caption;
+	letter-spacing: 1.5px;
+
+	&:focus {
+		border: 1px solid transparent;
+		background:
+			rgba(255, 255, 255, 0.8) padding-box,
+			linear-gradient(135deg, #dc2626 0%, #9b1c1c 100%) border-box;
+		box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+	}
+
+	&::placeholder {
+		font-family: 'app-font', sans-serif;
+		letter-spacing: normal;
+		font-size: 14px;
+		color: rgba(100, 116, 139, 0.7);
+	}
+}
+
+.delete-account-error {
+	font-size: 12px;
+	color: #dc2626;
+	padding-left: 2px;
+}
+
+/* ─────────────────────────────────────────
+   Footer buttons
+───────────────────────────────────────── */
+.delete-account-button-ghost {
+	border: 1.5px solid rgba(213, 51, 105, 0.4);
+	background: transparent;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 600;
+	color: rgba(213, 51, 105, 0.85);
+	height: 32px;
+	padding: 0 14px;
+	border-radius: 9px;
+	transition: background 150ms;
+
+	&:hover:not(:disabled) {
+		background: rgba(213, 51, 105, 0.05);
+	}
+
+	&:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+}
+
+.delete-account-button-danger {
+	border: none;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 600;
+	color: #fff;
+	background: linear-gradient(135deg, #dc2626 0%, #9b1c1c 100%);
+	height: 32px;
+	padding: 0 14px;
+	border-radius: 9px;
+	transition:
+		transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+		box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1);
+
+	&:hover:not(:disabled) {
+		transform: scale(1.03);
+		box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
+	}
+
+	&:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+}
+
+/* ─────────────────────────────────────────
+   Responsive ≤ 940 px (mobile)
+───────────────────────────────────────── */
+@media (max-width: 940px) {
+	::ng-deep .delete-account-dialog {
+		width: 100% !important;
+		min-height: 100dvh !important;
+		border-radius: 0 !important;
+	}
+
+	::ng-deep .delete-account-dialog .p-dialog-header {
+		border-radius: 0 !important;
+	}
+
+	::ng-deep .delete-account-dialog .p-dialog-content {
+		flex: 1 !important;
+	}
+
+	::ng-deep .delete-account-dialog .p-dialog-footer {
+		border-radius: 0 !important;
+	}
+}

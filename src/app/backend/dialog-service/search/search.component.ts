@@ -30,17 +30,22 @@ export class SearchDialogComponent {
 	 * @param stopCallback - The callback to call when the user interrupts the search.
 	 */
 	public openDialog(stopCallback: () => void): void {
+		// Step 1: Show the dialog and register the caller's interrupt hook
 		this.visible = true;
 		this.stopCallback = stopCallback;
 
+		// Step 2: Stream live log lines from the search service into the template
 		this.searchLogsSub = this.searchStreamService.searchLogs$.subscribe((searchLogs) => {
 			this.searchLogs = searchLogs;
 
+			// Step 2.1: Detect terminal sentinel so the Close button becomes available
 			const lastLog = searchLogs[searchLogs.length - 1];
 			if (lastLog === SEARCH_COMPLETE || lastLog === SEARCH_CANCEL) {
 				this.searchCompleteOrInterrupted = true;
 			}
 
+			/* Step 2.2: Defer the scroll by one microtask so Angular has already
+			   rendered the new log line into the DOM before we measure scrollHeight. */
 			setTimeout(() => {
 				const element = this.logContainer?.nativeElement;
 				if (element) {
@@ -62,9 +67,13 @@ export class SearchDialogComponent {
 	 * unsubscribing from search logs, and clearing the log state.
 	 */
 	protected onDialogClosed() {
+		// Step 1: Notify the parent that the dialog has closed
 		this.closed$.emit();
 		this.visible = false;
 		this.searchCompleteOrInterrupted = false;
+
+		/* Step 2: Unsubscribe before clearing so the subscriber cannot fire one
+		   last emission with an empty array and corrupt the log display. */
 		this.searchLogsSub.unsubscribe();
 		this.searchStreamService.clearSearchLogs();
 	}

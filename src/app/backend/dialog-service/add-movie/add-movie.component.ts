@@ -107,6 +107,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	protected async searchCurrentMovie(newMovieData: AddMovieFormValue) {
 		this.isLoading = true;
 		try {
+			// Step 1: Populate the VO using whichever search strategy the user chose
 			/* Two input strategies: if movieName is provided, search by name+year;
 			   if id is provided instead, search by numeric Douban ID. */
 			if (newMovieData.movieName) {
@@ -117,10 +118,12 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 			}
 			this.movieItemVO.setMovieGenre(newMovieData.genres?.genre ?? '');
 
+			// Step 2: Fetch the cover image and convert the blob to an object URL for display
 			const movieImage = await this.searchCallback?.(this.movieItemVO);
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 			this.canSubmit = true;
 		} catch (error) {
+			// Step 3: Surface domain errors inline; unknown errors go to the unexpected-error dialog
 			/* Each error type maps to a specific user-facing message;
 			   the dialog is shown in-place (not thrown) because this is a search flow. */
 			if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
@@ -130,6 +133,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		} finally {
+			// Step 4: Always clear the loading flag and force CD — isLoading must clear even on error
 			this.isLoading = false;
 			this.cdr.detectChanges();
 		}
@@ -142,10 +146,13 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	 * @param value - The new value of the ID input.
 	 */
 	protected onIdChange(value: string) {
+		// Step 1: Clear name+year fields when an ID is typed — the two strategies are mutually exclusive
 		if (value && value.trim() !== '') {
 			this.addMovieForm.controls['movieName']?.reset();
 			this.addMovieForm.controls['years']?.reset();
 		}
+
+		// Step 2: Invalidate any previous search result so the user must re-search before submitting
 		this.canSubmit = false;
 	}
 
@@ -162,9 +169,14 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	 * callback with the populated movie item VO.
 	 */
 	protected onSubmit() {
+		// Step 1: Close the dialog first so the UI hides immediately while the callback runs
 		this.onDialogClosed();
+
+		// Step 2: Stamp the favourite flag onto the VO and hand it to the caller
 		this.movieItemVO.setIsFavourite(this.isFavourite);
 		this.submitCallback?.(this.movieItemVO);
+
+		// Step 3: Reset the VO so a re-opened dialog starts clean rather than carrying stale data
 		this.movieItemVO = new MovieItemVO();
 	}
 

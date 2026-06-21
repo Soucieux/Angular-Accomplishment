@@ -76,17 +76,21 @@ export class HistoryDialogComponent implements OnDestroy {
 	 * @param entry - The history entry whose associated movie will be restored.
 	 */
 	protected openRestoreEntryDialog(entry: HistoryEntry) {
+
+		// Step 1: Wrap the restore logic inside a confirmation dialog so the user must acknowledge before reverting
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			async () => {
 				try {
 					if (!entry.id || !entry.message) throw new MovieIdNotFoundError(HISTORY_MOVIE_ID_UNKNOWN);
+
+					/* Step 2: Reconstruct a MovieItemVO from the history message string.
+					   Full movie data is not stored in history — only the human-readable message.
+					   Format: "MovieName - Genre (Rate: X) was status on YYYY.MM.DD HH:mm:ss"
+					   Positional splitting is fragile; field order in the message must never change. */
 					const movieToRestore = new MovieItemVO();
 					movieToRestore.setMovieId(entry.id);
-					/* Reconstruct MovieItemVO from the history message string.
-					   Format: "MovieName - Genre (Rate: X) was status on YYYY.MM.DD HH:mm:ss"
-					   This string-based reconstruction is brittle but avoids storing full movie data in history. */
 					const msg = entry.message;
 					const movieName = msg.split(' - ')[0];
 					const genre = msg.split(' - ')[1]?.split(' ')[0]?.trim() ?? '';
@@ -94,8 +98,11 @@ export class HistoryDialogComponent implements OnDestroy {
 					movieToRestore.setMovieName(movieName);
 					movieToRestore.setMovieYear(year);
 					movieToRestore.setMovieGenre(genre);
+
+					// Step 3: Invoke the caller-supplied revert callback to persist the restoration
 					await this.revertDataCallback?.(movieToRestore);
 				} catch (error) {
+					// Known domain errors surface as user-facing dialogs; everything else is logged as unexpected
 					if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
 						this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 					} else {

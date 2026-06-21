@@ -14,6 +14,7 @@ import {
 	DIALOG_BLOCK,
 	DIALOG_CONFIRM,
 	DIALOG_DEBT,
+	DIALOG_DELETE_ACCOUNT,
 	DIALOG_ERROR,
 	DIALOG_HISTORY,
 	DIALOG_LINK,
@@ -27,6 +28,7 @@ import {
 	MSG_PERMISSION_DENIED,
 	MSG_UNEXPECTED_ERROR,
 	RETRY_DIALOG_MSG,
+	RETRY_DIALOG_SESSION_EXPIRED_MSG,
 	SEARCH
 } from '../../common/app.constant';
 import { MessageService } from 'primeng/api';
@@ -38,6 +40,8 @@ import { NewDebtData } from '../../fontend/debt/debt.model';
 import { AddLinkDialogComponent } from './add-link/add-link.component';
 import { MultiLinkDialogComponent } from './multi-link/multi-link.component';
 import { NewLinkData } from '../../fontend/portal/portal.model';
+import { DeleteAccountDialogComponent } from './delete-account/delete-account.component';
+import { SessionExpiredError } from '../../common/error/session-expired.error';
 
 @Injectable({
 	providedIn: 'root'
@@ -79,6 +83,8 @@ export class DialogService {
 				return MultiLinkDialogComponent;
 			case DIALOG_RETRY:
 				return RetryDialogComponent;
+			case DIALOG_DELETE_ACCOUNT:
+				return DeleteAccountDialogComponent;
 			default:
 				throw new Error(MSG_INVALID_DIALOG_TYPE);
 		}
@@ -151,6 +157,12 @@ export class DialogService {
 
 	public openDialog(dialogContainerRef: ViewContainerRef, dialogType: 'retry', message: string): void;
 
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'delete-account',
+		submitCallback: (password: string) => Promise<void>
+	): void;
+
 	/**
 	 * Opens a dialog
 	 *
@@ -165,15 +177,18 @@ export class DialogService {
 		dataOrCallback1: any,
 		dataOrCallback2?: any
 	): void | Promise<void> {
-		// Guard: a null container means the component host is not initialized yet
+		// Step 1: Guard — a null container means the component host is not yet initialized
 		if (!dialogContainerRef) {
 			const error = new Error(MSG_DIALOG_CONTAINER_NOT_FOUND);
 			LOG.error(this.className, error.message);
 			throw error;
 		}
 
-		/* Block, error, and retry dialogs are allowed to stack (multiple can be open at once);
-		   all other dialog types enforce a single-instance rule to prevent duplicates. */
+		/*
+		 * Step 2: Enforce single-instance rule per dialog type.
+		 * Stackable types (block, error, retry) are silently skipped when already open;
+		 * all other types throw to surface the duplicate-open bug to the caller.
+		 */
 		if (this.openedDialogs.has(dialogType)) {
 			if (this.stackableDialogTypes.has(dialogType)) return;
 			const error = new Error(MSG_DIALOG_ALREADY_OPEN);
@@ -182,26 +197,32 @@ export class DialogService {
 		}
 
 		try {
+			// Step 3: Dynamically instantiate the component inside the provided container
 			const dialogComponent = this.getDialogComponent(dialogType);
-			/* Dynamically instantiate the dialog component inside the provided container,
-			   giving it access to the container's injector and change detection. */
 			const dialogComponentRef = dialogContainerRef.createComponent(dialogComponent);
 
 			let blockPromise: Promise<void> | undefined;
 
-			/* SEARCH and error dialogs only need one callback/data argument;
-			   block dialogs return a promise so callers can await task completion;
-			   all other dialogs receive two arguments (prefill/callback or two callbacks). */
+			/*
+			 * Step 4: Wire arguments to the dialog instance.
+			 * Search/error/retry take only one argument; block returns a Promise so
+			 * the caller can await task completion; all others receive two arguments.
+			 */
 			if (dialogType === SEARCH || dialogType === DIALOG_ERROR || dialogType === DIALOG_RETRY) {
 				dialogComponentRef.instance.openDialog(dataOrCallback1);
 			} else if (dialogType === DIALOG_BLOCK) {
 				blockPromise = dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
+			} else if (dialogType === DIALOG_DELETE_ACCOUNT) {
+				dialogComponentRef.instance.openDialog(dataOrCallback1);
+				dialogComponentRef.instance.sessionExpired$.pipe(take(1)).subscribe(() => {
+					this.showSessionExpired(dialogContainerRef);
+				});
 			} else {
 				dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
 			}
 
-			/* When the dialog emits its closed event, remove it from the tracking map
-			   and destroy the component to prevent memory leaks. */
+			/* Step 5: Subscribe to the closed$ event to remove the tracking entry and
+			   destroy the component ref — omitting destroy() would leak the DOM node. */
 			dialogComponentRef.instance.closed$.pipe(take(1)).subscribe(() => {
 				this.openedDialogs.delete(dialogType);
 				dialogComponentRef.destroy();
@@ -209,8 +230,7 @@ export class DialogService {
 
 			this.openedDialogs.set(dialogType, dialogComponentRef);
 
-			/* Return the promise for block dialogs so callers can await the task
-			   and handle any errors that occur during execution. */
+			// Step 6: Expose the block promise so callers can await long-running tasks
 			if (blockPromise) {
 				return blockPromise;
 			}
@@ -227,6 +247,16 @@ export class DialogService {
 	 */
 	public showLoadingTimeout(container: ViewContainerRef): void {
 		this.openDialog(container, 'retry', RETRY_DIALOG_MSG);
+	}
+
+	/**
+	 * Shows the session-expired retry dialog. Calling window.location.reload()
+	 * via the retry button redirects the user back to the login page.
+	 *
+	 * @param container - The ViewContainerRef to attach the dialog to.
+	 */
+	public showSessionExpired(container: ViewContainerRef): void {
+		this.openDialog(container, 'retry', RETRY_DIALOG_SESSION_EXPIRED_MSG);
 	}
 
 	/**
@@ -272,7 +302,9 @@ export class DialogService {
 	 * @param error - The caught error value.
 	 */
 	public handleError(container: ViewContainerRef, error: unknown): void {
-		if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
+		if (error instanceof SessionExpiredError) {
+			this.showSessionExpired(container);
+		} else if (error instanceof Error && error.message === ERROR_PERMISSION_DENIED) {
 			this.showPermissionError(container);
 		} else {
 			this.showUnexpectedError(container);

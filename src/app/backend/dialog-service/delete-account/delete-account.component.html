@@ -1,0 +1,38 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	appendTo="body"
+	[resizable]="false"
+	[closable]="false"
+	(onHide)="onDialogClosed()"
+	styleClass="delete-account-dialog">
+	<ng-template #header>
+		<span class="delete-account-dialog-title">{{ ACCOUNT_DIALOG_DELETE_HEADER }}</span>
+	</ng-template>
+
+	<p class="delete-account-warning">{{ ACCOUNT_DIALOG_DELETE_MSG }}</p>
+
+	<div class="delete-account-field">
+		<input
+			type="password"
+			[(ngModel)]="passwordInput"
+			[placeholder]="ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER"
+			(keyup.enter)="onSubmit()"
+			autocomplete="current-password" />
+		@if (errorMessage) {
+			<span class="delete-account-error">{{ errorMessage }}</span>
+		}
+	</div>
+
+	<ng-template #footer>
+		<button class="delete-account-button-ghost" [disabled]="isSubmitting" (click)="onDialogClosed()">
+			{{ ACCOUNT_DIALOG_DELETE_CANCEL_BTN }}
+		</button>
+		<button
+			class="delete-account-button-danger"
+			[disabled]="!passwordInput || isSubmitting"
+			(click)="onSubmit()">
+			{{ ACCOUNT_DIALOG_DELETE_BTN }}
+		</button>
+	</ng-template>
+</p-dialog>

@@ -84,9 +84,14 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 		submitCallback: (formData: NewLinkData) => void,
 		prefillData: Partial<NewLinkData> | null
 	): void {
+		// Step 1: Wire up the callback and determine whether this is an add or edit session
 		this.submitCallback = submitCallback;
 		this.isEditMode = prefillData !== null;
+
+		// Step 2: Always reset first so stale values from a previous session cannot leak into add mode
 		this.resetFields();
+
+		// Step 3: Populate fields from prefill data — favicon is derived from the URL, not stored separately
 		if (prefillData) {
 			this.url = prefillData.url ?? '';
 			this.title = prefillData.title ?? '';
@@ -94,6 +99,8 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 			this.isPinned = prefillData.isPinned ?? false;
 			this.faviconPreview = this.url ? Utilities.getFavicon(this.url) : '';
 		}
+
+		// Step 4: Clear any in-flight loading state from the previous session before making the dialog visible
 		this.metaLoading = false;
 		this.visible = true;
 	}
@@ -131,16 +138,28 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	protected onUrlConfirm(): void {
 		const rawUrl = this.url.trim();
 		if (!rawUrl) return;
+
+		// Step 1: Normalize the URL and immediately update the favicon — this happens even when title fetch is skipped
 		const normalizedUrl = Utilities.normalizeUrl(rawUrl);
 		this.url = normalizedUrl;
 		this.faviconPreview = Utilities.getFavicon(normalizedUrl);
+
+		/*
+		 * Step 2: Guard against redundant fetches — skip if a title already exists, a fetch is
+		 * already in flight, or this exact URL was already fetched during this dialog session.
+		 * lastFetchedUrl is reset on each openDialog() call so a reopened dialog always re-fetches.
+		 */
 		if (this.title || this.metaLoading || this.lastFetchedUrl === normalizedUrl) return;
+
+		// Step 3: Fetch the remote page HTML and extract the <title> tag via regex
 		this.metaLoading = true;
 		this.databaseService
 			.proxyFetch(normalizedUrl)
 			.then((result) => {
 				const match = result.content?.match(/<title[^>]*>([^<]+)<\/title>/i);
 				if (match?.[1]) this.title = match[1].trim();
+
+				// Mark URL as fetched so repeated blur/enter events on the same URL are no-ops
 				this.lastFetchedUrl = normalizedUrl;
 				this.metaLoading = false;
 				this.cdr.markForCheck();
@@ -156,12 +175,19 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	 */
 	protected onSubmit(): void {
 		if (!this.isValid) return;
+
+		// Step 1: Build the payload — URL is re-normalized here in case the user edited it after the blur event
 		const formData: NewLinkData = {
 			url: Utilities.normalizeUrl(this.url),
 			title: this.title.trim(),
 			category: this.category,
 			isPinned: this.isPinned
 		};
+
+		/*
+		 * Step 2: Close first, then invoke the callback — closing resets visible and emits closed$,
+		 * so the dialog is already dismissed before any async work the callback triggers begins.
+		 */
 		this.onDialogClosed();
 		this.submitCallback?.(formData);
 	}

@@ -403,9 +403,16 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected tagColor(tag: string | undefined): string {
 		if (!tag) return REMINDER_CATEGORY_COLOR_DEFAULT;
+
+		// Step 1: Return the fixed palette color for known base categories
 		if (this.categoryColorMap[tag]) return this.categoryColorMap[tag];
+
+		// Step 2: Return the memoized color for custom tags seen before
 		const cached = this.customTagColorCache.get(tag);
 		if (cached) return cached;
+
+		/* Step 3: Derive a deterministic HSL color from a djb2-style hash of the tag string.
+		   The same custom tag must always produce the same hue across renders and sessions. */
 		let hash = 0;
 		for (let i = 0; i < tag.length; i++) {
 			hash = tag.charCodeAt(i) + ((hash << 5) - hash);
@@ -629,12 +636,19 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param item - The ReminderItem being edited, or undefined for the new-item form.
 	 */
 	protected async openDatePopover(event: Event, item?: ReminderItem): Promise<void> {
+		// Step 1: Capture the editing target and build a stable Date model for the datepicker
 		this.editingItem = item ?? null;
 		// Compute once here — a stable reference avoids the datepicker re-rendering on every CD cycle.
 		this.editingDateModel = item?.date ? new Date(item.date + 'T00:00') : null;
 		this.isDate = true;
+
+		/* Step 2: Hide then re-show the popover after a 50 ms tick.
+		   Without the delay, PrimeNG repositions the already-open popover in place rather than
+		   re-anchoring it to the new event target, which leaves it misaligned when switching cards. */
 		this.dateOrLinkPopover.hide();
 		await firstValueFrom(timer(50));
+
+		// Step 3: Reveal the popover anchored to the triggering element
 		this.dateOrLinkPopover.show(event);
 	}
 
@@ -646,11 +660,17 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param item - The ReminderItem being edited, or undefined for the new-item form.
 	 */
 	protected async openLinkPopover(event: Event, item?: ReminderItem): Promise<void> {
+		// Step 1: Capture the editing target and seed the link input with the existing value
 		this.editingItem = item ?? null;
 		this.editingLink = item?.link ?? '';
 		this.isDate = false;
+
+		/* Step 2: Hide then re-show after 50 ms — same re-anchor pattern as openDatePopover.
+		   Without the tick, switching between card link buttons leaves the popover misaligned. */
 		this.dateOrLinkPopover.hide();
 		await firstValueFrom(timer(50));
+
+		// Step 3: Reveal the popover anchored to the triggering element
 		this.dateOrLinkPopover.show(event);
 	}
 
@@ -717,6 +737,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param entryKey - The CloudBase document key identifying the entry to remove.
 	 */
 	protected openDeleteConfirmationDialog(entryKey: string): void {
+		// Step 1: Guard with a permission check — only the record owner may delete
 		const returnCode = this.dialogService.ensurePermission(
 			this.dialogComponentContainer,
 			this.getOpenId(entryKey)
@@ -725,6 +746,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			: FAILURE;
 
 		if (returnCode === FAILURE) return;
+
+		/* Step 2: Open the confirm dialog; the actual DB removal runs inside the async callback
+		   so it only fires after the user explicitly confirms and not on accidental taps. */
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
@@ -742,10 +766,13 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param item - The ReminderItem whose text was edited.
 	 */
 	protected async onCardTextUpdate(item: ReminderItem): Promise<void> {
+		// Step 1: Bail out early if the item no longer exists in the snapshot or the text is unchanged
 		const originalIndex = this.originalItems.findIndex(
 			(originalRecord) => originalRecord.key === item.key
 		);
 		if (originalIndex === -1 || item.text === (this.originalItems[originalIndex].text ?? '')) return;
+
+		// Step 2: Guard with a permission check before touching the database
 		const returnCode = this.dialogService.ensurePermission(
 			this.dialogComponentContainer,
 			this.getOpenId(item.key)
@@ -753,10 +780,13 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			? SUCCESS
 			: FAILURE;
 		if (returnCode === FAILURE) return;
+
+		// Step 3: Persist the trimmed text to CloudBase
 		const savedText = item.text.trim();
 		await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TEXT, savedText);
-		/* The DB subscription fires asynchronously — replace the snapshot entry immutably so a
-		   concurrent blur cannot pass the changed-value guard and issue a duplicate write. */
+
+		/* Step 4: Update the local snapshot immutably so a concurrent blur cannot pass the
+		   changed-value guard above and fire a duplicate write before the DB subscription re-emits. */
 		const updatedSnapshot = structuredClone(this.originalItems[originalIndex]);
 		updatedSnapshot.text = savedText;
 		this.originalItems = [
@@ -788,11 +818,14 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param date - The Date value selected in the picker.
 	 */
 	protected async onEditingDateSelected(date: Date): Promise<void> {
-		// Close UI immediately — before any async work so the user is not blocked.
+		/* Step 1: Dismiss the datepicker overlay and popover before any async work.
+		   Closing first prevents the user seeing a stale open popover during the DB round-trip. */
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(this.editingDatepicker as any)?.hideOverlay();
 		this.dateOrLinkPopover.hide();
 		if (!this.editingItem) return;
+
+		// Step 2: Guard with a permission check — must happen after the null guard on editingItem
 		const returnCode = this.dialogService.ensurePermission(
 			this.dialogComponentContainer,
 			this.getOpenId(this.editingItem.key)
@@ -800,6 +833,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			? SUCCESS
 			: FAILURE;
 		if (returnCode === FAILURE) return;
+
+		// Step 3: Persist the selected date and refresh the statistics upcoming list
 		this.editingItem.date = date ? Utilities.formatDateForStorage(date) : null;
 		await this.updateTableSingleValue(
 			this.editingItem.key,
@@ -815,6 +850,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected async onPopoverLinkUpdate(): Promise<void> {
 		if (this.editingItem) {
+			// Step 1: Guard with a permission check before writing to the database
 			const returnCode = this.dialogService.ensurePermission(
 				this.dialogComponentContainer,
 				this.getOpenId(this.editingItem.key)
@@ -822,6 +858,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				? SUCCESS
 				: FAILURE;
 			if (returnCode === FAILURE) return;
+
+			/* Step 2: Normalize the URL before persisting — empty input clears the field rather
+			   than storing a blank string, matching the null-vs-string distinction used elsewhere. */
 			const trimmedLink = this.editingLink.trim();
 			this.editingItem.link = trimmedLink ? Utilities.normalizeUrl(trimmedLink, true) : null;
 			await this.updateTableSingleValue(
@@ -830,6 +869,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.editingItem.link
 			);
 		}
+
+		// Step 3: Always hide the popover — runs for both the existing-item and new-item paths
 		this.dateOrLinkPopover.hide();
 	}
 
@@ -859,6 +900,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		const session = this.tagEditSession;
 		if (!session?.item) return;
 		const item = session.item;
+
+		// Step 1: Guard with a permission check before writing to the database
 		const returnCode = this.dialogService.ensurePermission(
 			this.dialogComponentContainer,
 			this.getOpenId(item.key)
@@ -866,9 +909,14 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			? SUCCESS
 			: FAILURE;
 		if (returnCode === FAILURE) return;
+
+		/* Step 2: Apply the new tag to the view model — a non-empty input sets the tag; an empty
+		   input on an existing slot (index !== -1) clears it rather than leaving the old value. */
 		const tagText = session.tagText.trim();
 		if (tagText) item.tag = tagText;
 		else if (session.index !== -1) item.tag = '';
+
+		// Step 3: Dismiss the popover and clear the session, then persist the updated tag
 		this.tagPickerPopover?.hide();
 		this.cancelTagEdit();
 		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAG, item.tag);
@@ -948,6 +996,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param item - The ReminderItem to update.
 	 */
 	protected async clearDate(item: ReminderItem): Promise<void> {
+		// Step 1: Guard with a permission check before touching the database
 		const returnCode = this.dialogService.ensurePermission(
 			this.dialogComponentContainer,
 			this.getOpenId(item.key)
@@ -955,7 +1004,11 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			? SUCCESS
 			: FAILURE;
 		if (returnCode === FAILURE) return;
+
+		// Step 2: Clear the date on the view model immediately for instant UI feedback
 		item.date = null;
+
+		// Step 3: Persist the cleared date and refresh the upcoming-reminders statistics
 		if (item.key) {
 			await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_DATE, null);
 			this.updateUpcomingToStatistics();
@@ -968,6 +1021,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param item - The ReminderItem to update.
 	 */
 	protected async clearLink(item: ReminderItem): Promise<void> {
+		// Step 1: Guard with a permission check before touching the database
 		const returnCode = this.dialogService.ensurePermission(
 			this.dialogComponentContainer,
 			this.getOpenId(item.key)
@@ -975,8 +1029,13 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			? SUCCESS
 			: FAILURE;
 		if (returnCode === FAILURE) return;
+
+		/* Step 2: Clear the link on the view model and reset the popover input if this card
+		   is currently open in the link popover — prevents a stale URL showing when it re-opens. */
 		item.link = null;
 		if (this.editingItem === item) this.editingLink = '';
+
+		// Step 3: Persist the cleared link to CloudBase
 		if (item.key) {
 			await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_LINK, null);
 		}
@@ -1168,14 +1227,20 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		const grid = this.cardGrid?.nativeElement;
 		if (!container || !grid) return;
 
+		/* Step 1: Read column sizing from CSS custom properties rather than hardcoded values
+		   so the layout stays in sync with the stylesheet without duplicating constants in TS. */
 		const style = getComputedStyle(container);
 		const itemWidthPx = parseInt(style.getPropertyValue('--individual-item-width'));
 		const itemGapPx = parseInt(style.getPropertyValue('--individual-item-gap'));
 
+		// Step 2: Compute column count from available container width and apply it to the grid
 		const containerWidth = container.clientWidth;
 		const itemsPerRow = Math.max(1, Math.floor((containerWidth - itemGapPx) / (itemWidthPx + itemGapPx)));
 		grid.style.gridTemplateColumns = `repeat(${itemsPerRow}, minmax(${itemWidthPx}px, 1fr))`;
 
+		/* Step 3: Recalculate page size and clamp the current page index.
+		   The page must be clamped before updating itemsPerPage — otherwise pagedItems
+		   computes a slice from the old page size and can briefly show the wrong items. */
 		const newPageSize = itemsPerRow * REMINDER_ROWS_PER_PAGE;
 		const maxPage = Math.max(0, Math.ceil(this.filteredItems.length / newPageSize) - 1);
 		if (this.page > maxPage) this.page = maxPage;

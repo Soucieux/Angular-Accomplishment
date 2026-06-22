@@ -135,6 +135,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private chargedCellsInitialized = false;
 	protected isNextMonth!: boolean;
 	protected dateCalculatorLoading = true;
+	protected isDateCalculatorCollapsed = false;
 
 	protected links: PortalLink[] = [];
 	protected categories: PortalCategory[] = [];
@@ -923,6 +924,13 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				}
 			}
 		}, PORTAL_MSG_SAVING_CATEGORY).catch(() => {});
+	}
+
+	/**
+	 * Toggles the Date Calculator section between collapsed and expanded states.
+	 */
+	protected toggleDateCalculator(): void {
+		this.isDateCalculatorCollapsed = !this.isDateCalculatorCollapsed;
 	}
 
 	// ── Private helpers ───────────────────────────────────────────────────────

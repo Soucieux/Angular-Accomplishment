@@ -18,9 +18,10 @@
 		@if (utilities.getIsUserAlive()) {
 			<div class="date-calculator-section">
 				<div class="table-wrapper">
-					<div class="header-wrapper">
+					<div class="header-wrapper" style="cursor: pointer" (click)="toggleDateCalculator()">
 						<div class="header-main">
 							<h4>Date Calculator</h4>
+							<span class="pi" [class.pi-chevron-up]="!isDateCalculatorCollapsed" [class.pi-chevron-down]="isDateCalculatorCollapsed"></span>
 						</div>
 						<div class="date-calculator-toggle-wrapper">
 							<div class="date-calculator-segment-group">
@@ -47,6 +48,7 @@
 							</button>
 						</div>
 					</div>
+					@if (!isDateCalculatorCollapsed) {
 					<p-table
 						[value]="updatedDateCalculatorRows"
 						[loading]="dateCalculatorLoading"
@@ -123,6 +125,7 @@
 							{{ isNextMonth ? PORTAL_LABEL_NEXT_MONTH : PORTAL_LABEL_CURRENT_MONTH }}
 						</span>
 					</div>
+					}
 				</div>
 			</div>
 		}

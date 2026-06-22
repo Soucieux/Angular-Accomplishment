@@ -81,7 +81,14 @@ import {
 	TOAST_ERROR,
 	TOAST_INFO
 } from '../../common/app.constant';
-import { NewCategoryData, NewLinkData, PortalCategory, PortalLink, PORTAL_DATE_CALCULATOR_FIELDS, PORTAL_LINK_CARD_PALETTE } from './portal.model';
+import {
+	NewCategoryData,
+	NewLinkData,
+	PortalCategory,
+	PortalLink,
+	PORTAL_DATE_CALCULATOR_FIELDS,
+	PORTAL_LINK_CARD_PALETTE
+} from './portal.model';
 import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
 
 @Component({
@@ -135,7 +142,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private chargedCellsInitialized = false;
 	protected isNextMonth!: boolean;
 	protected dateCalculatorLoading = true;
-	protected isDateCalculatorCollapsed = false;
+	protected isDateCalculatorCollapsed = true;
 
 	protected links: PortalLink[] = [];
 	protected categories: PortalCategory[] = [];
@@ -621,7 +628,6 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	////////////////////// Below are links handlers ////////////////////////////////////
 
-
 	/**
 	 * Marks the link as having a failed favicon so the initial-letter fallback is displayed.
 	 * Logs a warning and triggers change detection.
@@ -907,11 +913,18 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		this.openBlockDialog(async () => {
 			try {
 				if (existing) {
-					await this.databaseService.updateLinkCategory(existing._id, { name: data.name }, data.name);
+					await this.databaseService.updateLinkCategory(
+						existing._id,
+						{ name: data.name },
+						data.name
+					);
 					LOG.info(this.className, `Category updated: ${data.name}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_CATEGORY_UPDATED);
 				} else {
-					await this.databaseService.addLinkCategory({ name: data.name, order: this.categories.length });
+					await this.databaseService.addLinkCategory({
+						name: data.name,
+						order: this.categories.length
+					});
 					LOG.info(this.className, `Category added: ${data.name}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_CATEGORY_ADDED);
 				}
@@ -920,7 +933,11 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 					this.dialogService.handleError(this.dialogComponentContainer, error);
 				} else {
 					LOG.error(this.className, PORTAL_MSG_SAVE_CATEGORY_FAILED, error as Error);
-					this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, PORTAL_MSG_CATEGORY_SAVE_FAILED_DETAIL);
+					this.dialogService.showToast(
+						TOAST_ERROR,
+						MSG_SAVE_FAILED,
+						PORTAL_MSG_CATEGORY_SAVE_FAILED_DETAIL
+					);
 				}
 			}
 		}, PORTAL_MSG_SAVING_CATEGORY).catch(() => {});
@@ -957,7 +974,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		this.personalFilteredLinks =
 			this.selectedCategory === PORTAL_CATEGORY_ALL
 				? personal
-				: personal.filter(l => l.category === this.selectedCategory);
+				: personal.filter((l) => l.category === this.selectedCategory);
 	}
 
 	// ── Template helper methods ───────────────────────────────────────────────

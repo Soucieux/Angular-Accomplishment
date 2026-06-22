@@ -1167,6 +1167,13 @@
 	-webkit-text-fill-color: transparent;
 }
 
+.icon-today {
+	background: linear-gradient(135deg, #16a34a, #065f46);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
 .icon-portal {
 	background: linear-gradient(135deg, #e91e8c, #07db19);
 	background-clip: text;

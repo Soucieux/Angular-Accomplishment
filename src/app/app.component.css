@@ -227,15 +227,23 @@ mat-drawer-content {
 /* ── Nav icon colours ────────────────────────────────────────────────────── */
 
 /* Home — orange → gold */
-li:nth-child(2) .nav-icon {
+li[data-nav-id="home"] .nav-icon {
 	background: linear-gradient(135deg, #ff6b35, #ffd700);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
+/* Today — forest green */
+li[data-nav-id="today"] .nav-icon {
+	background: linear-gradient(135deg, #16a34a, #065f46);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
 /* Portal — acid lime */
-li:nth-child(3) .nav-icon {
+li[data-nav-id="portal"] .nav-icon {
 	background: linear-gradient(135deg, #a3e635, #84cc16);
 	background-clip: text;
 	-webkit-background-clip: text;
@@ -243,7 +251,7 @@ li:nth-child(3) .nav-icon {
 }
 
 /* Resonance — amber gold */
-li:nth-child(4) .nav-icon {
+li[data-nav-id="resonance"] .nav-icon {
 	background: linear-gradient(135deg, #f59e0b, #d97706);
 	background-clip: text;
 	-webkit-background-clip: text;
@@ -251,7 +259,7 @@ li:nth-child(4) .nav-icon {
 }
 
 /* Recipes — rose */
-li:nth-child(5) .nav-icon {
+li[data-nav-id="recipes"] .nav-icon {
 	background: linear-gradient(135deg, #d53369, #b82d5a);
 	background-clip: text;
 	-webkit-background-clip: text;
@@ -259,7 +267,7 @@ li:nth-child(5) .nav-icon {
 }
 
 /* Entertainment — vivid spring */
-li:nth-child(6) .nav-icon {
+li[data-nav-id="entertainment"] .nav-icon {
 	background: linear-gradient(135deg, #4ade80, #22c55e);
 	background-clip: text;
 	-webkit-background-clip: text;
@@ -267,7 +275,7 @@ li:nth-child(6) .nav-icon {
 }
 
 /* Reminder — blue → cyan */
-li:nth-child(7) .nav-icon {
+li[data-nav-id="reminder"] .nav-icon {
 	background: linear-gradient(135deg, #1a6dff, #00d2ff);
 	background-clip: text;
 	-webkit-background-clip: text;
@@ -275,7 +283,7 @@ li:nth-child(7) .nav-icon {
 }
 
 /* Debt Sonata — dark teal → deep ocean */
-li:nth-child(8) .nav-icon {
+li[data-nav-id="debt"] .nav-icon {
 	background: linear-gradient(135deg, #0d9488, #134e4a);
 	background-clip: text;
 	-webkit-background-clip: text;
@@ -283,7 +291,7 @@ li:nth-child(8) .nav-icon {
 }
 
 /* Patch Notes — indigo */
-li:nth-child(9) .nav-icon {
+li[data-nav-id="patch"] .nav-icon {
 	background: linear-gradient(135deg, #667eea, #764ba2);
 	background-clip: text;
 	-webkit-background-clip: text;
@@ -291,7 +299,7 @@ li:nth-child(9) .nav-icon {
 }
 
 /* About — green → purple */
-li:nth-child(10) .nav-icon {
+li[data-nav-id="about"] .nav-icon {
 	background: linear-gradient(135deg, #4ade80, #9c27b0);
 	background-clip: text;
 	-webkit-background-clip: text;

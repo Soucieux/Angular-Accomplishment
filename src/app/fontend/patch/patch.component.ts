@@ -125,6 +125,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				colorClass: 'icon-home'
 			},
 			{
+				label: 'Today',
+				icon: 'calendar_today',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-today'
+			},
+			{
 				label: 'Portal',
 				icon: 'language',
 				iconClass: 'material-symbols-outlined',

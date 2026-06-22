@@ -785,6 +785,16 @@ export class Utilities {
 	}
 
 	/**
+	 * Pads a number to two digits with a leading zero.
+	 *
+	 * @param n - The number to pad.
+	 * @returns A two-character string representation of the number.
+	 */
+	public static padTwoDigits(n: number): string {
+		return String(n).padStart(2, '0');
+	}
+
+	/**
 	 * Checks and stores the current country code in the static field using the
 	 * browser timezone as a region signal. Mainland-China timezones resolve to CN;
 	 * all other timezones resolve to OVERSEAS.

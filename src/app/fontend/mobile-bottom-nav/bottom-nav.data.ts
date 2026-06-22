@@ -2,6 +2,7 @@ import { NavItem } from './bottom-nav.model';
 
 export const NAV_ITEMS: NavItem[] = [
 	{ id: 'home', label: 'Home', icon: 'home_app_logo', grad: 'linear-gradient(135deg,#ff6b35,#ffd700)' },
+	{ id: 'today', label: 'Today', icon: 'calendar_today', grad: 'linear-gradient(135deg,#16a34a,#065f46)' },
 	{ id: 'portal', label: 'Portal', icon: 'language', grad: 'linear-gradient(135deg,#a3e635,#84cc16)' },
 	{
 		id: 'resonance',
@@ -38,6 +39,7 @@ export const PRIMARY_IDS: string[] = ['home', 'portal', 'reminder', 'debt'];
 /** Maps Angular router URL paths to bottom-nav item ids. */
 export const ROUTE_TO_NAV_ID: Record<string, string> = {
 	'': 'home',
+	'/today': 'today',
 	'/portal': 'portal',
 	'/resonance': 'resonance',
 	'/recipe': 'recipes',
@@ -52,6 +54,7 @@ export const ROUTE_TO_NAV_ID: Record<string, string> = {
 /** Maps bottom-nav item ids to Angular router URL paths. */
 export const NAV_ID_TO_ROUTE: Record<string, string> = {
 	home: '',
+	today: '/today',
 	portal: '/portal',
 	resonance: '/resonance',
 	recipes: '/recipe',

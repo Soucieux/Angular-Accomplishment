@@ -32,6 +32,10 @@ export const SEARCH_COMPLETE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
 /** Message shown in the retry dialog when a page data load exceeds the timeout. */
 export const RETRY_DIALOG_MSG = 'Connection Lost...';
+/** Notification title shown when the user enables push notifications. */
+export const NOTIF_ENABLED_TITLE = 'Notifications enabled';
+/** Notification body shown when the user enables push notifications. */
+export const NOTIF_ENABLED_BODY = 'You will now receive notifications from Vision Canvas.';
 
 ////////////////////// Below are toast severity string constants //////////////////////
 
@@ -119,6 +123,12 @@ export const CN = 'CN';
 export const OVERSEAS = 'INTL';
 /** IANA timezone identifiers for mainland China — used by the timezone-based region detector. */
 export const CN_TIMEZONES = ['Asia/Shanghai', 'Asia/Urumqi'];
+/** Default locale used for date and time formatting throughout the app. */
+export const APP_LOCALE = 'en-US';
+/** DOM keyboard event key value for the Enter key. */
+export const KEY_ENTER = 'Enter';
+/** DOM keyboard event key value for the Escape key. */
+export const KEY_ESCAPE = 'Escape';
 
 ////////////////////// Below are auth and login constants ////////////////////////////
 
@@ -138,6 +148,7 @@ export const NAV_AVATAR_GRADIENT = 'linear-gradient(135deg,#d53369,#daae51)';
 export const NAV_NOTIF_LABEL_ENABLE = 'Enable notifications';
 export const NAV_NOTIF_LABEL_DISABLE = 'Disable notifications';
 export const NAV_NOTIF_LABEL_BLOCKED = 'Notifications blocked';
+export const NAV_NOTIF_TOGGLE_ERROR = 'Error toggling push notification';
 export const LOGIN_URL_DEFAULT_RETURN = '/';
 export const LOGIN_ANIM_OUT = 'out';
 export const LOGIN_ANIM_IN = 'in';
@@ -738,6 +749,18 @@ export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
 export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;
 /** Label for the chip that opens the free-text custom tag input. */
 export const REMINDER_CHIP_CUSTOM = 'Custom';
+/** Title for due-soon push notifications sent from the Reminder page. */
+export const REMINDER_NOTIF_TITLE = 'Reminder due soon';
+/** Separator between item text and date in the notification body. */
+export const REMINDER_NOTIF_BODY_SEPARATOR = ' · ';
+/** Suffix used to key the 3-day-ahead notification in the per-session notified set. */
+export const REMINDER_NOTIF_KEY_3DAY = '_3day';
+/** Suffix used to key the due-date notification in the per-session notified set. */
+export const REMINDER_NOTIF_KEY_DUE = '_due';
+/** Hour of day (0–23) at which the daily background notification scan fires when the app stays open. */
+export const REMINDER_NOTIF_DAILY_HOUR = 10;
+/** Interval in milliseconds for the daily background notification check — 24 hours. */
+export const REMINDER_NOTIF_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 ////////////////////// Below are Debt Sonata page constants //////////////////////////
 
@@ -852,6 +875,9 @@ export const CTX_COLOR_CLIPBOARD = 'linear-gradient(135deg, #d53369, #daae51)';
 export const CTX_COLOR_MY_ACCOUNT = 'linear-gradient(135deg, #6366f1, #a855f7)';
 export const CTX_COLOR_SIGN_OUT = 'linear-gradient(135deg, #d53369, #b82d5a)';
 export const CTX_COLOR_SIGN_IN = 'linear-gradient(135deg, #1a6dff, #00d2ff)';
+export const CTX_LABEL_INSPECT = 'Inspect';
+export const CTX_ICON_INSPECT = 'terminal';
+export const CTX_COLOR_INSPECT = 'linear-gradient(135deg, #059669, #10b981)';
 export const CTX_SEARCH_PLACEHOLDER = 'Search…';
 
 /* ─────────────────────────────────────────
@@ -915,3 +941,32 @@ export const ACCOUNT_DIALOG_DELETE_MSG =
 export const ACCOUNT_DIALOG_DELETE_HEADER = 'Delete Account';
 export const ACCOUNT_DIALOG_DELETE_BTN = 'Delete';
 export const ACCOUNT_DIALOG_DELETE_CANCEL_BTN = 'Cancel';
+
+/* ─────────────────────────────────────────
+   Today page
+───────────────────────────────────────── */
+
+export const TODAY_EYEBROW = "Today's Canvas";
+export const TODAY_TITLE = 'Shape your hours.';
+export const TODAY_SUBTITLE = 'Drag across the timeline to claim a moment — the day is yours to compose.';
+export const TODAY_QUICKADD_PLACEHOLDER = 'Quick add an untimed task — or drag the calendar to schedule';
+export const TODAY_BTN_ADD = 'Add';
+export const TODAY_HINT_DRAG_UNTIMED = 'drag a block here to make it untimed';
+export const TODAY_PENDING_PLACEHOLDER = 'Name this task…';
+export const TODAY_PENDING_HINT = '↵ save · Esc cancel';
+export const TODAY_LABEL_REMINDERS = 'Reminders';
+export const TODAY_LABEL_TASKS = 'Tasks';
+export const TODAY_LABEL_TRACKED = 'Tracked';
+export const TODAY_BTN_START_TRACKING = 'Start tracking';
+export const TODAY_BTN_STOP_TRACKING = 'Stop';
+export const TODAY_BTN_DRAG_CREATE = 'Drag to create';
+export const TODAY_BTN_DRAG_MOVE = 'Drag to move';
+export const TODAY_TRACKING_PREFIX = 'Tracking · ';
+/** Prefix character used when generating IDs for locally-created tasks. */
+export const TODAY_LOCAL_TASK_ID_PREFIX = 'l';
+/** AM period label used in 12-hour time formatting. */
+export const TODAY_LABEL_AM = 'AM';
+/** PM period label used in 12-hour time formatting. */
+export const TODAY_LABEL_PM = 'PM';
+/** Duration of the task removal fade-out animation in milliseconds. */
+export const TODAY_REMOVE_ANIMATION_MS = 220;

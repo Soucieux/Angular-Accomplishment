@@ -1,0 +1,769 @@
+/* ─────────────────────────────────────────
+   Host — design tokens + Group 2 baseline
+───────────────────────────────────────── */
+:host {
+	display: block;
+	font-family: 'app-font';
+	color: var(--ink);
+
+	--rose:       #16a34a;
+	--rose-deep:  #15803d;
+	--rose-soft:  rgba(22, 163, 74, 0.10);
+	--rose-glow:  rgba(22, 163, 74, 0.28);
+	--teal:       #0d9488;
+	--blue:       #1a6dff;
+
+	--grad-brand: linear-gradient(135deg, #16a34a 0%, #065f46 100%);
+
+	--ink:        #1a1a1a;
+	--ink-soft:   #334155;
+	--ink-muted:  #64748b;
+	--ink-faint:  #94a3b8;
+
+	--hh: 56px; /* px per hour — keep in sync with PIXELS_PER_HOUR in today.component.ts */
+}
+
+/* ─────────────────────────────────────────
+   Outer glass container
+───────────────────────────────────────── */
+.container-today {
+	padding: 0;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+/* ─────────────────────────────────────────
+   Hero
+───────────────────────────────────────── */
+.tp-hero {
+	flex: none;
+	padding: 20px 20px 16px;
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 20px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.tp-eyebrow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: 0.16em;
+	color: var(--rose);
+	text-transform: uppercase;
+}
+
+.tp-eyebrow-rule {
+	width: 16px;
+	height: 1.5px;
+	background: var(--rose);
+	display: inline-block;
+}
+
+.tp-title {
+	font-size: 44px;
+	font-weight: 500;
+	letter-spacing: 2px;
+	line-height: 1;
+	margin-top: 6px;
+	background: var(--grad-brand);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	filter: drop-shadow(0 1px 4px rgba(22, 163, 74, 0.15));
+}
+
+.tp-subtitle {
+	font-size: 15px;
+	color: rgba(30, 15, 35, 0.5);
+	margin-top: 6px;
+}
+
+.tp-hero-right {
+	flex: none;
+	text-align: right;
+	line-height: 1.1;
+}
+
+.tp-date {
+	font-size: 13px;
+	font-weight: 800;
+}
+
+.tp-clock {
+	font-size: 22px;
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+	color: var(--rose);
+}
+
+/* ─────────────────────────────────────────
+   Quick-add + anytime lane
+───────────────────────────────────────── */
+.tp-anytime-row {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 12px 20px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.tp-quickadd {
+	flex: 1;
+	max-width: 420px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	background: #fff;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	border-radius: 9999px;
+	padding: 6px 6px 6px 12px;
+}
+
+.tp-quickadd .material-symbols-outlined {
+	font-size: 18px;
+	color: var(--rose);
+}
+
+.tp-quickadd input {
+	flex: 1;
+	min-width: 0;
+	border: none;
+	outline: none;
+	font: inherit;
+	font-size: 13px;
+	background: transparent;
+}
+
+.tp-quickadd button {
+	border: none;
+	background: var(--grad-brand);
+	color: #fff;
+	font-weight: 700;
+	font-size: 12px;
+	padding: 6px 16px;
+	border-radius: 9999px;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.tp-anytime {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.tp-anytime-chip {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	background: #fff;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	border-radius: 9999px;
+	padding: 5px 10px 5px 8px;
+	font-size: 12px;
+}
+
+.tp-anytime-chip.is-done .tp-chip-title {
+	text-decoration: line-through;
+	color: var(--ink-faint);
+}
+
+.tp-check {
+	font-size: 16px;
+	color: var(--rose);
+	cursor: pointer;
+}
+
+.tp-anytime-chip.is-done .tp-check {
+	color: var(--ink-faint);
+}
+
+.tp-mini {
+	font-size: 14px;
+	color: var(--ink-faint);
+	cursor: pointer;
+}
+
+.tp-anytime-hint {
+	font-size: 11px;
+	color: var(--ink-faint);
+}
+
+.tp-edit-input {
+	border: none;
+	border-bottom: 1px solid var(--rose);
+	outline: none;
+	font: inherit;
+	font-size: 13px;
+	background: transparent;
+	min-width: 80px;
+}
+
+/* ─────────────────────────────────────────
+   Legend + actions bar
+───────────────────────────────────────── */
+.tp-legend {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 7px 16px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+	flex-wrap: nowrap;
+}
+
+.tp-legend-item {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 11px;
+	color: var(--ink-muted);
+	white-space: nowrap;
+}
+
+.tp-legend-item .material-symbols-outlined {
+	font-size: 14px;
+}
+
+.tp-legend-spacer {
+	flex: 1;
+	min-width: 8px;
+}
+
+.tp-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: none;
+}
+
+.tp-btn-track {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	border: none;
+	background: var(--grad-brand);
+	color: #fff;
+	font-weight: 700;
+	font-size: 11px;
+	padding: 5px 12px 5px 9px;
+	border-radius: 9999px;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.tp-btn-track .material-symbols-outlined {
+	font-size: 15px;
+}
+
+.tp-btn-track.is-live {
+	background: var(--rose-deep);
+	animation: tp-pulse 1.4s ease-in-out infinite;
+}
+
+.tp-toggle {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 10px 3px 5px;
+	border-radius: 9999px;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	background: rgba(0, 0, 0, 0.03);
+	cursor: pointer;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--ink-faint);
+	white-space: nowrap;
+}
+
+.tp-toggle .material-symbols-outlined {
+	font-size: 14px;
+}
+
+.tp-toggle .tp-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.2);
+}
+
+.tp-toggle.is-on {
+	border-color: rgba(213, 51, 105, 0.4);
+	background: var(--rose-soft);
+	color: var(--rose);
+}
+
+.tp-toggle.is-on .tp-dot {
+	background: var(--rose);
+}
+
+.tp-toggle--teal.is-on {
+	border-color: rgba(13, 148, 136, 0.4);
+	background: rgba(13, 148, 136, 0.08);
+	color: var(--teal);
+}
+
+.tp-toggle--teal.is-on .tp-dot {
+	background: var(--teal);
+}
+
+/* ─────────────────────────────────────────
+   Calendar scroll container (inner scroll)
+───────────────────────────────────────── */
+.tp-cal {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	position: relative;
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.4s ease;
+}
+
+.tp-cal::-webkit-scrollbar {
+	width: 8px;
+}
+
+.tp-cal::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.tp-cal::-webkit-scrollbar-thumb {
+	background: transparent;
+	border-radius: 999px;
+	transition: background 0.4s ease;
+}
+
+.tp-cal.is-scrolling {
+	scrollbar-color: rgba(22, 163, 74, 0.28) transparent;
+}
+
+.tp-cal.is-scrolling::-webkit-scrollbar-thumb {
+	background: rgba(22, 163, 74, 0.28);
+}
+
+.tp-cal.is-scrolling::-webkit-scrollbar-thumb:hover {
+	background: #16a34a;
+}
+
+.tp-cal-inner {
+	position: relative;
+}
+
+/* ─────────────────────────────────────────
+   Hour gutter
+───────────────────────────────────────── */
+.tp-hours {
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: 56px;
+}
+
+.tp-hour {
+	height: var(--hh);
+	position: relative;
+}
+
+.tp-hour-label {
+	position: absolute;
+	top: -7px;
+	right: 8px;
+	font-size: 10px;
+	font-weight: 700;
+	color: var(--ink-faint);
+}
+
+/* ─────────────────────────────────────────
+   Interactive grid
+───────────────────────────────────────── */
+.tp-grid {
+	position: absolute;
+	inset: 0 0 0 56px;
+	cursor: crosshair;
+}
+
+.tp-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.tp-line--q {
+	border-top: 1px dashed rgba(0, 0, 0, 0.04);
+}
+
+/* ─────────────────────────────────────────
+   Now indicator
+───────────────────────────────────────── */
+.tp-now {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 0;
+	border-top: 2px solid var(--rose);
+	z-index: 5;
+	pointer-events: none;
+}
+
+.tp-now-dot {
+	position: absolute;
+	left: -5px;
+	top: -5px;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background: var(--rose);
+}
+
+/* ─────────────────────────────────────────
+   Drag-move preview ghost
+───────────────────────────────────────── */
+.tp-preview {
+	position: absolute;
+	left: 4px;
+	right: 4px;
+	border: 2px dashed var(--rose);
+	border-radius: 10px;
+	background: var(--rose-soft);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 4;
+	pointer-events: none;
+}
+
+.tp-preview span {
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--ink-soft);
+	font-variant-numeric: tabular-nums;
+}
+
+/* ─────────────────────────────────────────
+   Live tracking band
+───────────────────────────────────────── */
+.tp-track-band {
+	position: absolute;
+	left: 0;
+	right: 0;
+	z-index: 1;
+	background: rgba(13, 148, 136, 0.14);
+	border-top: 2px solid var(--teal);
+	border-bottom: 1px dashed var(--teal);
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--teal);
+	pointer-events: none;
+}
+
+.tp-track-band .material-symbols-outlined {
+	font-size: 14px;
+}
+
+/* ─────────────────────────────────────────
+   Drag-to-create ghost
+───────────────────────────────────────── */
+.tp-ghost {
+	position: absolute;
+	left: 4px;
+	right: 4px;
+	border: 2px solid var(--rose);
+	border-radius: 10px;
+	background: var(--rose-soft);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--rose);
+	z-index: 6;
+}
+
+/* ─────────────────────────────────────────
+   Pending block name editor
+───────────────────────────────────────── */
+.tp-pending {
+	position: absolute;
+	left: 4px;
+	right: 4px;
+	z-index: 7;
+	background: #fff;
+	border: 2px solid var(--rose);
+	border-radius: 10px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+	padding: 7px 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	cursor: default;
+}
+
+.tp-pending input {
+	border: none;
+	outline: none;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.tp-pending-foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.tp-pending-foot .tp-hint {
+	color: var(--ink-faint);
+	font-weight: 500;
+}
+
+/* ─────────────────────────────────────────
+   Timed task blocks
+───────────────────────────────────────── */
+.tp-block {
+	position: absolute;
+	z-index: 2;
+	border-radius: 10px;
+	padding: 7px 9px 7px 11px;
+	background: #fff;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	box-shadow: 0 1px 5px rgba(0, 0, 0, 0.07), inset 3px 0 0 var(--accent);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	cursor: grab;
+	transition:
+		opacity 0.2s,
+		box-shadow 0.15s,
+		left 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+		width 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tp-block[draggable="false"] {
+	cursor: default;
+}
+
+.tp-block.is-short {
+	justify-content: center;
+	padding-top: 4px;
+	padding-bottom: 4px;
+}
+
+.tp-block.is-reminder {
+	background: rgba(26, 109, 255, 0.05);
+}
+
+.tp-block.is-tracked {
+	background: rgba(13, 148, 136, 0.05);
+}
+
+.tp-block.is-dragging {
+	opacity: 0.25;
+}
+
+.tp-block.is-removing {
+	opacity: 0.45;
+	box-shadow: 0 1px 5px rgba(0, 0, 0, 0.07);
+}
+
+.tp-block:hover {
+	z-index: 6;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), inset 3px 0 0 var(--accent);
+}
+
+/* Narrow blocks hover-expand to full width to reveal clipped text */
+.tp-block.is-narrow:hover {
+	z-index: 8;
+	left: 4px !important;
+	width: calc(100% - 8px) !important;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 3px 0 0 var(--accent);
+}
+
+.tp-block-remhead {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	background: rgba(26, 109, 255, 0.14);
+	border-radius: 5px;
+	padding: 3px 6px;
+	margin: -3px -3px 5px -3px;
+}
+
+.tp-block-remhead .material-symbols-outlined {
+	font-size: 12px;
+	color: var(--blue);
+}
+
+.tp-remhead-label {
+	font-size: 9px;
+	font-weight: 800;
+	letter-spacing: 0.07em;
+	color: var(--blue);
+	flex: 1;
+}
+
+.tp-block-actions {
+	position: absolute;
+	top: 5px;
+	right: 7px;
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	z-index: 3;
+	opacity: 0;
+	transition: opacity 0.12s;
+}
+
+.tp-block:hover .tp-block-actions {
+	opacity: 1;
+}
+
+.tp-block-actions .material-symbols-outlined {
+	font-size: 13px;
+	color: var(--ink-faint);
+	cursor: pointer;
+}
+
+.tp-block-title-row {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	min-width: 0;
+}
+
+.tp-lead {
+	font-size: 15px;
+	cursor: pointer;
+	flex: none;
+}
+
+.tp-block-title {
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.tp-block-title.is-done {
+	text-decoration: line-through;
+	color: var(--ink-faint);
+}
+
+.tp-recur {
+	font-size: 13px;
+	color: var(--rose);
+	flex: none;
+}
+
+.tp-block-meta {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.tp-time {
+	font-size: 10px;
+	color: var(--ink-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.tp-dur-pill {
+	font-size: 10px;
+	font-weight: 700;
+	color: var(--ink-faint);
+	background: rgba(0, 0, 0, 0.05);
+	padding: 1px 5px;
+	border-radius: 9999px;
+}
+
+.tp-grip {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 7px;
+	cursor: ns-resize;
+}
+
+.tp-grip::after {
+	content: '';
+	position: absolute;
+	left: 50%;
+	bottom: 2px;
+	transform: translateX(-50%);
+	width: 22px;
+	height: 3px;
+	border-radius: 2px;
+	background: rgba(0, 0, 0, 0.15);
+}
+
+/* ─────────────────────────────────────────
+   Animations
+───────────────────────────────────────── */
+@keyframes tp-pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.55; }
+}
+
+/* ─────────────────────────────────────────
+   Mobile
+───────────────────────────────────────── */
+@media (max-width: 940px) {
+	.tp-hero {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+		padding: 14px 14px 12px;
+	}
+
+	.tp-hero-right {
+		text-align: left;
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+	}
+
+	.tp-anytime-row {
+		flex-direction: column;
+		align-items: stretch;
+		padding: 10px 14px;
+	}
+
+	.tp-quickadd {
+		max-width: 100%;
+	}
+
+	.tp-legend {
+		flex-wrap: wrap;
+		padding: 7px 14px;
+		gap: 8px;
+	}
+
+	.tp-actions {
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	.tp-title {
+		font-size: 28px;
+	}
+}

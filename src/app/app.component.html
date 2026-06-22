@@ -22,7 +22,7 @@
 					</button>
 					<span class="nav-title">Menu</span>
 				</li>
-				<li class="nav-item">
+				<li class="nav-item" data-nav-id="home">
 					<a
 						mat-button
 						class="nav-button"
@@ -34,7 +34,18 @@
 						<span class="nav-label">Home</span>
 					</a>
 				</li>
-				<li class="nav-item">
+				<li class="nav-item" data-nav-id="today">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/today"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">calendar_today</span>
+						<span class="nav-label">Today</span>
+					</a>
+				</li>
+				<li class="nav-item" data-nav-id="portal">
 					<a
 						mat-button
 						class="nav-button"
@@ -45,7 +56,7 @@
 						<span class="nav-label">Portal</span>
 					</a>
 				</li>
-				<li class="nav-item">
+				<li class="nav-item" data-nav-id="resonance">
 					<a
 						mat-button
 						class="nav-button"
@@ -56,7 +67,7 @@
 						<span class="nav-label">Resonance</span>
 					</a>
 				</li>
-				<li class="nav-item">
+				<li class="nav-item" data-nav-id="recipes">
 					<a
 						mat-button
 						class="nav-button"
@@ -67,7 +78,7 @@
 						<span class="nav-label">Recipes</span>
 					</a>
 				</li>
-				<li class="nav-item">
+				<li class="nav-item" data-nav-id="entertainment">
 					<a
 						mat-button
 						class="nav-button"
@@ -78,7 +89,7 @@
 						<span class="nav-label">Entertainment</span>
 					</a>
 				</li>
-				<li class="nav-item">
+				<li class="nav-item" data-nav-id="reminder">
 					<a
 						mat-button
 						class="nav-button"
@@ -89,7 +100,7 @@
 						<span class="nav-label">Reminder</span>
 					</a>
 				</li>
-				<li class="nav-item">
+				<li class="nav-item" data-nav-id="debt">
 					<a
 						mat-button
 						class="nav-button"
@@ -100,7 +111,7 @@
 						<span class="nav-label">Debt Sonata</span>
 					</a>
 				</li>
-				<li class="nav-item">
+				<li class="nav-item" data-nav-id="patch">
 					<a
 						mat-button
 						class="nav-button"
@@ -111,7 +122,7 @@
 						<span class="nav-label">Patch Notes</span>
 					</a>
 				</li>
-				<li class="nav-item">
+				<li class="nav-item" data-nav-id="about">
 					<a
 						mat-button
 						class="nav-button"
@@ -142,6 +153,25 @@
 										(click)="navigateToAccount()">
 										<span class="material-symbols-outlined">manage_accounts</span>{{ ACCOUNT_TITLE_PAGE }}
 									</button>
+									@if (notifSupported) {
+										<button
+											class="account-menu-popover-item"
+											[class.account-menu-popover-item--primary]="!notifSubscribed()"
+											type="button"
+											[disabled]="notificationPermission() === 'denied'"
+											(click)="toggleNotification()">
+											<span class="material-symbols-outlined">{{
+												notifSubscribed() ? 'notifications_off' : 'notifications'
+											}}</span>
+											{{
+												notifSubscribed()
+													? NAV_NOTIF_LABEL_DISABLE
+													: notificationPermission() === 'denied'
+														? NAV_NOTIF_LABEL_BLOCKED
+														: NAV_NOTIF_LABEL_ENABLE
+											}}
+										</button>
+									}
 									<button
 										class="account-menu-popover-item account-menu-popover-item--danger"
 										(click)="logout()">

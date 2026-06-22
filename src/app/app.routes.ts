@@ -12,6 +12,7 @@ import { ResonanceComponent } from './fontend/resonance/resonance.component';
 import { PortalComponent } from './fontend/portal/portal.component';
 import { RecipeComponent } from './fontend/recipe/recipe.component';
 import { DebtComponent } from './fontend/debt/debt.component';
+import { TodayComponent } from './fontend/today/today.component';
 
 export const routes: Routes = [
 	{ path: '', component: HomeComponent },
@@ -24,5 +25,6 @@ export const routes: Routes = [
 	{ path: 'resonance', component: ResonanceComponent },
 	{ path: 'portal', component: PortalComponent },
 	{ path: 'recipe', component: RecipeComponent },
-	{ path: 'debt', component: DebtComponent }
+	{ path: 'debt', component: DebtComponent },
+	{ path: 'today', component: TodayComponent }
 ];

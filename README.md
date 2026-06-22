@@ -29,7 +29,7 @@
 | **Home** | **Orbital dashboard** built around a *Life Clock* displaying the current time in real-time.<br>- Concentric progress rings for **year, month, week, and day**<br>- **Satellite stat discs** with live counts for movies, patch notes, quotes, and recipes<br>- Glass widget panels: upcoming reminders, debt payments, recent activity, entertainment genre breakdown, a recipe list, and saved link chips<br>- **Week agenda** view and quick-action pill buttons<br>- Fully responsive mobile layout | Active |
 | **Entertainment** | Media tracker for **movies and TV dramas** with rich metadata support.<br>- **Douban API** lookup for title, genre, cast, and cover image<br>- Firebase / Cloudbase image storage and CDN delivery<br>- Category filtering, favourites toggle, and **colour-coded rating indicators**<br>- Full add / deletion history with timestamps | Stable |
 | **Reminder** | Account expense tracker with real-time cloud sync.<br>- **Inline cell editing** with keyboard confirm flow<br>- Colour-coded active, overdue, and paid-off status indicators<br>- Persistent per-user state | Active |
-| **Portal** | Personal AI search hub and link manager.<br>- **Chip-based category filters** for AI tool discovery<br>- Saved link management with category assignment and logo auto-fetch<br>- **Date Calculator** — date-range arithmetic with CloudBase persistence<br>- Fallback colour avatars when logo fetch fails | Beta |
+| **Portal** | Personal AI search hub and link manager.<br>- **Chip-based category filters** for AI tool discovery with category management dialog<br>- Saved link management with category assignment and logo auto-fetch<br>- **Date Calculator** — date-range arithmetic with CloudBase persistence; collapsible via header click<br>- Shared link flag to distinguish personal from shared entries<br>- Fallback colour avatars when logo fetch fails | Beta |
 | **Debt Sonata** | Debt tracking canvas with full payment history.<br>- **Card-based ledger** supporting CNY and CAD currencies<br>- Preset and custom **payment chips** with per-card progress bar<br>- Paid-off ribbon state and coral card styling<br>- Summary card with per-currency totals<br>- Full payment history timeline per entry | Active |
 | **Resonance** | Personal quote vault.<br>- Author attribution and timestamps<br>- **Anonymous browsing** support for public quotes<br>- Ownership-based edit and delete permissions | Active |
 | **Recipe** | Personal cookbook with per-category colour theming.<br>- List, detail, and editor views<br>- **Ingredient groups** with type badges and bilingual name support *(Chinese + English)*<br>- Live **servings scaler** and step-by-step instruction view<br>- Category colour themes — *rose · green · purple · amber · pink*<br>- Drag-to-reorder steps | Active |
@@ -80,7 +80,7 @@
 
 | Period | Milestone |
 | :--- | :--- |
-| **June 2026** | - Phase R2 begins — R1 feature set complete and stable<br>- **Desktop right-click context menu** — custom overlay with clipboard actions (copy / cut / paste / select-all), nav shortcuts, and sign-in / sign-out; uses Tauri clipboard plugin to bypass macOS native paste confirmation<br>- Codebase restructured: `LoadingTimeoutService` renamed to `TimeoutService` and moved into `common/timeout/`; utilities moved into `common/utilities/`; `navigation/` folder renamed to `mobile-bottom-nav/`; `context-menu` component renamed and moved to `fontend/desktop-context-menu/`<br>- **Account** page launched with navy sky theme (`#1e3a8a → #7dd3fc`): identity card with username / password editing, Second Brain stats panel, milestone timeline, and danger zone for account deletion; wired into route, nav bar, and account popover button<br>- Global placeholder font inheritance fix — all inputs now correctly inherit the app font |
+| **June 2026** | - Phase R2 begins — R1 feature set complete and stable<br>- **Desktop right-click context menu** — custom overlay with clipboard actions (copy / cut / paste / select-all), nav shortcuts, and sign-in / sign-out; uses Tauri clipboard plugin to bypass macOS native paste confirmation<br>- Codebase restructured: `LoadingTimeoutService` renamed to `TimeoutService` and moved into `common/timeout/`; utilities moved into `common/utilities/`; `navigation/` folder renamed to `mobile-bottom-nav/`; `context-menu` component renamed and moved to `fontend/desktop-context-menu/`<br>- **Account** page launched with navy sky theme (`#1e3a8a → #7dd3fc`): identity card with username / password editing, Second Brain stats panel, milestone timeline, and danger zone for account deletion; wired into route, nav bar, and account popover button<br>- Global placeholder font inheritance fix — all inputs now correctly inherit the app font<br>- **Forgot password** flow added to Login — email-based reset with CloudBase auth<br>- **Delete account** dialog and service — confirmation guard, auth method, and nav cleanup on success<br>- **Typed error class hierarchy** introduced (`AppError`, `AuthError`, `NetworkError`, etc.) replacing raw `unknown` catches across all pages; auth helper methods centralised<br>- Nexus links section redesigned with admin gate and layout cleanup<br>- Dialog button styles standardised across all dialogs (gradient primary, ghost cancel)<br>- Portal **category management dialog** added; shared link flag wired to link documents<br>- Portal Date Calculator collapsible via header click |
 
 ---
 
@@ -152,9 +152,10 @@ src/app/
 | `gsap` | ^3.x | Animation library for smooth UI transitions |
 | `rxjs` | ~7.8.x | Reactive streams and async data flows |
 | `date-fns` | ^4.x | Date formatting and calculations |
+| `@angular/service-worker` | ^21.x | PWA service worker for offline support and push notifications |
 | `@capacitor/core` | ^8.x | Native iOS / Android packaging |
-| `@tauri-apps/cli` | ^2.x | Desktop app bundler (macOS / Windows / Linux) |
-| `@tauri-apps/plugin-clipboard-manager` | ^2.x | Native clipboard access in the desktop app |
+| `@tauri-apps/api` | ^1.x | Tauri JS API for window, clipboard, and system access |
+| `@tauri-apps/cli` | ^1.x | Desktop app bundler (macOS / Windows / Linux) |
 
 ### Backend & Services
 

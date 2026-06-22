@@ -11,7 +11,7 @@ tauri-build = { version = "1", features = [] }
 custom-protocol = ["tauri/custom-protocol"]
 
 [dependencies]
-tauri = { version = "1", features = [ "shell-open", "window-start-dragging", "clipboard-all"] }
+tauri = { version = "1", features = [ "notification-all", "shell-open", "window-start-dragging", "clipboard-all", "devtools"] }
 rust-embed = "8"
 
 [profile.release]

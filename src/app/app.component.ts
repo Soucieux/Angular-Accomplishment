@@ -5,17 +5,22 @@ import {
 	HostListener,
 	Inject,
 	NgZone,
+	OnDestroy,
 	OnInit,
 	PLATFORM_ID,
 	ViewChild,
-	ViewContainerRef
+	ViewContainerRef,
+	isDevMode,
+	signal
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router, RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
 import { AuthService } from './backend/authentication-service/auth.service';
+import { DatabaseService } from './backend/database-service/database.service';
 import { DialogService } from './backend/dialog-service/dialog.service';
 import { NotificationService } from './backend/notification-service/notification.service';
 import { LOG } from './common/app.logs';
@@ -30,6 +35,7 @@ import {
 	CTX_COLOR_MY_ACCOUNT,
 	CTX_COLOR_SIGN_IN,
 	CTX_COLOR_SIGN_OUT,
+	CTX_COLOR_INSPECT,
 	CTX_ICON_COPY,
 	CTX_ICON_CUT,
 	CTX_ICON_MY_ACCOUNT,
@@ -37,6 +43,7 @@ import {
 	CTX_ICON_SELECT_ALL,
 	CTX_ICON_SIGN_IN,
 	CTX_ICON_SIGN_OUT,
+	CTX_ICON_INSPECT,
 	CTX_LABEL_COPY,
 	CTX_LABEL_CUT,
 	CTX_LABEL_MY_ACCOUNT,
@@ -44,20 +51,32 @@ import {
 	CTX_LABEL_SELECT_ALL,
 	CTX_LABEL_SIGN_IN,
 	CTX_LABEL_SIGN_OUT,
+	CTX_LABEL_INSPECT,
 	ACCOUNT_TITLE_PAGE,
+	NAV_NOTIF_LABEL_BLOCKED,
+	NAV_NOTIF_LABEL_DISABLE,
+	NAV_NOTIF_LABEL_ENABLE,
+	NAV_NOTIF_TOGGLE_ERROR,
 	DIALOG_BTN_SIGN_OUT,
 	DIALOG_CONFIRM,
 	DIALOG_HEADER_SIGN_OUT,
 	LS_NAV_COLLAPSED_KEY,
 	MSG_LOGOUT_CONFIRM,
-	TAURI_MODE_CLASS
+	TAURI_MODE_CLASS,
+	REMINDER_NOTIF_TITLE,
+	REMINDER_NOTIF_BODY_SEPARATOR,
+	REMINDER_NOTIF_KEY_3DAY,
+	REMINDER_NOTIF_KEY_DUE,
+	REMINDER_NOTIF_DAILY_HOUR,
+	REMINDER_NOTIF_INTERVAL_MS
 } from './common/app.constant';
 import {
 	ContextMenuAction,
 	DesktopContextMenuComponent
 } from './fontend/desktop-context-menu/context-menu.component';
 import { readText } from '@tauri-apps/api/clipboard';
-import { Observable, filter } from 'rxjs';
+import { invoke } from '@tauri-apps/api/tauri';
+import { Observable, Subscription, filter, firstValueFrom } from 'rxjs';
 import { BottomNavComponent } from './fontend/mobile-bottom-nav/bottom-nav.component';
 import { NavItem } from './fontend/mobile-bottom-nav/bottom-nav.model';
 import {
@@ -85,7 +104,7 @@ import {
 	templateUrl: 'app.component.html',
 	styleUrl: './app.component.css'
 })
-export class AppComponent implements OnInit, AfterViewInit {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly className = 'AppComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
@@ -112,7 +131,20 @@ export class AppComponent implements OnInit, AfterViewInit {
 		end: number | null;
 	} | null = null;
 	private readonly ctxNavItems = NAV_ITEMS.filter((item) => ['home', 'reminder'].includes(item.id));
+	private notifSub?: Subscription;
+	private readonly notifiedKeys = new Set<string>();
+	private readonly lastKnownDates = new Map<string, string | null>();
+	private dailyNotifTimeout?: ReturnType<typeof setTimeout>;
+	private dailyNotifInterval?: ReturnType<typeof setInterval>;
 	protected readonly ACCOUNT_TITLE_PAGE = ACCOUNT_TITLE_PAGE;
+	protected readonly NAV_NOTIF_LABEL_ENABLE = NAV_NOTIF_LABEL_ENABLE;
+	protected readonly NAV_NOTIF_LABEL_BLOCKED = NAV_NOTIF_LABEL_BLOCKED;
+	protected readonly NAV_NOTIF_LABEL_DISABLE = NAV_NOTIF_LABEL_DISABLE;
+	protected readonly notifSupported = this.notificationService.isSupported();
+	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, {
+		initialValue: false
+	});
+	protected readonly notificationPermission = signal<NotificationPermission>('default');
 	protected readonly navItems: NavItem[] = NAV_ITEMS;
 	protected readonly primaryIds: string[] = PRIMARY_IDS;
 	protected activeRoute = '';
@@ -121,6 +153,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 	constructor(
 		private authService: AuthService,
+		private databaseService: DatabaseService,
 		private dialogService: DialogService,
 		private notificationService: NotificationService,
 		private router: Router,
@@ -183,6 +216,23 @@ export class AppComponent implements OnInit, AfterViewInit {
 					{ capture: true, passive: true }
 				);
 			});
+
+			// Step 5: Run a reminder notification scan immediately and re-run it whenever
+			// the user enables notifications. isSubscribed$ is a BehaviorSubject, so the
+			// subscription fires synchronously with the current value on startup.
+			this.notifSub = this.notificationService.isSubscribed$.subscribe((subscribed) => {
+				if (subscribed) {
+					this.checkAndSendReminderNotifications().catch(() => {});
+				}
+			});
+
+			// Step 6: Schedule a daily 10 AM scan for when the app stays open in the background.
+			this.dailyNotifTimeout = setTimeout(() => {
+				this.checkAndSendReminderNotifications().catch(() => {});
+				this.dailyNotifInterval = setInterval(() => {
+					this.checkAndSendReminderNotifications().catch(() => {});
+				}, REMINDER_NOTIF_INTERVAL_MS);
+			}, this.getMsUntil10AM());
 		}
 	}
 
@@ -195,13 +245,17 @@ export class AppComponent implements OnInit, AfterViewInit {
 			setTimeout(() => {
 				this.navReady = true;
 			});
+			this.notificationPermission.set(this.notificationService.getPermission());
 		}
 	}
 
 	/**
-	 * Clears the dialog container and logs component teardown.
+	 * Clears the dialog container, cancels the notification timers, and logs component teardown.
 	 */
 	ngOnDestroy(): void {
+		this.notifSub?.unsubscribe();
+		clearTimeout(this.dailyNotifTimeout);
+		clearInterval(this.dailyNotifInterval);
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
@@ -374,7 +428,18 @@ export class AppComponent implements OnInit, AfterViewInit {
 			});
 		}
 
-		/* Step 5: Clamp the menu position so it never overflows the viewport edge —
+		// Step 5: Append Inspect (DevTools) only in development builds
+		if (isDevMode()) {
+			actions.push({
+				label: CTX_LABEL_INSPECT,
+				icon: CTX_ICON_INSPECT,
+				color: CTX_COLOR_INSPECT,
+				execute: () => invoke('open_devtools').catch(() => {}),
+				separator: true
+			});
+		}
+
+		/* Step 6: Clamp the menu position so it never overflows the viewport edge —
 		   220px and 280px are the approximate max width and height of the overlay. */
 		this.ctxX = Math.min(event.clientX, window.innerWidth - 220);
 		this.ctxY = Math.min(event.clientY, window.innerHeight - 280);
@@ -431,6 +496,28 @@ export class AppComponent implements OnInit, AfterViewInit {
 				}
 			}
 			this.navCompact = true;
+		}
+	}
+
+	/**
+	 * Subscribes to notifications when not yet subscribed, or unsubscribes when
+	 * already subscribed. Always refreshes the permission signal afterward.
+	 */
+	protected async toggleNotification(): Promise<void> {
+		try {
+			if (this.notifSubscribed()) {
+				await this.notificationService.unsubscribe();
+			} else {
+				await this.notificationService.subscribe();
+			}
+		} catch (error: unknown) {
+			LOG.error(
+				this.className,
+				NAV_NOTIF_TOGGLE_ERROR,
+				error instanceof Error ? error : new Error('Unexpected error')
+			);
+		} finally {
+			this.notificationPermission.set(this.notificationService.getPermission());
 		}
 	}
 
@@ -604,6 +691,82 @@ export class AppComponent implements OnInit, AfterViewInit {
 			DIALOG_HEADER_SIGN_OUT,
 			DIALOG_BTN_SIGN_OUT
 		]);
+	}
+
+	// ── Reminder notifications ────────────────────────────────────────────────
+
+	/**
+	 * Fetches the current reminder items from the database and sends push notifications
+	 * for any item due in exactly 3 days or due today. Each item fires at most two
+	 * notifications per session: one at 3 days out and one on the due date. When an
+	 * item's date changes, its notification state resets so the new date is evaluated fresh.
+	 */
+	private async checkAndSendReminderNotifications(): Promise<void> {
+		if (!this.notifSubscribed()) return;
+
+		const raw = await firstValueFrom(this.databaseService.getReminderTableDetails());
+		const records = raw as Array<{ key?: string; text?: string; date?: unknown }>;
+
+		// Step 1: Remove tracking entries for items that were deleted from the DB
+		const currentKeys = new Set(records.map((r) => r.key ?? ''));
+		for (const key of this.lastKnownDates.keys()) {
+			if (!currentKeys.has(key)) this.lastKnownDates.delete(key);
+		}
+
+		for (const record of records) {
+			const key = record.key ?? '';
+			const date = record.date != null ? Utilities.coerceDateToString(record.date) : null;
+
+			// Step 2: Reset notification state when the item's date has changed
+			const lastDate = this.lastKnownDates.get(key);
+			if (lastDate !== date) {
+				this.notifiedKeys.delete(`${key}${REMINDER_NOTIF_KEY_3DAY}`);
+				this.notifiedKeys.delete(`${key}${REMINDER_NOTIF_KEY_DUE}`);
+				this.lastKnownDates.set(key, date);
+			}
+
+			if (!date) continue;
+			const days = Utilities.getDaysUntilNumber(date);
+			if (days === null) continue;
+
+			const body = `${record.text ?? ''}${REMINDER_NOTIF_BODY_SEPARATOR}${date.replace(/-/g, '.')}`;
+
+			// Step 3: Fire the 3-day-ahead and due-date notifications once per session
+			if (days === 3) this.maybeFireNotification(key, REMINDER_NOTIF_KEY_3DAY, body);
+			if (days === 0) this.maybeFireNotification(key, REMINDER_NOTIF_KEY_DUE, body);
+		}
+	}
+
+	/**
+	 * Sends a push notification for the given item key and suffix if it has not
+	 * already been sent this session. Adds the key to the notified set on send.
+	 *
+	 * @param itemKey - The CloudBase document key of the reminder item.
+	 * @param suffix - The session-dedup suffix (3-day or due-date).
+	 * @param body - The notification body text.
+	 */
+	private maybeFireNotification(itemKey: string, suffix: string, body: string): void {
+		const notifKey = `${itemKey}${suffix}`;
+		if (!this.notifiedKeys.has(notifKey)) {
+			this.notifiedKeys.add(notifKey);
+			this.notificationService.sendNotification(REMINDER_NOTIF_TITLE, body).catch(() => {});
+		}
+	}
+
+	/**
+	 * Gets the milliseconds remaining until the next 10:00 AM boundary.
+	 * When the current time is already past 10:00 AM today, targets 10:00 AM tomorrow.
+	 *
+	 * @returns The number of milliseconds until the next 10:00 AM.
+	 */
+	private getMsUntil10AM(): number {
+		const now = new Date();
+		const next10AM = new Date(now);
+		next10AM.setHours(REMINDER_NOTIF_DAILY_HOUR, 0, 0, 0);
+		if (next10AM <= now) {
+			next10AM.setDate(next10AM.getDate() + 1);
+		}
+		return next10AM.getTime() - now.getTime();
 	}
 
 	// ── Template helpers ──────────────────────────────────────────────────────

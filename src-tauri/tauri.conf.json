@@ -7,7 +7,8 @@
 		"beforeBuildCommand": "npm run build && rsync -a --delete --exclude='recipe/' --exclude='resonance/' --exclude='login/' --exclude='portal/' --exclude='patch/' --exclude='debt/' --exclude='entertainment/' --exclude='about/' --exclude='reminder/' --exclude='ngsw-worker.js' --exclude='ngsw.json' --exclude='safety-worker.js' --exclude='worker-basic.min.js' dist/my-own-website/browser/ src-tauri/dist/browser/",
 		"beforeDevCommand": "npm run start",
 		"devPath": "http://localhost:4200",
-		"distDir": "http://127.0.0.1:9527"
+		"distDir": "http://127.0.0.1:9527",
+		"withGlobalTauri": true
 	},
 	"tauri": {
 		"bundle": {
@@ -25,6 +26,9 @@
 		"allowlist": {
 			"all": false,
 			"clipboard": {
+				"all": true
+			},
+			"notification": {
 				"all": true
 			},
 			"shell": {

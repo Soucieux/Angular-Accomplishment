@@ -135,30 +135,36 @@
 				</li>
 				@if (currentUser$ | async; as user) {
 					<li class="account-menu-container">
-						<div #accountRowWrapper class="account-row-wrapper" (focusout)="handleAccountMenuDismiss($event)">
+						<div
+							#accountRowWrapper
+							class="account-row-wrapper"
+							(focusout)="handleAccountMenuDismiss($event)">
 							@if (accountMenuOpen) {
 								<div class="account-menu-popover">
 									<div class="account-menu-popover-header">
 										@if (getUserAvatarUrl(user)) {
-											<img class="account-menu-popover-avatar account-menu-popover-avatar--photo" [src]="getUserAvatarUrl(user)" [alt]="getUserDisplayName(user)" />
+											<img
+												class="account-menu-popover-avatar account-menu-popover-avatar--photo"
+												[src]="getUserAvatarUrl(user)"
+												[alt]="getUserDisplayName(user)" />
 										} @else {
-											<span class="account-menu-popover-avatar">{{ getUserInitial(user) }}</span>
+											<span class="account-menu-popover-avatar">{{
+												getUserInitial(user)
+											}}</span>
 										}
 										<div class="account-menu-popover-name">
 											{{ getUserDisplayName(user) }}
 										</div>
 									</div>
-									<button
-										class="account-menu-popover-item"
-										(click)="navigateToAccount()">
-										<span class="material-symbols-outlined">manage_accounts</span>{{ ACCOUNT_TITLE_PAGE }}
+									<button class="account-menu-popover-item" (click)="navigateToAccount()">
+										<span class="material-symbols-outlined">manage_accounts</span
+										>{{ ACCOUNT_TITLE_PAGE }}
 									</button>
 									@if (notifSupported) {
 										<button
 											class="account-menu-popover-item"
 											[class.account-menu-popover-item--primary]="!notifSubscribed()"
 											type="button"
-											[disabled]="notificationPermission() === 'denied'"
 											(click)="toggleNotification()">
 											<span class="material-symbols-outlined">{{
 												notifSubscribed() ? 'notifications_off' : 'notifications'
@@ -166,9 +172,7 @@
 											{{
 												notifSubscribed()
 													? NAV_NOTIF_LABEL_DISABLE
-													: notificationPermission() === 'denied'
-														? NAV_NOTIF_LABEL_BLOCKED
-														: NAV_NOTIF_LABEL_ENABLE
+													: NAV_NOTIF_LABEL_ENABLE
 											}}
 										</button>
 									}
@@ -185,7 +189,10 @@
 								(click)="handleAccountButtonClick()">
 								<span class="account-row-avatar-wrapper">
 									@if (getUserAvatarUrl(user)) {
-										<img class="account-row-avatar account-row-avatar--photo" [src]="getUserAvatarUrl(user)" [alt]="getUserDisplayName(user)" />
+										<img
+											class="account-row-avatar account-row-avatar--photo"
+											[src]="getUserAvatarUrl(user)"
+											[alt]="getUserDisplayName(user)" />
 									} @else {
 										<span class="account-row-avatar">{{ getUserInitial(user) }}</span>
 									}

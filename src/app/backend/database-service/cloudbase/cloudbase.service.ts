@@ -20,6 +20,7 @@ import {
 	DATABASE_RECIPES,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_PUSH_SUBSCRIPTIONS,
+	DATABASE_TAURI_NOTIF_TYPE,
 	USEFUL_LINK_TYPE_LINK,
 	USEFUL_LINK_TYPE_CATEGORY,
 	ACTIVITY_TYPE_UPDATED,
@@ -1381,30 +1382,52 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Removes the current user's push subscription from the database, stopping
-	 * future notifications until the user re-subscribes.
+	 * Gets whether Tauri desktop push notifications are enabled for the current user
+	 * by checking for a preference record in the database.
+	 *
+	 * @returns True when a Tauri notification preference record exists.
 	 */
-	public async deletePushSubscription(): Promise<void> {
+	public async getTauriNotifEnabled(): Promise<boolean> {
 		try {
-			await this.deleteExistingSubscription();
-			LOG.info(this.className, `Push subscription deleted`);
+			const result = await this.database
+				.collection(DATABASE_PUSH_SUBSCRIPTIONS)
+				.where({ type: DATABASE_TAURI_NOTIF_TYPE })
+				.limit(1)
+				.get();
+			return (result.data?.length ?? 0) > 0;
 		} catch (error: unknown) {
-			LOG.error(this.className, `Error deleting push subscription`, error as Error);
-			this.rethrowCaught(error);
+			LOG.error(this.className, `Error reading Tauri notification preference`, error as Error);
+			return false;
 		}
 	}
 
 	/**
-	 * Fetches the current user's push subscription document (if any) and removes it.
-	 * Limits the fetch to one record to avoid an unbounded read.
+	 * Persists the Tauri desktop notification preference for the current user.
+	 * Creates the record when enabled, removes all matching records when disabled.
 	 *
-	 * {@link addPushSubscription} - Calls this before adding a new subscription to ensure at most one record.
-	 * {@link deletePushSubscription} - Calls this to remove the active subscription on sign-out.
+	 * @param enabled - The desired enabled state.
 	 */
-	private async deleteExistingSubscription(): Promise<void> {
-		const existing = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).limit(1).get();
-		if (existing.data?.length > 0) {
-			await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).doc(existing.data[0]._id).remove();
+	public async setTauriNotifEnabled(enabled: boolean): Promise<void> {
+		try {
+			const existing = await this.database
+				.collection(DATABASE_PUSH_SUBSCRIPTIONS)
+				.where({ type: DATABASE_TAURI_NOTIF_TYPE })
+				.limit(1)
+				.get();
+			if (enabled) {
+				if (!(existing.data?.length > 0)) {
+					await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).add({
+						type: DATABASE_TAURI_NOTIF_TYPE
+					});
+				}
+			} else {
+				for (const doc of existing.data ?? []) {
+					await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).doc(doc._id).remove();
+				}
+			}
+		} catch (error: unknown) {
+			LOG.error(this.className, `Error saving Tauri notification preference`, error as Error);
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1623,33 +1646,6 @@ export class CloudbaseService extends DatabaseService {
 			element: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
 			details: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim())
 		});
-	}
-
-	/**
-	 * Saves the user's Web Push subscription to the database so the server-side
-	 * notification function can dispatch push messages on their behalf.
-	 *
-	 * @param subscription - The serialised PushSubscription from the browser Push API.
-	 */
-	public async addPushSubscription(subscription: PushSubscriptionJSON): Promise<void> {
-		try {
-			/* Step 1: Delete any existing subscription first — a user can only hold one active
-			   subscription record. Without this, repeated calls would accumulate stale rows
-			   pointing to old browser endpoints that the push server would then fail to reach. */
-			await this.deleteExistingSubscription();
-
-			// Step 2: Write the new subscription document
-			const result = await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).add({
-				endpoint: subscription.endpoint,
-				keys: subscription.keys,
-				createdAt: Utilities.getCurrentFormattedTime(true)
-			});
-			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `Push subscription saved`);
-		} catch (error: unknown) {
-			LOG.error(this.className, `Error saving push subscription`, error as Error);
-			this.rethrowCaught(error);
-		}
 	}
 
 	/**

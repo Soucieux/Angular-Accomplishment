@@ -390,10 +390,19 @@ export abstract class DatabaseService {
 	): Promise<void>;
 
 	/**
-	 * Removes the current user's push subscription from the database, stopping
-	 * future notifications until the user re-subscribes.
+	 * Gets whether Tauri desktop push notifications are enabled for the current user.
+	 *
+	 * @returns True when a Tauri notification preference record exists in the database.
 	 */
-	public abstract deletePushSubscription(): Promise<void>;
+	public abstract getTauriNotifEnabled(): Promise<boolean>;
+
+	/**
+	 * Persists the Tauri desktop notification preference for the current user.
+	 * Creates the record when enabled, removes it when disabled.
+	 *
+	 * @param enabled - The desired enabled state.
+	 */
+	public abstract setTauriNotifEnabled(enabled: boolean): Promise<void>;
 
 	////////////////////// Below are Add methods for database records /////////////////////
 
@@ -469,14 +478,6 @@ export abstract class DatabaseService {
 	 * @param newRecord - The record to add, with a noteIndex field appended by the caller.
 	 */
 	public abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
-
-	/**
-	 * Saves the user's Web Push subscription to the database so the server-side
-	 * notification function can dispatch push messages on their behalf.
-	 *
-	 * @param subscription - The serialised PushSubscription from the browser Push API.
-	 */
-	public abstract addPushSubscription(subscription: PushSubscriptionJSON): Promise<void>;
 
 	////////////////////// Below are Utility methods for database records /////////////////////
 

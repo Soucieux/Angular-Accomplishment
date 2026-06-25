@@ -1,10 +1,8 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { SwPush } from '@angular/service-worker';
 import { invoke } from '@tauri-apps/api/tauri';
-import { BehaviorSubject, map, Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { DatabaseService } from '../database-service/database.service';
-import { environment } from '../../../environment/environment';
 import { NOTIF_ENABLED_BODY, NOTIF_ENABLED_TITLE } from '../../common/app.constant';
 
 @Injectable({ providedIn: 'root' })
@@ -12,69 +10,51 @@ export class NotificationService {
 	private readonly tauriSubscribed = new BehaviorSubject<boolean>(false);
 
 	/**
-	 * Emits true when a push subscription is active. For Tauri this reflects a
-	 * user-chosen preference; for PWA it reflects the Web Push subscription state.
+	 * Emits true when the Tauri notification preference is enabled.
 	 */
-	public readonly isSubscribed$: Observable<boolean> = this.isTauri
-		? this.tauriSubscribed.asObservable()
-		: this.swPush.subscription.pipe(map((sub) => sub !== null));
+	public readonly isSubscribed$: Observable<boolean> = this.tauriSubscribed.asObservable();
 
 	constructor(
-		private readonly swPush: SwPush,
 		private readonly databaseService: DatabaseService,
 		@Inject(PLATFORM_ID) private readonly platformId: object
 	) {}
 
 	/**
 	 * Gets whether push notifications are available on this device. Returns true
-	 * for the Tauri desktop app and for installed PWAs in standalone mode only.
+	 * only for the Tauri desktop app.
 	 *
-	 * @returns True when notifications can be requested.
+	 * @returns True when running inside the Tauri runtime.
 	 */
 	public isSupported(): boolean {
-		if (this.isTauri) return true;
-		return this.hasBrowserNotificationApi && this.swPush.isEnabled && this.isStandalonePwa;
+		return this.isTauri;
 	}
 
 	/**
-	 * Gets the current notification permission state. Always returns 'default'
-	 * for Tauri because macOS permission is requested implicitly on first send.
-	 *
-	 * @returns The NotificationPermission value, or 'denied' on unsupported platforms.
+	 * Loads the persisted notification preference from the database and applies it.
+	 * No-op on non-Tauri platforms.
 	 */
-	public getPermission(): NotificationPermission {
-		if (this.isTauri) return 'default';
-		if (!this.hasBrowserNotificationApi) return 'denied';
-		return Notification.permission;
+	public async init(): Promise<void> {
+		if (!this.isTauri) return;
+		const enabled = await this.databaseService.getTauriNotifEnabled();
+		this.tauriSubscribed.next(enabled);
 	}
 
 	/**
-	 * Activates the subscription. For Tauri, marks the subscription as active and
-	 * fires a fire-and-forget confirmation notification. For PWA, creates a Web Push
-	 * subscription and saves it to the database.
+	 * Activates the Tauri notification preference, persists it to the database,
+	 * and fires a confirmation notification.
 	 */
 	public async subscribe(): Promise<void> {
-		if (this.isTauri) {
-			this.tauriSubscribed.next(true);
-			this.sendNotification(NOTIF_ENABLED_TITLE, NOTIF_ENABLED_BODY).catch(() => {});
-			return;
-		}
-		const sub = await this.swPush.requestSubscription({ serverPublicKey: environment.vapidPublicKey });
-		await this.databaseService.addPushSubscription(sub.toJSON() as PushSubscriptionJSON);
+		await this.databaseService.setTauriNotifEnabled(true);
+		this.tauriSubscribed.next(true);
+		this.sendNotification(NOTIF_ENABLED_TITLE, NOTIF_ENABLED_BODY).catch(() => {});
 	}
 
 	/**
-	 * Deactivates the subscription. For Tauri, resets the local preference (OS
-	 * permission is not revoked — that requires System Settings). For PWA, cancels
-	 * the Web Push subscription and removes it from the database.
+	 * Deactivates the Tauri notification preference and removes it from the database.
 	 */
 	public async unsubscribe(): Promise<void> {
-		if (this.isTauri) {
-			this.tauriSubscribed.next(false);
-			return;
-		}
-		await this.swPush.unsubscribe();
-		await this.databaseService.deletePushSubscription();
+		await this.databaseService.setTauriNotifEnabled(false);
+		this.tauriSubscribed.next(false);
 	}
 
 	/**
@@ -96,23 +76,5 @@ export class NotificationService {
 	 */
 	private get isTauri(): boolean {
 		return isPlatformBrowser(this.platformId) && '__TAURI__' in window;
-	}
-
-	/**
-	 * Gets whether the app is running as an installed PWA added to the home screen.
-	 *
-	 * @returns True when display-mode is standalone.
-	 */
-	private get isStandalonePwa(): boolean {
-		return window.matchMedia('(display-mode: standalone)').matches;
-	}
-
-	/**
-	 * Gets whether the platform is a browser with the Notification API available.
-	 *
-	 * @returns True on browser platforms with Notification API support.
-	 */
-	private get hasBrowserNotificationApi(): boolean {
-		return isPlatformBrowser(this.platformId) && 'Notification' in window;
 	}
 }

@@ -62,18 +62,11 @@
 				class="account-popover-item"
 				[class.account-popover-item--primary]="!notifSubscribed()"
 				type="button"
-				[disabled]="notificationPermission() === 'denied'"
 				(click)="toggleNotification()">
 				<span class="material-symbols-outlined" style="font-size: 20px">{{
 					notifSubscribed() ? 'notifications_off' : 'notifications'
 				}}</span>
-				{{
-					notifSubscribed()
-						? NAV_NOTIF_LABEL_DISABLE
-						: notificationPermission() === 'denied'
-							? NAV_NOTIF_LABEL_BLOCKED
-							: NAV_NOTIF_LABEL_ENABLE
-				}}
+				{{ notifSubscribed() ? NAV_NOTIF_LABEL_DISABLE : NAV_NOTIF_LABEL_ENABLE }}
 			</button>
 		}
 		<button

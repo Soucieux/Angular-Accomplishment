@@ -147,7 +147,6 @@ export const NAV_AVATAR_FALLBACK_INITIAL = '?';
 export const NAV_AVATAR_GRADIENT = 'linear-gradient(135deg,#d53369,#daae51)';
 export const NAV_NOTIF_LABEL_ENABLE = 'Enable notifications';
 export const NAV_NOTIF_LABEL_DISABLE = 'Disable notifications';
-export const NAV_NOTIF_LABEL_BLOCKED = 'Notifications blocked';
 export const NAV_NOTIF_TOGGLE_ERROR = 'Error toggling push notification';
 export const LOGIN_URL_DEFAULT_RETURN = '/';
 export const LOGIN_ANIM_OUT = 'out';
@@ -194,6 +193,8 @@ export const DATABASE_STATISTICS = 'statistics';
 // stores both links (type:'link') and categories (type:'category')
 export const DATABASE_USEFUL_LINKS = 'useful_links';
 export const DATABASE_PUSH_SUBSCRIPTIONS = 'push_subscriptions';
+/** Type discriminator stored in the push_subscriptions collection for Tauri desktop entries. */
+export const DATABASE_TAURI_NOTIF_TYPE = 'tauri';
 
 ////////////////////// Below are shared UI constants /////////////////////////////////
 
@@ -700,6 +701,8 @@ export const REMINDER_PLACEHOLDER_TAG = 'tag…';
 export const REMINDER_ADD_LINK_LABEL = 'Add link';
 /** Ghost button label for adding a date to a reminder card. */
 export const REMINDER_ADD_DATE_LABEL = 'Add date';
+/** Ghost button label for adding a start/end time to a reminder card. */
+export const REMINDER_ADD_TIME_LABEL = 'Add time';
 /** Confirm button label on the new-reminder composer. */
 export const REMINDER_ADD_BTN_LABEL = 'Add';
 /** "All" filter chip label in the Reminder filter bar. */
@@ -734,6 +737,10 @@ export const REMINDER_VALUE_KEY_DATE = 'date';
 export const REMINDER_VALUE_KEY_LINK = 'link';
 /** CloudBase content entry key for the reminder tag. */
 export const REMINDER_VALUE_KEY_TAG = 'tag';
+/** CloudBase content entry key for the reminder start time (HH:mm). */
+export const REMINDER_VALUE_KEY_START_TIME = 'startTime';
+/** CloudBase content entry key for the reminder end time (HH:mm). */
+export const REMINDER_VALUE_KEY_END_TIME = 'endTime';
 
 /** Display name for the third reminder table — used in stat writes and the Recent Activity widget. */
 export const REMINDER_TABLE_MESSAGES = 'Messages';
@@ -751,16 +758,18 @@ export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;
 export const REMINDER_CHIP_CUSTOM = 'Custom';
 /** Title for due-soon push notifications sent from the Reminder page. */
 export const REMINDER_NOTIF_TITLE = 'Reminder due soon';
-/** Separator between item text and date in the notification body. */
-export const REMINDER_NOTIF_BODY_SEPARATOR = ' · ';
-/** Suffix used to key the 3-day-ahead notification in the per-session notified set. */
-export const REMINDER_NOTIF_KEY_3DAY = '_3day';
-/** Suffix used to key the due-date notification in the per-session notified set. */
-export const REMINDER_NOTIF_KEY_DUE = '_due';
+/** Suffix used to key the due-date notification in the per-session dedup set. */
+export const NOTIF_KEY_DUE = '_due';
+/** Separator between item text and date in any scheduled notification body. */
+export const NOTIF_BODY_SEPARATOR = ' · ';
+/** Suffix used to key the 3-day-ahead notification in the per-session dedup set. */
+export const NOTIF_KEY_3DAY = '_3day';
 /** Hour of day (0–23) at which the daily background notification scan fires when the app stays open. */
-export const REMINDER_NOTIF_DAILY_HOUR = 10;
+export const NOTIF_DAILY_HOUR = 10;
 /** Interval in milliseconds for the daily background notification check — 24 hours. */
-export const REMINDER_NOTIF_INTERVAL_MS = 24 * 60 * 60 * 1000;
+export const NOTIF_INTERVAL_MS = 24 * 60 * 60 * 1000;
+/** Error message logged when the notification scheduler fails to initialise. */
+export const NOTIF_SCHEDULER_INIT_ERROR = 'Failed to initialise notification scheduler';
 
 ////////////////////// Below are Debt Sonata page constants //////////////////////////
 

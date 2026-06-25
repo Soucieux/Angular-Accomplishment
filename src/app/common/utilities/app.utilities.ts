@@ -42,6 +42,10 @@ export class Utilities {
 		}
 	}
 
+	/* ─────────────────────────────────────────
+	   Platform & viewport
+	───────────────────────────────────────── */
+
 	/**
 	 * Checks whether the current device is a phone in portrait orientation, using
 	 * viewport width, aspect ratio, and input precision to distinguish real phones
@@ -71,6 +75,70 @@ export class Utilities {
 		}
 		return false;
 	}
+
+	/**
+	 * Checks whether the current device supports hover (has a pointing device like a mouse).
+	 *
+	 * @returns True if the device supports hover, otherwise false.
+	 */
+	public checkIfHoverCapable(): boolean {
+		return this.document.defaultView?.matchMedia('(hover: hover)').matches ?? false;
+	}
+
+	/**
+	 * Opens a URL in the system browser. In a Tauri desktop build, delegates to
+	 * the Tauri shell plugin so the link opens outside the webview; in a regular
+	 * browser context, falls back to a temporary anchor click.
+	 *
+	 * @param url - The fully-qualified URL to open.
+	 */
+	public openInNewTab(url: string): void {
+		/* `window.__TAURI__` is injected by the Tauri runtime only inside the desktop app.
+		   When present, use the shell plugin — anchor clicks open inside the webview instead. */
+		if ((window as unknown as { __TAURI__?: unknown }).__TAURI__) {
+			import('@tauri-apps/api/shell').then(({ open }) => open(url)).catch(() => {});
+			return;
+		}
+		const a = this.document.createElement('a');
+		a.href = url;
+		a.target = '_blank';
+		a.rel = 'noopener noreferrer';
+		this.document.body.appendChild(a);
+		a.click();
+		this.document.body.removeChild(a);
+	}
+
+	/**
+	 * Checks and stores the current country code in the static field using the
+	 * browser timezone as a region signal. Mainland-China timezones resolve to CN;
+	 * all other timezones resolve to OVERSEAS.
+	 * Only bootstraps should call this method — it must run before any component initialises.
+	 */
+	public static checkCurrentCountry(): void {
+		try {
+			// TODO Dont delete the below code for now, they will be worked on later
+			this.currentCountry = CN;
+			// const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			// this.currentCountry = CN_TIMEZONES.includes(timezone) ? CN : OVERSEAS;
+		} catch (error: unknown) {
+			LOG.error(this.className, UTILITIES_LOG_COUNTRY_FAILED, error as Error);
+			this.currentCountry = CN;
+			LOG.info(this.className, UTILITIES_LOG_DEFAULT_COUNTRY + this.currentCountry);
+		}
+	}
+
+	/**
+	 * Gets the current country code stored in the static field.
+	 *
+	 * @returns The country code string, or an empty string before detection runs.
+	 */
+	public static getCurrentCountry() {
+		return this.currentCountry;
+	}
+
+	/* ─────────────────────────────────────────
+	   Date & time
+	───────────────────────────────────────── */
 
 	/**
 	 * Gets the current date formatted as YYYY.MM.DD, optionally appending HH:mm:ss.
@@ -237,6 +305,118 @@ export class Utilities {
 	}
 
 	/**
+	 * Format a Date object to the app's canonical date-storage format: "YYYY-MM-DD".
+	 *
+	 * @param date - The Date object to format.
+	 * @returns A "YYYY-MM-DD" string.
+	 */
+	public static formatDateForStorage(date: Date): string {
+		return format(date, 'yyyy-MM-dd');
+	}
+
+	/**
+	 * Converts a time string in "HH:mm" format to the total number of minutes since midnight.
+	 *
+	 * @param hhmm - The time string in "HH:mm" format (e.g. "09:30", "14:00", "24:00").
+	 * @returns The total minutes since midnight (e.g. 570 for "09:30").
+	 */
+	public static parseTimeToMinutes(hhmm: string): number {
+		const [h, m] = hhmm.split(':').map(Number);
+		return h * 60 + m;
+	}
+
+	/**
+	 * Formats a date as "MMM yyyy" for human-readable month-year display (e.g. "Jun 2026").
+	 *
+	 * @param date - The date to format.
+	 * @returns The formatted month-year string.
+	 */
+	public static formatMonthYear(date: Date): string {
+		return format(date, 'MMM yyyy');
+	}
+
+	/**
+	 * Converts a storage date string in "YYYY-MM-DD" format to a human-readable
+	 * "MMM yyyy" string (e.g. "2026-06-19" → "Jun 2026").
+	 *
+	 * @param dateStr - The storage date string to convert.
+	 * @returns The month-year display string.
+	 */
+	public static storageDateToDisplayMonth(dateStr: string): string {
+		const [year, month] = dateStr.split('-').map(Number);
+		return Utilities.formatMonthYear(new Date(year, month - 1, 1));
+	}
+
+	/**
+	 * Parses a project timestamp string in either ISO-8601 or dot-separated format
+	 * into a "YYYY-MM-DD" date string, delegating the final formatting to
+	 * {@link formatDateForStorage}.
+	 *
+	 * @param timestamp - The timestamp to parse ("YYYY-MM-DDTHH:mm:ss" or "YYYY.MM.DD HH:mm:ss").
+	 * @returns The date portion as a "YYYY-MM-DD" string.
+	 */
+	public static parseDateToISODate(timestamp: string): string {
+		const iso = timestamp.includes('T') ? timestamp : timestamp.replace(/\./g, '-').replace(' ', 'T');
+		return Utilities.formatDateForStorage(new Date(iso));
+	}
+
+	/**
+	 * Computes a short human-readable countdown label from a date string.
+	 * Delegates the day-diff calculation to {@link getDaysUntilNumber}.
+	 *
+	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
+	 * @returns A countdown label, or an empty string if no date is provided.
+	 */
+	public static getDaysUntil(dateStr: unknown): string {
+		const diff = Utilities.getDaysUntilNumber(dateStr);
+		if (diff === null) return '';
+		if (diff < 0) return `${Math.abs(diff)}d overdue`;
+		if (diff === 0) return 'Today';
+		if (diff === 1) return 'Tomorrow';
+		return `in ${diff}d`;
+	}
+
+	/**
+	 * Computes the number of whole days from today until the given date.
+	 * Negative values indicate a past date. Positive values indicate a future date.
+	 *
+	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
+	 * @returns The number of whole days until the date, or null when no date is provided.
+	 */
+	public static getDaysUntilNumber(dateStr: unknown): number | null {
+		// Step 1: Coerce any date representation to a "YYYY-MM-DD" string; bail on falsy input
+		if (!dateStr) return null;
+		const str = Utilities.coerceDateToString(dateStr);
+		if (!str) return null;
+
+		// Step 2: Build a midnight-local Date for the target — constructor overload avoids UTC shift
+		const [year, month, day] = str.split('-').map(Number);
+		const target = new Date(year, month - 1, day);
+
+		/* Step 3: Zero today's time component so the diff is in whole calendar days,
+		   not hours-since-midnight (which would make "today" return a small positive fraction). */
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+	}
+
+	/**
+	 * Returns `true` if the given date is strictly before today (i.e. the item
+	 * is past due). Delegates the day-diff calculation to {@link getDaysUntilNumber}.
+	 *
+	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
+	 * @returns `true` if the date is in the past, `false` otherwise.
+	 */
+	public static isOverdue(dateStr: unknown): boolean {
+		const diff = Utilities.getDaysUntilNumber(dateStr);
+		return diff !== null && diff < 0;
+	}
+
+	/* ─────────────────────────────────────────
+	   String & text
+	───────────────────────────────────────── */
+
+	/**
 	 * Capitalizes the first letter of each word in the given string.
 	 *
 	 * @param string - The string to capitalize.
@@ -292,13 +472,102 @@ export class Utilities {
 	}
 
 	/**
-	 * Gets the current country code stored in the static field.
+	 * Truncate a string to at most `max` characters, appending an ellipsis (`…`)
+	 * when the text is cut. Returns an empty string for falsy input.
 	 *
-	 * @returns The country code string, or an empty string before detection runs.
+	 * @param text - The text to truncate.
+	 * @param max - The maximum number of characters to keep before truncating.
+	 * @returns The truncated string with an ellipsis appended if needed.
 	 */
-	public static getCurrentCountry() {
-		return this.currentCountry;
+	public static truncate(text: string, max: number): string {
+		if (!text) return '';
+		return text.length > max ? text.substring(0, max) + '…' : text;
 	}
+
+	/**
+	 * Safely extract a human-readable error message from any thrown value.
+	 * Guards against SDK objects whose `.message` getter itself throws.
+	 *
+	 * @param err - Any thrown value (Error, string, SDK error object, etc.).
+	 * @returns A plain string describing the error, never throws.
+	 */
+	public static safeErrorMessage(err: unknown): string {
+		try {
+			if (err == null) return 'unknown error';
+			if (typeof err === 'string') return err;
+			const msg = (err as Record<string, unknown>)['message'];
+			return typeof msg === 'string' ? msg : JSON.stringify(err);
+		} catch {
+			return 'unknown error';
+		}
+	}
+
+	/**
+	 * Returns true when the given string represents a finite number.
+	 * Useful for hiding numeric-only unit fields that carry no semantic meaning
+	 * (e.g. a user who typed "1" as a unit placeholder).
+	 *
+	 * @param value - The string to test.
+	 * @returns true if the trimmed string is a finite numeric value.
+	 */
+	public static isNumericString(value: string): boolean {
+		return value.trim() !== '' && isFinite(Number(value));
+	}
+
+	/* ─────────────────────────────────────────
+	   URL & web
+	───────────────────────────────────────── */
+
+	/**
+	 * Ensures a URL has an explicit protocol prefix so the browser treats it as
+	 * an absolute URL. When withWww is true, also lowercases the value and
+	 * prepends `https://www.` to bare domains (used for contact / reminder links).
+	 *
+	 * @param url - The raw URL string (may or may not have a protocol).
+	 * @param withWww - The flag to prepend www and lowercase the value.
+	 * @returns A URL string guaranteed to begin with a valid protocol.
+	 */
+	public static normalizeUrl(url: string, withWww = false): string {
+		if (!url) return url;
+		const value = withWww ? url.toLowerCase() : url;
+		if (value.startsWith('http://') || value.startsWith('https://')) return value;
+		if (value.startsWith('www.')) return 'https://' + value;
+		return withWww ? 'https://www.' + value : 'https://' + value;
+	}
+
+	/**
+	 * Extract a favicon URL from any site URL by reading the hostname and
+	 * constructing the conventional /favicon.ico path.
+	 *
+	 * @param url - The full URL of the website.
+	 * @returns A favicon image URL string, or '' if the URL is unparseable.
+	 */
+	public static getFavicon(url: string): string {
+		try {
+			const hostname = new URL(url).hostname;
+			return `https://${hostname}/favicon.ico`;
+		} catch {
+			return '';
+		}
+	}
+
+	/**
+	 * Extract the hostname (domain) from a URL string.
+	 *
+	 * @param url - The full URL of the website.
+	 * @returns The hostname string (e.g. "openai.com"), or the original value if unparseable.
+	 */
+	public static getDomain(url: string): string {
+		try {
+			return new URL(url).hostname;
+		} catch {
+			return url;
+		}
+	}
+
+	/* ─────────────────────────────────────────
+	   User & auth
+	───────────────────────────────────────── */
 
 	/**
 	 * Gets the display name for an authenticated user, choosing the correct field
@@ -339,6 +608,23 @@ export class Utilities {
 	 */
 	public static getUserAvatarUrl(user: any): string {
 		return user?.user_metadata?.avatarUrl ?? user?.user_metadata?.picture ?? '';
+	}
+
+	/**
+	 * Checks whether the current user has permission to modify an entry
+	 * owned by the given openid. Admin users bypass the check automatically.
+	 * Exceptions from the auth layer are treated as permission denied.
+	 *
+	 * @param openid - The owner ID stored on the database entry.
+	 * @returns True if the current user is permitted, false otherwise.
+	 */
+	public static checkPermission(openid: string): boolean {
+		try {
+			if (CloudbaseService.userHasAllRights()) return true;
+			return openid === CloudbaseService.getUserId();
+		} catch {
+			return false;
+		}
 	}
 
 	/**
@@ -385,93 +671,9 @@ export class Utilities {
 		this.isUserAliveSubject.next(isUserAlive);
 	}
 
-	/**
-	 * Returns a human-readable label for a movie rate based on the app's four rate tiers.
-	 * Mirrors the ngClass thresholds used in the entertainment template.
-	 *
-	 * @param rate - The numeric movie rate.
-	 * @returns "Excellent" (≥9), "Good" (≥7.9), "Average" (≥7), or "Poor" (<7).
-	 */
-	public static getMovieRateLabel(rate: number): string {
-		if (rate >= 9) return RATE_LABEL_EXCELLENT;
-		if (rate >= 7.9) return RATE_LABEL_GOOD;
-		if (rate >= 7) return RATE_LABEL_AVERAGE;
-		return RATE_LABEL_POOR;
-	}
-
-	/**
-	 * Validates that the given movie item VO has a name and a year set.
-	 *
-	 * @param movieItemVO - The movie item to validate.
-	 * @throws Error if the movie name is empty or the year is -1.
-	 */
-	public static checkMovieItemVO(movieItemVO: MovieItemVO) {
-		if (movieItemVO.getMovieName() === '' || movieItemVO.getMovieYear() === -1) {
-			throw new Error('Movie item VO is invalid');
-		}
-	}
-
-	/**
-	 * Checks whether the current user has permission to modify an entry
-	 * owned by the given openid. Admin users bypass the check automatically.
-	 * Exceptions from the auth layer are treated as permission denied.
-	 *
-	 * @param openid - The owner ID stored on the database entry.
-	 * @returns True if the current user is permitted, false otherwise.
-	 */
-	public static checkPermission(openid: string): boolean {
-		try {
-			if (CloudbaseService.userHasAllRights()) return true;
-			return openid === CloudbaseService.getUserId();
-		} catch {
-			return false;
-		}
-	}
-
-	/**
-	 * Checks whether the current device supports hover (has a pointing device like a mouse).
-	 *
-	 * @returns True if the device supports hover, otherwise false.
-	 */
-	public checkIfHoverCapable(): boolean {
-		return this.document.defaultView?.matchMedia('(hover: hover)').matches ?? false;
-	}
-
-	/**
-	 * Opens a URL in the system browser. In a Tauri desktop build, delegates to
-	 * the Tauri shell plugin so the link opens outside the webview; in a regular
-	 * browser context, falls back to a temporary anchor click.
-	 *
-	 * @param url - The fully-qualified URL to open.
-	 */
-	public openInNewTab(url: string): void {
-		/* `window.__TAURI__` is injected by the Tauri runtime only inside the desktop app.
-		   When present, use the shell plugin — anchor clicks open inside the webview instead. */
-		if ((window as unknown as { __TAURI__?: unknown }).__TAURI__) {
-			import('@tauri-apps/api/shell').then(({ open }) => open(url)).catch(() => {});
-			return;
-		}
-		const a = this.document.createElement('a');
-		a.href = url;
-		a.target = '_blank';
-		a.rel = 'noopener noreferrer';
-		this.document.body.appendChild(a);
-		a.click();
-		this.document.body.removeChild(a);
-	}
-
-	/**
-	 * Truncate a string to at most `max` characters, appending an ellipsis (`…`)
-	 * when the text is cut. Returns an empty string for falsy input.
-	 *
-	 * @param text - The text to truncate.
-	 * @param max - The maximum number of characters to keep before truncating.
-	 * @returns The truncated string with an ellipsis appended if needed.
-	 */
-	public static truncate(text: string, max: number): string {
-		if (!text) return '';
-		return text.length > max ? text.substring(0, max) + '…' : text;
-	}
+	/* ─────────────────────────────────────────
+	   Arrays & data
+	───────────────────────────────────────── */
 
 	/**
 	 * Flatten a raw CloudBase statistics field (returned as either a true array
@@ -499,52 +701,13 @@ export class Utilities {
 	}
 
 	/**
-	 * Ensures a URL has an explicit protocol prefix so the browser treats it as
-	 * an absolute URL. When withWww is true, also lowercases the value and
-	 * prepends `https://www.` to bare domains (used for contact / reminder links).
+	 * Pads a number to two digits with a leading zero.
 	 *
-	 * @param url - The raw URL string (may or may not have a protocol).
-	 * @param withWww - The flag to prepend www and lowercase the value.
-	 * @returns A URL string guaranteed to begin with a valid protocol.
+	 * @param n - The number to pad.
+	 * @returns A two-character string representation of the number.
 	 */
-	public static normalizeUrl(url: string, withWww = false): string {
-		if (!url) return url;
-		const value = withWww ? url.toLowerCase() : url;
-		if (value.startsWith('http://') || value.startsWith('https://')) return value;
-		if (value.startsWith('www.')) return 'https://' + value;
-		return withWww ? 'https://www.' + value : 'https://' + value;
-	}
-
-	/**
-	 * Format a Date object to the app's canonical date-storage format: "YYYY-MM-DD".
-	 *
-	 * @param date - The Date object to format.
-	 * @returns A "YYYY-MM-DD" string.
-	 */
-	public static formatDateForStorage(date: Date): string {
-		return format(date, 'yyyy-MM-dd');
-	}
-
-	/**
-	 * Formats a date as "MMM yyyy" for human-readable month-year display (e.g. "Jun 2026").
-	 *
-	 * @param date - The date to format.
-	 * @returns The formatted month-year string.
-	 */
-	public static formatMonthYear(date: Date): string {
-		return format(date, 'MMM yyyy');
-	}
-
-	/**
-	 * Converts a storage date string in "YYYY-MM-DD" format to a human-readable
-	 * "MMM yyyy" string (e.g. "2026-06-19" → "Jun 2026").
-	 *
-	 * @param dateStr - The storage date string to convert.
-	 * @returns The month-year display string.
-	 */
-	public static storageDateToDisplayMonth(dateStr: string): string {
-		const [year, month] = dateStr.split('-').map(Number);
-		return Utilities.formatMonthYear(new Date(year, month - 1, 1));
+	public static padTwoDigits(n: number): string {
+		return String(n).padStart(2, '0');
 	}
 
 	/**
@@ -563,33 +726,116 @@ export class Utilities {
 	}
 
 	/**
-	 * Parses a project timestamp string in either ISO-8601 or dot-separated format
-	 * into a "YYYY-MM-DD" date string, delegating the final formatting to
-	 * {@link formatDateForStorage}.
+	 * Builds a boolean array representing a segmented progress bar.
+	 * Each element is true if that block should be filled, based on
+	 * the proportion of count to max scaled to totalBlocks segments.
 	 *
-	 * @param timestamp - The timestamp to parse ("YYYY-MM-DDTHH:mm:ss" or "YYYY.MM.DD HH:mm:ss").
-	 * @returns The date portion as a "YYYY-MM-DD" string.
+	 * @param count - The value to represent (e.g. movies in a genre).
+	 * @param max - The maximum value used as the scale denominator.
+	 * @param totalBlocks - Total number of blocks in the bar.
+	 * @returns A boolean array of length totalBlocks.
 	 */
-	public static parseDateToISODate(timestamp: string): string {
-		const iso = timestamp.includes('T') ? timestamp : timestamp.replace(/\./g, '-').replace(' ', 'T');
-		return Utilities.formatDateForStorage(new Date(iso));
+	public static filledBlocks(count: number, max: number, totalBlocks: number): boolean[] {
+		const filled = max > 0 ? Math.round((count / max) * totalBlocks) : 0;
+		return Array.from({ length: totalBlocks }, (_, i) => i < filled);
+	}
+
+	/* ─────────────────────────────────────────
+	   DOM
+	───────────────────────────────────────── */
+
+	/**
+	 * Attach a scroll-activity listener to a scrollable element that adds the
+	 * `is-scrolling` CSS class while the user is scrolling and removes it
+	 * 700 ms after scrolling stops, keeping the scrollbar hidden at rest.
+	 * No-ops if the element is already bound or is undefined.
+	 *
+	 * @param el - The scrollable DOM element to observe, or undefined to skip.
+	 */
+	public static attachScrollAutoHide(el?: HTMLElement): void {
+		/* Step 1: Guard — skip undefined elements and elements already wired up.
+		   WeakSet membership check is O(1) and avoids stacking duplicate listeners
+		   when a component's ngAfterViewInit re-runs (e.g. after a tab switch). */
+		if (!el || Utilities.boundScrollEls.has(el)) return;
+		Utilities.boundScrollEls.add(el);
+
+		/* Step 2: Define the reveal closure that adds the CSS class and debounces removal.
+		   WeakMap is used so the timer ref is GC-eligible when the element is destroyed. */
+		const reveal = () => {
+			el.classList.add('is-scrolling');
+			const prev = Utilities.scrollTimers.get(el);
+			if (prev) clearTimeout(prev);
+			Utilities.scrollTimers.set(
+				el,
+				setTimeout(() => el.classList.remove('is-scrolling'), 700)
+			);
+		};
+
+		// Step 3: Attach listeners — scroll fires during drag; mouseenter handles hover-over-rest
+		el.addEventListener('scroll', reveal, { passive: true });
+		el.addEventListener('mouseenter', () => {
+			// Only reveal on hover if the element actually has overflow to scroll
+			if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) reveal();
+		});
+	}
+
+	/* ─────────────────────────────────────────
+	   Domain-specific
+	───────────────────────────────────────── */
+
+	/**
+	 * Returns a human-readable label for a movie rate based on the app's four rate tiers.
+	 * Mirrors the ngClass thresholds used in the entertainment template.
+	 *
+	 * @param rate - The numeric movie rate.
+	 * @returns "Excellent" (≥9), "Good" (≥7.9), "Average" (≥7), or "Poor" (<7).
+	 */
+	public static getMovieRateLabel(rate: number): string {
+		if (rate >= 9) return RATE_LABEL_EXCELLENT;
+		if (rate >= 7.9) return RATE_LABEL_GOOD;
+		if (rate >= 7) return RATE_LABEL_AVERAGE;
+		return RATE_LABEL_POOR;
 	}
 
 	/**
-	 * Extract a favicon URL from any site URL by reading the hostname and
-	 * constructing the conventional /favicon.ico path.
+	 * Validates that the given movie item VO has a name and a year set.
 	 *
-	 * @param url - The full URL of the website.
-	 * @returns A favicon image URL string, or '' if the URL is unparseable.
+	 * @param movieItemVO - The movie item to validate.
+	 * @throws Error if the movie name is empty or the year is -1.
 	 */
-	public static getFavicon(url: string): string {
-		try {
-			const hostname = new URL(url).hostname;
-			return `https://${hostname}/favicon.ico`;
-		} catch {
-			return '';
+	public static checkMovieItemVO(movieItemVO: MovieItemVO) {
+		if (movieItemVO.getMovieName() === '' || movieItemVO.getMovieYear() === -1) {
+			throw new Error('Movie item VO is invalid');
 		}
 	}
+
+	/**
+	 * Return the CSS band class name for a given recipe category.
+	 * When adding a new category, add a corresponding case here and follow the
+	 * checklist in the RECIPE_BAND_* block inside app.constant.ts.
+	 *
+	 * @param category - The recipe category string (e.g. 'Chinese', 'Western').
+	 * @returns The CSS band class constant for that category, or an empty string
+	 *   if the category is not recognised.
+	 */
+	public static recipeBandClass(category: string): string {
+		switch (category) {
+			case RECIPE_CATEGORY_CHINESE:
+				return RECIPE_BAND_CHINESE;
+			case RECIPE_CATEGORY_WESTERN:
+				return RECIPE_BAND_WESTERN;
+			case RECIPE_CATEGORY_QUICK:
+				return RECIPE_BAND_QUICK;
+			case RECIPE_CATEGORY_DESSERT:
+				return RECIPE_BAND_DESSERT;
+			default:
+				return '';
+		}
+	}
+
+	/* ─────────────────────────────────────────
+	   Template wrappers
+	───────────────────────────────────────── */
 
 	/**
 	 * Instance wrapper around {@link Utilities.getFavicon} so templates that
@@ -601,20 +847,6 @@ export class Utilities {
 	 */
 	public getFavicon(url: string): string {
 		return Utilities.getFavicon(url);
-	}
-
-	/**
-	 * Extract the hostname (domain) from a URL string.
-	 *
-	 * @param url - The full URL of the website.
-	 * @returns The hostname string (e.g. "openai.com"), or the original value if unparseable.
-	 */
-	public static getDomain(url: string): string {
-		try {
-			return new URL(url).hostname;
-		} catch {
-			return url;
-		}
 	}
 
 	/**
@@ -665,190 +897,5 @@ export class Utilities {
 	 */
 	public getRelativeTime(timestamp: string | undefined): string {
 		return Utilities.getRelativeTime(timestamp ?? '');
-	}
-
-	/**
-	 * Safely extract a human-readable error message from any thrown value.
-	 * Guards against SDK objects whose `.message` getter itself throws.
-	 *
-	 * @param err - Any thrown value (Error, string, SDK error object, etc.).
-	 * @returns A plain string describing the error, never throws.
-	 */
-	public static safeErrorMessage(err: unknown): string {
-		try {
-			if (err == null) return 'unknown error';
-			if (typeof err === 'string') return err;
-			const msg = (err as Record<string, unknown>)['message'];
-			return typeof msg === 'string' ? msg : JSON.stringify(err);
-		} catch {
-			return 'unknown error';
-		}
-	}
-
-	/**
-	 * Returns true when the given string represents a finite number.
-	 * Useful for hiding numeric-only unit fields that carry no semantic meaning
-	 * (e.g. a user who typed "1" as a unit placeholder).
-	 *
-	 * @param value - The string to test.
-	 * @returns true if the trimmed string is a finite numeric value.
-	 */
-	public static isNumericString(value: string): boolean {
-		return value.trim() !== '' && isFinite(Number(value));
-	}
-
-	/**
-	 * Computes a short human-readable countdown label from a date string.
-	 * Delegates the day-diff calculation to {@link getDaysUntilNumber}.
-	 *
-	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
-	 * @returns A countdown label, or an empty string if no date is provided.
-	 */
-	public static getDaysUntil(dateStr: unknown): string {
-		const diff = Utilities.getDaysUntilNumber(dateStr);
-		if (diff === null) return '';
-		if (diff < 0) return `${Math.abs(diff)}d overdue`;
-		if (diff === 0) return 'Today';
-		if (diff === 1) return 'Tomorrow';
-		return `in ${diff}d`;
-	}
-
-	/**
-	 * Computes the number of whole days from today until the given date.
-	 * Negative values indicate a past date. Positive values indicate a future date.
-	 *
-	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
-	 * @returns The number of whole days until the date, or null when no date is provided.
-	 */
-	public static getDaysUntilNumber(dateStr: unknown): number | null {
-		// Step 1: Coerce any date representation to a "YYYY-MM-DD" string; bail on falsy input
-		if (!dateStr) return null;
-		const str = Utilities.coerceDateToString(dateStr);
-		if (!str) return null;
-
-		// Step 2: Build a midnight-local Date for the target — constructor overload avoids UTC shift
-		const [year, month, day] = str.split('-').map(Number);
-		const target = new Date(year, month - 1, day);
-
-		/* Step 3: Zero today's time component so the diff is in whole calendar days,
-		   not hours-since-midnight (which would make "today" return a small positive fraction). */
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-	}
-
-	/**
-	 * Returns `true` if the given date is strictly before today (i.e. the item
-	 * is past due). Delegates the day-diff calculation to {@link getDaysUntilNumber}.
-	 *
-	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
-	 * @returns `true` if the date is in the past, `false` otherwise.
-	 */
-	public static isOverdue(dateStr: unknown): boolean {
-		const diff = Utilities.getDaysUntilNumber(dateStr);
-		return diff !== null && diff < 0;
-	}
-
-	/**
-	 * Attach a scroll-activity listener to a scrollable element that adds the
-	 * `is-scrolling` CSS class while the user is scrolling and removes it
-	 * 700 ms after scrolling stops, keeping the scrollbar hidden at rest.
-	 * No-ops if the element is already bound or is undefined.
-	 *
-	 * @param el - The scrollable DOM element to observe, or undefined to skip.
-	 */
-	public static attachScrollAutoHide(el?: HTMLElement): void {
-		/* Step 1: Guard — skip undefined elements and elements already wired up.
-		   WeakSet membership check is O(1) and avoids stacking duplicate listeners
-		   when a component's ngAfterViewInit re-runs (e.g. after a tab switch). */
-		if (!el || Utilities.boundScrollEls.has(el)) return;
-		Utilities.boundScrollEls.add(el);
-
-		/* Step 2: Define the reveal closure that adds the CSS class and debounces removal.
-		   WeakMap is used so the timer ref is GC-eligible when the element is destroyed. */
-		const reveal = () => {
-			el.classList.add('is-scrolling');
-			const prev = Utilities.scrollTimers.get(el);
-			if (prev) clearTimeout(prev);
-			Utilities.scrollTimers.set(
-				el,
-				setTimeout(() => el.classList.remove('is-scrolling'), 700)
-			);
-		};
-
-		// Step 3: Attach listeners — scroll fires during drag; mouseenter handles hover-over-rest
-		el.addEventListener('scroll', reveal, { passive: true });
-		el.addEventListener('mouseenter', () => {
-			// Only reveal on hover if the element actually has overflow to scroll
-			if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) reveal();
-		});
-	}
-
-	/**
-	 * Pads a number to two digits with a leading zero.
-	 *
-	 * @param n - The number to pad.
-	 * @returns A two-character string representation of the number.
-	 */
-	public static padTwoDigits(n: number): string {
-		return String(n).padStart(2, '0');
-	}
-
-	/**
-	 * Checks and stores the current country code in the static field using the
-	 * browser timezone as a region signal. Mainland-China timezones resolve to CN;
-	 * all other timezones resolve to OVERSEAS.
-	 * Only bootstraps should call this method — it must run before any component initialises.
-	 */
-	public static checkCurrentCountry(): void {
-		try {
-			// TODO Dont delete the below code for now, they will be worked on later
-			this.currentCountry = CN;
-			// const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-			// this.currentCountry = CN_TIMEZONES.includes(timezone) ? CN : OVERSEAS;
-		} catch (error: unknown) {
-			LOG.error(this.className, UTILITIES_LOG_COUNTRY_FAILED, error as Error);
-			this.currentCountry = CN;
-			LOG.info(this.className, UTILITIES_LOG_DEFAULT_COUNTRY + this.currentCountry);
-		}
-	}
-
-	/**
-	 * Builds a boolean array representing a segmented progress bar.
-	 * Each element is true if that block should be filled, based on
-	 * the proportion of count to max scaled to totalBlocks segments.
-	 *
-	 * @param count - The value to represent (e.g. movies in a genre).
-	 * @param max - The maximum value used as the scale denominator.
-	 * @param totalBlocks - Total number of blocks in the bar.
-	 * @returns A boolean array of length totalBlocks.
-	 */
-	public static filledBlocks(count: number, max: number, totalBlocks: number): boolean[] {
-		const filled = max > 0 ? Math.round((count / max) * totalBlocks) : 0;
-		return Array.from({ length: totalBlocks }, (_, i) => i < filled);
-	}
-
-	/**
-	 * Return the CSS band class name for a given recipe category.
-	 * When adding a new category, add a corresponding case here and follow the
-	 * checklist in the RECIPE_BAND_* block inside app.constant.ts.
-	 *
-	 * @param category - The recipe category string (e.g. 'Chinese', 'Western').
-	 * @returns The CSS band class constant for that category, or an empty string
-	 *   if the category is not recognised.
-	 */
-	public static recipeBandClass(category: string): string {
-		switch (category) {
-			case RECIPE_CATEGORY_CHINESE:
-				return RECIPE_BAND_CHINESE;
-			case RECIPE_CATEGORY_WESTERN:
-				return RECIPE_BAND_WESTERN;
-			case RECIPE_CATEGORY_QUICK:
-				return RECIPE_BAND_QUICK;
-			case RECIPE_CATEGORY_DESSERT:
-				return RECIPE_BAND_DESSERT;
-			default:
-				return '';
-		}
 	}
 }

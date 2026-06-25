@@ -90,11 +90,11 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 					// Step 3: Subscribe to portal links and categories independently so a
 					// failure in one stream does not prevent the other from rendering
-					const userId = CloudbaseService.getUserId();
 					this.linksSub = this.databaseService.getUsefulLinks().subscribe({
 						next: (data: PortalLink[]) => {
 							clearTimeout(this.linksLoadingTimer);
-							this.dashLinks = data.filter(link => link._openid === userId);
+							const userId = CloudbaseService.getUserId();
+							this.dashLinks = userId ? data.filter(link => link._openid === userId) : [];
 							this.dashLinksLoading = false;
 							this.cdr.detectChanges();
 						},

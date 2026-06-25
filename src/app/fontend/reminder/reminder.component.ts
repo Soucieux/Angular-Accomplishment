@@ -19,6 +19,7 @@ import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { PopoverModule } from 'primeng/popover';
 import { Popover } from 'primeng/popover';
+import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DatePickerModule, DatePicker } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
@@ -34,6 +35,7 @@ import {
 	REMINDER_ADD_BTN_LABEL,
 	REMINDER_ADD_DATE_LABEL,
 	REMINDER_ADD_LINK_LABEL,
+	REMINDER_ADD_TIME_LABEL,
 	REMINDER_AWAIT_SUFFIX_CN,
 	REMINDER_AWAIT_SUFFIX_EN,
 	REMINDER_CATEGORY_COLOR_DEFAULT,
@@ -58,7 +60,9 @@ import {
 	REMINDER_SUBTITLE_CN,
 	REMINDER_SUBTITLE_EN,
 	REMINDER_VALUE_KEY_DATE,
+	REMINDER_VALUE_KEY_END_TIME,
 	REMINDER_VALUE_KEY_LINK,
+	REMINDER_VALUE_KEY_START_TIME,
 	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
 	STATS_CAP_ACTIVITY_LOG,
@@ -70,11 +74,14 @@ import {
 import {
 	NewItem,
 	REMINDER_CATEGORY_COLOR_MAP,
+	REMINDER_END_TIME_OPTIONS,
 	REMINDER_KNOWN_CATEGORIES,
+	REMINDER_TIME_OPTIONS,
 	ReminderDbRecord,
 	ReminderValueKey,
 	ReminderItem,
-	TagEditSession
+	TagEditSession,
+	TimeOption
 } from './reminder.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
@@ -92,6 +99,7 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		InputGroupModule,
 		InputGroupAddonModule,
 		PopoverModule,
+		SelectModule,
 		SkeletonModule,
 		DatePickerModule,
 		TooltipModule,
@@ -122,7 +130,10 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_FILTER_LABEL = REMINDER_FILTER_LABEL;
 	protected readonly REMINDER_ADD_LINK_LABEL = REMINDER_ADD_LINK_LABEL;
 	protected readonly REMINDER_ADD_DATE_LABEL = REMINDER_ADD_DATE_LABEL;
+	protected readonly REMINDER_ADD_TIME_LABEL = REMINDER_ADD_TIME_LABEL;
 	protected readonly REMINDER_ADD_BTN_LABEL = REMINDER_ADD_BTN_LABEL;
+	protected readonly REMINDER_TIME_OPTIONS = REMINDER_TIME_OPTIONS;
+	protected readonly REMINDER_END_TIME_OPTIONS = REMINDER_END_TIME_OPTIONS;
 	protected readonly REMINDER_DUE_SOON_LABEL = REMINDER_DUE_SOON_LABEL;
 	protected readonly REMINDER_DUE_SOON_SUBTITLE = REMINDER_DUE_SOON_SUBTITLE;
 	protected readonly REMINDER_GREETING_SINGULAR = REMINDER_GREETING_SINGULAR;
@@ -141,9 +152,18 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected page = 0;
 	protected editingItem: ReminderItem | null = null;
 	protected editingDateModel: Date | null = null;
+	protected editingStartTime: string | null = null;
+	protected editingEndTime: string | null = null;
 	protected isDate = false;
 	protected editingLink = '';
-	protected newItem: NewItem = { text: '', date: null, link: '', tag: REMINDER_CATEGORY_PERSONAL };
+	protected newItem: NewItem = {
+		text: '',
+		date: null,
+		link: '',
+		tag: REMINDER_CATEGORY_PERSONAL,
+		startTime: null,
+		endTime: null
+	};
 	protected saveIndicator = false;
 	protected tagFilter = new Set<string>();
 	protected tagEditSession: TagEditSession | null = null;
@@ -182,7 +202,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 					text: record.text ?? '',
 					date: record.date != null ? Utilities.coerceDateToString(record.date) : null,
 					link: record.link ?? null,
-					tag: record.tag ?? ''
+					tag: record.tag ?? '',
+					startTime: record.startTime ?? null,
+					endTime: record.endTime ?? null
 				}));
 				// Step 2: Remove any selected tag filters that no longer exist in the item set
 				this.removeStaleTag();
@@ -229,7 +251,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	////////////////////// Below are DB helper and permission check methods //////////////////////
+	// ── DB helper and permission check methods ───────────────────────────────
 
 	/**
 	 * Gets the user id of the current item.
@@ -293,6 +315,19 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
+	 * Computes the auto-filled end time by adding 60 minutes to the given start time.
+	 * Caps the result at "24:00" when the computed time would exceed midnight.
+	 *
+	 * @param startTime - The start time string in "HH:mm" format.
+	 * @returns The computed end time string in "HH:mm" format.
+	 */
+	private computeEndTimeFromStart(startTime: string): string {
+		const totalMinutes = Utilities.parseTimeToMinutes(startTime) + 60;
+		if (totalMinutes >= 24 * 60) return '24:00';
+		return `${Utilities.padTwoDigits(Math.floor(totalMinutes / 60))}:${Utilities.padTwoDigits(totalMinutes % 60)}`;
+	}
+
+	/**
 	 * Restores one single value on a view-model item from the latest database snapshot.
 	 *
 	 * @param item - The view-model item whose single value will be restored.
@@ -318,6 +353,12 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			case REMINDER_VALUE_KEY_TAG:
 				item.tag = originalRecord.tag ?? '';
 				break;
+			case REMINDER_VALUE_KEY_START_TIME:
+				item.startTime = originalRecord.startTime ?? null;
+				break;
+			case REMINDER_VALUE_KEY_END_TIME:
+				item.endTime = originalRecord.endTime ?? null;
+				break;
 		}
 	}
 
@@ -332,8 +373,11 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * {@link onPopoverLinkUpdate} - Persists link changes from the popover link input.
 	 * {@link onTagUpdate} - Persists tag array updates for existing cards.
 	 * {@link removeExistingCardTag} - Persists tag removal for existing cards.
-	 * {@link clearDate} - Clears the date value on a pin.
+	 * {@link clearDate} - Clears the date (and cascades to clear time) on a pin.
 	 * {@link clearLink} - Clears the link value on a pin.
+	 * {@link clearTime} - Clears both start and end time on a pin.
+	 * {@link onStartTimeSelect} - Persists start time (and auto-filled end time) for an existing pin.
+	 * {@link onEndTimeSelect} - Persists the adjusted end time for an existing pin.
 	 *
 	 * @param entryKey - The CloudBase document key identifying which entry to update.
 	 * @param valueKey - The value key identifying which property inside the entry to update (e.g. REMINDER_VALUE_KEY_TEXT).
@@ -387,11 +431,20 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Resets all new-item form fields to their empty state.
 	 */
 	private resetNewItem(): void {
-		this.newItem = { text: '', date: null, link: '', tag: REMINDER_CATEGORY_PERSONAL };
+		this.newItem = {
+			text: '',
+			date: null,
+			link: '',
+			tag: REMINDER_CATEGORY_PERSONAL,
+			startTime: null,
+			endTime: null
+		};
+		this.editingStartTime = null;
+		this.editingEndTime = null;
 		if (this.tagEditSession?.isNewItem) this.tagEditSession = null;
 	}
 
-	////////////////////// Below are category, done state, and due-soon helpers //////////////
+	// ── category, done state, and due-soon helpers ───────────────────────────
 
 	/**
 	 * Gets the accent color for a tag. Known categories use their fixed palette
@@ -492,7 +545,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.doneKeys = updated;
 	}
 
-	////////////////////// Below are tag filter methods for the item list ////////////////////
+	// ── tag filter methods for the item list ─────────────────────────────────
 
 	/**
 	 * Gets the non-blank items matching the selected tag filters (OR logic) or all non-blank items when
@@ -550,7 +603,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.page = 0;
 	}
 
-	////////////////////// Below are pagination methods and page label getters //////////////////
+	// ── pagination methods and page label getters ────────────────────────────
 
 	/**
 	 * Gets the items visible on the current page.
@@ -615,7 +668,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.page < this.totalPages - 1) this.page++;
 	}
 
-	////////////////////// Below are CRUD operations for adding and removing pins ///////////////
+	// ── CRUD operations for adding and removing pins ─────────────────────────
 
 	/**
 	 * Hides the shared date-or-link popover.
@@ -640,6 +693,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.editingItem = item ?? null;
 		// Compute once here — a stable reference avoids the datepicker re-rendering on every CD cycle.
 		this.editingDateModel = item?.date ? new Date(item.date + 'T00:00') : null;
+		this.editingStartTime = item ? (item.startTime ?? null) : (this.newItem.startTime ?? null);
+		this.editingEndTime = item ? (item.endTime ?? null) : (this.newItem.endTime ?? null);
 		this.isDate = true;
 
 		/* Step 2: Hide then re-show the popover after a 50 ms tick.
@@ -710,6 +765,11 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			}
 			if (this.newItem.link.trim()) {
 				newRecord.link = Utilities.normalizeUrl(this.newItem.link.trim(), true);
+			}
+			// Only persist time when both values are set (they are always a pair)
+			if (this.newItem.startTime && this.newItem.endTime) {
+				newRecord[REMINDER_VALUE_KEY_START_TIME] = this.newItem.startTime;
+				newRecord[REMINDER_VALUE_KEY_END_TIME] = this.newItem.endTime;
 			}
 		}
 
@@ -796,7 +856,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		];
 	}
 
-	////////////////////// Below are global index display helpers for paged items //////////////
+	// ── global index display helpers for paged items ─────────────────────────
 
 	/**
 	 * Gets the 1-based global index for a paged item, zero-padded to 2 digits.
@@ -808,7 +868,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		return String(this.page * this.itemsPerPage + localIndex + 1).padStart(2, '0');
 	}
 
-	////////////////////// Below are card edit popover event handlers ////////////////////////
+	// ── card edit popover event handlers ─────────────────────────────────────
 
 	/**
 	 * Handles date selection from the editing-item datepicker. Closes the calendar and popover
@@ -818,11 +878,10 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param date - The Date value selected in the picker.
 	 */
 	protected async onEditingDateSelected(date: Date): Promise<void> {
-		/* Step 1: Dismiss the datepicker overlay and popover before any async work.
-		   Closing first prevents the user seeing a stale open popover during the DB round-trip. */
+		/* Step 1: Dismiss only the calendar overlay — keep the popover open so the user can
+		   continue setting start and end times immediately after picking the date. */
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(this.editingDatepicker as any)?.hideOverlay();
-		this.dateOrLinkPopover.hide();
 		if (!this.editingItem) return;
 
 		// Step 2: Guard with a permission check — must happen after the null guard on editingItem
@@ -842,6 +901,59 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.editingItem.date
 		);
 		this.updateUpcomingToStatistics();
+	}
+
+	/**
+	 * Handles date selection from the new-item datepicker. Hides the calendar overlay only,
+	 * keeping the popover open so the user can continue setting start and end times.
+	 */
+	protected onNewItemDateSelected(): void {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		(this.newItemDatepicker as any)?.hideOverlay();
+	}
+
+	/**
+	 * Handles start time selection from the time dropdown. Persists both start time and
+	 * auto-filled end time for existing items, or updates the new-item form state.
+	 *
+	 * @param value - The selected start time string in "HH:mm" format.
+	 */
+	protected async onStartTimeSelect(value: string): Promise<void> {
+		this.editingStartTime = value;
+
+		// Compute and assign the auto-filled end time (start + 60 min, capped at 24:00)
+		const autoEnd = this.computeEndTimeFromStart(value);
+		this.editingEndTime = autoEnd;
+
+		if (this.editingItem) {
+			// Persist both values to CloudBase for an existing item
+			this.editingItem.startTime = value;
+			this.editingItem.endTime = autoEnd;
+			await Promise.all([
+				this.updateTableSingleValue(this.editingItem.key, REMINDER_VALUE_KEY_START_TIME, value),
+				this.updateTableSingleValue(this.editingItem.key, REMINDER_VALUE_KEY_END_TIME, autoEnd),
+			]);
+		} else {
+			// Update new-item form state only — no DB write until addNewItem()
+			this.newItem = { ...this.newItem, startTime: value, endTime: autoEnd };
+		}
+	}
+
+	/**
+	 * Handles end time selection from the time dropdown. Persists the end time for existing
+	 * items, or updates the new-item form state.
+	 *
+	 * @param value - The selected end time string in "HH:mm" format.
+	 */
+	protected async onEndTimeSelect(value: string): Promise<void> {
+		this.editingEndTime = value;
+
+		if (this.editingItem) {
+			this.editingItem.endTime = value;
+			await this.updateTableSingleValue(this.editingItem.key, REMINDER_VALUE_KEY_END_TIME, value);
+		} else {
+			this.newItem = { ...this.newItem, endTime: value };
+		}
 	}
 
 	/**
@@ -874,7 +986,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.dateOrLinkPopover.hide();
 	}
 
-	////////////////////// Below are tag editing handlers for existing card items //////////////
+	// ── tag editing handlers for existing card items ─────────────────────────
 
 	/**
 	 * Begins editing or adding a tag on an existing card.
@@ -961,7 +1073,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.tagEditSession) this.tagEditSession = { ...this.tagEditSession, tagText: value };
 	}
 
-	////////////////////// Below are tag editing handlers for the new-item card ////////////////
+	// ── tag editing handlers for the new-item card ───────────────────────────
 
 	/**
 	 * Begins editing or adding a tag on the new-item card.
@@ -988,7 +1100,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		return session !== null && session.isNewItem && session.index === -1;
 	}
 
-	////////////////////// Below are single-value clear handlers for date and link //////////////
+	// ── single-value clear handlers for date and link ────────────────────────
 
 	/**
 	 * Clears the date single value on a pin and persists the change to CloudBase.
@@ -1005,14 +1117,72 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			: FAILURE;
 		if (returnCode === FAILURE) return;
 
-		// Step 2: Clear the date on the view model immediately for instant UI feedback
-		item.date = null;
+		// Step 2: Capture whether time fields need clearing before nulling everything
+		const hadTime = item.startTime !== null || item.endTime !== null;
 
-		// Step 3: Persist the cleared date and refresh the upcoming-reminders statistics
+		// Step 3: Clear date, startTime, and endTime on the view model for instant UI feedback
+		item.date = null;
+		item.startTime = null;
+		item.endTime = null;
+
+		// Step 4: Persist all cleared values and refresh the upcoming-reminders statistics
 		if (item.key) {
-			await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_DATE, null);
+			const writes: Promise<void>[] = [this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_DATE, null)];
+			if (hadTime) {
+				writes.push(this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_START_TIME, null));
+				writes.push(this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_END_TIME, null));
+			}
+			await Promise.all(writes);
 			this.updateUpcomingToStatistics();
 		}
+	}
+
+	/**
+	 * Clears both start and end time on a pin and persists the changes to CloudBase.
+	 *
+	 * @param item - The ReminderItem to update.
+	 */
+	protected async clearTime(item: ReminderItem): Promise<void> {
+		// Step 1: Guard with a permission check before touching the database
+		const returnCode = this.dialogService.ensurePermission(
+			this.dialogComponentContainer,
+			this.getOpenId(item.key)
+		)
+			? SUCCESS
+			: FAILURE;
+		if (returnCode === FAILURE) return;
+
+		// Step 2: Clear both time fields on the view model for instant UI feedback
+		item.startTime = null;
+		item.endTime = null;
+		this.editingStartTime = null;
+		this.editingEndTime = null;
+
+		// Step 3: Persist both cleared time values
+		if (item.key) {
+			await Promise.all([
+				this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_START_TIME, null),
+				this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_END_TIME, null),
+			]);
+		}
+	}
+
+	/**
+	 * Clears the date and cascades to clear both time fields on the new-item form. No DB write — state update only.
+	 */
+	protected clearNewItemDate(): void {
+		this.newItem = { ...this.newItem, date: null, startTime: null, endTime: null };
+		this.editingStartTime = null;
+		this.editingEndTime = null;
+	}
+
+	/**
+	 * Clears both start and end time on the new-item form. No DB write — state update only.
+	 */
+	protected clearNewItemTime(): void {
+		this.newItem = { ...this.newItem, startTime: null, endTime: null };
+		this.editingStartTime = null;
+		this.editingEndTime = null;
 	}
 
 	/**
@@ -1041,7 +1211,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 	}
 
-	////////////////////// Below are add-card display helpers and label getters ////////////////
+	// ── add-card display helpers and label getters ───────────────────────────
 
 	/**
 	 * Gets the YYYY.MM.DD display string for the new-item date pill.
@@ -1062,7 +1232,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		return Utilities.getDomain(Utilities.normalizeUrl(this.newItem.link.trim(), true));
 	}
 
-	////////////////////// Below are display helper methods used by the card template /////////
+	// ── display helper methods used by the card template ─────────────────────
 
 	/**
 	 * Safely coerces any date value (string, Date, CloudBase timestamp) to a display string
@@ -1086,7 +1256,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		return Utilities.getDomain(item.link);
 	}
 
-	////////////////////// Below are new-item category selection and paginator helpers ///////
+	// ── new-item category selection and paginator helpers ────────────────────
 
 	/**
 	 * Returns true when the given tag is one of the four built-in categories.
@@ -1193,7 +1363,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		return Math.min((this.page + 1) * this.itemsPerPage, this.filteredItems.length);
 	}
 
-	////////////////////// Below are utility counter getters used by the template //////////////
+	// ── utility counter getters used by the template ─────────────────────────
 
 	/**
 	 * Gets the total pin count as a zero-padded 2-character string.
@@ -1215,7 +1385,62 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		return Array.from({ length: this.itemsPerPage }, (_, i) => i);
 	}
 
-	////////////////////// Below are grid layout helpers /////////////////////////////////////
+	// ── time dropdown template helpers ───────────────────────────────────────
+
+	/**
+	 * Gets the filtered end-time options, excluding all values at or before the current
+	 * start time. String comparison is valid here because all values are zero-padded "HH:mm".
+	 *
+	 * @returns The subset of REMINDER_END_TIME_OPTIONS whose value is strictly after editingStartTime.
+	 */
+	protected get filteredEndTimeOptions(): TimeOption[] {
+		const startTime = this.editingStartTime;
+		if (!startTime) return REMINDER_END_TIME_OPTIONS;
+		return REMINDER_END_TIME_OPTIONS.filter((option) => option.value > startTime);
+	}
+
+	/**
+	 * Returns true when the time dropdowns should be disabled. Time may only be set
+	 * after a date is present in the current popover context.
+	 *
+	 * @returns True when no date is set in the current editing context.
+	 */
+	protected get isTimeInputDisabled(): boolean {
+		return this.editingItem ? !this.editingItem.date : !this.newItem.date;
+	}
+
+	/**
+	 * Gets the formatted time range label for an existing item's time chip.
+	 *
+	 * @param item - The ReminderItem whose time chip label is needed.
+	 * @returns A "HH:mm – HH:mm" string, or empty string when no time is set.
+	 */
+	protected getTimeChipLabel(item: ReminderItem): string {
+		return this.formatTimeRange(item.startTime, item.endTime);
+	}
+
+	/**
+	 * Gets the formatted time range label for the new-item card time chip.
+	 *
+	 * @returns A "HH:mm – HH:mm" string, or empty string when no time is set.
+	 */
+	protected get newItemTimeLabel(): string {
+		return this.formatTimeRange(this.newItem.startTime, this.newItem.endTime);
+	}
+
+	/**
+	 * Formats a start and end time pair as a "HH:mm – HH:mm" display string.
+	 *
+	 * @param start - The start time in "HH:mm" format, or null when unset.
+	 * @param end - The end time in "HH:mm" format, or null when unset.
+	 * @returns A formatted range string, or empty string when either value is absent.
+	 */
+	private formatTimeRange(start: string | null | undefined, end: string | null | undefined): string {
+		if (!start || !end) return '';
+		return `${start} – ${end}`;
+	}
+
+	// ── grid layout helpers ──────────────────────────────────────────────────
 
 	/**
 	 * Recalculates the grid column count and page size based on the current container

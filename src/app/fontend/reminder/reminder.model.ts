@@ -5,9 +5,11 @@ export interface ReminderItem {
 	date: string | null;
 	link: string | null;
 	tag: string;
+	startTime: string | null;
+	endTime: string | null;
 }
 
-export type ReminderValueKey = 'text' | 'date' | 'link' | 'tag';
+export type ReminderValueKey = 'text' | 'date' | 'link' | 'tag' | 'startTime' | 'endTime';
 
 /** Raw shape of a reminder document as returned by CloudBase (flat — no content wrapper). */
 export interface ReminderDbRecord {
@@ -17,6 +19,14 @@ export interface ReminderDbRecord {
 	date?: unknown;
 	link?: string | null;
 	tag: string;
+	startTime?: string | null;
+	endTime?: string | null;
+}
+
+/** A single option entry for the start/end time p-select dropdowns. */
+export interface TimeOption {
+	label: string;
+	value: string;
 }
 
 /** Tag-edit session shared by both existing-card and new-item-card contexts. */
@@ -33,6 +43,8 @@ export interface NewItem {
 	date: Date | null;
 	link: string;
 	tag: string;
+	startTime: string | null;
+	endTime: string | null;
 }
 
 /** Tag categories available for reminder items. */
@@ -45,3 +57,22 @@ export const REMINDER_CATEGORY_COLOR_MAP: Record<string, string> = {
 	Utility: '#c2820a',
 	Other: '#0d9488'
 };
+
+/** All valid start-time options: 00:00 to 23:45 in 15-minute steps. */
+export const REMINDER_TIME_OPTIONS: TimeOption[] = (() => {
+	const pad = (n: number) => String(n).padStart(2, '0');
+	const options: TimeOption[] = [];
+	for (let h = 0; h <= 23; h++) {
+		for (const m of [0, 15, 30, 45]) {
+			const label = `${pad(h)}:${pad(m)}`;
+			options.push({ label, value: label });
+		}
+	}
+	return options;
+})();
+
+/** All valid end-time options: 00:00 to 24:00 in 15-minute steps (superset of start options). */
+export const REMINDER_END_TIME_OPTIONS: TimeOption[] = [
+	...REMINDER_TIME_OPTIONS,
+	{ label: '24:00', value: '24:00' }
+];

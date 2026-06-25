@@ -173,6 +173,33 @@
 									{{ REMINDER_ADD_DATE_LABEL }}
 								</button>
 							}
+							@if (item.startTime && item.endTime) {
+								<span
+									class="rm-date-chip"
+									[style.background]="tagColor(item.tag) + '14'"
+									(click)="openDatePopover($event, item)">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+										>schedule</span
+									>
+									{{ getTimeChipLabel(item) }}
+									<button
+										class="rm-chip-remove"
+										(click)="$event.stopPropagation(); clearTime(item)">
+										<span
+											class="material-symbols-outlined rm-icon"
+											style="font-size: 11px"
+											>close</span
+										>
+									</button>
+								</span>
+							} @else if (item.date) {
+								<button class="rm-add-field-button" (click)="openDatePopover($event, item)">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+										>schedule</span
+									>
+									{{ REMINDER_ADD_TIME_LABEL }}
+								</button>
+							}
 							<button class="rm-delete-button" (click)="openDeleteConfirmationDialog(item.key)">
 								<span class="material-symbols-outlined rm-icon" style="font-size: 14px"
 									>delete</span
@@ -257,12 +284,60 @@
 						>
 						{{ newItemLinkLabel || REMINDER_ADD_LINK_LABEL }}
 					</button>
-					<button class="rm-add-field-button" (click)="openDatePopover($event)">
-						<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-							>calendar_today</span
-						>
-						{{ newItemDateLabel || REMINDER_ADD_DATE_LABEL }}
-					</button>
+					@if (newItem.date) {
+						<span
+							class="rm-date-chip"
+							[style.background]="tagColor(newItem.tag) + '14'"
+							(click)="openDatePopover($event)">
+							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+								>calendar_today</span
+							>
+							{{ newItemDateLabel }}
+							<button
+								class="rm-chip-remove"
+								(click)="$event.stopPropagation(); clearNewItemDate()">
+								<span
+									class="material-symbols-outlined rm-icon"
+									style="font-size: 11px"
+									>close</span
+								>
+							</button>
+						</span>
+					} @else {
+						<button class="rm-add-field-button" (click)="openDatePopover($event)">
+							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+								>calendar_today</span
+							>
+							{{ REMINDER_ADD_DATE_LABEL }}
+						</button>
+					}
+					@if (newItemTimeLabel) {
+						<span
+							class="rm-date-chip"
+							[style.background]="tagColor(newItem.tag) + '14'"
+							(click)="openDatePopover($event)">
+							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+								>schedule</span
+							>
+							{{ newItemTimeLabel }}
+							<button
+								class="rm-chip-remove"
+								(click)="$event.stopPropagation(); clearNewItemTime()">
+								<span
+									class="material-symbols-outlined rm-icon"
+									style="font-size: 11px"
+									>close</span
+								>
+							</button>
+						</span>
+					} @else if (newItem.date) {
+						<button class="rm-add-field-button" (click)="openDatePopover($event)">
+							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+								>schedule</span
+							>
+							{{ REMINDER_ADD_TIME_LABEL }}
+						</button>
+					}
 					<div class="rm-new-card-divider"></div>
 					<button
 						class="rm-confirm-button"
@@ -279,6 +354,34 @@
 		<!-- ── Date / link popover ────────────────────────────────────── -->
 		<p-popover [focusOnShow]="false" #dateOrLinkPopover>
 			<div class="rm-popover-body">
+				@if (isDate) {
+					<!-- Time row: sits above the date picker, disabled until a date is set -->
+					<div class="rm-time-row">
+						<p-select
+							[options]="REMINDER_TIME_OPTIONS"
+							optionLabel="label"
+							optionValue="value"
+							[placeholder]="REMINDER_ADD_TIME_LABEL"
+							[appendTo]="'body'"
+							panelStyleClass="dropdown-panel-font"
+							[disabled]="isTimeInputDisabled"
+							[(ngModel)]="editingStartTime"
+							(onChange)="onStartTimeSelect($event.value)">
+						</p-select>
+						<span class="rm-time-separator">–</span>
+						<p-select
+							[options]="filteredEndTimeOptions"
+							optionLabel="label"
+							optionValue="value"
+							[placeholder]="REMINDER_ADD_TIME_LABEL"
+							[appendTo]="'body'"
+							panelStyleClass="dropdown-panel-font"
+							[disabled]="isTimeInputDisabled || !editingStartTime"
+							[(ngModel)]="editingEndTime"
+							(onChange)="onEndTimeSelect($event.value)">
+						</p-select>
+					</div>
+				}
 				<p-inputgroup class="rm-popover-inputgroup">
 					<p-inputgroup-addon>
 						@if (isDate) {
@@ -306,7 +409,7 @@
 								showTransitionOptions="0ms"
 								hideTransitionOptions="0ms"
 								[(ngModel)]="newItem.date"
-								(onSelect)="closePopover()">
+								(onSelect)="onNewItemDateSelected()">
 							</p-datepicker>
 						}
 					} @else {

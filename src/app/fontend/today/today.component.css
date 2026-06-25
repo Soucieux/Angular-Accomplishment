@@ -6,28 +6,27 @@
 	font-family: 'app-font';
 	color: var(--ink);
 
-	--rose:       #16a34a;
-	--rose-deep:  #15803d;
-	--rose-soft:  rgba(22, 163, 74, 0.10);
-	--rose-glow:  rgba(22, 163, 74, 0.28);
-	--teal:       #0d9488;
-	--blue:       #1a6dff;
+	--rose: #16a34a;
+	--rose-deep: #15803d;
+	--rose-soft: rgba(22, 163, 74, 0.1);
+	--rose-glow: rgba(22, 163, 74, 0.28);
+	--teal: #0d9488;
+	--blue: #1a6dff;
 
 	--grad-brand: linear-gradient(135deg, #16a34a 0%, #065f46 100%);
 
-	--ink:        #1a1a1a;
-	--ink-soft:   #334155;
-	--ink-muted:  #64748b;
-	--ink-faint:  #94a3b8;
+	--ink: #1a1a1a;
+	--ink-soft: #334155;
+	--ink-muted: #64748b;
+	--ink-faint: #94a3b8;
 
-	--hh: 56px; /* px per hour — keep in sync with PIXELS_PER_HOUR in today.component.ts */
+	--hh: 112px; /* px per hour — keep in sync with PIXELS_PER_HOUR in today.component.ts */
 }
 
 /* ─────────────────────────────────────────
    Outer glass container
 ───────────────────────────────────────── */
 .container-today {
-	padding: 0;
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
@@ -38,12 +37,12 @@
 ───────────────────────────────────────── */
 .tp-hero {
 	flex: none;
-	padding: 20px 20px 16px;
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
 	gap: 20px;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+	padding-bottom: 10px;
 }
 
 .tp-eyebrow {
@@ -57,18 +56,12 @@
 	text-transform: uppercase;
 }
 
-.tp-eyebrow-rule {
-	width: 16px;
-	height: 1.5px;
-	background: var(--rose);
-	display: inline-block;
-}
-
 .tp-title {
 	font-size: 44px;
 	font-weight: 500;
 	letter-spacing: 2px;
 	line-height: 1;
+	padding-bottom: 0.2em;
 	margin-top: 6px;
 	background: var(--grad-brand);
 	-webkit-background-clip: text;
@@ -84,18 +77,18 @@
 }
 
 .tp-hero-right {
-	flex: none;
+	flex: 1;
+	height: 100%;
 	text-align: right;
-	line-height: 1.1;
 }
 
 .tp-date {
-	font-size: 13px;
+	font-size: 18px;
 	font-weight: 800;
 }
 
 .tp-clock {
-	font-size: 22px;
+	font-size: 24px;
 	font-weight: 800;
 	font-variant-numeric: tabular-nums;
 	color: var(--rose);
@@ -107,15 +100,13 @@
 .tp-anytime-row {
 	flex: none;
 	display: flex;
-	align-items: center;
-	gap: 14px;
+	flex-direction: column;
+	gap: 10px;
 	padding: 12px 20px;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 .tp-quickadd {
-	flex: 1;
-	max-width: 420px;
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -320,6 +311,7 @@
    Calendar scroll container (inner scroll)
 ───────────────────────────────────────── */
 .tp-cal {
+	padding: 10px 0;
 	flex: 1;
 	min-height: 0;
 	overflow-y: auto;
@@ -345,15 +337,15 @@
 }
 
 .tp-cal.is-scrolling {
-	scrollbar-color: rgba(22, 163, 74, 0.28) transparent;
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
 }
 
 .tp-cal.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(22, 163, 74, 0.28);
+	background: rgba(213, 51, 105, 0.28);
 }
 
 .tp-cal.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #16a34a;
+	background: rgba(213, 51, 105, 0.5);
 }
 
 .tp-cal-inner {
@@ -389,6 +381,9 @@
 .tp-grid {
 	position: absolute;
 	inset: 0 0 0 56px;
+}
+
+.tp-grid.drag-create-active {
 	cursor: crosshair;
 }
 
@@ -396,11 +391,11 @@
 	position: absolute;
 	left: 0;
 	right: 0;
-	border-top: 1px solid rgba(0, 0, 0, 0.07);
+	border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .tp-line--q {
-	border-top: 1px dashed rgba(0, 0, 0, 0.04);
+	border-top: 1px dashed rgba(0, 0, 0, 0.1);
 }
 
 /* ─────────────────────────────────────────
@@ -431,8 +426,6 @@
 ───────────────────────────────────────── */
 .tp-preview {
 	position: absolute;
-	left: 4px;
-	right: 4px;
 	border: 2px dashed var(--rose);
 	border-radius: 10px;
 	background: var(--rose-soft);
@@ -492,6 +485,7 @@
 	font-weight: 700;
 	color: var(--rose);
 	z-index: 6;
+	pointer-events: none;
 }
 
 /* ─────────────────────────────────────────
@@ -534,6 +528,25 @@
 	font-weight: 500;
 }
 
+.tp-pending.is-short {
+	flex-direction: row;
+	align-items: center;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	gap: 8px;
+}
+
+.tp-pending.is-short input {
+	flex: 1;
+	min-width: 0;
+}
+
+.tp-pending.is-short .tp-pending-foot {
+	flex-shrink: 0;
+	gap: 10px;
+	white-space: nowrap;
+}
+
 /* ─────────────────────────────────────────
    Timed task blocks
 ───────────────────────────────────────── */
@@ -544,21 +557,19 @@
 	padding: 7px 9px 7px 11px;
 	background: #fff;
 	border: 1px solid rgba(0, 0, 0, 0.08);
-	box-shadow: 0 1px 5px rgba(0, 0, 0, 0.07), inset 3px 0 0 var(--accent);
+	box-shadow:
+		0 1px 5px rgba(0, 0, 0, 0.07),
+		inset 3px 0 0 var(--accent);
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
 	gap: 3px;
-	cursor: grab;
+	cursor: default;
 	transition:
 		opacity 0.2s,
 		box-shadow 0.15s,
 		left 0.16s cubic-bezier(0.22, 1, 0.36, 1),
 		width 0.16s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.tp-block[draggable="false"] {
-	cursor: default;
 }
 
 .tp-block.is-short {
@@ -569,6 +580,14 @@
 
 .tp-block.is-reminder {
 	background: rgba(26, 109, 255, 0.05);
+	cursor: default;
+}
+
+.tp-block.is-reminder:hover {
+	z-index: 2;
+	box-shadow:
+		0 1px 5px rgba(0, 0, 0, 0.07),
+		inset 3px 0 0 var(--accent);
 }
 
 .tp-block.is-tracked {
@@ -586,15 +605,13 @@
 
 .tp-block:hover {
 	z-index: 6;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), inset 3px 0 0 var(--accent);
+	box-shadow:
+		0 4px 16px rgba(0, 0, 0, 0.12),
+		inset 3px 0 0 var(--accent);
 }
 
-/* Narrow blocks hover-expand to full width to reveal clipped text */
-.tp-block.is-narrow:hover {
-	z-index: 8;
-	left: 4px !important;
-	width: calc(100% - 8px) !important;
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 3px 0 0 var(--accent);
+.tp-grid.drag-move-active .tp-block:not(.is-reminder) {
+	cursor: grab;
 }
 
 .tp-block-remhead {
@@ -686,6 +703,17 @@
 	font-variant-numeric: tabular-nums;
 }
 
+.tp-time--inline {
+	margin-left: auto;
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+/* On hover of a short local block, shift the time text left so action buttons fit beside it */
+.tp-block.is-short:not(.is-reminder):hover .tp-block-title-row {
+	padding-right: 36px;
+}
+
 .tp-dur-pill {
 	font-size: 10px;
 	font-weight: 700;
@@ -720,8 +748,13 @@
    Animations
 ───────────────────────────────────────── */
 @keyframes tp-pulse {
-	0%, 100% { opacity: 1; }
-	50% { opacity: 0.55; }
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.55;
+	}
 }
 
 /* ─────────────────────────────────────────
@@ -732,7 +765,6 @@
 		flex-direction: column;
 		align-items: flex-start;
 		gap: 8px;
-		padding: 14px 14px 12px;
 	}
 
 	.tp-hero-right {
@@ -743,13 +775,7 @@
 	}
 
 	.tp-anytime-row {
-		flex-direction: column;
-		align-items: stretch;
 		padding: 10px 14px;
-	}
-
-	.tp-quickadd {
-		max-width: 100%;
 	}
 
 	.tp-legend {

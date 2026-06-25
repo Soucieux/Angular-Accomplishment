@@ -1,277 +1,302 @@
 <div class="glass-card container-today">
-
-  <!-- ════════════════════════════════════════
+	<!-- ════════════════════════════════════════
        HERO
   ════════════════════════════════════════ -->
-  <header class="tp-hero">
-    <div class="tp-hero-left">
-      <div class="tp-eyebrow">
-        <span class="tp-eyebrow-rule"></span>{{ TODAY_EYEBROW }}
-      </div>
-      <div class="tp-title">{{ TODAY_TITLE }}</div>
-      <div class="tp-subtitle">{{ TODAY_SUBTITLE }}</div>
-    </div>
-    <div class="tp-hero-right">
-      <div class="tp-date">{{ dateLabel() }}</div>
-      <div class="tp-clock">{{ clock() }}</div>
-    </div>
-  </header>
+	<header class="tp-hero">
+		<div>
+			<div class="tp-eyebrow">
+				{{ TODAY_EYEBROW }}
+			</div>
+			<div class="tp-title">{{ TODAY_TITLE }}</div>
+			<div class="tp-subtitle">{{ TODAY_SUBTITLE }}</div>
+		</div>
+		<div class="tp-hero-right hide-on-narrow-or-mobile">
+			<div class="tp-date">{{ dateLabel() }}</div>
+			<div class="tp-clock">{{ clock() }}</div>
+		</div>
+	</header>
 
-  <!-- ════════════════════════════════════════
+	<!-- ════════════════════════════════════════
        QUICK-ADD + ANYTIME LANE
   ════════════════════════════════════════ -->
-  <div class="tp-anytime-row"
-       (dragover)="onUntimedZoneDragOver($event)"
-       (drop)="onUntimedZoneDrop($event)">
+	<div #untimedZone class="tp-anytime-row">
+		<div class="tp-quickadd">
+			<span class="material-symbols-outlined">add_task</span>
+			<input
+				[value]="quickAddDraft()"
+				(input)="quickAddDraft.set($any($event.target).value)"
+				(keydown)="onQuickAddKeyDown($event)"
+				[placeholder]="TODAY_QUICKADD_PLACEHOLDER" />
+			<button (click)="addUntimed()">{{ TODAY_BTN_ADD }}</button>
+		</div>
 
-    <div class="tp-quickadd">
-      <span class="material-symbols-outlined">add_task</span>
-      <input [value]="quickAddDraft()"
-             (input)="quickAddDraft.set($any($event.target).value)"
-             (keydown)="onQuickAddKeyDown($event)"
-             [placeholder]="TODAY_QUICKADD_PLACEHOLDER" />
-      <button (click)="addUntimed()">{{ TODAY_BTN_ADD }}</button>
-    </div>
+		<div class="tp-anytime">
+			@for (item of untimedTasks(); track item.id) {
+				<div class="tp-anytime-chip" [class.is-done]="item.done">
+					<span class="material-symbols-outlined tp-check" (click)="toggleTaskDone(item.id)">
+						{{ item.done ? 'check_circle' : 'radio_button_unchecked' }}
+					</span>
+					@if (editingId() === item.id) {
+						<input
+							class="tp-edit-input"
+							[value]="editingDraft()"
+							(input)="editingDraft.set($any($event.target).value)"
+							(keydown.enter)="saveBlockEdit()"
+							(keydown.escape)="cancelBlockEdit()"
+							(blur)="saveBlockEdit()"
+							autofocus />
+					} @else {
+						<span class="tp-chip-title">{{ item.title }}</span>
+						<span
+							class="material-symbols-outlined tp-mini"
+							(click)="beginBlockEdit(item.id, item.title)"
+							>edit</span
+						>
+						<span class="material-symbols-outlined tp-mini" (click)="removeTask(item.id)"
+							>close</span
+						>
+					}
+				</div>
+			}
+			<span class="tp-anytime-hint">{{ TODAY_HINT_DRAG_UNTIMED }}</span>
+		</div>
+	</div>
 
-    <div class="tp-anytime">
-      @for (item of untimedTasks(); track item.id) {
-        <div class="tp-anytime-chip" [class.is-done]="item.done">
-          <span class="material-symbols-outlined tp-check"
-                (click)="toggleTaskDone(item.id)">
-            {{ item.done ? 'check_circle' : 'radio_button_unchecked' }}
-          </span>
-          @if (editingId() === item.id) {
-            <input class="tp-edit-input"
-                   [value]="editingDraft()"
-                   (input)="editingDraft.set($any($event.target).value)"
-                   (keydown.enter)="saveBlockEdit()"
-                   (keydown.escape)="cancelBlockEdit()"
-                   (blur)="saveBlockEdit()"
-                   autofocus />
-          } @else {
-            <span class="tp-chip-title">{{ item.title }}</span>
-            <span class="material-symbols-outlined tp-mini"
-                  (click)="beginBlockEdit(item.id, item.title)">edit</span>
-            <span class="material-symbols-outlined tp-mini"
-                  (click)="removeTask(item.id)">close</span>
-          }
-        </div>
-      }
-      <span class="tp-anytime-hint">{{ TODAY_HINT_DRAG_UNTIMED }}</span>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════
+	<!-- ════════════════════════════════════════
        LEGEND + ACTIONS
   ════════════════════════════════════════ -->
-  <div class="tp-legend">
-    <div class="tp-legend-item">
-      <span class="material-symbols-outlined" style="color:#1a6dff">lock</span>
-      {{ TODAY_LABEL_REMINDERS }}
-    </div>
-    <div class="tp-legend-item">
-      <span class="material-symbols-outlined" style="color:var(--rose)">radio_button_unchecked</span>
-      {{ TODAY_LABEL_TASKS }}
-    </div>
-    <div class="tp-legend-item">
-      <span class="material-symbols-outlined" style="color:#0d9488">timelapse</span>
-      {{ TODAY_LABEL_TRACKED }}
-    </div>
-    <div class="tp-legend-spacer"></div>
-    <div class="tp-actions">
-      @if (!tracking()) {
-        <button class="tp-btn-track" (click)="beginTracking()">
-          <span class="material-symbols-outlined">play_circle</span>
-          {{ TODAY_BTN_START_TRACKING }}
-        </button>
-      } @else {
-        <button class="tp-btn-track is-live" (click)="stopTracking()">
-          <span class="material-symbols-outlined">stop_circle</span>
-          {{ TODAY_BTN_STOP_TRACKING }} · {{ trackElapsedLabel() }}
-        </button>
-      }
-      <div class="tp-toggle" [class.is-on]="isDragCreateEnabled()" (click)="onDragCreateChange()">
-        <span class="tp-dot"></span>
-        <span class="material-symbols-outlined">ads_click</span>
-        {{ TODAY_BTN_DRAG_CREATE }}
-      </div>
-      <div class="tp-toggle tp-toggle--teal" [class.is-on]="isDragMoveEnabled()" (click)="onDragMoveChange()">
-        <span class="tp-dot"></span>
-        <span class="material-symbols-outlined">drag_pan</span>
-        {{ TODAY_BTN_DRAG_MOVE }}
-      </div>
-    </div>
-  </div>
+	<div class="tp-legend">
+		<div class="tp-legend-item">
+			<span class="material-symbols-outlined" style="color: #1a6dff">lock</span>
+			{{ TODAY_LABEL_REMINDERS }}
+		</div>
+		<div class="tp-legend-item">
+			<span class="material-symbols-outlined" style="color: var(--rose)">radio_button_unchecked</span>
+			{{ TODAY_LABEL_TASKS }}
+		</div>
+		<div class="tp-legend-item">
+			<span class="material-symbols-outlined" style="color: #0d9488">timelapse</span>
+			{{ TODAY_LABEL_TRACKED }}
+		</div>
+		<div class="tp-legend-spacer"></div>
+		<div class="tp-actions">
+			@if (!tracking()) {
+				<button class="tp-btn-track" (click)="beginTracking()">
+					<span class="material-symbols-outlined">play_circle</span>
+					{{ TODAY_BTN_START_TRACKING }}
+				</button>
+			} @else {
+				<button class="tp-btn-track is-live" (click)="stopTracking()">
+					<span class="material-symbols-outlined">stop_circle</span>
+					{{ TODAY_BTN_STOP_TRACKING }} · {{ trackElapsedLabel() }}
+				</button>
+			}
+			<div
+				class="tp-toggle tp-toggle--teal"
+				[class.is-on]="isDragCreateEnabled()"
+				(click)="onDragCreateChange()">
+				<span class="tp-dot"></span>
+				<span class="material-symbols-outlined">ads_click</span>
+				{{ TODAY_BTN_DRAG_CREATE }}
+			</div>
+			<div
+				class="tp-toggle tp-toggle--teal"
+				[class.is-on]="isDragMoveEnabled()"
+				(click)="onDragMoveChange()">
+				<span class="tp-dot"></span>
+				<span class="material-symbols-outlined">drag_pan</span>
+				{{ TODAY_BTN_DRAG_MOVE }}
+			</div>
+		</div>
+	</div>
 
-  <!-- ════════════════════════════════════════
+	<!-- ════════════════════════════════════════
        CALENDAR (inner scroll)
   ════════════════════════════════════════ -->
-  <div #cal class="tp-cal">
-    <div class="tp-cal-inner" [style.height.px]="24 * PIXELS_PER_HOUR">
+	<div #cal class="tp-cal">
+		<div class="tp-cal-inner" [style.height.px]="24 * PIXELS_PER_HOUR">
+			<!-- Hour gutter -->
+			<div class="tp-hours">
+				@for (h of hours; track h) {
+					<div class="tp-hour">
+						<span class="tp-hour-label">{{ formatHourLabel(h) }}</span>
+					</div>
+				}
+			</div>
 
-      <!-- Hour gutter -->
-      <div class="tp-hours">
-        @for (h of hours; track h) {
-          <div class="tp-hour">
-            <span class="tp-hour-label">{{ formatHourLabel(h) }}</span>
-          </div>
-        }
-      </div>
+			<!-- Interactive grid -->
+			<div
+				#grid
+				class="tp-grid"
+				[class.drag-create-active]="isDragCreateEnabled()"
+				[class.drag-move-active]="isDragMoveEnabled()"
+				(mousedown)="onGridDragCreate($event)">
+				<!-- Hour separator lines -->
+				@for (h of hours; track h) {
+					<div class="tp-line" [style.top.px]="minutesToPixels(h * 60)"></div>
+				}
 
-      <!-- Interactive grid -->
-      <div #grid class="tp-grid"
-           (mousedown)="onGridDragCreate($event)"
-           (dragover)="onGridDragOver($event)"
-           (drop)="onGridDrop($event)">
+				<!-- Quarter-hour marks -->
+				@for (q of quarters; track q.qmin) {
+					<div class="tp-line tp-line--q" [style.top.px]="minutesToPixels(q.qmin)"></div>
+				}
 
-        <!-- Hour separator lines -->
-        @for (h of hours; track h) {
-          <div class="tp-line" [style.top.px]="minutesToPixels(h * 60)"></div>
-        }
+				<!-- Drag-to-move preview ghost -->
+				@if (dragMovePreviewPlacement(); as pp) {
+					@if (dragMovePreview(); as dp) {
+						<div
+							class="tp-preview"
+							[style.top.px]="minutesToPixels(dp.startMin)"
+							[style.height.px]="previewBlockHeight(dp)"
+							[style.left]="'calc(' + pp.leftPercent + '% + 4px)'"
+							[style.width]="'calc(' + pp.widthPercent + '% - 8px)'">
+							<span>{{ formatMinutes(dp.startMin) }} – {{ formatMinutes(dp.endMin) }}</span>
+						</div>
+					}
+				}
 
-        <!-- Quarter-hour marks -->
-        @for (q of quarters; track q.qmin) {
-          <div class="tp-line tp-line--q" [style.top.px]="minutesToPixels(q.qmin)"></div>
-        }
+				<!-- Now line -->
+				<div class="tp-now" [style.top.px]="nowLineTop()">
+					<span class="tp-now-dot"></span>
+				</div>
 
-        <!-- Drag-to-move preview ghost -->
-        @if (dragMovePreview(); as dp) {
-          <div class="tp-preview"
-               [style.top.px]="minutesToPixels(dp.startMin)"
-               [style.height.px]="minutesToPixels(dp.endMin) - minutesToPixels(dp.startMin)">
-            <span>{{ formatMinutes(dp.startMin) }} – {{ formatMinutes(dp.endMin) }}</span>
-          </div>
-        }
+				<!-- Live tracking band (not part of column layout) -->
+				@if (tracking()) {
+					<div
+						class="tp-track-band"
+						[style.top.px]="trackBandTop()"
+						[style.height.px]="trackBandHeight()">
+						<span class="material-symbols-outlined">timelapse</span>
+						{{ TODAY_TRACKING_PREFIX }}{{ trackElapsedLabel() }}
+					</div>
+				}
 
-        <!-- Now line -->
-        <div class="tp-now" [style.top.px]="nowLineTop()">
-          <span class="tp-now-dot"></span>
-        </div>
+				<!-- Ghost block while drawing -->
+				@if (dragCreateRange(); as c) {
+					<div
+						class="tp-ghost"
+						[style.top.px]="minutesToPixels(c.startMin)"
+						[style.height.px]="rangeBlockHeight(c)">
+						{{ formatMinutes(c.startMin) }} – {{ formatMinutes(c.endMin) }}
+					</div>
+				}
 
-        <!-- Live tracking band (not part of column layout) -->
-        @if (tracking()) {
-          <div class="tp-track-band"
-               [style.top.px]="trackBandTop()"
-               [style.height.px]="trackBandHeight()">
-            <span class="material-symbols-outlined">timelapse</span>
-            {{ TODAY_TRACKING_PREFIX }}{{ trackElapsedLabel() }}
-          </div>
-        }
+				<!-- Pending block name editor -->
+				@if (pendingBlock(); as pb) {
+					<div
+						class="tp-pending"
+						[class.is-short]="pb.endMin - pb.startMin <= 15"
+						(mousedown)="$event.stopPropagation()"
+						[style.top.px]="minutesToPixels(pb.startMin)"
+						[style.height.px]="rangeBlockHeight(pb)">
+						<input
+							#pendingInput
+							[value]="pendingName()"
+							(input)="pendingName.set($any($event.target).value)"
+							(keydown)="onPendingNameKeyDown($event)"
+							[placeholder]="TODAY_PENDING_PLACEHOLDER"
+							autofocus />
+						<div class="tp-pending-foot">
+							<span [style.color]="isPendingFromTracking() ? '#0d9488' : 'var(--rose)'">
+								{{ formatMinutes(pb.startMin) }} – {{ formatMinutes(pb.endMin) }}
+							</span>
+							<span class="tp-hint">{{ TODAY_PENDING_HINT }}</span>
+						</div>
+					</div>
+				}
 
-        <!-- Ghost block while drawing -->
-        @if (dragCreateRange(); as c) {
-          <div class="tp-ghost"
-               [style.top.px]="minutesToPixels(c.startMin)"
-               [style.height.px]="rangeBlockHeight(c)">
-            {{ formatMinutes(c.startMin) }} – {{ formatMinutes(c.endMin) }}
-          </div>
-        }
+				<!-- Timed task blocks -->
+				@for (b of timedBlocks(); track b.task.id) {
+					<div
+						class="tp-block"
+						[class.is-short]="b.isShort"
+						[class.is-narrow]="b.isNarrow"
+						[class.is-dragging]="b.isDragging"
+						[class.is-removing]="b.isRemoving"
+						[class.is-reminder]="b.task.source === TASK_SOURCE_REMINDER"
+						[class.is-tracked]="b.task.source === TASK_SOURCE_TRACKED"
+						[class.is-done]="b.task.done"
+						[style.top.px]="b.top"
+						[style.height.px]="b.height"
+						[style.left]="'calc(' + b.leftPercent + '% + 4px)'"
+						[style.width]="'calc(' + b.widthPercent + '% - 8px)'"
+						[style.--accent]="b.accent"
+						(mousedown)="b.draggable ? onBlockMoveStart($event, b.task.id) : null">
+						<!-- Reminder header (tall reminders only) -->
+						@if (b.task.source === TASK_SOURCE_REMINDER && !b.isShort) {
+							<div class="tp-block-remhead">
+								<span class="material-symbols-outlined">alarm</span>
+								<span class="tp-remhead-label">REMINDER · read-only</span>
+								<span class="tp-dur-pill">{{ b.durationLabel }}</span>
+							</div>
+						}
 
-        <!-- Pending block name editor -->
-        @if (pendingBlock(); as pb) {
-          <div class="tp-pending"
-               (mousedown)="$event.stopPropagation()"
-               [style.top.px]="minutesToPixels(pb.startMin)"
-               [style.height.px]="rangeBlockHeight(pb)">
-            <input [value]="pendingName()"
-                   (input)="pendingName.set($any($event.target).value)"
-                   (keydown)="onPendingNameKeyDown($event)"
-                   [placeholder]="TODAY_PENDING_PLACEHOLDER"
-                   autofocus />
-            <div class="tp-pending-foot">
-              <span [style.color]="isPendingFromTracking() ? '#0d9488' : 'var(--rose)'">
-                {{ formatMinutes(pb.startMin) }} – {{ formatMinutes(pb.endMin) }}
-              </span>
-              <span class="tp-hint">{{ TODAY_PENDING_HINT }}</span>
-            </div>
-          </div>
-        }
+						<!-- Hover actions (local + tracked, tall blocks only) -->
+						@if (b.task.source === TASK_SOURCE_LOCAL || b.task.source === TASK_SOURCE_TRACKED) {
+							<div class="tp-block-actions">
+								<span
+									class="material-symbols-outlined"
+									(click)="beginBlockEdit(b.task.id, b.task.title)"
+									>edit</span
+								>
+								<span class="material-symbols-outlined" (click)="removeTask(b.task.id)"
+									>delete</span
+								>
+							</div>
+						}
 
-        <!-- Timed task blocks -->
-        @for (b of timedBlocks(); track b.task.id) {
-          <div class="tp-block"
-               [class.is-short]="b.isShort"
-               [class.is-narrow]="b.isNarrow"
-               [class.is-dragging]="b.isDragging"
-               [class.is-removing]="b.isRemoving"
-               [class.is-reminder]="b.task.source === TASK_SOURCE_REMINDER"
-               [class.is-tracked]="b.task.source === TASK_SOURCE_TRACKED"
-               [class.is-done]="b.task.done"
-               [attr.title]="b.task.title"
-               [attr.draggable]="b.draggable"
-               [style.top.px]="b.top"
-               [style.height.px]="b.height"
-               [style.left]="'calc(' + b.leftPercent + '% + 4px)'"
-               [style.width]="'calc(' + b.widthPercent + '% - 8px)'"
-               [style.--accent]="b.accent"
-               (dragstart)="onBlockDragStart(b.task.id)"
-               (dragend)="onBlockDragEnd()">
+						<!-- Title row -->
+						<div class="tp-block-title-row">
+							<span
+								class="material-symbols-outlined tp-lead"
+								[style.color]="b.accent"
+								(click)="
+									b.task.source === TASK_SOURCE_LOCAL ? toggleTaskDone(b.task.id) : null
+								">
+								{{ b.leadIcon }}
+							</span>
+							@if (b.isEditing) {
+								<input
+									class="tp-edit-input"
+									[value]="editingDraft()"
+									(input)="editingDraft.set($any($event.target).value)"
+									(keydown.enter)="saveBlockEdit()"
+									(keydown.escape)="cancelBlockEdit()"
+									(blur)="saveBlockEdit()"
+									(mousedown)="$event.stopPropagation()"
+									autofocus />
+							} @else {
+								<span class="tp-block-title" [class.is-done]="b.task.done">{{
+									b.task.title
+								}}</span>
+								@if (b.hasRecurrence) {
+									<span
+										class="material-symbols-outlined tp-recur"
+										[title]="b.recurrenceLabel"
+										>repeat</span
+									>
+								}
+							}
+							@if (b.isShort || b.task.source === TASK_SOURCE_REMINDER) {
+								<span class="tp-time tp-time--inline">{{ b.timeLabel }}</span>
+							}
+						</div>
 
-            <!-- Reminder header (tall reminders only) -->
-            @if (b.task.source === TASK_SOURCE_REMINDER && !b.isShort) {
-              <div class="tp-block-remhead">
-                <span class="material-symbols-outlined">alarm</span>
-                <span class="tp-remhead-label">REMINDER · read-only</span>
-                <span class="tp-dur-pill">{{ b.durationLabel }}</span>
-              </div>
-            }
+						<!-- Meta row (hidden on short and reminder blocks) -->
+						@if (!b.isShort && b.task.source !== TASK_SOURCE_REMINDER) {
+							<div class="tp-block-meta">
+								<span class="tp-time">{{ b.timeLabel }}</span>
+								<span class="tp-dur-pill">{{ b.durationLabel }}</span>
+							</div>
+						}
 
-            <!-- Hover actions (local + tracked, tall blocks only) -->
-            @if ((b.task.source === TASK_SOURCE_LOCAL || b.task.source === TASK_SOURCE_TRACKED) && !b.isShort) {
-              <div class="tp-block-actions">
-                <span class="material-symbols-outlined"
-                      (click)="beginBlockEdit(b.task.id, b.task.title)">edit</span>
-                <span class="material-symbols-outlined"
-                      (click)="removeTask(b.task.id)">delete</span>
-              </div>
-            }
-
-            <!-- Title row -->
-            <div class="tp-block-title-row">
-              <span class="material-symbols-outlined tp-lead"
-                    [style.color]="b.accent"
-                    (click)="b.task.source === TASK_SOURCE_LOCAL ? toggleTaskDone(b.task.id) : null">
-                {{ b.leadIcon }}
-              </span>
-              @if (b.isEditing) {
-                <input class="tp-edit-input"
-                       [value]="editingDraft()"
-                       (input)="editingDraft.set($any($event.target).value)"
-                       (keydown.enter)="saveBlockEdit()"
-                       (keydown.escape)="cancelBlockEdit()"
-                       (blur)="saveBlockEdit()"
-                       (mousedown)="$event.stopPropagation()"
-                       autofocus />
-              } @else {
-                <span class="tp-block-title" [class.is-done]="b.task.done">{{ b.task.title }}</span>
-                @if (b.hasRecurrence) {
-                  <span class="material-symbols-outlined tp-recur"
-                        [title]="b.recurrenceLabel">repeat</span>
-                }
-              }
-            </div>
-
-            <!-- Meta row (hidden on short blocks) -->
-            @if (!b.isShort) {
-              <div class="tp-block-meta">
-                <span class="tp-time">{{ b.timeLabel }}</span>
-                @if (b.task.source !== TASK_SOURCE_REMINDER) {
-                  <span class="tp-dur-pill">{{ b.durationLabel }}</span>
-                }
-              </div>
-            }
-
-            <!-- Resize grip (pure local tasks only) -->
-            @if (b.task.source === TASK_SOURCE_LOCAL) {
-              <div class="tp-grip"
-                   (mousedown)="onBlockResizeStart(b.task.id, $event)"></div>
-            }
-
-          </div>
-        }
-
-      </div>
-    </div>
-  </div>
-
+						<!-- Resize grip (pure local tasks only) -->
+						@if (b.task.source === TASK_SOURCE_LOCAL) {
+							<div class="tp-grip" (mousedown)="onBlockResizeStart(b.task.id, $event)"></div>
+						}
+					</div>
+				}
+			</div>
+		</div>
+	</div>
 </div>

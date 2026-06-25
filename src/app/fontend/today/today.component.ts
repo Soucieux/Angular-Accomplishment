@@ -2,14 +2,19 @@ import {
 	AfterViewInit,
 	Component,
 	ElementRef,
+	Inject,
 	OnDestroy,
 	OnInit,
+	PLATFORM_ID,
 	ViewChild,
 	computed,
-	signal,
+	effect,
+	signal
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { DatabaseService } from '../../backend/database-service/database.service';
+import { Subscription } from 'rxjs';
 import {
 	APP_LOCALE,
 	KEY_ENTER,
@@ -33,7 +38,7 @@ import {
 	TODAY_REMOVE_ANIMATION_MS,
 	TODAY_SUBTITLE,
 	TODAY_TITLE,
-	TODAY_TRACKING_PREFIX,
+	TODAY_TRACKING_PREFIX
 } from '../../common/app.constant';
 import {
 	BLOCK_MIN_HEIGHT_PX,
@@ -42,7 +47,6 @@ import {
 	PIXELS_PER_HOUR,
 	RANGE_BLOCK_MIN_HEIGHT_PX,
 	RECUR_LABELS,
-	SAMPLE_TASKS,
 	SCROLL_AHEAD_PX,
 	TASK_ACCENT_DONE,
 	TASK_ACCENT_MAP,
@@ -54,7 +58,7 @@ import {
 	TodayTask,
 	TodayTimedBlock,
 	TodayTimeRange,
-	TodayTracking,
+	TodayTracking
 } from './today.model';
 
 @Component({
@@ -62,11 +66,13 @@ import {
 	standalone: true,
 	imports: [CommonModule],
 	templateUrl: './today.component.html',
-	styleUrls: ['../../common/glass-card.css', './today.component.css'],
+	styleUrls: ['../../common/glass-card.css', './today.component.css']
 })
 export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	@ViewChild('cal') private calRef!: ElementRef<HTMLDivElement>;
 	@ViewChild('grid') private gridRef!: ElementRef<HTMLDivElement>;
+	@ViewChild('untimedZone') private untimedZoneRef!: ElementRef<HTMLDivElement>;
+	@ViewChild('pendingInput') private pendingInputRef?: ElementRef<HTMLInputElement>;
 
 	/* ─────────────────────────────────────────
 	   Constants re-exposed for the template
@@ -115,8 +121,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly quickAddDraft = signal('');
 	protected readonly editingId = signal<string | null>(null);
 	protected readonly editingDraft = signal('');
-	protected readonly isDragCreateEnabled = signal(true);
-	protected readonly isDragMoveEnabled = signal(true);
+	protected readonly isDragCreateEnabled = signal(false);
+	protected readonly isDragMoveEnabled = signal(false);
 	protected readonly dragMovePreview = signal<TodayTimeRange | null>(null);
 	protected readonly dragCreateRange = signal<TodayTimeRange | null>(null);
 	protected readonly pendingBlock = signal<TodayTimeRange | null>(null);
@@ -124,9 +130,21 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly tracking = signal<TodayTracking | null>(null);
 	private readonly nowMin = signal(8 * 60);
 	private readonly draggingBlockId = signal<string | null>(null);
+	private draggingBlockStartMin = 0;
+	private draggingBlockEndMin = 0;
+	private readonly dragMoveClientX = signal<number | null>(null);
+	protected draggingBlockLeftPercent = 0;
+	protected draggingBlockWidthPercent = 100;
 	private readonly removingIds = signal<string[]>([]);
 	private readonly pendingSource = signal<TodayTask['source'] | null>(null);
-	private tasks = signal<TodayTask[]>(SAMPLE_TASKS);
+	private tasks = signal<TodayTask[]>([]);
+	private remindersSub: Subscription | undefined;
+	/** Live layout state for the dragged ghost and the blocks it reflows. */
+	private readonly dragMoveLayoutState = computed(() => this.buildDragMoveLayoutState());
+	/** Geometry of the dragged ghost while it is previewed. */
+	protected readonly dragMovePreviewPlacement = computed(
+		() => this.dragMoveLayoutState()?.previewPlacement ?? null
+	);
 
 	/* ─────────────────────────────────────────
 	   Derived view-models
@@ -134,20 +152,26 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/** Timed task blocks with full layout and display data. */
 	protected readonly timedBlocks = computed((): TodayTimedBlock[] => {
-		const layout = this.blockLayout();
+		const baseLayout = this.blockLayout();
+		const liveLayout = this.dragMoveLayoutState()?.layoutMap ?? {};
+		const draggingBlockId = this.draggingBlockId();
 		return this.tasks()
-			.filter(t => t.startMin != null)
-			.map(t => {
+			.filter((t) => t.startMin != null)
+			.map((t) => {
 				const isDone = t.source === TASK_SOURCE_LOCAL && t.done;
-				const pos = layout[t.id] ?? { col: 0, total: 1 };
+				const isDragging = draggingBlockId === t.id;
+				const pos = liveLayout[t.id] ?? baseLayout[t.id] ?? { col: 0, total: 1 };
 				const top = this.minutesToPixels(t.startMin!);
-				const endMin = t.endMin ?? (t.startMin! + MINIMUM_VISUAL_MINUTES);
-				const height = Math.max(BLOCK_MIN_HEIGHT_PX, (endMin - t.startMin!) / 60 * PIXELS_PER_HOUR - 2);
+				const endMin = t.endMin ?? t.startMin! + MINIMUM_VISUAL_MINUTES;
+				const height = Math.max(
+					BLOCK_MIN_HEIGHT_PX,
+					((endMin - t.startMin!) / 60) * PIXELS_PER_HOUR - 2
+				);
 				const widthPercent = 100 / pos.total;
 				const leftPercent = pos.col * widthPercent;
 				return {
 					task: t,
-					isDragging: this.draggingBlockId() === t.id,
+					isDragging,
 					isRemoving: this.removingIds().includes(t.id),
 					accent: isDone ? TASK_ACCENT_DONE : TASK_ACCENT_MAP[t.source],
 					top,
@@ -156,20 +180,22 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					leftPercent,
 					isShort: height < BLOCK_SHORT_THRESHOLD_PX,
 					isNarrow: pos.total > 1,
-					draggable: (t.source === TASK_SOURCE_LOCAL || t.source === TASK_SOURCE_TRACKED) && this.isDragMoveEnabled(),
+					draggable:
+						(t.source === TASK_SOURCE_LOCAL || t.source === TASK_SOURCE_TRACKED) &&
+						this.isDragMoveEnabled(),
 					isEditing: this.editingId() === t.id,
 					leadIcon: isDone ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_MAP[t.source],
 					timeLabel: this.formatMinutes(t.startMin!) + ' – ' + this.formatMinutes(endMin),
 					durationLabel: this.formatDuration(endMin - t.startMin!),
 					hasRecurrence: t.recur !== 'none',
-					recurrenceLabel: RECUR_LABELS[t.recur] ?? '',
+					recurrenceLabel: RECUR_LABELS[t.recur] ?? ''
 				};
 			});
 	});
 
 	/** Untimed local tasks shown in the anytime lane. */
 	protected readonly untimedTasks = computed(() =>
-		this.tasks().filter(t => t.source === TASK_SOURCE_LOCAL && t.startMin == null)
+		this.tasks().filter((t) => t.source === TASK_SOURCE_LOCAL && t.startMin == null)
 	);
 
 	/** Pixel top offset of the current-time indicator. */
@@ -186,7 +212,9 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	/** Pixel height of the live tracking band. */
 	protected readonly trackBandHeight = computed(() => {
 		const track = this.tracking();
-		return track ? Math.max(2, this.minutesToPixels(this.nowMin()) - this.minutesToPixels(track.startMin)) : 0;
+		return track
+			? Math.max(2, this.minutesToPixels(this.nowMin()) - this.minutesToPixels(track.startMin))
+			: 0;
 	});
 
 	/** Elapsed time string, updated every second via the clock signal. */
@@ -197,9 +225,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	});
 
 	/** Returns true when the pending block was created by stopping a tracking session. */
-	protected readonly isPendingFromTracking = computed(() =>
-		this.pendingSource() === TASK_SOURCE_TRACKED
-	);
+	protected readonly isPendingFromTracking = computed(() => this.pendingSource() === TASK_SOURCE_TRACKED);
 
 	/** Formatted current date, updated every second via the clock signal. */
 	protected readonly dateLabel = computed(() => {
@@ -209,58 +235,51 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/** Column layout positions for all timed blocks, using visual-extent packing. */
 	private readonly blockLayout = computed((): Record<string, { col: number; total: number }> => {
-		const layoutMap: Record<string, { col: number; total: number }> = {};
-		const timedTasks = this.tasks()
-			.filter(t => t.startMin != null)
-			.sort((a, b) => a.startMin! - b.startMin!);
-
-		let cluster: TodayTask[] = [];
-		let clusterEndMinute = -1;
-
-		const flushCluster = () => {
-			const sorted = [...cluster].sort(
-				(a, b) => (a.ord ?? a.startMin!) - (b.ord ?? b.startMin!)
-			);
-			const columnEnds: number[] = [];
-			sorted.forEach(task => {
-				let col = columnEnds.findIndex(end => task.startMin! >= end);
-				if (col < 0) {
-					col = columnEnds.length;
-					columnEnds.push(this.visualEndMinute(task));
-				} else {
-					columnEnds[col] = this.visualEndMinute(task);
-				}
-				layoutMap[task.id] = { col, total: 1 };
-			});
-			const columnCount = columnEnds.length;
-			sorted.forEach(task => { layoutMap[task.id] = { col: layoutMap[task.id].col, total: columnCount }; });
-		};
-
-		timedTasks.forEach(task => {
-			if (cluster.length && task.startMin! >= clusterEndMinute) {
-				flushCluster();
-				cluster = [];
-				clusterEndMinute = -1;
-			}
-			cluster.push(task);
-			clusterEndMinute = Math.max(clusterEndMinute, this.visualEndMinute(task));
-		});
-		if (cluster.length) flushCluster();
-
-		return layoutMap;
+		return this.buildTimedLayout(
+			this.tasks()
+				.filter((t) => t.startMin != null)
+				.map((task) => ({ task, isGhost: false }))
+		).layoutMap;
 	});
 
 	private clockInterval: ReturnType<typeof setInterval> | undefined;
-	private activeDragId: string | null = null;
+	private currentDateStr = '';
 	private dragCreateStartMinute = 0;
 	private dragCleanup: (() => void) | null = null;
 
+	/** Focuses the pending block input whenever a new pending block is created. */
+	protected readonly focusPendingInput = effect(() => {
+		const block = this.pendingBlock();
+		if (block) {
+			setTimeout(() => {
+				this.pendingInputRef?.nativeElement?.focus();
+				if (this.pendingSource() === TASK_SOURCE_TRACKED) {
+					const calEl = this.calRef?.nativeElement;
+					if (calEl) {
+						const top = this.minutesToPixels(block.startMin);
+						const targetScroll = Math.max(0, top - SCROLL_AHEAD_PX);
+						calEl.scrollTo({ top: targetScroll, behavior: 'smooth' });
+					}
+				}
+			});
+		}
+	});
+
+	constructor(
+		@Inject(PLATFORM_ID) private readonly platformId: object,
+		private readonly databaseService: DatabaseService
+	) {}
+
 	/**
-	 * Starts the clock tick and schedules a 1-second interval to keep it current.
+	 * Starts the clock tick, subscribes to today's reminders, and schedules a
+	 * 1-second interval to keep the clock current.
 	 */
 	ngOnInit(): void {
 		this.tick();
 		this.clockInterval = setInterval(() => this.tick(), 1000);
+		if (isPlatformBrowser(this.platformId)) {
+			this.refreshReminderSub();
+		}
 	}
 
 	/**
@@ -277,10 +296,12 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Clears the clock interval and removes any active drag event listeners.
+	 * Clears the clock interval, unsubscribes from the reminders stream, and removes
+	 * any active drag event listeners.
 	 */
 	ngOnDestroy(): void {
 		clearInterval(this.clockInterval);
+		this.remindersSub?.unsubscribe();
 		this.dragCleanup?.();
 	}
 
@@ -305,9 +326,17 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected addUntimed(): void {
 		const title = this.quickAddDraft().trim();
 		if (!title) return;
-		this.tasks.update(ts => [
+		this.tasks.update((ts) => [
 			...ts,
-			{ id: TODAY_LOCAL_TASK_ID_PREFIX + Date.now(), source: TASK_SOURCE_LOCAL, title, done: false, startMin: null, endMin: null, recur: 'none' },
+			{
+				id: TODAY_LOCAL_TASK_ID_PREFIX + Date.now(),
+				source: TASK_SOURCE_LOCAL,
+				title,
+				done: false,
+				startMin: null,
+				endMin: null,
+				recur: 'none'
+			}
 		]);
 		this.quickAddDraft.set('');
 	}
@@ -318,8 +347,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param id - The ID of the task to toggle.
 	 */
 	protected toggleTaskDone(id: string): void {
-		this.tasks.update(ts =>
-			ts.map(t => (t.id === id && t.source === TASK_SOURCE_LOCAL) ? { ...t, done: !t.done } : t)
+		this.tasks.update((ts) =>
+			ts.map((t) => (t.id === id && t.source === TASK_SOURCE_LOCAL ? { ...t, done: !t.done } : t))
 		);
 	}
 
@@ -329,10 +358,10 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param id - The ID of the task to remove (reminders cannot be removed).
 	 */
 	protected removeTask(id: string): void {
-		this.removingIds.update(r => [...r, id]);
+		this.removingIds.update((r) => [...r, id]);
 		setTimeout(() => {
-			this.tasks.update(ts => ts.filter(t => !(t.id === id && t.source !== TASK_SOURCE_REMINDER)));
-			this.removingIds.update(r => r.filter(x => x !== id));
+			this.tasks.update((ts) => ts.filter((t) => !(t.id === id && t.source !== TASK_SOURCE_REMINDER)));
+			this.removingIds.update((r) => r.filter((x) => x !== id));
 		}, TODAY_REMOVE_ANIMATION_MS);
 	}
 
@@ -358,9 +387,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected saveBlockEdit(): void {
 		const id = this.editingId();
 		const value = this.editingDraft().trim();
-		this.tasks.update(ts =>
-			ts.map(t => t.id === id ? { ...t, title: value || t.title } : t)
-		);
+		this.tasks.update((ts) => ts.map((t) => (t.id === id ? { ...t, title: value || t.title } : t)));
 		this.clearBlockEdit();
 	}
 
@@ -383,13 +410,25 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected onGridDragCreate(event: MouseEvent): void {
 		if (!this.isDragCreateEnabled()) return;
-		if (this.pendingBlock()) { this.cancelPendingBlock(); return; }
-		if (this.dragCreateRange()) { this.dragCreateRange.set(null); return; }
+		if ((event.target as Element).closest?.('[draggable="true"]')) return;
+		if (this.pendingBlock()) {
+			this.cancelPendingBlock();
+			return;
+		}
+		if (this.dragCreateRange()) {
+			this.dragCreateRange.set(null);
+			return;
+		}
 
 		const cal = this.calRef.nativeElement;
 		const startMin = Math.max(
 			0,
-			Math.min(24 * 60 - 15, this.snapMinutes((event.clientY - cal.getBoundingClientRect().top + cal.scrollTop) / PIXELS_PER_HOUR * 60))
+			Math.min(
+				24 * 60 - 15,
+				this.snapMinutes(
+					((event.clientY - cal.getBoundingClientRect().top + cal.scrollTop) / PIXELS_PER_HOUR) * 60
+				)
+			)
 		);
 		this.dragCreateStartMinute = startMin;
 		this.dragCreateRange.set({ startMin, endMin: startMin + 30 });
@@ -419,7 +458,10 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		};
 		document.addEventListener('mousemove', onMouseMove);
 		document.addEventListener('mouseup', onMouseUp);
-		this.dragCleanup = () => { document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); };
+		this.dragCleanup = () => {
+			document.removeEventListener('mousemove', onMouseMove);
+			document.removeEventListener('mouseup', onMouseUp);
+		};
 	}
 
 	/**
@@ -430,11 +472,22 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		const block = this.pendingBlock();
 		if (!block) return;
 		const name = this.pendingName().trim();
-		if (!name) { this.clearPendingState(); return; }
+		if (!name) {
+			this.clearPendingState();
+			return;
+		}
 		const source = this.pendingSource() ?? TASK_SOURCE_LOCAL;
-		this.tasks.update(ts => [
+		this.tasks.update((ts) => [
 			...ts,
-			{ id: TODAY_LOCAL_TASK_ID_PREFIX + Date.now(), source, title: name, done: false, startMin: block.startMin, endMin: block.endMin, recur: 'none' },
+			{
+				id: TODAY_LOCAL_TASK_ID_PREFIX + Date.now(),
+				source,
+				title: name,
+				done: false,
+				startMin: block.startMin,
+				endMin: block.endMin,
+				recur: 'none'
+			}
 		]);
 		this.clearPendingState();
 	}
@@ -483,9 +536,9 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		let endMin = Math.round(this.nowMin());
 		if (endMin <= startMin) endMin = startMin + 1;
 		this.tracking.set(null);
+		this.pendingSource.set(TASK_SOURCE_TRACKED);
 		this.pendingBlock.set({ startMin, endMin });
 		this.pendingName.set('');
-		this.pendingSource.set(TASK_SOURCE_TRACKED);
 	}
 
 	/* ─────────────────────────────────────────
@@ -502,7 +555,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected onBlockResizeStart(id: string, event: MouseEvent): void {
 		event.stopPropagation();
 		event.preventDefault();
-		const task = this.tasks().find(t => t.id === id);
+		const task = this.tasks().find((t) => t.id === id);
 		if (!task || task.startMin == null) return;
 		const startMin = task.startMin;
 		const cal = this.calRef.nativeElement;
@@ -510,9 +563,12 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		const onMouseMove = (moveEvent: MouseEvent) => {
 			const calRect = cal.getBoundingClientRect();
 			const relY = moveEvent.clientY - calRect.top + cal.scrollTop;
-			const endMin = Math.max(startMin + 15, Math.min(24 * 60, this.snapMinutes((relY / PIXELS_PER_HOUR) * 60)));
-			this.tasks.update(ts =>
-				ts.map(t => (t.id === id && t.source !== TASK_SOURCE_REMINDER) ? { ...t, endMin } : t)
+			const endMin = Math.max(
+				startMin + 15,
+				Math.min(24 * 60, this.snapMinutes((relY / PIXELS_PER_HOUR) * 60))
+			);
+			this.tasks.update((ts) =>
+				ts.map((t) => (t.id === id && t.source !== TASK_SOURCE_REMINDER ? { ...t, endMin } : t))
 			);
 		};
 		const onMouseUp = () => {
@@ -522,93 +578,96 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		};
 		document.addEventListener('mousemove', onMouseMove);
 		document.addEventListener('mouseup', onMouseUp);
-		this.dragCleanup = () => { document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); };
+		this.dragCleanup = () => {
+			document.removeEventListener('mousemove', onMouseMove);
+			document.removeEventListener('mouseup', onMouseUp);
+		};
 	}
 
 	/* ─────────────────────────────────────────
-	   Drag-to-move (HTML5 drag) actions
+	   Drag-to-move (pointer) actions
 	───────────────────────────────────────── */
 
 	/**
-	 * Records the dragged block ID and marks it as dragging.
+	 * Starts a pointer-driven move of a local or tracked task block.
+	 * Attaches temporary mousemove and mouseup listeners to update the preview live and commit on release.
+	 * Stops propagation so the grid's drag-create handler does not fire simultaneously.
 	 *
-	 * @param id - The ID of the block being dragged.
+	 * @param event - The mousedown event on the block.
+	 * @param id - The ID of the block being moved.
 	 */
-	protected onBlockDragStart(id: string): void {
-		this.activeDragId = id;
+	protected onBlockMoveStart(event: MouseEvent, id: string): void {
+		event.preventDefault();
+		event.stopPropagation();
+		const task = this.tasks().find((t) => t.id === id);
+		if (!task) return;
+		const duration = task.startMin != null ? task.endMin! - task.startMin : 60;
+		const cal = this.calRef.nativeElement;
+		const layout = this.timedBlocks().find((b) => b.task.id === id);
+		this.draggingBlockStartMin = task.startMin ?? 0;
+		this.draggingBlockEndMin = task.endMin ?? this.draggingBlockStartMin + duration;
+		this.draggingBlockLeftPercent = layout?.leftPercent ?? 0;
+		this.draggingBlockWidthPercent = layout?.widthPercent ?? 100;
 		this.draggingBlockId.set(id);
-	}
 
-	/**
-	 * Clears the dragging state when the drag gesture ends.
-	 */
-	protected onBlockDragEnd(): void {
-		this.activeDragId = null;
-		this.draggingBlockId.set(null);
-		this.dragMovePreview.set(null);
-	}
+		const getStartMinute = (e: MouseEvent): number => {
+			const relY = e.clientY - cal.getBoundingClientRect().top + cal.scrollTop;
+			return Math.max(0, Math.min(24 * 60 - 15, this.snapDragMoveMinutes((relY / PIXELS_PER_HOUR) * 60)));
+		};
 
-	/**
-	 * Prevents default drag behaviour on the untimed zone to allow drop.
-	 *
-	 * @param event - The dragover event.
-	 */
-	protected onUntimedZoneDragOver(event: DragEvent): void {
-		event.preventDefault();
-	}
+		const onMouseMove = (moveEvent: MouseEvent) => {
+			let start = getStartMinute(moveEvent);
+			let end = start + duration;
+			if (end > 1440) {
+				end = 1440;
+				start = end - duration;
+			}
+			this.dragMoveClientX.set(moveEvent.clientX);
+			const preview = this.dragMovePreview();
+			if (!preview || preview.startMin !== start) {
+				this.dragMovePreview.set({ startMin: start, endMin: end });
+			}
+		};
 
-	/**
-	 * Drops a timed block onto the untimed zone, removing its schedule.
-	 *
-	 * @param event - The drop event on the untimed zone.
-	 */
-	protected onUntimedZoneDrop(event: DragEvent): void {
-		event.preventDefault();
-		const id = this.activeDragId;
-		if (!id) return;
-		this.tasks.update(ts =>
-			ts.map(t => (t.id === id && t.source === TASK_SOURCE_LOCAL) ? { ...t, startMin: null, endMin: null } : t)
-		);
-		this.activeDragId = null;
-		this.draggingBlockId.set(null);
-	}
+		const onMouseUp = (upEvent: MouseEvent) => {
+			document.removeEventListener('mousemove', onMouseMove);
+			document.removeEventListener('mouseup', onMouseUp);
+			this.dragCleanup = null;
+			const untimedEl = this.untimedZoneRef?.nativeElement;
+			if (untimedEl) {
+				const rect = untimedEl.getBoundingClientRect();
+				if (
+					upEvent.clientX >= rect.left &&
+					upEvent.clientX <= rect.right &&
+					upEvent.clientY >= rect.top &&
+					upEvent.clientY <= rect.bottom
+				) {
+					this.tasks.update((ts) =>
+						ts.map((t) =>
+							t.id === id && t.source === TASK_SOURCE_LOCAL
+								? { ...t, startMin: null, endMin: null }
+								: t
+						)
+					);
+					this.draggingBlockId.set(null);
+					this.dragMoveClientX.set(null);
+					this.dragMovePreview.set(null);
+					return;
+				}
+			}
+			const newStart = getStartMinute(upEvent);
+			this.rescheduleDraggedBlock(id, newStart, upEvent.clientX);
+			this.draggingBlockId.set(null);
+			this.dragMoveClientX.set(null);
+			this.dragMovePreview.set(null);
+		};
 
-	/**
-	 * Updates the drag-move preview position as the block is dragged over the grid.
-	 *
-	 * @param event - The dragover event on the calendar grid.
-	 */
-	protected onGridDragOver(event: DragEvent): void {
-		event.preventDefault();
-		const id = this.activeDragId;
-		if (!id) return;
-		const cal = this.calRef.nativeElement;
-		const relY = event.clientY - cal.getBoundingClientRect().top + cal.scrollTop;
-		const newStart = Math.max(0, Math.min(24 * 60 - 15, this.snapMinutes((relY / PIXELS_PER_HOUR) * 60)));
-		const task = this.tasks().find(t => t.id === id);
-		const duration = (task && task.startMin != null) ? (task.endMin! - task.startMin) : 60;
-		let start = newStart, end = start + duration;
-		if (end > 1440) { end = 1440; start = end - duration; }
-		const preview = this.dragMovePreview();
-		if (!preview || preview.startMin !== start) this.dragMovePreview.set({ startMin: start, endMin: end });
-	}
-
-	/**
-	 * Commits the drag-move drop, rescheduling the block to its new position.
-	 *
-	 * @param event - The drop event on the calendar grid.
-	 */
-	protected onGridDrop(event: DragEvent): void {
-		event.preventDefault();
-		const id = this.activeDragId;
-		if (!id) return;
-		const cal = this.calRef.nativeElement;
-		const relY = event.clientY - cal.getBoundingClientRect().top + cal.scrollTop;
-		const newStart = Math.max(0, Math.min(24 * 60 - 15, this.snapMinutes((relY / PIXELS_PER_HOUR) * 60)));
-		this.rescheduleDraggedBlock(id, newStart, event.clientX);
-		this.activeDragId = null;
-		this.draggingBlockId.set(null);
-		this.dragMovePreview.set(null);
+		document.addEventListener('mousemove', onMouseMove);
+		document.addEventListener('mouseup', onMouseUp);
+		this.dragCleanup = () => {
+			document.removeEventListener('mousemove', onMouseMove);
+			document.removeEventListener('mouseup', onMouseUp);
+		};
 	}
 
 	/* ─────────────────────────────────────────
@@ -616,21 +675,37 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	───────────────────────────────────────── */
 
 	/**
-	 * Toggles the drag-to-create mode. Cancels any in-progress gesture on disable.
+	 * Toggles the drag-to-create mode. Disables drag-to-move when enabling, and cancels any in-progress gesture.
 	 */
 	protected onDragCreateChange(): void {
-		this.isDragCreateEnabled.update(v => !v);
+		const enabling = !this.isDragCreateEnabled();
+		this.isDragCreateEnabled.set(enabling);
+		if (enabling) {
+			this.isDragMoveEnabled.set(false);
+			this.draggingBlockId.set(null);
+			this.dragMovePreview.set(null);
+		}
 		this.dragCreateRange.set(null);
 		this.pendingBlock.set(null);
 		this.pendingName.set('');
 	}
 
 	/**
-	 * Toggles the drag-to-move mode. Clears the drag preview on disable.
+	 * Toggles the drag-to-move mode. Disables drag-to-create when enabling, and clears any in-progress state.
 	 */
 	protected onDragMoveChange(): void {
-		this.isDragMoveEnabled.update(v => !v);
+		const enabling = !this.isDragMoveEnabled();
+		this.isDragMoveEnabled.set(enabling);
+		if (enabling) {
+			this.isDragCreateEnabled.set(false);
+			this.dragCreateRange.set(null);
+			this.pendingBlock.set(null);
+			this.pendingName.set('');
+		}
+		this.dragCleanup?.();
+		this.dragCleanup = null;
 		this.draggingBlockId.set(null);
+		this.dragMoveClientX.set(null);
 		this.dragMovePreview.set(null);
 	}
 
@@ -657,11 +732,45 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Updates the clock signal and the current-minute signal from the real wall clock.
+	 * When the date changes past midnight, re-subscribes to reminders for the new day.
 	 */
 	private tick(): void {
 		const now = new Date();
 		this.clock.set(now.toLocaleTimeString(APP_LOCALE, { hour: 'numeric', minute: '2-digit' }));
 		this.nowMin.set(now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60);
+		const newDateStr = Utilities.formatDateForStorage(now);
+		if (this.currentDateStr && newDateStr !== this.currentDateStr) {
+			this.refreshReminderSub();
+		}
+	}
+
+	/**
+	 * Unsubscribes any existing reminder stream, sets the current date string,
+	 * then opens a fresh subscription filtered to today's date only.
+	 */
+	private refreshReminderSub(): void {
+		this.remindersSub?.unsubscribe();
+		this.currentDateStr = Utilities.formatDateForStorage(new Date());
+		this.remindersSub = this.databaseService.getReminderTableDetails().subscribe((records) => {
+			const reminderTasks: TodayTask[] = records
+				.filter((r) => {
+					const recDate = r.date != null ? Utilities.coerceDateToString(r.date) : null;
+					return recDate === this.currentDateStr;
+				})
+				.map((r) => ({
+					id: r.key ?? '',
+					source: TASK_SOURCE_REMINDER,
+					title: r.text ?? '',
+					done: false,
+					startMin: r.startTime ? Utilities.parseTimeToMinutes(r.startTime as string) : null,
+					endMin: r.endTime ? Utilities.parseTimeToMinutes(r.endTime as string) : null,
+					recur: 'none' as const
+				}));
+			this.tasks.update((ts) => [
+				...ts.filter((t) => t.source !== TASK_SOURCE_REMINDER),
+				...reminderTasks
+			]);
+		});
 	}
 
 	/**
@@ -672,6 +781,16 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	private snapMinutes(minutes: number): number {
 		return Math.round(minutes / 15) * 15;
+	}
+
+	/**
+	 * Floors a drag-move minute value to the current 15-minute slot boundary.
+	 *
+	 * @param minutes - The raw minute value to snap during drag-move.
+	 * @returns The lower 15-minute boundary for the drag preview.
+	 */
+	private snapDragMoveMinutes(minutes: number): number {
+		return Math.floor(minutes / 15) * 15;
 	}
 
 	/**
@@ -687,6 +806,222 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
+	 * Returns true when the drag cursor is still inside the original block bounds.
+	 *
+	 * @param clientX - The viewport X coordinate of the cursor during the drag.
+	 * @returns True when the cursor remains inside the original block footprint.
+	 */
+	private isCursorWithinOriginalBlock(clientX: number): boolean {
+		const grid = this.gridRef?.nativeElement;
+		if (!grid) return false;
+		const rect = grid.getBoundingClientRect();
+		const left = rect.left + rect.width * (this.draggingBlockLeftPercent / 100);
+		const right = left + rect.width * (this.draggingBlockWidthPercent / 100);
+		return clientX >= left && clientX <= right;
+	}
+
+	/**
+	 * Computes the live insertion slot for the ghost among overlapping peers.
+	 *
+	 * @param peers - The overlapping peer blocks excluding the dragged block.
+	 * @param clientX - The viewport X coordinate of the cursor during the drag.
+	 * @returns The slot index that the ghost should occupy.
+	 */
+	private resolveGhostSlot(peers: TodayTask[], clientX: number | null): number {
+		const grid = this.gridRef?.nativeElement;
+		if (!grid || clientX == null || !peers.length) return 0;
+		const rect = grid.getBoundingClientRect();
+		const columnCount = peers.length + 1;
+		const columnWidth = rect.width / columnCount;
+		let slot = Math.round((clientX - rect.left) / columnWidth - 0.5);
+		return Math.max(0, Math.min(peers.length, slot));
+	}
+
+	/**
+	 * Collects the timed task IDs that overlap the ghost preview span.
+	 *
+	 * @param startMin - The snapped ghost start minute.
+	 * @param endMin - The snapped ghost end minute.
+	 * @param draggedId - The ID of the task currently being dragged.
+	 * @returns The overlapping task IDs that should reflow with the ghost.
+	 */
+	private collectGhostOverlapIds(startMin: number, endMin: number, draggedId: string): string[] {
+		const ghostEnd = Math.max(endMin, startMin + MINIMUM_VISUAL_MINUTES);
+		const tasks = this.tasks().filter((t) => t.id !== draggedId && t.startMin != null);
+		const selected = new Set<string>();
+		const queue: TodayTask[] = [];
+
+		const overlaps = (aStart: number, aEnd: number, b: TodayTask): boolean =>
+			aStart < this.visualEndMinute(b) && b.startMin! < aEnd;
+
+		// Step 1: Seed — collect tasks that directly overlap the ghost span
+		tasks.forEach((task) => {
+			if (overlaps(startMin, ghostEnd, task)) {
+				selected.add(task.id);
+				queue.push(task);
+			}
+		});
+
+		// Step 2: BFS — expand to transitive overlaps (tasks that overlap a seeded task)
+		while (queue.length) {
+			const current = queue.shift()!;
+			const currentEnd = this.visualEndMinute(current);
+			tasks.forEach((task) => {
+				if (!selected.has(task.id) && overlaps(current.startMin!, currentEnd, task)) {
+					selected.add(task.id);
+					queue.push(task);
+				}
+			});
+		}
+
+		return [...selected];
+	}
+
+	/**
+	 * Packs timed entries into overlap columns and keeps track of the ghost entry placement.
+	 *
+	 * @param entries - The timed entries to pack into column groups.
+	 * @returns The packed real-task layout and optional ghost placement.
+	 */
+	private buildTimedLayout(entries: Array<{ task: TodayTask; isGhost: boolean }>): {
+		layoutMap: Record<string, { col: number; total: number }>;
+		ghostPlacement: { col: number; total: number } | null;
+	} {
+		const layoutMap: Record<string, { col: number; total: number }> = {};
+		const timedEntries = [...entries].sort((a, b) => a.task.startMin! - b.task.startMin!);
+		let cluster: Array<{ task: TodayTask; isGhost: boolean }> = [];
+		let clusterEndMinute = -1;
+		let ghostPlacement: { col: number; total: number } | null = null;
+
+		const flushCluster = (): void => {
+			const sorted = [...cluster].sort(
+				(a, b) => (a.task.ord ?? a.task.startMin!) - (b.task.ord ?? b.task.startMin!)
+			);
+			const columnEnds: number[] = [];
+			sorted.forEach((entry) => {
+				let col = columnEnds.findIndex((end) => entry.task.startMin! >= end);
+				if (col < 0) {
+					col = columnEnds.length;
+					columnEnds.push(this.visualEndMinute(entry.task));
+				} else {
+					columnEnds[col] = this.visualEndMinute(entry.task);
+				}
+				if (entry.isGhost) ghostPlacement = { col, total: 1 };
+				else layoutMap[entry.task.id] = { col, total: 1 };
+			});
+			const columnCount = columnEnds.length;
+			sorted.forEach((entry) => {
+				if (entry.isGhost) {
+					if (ghostPlacement) ghostPlacement = { col: ghostPlacement.col, total: columnCount };
+				} else {
+					layoutMap[entry.task.id] = { col: layoutMap[entry.task.id].col, total: columnCount };
+				}
+			});
+		};
+
+		timedEntries.forEach((entry) => {
+			if (cluster.length && entry.task.startMin! >= clusterEndMinute) {
+				flushCluster();
+				cluster = [];
+				clusterEndMinute = -1;
+			}
+			cluster.push(entry);
+			clusterEndMinute = Math.max(clusterEndMinute, this.visualEndMinute(entry.task));
+		});
+		if (cluster.length) flushCluster();
+
+		return { layoutMap, ghostPlacement };
+	}
+
+	/**
+	 * Builds the live layout state for the dragged ghost and the blocks it reflows.
+	 *
+	 * @returns The live layout map and preview geometry when a drag ghost is active.
+	 */
+	private buildDragMoveLayoutState(): {
+		layoutMap: Record<string, { col: number; total: number }>;
+		previewPlacement: {
+			top: number;
+			height: number;
+			leftPercent: number;
+			widthPercent: number;
+		} | null;
+	} | null {
+		// Step 1: Guard — bail early when no drag is active
+		const draggedId = this.draggingBlockId();
+		const preview = this.dragMovePreview();
+		const clientX = this.dragMoveClientX();
+		if (!draggedId || !preview) return null;
+		const dragged = this.tasks().find((t) => t.id === draggedId);
+		if (!dragged || dragged.startMin == null) return null;
+
+		// Step 2: At-origin shortcut — ghost hasn't moved yet; reuse the committed layout as-is
+		const isAtOrigin =
+			preview.startMin === this.draggingBlockStartMin &&
+			preview.endMin === this.draggingBlockEndMin &&
+			(clientX == null || this.isCursorWithinOriginalBlock(clientX));
+		if (isAtOrigin) {
+			return {
+				layoutMap: this.blockLayout(),
+				previewPlacement: {
+					top: this.minutesToPixels(preview.startMin),
+					height: this.previewBlockHeight(preview),
+					leftPercent: this.draggingBlockLeftPercent,
+					widthPercent: this.draggingBlockWidthPercent
+				}
+			};
+		}
+
+		// Step 3: No-overlap shortcut — ghost is alone in its slot; full-width single column
+		const overlapIds = this.collectGhostOverlapIds(preview.startMin, preview.endMin, draggedId);
+		if (!overlapIds.length) {
+			return {
+				layoutMap: {},
+				previewPlacement: {
+					top: this.minutesToPixels(preview.startMin),
+					height: this.previewBlockHeight(preview),
+					leftPercent: 0,
+					widthPercent: 100
+				}
+			};
+		}
+
+		// Step 4: Full reflow — pack ghost alongside its overlapping peers and derive placement
+		const overlapSet = new Set(overlapIds);
+		const overlapTasks = this.tasks()
+			.filter((t) => overlapSet.has(t.id))
+			.sort((a, b) => (a.ord ?? a.startMin!) - (b.ord ?? b.startMin!));
+		const ghostOrd = (() => {
+			const slot = this.resolveGhostSlot(overlapTasks, clientX);
+			const orderKey = (t: TodayTask) => t.ord ?? t.startMin!;
+			if (!overlapTasks.length) return preview.startMin;
+			if (slot <= 0) return orderKey(overlapTasks[0]) - 1;
+			if (slot >= overlapTasks.length) return orderKey(overlapTasks[overlapTasks.length - 1]) + 1;
+			return (orderKey(overlapTasks[slot - 1]) + orderKey(overlapTasks[slot])) / 2;
+		})();
+		const overlapEntries = overlapTasks.map((task) => ({ task, isGhost: false }));
+		const layoutState = this.buildTimedLayout([
+			...overlapEntries,
+			{
+				task: { ...dragged, startMin: preview.startMin, endMin: preview.endMin, ord: ghostOrd },
+				isGhost: true
+			}
+		]);
+		const ghostPlacement = layoutState.ghostPlacement;
+		if (!ghostPlacement) return null;
+
+		return {
+			layoutMap: layoutState.layoutMap,
+			previewPlacement: {
+				top: this.minutesToPixels(preview.startMin),
+				height: this.previewBlockHeight(preview),
+				leftPercent: (ghostPlacement.col * 100) / ghostPlacement.total,
+				widthPercent: 100 / ghostPlacement.total
+			}
+		};
+	}
+
+	/**
 	 * Reschedules a dragged block to a new start time, computing its column order
 	 * from the drop X position relative to overlapping peers.
 	 *
@@ -695,34 +1030,45 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param clientX - The viewport X coordinate of the drop, used for column placement.
 	 */
 	private rescheduleDraggedBlock(id: string, newStart: number, clientX: number | null): void {
+		// Step 1: Guard and compute the clamped time range (preserves original duration)
 		const allTasks = this.tasks();
-		const target = allTasks.find(t => t.id === id);
+		const target = allTasks.find((t) => t.id === id);
 		if (!target || target.source === TASK_SOURCE_REMINDER) return;
-		const duration = target.startMin != null ? (target.endMin! - target.startMin) : 60;
-		let start = newStart, end = start + duration;
-		if (end > 1440) { end = 1440; start = end - duration; }
+		const duration = target.startMin != null ? target.endMin! - target.startMin : 60;
+		let start = newStart,
+			end = start + duration;
+		if (end > 1440) {
+			end = 1440;
+			start = end - duration;
+		}
 
+		// Step 2: Collect overlapping peers and resolve the column slot from drop position
 		const orderKey = (t: TodayTask) => t.ord ?? t.startMin!;
 		const visualEnd = Math.max(end, start + MINIMUM_VISUAL_MINUTES);
 		const peers = allTasks
-			.filter(t => t.id !== id && t.startMin != null && t.startMin < visualEnd && start < this.visualEndMinute(t))
+			.filter(
+				(t) =>
+					t.id !== id &&
+					t.startMin != null &&
+					t.startMin < visualEnd &&
+					start < this.visualEndMinute(t)
+			)
 			.sort((a, b) => orderKey(a) - orderKey(b));
 
 		let ord: number;
-		const grid = this.gridRef?.nativeElement;
-		if (!peers.length || !grid || clientX == null) {
+		if (!peers.length || clientX == null) {
 			ord = start;
 		} else {
-			const gridRect = grid.getBoundingClientRect();
-			const columnCount = peers.length + 1;
-			const columnWidth = gridRect.width / columnCount;
-			let slot = Math.round((clientX - gridRect.left) / columnWidth - 0.5);
-			slot = Math.max(0, Math.min(peers.length, slot));
+			const slot = this.resolveGhostSlot(peers, clientX);
 			if (slot === 0) ord = orderKey(peers[0]) - 1;
 			else if (slot >= peers.length) ord = orderKey(peers[peers.length - 1]) + 1;
 			else ord = (orderKey(peers[slot - 1]) + orderKey(peers[slot])) / 2;
 		}
-		this.tasks.update(ts => ts.map(t => t.id === id ? { ...t, startMin: start, endMin: end, ord } : t));
+
+		// Step 3: Commit the new position and column order to the task signal
+		this.tasks.update((ts) =>
+			ts.map((t) => (t.id === id ? { ...t, startMin: start, endMin: end, ord } : t))
+		);
 	}
 
 	/**
@@ -773,7 +1119,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		const h = Math.floor(minutes / 60);
 		const mm = Math.round(minutes % 60);
 		const ap = h < 12 ? TODAY_LABEL_AM : TODAY_LABEL_PM;
-		const hh = (h % 12) || 12;
+		const hh = h % 12 || 12;
 		return `${hh}:${Utilities.padTwoDigits(mm)} ${ap}`;
 	}
 
@@ -785,7 +1131,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected formatHourLabel(h: number): string {
 		const ap = h < 12 ? TODAY_LABEL_AM : TODAY_LABEL_PM;
-		const hh = (h % 12) || 12;
+		const hh = h % 12 || 12;
 		return `${hh} ${ap}`;
 	}
 
@@ -800,5 +1146,16 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			RANGE_BLOCK_MIN_HEIGHT_PX,
 			this.minutesToPixels(range.endMin) - this.minutesToPixels(range.startMin)
 		);
+	}
+
+	/**
+	 * Gets the pixel height for the drag-move preview ghost, matching the committed block height formula.
+	 *
+	 * @param range - The time range being previewed.
+	 * @returns The pixel height, mirroring max(BLOCK_MIN_HEIGHT_PX, raw − 2) used by committed blocks.
+	 */
+	protected previewBlockHeight(range: TodayTimeRange): number {
+		const raw = this.minutesToPixels(range.endMin) - this.minutesToPixels(range.startMin);
+		return Math.max(BLOCK_MIN_HEIGHT_PX, raw - 2);
 	}
 }

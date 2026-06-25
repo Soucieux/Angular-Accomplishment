@@ -42,7 +42,7 @@ export interface TodayTimedBlock {
 }
 
 /** Pixels rendered per hour — must stay in sync with --hh in today.component.css. */
-export const PIXELS_PER_HOUR = 56;
+export const PIXELS_PER_HOUR = 112;
 
 /** Pixel offset above the current time to use when auto-scrolling on load. */
 export const SCROLL_AHEAD_PX = 150;
@@ -51,7 +51,7 @@ export const SCROLL_AHEAD_PX = 150;
 export const MINIMUM_VISUAL_MINUTES = Math.ceil(26 / PIXELS_PER_HOUR * 60);
 
 /** Minimum pixel height for drag-create and pending range blocks. */
-export const RANGE_BLOCK_MIN_HEIGHT_PX = 54;
+export const RANGE_BLOCK_MIN_HEIGHT_PX = 28;
 
 /** Minimum pixel height for committed timed task blocks (accounts for 2px border/gap). */
 export const BLOCK_MIN_HEIGHT_PX = 26;
@@ -91,14 +91,3 @@ export const TASK_LEAD_ICON_MAP: Record<TodayTaskSource, string> = {
 
 /** Icon override for completed local tasks. */
 export const TASK_LEAD_ICON_DONE = 'check_circle';
-
-export const SAMPLE_TASKS: TodayTask[] = [
-	{ id: 'r1', source: 'reminder', title: 'Submit visa documents', done: false, startMin: 690, endMin: 720, recur: 'none' },
-	{ id: 'r2', source: 'reminder', title: 'Dentist appointment', done: false, startMin: 900, endMin: 960, recur: 'none' },
-	{ id: 'r3', source: 'reminder', title: 'Call Mom — birthday', done: false, startMin: 1140, endMin: 1170, recur: 'yearly' },
-	{ id: 'l1', source: 'local', title: 'Finish Q3 report draft', done: false, startMin: 540, endMin: 630, recur: 'none' },
-	{ id: 'l2', source: 'local', title: 'Lunch with Sam', done: false, startMin: 720, endMin: 780, recur: 'none' },
-	{ id: 'l3', source: 'local', title: 'Gym session', done: false, startMin: 1080, endMin: 1140, recur: 'weekly' },
-	{ id: 'l4', source: 'local', title: 'Reply to Alex about timeline', done: false, startMin: null, endMin: null, recur: 'none' },
-	{ id: 'l5', source: 'local', title: 'Read 20 pages', done: true, startMin: null, endMin: null, recur: 'none' },
-];

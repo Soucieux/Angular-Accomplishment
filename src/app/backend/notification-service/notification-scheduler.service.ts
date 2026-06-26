@@ -11,7 +11,8 @@ import {
 	NOTIF_KEY_3DAY,
 	NOTIF_KEY_DUE,
 	NOTIF_SCHEDULER_INIT_ERROR,
-	REMINDER_NOTIF_TITLE
+	REMINDER_NOTIF_TITLE_3DAY,
+	REMINDER_NOTIF_TITLE_TODAY
 } from '../../common/app.constant';
 
 @Injectable({ providedIn: 'root' })
@@ -96,8 +97,8 @@ export class NotificationSchedulerService {
 
 			const body = `${record.text ?? ''}${NOTIF_BODY_SEPARATOR}${date.replace(/-/g, '.')}`;
 
-			if (days === 3) this.sendOnce(`${itemKey}${NOTIF_KEY_3DAY}`, body);
-			if (days === 0) this.sendOnce(`${itemKey}${NOTIF_KEY_DUE}`, body);
+			if (days === 3) this.sendOnce(`${itemKey}${NOTIF_KEY_3DAY}`, REMINDER_NOTIF_TITLE_3DAY, body);
+			if (days === 0) this.sendOnce(`${itemKey}${NOTIF_KEY_DUE}`, REMINDER_NOTIF_TITLE_TODAY, body);
 		}
 	}
 
@@ -106,12 +107,13 @@ export class NotificationSchedulerService {
 	 * this session. Adds the key to the notified set on send.
 	 *
 	 * @param notifKey - The composite session-dedup key (item key + suffix).
+	 * @param title - The notification title reflecting the urgency level.
 	 * @param body - The notification body text.
 	 */
-	private sendOnce(notifKey: string, body: string): void {
+	private sendOnce(notifKey: string, title: string, body: string): void {
 		if (this.notifiedKeys.has(notifKey)) return;
 		this.notifiedKeys.add(notifKey);
-		this.notificationService.sendNotification(REMINDER_NOTIF_TITLE, body).catch(() => {});
+		this.notificationService.sendNotification(title, body).catch(() => {});
 	}
 
 	/**

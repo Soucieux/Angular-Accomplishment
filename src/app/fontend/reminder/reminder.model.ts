@@ -58,6 +58,23 @@ export const REMINDER_CATEGORY_COLOR_MAP: Record<string, string> = {
 	Other: '#0d9488'
 };
 
+/**
+ * Curated palette for custom tags. Colors are chosen to be distinct from each
+ * other and from the four base-category colors above.
+ */
+export const REMINDER_CUSTOM_TAG_COLORS: string[] = [
+	'#7c3aed',
+	'#059669',
+	'#dc2626',
+	'#0891b2',
+	'#9333ea',
+	'#65a30d',
+	'#b45309',
+	'#0369a1',
+	'#15803d',
+	'#be185d'
+];
+
 /** All valid start-time options: 00:00 to 23:45 in 15-minute steps. */
 export const REMINDER_TIME_OPTIONS: TimeOption[] = (() => {
 	const pad = (n: number) => String(n).padStart(2, '0');

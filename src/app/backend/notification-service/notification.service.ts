@@ -3,10 +3,18 @@ import { isPlatformBrowser } from '@angular/common';
 import { invoke } from '@tauri-apps/api/tauri';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { DatabaseService } from '../database-service/database.service';
-import { NOTIF_ENABLED_BODY, NOTIF_ENABLED_TITLE } from '../../common/app.constant';
+import { LOG } from '../../common/app.logs';
+import {
+	NOTIF_ENABLED_BODY,
+	NOTIF_ENABLED_TITLE,
+	NOTIF_SEND_FAILED,
+	NOTIF_SUBSCRIBE_FAILED,
+	NOTIF_UNSUBSCRIBE_FAILED
+} from '../../common/app.constant';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
+	private readonly className = 'NotificationService';
 	private readonly tauriSubscribed = new BehaviorSubject<boolean>(false);
 
 	/**
@@ -40,21 +48,35 @@ export class NotificationService {
 	}
 
 	/**
-	 * Activates the Tauri notification preference, persists it to the database,
-	 * and fires a confirmation notification.
+	 * Activates the Tauri notification preference. Flips state immediately and
+	 * fires the confirmation notification before the DB write so neither can
+	 * block the other. Reverts state if the DB write fails.
 	 */
 	public async subscribe(): Promise<void> {
-		await this.databaseService.setTauriNotifEnabled(true);
 		this.tauriSubscribed.next(true);
-		this.sendNotification(NOTIF_ENABLED_TITLE, NOTIF_ENABLED_BODY).catch(() => {});
+		this.sendNotification(NOTIF_ENABLED_TITLE, NOTIF_ENABLED_BODY).catch((err: unknown) => {
+			LOG.error(this.className, NOTIF_SEND_FAILED, err as Error);
+		});
+		try {
+			await this.databaseService.setTauriNotifEnabled(true);
+		} catch (err: unknown) {
+			LOG.error(this.className, NOTIF_SUBSCRIBE_FAILED, err as Error);
+			this.tauriSubscribed.next(false);
+		}
 	}
 
 	/**
-	 * Deactivates the Tauri notification preference and removes it from the database.
+	 * Deactivates the Tauri notification preference. Flips state immediately so
+	 * the button responds without waiting for the DB write. Reverts on failure.
 	 */
 	public async unsubscribe(): Promise<void> {
-		await this.databaseService.setTauriNotifEnabled(false);
 		this.tauriSubscribed.next(false);
+		try {
+			await this.databaseService.setTauriNotifEnabled(false);
+		} catch (err: unknown) {
+			LOG.error(this.className, NOTIF_UNSUBSCRIBE_FAILED, err as Error);
+			this.tauriSubscribed.next(true);
+		}
 	}
 
 	/**

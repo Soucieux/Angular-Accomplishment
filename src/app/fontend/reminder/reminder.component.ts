@@ -31,6 +31,7 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_REMINDER,
 	DIALOG_CONFIRM,
+	DIALOG_ERROR,
 	FAILURE,
 	REMINDER_ADD_BTN_LABEL,
 	REMINDER_ADD_DATE_LABEL,
@@ -52,8 +53,10 @@ import {
 	REMINDER_GREETING_SINGULAR,
 	REMINDER_ITEMS_PER_PAGE,
 	REMINDER_ROWS_PER_PAGE,
+	REMINDER_ROWS_PER_PAGE_NARROW,
 	REMINDER_ITEM_MESSAGE,
 	REMINDER_MSG_DELETE_CONFIRM,
+	REMINDER_MSG_TAG_DUPLICATE,
 	REMINDER_PLACEHOLDER_LINK,
 	REMINDER_PLACEHOLDER_TAG,
 	REMINDER_PLACEHOLDER_TEXT,
@@ -74,6 +77,7 @@ import {
 import {
 	NewItem,
 	REMINDER_CATEGORY_COLOR_MAP,
+	REMINDER_CUSTOM_TAG_COLORS,
 	REMINDER_END_TIME_OPTIONS,
 	REMINDER_KNOWN_CATEGORIES,
 	REMINDER_TIME_OPTIONS,
@@ -117,6 +121,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	@ViewChild('tagPickerPopover') private tagPickerPopover?: Popover;
 	@ViewChild('editingDatepicker') private editingDatepicker?: DatePicker;
 	@ViewChild('newItemDatepicker') private newItemDatepicker?: DatePicker;
+	@ViewChild('linkInput') private linkInput?: ElementRef<HTMLInputElement>;
+	@ViewChild('tagInlineInput') private tagInlineInput?: ElementRef<HTMLInputElement>;
+	@ViewChild('tagPickerInput') private tagPickerInput?: ElementRef<HTMLInputElement>;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
@@ -142,13 +149,13 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
 	protected readonly REMINDER_CHIP_CUSTOM = REMINDER_CHIP_CUSTOM;
 	private readonly categoryColorMap = REMINDER_CATEGORY_COLOR_MAP;
-	private readonly baseCategories: readonly string[] = REMINDER_KNOWN_CATEGORIES;
-	private readonly customTagColorCache = new Map<string, string>();
+	private readonly baseCategorySet = new Set<string>(REMINDER_KNOWN_CATEGORIES);
 	private gridResizeObserver?: ResizeObserver;
 	private itemsPerPage = REMINDER_ITEMS_PER_PAGE;
 	private doneKeys = new Set<string>();
 	protected loading = true;
 	protected items: ReminderItem[] = [];
+	protected filterBarTags: string[] = [];
 	protected page = 0;
 	protected editingItem: ReminderItem | null = null;
 	protected editingDateModel: Date | null = null;
@@ -206,6 +213,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 					startTime: record.startTime ?? null,
 					endTime: record.endTime ?? null
 				}));
+				this.filterBarTags = this.computeFilterBarTags();
 				// Step 2: Remove any selected tag filters that no longer exist in the item set
 				this.removeStaleTag();
 				// Step 3: Sync upcoming items to the statistics collection
@@ -448,46 +456,50 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Gets the accent color for a tag. Known categories use their fixed palette
-	 * color; custom tags derive a deterministic HSL color from a hash of the
-	 * tag string so each custom tag always renders the same distinct hue.
+	 * color; custom tags pick a color from the curated palette using a djb2-style
+	 * hash of the tag string so the same name always renders the same color.
+	 * Returns hex so that hex-alpha suffixes (e.g. `+ '1f'`) produce valid CSS.
 	 *
 	 * @param tag - The tag string to look up, or undefined when the item has no tag.
-	 * @returns A CSS color string.
+	 * @returns A CSS hex color string.
 	 */
 	protected tagColor(tag: string | undefined): string {
 		if (!tag) return REMINDER_CATEGORY_COLOR_DEFAULT;
-
-		// Step 1: Return the fixed palette color for known base categories
 		if (this.categoryColorMap[tag]) return this.categoryColorMap[tag];
-
-		// Step 2: Return the memoized color for custom tags seen before
-		const cached = this.customTagColorCache.get(tag);
-		if (cached) return cached;
-
-		/* Step 3: Derive a deterministic HSL color from a djb2-style hash of the tag string.
-		   The same custom tag must always produce the same hue across renders and sessions. */
 		let hash = 0;
 		for (let i = 0; i < tag.length; i++) {
 			hash = tag.charCodeAt(i) + ((hash << 5) - hash);
 		}
-		const color = `hsl(${Math.abs(hash) % 360}, 60%, 42%)`;
-		this.customTagColorCache.set(tag, color);
-		return color;
+		return REMINDER_CUSTOM_TAG_COLORS[Math.abs(hash) % REMINDER_CUSTOM_TAG_COLORS.length];
 	}
 
 	/**
-	 * Gets the ordered list of tags for the filter bar: the four base categories
+	 * Computes the ordered list of tags for the filter bar: the four base categories
 	 * first, followed by any unique custom tags found across all current items.
+	 * Called once per DB subscription emission; result is stored in {@link filterBarTags}.
 	 *
 	 * @returns The ordered array of tag strings with base categories leading.
 	 */
-	protected get filterBarTags(): string[] {
+	private computeFilterBarTags(): string[] {
 		const custom = [
 			...new Set(
-				this.items.map((item) => item.tag).filter((tag) => tag && !this.baseCategories.includes(tag))
+				this.items.map((item) => item.tag).filter((tag) => tag && !this.baseCategorySet.has(tag))
 			)
 		];
-		return [...this.baseCategories, ...custom];
+		return [...this.baseCategorySet, ...custom];
+	}
+
+	/**
+	 * Gets the selectable tags for the card tag-picker popover, excluding the
+	 * currently edited card's own custom tag so it doesn't appear twice (it is
+	 * already represented by the Custom chip at the end of the list).
+	 *
+	 * @returns The filtered tag array for the card tag-picker chip list.
+	 */
+	protected get popoverFilterTags(): string[] {
+		const ownCustom = this.tagEditSession?.item?.tag;
+		if (!ownCustom || this.isKnownCategory(ownCustom)) return this.filterBarTags;
+		return this.filterBarTags.filter((t) => t !== ownCustom);
 	}
 
 	/**
@@ -725,8 +737,10 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.dateOrLinkPopover.hide();
 		await firstValueFrom(timer(50));
 
-		// Step 3: Reveal the popover anchored to the triggering element
+		// Step 3: Reveal the popover anchored to the triggering element, then focus the input
 		this.dateOrLinkPopover.show(event);
+		await firstValueFrom(timer(100));
+		this.linkInput?.nativeElement.focus();
 	}
 
 	/**
@@ -1005,15 +1019,33 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Persists the current tag value for an existing card when confirmed (Enter or blur).
-	 * Writes the updated tags array to CloudBase.
+	 * Persists the current tag value for an existing card when confirmed (Enter).
+	 * Empty input cancels silently; duplicate names show an error dialog.
+	 * Writes the updated tag to CloudBase.
 	 */
 	protected async onTagUpdate(): Promise<void> {
 		const session = this.tagEditSession;
 		if (!session?.item) return;
 		const item = session.item;
 
-		// Step 1: Guard with a permission check before writing to the database
+		// Step 1: Empty input → cancel without a DB write
+		const tagText = session.tagText.trim();
+		if (!tagText) {
+			this.tagPickerPopover?.hide();
+			this.cancelTagEdit();
+			return;
+		}
+
+		// Step 2: Reject new custom tag names that collide with any existing tag (custom chip only)
+		if (session.index === -1) {
+			const isDuplicate = this.filterBarTags.includes(tagText) && tagText !== item.tag;
+			if (isDuplicate) {
+				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, REMINDER_MSG_TAG_DUPLICATE);
+				return;
+			}
+		}
+
+		// Step 3: Guard with a permission check before writing to the database
 		const returnCode = this.dialogService.ensurePermission(
 			this.dialogComponentContainer,
 			this.getOpenId(item.key)
@@ -1022,27 +1054,30 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			: FAILURE;
 		if (returnCode === FAILURE) return;
 
-		/* Step 2: Apply the new tag to the view model — a non-empty input sets the tag; an empty
-		   input on an existing slot (index !== -1) clears it rather than leaving the old value. */
-		const tagText = session.tagText.trim();
-		if (tagText) item.tag = tagText;
-		else if (session.index !== -1) item.tag = '';
-
-		// Step 3: Dismiss the popover and clear the session, then persist the updated tag
+		// Step 4: Apply the new tag and persist
+		item.tag = tagText;
 		this.tagPickerPopover?.hide();
 		this.cancelTagEdit();
 		if (item.key) await this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_TAG, item.tag);
 	}
 
 	/**
-	 * Commits the current tag value for the new-item card when confirmed (Enter or blur).
+	 * Commits the current tag value for the new-item card when confirmed (Enter).
+	 * Empty input cancels silently; duplicate names show an error dialog.
 	 * Updates the local newItem state only — no DB write.
 	 */
 	protected onNewItemTagUpdate(): void {
 		const session = this.tagEditSession;
 		const tagText = session?.tagText.trim() ?? '';
-		if (tagText) this.newItem.tag = tagText;
-		else if (session !== null && session.index >= 0) this.newItem.tag = '';
+		if (!tagText) {
+			this.cancelTagEdit();
+			return;
+		}
+		if (this.filterBarTags.includes(tagText) && tagText !== this.newItem.tag) {
+			this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, REMINDER_MSG_TAG_DUPLICATE);
+			return;
+		}
+		this.newItem.tag = tagText;
 		this.cancelTagEdit();
 	}
 
@@ -1078,16 +1113,20 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	/**
 	 * Begins editing or adding a tag on the new-item card.
 	 * Pass index = -1 to open the add-tag input; pass the tag's 0-based index to edit it.
+	 * Pre-fills with the existing custom tag when one is already set.
 	 *
 	 * @param index - The 0-based tag index to edit, or -1 to add a new tag.
 	 */
-	protected startNewItemTagEdit(index: number): void {
+	protected async startNewItemTagEdit(index: number): Promise<void> {
+		const existingCustom = index === -1 && !this.isKnownCategory(this.newItem.tag) ? this.newItem.tag : '';
 		this.tagEditSession = {
 			item: null,
 			index,
 			isNewItem: true,
-			tagText: index === -1 ? '' : this.newItem.tag
+			tagText: existingCustom
 		};
+		await firstValueFrom(timer(50));
+		this.tagInlineInput?.nativeElement.focus();
 	}
 
 	/**
@@ -1174,6 +1213,13 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.newItem = { ...this.newItem, date: null, startTime: null, endTime: null };
 		this.editingStartTime = null;
 		this.editingEndTime = null;
+	}
+
+	/**
+	 * Clears the link on the new-item form. No DB write — state update only.
+	 */
+	protected clearNewItemLink(): void {
+		this.newItem = { ...this.newItem, link: '' };
 	}
 
 	/**
@@ -1265,7 +1311,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns True when the tag is a known base category.
 	 */
 	protected isKnownCategory(tag: string): boolean {
-		return this.baseCategories.includes(tag);
+		return this.baseCategorySet.has(tag);
 	}
 
 	/**
@@ -1318,12 +1364,18 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Switches the tag picker popover from chip-selection mode to free-text input mode.
+	 * Pre-fills with the card's current custom tag if one is set, then focuses the input.
 	 */
-	protected startTagPickerCustomInput(): void {
+	protected async startTagPickerCustomInput(): Promise<void> {
+		const existingCustom = this.tagEditSession?.item
+			? (!this.isKnownCategory(this.tagEditSession.item.tag) ? this.tagEditSession.item.tag : '')
+			: '';
 		this.tagPickerCustomMode = true;
 		if (this.tagEditSession) {
-			this.tagEditSession = { ...this.tagEditSession, index: -1, tagText: '' };
+			this.tagEditSession = { ...this.tagEditSession, index: -1, tagText: existingCustom };
 		}
+		await firstValueFrom(timer(50));
+		this.tagPickerInput?.nativeElement.focus();
 	}
 
 	/**
@@ -1383,6 +1435,25 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected get skeletonItems(): number[] {
 		return Array.from({ length: this.itemsPerPage }, (_, i) => i);
+	}
+
+	/**
+	 * Returns true when the new-item card currently has a custom (non-category) tag selected.
+	 *
+	 * @returns True when newItem.tag is set and is not a known base category.
+	 */
+	protected get newItemHasCustomTag(): boolean {
+		return !!(this.newItem.tag && !this.isKnownCategory(this.newItem.tag));
+	}
+
+	/**
+	 * Returns true when the tag-picker popover is editing an item that has a custom tag.
+	 *
+	 * @returns True when the active tag-edit session's item tag is a non-category string.
+	 */
+	protected get popoverItemHasCustomTag(): boolean {
+		const tag = this.tagEditSession?.item?.tag;
+		return !!(tag && !this.isKnownCategory(tag));
 	}
 
 	// ── time dropdown template helpers ───────────────────────────────────────
@@ -1466,7 +1537,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		/* Step 3: Recalculate page size and clamp the current page index.
 		   The page must be clamped before updating itemsPerPage — otherwise pagedItems
 		   computes a slice from the old page size and can briefly show the wrong items. */
-		const newPageSize = itemsPerRow * REMINDER_ROWS_PER_PAGE;
+		const rowsPerPage = itemsPerRow === 1 ? REMINDER_ROWS_PER_PAGE_NARROW : REMINDER_ROWS_PER_PAGE;
+		const newPageSize = itemsPerRow * rowsPerPage;
 		const maxPage = Math.max(0, Math.ceil(this.filteredItems.length / newPageSize) - 1);
 		if (this.page > maxPage) this.page = maxPage;
 		this.itemsPerPage = newPageSize;

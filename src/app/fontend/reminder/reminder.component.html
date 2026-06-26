@@ -47,9 +47,12 @@
 					class="rm-filter-chip"
 					[style.background]="isTagSelected(tag) ? tagColor(tag) + '1f' : null"
 					[style.color]="isTagSelected(tag) ? tagColor(tag) : null"
-					[style.border-color]="isTagSelected(tag) ? 'transparent' : null"
 					(click)="toggleTagFilter(tag)">
-					<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
+					@if (isKnownCategory(tag)) {
+						<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
+					} @else {
+						<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagColor(tag)">sell</span>
+					}
 					{{ tag }}
 				</button>
 			}
@@ -79,6 +82,7 @@
 					<div
 						class="rm-card"
 						[class.rm-card-done]="isDone(item.key)"
+						[class.rm-card-due-soon]="isDueSoon(item) && !isDone(item.key)"
 						[style.--card-color]="tagColor(item.tag)">
 						<!-- Top: checkbox + title + category label -->
 						<div class="rm-card-top">
@@ -242,48 +246,102 @@
 						(keyup.enter)="addNewTextOnly()" />
 				</div>
 				<div class="rm-new-card-row2">
+					@for (tag of filterBarTags; track tag) {
+						<button
+							class="rm-category-chip"
+							[class.rm-category-chip-selected]="newItem.tag === tag"
+							[style.background]="newItem.tag === tag ? tagColor(tag) + '1f' : null"
+							[style.color]="newItem.tag === tag ? tagColor(tag) : null"
+							(click)="selectNewItemCategory(tag)">
+							@if (isKnownCategory(tag)) {
+								<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
+							} @else {
+								<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="newItem.tag === tag ? tagColor(tag) : null">sell</span>
+							}
+							<span class="hide-on-narrow-or-mobile">{{ tag }}</span>
+						</button>
+					}
 					@if (isAddingNewTag()) {
-						<div class="rm-tag-custom-row">
+						<span
+							class="rm-category-chip rm-chip-editing"
+							[style.background]="
+								newItem.tag && !isKnownCategory(newItem.tag)
+									? tagColor(newItem.tag) + '1f'
+									: null
+							">
+							<span
+								class="rm-filter-dot"
+								[style.background]="
+									newItem.tag && !isKnownCategory(newItem.tag)
+										? tagColor(newItem.tag)
+										: '#94a3b8'
+								"></span>
 							<input
-								class="rm-tag-inline-input"
+								#tagInlineInput
+								class="rm-tag-chip-input"
 								type="text"
 								[placeholder]="REMINDER_PLACEHOLDER_TAG"
 								[(ngModel)]="tagSessionText"
-								(keyup.enter)="onNewItemTagUpdate()"
-								(blur)="onNewItemTagUpdate()" />
+								(keyup.enter)="onNewItemTagUpdate()" />
 							<button class="rm-chip-remove" (click)="cancelTagEdit()">
-								<span class="material-symbols-outlined rm-icon" style="font-size: 11px">close</span>
+								<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
+									>close</span
+								>
 							</button>
-						</div>
+						</span>
 					} @else {
-						@for (tag of filterBarTags; track tag) {
-							<button
-								class="rm-category-chip"
-								[class.rm-category-chip-selected]="newItem.tag === tag"
-								[style.background]="newItem.tag === tag ? tagColor(tag) + '1f' : null"
-								[style.color]="newItem.tag === tag ? tagColor(tag) : null"
-								(click)="selectNewItemCategory(tag)">
-								<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
-								<span class="hide-on-narrow-or-mobile">{{ tag }}</span>
-							</button>
-						}
 						<button
-							class="rm-category-chip"
-							[class.rm-category-chip-selected]="newItem.tag && !isKnownCategory(newItem.tag)"
-							[style.background]="newItem.tag && !isKnownCategory(newItem.tag) ? tagColor(newItem.tag) + '1f' : null"
-							[style.color]="newItem.tag && !isKnownCategory(newItem.tag) ? tagColor(newItem.tag) : null"
+							class="rm-category-chip rm-chip-custom"
+							[class.rm-category-chip-selected]="newItemHasCustomTag"
+							[class.rm-chip-custom-owner]="newItemHasCustomTag"
+							[style.background]="newItemHasCustomTag ? tagColor(newItem.tag) + '1f' : null"
+							[style.color]="newItemHasCustomTag ? tagColor(newItem.tag) : null"
 							(click)="startNewItemTagEdit(-1)">
-							<span class="rm-filter-dot" [style.background]="newItem.tag && !isKnownCategory(newItem.tag) ? tagColor(newItem.tag) : '#94a3b8'"></span>
-							{{ newItem.tag && !isKnownCategory(newItem.tag) ? newItem.tag : REMINDER_CHIP_CUSTOM }}
+							@if (newItemHasCustomTag) {
+								<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagColor(newItem.tag)">sell</span>
+							} @else {
+								<span class="rm-filter-dot" style="background: #94a3b8"></span>
+							}
+							{{ newItemHasCustomTag ? newItem.tag : REMINDER_CHIP_CUSTOM }}
 						</button>
 					}
 					<span class="rm-bar-spacer"></span>
-					<button class="rm-add-field-button" (click)="openLinkPopover($event)">
-						<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-							>add_link</span
-						>
-						{{ newItemLinkLabel || REMINDER_ADD_LINK_LABEL }}
-					</button>
+					@if (newItemLinkLabel) {
+						<span class="rm-link-chip" (click)="openLinkPopover($event)">
+							<span
+								class="material-symbols-outlined rm-icon"
+								style="font-size: 15px; padding-top: 5px"
+								>link</span
+							>
+							{{ newItemLinkLabel }}
+							<button
+								class="rm-chip-remove"
+								(click)="$event.stopPropagation(); clearNewItemLink()">
+								<span
+									class="material-symbols-outlined rm-icon"
+									style="font-size: 11px"
+									>close</span
+								>
+							</button>
+						</span>
+						<a
+							[href]="newItem.link"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="rm-chip-external"
+							(click)="$event.stopPropagation()">
+							<span class="material-symbols-outlined rm-icon" style="font-size: 16px"
+								>open_in_new</span
+							>
+						</a>
+					} @else {
+						<button class="rm-add-field-button" (click)="openLinkPopover($event)">
+							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+								>add_link</span
+							>
+							{{ REMINDER_ADD_LINK_LABEL }}
+						</button>
+					}
 					@if (newItem.date) {
 						<span
 							class="rm-date-chip"
@@ -296,9 +354,7 @@
 							<button
 								class="rm-chip-remove"
 								(click)="$event.stopPropagation(); clearNewItemDate()">
-								<span
-									class="material-symbols-outlined rm-icon"
-									style="font-size: 11px"
+								<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
 									>close</span
 								>
 							</button>
@@ -323,9 +379,7 @@
 							<button
 								class="rm-chip-remove"
 								(click)="$event.stopPropagation(); clearNewItemTime()">
-								<span
-									class="material-symbols-outlined rm-icon"
-									style="font-size: 11px"
+								<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
 									>close</span
 								>
 							</button>
@@ -415,6 +469,7 @@
 					} @else {
 						@if (editingItem) {
 							<input
+								#linkInput
 								type="text"
 								pInputText
 								[(ngModel)]="editingLink"
@@ -424,6 +479,7 @@
 								style="font-size: 14px" />
 						} @else {
 							<input
+								#linkInput
 								type="text"
 								pInputText
 								[(ngModel)]="newItem.link"
@@ -440,34 +496,54 @@
 		<!-- ── Tag picker popover ────────────────────────────────────── -->
 		<p-popover [focusOnShow]="false" #tagPickerPopover (onHide)="onTagPickerHide()">
 			<div class="rm-tag-picker-popover">
-				@if (!tagPickerCustomMode) {
-					@for (tag of filterBarTags; track tag) {
-						<button
-							class="rm-category-chip"
-							[class.rm-category-chip-selected]="tagEditSession?.item?.tag === tag"
-							[style.background]="tagEditSession?.item?.tag === tag ? tagColor(tag) + '1f' : null"
-							[style.color]="tagEditSession?.item?.tag === tag ? tagColor(tag) : null"
-							(click)="onSelectItemCategory(tag)">
-							<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
-							{{ tag }}
-						</button>
-					}
+				@for (tag of popoverFilterTags; track tag) {
 					<button
-						class="rm-category-chip rm-chip-custom"
-						(click)="startTagPickerCustomInput()">
-						<span class="material-symbols-outlined rm-icon" style="font-size: 13px">add</span>
-						{{ REMINDER_CHIP_CUSTOM }}
+						class="rm-category-chip"
+						[class.rm-category-chip-selected]="tagEditSession?.item?.tag === tag"
+						[style.background]="
+							tagEditSession?.item?.tag === tag ? tagColor(tag) + '1f' : null
+						"
+						[style.color]="tagEditSession?.item?.tag === tag ? tagColor(tag) : null"
+						(click)="onSelectItemCategory(tag)">
+						@if (isKnownCategory(tag)) {
+							<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
+						} @else {
+							<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagEditSession?.item?.tag === tag ? tagColor(tag) : null">sell</span>
+						}
+						{{ tag }}
 					</button>
-				} @else {
-					<div class="rm-tag-picker-input-row">
+				}
+				@if (tagPickerCustomMode) {
+					<span class="rm-category-chip rm-chip-editing">
+						<span
+							class="rm-filter-dot"
+							[style.background]="
+								tagEditSession?.item?.tag && !isKnownCategory(tagEditSession!.item!.tag)
+									? tagColor(tagEditSession!.item!.tag)
+									: '#94a3b8'
+							"></span>
 						<input
-							class="rm-tag-picker-input"
+							#tagPickerInput
+							class="rm-tag-chip-input"
 							type="text"
 							[placeholder]="REMINDER_PLACEHOLDER_TAG"
 							[(ngModel)]="tagSessionText"
-							(keyup.enter)="onTagUpdate()"
-							(blur)="onTagUpdate()" />
-					</div>
+							(keyup.enter)="onTagUpdate()" />
+					</span>
+				} @else if (popoverItemHasCustomTag) {
+					<button
+						class="rm-category-chip rm-category-chip-selected rm-chip-custom-owner"
+						[style.background]="tagColor(tagEditSession!.item!.tag) + '1f'"
+						[style.color]="tagColor(tagEditSession!.item!.tag)"
+						(click)="startTagPickerCustomInput()">
+						<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagColor(tagEditSession!.item!.tag)">sell</span>
+						{{ tagEditSession!.item!.tag }}
+					</button>
+				} @else {
+					<button class="rm-category-chip rm-chip-custom" (click)="startTagPickerCustomInput()">
+						<span class="material-symbols-outlined rm-icon" style="font-size: 13px">add</span>
+						{{ REMINDER_CHIP_CUSTOM }}
+					</button>
 				}
 			</div>
 		</p-popover>

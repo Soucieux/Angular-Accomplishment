@@ -55,13 +55,28 @@ import {
 	NAV_NOTIF_LABEL_DISABLE,
 	NAV_NOTIF_LABEL_ENABLE,
 	NAV_NOTIF_TOGGLE_ERROR,
+	NAV_LABEL_MENU,
+	NAV_LABEL_HOME,
+	NAV_LABEL_TODAY,
+	NAV_LABEL_PORTAL,
+	NAV_LABEL_RESONANCE,
+	NAV_LABEL_RECIPES,
+	NAV_LABEL_ENTERTAINMENT,
+	NAV_LABEL_REMINDER,
+	NAV_LABEL_DEBT_SONATA,
+	NAV_LABEL_PATCH_NOTES,
+	NAV_LABEL_ABOUT,
+	NAV_LABEL_SIGN_OUT,
+	NAV_LABEL_SIGN_IN,
+	NAV_STATUS_ONLINE,
+	NAV_STATUS_OFFLINE,
 	DIALOG_BTN_SIGN_OUT,
 	DIALOG_CONFIRM,
 	DIALOG_HEADER_SIGN_OUT,
 	LS_NAV_COLLAPSED_KEY,
 	MSG_LOGOUT_CONFIRM,
 	TAURI_MODE_CLASS
-} from './common/app.constant';
+} from './common/locale/locale.en';
 import {
 	ContextMenuAction,
 	DesktopContextMenuComponent
@@ -127,6 +142,21 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_TITLE_PAGE = ACCOUNT_TITLE_PAGE;
 	protected readonly NAV_NOTIF_LABEL_ENABLE = NAV_NOTIF_LABEL_ENABLE;
 	protected readonly NAV_NOTIF_LABEL_DISABLE = NAV_NOTIF_LABEL_DISABLE;
+	protected readonly NAV_LABEL_MENU = NAV_LABEL_MENU;
+	protected readonly NAV_LABEL_HOME = NAV_LABEL_HOME;
+	protected readonly NAV_LABEL_TODAY = NAV_LABEL_TODAY;
+	protected readonly NAV_LABEL_PORTAL = NAV_LABEL_PORTAL;
+	protected readonly NAV_LABEL_RESONANCE = NAV_LABEL_RESONANCE;
+	protected readonly NAV_LABEL_RECIPES = NAV_LABEL_RECIPES;
+	protected readonly NAV_LABEL_ENTERTAINMENT = NAV_LABEL_ENTERTAINMENT;
+	protected readonly NAV_LABEL_REMINDER = NAV_LABEL_REMINDER;
+	protected readonly NAV_LABEL_DEBT_SONATA = NAV_LABEL_DEBT_SONATA;
+	protected readonly NAV_LABEL_PATCH_NOTES = NAV_LABEL_PATCH_NOTES;
+	protected readonly NAV_LABEL_ABOUT = NAV_LABEL_ABOUT;
+	protected readonly NAV_LABEL_SIGN_OUT = NAV_LABEL_SIGN_OUT;
+	protected readonly NAV_LABEL_SIGN_IN = NAV_LABEL_SIGN_IN;
+	protected readonly NAV_STATUS_ONLINE = NAV_STATUS_ONLINE;
+	protected readonly NAV_STATUS_OFFLINE = NAV_STATUS_OFFLINE;
 	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, {
 		initialValue: false
 	});

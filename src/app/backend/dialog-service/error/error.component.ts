@@ -6,7 +6,7 @@ import {
 	ERROR_DIALOG_HEADER,
 	ERROR_DIALOG_ICON_CLASS,
 	ERROR_DIALOG_MSG_CLASS
-} from '../../../common/app.constant';
+} from '../../../common/locale/locale.en';
 
 @Component({
 	selector: 'error-dialog',

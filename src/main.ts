@@ -2,7 +2,7 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
 import { Utilities } from './app/common/utilities/app.utilities';
-import { CN } from './app/common/app.constant';
+import { CN } from './app/common/locale/locale.en';
 import {
 	CLOUDBASE,
 	DatabaseService,

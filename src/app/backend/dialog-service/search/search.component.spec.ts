@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 
 import { SearchStreamService } from './search-stream.service';
 import { SearchDialogComponent } from './search.component';
-import { SEARCH_CANCEL, SEARCH_COMPLETE } from '../../../common/app.constant';
+import { SEARCH_CANCEL, SEARCH_COMPLETE } from '../../../common/locale/locale.en';
 
 describe('SearchComponent', () => {
     let component: SearchDialogComponent;

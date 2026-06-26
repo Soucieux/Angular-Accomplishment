@@ -13,8 +13,14 @@ import {
 	PORTAL_DIALOG_TITLE_ADD_LINK,
 	PORTAL_DIALOG_TITLE_EDIT_LINK,
 	PORTAL_LABEL_PIN_TO_DASHBOARD,
-	PORTAL_LABEL_SHARED_LINK
-} from '../../../common/app.constant';
+	PORTAL_LABEL_SHARED_LINK,
+	ADD_LINK_LABEL_URL,
+	ADD_LINK_PLACEHOLDER_URL,
+	ADD_LINK_LABEL_LOADING,
+	ADD_LINK_PLACEHOLDER_NAME,
+	ADD_LINK_LABEL_CATEGORY,
+	ADD_LINK_PLACEHOLDER_CATEGORY
+} from '../../../common/locale/locale.en';
 import { PortalCategory, NewLinkData } from '../../../fontend/portal/portal.model';
 
 @Component({
@@ -36,6 +42,12 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	protected readonly PORTAL_DIALOG_TITLE_EDIT_LINK = PORTAL_DIALOG_TITLE_EDIT_LINK;
 	protected readonly PORTAL_LABEL_PIN_TO_DASHBOARD = PORTAL_LABEL_PIN_TO_DASHBOARD;
 	protected readonly PORTAL_LABEL_SHARED_LINK = PORTAL_LABEL_SHARED_LINK;
+	protected readonly ADD_LINK_LABEL_URL = ADD_LINK_LABEL_URL;
+	protected readonly ADD_LINK_PLACEHOLDER_URL = ADD_LINK_PLACEHOLDER_URL;
+	protected readonly ADD_LINK_LABEL_LOADING = ADD_LINK_LABEL_LOADING;
+	protected readonly ADD_LINK_PLACEHOLDER_NAME = ADD_LINK_PLACEHOLDER_NAME;
+	protected readonly ADD_LINK_LABEL_CATEGORY = ADD_LINK_LABEL_CATEGORY;
+	protected readonly ADD_LINK_PLACEHOLDER_CATEGORY = ADD_LINK_PLACEHOLDER_CATEGORY;
 
 	protected isEditMode = false;
 	protected visible = false;

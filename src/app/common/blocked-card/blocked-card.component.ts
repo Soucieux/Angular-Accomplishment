@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { ACCESS_DENIED_TITLE, ACCESS_DENIED_BODY } from '../app.constant';
+import { ACCESS_DENIED_TITLE, ACCESS_DENIED_BODY } from '../locale/locale.en';
 
 /**
  * Shared full-screen blocked card shown when a page cannot be accessed.

@@ -15,7 +15,7 @@
 	@if (!isEditMode) {
 		<!-- Name -->
 		<div class="add-debt-field">
-			<span class="add-debt-label">Name</span>
+			<span class="add-debt-label">{{ ADD_DEBT_LABEL_NAME }}</span>
 			<input
 				type="text"
 				[(ngModel)]="name"
@@ -26,7 +26,7 @@
 
 		<!-- Category -->
 		<div class="add-debt-field">
-			<span class="add-debt-label">Category</span>
+			<span class="add-debt-label">{{ ADD_DEBT_LABEL_CATEGORY }}</span>
 			<div class="add-debt-category-grid">
 				@for (category of DEBT_CATEGORY_DEFS; track category.key) {
 					<button
@@ -52,7 +52,7 @@
 			@if (isEditMode) {
 				<span class="add-debt-label">{{ DEBT_DIALOG_LABEL_BALANCE }}</span>
 			} @else {
-				<span class="add-debt-label">Amount</span>
+				<span class="add-debt-label">{{ ADD_DEBT_LABEL_AMOUNT }}</span>
 			}
 			<input
 				type="number"
@@ -62,7 +62,7 @@
 				(keyup.enter)="onSubmit()" />
 		</div>
 		<div class="add-debt-field">
-			<span class="add-debt-label">Currency</span>
+			<span class="add-debt-label">{{ ADD_DEBT_LABEL_CURRENCY }}</span>
 			<div class="add-debt-currency-picker">
 				<button
 					type="button"
@@ -86,7 +86,7 @@
 
 	<!-- Due date -->
 	<div class="add-debt-field">
-		<span class="add-debt-label">Due date</span>
+		<span class="add-debt-label">{{ ADD_DEBT_LABEL_DUE_DATE }}</span>
 		<p-datepicker [appendTo]="'body'" dateFormat="yy-mm-dd" [(ngModel)]="dueDateModel"></p-datepicker>
 	</div>
 

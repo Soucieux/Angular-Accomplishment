@@ -8,14 +8,14 @@
 			<div class="header-left">
 				<div class="header-text">
 					<div class="page-title-row">
-						<h1 class="page-title">Debt Sonata</h1>
+						<h1 class="page-title">{{ DEBT_TITLE_PAGE }}</h1>
 						@if (saveIndicator) {
 							<div class="save-indicator">
 								<span class="save-spinner"></span>
 							</div>
 						}
 					</div>
-					<p class="page-subtitle">Where every repayment is a brushstroke — and a closing line.</p>
+					<p class="page-subtitle">{{ DEBT_SUBTITLE }}</p>
 				</div>
 			</div>
 			<button class="new-debt-button" (click)="openNewDebtDialog()">
@@ -50,7 +50,7 @@
 				</div>
 			} @else {
 				<div class="summary-left">
-					<span class="summary-label">TOTAL DEBT</span>
+					<span class="summary-label">{{ DEBT_STAT_LABEL_TOTAL }}</span>
 					@for (group of currencyGroups; track group.code) {
 						<div class="summary-amount-row">
 							<span class="summary-amount">{{
@@ -74,27 +74,27 @@
 					<div class="stat-grid">
 						<div class="stat-cell">
 							<span class="stat-number">{{ debtRows.length }}</span>
-							<span class="stat-label">DEBTS</span>
+							<span class="stat-label">{{ DEBT_STAT_LABEL_DEBTS }}</span>
 						</div>
 						<div class="stat-cell">
 							<span class="stat-number">{{ activeCount }}</span>
-							<span class="stat-label">ACTIVE</span>
+							<span class="stat-label">{{ DEBT_STAT_LABEL_ACTIVE }}</span>
 						</div>
 						<div class="stat-cell">
 							<span class="stat-number">{{ paidCount }}</span>
-							<span class="stat-label">PAID OFF</span>
+							<span class="stat-label">{{ DEBT_STAT_LABEL_PAID_OFF }}</span>
 						</div>
 						<div class="stat-cell">
 							<span class="stat-number">{{ dueSoonCount }}</span>
-							<span class="stat-label">DUE SOON</span>
+							<span class="stat-label">{{ DEBT_STAT_LABEL_DUE_SOON }}</span>
 						</div>
 						<div class="stat-cell" [class.is-overdue]="overdueCount > 0">
 							<span class="stat-number">{{ overdueCount }}</span>
-							<span class="stat-label">OVERDUE</span>
+							<span class="stat-label">{{ DEBT_STAT_LABEL_OVERDUE }}</span>
 						</div>
 						<div class="stat-cell">
 							<span class="stat-number">{{ totalPayments }}</span>
-							<span class="stat-label">PAYMENTS</span>
+							<span class="stat-label">{{ DEBT_STAT_LABEL_PAYMENTS }}</span>
 						</div>
 					</div>
 				</div>
@@ -104,7 +104,7 @@
 		<!-- ── Your debts ─────────────────────────────────────────────── -->
 		<div class="debts-section">
 			<div class="debts-header">
-				<h2 class="debts-title">Your debts</h2>
+				<h2 class="debts-title">{{ DEBT_HEADING_YOUR_DEBTS }}</h2>
 				@if (!loading) {
 					<span class="debts-count">{{ debtRows.length }}</span>
 				}
@@ -137,7 +137,7 @@
 							[class.is-expanded]="expandedItems[item.key]"
 							[style.--category-gradient]="getCategoryForItem(item).gradient">
 							@if (item.paid) {
-								<div class="paid-ribbon">PAID OFF</div>
+								<div class="paid-ribbon">{{ DEBT_RIBBON_PAID_OFF }}</div>
 							}
 
 							<!-- Card head: icon + name/category + due chip -->
@@ -307,7 +307,7 @@
 							@if (expandedItems[item.key]) {
 								<div class="history-panel">
 									@if (getHistoryEntries(item.key).length === 0) {
-										<p class="history-empty">No payments yet — chip away at it above.</p>
+										<p class="history-empty">{{ DEBT_HISTORY_EMPTY }}</p>
 									} @else {
 										@for (entry of getHistoryEntries(item.key); track entry.index) {
 											<div

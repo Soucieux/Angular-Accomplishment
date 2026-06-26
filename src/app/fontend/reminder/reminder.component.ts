@@ -72,8 +72,9 @@ import {
 	STATS_FIELD_TOTAL_REMINDERS,
 	STATS_FIELD_REMINDER_UPCOMING,
 	SUCCESS,
-	TIMEOUT_KEY_REMINDER
-} from '../../common/app.constant';
+	TIMEOUT_KEY_REMINDER,
+	REMINDER_TITLE_PAGE
+} from '../../common/locale/locale.en';
 import {
 	NewItem,
 	REMINDER_CATEGORY_COLOR_MAP,
@@ -148,6 +149,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_AWAIT_SUFFIX_CN = REMINDER_AWAIT_SUFFIX_CN;
 	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
 	protected readonly REMINDER_CHIP_CUSTOM = REMINDER_CHIP_CUSTOM;
+	protected readonly REMINDER_TITLE_PAGE = REMINDER_TITLE_PAGE;
 	private readonly categoryColorMap = REMINDER_CATEGORY_COLOR_MAP;
 	private readonly baseCategorySet = new Set<string>(REMINDER_KNOWN_CATEGORIES);
 	private gridResizeObserver?: ResizeObserver;

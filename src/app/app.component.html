@@ -20,7 +20,7 @@
 							}}
 						</span>
 					</button>
-					<span class="nav-title">Menu</span>
+					<span class="nav-title">{{ NAV_LABEL_MENU }}</span>
 				</li>
 				<li class="nav-item" data-nav-id="home">
 					<a
@@ -31,7 +31,7 @@
 						routerLinkActive="nav-active"
 						[routerLinkActiveOptions]="{ exact: true }">
 						<span class="material-symbols-outlined nav-icon">home_app_logo</span>
-						<span class="nav-label">Home</span>
+						<span class="nav-label">{{ NAV_LABEL_HOME }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="today">
@@ -42,7 +42,7 @@
 						routerLink="/today"
 						routerLinkActive="nav-active">
 						<span class="material-symbols-outlined nav-icon">calendar_today</span>
-						<span class="nav-label">Today</span>
+						<span class="nav-label">{{ NAV_LABEL_TODAY }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="portal">
@@ -53,7 +53,7 @@
 						routerLink="/portal"
 						routerLinkActive="nav-active">
 						<span class="material-symbols-outlined nav-icon">language</span>
-						<span class="nav-label">Portal</span>
+						<span class="nav-label">{{ NAV_LABEL_PORTAL }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="resonance">
@@ -64,7 +64,7 @@
 						routerLink="/resonance"
 						routerLinkActive="nav-active">
 						<span class="material-symbols-outlined nav-icon">format_quote</span>
-						<span class="nav-label">Resonance</span>
+						<span class="nav-label">{{ NAV_LABEL_RESONANCE }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="recipes">
@@ -75,7 +75,7 @@
 						routerLink="/recipe"
 						routerLinkActive="nav-active">
 						<span class="material-symbols-outlined nav-icon">menu_book</span>
-						<span class="nav-label">Recipes</span>
+						<span class="nav-label">{{ NAV_LABEL_RECIPES }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="entertainment">
@@ -86,7 +86,7 @@
 						routerLink="/entertainment"
 						routerLinkActive="nav-active">
 						<span class="material-symbols-outlined nav-icon">live_tv</span>
-						<span class="nav-label">Entertainment</span>
+						<span class="nav-label">{{ NAV_LABEL_ENTERTAINMENT }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="reminder">
@@ -97,7 +97,7 @@
 						routerLink="/reminder"
 						routerLinkActive="nav-active">
 						<span class="material-symbols-outlined nav-icon">alarm</span>
-						<span class="nav-label">Reminder</span>
+						<span class="nav-label">{{ NAV_LABEL_REMINDER }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="debt">
@@ -108,7 +108,7 @@
 						routerLink="/debt"
 						routerLinkActive="nav-active">
 						<span class="material-symbols-outlined nav-icon">account_balance</span>
-						<span class="nav-label">Debt Sonata</span>
+						<span class="nav-label">{{ NAV_LABEL_DEBT_SONATA }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="patch">
@@ -119,7 +119,7 @@
 						routerLink="/patch"
 						routerLinkActive="nav-active">
 						<span class="material-symbols-outlined nav-icon">note_stack</span>
-						<span class="nav-label">Patch Notes</span>
+						<span class="nav-label">{{ NAV_LABEL_PATCH_NOTES }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="about">
@@ -130,7 +130,7 @@
 						routerLink="/about"
 						routerLinkActive="nav-active">
 						<span class="material-symbols-outlined nav-icon">badge</span>
-						<span class="nav-label">About</span>
+						<span class="nav-label">{{ NAV_LABEL_ABOUT }}</span>
 					</a>
 				</li>
 				@if (currentUser$ | async; as user) {
@@ -179,7 +179,7 @@
 									<button
 										class="account-menu-popover-item account-menu-popover-item--danger"
 										(click)="logout()">
-										<span class="material-symbols-outlined">logout</span>Sign out
+										<span class="material-symbols-outlined">logout</span>{{ NAV_LABEL_SIGN_OUT }}
 									</button>
 								</div>
 							}
@@ -201,7 +201,7 @@
 								<span class="material-symbols-outlined account-row-narrow-icon">logout</span>
 								<span class="account-row-meta">
 									<span class="account-row-name">{{ getUserDisplayName(user) }}</span>
-									<span class="account-row-status">Online</span>
+									<span class="account-row-status">{{ NAV_STATUS_ONLINE }}</span>
 								</span>
 								<span class="material-symbols-outlined account-row-chevron">{{
 									accountMenuOpen ? 'expand_more' : 'expand_less'
@@ -220,8 +220,8 @@
 								</span>
 							</span>
 							<span class="account-row-meta">
-								<span class="account-row-name">Sign in</span>
-								<span class="account-row-status">Offline</span>
+								<span class="account-row-name">{{ NAV_LABEL_SIGN_IN }}</span>
+								<span class="account-row-status">{{ NAV_STATUS_OFFLINE }}</span>
 							</span>
 							<span class="material-symbols-outlined account-row-login-icon">login</span>
 						</button>

@@ -3,14 +3,14 @@
 		<!-- ── Header ───────────────────────────────────────────────── -->
 		<div class="page-header">
 			<div class="page-title-row">
-				<h1 class="page-title">Portal</h1>
+				<h1 class="page-title">{{ PORTAL_TITLE_PAGE }}</h1>
 				@if (saveIndicator) {
 					<div class="save-indicator">
 						<span class="save-indicator-spinner"></span>
 					</div>
 				}
 			</div>
-			<p class="page-subtitle">Your links & resources command center</p>
+			<p class="page-subtitle">{{ PORTAL_SUBTITLE }}</p>
 			<div class="header-ornament"></div>
 		</div>
 
@@ -20,7 +20,7 @@
 				<div class="table-wrapper">
 					<div class="header-wrapper" style="cursor: pointer" (click)="toggleDateCalculator()">
 						<div class="header-main">
-							<h4>Date Calculator</h4>
+							<h4>{{ PORTAL_LABEL_DATE_CALCULATOR }}</h4>
 							<span
 								class="pi"
 								[class.pi-chevron-up]="!isDateCalculatorCollapsed"
@@ -59,10 +59,10 @@
 							class="date-calculator-table">
 							<ng-template pTemplate="header">
 								<tr>
-									<th class="header">First</th>
-									<th class="header">Second</th>
-									<th class="header">Third</th>
-									<th class="header">Fourth</th>
+									<th class="header">{{ PORTAL_TABLE_HEADER_FIRST }}</th>
+									<th class="header">{{ PORTAL_TABLE_HEADER_SECOND }}</th>
+									<th class="header">{{ PORTAL_TABLE_HEADER_THIRD }}</th>
+									<th class="header">{{ PORTAL_TABLE_HEADER_FOURTH }}</th>
 								</tr>
 							</ng-template>
 							<ng-template pTemplate="loadingbody">
@@ -157,7 +157,7 @@
 								<span
 									class="category-edit-button"
 									(click)="openEditCategoryDialog(cat, $event)"
-									title="Edit category">
+									[title]="PORTAL_BTN_TITLE_EDIT_CATEGORY">
 									<span class="material-symbols-outlined">edit</span>
 								</span>
 							</button>
@@ -165,7 +165,7 @@
 						<button
 							class="category-add-button"
 							(click)="openAddCategoryDialog()"
-							title="New category">
+							[title]="PORTAL_BTN_TITLE_NEW_CATEGORY">
 							<span class="material-symbols-outlined">add</span>
 						</button>
 					</div>
@@ -233,7 +233,7 @@
 								<button
 									class="action-btn"
 									(click)="openEditLinkDialog(link, $event)"
-									title="Edit">
+									[title]="PORTAL_BTN_TITLE_EDIT">
 									<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
 										<path
 											d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z"
@@ -245,7 +245,7 @@
 								<button
 									class="action-btn action-btn--delete"
 									(click)="openDeleteLinkDialog(link, $event)"
-									title="Delete">
+									[title]="PORTAL_BTN_TITLE_DELETE">
 									<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
 										<path
 											d="M2 3h8M5 3V2h2v1M4 3v7h4V3"

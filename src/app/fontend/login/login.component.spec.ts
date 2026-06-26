@@ -7,7 +7,7 @@ import { LoginComponent } from './login.component';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/utilities/app.utilities';
-import { CN, LOGIN_URL_DEFAULT_RETURN } from '../../common/app.constant';
+import { CN, LOGIN_URL_DEFAULT_RETURN } from '../../common/locale/locale.en';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 
 describe('LoginComponent', () => {

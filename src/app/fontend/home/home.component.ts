@@ -14,9 +14,19 @@ import {
 	COMPONENT_DESTROY,
 	HOME_MSG_INCREMENT_VISIT_FAILED,
 	HOME_MSG_LOAD_STATISTICS_FAILED,
+	HOME_EST_YEAR,
+	HOME_BRAND_SUBTITLE,
+	HOME_FLAVOUR_LINE_1,
+	HOME_FLAVOUR_LINE_2,
+	HOME_CHIP_PORTAL,
+	HOME_CHIP_RESONANCE,
+	HOME_CHIP_RECIPES,
+	HOME_CHIP_ENTERTAINMENT,
+	HOME_CHIP_REMINDER,
+	HOME_CHIP_DEBT_SONATA,
 	PORTAL_MSG_LOAD_CATEGORIES_FAILED,
 	TIMEOUT_KEY_HOME
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 import { OrbitalComponent } from './orbital/orbital.component';
 
 @Component({
@@ -28,6 +38,16 @@ import { OrbitalComponent } from './orbital/orbital.component';
 })
 export class HomeComponent implements OnInit, OnDestroy {
 	private readonly className = 'HomeComponent';
+	protected readonly HOME_EST_YEAR = HOME_EST_YEAR;
+	protected readonly HOME_BRAND_SUBTITLE = HOME_BRAND_SUBTITLE;
+	protected readonly HOME_FLAVOUR_LINE_1 = HOME_FLAVOUR_LINE_1;
+	protected readonly HOME_FLAVOUR_LINE_2 = HOME_FLAVOUR_LINE_2;
+	protected readonly HOME_CHIP_PORTAL = HOME_CHIP_PORTAL;
+	protected readonly HOME_CHIP_RESONANCE = HOME_CHIP_RESONANCE;
+	protected readonly HOME_CHIP_RECIPES = HOME_CHIP_RECIPES;
+	protected readonly HOME_CHIP_ENTERTAINMENT = HOME_CHIP_ENTERTAINMENT;
+	protected readonly HOME_CHIP_REMINDER = HOME_CHIP_REMINDER;
+	protected readonly HOME_CHIP_DEBT_SONATA = HOME_CHIP_DEBT_SONATA;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;

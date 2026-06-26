@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CTX_SEARCH_PLACEHOLDER } from '../../common/app.constant';
+import { CTX_SEARCH_PLACEHOLDER } from '../../common/locale/locale.en';
 
 /** A single item in the context menu. Set separator to true to render a divider before this item. */
 export interface ContextMenuAction {

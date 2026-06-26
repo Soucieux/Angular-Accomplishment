@@ -24,7 +24,7 @@ import {
 	NAV_NOTIF_LABEL_DISABLE,
 	NAV_NOTIF_LABEL_ENABLE,
 	NAV_NOTIF_TOGGLE_ERROR
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 import { NotificationService } from '../../backend/notification-service/notification.service';
 import { NavItem } from './bottom-nav.model';
 import { Utilities } from '../../common/utilities/app.utilities';

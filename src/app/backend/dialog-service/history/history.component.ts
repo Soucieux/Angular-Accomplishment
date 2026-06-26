@@ -19,8 +19,9 @@ import {
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
 	HISTORY_STYLE_ADDED,
-	HISTORY_STYLE_DELETED
-} from '../../../common/app.constant';
+	HISTORY_STYLE_DELETED,
+	HISTORY_SUBTITLE
+} from '../../../common/locale/locale.en';
 import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';
 import { HistoryEntry } from './history.model';
 
@@ -33,6 +34,7 @@ import { HistoryEntry } from './history.model';
 export class HistoryDialogComponent implements OnDestroy {
 	private readonly className = 'HistoryDialogComponent';
 	protected readonly HISTORY_DIALOG_TITLE = HISTORY_DIALOG_TITLE;
+	protected readonly HISTORY_SUBTITLE = HISTORY_SUBTITLE;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;

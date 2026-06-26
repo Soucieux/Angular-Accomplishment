@@ -29,7 +29,7 @@ import {
 	CLOUDBASE_ERROR_INVALID_CREDENTIALS,
 	CN,
 	MSG_UNEXPECTED_ERROR
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 import { AccountRateLimitedError } from '../../common/error/account-rate-limited.error';
 import { EmailNotVerifiedError } from '../../common/error/email-not-verified.error';
 import { InvalidEmailError } from '../../common/error/invalid-email.error';

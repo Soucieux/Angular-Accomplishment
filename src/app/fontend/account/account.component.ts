@@ -55,7 +55,7 @@ import {
 	STATS_FIELD_PASSWORD_CHANGED,
 	SUCCESS,
 	TOAST_WARN
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 import {
 	AccountMilestone,
 	AccountStat,

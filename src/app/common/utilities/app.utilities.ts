@@ -22,7 +22,7 @@ import {
 	RECIPE_CATEGORY_DESSERT,
 	RECIPE_CATEGORY_QUICK,
 	RECIPE_CATEGORY_WESTERN
-} from '../app.constant';
+} from '../locale/locale.en';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 
 @Injectable({ providedIn: 'root' })

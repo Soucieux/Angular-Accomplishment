@@ -32,7 +32,7 @@ import {
 	HOME_WEEK_AGENDA_DUE_HEADER_COLOR,
 	HOME_WEEK_AGENDA_EMPTY_TEXT,
 	HOME_WEEK_AGENDA_GRADIENT_TODAY
-} from '../../../common/app.constant';
+} from '../../../common/locale/locale.en';
 import { OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
 import { OrbitalStore } from './orbital.store';
 

@@ -2,7 +2,7 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { BehaviorSubject, ReplaySubject } from 'rxjs';
 import { skip } from 'rxjs/operators';
 
-import { ROLE_ADMIN } from '../../../common/app.constant';
+import { ROLE_ADMIN } from '../../../common/locale/locale.en';
 import { CloudbaseService } from './cloudbase.service';
 
 describe('CloudbaseService', () => {

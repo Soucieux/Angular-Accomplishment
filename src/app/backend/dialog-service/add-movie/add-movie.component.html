@@ -7,7 +7,7 @@
 	(onHide)="onDialogClosed()"
 	styleClass="add-dialog">
 	<ng-template #header><span class="add-dialog-title">{{ ENT_DIALOG_TITLE_ADD_MOVIE }}</span></ng-template>
-	<p class="dialog-subtitle">Enter either Name or ID to start searching</p>
+	<p class="dialog-subtitle">{{ ADD_MOVIE_SUBTITLE }}</p>
 	<div class="form-body-container">
 		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 			<div class="form-row">
@@ -67,7 +67,7 @@
 					(ngModelChange)="onNameAndYearChange()" />
 			</div>
 			<div class="form-row">
-				<label for="genres">Genre*</label>
+				<label for="genres">{{ ADD_MOVIE_LABEL_GENRE }}</label>
 				<p-select
 					[options]="genres"
 					name="genres"
@@ -92,7 +92,7 @@
 	<ng-template #footer>
 		<div class="favourite">
 			<p-checkBox inputId="favourite" [(ngModel)]="isFavourite" [binary]="true"></p-checkBox>
-			<label for="favourite">Favourite</label>
+			<label for="favourite">{{ ADD_MOVIE_LABEL_FAVOURITE }}</label>
 		</div>
 		<p-button
 			label="Search"

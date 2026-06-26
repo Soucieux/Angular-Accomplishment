@@ -42,7 +42,7 @@ import {
 	ENT_LOG_SEARCH_CANCEL_REQUESTED,
 	ENT_LOG_MOVIE_DETAILS_RETRIEVED,
 	ENT_LOG_UPDATE_FAVOURITE_FAILED
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { ENT_CORK_PIN_COLORS, ENT_CORK_ROTATIONS, MOVIE_GENRES } from './entertainment.model';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';

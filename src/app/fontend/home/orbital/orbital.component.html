@@ -10,7 +10,7 @@
 		<div class="orbital-ring-outer"></div>
 
 		<!-- Brand -->
-		<div class="orbital-brand">VISION CANVAS</div>
+		<div class="orbital-brand">{{ ORBITAL_BRAND_TITLE }}</div>
 
 		<!-- Greeting + date -->
 		<div class="orbital-greeting">
@@ -30,21 +30,21 @@
 					<span class="material-symbols-outlined">local_fire_department</span>
 					<div class="orbital-satellite-number">{{ activityStreak }}</div>
 				</div>
-				<div class="orbital-satellite-label">Streak</div>
+				<div class="orbital-satellite-label">{{ ORBITAL_LABEL_STREAK }}</div>
 			</div>
 			<div class="orbital-satellite">
 				<div class="orbital-satellite-disc">
 					<span class="material-symbols-outlined">note_stack</span>
 					<div class="orbital-satellite-number">{{ patchNotesCount }}</div>
 				</div>
-				<div class="orbital-satellite-label">Patch</div>
+				<div class="orbital-satellite-label">{{ ORBITAL_LABEL_PATCH }}</div>
 			</div>
 			<div class="orbital-satellite">
 				<div class="orbital-satellite-disc">
 					<span class="material-symbols-outlined">format_quote</span>
 					<div class="orbital-satellite-number">{{ stats.totalQuotes ?? 0 }}</div>
 				</div>
-				<div class="orbital-satellite-label">Voices</div>
+				<div class="orbital-satellite-label">{{ ORBITAL_LABEL_VOICES }}</div>
 			</div>
 			<div
 				class="orbital-satellite"
@@ -54,7 +54,7 @@
 					<span class="material-symbols-outlined">trending_up</span>
 					<div class="orbital-satellite-number">{{ addedThisWeek }}</div>
 				</div>
-				<div class="orbital-satellite-label">This Week</div>
+				<div class="orbital-satellite-label">{{ ORBITAL_LABEL_THIS_WEEK }}</div>
 			</div>
 		</div>
 
@@ -64,7 +64,7 @@
 				<div class="orbital-core-content">
 					<div class="orbital-hour-minute">{{ d.hourMinute() }}</div>
 					<div class="orbital-seconds">{{ d.seconds() }}</div>
-					<div class="orbital-core-label">LIFE CLOCK</div>
+					<div class="orbital-core-label">{{ ORBITAL_LABEL_LIFE_CLOCK }}</div>
 				</div>
 			</div>
 
@@ -133,7 +133,7 @@
 				<span
 					class="orbital-panel-header-title orbital-panel-header-nav"
 					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_REMINDER)"
-					>Reminders</span
+					>{{ ORBITAL_LABEL_REMINDERS }}</span
 				>
 				<span
 					class="orbital-panel-header-badge"
@@ -172,13 +172,13 @@
 				<span
 					class="orbital-panel-header-title orbital-panel-header-nav"
 					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_PORTAL)"
-					>Shortcuts</span
+					>{{ ORBITAL_LABEL_SHORTCUTS }}</span
 				>
 				<span class="orbital-panel-header-badge">{{ links.length }}</span>
 			</div>
 			<div class="orbital-panel-scroll">
 				@if (links.length === 0) {
-					<div class="orbital-panel-empty">No links yet</div>
+					<div class="orbital-panel-empty">{{ ORBITAL_PANEL_EMPTY_LINKS }}</div>
 				} @else {
 					@for (link of links; track link._id) {
 						<div class="orbital-saved-link-row" (click)="openLink(link)">
@@ -206,7 +206,7 @@
 				<span
 					class="orbital-panel-header-title orbital-panel-header-nav"
 					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_DEBT)"
-					>Debt Sonata</span
+					>{{ ORBITAL_LABEL_DEBT_SONATA }}</span
 				>
 				<span
 					class="orbital-panel-header-badge"
@@ -216,7 +216,7 @@
 			</div>
 			<div class="orbital-panel-scroll">
 				@if (debtRows.length === 0) {
-					<div class="orbital-panel-empty">No upcoming payments</div>
+					<div class="orbital-panel-empty">{{ ORBITAL_PANEL_EMPTY_PAYMENTS }}</div>
 				} @else {
 					@for (debt of debtRows; track debt.id) {
 						<div class="orbital-debt-bar-row">
@@ -255,13 +255,13 @@
 				<span
 					class="orbital-panel-header-title orbital-panel-header-nav"
 					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT)"
-					>Entertainment</span
+					>{{ ORBITAL_LABEL_ENTERTAINMENT }}</span
 				>
 				<span class="orbital-panel-header-badge">{{ stats.totalFilms ?? 0 }}</span>
 			</div>
 			<div class="orbital-panel-scroll">
 				@if (genreBars.length === 0) {
-					<div class="orbital-panel-empty">No genre data yet</div>
+					<div class="orbital-panel-empty">{{ ORBITAL_PANEL_EMPTY_GENRES }}</div>
 				} @else {
 					@for (bar of genreBars; track bar.label) {
 						<div class="orbital-entertainment-bar-row">
@@ -286,13 +286,13 @@
 				<span
 					class="orbital-panel-header-title orbital-panel-header-nav"
 					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_RECIPE)"
-					>Recipes</span
+					>{{ ORBITAL_LABEL_RECIPES }}</span
 				>
 				<span class="orbital-panel-header-badge">{{ stats.totalRecipes ?? 0 }}</span>
 			</div>
 			<div class="orbital-panel-scroll">
 				@if (recipeRows.length === 0) {
-					<div class="orbital-panel-empty">No recipes yet</div>
+					<div class="orbital-panel-empty">{{ ORBITAL_PANEL_EMPTY_RECIPES }}</div>
 				} @else {
 					@for (recipe of recipeRows; track recipe.id) {
 						<div class="orbital-recipe-row">
@@ -318,7 +318,7 @@
 		<div class="orbital-glass orbital-activity">
 			<div class="orbital-panel-header">
 				<span class="material-symbols-outlined orbital-panel-header-icon">history</span>
-				<span class="orbital-panel-header-title">Activity</span>
+				<span class="orbital-panel-header-title">{{ ORBITAL_LABEL_ACTIVITY }}</span>
 			</div>
 			<div class="orbital-panel-scroll">
 				@for (activity of activityRows; track activity.timestamp) {

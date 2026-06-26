@@ -29,7 +29,7 @@ import {
 	MSG_UNEXPECTED_ERROR,
 	RETRY_DIALOG_MSG,
 	SEARCH
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 import { MessageService } from 'primeng/api';
 import { IngredientDialogComponent } from './ingredient/ingredient.component';
 import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';

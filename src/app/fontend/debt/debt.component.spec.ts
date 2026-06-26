@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, BehaviorSubject, ReplaySubject } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
-import { DEBT_CURRENCY_CNY, DEBT_VALUE_KEY_CURRENCY } from '../../common/app.constant';
+import { DEBT_CURRENCY_CNY, DEBT_VALUE_KEY_CURRENCY } from '../../common/locale/locale.en';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';

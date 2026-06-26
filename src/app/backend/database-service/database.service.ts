@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../fontend/recipe/recipe.model';
 import { InjectionToken } from '@angular/core';
-import { NO_RATE } from '../../common/app.constant';
+import { NO_RATE } from '../../common/locale/locale.en';
 import type cloudbase from '@cloudbase/js-sdk';
 import type { Auth } from 'firebase/auth';
 import type { Database } from 'firebase/database';

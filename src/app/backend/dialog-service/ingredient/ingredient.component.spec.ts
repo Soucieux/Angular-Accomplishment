@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RECIPE_EDITOR_TYPE_MAX, RECIPE_ITYPE_MEAT, RECIPE_ITYPE_VEGETABLE } from '../../../common/app.constant';
+import { RECIPE_EDITOR_TYPE_MAX, RECIPE_ITYPE_MEAT, RECIPE_ITYPE_VEGETABLE } from '../../../common/locale/locale.en';
 import { IngredientType } from '../../../fontend/recipe/recipe.model';
 import { IngredientDialogComponent } from './ingredient.component';
 

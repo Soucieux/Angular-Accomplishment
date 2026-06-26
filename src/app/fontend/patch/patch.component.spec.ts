@@ -9,7 +9,7 @@ import {
 	STATUS_IN_PROGRESS,
 	STATUS_RESOLVED,
 	STATUS_TODO
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { PatchComponent } from './patch.component';
 

@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ViewContainerRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
-import { DIALOG_CONFIRM } from '../../common/app.constant';
+import { DIALOG_CONFIRM } from '../../common/locale/locale.en';
 import { DialogService } from './dialog.service';
 
 describe('DialogService', () => {

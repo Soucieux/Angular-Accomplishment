@@ -42,7 +42,7 @@ import {
 	TODAY_TRACKING_VIRTUAL_ID,
 	MOBILE_BLOCKED_TITLE,
 	MOBILE_BLOCKED_BODY
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 import {
 	BLOCK_MIN_HEIGHT_PX,

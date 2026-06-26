@@ -10,7 +10,7 @@ import {
 	NOTIF_SEND_FAILED,
 	NOTIF_SUBSCRIBE_FAILED,
 	NOTIF_UNSUBSCRIBE_FAILED
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {

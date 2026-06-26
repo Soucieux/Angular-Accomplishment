@@ -6,7 +6,7 @@ import { AuthService } from '../../backend/authentication-service/auth.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import { ResonanceComponent } from './resonance.component';
-import { RESONANCE_MAX_QUOTE_LENGTH } from '../../common/app.constant';
+import { RESONANCE_MAX_QUOTE_LENGTH } from '../../common/locale/locale.en';
 
 describe('ResonanceComponent', () => {
 	let component: ResonanceComponent;

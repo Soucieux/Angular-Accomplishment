@@ -2,7 +2,7 @@
 	<div class="glass-card container-patch">
 		<div class="page-header-row">
 			<div class="page-header">
-				<div class="eyebrow">Progress Tracker</div>
+				<div class="eyebrow">{{ PATCH_EYEBROW }}</div>
 				<h1 class="page-title">
 					{{
 						currentView === PATCH_VIEW_PATCH ? PATCH_LABEL_PATCH_NOTES : PATCH_LABEL_RELEASE_NOTES
@@ -44,7 +44,7 @@
 					<span class="material-symbols-outlined">search</span>
 					<input
 						type="text"
-						placeholder="Search patch notes…"
+						[placeholder]="PATCH_PLACEHOLDER_SEARCH"
 						[(ngModel)]="searchQuery"
 						(ngModelChange)="t.filterGlobal($event, 'contains')" />
 				</label>
@@ -88,9 +88,9 @@
 				(onFilter)="onTableFilter()">
 				<ng-template pTemplate="header">
 					<tr>
-						<th class="component">Component</th>
-						<th class="element">Element</th>
-						<th class="details">Details</th>
+						<th class="component">{{ PATCH_TABLE_HEADER_COMPONENT }}</th>
+						<th class="element">{{ PATCH_TABLE_HEADER_ELEMENT }}</th>
+						<th class="details">{{ PATCH_TABLE_HEADER_DETAILS }}</th>
 						<th class="status">
 							Status
 							<p-columnFilter
@@ -130,8 +130,8 @@
 								</ng-template>
 							</p-columnFilter>
 						</th>
-						<th class="timestamp">TimeStamp</th>
-						<th class="edit-button hide-on-narrow-or-mobile">Edit</th>
+						<th class="timestamp">{{ PATCH_TABLE_HEADER_TIMESTAMP }}</th>
+						<th class="edit-button hide-on-narrow-or-mobile">{{ PATCH_TABLE_HEADER_EDIT }}</th>
 					</tr>
 				</ng-template>
 				<ng-template pTemplate="loadingbody">
@@ -153,7 +153,7 @@
 						<td [attr.colspan]="isNarrowViewport ? 5 : 6">
 							<div class="empty-state">
 								<span class="material-symbols-outlined empty-icon">note_stack</span>
-								<p>No patch notes match your search</p>
+								<p>{{ PATCH_EMPTY_SEARCH }}</p>
 							</div>
 						</td>
 					</tr>
@@ -419,7 +419,7 @@
 						</div>
 					</section>
 					@if (notes.length > 1) {
-						<div class="previous-label">Previous releases</div>
+						<div class="previous-label">{{ PATCH_LABEL_PREVIOUS_RELEASES }}</div>
 						<div class="release-list">
 							@for (rel of notes.slice(1); track rel.version) {
 								<div class="release-row">

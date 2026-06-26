@@ -1,4 +1,6 @@
-////////////////////// Below are shared user-facing messages /////////////////////////
+/* ─────────────────────────────────────────
+   Shared user-facing messages
+───────────────────────────────────────── */
 
 /** Confirmation message shown when the user attempts to sign out. */
 export const MSG_LOGOUT_CONFIRM = 'Are you sure you want to sign out?';
@@ -41,12 +43,13 @@ export const NOTIF_ENABLED_TITLE = 'Notifications enabled';
 /** Notification body shown when the user enables push notifications. */
 export const NOTIF_ENABLED_BODY = 'You will now receive notifications from Vision Canvas.';
 
-////////////////////// Below are toast severity string constants //////////////////////
+/* ─────────────────────────────────────────
+   Toast severity strings
+───────────────────────────────────────── */
 
 export const TOAST_INFO = 'info';
 export const TOAST_WARN = 'warn';
 export const TOAST_ERROR = 'error';
-export const SEVERITY_SUCCESS = 'success';
 export const SEVERITY_DANGER = 'danger';
 export const SEVERITY_SECONDARY = 'secondary';
 export const PATCH_SEVERITY_ICON_TODO = 'pi pi-clock';
@@ -55,7 +58,9 @@ export const PATCH_SEVERITY_ICON_COMPLETED = 'pi pi-verified';
 export const PATCH_SEVERITY_ICON_DEBUG = 'pi pi-exclamation-circle';
 export const PATCH_SEVERITY_ICON_DRAFT = 'pi pi-file-edit';
 
-////////////////////// Below are dialog type discriminator constants /////////////////
+/* ─────────────────────────────────────────
+   Dialog type discriminators
+───────────────────────────────────────── */
 
 /** Dialog type for a yes/no confirmation prompt. */
 export const DIALOG_CONFIRM = 'confirm';
@@ -82,7 +87,9 @@ export const DIALOG_DELETE_ACCOUNT = 'delete-account';
 /** Dialog type for the add/edit category dialog on the Portal page. */
 export const DIALOG_CATEGORY = 'category';
 
-////////////////////// Below are history dialog and style string constants ///////////
+/* ─────────────────────────────────────────
+   History dialog constants
+───────────────────────────────────────── */
 
 /** History-entry status when a movie is added — appears in the history message text. */
 export const HISTORY_STATUS_ADDED = 'added';
@@ -93,12 +100,15 @@ export const HISTORY_DIALOG_UNDO_BTN = 'Undo';
 export const HISTORY_DIALOG_TITLE = 'Activities';
 /** Sentinel movie ID string used when a history entry has no valid numeric ID. */
 export const HISTORY_MOVIE_ID_UNKNOWN = 'unknown';
+export const HISTORY_SUBTITLE = 'Click on a deleted entry to recover it';
 /** Inline border style for an "added" history entry. */
 export const HISTORY_STYLE_ADDED = 'solid green';
 /** Inline border style for a "deleted" history entry. */
 export const HISTORY_STYLE_DELETED = 'solid red';
 
-////////////////////// Below are application lifecycle constants //////////////////////
+/* ─────────────────────────────────────────
+   Application lifecycle constants
+───────────────────────────────────────── */
 
 /** Layout breakpoint for compact overlay nav: below this width the drawer switches to overlay mode. */
 export const APP_BREAKPOINT_COMPACT = 1300;
@@ -134,7 +144,9 @@ export const KEY_ENTER = 'Enter';
 /** DOM keyboard event key value for the Escape key. */
 export const KEY_ESCAPE = 'Escape';
 
-////////////////////// Below are auth and login constants ////////////////////////////
+/* ─────────────────────────────────────────
+   Auth and login constants
+───────────────────────────────────────── */
 
 export const LOGIN_MSG_SEND_CODE_FAILED = 'Failed to send verification code';
 /* Stored in localStorage to avoid the Access Denied flicker on page refresh.
@@ -152,6 +164,21 @@ export const NAV_AVATAR_GRADIENT = 'linear-gradient(135deg,#d53369,#daae51)';
 export const NAV_NOTIF_LABEL_ENABLE = 'Enable notifications';
 export const NAV_NOTIF_LABEL_DISABLE = 'Disable notifications';
 export const NAV_NOTIF_TOGGLE_ERROR = 'Error toggling push notification';
+export const NAV_LABEL_MENU = 'Menu';
+export const NAV_LABEL_HOME = 'Home';
+export const NAV_LABEL_TODAY = 'Today';
+export const NAV_LABEL_PORTAL = 'Portal';
+export const NAV_LABEL_RESONANCE = 'Resonance';
+export const NAV_LABEL_RECIPES = 'Recipes';
+export const NAV_LABEL_ENTERTAINMENT = 'Entertainment';
+export const NAV_LABEL_REMINDER = 'Reminder';
+export const NAV_LABEL_DEBT_SONATA = 'Debt Sonata';
+export const NAV_LABEL_PATCH_NOTES = 'Patch Notes';
+export const NAV_LABEL_ABOUT = 'About';
+export const NAV_LABEL_SIGN_OUT = 'Sign out';
+export const NAV_LABEL_SIGN_IN = 'Sign in';
+export const NAV_STATUS_ONLINE = 'Online';
+export const NAV_STATUS_OFFLINE = 'Offline';
 export const LOGIN_URL_DEFAULT_RETURN = '/';
 export const LOGIN_ANIM_OUT = 'out';
 export const LOGIN_ANIM_IN = 'in';
@@ -173,6 +200,19 @@ export const LOGIN_LABEL_FORGOT_PASSWORD = 'Forgot password?';
 export const LOGIN_LABEL_SEND_RESET_CODE = 'Send reset code';
 export const LOGIN_LABEL_RESET_PASSWORD = 'Reset password';
 export const LOGIN_LABEL_BACK_TO_SIGN_IN = 'Back to sign in';
+export const LOGIN_FLAVOUR_TEXT = 'Welcome back to the hidden kingdom';
+export const LOGIN_LABEL_EMAIL = 'Email';
+export const LOGIN_MSG_EMAIL_REQUIRED = 'Email is required.';
+export const LOGIN_MSG_EMAIL_INVALID = 'Enter a valid email address.';
+export const LOGIN_LABEL_CODE = 'Code';
+export const LOGIN_MSG_CODE_REQUIRED = 'Verification code is required.';
+export const LOGIN_LABEL_NEW_PASSWORD = 'New password';
+export const LOGIN_MSG_PASSWORD_REQUIRED = 'Password is required.';
+export const LOGIN_LABEL_USERNAME = 'Username';
+export const LOGIN_MSG_USERNAME_REQUIRED = 'Username is required.';
+export const LOGIN_LABEL_PASSWORD = 'Password';
+export const LOGIN_LABEL_DIVIDER = 'or';
+export const LOGIN_BTN_GOOGLE = 'Continue with Google';
 /** CloudBase role string that identifies an admin user. */
 export const ROLE_ADMIN = 'administrator';
 /** CloudBase error code for an invalid request argument (e.g. wrong verification code). */
@@ -181,7 +221,9 @@ export const CLOUDBASE_ERROR_INVALID_ARGUMENT = 'invalid_argument';
 export const CLOUDBASE_ERROR_INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
 export const ERROR_NO_DOCUMENT_UPDATED = 'No document was updated';
 
-////////////////////// Below are database collection name constants ///////////////////
+/* ─────────────────────────────────────────
+   Database collection names
+───────────────────────────────────────── */
 
 export const DATABASE_HISTORY = 'history';
 export const DATABASE_MOVIES = 'movies';
@@ -199,7 +241,9 @@ export const DATABASE_USEFUL_LINKS = 'useful_links';
 /** Per-user preferences stored as a keyed object under each user's uid (Firebase path). */
 export const DATABASE_USER_PREFERENCES = 'preferences';
 
-////////////////////// Below are shared UI constants /////////////////////////////////
+/* ─────────────────────────────────────────
+   Shared UI constants
+───────────────────────────────────────── */
 
 // Layout responsive breakpoints
 export const BREAKPOINT_MOBILE = '(max-width: 800px)';
@@ -211,7 +255,9 @@ export const FAILURE = 'failure';
 /** Window target for opening links in a new browser tab. */
 export const LINK_TARGET_BLANK = '_blank';
 
-////////////////////// Below are activity log type discriminator constants ////////////
+/* ─────────────────────────────────────────
+   Activity log type discriminators
+───────────────────────────────────────── */
 
 /* Type discriminators written into activity-log entries across all pages.
    Use HISTORY_STATUS_ADDED / HISTORY_STATUS_DELETED for 'added' / 'deleted'. */
@@ -240,7 +286,9 @@ export const ACTIVITY_SOURCE_RECIPE = 'recipe';
 export const ACTIVITY_SOURCE_DEFAULT = 'default';
 export const ACTIVITY_SOURCE_DATE_CALCULATOR = 'date_calculator';
 
-////////////////////// Below are statistics document field name constants /////////////
+/* ─────────────────────────────────────────
+   Statistics field names
+───────────────────────────────────────── */
 
 /* Single source of truth for every key read from or written to the statistics
    document. Use these constants everywhere — never inline the raw string. */
@@ -266,14 +314,18 @@ export const STATS_FIELD_PASSWORD_CHANGED = 'passwordChangedDate';
 /** Boolean flag stored on the per-user stats document — true when Tauri desktop notifications are enabled. */
 export const STATS_FIELD_TAURI_NOTIF_ENABLED = 'tauriNotifEnabled';
 
-////////////////////// Below are statistics display cap constants /////////////////////
+/* ─────────────────────────────────────────
+   Statistics display caps
+───────────────────────────────────────── */
 
 /* All list-based stat arrays (recentActivities, reminderUpcoming, debtUpcoming,
    recipeList) are capped at this many items on every write. Counters (totalReminders,
    totalDebts, totalRecipes) are always the uncapped true total. */
 export const STATS_CAP_ACTIVITY_LOG = 20;
 
-////////////////////// Below are home page constants /////////////////////////////////
+/* ─────────────────────────────────────────
+   Home page constants
+───────────────────────────────────────── */
 
 export const HOME_MSG_LOAD_STATISTICS_FAILED = 'Failed to load statistics';
 export const HOME_MSG_INCREMENT_VISIT_FAILED = 'Failed to increment link visit';
@@ -429,6 +481,16 @@ export const HOME_ACTIVITY_FOOTER_ZH = '往日已成历史';
 export const HOME_ACTIVITY_FOOTER_EN = 'Yesterday is history';
 /** Tooltip shown on the Streak satellite on the orbital dashboard. */
 export const HOME_SATELLITE_TOOLTIP_STREAK = 'Consecutive days with at least one activity logged';
+export const HOME_EST_YEAR = 'EST. 2024';
+export const HOME_BRAND_SUBTITLE = 'A PERSONAL INNER WORLD';
+export const HOME_FLAVOUR_LINE_1 = 'Some memories are worth keeping.';
+export const HOME_FLAVOUR_LINE_2 = 'So I made a place to keep them.';
+export const HOME_CHIP_PORTAL = 'PORTAL';
+export const HOME_CHIP_RESONANCE = 'RESONANCE';
+export const HOME_CHIP_RECIPES = 'RECIPES';
+export const HOME_CHIP_ENTERTAINMENT = 'ENTERTAINMENT';
+export const HOME_CHIP_REMINDER = 'REMINDER';
+export const HOME_CHIP_DEBT_SONATA = 'DEBT SONATA';
 /** Number of days within which a reminder or debt item triggers the urgency strip. */
 export const ORBITAL_URGENCY_WINDOW_DAYS = 3;
 /** Type discriminator for reminder chips in the urgency strip. */
@@ -447,12 +509,33 @@ export const ORBITAL_URGENCY_LABEL_REMINDERS = 'reminders';
 export const ORBITAL_URGENCY_LABEL_DEBTS = 'debts';
 /** Appended after the closest due date when multiple items have different due dates in the urgency strip. */
 export const ORBITAL_URGENCY_LABEL_VARIOUS = 'Various';
+export const ORBITAL_BRAND_TITLE = 'VISION CANVAS';
+export const ORBITAL_LABEL_STREAK = 'Streak';
+export const ORBITAL_LABEL_PATCH = 'Patch';
+export const ORBITAL_LABEL_VOICES = 'Voices';
+export const ORBITAL_LABEL_THIS_WEEK = 'This Week';
+export const ORBITAL_LABEL_LIFE_CLOCK = 'LIFE CLOCK';
+export const ORBITAL_LABEL_REMINDERS = 'Reminders';
+export const ORBITAL_LABEL_SHORTCUTS = 'Shortcuts';
+export const ORBITAL_LABEL_DEBT_SONATA = 'Debt Sonata';
+export const ORBITAL_LABEL_ENTERTAINMENT = 'Entertainment';
+export const ORBITAL_LABEL_RECIPES = 'Recipes';
+export const ORBITAL_LABEL_ACTIVITY = 'Activity';
+export const ORBITAL_PANEL_EMPTY_LINKS = 'No links yet';
+export const ORBITAL_PANEL_EMPTY_PAYMENTS = 'No upcoming payments';
+export const ORBITAL_PANEL_EMPTY_GENRES = 'No genre data yet';
+export const ORBITAL_PANEL_EMPTY_RECIPES = 'No recipes yet';
 
-////////////////////// Below are entertainment page constants ////////////////////////
+/* ─────────────────────────────────────────
+   Entertainment page constants
+───────────────────────────────────────── */
 
 /** Prefix for the delete-movie confirm message; movie name is appended at the call site. */
 export const ENT_MSG_DELETE_CONFIRM_PREFIX = 'Are you sure you want to delete ';
 export const ENT_DIALOG_TITLE_ADD_MOVIE = 'Add New Movie';
+export const ADD_MOVIE_SUBTITLE = 'Enter either Name or ID to start searching';
+export const ADD_MOVIE_LABEL_GENRE = 'Genre*';
+export const ADD_MOVIE_LABEL_FAVOURITE = 'Favourite';
 export const ENT_DIALOG_TITLE_SEARCH = 'Searching latest rate for each movie...';
 export const ENT_DIALOG_TITLE_DELETE_MOVIE = 'Delete Movie';
 export const ENT_MSG_LOADING = 'Loading movies...';
@@ -500,7 +583,9 @@ export const NO_RATE = '-1';
 export const RATE_DECREASED = 'decreased';
 export const RATE_INCREASED = 'increased';
 
-////////////////////// Below are Resonance page constants ////////////////////////////
+/* ─────────────────────────────────────────
+   Resonance page constants
+───────────────────────────────────────── */
 
 export const RESONANCE_MSG_DELETE_CONFIRM = 'Are you sure you want to delete this quote?';
 export const RESONANCE_DIALOG_TITLE_DELETE = 'Delete Quote';
@@ -510,8 +595,17 @@ export const RESONANCE_LABEL_VOICES = 'voices';
 /** Maximum character count allowed for a new quote submission. */
 export const RESONANCE_MAX_QUOTE_LENGTH = 500;
 export const RESONANCE_SKELETON_COUNT = 6;
+export const RESONANCE_TITLE_PAGE = 'Resonance';
+export const RESONANCE_SUBTITLE = 'A quiet refuge where every word finds its power';
+export const RESONANCE_PLACEHOLDER_QUOTE = 'Write something worth remembering...';
+export const RESONANCE_PLACEHOLDER_NAME = 'Your name (optional)';
+export const RESONANCE_BTN_POST = 'Post';
+export const RESONANCE_EMPTY_TEXT = 'No voices yet. Yours could be the first to resonate.';
+export const RESONANCE_ARIA_DELETE = 'Delete quote';
 
-////////////////////// Below are recipe page constants ///////////////////////////////
+/* ─────────────────────────────────────────
+   Recipe page constants
+───────────────────────────────────────── */
 
 /** Confirm-discard title shown when the user clicks Cancel on the add-recipe screen. */
 export const RECIPE_DISCARD_TITLE = 'Discard Recipe';
@@ -557,7 +651,9 @@ export const RECIPE_CATEGORY_DESSERT = 'Dessert';
 export const RECIPE_ITYPE_VEGETABLE = 'veg';
 export const RECIPE_ITYPE_MEAT = 'meat';
 
-////////////////////// Below are recipe band CSS class name constants ////////////////
+/* ─────────────────────────────────────────
+   Recipe band CSS classes
+───────────────────────────────────────── */
 
 /* Each band pairs with a RECIPE_CATEGORY_* constant above and a full CSS
    section in recipe.component.css.  When adding a new band:
@@ -584,8 +680,26 @@ export const RECIPE_PAGE_SIZE = 8;
 export const RECIPE_ROWS_PER_PAGE = 5;
 /** Maximum number of ingredient type tabs shown in the add/edit editor. */
 export const RECIPE_EDITOR_TYPE_MAX = 9;
+export const RECIPE_EYEBROW = 'Personal Cookbook';
+export const RECIPE_TITLE_PAGE = 'Recipes';
+export const RECIPE_SUBTITLE = 'Your personal cookbook';
+export const RECIPE_PLACEHOLDER_SEARCH = 'Search recipes…';
+export const RECIPE_EMPTY_SEARCH = 'No recipes match your search';
+export const RECIPE_BTN_VIEW = 'View Recipe →';
+export const RECIPE_ARIA_DEC_SERVINGS = 'decrease servings';
+export const RECIPE_ARIA_INC_SERVINGS = 'increase servings';
+export const RECIPE_PLACEHOLDER_TITLE = 'Untitled recipe…';
+export const RECIPE_PLACEHOLDER_INGREDIENT = 'Ingredient name';
+export const RECIPE_PLACEHOLDER_QTY = 'qty';
+export const RECIPE_PLACEHOLDER_UNIT = 'unit *';
+export const RECIPE_SUFFIX_MIN = 'min';
+export const RECIPE_SUFFIX_SERVINGS = 'servings';
+export const INGREDIENT_BTN_CANCEL = 'Cancel';
+export const INGREDIENT_BTN_APPLY = 'Apply';
 
-////////////////////// Below are Portal page constants ////////////////////////////////
+/* ─────────────────────────────────────────
+   Portal page constants
+───────────────────────────────────────── */
 
 export const PORTAL_MSG_LINK_UPDATED = 'Link updated';
 export const PORTAL_MSG_LINK_SAVED = 'Link saved';
@@ -692,8 +806,27 @@ export const MULTI_LINK_LABEL_ARROW = '→';
 export const PORTAL_MSG_MULTI_LINK_SAVED = 'Links saved';
 export const PORTAL_MSG_SAVING_LINKS = 'Saving links...';
 export const PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL = 'Could not save the links. Please try again.';
+export const PORTAL_TITLE_PAGE = 'Portal';
+export const PORTAL_SUBTITLE = 'Your links & resources command center';
+export const PORTAL_LABEL_DATE_CALCULATOR = 'Date Calculator';
+export const PORTAL_TABLE_HEADER_FIRST = 'First';
+export const PORTAL_TABLE_HEADER_SECOND = 'Second';
+export const PORTAL_TABLE_HEADER_THIRD = 'Third';
+export const PORTAL_TABLE_HEADER_FOURTH = 'Fourth';
+export const PORTAL_BTN_TITLE_EDIT_CATEGORY = 'Edit category';
+export const PORTAL_BTN_TITLE_NEW_CATEGORY = 'New category';
+export const PORTAL_BTN_TITLE_EDIT = 'Edit';
+export const PORTAL_BTN_TITLE_DELETE = 'Delete';
+export const ADD_LINK_LABEL_URL = 'URL *';
+export const ADD_LINK_PLACEHOLDER_URL = 'https://example.com';
+export const ADD_LINK_LABEL_LOADING = 'fetching…';
+export const ADD_LINK_PLACEHOLDER_NAME = 'My favourite resource';
+export const ADD_LINK_LABEL_CATEGORY = 'Category *';
+export const ADD_LINK_PLACEHOLDER_CATEGORY = 'Select a category';
 
-////////////////////// Below are Reminder page constants /////////////////////////////
+/* ─────────────────────────────────────────
+   Reminder page constants
+───────────────────────────────────────── */
 
 /** Confirmation message shown before deleting a reminder entry. */
 export const REMINDER_MSG_DELETE_CONFIRM = 'Proceed with deleting this entry?\nThis cannot be undone.';
@@ -766,6 +899,7 @@ export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
 export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;
 /** Label for the chip that opens the free-text custom tag input. */
 export const REMINDER_CHIP_CUSTOM = 'Custom';
+export const REMINDER_TITLE_PAGE = 'Reminder';
 /** Title for push notifications sent when a reminder is due in 3 days. */
 export const REMINDER_NOTIF_TITLE_3DAY = 'Due in 3 days';
 /** Title for push notifications sent when a reminder is due today. */
@@ -789,7 +923,9 @@ export const NOTIF_SUBSCRIBE_FAILED = 'Failed to persist notification subscripti
 /** Error message logged when the unsubscribe DB write fails. */
 export const NOTIF_UNSUBSCRIBE_FAILED = 'Failed to persist notification unsubscription';
 
-////////////////////// Below are Debt Sonata page constants //////////////////////////
+/* ─────────────────────────────────────────
+   Debt Sonata page constants
+───────────────────────────────────────── */
 
 export const DEBT_SKELETON_COUNT = 6;
 export const DEBT_DIALOG_TITLE = 'New debt';
@@ -858,8 +994,27 @@ export const DEBT_DUE_CLASS_OVERDUE = 'is-over';
 export const DEBT_DUE_CLASS_SOON = 'is-soon';
 export const DEBT_DUE_ICON_OVERDUE = 'error';
 export const DEBT_DUE_ICON_DEFAULT = 'event';
+export const DEBT_TITLE_PAGE = 'Debt Sonata';
+export const DEBT_SUBTITLE = 'Where every repayment is a brushstroke — and a closing line.';
+export const DEBT_STAT_LABEL_TOTAL = 'TOTAL DEBT';
+export const DEBT_STAT_LABEL_DEBTS = 'DEBTS';
+export const DEBT_STAT_LABEL_ACTIVE = 'ACTIVE';
+export const DEBT_STAT_LABEL_PAID_OFF = 'PAID OFF';
+export const DEBT_STAT_LABEL_DUE_SOON = 'DUE SOON';
+export const DEBT_STAT_LABEL_OVERDUE = 'OVERDUE';
+export const DEBT_STAT_LABEL_PAYMENTS = 'PAYMENTS';
+export const DEBT_HEADING_YOUR_DEBTS = 'Your debts';
+export const DEBT_RIBBON_PAID_OFF = 'PAID OFF';
+export const DEBT_HISTORY_EMPTY = 'No payments yet — chip away at it above.';
+export const ADD_DEBT_LABEL_NAME = 'Name';
+export const ADD_DEBT_LABEL_CATEGORY = 'Category';
+export const ADD_DEBT_LABEL_AMOUNT = 'Amount';
+export const ADD_DEBT_LABEL_CURRENCY = 'Currency';
+export const ADD_DEBT_LABEL_DUE_DATE = 'Due date';
 
-////////////////////// Below are patch notes page constants //////////////////////////
+/* ─────────────────────────────────────────
+   Patch Notes page constants
+───────────────────────────────────────── */
 
 export const PATCH_MSG_DELETE_CONFIRM = 'Proceed with deleting this note?';
 
@@ -879,6 +1034,15 @@ export const PATCH_SUBTITLE_PATCH_NOTES = 'Development history and open items';
 export const PATCH_SUBTITLE_RELEASE_NOTES = 'Published versions and release history';
 export const PATCH_VIEW_PATCH = 'patch';
 export const PATCH_VIEW_RELEASE = 'release';
+export const PATCH_EYEBROW = 'Progress Tracker';
+export const PATCH_PLACEHOLDER_SEARCH = 'Search patch notes…';
+export const PATCH_TABLE_HEADER_COMPONENT = 'Component';
+export const PATCH_TABLE_HEADER_ELEMENT = 'Element';
+export const PATCH_TABLE_HEADER_DETAILS = 'Details';
+export const PATCH_TABLE_HEADER_TIMESTAMP = 'TimeStamp';
+export const PATCH_TABLE_HEADER_EDIT = 'Edit';
+export const PATCH_EMPTY_SEARCH = 'No patch notes match your search';
+export const PATCH_LABEL_PREVIOUS_RELEASES = 'Previous releases';
 
 /* ─────────────────────────────────────────
    Context menu

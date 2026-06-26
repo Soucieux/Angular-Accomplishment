@@ -32,8 +32,15 @@ import {
 	RESONANCE_MSG_POSTED,
 	RESONANCE_LABEL_VOICES,
 	RESONANCE_MAX_QUOTE_LENGTH,
-	RESONANCE_SKELETON_COUNT
-} from '../../common/app.constant';
+	RESONANCE_SKELETON_COUNT,
+	RESONANCE_TITLE_PAGE,
+	RESONANCE_SUBTITLE,
+	RESONANCE_PLACEHOLDER_QUOTE,
+	RESONANCE_PLACEHOLDER_NAME,
+	RESONANCE_BTN_POST,
+	RESONANCE_EMPTY_TEXT,
+	RESONANCE_ARIA_DELETE
+} from '../../common/locale/locale.en';
 import { LOG } from '../../common/app.logs';
 import { RESONANCE_GRADIENTS, QuoteRecord } from './resonance.model';
 
@@ -63,6 +70,13 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	protected readonly RESONANCE_MSG_POSTED = RESONANCE_MSG_POSTED;
 	protected readonly RESONANCE_LABEL_VOICES = RESONANCE_LABEL_VOICES;
 	protected readonly RESONANCE_MAX_QUOTE_LENGTH = RESONANCE_MAX_QUOTE_LENGTH;
+	protected readonly RESONANCE_TITLE_PAGE = RESONANCE_TITLE_PAGE;
+	protected readonly RESONANCE_SUBTITLE = RESONANCE_SUBTITLE;
+	protected readonly RESONANCE_PLACEHOLDER_QUOTE = RESONANCE_PLACEHOLDER_QUOTE;
+	protected readonly RESONANCE_PLACEHOLDER_NAME = RESONANCE_PLACEHOLDER_NAME;
+	protected readonly RESONANCE_BTN_POST = RESONANCE_BTN_POST;
+	protected readonly RESONANCE_EMPTY_TEXT = RESONANCE_EMPTY_TEXT;
+	protected readonly RESONANCE_ARIA_DELETE = RESONANCE_ARIA_DELETE;
 
 	protected quotes$!: Observable<QuoteRecord[]>;
 	protected newQuoteText = '';

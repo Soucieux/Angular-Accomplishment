@@ -27,7 +27,7 @@ import {
 	ACTIVITY_TYPE_FAVOURITE_UPDATED,
 	DATABASE_USER_PREFERENCES,
 	STATS_FIELD_TAURI_NOTIF_ENABLED,
-} from '../../../common/app.constant';
+} from '../../../common/locale/locale.en';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Inject, Injectable } from '@angular/core';
 import {

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
-import { PORTAL_CATEGORY_ALL } from '../../common/app.constant';
+import { PORTAL_CATEGORY_ALL } from '../../common/locale/locale.en';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { PortalComponent } from './portal.component';

@@ -21,7 +21,14 @@ import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exi
 import { LOG } from '../../../common/app.logs';
 import { Checkbox } from 'primeng/checkbox';
 import { DialogService } from '../dialog.service';
-import { DIALOG_ERROR, ENT_DIALOG_TITLE_ADD_MOVIE, ENT_MSG_ADD_DIALOG_SEARCH_FAILED } from '../../../common/app.constant';
+import {
+	DIALOG_ERROR,
+	ENT_DIALOG_TITLE_ADD_MOVIE,
+	ENT_MSG_ADD_DIALOG_SEARCH_FAILED,
+	ADD_MOVIE_SUBTITLE,
+	ADD_MOVIE_LABEL_GENRE,
+	ADD_MOVIE_LABEL_FAVOURITE
+} from '../../../common/locale/locale.en';
 import { AddMovieFormValue } from './add-movie.model';
 import { MOVIE_GENRES } from '../../../fontend/entertainment/entertainment.model';
 
@@ -45,6 +52,9 @@ import { MOVIE_GENRES } from '../../../fontend/entertainment/entertainment.model
 export class AddDialogComponent implements OnInit, OnDestroy {
 	private readonly className = 'AddDialogComponent';
 	protected readonly ENT_DIALOG_TITLE_ADD_MOVIE = ENT_DIALOG_TITLE_ADD_MOVIE;
+	protected readonly ADD_MOVIE_SUBTITLE = ADD_MOVIE_SUBTITLE;
+	protected readonly ADD_MOVIE_LABEL_GENRE = ADD_MOVIE_LABEL_GENRE;
+	protected readonly ADD_MOVIE_LABEL_FAVOURITE = ADD_MOVIE_LABEL_FAVOURITE;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;

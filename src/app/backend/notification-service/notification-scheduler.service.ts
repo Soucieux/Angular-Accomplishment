@@ -13,7 +13,7 @@ import {
 	NOTIF_SCHEDULER_INIT_ERROR,
 	REMINDER_NOTIF_TITLE_3DAY,
 	REMINDER_NOTIF_TITLE_TODAY
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationSchedulerService {

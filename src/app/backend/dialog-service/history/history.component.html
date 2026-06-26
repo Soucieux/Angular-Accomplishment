@@ -6,7 +6,7 @@
 	styleClass="history-dialog"
 	(onHide)="onDialogClosed()">
 	<ng-template #header><span class="history-dialog-title">{{ HISTORY_DIALOG_TITLE }}</span></ng-template>
-	<p class="history-subtitle">Click on a deleted entry to recover it</p>
+	<p class="history-subtitle">{{ HISTORY_SUBTITLE }}</p>
 	<div class="dialog-content">
 		@for(entry of entries$ | async; track entry.key){
 		<div class="entry-row">

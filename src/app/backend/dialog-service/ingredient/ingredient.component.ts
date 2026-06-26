@@ -1,7 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
-import { RECIPE_EDITOR_TYPE_MAX, RECIPE_ITYPE_DIALOG_TITLE } from '../../../common/app.constant';
+import {
+	RECIPE_EDITOR_TYPE_MAX,
+	RECIPE_ITYPE_DIALOG_TITLE,
+	INGREDIENT_BTN_CANCEL,
+	INGREDIENT_BTN_APPLY
+} from '../../../common/locale/locale.en';
 import { IngredientType, TypeTab } from '../../../fontend/recipe/recipe.model';
 
 @Component({
@@ -16,6 +21,8 @@ export class IngredientDialogComponent {
 
 	protected readonly RECIPE_ITYPE_DIALOG_TITLE = RECIPE_ITYPE_DIALOG_TITLE;
 	protected readonly RECIPE_EDITOR_TYPE_MAX = RECIPE_EDITOR_TYPE_MAX;
+	protected readonly INGREDIENT_BTN_CANCEL = INGREDIENT_BTN_CANCEL;
+	protected readonly INGREDIENT_BTN_APPLY = INGREDIENT_BTN_APPLY;
 
 	protected visible = false;
 	protected masterTabs: TypeTab[] = [];

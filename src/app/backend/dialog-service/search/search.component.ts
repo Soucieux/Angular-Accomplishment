@@ -3,7 +3,7 @@ import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
-import { ENT_DIALOG_TITLE_SEARCH, SEARCH_CANCEL, SEARCH_COMPLETE } from '../../../common/app.constant';
+import { ENT_DIALOG_TITLE_SEARCH, SEARCH_CANCEL, SEARCH_COMPLETE } from '../../../common/locale/locale.en';
 
 @Component({
 	selector: 'search-dialog',

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LOADING_TIMEOUT_MS } from '../app.constant';
+import { LOADING_TIMEOUT_MS } from '../locale/locale.en';
 import { Utilities } from '../utilities/app.utilities';
 
 @Injectable({ providedIn: 'root' })

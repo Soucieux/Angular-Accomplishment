@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { CanMatchFn, Router } from '@angular/router';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
-import { LS_AUTH_HINT_KEY } from '../../common/app.constant';
+import { LS_AUTH_HINT_KEY } from '../../common/locale/locale.en';
 
 /**
  * Route guard that prevents authenticated users from accessing the login page.

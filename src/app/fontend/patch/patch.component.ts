@@ -51,8 +51,17 @@ import {
 	PATCH_SWITCH_PREFIX_RELEASE,
 	PATCH_SWITCH_NOTES,
 	TIMEOUT_KEY_PATCH,
-	TIMEOUT_KEY_PATCH_RELEASE
-} from '../../common/app.constant';
+	TIMEOUT_KEY_PATCH_RELEASE,
+	PATCH_EYEBROW,
+	PATCH_PLACEHOLDER_SEARCH,
+	PATCH_TABLE_HEADER_COMPONENT,
+	PATCH_TABLE_HEADER_ELEMENT,
+	PATCH_TABLE_HEADER_DETAILS,
+	PATCH_TABLE_HEADER_TIMESTAMP,
+	PATCH_TABLE_HEADER_EDIT,
+	PATCH_EMPTY_SEARCH,
+	PATCH_LABEL_PREVIOUS_RELEASES
+} from '../../common/locale/locale.en';
 import { ReleaseNote } from './patch.model';
 import { Observable, catchError, firstValueFrom, of, startWith, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -97,6 +106,15 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly PATCH_LABEL_RELEASE_NOTES = PATCH_LABEL_RELEASE_NOTES;
 	protected readonly PATCH_SUBTITLE_PATCH_NOTES = PATCH_SUBTITLE_PATCH_NOTES;
 	protected readonly PATCH_SUBTITLE_RELEASE_NOTES = PATCH_SUBTITLE_RELEASE_NOTES;
+	protected readonly PATCH_EYEBROW = PATCH_EYEBROW;
+	protected readonly PATCH_PLACEHOLDER_SEARCH = PATCH_PLACEHOLDER_SEARCH;
+	protected readonly PATCH_TABLE_HEADER_COMPONENT = PATCH_TABLE_HEADER_COMPONENT;
+	protected readonly PATCH_TABLE_HEADER_ELEMENT = PATCH_TABLE_HEADER_ELEMENT;
+	protected readonly PATCH_TABLE_HEADER_DETAILS = PATCH_TABLE_HEADER_DETAILS;
+	protected readonly PATCH_TABLE_HEADER_TIMESTAMP = PATCH_TABLE_HEADER_TIMESTAMP;
+	protected readonly PATCH_TABLE_HEADER_EDIT = PATCH_TABLE_HEADER_EDIT;
+	protected readonly PATCH_EMPTY_SEARCH = PATCH_EMPTY_SEARCH;
+	protected readonly PATCH_LABEL_PREVIOUS_RELEASES = PATCH_LABEL_PREVIOUS_RELEASES;
 	protected currentView: 'patch' | 'release' = PATCH_VIEW_PATCH;
 	protected releaseNotes$!: Observable<ReleaseNote[] | null>;
 	private releaseNotesLoaded = false;

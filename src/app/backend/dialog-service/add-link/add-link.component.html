@@ -13,11 +13,11 @@
 	</ng-template>
 
 	<div class="link-dialog-field">
-		<span class="link-dialog-label">URL *</span>
+		<span class="link-dialog-label">{{ ADD_LINK_LABEL_URL }}</span>
 		<input
 			type="url"
 			[(ngModel)]="url"
-			placeholder="https://example.com"
+			[placeholder]="ADD_LINK_PLACEHOLDER_URL"
 			autocomplete="off"
 			(keyup.enter)="onUrlConfirm()"
 			(blur)="onUrlConfirm()" />
@@ -34,24 +34,24 @@
 		<span class="link-dialog-label">
 			Title *
 			@if (metaLoading) {
-				<span class="link-dialog-meta-loading">fetching…</span>
+				<span class="link-dialog-meta-loading">{{ ADD_LINK_LABEL_LOADING }}</span>
 			}
 		</span>
 		<input
 			type="text"
 			[(ngModel)]="title"
-			placeholder="My favourite resource"
+			[placeholder]="ADD_LINK_PLACEHOLDER_NAME"
 			autocomplete="off" />
 	</div>
 
 	<div class="link-dialog-field">
-		<span class="link-dialog-label">Category *</span>
+		<span class="link-dialog-label">{{ ADD_LINK_LABEL_CATEGORY }}</span>
 		<p-select
 			[options]="categories"
 			optionLabel="name"
 			optionValue="_id"
 			[appendTo]="'body'"
-			placeholder="Select a category"
+			[placeholder]="ADD_LINK_PLACEHOLDER_CATEGORY"
 			panelStyleClass="dropdown-panel-font"
 			[(ngModel)]="category" />
 	</div>

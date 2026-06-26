@@ -5,16 +5,16 @@
 		@if (currentView === RECIPE_VIEW_LIST) {
 			<section class="view">
 				<div class="page-header">
-					<div class="eyebrow">Personal Cookbook</div>
-					<h1 class="page-title">Recipes</h1>
-					<p class="page-subtitle">Your personal cookbook</p>
+					<div class="eyebrow">{{ RECIPE_EYEBROW }}</div>
+					<h1 class="page-title">{{ RECIPE_TITLE_PAGE }}</h1>
+					<p class="page-subtitle">{{ RECIPE_SUBTITLE }}</p>
 					<div class="header-ornament"></div>
 				</div>
 
 				<div class="toolbar">
 					<label class="search">
 						<span class="material-symbols-outlined">search</span>
-						<input type="text" placeholder="Search recipes…" [(ngModel)]="searchQuery" (ngModelChange)="currentPage = 0" />
+						<input type="text" [placeholder]="RECIPE_PLACEHOLDER_SEARCH" [(ngModel)]="searchQuery" (ngModelChange)="currentPage = 0" />
 					</label>
 					<button class="btn btn-primary" (click)="openAddView()">
 						<span class="material-symbols-outlined">add</span>
@@ -52,7 +52,7 @@
 				} @else if (filteredRecipes.length === 0) {
 					<div class="empty-state">
 						<span class="material-symbols-outlined empty-icon">restaurant_menu</span>
-						<p>No recipes match your search</p>
+						<p>{{ RECIPE_EMPTY_SEARCH }}</p>
 					</div>
 				} @else {
 					<div class="grid">
@@ -80,15 +80,15 @@
 									<div class="meta-row">
 										<span class="meta-chip">
 											<span class="material-symbols-outlined">schedule</span>
-											{{ recipe.cookTimeMin }} min
+											{{ recipe.cookTimeMin }} {{ RECIPE_SUFFIX_MIN }}
 										</span>
 										<span class="meta-chip hide-on-narrow-or-mobile">
 											<span class="material-symbols-outlined">restaurant</span>
-											{{ recipe.baseServings }} servings
+											{{ recipe.baseServings }} {{ RECIPE_SUFFIX_SERVINGS }}
 										</span>
 									</div>
 								</div>
-								<div class="view-recipe">View Recipe →</div>
+								<div class="view-recipe">{{ RECIPE_BTN_VIEW }}</div>
 							</article>
 						}
 					</div>
@@ -124,7 +124,7 @@
 					<div class="detail-meta">
 						<span class="meta-chip">
 							<span class="material-symbols-outlined">schedule</span>
-							{{ selectedRecipe.cookTimeMin }} min
+							{{ selectedRecipe.cookTimeMin }} {{ RECIPE_SUFFIX_MIN }}
 						</span>
 						<span class="meta-chip">
 							<span class="material-symbols-outlined">restaurant</span>
@@ -146,9 +146,9 @@
 
 						<div class="panel-collapse-body" #ingredientsScroll>
 							<div class="servings-row">
-								<button (click)="decServings()" aria-label="decrease servings">−</button>
-								<span class="count">{{ servings }} servings</span>
-								<button (click)="incServings()" aria-label="increase servings">+</button>
+								<button (click)="decServings()" [attr.aria-label]="RECIPE_ARIA_DEC_SERVINGS">−</button>
+								<span class="count">{{ servings }} {{ RECIPE_SUFFIX_SERVINGS }}</span>
+								<button (click)="incServings()" [attr.aria-label]="RECIPE_ARIA_INC_SERVINGS">+</button>
 							</div>
 
 							@for (g of selectedRecipe.groups; track g.type) {
@@ -260,7 +260,7 @@
 					<input
 						class="title-field"
 						type="text"
-						placeholder="Untitled recipe…"
+						[placeholder]="RECIPE_PLACEHOLDER_TITLE"
 						autocomplete="off"
 						[class.invalid]="editorNameInvalid || editorNameTooLong"
 						[(ngModel)]="editorName"
@@ -275,7 +275,7 @@
 						<label class="meta-chip editor-meta-chip">
 							<span class="material-symbols-outlined icon">group</span>
 							<input type="number" min="1" [(ngModel)]="editorServings" />
-							<span class="suffix">servings</span>
+							<span class="suffix">{{ RECIPE_SUFFIX_SERVINGS }}</span>
 						</label>
 						<div
 							#catDropdown
@@ -347,20 +347,20 @@
 												<span class="type-dot"></span>
 												<textarea
 													class="name"
-													placeholder="Ingredient name"
+													[placeholder]="RECIPE_PLACEHOLDER_INGREDIENT"
 													rows="1"
 													[(ngModel)]="it.name"></textarea>
 												<div class="ing-qty-group">
 													<input
 														class="quantity"
 														type="text"
-														placeholder="qty"
+														[placeholder]="RECIPE_PLACEHOLDER_QTY"
 														[(ngModel)]="it.qty" />
 													<p-autocomplete
 														class="unit-ac"
 														panelStyleClass="unit-ac-panel"
 														[class.required]="it.qty && !it.unit"
-														placeholder="unit *"
+														[placeholder]="RECIPE_PLACEHOLDER_UNIT"
 														[suggestions]="editorUnitSuggestions"
 														[completeOnFocus]="true"
 														[forceSelection]="false"

@@ -12,7 +12,7 @@ import {
 	REMINDER_CATEGORY_PERSONAL,
 	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING
-} from '../../common/app.constant';
+} from '../../common/locale/locale.en';
 import { ReminderComponent } from './reminder.component';
 import { ReminderItem } from './reminder.model';
 

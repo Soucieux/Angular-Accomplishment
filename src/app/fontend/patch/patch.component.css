@@ -1175,28 +1175,28 @@
 }
 
 .icon-portal {
-	background: linear-gradient(135deg, #e91e8c, #07db19);
+	background: linear-gradient(135deg, #a3e635, #84cc16);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
 .icon-resonance {
-	background: linear-gradient(135deg, #4776e6, #8e54e9);
+	background: linear-gradient(135deg, #f59e0b, #d97706);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
 .icon-recipe {
-	background: linear-gradient(135deg, #f7971e, #78d000);
+	background: linear-gradient(135deg, #d53369, #b82d5a);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
 .icon-entertainment {
-	background: linear-gradient(135deg, #11998e, #38ef7d);
+	background: linear-gradient(135deg, #4ade80, #22c55e);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -1210,21 +1210,21 @@
 }
 
 .icon-debt {
-	background: linear-gradient(135deg, #f97316, #e879f9);
+	background: linear-gradient(135deg, #0d9488, #134e4a);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
 .icon-patch-notes {
-	background: linear-gradient(135deg, #d53369, #f7971e);
+	background: linear-gradient(135deg, #667eea, #764ba2);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
 
 .icon-about {
-	background: linear-gradient(135deg, #8e54e9, #e91e8c);
+	background: linear-gradient(135deg, #4ade80, #9c27b0);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;

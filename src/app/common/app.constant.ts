@@ -14,6 +14,10 @@ export const DIALOG_BTN_CONFIRM = 'Confirm';
 export const MSG_DELETE_FAILED = 'Delete failed';
 /** Shared toast summary shown when a save operation fails. */
 export const MSG_SAVE_FAILED = 'Save failed';
+/** Heading shown on the access-denied card when the user lacks page permission. */
+export const ACCESS_DENIED_TITLE = 'Access Denied';
+/** Body text shown on the access-denied card when the user lacks page permission. */
+export const ACCESS_DENIED_BODY = 'You do not have permission to access this page';
 /** User-facing message shown when an action is blocked by insufficient permissions. */
 export const MSG_PERMISSION_DENIED = 'User does not have permission';
 /** User-facing message shown when an unhandled exception occurs. */
@@ -199,6 +203,7 @@ export const DATABASE_USER_PREFERENCES = 'preferences';
 
 // Layout responsive breakpoints
 export const BREAKPOINT_MOBILE = '(max-width: 800px)';
+export const BREAKPOINT_NARROW_QUERY = `(max-width: ${APP_BREAKPOINT_NARROW}px)`;
 
 export const SEARCH = 'search';
 export const SUCCESS = 'success';
@@ -994,3 +999,8 @@ export const TODAY_LABEL_AM = 'AM';
 export const TODAY_LABEL_PM = 'PM';
 /** Duration of the task removal fade-out animation in milliseconds. */
 export const TODAY_REMOVE_ANIMATION_MS = 220;
+/** Heading shown on the mobile-blocked card for the Today planner. */
+export const MOBILE_BLOCKED_TITLE = 'Desktop & Tablet Only';
+/** Body text shown on the mobile-blocked card explaining that the Today planner requires a wider screen. */
+export const MOBILE_BLOCKED_BODY =
+	'The Today planner is built for wider screens. Open it on a desktop, laptop, or tablet to access your daily view.';

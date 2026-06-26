@@ -72,10 +72,10 @@ import {
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TimeoutService } from '../../common/timeout/timeout.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
-import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
+import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 @Component({
 	selector: 'debt',
-	imports: [AsyncPipe, FormsModule, SkeletonModule, AccessDeniedComponent],
+	imports: [AsyncPipe, FormsModule, SkeletonModule, BlockedCardComponent],
 	templateUrl: './debt.component.html',
 	styleUrls: ['./debt.component.css']
 })

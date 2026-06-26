@@ -89,14 +89,14 @@ import {
 	PORTAL_DATE_CALCULATOR_FIELDS,
 	PORTAL_LINK_CARD_PALETTE
 } from './portal.model';
-import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
+import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 
 @Component({
 	selector: 'portal',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [
-		AccessDeniedComponent,
+		BlockedCardComponent,
 		CommonModule,
 		FormsModule,
 		TableModule,

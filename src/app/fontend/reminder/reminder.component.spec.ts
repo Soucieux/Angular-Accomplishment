@@ -607,14 +607,14 @@ describe('ReminderComponent', () => {
 		it('shows content when getIsUserAlive returns true', () => {
 			mockUtilities.getIsUserAlive.and.returnValue(true);
 			fixture.detectChanges();
-			const accessDenied = fixture.nativeElement.querySelector('access-denied');
+			const accessDenied = fixture.nativeElement.querySelector('blocked-card');
 			expect(accessDenied).toBeFalsy();
 		});
 
 		it('shows access-denied when getIsUserAlive returns false', () => {
 			mockUtilities.getIsUserAlive.and.returnValue(false);
 			fixture.detectChanges();
-			const accessDenied = fixture.nativeElement.querySelector('access-denied');
+			const accessDenied = fixture.nativeElement.querySelector('blocked-card');
 			expect(accessDenied).toBeTruthy();
 		});
 	});

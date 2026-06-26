@@ -1,4 +1,4 @@
-import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
+import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 import { SearchStreamService } from '../../backend/dialog-service/search/search-stream.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
@@ -111,7 +111,7 @@ const ENT_VTA_CSS = `
 		MatTooltipModule,
 		ButtonModule,
 		SelectModule,
-		AccessDeniedComponent
+		BlockedCardComponent
 	],
 	templateUrl: './entertainment.component.html',
 	styleUrl: './entertainment.component.css'

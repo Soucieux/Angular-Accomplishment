@@ -91,13 +91,13 @@ import {
 	StepToken,
 	TypeTab
 } from './recipe.model';
-import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
+import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 import { PaginatorComponent } from './paginator/paginator.component';
 
 @Component({
 	selector: 'recipe',
 	standalone: true,
-	imports: [CommonModule, FormsModule, AutoComplete, AccessDeniedComponent, PaginatorComponent],
+	imports: [CommonModule, FormsModule, AutoComplete, BlockedCardComponent, PaginatorComponent],
 	templateUrl: './recipe.component.html',
 	styleUrls: ['../../common/glass-card.css', './recipe.component.css']
 })

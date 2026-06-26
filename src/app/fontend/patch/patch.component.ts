@@ -61,7 +61,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TimeoutService } from '../../common/timeout/timeout.service';
 import { PaginatorModule } from 'primeng/paginator';
 import { DatabaseService } from '../../backend/database-service/database.service';
-import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
+import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 
 @Component({
 	selector: 'patch',
@@ -75,7 +75,7 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		FormsModule,
 		CommonModule,
 		PaginatorModule,
-		AccessDeniedComponent
+		BlockedCardComponent
 	],
 	templateUrl: './patch.component.html',
 	styleUrls: ['../../common/glass-card.css', './patch.component.css']

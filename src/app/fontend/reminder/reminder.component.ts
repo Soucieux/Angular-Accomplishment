@@ -90,7 +90,7 @@ import {
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TimeoutService } from '../../common/timeout/timeout.service';
-import { AccessDeniedComponent } from '../../common/access-denied/access-denied.component';
+import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 
 @Component({
 	selector: 'reminder',
@@ -107,7 +107,7 @@ import { AccessDeniedComponent } from '../../common/access-denied/access-denied.
 		SkeletonModule,
 		DatePickerModule,
 		TooltipModule,
-		AccessDeniedComponent
+		BlockedCardComponent
 	],
 	templateUrl: './reminder.component.html',
 	styleUrls: ['../../common/glass-card.css', './reminder.component.css']

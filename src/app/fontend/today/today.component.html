@@ -1,4 +1,4 @@
-<div class="glass-card container-today">
+<div #container class="glass-card container-today">
 	<!-- ════════════════════════════════════════
        HERO
   ════════════════════════════════════════ -->
@@ -19,7 +19,7 @@
 	<!-- ════════════════════════════════════════
        QUICK-ADD + ANYTIME LANE
   ════════════════════════════════════════ -->
-	<div #untimedZone class="tp-anytime-row">
+	<div #untimedZone class="tp-anytime-row" [class.is-drag-target]="dragMoveIsOverUntimed()">
 		<div class="tp-quickadd">
 			<span class="material-symbols-outlined">add_task</span>
 			<input
@@ -30,16 +30,24 @@
 			<button (click)="addUntimed()">{{ TODAY_BTN_ADD }}</button>
 		</div>
 
-		<div class="tp-anytime">
+		<div class="tp-anytime" [class.drag-move-active]="isDragMoveEnabled()">
 			@for (item of untimedTasks(); track item.id) {
-				<div class="tp-anytime-chip" [class.is-done]="item.done">
-					<span class="material-symbols-outlined tp-check" (click)="toggleTaskDone(item.id)">
+				<div
+					class="tp-anytime-chip"
+					[class.is-done]="item.done"
+					(mousedown)="isDragMoveEnabled() ? onBlockMoveStart($event, item.id) : null">
+					<span
+						class="material-symbols-outlined tp-check"
+						(mousedown)="$event.stopPropagation()"
+						(click)="toggleTaskDone(item.id)">
 						{{ item.done ? 'check_circle' : 'radio_button_unchecked' }}
 					</span>
 					@if (editingId() === item.id) {
 						<input
+							#editInput
 							class="tp-edit-input"
 							[value]="editingDraft()"
+							(mousedown)="$event.stopPropagation()"
 							(input)="editingDraft.set($any($event.target).value)"
 							(keydown.enter)="saveBlockEdit()"
 							(keydown.escape)="cancelBlockEdit()"
@@ -49,10 +57,14 @@
 						<span class="tp-chip-title">{{ item.title }}</span>
 						<span
 							class="material-symbols-outlined tp-mini"
+							(mousedown)="$event.stopPropagation()"
 							(click)="beginBlockEdit(item.id, item.title)"
 							>edit</span
 						>
-						<span class="material-symbols-outlined tp-mini" (click)="removeTask(item.id)"
+						<span
+							class="material-symbols-outlined tp-mini"
+							(mousedown)="$event.stopPropagation()"
+							(click)="removeTask(item.id)"
 							>close</span
 						>
 					}
@@ -83,12 +95,14 @@
 			@if (!tracking()) {
 				<button class="tp-btn-track" (click)="beginTracking()">
 					<span class="material-symbols-outlined">play_circle</span>
-					{{ TODAY_BTN_START_TRACKING }}
+					<span class="hide-on-narrow-or-mobile">{{ TODAY_BTN_START_TRACKING }}</span>
 				</button>
 			} @else {
 				<button class="tp-btn-track is-live" (click)="stopTracking()">
 					<span class="material-symbols-outlined">stop_circle</span>
-					{{ TODAY_BTN_STOP_TRACKING }} · {{ trackElapsedLabel() }}
+					<span class="hide-on-narrow-or-mobile"
+						>{{ TODAY_BTN_STOP_TRACKING }} · {{ trackElapsedLabel() }}</span
+					>
 				</button>
 			}
 			<div
@@ -97,7 +111,7 @@
 				(click)="onDragCreateChange()">
 				<span class="tp-dot"></span>
 				<span class="material-symbols-outlined">ads_click</span>
-				{{ TODAY_BTN_DRAG_CREATE }}
+				<span class="hide-on-narrow-or-mobile">{{ TODAY_BTN_DRAG_CREATE }}</span>
 			</div>
 			<div
 				class="tp-toggle tp-toggle--teal"
@@ -105,7 +119,7 @@
 				(click)="onDragMoveChange()">
 				<span class="tp-dot"></span>
 				<span class="material-symbols-outlined">drag_pan</span>
-				{{ TODAY_BTN_DRAG_MOVE }}
+				<span class="hide-on-narrow-or-mobile">{{ TODAY_BTN_DRAG_MOVE }}</span>
 			</div>
 		</div>
 	</div>
@@ -142,7 +156,7 @@
 				}
 
 				<!-- Drag-to-move preview ghost -->
-				@if (dragMovePreviewPlacement(); as pp) {
+				@if (!dragMoveIsOverUntimed() && dragMovePreviewPlacement(); as pp) {
 					@if (dragMovePreview(); as dp) {
 						<div
 							class="tp-preview"
@@ -299,4 +313,11 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Floating ghost that follows the cursor when dragging above the calendar -->
+	@if (isDragMoveActive() && dragMoveIsOverUntimed() && dragMoveClientX() !== null) {
+		<div class="tp-drag-float" [style.left.px]="dragMoveClientX()" [style.top.px]="dragMoveClientY()">
+			{{ draggedTitle() }}
+		</div>
+	}
 </div>

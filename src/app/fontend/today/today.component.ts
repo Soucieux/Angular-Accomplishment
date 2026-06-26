@@ -69,10 +69,12 @@ import {
 	styleUrls: ['../../common/glass-card.css', './today.component.css']
 })
 export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
+	@ViewChild('container') private containerRef!: ElementRef<HTMLDivElement>;
 	@ViewChild('cal') private calRef!: ElementRef<HTMLDivElement>;
 	@ViewChild('grid') private gridRef!: ElementRef<HTMLDivElement>;
 	@ViewChild('untimedZone') private untimedZoneRef!: ElementRef<HTMLDivElement>;
 	@ViewChild('pendingInput') private pendingInputRef?: ElementRef<HTMLInputElement>;
+	@ViewChild('editInput') private editInputRef?: ElementRef<HTMLInputElement>;
 
 	/* ─────────────────────────────────────────
 	   Constants re-exposed for the template
@@ -132,7 +134,9 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly draggingBlockId = signal<string | null>(null);
 	private draggingBlockStartMin = 0;
 	private draggingBlockEndMin = 0;
-	private readonly dragMoveClientX = signal<number | null>(null);
+	protected readonly dragMoveClientX = signal<number | null>(null);
+	protected readonly dragMoveClientY = signal<number | null>(null);
+	protected readonly dragMoveIsOverUntimed = signal<boolean>(false);
 	protected draggingBlockLeftPercent = 0;
 	protected draggingBlockWidthPercent = 100;
 	private readonly removingIds = signal<string[]>([]);
@@ -149,6 +153,15 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	/* ─────────────────────────────────────────
 	   Derived view-models
 	───────────────────────────────────────── */
+
+	/** True while a drag-move gesture is active. */
+	protected readonly isDragMoveActive = computed(() => this.draggingBlockId() !== null);
+
+	/** Title of the block currently being drag-moved, used in the floating ghost label. */
+	protected readonly draggedTitle = computed(() => {
+		const id = this.draggingBlockId();
+		return id ? (this.tasks().find((t) => t.id === id)?.title ?? '') : '';
+	});
 
 	/** Timed task blocks with full layout and display data. */
 	protected readonly timedBlocks = computed((): TodayTimedBlock[] => {
@@ -181,7 +194,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					isShort: height < BLOCK_SHORT_THRESHOLD_PX,
 					isNarrow: pos.total > 1,
 					draggable:
-						(t.source === TASK_SOURCE_LOCAL || t.source === TASK_SOURCE_TRACKED) &&
+						t.source === TASK_SOURCE_LOCAL &&
 						this.isDragMoveEnabled(),
 					isEditing: this.editingId() === t.id,
 					leadIcon: isDone ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_MAP[t.source],
@@ -217,9 +230,9 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			: 0;
 	});
 
-	/** Elapsed time string, updated every second via the clock signal. */
+	/** Elapsed time string, updated every second via the nowMin signal. */
 	protected readonly trackElapsedLabel = computed(() => {
-		const _ = this.clock();
+		const _ = this.nowMin();
 		const track = this.tracking();
 		return track ? this.formatElapsed((Date.now() - track.startedAt) / 1000) : '';
 	});
@@ -246,6 +259,14 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	private currentDateStr = '';
 	private dragCreateStartMinute = 0;
 	private dragCleanup: (() => void) | null = null;
+
+	/** Focuses the edit input whenever an untimed chip enters edit mode. */
+	protected readonly focusEditInput = effect(() => {
+		const id = this.editingId();
+		if (id) {
+			setTimeout(() => this.editInputRef?.nativeElement?.focus());
+		}
+	});
 
 	/** Focuses the pending block input whenever a new pending block is created. */
 	protected readonly focusPendingInput = effect(() => {
@@ -288,10 +309,11 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	ngAfterViewInit(): void {
 		const calEl = this.calRef?.nativeElement;
 		if (calEl) {
+			Utilities.attachScrollAutoHide(calEl);
 			const now = new Date();
 			const nowMinutes = now.getHours() * 60 + now.getMinutes();
 			calEl.scrollTop = Math.max(0, this.minutesToPixels(nowMinutes) - SCROLL_AHEAD_PX);
-			Utilities.attachScrollAutoHide(calEl);
+			calEl.dispatchEvent(new Event('scroll'));
 		}
 	}
 
@@ -410,7 +432,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected onGridDragCreate(event: MouseEvent): void {
 		if (!this.isDragCreateEnabled()) return;
-		if ((event.target as Element).closest?.('[draggable="true"]')) return;
+		if ((event.target as Element).closest?.('.tp-block')) return;
 		if (this.pendingBlock()) {
 			this.cancelPendingBlock();
 			return;
@@ -421,21 +443,21 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 
 		const cal = this.calRef.nativeElement;
+		const grid = this.gridRef.nativeElement;
 		const startMin = Math.max(
 			0,
 			Math.min(
 				24 * 60 - 15,
-				this.snapMinutes(
-					((event.clientY - cal.getBoundingClientRect().top + cal.scrollTop) / PIXELS_PER_HOUR) * 60
+				this.snapDragMoveMinutes(
+					((event.clientY - grid.getBoundingClientRect().top) / PIXELS_PER_HOUR) * 60
 				)
 			)
 		);
 		this.dragCreateStartMinute = startMin;
-		this.dragCreateRange.set({ startMin, endMin: startMin + 30 });
+		this.dragCreateRange.set({ startMin, endMin: startMin + 15 });
 
 		const onMouseMove = (moveEvent: MouseEvent) => {
-			const calRect = cal.getBoundingClientRect();
-			const relY = moveEvent.clientY - calRect.top + cal.scrollTop;
+			const relY = moveEvent.clientY - grid.getBoundingClientRect().top;
 			const endMin = Math.max(
 				this.dragCreateStartMinute + 15,
 				Math.min(24 * 60, this.snapMinutes((relY / PIXELS_PER_HOUR) * 60))
@@ -616,13 +638,19 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		};
 
 		const onMouseMove = (moveEvent: MouseEvent) => {
+			const calRect = cal.getBoundingClientRect();
+			const isAboveCal = moveEvent.clientY < calRect.top;
+			const cRect = this.containerRef.nativeElement.getBoundingClientRect();
+			this.dragMoveClientX.set(moveEvent.clientX - cRect.left);
+			this.dragMoveClientY.set(moveEvent.clientY - cRect.top);
+			this.dragMoveIsOverUntimed.set(isAboveCal);
+			if (isAboveCal) return;
 			let start = getStartMinute(moveEvent);
 			let end = start + duration;
 			if (end > 1440) {
 				end = 1440;
 				start = end - duration;
 			}
-			this.dragMoveClientX.set(moveEvent.clientX);
 			const preview = this.dragMovePreview();
 			if (!preview || preview.startMin !== start) {
 				this.dragMovePreview.set({ startMin: start, endMin: end });
@@ -651,6 +679,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					);
 					this.draggingBlockId.set(null);
 					this.dragMoveClientX.set(null);
+					this.dragMoveClientY.set(null);
+					this.dragMoveIsOverUntimed.set(false);
 					this.dragMovePreview.set(null);
 					return;
 				}
@@ -659,6 +689,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.rescheduleDraggedBlock(id, newStart, upEvent.clientX);
 			this.draggingBlockId.set(null);
 			this.dragMoveClientX.set(null);
+			this.dragMoveClientY.set(null);
+			this.dragMoveIsOverUntimed.set(false);
 			this.dragMovePreview.set(null);
 		};
 
@@ -706,6 +738,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.dragCleanup = null;
 		this.draggingBlockId.set(null);
 		this.dragMoveClientX.set(null);
+		this.dragMoveClientY.set(null);
+		this.dragMoveIsOverUntimed.set(false);
 		this.dragMovePreview.set(null);
 	}
 
@@ -784,10 +818,12 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Floors a drag-move minute value to the current 15-minute slot boundary.
+	 * Floors a minute value to the lower 15-minute slot boundary.
+	 * Used for drag-move previews and drag-create start positions so the
+	 * clicked time is always contained within the resulting block.
 	 *
-	 * @param minutes - The raw minute value to snap during drag-move.
-	 * @returns The lower 15-minute boundary for the drag preview.
+	 * @param minutes - The raw minute value to floor.
+	 * @returns The lower 15-minute boundary.
 	 */
 	private snapDragMoveMinutes(minutes: number): number {
 		return Math.floor(minutes / 15) * 15;
@@ -953,10 +989,13 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		const clientX = this.dragMoveClientX();
 		if (!draggedId || !preview) return null;
 		const dragged = this.tasks().find((t) => t.id === draggedId);
-		if (!dragged || dragged.startMin == null) return null;
+		if (!dragged) return null;
+		const isUntimed = dragged.startMin == null;
 
 		// Step 2: At-origin shortcut — ghost hasn't moved yet; reuse the committed layout as-is
+		// Untimed tasks have no calendar origin, so skip this shortcut for them.
 		const isAtOrigin =
+			!isUntimed &&
 			preview.startMin === this.draggingBlockStartMin &&
 			preview.endMin === this.draggingBlockEndMin &&
 			(clientX == null || this.isCursorWithinOriginalBlock(clientX));

@@ -939,7 +939,7 @@
 	cursor: pointer;
 	font-size: 14px;
 	font-weight: 600;
-	color: #fff;
+	color: #fff !important;
 	background: linear-gradient(135deg, #0d9488 0%, #134e4a 100%);
 	padding: 11px 22px;
 	border-radius: 999px;

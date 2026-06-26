@@ -39,8 +39,11 @@ import {
 	TODAY_SUBTITLE,
 	TODAY_TITLE,
 	TODAY_TRACKING_PREFIX,
-	TODAY_TRACKING_VIRTUAL_ID
+	TODAY_TRACKING_VIRTUAL_ID,
+	MOBILE_BLOCKED_TITLE,
+	MOBILE_BLOCKED_BODY
 } from '../../common/app.constant';
+import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 import {
 	BLOCK_MIN_HEIGHT_PX,
 	BLOCK_SHORT_THRESHOLD_PX,
@@ -67,7 +70,7 @@ import {
 @Component({
 	selector: 'today',
 	standalone: true,
-	imports: [CommonModule],
+	imports: [CommonModule, BlockedCardComponent],
 	templateUrl: './today.component.html',
 	styleUrls: ['../../common/glass-card.css', './today.component.css']
 })
@@ -102,6 +105,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly TASK_SOURCE_LOCAL = TASK_SOURCE_LOCAL;
 	protected readonly TASK_SOURCE_REMINDER = TASK_SOURCE_REMINDER;
 	protected readonly TASK_SOURCE_TRACKED = TASK_SOURCE_TRACKED;
+	protected readonly MOBILE_BLOCKED_TITLE = MOBILE_BLOCKED_TITLE;
+	protected readonly MOBILE_BLOCKED_BODY = MOBILE_BLOCKED_BODY;
 
 	/* ─────────────────────────────────────────
 	   Static view data
@@ -142,6 +147,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly dragMoveIsOverUntimed = signal<boolean>(false);
 	protected draggingBlockLeftPercent = 0;
 	protected draggingBlockWidthPercent = 100;
+	protected isMobile = false;
 	private readonly removingIds = signal<string[]>([]);
 	private readonly pendingSource = signal<TodayTask['source'] | null>(null);
 	private tasks = signal<TodayTask[]>([]);
@@ -342,14 +348,16 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	constructor(
 		@Inject(PLATFORM_ID) private readonly platformId: object,
-		private readonly databaseService: DatabaseService
+		private readonly databaseService: DatabaseService,
+		protected utilities: Utilities
 	) {}
 
 	/**
-	 * Starts the clock tick, subscribes to today's reminders, and schedules a
-	 * 1-second interval to keep the clock current.
+	 * Detects the initial viewport width, starts the clock tick, subscribes to today's reminders,
+	 * and schedules a 1-second interval to keep the clock current.
 	 */
 	ngOnInit(): void {
+		this.isMobile = this.utilities.isNarrowViewport();
 		this.tick();
 		this.clockInterval = setInterval(() => this.tick(), 1000);
 		if (isPlatformBrowser(this.platformId)) {
@@ -496,6 +504,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			return;
 		}
 
+		// Snap the initial click to the nearest 15-minute mark and begin the drag range
 		const cal = this.calRef.nativeElement;
 		const grid = this.gridRef.nativeElement;
 		const startMin = Math.max(
@@ -510,6 +519,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.dragCreateStartMinute = startMin;
 		this.dragCreateRange.set({ startMin, endMin: startMin + 15 });
 
+		// Extend the drag range end to the current cursor position while the button is held
 		const onMouseMove = (moveEvent: MouseEvent) => {
 			const relY = moveEvent.clientY - grid.getBoundingClientRect().top;
 			const endMin = Math.max(
@@ -519,6 +529,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			const current = this.dragCreateRange();
 			if (current) this.dragCreateRange.set({ startMin: current.startMin, endMin });
 		};
+
+		// Commit as a pending block if ≥15 min; discard on a too-short drag or accidental click
 		const onMouseUp = () => {
 			document.removeEventListener('mousemove', onMouseMove);
 			document.removeEventListener('mouseup', onMouseUp);
@@ -631,11 +643,14 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected onBlockResizeStart(id: string, event: MouseEvent): void {
 		event.stopPropagation();
 		event.preventDefault();
+
+		// Guard: task must exist and already have a scheduled start time
 		const task = this.tasks().find((t) => t.id === id);
 		if (!task || task.startMin == null) return;
 		const startMin = task.startMin;
 		const cal = this.calRef.nativeElement;
 
+		// Snap endMin to the nearest 15-min mark on every move, keeping startMin fixed
 		const onMouseMove = (moveEvent: MouseEvent) => {
 			const calRect = cal.getBoundingClientRect();
 			const relY = moveEvent.clientY - calRect.top + cal.scrollTop;
@@ -647,6 +662,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 				ts.map((t) => (t.id === id && t.source !== TASK_SOURCE_REMINDER ? { ...t, endMin } : t))
 			);
 		};
+
+		// Remove listeners on release; the task signal was already updated in-flight
 		const onMouseUp = () => {
 			document.removeEventListener('mousemove', onMouseMove);
 			document.removeEventListener('mouseup', onMouseUp);
@@ -665,16 +682,18 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	───────────────────────────────────────── */
 
 	/**
-	 * Starts a pointer-driven move of a local or tracked task block.
+	 * Starts a pointer-driven move of a local task block.
 	 * Attaches temporary mousemove and mouseup listeners to update the preview live and commit on release.
 	 * Stops propagation so the grid's drag-create handler does not fire simultaneously.
 	 *
 	 * @param event - The mousedown event on the block.
-	 * @param id - The ID of the block being moved.
+	 * @param id - The ID of the local block being moved.
 	 */
 	protected onBlockMoveStart(event: MouseEvent, id: string): void {
 		event.preventDefault();
 		event.stopPropagation();
+
+		// Snapshot the task, its original column layout, and duration for the ghost overlay
 		const task = this.tasks().find((t) => t.id === id);
 		if (!task) return;
 		const duration = task.startMin != null ? task.endMin! - task.startMin : 60;
@@ -686,11 +705,13 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.draggingBlockWidthPercent = layout?.widthPercent ?? 100;
 		this.draggingBlockId.set(id);
 
+		// Scroll-aware helper: converts a MouseEvent Y position to a snapped calendar minute
 		const getStartMinute = (e: MouseEvent): number => {
 			const relY = e.clientY - cal.getBoundingClientRect().top + cal.scrollTop;
 			return Math.max(0, Math.min(24 * 60 - 15, this.snapDragMoveMinutes((relY / PIXELS_PER_HOUR) * 60)));
 		};
 
+		// Update the ghost position signals on every move; skip calendar snapping when above it
 		const onMouseMove = (moveEvent: MouseEvent) => {
 			const calRect = cal.getBoundingClientRect();
 			const isAboveCal = moveEvent.clientY < calRect.top;
@@ -711,6 +732,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			}
 		};
 
+		/* On release: if drop lands inside the untimed zone strip, clear the scheduled time;
+		   otherwise reschedule at the snapped calendar position and resolve column order. */
 		const onMouseUp = (upEvent: MouseEvent) => {
 			document.removeEventListener('mousemove', onMouseMove);
 			document.removeEventListener('mouseup', onMouseUp);
@@ -837,8 +860,11 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * then opens a fresh subscription filtered to today's date only.
 	 */
 	private refreshReminderSub(): void {
+		// Cancel the previous subscription and snapshot today's date string for filtering
 		this.remindersSub?.unsubscribe();
 		this.currentDateStr = Utilities.formatDateForStorage(new Date());
+
+		// Re-subscribe: filter reminder records to today, map to TodayTask, merge into the signal
 		this.remindersSub = this.databaseService.getReminderTableDetails().subscribe((records) => {
 			const reminderTasks: TodayTask[] = records
 				.filter((r) => {
@@ -1025,11 +1051,16 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		ghostPlacement: { col: number; total: number } | null;
 	} {
 		const layoutMap: Record<string, { col: number; total: number }> = {};
+
+		// Sort by startMin so consecutive overlap detection is correct
 		const timedEntries = [...entries].sort((a, b) => a.task.startMin! - b.task.startMin!);
 		let cluster: Array<{ task: TodayTask; isGhost: boolean }> = [];
 		let clusterEndMinute = -1;
 		let ghostPlacement: { col: number; total: number } | null = null;
 
+		/* Greedy column-packing: assign each entry in ord order to the first column whose
+		   visual end time has passed, then back-fill the final column count once the whole
+		   cluster is resolved. */
 		const flushCluster = (): void => {
 			const sorted = [...cluster].sort(
 				(a, b) => (a.task.ord ?? a.task.startMin!) - (b.task.ord ?? b.task.startMin!)
@@ -1056,6 +1087,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			});
 		};
 
+		// Group consecutive overlapping entries into clusters; flush each time a gap is detected
 		timedEntries.forEach((entry) => {
 			if (cluster.length && entry.task.startMin! >= clusterEndMinute) {
 				flushCluster();

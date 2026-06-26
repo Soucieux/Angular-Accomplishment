@@ -623,6 +623,8 @@
 .tp-block.is-tracked {
 	background: rgba(13, 148, 136, 0.05);
 	z-index: 8;
+	padding-top: 4px;
+	padding-bottom: 4px;
 }
 
 .tp-block.is-tiny {
@@ -636,12 +638,35 @@
 	position: absolute;
 	bottom: calc(100% + 3px);
 	left: 0;
-	font-size: 9px;
+	font-size: 11px;
 	font-weight: 500;
 	color: #64748b;
 	white-space: nowrap;
 	line-height: 1;
 	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.12s;
+	z-index: 20;
+	background: rgba(255, 255, 255, 0.95);
+	padding: 1px 4px;
+	border-radius: 3px;
+}
+
+.tp-block.is-tiny:hover {
+	z-index: 20;
+}
+
+.tp-block.is-tiny:hover .tp-tiny-label {
+	opacity: 1;
+}
+
+.tp-tracked-label {
+	font-size: 11px;
+	font-weight: 500;
+	color: #64748b;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .tp-block.is-dragging {
@@ -660,7 +685,7 @@
 		inset 3px 0 0 var(--accent);
 }
 
-.tp-grid.drag-move-active .tp-block:not(.is-reminder) {
+.tp-grid.drag-move-active .tp-block:not(.is-reminder):not(.is-tracked) {
 	cursor: grab;
 }
 

@@ -1,3 +1,6 @@
+@if (isMobile) {
+	<blocked-card icon="desktop_windows" [title]="MOBILE_BLOCKED_TITLE" [body]="MOBILE_BLOCKED_BODY" />
+} @else {
 <div #container class="glass-card container-today">
 	<!-- ════════════════════════════════════════
        HERO
@@ -240,10 +243,23 @@
 						[style.left]="'calc(' + b.leftPercent + '% + 4px)'"
 						[style.width]="'calc(' + b.widthPercent + '% - 8px)'"
 						[style.--accent]="b.accent"
-						(mousedown)="b.draggable ? onBlockMoveStart($event, b.task.id) : null">
-						<!-- Tiny tracked band (duration < 15 min) -->
+						(mousedown)="b.draggable ? onBlockMoveStart($event, b.task.id) : $event.stopPropagation()">
+						<!-- Tiny tracked band (duration < 15 min): label floats above block -->
 						@if (b.isTiny) {
-							<div class="tp-tiny-label">{{ b.task.title }} · {{ b.durationLabel }}</div>
+							<div class="tp-tiny-label">{{ b.task.title }} · {{ b.timeLabel }}</div>
+						} @else if (b.task.source === TASK_SOURCE_TRACKED) {
+							<!-- Non-tiny tracked block: label sits inside at the same font size -->
+							<div class="tp-block-actions">
+								<span
+									class="material-symbols-outlined"
+									(click)="beginBlockEdit(b.task.id, b.task.title)"
+									>edit</span
+								>
+								<span class="material-symbols-outlined" (click)="removeTask(b.task.id)"
+									>delete</span
+								>
+							</div>
+							<div class="tp-tracked-label">{{ b.task.title }} · {{ b.timeLabel }}</div>
 						} @else {
 							<!-- Reminder header (tall reminders only) -->
 							@if (b.task.source === TASK_SOURCE_REMINDER && !b.isShort) {
@@ -254,8 +270,8 @@
 								</div>
 							}
 
-							<!-- Hover actions (local + tracked, tall blocks only) -->
-							@if (b.task.source === TASK_SOURCE_LOCAL || b.task.source === TASK_SOURCE_TRACKED) {
+							<!-- Hover actions (local blocks only) -->
+							@if (b.task.source === TASK_SOURCE_LOCAL) {
 								<div class="tp-block-actions">
 									<span
 										class="material-symbols-outlined"
@@ -331,3 +347,4 @@
 		</div>
 	}
 </div>
+}

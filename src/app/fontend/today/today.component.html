@@ -179,7 +179,9 @@
 					<div
 						class="tp-track-band"
 						[style.top.px]="trackBandTop()"
-						[style.height.px]="trackBandHeight()">
+						[style.height.px]="trackBandHeight()"
+						[style.left]="trackBandLeft()"
+						[style.width]="trackBandWidth()">
 						<span class="material-symbols-outlined">timelapse</span>
 						{{ TODAY_TRACKING_PREFIX }}{{ trackElapsedLabel() }}
 					</div>
@@ -202,7 +204,9 @@
 						[class.is-short]="pb.endMin - pb.startMin <= 15"
 						(mousedown)="$event.stopPropagation()"
 						[style.top.px]="minutesToPixels(pb.startMin)"
-						[style.height.px]="rangeBlockHeight(pb)">
+						[style.height.px]="rangeBlockHeight(pb)"
+						[style.left]="pendingBlockLeft()"
+						[style.width]="pendingBlockWidth()">
 						<input
 							#pendingInput
 							[value]="pendingName()"
@@ -224,6 +228,7 @@
 					<div
 						class="tp-block"
 						[class.is-short]="b.isShort"
+						[class.is-tiny]="b.isTiny"
 						[class.is-narrow]="b.isNarrow"
 						[class.is-dragging]="b.isDragging"
 						[class.is-removing]="b.isRemoving"
@@ -236,77 +241,82 @@
 						[style.width]="'calc(' + b.widthPercent + '% - 8px)'"
 						[style.--accent]="b.accent"
 						(mousedown)="b.draggable ? onBlockMoveStart($event, b.task.id) : null">
-						<!-- Reminder header (tall reminders only) -->
-						@if (b.task.source === TASK_SOURCE_REMINDER && !b.isShort) {
-							<div class="tp-block-remhead">
-								<span class="material-symbols-outlined">alarm</span>
-								<span class="tp-remhead-label">REMINDER · read-only</span>
-								<span class="tp-dur-pill">{{ b.durationLabel }}</span>
-							</div>
-						}
+						<!-- Tiny tracked band (duration < 15 min) -->
+						@if (b.isTiny) {
+							<div class="tp-tiny-label">{{ b.task.title }} · {{ b.durationLabel }}</div>
+						} @else {
+							<!-- Reminder header (tall reminders only) -->
+							@if (b.task.source === TASK_SOURCE_REMINDER && !b.isShort) {
+								<div class="tp-block-remhead">
+									<span class="material-symbols-outlined">alarm</span>
+									<span class="tp-remhead-label">REMINDER · read-only</span>
+									<span class="tp-dur-pill">{{ b.durationLabel }}</span>
+								</div>
+							}
 
-						<!-- Hover actions (local + tracked, tall blocks only) -->
-						@if (b.task.source === TASK_SOURCE_LOCAL || b.task.source === TASK_SOURCE_TRACKED) {
-							<div class="tp-block-actions">
-								<span
-									class="material-symbols-outlined"
-									(click)="beginBlockEdit(b.task.id, b.task.title)"
-									>edit</span
-								>
-								<span class="material-symbols-outlined" (click)="removeTask(b.task.id)"
-									>delete</span
-								>
-							</div>
-						}
-
-						<!-- Title row -->
-						<div class="tp-block-title-row">
-							<span
-								class="material-symbols-outlined tp-lead"
-								[style.color]="b.accent"
-								(click)="
-									b.task.source === TASK_SOURCE_LOCAL ? toggleTaskDone(b.task.id) : null
-								">
-								{{ b.leadIcon }}
-							</span>
-							@if (b.isEditing) {
-								<input
-									class="tp-edit-input"
-									[value]="editingDraft()"
-									(input)="editingDraft.set($any($event.target).value)"
-									(keydown.enter)="saveBlockEdit()"
-									(keydown.escape)="cancelBlockEdit()"
-									(blur)="saveBlockEdit()"
-									(mousedown)="$event.stopPropagation()"
-									autofocus />
-							} @else {
-								<span class="tp-block-title" [class.is-done]="b.task.done">{{
-									b.task.title
-								}}</span>
-								@if (b.hasRecurrence) {
+							<!-- Hover actions (local + tracked, tall blocks only) -->
+							@if (b.task.source === TASK_SOURCE_LOCAL || b.task.source === TASK_SOURCE_TRACKED) {
+								<div class="tp-block-actions">
 									<span
-										class="material-symbols-outlined tp-recur"
-										[title]="b.recurrenceLabel"
-										>repeat</span
+										class="material-symbols-outlined"
+										(click)="beginBlockEdit(b.task.id, b.task.title)"
+										>edit</span
 									>
+									<span class="material-symbols-outlined" (click)="removeTask(b.task.id)"
+										>delete</span
+									>
+								</div>
+							}
+
+							<!-- Title row -->
+							<div class="tp-block-title-row">
+								<span
+									class="material-symbols-outlined tp-lead"
+									[style.color]="b.accent"
+									(click)="
+										b.task.source === TASK_SOURCE_LOCAL ? toggleTaskDone(b.task.id) : null
+									">
+									{{ b.leadIcon }}
+								</span>
+								@if (b.isEditing) {
+									<input
+										class="tp-edit-input"
+										[value]="editingDraft()"
+										(input)="editingDraft.set($any($event.target).value)"
+										(keydown.enter)="saveBlockEdit()"
+										(keydown.escape)="cancelBlockEdit()"
+										(blur)="saveBlockEdit()"
+										(mousedown)="$event.stopPropagation()"
+										autofocus />
+								} @else {
+									<span class="tp-block-title" [class.is-done]="b.task.done">{{
+										b.task.title
+									}}</span>
+									@if (b.hasRecurrence) {
+										<span
+											class="material-symbols-outlined tp-recur"
+											[title]="b.recurrenceLabel"
+											>repeat</span
+										>
+									}
 								}
-							}
-							@if (b.isShort || b.task.source === TASK_SOURCE_REMINDER) {
-								<span class="tp-time tp-time--inline">{{ b.timeLabel }}</span>
-							}
-						</div>
-
-						<!-- Meta row (hidden on short and reminder blocks) -->
-						@if (!b.isShort && b.task.source !== TASK_SOURCE_REMINDER) {
-							<div class="tp-block-meta">
-								<span class="tp-time">{{ b.timeLabel }}</span>
-								<span class="tp-dur-pill">{{ b.durationLabel }}</span>
+								@if (b.isShort || b.task.source === TASK_SOURCE_REMINDER) {
+									<span class="tp-time tp-time--inline">{{ b.timeLabel }}</span>
+								}
 							</div>
-						}
 
-						<!-- Resize grip (pure local tasks only) -->
-						@if (b.task.source === TASK_SOURCE_LOCAL) {
-							<div class="tp-grip" (mousedown)="onBlockResizeStart(b.task.id, $event)"></div>
+							<!-- Meta row (hidden on short and reminder blocks) -->
+							@if (!b.isShort && b.task.source !== TASK_SOURCE_REMINDER) {
+								<div class="tp-block-meta">
+									<span class="tp-time">{{ b.timeLabel }}</span>
+									<span class="tp-dur-pill">{{ b.durationLabel }}</span>
+								</div>
+							}
+
+							<!-- Resize grip (pure local tasks only) -->
+							@if (b.task.source === TASK_SOURCE_LOCAL) {
+								<div class="tp-grip" (mousedown)="onBlockResizeStart(b.task.id, $event)"></div>
+							}
 						}
 					</div>
 				}

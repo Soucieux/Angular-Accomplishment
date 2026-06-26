@@ -984,6 +984,8 @@ export const TODAY_BTN_STOP_TRACKING = 'Stop';
 export const TODAY_BTN_DRAG_CREATE = 'Drag to create';
 export const TODAY_BTN_DRAG_MOVE = 'Drag to move';
 export const TODAY_TRACKING_PREFIX = 'Tracking · ';
+/** Synthetic task ID used to inject the live tracking band into the column layout engine. */
+export const TODAY_TRACKING_VIRTUAL_ID = '__tracking__';
 /** Prefix character used when generating IDs for locally-created tasks. */
 export const TODAY_LOCAL_TASK_ID_PREFIX = 'l';
 /** AM period label used in 12-hour time formatting. */

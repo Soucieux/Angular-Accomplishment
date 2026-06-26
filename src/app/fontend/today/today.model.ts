@@ -31,6 +31,7 @@ export interface TodayTimedBlock {
 	widthPercent: number;
 	leftPercent: number;
 	isShort: boolean;
+	isTiny: boolean;
 	isNarrow: boolean;
 	draggable: boolean;
 	isEditing: boolean;
@@ -58,6 +59,12 @@ export const BLOCK_MIN_HEIGHT_PX = 26;
 
 /** Pixel height threshold below which a block uses the compact single-line layout. */
 export const BLOCK_SHORT_THRESHOLD_PX = 50;
+
+/** Minimum pixel height for tiny tracked blocks shorter than TRACKED_TINY_THRESHOLD_MIN. */
+export const TRACKED_TINY_MIN_HEIGHT_PX = 6;
+
+/** Duration in minutes below which a completed tracked block renders as a thin band. */
+export const TRACKED_TINY_THRESHOLD_MIN = 15;
 
 export const TASK_SOURCE_LOCAL: TodayTaskSource = 'local';
 export const TASK_SOURCE_REMINDER: TodayTaskSource = 'reminder';

@@ -38,7 +38,8 @@ import {
 	TODAY_REMOVE_ANIMATION_MS,
 	TODAY_SUBTITLE,
 	TODAY_TITLE,
-	TODAY_TRACKING_PREFIX
+	TODAY_TRACKING_PREFIX,
+	TODAY_TRACKING_VIRTUAL_ID
 } from '../../common/app.constant';
 import {
 	BLOCK_MIN_HEIGHT_PX,
@@ -46,6 +47,8 @@ import {
 	MINIMUM_VISUAL_MINUTES,
 	PIXELS_PER_HOUR,
 	RANGE_BLOCK_MIN_HEIGHT_PX,
+	TRACKED_TINY_MIN_HEIGHT_PX,
+	TRACKED_TINY_THRESHOLD_MIN,
 	RECUR_LABELS,
 	SCROLL_AHEAD_PX,
 	TASK_ACCENT_DONE,
@@ -175,11 +178,13 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 				const isDragging = draggingBlockId === t.id;
 				const pos = liveLayout[t.id] ?? baseLayout[t.id] ?? { col: 0, total: 1 };
 				const top = this.minutesToPixels(t.startMin!);
-				const endMin = t.endMin ?? t.startMin! + MINIMUM_VISUAL_MINUTES;
-				const height = Math.max(
-					BLOCK_MIN_HEIGHT_PX,
-					((endMin - t.startMin!) / 60) * PIXELS_PER_HOUR - 2
-				);
+				const isTiny =
+					t.source === TASK_SOURCE_TRACKED &&
+					t.endMin != null &&
+					t.endMin - t.startMin! < TRACKED_TINY_THRESHOLD_MIN;
+				const endMin = isTiny ? t.endMin! : (t.endMin ?? t.startMin! + MINIMUM_VISUAL_MINUTES);
+				const minHeight = isTiny ? TRACKED_TINY_MIN_HEIGHT_PX : BLOCK_MIN_HEIGHT_PX;
+				const height = Math.max(minHeight, ((endMin - t.startMin!) / 60) * PIXELS_PER_HOUR - 2);
 				const widthPercent = 100 / pos.total;
 				const leftPercent = pos.col * widthPercent;
 				return {
@@ -192,6 +197,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					widthPercent,
 					leftPercent,
 					isShort: height < BLOCK_SHORT_THRESHOLD_PX,
+					isTiny,
 					isNarrow: pos.total > 1,
 					draggable:
 						t.source === TASK_SOURCE_LOCAL &&
@@ -230,6 +236,26 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			: 0;
 	});
 
+	/** CSS left value for the live tracking band, adjusted for column overlap. */
+	protected readonly trackBandLeft = computed(() =>
+		this.colLeft(this.blockLayoutResult().trackingPos)
+	);
+
+	/** CSS width value for the live tracking band, adjusted for column overlap. */
+	protected readonly trackBandWidth = computed(() =>
+		this.colWidth(this.blockLayoutResult().trackingPos)
+	);
+
+	/** CSS left value for the pending name-entry block, adjusted for column overlap. */
+	protected readonly pendingBlockLeft = computed(() =>
+		this.colLeft(this.blockLayoutResult().pendingBlockPos)
+	);
+
+	/** CSS width value for the pending name-entry block, adjusted for column overlap. */
+	protected readonly pendingBlockWidth = computed(() =>
+		this.colWidth(this.blockLayoutResult().pendingBlockPos)
+	);
+
 	/** Elapsed time string, updated every second via the nowMin signal. */
 	protected readonly trackElapsedLabel = computed(() => {
 		const _ = this.nowMin();
@@ -246,14 +272,42 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		return new Date().toLocaleDateString(APP_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' });
 	});
 
-	/** Column layout positions for all timed blocks, using visual-extent packing. */
-	private readonly blockLayout = computed((): Record<string, { col: number; total: number }> => {
-		return this.buildTimedLayout(
-			this.tasks()
-				.filter((t) => t.startMin != null)
-				.map((task) => ({ task, isGhost: false }))
-		).layoutMap;
+	/**
+	 * Builds column layout for all timed tasks, injecting a virtual ghost entry for the live
+	 * tracking band or the pending name-entry block when either is active.
+	 * The ghost uses its actual time range so only genuinely overlapping tasks are displaced.
+	 *
+	 * @returns The per-task layout map, the tracking band placement, and the pending block placement.
+	 */
+	private readonly blockLayoutResult = computed((): {
+		taskLayout: Record<string, { col: number; total: number }>;
+		trackingPos: { col: number; total: number } | null;
+		pendingBlockPos: { col: number; total: number } | null;
+	} => {
+		const tracking = this.tracking();
+		const pending = this.pendingBlock();
+		const entries = this.tasks()
+			.filter((t) => t.startMin != null)
+			.map((task) => ({ task, isGhost: false as const }));
+		const ghostRange = tracking
+			? { startMin: tracking.startMin, endMin: this.nowMin() }
+			: pending ?? null;
+		if (ghostRange) {
+			const result = this.buildTimedLayout([
+				{ task: this.buildVirtualTask(ghostRange.startMin, ghostRange.endMin), isGhost: true },
+				...entries,
+			]);
+			return {
+				taskLayout: result.layoutMap,
+				trackingPos: tracking ? result.ghostPlacement : null,
+				pendingBlockPos: pending ? result.ghostPlacement : null,
+			};
+		}
+		return { taskLayout: this.buildTimedLayout(entries).layoutMap, trackingPos: null, pendingBlockPos: null };
 	});
+
+	/** Column layout positions for all timed blocks, using visual-extent packing. */
+	private readonly blockLayout = computed(() => this.blockLayoutResult().taskLayout);
 
 	private clockInterval: ReturnType<typeof setInterval> | undefined;
 	private currentDateStr = '';
@@ -830,13 +884,60 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Gets the visual end minute of a task, enforcing the minimum visual height.
+	 * Converts a column position into the CSS left value used by overlay elements.
+	 *
+	 * @param pos - The column position, or null when the element takes full width.
+	 * @returns The calc() string for the CSS left property.
+	 */
+	private colLeft(pos: { col: number; total: number } | null): string {
+		const leftPercent = pos ? pos.col * (100 / pos.total) : 0;
+		return `calc(${leftPercent}% + 4px)`;
+	}
+
+	/**
+	 * Converts a column position into the CSS width value used by overlay elements.
+	 *
+	 * @param pos - The column position, or null when the element takes full width.
+	 * @returns The calc() string for the CSS width property.
+	 */
+	private colWidth(pos: { col: number; total: number } | null): string {
+		const widthPercent = pos ? 100 / pos.total : 100;
+		return `calc(${widthPercent}% - 8px)`;
+	}
+
+	/**
+	 * Builds a synthetic tracked task used as a ghost in the column layout engine.
+	 *
+	 * @param startMin - The start minute of the ghost range.
+	 * @param endMin - The end minute of the ghost range.
+	 * @returns A TodayTask configured as a layout ghost with sentinel ord and ID.
+	 */
+	private buildVirtualTask(startMin: number, endMin: number): TodayTask {
+		return {
+			id: TODAY_TRACKING_VIRTUAL_ID,
+			source: TASK_SOURCE_TRACKED,
+			title: '',
+			done: false,
+			startMin,
+			endMin,
+			recur: 'none',
+			ord: -1e9,
+		};
+	}
+
+	/**
+	 * Gets the visual end minute of a task for layout overlap detection.
+	 * Tracked tasks with an explicit end use their real end time; all others are padded to
+	 * MINIMUM_VISUAL_MINUTES so short blocks (rendered at BLOCK_MIN_HEIGHT_PX) protect their column slot.
 	 *
 	 * @param task - The task whose visual end minute is needed.
-	 * @returns The later of the task's real end minute and start + MINIMUM_VISUAL_MINUTES.
+	 * @returns The effective end minute used for cluster and column placement.
 	 */
 	private visualEndMinute(task: TodayTask): number {
 		const start = task.startMin ?? 0;
+		if (task.source === TASK_SOURCE_TRACKED && task.endMin != null) {
+			return task.endMin;
+		}
 		const end = task.endMin ?? start;
 		return Math.max(end, start + MINIMUM_VISUAL_MINUTES);
 	}

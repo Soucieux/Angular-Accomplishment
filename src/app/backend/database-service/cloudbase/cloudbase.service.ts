@@ -19,8 +19,7 @@ import {
 	DATABASE_STATISTICS,
 	DATABASE_RECIPES,
 	DATABASE_USEFUL_LINKS,
-	DATABASE_PUSH_SUBSCRIPTIONS,
-	DATABASE_TAURI_NOTIF_TYPE,
+	STATS_FIELD_TAURI_NOTIF_ENABLED,
 	USEFUL_LINK_TYPE_LINK,
 	USEFUL_LINK_TYPE_CATEGORY,
 	ACTIVITY_TYPE_UPDATED,
@@ -1382,19 +1381,19 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets whether Tauri desktop push notifications are enabled for the current user
-	 * by checking for a preference record in the database.
+	 * Gets whether Tauri desktop notifications are enabled for the current user
+	 * by reading the flag from the per-user statistics document.
 	 *
-	 * @returns True when a Tauri notification preference record exists.
+	 * @returns True when the Tauri notification flag is set on the user's stats document.
 	 */
 	public async getTauriNotifEnabled(): Promise<boolean> {
 		try {
 			const result = await this.database
-				.collection(DATABASE_PUSH_SUBSCRIPTIONS)
-				.where({ type: DATABASE_TAURI_NOTIF_TYPE })
+				.collection(DATABASE_STATISTICS)
+				.where(this.getUserStatsFilter())
 				.limit(1)
 				.get();
-			return (result.data?.length ?? 0) > 0;
+			return result.data?.[0]?.[STATS_FIELD_TAURI_NOTIF_ENABLED] === true;
 		} catch (error: unknown) {
 			LOG.error(this.className, `Error reading Tauri notification preference`, error as Error);
 			return false;
@@ -1402,33 +1401,13 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Persists the Tauri desktop notification preference for the current user.
-	 * Creates the record when enabled, removes all matching records when disabled.
+	 * Persists the Tauri desktop notification preference for the current user
+	 * by updating the flag on the per-user statistics document.
 	 *
 	 * @param enabled - The desired enabled state.
 	 */
 	public async setTauriNotifEnabled(enabled: boolean): Promise<void> {
-		try {
-			const existing = await this.database
-				.collection(DATABASE_PUSH_SUBSCRIPTIONS)
-				.where({ type: DATABASE_TAURI_NOTIF_TYPE })
-				.limit(1)
-				.get();
-			if (enabled) {
-				if (!(existing.data?.length > 0)) {
-					await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).add({
-						type: DATABASE_TAURI_NOTIF_TYPE
-					});
-				}
-			} else {
-				for (const doc of existing.data ?? []) {
-					await this.database.collection(DATABASE_PUSH_SUBSCRIPTIONS).doc(doc._id).remove();
-				}
-			}
-		} catch (error: unknown) {
-			LOG.error(this.className, `Error saving Tauri notification preference`, error as Error);
-			this.rethrowCaught(error);
-		}
+		await this.updateUserStatsFields({ [STATS_FIELD_TAURI_NOTIF_ENABLED]: enabled });
 	}
 
 	////////////////////// Below are Add methods for database records /////////////////////

@@ -113,6 +113,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected compactOverlayOpen = false;
 	protected isTauriApp = false;
 	private tauriAppWindow: { startDragging: () => Promise<void> } | null = null;
+	private notifInitialized = false;
 	protected ctxVisible = false;
 	protected ctxX = 0;
 	protected ctxY = 0;
@@ -186,6 +187,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.mobileUserName = Utilities.capitalizeFirstLetterOnEachWord(
 					Utilities.getUserDisplayName(user)
 				);
+				if (user && this.isTauriApp && !this.notifInitialized) {
+					this.notifInitialized = true;
+					this.notificationService.init().catch(() => {});
+				}
 			});
 
 			/* Step 4: Register a capture-phase scroll listener outside Angular's zone so it

@@ -25,7 +25,8 @@ import {
 	ACTIVITY_TYPE_RATE_UPDATED,
 	ACTIVITY_TYPE_GENRE_UPDATED,
 	ACTIVITY_TYPE_FAVOURITE_UPDATED,
-	DATABASE_PUSH_SUBSCRIPTIONS,
+	DATABASE_USER_PREFERENCES,
+	STATS_FIELD_TAURI_NOTIF_ENABLED,
 } from '../../../common/app.constant';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Inject, Injectable } from '@angular/core';
@@ -906,32 +907,31 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets whether Tauri desktop push notifications are enabled for the current user.
+	 * Gets whether Tauri desktop notifications are enabled for the current user
+	 * by reading the flag from the user's preferences node.
 	 *
-	 * @returns True when a Tauri notification preference record exists in the database.
+	 * @returns True when the Tauri notification flag is set in the user's preferences.
 	 */
 	public async getTauriNotifEnabled(): Promise<boolean> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return false;
-		const snap = await get(dbRef(this.db, `${DATABASE_PUSH_SUBSCRIPTIONS}/${uid}`));
-		return snap.val()?.tauriEnabled === true;
+		const snap = await get(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`));
+		return snap.val()?.[STATS_FIELD_TAURI_NOTIF_ENABLED] === true;
 	}
 
 	/**
-	 * Persists the Tauri desktop notification preference for the current user.
-	 * Creates the record when enabled, removes it when disabled.
+	 * Persists the Tauri desktop notification preference for the current user
+	 * by updating the flag in the user's preferences node.
 	 *
 	 * @param enabled - The desired enabled state.
 	 */
 	public async setTauriNotifEnabled(enabled: boolean): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return;
-		const ref = dbRef(this.db, `${DATABASE_PUSH_SUBSCRIPTIONS}/${uid}`);
-		if (enabled) {
-			await set(ref, { tauriEnabled: true });
-		} else {
-			await remove(ref);
-		}
+		await set(
+			dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`),
+			{ [STATS_FIELD_TAURI_NOTIF_ENABLED]: enabled }
+		);
 	}
 
 	/**

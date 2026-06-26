@@ -192,9 +192,8 @@ export const DATABASE_STATISTICS = 'statistics';
 
 // stores both links (type:'link') and categories (type:'category')
 export const DATABASE_USEFUL_LINKS = 'useful_links';
-export const DATABASE_PUSH_SUBSCRIPTIONS = 'push_subscriptions';
-/** Type discriminator stored in the push_subscriptions collection for Tauri desktop entries. */
-export const DATABASE_TAURI_NOTIF_TYPE = 'tauri';
+/** Per-user preferences stored as a keyed object under each user's uid (Firebase path). */
+export const DATABASE_USER_PREFERENCES = 'preferences';
 
 ////////////////////// Below are shared UI constants /////////////////////////////////
 
@@ -259,6 +258,8 @@ export const STATS_FIELD_TOTAL_QUOTES = 'totalQuotes';
 export const STATS_FIELD_MILESTONES = 'milestones';
 export const STATS_FIELD_USERNAME_CHANGED = 'usernameChangedDate';
 export const STATS_FIELD_PASSWORD_CHANGED = 'passwordChangedDate';
+/** Boolean flag stored on the per-user stats document — true when Tauri desktop notifications are enabled. */
+export const STATS_FIELD_TAURI_NOTIF_ENABLED = 'tauriNotifEnabled';
 
 ////////////////////// Below are statistics display cap constants /////////////////////
 
@@ -691,6 +692,8 @@ export const PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL = 'Could not save the link
 
 /** Confirmation message shown before deleting a reminder entry. */
 export const REMINDER_MSG_DELETE_CONFIRM = 'Proceed with deleting this entry?\nThis cannot be undone.';
+/** Error shown when a custom tag name conflicts with an existing tag. */
+export const REMINDER_MSG_TAG_DUPLICATE = 'That name already belongs to an existing tag.';
 /** Placeholder for the reminder message text input. */
 export const REMINDER_PLACEHOLDER_TEXT = 'What should we remind you about…';
 /** Placeholder for the link URL input inside the link popover. */
@@ -748,6 +751,8 @@ export const REMINDER_TABLE_MESSAGES = 'Messages';
 export const REMINDER_ITEMS_PER_PAGE = 14;
 /** Fixed number of rows per page in the Reminder grid — page size scales as itemsPerRow × this. */
 export const REMINDER_ROWS_PER_PAGE = 7;
+/** Rows per page on narrow viewports where only one column fits — overrides the default. */
+export const REMINDER_ROWS_PER_PAGE_NARROW = 10;
 /** Reminder category label — Personal (used as the default tag for new items). */
 export const REMINDER_CATEGORY_PERSONAL = 'Personal';
 /** Fallback accent color for unrecognized or absent categories — matches the Reminder section accent. */
@@ -756,8 +761,10 @@ export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
 export const REMINDER_DUE_SOON_WINDOW_DAYS = 7;
 /** Label for the chip that opens the free-text custom tag input. */
 export const REMINDER_CHIP_CUSTOM = 'Custom';
-/** Title for due-soon push notifications sent from the Reminder page. */
-export const REMINDER_NOTIF_TITLE = 'Reminder due soon';
+/** Title for push notifications sent when a reminder is due in 3 days. */
+export const REMINDER_NOTIF_TITLE_3DAY = 'Due in 3 days';
+/** Title for push notifications sent when a reminder is due today. */
+export const REMINDER_NOTIF_TITLE_TODAY = 'Due today';
 /** Suffix used to key the due-date notification in the per-session dedup set. */
 export const NOTIF_KEY_DUE = '_due';
 /** Separator between item text and date in any scheduled notification body. */
@@ -770,6 +777,12 @@ export const NOTIF_DAILY_HOUR = 10;
 export const NOTIF_INTERVAL_MS = 24 * 60 * 60 * 1000;
 /** Error message logged when the notification scheduler fails to initialise. */
 export const NOTIF_SCHEDULER_INIT_ERROR = 'Failed to initialise notification scheduler';
+/** Error message logged when a push notification send call fails. */
+export const NOTIF_SEND_FAILED = 'Failed to send notification';
+/** Error message logged when the subscribe DB write fails. */
+export const NOTIF_SUBSCRIBE_FAILED = 'Failed to persist notification subscription';
+/** Error message logged when the unsubscribe DB write fails. */
+export const NOTIF_UNSUBSCRIBE_FAILED = 'Failed to persist notification unsubscription';
 
 ////////////////////// Below are Debt Sonata page constants //////////////////////////
 
@@ -957,7 +970,7 @@ export const ACCOUNT_DIALOG_DELETE_CANCEL_BTN = 'Cancel';
 
 export const TODAY_EYEBROW = "Today's Canvas";
 export const TODAY_TITLE = 'Shape your hours.';
-export const TODAY_SUBTITLE = 'Drag across the timeline to claim a moment — the day is yours to compose.';
+export const TODAY_SUBTITLE = 'Drag across the timeline to claim a moment';
 export const TODAY_QUICKADD_PLACEHOLDER = 'Quick add an untimed task — or drag the calendar to schedule';
 export const TODAY_BTN_ADD = 'Add';
 export const TODAY_HINT_DRAG_UNTIMED = 'drag a block here to make it untimed';

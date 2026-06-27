@@ -177,6 +177,13 @@
 										</button>
 									}
 									<button
+										class="account-menu-popover-item"
+										type="button"
+										(click)="doSwitchLocale()">
+										<span class="material-symbols-outlined">language</span>
+										{{ localeSwitchLabel }}
+									</button>
+									<button
 										class="account-menu-popover-item account-menu-popover-item--danger"
 										(click)="logout()">
 										<span class="material-symbols-outlined">logout</span>{{ NAV_LABEL_SIGN_OUT }}
@@ -247,7 +254,8 @@
 		[userName]="mobileUserName"
 		(navigate)="navigateToRoute($event)"
 		(signIn)="navigateToLogin()"
-		(signOut)="handleMobileSignOut()" />
+		(signOut)="handleMobileSignOut()"
+		(switchLocale)="doSwitchLocale()" />
 }
 @if (isTauriApp) {
 	<div class="app-header-container">

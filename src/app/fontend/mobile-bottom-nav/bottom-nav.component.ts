@@ -23,10 +23,13 @@ import {
 } from '../../common/constants';
 import {
 	ACCOUNT_TITLE_PAGE,
+	ACTIVE_LOCALE,
 	NAV_NOTIF_LABEL_DISABLE,
 	NAV_NOTIF_LABEL_ENABLE,
-	NAV_NOTIF_TOGGLE_ERROR
-} from '../../common/locale/locale.en';
+	NAV_NOTIF_TOGGLE_ERROR,
+	NAV_LOCALE_SWITCH_TO_ZH,
+	NAV_LOCALE_SWITCH_TO_EN
+} from '../../common/locale/locale-strings';
 import { NotificationService } from '../../backend/notification-service/notification.service';
 import { NavItem } from './bottom-nav.model';
 import { Utilities } from '../../common/utilities/app.utilities';
@@ -46,6 +49,7 @@ export class BottomNavComponent implements AfterViewInit {
 	@Output() public readonly navigate = new EventEmitter<string>();
 	@Output() public readonly signIn = new EventEmitter<void>();
 	@Output() public readonly signOut = new EventEmitter<void>();
+	@Output() public readonly switchLocale = new EventEmitter<void>();
 
 	@Input() public items: NavItem[] = [];
 	@Input() public primaryIds: string[] = [];
@@ -59,6 +63,8 @@ export class BottomNavComponent implements AfterViewInit {
 	protected readonly NAV_AVATAR_GRADIENT = NAV_AVATAR_GRADIENT;
 	protected readonly NAV_NOTIF_LABEL_ENABLE = NAV_NOTIF_LABEL_ENABLE;
 	protected readonly NAV_NOTIF_LABEL_DISABLE = NAV_NOTIF_LABEL_DISABLE;
+	protected readonly localeSwitchLabel: string =
+		ACTIVE_LOCALE === 'en' ? NAV_LOCALE_SWITCH_TO_ZH : NAV_LOCALE_SWITCH_TO_EN;
 
 	protected readonly gridOpen = signal(false);
 	protected readonly accountOpen = signal(false);
@@ -180,6 +186,15 @@ export class BottomNavComponent implements AfterViewInit {
 	protected doSignOut(): void {
 		this.accountOpen.set(false);
 		this.signOut.emit();
+	}
+
+	/**
+	 * Closes the account popover and emits the switchLocale event so the parent
+	 * can open a confirmation dialog before reloading with the new language.
+	 */
+	protected doSwitchLocale(): void {
+		this.accountOpen.set(false);
+		this.switchLocale.emit();
 	}
 
 	/**

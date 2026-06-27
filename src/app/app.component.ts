@@ -19,6 +19,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
 import { AuthService } from './backend/authentication-service/auth.service';
+import { LocaleService } from './common/locale/locale.service';
 import { DialogService } from './backend/dialog-service/dialog.service';
 import { NotificationService } from './backend/notification-service/notification.service';
 import { NotificationSchedulerService } from './backend/notification-service/notification-scheduler.service';
@@ -77,8 +78,13 @@ import {
 	NAV_STATUS_OFFLINE,
 	DIALOG_BTN_SIGN_OUT,
 	DIALOG_HEADER_SIGN_OUT,
-	MSG_LOGOUT_CONFIRM
-} from './common/locale/locale.en';
+	MSG_LOGOUT_CONFIRM,
+	NAV_LOCALE_SWITCH_TO_ZH,
+	NAV_LOCALE_SWITCH_TO_EN,
+	DIALOG_LOCALE_SWITCH_HEADER,
+	DIALOG_LOCALE_SWITCH_MSG,
+	DIALOG_LOCALE_SWITCH_BTN
+} from './common/locale/locale-strings';
 import {
 	ContextMenuAction,
 	DesktopContextMenuComponent
@@ -159,6 +165,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly NAV_LABEL_SIGN_IN = NAV_LABEL_SIGN_IN;
 	protected readonly NAV_STATUS_ONLINE = NAV_STATUS_ONLINE;
 	protected readonly NAV_STATUS_OFFLINE = NAV_STATUS_OFFLINE;
+	protected readonly localeSwitchLabel: string =
+		this.localeService.currentLocale === 'en' ? NAV_LOCALE_SWITCH_TO_ZH : NAV_LOCALE_SWITCH_TO_EN;
 	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, {
 		initialValue: false
 	});
@@ -173,6 +181,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		private dialogService: DialogService,
 		private notificationService: NotificationService,
 		private notificationScheduler: NotificationSchedulerService,
+		private localeService: LocaleService,
 		private router: Router,
 		private ngZone: NgZone,
 		private utilities: Utilities,
@@ -694,6 +703,18 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 			DIALOG_HEADER_SIGN_OUT,
 			DIALOG_BTN_SIGN_OUT
 		]);
+	}
+
+	/**
+	 * Opens a confirmation dialog for switching the display language, then
+	 * applies the opposite locale and reloads the page when the user accepts.
+	 * Used by both the desktop account popover and the mobile bottom-nav.
+	 */
+	protected doSwitchLocale(): void {
+		const targetLocale: 'en' | 'zh' = this.localeService.currentLocale === 'en' ? 'zh' : 'en';
+		this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, () => {
+			this.localeService.applyLocale(targetLocale);
+		}, [DIALOG_LOCALE_SWITCH_MSG, DIALOG_LOCALE_SWITCH_HEADER, DIALOG_LOCALE_SWITCH_BTN]);
 	}
 
 	// ── Template helpers ──────────────────────────────────────────────────────

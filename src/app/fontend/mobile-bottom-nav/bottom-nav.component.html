@@ -76,6 +76,13 @@
 			<span class="material-symbols-outlined" style="font-size: 20px">manage_accounts</span><span>{{ ACCOUNT_TITLE_PAGE }}</span>
 		</button>
 		<button
+			class="account-popover-item"
+			type="button"
+			(click)="doSwitchLocale()">
+			<span class="material-symbols-outlined" style="font-size: 20px">language</span>
+			{{ localeSwitchLabel }}
+		</button>
+		<button
 			class="account-popover-item account-popover-item--danger"
 			type="button"
 			cdkFocusInitial

@@ -77,7 +77,7 @@ import {
 	MILESTONE_DOMAIN_STREAK,
 	CLOUDBASE_ERR_PERMISSION_DENIED
 } from '../../../common/constants';
-import { ERROR_NO_DOCUMENT_UPDATED } from '../../../common/locale/locale.en';
+import { ERROR_NO_DOCUMENT_UPDATED } from '../../../common/locale/locale-strings';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
 import { SessionExpiredError } from '../../../common/error/session-expired.error';

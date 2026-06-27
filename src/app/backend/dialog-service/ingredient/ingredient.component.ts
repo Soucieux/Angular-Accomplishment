@@ -6,7 +6,7 @@ import {
 	RECIPE_ITYPE_DIALOG_TITLE,
 	INGREDIENT_BTN_CANCEL,
 	INGREDIENT_BTN_APPLY
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 import { IngredientType, TypeTab } from '../../../fontend/recipe/recipe.model';
 
 @Component({

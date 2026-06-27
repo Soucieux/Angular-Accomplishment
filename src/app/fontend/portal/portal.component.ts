@@ -93,7 +93,7 @@ import {
 	PORTAL_BTN_TITLE_NEW_CATEGORY,
 	PORTAL_BTN_TITLE_EDIT,
 	PORTAL_BTN_TITLE_DELETE
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import {
 	NewCategoryData,
 	NewLinkData,

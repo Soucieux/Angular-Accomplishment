@@ -11,7 +11,7 @@ import {
 	ACCOUNT_DIALOG_DELETE_MSG,
 	ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER,
 	MSG_UNEXPECTED_ERROR
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 
 @Component({
 	selector: 'delete-account-dialog',

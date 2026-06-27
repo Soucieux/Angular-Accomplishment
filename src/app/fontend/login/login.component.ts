@@ -64,7 +64,7 @@ import {
 	LOGIN_LABEL_PASSWORD,
 	LOGIN_LABEL_DIVIDER,
 	LOGIN_BTN_GOOGLE
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import { LOG } from '../../common/app.logs';
 import { AccountRateLimitedError } from '../../common/error/account-rate-limited.error';
 import { EmailNotVerifiedError } from '../../common/error/email-not-verified.error';

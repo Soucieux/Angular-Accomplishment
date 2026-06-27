@@ -27,7 +27,7 @@ import {
 	DATABASE_USER_PREFERENCES,
 	STATS_FIELD_TAURI_NOTIF_ENABLED
 } from '../../../common/constants';
-import { REMINDER_TABLE_MESSAGES } from '../../../common/locale/locale.en';
+import { REMINDER_TABLE_MESSAGES } from '../../../common/locale/locale-strings';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Inject, Injectable } from '@angular/core';
 import {

@@ -75,7 +75,7 @@ import {
 	DEBT_HEADING_YOUR_DEBTS,
 	DEBT_RIBBON_PAID_OFF,
 	DEBT_HISTORY_EMPTY
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import {
 	DEBT_CATEGORY_DEFS,
 	DebtCategoryDef,

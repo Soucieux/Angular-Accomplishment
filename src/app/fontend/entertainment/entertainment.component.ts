@@ -44,7 +44,7 @@ import {
 	ENT_SEARCH_PLACEHOLDER,
 	ENT_LABEL_FILMS,
 	ENT_LABEL_TO_WATCH
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { ENT_CORK_PIN_COLORS, ENT_CORK_ROTATIONS, MOVIE_GENRES } from './entertainment.model';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';

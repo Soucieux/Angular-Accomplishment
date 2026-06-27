@@ -8,7 +8,7 @@ import {
 import {
 	ERROR_DIALOG_BTN_LABEL,
 	ERROR_DIALOG_HEADER
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 
 @Component({
 	selector: 'error-dialog',

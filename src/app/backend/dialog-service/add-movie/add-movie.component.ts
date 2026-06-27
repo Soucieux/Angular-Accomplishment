@@ -30,7 +30,7 @@ import {
 	ADD_MOVIE_SUBTITLE,
 	ADD_MOVIE_LABEL_GENRE,
 	ADD_MOVIE_LABEL_FAVOURITE
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 import { AddMovieFormValue } from './add-movie.model';
 import { MOVIE_GENRES } from '../../../fontend/entertainment/entertainment.model';
 

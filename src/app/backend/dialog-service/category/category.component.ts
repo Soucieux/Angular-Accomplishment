@@ -9,7 +9,7 @@ import {
 	PORTAL_CATEGORY_DIALOG_PLACEHOLDER_NAME,
 	PORTAL_CATEGORY_DIALOG_TITLE_ADD,
 	PORTAL_CATEGORY_DIALOG_TITLE_EDIT
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 import { NewCategoryData } from '../../../fontend/portal/portal.model';
 
 @Component({

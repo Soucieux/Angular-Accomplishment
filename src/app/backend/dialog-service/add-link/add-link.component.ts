@@ -22,7 +22,7 @@ import {
 	ADD_LINK_PLACEHOLDER_NAME,
 	ADD_LINK_LABEL_CATEGORY,
 	ADD_LINK_PLACEHOLDER_CATEGORY
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 import { PortalCategory, NewLinkData } from '../../../fontend/portal/portal.model';
 
 @Component({

@@ -84,7 +84,7 @@ import {
 	RECIPE_PLACEHOLDER_UNIT,
 	RECIPE_SUFFIX_MIN,
 	RECIPE_SUFFIX_SERVINGS
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import {
 	BadgeTag,
 	DropPosition,

@@ -23,7 +23,7 @@ import {
 	HISTORY_DIALOG_UNDO_BTN,
 	HISTORY_MSG_UNDO_CONFIRM,
 	HISTORY_SUBTITLE
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';
 import { HistoryEntry } from './history.model';
 

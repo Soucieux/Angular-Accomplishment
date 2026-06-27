@@ -182,7 +182,7 @@ import {
 	ORBITAL_PANEL_EMPTY_PAYMENTS,
 	ORBITAL_PANEL_EMPTY_GENRES,
 	ORBITAL_PANEL_EMPTY_RECIPES
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 
 type OrbitalActivityOverride = {
 	icon?: string;

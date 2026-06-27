@@ -7,7 +7,7 @@ import {
 	ENT_DIALOG_TITLE_SEARCH,
 	SEARCH_CANCEL,
 	SEARCH_COMPLETE
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 
 @Component({
 	selector: 'search-dialog',

@@ -76,7 +76,7 @@ import {
 	REMINDER_PLACEHOLDER_TAG,
 	REMINDER_PLACEHOLDER_TEXT,
 	REMINDER_TITLE_PAGE
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import {
 	NewItem,
 	REMINDER_CATEGORY_COLOR_MAP,

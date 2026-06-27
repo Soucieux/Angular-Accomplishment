@@ -63,7 +63,7 @@ import {
 	PATCH_TABLE_HEADER_EDIT,
 	PATCH_EMPTY_SEARCH,
 	PATCH_LABEL_PREVIOUS_RELEASES
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import { ReleaseNote } from './patch.model';
 import { Observable, catchError, firstValueFrom, of, startWith, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';

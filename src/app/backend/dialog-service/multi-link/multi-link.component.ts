@@ -17,7 +17,7 @@ import {
 	MULTI_LINK_LABEL_LINKS_FOUND,
 	MULTI_LINK_LABEL_PASTE,
 	MULTI_LINK_PLACEHOLDER_PASTE
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 import { Utilities } from '../../../common/utilities/app.utilities';
 import { NewLinkData } from '../../../fontend/portal/portal.model';
 import { BulkLink, parseLinks, titleFromHost } from './multi-link.model';

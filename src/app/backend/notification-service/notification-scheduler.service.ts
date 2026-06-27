@@ -15,7 +15,7 @@ import {
 import {
 	REMINDER_NOTIF_TITLE_3DAY,
 	REMINDER_NOTIF_TITLE_TODAY
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationSchedulerService {

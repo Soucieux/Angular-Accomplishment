@@ -28,7 +28,7 @@ import {
 	HOME_CHIP_REMINDER,
 	HOME_CHIP_DEBT_SONATA,
 	PORTAL_MSG_LOAD_CATEGORIES_FAILED
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import { OrbitalComponent } from './orbital/orbital.component';
 
 @Component({

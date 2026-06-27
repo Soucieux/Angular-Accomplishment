@@ -44,7 +44,7 @@ import {
 	TODAY_TRACKING_PREFIX,
 	MOBILE_BLOCKED_TITLE,
 	MOBILE_BLOCKED_BODY
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 import {
 	BLOCK_MIN_HEIGHT_PX,

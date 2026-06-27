@@ -42,7 +42,7 @@ import {
 	RESONANCE_BTN_POST,
 	RESONANCE_EMPTY_TEXT,
 	RESONANCE_ARIA_DELETE
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import { LOG } from '../../common/app.logs';
 import { RESONANCE_GRADIENTS, QuoteRecord } from './resonance.model';
 

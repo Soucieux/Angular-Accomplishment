@@ -57,7 +57,7 @@ import {
 	ACCOUNT_MSG_PASSWORD_MISMATCH,
 	ACCOUNT_MSG_PASSWORD_TOO_SHORT,
 	ACCOUNT_MSG_PASSWORD_UPDATED
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 import {
 	AccountMilestone,
 	AccountStat,

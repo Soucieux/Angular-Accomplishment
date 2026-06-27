@@ -25,7 +25,7 @@ import {
 	ADD_DEBT_LABEL_AMOUNT,
 	ADD_DEBT_LABEL_CURRENCY,
 	ADD_DEBT_LABEL_DUE_DATE
-} from '../../../common/locale/locale.en';
+} from '../../../common/locale/locale-strings';
 import { DEBT_CATEGORY_DEFS, NewDebtData } from '../../../fontend/debt/debt.model';
 
 @Component({

@@ -12,7 +12,7 @@ import {
 import {
 	NOTIF_ENABLED_BODY,
 	NOTIF_ENABLED_TITLE
-} from '../../common/locale/locale.en';
+} from '../../common/locale/locale-strings';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {

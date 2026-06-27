@@ -107,6 +107,8 @@ export const KEY_ESCAPE = 'Escape';
 export const LS_AUTH_HINT_KEY = 'auth_hint';
 /** localStorage key used to persist the nav sidebar collapsed state across page refreshes. */
 export const LS_NAV_COLLAPSED_KEY = 'nav_collapsed';
+/** localStorage key used to persist the user's selected display language across page refreshes. */
+export const LS_LOCALE_KEY = 'app_locale';
 export const NAV_AVATAR_FALLBACK_INITIAL = '?';
 /** Fallback background gradient for the avatar element when no user-specific colour is set. */
 export const NAV_AVATAR_GRADIENT = 'linear-gradient(135deg,#d53369,#daae51)';

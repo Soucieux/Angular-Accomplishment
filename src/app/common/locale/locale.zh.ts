@@ -43,6 +43,11 @@ export const LOGIN_MSG_SEND_CODE_FAILED = '发送验证码失败';
 export const NAV_NOTIF_LABEL_ENABLE = '开启推送通知';
 export const NAV_NOTIF_LABEL_DISABLE = '关闭推送通知';
 export const NAV_NOTIF_TOGGLE_ERROR = '切换推送通知时出错';
+export const NAV_LOCALE_SWITCH_TO_ZH = '切换到中文';
+export const NAV_LOCALE_SWITCH_TO_EN = '切换到英文';
+export const DIALOG_LOCALE_SWITCH_HEADER = '切换语言';
+export const DIALOG_LOCALE_SWITCH_MSG = '页面将重新加载以应用更改。';
+export const DIALOG_LOCALE_SWITCH_BTN = '切换并重载';
 export const NAV_LABEL_MENU = '目录';
 export const NAV_LABEL_HOME = '主页';
 export const NAV_LABEL_TODAY = '今日';
@@ -198,8 +203,8 @@ export const RATE_LABEL_POOR = '差评';
    Resonance page constants
 ───────────────────────────────────────── */
 
-export const RESONANCE_MSG_DELETE_CONFIRM = '确认删除这条留言？';
-export const RESONANCE_DIALOG_TITLE_DELETE = '删除留言';
+export const RESONANCE_MSG_DELETE_CONFIRM = '确认删除这条心声？';
+export const RESONANCE_DIALOG_TITLE_DELETE = '删除心声';
 export const RESONANCE_MSG_POSTED = '已发布';
 export const RESONANCE_AUTHOR_ANONYMOUS = '匿名';
 export const RESONANCE_LABEL_VOICES = '条心声';
@@ -208,8 +213,8 @@ export const RESONANCE_SUBTITLE = '静谧之所，每一个字都有它的份量
 export const RESONANCE_PLACEHOLDER_QUOTE = '写下值得铭记的话...';
 export const RESONANCE_PLACEHOLDER_NAME = '名字（选填）';
 export const RESONANCE_BTN_POST = '发布';
-export const RESONANCE_EMPTY_TEXT = '还没有人留言，也许你的声音会是第一个。';
-export const RESONANCE_ARIA_DELETE = '删除留言';
+export const RESONANCE_EMPTY_TEXT = '还没有心声，也许你的声音会是第一个。';
+export const RESONANCE_ARIA_DELETE = '删除心声';
 
 /* ─────────────────────────────────────────
    Recipe page constants

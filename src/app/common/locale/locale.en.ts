@@ -6,14 +6,16 @@ export * from '../constants';
 
 /** Confirmation message shown when the user attempts to sign out. */
 export const MSG_LOGOUT_CONFIRM = 'Are you sure you want to sign out?';
-/** Header for the sign-out confirmation dialog. */
-export const DIALOG_HEADER_SIGN_OUT = 'Sign Out';
 /** Accept button label for the sign-out confirmation dialog. */
 export const DIALOG_BTN_SIGN_OUT = 'Sign Out';
 /** Shared delete button label used across all confirm-delete dialogs. */
 export const DIALOG_BTN_DELETE = 'Delete';
 /** Shared confirm button label used across all confirm dialogs. */
 export const DIALOG_BTN_CONFIRM = 'Confirm';
+/** Shared cancel button label used across all dialogs. */
+export const DIALOG_BTN_CANCEL = 'Cancel';
+/** Shared save button label used across all dialogs. */
+export const DIALOG_BTN_SAVE = 'Save';
 /** Shared toast summary shown when a delete operation fails. */
 export const MSG_DELETE_FAILED = 'Delete failed';
 /** Shared toast summary shown when a save operation fails. */
@@ -33,7 +35,6 @@ export const MSG_DIALOG_CONTAINER_NOT_FOUND = 'Dialog container not found';
 /** Error message thrown when a second dialog is opened before the first is closed. */
 export const MSG_DIALOG_ALREADY_OPEN = 'Dialog already opened';
 export const ERROR_DIALOG_HEADER = 'Error';
-export const ERROR_DIALOG_BTN_LABEL = 'OK';
 export const SEARCH_COMPLETE = 'Search complete';
 export const SEARCH_CANCEL = 'Search cancelled';
 /** Message shown in the retry dialog when a page data load exceeds the timeout. */
@@ -78,8 +79,9 @@ export const NAV_LABEL_PATCH_NOTES = 'Patch Notes';
 export const NAV_LABEL_ABOUT = 'About';
 export const NAV_LABEL_SIGN_OUT = 'Sign out';
 export const NAV_LABEL_SIGN_IN = 'Sign in';
-export const NAV_STATUS_ONLINE = 'Online';
 export const NAV_STATUS_OFFLINE = 'Offline';
+/** Shared "Online" label used across nav and mobile-nav status indicators. */
+export const LABEL_ONLINE = 'Online';
 export const LOGIN_LABEL_CREATE_ACCOUNT = 'Create account';
 export const LOGIN_LABEL_GET_CODE = 'Get Code';
 export const LOGIN_LABEL_SIGN_IN = 'Sign In';
@@ -97,14 +99,17 @@ export const LOGIN_LABEL_SEND_RESET_CODE = 'Send reset code';
 export const LOGIN_LABEL_RESET_PASSWORD = 'Reset password';
 export const LOGIN_LABEL_BACK_TO_SIGN_IN = 'Back to sign in';
 export const LOGIN_FLAVOUR_TEXT = 'Welcome back to the hidden kingdom';
-export const LOGIN_LABEL_EMAIL = 'Email';
 export const LOGIN_MSG_EMAIL_REQUIRED = 'Email is required.';
+/** Shared "Email" label used in login and account pages. */
+export const LABEL_EMAIL = 'Email';
 export const LOGIN_MSG_EMAIL_INVALID = 'Enter a valid email address.';
 export const LOGIN_LABEL_CODE = 'Code';
 export const LOGIN_MSG_CODE_REQUIRED = 'Verification code is required.';
-export const LOGIN_LABEL_NEW_PASSWORD = 'New password';
 export const LOGIN_MSG_PASSWORD_REQUIRED = 'Password is required.';
-export const LOGIN_LABEL_USERNAME = 'Username';
+/** Shared "New password" label used in login and account pages. */
+export const LABEL_NEW_PASSWORD = 'New password';
+/** Shared "Username" label used in login and account pages. */
+export const LABEL_USERNAME = 'Username';
 export const LOGIN_MSG_USERNAME_REQUIRED = 'Username is required.';
 export const LOGIN_LABEL_PASSWORD = 'Password';
 export const LOGIN_LABEL_DIVIDER = 'or';
@@ -166,13 +171,6 @@ export const HOME_SATELLITE_TOOLTIP_STREAK = 'Consecutive days with at least one
 export const HOME_BRAND_SUBTITLE = 'A PERSONAL INNER WORLD';
 export const HOME_FLAVOUR_LINE_1 = 'Some memories are worth keeping.';
 export const HOME_FLAVOUR_LINE_2 = 'So I made a place to keep them.';
-export const HOME_CHIP_PORTAL = 'PORTAL';
-export const HOME_CHIP_RESONANCE = 'RESONANCE';
-export const HOME_CHIP_RECIPES = 'RECIPES';
-export const HOME_CHIP_ENTERTAINMENT = 'ENTERTAINMENT';
-export const HOME_CHIP_REMINDER = 'REMINDER';
-export const HOME_CHIP_DEBT_SONATA = 'DEBT SONATA';
-
 /** Plural label used when multiple reminders appear in the urgency strip. */
 export const ORBITAL_URGENCY_LABEL_REMINDERS = 'reminders';
 /** Plural label used when multiple debts appear in the urgency strip. */
@@ -181,19 +179,21 @@ export const ORBITAL_URGENCY_LABEL_DEBTS = 'debts';
 export const ORBITAL_URGENCY_LABEL_VARIOUS = 'Various';
 export const ORBITAL_LABEL_STREAK = 'Streak';
 export const ORBITAL_LABEL_PATCH = 'Patch';
-export const ORBITAL_LABEL_VOICES = 'Voices';
 export const ORBITAL_LABEL_THIS_WEEK = 'This Week';
 export const ORBITAL_LABEL_LIFE_CLOCK = 'LIFE CLOCK';
 export const ORBITAL_LABEL_REMINDERS = 'Reminders';
 export const ORBITAL_LABEL_SHORTCUTS = 'Shortcuts';
-export const ORBITAL_LABEL_DEBT_SONATA = 'Debt Sonata';
-export const ORBITAL_LABEL_ENTERTAINMENT = 'Entertainment';
-export const ORBITAL_LABEL_RECIPES = 'Recipes';
 export const ORBITAL_LABEL_ACTIVITY = 'Activity';
 export const ORBITAL_PANEL_EMPTY_LINKS = 'No links yet';
 export const ORBITAL_PANEL_EMPTY_PAYMENTS = 'No upcoming payments';
 export const ORBITAL_PANEL_EMPTY_GENRES = 'No genre data yet';
 export const ORBITAL_PANEL_EMPTY_RECIPES = 'No recipes yet';
+export const ORBITAL_DAY_NAMES_SHORT: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export const ORBITAL_QUICK_ACTION_LABELS: string[] = ['Add Movie', 'Add Quote', 'Add Recipe', 'Add Debt', 'Add Reminder', 'Add Shortcut'];
+export const ORBITAL_GREETING_NIGHT = 'Good night';
+export const ORBITAL_GREETING_MORNING = 'Good morning';
+export const ORBITAL_GREETING_AFTERNOON = 'Good afternoon';
+export const ORBITAL_GREETING_EVENING = 'Good evening';
 
 /* ─────────────────────────────────────────
    Entertainment page constants
@@ -238,7 +238,6 @@ export const RESONANCE_DIALOG_TITLE_DELETE = 'Delete Quote';
 export const RESONANCE_MSG_POSTED = 'Posted';
 export const RESONANCE_AUTHOR_ANONYMOUS = 'Anonymous';
 export const RESONANCE_LABEL_VOICES = 'voices';
-export const RESONANCE_TITLE_PAGE = 'Resonance';
 export const RESONANCE_SUBTITLE = 'A quiet refuge where every word finds its power';
 export const RESONANCE_PLACEHOLDER_QUOTE = 'Write something worth remembering...';
 export const RESONANCE_PLACEHOLDER_NAME = 'Your name (optional)';
@@ -276,14 +275,15 @@ export const RECIPE_MSG_DELETE_FAILED_DETAIL = 'Could not delete the recipe. Ple
 export const RECIPE_MSG_NAME_TOO_LONG = 'Recipe name must not exceed 9 Chinese characters in length.';
 export const RECIPE_MSG_CATEGORY_REQUIRED = 'Please select a category before saving.';
 
-export const RECIPE_CATEGORY_ALL = 'All';
+/** Shared "All" filter label used across pages (Recipe, Reminder). */
+export const LABEL_ALL = 'All';
 export const RECIPE_CATEGORY_CHINESE = 'Chinese';
 export const RECIPE_CATEGORY_WESTERN = 'Western';
 export const RECIPE_CATEGORY_QUICK = 'Quick';
 export const RECIPE_CATEGORY_DESSERT = 'Dessert';
+export const RECIPE_PLACEHOLDER_CATEGORY = 'Choose category…';
 
 export const RECIPE_EYEBROW = 'Personal Cookbook';
-export const RECIPE_TITLE_PAGE = 'Recipes';
 export const RECIPE_SUBTITLE = 'Your personal cookbook';
 export const RECIPE_PLACEHOLDER_SEARCH = 'Search recipes…';
 export const RECIPE_EMPTY_SEARCH = 'No recipes match your search';
@@ -296,8 +296,25 @@ export const RECIPE_PLACEHOLDER_QTY = 'qty';
 export const RECIPE_PLACEHOLDER_UNIT = 'unit *';
 export const RECIPE_SUFFIX_MIN = 'min';
 export const RECIPE_SUFFIX_SERVINGS = 'servings';
-export const INGREDIENT_BTN_CANCEL = 'Cancel';
+export const RECIPE_BTN_ADD = 'Add Recipe';
+export const RECIPE_BTN_EDIT = 'Edit Recipe';
+export const RECIPE_BTN_SAVE = 'Save Recipe';
+export const RECIPE_BTN_SAVE_CHANGES = 'Save Changes';
+export const RECIPE_LABEL_SERVES = 'Serves';
+export const RECIPE_LABEL_INGREDIENTS = 'Ingredients';
+export const RECIPE_LABEL_STEPS = 'Steps';
+export const RECIPE_LABEL_NOTES = 'Notes & Tips';
+export const RECIPE_BTN_ADD_INGREDIENT = '+ Add ingredient';
+export const RECIPE_BTN_ADD_SUBPOINT = '+ Add sub-point';
+export const RECIPE_BTN_ADD_STEP = '+ Add step';
+export const RECIPE_BADGE_EXAMPLE = 'Example';
 export const INGREDIENT_BTN_APPLY = 'Apply';
+export const RECIPE_ITYPE_LABELS: Record<string, string> = {
+	veg: 'Vegetables', meat: 'Meat', seas: 'Seasoning', dairy: 'Dairy',
+	grain: 'Grain', liq: 'Liquid', spice: 'Spice', seafood: 'Seafood',
+	egg: 'Eggs', nut: 'Nuts', fruit: 'Fruit', oil: 'Oil',
+	herb: 'Herb', fungi: 'Fungi', sweet: 'Sweetener', condiment: 'Condiment',
+};
 
 /* ─────────────────────────────────────────
    Portal page constants
@@ -332,6 +349,12 @@ export const PORTAL_MSG_LOAD_CATEGORIES_FAILED = 'Failed to load link categories
 export const PORTAL_MSG_SAVE_LINK_FAILED = 'Failed to save link';
 export const PORTAL_MSG_SAVE_CATEGORY_FAILED = 'Failed to save category';
 export const PORTAL_MSG_RESET_CONFIRM = 'Proceed with resetting the dates?';
+export const PORTAL_BTN_BATCH = 'Batch';
+export const PORTAL_BTN_ADD_LINK = 'Add Link';
+/** Shared "Add Link" label used for dialog titles and buttons. */
+export const LABEL_ADD_LINK = 'Add Link';
+/** Shared "Add" button label used across multiple pages. */
+export const BTN_ADD = 'Add';
 
 /** Dialog title when adding a new link. */
 export const PORTAL_DIALOG_TITLE_ADD_LINK = 'Add Link';
@@ -341,16 +364,10 @@ export const PORTAL_DIALOG_TITLE_EDIT_LINK = 'Edit Link';
 export const PORTAL_CATEGORY_DIALOG_TITLE_ADD = 'New Category';
 /** Dialog title when editing an existing category. */
 export const PORTAL_CATEGORY_DIALOG_TITLE_EDIT = 'Edit Category';
-/** Label for the name input in the add/edit category dialog. */
-export const PORTAL_CATEGORY_DIALOG_LABEL_NAME = 'Name';
+/** Shared "Name" label used in category and debt dialogs. */
+export const LABEL_NAME = 'Name';
 /** Placeholder for the category name input field. */
 export const PORTAL_CATEGORY_DIALOG_PLACEHOLDER_NAME = 'e.g. Study, Tools, Dev';
-/** Cancel button label in the add/edit category dialog. */
-export const PORTAL_CATEGORY_DIALOG_LABEL_CANCEL = 'Cancel';
-/** Save button label in the add/edit category dialog. */
-export const PORTAL_CATEGORY_DIALOG_LABEL_SAVE = 'Save';
-/** Delete button label shown in edit mode in the category dialog. */
-export const PORTAL_CATEGORY_DIALOG_LABEL_DELETE = 'Delete';
 /** Label for the isPinned checkbox in the add/edit link dialog. */
 export const PORTAL_LABEL_PIN_TO_DASHBOARD = 'Pin to dashboard';
 /** Label for the isShared checkbox in the add link dialog. */
@@ -367,21 +384,17 @@ export const PORTAL_SECTION_MY_LINKS_SUFFIX = 'links · only you can see these';
 export const PORTAL_SECTION_SHARED_EMPTY = 'No shared links here yet';
 /** Empty-state message shown when the My Links section has no links. */
 export const PORTAL_SECTION_MY_LINKS_EMPTY = 'No links here yet';
-export const LINK_DIALOG_LABEL_CANCEL = 'Cancel';
-export const LINK_DIALOG_LABEL_SAVE = 'Save';
-export const LINK_DIALOG_LABEL_ADD = 'Add Link';
 export const LINK_DIALOG_LABEL_TITLE_LOADING = 'Loading title…';
-export const PORTAL_DIALOG_RESET_BTN = 'Reset';
 export const PORTAL_LABEL_CURRENT_MONTH = 'Current Month';
 export const PORTAL_LABEL_NEXT_MONTH = 'Next Month';
 export const PORTAL_LABEL_RESET = 'Reset';
-export const PORTAL_LABEL_CELL_CONFIRM = 'Confirm';
 export const PORTAL_LABEL_CELL_DONE = 'Done';
 export const PORTAL_LABEL_CELL_TODAY = 'Today';
 
 export const MULTI_LINK_DIALOG_TITLE = 'Add multiple links';
 export const MULTI_LINK_DIALOG_SUBTITLE = "Paste a batch of URLs — we'll fetch each icon automatically.";
-export const MULTI_LINK_LABEL_CATEGORY = 'Category';
+/** Shared "Category" label used in multi-link and debt dialogs. */
+export const LABEL_CATEGORY = 'Category';
 export const MULTI_LINK_LABEL_APPLIES_PREFIX = '· applies to all ';
 export const MULTI_LINK_LABEL_LINK = 'link';
 export const MULTI_LINK_LABEL_LINKS = 'links';
@@ -392,12 +405,9 @@ export const MULTI_LINK_LABEL_LINK_FOUND = 'link found';
 export const MULTI_LINK_LABEL_LINKS_FOUND = 'links found';
 export const MULTI_LINK_LABEL_EMPTY = 'Links will appear here';
 export const MULTI_LINK_LABEL_EMPTY_HINT = 'Paste URLs on the left to preview them with fetched icons.';
-export const MULTI_LINK_LABEL_CANCEL = 'Cancel';
-export const MULTI_LINK_LABEL_ADD_PREFIX = 'Add ';
 export const PORTAL_MSG_MULTI_LINK_SAVED = 'Links saved';
 export const PORTAL_MSG_SAVING_LINKS = 'Saving links...';
 export const PORTAL_MSG_MULTI_LINK_SAVE_FAILED_DETAIL = 'Could not save the links. Please try again.';
-export const PORTAL_TITLE_PAGE = 'Portal';
 export const PORTAL_SUBTITLE = 'Your links & resources command center';
 export const PORTAL_LABEL_DATE_CALCULATOR = 'Date Calculator';
 export const PORTAL_TABLE_HEADER_FIRST = 'First';
@@ -406,8 +416,8 @@ export const PORTAL_TABLE_HEADER_THIRD = 'Third';
 export const PORTAL_TABLE_HEADER_FOURTH = 'Fourth';
 export const PORTAL_BTN_TITLE_EDIT_CATEGORY = 'Edit category';
 export const PORTAL_BTN_TITLE_NEW_CATEGORY = 'New category';
-export const PORTAL_BTN_TITLE_EDIT = 'Edit';
-export const PORTAL_BTN_TITLE_DELETE = 'Delete';
+/** Shared "Edit" label used in portal and patch notes. */
+export const LABEL_EDIT = 'Edit';
 export const ADD_LINK_LABEL_LOADING = 'fetching…';
 export const ADD_LINK_PLACEHOLDER_NAME = 'My favourite resource';
 export const ADD_LINK_LABEL_CATEGORY = 'Category *';
@@ -431,10 +441,6 @@ export const REMINDER_ADD_LINK_LABEL = 'Add link';
 export const REMINDER_ADD_DATE_LABEL = 'Add date';
 /** Ghost button label for adding a start/end time to a reminder card. */
 export const REMINDER_ADD_TIME_LABEL = 'Add time';
-/** Confirm button label on the new-reminder composer. */
-export const REMINDER_ADD_BTN_LABEL = 'Add';
-/** "All" filter chip label in the Reminder filter bar. */
-export const REMINDER_FILTER_ALL = 'All';
 /** Section label above the filter chips. */
 export const REMINDER_FILTER_LABEL = 'FILTER';
 /** Primary label on the due-soon stat card. */
@@ -446,11 +452,11 @@ export const REMINDER_GREETING_PLURAL = 'reminders';
 
 /** Display name for the third reminder table — used in stat writes and the Recent Activity widget. */
 export const REMINDER_TABLE_MESSAGES = 'Messages';
-/** Reminder category label — Personal (used as the default tag for new items). */
-export const REMINDER_CATEGORY_PERSONAL = 'Personal';
+export const REMINDER_CATEGORY_WORK = 'Work';
+export const REMINDER_CATEGORY_UTILITY = 'Utility';
+export const REMINDER_CATEGORY_OTHER = 'Other';
 /** Label for the chip that opens the free-text custom tag input. */
 export const REMINDER_CHIP_CUSTOM = 'Custom';
-export const REMINDER_TITLE_PAGE = 'Reminder';
 /** Title for push notifications sent when a reminder is due in 3 days. */
 export const REMINDER_NOTIF_TITLE_3DAY = 'Due in 3 days';
 /** Title for push notifications sent when a reminder is due today. */
@@ -483,7 +489,6 @@ export const DEBT_DIALOG_LABEL_BALANCE = 'New amount';
 export const DEBT_DUE_LABEL_NONE = 'No due date';
 export const DEBT_DUE_LABEL_TODAY = 'Due today';
 export const DEBT_DUE_LABEL_TOMORROW = 'Due tomorrow';
-export const DEBT_TITLE_PAGE = 'Debt Sonata';
 export const DEBT_SUBTITLE = 'Where every repayment is a brushstroke — and a closing line.';
 export const DEBT_STAT_LABEL_TOTAL = 'TOTAL DEBT';
 export const DEBT_STAT_LABEL_DEBTS = 'DEBTS';
@@ -493,13 +498,15 @@ export const DEBT_STAT_LABEL_DUE_SOON = 'DUE SOON';
 export const DEBT_STAT_LABEL_OVERDUE = 'OVERDUE';
 export const DEBT_STAT_LABEL_PAYMENTS = 'PAYMENTS';
 export const DEBT_HEADING_YOUR_DEBTS = 'Your debts';
-export const DEBT_RIBBON_PAID_OFF = 'PAID OFF';
 export const DEBT_HISTORY_EMPTY = 'No payments yet — chip away at it above.';
-export const ADD_DEBT_LABEL_NAME = 'Name';
-export const ADD_DEBT_LABEL_CATEGORY = 'Category';
 export const ADD_DEBT_LABEL_AMOUNT = 'Amount';
 export const ADD_DEBT_LABEL_CURRENCY = 'Currency';
 export const ADD_DEBT_LABEL_DUE_DATE = 'Due date';
+export const DEBT_MONTHS: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const DEBT_CATEGORY_LABEL_CARD = 'Credit card';
+/** Shared "Personal" label used in debt category and reminder category. */
+export const LABEL_PERSONAL = 'Personal';
+export const DEBT_CATEGORY_LABEL_FINANCING = 'Financing';
 
 /* ─────────────────────────────────────────
    Patch Notes page constants
@@ -527,9 +534,17 @@ export const PATCH_TABLE_HEADER_COMPONENT = 'Component';
 export const PATCH_TABLE_HEADER_ELEMENT = 'Element';
 export const PATCH_TABLE_HEADER_DETAILS = 'Details';
 export const PATCH_TABLE_HEADER_TIMESTAMP = 'TimeStamp';
-export const PATCH_TABLE_HEADER_EDIT = 'Edit';
 export const PATCH_EMPTY_SEARCH = 'No patch notes match your search';
 export const PATCH_LABEL_PREVIOUS_RELEASES = 'Previous releases';
+export const PATCH_STAT_TOTAL = 'total';
+export const PATCH_STAT_BUGS_RESOLVED = 'bugs resolved';
+export const PATCH_STAT_IN_PROGRESS = 'in progress';
+export const PATCH_STAT_OPEN_BUGS = 'open bugs';
+export const PATCH_PAGINATION_TEMPLATE = 'Showing {first} to {last} of {totalRecords}';
+export const PATCH_COL_STATUS = 'Status';
+export const PATCH_BTN_CLEAR_FILTER = 'Clear Filter';
+export const PATCH_DROPDOWN_ALL_PAGES = 'All Pages';
+export const PATCH_DROPDOWN_ACCOUNT = 'Account';
 
 /* ─────────────────────────────────────────
    Context menu
@@ -540,8 +555,6 @@ export const CTX_LABEL_CUT = 'Cut';
 export const CTX_LABEL_PASTE = 'Paste';
 export const CTX_LABEL_SELECT_ALL = 'Select All';
 export const CTX_LABEL_MY_ACCOUNT = 'My account';
-export const CTX_LABEL_SIGN_OUT = 'Sign out';
-export const CTX_LABEL_SIGN_IN = 'Sign in';
 export const CTX_LABEL_INSPECT = 'Inspect';
 export const CTX_SEARCH_PLACEHOLDER = 'Search…';
 
@@ -560,7 +573,6 @@ export const ACCOUNT_LABEL_INNER_WORLD_TITLE = 'Inner World';
 export const ACCOUNT_LABEL_MILESTONES_TITLE = 'Milestones';
 export const ACCOUNT_LABEL_DANGER_ZONE_TITLE = 'Danger Zone';
 export const ACCOUNT_MSG_COMING_SOON = 'This will be available in a future release.';
-export const ACCOUNT_LABEL_USERNAME = 'Username';
 export const ACCOUNT_LABEL_SECURITY_TITLE = 'Security';
 export const ACCOUNT_LABEL_LAST_LOGIN = 'Last sign-in';
 export const ACCOUNT_LABEL_USERNAME_CHANGED = 'Username last changed';
@@ -568,10 +580,8 @@ export const ACCOUNT_LABEL_PASSWORD_CHANGED = 'Password last changed';
 export const ACCOUNT_LABEL_UPDATE_USERNAME = 'Update Username';
 export const ACCOUNT_PLACEHOLDER_USERNAME = 'Enter your username';
 export const ACCOUNT_MSG_USERNAME_UPDATED = 'Username updated';
-export const ACCOUNT_LABEL_EMAIL = 'Email';
 export const ACCOUNT_LABEL_CHANGE_PASSWORD = 'Change Password';
 export const ACCOUNT_LABEL_OLD_PASSWORD = 'Current password';
-export const ACCOUNT_LABEL_NEW_PASSWORD = 'New password';
 export const ACCOUNT_LABEL_CONFIRM_PASSWORD = 'Confirm password';
 export const ACCOUNT_LABEL_UPDATE_PASSWORD = 'Update Password';
 export const ACCOUNT_LABEL_DELETE_ACCOUNT = 'Delete Account';
@@ -585,9 +595,44 @@ export const ACCOUNT_MSG_DELETING_ACCOUNT = 'Deleting account...';
 export const ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER = 'Enter your password to confirm';
 export const ACCOUNT_DIALOG_DELETE_MSG =
 	'This will permanently delete your account and all associated data. This action cannot be undone.';
-export const ACCOUNT_DIALOG_DELETE_HEADER = 'Delete Account';
-export const ACCOUNT_DIALOG_DELETE_BTN = 'Delete';
-export const ACCOUNT_DIALOG_DELETE_CANCEL_BTN = 'Cancel';
+export const ACCOUNT_STAT_LABEL_FILMS = 'Films Logged';
+export const ACCOUNT_STAT_LABEL_QUOTES = 'Quotes';
+export const ACCOUNT_STAT_LABEL_DEBTS = 'Debts Tracked';
+export const ACCOUNT_STAT_LABEL_LINKS = 'Links Saved';
+export const ACCOUNT_STAT_UNIT_FILM = 'film';
+export const ACCOUNT_STAT_UNIT_QUOTE = 'quote';
+export const ACCOUNT_STAT_UNIT_RECIPE = 'recipe';
+export const ACCOUNT_STAT_UNIT_REMINDER = 'reminder';
+export const ACCOUNT_STAT_UNIT_DEBT = 'debt';
+export const ACCOUNT_STAT_UNIT_LINK = 'link';
+export const ACCOUNT_MILESTONE_ACCOUNT_CREATED_TITLE = 'Account Created';
+export const ACCOUNT_MILESTONE_ACCOUNT_CREATED_NOTE = 'Welcome to Inner World.';
+export const ACCOUNT_MILESTONE_FILM_TITLE = 'First Film Logged';
+export const ACCOUNT_MILESTONE_FILM_NOTE = 'The cinephile journey begins.';
+export const ACCOUNT_MILESTONE_QUOTE_TITLE = 'First Quote Saved';
+export const ACCOUNT_MILESTONE_QUOTE_NOTE = 'A mind full of words.';
+export const ACCOUNT_MILESTONE_RECIPE_TITLE = 'First Recipe Created';
+export const ACCOUNT_MILESTONE_RECIPE_NOTE = 'Cooking gets tracked.';
+export const ACCOUNT_MILESTONE_REMINDER_TITLE = 'First Reminder Set';
+export const ACCOUNT_MILESTONE_REMINDER_NOTE = 'Never miss a thing.';
+export const ACCOUNT_MILESTONE_DEBT_TITLE = 'First Debt Tracked';
+export const ACCOUNT_MILESTONE_DEBT_NOTE = 'Financial clarity starts here.';
+export const ACCOUNT_MILESTONE_LINK_TITLE = 'First Link Saved';
+export const ACCOUNT_MILESTONE_LINK_NOTE = 'The first breadcrumb.';
+export const ACCOUNT_MILESTONE_STREAK_TITLE = 'First Day Active';
+export const ACCOUNT_MILESTONE_STREAK_NOTE = 'Every journey starts here.';
+export const ACCOUNT_DOMAIN_FILMS = ' Films Logged';
+export const ACCOUNT_DOMAIN_QUOTES = ' Quotes Saved';
+export const ACCOUNT_DOMAIN_RECIPES = ' Recipes Created';
+export const ACCOUNT_DOMAIN_REMINDERS = ' Reminders Set';
+export const ACCOUNT_DOMAIN_DEBTS = ' Debts Tracked';
+export const ACCOUNT_DOMAIN_LINKS = ' Links Saved';
+export const ACCOUNT_DOMAIN_STREAK = '-Day Streak';
+export const ACCOUNT_STRENGTH_TOO_SHORT = 'Too short';
+export const ACCOUNT_STRENGTH_WEAK = 'Weak';
+export const ACCOUNT_STRENGTH_FAIR = 'Fair';
+export const ACCOUNT_STRENGTH_GOOD = 'Good';
+export const ACCOUNT_STRENGTH_STRONG = 'Strong';
 
 /* ─────────────────────────────────────────
    Today page
@@ -597,11 +642,9 @@ export const TODAY_EYEBROW = "Today's Canvas";
 export const TODAY_TITLE = 'Shape your hours.';
 export const TODAY_SUBTITLE = 'Drag across the timeline to claim a moment';
 export const TODAY_QUICKADD_PLACEHOLDER = 'Quick add an untimed task — or drag the calendar to schedule';
-export const TODAY_BTN_ADD = 'Add';
 export const TODAY_HINT_DRAG_UNTIMED = 'drag a block here to make it untimed';
 export const TODAY_PENDING_PLACEHOLDER = 'Name this task…';
 export const TODAY_PENDING_HINT = '↵ save · Esc cancel';
-export const TODAY_LABEL_REMINDERS = 'Reminders';
 export const TODAY_LABEL_TASKS = 'Tasks';
 export const TODAY_LABEL_TRACKED = 'Tracked';
 export const TODAY_BTN_START_TRACKING = 'Start tracking';
@@ -610,7 +653,13 @@ export const TODAY_BTN_DRAG_CREATE = 'Drag to create';
 export const TODAY_BTN_DRAG_MOVE = 'Drag to move';
 export const TODAY_TRACKING_PREFIX = 'Tracking · ';
 /** Heading shown on the mobile-blocked card for the Today planner. */
+export const NAV_MOBILE_ALL_SECTIONS = 'All sections';
+export const NAV_MOBILE_WELCOME = 'Welcome';
+export const NAV_MOBILE_OFFLINE = 'Offline · not signed in';
 export const MOBILE_BLOCKED_TITLE = 'Not Accessible on Mobile';
 /** Body text shown on the mobile-blocked card explaining that the Today planner requires a wider screen. */
 export const MOBILE_BLOCKED_BODY =
 	'The Today planner is built for wider screens. Open it on a desktop, laptop, or tablet to access your daily view.';
+export const TODAY_RECUR_LABELS: Partial<Record<string, string>> = {
+	daily: 'Daily', weekdays: 'Weekdays', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly',
+};

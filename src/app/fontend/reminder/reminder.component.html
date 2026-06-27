@@ -84,7 +84,7 @@
 						[class.rm-card-done]="isDone(item.key)"
 						[class.rm-card-due-soon]="isDueSoon(item) && !isDone(item.key)"
 						[style.--card-color]="tagColor(item.tag)">
-						<!-- Top: checkbox + title + category label -->
+						<!-- Top: checkbox + title + category label + delete -->
 						<div class="rm-card-top">
 							<div
 								class="rm-checkbox"
@@ -108,107 +108,125 @@
 									{{ item.tag || REMINDER_CHIP_CUSTOM }}
 								</div>
 							</div>
-						</div>
-
-						<!-- Bar: link · spacer · date · delete -->
-						<div class="rm-card-bar">
-							@if (item.link) {
-								<span class="rm-link-chip" (click)="openLinkPopover($event, item)">
-									<span
-										class="material-symbols-outlined rm-icon"
-										style="font-size: 15px; padding-top: 5px"
-										>link</span
-									>
-									{{ getLinkLabel(item) }}
-
-									<button
-										class="rm-chip-remove"
-										(click)="$event.stopPropagation(); clearLink(item)">
-										<span
-											class="material-symbols-outlined rm-icon"
-											style="font-size: 11px"
-											>close</span
-										>
-									</button>
-								</span>
-								<a
-									[href]="item.link"
-									target="_blank"
-									rel="noopener noreferrer"
-									class="rm-chip-external"
-									(click)="$event.stopPropagation()">
-									<span class="material-symbols-outlined rm-icon" style="font-size: 16px"
-										>open_in_new</span
-									>
-								</a>
-							} @else {
-								<button class="rm-add-field-button" (click)="openLinkPopover($event, item)">
-									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-										>add_link</span
-									>
-									{{ REMINDER_ADD_LINK_LABEL }}
-								</button>
-							}
-							<span class="rm-bar-spacer"></span>
-							@if (item.date) {
-								<span
-									class="rm-date-chip"
-									[style.background]="tagColor(item.tag) + '14'"
-									(click)="openDatePopover($event, item)">
-									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-										>calendar_today</span
-									>
-									{{ formatDate(item.date) }}
-									<button
-										class="rm-chip-remove"
-										(click)="$event.stopPropagation(); clearDate(item)">
-										<span
-											class="material-symbols-outlined rm-icon"
-											style="font-size: 11px"
-											>close</span
-										>
-									</button>
-								</span>
-							} @else {
-								<button class="rm-add-field-button" (click)="openDatePopover($event, item)">
-									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-										>calendar_today</span
-									>
-									{{ REMINDER_ADD_DATE_LABEL }}
-								</button>
-							}
-							@if (item.startTime && item.endTime) {
-								<span
-									class="rm-date-chip"
-									[style.background]="tagColor(item.tag) + '14'"
-									(click)="openDatePopover($event, item)">
-									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-										>schedule</span
-									>
-									{{ getTimeChipLabel(item) }}
-									<button
-										class="rm-chip-remove"
-										(click)="$event.stopPropagation(); clearTime(item)">
-										<span
-											class="material-symbols-outlined rm-icon"
-											style="font-size: 11px"
-											>close</span
-										>
-									</button>
-								</span>
-							} @else if (item.date) {
-								<button class="rm-add-field-button" (click)="openDatePopover($event, item)">
-									<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-										>schedule</span
-									>
-									{{ REMINDER_ADD_TIME_LABEL }}
-								</button>
-							}
 							<button class="rm-delete-button" (click)="openDeleteConfirmationDialog(item.key)">
 								<span class="material-symbols-outlined rm-icon" style="font-size: 14px"
 									>delete</span
 								>
 							</button>
+						</div>
+
+						<!-- Bar: link row + date/time row -->
+						<div class="rm-card-bar">
+							<div class="rm-bar-link-row">
+								@if (item.link) {
+									<span class="rm-link-chip" [style.background]="tagColor(item.tag) + '14'" (click)="openLinkPopover($event, item)">
+										<span
+											class="material-symbols-outlined rm-icon"
+											style="font-size: 13px"
+											>link</span
+										>
+										{{ getLinkLabel(item) }}
+										<button
+											class="rm-chip-remove"
+											(click)="$event.stopPropagation(); clearLink(item)">
+											<span
+												class="material-symbols-outlined rm-icon"
+												style="font-size: 11px"
+												>close</span
+											>
+										</button>
+									</span>
+									<a
+										[href]="item.link"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="rm-chip-external"
+										(click)="$event.stopPropagation()">
+										<span class="material-symbols-outlined rm-icon" style="font-size: 16px"
+											>open_in_new</span
+										>
+									</a>
+								} @else {
+									<button class="rm-add-field-button" (click)="openLinkPopover($event, item)">
+										<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+											>add_link</span
+										>
+										{{ REMINDER_ADD_LINK_LABEL }}
+									</button>
+								}
+							</div>
+							<div class="rm-bar-datetime-row">
+								@if (!item.date) {
+									<button
+										class="rm-add-field-button"
+										(click)="openDatePopover($event, item)">
+										<span
+											class="material-symbols-outlined rm-icon"
+											style="font-size: 13px"
+											>calendar_today</span
+										>
+										{{ REMINDER_ADD_DATE_LABEL }}
+									</button>
+								} @else {
+									<div class="rm-bar-half">
+										<span
+											class="rm-date-chip"
+											[style.background]="tagColor(item.tag) + '14'"
+											(click)="openDatePopover($event, item)">
+											<span
+												class="material-symbols-outlined rm-icon"
+												style="font-size: 13px"
+												>calendar_today</span
+											>
+											{{ formatDate(item.date) }}
+											<button
+												class="rm-chip-remove"
+												(click)="$event.stopPropagation(); clearDate(item)">
+												<span
+													class="material-symbols-outlined rm-icon"
+													style="font-size: 11px"
+													>close</span
+												>
+											</button>
+										</span>
+									</div>
+									<div class="rm-bar-half">
+										@if (item.startTime && item.endTime) {
+											<span
+												class="rm-date-chip"
+												[style.background]="tagColor(item.tag) + '14'"
+												(click)="openDatePopover($event, item)">
+												<span
+													class="material-symbols-outlined rm-icon"
+													style="font-size: 13px"
+													>schedule</span
+												>
+												{{ getTimeChipLabel(item) }}
+												<button
+													class="rm-chip-remove"
+													(click)="$event.stopPropagation(); clearTime(item)">
+													<span
+														class="material-symbols-outlined rm-icon"
+														style="font-size: 11px"
+														>close</span
+													>
+												</button>
+											</span>
+										} @else {
+											<button
+												class="rm-add-field-button"
+												(click)="openDatePopover($event, item)">
+												<span
+													class="material-symbols-outlined rm-icon"
+													style="font-size: 13px"
+													>schedule</span
+												>
+												{{ REMINDER_ADD_TIME_LABEL }}
+											</button>
+										}
+									</div>
+								}
+							</div>
 						</div>
 					</div>
 				}

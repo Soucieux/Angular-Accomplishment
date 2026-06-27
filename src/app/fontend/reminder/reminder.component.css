@@ -189,7 +189,7 @@
 /* ── Card grid ───────────────────────────────────────────────────────────── */
 .rm-card-grid {
 	display: grid;
-	grid-auto-rows: 115px;
+	grid-auto-rows: 148px;
 	align-content: start;
 	gap: 11px var(--individual-item-gap);
 	margin-top: 14px;
@@ -233,8 +233,8 @@
 
 .rm-card-top {
 	display: grid;
-	grid-template-columns: 22px 1fr;
-	gap: 13px;
+	grid-template-columns: 22px 1fr auto;
+	gap: 10px;
 	align-items: center;
 	flex: 1;
 }
@@ -358,8 +358,8 @@
 /* ── Card bottom bar ─────────────────────────────────────────────────────── */
 .rm-card-bar {
 	display: flex;
-	align-items: center;
-	gap: 6px;
+	flex-direction: column;
+	gap: 5px;
 	margin-top: 10px;
 	padding-top: 9px;
 	border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -369,21 +369,62 @@
 	flex: 1;
 }
 
+.rm-bar-link-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.rm-bar-link-row .rm-link-chip {
+	flex: 1;
+	min-width: 0;
+}
+
+.rm-bar-link-row .rm-add-field-button {
+	flex: 1;
+}
+
+.rm-bar-datetime-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.rm-bar-datetime-row > .rm-add-field-button {
+	width: 100%;
+}
+
+.rm-bar-half {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+}
+
+.rm-bar-half .rm-date-chip {
+	width: 100%;
+}
+
+.rm-bar-half .rm-add-field-button {
+	width: 100%;
+}
+
 /* ── Link chip ───────────────────────────────────────────────────────────── */
 .rm-link-chip {
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: 4px;
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--card-color, #1a6dff);
 	cursor: pointer;
-	padding: 3px 6px;
+	padding: 3px 24px 3px 6px;
 	border-radius: 6px;
 	transition: background 0.12s;
-	max-width: 130px;
 	overflow: hidden;
 	white-space: nowrap;
+	position: relative;
 }
 
 .rm-link-chip:hover {
@@ -394,15 +435,17 @@
 .rm-date-chip {
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: 4px;
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--card-color, #1a6dff);
 	cursor: pointer;
-	padding: 3px 6px;
+	padding: 3px 24px 3px 6px;
 	border-radius: 6px;
 	transition: background 0.12s;
 	white-space: nowrap;
+	position: relative;
 }
 
 .rm-date-chip:hover {
@@ -410,6 +453,14 @@
 }
 
 /* ── Chip controls ───────────────────────────────────────────────────────── */
+.rm-link-chip .rm-chip-remove,
+.rm-date-chip .rm-chip-remove {
+	position: absolute;
+	right: 5px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
 .rm-chip-external {
 	color: #4776e6;
 	text-decoration: none;
@@ -418,7 +469,6 @@
 	width: 18px;
 	height: 18px;
 	flex-shrink: 0;
-	margin-top: 5px;
 }
 
 .rm-chip-remove {
@@ -448,6 +498,7 @@
 .rm-add-field-button {
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: 4px;
 	font-size: 12px;
 	font-weight: 500;
@@ -485,7 +536,7 @@
 	transition:
 		color 0.12s,
 		background 0.12s;
-	margin-left: auto;
+	align-self: start;
 	flex-shrink: 0;
 	padding: 0;
 }

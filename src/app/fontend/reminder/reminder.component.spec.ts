@@ -9,9 +9,11 @@ import {
 	REMINDER_VALUE_KEY_LINK,
 	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
-	REMINDER_CATEGORY_PERSONAL,
-	STATS_FIELD_REMINDER_TOTAL,
 	STATS_FIELD_REMINDER_UPCOMING
+} from '../../common/constants';
+import {
+	REMINDER_CATEGORY_PERSONAL,
+	STATS_FIELD_REMINDER_TOTAL
 } from '../../common/locale/locale.en';
 import { ReminderComponent } from './reminder.component';
 import { ReminderItem } from './reminder.model';

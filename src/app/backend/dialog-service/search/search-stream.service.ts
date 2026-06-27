@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { RATE_DECREASED, RATE_INCREASED } from '../../../common/locale/locale.en';
+import {
+	RATE_DECREASED,
+	RATE_INCREASED
+} from '../../../common/constants';
 
 @Injectable({ providedIn: 'root' })
 export class SearchStreamService {

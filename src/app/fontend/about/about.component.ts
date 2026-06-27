@@ -12,7 +12,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { ChipModule } from 'primeng/chip';
 import { TagModule } from 'primeng/tag';
-import { COMPONENT_DESTROY } from '../../common/locale/locale.en';
+import { COMPONENT_DESTROY } from '../../common/constants';
 import { LOG } from '../../common/app.logs';
 import { TIMELINE } from './about.model';
 

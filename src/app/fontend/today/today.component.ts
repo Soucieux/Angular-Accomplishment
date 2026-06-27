@@ -19,6 +19,13 @@ import {
 	APP_LOCALE,
 	KEY_ENTER,
 	KEY_ESCAPE,
+	TODAY_LABEL_AM,
+	TODAY_LABEL_PM,
+	TODAY_LOCAL_TASK_ID_PREFIX,
+	TODAY_REMOVE_ANIMATION_MS,
+	TODAY_TRACKING_VIRTUAL_ID
+} from '../../common/constants';
+import {
 	TODAY_BTN_ADD,
 	TODAY_BTN_DRAG_CREATE,
 	TODAY_BTN_DRAG_MOVE,
@@ -26,20 +33,15 @@ import {
 	TODAY_BTN_STOP_TRACKING,
 	TODAY_EYEBROW,
 	TODAY_HINT_DRAG_UNTIMED,
-	TODAY_LABEL_AM,
-	TODAY_LABEL_PM,
 	TODAY_LABEL_REMINDERS,
 	TODAY_LABEL_TASKS,
 	TODAY_LABEL_TRACKED,
-	TODAY_LOCAL_TASK_ID_PREFIX,
 	TODAY_PENDING_HINT,
 	TODAY_PENDING_PLACEHOLDER,
 	TODAY_QUICKADD_PLACEHOLDER,
-	TODAY_REMOVE_ANIMATION_MS,
 	TODAY_SUBTITLE,
 	TODAY_TITLE,
 	TODAY_TRACKING_PREFIX,
-	TODAY_TRACKING_VIRTUAL_ID,
 	MOBILE_BLOCKED_TITLE,
 	MOBILE_BLOCKED_BODY
 } from '../../common/locale/locale.en';
@@ -205,9 +207,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					isShort: height < BLOCK_SHORT_THRESHOLD_PX,
 					isTiny,
 					isNarrow: pos.total > 1,
-					draggable:
-						t.source === TASK_SOURCE_LOCAL &&
-						this.isDragMoveEnabled(),
+					draggable: t.source === TASK_SOURCE_LOCAL && this.isDragMoveEnabled(),
 					isEditing: this.editingId() === t.id,
 					leadIcon: isDone ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_MAP[t.source],
 					timeLabel: this.formatMinutes(t.startMin!) + ' – ' + this.formatMinutes(endMin),
@@ -243,14 +243,10 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	});
 
 	/** CSS left value for the live tracking band, adjusted for column overlap. */
-	protected readonly trackBandLeft = computed(() =>
-		this.colLeft(this.blockLayoutResult().trackingPos)
-	);
+	protected readonly trackBandLeft = computed(() => this.colLeft(this.blockLayoutResult().trackingPos));
 
 	/** CSS width value for the live tracking band, adjusted for column overlap. */
-	protected readonly trackBandWidth = computed(() =>
-		this.colWidth(this.blockLayoutResult().trackingPos)
-	);
+	protected readonly trackBandWidth = computed(() => this.colWidth(this.blockLayoutResult().trackingPos));
 
 	/** CSS left value for the pending name-entry block, adjusted for column overlap. */
 	protected readonly pendingBlockLeft = computed(() =>
@@ -285,32 +281,38 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 *
 	 * @returns The per-task layout map, the tracking band placement, and the pending block placement.
 	 */
-	private readonly blockLayoutResult = computed((): {
-		taskLayout: Record<string, { col: number; total: number }>;
-		trackingPos: { col: number; total: number } | null;
-		pendingBlockPos: { col: number; total: number } | null;
-	} => {
-		const tracking = this.tracking();
-		const pending = this.pendingBlock();
-		const entries = this.tasks()
-			.filter((t) => t.startMin != null)
-			.map((task) => ({ task, isGhost: false as const }));
-		const ghostRange = tracking
-			? { startMin: tracking.startMin, endMin: this.nowMin() }
-			: pending ?? null;
-		if (ghostRange) {
-			const result = this.buildTimedLayout([
-				{ task: this.buildVirtualTask(ghostRange.startMin, ghostRange.endMin), isGhost: true },
-				...entries,
-			]);
+	private readonly blockLayoutResult = computed(
+		(): {
+			taskLayout: Record<string, { col: number; total: number }>;
+			trackingPos: { col: number; total: number } | null;
+			pendingBlockPos: { col: number; total: number } | null;
+		} => {
+			const tracking = this.tracking();
+			const pending = this.pendingBlock();
+			const entries = this.tasks()
+				.filter((t) => t.startMin != null)
+				.map((task) => ({ task, isGhost: false as const }));
+			const ghostRange = tracking
+				? { startMin: tracking.startMin, endMin: this.nowMin() }
+				: (pending ?? null);
+			if (ghostRange) {
+				const result = this.buildTimedLayout([
+					{ task: this.buildVirtualTask(ghostRange.startMin, ghostRange.endMin), isGhost: true },
+					...entries
+				]);
+				return {
+					taskLayout: result.layoutMap,
+					trackingPos: tracking ? result.ghostPlacement : null,
+					pendingBlockPos: pending ? result.ghostPlacement : null
+				};
+			}
 			return {
-				taskLayout: result.layoutMap,
-				trackingPos: tracking ? result.ghostPlacement : null,
-				pendingBlockPos: pending ? result.ghostPlacement : null,
+				taskLayout: this.buildTimedLayout(entries).layoutMap,
+				trackingPos: null,
+				pendingBlockPos: null
 			};
 		}
-		return { taskLayout: this.buildTimedLayout(entries).layoutMap, trackingPos: null, pendingBlockPos: null };
-	});
+	);
 
 	/** Column layout positions for all timed blocks, using visual-extent packing. */
 	private readonly blockLayout = computed(() => this.blockLayoutResult().taskLayout);
@@ -708,7 +710,10 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		// Scroll-aware helper: converts a MouseEvent Y position to a snapped calendar minute
 		const getStartMinute = (e: MouseEvent): number => {
 			const relY = e.clientY - cal.getBoundingClientRect().top + cal.scrollTop;
-			return Math.max(0, Math.min(24 * 60 - 15, this.snapDragMoveMinutes((relY / PIXELS_PER_HOUR) * 60)));
+			return Math.max(
+				0,
+				Math.min(24 * 60 - 15, this.snapDragMoveMinutes((relY / PIXELS_PER_HOUR) * 60))
+			);
 		};
 
 		// Update the ghost position signals on every move; skip calendar snapping when above it
@@ -947,7 +952,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			startMin,
 			endMin,
 			recur: 'none',
-			ord: -1e9,
+			ord: -1e9
 		};
 	}
 

@@ -10,7 +10,9 @@ import {
 	NOTIF_INTERVAL_MS,
 	NOTIF_KEY_3DAY,
 	NOTIF_KEY_DUE,
-	NOTIF_SCHEDULER_INIT_ERROR,
+	NOTIF_SCHEDULER_INIT_ERROR
+} from '../../common/constants';
+import {
 	REMINDER_NOTIF_TITLE_3DAY,
 	REMINDER_NOTIF_TITLE_TODAY
 } from '../../common/locale/locale.en';

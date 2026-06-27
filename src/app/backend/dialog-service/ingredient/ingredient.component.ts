@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DialogModule } from 'primeng/dialog';
+import { RECIPE_EDITOR_TYPE_MAX } from '../../../common/constants';
 import {
-	RECIPE_EDITOR_TYPE_MAX,
 	RECIPE_ITYPE_DIALOG_TITLE,
 	INGREDIENT_BTN_CANCEL,
 	INGREDIENT_BTN_APPLY

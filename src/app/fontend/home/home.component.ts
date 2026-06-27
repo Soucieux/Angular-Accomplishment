@@ -12,9 +12,12 @@ import { PortalCategory, PortalLink } from '../portal/portal.model';
 import { HomeStats } from './home.model';
 import {
 	COMPONENT_DESTROY,
+	HOME_EST_YEAR,
+	TIMEOUT_KEY_HOME
+} from '../../common/constants';
+import {
 	HOME_MSG_INCREMENT_VISIT_FAILED,
 	HOME_MSG_LOAD_STATISTICS_FAILED,
-	HOME_EST_YEAR,
 	HOME_BRAND_SUBTITLE,
 	HOME_FLAVOUR_LINE_1,
 	HOME_FLAVOUR_LINE_2,
@@ -24,8 +27,7 @@ import {
 	HOME_CHIP_ENTERTAINMENT,
 	HOME_CHIP_REMINDER,
 	HOME_CHIP_DEBT_SONATA,
-	PORTAL_MSG_LOAD_CATEGORIES_FAILED,
-	TIMEOUT_KEY_HOME
+	PORTAL_MSG_LOAD_CATEGORIES_FAILED
 } from '../../common/locale/locale.en';
 import { OrbitalComponent } from './orbital/orbital.component';
 

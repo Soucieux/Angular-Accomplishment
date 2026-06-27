@@ -22,13 +22,15 @@ import {
 	DIALOG_MULTI_LINK,
 	DIALOG_INGREDIENT,
 	DIALOG_RETRY,
+	SEARCH
+} from '../../common/constants';
+import {
 	MSG_DIALOG_ALREADY_OPEN,
 	MSG_DIALOG_CONTAINER_NOT_FOUND,
 	MSG_INVALID_DIALOG_TYPE,
 	MSG_PERMISSION_DENIED,
 	MSG_UNEXPECTED_ERROR,
-	RETRY_DIALOG_MSG,
-	SEARCH
+	RETRY_DIALOG_MSG
 } from '../../common/locale/locale.en';
 import { MessageService } from 'primeng/api';
 import { IngredientDialogComponent } from './ingredient/ingredient.component';

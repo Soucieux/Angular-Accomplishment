@@ -8,18 +8,20 @@ import { DialogService } from '../dialog.service';
 import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exists-error';
 import { LOG } from '../../../common/app.logs';
 import {
-	DIALOG_BTN_CONFIRM,
 	DIALOG_CONFIRM,
 	DIALOG_ERROR,
 	ENT_MSG_ADD_DIALOG_SEARCH_FAILED,
-	HISTORY_DIALOG_TITLE,
-	HISTORY_DIALOG_UNDO_BTN,
 	HISTORY_MOVIE_ID_UNKNOWN,
-	HISTORY_MSG_UNDO_CONFIRM,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
 	HISTORY_STYLE_ADDED,
-	HISTORY_STYLE_DELETED,
+	HISTORY_STYLE_DELETED
+} from '../../../common/constants';
+import {
+	DIALOG_BTN_CONFIRM,
+	HISTORY_DIALOG_TITLE,
+	HISTORY_DIALOG_UNDO_BTN,
+	HISTORY_MSG_UNDO_CONFIRM,
 	HISTORY_SUBTITLE
 } from '../../../common/locale/locale.en';
 import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';

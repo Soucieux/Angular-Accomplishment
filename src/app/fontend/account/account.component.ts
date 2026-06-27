@@ -19,6 +19,15 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
+	MILESTONE_KEY_ACCOUNT_CREATED,
+	STATS_FIELD_ACTIVITY_STREAK,
+	STATS_FIELD_MILESTONES,
+	STATS_FIELD_USERNAME_CHANGED,
+	STATS_FIELD_PASSWORD_CHANGED,
+	SUCCESS,
+	TOAST_WARN
+} from '../../common/constants';
+import {
 	ACCOUNT_LABEL_CHANGE_PASSWORD,
 	ACCOUNT_LABEL_OLD_PASSWORD,
 	ACCOUNT_LABEL_CONFIRM_PASSWORD,
@@ -47,14 +56,7 @@ import {
 	ACCOUNT_MSG_NO_EMAIL,
 	ACCOUNT_MSG_PASSWORD_MISMATCH,
 	ACCOUNT_MSG_PASSWORD_TOO_SHORT,
-	ACCOUNT_MSG_PASSWORD_UPDATED,
-	MILESTONE_KEY_ACCOUNT_CREATED,
-	STATS_FIELD_ACTIVITY_STREAK,
-	STATS_FIELD_MILESTONES,
-	STATS_FIELD_USERNAME_CHANGED,
-	STATS_FIELD_PASSWORD_CHANGED,
-	SUCCESS,
-	TOAST_WARN
+	ACCOUNT_MSG_PASSWORD_UPDATED
 } from '../../common/locale/locale.en';
 import {
 	AccountMilestone,

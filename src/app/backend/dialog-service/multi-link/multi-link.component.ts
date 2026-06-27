@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
+import { MULTI_LINK_LABEL_ARROW } from '../../../common/constants';
 import {
 	MULTI_LINK_DIALOG_SUBTITLE,
 	MULTI_LINK_DIALOG_TITLE,
 	MULTI_LINK_LABEL_ADD_PREFIX,
 	MULTI_LINK_LABEL_APPLIES_PREFIX,
-	MULTI_LINK_LABEL_ARROW,
 	MULTI_LINK_LABEL_CANCEL,
 	MULTI_LINK_LABEL_CATEGORY,
 	MULTI_LINK_LABEL_EMPTY,

@@ -11,7 +11,6 @@ import {
 	HISTORY_STATUS_DELETED,
 	RATE_DECREASED,
 	RATE_INCREASED,
-	REMINDER_TABLE_MESSAGES,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_RECENT_ACTIVITIES,
@@ -26,8 +25,9 @@ import {
 	ACTIVITY_TYPE_GENRE_UPDATED,
 	ACTIVITY_TYPE_FAVOURITE_UPDATED,
 	DATABASE_USER_PREFERENCES,
-	STATS_FIELD_TAURI_NOTIF_ENABLED,
-} from '../../../common/locale/locale.en';
+	STATS_FIELD_TAURI_NOTIF_ENABLED
+} from '../../../common/constants';
+import { REMINDER_TABLE_MESSAGES } from '../../../common/locale/locale.en';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Inject, Injectable } from '@angular/core';
 import {

@@ -5,11 +5,13 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { DatabaseService } from '../database-service/database.service';
 import { LOG } from '../../common/app.logs';
 import {
-	NOTIF_ENABLED_BODY,
-	NOTIF_ENABLED_TITLE,
 	NOTIF_SEND_FAILED,
 	NOTIF_SUBSCRIBE_FAILED,
 	NOTIF_UNSUBSCRIBE_FAILED
+} from '../../common/constants';
+import {
+	NOTIF_ENABLED_BODY,
+	NOTIF_ENABLED_TITLE
 } from '../../common/locale/locale.en';
 
 @Injectable({ providedIn: 'root' })

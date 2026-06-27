@@ -55,7 +55,6 @@ import {
 	DEBT_VALUE_KEY_PAYMENTS,
 	ACTIVITY_SOURCE_DATE_CALCULATOR,
 	ACTIVITY_SOURCE_DEFAULT,
-	ERROR_NO_DOCUMENT_UPDATED,
 	ACTIVITY_TYPE_STATUS_CHANGED,
 	ACTIVITY_TYPE_EDITED,
 	ACTIVITY_TYPE_RATE_UPDATED,
@@ -77,7 +76,8 @@ import {
 	MILESTONE_DOMAIN_LINK,
 	MILESTONE_DOMAIN_STREAK,
 	CLOUDBASE_ERR_PERMISSION_DENIED
-} from '../../../common/locale/locale.en';
+} from '../../../common/constants';
+import { ERROR_NO_DOCUMENT_UPDATED } from '../../../common/locale/locale.en';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
 import { SessionExpiredError } from '../../../common/error/session-expired.error';

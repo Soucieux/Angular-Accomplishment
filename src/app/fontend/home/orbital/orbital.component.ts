@@ -104,6 +104,28 @@ import {
 	HOME_ACTIVITY_ICON_REMINDER_UPDATED,
 	HOME_ACTIVITY_ICON_RESONANCE_ADDED,
 	HOME_ACTIVITY_ICON_RESONANCE_REMOVED,
+	HOME_AGENDA_ICON_REMINDER,
+	HOME_CONCENTRIC_SIZE_DEFAULT,
+	HOME_DEBT_ROW_ID_PREFIX,
+	HOME_LINKS_DOT_FALLBACK,
+	HOME_ORBITAL_CHANGES_KEY_STATS,
+	HOME_ORBITAL_PANEL_SCROLL_SELECTOR,
+	HOME_QUICK_ACTION_ROUTE_DEBT,
+	HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT,
+	HOME_QUICK_ACTION_ROUTE_PORTAL,
+	HOME_QUICK_ACTION_ROUTE_RECIPE,
+	HOME_QUICK_ACTION_ROUTE_REMINDER,
+	HOME_REMINDER_ROW_ID_PREFIX,
+	STATS_FIELD_ACTIVITY_STREAK,
+	ORBITAL_URGENCY_CHIP_TYPE_DEBT,
+	ORBITAL_URGENCY_CHIP_TYPE_REMINDER,
+	ORBITAL_URGENCY_GROUP_SEPARATOR,
+	ORBITAL_URGENCY_ITEM_SEPARATOR,
+	ORBITAL_URGENCY_TEXT_MAX_CHARS,
+	ORBITAL_URGENCY_WINDOW_DAYS,
+	ORBITAL_BRAND_TITLE
+} from '../../../common/constants';
+import {
 	HOME_ACTIVITY_LABEL_DEBT_ADDED,
 	HOME_ACTIVITY_LABEL_DEBT_REMOVED,
 	HOME_ACTIVITY_LABEL_DEBT_RESET,
@@ -137,34 +159,14 @@ import {
 	HOME_ACTIVITY_LABEL_LINK_CATEGORY_ADDED,
 	HOME_ACTIVITY_LABEL_DATE_CALCULATOR_UPDATED,
 	HOME_ACTIVITY_LABEL_DEBT_LOCK_UPDATED,
-	HOME_AGENDA_ICON_REMINDER,
-	HOME_CONCENTRIC_SIZE_DEFAULT,
-	HOME_DEBT_ROW_ID_PREFIX,
-	HOME_LINKS_DOT_FALLBACK,
-	HOME_ORBITAL_CHANGES_KEY_STATS,
-	HOME_ORBITAL_PANEL_SCROLL_SELECTOR,
 	HOME_OVERFLOW_LABEL_DEBT,
 	HOME_OVERFLOW_LABEL_LINKS,
 	HOME_OVERFLOW_LABEL_RECIPES,
 	HOME_OVERFLOW_LABEL_REMINDERS,
-	HOME_QUICK_ACTION_ROUTE_DEBT,
-	HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT,
-	HOME_QUICK_ACTION_ROUTE_PORTAL,
-	HOME_QUICK_ACTION_ROUTE_RECIPE,
-	HOME_QUICK_ACTION_ROUTE_REMINDER,
-	HOME_REMINDER_ROW_ID_PREFIX,
 	HOME_SATELLITE_TOOLTIP_STREAK,
-	STATS_FIELD_ACTIVITY_STREAK,
-	ORBITAL_URGENCY_CHIP_TYPE_DEBT,
-	ORBITAL_URGENCY_CHIP_TYPE_REMINDER,
-	ORBITAL_URGENCY_GROUP_SEPARATOR,
-	ORBITAL_URGENCY_ITEM_SEPARATOR,
 	ORBITAL_URGENCY_LABEL_DEBTS,
 	ORBITAL_URGENCY_LABEL_REMINDERS,
 	ORBITAL_URGENCY_LABEL_VARIOUS,
-	ORBITAL_URGENCY_TEXT_MAX_CHARS,
-	ORBITAL_URGENCY_WINDOW_DAYS,
-	ORBITAL_BRAND_TITLE,
 	ORBITAL_LABEL_STREAK,
 	ORBITAL_LABEL_PATCH,
 	ORBITAL_LABEL_VOICES,
@@ -739,35 +741,37 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_REMINDER_UPCOMING]);
 
 		// Step 1: Drop entries without a parseable date so sort arithmetic is always valid
-		return raw
-			.filter((item) => {
-				const reminder = item as { date?: string | null };
-				return reminder.date && Utilities.coerceDateToString(reminder.date);
-			})
+		return (
+			raw
+				.filter((item) => {
+					const reminder = item as { date?: string | null };
+					return reminder.date && Utilities.coerceDateToString(reminder.date);
+				})
 
-			/* Step 2: Sort ascending by calendar date. The date string may be in app dot-format
+				/* Step 2: Sort ascending by calendar date. The date string may be in app dot-format
 			   or ISO 8601, so coerceDateToString normalises it before constructing the timestamp. */
-			.sort((a, b) => {
-				const toMs = (item: unknown) => {
-					const dateStr = Utilities.coerceDateToString((item as { date?: unknown }).date);
-					const [year, month, day] = dateStr.split('-').map(Number);
-					return new Date(year, month - 1, day).getTime();
-				};
-				return toMs(a) - toMs(b);
-			})
+				.sort((a, b) => {
+					const toMs = (item: unknown) => {
+						const dateStr = Utilities.coerceDateToString((item as { date?: unknown }).date);
+						const [year, month, day] = dateStr.split('-').map(Number);
+						return new Date(year, month - 1, day).getTime();
+					};
+					return toMs(a) - toMs(b);
+				})
 
-			// Step 3: Map each item to a typed row; 9999 sentinel pushes undated items to the end of urgency sorts
-			.map((item, index) => {
-				const reminder = item as { name?: string; date?: string | null };
-				const overdue = Utilities.isOverdue(reminder.date);
-				return {
-					id: `${HOME_REMINDER_ROW_ID_PREFIX}${index}`,
-					name: reminder.name ?? '',
-					dueLabel: Utilities.getDaysUntil(reminder.date),
-					overdue,
-					daysUntilDue: Utilities.getDaysUntilNumber(reminder.date) ?? 9999
-				};
-			});
+				// Step 3: Map each item to a typed row; 9999 sentinel pushes undated items to the end of urgency sorts
+				.map((item, index) => {
+					const reminder = item as { name?: string; date?: string | null };
+					const overdue = Utilities.isOverdue(reminder.date);
+					return {
+						id: `${HOME_REMINDER_ROW_ID_PREFIX}${index}`,
+						name: reminder.name ?? '',
+						dueLabel: Utilities.getDaysUntil(reminder.date),
+						overdue,
+						daysUntilDue: Utilities.getDaysUntilNumber(reminder.date) ?? 9999
+					};
+				})
+		);
 	}
 
 	/**
@@ -797,50 +801,53 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 		const raw = Utilities.toArray(this.stats?.[STATS_FIELD_DEBT_UPCOMING]);
 
 		// Step 1: Drop entries without a parseable date so sort arithmetic is always valid
-		return raw
-			.filter((item) => {
-				const debt = item as { date?: string | null };
-				return debt.date && Utilities.coerceDateToString(debt.date);
-			})
+		return (
+			raw
+				.filter((item) => {
+					const debt = item as { date?: string | null };
+					return debt.date && Utilities.coerceDateToString(debt.date);
+				})
 
-			/* Step 2: Sort ascending by calendar date. coerceDateToString normalises both
+				/* Step 2: Sort ascending by calendar date. coerceDateToString normalises both
 			   app dot-format and ISO 8601 before the millisecond comparison. */
-			.sort((a, b) => {
-				const toMs = (item: unknown) => {
-					const dateStr = Utilities.coerceDateToString((item as { date?: unknown }).date);
-					const [year, month, day] = dateStr.split('-').map(Number);
-					return new Date(year, month - 1, day).getTime();
-				};
-				return toMs(a) - toMs(b);
-			})
+				.sort((a, b) => {
+					const toMs = (item: unknown) => {
+						const dateStr = Utilities.coerceDateToString((item as { date?: unknown }).date);
+						const [year, month, day] = dateStr.split('-').map(Number);
+						return new Date(year, month - 1, day).getTime();
+					};
+					return toMs(a) - toMs(b);
+				})
 
-			// Step 3: Map to typed row; derive repayment percentage and category gradient for the progress bar
-			.map((item, index) => {
-				const debt = item as {
-					name?: string;
-					date?: string | null;
-					debt?: number;
-					original?: number;
-					category?: string;
-				};
-				const overdue = Utilities.isOverdue(debt.date);
-				const remaining = debt.debt ?? 0;
-				const original = debt.original ?? 0;
+				// Step 3: Map to typed row; derive repayment percentage and category gradient for the progress bar
+				.map((item, index) => {
+					const debt = item as {
+						name?: string;
+						date?: string | null;
+						debt?: number;
+						original?: number;
+						category?: string;
+					};
+					const overdue = Utilities.isOverdue(debt.date);
+					const remaining = debt.debt ?? 0;
+					const original = debt.original ?? 0;
 
-				// Guard against division by zero when no original amount is recorded
-				const percentage = original > 0 ? Math.round(((original - remaining) / original) * 100) : 0;
-				const categoryDef = DEBT_CATEGORY_DEFS.find((d) => d.key === debt.category);
-				const barColor = categoryDef?.gradient ?? 'linear-gradient(90deg,#d53163,#f7971e)';
-				return {
-					id: `${HOME_DEBT_ROW_ID_PREFIX}${index}`,
-					name: debt.name ?? '',
-					dueLabel: Utilities.getDaysUntil(debt.date),
-					overdue,
-					daysUntilDue: Utilities.getDaysUntilNumber(debt.date) ?? 9999,
-					percentage,
-					barColor
-				};
-			});
+					// Guard against division by zero when no original amount is recorded
+					const percentage =
+						original > 0 ? Math.round(((original - remaining) / original) * 100) : 0;
+					const categoryDef = DEBT_CATEGORY_DEFS.find((d) => d.key === debt.category);
+					const barColor = categoryDef?.gradient ?? 'linear-gradient(90deg,#d53163,#f7971e)';
+					return {
+						id: `${HOME_DEBT_ROW_ID_PREFIX}${index}`,
+						name: debt.name ?? '',
+						dueLabel: Utilities.getDaysUntil(debt.date),
+						overdue,
+						daysUntilDue: Utilities.getDaysUntilNumber(debt.date) ?? 9999,
+						percentage,
+						barColor
+					};
+				})
+		);
 	}
 
 	/**

@@ -3,7 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, ReplaySubject } from 'rxjs';
 
-import { CN } from './common/locale/locale.en';
+import { CN } from './common/constants';
 import { Utilities } from './common/utilities/app.utilities';
 import { AppComponent } from './app.component';
 import { AuthService } from './backend/authentication-service/auth.service';

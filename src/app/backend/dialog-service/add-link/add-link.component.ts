@@ -6,6 +6,10 @@ import { Subscription } from 'rxjs';
 import { DatabaseService } from '../../database-service/database.service';
 import { Utilities } from '../../../common/utilities/app.utilities';
 import {
+	ADD_LINK_LABEL_URL,
+	ADD_LINK_PLACEHOLDER_URL
+} from '../../../common/constants';
+import {
 	LINK_DIALOG_LABEL_ADD,
 	LINK_DIALOG_LABEL_CANCEL,
 	LINK_DIALOG_LABEL_SAVE,
@@ -14,8 +18,6 @@ import {
 	PORTAL_DIALOG_TITLE_EDIT_LINK,
 	PORTAL_LABEL_PIN_TO_DASHBOARD,
 	PORTAL_LABEL_SHARED_LINK,
-	ADD_LINK_LABEL_URL,
-	ADD_LINK_PLACEHOLDER_URL,
 	ADD_LINK_LABEL_LOADING,
 	ADD_LINK_PLACEHOLDER_NAME,
 	ADD_LINK_LABEL_CATEGORY,

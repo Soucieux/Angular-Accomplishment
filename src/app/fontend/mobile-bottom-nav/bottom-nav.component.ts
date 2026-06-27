@@ -18,9 +18,11 @@ import { isPlatformBrowser } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { LOG } from '../../common/app.logs';
 import {
-	ACCOUNT_TITLE_PAGE,
 	NAV_AVATAR_FALLBACK_INITIAL,
-	NAV_AVATAR_GRADIENT,
+	NAV_AVATAR_GRADIENT
+} from '../../common/constants';
+import {
+	ACCOUNT_TITLE_PAGE,
 	NAV_NOTIF_LABEL_DISABLE,
 	NAV_NOTIF_LABEL_ENABLE,
 	NAV_NOTIF_TOGGLE_ERROR

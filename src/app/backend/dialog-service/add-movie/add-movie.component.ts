@@ -23,8 +23,10 @@ import { Checkbox } from 'primeng/checkbox';
 import { DialogService } from '../dialog.service';
 import {
 	DIALOG_ERROR,
+	ENT_MSG_ADD_DIALOG_SEARCH_FAILED
+} from '../../../common/constants';
+import {
 	ENT_DIALOG_TITLE_ADD_MOVIE,
-	ENT_MSG_ADD_DIALOG_SEARCH_FAILED,
 	ADD_MOVIE_SUBTITLE,
 	ADD_MOVIE_LABEL_GENRE,
 	ADD_MOVIE_LABEL_FAVOURITE

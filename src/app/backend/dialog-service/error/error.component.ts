@@ -2,10 +2,12 @@ import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import {
-	ERROR_DIALOG_BTN_LABEL,
-	ERROR_DIALOG_HEADER,
 	ERROR_DIALOG_ICON_CLASS,
 	ERROR_DIALOG_MSG_CLASS
+} from '../../../common/constants';
+import {
+	ERROR_DIALOG_BTN_LABEL,
+	ERROR_DIALOG_HEADER
 } from '../../../common/locale/locale.en';
 
 @Component({

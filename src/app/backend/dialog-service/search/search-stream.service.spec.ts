@@ -1,6 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 
-import { RATE_DECREASED, RATE_INCREASED } from '../../../common/locale/locale.en';
+import {
+	RATE_DECREASED,
+	RATE_INCREASED
+} from '../../../common/constants';
 import { SearchStreamService } from './search-stream.service';
 
 describe('SearchStreamService', () => {

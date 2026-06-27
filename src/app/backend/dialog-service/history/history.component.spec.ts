@@ -7,7 +7,7 @@ import {
 	HISTORY_STATUS_DELETED,
 	HISTORY_STYLE_ADDED,
 	HISTORY_STYLE_DELETED
-} from '../../../common/locale/locale.en';
+} from '../../../common/constants';
 import { HistoryDialogComponent } from './history.component';
 
 describe('HistoryDialogComponent', () => {

@@ -63,7 +63,6 @@ import {
 	DEBT_CONFIRM_DELETE_PAYMENT_MSG,
 	DEBT_CONFIRM_DELETE_PAYMENT_HEADER,
 	DEBT_CONFIRM_DELETE_PAYMENT_BTN,
-	DEBT_TITLE_PAGE,
 	DEBT_SUBTITLE,
 	DEBT_STAT_LABEL_TOTAL,
 	DEBT_STAT_LABEL_DEBTS,
@@ -73,13 +72,16 @@ import {
 	DEBT_STAT_LABEL_OVERDUE,
 	DEBT_STAT_LABEL_PAYMENTS,
 	DEBT_HEADING_YOUR_DEBTS,
-	DEBT_RIBBON_PAID_OFF,
-	DEBT_HISTORY_EMPTY
+	DEBT_HISTORY_EMPTY,
+	DEBT_MONTHS,
+	DEBT_CATEGORY_LABEL_CARD,
+	DEBT_CATEGORY_LABEL_FINANCING,
+	NAV_LABEL_DEBT_SONATA,
+	LABEL_PERSONAL
 } from '../../common/locale/locale-strings';
 import {
 	DEBT_CATEGORY_DEFS,
 	DebtCategoryDef,
-	MONTH_NAMES_SHORT,
 	NewDebtData,
 	PaymentEntry
 } from './debt.model';
@@ -109,7 +111,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected readonly DEBT_CONFIRM_DELETE_PAYMENT_MSG = DEBT_CONFIRM_DELETE_PAYMENT_MSG;
 	protected readonly DEBT_CONFIRM_DELETE_PAYMENT_HEADER = DEBT_CONFIRM_DELETE_PAYMENT_HEADER;
 	protected readonly DEBT_CONFIRM_DELETE_PAYMENT_BTN = DEBT_CONFIRM_DELETE_PAYMENT_BTN;
-	protected readonly DEBT_TITLE_PAGE = DEBT_TITLE_PAGE;
+	protected readonly NAV_LABEL_DEBT_SONATA = NAV_LABEL_DEBT_SONATA;
 	protected readonly DEBT_SUBTITLE = DEBT_SUBTITLE;
 	protected readonly DEBT_STAT_LABEL_TOTAL = DEBT_STAT_LABEL_TOTAL;
 	protected readonly DEBT_STAT_LABEL_DEBTS = DEBT_STAT_LABEL_DEBTS;
@@ -119,7 +121,6 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected readonly DEBT_STAT_LABEL_OVERDUE = DEBT_STAT_LABEL_OVERDUE;
 	protected readonly DEBT_STAT_LABEL_PAYMENTS = DEBT_STAT_LABEL_PAYMENTS;
 	protected readonly DEBT_HEADING_YOUR_DEBTS = DEBT_HEADING_YOUR_DEBTS;
-	protected readonly DEBT_RIBBON_PAID_OFF = DEBT_RIBBON_PAID_OFF;
 	protected readonly DEBT_HISTORY_EMPTY = DEBT_HISTORY_EMPTY;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
@@ -140,7 +141,10 @@ export class DebtComponent implements OnInit, OnDestroy {
 	private balanceBumpTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
-	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS;
+	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS.map((d) => ({
+		...d,
+		label: ({ card: DEBT_CATEGORY_LABEL_CARD, person: LABEL_PERSONAL, shopping: DEBT_CATEGORY_LABEL_FINANCING } as Record<string, string>)[d.key] ?? d.label,
+	}));
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
@@ -1094,7 +1098,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		   Append 'T00:00' to force local-midnight parsing; omitting the time token causes
 		   Date to interpret the string as UTC, shifting the displayed date by the local timezone offset. */
 		const due = new Date(dateStr + 'T00:00');
-		const m = MONTH_NAMES_SHORT[due.getMonth()];
+		const m = DEBT_MONTHS[due.getMonth()];
 		return `${m} ${due.getDate()}, ${due.getFullYear()}`;
 	}
 

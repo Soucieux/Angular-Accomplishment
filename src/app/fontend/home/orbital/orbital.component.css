@@ -147,6 +147,7 @@
 	align-items: center;
 	max-width: 480px;
 	overflow: hidden;
+	line-height: 1;
 }
 
 .orbital-urgency-chip-label {

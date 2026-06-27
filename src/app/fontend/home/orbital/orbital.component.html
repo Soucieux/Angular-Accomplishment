@@ -44,7 +44,7 @@
 					<span class="material-symbols-outlined">format_quote</span>
 					<div class="orbital-satellite-number">{{ stats.totalQuotes ?? 0 }}</div>
 				</div>
-				<div class="orbital-satellite-label">{{ ORBITAL_LABEL_VOICES }}</div>
+				<div class="orbital-satellite-label">{{ NAV_LABEL_RESONANCE }}</div>
 			</div>
 			<div
 				class="orbital-satellite"
@@ -206,7 +206,7 @@
 				<span
 					class="orbital-panel-header-title orbital-panel-header-nav"
 					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_DEBT)"
-					>{{ ORBITAL_LABEL_DEBT_SONATA }}</span
+					>{{ NAV_LABEL_DEBT_SONATA }}</span
 				>
 				<span
 					class="orbital-panel-header-badge"
@@ -255,7 +255,7 @@
 				<span
 					class="orbital-panel-header-title orbital-panel-header-nav"
 					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT)"
-					>{{ ORBITAL_LABEL_ENTERTAINMENT }}</span
+					>{{ NAV_LABEL_ENTERTAINMENT }}</span
 				>
 				<span class="orbital-panel-header-badge">{{ stats.totalFilms ?? 0 }}</span>
 			</div>
@@ -286,7 +286,7 @@
 				<span
 					class="orbital-panel-header-title orbital-panel-header-nav"
 					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_RECIPE)"
-					>{{ ORBITAL_LABEL_RECIPES }}</span
+					>{{ NAV_LABEL_RECIPES }}</span
 				>
 				<span class="orbital-panel-header-badge">{{ stats.totalRecipes ?? 0 }}</span>
 			</div>
@@ -298,7 +298,7 @@
 						<div class="orbital-recipe-row">
 							<span class="orbital-row-dot" aria-hidden="true"></span>
 							<span class="orbital-recipe-row-name">{{ recipe.name }}</span>
-							<span class="orbital-recipe-row-category">{{ recipe.category }}</span>
+							<span class="orbital-recipe-row-category">{{ categoryDisplayLabel(recipe.category) }}</span>
 						</div>
 					}
 					@if (recipeRows.length === 20) {

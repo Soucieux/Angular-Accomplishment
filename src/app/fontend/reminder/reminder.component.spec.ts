@@ -11,10 +11,8 @@ import {
 	REMINDER_VALUE_KEY_TEXT,
 	STATS_FIELD_REMINDER_UPCOMING
 } from '../../common/constants';
-import {
-	REMINDER_CATEGORY_PERSONAL,
-	STATS_FIELD_REMINDER_TOTAL
-} from '../../common/locale/locale.en';
+import { STATS_FIELD_REMINDER_TOTAL } from '../../common/locale/locale.en';
+import { LABEL_PERSONAL } from '../../common/locale/locale-strings';
 import { ReminderComponent } from './reminder.component';
 import { ReminderItem } from './reminder.model';
 
@@ -347,7 +345,7 @@ describe('ReminderComponent', () => {
 			(component as any).newItem = { text: 'hello', date: null, link: '', tag: 'tag1' };
 			await (component as any).addNewTextOnly();
 			expect((component as any).newItem.text).toBe('');
-			expect((component as any).newItem.tag).toBe(REMINDER_CATEGORY_PERSONAL);
+			expect((component as any).newItem.tag).toBe(LABEL_PERSONAL);
 		});
 
 		it('calls handleError when the database throws', async () => {

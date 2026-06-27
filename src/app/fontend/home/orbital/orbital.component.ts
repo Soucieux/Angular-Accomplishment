@@ -21,7 +21,6 @@ import { AuthService } from '../../../backend/authentication-service/auth.servic
 import { OrbitalStore } from './orbital.store';
 import { Concentric, WeekAgenda, hexToRgba } from './shared.components';
 import {
-	DAY_NAMES_SHORT,
 	HOME_GENRE_COLORS,
 	OrbitalAgendaItem,
 	OrbitalActivityRow,
@@ -169,19 +168,26 @@ import {
 	ORBITAL_URGENCY_LABEL_VARIOUS,
 	ORBITAL_LABEL_STREAK,
 	ORBITAL_LABEL_PATCH,
-	ORBITAL_LABEL_VOICES,
 	ORBITAL_LABEL_THIS_WEEK,
 	ORBITAL_LABEL_LIFE_CLOCK,
 	ORBITAL_LABEL_REMINDERS,
 	ORBITAL_LABEL_SHORTCUTS,
-	ORBITAL_LABEL_DEBT_SONATA,
-	ORBITAL_LABEL_ENTERTAINMENT,
-	ORBITAL_LABEL_RECIPES,
 	ORBITAL_LABEL_ACTIVITY,
 	ORBITAL_PANEL_EMPTY_LINKS,
 	ORBITAL_PANEL_EMPTY_PAYMENTS,
 	ORBITAL_PANEL_EMPTY_GENRES,
-	ORBITAL_PANEL_EMPTY_RECIPES
+	ORBITAL_PANEL_EMPTY_RECIPES,
+	ORBITAL_DAY_NAMES_SHORT,
+	ORBITAL_QUICK_ACTION_LABELS,
+	NAV_LABEL_RESONANCE,
+	NAV_LABEL_DEBT_SONATA,
+	NAV_LABEL_ENTERTAINMENT,
+	NAV_LABEL_RECIPES,
+	LABEL_ALL,
+	RECIPE_CATEGORY_CHINESE,
+	RECIPE_CATEGORY_WESTERN,
+	RECIPE_CATEGORY_QUICK,
+	RECIPE_CATEGORY_DESSERT,
 } from '../../../common/locale/locale-strings';
 
 type OrbitalActivityOverride = {
@@ -198,6 +204,8 @@ type OrbitalActivitySourceDef = {
 	getDetail: (e: RecentActivityItem) => string;
 	types: Record<string, OrbitalActivityOverride>;
 };
+
+const MON_TO_SUN_LABELS = [...ORBITAL_DAY_NAMES_SHORT.slice(1), ORBITAL_DAY_NAMES_SHORT[0]];
 
 @Component({
 	selector: 'orbital',
@@ -223,7 +231,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	protected readonly HOME_ACTIVITY_FOOTER_ZH = HOME_ACTIVITY_FOOTER_ZH;
 	protected readonly HOME_ACTIVITY_FOOTER_EN = HOME_ACTIVITY_FOOTER_EN;
 	protected readonly HOME_CONCENTRIC_SIZE_DEFAULT = HOME_CONCENTRIC_SIZE_DEFAULT;
-	protected readonly QUICK_ACTIONS = QUICK_ACTIONS;
+	protected readonly QUICK_ACTIONS = QUICK_ACTIONS.map((qa, i) => ({ ...qa, label: ORBITAL_QUICK_ACTION_LABELS[i] ?? qa.label }));
 	protected readonly HOME_OVERFLOW_LABEL_REMINDERS = HOME_OVERFLOW_LABEL_REMINDERS;
 	protected readonly HOME_OVERFLOW_LABEL_DEBT = HOME_OVERFLOW_LABEL_DEBT;
 	protected readonly HOME_OVERFLOW_LABEL_RECIPES = HOME_OVERFLOW_LABEL_RECIPES;
@@ -237,19 +245,26 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	protected readonly ORBITAL_BRAND_TITLE = ORBITAL_BRAND_TITLE;
 	protected readonly ORBITAL_LABEL_STREAK = ORBITAL_LABEL_STREAK;
 	protected readonly ORBITAL_LABEL_PATCH = ORBITAL_LABEL_PATCH;
-	protected readonly ORBITAL_LABEL_VOICES = ORBITAL_LABEL_VOICES;
+	protected readonly NAV_LABEL_RESONANCE = NAV_LABEL_RESONANCE;
 	protected readonly ORBITAL_LABEL_THIS_WEEK = ORBITAL_LABEL_THIS_WEEK;
 	protected readonly ORBITAL_LABEL_LIFE_CLOCK = ORBITAL_LABEL_LIFE_CLOCK;
 	protected readonly ORBITAL_LABEL_REMINDERS = ORBITAL_LABEL_REMINDERS;
 	protected readonly ORBITAL_LABEL_SHORTCUTS = ORBITAL_LABEL_SHORTCUTS;
-	protected readonly ORBITAL_LABEL_DEBT_SONATA = ORBITAL_LABEL_DEBT_SONATA;
-	protected readonly ORBITAL_LABEL_ENTERTAINMENT = ORBITAL_LABEL_ENTERTAINMENT;
-	protected readonly ORBITAL_LABEL_RECIPES = ORBITAL_LABEL_RECIPES;
+	protected readonly NAV_LABEL_DEBT_SONATA = NAV_LABEL_DEBT_SONATA;
+	protected readonly NAV_LABEL_ENTERTAINMENT = NAV_LABEL_ENTERTAINMENT;
+	protected readonly NAV_LABEL_RECIPES = NAV_LABEL_RECIPES;
 	protected readonly ORBITAL_LABEL_ACTIVITY = ORBITAL_LABEL_ACTIVITY;
 	protected readonly ORBITAL_PANEL_EMPTY_LINKS = ORBITAL_PANEL_EMPTY_LINKS;
 	protected readonly ORBITAL_PANEL_EMPTY_PAYMENTS = ORBITAL_PANEL_EMPTY_PAYMENTS;
 	protected readonly ORBITAL_PANEL_EMPTY_GENRES = ORBITAL_PANEL_EMPTY_GENRES;
 	protected readonly ORBITAL_PANEL_EMPTY_RECIPES = ORBITAL_PANEL_EMPTY_RECIPES;
+	private readonly localeCategoryLabels: Record<string, string> = {
+		'All':     LABEL_ALL,
+		'Chinese': RECIPE_CATEGORY_CHINESE,
+		'Western': RECIPE_CATEGORY_WESTERN,
+		'Quick':   RECIPE_CATEGORY_QUICK,
+		'Dessert': RECIPE_CATEGORY_DESSERT,
+	};
 	protected currentUser$!: Observable<any>;
 	protected genreBars: { label: string; count: number; percentage: number; color: string }[] = [];
 	protected reminderRows: OrbitalReminderRow[] = [];
@@ -911,8 +926,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 
 		// Step 3 : Build day descriptors and per-day agenda items for the week
 		const agenda: Record<number, OrbitalAgendaItem[]> = {};
-		const monToSunLabels = [...DAY_NAMES_SHORT.slice(1), DAY_NAMES_SHORT[0]];
-		const days: OrbitalWeekDay[] = monToSunLabels.map((label, dayIndex) => {
+		const days: OrbitalWeekDay[] = MON_TO_SUN_LABELS.map((label, dayIndex) => {
 			const dayDate = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + dayIndex);
 			const dateKey = Utilities.formatDateForStorage(dayDate);
 
@@ -965,5 +979,15 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	 */
 	protected getUserDisplayName(user: any): string {
 		return Utilities.getUserDisplayName(user);
+	}
+
+	/**
+	 * Gets the locale-resolved display label for a recipe category key.
+	 *
+	 * @param cat - The English category key stored in the database.
+	 * @returns The translated category label, or the raw key when no mapping exists.
+	 */
+	protected categoryDisplayLabel(cat: string): string {
+		return this.localeCategoryLabels[cat] ?? cat;
 	}
 }

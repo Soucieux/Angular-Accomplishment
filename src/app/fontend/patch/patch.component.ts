@@ -60,9 +60,30 @@ import {
 	PATCH_TABLE_HEADER_ELEMENT,
 	PATCH_TABLE_HEADER_DETAILS,
 	PATCH_TABLE_HEADER_TIMESTAMP,
-	PATCH_TABLE_HEADER_EDIT,
 	PATCH_EMPTY_SEARCH,
-	PATCH_LABEL_PREVIOUS_RELEASES
+	PATCH_LABEL_PREVIOUS_RELEASES,
+	PATCH_STAT_TOTAL,
+	PATCH_STAT_BUGS_RESOLVED,
+	PATCH_STAT_IN_PROGRESS,
+	PATCH_STAT_OPEN_BUGS,
+	PATCH_PAGINATION_TEMPLATE,
+	PATCH_COL_STATUS,
+	PATCH_BTN_CLEAR_FILTER,
+	PATCH_DROPDOWN_ALL_PAGES,
+	PATCH_DROPDOWN_ACCOUNT,
+	BTN_ADD,
+	LABEL_EDIT,
+	NAV_LABEL_HOME,
+	NAV_LABEL_TODAY,
+	NAV_LABEL_PORTAL,
+	NAV_LABEL_RESONANCE,
+	NAV_LABEL_RECIPES,
+	NAV_LABEL_ENTERTAINMENT,
+	NAV_LABEL_REMINDER,
+	NAV_LABEL_DEBT_SONATA,
+	NAV_LABEL_PATCH_NOTES,
+	NAV_LABEL_ABOUT,
+	NAV_LABEL_SIGN_IN
 } from '../../common/locale/locale-strings';
 import { ReleaseNote } from './patch.model';
 import { Observable, catchError, firstValueFrom, of, startWith, tap } from 'rxjs';
@@ -114,9 +135,17 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly PATCH_TABLE_HEADER_ELEMENT = PATCH_TABLE_HEADER_ELEMENT;
 	protected readonly PATCH_TABLE_HEADER_DETAILS = PATCH_TABLE_HEADER_DETAILS;
 	protected readonly PATCH_TABLE_HEADER_TIMESTAMP = PATCH_TABLE_HEADER_TIMESTAMP;
-	protected readonly PATCH_TABLE_HEADER_EDIT = PATCH_TABLE_HEADER_EDIT;
+	protected readonly LABEL_EDIT = LABEL_EDIT;
 	protected readonly PATCH_EMPTY_SEARCH = PATCH_EMPTY_SEARCH;
 	protected readonly PATCH_LABEL_PREVIOUS_RELEASES = PATCH_LABEL_PREVIOUS_RELEASES;
+	protected readonly PATCH_STAT_TOTAL = PATCH_STAT_TOTAL;
+	protected readonly PATCH_STAT_BUGS_RESOLVED = PATCH_STAT_BUGS_RESOLVED;
+	protected readonly PATCH_STAT_IN_PROGRESS = PATCH_STAT_IN_PROGRESS;
+	protected readonly PATCH_STAT_OPEN_BUGS = PATCH_STAT_OPEN_BUGS;
+	protected readonly PATCH_PAGINATION_TEMPLATE = PATCH_PAGINATION_TEMPLATE;
+	protected readonly PATCH_COL_STATUS = PATCH_COL_STATUS;
+	protected readonly PATCH_BTN_CLEAR_FILTER = PATCH_BTN_CLEAR_FILTER;
+	protected readonly BTN_ADD = BTN_ADD;
 	protected currentView: 'patch' | 'release' = PATCH_VIEW_PATCH;
 	protected releaseNotes$!: Observable<ReleaseNote[] | null>;
 	private releaseNotesLoaded = false;
@@ -130,77 +159,89 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * `iconClass` (e.g. `'pi pi-user'`).
 	 * `colorClass` maps to a CSS gradient rule that matches the nav panel icon colour.
 	 */
-	protected readonly components: { label: string; icon: string; iconClass: string; colorClass: string }[] =
+	protected readonly components: { key: string; label: string; icon: string; iconClass: string; colorClass: string }[] =
 		[
 			{
-				label: 'All Pages',
+				key: 'All Pages',
+				label: PATCH_DROPDOWN_ALL_PAGES,
 				icon: 'grid_view',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-all-pages'
 			},
 			{
-				label: 'Home',
+				key: 'Home',
+				label: NAV_LABEL_HOME,
 				icon: 'home_app_logo',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-home'
 			},
 			{
-				label: 'Today',
+				key: 'Today',
+				label: NAV_LABEL_TODAY,
 				icon: 'calendar_today',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-today'
 			},
 			{
-				label: 'Portal',
+				key: 'Portal',
+				label: NAV_LABEL_PORTAL,
 				icon: 'language',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-portal'
 			},
 			{
-				label: 'Resonance',
+				key: 'Resonance',
+				label: NAV_LABEL_RESONANCE,
 				icon: 'format_quote',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-resonance'
 			},
 			{
-				label: 'Recipe',
+				key: 'Recipe',
+				label: NAV_LABEL_RECIPES,
 				icon: 'menu_book',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-recipe'
 			},
 			{
-				label: 'Entertainment',
+				key: 'Entertainment',
+				label: NAV_LABEL_ENTERTAINMENT,
 				icon: 'live_tv',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-entertainment'
 			},
 			{
-				label: 'Reminder',
+				key: 'Reminder',
+				label: NAV_LABEL_REMINDER,
 				icon: 'alarm',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-reminder'
 			},
 			{
-				label: 'Debt Sonata',
+				key: 'Debt Sonata',
+				label: NAV_LABEL_DEBT_SONATA,
 				icon: 'account_balance',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-debt'
 			},
 			{
-				label: 'Patch Notes',
+				key: 'Patch Notes',
+				label: NAV_LABEL_PATCH_NOTES,
 				icon: 'note_stack',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-patch-notes'
 			},
 			{
-				label: 'About',
+				key: 'About',
+				label: NAV_LABEL_ABOUT,
 				icon: 'badge',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-about'
 			},
-			{ label: 'Login', icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' }, // pi icon — CSS only, no ligature text
+			{ key: 'Login', label: NAV_LABEL_SIGN_IN, icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' }, // pi icon — CSS only, no ligature text
 			{
-				label: 'Account',
+				key: 'Account',
+				label: PATCH_DROPDOWN_ACCOUNT,
 				icon: 'manage_accounts',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-account'
@@ -858,12 +899,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * even when `optionValue="label"` is set (the binding affects the `ngModel`
 	 * value, not what the template slot receives).
 	 *
-	 * @param label - The component label string, or a full option object with a
-	 *   `label` property (e.g. from the PrimeNG selectedItem template context).
+	 * @param value - The component key string (stored in DB), or a full option object
+	 *   with a `key` property (e.g. from the PrimeNG selectedItem template context).
 	 * @returns The matching option object, or `null` if not found.
 	 */
-	protected getComponentOption(label: string | { label: string } | any) {
-		const key = typeof label === 'string' ? label : (label?.label ?? '');
-		return this.components.find((option) => option.label === key) ?? null;
+	protected getComponentOption(value: string | { key: string } | any) {
+		const key = typeof value === 'string' ? value : (value?.key ?? '');
+		return this.components.find((option) => option.key === key) ?? null;
 	}
 }

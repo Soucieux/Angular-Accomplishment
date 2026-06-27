@@ -164,6 +164,7 @@
 	border-radius: 9999px;
 	padding: 5px;
 	font-size: 14px;
+	line-height: 1;
 }
 
 .tp-anytime.drag-move-active .tp-chip-title {

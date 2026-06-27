@@ -64,7 +64,7 @@
 							formControlName="email"
 							[invalid]="isInvalid('email')"
 							(keyup.enter)="onSubmit()" />
-						<label for="reset-email">{{ LOGIN_LABEL_EMAIL }}</label>
+						<label for="reset-email">{{ LABEL_EMAIL }}</label>
 					</p-iftalabel>
 					@if (formSubmitted && loginForm.get('email')?.hasError('required')) {
 						<p-message severity="error" size="small" variant="simple"
@@ -108,7 +108,7 @@
 							formControlName="password"
 							[invalid]="isInvalid('password')"
 							(keyup.enter)="onSubmit()" />
-						<label for="reset-password">{{ LOGIN_LABEL_NEW_PASSWORD }}</label>
+						<label for="reset-password">{{ LABEL_NEW_PASSWORD }}</label>
 					</p-iftalabel>
 					@if (isInvalid('password')) {
 						<p-message severity="error" size="small" variant="simple"
@@ -187,7 +187,7 @@
 							autocomplete="off"
 							formControlName="username"
 							[invalid]="isInvalid('username')" />
-						<label for="username">{{ LOGIN_LABEL_USERNAME }}</label>
+						<label for="username">{{ LABEL_USERNAME }}</label>
 					</p-iftalabel>
 					@if (isInvalid('username')) {
 						<p-message severity="error" size="small" variant="simple"
@@ -208,7 +208,7 @@
 							id="email"
 							formControlName="email"
 							[invalid]="isInvalid('email')" />
-						<label for="email">{{ LOGIN_LABEL_EMAIL }}</label>
+						<label for="email">{{ LABEL_EMAIL }}</label>
 					</p-iftalabel>
 					@if (isInvalid('email')) {
 						<p-message severity="error" size="small" variant="simple"
@@ -261,7 +261,7 @@
 							formControlName="username"
 							[maxlength]="LOGIN_MAX_USERNAME_LENGTH"
 							[invalid]="isInvalid('username')" />
-						<label for="signup-username">{{ LOGIN_LABEL_USERNAME }}</label>
+						<label for="signup-username">{{ LABEL_USERNAME }}</label>
 					</p-iftalabel>
 					@if (isInvalid('username')) {
 						<p-message severity="error" size="small" variant="simple">{{

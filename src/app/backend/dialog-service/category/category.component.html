@@ -13,7 +13,7 @@
 	</ng-template>
 
 	<div class="category-dialog-field">
-		<span class="category-dialog-label">{{ PORTAL_CATEGORY_DIALOG_LABEL_NAME }}</span>
+		<span class="category-dialog-label">{{ LABEL_NAME }}</span>
 		<input
 			type="text"
 			[(ngModel)]="name"
@@ -25,14 +25,14 @@
 	<ng-template #footer>
 		@if (isEditMode) {
 			<button class="category-dialog-button-delete" (click)="onDeleteRequested()">
-				{{ PORTAL_CATEGORY_DIALOG_LABEL_DELETE }}
+				{{ DIALOG_BTN_DELETE }}
 			</button>
 		}
 		<button class="category-dialog-button-ghost" (click)="onDialogClosed()">
-			{{ PORTAL_CATEGORY_DIALOG_LABEL_CANCEL }}
+			{{ DIALOG_BTN_CANCEL }}
 		</button>
 		<button class="category-dialog-button-gradient" [disabled]="!isValid" (click)="onSubmit()">
-			{{ PORTAL_CATEGORY_DIALOG_LABEL_SAVE }}
+			{{ DIALOG_BTN_SAVE }}
 		</button>
 	</ng-template>
 </p-dialog>

@@ -53,19 +53,19 @@
 			@if (!loading) {
 				<div class="stats-strip">
 					<span class="stat-chip">
-						<span class="stat-number">{{ statsTotal }}</span> total
+						<span class="stat-number">{{ statsTotal }}</span> {{ PATCH_STAT_TOTAL }}
 					</span>
 					<span class="stat-divider">·</span>
 					<span class="stat-chip">
-						<span class="stat-number stat-resolved">{{ statsResolved }}</span> bugs resolved
+						<span class="stat-number stat-resolved">{{ statsResolved }}</span> {{ PATCH_STAT_BUGS_RESOLVED }}
 					</span>
 					<span class="stat-divider stat-mobile-hidden">·</span>
 					<span class="stat-chip stat-mobile-hidden">
-						<span class="stat-number stat-progress">{{ statsInProgress }}</span> in progress
+						<span class="stat-number stat-progress">{{ statsInProgress }}</span> {{ PATCH_STAT_IN_PROGRESS }}
 					</span>
 					<span class="stat-divider stat-mobile-hidden">·</span>
 					<span class="stat-chip stat-mobile-hidden">
-						<span class="stat-number stat-bug">{{ statsOpenBugs }}</span> open bugs
+						<span class="stat-number stat-bug">{{ statsOpenBugs }}</span> {{ PATCH_STAT_OPEN_BUGS }}
 					</span>
 				</div>
 			}
@@ -78,7 +78,7 @@
 				[rows]="itemsPerPage"
 				[(first)]="indexOfFirstItem"
 				[showCurrentPageReport]="!isNarrowViewport"
-				currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+				[currentPageReportTemplate]="PATCH_PAGINATION_TEMPLATE"
 				[showFirstLastIcon]="true"
 				[showPageLinks]="!isNarrowViewport"
 				[loading]="loading"
@@ -92,7 +92,7 @@
 						<th class="element">{{ PATCH_TABLE_HEADER_ELEMENT }}</th>
 						<th class="details">{{ PATCH_TABLE_HEADER_DETAILS }}</th>
 						<th class="status">
-							Status
+							{{ PATCH_COL_STATUS }}
 							<p-columnFilter
 								class="column-filter"
 								#columnFilter
@@ -121,7 +121,7 @@
 									</div>
 									<!-- Custom clear -->
 									<p-tag
-										value="Clear Filter"
+										[value]="PATCH_BTN_CLEAR_FILTER"
 										icon="pi pi-times"
 										severity="secondary"
 										class="clear-tag"
@@ -131,7 +131,7 @@
 							</p-columnFilter>
 						</th>
 						<th class="timestamp">{{ PATCH_TABLE_HEADER_TIMESTAMP }}</th>
-						<th class="edit-button hide-on-narrow-or-mobile">{{ PATCH_TABLE_HEADER_EDIT }}</th>
+						<th class="edit-button hide-on-narrow-or-mobile">{{ LABEL_EDIT }}</th>
 					</tr>
 				</ng-template>
 				<ng-template pTemplate="loadingbody">
@@ -294,8 +294,8 @@
 								<p-select
 									[options]="components"
 									optionLabel="label"
-									optionValue="label"
-									placeholder="Component"
+									optionValue="key"
+									[placeholder]="PATCH_TABLE_HEADER_COMPONENT"
 									[appendTo]="'body'"
 									panelStyleClass="dropdown-panel-font component-dropdown-panel"
 									[(ngModel)]="newRecord.component"
@@ -324,7 +324,7 @@
 								<input
 									pInputText
 									type="text"
-									placeholder="Element"
+									[placeholder]="PATCH_TABLE_HEADER_ELEMENT"
 									[(ngModel)]="newRecord.element"
 									class="input"
 									(keyup.enter)="submitNewRecord()" />
@@ -334,7 +334,7 @@
 									pTextarea
 									variant="filled"
 									fluid
-									placeholder="Details"
+									[placeholder]="PATCH_TABLE_HEADER_DETAILS"
 									[(ngModel)]="newRecord.details"
 									class="input textarea-input"
 									(keyup.enter)="submitNewRecord()"></textarea>
@@ -367,7 +367,7 @@
 							</td>
 							<td class="timeStamp" colspan="2">
 								<p-button
-									label="Add"
+									[label]="BTN_ADD"
 									icon="pi pi-plus"
 									severity="secondary"
 									[disabled]="

@@ -156,6 +156,7 @@
 	background: #fff;
 	cursor: pointer;
 	white-space: nowrap;
+	line-height: 1;
 	transition:
 		background 0.12s,
 		color 0.12s,
@@ -421,6 +422,7 @@
 	cursor: pointer;
 	padding: 3px 24px 3px 6px;
 	border-radius: 6px;
+	line-height: 1;
 	transition: background 0.12s;
 	overflow: hidden;
 	white-space: nowrap;
@@ -443,6 +445,7 @@
 	cursor: pointer;
 	padding: 3px 24px 3px 6px;
 	border-radius: 6px;
+	line-height: 1;
 	transition: background 0.12s;
 	white-space: nowrap;
 	position: relative;
@@ -618,6 +621,7 @@
 	color: #64748b;
 	cursor: pointer;
 	white-space: nowrap;
+	line-height: 1;
 	transition:
 		background 0.12s,
 		color 0.12s;

@@ -58,16 +58,13 @@ import {
 	TIMEOUT_KEY_REMINDER
 } from '../../common/constants';
 import {
-	REMINDER_ADD_BTN_LABEL,
 	REMINDER_ADD_DATE_LABEL,
 	REMINDER_ADD_LINK_LABEL,
 	REMINDER_ADD_TIME_LABEL,
-	REMINDER_CATEGORY_PERSONAL,
 	REMINDER_CHIP_CUSTOM,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
 	REMINDER_DUE_SOON_LABEL,
-	REMINDER_FILTER_ALL,
 	REMINDER_FILTER_LABEL,
 	REMINDER_GREETING_PLURAL,
 	REMINDER_GREETING_SINGULAR,
@@ -75,7 +72,13 @@ import {
 	REMINDER_MSG_TAG_DUPLICATE,
 	REMINDER_PLACEHOLDER_TAG,
 	REMINDER_PLACEHOLDER_TEXT,
-	REMINDER_TITLE_PAGE
+	REMINDER_CATEGORY_WORK,
+	REMINDER_CATEGORY_UTILITY,
+	REMINDER_CATEGORY_OTHER,
+	BTN_ADD,
+	LABEL_ALL,
+	LABEL_PERSONAL,
+	NAV_LABEL_REMINDER
 } from '../../common/locale/locale-strings';
 import {
 	NewItem,
@@ -136,12 +139,12 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_PLACEHOLDER_TAG = REMINDER_PLACEHOLDER_TAG;
 	protected readonly REMINDER_SUBTITLE_CN = REMINDER_SUBTITLE_CN;
 	protected readonly REMINDER_SUBTITLE_EN = REMINDER_SUBTITLE_EN;
-	protected readonly REMINDER_FILTER_ALL = REMINDER_FILTER_ALL;
+	protected readonly LABEL_ALL = LABEL_ALL;
 	protected readonly REMINDER_FILTER_LABEL = REMINDER_FILTER_LABEL;
 	protected readonly REMINDER_ADD_LINK_LABEL = REMINDER_ADD_LINK_LABEL;
 	protected readonly REMINDER_ADD_DATE_LABEL = REMINDER_ADD_DATE_LABEL;
 	protected readonly REMINDER_ADD_TIME_LABEL = REMINDER_ADD_TIME_LABEL;
-	protected readonly REMINDER_ADD_BTN_LABEL = REMINDER_ADD_BTN_LABEL;
+	protected readonly BTN_ADD = BTN_ADD;
 	protected readonly REMINDER_TIME_OPTIONS = REMINDER_TIME_OPTIONS;
 	protected readonly REMINDER_END_TIME_OPTIONS = REMINDER_END_TIME_OPTIONS;
 	protected readonly REMINDER_DUE_SOON_LABEL = REMINDER_DUE_SOON_LABEL;
@@ -151,9 +154,15 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_AWAIT_SUFFIX_CN = REMINDER_AWAIT_SUFFIX_CN;
 	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
 	protected readonly REMINDER_CHIP_CUSTOM = REMINDER_CHIP_CUSTOM;
-	protected readonly REMINDER_TITLE_PAGE = REMINDER_TITLE_PAGE;
+	protected readonly NAV_LABEL_REMINDER = NAV_LABEL_REMINDER;
 	private readonly categoryColorMap = REMINDER_CATEGORY_COLOR_MAP;
 	private readonly baseCategorySet = new Set<string>(REMINDER_KNOWN_CATEGORIES);
+	private readonly localeCategoryLabels: Record<string, string> = {
+		Personal: LABEL_PERSONAL,
+		Work: REMINDER_CATEGORY_WORK,
+		Utility: REMINDER_CATEGORY_UTILITY,
+		Other: REMINDER_CATEGORY_OTHER,
+	};
 	private gridResizeObserver?: ResizeObserver;
 	private itemsPerPage = REMINDER_ITEMS_PER_PAGE;
 	private doneKeys = new Set<string>();
@@ -171,7 +180,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		text: '',
 		date: null,
 		link: '',
-		tag: REMINDER_CATEGORY_PERSONAL,
+		tag: LABEL_PERSONAL,
 		startTime: null,
 		endTime: null
 	};
@@ -447,7 +456,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			text: '',
 			date: null,
 			link: '',
-			tag: REMINDER_CATEGORY_PERSONAL,
+			tag: LABEL_PERSONAL,
 			startTime: null,
 			endTime: null
 		};
@@ -1316,6 +1325,18 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected isKnownCategory(tag: string): boolean {
 		return this.baseCategorySet.has(tag);
+	}
+
+	/**
+	 * Gets the locale-translated display label for a category tag.
+	 * Returns the raw tag for custom (non-built-in) categories.
+	 *
+	 * @param tag - The tag string (stored EN value or custom string).
+	 * @returns The translated label, or the tag itself if not a known category.
+	 */
+	protected categoryDisplayLabel(tag: string | undefined): string {
+		if (!tag) return '';
+		return this.localeCategoryLabels[tag] ?? tag;
 	}
 
 	/**

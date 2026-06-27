@@ -53,7 +53,12 @@ import {
 	DIALOG_BTN_DELETE,
 	MSG_DELETE_FAILED,
 	MSG_SAVE_FAILED,
-	RECIPE_CATEGORY_ALL,
+	LABEL_ALL,
+	RECIPE_CATEGORY_CHINESE,
+	RECIPE_CATEGORY_WESTERN,
+	RECIPE_CATEGORY_QUICK,
+	RECIPE_CATEGORY_DESSERT,
+	RECIPE_PLACEHOLDER_CATEGORY,
 	RECIPE_DELETE_MESSAGE,
 	RECIPE_DELETE_TITLE,
 	RECIPE_DISCARD_BTN,
@@ -71,7 +76,6 @@ import {
 	RECIPE_MSG_SAVE_FAILED_DETAIL,
 	RECIPE_MSG_UPDATED,
 	RECIPE_EYEBROW,
-	RECIPE_TITLE_PAGE,
 	RECIPE_SUBTITLE,
 	RECIPE_PLACEHOLDER_SEARCH,
 	RECIPE_EMPTY_SEARCH,
@@ -83,7 +87,21 @@ import {
 	RECIPE_PLACEHOLDER_QTY,
 	RECIPE_PLACEHOLDER_UNIT,
 	RECIPE_SUFFIX_MIN,
-	RECIPE_SUFFIX_SERVINGS
+	RECIPE_SUFFIX_SERVINGS,
+	RECIPE_ITYPE_LABELS,
+	RECIPE_BTN_ADD,
+	RECIPE_BTN_EDIT,
+	RECIPE_BTN_SAVE,
+	RECIPE_BTN_SAVE_CHANGES,
+	NAV_LABEL_RECIPES,
+	RECIPE_LABEL_SERVES,
+	RECIPE_LABEL_INGREDIENTS,
+	RECIPE_LABEL_STEPS,
+	RECIPE_LABEL_NOTES,
+	RECIPE_BTN_ADD_INGREDIENT,
+	RECIPE_BTN_ADD_SUBPOINT,
+	RECIPE_BTN_ADD_STEP,
+	RECIPE_BADGE_EXAMPLE
 } from '../../common/locale/locale-strings';
 import {
 	BadgeTag,
@@ -130,7 +148,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected readonly RECIPE_VIEW_LIST = RECIPE_VIEW_LIST;
 	protected readonly RECIPE_VIEW_DETAIL = RECIPE_VIEW_DETAIL;
 	protected readonly RECIPE_VIEW_ADD = RECIPE_VIEW_ADD;
-	protected readonly RECIPE_CATEGORY_ALL = RECIPE_CATEGORY_ALL;
+	protected readonly LABEL_ALL = LABEL_ALL;
+	protected readonly RECIPE_PLACEHOLDER_CATEGORY = RECIPE_PLACEHOLDER_CATEGORY;
 	protected readonly MASTER_TYPE_TABS = MASTER_TYPE_TABS;
 	protected readonly RECIPE_CATEGORIES = RECIPE_CATEGORIES;
 	protected readonly RECIPE_EDITOR_CATEGORIES = RECIPE_EDITOR_CATEGORIES;
@@ -138,7 +157,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected readonly RECIPE_MSG_NAME_TOO_LONG = RECIPE_MSG_NAME_TOO_LONG;
 	protected readonly RECIPE_MSG_CATEGORY_REQUIRED = RECIPE_MSG_CATEGORY_REQUIRED;
 	protected readonly RECIPE_EYEBROW = RECIPE_EYEBROW;
-	protected readonly RECIPE_TITLE_PAGE = RECIPE_TITLE_PAGE;
+	protected readonly NAV_LABEL_RECIPES = NAV_LABEL_RECIPES;
 	protected readonly RECIPE_SUBTITLE = RECIPE_SUBTITLE;
 	protected readonly RECIPE_PLACEHOLDER_SEARCH = RECIPE_PLACEHOLDER_SEARCH;
 	protected readonly RECIPE_EMPTY_SEARCH = RECIPE_EMPTY_SEARCH;
@@ -151,6 +170,26 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected readonly RECIPE_PLACEHOLDER_UNIT = RECIPE_PLACEHOLDER_UNIT;
 	protected readonly RECIPE_SUFFIX_MIN = RECIPE_SUFFIX_MIN;
 	protected readonly RECIPE_SUFFIX_SERVINGS = RECIPE_SUFFIX_SERVINGS;
+	protected readonly RECIPE_BTN_ADD = RECIPE_BTN_ADD;
+	protected readonly RECIPE_BTN_EDIT = RECIPE_BTN_EDIT;
+	protected readonly DIALOG_BTN_DELETE = DIALOG_BTN_DELETE;
+	protected readonly RECIPE_BTN_SAVE = RECIPE_BTN_SAVE;
+	protected readonly RECIPE_BTN_SAVE_CHANGES = RECIPE_BTN_SAVE_CHANGES;
+	protected readonly RECIPE_LABEL_SERVES = RECIPE_LABEL_SERVES;
+	protected readonly RECIPE_LABEL_INGREDIENTS = RECIPE_LABEL_INGREDIENTS;
+	protected readonly RECIPE_LABEL_STEPS = RECIPE_LABEL_STEPS;
+	protected readonly RECIPE_LABEL_NOTES = RECIPE_LABEL_NOTES;
+	protected readonly RECIPE_BTN_ADD_INGREDIENT = RECIPE_BTN_ADD_INGREDIENT;
+	protected readonly RECIPE_BTN_ADD_SUBPOINT = RECIPE_BTN_ADD_SUBPOINT;
+	protected readonly RECIPE_BTN_ADD_STEP = RECIPE_BTN_ADD_STEP;
+	protected readonly RECIPE_BADGE_EXAMPLE = RECIPE_BADGE_EXAMPLE;
+	private readonly localeCategoryLabels: Record<string, string> = {
+		'All':     LABEL_ALL,
+		'Chinese': RECIPE_CATEGORY_CHINESE,
+		'Western': RECIPE_CATEGORY_WESTERN,
+		'Quick':   RECIPE_CATEGORY_QUICK,
+		'Dessert': RECIPE_CATEGORY_DESSERT,
+	};
 	protected pageSize = RECIPE_PAGE_SIZE;
 
 	private recipesSub?: Subscription;
@@ -158,7 +197,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected currentView: string = RECIPE_VIEW_LIST;
 	protected currentPage = 0;
 	protected searchQuery = '';
-	protected selectedCategory: string = RECIPE_CATEGORY_ALL;
+	protected selectedCategory: string = LABEL_ALL;
 
 	protected selectedRecipe: Recipe | null = null;
 	protected servings = 2;
@@ -349,7 +388,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		const query = this.searchQuery.trim().toLowerCase();
 		return this.recipes.filter((recipe) => {
 			const matchesCategory =
-				this.selectedCategory === RECIPE_CATEGORY_ALL || recipe.category === this.selectedCategory;
+				this.selectedCategory === LABEL_ALL || recipe.category === this.selectedCategory;
 			const matchesQuery = !query || recipe.name.toLowerCase().includes(query);
 			return matchesCategory && matchesQuery;
 		});
@@ -379,7 +418,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	/**
 	 * Sets the active category filter for the recipe list and resets to the first page.
 	 *
-	 * @param cat - The category string to activate (use {@link RECIPE_CATEGORY_ALL} to show all).
+	 * @param cat - The category string to activate (use {@link LABEL_ALL} to show all).
 	 */
 	protected selectCategory(cat: string): void {
 		this.selectedCategory = cat;
@@ -780,7 +819,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected get editorGroupedIngredients(): EditorGroup[] {
 		return MASTER_TYPE_TABS.flatMap((tab) => {
 			const items = this.editorIngredients.filter((ingredient) => ingredient.type === tab.id);
-			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: tab.label, items }];
+			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: RECIPE_ITYPE_LABELS[tab.id] ?? tab.label, items }];
 		});
 	}
 
@@ -1045,7 +1084,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 					baseQty: Number(ingredient.qty) || 0,
 					unit: ingredient.unit.trim()
 				}));
-			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: tab.label, items }];
+			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: RECIPE_ITYPE_LABELS[tab.id] ?? tab.label, items }];
 		});
 
 		/* Step 4: Convert editor step rows to RecipeStep objects, running autoPillStepText
@@ -1350,5 +1389,15 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			this.pageSize = newPageSize;
 			this.cdr.markForCheck();
 		}
+	}
+
+	/**
+	 * Gets the locale-resolved display label for a recipe category key.
+	 *
+	 * @param cat - The English category key as stored in the database.
+	 * @returns The translated label for the active locale, or the raw key as fallback.
+	 */
+	protected categoryDisplayLabel(cat: string): string {
+		return this.localeCategoryLabels[cat] ?? cat;
 	}
 }

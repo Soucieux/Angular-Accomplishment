@@ -30,7 +30,7 @@
 				(input)="quickAddDraft.set($any($event.target).value)"
 				(keydown)="onQuickAddKeyDown($event)"
 				[placeholder]="TODAY_QUICKADD_PLACEHOLDER" />
-			<button (click)="addUntimed()">{{ TODAY_BTN_ADD }}</button>
+			<button (click)="addUntimed()">{{ BTN_ADD }}</button>
 		</div>
 
 		<div class="tp-anytime" [class.drag-move-active]="isDragMoveEnabled()">
@@ -83,7 +83,7 @@
 	<div class="tp-legend">
 		<div class="tp-legend-item">
 			<span class="material-symbols-outlined" style="color: #1a6dff">lock</span>
-			{{ TODAY_LABEL_REMINDERS }}
+			{{ ORBITAL_LABEL_REMINDERS }}
 		</div>
 		<div class="tp-legend-item">
 			<span class="material-symbols-outlined" style="color: var(--rose)">radio_button_unchecked</span>

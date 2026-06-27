@@ -1,5 +1,11 @@
 import { Injectable, OnDestroy, computed, signal } from '@angular/core';
 import { OrbitalAgendaItem, OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
+import {
+	ORBITAL_GREETING_NIGHT,
+	ORBITAL_GREETING_MORNING,
+	ORBITAL_GREETING_AFTERNOON,
+	ORBITAL_GREETING_EVENING,
+} from '../../../common/locale/locale-strings';
 
 @Injectable()
 export class OrbitalStore implements OnDestroy {
@@ -40,12 +46,12 @@ export class OrbitalStore implements OnDestroy {
 	readonly greeting = computed(() => {
 		const hour = this.now().getHours();
 		return hour < 5
-			? 'Good night'
+			? ORBITAL_GREETING_NIGHT
 			: hour < 12
-				? 'Good morning'
+				? ORBITAL_GREETING_MORNING
 				: hour < 18
-					? 'Good afternoon'
-					: 'Good evening';
+					? ORBITAL_GREETING_AFTERNOON
+					: ORBITAL_GREETING_EVENING;
 	});
 
 	/**

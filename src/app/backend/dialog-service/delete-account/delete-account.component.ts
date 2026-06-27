@@ -5,9 +5,9 @@ import { AccountRateLimitedError } from '../../../common/error/account-rate-limi
 import { SessionExpiredError } from '../../../common/error/session-expired.error';
 import { WrongOldPasswordError } from '../../../common/error/wrong-old-password.error';
 import {
-	ACCOUNT_DIALOG_DELETE_BTN,
-	ACCOUNT_DIALOG_DELETE_CANCEL_BTN,
-	ACCOUNT_DIALOG_DELETE_HEADER,
+	DIALOG_BTN_DELETE,
+	DIALOG_BTN_CANCEL,
+	ACCOUNT_LABEL_DELETE_ACCOUNT,
 	ACCOUNT_DIALOG_DELETE_MSG,
 	ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER,
 	MSG_UNEXPECTED_ERROR
@@ -25,11 +25,11 @@ export class DeleteAccountDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	@Output() sessionExpired$ = new EventEmitter<void>();
 
-	protected readonly ACCOUNT_DIALOG_DELETE_HEADER = ACCOUNT_DIALOG_DELETE_HEADER;
+	protected readonly ACCOUNT_LABEL_DELETE_ACCOUNT = ACCOUNT_LABEL_DELETE_ACCOUNT;
 	protected readonly ACCOUNT_DIALOG_DELETE_MSG = ACCOUNT_DIALOG_DELETE_MSG;
 	protected readonly ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER = ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER;
-	protected readonly ACCOUNT_DIALOG_DELETE_BTN = ACCOUNT_DIALOG_DELETE_BTN;
-	protected readonly ACCOUNT_DIALOG_DELETE_CANCEL_BTN = ACCOUNT_DIALOG_DELETE_CANCEL_BTN;
+	protected readonly DIALOG_BTN_DELETE = DIALOG_BTN_DELETE;
+	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
 
 	protected visible = false;
 	protected passwordInput = '';

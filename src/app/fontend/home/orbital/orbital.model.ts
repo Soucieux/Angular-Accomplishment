@@ -81,9 +81,6 @@ export interface OrbitalQuickAction {
 	state?: Record<string, unknown>;
 }
 
-/** Short weekday names, Sunday-first, for the week-strip component. */
-export const DAY_NAMES_SHORT: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
 /** Cycling colour palette for the genre bar chart on the Home dashboard. */
 export const HOME_GENRE_COLORS: string[] = ['#4776e6', '#e91e8c', '#f7971e', '#78d000', '#8e54e9', '#22d3ee'];
 

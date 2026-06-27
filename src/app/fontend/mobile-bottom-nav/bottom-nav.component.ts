@@ -28,7 +28,13 @@ import {
 	NAV_NOTIF_LABEL_ENABLE,
 	NAV_NOTIF_TOGGLE_ERROR,
 	NAV_LOCALE_SWITCH_TO_ZH,
-	NAV_LOCALE_SWITCH_TO_EN
+	NAV_LOCALE_SWITCH_TO_EN,
+	NAV_MOBILE_ALL_SECTIONS,
+	LABEL_ONLINE,
+	NAV_LABEL_SIGN_OUT,
+	NAV_MOBILE_WELCOME,
+	NAV_MOBILE_OFFLINE,
+	NAV_LABEL_SIGN_IN
 } from '../../common/locale/locale-strings';
 import { NotificationService } from '../../backend/notification-service/notification.service';
 import { NavItem } from './bottom-nav.model';
@@ -63,6 +69,12 @@ export class BottomNavComponent implements AfterViewInit {
 	protected readonly NAV_AVATAR_GRADIENT = NAV_AVATAR_GRADIENT;
 	protected readonly NAV_NOTIF_LABEL_ENABLE = NAV_NOTIF_LABEL_ENABLE;
 	protected readonly NAV_NOTIF_LABEL_DISABLE = NAV_NOTIF_LABEL_DISABLE;
+	protected readonly NAV_MOBILE_ALL_SECTIONS = NAV_MOBILE_ALL_SECTIONS;
+	protected readonly LABEL_ONLINE = LABEL_ONLINE;
+	protected readonly NAV_LABEL_SIGN_OUT = NAV_LABEL_SIGN_OUT;
+	protected readonly NAV_MOBILE_WELCOME = NAV_MOBILE_WELCOME;
+	protected readonly NAV_MOBILE_OFFLINE = NAV_MOBILE_OFFLINE;
+	protected readonly NAV_LABEL_SIGN_IN = NAV_LABEL_SIGN_IN;
 	protected readonly localeSwitchLabel: string =
 		ACTIVE_LOCALE === 'en' ? NAV_LOCALE_SWITCH_TO_ZH : NAV_LOCALE_SWITCH_TO_EN;
 

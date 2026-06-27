@@ -70,27 +70,6 @@ export const ACCOUNT_STATS: AccountStat[] = [
 	}
 ];
 
-export const MILESTONE_LABELS: Record<string, { title: string; note: string }> = {
-	accountCreated: { title: 'Account Created', note: 'Welcome to Inner World.' },
-	film1st:        { title: 'First Film Logged',    note: 'The cinephile journey begins.' },
-	quote1st:       { title: 'First Quote Saved',    note: 'A mind full of words.' },
-	recipe1st:      { title: 'First Recipe Created', note: 'Cooking gets tracked.' },
-	reminder1st:    { title: 'First Reminder Set',   note: 'Never miss a thing.' },
-	debt1st:        { title: 'First Debt Tracked',   note: 'Financial clarity starts here.' },
-	link1st:        { title: 'First Link Saved',     note: 'The first breadcrumb.' },
-	streak1st:      { title: 'First Day Active',     note: 'Every journey starts here.' }
-};
-
-export const MILESTONE_DOMAIN_DISPLAY: Record<string, string> = {
-	film:     ' Films Logged',
-	quote:    ' Quotes Saved',
-	recipe:   ' Recipes Created',
-	reminder: ' Reminders Set',
-	debt:     ' Debts Tracked',
-	link:     ' Links Saved',
-	streak:   '-Day Streak'
-};
-
 export const ACCOUNT_STRENGTH_LEVELS: AccountStrengthLevel[] = [
 	{ label: 'Too short', color: '#94a3b8', minLength: 0 },
 	{ label: 'Weak', color: '#ef4444', minLength: 6 },

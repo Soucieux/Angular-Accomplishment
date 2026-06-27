@@ -6,7 +6,7 @@
 			<section class="view">
 				<div class="page-header">
 					<div class="eyebrow">{{ RECIPE_EYEBROW }}</div>
-					<h1 class="page-title">{{ RECIPE_TITLE_PAGE }}</h1>
+					<h1 class="page-title">{{ NAV_LABEL_RECIPES }}</h1>
 					<p class="page-subtitle">{{ RECIPE_SUBTITLE }}</p>
 					<div class="header-ornament"></div>
 				</div>
@@ -18,7 +18,7 @@
 					</label>
 					<button class="btn btn-primary" (click)="openAddView()">
 						<span class="material-symbols-outlined">add</span>
-						Add Recipe
+						{{ RECIPE_BTN_ADD }}
 					</button>
 				</div>
 
@@ -29,7 +29,7 @@
 								class="chip"
 								[class.active]="selectedCategory === cat"
 								(click)="selectCategory(cat)">
-								{{ cat }}
+								{{ categoryDisplayLabel(cat) }}
 							</button>
 						}
 					</div>
@@ -59,11 +59,11 @@
 						@for (recipe of pagedRecipes; track recipe.id) {
 							<article class="recipe-card" [ngClass]="recipe.bandClass" (click)="openRecipe(recipe)">
 								<div class="band" [class]="recipe.bandClass">
-									<span class="category-tag">{{ recipe.category }}</span>
+									<span class="category-tag">{{ categoryDisplayLabel(recipe.category) }}</span>
 									@if (recipes.length === 1) {
 										<span class="example-badge">
 											<span class="material-symbols-outlined">auto_awesome</span>
-											Example
+											{{ RECIPE_BADGE_EXAMPLE }}
 										</span>
 									}
 								</div>
@@ -115,7 +115,7 @@
 					</button>
 					<button class="btn btn-secondary edit-button" (click)="openEditView()">
 						<span class="material-symbols-outlined">edit</span>
-						Edit Recipe
+						{{ RECIPE_BTN_EDIT }}
 					</button>
 				</div>
 
@@ -128,7 +128,7 @@
 						</span>
 						<span class="meta-chip">
 							<span class="material-symbols-outlined">restaurant</span>
-							Serves {{ selectedRecipe.baseServings }}
+							{{ selectedRecipe.baseServings }} {{ RECIPE_LABEL_SERVES }}
 						</span>
 						<span class="meta-chip category-chip">{{ selectedRecipe.category }}</span>
 					</div>
@@ -140,7 +140,7 @@
 					<aside class="panel ingredients-panel" [class.collapsed]="ingredientsCollapsed">
 						<h2 class="panel-heading collapsible" (click)="toggleIngredients()">
 							<span class="material-symbols-outlined">kitchen</span>
-							Ingredients
+							{{ RECIPE_LABEL_INGREDIENTS }}
 							<span class="chev material-symbols-outlined">expand_more</span>
 						</h2>
 
@@ -184,7 +184,7 @@
 					<div class="panel steps-panel">
 						<h2 class="panel-heading">
 							<span class="material-symbols-outlined">format_list_numbered</span>
-							Steps
+							{{ RECIPE_LABEL_STEPS }}
 						</h2>
 
 						<div class="steps" #stepsScroll>
@@ -222,7 +222,7 @@
 				<div class="notes-card">
 					<div class="notes-header">
 						<span class="material-symbols-outlined">sticky_note_2</span>
-						Notes &amp; Tips
+						{{ RECIPE_LABEL_NOTES }}
 					</div>
 					<div class="notes-inner">
 						<div class="notepad">{{ selectedRecipe.notes }}</div>
@@ -237,25 +237,25 @@
 				<div class="editor-topbar">
 					<button class="back-button" (click)="cancelAdd()">
 						<span class="material-symbols-outlined">arrow_back</span>
-						Recipes
+						{{ NAV_LABEL_RECIPES }}
 					</button>
 					<div class="editor-actions">
 						@if (editingMode === 'edit' && recipes.length > 1) {
 							<button class="btn btn-danger" (click)="removeCurrentRecipe()">
 								<span class="material-symbols-outlined">delete</span>
-								Delete
+								{{ DIALOG_BTN_DELETE }}
 							</button>
 						}
 						<button class="btn btn-primary" (click)="saveRecipe()">
 							<span class="material-symbols-outlined">save</span>
-							{{ editingMode === 'edit' ? 'Save Changes' : 'Save Recipe' }}
+							{{ editingMode === 'edit' ? RECIPE_BTN_SAVE_CHANGES : RECIPE_BTN_SAVE }}
 						</button>
 					</div>
 				</div>
 
 				<div class="editor-header">
 					<div class="editor-eyebrow">
-						{{ editingMode === 'edit' ? 'Edit Recipe' : 'Add Recipe' }}
+						{{ editingMode === 'edit' ? RECIPE_BTN_EDIT : RECIPE_BTN_ADD }}
 					</div>
 					<input
 						class="title-field"
@@ -291,7 +291,7 @@
 								(keydown.enter)="toggleCategoryDropdown($event)"
 								(keydown.space)="toggleCategoryDropdown($event)">
 								<span [class.category-placeholder]="!editorCategory">{{
-									editorCategory || 'Choose category…'
+									editorCategory ? categoryDisplayLabel(editorCategory) : RECIPE_PLACEHOLDER_CATEGORY
 								}}</span>
 								<span class="material-symbols-outlined drop-arrow">expand_more</span>
 							</span>
@@ -303,7 +303,7 @@
 											class="category-option"
 											[class.selected]="editorCategory === cat"
 											(click)="selectCategoryOption(cat)">
-											{{ cat }}
+											{{ categoryDisplayLabel(cat) }}
 										</button>
 									}
 								</div>
@@ -335,7 +335,7 @@
 					<aside class="panel ingredients-panel editor-panel">
 						<h2 class="panel-heading">
 							<span class="material-symbols-outlined">kitchen</span>
-							Ingredients
+							{{ RECIPE_LABEL_INGREDIENTS }}
 						</h2>
 						<div class="panel-collapse-body editor-body">
 							<div class="editor-groups">
@@ -403,7 +403,7 @@
 									<span class="material-symbols-outlined">tune</span>
 								</button>
 							</div>
-							<button class="add-button" (click)="addEditorIngredient()">+ Add ingredient</button>
+							<button class="add-button" (click)="addEditorIngredient()">{{ RECIPE_BTN_ADD_INGREDIENT }}</button>
 						</div>
 						<div class="panel-foot">
 							<span class="count-badge"
@@ -418,7 +418,7 @@
 					<div class="panel steps-panel editor-panel">
 						<h2 class="panel-heading">
 							<span class="material-symbols-outlined">format_list_numbered</span>
-							Steps
+							{{ RECIPE_LABEL_STEPS }}
 						</h2>
 						<div class="editor-body steps-editor-body">
 							@for (step of editorSteps; track $index; let i = $index) {
@@ -455,7 +455,7 @@
 											}
 										</div>
 										<button class="add-sub" (click)="addSubpoint(step)">
-											+ Add sub-point
+											{{ RECIPE_BTN_ADD_SUBPOINT }}
 										</button>
 									</div>
 									<div class="step-tools">
@@ -476,7 +476,7 @@
 									</div>
 								</div>
 							}
-							<button class="add-button" (click)="addEditorStep()">+ Add step</button>
+							<button class="add-button" (click)="addEditorStep()">{{ RECIPE_BTN_ADD_STEP }}</button>
 						</div>
 						<div class="panel-foot">
 							<span class="count-badge"
@@ -490,7 +490,7 @@
 				<div class="notes-card editor-notes">
 					<div class="notes-header">
 						<span class="material-symbols-outlined">edit_note</span>
-						Notes &amp; Tips
+						{{ RECIPE_LABEL_NOTES }}
 					</div>
 					<div class="notes-inner">
 						<textarea

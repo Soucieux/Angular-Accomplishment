@@ -5,10 +5,10 @@
 	[class.show]="gridOpen()"
 	role="dialog"
 	aria-modal="true"
-	aria-label="All sections"
+	[attr.aria-label]="NAV_MOBILE_ALL_SECTIONS"
 	[cdkTrapFocus]="gridOpen()"
 	[cdkTrapFocusAutoCapture]="gridOpen()">
-	<div class="grid-head">All sections</div>
+	<div class="grid-head">{{ NAV_MOBILE_ALL_SECTIONS }}</div>
 	<div class="grid-cells" #gridCells>
 		@for (navItem of items; track navItem.id) {
 			<button
@@ -53,7 +53,7 @@
 			<span class="account-popover-meta">
 				<span class="account-popover-name">{{ userName }}</span>
 				<span class="account-popover-status"
-					><span class="account-popover-online-dot"></span>Online</span
+					><span class="account-popover-online-dot"></span>{{ LABEL_ONLINE }}</span
 				>
 			</span>
 		</div>
@@ -87,7 +87,7 @@
 			type="button"
 			cdkFocusInitial
 			(click)="doSignOut()">
-			<span class="material-symbols-outlined" style="font-size: 20px">logout</span>Sign out
+			<span class="material-symbols-outlined" style="font-size: 20px">logout</span>{{ NAV_LABEL_SIGN_OUT }}
 		</button>
 	} @else {
 		<div class="account-popover-header">
@@ -95,8 +95,8 @@
 				<span class="material-symbols-outlined" style="font-size: 24px">person</span>
 			</span>
 			<span class="account-popover-meta">
-				<span class="account-popover-name">Welcome</span>
-				<span class="account-popover-status">Offline · not signed in</span>
+				<span class="account-popover-name">{{ NAV_MOBILE_WELCOME }}</span>
+				<span class="account-popover-status">{{ NAV_MOBILE_OFFLINE }}</span>
 			</span>
 		</div>
 		<button
@@ -104,7 +104,7 @@
 			type="button"
 			cdkFocusInitial
 			(click)="doSignIn()">
-			<span class="material-symbols-outlined" style="font-size: 20px">login</span>Sign in
+			<span class="material-symbols-outlined" style="font-size: 20px">login</span>{{ NAV_LABEL_SIGN_IN }}
 		</button>
 	}
 </div>

@@ -21,12 +21,12 @@ import {
 	HOME_BRAND_SUBTITLE,
 	HOME_FLAVOUR_LINE_1,
 	HOME_FLAVOUR_LINE_2,
-	HOME_CHIP_PORTAL,
-	HOME_CHIP_RESONANCE,
-	HOME_CHIP_RECIPES,
-	HOME_CHIP_ENTERTAINMENT,
-	HOME_CHIP_REMINDER,
-	HOME_CHIP_DEBT_SONATA,
+	NAV_LABEL_PORTAL,
+	NAV_LABEL_RESONANCE,
+	NAV_LABEL_RECIPES,
+	NAV_LABEL_ENTERTAINMENT,
+	NAV_LABEL_REMINDER,
+	NAV_LABEL_DEBT_SONATA,
 	PORTAL_MSG_LOAD_CATEGORIES_FAILED
 } from '../../common/locale/locale-strings';
 import { OrbitalComponent } from './orbital/orbital.component';
@@ -44,12 +44,12 @@ export class HomeComponent implements OnInit, OnDestroy {
 	protected readonly HOME_BRAND_SUBTITLE = HOME_BRAND_SUBTITLE;
 	protected readonly HOME_FLAVOUR_LINE_1 = HOME_FLAVOUR_LINE_1;
 	protected readonly HOME_FLAVOUR_LINE_2 = HOME_FLAVOUR_LINE_2;
-	protected readonly HOME_CHIP_PORTAL = HOME_CHIP_PORTAL;
-	protected readonly HOME_CHIP_RESONANCE = HOME_CHIP_RESONANCE;
-	protected readonly HOME_CHIP_RECIPES = HOME_CHIP_RECIPES;
-	protected readonly HOME_CHIP_ENTERTAINMENT = HOME_CHIP_ENTERTAINMENT;
-	protected readonly HOME_CHIP_REMINDER = HOME_CHIP_REMINDER;
-	protected readonly HOME_CHIP_DEBT_SONATA = HOME_CHIP_DEBT_SONATA;
+	protected readonly NAV_LABEL_PORTAL = NAV_LABEL_PORTAL;
+	protected readonly NAV_LABEL_RESONANCE = NAV_LABEL_RESONANCE;
+	protected readonly NAV_LABEL_RECIPES = NAV_LABEL_RECIPES;
+	protected readonly NAV_LABEL_ENTERTAINMENT = NAV_LABEL_ENTERTAINMENT;
+	protected readonly NAV_LABEL_REMINDER = NAV_LABEL_REMINDER;
+	protected readonly NAV_LABEL_DEBT_SONATA = NAV_LABEL_DEBT_SONATA;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;

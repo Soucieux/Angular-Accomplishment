@@ -15,7 +15,7 @@
 	@if (!isEditMode) {
 		<!-- Name -->
 		<div class="add-debt-field">
-			<span class="add-debt-label">{{ ADD_DEBT_LABEL_NAME }}</span>
+			<span class="add-debt-label">{{ LABEL_NAME }}</span>
 			<input
 				type="text"
 				[(ngModel)]="name"
@@ -26,7 +26,7 @@
 
 		<!-- Category -->
 		<div class="add-debt-field">
-			<span class="add-debt-label">{{ ADD_DEBT_LABEL_CATEGORY }}</span>
+			<span class="add-debt-label">{{ LABEL_CATEGORY }}</span>
 			<div class="add-debt-category-grid">
 				@for (category of DEBT_CATEGORY_DEFS; track category.key) {
 					<button

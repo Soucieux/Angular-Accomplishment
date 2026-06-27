@@ -34,16 +34,13 @@ import {
 	ACCOUNT_LABEL_DANGER_ZONE_TITLE,
 	ACCOUNT_LABEL_DELETE_ACCOUNT,
 	ACCOUNT_LABEL_DELETE_DESCRIPTION,
-	ACCOUNT_LABEL_EMAIL,
 	ACCOUNT_LABEL_IDENTITY_TITLE,
 	ACCOUNT_LABEL_MEMBER_SINCE,
 	ACCOUNT_LABEL_MILESTONES_TITLE,
-	ACCOUNT_LABEL_NEW_PASSWORD,
 	ACCOUNT_LABEL_PROFILE_TAGLINE,
 	ACCOUNT_LABEL_UPDATE_PASSWORD,
 	ACCOUNT_LABEL_INNER_WORLD_TITLE,
 	ACCOUNT_LABEL_STREAK_SUFFIX,
-	ACCOUNT_LABEL_USERNAME,
 	ACCOUNT_LABEL_SECURITY_TITLE,
 	ACCOUNT_LABEL_LAST_LOGIN,
 	ACCOUNT_LABEL_USERNAME_CHANGED,
@@ -56,15 +53,56 @@ import {
 	ACCOUNT_MSG_NO_EMAIL,
 	ACCOUNT_MSG_PASSWORD_MISMATCH,
 	ACCOUNT_MSG_PASSWORD_TOO_SHORT,
-	ACCOUNT_MSG_PASSWORD_UPDATED
+	ACCOUNT_MSG_PASSWORD_UPDATED,
+	ACCOUNT_STAT_LABEL_FILMS,
+	ACCOUNT_STAT_LABEL_QUOTES,
+	ACCOUNT_STAT_LABEL_DEBTS,
+	ACCOUNT_STAT_LABEL_LINKS,
+	NAV_LABEL_RECIPES,
+	ORBITAL_LABEL_REMINDERS,
+	LABEL_EMAIL,
+	LABEL_USERNAME,
+	LABEL_NEW_PASSWORD,
+	ACCOUNT_STAT_UNIT_FILM,
+	ACCOUNT_STAT_UNIT_QUOTE,
+	ACCOUNT_STAT_UNIT_RECIPE,
+	ACCOUNT_STAT_UNIT_REMINDER,
+	ACCOUNT_STAT_UNIT_DEBT,
+	ACCOUNT_STAT_UNIT_LINK,
+	ACCOUNT_MILESTONE_ACCOUNT_CREATED_TITLE,
+	ACCOUNT_MILESTONE_ACCOUNT_CREATED_NOTE,
+	ACCOUNT_MILESTONE_FILM_TITLE,
+	ACCOUNT_MILESTONE_FILM_NOTE,
+	ACCOUNT_MILESTONE_QUOTE_TITLE,
+	ACCOUNT_MILESTONE_QUOTE_NOTE,
+	ACCOUNT_MILESTONE_RECIPE_TITLE,
+	ACCOUNT_MILESTONE_RECIPE_NOTE,
+	ACCOUNT_MILESTONE_REMINDER_TITLE,
+	ACCOUNT_MILESTONE_REMINDER_NOTE,
+	ACCOUNT_MILESTONE_DEBT_TITLE,
+	ACCOUNT_MILESTONE_DEBT_NOTE,
+	ACCOUNT_MILESTONE_LINK_TITLE,
+	ACCOUNT_MILESTONE_LINK_NOTE,
+	ACCOUNT_MILESTONE_STREAK_TITLE,
+	ACCOUNT_MILESTONE_STREAK_NOTE,
+	ACCOUNT_DOMAIN_FILMS,
+	ACCOUNT_DOMAIN_QUOTES,
+	ACCOUNT_DOMAIN_RECIPES,
+	ACCOUNT_DOMAIN_REMINDERS,
+	ACCOUNT_DOMAIN_DEBTS,
+	ACCOUNT_DOMAIN_LINKS,
+	ACCOUNT_DOMAIN_STREAK,
+	ACCOUNT_STRENGTH_TOO_SHORT,
+	ACCOUNT_STRENGTH_WEAK,
+	ACCOUNT_STRENGTH_FAIR,
+	ACCOUNT_STRENGTH_GOOD,
+	ACCOUNT_STRENGTH_STRONG
 } from '../../common/locale/locale-strings';
 import {
 	AccountMilestone,
 	AccountStat,
 	ACCOUNT_STATS,
-	ACCOUNT_STRENGTH_LEVELS,
-	MILESTONE_DOMAIN_DISPLAY,
-	MILESTONE_LABELS
+	ACCOUNT_STRENGTH_LEVELS
 } from './account.model';
 import { PasswordTooWeakError } from '../../common/error/password-too-weak.error';
 import { WrongOldPasswordError } from '../../common/error/wrong-old-password.error';
@@ -91,25 +129,58 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_LABEL_INNER_WORLD_TITLE = ACCOUNT_LABEL_INNER_WORLD_TITLE;
 	protected readonly ACCOUNT_LABEL_MILESTONES_TITLE = ACCOUNT_LABEL_MILESTONES_TITLE;
 	protected readonly ACCOUNT_LABEL_DANGER_ZONE_TITLE = ACCOUNT_LABEL_DANGER_ZONE_TITLE;
-	protected readonly ACCOUNT_LABEL_USERNAME = ACCOUNT_LABEL_USERNAME;
+	protected readonly LABEL_USERNAME = LABEL_USERNAME;
 	protected readonly ACCOUNT_LABEL_SECURITY_TITLE = ACCOUNT_LABEL_SECURITY_TITLE;
 	protected readonly ACCOUNT_LABEL_LAST_LOGIN = ACCOUNT_LABEL_LAST_LOGIN;
 	protected readonly ACCOUNT_LABEL_USERNAME_CHANGED = ACCOUNT_LABEL_USERNAME_CHANGED;
 	protected readonly ACCOUNT_LABEL_PASSWORD_CHANGED = ACCOUNT_LABEL_PASSWORD_CHANGED;
 	protected readonly ACCOUNT_LABEL_UPDATE_USERNAME = ACCOUNT_LABEL_UPDATE_USERNAME;
 	protected readonly ACCOUNT_PLACEHOLDER_USERNAME = ACCOUNT_PLACEHOLDER_USERNAME;
-	protected readonly ACCOUNT_LABEL_EMAIL = ACCOUNT_LABEL_EMAIL;
+	protected readonly LABEL_EMAIL = LABEL_EMAIL;
 	protected readonly ACCOUNT_LABEL_CHANGE_PASSWORD = ACCOUNT_LABEL_CHANGE_PASSWORD;
 	protected readonly ACCOUNT_LABEL_OLD_PASSWORD = ACCOUNT_LABEL_OLD_PASSWORD;
-	protected readonly ACCOUNT_LABEL_NEW_PASSWORD = ACCOUNT_LABEL_NEW_PASSWORD;
+	protected readonly LABEL_NEW_PASSWORD = LABEL_NEW_PASSWORD;
 	protected readonly ACCOUNT_LABEL_CONFIRM_PASSWORD = ACCOUNT_LABEL_CONFIRM_PASSWORD;
 	protected readonly ACCOUNT_LABEL_UPDATE_PASSWORD = ACCOUNT_LABEL_UPDATE_PASSWORD;
 	protected readonly ACCOUNT_LABEL_DELETE_ACCOUNT = ACCOUNT_LABEL_DELETE_ACCOUNT;
 	protected readonly ACCOUNT_LABEL_DELETE_DESCRIPTION = ACCOUNT_LABEL_DELETE_DESCRIPTION;
 	protected readonly ACCOUNT_STRENGTH_LEVELS = ACCOUNT_STRENGTH_LEVELS;
+	private readonly localeStatLabels: Record<string, string> = {
+		totalFilms: ACCOUNT_STAT_LABEL_FILMS, totalQuotes: ACCOUNT_STAT_LABEL_QUOTES,
+		totalRecipes: NAV_LABEL_RECIPES, totalReminders: ORBITAL_LABEL_REMINDERS,
+		totalDebts: ACCOUNT_STAT_LABEL_DEBTS, totalLinks: ACCOUNT_STAT_LABEL_LINKS,
+	};
+	private readonly localeStatUnits: Record<string, string> = {
+		totalFilms: ACCOUNT_STAT_UNIT_FILM, totalQuotes: ACCOUNT_STAT_UNIT_QUOTE,
+		totalRecipes: ACCOUNT_STAT_UNIT_RECIPE, totalReminders: ACCOUNT_STAT_UNIT_REMINDER,
+		totalDebts: ACCOUNT_STAT_UNIT_DEBT, totalLinks: ACCOUNT_STAT_UNIT_LINK,
+	};
+	private readonly localeMilestoneLabels: Record<string, { title: string; note: string }> = {
+		accountCreated: { title: ACCOUNT_MILESTONE_ACCOUNT_CREATED_TITLE, note: ACCOUNT_MILESTONE_ACCOUNT_CREATED_NOTE },
+		film1st:        { title: ACCOUNT_MILESTONE_FILM_TITLE,            note: ACCOUNT_MILESTONE_FILM_NOTE },
+		quote1st:       { title: ACCOUNT_MILESTONE_QUOTE_TITLE,           note: ACCOUNT_MILESTONE_QUOTE_NOTE },
+		recipe1st:      { title: ACCOUNT_MILESTONE_RECIPE_TITLE,          note: ACCOUNT_MILESTONE_RECIPE_NOTE },
+		reminder1st:    { title: ACCOUNT_MILESTONE_REMINDER_TITLE,        note: ACCOUNT_MILESTONE_REMINDER_NOTE },
+		debt1st:        { title: ACCOUNT_MILESTONE_DEBT_TITLE,            note: ACCOUNT_MILESTONE_DEBT_NOTE },
+		link1st:        { title: ACCOUNT_MILESTONE_LINK_TITLE,            note: ACCOUNT_MILESTONE_LINK_NOTE },
+		streak1st:      { title: ACCOUNT_MILESTONE_STREAK_TITLE,          note: ACCOUNT_MILESTONE_STREAK_NOTE },
+	};
+	private readonly localeDomainDisplay: Record<string, string> = {
+		film: ACCOUNT_DOMAIN_FILMS, quote: ACCOUNT_DOMAIN_QUOTES, recipe: ACCOUNT_DOMAIN_RECIPES,
+		reminder: ACCOUNT_DOMAIN_REMINDERS, debt: ACCOUNT_DOMAIN_DEBTS, link: ACCOUNT_DOMAIN_LINKS,
+		streak: ACCOUNT_DOMAIN_STREAK,
+	};
+	private readonly localeStrengthLabels: string[] = [
+		ACCOUNT_STRENGTH_TOO_SHORT, ACCOUNT_STRENGTH_WEAK, ACCOUNT_STRENGTH_FAIR,
+		ACCOUNT_STRENGTH_GOOD, ACCOUNT_STRENGTH_STRONG,
+	];
 
 	// ── Mutable state ─────────────────────────────────────────────────────────
-	protected userStats: AccountStat[] = ACCOUNT_STATS.map((stat) => ({ ...stat }));
+	protected userStats: AccountStat[] = ACCOUNT_STATS.map((stat) => ({
+		...stat,
+		label: this.localeStatLabels[stat.field] ?? stat.label,
+		unit: this.localeStatUnits[stat.field] ?? stat.unit,
+	}));
 	protected streakCount = 0;
 	protected memberSince = '';
 	protected milestoneList: AccountMilestone[] = [];
@@ -346,7 +417,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 				.sort(([, dateA], [, dateB]) => dateB.localeCompare(dateA))
 				.map(([key, storageDate]) => {
 					// Step 2a: Named milestones (e.g. account-created) resolve directly from the label map
-					const label = MILESTONE_LABELS[key];
+					const label = this.localeMilestoneLabels[key];
 					if (label) {
 						return {
 							title: label.title,
@@ -361,7 +432,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 					const match = key.match(/^([a-z]+?)(\d+)(st|th)$/);
 					if (!match) return null;
 					const [, domain, count] = match;
-					const domainLabel = MILESTONE_DOMAIN_DISPLAY[domain];
+					const domainLabel = this.localeDomainDisplay[domain];
 					if (!domainLabel) return null;
 					const title = `${count}${domainLabel}`;
 					return { title, date: Utilities.storageDateToDisplayMonth(storageDate), note: '' };
@@ -404,7 +475,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns The label string matching the password strength.
 	 */
 	protected getStrengthLabel(password: string): string {
-		return ACCOUNT_STRENGTH_LEVELS[this.getPasswordStrengthIndex(password)].label;
+		return this.localeStrengthLabels[this.getPasswordStrengthIndex(password)];
 	}
 
 	/**

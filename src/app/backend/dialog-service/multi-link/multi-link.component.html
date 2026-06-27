@@ -15,7 +15,7 @@
 	<section class="multi-link-category">
 		<div class="multi-link-category-label">
 			<span class="material-symbols-outlined">folder</span>
-			{{ MULTI_LINK_LABEL_CATEGORY }}
+			{{ LABEL_CATEGORY }}
 			@if (count > 0) {
 				<em>{{ MULTI_LINK_LABEL_APPLIES_PREFIX }}{{ count }} {{ linkLabel }}</em>
 			}
@@ -110,10 +110,10 @@
 		</div>
 		<div class="multi-link-footer-actions">
 			<button class="multi-link-button-ghost" (click)="onDialogClosed()">
-				{{ MULTI_LINK_LABEL_CANCEL }}
+				{{ DIALOG_BTN_CANCEL }}
 			</button>
 			<button class="multi-link-button-gradient" [disabled]="count === 0" (click)="onSubmit()">
-				{{ MULTI_LINK_LABEL_ADD_PREFIX }}{{ count || '' }} {{ linkLabel }}
+				{{ BTN_ADD }} {{ count || '' }} {{ linkLabel }}
 			</button>
 		</div>
 	</ng-template>

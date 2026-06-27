@@ -6,7 +6,7 @@ import {
 	ERROR_DIALOG_MSG_CLASS
 } from '../../../common/constants';
 import {
-	ERROR_DIALOG_BTN_LABEL,
+	DIALOG_BTN_CONFIRM,
 	ERROR_DIALOG_HEADER
 } from '../../../common/locale/locale-strings';
 
@@ -36,7 +36,7 @@ export class ErrorDialogComponent {
 			icon: ERROR_DIALOG_ICON_CLASS,
 			rejectVisible: false,
 			acceptButtonProps: {
-				label: ERROR_DIALOG_BTN_LABEL,
+				label: DIALOG_BTN_CONFIRM,
 				severity: 'danger',
 				style: { width: '100px' }
 			}

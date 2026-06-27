@@ -10,9 +10,9 @@ import {
 	ADD_LINK_PLACEHOLDER_URL
 } from '../../../common/constants';
 import {
-	LINK_DIALOG_LABEL_ADD,
-	LINK_DIALOG_LABEL_CANCEL,
-	LINK_DIALOG_LABEL_SAVE,
+	LABEL_ADD_LINK,
+	DIALOG_BTN_CANCEL,
+	DIALOG_BTN_SAVE,
 	LINK_DIALOG_LABEL_TITLE_LOADING,
 	PORTAL_DIALOG_TITLE_ADD_LINK,
 	PORTAL_DIALOG_TITLE_EDIT_LINK,
@@ -36,9 +36,9 @@ import { PortalCategory, NewLinkData } from '../../../fontend/portal/portal.mode
 export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	@Output() closed$ = new EventEmitter<void>();
 
-	protected readonly LINK_DIALOG_LABEL_ADD = LINK_DIALOG_LABEL_ADD;
-	protected readonly LINK_DIALOG_LABEL_CANCEL = LINK_DIALOG_LABEL_CANCEL;
-	protected readonly LINK_DIALOG_LABEL_SAVE = LINK_DIALOG_LABEL_SAVE;
+	protected readonly LABEL_ADD_LINK = LABEL_ADD_LINK;
+	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
+	protected readonly DIALOG_BTN_SAVE = DIALOG_BTN_SAVE;
 	protected readonly LINK_DIALOG_LABEL_TITLE_LOADING = LINK_DIALOG_LABEL_TITLE_LOADING;
 	protected readonly PORTAL_DIALOG_TITLE_ADD_LINK = PORTAL_DIALOG_TITLE_ADD_LINK;
 	protected readonly PORTAL_DIALOG_TITLE_EDIT_LINK = PORTAL_DIALOG_TITLE_EDIT_LINK;

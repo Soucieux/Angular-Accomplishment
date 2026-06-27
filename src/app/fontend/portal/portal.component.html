@@ -3,7 +3,7 @@
 		<!-- ── Header ───────────────────────────────────────────────── -->
 		<div class="page-header">
 			<div class="page-title-row">
-				<h1 class="page-title">{{ PORTAL_TITLE_PAGE }}</h1>
+				<h1 class="page-title">{{ NAV_LABEL_PORTAL }}</h1>
 				@if (saveIndicator) {
 					<div class="save-indicator">
 						<span class="save-indicator-spinner"></span>
@@ -113,7 +113,7 @@
 															? PORTAL_LABEL_CELL_DONE
 															: row[field].value === currentDay
 																? PORTAL_LABEL_CELL_TODAY
-																: PORTAL_LABEL_CELL_CONFIRM
+																: DIALOG_BTN_CONFIRM
 													}}
 												</button>
 											</div>
@@ -172,11 +172,11 @@
 					<div class="toolbar-right">
 						<button class="add-link-button" (click)="openMultiLinkDialog()">
 							<span class="material-symbols-outlined">playlist_add</span>
-							Batch
+							{{ PORTAL_BTN_BATCH }}
 						</button>
 						<button class="add-link-button" (click)="openAddLinkDialog()">
 							<span class="material-symbols-outlined">add</span>
-							Add Link
+							{{ PORTAL_BTN_ADD_LINK }}
 						</button>
 					</div>
 				</div>
@@ -233,7 +233,7 @@
 								<button
 									class="action-btn"
 									(click)="openEditLinkDialog(link, $event)"
-									[title]="PORTAL_BTN_TITLE_EDIT">
+									[title]="LABEL_EDIT">
 									<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
 										<path
 											d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z"
@@ -245,7 +245,7 @@
 								<button
 									class="action-btn action-btn--delete"
 									(click)="openDeleteLinkDialog(link, $event)"
-									[title]="PORTAL_BTN_TITLE_DELETE">
+									[title]="DIALOG_BTN_DELETE">
 									<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
 										<path
 											d="M2 3h8M5 3V2h2v1M4 3v7h4V3"
@@ -313,7 +313,7 @@
 							<p>{{ PORTAL_SECTION_MY_LINKS_EMPTY }}</p>
 							<button class="add-link-button" (click)="openAddLinkDialog()">
 								<span class="material-symbols-outlined">add</span>
-								Add Link
+								{{ PORTAL_BTN_ADD_LINK }}
 							</button>
 						</div>
 					} @else {

@@ -271,6 +271,7 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	line-height: 1;
 	transition: all 0.2s ease;
 }
 .chip:hover {
@@ -490,6 +491,7 @@
 	color: var(--ink-muted);
 	font-size: 13px;
 	font-weight: 500;
+	line-height: 1;
 }
 .meta-chip .material-symbols-outlined {
 	font-size: 16px;

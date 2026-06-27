@@ -23,22 +23,6 @@ export interface DebtCategoryDef {
 	gradient: string;
 }
 
-/** Short month names, January-first, for date formatting in the debt view. */
-export const MONTH_NAMES_SHORT: string[] = [
-	'Jan',
-	'Feb',
-	'Mar',
-	'Apr',
-	'May',
-	'Jun',
-	'Jul',
-	'Aug',
-	'Sep',
-	'Oct',
-	'Nov',
-	'Dec'
-];
-
 /** Static category definitions used to assign icons, labels, and gradients to debt items. */
 export const DEBT_CATEGORY_DEFS: DebtCategoryDef[] = [
 	{

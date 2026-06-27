@@ -54,8 +54,6 @@ import {
 	CTX_LABEL_MY_ACCOUNT,
 	CTX_LABEL_PASTE,
 	CTX_LABEL_SELECT_ALL,
-	CTX_LABEL_SIGN_IN,
-	CTX_LABEL_SIGN_OUT,
 	CTX_LABEL_INSPECT,
 	ACCOUNT_TITLE_PAGE,
 	NAV_NOTIF_LABEL_DISABLE,
@@ -74,10 +72,9 @@ import {
 	NAV_LABEL_ABOUT,
 	NAV_LABEL_SIGN_OUT,
 	NAV_LABEL_SIGN_IN,
-	NAV_STATUS_ONLINE,
 	NAV_STATUS_OFFLINE,
+	LABEL_ONLINE,
 	DIALOG_BTN_SIGN_OUT,
-	DIALOG_HEADER_SIGN_OUT,
 	MSG_LOGOUT_CONFIRM,
 	NAV_LOCALE_SWITCH_TO_ZH,
 	NAV_LOCALE_SWITCH_TO_EN,
@@ -163,7 +160,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly NAV_LABEL_ABOUT = NAV_LABEL_ABOUT;
 	protected readonly NAV_LABEL_SIGN_OUT = NAV_LABEL_SIGN_OUT;
 	protected readonly NAV_LABEL_SIGN_IN = NAV_LABEL_SIGN_IN;
-	protected readonly NAV_STATUS_ONLINE = NAV_STATUS_ONLINE;
+	protected readonly LABEL_ONLINE = LABEL_ONLINE;
 	protected readonly NAV_STATUS_OFFLINE = NAV_STATUS_OFFLINE;
 	protected readonly localeSwitchLabel: string =
 		this.localeService.currentLocale === 'en' ? NAV_LOCALE_SWITCH_TO_ZH : NAV_LOCALE_SWITCH_TO_EN;
@@ -420,7 +417,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 					separator: true
 				},
 				{
-					label: CTX_LABEL_SIGN_OUT,
+					label: NAV_LABEL_SIGN_OUT,
 					icon: CTX_ICON_SIGN_OUT,
 					color: CTX_COLOR_SIGN_OUT,
 					execute: () =>
@@ -428,13 +425,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 							this.dialogComponentContainer,
 							DIALOG_CONFIRM,
 							() => this.logout(),
-							[MSG_LOGOUT_CONFIRM, DIALOG_HEADER_SIGN_OUT, DIALOG_BTN_SIGN_OUT]
+							[MSG_LOGOUT_CONFIRM, DIALOG_BTN_SIGN_OUT, DIALOG_BTN_SIGN_OUT]
 						)
 				}
 			);
 		} else {
 			actions.push({
-				label: CTX_LABEL_SIGN_IN,
+				label: NAV_LABEL_SIGN_IN,
 				icon: CTX_ICON_SIGN_IN,
 				color: CTX_COLOR_SIGN_IN,
 				execute: () => this.navigateToLogin(),
@@ -657,7 +654,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.dialogComponentContainer,
 				DIALOG_CONFIRM,
 				() => this.logout(),
-				[MSG_LOGOUT_CONFIRM, DIALOG_HEADER_SIGN_OUT, DIALOG_BTN_SIGN_OUT]
+				[MSG_LOGOUT_CONFIRM, DIALOG_BTN_SIGN_OUT, DIALOG_BTN_SIGN_OUT]
 			);
 			return;
 		}
@@ -700,7 +697,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected handleMobileSignOut(): void {
 		this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, () => this.logout(), [
 			MSG_LOGOUT_CONFIRM,
-			DIALOG_HEADER_SIGN_OUT,
+			DIALOG_BTN_SIGN_OUT,
 			DIALOG_BTN_SIGN_OUT
 		]);
 	}

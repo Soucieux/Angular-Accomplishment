@@ -5,7 +5,7 @@
 		<div class="rm-masthead">
 			<div class="rm-masthead-left">
 				<div class="rm-title-row">
-					<div class="rm-title">{{ REMINDER_TITLE_PAGE }}</div>
+					<div class="rm-title">{{ NAV_LABEL_REMINDER }}</div>
 					@if (saveIndicator) {
 						<div class="rm-save-indicator">
 							<span class="rm-spinner"></span>
@@ -40,7 +40,7 @@
 				class="rm-filter-chip"
 				[class.rm-filter-chip-active]="tagFilter.size === 0"
 				(click)="clearTagFilter()">
-				{{ REMINDER_FILTER_ALL }}
+				{{ LABEL_ALL }}
 			</button>
 			@for (tag of filterBarTags; track tag) {
 				<button
@@ -53,7 +53,7 @@
 					} @else {
 						<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagColor(tag)">sell</span>
 					}
-					{{ tag }}
+					{{ categoryDisplayLabel(tag) }}
 				</button>
 			}
 		</div>
@@ -105,7 +105,7 @@
 								<div
 									class="rm-card-category rm-card-category-clickable"
 									(click)="openTagPicker($event, item)">
-									{{ item.tag || REMINDER_CHIP_CUSTOM }}
+									{{ categoryDisplayLabel(item.tag) || REMINDER_CHIP_CUSTOM }}
 								</div>
 							</div>
 							<button class="rm-delete-button" (click)="openDeleteConfirmationDialog(item.key)">
@@ -276,7 +276,7 @@
 							} @else {
 								<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="newItem.tag === tag ? tagColor(tag) : null">sell</span>
 							}
-							<span class="hide-on-narrow-or-mobile">{{ tag }}</span>
+							<span class="hide-on-narrow-or-mobile">{{ categoryDisplayLabel(tag) }}</span>
 						</button>
 					}
 					@if (isAddingNewTag()) {
@@ -417,7 +417,7 @@
 						[disabled]="!newItem.text.trim()"
 						(click)="addNewItemWithDateOrLink()">
 						<span class="material-symbols-outlined rm-icon" style="font-size: 15px">check</span>
-						{{ REMINDER_ADD_BTN_LABEL }}
+						{{ BTN_ADD }}
 					</button>
 				</div>
 			</div>
@@ -528,7 +528,7 @@
 						} @else {
 							<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagEditSession?.item?.tag === tag ? tagColor(tag) : null">sell</span>
 						}
-						{{ tag }}
+						{{ categoryDisplayLabel(tag) }}
 					</button>
 				}
 				@if (tagPickerCustomMode) {

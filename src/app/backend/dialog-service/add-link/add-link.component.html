@@ -82,10 +82,10 @@
 
 	<ng-template #footer>
 		<button class="link-dialog-button-ghost" (click)="onDialogClosed()">
-			{{ LINK_DIALOG_LABEL_CANCEL }}
+			{{ DIALOG_BTN_CANCEL }}
 		</button>
 		<button class="link-dialog-button-gradient" [disabled]="!isValid" (click)="onSubmit()">
-			{{ isEditMode ? LINK_DIALOG_LABEL_SAVE : LINK_DIALOG_LABEL_ADD }}
+			{{ isEditMode ? DIALOG_BTN_SAVE : LABEL_ADD_LINK }}
 		</button>
 	</ng-template>
 </p-dialog>

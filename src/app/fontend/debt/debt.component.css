@@ -442,6 +442,7 @@
 	color: #334155;
 	border: none;
 	white-space: nowrap;
+	line-height: 1;
 	transition:
 		box-shadow 150ms,
 		filter 150ms;

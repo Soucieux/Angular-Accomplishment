@@ -8,7 +8,7 @@
 			<div class="header-left">
 				<div class="header-text">
 					<div class="page-title-row">
-						<h1 class="page-title">{{ DEBT_TITLE_PAGE }}</h1>
+						<h1 class="page-title">{{ NAV_LABEL_DEBT_SONATA }}</h1>
 						@if (saveIndicator) {
 							<div class="save-indicator">
 								<span class="save-spinner"></span>
@@ -137,7 +137,7 @@
 							[class.is-expanded]="expandedItems[item.key]"
 							[style.--category-gradient]="getCategoryForItem(item).gradient">
 							@if (item.paid) {
-								<div class="paid-ribbon">{{ DEBT_RIBBON_PAID_OFF }}</div>
+								<div class="paid-ribbon">{{ DEBT_STAT_LABEL_PAID_OFF }}</div>
 							}
 
 							<!-- Card head: icon + name/category + due chip -->

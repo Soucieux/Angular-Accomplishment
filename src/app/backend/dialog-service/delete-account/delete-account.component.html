@@ -7,7 +7,7 @@
 	(onHide)="onDialogClosed()"
 	styleClass="delete-account-dialog">
 	<ng-template #header>
-		<span class="delete-account-dialog-title">{{ ACCOUNT_DIALOG_DELETE_HEADER }}</span>
+		<span class="delete-account-dialog-title">{{ ACCOUNT_LABEL_DELETE_ACCOUNT }}</span>
 	</ng-template>
 
 	<p class="delete-account-warning">{{ ACCOUNT_DIALOG_DELETE_MSG }}</p>
@@ -26,13 +26,13 @@
 
 	<ng-template #footer>
 		<button class="delete-account-button-ghost" [disabled]="isSubmitting" (click)="onDialogClosed()">
-			{{ ACCOUNT_DIALOG_DELETE_CANCEL_BTN }}
+			{{ DIALOG_BTN_CANCEL }}
 		</button>
 		<button
 			class="delete-account-button-danger"
 			[disabled]="!passwordInput || isSubmitting"
 			(click)="onSubmit()">
-			{{ ACCOUNT_DIALOG_DELETE_BTN }}
+			{{ DIALOG_BTN_DELETE }}
 		</button>
 	</ng-template>
 </p-dialog>

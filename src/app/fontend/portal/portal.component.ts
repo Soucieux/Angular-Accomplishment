@@ -41,10 +41,9 @@ import {
 import {
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
+	LABEL_EDIT,
 	MSG_DELETE_FAILED,
 	MSG_SAVE_FAILED,
-	PORTAL_DIALOG_RESET_BTN,
-	PORTAL_LABEL_CELL_CONFIRM,
 	PORTAL_LABEL_CELL_DONE,
 	PORTAL_LABEL_CELL_TODAY,
 	PORTAL_LABEL_CURRENT_MONTH,
@@ -82,8 +81,8 @@ import {
 	PORTAL_SECTION_SHARED,
 	PORTAL_SECTION_SHARED_EMPTY,
 	PORTAL_SECTION_SHARED_SUFFIX,
-	PORTAL_TITLE_PAGE,
 	PORTAL_SUBTITLE,
+	NAV_LABEL_PORTAL,
 	PORTAL_LABEL_DATE_CALCULATOR,
 	PORTAL_TABLE_HEADER_FIRST,
 	PORTAL_TABLE_HEADER_SECOND,
@@ -91,8 +90,8 @@ import {
 	PORTAL_TABLE_HEADER_FOURTH,
 	PORTAL_BTN_TITLE_EDIT_CATEGORY,
 	PORTAL_BTN_TITLE_NEW_CATEGORY,
-	PORTAL_BTN_TITLE_EDIT,
-	PORTAL_BTN_TITLE_DELETE
+	PORTAL_BTN_BATCH,
+	PORTAL_BTN_ADD_LINK
 } from '../../common/locale/locale-strings';
 import {
 	NewCategoryData,
@@ -132,7 +131,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly PORTAL_LABEL_CURRENT_MONTH = PORTAL_LABEL_CURRENT_MONTH;
 	protected readonly PORTAL_LABEL_NEXT_MONTH = PORTAL_LABEL_NEXT_MONTH;
 	protected readonly PORTAL_LABEL_RESET = PORTAL_LABEL_RESET;
-	protected readonly PORTAL_LABEL_CELL_CONFIRM = PORTAL_LABEL_CELL_CONFIRM;
+	protected readonly DIALOG_BTN_CONFIRM = DIALOG_BTN_CONFIRM;
 	protected readonly PORTAL_LABEL_CELL_DONE = PORTAL_LABEL_CELL_DONE;
 	protected readonly PORTAL_LABEL_CELL_TODAY = PORTAL_LABEL_CELL_TODAY;
 	protected readonly PORTAL_LABEL_CONFIRMED = PORTAL_LABEL_CONFIRMED;
@@ -142,7 +141,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly PORTAL_SECTION_MY_LINKS_SUFFIX = PORTAL_SECTION_MY_LINKS_SUFFIX;
 	protected readonly PORTAL_SECTION_SHARED_EMPTY = PORTAL_SECTION_SHARED_EMPTY;
 	protected readonly PORTAL_SECTION_MY_LINKS_EMPTY = PORTAL_SECTION_MY_LINKS_EMPTY;
-	protected readonly PORTAL_TITLE_PAGE = PORTAL_TITLE_PAGE;
+	protected readonly NAV_LABEL_PORTAL = NAV_LABEL_PORTAL;
 	protected readonly PORTAL_SUBTITLE = PORTAL_SUBTITLE;
 	protected readonly PORTAL_LABEL_DATE_CALCULATOR = PORTAL_LABEL_DATE_CALCULATOR;
 	protected readonly PORTAL_TABLE_HEADER_FIRST = PORTAL_TABLE_HEADER_FIRST;
@@ -151,9 +150,11 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected readonly PORTAL_TABLE_HEADER_FOURTH = PORTAL_TABLE_HEADER_FOURTH;
 	protected readonly PORTAL_BTN_TITLE_EDIT_CATEGORY = PORTAL_BTN_TITLE_EDIT_CATEGORY;
 	protected readonly PORTAL_BTN_TITLE_NEW_CATEGORY = PORTAL_BTN_TITLE_NEW_CATEGORY;
-	protected readonly PORTAL_BTN_TITLE_EDIT = PORTAL_BTN_TITLE_EDIT;
-	protected readonly PORTAL_BTN_TITLE_DELETE = PORTAL_BTN_TITLE_DELETE;
-	////////////////////// Below are Date Calculator state fields ////////////////////
+	protected readonly LABEL_EDIT = LABEL_EDIT;
+	protected readonly DIALOG_BTN_DELETE = DIALOG_BTN_DELETE;
+	protected readonly PORTAL_BTN_BATCH = PORTAL_BTN_BATCH;
+	protected readonly PORTAL_BTN_ADD_LINK = PORTAL_BTN_ADD_LINK;
+	// ── Date Calculator state fields ──────────────────────────────────────────
 	private chargedCells = new Set<string>();
 	protected originalDateCalculatorRows!: any[];
 	protected updatedDateCalculatorRows!: any[];
@@ -565,7 +566,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			() => {
 				this.setDateCalculatorDefaults();
 			},
-			[PORTAL_MSG_RESET_CONFIRM, PORTAL_DIALOG_RESET_BTN, DIALOG_BTN_CONFIRM]
+			[PORTAL_MSG_RESET_CONFIRM, PORTAL_LABEL_RESET, DIALOG_BTN_CONFIRM]
 		);
 	}
 

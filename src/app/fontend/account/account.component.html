@@ -5,7 +5,10 @@
 		<!-- Profile header -->
 		<div class="profile-header">
 			@if (getUserAvatarUrl(user)) {
-				<img class="profile-avatar profile-avatar--photo" [src]="getUserAvatarUrl(user)" [alt]="getUserDisplayName(user)" />
+				<img
+					class="profile-avatar profile-avatar--photo"
+					[src]="getUserAvatarUrl(user)"
+					[alt]="getUserDisplayName(user)" />
 			} @else {
 				<div class="profile-avatar">{{ getUserInitials(user) }}</div>
 			}
@@ -47,7 +50,7 @@
 
 				@if (isStatsLoaded) {
 					<div class="field-group">
-						<label class="field-label">{{ ACCOUNT_LABEL_USERNAME }}</label>
+						<label class="field-label">{{ LABEL_USERNAME }}</label>
 						<div class="field-row">
 							<input
 								class="account-input"
@@ -62,7 +65,7 @@
 					</div>
 
 					<div class="field-group">
-						<label class="field-label">{{ ACCOUNT_LABEL_EMAIL }}</label>
+						<label class="field-label">{{ LABEL_EMAIL }}</label>
 						<div class="email-row">
 							@if (getUserEmail(user)) {
 								<span class="email-value">{{ getUserEmail(user) }}</span>
@@ -99,7 +102,7 @@
 								class="account-input"
 								[type]="showNewPassword ? 'text' : 'password'"
 								[(ngModel)]="newPasswordInput"
-								[placeholder]="ACCOUNT_LABEL_NEW_PASSWORD"
+								[placeholder]="LABEL_NEW_PASSWORD"
 								(keyup.enter)="updatePassword()" />
 							<button
 								type="button"

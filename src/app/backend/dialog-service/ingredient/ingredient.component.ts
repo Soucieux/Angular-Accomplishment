@@ -4,7 +4,7 @@ import { DialogModule } from 'primeng/dialog';
 import { RECIPE_EDITOR_TYPE_MAX } from '../../../common/constants';
 import {
 	RECIPE_ITYPE_DIALOG_TITLE,
-	INGREDIENT_BTN_CANCEL,
+	DIALOG_BTN_CANCEL,
 	INGREDIENT_BTN_APPLY
 } from '../../../common/locale/locale-strings';
 import { IngredientType, TypeTab } from '../../../fontend/recipe/recipe.model';
@@ -21,7 +21,7 @@ export class IngredientDialogComponent {
 
 	protected readonly RECIPE_ITYPE_DIALOG_TITLE = RECIPE_ITYPE_DIALOG_TITLE;
 	protected readonly RECIPE_EDITOR_TYPE_MAX = RECIPE_EDITOR_TYPE_MAX;
-	protected readonly INGREDIENT_BTN_CANCEL = INGREDIENT_BTN_CANCEL;
+	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
 	protected readonly INGREDIENT_BTN_APPLY = INGREDIENT_BTN_APPLY;
 
 	protected visible = false;

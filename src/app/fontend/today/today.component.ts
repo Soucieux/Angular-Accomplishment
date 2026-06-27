@@ -26,14 +26,12 @@ import {
 	TODAY_TRACKING_VIRTUAL_ID
 } from '../../common/constants';
 import {
-	TODAY_BTN_ADD,
 	TODAY_BTN_DRAG_CREATE,
 	TODAY_BTN_DRAG_MOVE,
 	TODAY_BTN_START_TRACKING,
 	TODAY_BTN_STOP_TRACKING,
 	TODAY_EYEBROW,
 	TODAY_HINT_DRAG_UNTIMED,
-	TODAY_LABEL_REMINDERS,
 	TODAY_LABEL_TASKS,
 	TODAY_LABEL_TRACKED,
 	TODAY_PENDING_HINT,
@@ -43,7 +41,10 @@ import {
 	TODAY_TITLE,
 	TODAY_TRACKING_PREFIX,
 	MOBILE_BLOCKED_TITLE,
-	MOBILE_BLOCKED_BODY
+	MOBILE_BLOCKED_BODY,
+	TODAY_RECUR_LABELS,
+	BTN_ADD,
+	ORBITAL_LABEL_REMINDERS
 } from '../../common/locale/locale-strings';
 import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 import {
@@ -54,7 +55,6 @@ import {
 	RANGE_BLOCK_MIN_HEIGHT_PX,
 	TRACKED_TINY_MIN_HEIGHT_PX,
 	TRACKED_TINY_THRESHOLD_MIN,
-	RECUR_LABELS,
 	SCROLL_AHEAD_PX,
 	TASK_ACCENT_DONE,
 	TASK_ACCENT_MAP,
@@ -91,11 +91,11 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly TODAY_TITLE = TODAY_TITLE;
 	protected readonly TODAY_SUBTITLE = TODAY_SUBTITLE;
 	protected readonly TODAY_QUICKADD_PLACEHOLDER = TODAY_QUICKADD_PLACEHOLDER;
-	protected readonly TODAY_BTN_ADD = TODAY_BTN_ADD;
+	protected readonly BTN_ADD = BTN_ADD;
 	protected readonly TODAY_HINT_DRAG_UNTIMED = TODAY_HINT_DRAG_UNTIMED;
 	protected readonly TODAY_PENDING_PLACEHOLDER = TODAY_PENDING_PLACEHOLDER;
 	protected readonly TODAY_PENDING_HINT = TODAY_PENDING_HINT;
-	protected readonly TODAY_LABEL_REMINDERS = TODAY_LABEL_REMINDERS;
+	protected readonly ORBITAL_LABEL_REMINDERS = ORBITAL_LABEL_REMINDERS;
 	protected readonly TODAY_LABEL_TASKS = TODAY_LABEL_TASKS;
 	protected readonly TODAY_LABEL_TRACKED = TODAY_LABEL_TRACKED;
 	protected readonly TODAY_BTN_START_TRACKING = TODAY_BTN_START_TRACKING;
@@ -213,7 +213,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					timeLabel: this.formatMinutes(t.startMin!) + ' – ' + this.formatMinutes(endMin),
 					durationLabel: this.formatDuration(endMin - t.startMin!),
 					hasRecurrence: t.recur !== 'none',
-					recurrenceLabel: RECUR_LABELS[t.recur] ?? ''
+					recurrenceLabel: TODAY_RECUR_LABELS[t.recur] ?? ''
 				};
 			});
 	});

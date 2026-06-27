@@ -70,15 +70,6 @@ export const TASK_SOURCE_LOCAL: TodayTaskSource = 'local';
 export const TASK_SOURCE_REMINDER: TodayTaskSource = 'reminder';
 export const TASK_SOURCE_TRACKED: TodayTaskSource = 'tracked';
 
-/** Human-readable label per recurrence value, shown in block chips. */
-export const RECUR_LABELS: Partial<Record<TodayTask['recur'], string>> = {
-	daily: 'Daily',
-	weekdays: 'Weekdays',
-	weekly: 'Weekly',
-	monthly: 'Monthly',
-	yearly: 'Yearly',
-};
-
 /** Left-border accent colour per task source. */
 export const TASK_ACCENT_MAP: Record<TodayTaskSource, string> = {
 	reminder: '#1a6dff',

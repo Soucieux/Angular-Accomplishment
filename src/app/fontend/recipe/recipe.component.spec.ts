@@ -6,7 +6,7 @@ import {
 	RECIPE_ITYPE_VEGETABLE,
 	RECIPE_ITYPE_MEAT
 } from '../../common/constants';
-import { RECIPE_CATEGORY_ALL } from '../../common/locale/locale.en';
+import { LABEL_ALL } from '../../common/locale/locale-strings';
 import { RECIPE_UNIT_OPTIONS } from './recipe.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { IngredientType } from './recipe.model';
@@ -249,7 +249,7 @@ describe('RecipeComponent', () => {
 				{ name: 'Pasta', category: 'Italian', baseServings: 2 },
 				{ name: 'Tacos', category: 'Mexican', baseServings: 2 }
 			];
-			(component as any).selectedCategory = RECIPE_CATEGORY_ALL;
+			(component as any).selectedCategory = LABEL_ALL;
 			(component as any).searchQuery = '';
 			expect((component as any).filteredRecipes.length).toBe(2);
 		});
@@ -269,7 +269,7 @@ describe('RecipeComponent', () => {
 				{ name: 'Pasta Carbonara', category: 'Italian', baseServings: 2 },
 				{ name: 'Tacos', category: 'Mexican', baseServings: 2 }
 			];
-			(component as any).selectedCategory = RECIPE_CATEGORY_ALL;
+			(component as any).selectedCategory = LABEL_ALL;
 			(component as any).searchQuery = 'pasta';
 			expect((component as any).filteredRecipes.length).toBe(1);
 		});
@@ -285,8 +285,8 @@ describe('RecipeComponent', () => {
 
 		it('resets to ALL when the sentinel constant is passed', () => {
 			(component as any).selectedCategory = 'Italian';
-			(component as any).selectCategory(RECIPE_CATEGORY_ALL);
-			expect((component as any).selectedCategory).toBe(RECIPE_CATEGORY_ALL);
+			(component as any).selectCategory(LABEL_ALL);
+			expect((component as any).selectedCategory).toBe(LABEL_ALL);
 		});
 	});
 

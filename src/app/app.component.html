@@ -274,10 +274,10 @@
 		<div class="header-drag-fill" (mousedown)="startWindowDrag($event)"></div>
 	</div>
 	<desktop-context-menu
-		[visible]="ctxVisible"
-		[x]="ctxX"
-		[y]="ctxY"
-		[actions]="ctxActions"
-		(close)="closeCtxMenu()" />
+		[visible]="contextMenuVisible"
+		[x]="contextMenuX"
+		[y]="contextMenuY"
+		[actions]="contextMenuActions"
+		(close)="closeContextMenu()" />
 }
 <ng-container #dialogComponentContainer></ng-container>

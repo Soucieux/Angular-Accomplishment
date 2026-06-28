@@ -22,7 +22,7 @@
 				<span class="cell-icon">
 					<span
 						class="material-symbols-outlined gradient-icon"
-						[style.background-image]="navItem.grad"
+						[style.background-image]="navItem.gradient"
 						style="font-size: 28px"
 						[style.font-variation-settings]="
 							activeId === navItem.id ? '\'FILL\' 1' : '\'FILL\' 0'
@@ -57,16 +57,16 @@
 				>
 			</span>
 		</div>
-		@if (notifSupported) {
+		@if (notificationSupported) {
 			<button
 				class="account-popover-item"
-				[class.account-popover-item--primary]="!notifSubscribed()"
+				[class.account-popover-item--primary]="!notificationSubscribed()"
 				type="button"
 				(click)="toggleNotification()">
 				<span class="material-symbols-outlined" style="font-size: 20px">{{
-					notifSubscribed() ? 'notifications_off' : 'notifications'
+					notificationSubscribed() ? 'notifications_off' : 'notifications'
 				}}</span>
-				{{ notifSubscribed() ? NAV_NOTIF_LABEL_DISABLE : NAV_NOTIF_LABEL_ENABLE }}
+				{{ notificationSubscribed() ? NAV_NOTIF_LABEL_DISABLE : NAV_NOTIF_LABEL_ENABLE }}
 			</button>
 		}
 		<button
@@ -120,7 +120,7 @@
 				[attr.aria-selected]="activeId === navItem.id"
 				[attr.aria-label]="navItem.label"
 				[style.background]="
-					activeId === navItem.id ? navItem.grad || 'var(--vc-rose)' : 'transparent'
+					activeId === navItem.id ? navItem.gradient || 'var(--vc-rose)' : 'transparent'
 				"
 				[style.box-shadow]="activeId === navItem.id ? '0 4px 14px rgba(0,0,0,0.22)' : 'none'"
 				(click)="select(navItem.id)">
@@ -134,7 +134,7 @@
 					} @else {
 						<span
 							class="material-symbols-outlined gradient-icon"
-							[style.background-image]="navItem.grad"
+							[style.background-image]="navItem.gradient"
 							style="font-size: 25px"
 							>{{ navItem.icon }}</span
 						>

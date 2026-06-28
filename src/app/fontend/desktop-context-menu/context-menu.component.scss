@@ -1,6 +1,16 @@
-/* ── Context menu container ──────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Host
+───────────────────────────────────────── */
 
-.ctx-menu {
+:host {
+	font-family: 'app-font';
+}
+
+/* ─────────────────────────────────────────
+   Context menu container
+───────────────────────────────────────── */
+
+.context-menu-menu {
 	position: fixed;
 	z-index: 9999;
 	min-width: 200px;
@@ -14,22 +24,24 @@
 	user-select: none;
 }
 
-/* ── Search row ──────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Search row
+───────────────────────────────────────── */
 
-.ctx-search-row {
+.context-menu-search-row {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 	padding: 10px 12px 8px;
 }
 
-.ctx-search-icon {
+.context-menu-search-icon {
 	font-size: 16px;
 	color: #aaa;
 	flex-shrink: 0;
 }
 
-.ctx-search-input {
+.context-menu-search-input {
 	flex: 1;
 	border: none;
 	outline: none;
@@ -43,23 +55,27 @@
 	}
 }
 
-/* ── Divider ─────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Divider
+───────────────────────────────────────── */
 
-.ctx-divider {
+.context-menu-divider {
 	height: 1px;
 	background: rgba(0, 0, 0, 0.07);
 	margin: 0;
 }
 
-/* ── Item list ───────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Item list
+───────────────────────────────────────── */
 
-.ctx-list {
+.context-menu-list {
 	list-style: none;
 	margin: 0;
 	padding: 4px 0;
 }
 
-.ctx-item {
+.context-menu-item {
 	display: flex;
 	align-items: center;
 	gap: 10px;
@@ -76,7 +92,7 @@
 	}
 }
 
-.ctx-item-icon {
+.context-menu-item-icon {
 	font-size: 17px;
 	flex-shrink: 0;
 	background-clip: text;
@@ -84,15 +100,17 @@
 	-webkit-text-fill-color: transparent;
 }
 
-.ctx-item-label {
+.context-menu-item-label {
 	font-size: 13px;
 	color: #222;
 	font-weight: 500;
 }
 
-/* ── In-list separator ───────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   In-list separator
+───────────────────────────────────────── */
 
-.ctx-separator {
+.context-menu-separator {
 	height: 1px;
 	background: rgba(0, 0, 0, 0.07);
 	margin: 4px 0;
@@ -100,10 +118,22 @@
 	list-style: none;
 }
 
-/* ── Empty state ─────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Empty state
+───────────────────────────────────────── */
 
-.ctx-empty {
+.context-menu-empty {
 	padding: 10px 14px;
 	font-size: 12px;
 	color: #bbb;
+}
+
+/* ─────────────────────────────────────────
+   Narrow viewport
+───────────────────────────────────────── */
+
+@media (max-width: 940px) {
+	.context-menu-menu {
+		display: none;
+	}
 }

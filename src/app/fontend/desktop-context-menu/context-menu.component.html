@@ -1,37 +1,37 @@
 @if (visible) {
-	<div class="ctx-menu" [style.left.px]="x" [style.top.px]="y">
-		<div class="ctx-search-row">
-			<span class="material-symbols-outlined ctx-search-icon">search</span>
+	<div class="context-menu-menu" [style.left.px]="x" [style.top.px]="y">
+		<div class="context-menu-search-row">
+			<span class="material-symbols-outlined context-menu-search-icon">search</span>
 			<input
-				class="ctx-search-input"
+				class="context-menu-search-input"
 				type="text"
 				[placeholder]="CTX_SEARCH_PLACEHOLDER"
 				[(ngModel)]="searchQuery"
 				(mousedown)="$event.stopPropagation()" />
 		</div>
 		@if (filteredActions.length > 0) {
-			<div class="ctx-divider"></div>
-			<ul class="ctx-list">
+			<div class="context-menu-divider"></div>
+			<ul class="context-menu-list">
 				@for (action of filteredActions; track action.label) {
 					@if (action.separator) {
-						<li class="ctx-separator" aria-hidden="true"></li>
+						<li class="context-menu-separator" aria-hidden="true"></li>
 					}
 					<li
-						class="ctx-item"
+						class="context-menu-item"
 						(mousedown)="$event.stopPropagation(); $event.preventDefault()"
 						(click)="selectAction(action)">
 						<span
-							class="material-symbols-outlined ctx-item-icon"
+							class="material-symbols-outlined context-menu-item-icon"
 							[style.backgroundImage]="action.color"
 							>{{ action.icon }}</span
 						>
-						<span class="ctx-item-label">{{ action.label }}</span>
+						<span class="context-menu-item-label">{{ action.label }}</span>
 					</li>
 				}
 			</ul>
 		} @else {
-			<div class="ctx-divider"></div>
-			<div class="ctx-empty">No results</div>
+			<div class="context-menu-divider"></div>
+			<div class="context-menu-empty">No results</div>
 		}
 	</div>
 }

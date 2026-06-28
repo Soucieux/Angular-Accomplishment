@@ -11,15 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CTX_SEARCH_PLACEHOLDER } from '../../common/locale/locale-strings';
-
-/** A single item in the context menu. Set separator to true to render a divider before this item. */
-export interface ContextMenuAction {
-	label: string;
-	icon: string;
-	color: string;
-	execute: () => void;
-	separator?: true;
-}
+import { ContextMenuAction } from './context-menu.model';
 
 @Component({
 	selector: 'desktop-context-menu',
@@ -33,7 +25,7 @@ export class DesktopContextMenuComponent implements OnChanges {
 	@Input() x = 0;
 	@Input() y = 0;
 	@Input() actions: ContextMenuAction[] = [];
-	@Output() readonly close = new EventEmitter<void>();
+	@Output() public readonly close = new EventEmitter<void>();
 
 	protected readonly CTX_SEARCH_PLACEHOLDER = CTX_SEARCH_PLACEHOLDER;
 	protected searchQuery = '';
@@ -59,7 +51,7 @@ export class DesktopContextMenuComponent implements OnChanges {
 	protected get filteredActions(): ContextMenuAction[] {
 		const query = this.searchQuery.toLowerCase();
 		if (!query) return this.actions;
-		return this.actions.filter((a) => a.label.toLowerCase().includes(query));
+		return this.actions.filter((action) => action.label.toLowerCase().includes(query));
 	}
 
 	/**

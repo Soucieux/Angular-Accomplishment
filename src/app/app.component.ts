@@ -88,10 +88,8 @@ import {
 	DIALOG_LOCALE_SWITCH_MSG,
 	DIALOG_LOCALE_SWITCH_BTN
 } from './common/locale/locale-strings';
-import {
-	ContextMenuAction,
-	DesktopContextMenuComponent
-} from './fontend/desktop-context-menu/context-menu.component';
+import { DesktopContextMenuComponent } from './fontend/desktop-context-menu/context-menu.component';
+import { ContextMenuAction } from './fontend/desktop-context-menu/context-menu.model';
 import { readText } from '@tauri-apps/api/clipboard';
 import { invoke } from '@tauri-apps/api/tauri';
 import { Observable, filter } from 'rxjs';
@@ -129,27 +127,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	private dialogComponentContainer!: ViewContainerRef;
 	@ViewChild('accountRowWrapper')
 	private accountRowWrapper?: ElementRef<HTMLElement>;
-	protected currentUser$!: Observable<any>;
-	protected accountMenuOpen = false;
-	protected navCollapsed = false;
-	protected navMobile = false;
-	protected navReady = false;
-	protected navCompact = false;
-	protected navMode: 'side' | 'over' = 'side';
-	protected compactOverlayOpen = false;
-	protected isTauriApp = false;
-	private tauriAppWindow: { startDragging: () => Promise<void> } | null = null;
-	private userInitialized = false;
-	protected ctxVisible = false;
-	protected ctxX = 0;
-	protected ctxY = 0;
-	protected ctxActions: ContextMenuAction[] = [];
-	private ctxSavedSelection: {
-		el: HTMLInputElement | HTMLTextAreaElement;
-		start: number | null;
-		end: number | null;
-	} | null = null;
-	private readonly ctxNavItems = NAV_ITEMS.filter((item) => ['home', 'reminder'].includes(item.id));
 	protected readonly ACCOUNT_TITLE_PAGE = ACCOUNT_TITLE_PAGE;
 	protected readonly NAV_NOTIF_LABEL_ENABLE = NAV_NOTIF_LABEL_ENABLE;
 	protected readonly NAV_NOTIF_LABEL_DISABLE = NAV_NOTIF_LABEL_DISABLE;
@@ -175,9 +152,32 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, {
 		initialValue: false
 	});
-	protected minimizeOnClose = signal(true);
 	protected readonly navItems: NavItem[] = NAV_ITEMS;
 	protected readonly primaryIds: string[] = PRIMARY_IDS;
+	protected currentUser$!: Observable<any>;
+	protected accountMenuOpen = false;
+	protected navCollapsed = false;
+	protected navMobile = false;
+	protected navReady = false;
+	protected navCompact = false;
+	protected navMode: 'side' | 'over' = 'side';
+	protected compactOverlayOpen = false;
+	protected isTauriApp = false;
+	private tauriAppWindow: { startDragging: () => Promise<void> } | null = null;
+	private userInitialized = false;
+	protected contextMenuVisible = false;
+	protected contextMenuX = 0;
+	protected contextMenuY = 0;
+	protected contextMenuActions: ContextMenuAction[] = [];
+	private contextMenuSavedSelection: {
+		element: HTMLInputElement | HTMLTextAreaElement;
+		start: number | null;
+		end: number | null;
+	} | null = null;
+	private readonly contextMenuNavItems = NAV_ITEMS.filter((item) =>
+		['home', 'reminder'].includes(item.id)
+	);
+	protected minimizeOnClose = signal(true);
 	protected activeRoute = '';
 	protected mobileSignedIn = false;
 	protected mobileUserName = '';
@@ -271,7 +271,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 				document.addEventListener(
 					'scroll',
 					() => {
-						if (this.ctxVisible) this.ngZone.run(() => this.closeCtxMenu());
+						if (this.contextMenuVisible) this.ngZone.run(() => this.closeContextMenu());
 					},
 					{ capture: true, passive: true }
 				);
@@ -345,8 +345,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.isTauriApp && event.button === 2) {
 			const target = event.target as HTMLElement;
 			if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
-				this.ctxSavedSelection = {
-					el: target,
+				this.contextMenuSavedSelection = {
+					element: target,
 					start: target.selectionStart,
 					end: target.selectionEnd
 				};
@@ -374,11 +374,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		/* Step 1: Restore the pre-right-click selection that was snapshotted in
 		   onDocumentMouseDown — must happen before building actions so that execCommand
 		   operations run against the correct range. */
-		if (this.ctxSavedSelection) {
-			const { el, start, end } = this.ctxSavedSelection;
-			el.selectionStart = start;
-			el.selectionEnd = end;
-			this.ctxSavedSelection = null;
+		if (this.contextMenuSavedSelection) {
+			const { element, start, end } = this.contextMenuSavedSelection;
+			element.selectionStart = start;
+			element.selectionEnd = end;
+			this.contextMenuSavedSelection = null;
 		}
 
 		const actions: ContextMenuAction[] = [];
@@ -429,11 +429,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		// Step 3: Append quick-nav shortcuts (Home, Reminder); the first one gets a separator
 		// when clipboard actions precede it so the groups are visually distinct.
-		for (const [i, item] of this.ctxNavItems.entries()) {
+		for (const [i, item] of this.contextMenuNavItems.entries()) {
 			actions.push({
 				label: item.id === 'home' ? NAV_LABEL_HOME : NAV_LABEL_REMINDER,
 				icon: item.icon,
-				color: item.grad!,
+				color: item.gradient!,
 				execute: () => this.navigateToRoute(item.id),
 				separator: isInput && i === 0 ? true : undefined
 			});
@@ -485,17 +485,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		/* Step 6: Clamp the menu position so it never overflows the viewport edge —
 		   220px and 280px are the approximate max width and height of the overlay. */
-		this.ctxX = Math.min(event.clientX, window.innerWidth - 220);
-		this.ctxY = Math.min(event.clientY, window.innerHeight - 280);
-		this.ctxActions = actions;
-		this.ctxVisible = true;
+		this.contextMenuX = Math.min(event.clientX, window.innerWidth - 220);
+		this.contextMenuY = Math.min(event.clientY, window.innerHeight - 280);
+		this.contextMenuActions = actions;
+		this.contextMenuVisible = true;
 	}
 
 	/**
 	 * Closes the custom context menu overlay.
 	 */
-	protected closeCtxMenu(): void {
-		this.ctxVisible = false;
+	protected closeContextMenu(): void {
+		this.contextMenuVisible = false;
 	}
 
 	/**

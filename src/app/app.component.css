@@ -524,25 +524,6 @@ li[data-nav-id='about'] .nav-icon {
 	color: rgba(100, 116, 139, 0.85);
 }
 
-/* ── Mobile only bottom navigation ─────────────────────────────────── */
-@media (max-width: 900px) and (pointer: coarse) {
-	/* Hide the left nav before JS runs to prevent the SSR hydration flash */
-	mat-drawer {
-		display: none !important;
-	}
-
-	mat-drawer-content {
-		margin: 4px !important;
-	}
-}
-
-/* ── iOS PWA — extend gradient behind the status-bar notch ──────────── */
-@media (display-mode: standalone) and (max-width: 900px) and (pointer: coarse) {
-	mat-drawer-container {
-		padding-top: env(safe-area-inset-top);
-	}
-}
-
 .account-row-chevron {
 	font-size: 23px;
 	flex-shrink: 0;
@@ -651,4 +632,23 @@ mat-drawer-container:has(mat-drawer.nav-collapsed) mat-drawer-content {
 	margin: auto;
 	width: fit-content;
 	height: fit-content;
+}
+
+/* ── Mobile only bottom navigation ─────────────────────────────────── */
+@media (max-width: 900px) and (pointer: coarse) {
+	/* Hide the left nav before JS runs to prevent the SSR hydration flash */
+	mat-drawer {
+		display: none !important;
+	}
+
+	mat-drawer-content {
+		margin: 4px !important;
+	}
+}
+
+/* ── iOS PWA — extend gradient behind the status-bar notch ──────────── */
+@media (display-mode: standalone) and (max-width: 900px) and (pointer: coarse) {
+	mat-drawer-container {
+		padding-top: env(safe-area-inset-top);
+	}
 }

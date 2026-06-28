@@ -39,6 +39,7 @@ import {
 import { NotificationService } from '../../backend/notification-service/notification.service';
 import { NavItem } from './bottom-nav.model';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { UnexpectedError } from '../../common/error/unexpected.error';
 
 @Component({
 	selector: 'bottom-nav',
@@ -80,10 +81,10 @@ export class BottomNavComponent implements AfterViewInit {
 
 	protected readonly gridOpen = signal(false);
 	protected readonly accountOpen = signal(false);
-	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, {
+	protected readonly notificationSubscribed = toSignal(this.notificationService.isSubscribed$, {
 		initialValue: false
 	});
-	protected readonly notifSupported = this.notificationService.isSupported();
+	protected readonly notificationSupported = this.notificationService.isSupported();
 
 	constructor(
 		private ngZone: NgZone,
@@ -215,7 +216,7 @@ export class BottomNavComponent implements AfterViewInit {
 	 */
 	protected async toggleNotification(): Promise<void> {
 		try {
-			if (this.notifSubscribed()) {
+			if (this.notificationSubscribed()) {
 				await this.notificationService.unsubscribe();
 			} else {
 				await this.notificationService.subscribe();
@@ -224,7 +225,7 @@ export class BottomNavComponent implements AfterViewInit {
 			LOG.error(
 				this.className,
 				NAV_NOTIF_TOGGLE_ERROR,
-				error instanceof Error ? error : new Error('Unexpected error')
+				error instanceof Error ? error : new UnexpectedError()
 			);
 		}
 	}

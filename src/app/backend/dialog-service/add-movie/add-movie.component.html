@@ -11,7 +11,7 @@
 	<div class="form-body-container">
 		<form id="addMovieForm" #addMovieForm="ngForm" (ngSubmit)="onSubmit()" class="form-grid">
 			<div class="form-row">
-				<label for="movieName">{{ movieName.value || year.value ? 'Name*' : 'Name' }}</label>
+				<label for="movieName">{{ movieName.value || year.value ? ADD_MOVIE_LABEL_NAME_REQUIRED : ADD_MOVIE_LABEL_NAME }}</label>
 				<input
 					pInputText
 					name="movieName"
@@ -25,7 +25,7 @@
 					[required]="movieName.value || year.value" />
 			</div>
 			<div class="form-row">
-				<label for="years">{{ movieName.value || year.value ? 'Year*' : 'Year' }}</label>
+				<label for="years">{{ movieName.value || year.value ? ADD_MOVIE_LABEL_YEAR_REQUIRED : ADD_MOVIE_LABEL_YEAR }}</label>
 				<!-- name is used to register control inside ngForm, used to track its value, validation status, errors etc. -->
 				<!-- id is used to link a <label> to the input -->
 				<!-- for inside <label> uses id to focus on the input when clicked -->
@@ -53,7 +53,7 @@
 					(ngModelChange)="onNameAndYearChange()"></p-select>
 			</div>
 			<div class="form-row">
-				<label for="id">{{ id.value ? 'ID*' : 'ID' }}</label>
+				<label for="id">{{ id.value ? ADD_MOVIE_LABEL_ID_REQUIRED : ADD_MOVIE_LABEL_ID }}</label>
 				<input
 					pInputText
 					name="id"
@@ -95,15 +95,15 @@
 			<label for="favourite">{{ ADD_MOVIE_LABEL_FAVOURITE }}</label>
 		</div>
 		<p-button
-			label="Search"
+			[label]="ADD_MOVIE_BTN_SEARCH"
 			type="button"
 			severity="primary"
 			[attr.form]="'addMovieForm'"
 			[disabled]="addMovieForm.invalid"
 			(click)="searchCurrentMovie(addMovieForm.value)" />
-		<p-button label="Cancel" type="button" severity="secondary" (click)="onDialogClosed()" />
+		<p-button [label]="DIALOG_BTN_CANCEL" type="button" severity="secondary" (click)="onDialogClosed()" />
 		<p-button
-			label="Submit"
+			[label]="ADD_MOVIE_BTN_SUBMIT"
 			type="submit"
 			class="submit-button"
 			[disabled]="!canSubmit"

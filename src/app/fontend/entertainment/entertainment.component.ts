@@ -43,7 +43,13 @@ import {
 	ENT_TITLE_PAGE,
 	ENT_SEARCH_PLACEHOLDER,
 	ENT_LABEL_FILMS,
-	ENT_LABEL_TO_WATCH
+	ENT_LABEL_TO_WATCH,
+	ENT_LOG_START_SEARCHING,
+	ENT_LOG_SUMMARY_HEADER,
+	ENT_LOG_RATE_INCREASED_LABEL,
+	ENT_LOG_RATE_DECREASED_LABEL,
+	ENT_LOG_NONE,
+	ENT_LOG_SKIPPING
 } from '../../common/locale/locale-strings';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
 import { ENT_CORK_PIN_COLORS, ENT_CORK_ROTATIONS, MOVIE_GENRES } from './entertainment.model';
@@ -277,7 +283,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 
 		// Step 2: Loop through the movieList to get latest movie details
 		for (let movieItemVO of movieListVOs) {
-			this.searchStreamService.addSearchLog(`Start searching for ${movieItemVO.getMovieName()}`);
+			this.searchStreamService.addSearchLog(`${ENT_LOG_START_SEARCHING}${movieItemVO.getMovieName()}`);
 			movieItemVO.setSessionId(currentSessionId);
 
 			try {
@@ -324,20 +330,20 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			// Summary
 			const rateIncreaseLength = rateIncreasedArray?.length ?? 0;
 			const rateDecreaseLength = rateDecreasedArray?.length ?? 0;
-			let summary = `---------------------------------\n📊 Search Summary (${searchCount})\n`;
-			summary += `⬆ Rate Increased (${rateIncreaseLength}): `;
+			let summary = `---------------------------------\n${ENT_LOG_SUMMARY_HEADER} (${searchCount})\n`;
+			summary += `${ENT_LOG_RATE_INCREASED_LABEL} (${rateIncreaseLength}): `;
 			if ((rateIncreasedArray?.length ?? 0) > 0) {
 				summary += rateIncreasedArray?.join(', ');
 				summary += '.\n';
 			} else {
-				summary += 'None\n';
+				summary += `${ENT_LOG_NONE}\n`;
 			}
-			summary += `⬇ Rate Decreased (${rateDecreaseLength}): `;
+			summary += `${ENT_LOG_RATE_DECREASED_LABEL} (${rateDecreaseLength}): `;
 			if ((rateDecreasedArray?.length ?? 0) > 0) {
 				summary += rateDecreasedArray?.join(', ');
 				summary += '.\n';
 			} else {
-				summary += 'None\n';
+				summary += `${ENT_LOG_NONE}\n`;
 			}
 			this.searchStreamService.addSearchLog(summary);
 		}
@@ -531,11 +537,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			if (!retrieveOtherData && !retrieveYearAndTitle) {
 				if (error instanceof MovieFetchFailedError) {
 					this.searchStreamService.addSearchLog(
-						`${ENT_MSG_FETCH_FAILED_PREFIX}${movieItemVO.getMovieName()}. SKIPPING.`
+						`${ENT_MSG_FETCH_FAILED_PREFIX}${movieItemVO.getMovieName()}${ENT_LOG_SKIPPING}`
 					);
 				} else {
 					this.searchStreamService.addSearchLog(
-						`${ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX}${movieItemVO.getMovieName()}. SKIPPING.`
+						`${ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX}${movieItemVO.getMovieName()}${ENT_LOG_SKIPPING}`
 					);
 				}
 			} else {
@@ -661,7 +667,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	////////////////////// Below are Utilities Functions used by HTML template /////////////////////
+	// ── Utilities Functions used by HTML template ────────────────────────────
 	/**
 	 * Gets the human-readable quality label for a movie rate ("Excellent", "Good",
 	 * "Average", or "Poor") by delegating to the shared utility method.
@@ -776,7 +782,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		this.searchQuery$.next(value);
 	}
 
-	////////////////////// Below are Event Handlers triggered by user actions ////////////////////
+	// ── Event Handlers triggered by user actions ─────────────────────────────
 	/**
 	 * Toggles the genre filter with a View Transition animation.
 	 * Movies leaving the visible set are tagged vt-leaving (fade out + scale);

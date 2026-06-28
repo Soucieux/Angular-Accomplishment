@@ -29,7 +29,16 @@ import {
 	ENT_DIALOG_TITLE_ADD_MOVIE,
 	ADD_MOVIE_SUBTITLE,
 	ADD_MOVIE_LABEL_GENRE,
-	ADD_MOVIE_LABEL_FAVOURITE
+	ADD_MOVIE_LABEL_FAVOURITE,
+	ADD_MOVIE_LABEL_NAME,
+	ADD_MOVIE_LABEL_NAME_REQUIRED,
+	ADD_MOVIE_LABEL_YEAR,
+	ADD_MOVIE_LABEL_YEAR_REQUIRED,
+	ADD_MOVIE_LABEL_ID,
+	ADD_MOVIE_LABEL_ID_REQUIRED,
+	ADD_MOVIE_BTN_SEARCH,
+	ADD_MOVIE_BTN_SUBMIT,
+	DIALOG_BTN_CANCEL
 } from '../../../common/locale/locale-strings';
 import { AddMovieFormValue } from './add-movie.model';
 import { MOVIE_GENRES } from '../../../fontend/entertainment/entertainment.model';
@@ -57,6 +66,15 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	protected readonly ADD_MOVIE_SUBTITLE = ADD_MOVIE_SUBTITLE;
 	protected readonly ADD_MOVIE_LABEL_GENRE = ADD_MOVIE_LABEL_GENRE;
 	protected readonly ADD_MOVIE_LABEL_FAVOURITE = ADD_MOVIE_LABEL_FAVOURITE;
+	protected readonly ADD_MOVIE_LABEL_NAME = ADD_MOVIE_LABEL_NAME;
+	protected readonly ADD_MOVIE_LABEL_NAME_REQUIRED = ADD_MOVIE_LABEL_NAME_REQUIRED;
+	protected readonly ADD_MOVIE_LABEL_YEAR = ADD_MOVIE_LABEL_YEAR;
+	protected readonly ADD_MOVIE_LABEL_YEAR_REQUIRED = ADD_MOVIE_LABEL_YEAR_REQUIRED;
+	protected readonly ADD_MOVIE_LABEL_ID = ADD_MOVIE_LABEL_ID;
+	protected readonly ADD_MOVIE_LABEL_ID_REQUIRED = ADD_MOVIE_LABEL_ID_REQUIRED;
+	protected readonly ADD_MOVIE_BTN_SEARCH = ADD_MOVIE_BTN_SEARCH;
+	protected readonly ADD_MOVIE_BTN_SUBMIT = ADD_MOVIE_BTN_SUBMIT;
+	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;

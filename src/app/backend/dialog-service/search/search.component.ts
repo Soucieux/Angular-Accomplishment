@@ -5,6 +5,8 @@ import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
 import {
 	ENT_DIALOG_TITLE_SEARCH,
+	ENT_BTN_STOP,
+	ENT_BTN_DONE,
 	SEARCH_CANCEL,
 	SEARCH_COMPLETE
 } from '../../../common/locale/locale-strings';
@@ -19,6 +21,8 @@ export class SearchDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	@ViewChild('logContainer') logContainer!: ElementRef<HTMLDivElement>;
 	protected readonly ENT_DIALOG_TITLE_SEARCH = ENT_DIALOG_TITLE_SEARCH;
+	protected readonly ENT_BTN_STOP = ENT_BTN_STOP;
+	protected readonly ENT_BTN_DONE = ENT_BTN_DONE;
 	protected visible: boolean = false;
 	protected searchCompleteOrInterrupted: boolean = false;
 	private stopCallback?: () => void;

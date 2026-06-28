@@ -76,7 +76,7 @@ export class NotificationSchedulerService {
 		const records = raw as Array<{ key?: string; text?: string; date?: unknown }>;
 
 		// Step 1: Remove dedup entries for items that were deleted
-		const currentKeys = new Set(records.map((r) => r.key ?? ''));
+		const currentKeys = new Set(records.map((record) => record.key ?? ''));
 		for (const key of this.lastKnownDates.keys()) {
 			if (!currentKeys.has(key)) this.lastKnownDates.delete(key);
 		}

@@ -56,13 +56,13 @@ export class NotificationService {
 	 */
 	public async subscribe(): Promise<void> {
 		this.tauriSubscribed.next(true);
-		this.sendNotification(NOTIF_ENABLED_TITLE, NOTIF_ENABLED_BODY).catch((err: unknown) => {
-			LOG.error(this.className, NOTIF_SEND_FAILED, err as Error);
+		this.sendNotification(NOTIF_ENABLED_TITLE, NOTIF_ENABLED_BODY).catch((error: unknown) => {
+			LOG.error(this.className, NOTIF_SEND_FAILED, error as Error);
 		});
 		try {
 			await this.databaseService.setTauriNotifEnabled(true);
-		} catch (err: unknown) {
-			LOG.error(this.className, NOTIF_SUBSCRIBE_FAILED, err as Error);
+		} catch (error: unknown) {
+			LOG.error(this.className, NOTIF_SUBSCRIBE_FAILED, error as Error);
 			this.tauriSubscribed.next(false);
 		}
 	}
@@ -75,8 +75,8 @@ export class NotificationService {
 		this.tauriSubscribed.next(false);
 		try {
 			await this.databaseService.setTauriNotifEnabled(false);
-		} catch (err: unknown) {
-			LOG.error(this.className, NOTIF_UNSUBSCRIBE_FAILED, err as Error);
+		} catch (error: unknown) {
+			LOG.error(this.className, NOTIF_UNSUBSCRIBE_FAILED, error as Error);
 			this.tauriSubscribed.next(true);
 		}
 	}

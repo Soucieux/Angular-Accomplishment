@@ -160,12 +160,12 @@
 .v-lamp-head {
 	margin-bottom: 22px;
 }
-.v-lamp-head .h-cn {
+.v-lamp-head .head-chinese {
 	font-size: clamp(20px, 1.8vw, 30px);
 	font-weight: 700;
 	color: #f3f7fb;
 }
-.v-lamp-head .h-en {
+.v-lamp-head .head-english {
 	font-size: clamp(15px, 1vw, 17px);
 	color: rgba(234, 240, 246, 0.55);
 	margin-top: 4px;

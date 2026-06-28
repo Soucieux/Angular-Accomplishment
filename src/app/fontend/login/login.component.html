@@ -42,8 +42,8 @@
 	<!-- ── the lit form ── -->
 	<div class="v-lamp-form">
 		<div class="v-lamp-head">
-			<div class="h-cn">欢迎回来</div>
-			<div class="h-en">{{ LOGIN_FLAVOUR_TEXT }}</div>
+			<div class="head-chinese">欢迎回来</div>
+			<div class="head-english">{{ LOGIN_FLAVOUR_TEXT }}</div>
 		</div>
 
 		<form
@@ -116,59 +116,59 @@
 						>
 					}
 				</div>
-				@let pc = passwordChecks;
+				@let checks = passwordChecks;
 				<div class="password-requirements">
 					<div
 						class="req-row"
-						[class.req-met]="pc.meetsLength"
-						[class.req-unmet]="formSubmitted && !pc.meetsLength">
+						[class.req-met]="checks.meetsLength"
+						[class.req-unmet]="formSubmitted && !checks.meetsLength">
 						<span class="material-symbols-outlined req-icon">{{
-							pc.meetsLength ? 'check_circle' : 'radio_button_unchecked'
+							checks.meetsLength ? 'check_circle' : 'radio_button_unchecked'
 						}}</span>
 						<span>{{ LOGIN_LABEL_PWD_REQ_LENGTH }}</span>
 					</div>
 					<div
 						class="req-row"
-						[class.req-met]="pc.typesMet"
-						[class.req-unmet]="formSubmitted && !pc.typesMet">
+						[class.req-met]="checks.typesMet"
+						[class.req-unmet]="formSubmitted && !checks.typesMet">
 						<span class="material-symbols-outlined req-icon">{{
-							pc.typesMet ? 'check_circle' : 'radio_button_unchecked'
+							checks.typesMet ? 'check_circle' : 'radio_button_unchecked'
 						}}</span>
 						<span>{{ LOGIN_LABEL_PWD_REQ_TYPES }}</span>
 					</div>
 					<div
 						class="req-row req-row--indented"
-						[class.req-met]="pc.hasUppercase"
-						[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasUppercase">
+						[class.req-met]="checks.hasUppercase"
+						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasUppercase">
 						<span class="material-symbols-outlined req-icon">{{
-							pc.hasUppercase ? 'check_circle' : 'radio_button_unchecked'
+							checks.hasUppercase ? 'check_circle' : 'radio_button_unchecked'
 						}}</span>
 						<span>{{ LOGIN_LABEL_PWD_REQ_UPPERCASE }}</span>
 					</div>
 					<div
 						class="req-row req-row--indented"
-						[class.req-met]="pc.hasLowercase"
-						[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasLowercase">
+						[class.req-met]="checks.hasLowercase"
+						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasLowercase">
 						<span class="material-symbols-outlined req-icon">{{
-							pc.hasLowercase ? 'check_circle' : 'radio_button_unchecked'
+							checks.hasLowercase ? 'check_circle' : 'radio_button_unchecked'
 						}}</span>
 						<span>{{ LOGIN_LABEL_PWD_REQ_LOWERCASE }}</span>
 					</div>
 					<div
 						class="req-row req-row--indented"
-						[class.req-met]="pc.hasDigit"
-						[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasDigit">
+						[class.req-met]="checks.hasDigit"
+						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasDigit">
 						<span class="material-symbols-outlined req-icon">{{
-							pc.hasDigit ? 'check_circle' : 'radio_button_unchecked'
+							checks.hasDigit ? 'check_circle' : 'radio_button_unchecked'
 						}}</span>
 						<span>{{ LOGIN_LABEL_PWD_REQ_DIGIT }}</span>
 					</div>
 					<div
 						class="req-row req-row--indented"
-						[class.req-met]="pc.hasSpecial"
-						[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasSpecial">
+						[class.req-met]="checks.hasSpecial"
+						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasSpecial">
 						<span class="material-symbols-outlined req-icon">{{
-							pc.hasSpecial ? 'check_circle' : 'radio_button_unchecked'
+							checks.hasSpecial ? 'check_circle' : 'radio_button_unchecked'
 						}}</span>
 						<span>{{ LOGIN_LABEL_PWD_REQ_SPECIAL }}</span>
 					</div>
@@ -292,59 +292,59 @@
 
 				<!-- Password requirements (Sign Up only) -->
 				@if (isSignUp) {
-					@let pc = passwordChecks;
+					@let checks = passwordChecks;
 					<div class="password-requirements">
 						<div
 							class="req-row"
-							[class.req-met]="pc.meetsLength"
-							[class.req-unmet]="formSubmitted && !pc.meetsLength">
+							[class.req-met]="checks.meetsLength"
+							[class.req-unmet]="formSubmitted && !checks.meetsLength">
 							<span class="material-symbols-outlined req-icon">{{
-								pc.meetsLength ? 'check_circle' : 'radio_button_unchecked'
+								checks.meetsLength ? 'check_circle' : 'radio_button_unchecked'
 							}}</span>
 							<span>{{ LOGIN_LABEL_PWD_REQ_LENGTH }}</span>
 						</div>
 						<div
 							class="req-row"
-							[class.req-met]="pc.typesMet"
-							[class.req-unmet]="formSubmitted && !pc.typesMet">
+							[class.req-met]="checks.typesMet"
+							[class.req-unmet]="formSubmitted && !checks.typesMet">
 							<span class="material-symbols-outlined req-icon">{{
-								pc.typesMet ? 'check_circle' : 'radio_button_unchecked'
+								checks.typesMet ? 'check_circle' : 'radio_button_unchecked'
 							}}</span>
 							<span>{{ LOGIN_LABEL_PWD_REQ_TYPES }}</span>
 						</div>
 						<div
 							class="req-row req-row--indented"
-							[class.req-met]="pc.hasUppercase"
-							[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasUppercase">
+							[class.req-met]="checks.hasUppercase"
+							[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasUppercase">
 							<span class="material-symbols-outlined req-icon">{{
-								pc.hasUppercase ? 'check_circle' : 'radio_button_unchecked'
+								checks.hasUppercase ? 'check_circle' : 'radio_button_unchecked'
 							}}</span>
 							<span>{{ LOGIN_LABEL_PWD_REQ_UPPERCASE }}</span>
 						</div>
 						<div
 							class="req-row req-row--indented"
-							[class.req-met]="pc.hasLowercase"
-							[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasLowercase">
+							[class.req-met]="checks.hasLowercase"
+							[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasLowercase">
 							<span class="material-symbols-outlined req-icon">{{
-								pc.hasLowercase ? 'check_circle' : 'radio_button_unchecked'
+								checks.hasLowercase ? 'check_circle' : 'radio_button_unchecked'
 							}}</span>
 							<span>{{ LOGIN_LABEL_PWD_REQ_LOWERCASE }}</span>
 						</div>
 						<div
 							class="req-row req-row--indented"
-							[class.req-met]="pc.hasDigit"
-							[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasDigit">
+							[class.req-met]="checks.hasDigit"
+							[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasDigit">
 							<span class="material-symbols-outlined req-icon">{{
-								pc.hasDigit ? 'check_circle' : 'radio_button_unchecked'
+								checks.hasDigit ? 'check_circle' : 'radio_button_unchecked'
 							}}</span>
 							<span>{{ LOGIN_LABEL_PWD_REQ_DIGIT }}</span>
 						</div>
 						<div
 							class="req-row req-row--indented"
-							[class.req-met]="pc.hasSpecial"
-							[class.req-unmet]="formSubmitted && !pc.typesMet && !pc.hasSpecial">
+							[class.req-met]="checks.hasSpecial"
+							[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasSpecial">
 							<span class="material-symbols-outlined req-icon">{{
-								pc.hasSpecial ? 'check_circle' : 'radio_button_unchecked'
+								checks.hasSpecial ? 'check_circle' : 'radio_button_unchecked'
 							}}</span>
 							<span>{{ LOGIN_LABEL_PWD_REQ_SPECIAL }}</span>
 						</div>

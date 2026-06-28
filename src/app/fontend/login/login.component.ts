@@ -140,10 +140,6 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected sendingCode = false;
 	protected lampOn = false;
 	protected lampHue = 42;
-	/** Gets the current date, evaluated on each change-detection cycle. */
-	protected get today(): Date {
-		return new Date();
-	}
 
 	private codeCountdownInterval: ReturnType<typeof setInterval> | null = null;
 	private returnUrl: string = LOGIN_URL_DEFAULT_RETURN;
@@ -179,8 +175,10 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 			password: ['', Validators.required],
 			verificationCode: ['']
 		});
-		const raw = this.route.snapshot.queryParamMap.get('returnUrl') ?? LOGIN_URL_DEFAULT_RETURN;
-		this.returnUrl = raw.startsWith(LOGIN_URL_DEFAULT_RETURN) ? raw : LOGIN_URL_DEFAULT_RETURN;
+		const rawReturnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? LOGIN_URL_DEFAULT_RETURN;
+		this.returnUrl = rawReturnUrl.startsWith(LOGIN_URL_DEFAULT_RETURN)
+			? rawReturnUrl
+			: LOGIN_URL_DEFAULT_RETURN;
 	}
 
 	/**
@@ -234,7 +232,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 			onDragEnd() {
 				// Step 4.1: Toggle the lamp if the user pulled far enough, then spring the handle back
 				if (this['y'] > self.PULL_THRESHOLD) self.toggleLamp();
-				const dir = Math.random() > 0.5 ? 1 : -1;
+				const direction = Math.random() > 0.5 ? 1 : -1;
 				gsap.to(rope, {
 					y: 0,
 					duration: 1.15,
@@ -250,7 +248,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 				   producing a more organic swinging-rope feel. */
 				gsap.fromTo(
 					rope,
-					{ cx: 150 + 32 * dir },
+					{ cx: 150 + 32 * direction },
 					{ cx: 150, duration: 1.3, ease: 'elastic.out(1.1, 0.25)', onUpdate: draw }
 				);
 			}
@@ -295,36 +293,36 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 			   a ReferenceError on older WebKit builds. The instance is lazily created
 			   and reused — constructing a new context per click would exhaust the
 			   browser's context limit (~6 on Chrome). */
-			const Ctx =
+			const AudioContextClass =
 				window.AudioContext ||
 				(window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-			this.audioCtx ??= new Ctx();
-			const a = this.audioCtx;
+			this.audioCtx ??= new AudioContextClass();
+			const audioContext = this.audioCtx;
 
 			// Step 2: Resume the context if it was suspended by autoplay policy
-			if (a.state === 'suspended') a.resume().catch(() => {});
-			const t = a.currentTime;
-			const osc = a.createOscillator();
-			const gain = a.createGain();
+			if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+			const startTime = audioContext.currentTime;
+			const oscillator = audioContext.createOscillator();
+			const gain = audioContext.createGain();
 
 			/* Step 3: Shape the oscillator's pitch envelope to mimic a mechanical click.
 			   High-frequency square wave drops sharply to a thud — the 840→170 Hz ramp
 			   over 50 ms approximates the transient of a physical switch. */
-			osc.type = 'square';
-			osc.frequency.setValueAtTime(840, t);
-			osc.frequency.exponentialRampToValueAtTime(170, t + 0.05);
+			oscillator.type = 'square';
+			oscillator.frequency.setValueAtTime(840, startTime);
+			oscillator.frequency.exponentialRampToValueAtTime(170, startTime + 0.05);
 
 			/* Step 4: Shape the gain envelope — fast attack, short decay.
 			   The initial value must be non-zero (0.0001) because exponentialRamp
 			   is undefined for zero and will throw on some browsers. */
-			gain.gain.setValueAtTime(0.0001, t);
-			gain.gain.exponentialRampToValueAtTime(0.2, t + 0.004);
-			gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+			gain.gain.setValueAtTime(0.0001, startTime);
+			gain.gain.exponentialRampToValueAtTime(0.2, startTime + 0.004);
+			gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.1);
 
 			// Step 5: Connect the graph and schedule the one-shot sound
-			osc.connect(gain).connect(a.destination);
-			osc.start(t);
-			osc.stop(t + 0.11);
+			oscillator.connect(gain).connect(audioContext.destination);
+			oscillator.start(startTime);
+			oscillator.stop(startTime + 0.11);
 		} catch {
 			/* audio is a non-critical flourish */
 		}
@@ -635,20 +633,29 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── Template helper methods ───────────────────────────────────────────────
 
 	/**
+	 * Gets the current date, evaluated on each change-detection cycle.
+	 *
+	 * @returns The current date.
+	 */
+	protected get today(): Date {
+		return new Date();
+	}
+
+	/**
 	 * Gets the full set of password requirement check results in one pass over the form value.
-	 * Bound via `@let pc = passwordChecks` in the template so Angular evaluates this once
+	 * Bound via `@let checks = passwordChecks` in the template so Angular evaluates this once
 	 * per change-detection cycle regardless of how many bindings reference it.
 	 *
 	 * @returns An object with named boolean flags for each requirement and the combined typesMet gate.
 	 */
 	protected get passwordChecks() {
-		const v = (this.loginForm.get('password')?.value as string) ?? '';
-		const upper = /[A-Z]/.test(v);
-		const lower = /[a-z]/.test(v);
-		const digit = /[0-9]/.test(v);
-		const special = /[^A-Za-z0-9]/.test(v);
+		const password = (this.loginForm.get('password')?.value as string) ?? '';
+		const upper = /[A-Z]/.test(password);
+		const lower = /[a-z]/.test(password);
+		const digit = /[0-9]/.test(password);
+		const special = /[^A-Za-z0-9]/.test(password);
 		return {
-			meetsLength: v.length >= 8,
+			meetsLength: password.length >= 8,
 			hasUppercase: upper,
 			hasLowercase: lower,
 			hasDigit: digit,

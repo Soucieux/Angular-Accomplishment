@@ -1,5 +1,8 @@
 export * from '../constants';
 
+/** BCP 47 language tag for date and time formatting on the active locale. */
+export const APP_LOCALE = 'en-US';
+
 /* ─────────────────────────────────────────
    Shared user-facing messages
 ───────────────────────────────────────── */
@@ -63,6 +66,8 @@ export const NAV_NOTIF_LABEL_DISABLE = 'Disable notifications';
 export const NAV_NOTIF_TOGGLE_ERROR = 'Error toggling push notification';
 export const NAV_LOCALE_SWITCH_TO_ZH = 'Switch to Chinese';
 export const NAV_LOCALE_SWITCH_TO_EN = 'Switch to English';
+export const NAV_MINIMIZE_ON_CLOSE_ENABLE = 'Minimize on close';
+export const NAV_MINIMIZE_ON_CLOSE_DISABLE = 'Exit on close';
 export const DIALOG_LOCALE_SWITCH_HEADER = 'Switch Language';
 export const DIALOG_LOCALE_SWITCH_MSG = 'The page will reload to apply the change.';
 export const DIALOG_LOCALE_SWITCH_BTN = 'Switch & Reload';
@@ -188,12 +193,27 @@ export const ORBITAL_PANEL_EMPTY_LINKS = 'No links yet';
 export const ORBITAL_PANEL_EMPTY_PAYMENTS = 'No upcoming payments';
 export const ORBITAL_PANEL_EMPTY_GENRES = 'No genre data yet';
 export const ORBITAL_PANEL_EMPTY_RECIPES = 'No recipes yet';
+export const ORBITAL_PANEL_EMPTY_REMINDERS = 'No reminders yet';
 export const ORBITAL_DAY_NAMES_SHORT: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const ORBITAL_QUICK_ACTION_LABELS: string[] = ['Add Movie', 'Add Quote', 'Add Recipe', 'Add Debt', 'Add Reminder', 'Add Shortcut'];
 export const ORBITAL_GREETING_NIGHT = 'Good night';
 export const ORBITAL_GREETING_MORNING = 'Good morning';
 export const ORBITAL_GREETING_AFTERNOON = 'Good afternoon';
 export const ORBITAL_GREETING_EVENING = 'Good evening';
+/** Life-clock ring label for the yearly progress arc. */
+export const ORBITAL_LABEL_YEAR = 'Year';
+/** Life-clock ring label for the monthly progress arc. */
+export const ORBITAL_LABEL_MONTH = 'Month';
+/** Life-clock ring label for the weekly progress arc. */
+export const ORBITAL_LABEL_WEEK = 'Week';
+/** Life-clock ring label for the daily progress arc. */
+export const ORBITAL_LABEL_DAY = 'Day';
+/** Header label above the selected-day date in the week-agenda panel. */
+export const ORBITAL_WEEK_AGENDA_DUE_HEADER = 'Due';
+/** Suffix appended to the open-reminder count badge in the reminders panel. */
+export const ORBITAL_PANEL_BADGE_OPEN = 'open';
+/** Suffix appended to the open-debt count badge in the debt panel. */
+export const ORBITAL_PANEL_BADGE_DUE = 'due';
 
 /* ─────────────────────────────────────────
    Entertainment page constants
@@ -224,6 +244,63 @@ export const ENT_SEARCH_PLACEHOLDER = 'Search movies...';
 export const ENT_LABEL_FILMS = 'films';
 /** Secondary label on each category card (e.g. "10 to watch"). */
 export const ENT_LABEL_TO_WATCH = 'to watch';
+/** Button label shown while a movie-rate search is in progress. */
+export const ENT_BTN_STOP = 'STOP';
+/** Button label shown after a movie-rate search completes or is interrupted. */
+export const ENT_BTN_DONE = 'DONE';
+/** Form label for the movie name field (optional state). */
+export const ADD_MOVIE_LABEL_NAME = 'Name';
+/** Form label for the movie name field (required state). */
+export const ADD_MOVIE_LABEL_NAME_REQUIRED = 'Name*';
+/** Form label for the movie year field (optional state). */
+export const ADD_MOVIE_LABEL_YEAR = 'Year';
+/** Form label for the movie year field (required state). */
+export const ADD_MOVIE_LABEL_YEAR_REQUIRED = 'Year*';
+/** Form label for the movie ID field (optional state). */
+export const ADD_MOVIE_LABEL_ID = 'ID';
+/** Form label for the movie ID field (required state). */
+export const ADD_MOVIE_LABEL_ID_REQUIRED = 'ID*';
+/** Button label that triggers a TMDB cover-image search in the add-movie dialog. */
+export const ADD_MOVIE_BTN_SEARCH = 'Search';
+/** Button label that confirms adding the movie in the add-movie dialog. */
+export const ADD_MOVIE_BTN_SUBMIT = 'Submit';
+
+/** Opening bracket for the rating in movie history entries. */
+export const ENT_HISTORY_RATE_OPEN = '(Rate: ';
+/** Closing bracket for the rating in movie history entries. */
+export const ENT_HISTORY_RATE_CLOSE = ')';
+/** History status label when a movie was added. */
+export const ENT_HISTORY_STATUS_ADDED = 'added';
+/** History status label when a movie was deleted. */
+export const ENT_HISTORY_STATUS_DELETED = 'deleted';
+/** Prefix for history entries that record a standalone rate search. */
+export const ENT_HISTORY_SEARCH_STARTED = 'New rate search was started on ';
+/** Search log prefix when starting to look up a movie's rate. */
+export const ENT_LOG_START_SEARCHING = 'Start searching for ';
+/** Search log prefix before the movie name in a rate-change entry. */
+export const ENT_LOG_RATE_PRE = 'The rate of ';
+/** Search log connector between the movie name and the rate-change span. */
+export const ENT_LOG_RATE_IS = ' is ';
+/** Search log connector between the change direction word and the numeric diff. */
+export const ENT_LOG_RATE_BY = ' by ';
+/** Search log connector after the closing span tag, before the new rate value. */
+export const ENT_LOG_RATE_TO = '</span> to ';
+/** Search log suffix for a movie whose rate did not change. */
+export const ENT_LOG_RATE_SAME = ' stays the same';
+/** Display word for an upward rate change inside the search log span. */
+export const ENT_LOG_RATE_UP = 'increased';
+/** Display word for a downward rate change inside the search log span. */
+export const ENT_LOG_RATE_DOWN = 'decreased';
+/** Search log summary header shown after all movies are processed. */
+export const ENT_LOG_SUMMARY_HEADER = '📊 Search Summary';
+/** Search log summary label for movies whose rate increased. */
+export const ENT_LOG_RATE_INCREASED_LABEL = '⬆ Rate Increased';
+/** Search log summary label for movies whose rate decreased. */
+export const ENT_LOG_RATE_DECREASED_LABEL = '⬇ Rate Decreased';
+/** Search log placeholder when no movies fall into a summary category. */
+export const ENT_LOG_NONE = 'None';
+/** Search log suffix appended when a movie is skipped during a rate search. */
+export const ENT_LOG_SKIPPING = '. SKIPPING.';
 
 export const RATE_LABEL_EXCELLENT = 'Excellent';
 export const RATE_LABEL_GOOD = 'Good';
@@ -498,6 +575,11 @@ export const DEBT_STAT_LABEL_DUE_SOON = 'DUE SOON';
 export const DEBT_STAT_LABEL_OVERDUE = 'OVERDUE';
 export const DEBT_STAT_LABEL_PAYMENTS = 'PAYMENTS';
 export const DEBT_HEADING_YOUR_DEBTS = 'Your debts';
+export const DEBT_BTN_SET = 'Set';
+export const DEBT_BTN_RESET = 'Reset';
+/** Label on the reset button after the user has tapped it once, confirming the restore action. */
+export const DEBT_BTN_RESTORE = 'Restore?';
+export const DEBT_BTN_HISTORY = 'History';
 export const DEBT_HISTORY_EMPTY = 'No payments yet — chip away at it above.';
 export const ADD_DEBT_LABEL_AMOUNT = 'Amount';
 export const ADD_DEBT_LABEL_CURRENCY = 'Currency';
@@ -507,6 +589,16 @@ export const DEBT_CATEGORY_LABEL_CARD = 'Credit card';
 /** Shared "Personal" label used in debt category and reminder category. */
 export const LABEL_PERSONAL = 'Personal';
 export const DEBT_CATEGORY_LABEL_FINANCING = 'Financing';
+export const DEBT_CATEGORY_LABEL_MORTGAGE = 'Mortgage';
+export const DEBT_LABEL_PCT_CLEARED = '% cleared';
+export const DEBT_LABEL_PCT_PAID = '% paid';
+export const DEBT_LABEL_OF = 'of';
+export const DEBT_LABEL_REMAINING_OF = 'remaining of';
+export const DEBT_LABEL_PAID_IN_FULL = 'Coda · paid in full';
+export const DEBT_LABEL_CUSTOM_PAY = 'Custom';
+export const DEBT_DAYS_LEFT_SUFFIX = 'd left';
+export const DEBT_DAYS_OVERDUE_PREFIX = '';
+export const DEBT_DAYS_OVERDUE_SUFFIX = 'd overdue';
 
 /* ─────────────────────────────────────────
    Patch Notes page constants

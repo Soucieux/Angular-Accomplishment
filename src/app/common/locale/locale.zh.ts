@@ -1,5 +1,7 @@
 export * from '../constants';
 
+export const APP_LOCALE = 'zh-CN';
+
 /* ─────────────────────────────────────────
    Shared user-facing messages
 ───────────────────────────────────────── */
@@ -13,7 +15,7 @@ export const DIALOG_BTN_SAVE = '保存';
 export const MSG_DELETE_FAILED = '删除失败';
 export const MSG_SAVE_FAILED = '保存失败';
 export const ACCESS_DENIED_TITLE = '无权访问';
-export const ACCESS_DENIED_BODY = '你没有权限访问此页面';
+export const ACCESS_DENIED_BODY = '登录以访问此页面';
 export const MSG_PERMISSION_DENIED = '用户没有权限';
 export const MSG_UNEXPECTED_ERROR = '发生未知错误';
 export const MSG_INVALID_DIALOG_TYPE = '对话框无效';
@@ -32,7 +34,7 @@ export const NOTIF_ENABLED_BODY = '你将收到来自 Vision Canvas 的通知。
 
 export const HISTORY_MSG_UNDO_CONFIRM = '撤销此次删除？';
 export const HISTORY_DIALOG_UNDO_BTN = '撤销';
-export const HISTORY_DIALOG_TITLE = '操作记录';
+export const HISTORY_DIALOG_TITLE = '历史记录';
 export const HISTORY_SUBTITLE = '点击恢复已删除条目';
 
 /* ─────────────────────────────────────────
@@ -45,6 +47,8 @@ export const NAV_NOTIF_LABEL_DISABLE = '关闭推送通知';
 export const NAV_NOTIF_TOGGLE_ERROR = '切换推送通知时出错';
 export const NAV_LOCALE_SWITCH_TO_ZH = '切换到中文';
 export const NAV_LOCALE_SWITCH_TO_EN = '切换到英文';
+export const NAV_MINIMIZE_ON_CLOSE_ENABLE = '关闭时最小化';
+export const NAV_MINIMIZE_ON_CLOSE_DISABLE = '关闭时退出';
 export const DIALOG_LOCALE_SWITCH_HEADER = '切换语言';
 export const DIALOG_LOCALE_SWITCH_MSG = '页面将重新加载以应用更改。';
 export const DIALOG_LOCALE_SWITCH_BTN = '切换并重载';
@@ -159,12 +163,27 @@ export const ORBITAL_PANEL_EMPTY_LINKS = '暂无链接';
 export const ORBITAL_PANEL_EMPTY_PAYMENTS = '暂无还款项';
 export const ORBITAL_PANEL_EMPTY_GENRES = '暂无类型数据';
 export const ORBITAL_PANEL_EMPTY_RECIPES = '暂无食谱';
+export const ORBITAL_PANEL_EMPTY_REMINDERS = '暂无提醒';
 export const ORBITAL_DAY_NAMES_SHORT: string[] = ['日', '一', '二', '三', '四', '五', '六'];
-export const ORBITAL_QUICK_ACTION_LABELS: string[] = ['添加影片', '添加心声', '添加食谱', '添加债务', '添加提醒', '添加快捷指令'];
+export const ORBITAL_QUICK_ACTION_LABELS: string[] = [
+	'添加影片',
+	'添加心声',
+	'添加食谱',
+	'添加债务',
+	'添加提醒',
+	'添加快捷指令'
+];
 export const ORBITAL_GREETING_NIGHT = '晚安';
 export const ORBITAL_GREETING_MORNING = '早上好';
 export const ORBITAL_GREETING_AFTERNOON = '下午好';
 export const ORBITAL_GREETING_EVENING = '晚上好';
+export const ORBITAL_LABEL_YEAR = '年';
+export const ORBITAL_LABEL_MONTH = '月';
+export const ORBITAL_LABEL_WEEK = '周';
+export const ORBITAL_LABEL_DAY = '日';
+export const ORBITAL_WEEK_AGENDA_DUE_HEADER = '截止';
+export const ORBITAL_PANEL_BADGE_OPEN = '待办';
+export const ORBITAL_PANEL_BADGE_DUE = '待还';
 
 /* ─────────────────────────────────────────
    Entertainment page constants
@@ -188,6 +207,35 @@ export const ENT_TITLE_PAGE = '影片';
 export const ENT_SEARCH_PLACEHOLDER = '搜索影片...';
 export const ENT_LABEL_FILMS = '部影片';
 export const ENT_LABEL_TO_WATCH = '部待观看';
+export const ENT_BTN_STOP = '停止';
+export const ENT_BTN_DONE = '完成';
+export const ADD_MOVIE_LABEL_NAME = '片名';
+export const ADD_MOVIE_LABEL_NAME_REQUIRED = '片名*';
+export const ADD_MOVIE_LABEL_YEAR = '年份';
+export const ADD_MOVIE_LABEL_YEAR_REQUIRED = '年份*';
+export const ADD_MOVIE_LABEL_ID = 'ID';
+export const ADD_MOVIE_LABEL_ID_REQUIRED = 'ID*';
+export const ADD_MOVIE_BTN_SEARCH = '搜索';
+export const ADD_MOVIE_BTN_SUBMIT = '提交';
+
+export const ENT_HISTORY_RATE_OPEN = '（评分：';
+export const ENT_HISTORY_RATE_CLOSE = '）';
+export const ENT_HISTORY_STATUS_ADDED = '添加';
+export const ENT_HISTORY_STATUS_DELETED = '删除';
+export const ENT_HISTORY_SEARCH_STARTED = '新的评分搜索记录于 ';
+export const ENT_LOG_START_SEARCHING = '开始搜索 ';
+export const ENT_LOG_RATE_PRE = '';
+export const ENT_LOG_RATE_IS = ' 的评分';
+export const ENT_LOG_RATE_BY = ' ';
+export const ENT_LOG_RATE_TO = '</span>至 ';
+export const ENT_LOG_RATE_SAME = ' 的评分未变化';
+export const ENT_LOG_RATE_UP = '提升';
+export const ENT_LOG_RATE_DOWN = '下降';
+export const ENT_LOG_SUMMARY_HEADER = '📊 搜索结果';
+export const ENT_LOG_RATE_INCREASED_LABEL = '⬆ 评分提升';
+export const ENT_LOG_RATE_DECREASED_LABEL = '⬇ 评分下降';
+export const ENT_LOG_NONE = '无';
+export const ENT_LOG_SKIPPING = '。跳过。';
 
 export const RATE_LABEL_EXCELLENT = '神作';
 export const RATE_LABEL_GOOD = '佳片';
@@ -266,10 +314,22 @@ export const RECIPE_BTN_ADD_STEP = '+ 添加步骤';
 export const RECIPE_BADGE_EXAMPLE = '示例';
 export const INGREDIENT_BTN_APPLY = '应用';
 export const RECIPE_ITYPE_LABELS: Record<string, string> = {
-	veg: '蔬菜', meat: '肉类', seas: '调料', dairy: '乳制品',
-	grain: '谷物', liq: '液态', spice: '香料', seafood: '海鲜',
-	egg: '蛋类', nut: '坚果', fruit: '水果', oil: '油',
-	herb: '香草', fungi: '菌类', sweet: '甜味剂', condiment: '调味品',
+	veg: '蔬菜',
+	meat: '肉类',
+	seas: '调料',
+	dairy: '乳制品',
+	grain: '谷物',
+	liq: '液态',
+	spice: '香料',
+	seafood: '海鲜',
+	egg: '蛋类',
+	nut: '坚果',
+	fruit: '水果',
+	oil: '油',
+	herb: '香草',
+	fungi: '菌类',
+	sweet: '甜味剂',
+	condiment: '调味品'
 };
 
 /* ─────────────────────────────────────────
@@ -416,14 +476,41 @@ export const DEBT_STAT_LABEL_DUE_SOON = '即将到期';
 export const DEBT_STAT_LABEL_OVERDUE = '已逾期';
 export const DEBT_STAT_LABEL_PAYMENTS = '还款次数';
 export const DEBT_HEADING_YOUR_DEBTS = '我的债务';
+export const DEBT_BTN_SET = '设置';
+export const DEBT_BTN_RESET = '重置';
+export const DEBT_BTN_RESTORE = '恢复？';
+export const DEBT_BTN_HISTORY = '记录';
 export const DEBT_HISTORY_EMPTY = '暂无还款记录——在上方开始还款吧。';
 export const ADD_DEBT_LABEL_AMOUNT = '金额';
 export const ADD_DEBT_LABEL_CURRENCY = '货币';
 export const ADD_DEBT_LABEL_DUE_DATE = '到期日';
-export const DEBT_MONTHS: string[] = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+export const DEBT_MONTHS: string[] = [
+	'1月',
+	'2月',
+	'3月',
+	'4月',
+	'5月',
+	'6月',
+	'7月',
+	'8月',
+	'9月',
+	'10月',
+	'11月',
+	'12月'
+];
 export const DEBT_CATEGORY_LABEL_CARD = '信用卡';
 export const LABEL_PERSONAL = '个人';
 export const DEBT_CATEGORY_LABEL_FINANCING = '分期';
+export const DEBT_CATEGORY_LABEL_MORTGAGE = '房贷';
+export const DEBT_LABEL_PCT_CLEARED = '% 已还清';
+export const DEBT_LABEL_PCT_PAID = '% 已还清';
+export const DEBT_LABEL_OF = '共';
+export const DEBT_LABEL_REMAINING_OF = '共';
+export const DEBT_LABEL_PAID_IN_FULL = '终章 · 已还清';
+export const DEBT_LABEL_CUSTOM_PAY = '自定义';
+export const DEBT_DAYS_LEFT_SUFFIX = '天后截止';
+export const DEBT_DAYS_OVERDUE_PREFIX = '已逾期';
+export const DEBT_DAYS_OVERDUE_SUFFIX = '天';
 
 /* ─────────────────────────────────────────
    Patch Notes page constants
@@ -573,5 +660,9 @@ export const NAV_MOBILE_OFFLINE = '离线 · 未登录';
 export const MOBILE_BLOCKED_TITLE = '不支持手机端查看';
 export const MOBILE_BLOCKED_BODY = '今日规划需要较宽屏幕才能正常使用。请在桌面端、笔记本或平板上访问。';
 export const TODAY_RECUR_LABELS: Partial<Record<string, string>> = {
-	daily: '每天', weekdays: '工作日', weekly: '每周', monthly: '每月', yearly: '每年',
+	daily: '每天',
+	weekdays: '工作日',
+	weekly: '每周',
+	monthly: '每月',
+	yearly: '每年'
 };

@@ -67,6 +67,8 @@ export const APP_BREAKPOINT_COMPACT = 1300;
 export const APP_BREAKPOINT_NARROW = 940;
 /** CSS class added to body when running inside the Tauri desktop app — scopes Tauri-only global styles. */
 export const TAURI_MODE_CLASS = 'tauri-mode';
+/** Tauri backend command name that toggles the minimize-on-close window behaviour. */
+export const TAURI_CMD_SET_MINIMIZE_ON_CLOSE = 'set_minimize_on_close';
 /** Milliseconds before the loading-timeout retry dialog appears when a page is stuck loading. */
 export const LOADING_TIMEOUT_MS = 7000;
 /** Timeout key for the Home page loading guard. */
@@ -88,8 +90,6 @@ export const CN = 'CN';
 export const OVERSEAS = 'INTL';
 /** IANA timezone identifiers for mainland China — used by the timezone-based region detector. */
 export const CN_TIMEZONES = ['Asia/Shanghai', 'Asia/Urumqi'];
-/** Default locale used for date and time formatting throughout the app. */
-export const APP_LOCALE = 'en-US';
 /** DOM keyboard event key value for the Enter key. */
 export const KEY_ENTER = 'Enter';
 /** DOM keyboard event key value for the Escape key. */
@@ -189,6 +189,7 @@ export const ACTIVITY_SOURCE_LINK = 'link';
 export const ACTIVITY_SOURCE_DEBT = 'debt';
 export const ACTIVITY_SOURCE_RECIPE = 'recipe';
 export const ACTIVITY_SOURCE_DEFAULT = 'default';
+export const ACTIVITY_INVALID_TABLE_TEXT = 'Invalid database name';
 export const ACTIVITY_SOURCE_DATE_CALCULATOR = 'date_calculator';
 
 /* ─────────────────────────────────────────
@@ -218,6 +219,14 @@ export const STATS_FIELD_USERNAME_CHANGED = 'usernameChangedDate';
 export const STATS_FIELD_PASSWORD_CHANGED = 'passwordChangedDate';
 /** Boolean flag stored on the per-user stats document — true when Tauri desktop notifications are enabled. */
 export const STATS_FIELD_TAURI_NOTIF_ENABLED = 'tauriNotifEnabled';
+/** Boolean flag stored on the per-user stats document — true when the desktop app minimizes to Dock on close. */
+export const STATS_FIELD_MINIMIZE_ON_CLOSE = 'minimizeOnClose';
+/** Locale key stored on the per-user stats document — 'en' or 'zh'. */
+export const STATS_FIELD_LOCALE = 'locale';
+/** Locale identifier value for English. */
+export const LOCALE_KEY_EN = 'en';
+/** Locale identifier value for Chinese. */
+export const LOCALE_KEY_ZH = 'zh';
 
 /* ─────────────────────────────────────────
    Statistics display caps
@@ -382,6 +391,10 @@ export const ENT_VT_CLASS_ENTERING = 'vt-entering';
 export const NO_RATE = '-1';
 export const RATE_DECREASED = 'decreased';
 export const RATE_INCREASED = 'increased';
+/** HTML attribute fragment applied to the rate-change span when the rate dropped — used to build and detect search log entries. */
+export const ENT_LOG_SPAN_CLASS_RATE_DOWN = 'class="rate-down"';
+/** HTML attribute fragment applied to the rate-change span when the rate rose — used to build and detect search log entries. */
+export const ENT_LOG_SPAN_CLASS_RATE_UP = 'class="rate-up"';
 /** Genre key used as the favourites category — written to the DB and shown as the genre label. */
 export const GENRE_FAVOURITE = '特别关注';
 
@@ -392,6 +405,8 @@ export const GENRE_FAVOURITE = '特别关注';
 /** Maximum character count allowed for a new quote submission. */
 export const RESONANCE_MAX_QUOTE_LENGTH = 500;
 export const RESONANCE_SKELETON_COUNT = 6;
+/** Legacy English value previously stored in the database for anonymous authors. */
+export const RESONANCE_AUTHOR_ANONYMOUS_LEGACY = 'Anonymous';
 
 /* ─────────────────────────────────────────
    Recipe page constants

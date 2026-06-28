@@ -16,7 +16,6 @@ import { Utilities } from '../../common/utilities/app.utilities';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { Subscription } from 'rxjs';
 import {
-	APP_LOCALE,
 	KEY_ENTER,
 	KEY_ESCAPE,
 	TODAY_LABEL_AM,
@@ -26,6 +25,7 @@ import {
 	TODAY_TRACKING_VIRTUAL_ID
 } from '../../common/constants';
 import {
+	APP_LOCALE,
 	TODAY_BTN_DRAG_CREATE,
 	TODAY_BTN_DRAG_MOVE,
 	TODAY_BTN_START_TRACKING,

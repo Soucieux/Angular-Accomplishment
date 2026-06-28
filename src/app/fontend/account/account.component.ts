@@ -440,7 +440,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 					return { title, date: Utilities.storageDateToDisplayMonth(storageDate), note: '' };
 				})
 				// Step 3: Drop nulls produced by unrecognised key shapes — typed predicate keeps the array type clean
-				.filter((m): m is AccountMilestone => m !== null)
+				.filter((milestone): milestone is AccountMilestone => milestone !== null)
 		);
 	}
 

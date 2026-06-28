@@ -187,7 +187,7 @@
 							</div>
 						}
 					} @else {
-						@for (i of [1, 2, 3, 4, 5, 6]; track i) {
+						@for (placeholder of [1, 2, 3, 4, 5, 6]; track $index) {
 							<div class="stat-row">
 								<div class="skeleton stat-icon-tile"></div>
 								<span class="skeleton skeleton-stat-label"></span>
@@ -219,7 +219,7 @@
 					</div>
 				} @else {
 					<div class="milestone-skeleton-list">
-						@for (i of [1, 2, 3, 4, 5]; track i) {
+						@for (placeholder of [1, 2, 3, 4, 5]; track $index) {
 							<div class="milestone-row">
 								<div class="milestone-dot skeleton-dot"></div>
 								<div class="milestone-content">

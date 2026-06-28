@@ -424,6 +424,7 @@
 
 .card-category {
 	font-size: 12px;
+	line-height: 1.2;
 	color: #94a3b8;
 	margin-top: 2px;
 }
@@ -507,6 +508,7 @@
 
 .card-remaining {
 	font-size: 13px;
+	line-height: 1.2;
 	color: #64748b;
 }
 .card-remaining b {
@@ -551,6 +553,7 @@
 	display: flex;
 	justify-content: space-between;
 	font-size: 12px;
+	line-height: 1.2;
 	font-weight: 500;
 	color: #64748b;
 }

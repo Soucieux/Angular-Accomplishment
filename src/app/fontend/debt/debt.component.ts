@@ -51,6 +51,10 @@ import {
 	TIMEOUT_KEY_DEBT
 } from '../../common/constants';
 import {
+	DEBT_BTN_SET,
+	DEBT_BTN_RESET,
+	DEBT_BTN_RESTORE,
+	DEBT_BTN_HISTORY,
 	DEBT_EMPTY_STATE_BTN,
 	DEBT_EMPTY_STATE_MSG,
 	DEBT_LABEL_DELETE_CONFIRM,
@@ -76,8 +80,19 @@ import {
 	DEBT_MONTHS,
 	DEBT_CATEGORY_LABEL_CARD,
 	DEBT_CATEGORY_LABEL_FINANCING,
+	DEBT_CATEGORY_LABEL_MORTGAGE,
+	DEBT_DIALOG_TITLE,
 	NAV_LABEL_DEBT_SONATA,
-	LABEL_PERSONAL
+	LABEL_PERSONAL,
+	DEBT_LABEL_PCT_CLEARED,
+	DEBT_LABEL_PCT_PAID,
+	DEBT_LABEL_OF,
+	DEBT_LABEL_REMAINING_OF,
+	DEBT_LABEL_PAID_IN_FULL,
+	DEBT_LABEL_CUSTOM_PAY,
+	DEBT_DAYS_LEFT_SUFFIX,
+	DEBT_DAYS_OVERDUE_PREFIX,
+	DEBT_DAYS_OVERDUE_SUFFIX
 } from '../../common/locale/locale-strings';
 import {
 	DEBT_CATEGORY_DEFS,
@@ -104,6 +119,10 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected readonly DEBT_CURRENCY_CNY = DEBT_CURRENCY_CNY;
 	protected readonly DEBT_PRESET_SMALL = DEBT_PRESET_SMALL;
 	protected readonly DEBT_PRESET_LARGE = DEBT_PRESET_LARGE;
+	protected readonly DEBT_BTN_SET = DEBT_BTN_SET;
+	protected readonly DEBT_BTN_RESET = DEBT_BTN_RESET;
+	protected readonly DEBT_BTN_RESTORE = DEBT_BTN_RESTORE;
+	protected readonly DEBT_BTN_HISTORY = DEBT_BTN_HISTORY;
 	protected readonly DEBT_EMPTY_STATE_MSG = DEBT_EMPTY_STATE_MSG;
 	protected readonly DEBT_EMPTY_STATE_BTN = DEBT_EMPTY_STATE_BTN;
 	protected readonly DEBT_CUSTOM_INPUT_PLACEHOLDER = DEBT_CUSTOM_INPUT_PLACEHOLDER;
@@ -122,6 +141,13 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected readonly DEBT_STAT_LABEL_PAYMENTS = DEBT_STAT_LABEL_PAYMENTS;
 	protected readonly DEBT_HEADING_YOUR_DEBTS = DEBT_HEADING_YOUR_DEBTS;
 	protected readonly DEBT_HISTORY_EMPTY = DEBT_HISTORY_EMPTY;
+	protected readonly DEBT_DIALOG_TITLE = DEBT_DIALOG_TITLE;
+	protected readonly DEBT_LABEL_PCT_CLEARED = DEBT_LABEL_PCT_CLEARED;
+	protected readonly DEBT_LABEL_PCT_PAID = DEBT_LABEL_PCT_PAID;
+	protected readonly DEBT_LABEL_OF = DEBT_LABEL_OF;
+	protected readonly DEBT_LABEL_REMAINING_OF = DEBT_LABEL_REMAINING_OF;
+	protected readonly DEBT_LABEL_PAID_IN_FULL = DEBT_LABEL_PAID_IN_FULL;
+	protected readonly DEBT_LABEL_CUSTOM_PAY = DEBT_LABEL_CUSTOM_PAY;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
 	protected updatedDebtSonataItems: any[] = [];
@@ -143,7 +169,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
 	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS.map((d) => ({
 		...d,
-		label: ({ card: DEBT_CATEGORY_LABEL_CARD, person: LABEL_PERSONAL, shopping: DEBT_CATEGORY_LABEL_FINANCING } as Record<string, string>)[d.key] ?? d.label,
+		label: ({ card: DEBT_CATEGORY_LABEL_CARD, person: LABEL_PERSONAL, shopping: DEBT_CATEGORY_LABEL_FINANCING, home: DEBT_CATEGORY_LABEL_MORTGAGE } as Record<string, string>)[d.key] ?? d.label,
 	}));
 
 	constructor(
@@ -231,7 +257,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	////////////////////// Below are Preset chip payment interaction handlers ///////////////////
+	// ── Preset chip payment interaction handlers ─────────────────────────────
 
 	/**
 	 * Subtracts the given amount from the item's debt balance and persists
@@ -342,7 +368,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		this.customInputState = { ...this.customInputState, [entryKey]: null };
 	}
 
-	////////////////////// Below are Two-step confirm interaction handlers //////////////////////
+	// ── Two-step confirm interaction handlers ────────────────────────────────
 
 	/**
 	 * First call prompts the Reset button; second call within 2.6 s executes
@@ -398,7 +424,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	////////////////////// Below are History panel interaction handlers //////////////////////////
+	// ── History panel interaction handlers ───────────────────────────────────
 
 	/**
 	 * Toggles the payment history panel for the given entry open or closed.
@@ -492,7 +518,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		this.cdr.detectChanges();
 	}
 
-	////////////////////// Below are Dialog opener methods for user-triggered dialogs ///////////
+	// ── Dialog opener methods for user-triggered dialogs ─────────────────────
 
 	/**
 	 * Opens the add-debt dialog and wires the submit callback to persist
@@ -537,7 +563,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		);
 	}
 
-	////////////////////// Below are Internal data methods for CloudBase writes /////////////////
+	// ── Internal data methods for CloudBase writes ───────────────────────────
 
 	/**
 	 * Creates a new debt record in CloudBase from the data returned by the add-debt dialog.
@@ -950,7 +976,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		return fields;
 	}
 
-	////////////////////// Below are Template helper methods for the HTML template ///////////////
+	// ── Template helper methods ───────────────────────────────────────────────
 
 	/**
 	 * Returns the array of indices used to render skeleton loading cards,
@@ -1088,10 +1114,10 @@ export class DebtComponent implements OnInit, OnDestroy {
 		if (diffDays === null) return DEBT_DUE_LABEL_NONE;
 
 		// Step 2: Return the most specific short label for near-term dates
-		if (diffDays < 0) return `${Math.abs(diffDays)}d overdue`;
+		if (diffDays < 0) return `${DEBT_DAYS_OVERDUE_PREFIX}${Math.abs(diffDays)}${DEBT_DAYS_OVERDUE_SUFFIX}`;
 		if (diffDays === 0) return DEBT_DUE_LABEL_TODAY;
 		if (diffDays === 1) return DEBT_DUE_LABEL_TOMORROW;
-		if (diffDays <= 30) return `${diffDays}d left`;
+		if (diffDays <= 30) return `${diffDays}${DEBT_DAYS_LEFT_SUFFIX}`;
 
 		/* Step 3: More than 30 days out — switch to a full calendar date so the chip does not
 		   show an unwieldy "183d left" string that is hard to read at a glance.

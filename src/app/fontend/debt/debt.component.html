@@ -20,7 +20,7 @@
 			</div>
 			<button class="new-debt-button" (click)="openNewDebtDialog()">
 				<span class="material-symbols-outlined">add</span>
-				New debt
+				{{ DEBT_DIALOG_TITLE }}
 			</button>
 		</div>
 
@@ -62,9 +62,9 @@
 							<div class="summary-bar-fill" [style.width.%]="group.pct"></div>
 						</div>
 						<div class="summary-bar-meta">
-							<span>{{ group.pct }}% cleared</span>
+							<span>{{ group.pct }}{{ DEBT_LABEL_PCT_CLEARED }}</span>
 							<span
-								>{{ formatMoney(group.paid, group.code === DEBT_CURRENCY_CNY) }} of
+								>{{ formatMoney(group.paid, group.code === DEBT_CURRENCY_CNY) }} {{ DEBT_LABEL_OF }}
 								{{ formatMoney(group.original, group.code === DEBT_CURRENCY_CNY) }}</span
 							>
 						</div>
@@ -176,11 +176,11 @@
 										<span class="material-symbols-outlined" style="font-size: 13px"
 											>music_note</span
 										>
-										Coda · paid in full
+										{{ DEBT_LABEL_PAID_IN_FULL }}
 									</span>
 								} @else {
 									<span class="card-remaining"
-										>remaining of
+										>{{ DEBT_LABEL_REMAINING_OF }}
 										<b>{{ formatMoney(item.original, isCnyCurrency(item)) }}</b></span
 									>
 								}
@@ -194,7 +194,7 @@
 									[class.is-paid]="item?.paid"></div>
 							</div>
 							<div class="card-progress-meta">
-								<span>{{ getDebtProgress(item) }}% paid</span>
+								<span>{{ getDebtProgress(item) }}{{ DEBT_LABEL_PCT_PAID }}</span>
 								<span
 									>{{
 										formatMoney(
@@ -204,7 +204,7 @@
 											isCnyCurrency(item)
 										)
 									}}
-									of {{ formatMoney(item?.original ?? 0, isCnyCurrency(item)) }}</span
+									{{ DEBT_LABEL_OF }} {{ formatMoney(item?.original ?? 0, isCnyCurrency(item)) }}</span
 								>
 							</div>
 
@@ -230,7 +230,7 @@
 										[disabled]="isPayDisabled(item)"
 										(click)="toggleCustomInput(item.key)">
 										<span class="material-symbols-outlined">edit</span>
-										Custom
+										{{ DEBT_LABEL_CUSTOM_PAY }}
 									</button>
 								} @else {
 									<div class="custom-pay-wrapper">
@@ -255,7 +255,7 @@
 									<span class="material-symbols-outlined" style="font-size: 17px"
 										>tune</span
 									>
-									Set
+									{{ DEBT_BTN_SET }}
 								</button>
 								<button
 									class="footer-button"
@@ -264,7 +264,7 @@
 									<span class="material-symbols-outlined" style="font-size: 17px"
 										>restart_alt</span
 									>
-									{{ isPromptedReset[item.key] ? 'Restore?' : 'Reset' }}
+									{{ isPromptedReset[item.key] ? DEBT_BTN_RESTORE : DEBT_BTN_RESET }}
 								</button>
 								<button
 									class="footer-icon-button lock-button hide-on-narrow-or-mobile"
@@ -293,7 +293,7 @@
 									</button>
 								}
 								<button class="footer-history-btn" (click)="toggleHistory(item.key)">
-									History
+									{{ DEBT_BTN_HISTORY }}
 									<span class="history-count-chip">{{
 										getHistoryEntries(item.key).length
 									}}</span>

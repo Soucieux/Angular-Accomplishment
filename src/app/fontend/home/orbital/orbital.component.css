@@ -340,14 +340,17 @@
 	transform: translateY(34px);
 	animation-delay: 0s;
 }
+
 .orbital-satellite:nth-child(2) {
 	transform: translateY(8px);
 	animation-delay: 0.08s;
 }
+
 .orbital-satellite:nth-child(3) {
 	transform: translateY(8px);
 	animation-delay: 0.16s;
 }
+
 .orbital-satellite:nth-child(4) {
 	transform: translateY(34px);
 	animation-delay: 0.24s;
@@ -360,18 +363,21 @@
 		0 12px 28px rgba(120, 30, 70, 0.22),
 		inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
+
 .orbital-satellite:nth-child(2) .orbital-satellite-disc {
 	box-shadow:
 		0 0 0 3px rgba(167, 139, 250, 0.2),
 		0 12px 28px rgba(120, 30, 70, 0.22),
 		inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
+
 .orbital-satellite:nth-child(3) .orbital-satellite-disc {
 	box-shadow:
 		0 0 0 3px rgba(56, 189, 248, 0.2),
 		0 12px 28px rgba(120, 30, 70, 0.22),
 		inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
+
 .orbital-satellite:nth-child(4) .orbital-satellite-disc {
 	box-shadow:
 		0 0 0 3px rgba(249, 115, 22, 0.2),
@@ -613,6 +619,7 @@
 .orbital-debt-sonata .orbital-panel-header-icon {
 	color: #f97316;
 }
+
 .orbital-debt-sonata .orbital-panel-header-badge {
 	color: #d53369;
 }

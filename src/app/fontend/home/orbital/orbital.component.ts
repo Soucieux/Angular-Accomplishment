@@ -198,14 +198,14 @@ type OrbitalActivityOverride = {
 	icon?: string;
 	label?: string;
 	color?: string;
-	getDetail?: (e: RecentActivityItem) => string;
+	getDetail?: (entry: RecentActivityItem) => string;
 };
 
 type OrbitalActivitySourceDef = {
 	icon: string;
 	label: string;
 	color: string;
-	getDetail: (e: RecentActivityItem) => string;
+	getDetail: (entry: RecentActivityItem) => string;
 	types: Record<string, OrbitalActivityOverride>;
 };
 
@@ -235,7 +235,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	protected readonly HOME_ACTIVITY_FOOTER_ZH = HOME_ACTIVITY_FOOTER_ZH;
 	protected readonly HOME_ACTIVITY_FOOTER_EN = HOME_ACTIVITY_FOOTER_EN;
 	protected readonly HOME_CONCENTRIC_SIZE_DEFAULT = HOME_CONCENTRIC_SIZE_DEFAULT;
-	protected readonly QUICK_ACTIONS = QUICK_ACTIONS.map((qa, i) => ({ ...qa, label: ORBITAL_QUICK_ACTION_LABELS[i] ?? qa.label }));
+	protected readonly QUICK_ACTIONS = QUICK_ACTIONS.map((quickAction, i) => ({ ...quickAction, label: ORBITAL_QUICK_ACTION_LABELS[i] ?? quickAction.label }));
 	protected readonly HOME_OVERFLOW_LABEL_REMINDERS = HOME_OVERFLOW_LABEL_REMINDERS;
 	protected readonly HOME_OVERFLOW_LABEL_DEBT = HOME_OVERFLOW_LABEL_DEBT;
 	protected readonly HOME_OVERFLOW_LABEL_RECIPES = HOME_OVERFLOW_LABEL_RECIPES;
@@ -301,7 +301,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 			icon: HOME_ACTIVITY_ICON_MOVIE_ADDED,
 			label: HOME_ACTIVITY_LABEL_MOVIE_ADDED,
 			color: HOME_ACTIVITY_COLOR_MOVIE,
-			getDetail: (e) => this.truncateDetail(e.title),
+			getDetail: (entry) => this.truncateDetail(entry.title),
 			types: {
 				[ACTIVITY_TYPE_UPDATED]: {
 					icon: HOME_ACTIVITY_ICON_MOVIE_UPDATED,
@@ -335,7 +335,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 			icon: HOME_ACTIVITY_ICON_REMINDER_ADDED,
 			label: HOME_ACTIVITY_LABEL_REMINDER_ADDED,
 			color: HOME_ACTIVITY_COLOR_REMINDER,
-			getDetail: (e) => this.truncateDetail(e.text),
+			getDetail: (entry) => this.truncateDetail(entry.text),
 			types: {
 				[ACTIVITY_TYPE_UPDATED]: {
 					icon: HOME_ACTIVITY_ICON_REMINDER_UPDATED,
@@ -359,7 +359,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 			icon: HOME_ACTIVITY_ICON_RESONANCE_ADDED,
 			label: HOME_ACTIVITY_LABEL_RESONANCE_ADDED,
 			color: HOME_ACTIVITY_COLOR_RESONANCE,
-			getDetail: (e) => this.truncateDetail(e.author),
+			getDetail: (entry) => this.truncateDetail(entry.author),
 			types: {
 				[HISTORY_STATUS_DELETED]: {
 					icon: HOME_ACTIVITY_ICON_RESONANCE_REMOVED,
@@ -372,7 +372,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 			icon: HOME_ACTIVITY_ICON_PATCH_ADDED,
 			label: HOME_ACTIVITY_LABEL_PATCH_ADDED,
 			color: HOME_ACTIVITY_COLOR_PATCH,
-			getDetail: (e) => `#${e.noteIndex ?? '?'} · ${e.component ?? ''} · ${e.element ?? ''}`,
+			getDetail: (entry) => `#${entry.noteIndex ?? '?'} · ${entry.component ?? ''} · ${entry.element ?? ''}`,
 			types: {
 				[ACTIVITY_TYPE_BUG_LOGGED]: {
 					icon: HOME_ACTIVITY_ICON_PATCH_BUG,
@@ -397,7 +397,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 			icon: HOME_ACTIVITY_ICON_LINK_ADDED,
 			label: HOME_ACTIVITY_LABEL_LINK_ADDED,
 			color: HOME_ACTIVITY_COLOR_LINK,
-			getDetail: (e) => this.truncateDetail(e.domain),
+			getDetail: (entry) => this.truncateDetail(entry.domain),
 			types: {
 				[ACTIVITY_TYPE_CATEGORY_ADDED]: {
 					icon: HOME_ACTIVITY_ICON_LINK_ADDED,
@@ -427,7 +427,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 			icon: HOME_ACTIVITY_ICON_DEBT_ADDED,
 			label: HOME_ACTIVITY_LABEL_DEBT_ADDED,
 			color: HOME_ACTIVITY_COLOR_DEBT,
-			getDetail: (e) => this.truncateDetail(e.name),
+			getDetail: (entry) => this.truncateDetail(entry.name),
 			types: {
 				[ACTIVITY_TYPE_UPDATED]: {
 					icon: HOME_ACTIVITY_ICON_DEBT_UPDATED,
@@ -456,7 +456,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 			icon: HOME_ACTIVITY_ICON_RECIPE_ADDED,
 			label: HOME_ACTIVITY_LABEL_RECIPE_ADDED,
 			color: HOME_ACTIVITY_COLOR_RECIPE,
-			getDetail: (e) => this.truncateDetail(e.name),
+			getDetail: (entry) => this.truncateDetail(entry.name),
 			types: {
 				[ACTIVITY_TYPE_UPDATED]: {
 					icon: HOME_ACTIVITY_ICON_RECIPE_UPDATED,
@@ -992,10 +992,10 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	/**
 	 * Gets the locale-resolved display label for a recipe category key.
 	 *
-	 * @param cat - The English category key stored in the database.
+	 * @param categoryKey - The English category key stored in the database.
 	 * @returns The translated category label, or the raw key when no mapping exists.
 	 */
-	protected categoryDisplayLabel(cat: string): string {
-		return this.localeCategoryLabels[cat] ?? cat;
+	protected categoryDisplayLabel(categoryKey: string): string {
+		return this.localeCategoryLabels[categoryKey] ?? categoryKey;
 	}
 }

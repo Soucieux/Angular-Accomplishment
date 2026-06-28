@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, ViewEncapsulation, inject } from '@angular/core';
+import { Component, Input, OnChanges, inject } from '@angular/core';
 import {
 	HOME_CONCENTRIC_LEADER_BOUNDARY_MARGIN,
 	HOME_CONCENTRIC_LEADER_LINE_OFFSET_X,
@@ -178,41 +178,41 @@ interface PlacedMetric extends OrbitalProgressMetric {
 			}
 
 			<svg class="concentric-svg" [attr.viewBox]="'0 0 ' + size + ' ' + size">
-				@for (p of placedMetrics; track p.key) {
+				@for (placedMetric of placedMetrics; track placedMetric.key) {
 					<line
-						[attr.x1]="p.tipX"
-						[attr.y1]="p.tipY"
-						[attr.x2]="p.side === HOME_CONCENTRIC_LEADER_SIDE_RIGHT ? p.labelX - 2 : p.labelX + 2"
-						[attr.y2]="p.labelY"
-						[attr.stroke]="p.gradientEnd"
+						[attr.x1]="placedMetric.tipX"
+						[attr.y1]="placedMetric.tipY"
+						[attr.x2]="placedMetric.side === HOME_CONCENTRIC_LEADER_SIDE_RIGHT ? placedMetric.labelX - 2 : placedMetric.labelX + 2"
+						[attr.y2]="placedMetric.labelY"
+						[attr.stroke]="placedMetric.gradientEnd"
 						stroke-width="1.5"
 						stroke-linecap="round"
 						opacity="0.7" />
 					<circle
-						[attr.cx]="p.tipX"
-						[attr.cy]="p.tipY"
+						[attr.cx]="placedMetric.tipX"
+						[attr.cy]="placedMetric.tipY"
 						r="3.5"
 						fill="#fff"
-						[attr.stroke]="p.gradientEnd"
+						[attr.stroke]="placedMetric.gradientEnd"
 						stroke-width="2" />
 				}
 			</svg>
 
-			@for (p of placedMetrics; track p.key) {
+			@for (placedMetric of placedMetrics; track placedMetric.key) {
 				<div
 					class="concentric-pill"
-					[style.left.%]="(p.labelX / size) * 100"
-					[style.top.%]="(p.labelY / size) * 100"
+					[style.left.%]="(placedMetric.labelX / size) * 100"
+					[style.top.%]="(placedMetric.labelY / size) * 100"
 					[style.transform]="
-						p.side === HOME_CONCENTRIC_LEADER_SIDE_RIGHT
+						placedMetric.side === HOME_CONCENTRIC_LEADER_SIDE_RIGHT
 							? 'translate(0,-50%)'
 							: 'translate(-100%,-50%)'
 					">
 					<i
 						[style.background]="
-							'linear-gradient(90deg,' + p.gradientStart + ',' + p.gradientEnd + ')'
+							'linear-gradient(90deg,' + placedMetric.gradientStart + ',' + placedMetric.gradientEnd + ')'
 						"></i>
-					{{ p.label }}&nbsp;<em>{{ p.percentage }}%</em>
+					{{ placedMetric.label }}&nbsp;<em>{{ placedMetric.percentage }}%</em>
 				</div>
 			}
 
@@ -379,7 +379,6 @@ export class Concentric implements OnChanges {
 @Component({
 	selector: 'week-agenda',
 	standalone: true,
-	encapsulation: ViewEncapsulation.None,
 	template: `
 		<div class="week-agenda-strip">
 			@for (day of d.week(); track day.label) {
@@ -429,7 +428,7 @@ export class Concentric implements OnChanges {
 	`,
 	styles: [
 		`
-			week-agenda {
+			:host {
 				display: contents;
 			}
 			.week-agenda-strip {

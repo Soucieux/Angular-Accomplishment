@@ -5,6 +5,7 @@
 /* ─────────────────────────────────────────
    Container — full viewport, flex column
 ───────────────────────────────────────── */
+
 .container-home {
 	display: flex;
 	flex-direction: column;
@@ -66,6 +67,7 @@
 /* ─────────────────────────────────────────
    Not-logged-in: editorial landing
 ───────────────────────────────────────── */
+
 .logged-out-view {
 	flex: 1;
 	position: relative;
@@ -119,6 +121,7 @@
 /* ─────────────────────────────────────────
    Drifting orbs
 ───────────────────────────────────────── */
+
 .ed-orb {
 	position: absolute;
 	border-radius: 50%;
@@ -172,6 +175,7 @@
 /* ─────────────────────────────────────────
    Giant vertical watermark
 ───────────────────────────────────────── */
+
 .ed-watermark {
 	position: absolute;
 	right: 4%;
@@ -191,6 +195,7 @@
 /* ─────────────────────────────────────────
    Content stage
 ───────────────────────────────────────── */
+
 .ed-stage {
 	position: absolute;
 	inset: 0;
@@ -203,6 +208,7 @@
 /* ─────────────────────────────────────────
    Masthead
 ───────────────────────────────────────── */
+
 .ed-masthead {
 	display: flex;
 	justify-content: space-between;
@@ -223,6 +229,7 @@
 /* ─────────────────────────────────────────
    Title block
 ───────────────────────────────────────── */
+
 .ed-titlewrap {
 	margin-top: clamp(40px, 11vw, 76px);
 }
@@ -249,6 +256,7 @@
 /* ─────────────────────────────────────────
    Body lines pinned to lower area
 ───────────────────────────────────────── */
+
 .ed-body {
 	margin-top: auto;
 }
@@ -274,6 +282,7 @@
 /* ─────────────────────────────────────────
    Footer colophon — app sections
 ───────────────────────────────────────── */
+
 .ed-colophon {
 	margin-top: clamp(22px, 6vw, 34px);
 	padding-top: clamp(16px, 4vw, 20px);
@@ -299,6 +308,7 @@
    Entrance animations
    Base state stays visible for print / screenshot
 ───────────────────────────────────────── */
+
 .ed-stage > * {
 	animation: fadeSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -318,6 +328,7 @@
 /* ─────────────────────────────────────────
    Animations (shared)
 ───────────────────────────────────────── */
+
 @keyframes fadeSlideUp {
 	from {
 		opacity: 0;
@@ -332,6 +343,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (narrow viewport)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	.container-home {
 		padding: 10px;

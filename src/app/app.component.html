@@ -183,6 +183,17 @@
 										<span class="material-symbols-outlined">language</span>
 										{{ localeSwitchLabel }}
 									</button>
+									@if (isTauriApp) {
+										<button
+											class="account-menu-popover-item"
+											type="button"
+											(click)="toggleMinimizeOnClose()">
+											<span class="material-symbols-outlined">{{
+												minimizeOnClose() ? 'close_fullscreen' : 'open_in_full'
+											}}</span>
+											{{ minimizeOnClose() ? NAV_MINIMIZE_ON_CLOSE_DISABLE : NAV_MINIMIZE_ON_CLOSE_ENABLE }}
+										</button>
+									}
 									<button
 										class="account-menu-popover-item account-menu-popover-item--danger"
 										(click)="logout()">

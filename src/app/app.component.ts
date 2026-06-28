@@ -10,7 +10,8 @@ import {
 	PLATFORM_ID,
 	ViewChild,
 	ViewContainerRef,
-	isDevMode
+	isDevMode,
+	signal
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -18,6 +19,7 @@ import { NavigationEnd, Router, RouterOutlet, RouterModule } from '@angular/rout
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
+import { DatabaseService } from './backend/database-service/database.service';
 import { AuthService } from './backend/authentication-service/auth.service';
 import { LocaleService } from './common/locale/locale.service';
 import { DialogService } from './backend/dialog-service/dialog.service';
@@ -46,7 +48,9 @@ import {
 	CTX_ICON_INSPECT,
 	DIALOG_CONFIRM,
 	LS_NAV_COLLAPSED_KEY,
-	TAURI_MODE_CLASS
+	LS_LOCALE_KEY,
+	TAURI_MODE_CLASS,
+	TAURI_CMD_SET_MINIMIZE_ON_CLOSE
 } from './common/constants';
 import {
 	CTX_LABEL_COPY,
@@ -78,6 +82,8 @@ import {
 	MSG_LOGOUT_CONFIRM,
 	NAV_LOCALE_SWITCH_TO_ZH,
 	NAV_LOCALE_SWITCH_TO_EN,
+	NAV_MINIMIZE_ON_CLOSE_ENABLE,
+	NAV_MINIMIZE_ON_CLOSE_DISABLE,
 	DIALOG_LOCALE_SWITCH_HEADER,
 	DIALOG_LOCALE_SWITCH_MSG,
 	DIALOG_LOCALE_SWITCH_BTN
@@ -133,7 +139,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected compactOverlayOpen = false;
 	protected isTauriApp = false;
 	private tauriAppWindow: { startDragging: () => Promise<void> } | null = null;
-	private notifInitialized = false;
+	private userInitialized = false;
 	protected ctxVisible = false;
 	protected ctxX = 0;
 	protected ctxY = 0;
@@ -147,6 +153,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_TITLE_PAGE = ACCOUNT_TITLE_PAGE;
 	protected readonly NAV_NOTIF_LABEL_ENABLE = NAV_NOTIF_LABEL_ENABLE;
 	protected readonly NAV_NOTIF_LABEL_DISABLE = NAV_NOTIF_LABEL_DISABLE;
+	protected readonly NAV_MINIMIZE_ON_CLOSE_ENABLE = NAV_MINIMIZE_ON_CLOSE_ENABLE;
+	protected readonly NAV_MINIMIZE_ON_CLOSE_DISABLE = NAV_MINIMIZE_ON_CLOSE_DISABLE;
 	protected readonly NAV_LABEL_MENU = NAV_LABEL_MENU;
 	protected readonly NAV_LABEL_HOME = NAV_LABEL_HOME;
 	protected readonly NAV_LABEL_TODAY = NAV_LABEL_TODAY;
@@ -167,6 +175,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, {
 		initialValue: false
 	});
+	protected minimizeOnClose = signal(true);
 	protected readonly navItems: NavItem[] = NAV_ITEMS;
 	protected readonly primaryIds: string[] = PRIMARY_IDS;
 	protected activeRoute = '';
@@ -174,6 +183,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected mobileUserName = '';
 
 	constructor(
+		private databaseService: DatabaseService,
 		private authService: AuthService,
 		private dialogService: DialogService,
 		private notificationService: NotificationService,
@@ -225,9 +235,32 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.mobileUserName = Utilities.capitalizeFirstLetterOnEachWord(
 					Utilities.getUserDisplayName(user)
 				);
-				if (user && this.isTauriApp && !this.notifInitialized) {
-					this.notifInitialized = true;
-					this.notificationService.init().catch(() => {});
+				if (user && !this.userInitialized) {
+					this.userInitialized = true;
+					if (this.isTauriApp) {
+						this.notificationService.init().catch(() => {});
+						this.databaseService.getMinimizeOnClose().then((enabled: boolean) => {
+							this.minimizeOnClose.set(enabled);
+							invoke(TAURI_CMD_SET_MINIMIZE_ON_CLOSE, { enabled }).catch(() => {});
+						}).catch(() => {});
+					}
+					this.databaseService.getLocale().then((dbLocale: 'en' | 'zh' | null) => {
+						const storedLocale = localStorage.getItem(LS_LOCALE_KEY) as 'en' | 'zh' | null;
+
+						// No DB record yet — first login ever; seed from current localStorage value
+						if (dbLocale === null) {
+							this.databaseService.setLocale(this.localeService.currentLocale).catch(() => {});
+
+						// No localStorage value — fresh device; sync from DB once (one-time flip, then stable)
+						} else if (storedLocale === null) {
+							this.localeService.applyLocale(dbLocale);
+
+						/* localStorage wins over DB — the DB read may be stale if the previous write
+						   did not complete before the reload. Repair DB silently; no reload triggered. */
+						} else if (dbLocale !== storedLocale) {
+							this.databaseService.setLocale(storedLocale).catch(() => {});
+						}
+					}).catch(() => {});
 				}
 			});
 
@@ -398,7 +431,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		// when clipboard actions precede it so the groups are visually distinct.
 		for (const [i, item] of this.ctxNavItems.entries()) {
 			actions.push({
-				label: item.label,
+				label: item.id === 'home' ? NAV_LABEL_HOME : NAV_LABEL_REMINDER,
 				icon: item.icon,
 				color: item.grad!,
 				execute: () => this.navigateToRoute(item.id),
@@ -528,6 +561,16 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 				error instanceof Error ? error : new Error('Unexpected error')
 			);
 		}
+	}
+
+	/**
+	 * Toggles the minimize-on-close preference and persists the change to the database and Rust app state.
+	 */
+	protected toggleMinimizeOnClose(): void {
+		const enabled = !this.minimizeOnClose();
+		this.minimizeOnClose.set(enabled);
+		this.databaseService.setMinimizeOnClose(enabled).catch(() => {});
+		invoke(TAURI_CMD_SET_MINIMIZE_ON_CLOSE, { enabled }).catch(() => {});
 	}
 
 	/**
@@ -709,7 +752,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected doSwitchLocale(): void {
 		const targetLocale: 'en' | 'zh' = this.localeService.currentLocale === 'en' ? 'zh' : 'en';
-		this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, () => {
+		this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, async () => {
+			/* Must complete before applyLocale() — applyLocale calls window.location.reload()
+			   immediately, which would kill the in-flight DB write if not awaited first. */
+			await this.databaseService.setLocale(targetLocale).catch(() => {});
 			this.localeService.applyLocale(targetLocale);
 		}, [DIALOG_LOCALE_SWITCH_MSG, DIALOG_LOCALE_SWITCH_HEADER, DIALOG_LOCALE_SWITCH_BTN]);
 	}

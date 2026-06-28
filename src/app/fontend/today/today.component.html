@@ -26,8 +26,8 @@
 			<div class="tp-quickadd">
 				<span class="material-symbols-outlined">add_task</span>
 				<input
-					[value]="quickAddDraft()"
-					(input)="quickAddDraft.set($any($event.target).value)"
+					[value]="quickAddText()"
+					(input)="quickAddText.set($any($event.target).value)"
 					(keydown)="onQuickAddKeyDown($event)"
 					[placeholder]="TODAY_QUICKADD_PLACEHOLDER" />
 				<button (click)="addUntimed()">{{ BTN_ADD }}</button>
@@ -49,9 +49,9 @@
 							<input
 								#editInput
 								class="tp-edit-input"
-								[value]="editingDraft()"
+								[value]="editingText()"
 								(mousedown)="$event.stopPropagation()"
-								(input)="editingDraft.set($any($event.target).value)"
+								(input)="editingText.set($any($event.target).value)"
 								(keydown.enter)="saveBlockEdit()"
 								(keydown.escape)="cancelBlockEdit()"
 								(blur)="saveBlockEdit()"
@@ -305,8 +305,8 @@
 									@if (b.isEditing) {
 										<input
 											class="tp-edit-input"
-											[value]="editingDraft()"
-											(input)="editingDraft.set($any($event.target).value)"
+											[value]="editingText()"
+											(input)="editingText.set($any($event.target).value)"
 											(keydown.enter)="saveBlockEdit()"
 											(keydown.escape)="cancelBlockEdit()"
 											(blur)="saveBlockEdit()"

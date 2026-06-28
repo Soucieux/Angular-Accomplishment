@@ -130,9 +130,9 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	   Reactive state
 	───────────────────────────────────────── */
 	protected readonly clock = signal('');
-	protected readonly quickAddDraft = signal('');
+	protected readonly quickAddText = signal('');
 	protected readonly editingId = signal<string | null>(null);
-	protected readonly editingDraft = signal('');
+	protected readonly editingText = signal('');
 	protected readonly isDragCreateEnabled = signal(false);
 	protected readonly isDragMoveEnabled = signal(false);
 	protected readonly dragMovePreview = signal<TodayTimeRange | null>(null);
@@ -171,7 +171,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	/** Title of the block currently being drag-moved, used in the floating ghost label. */
 	protected readonly draggedTitle = computed(() => {
 		const id = this.draggingBlockId();
-		return id ? (this.tasks().find((t) => t.id === id)?.title ?? '') : '';
+		return id ? (this.tasks().find((task) => task.id === id)?.title ?? '') : '';
 	});
 
 	/** Timed task blocks with full layout and display data. */
@@ -180,26 +180,26 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		const liveLayout = this.dragMoveLayoutState()?.layoutMap ?? {};
 		const draggingBlockId = this.draggingBlockId();
 		return this.tasks()
-			.filter((t) => t.startMin != null)
-			.map((t) => {
-				const isDone = t.source === TASK_SOURCE_LOCAL && t.done;
-				const isDragging = draggingBlockId === t.id;
-				const pos = liveLayout[t.id] ?? baseLayout[t.id] ?? { col: 0, total: 1 };
-				const top = this.minutesToPixels(t.startMin!);
+			.filter((task) => task.startMin != null)
+			.map((task) => {
+				const isDone = task.source === TASK_SOURCE_LOCAL && task.done;
+				const isDragging = draggingBlockId === task.id;
+				const pos = liveLayout[task.id] ?? baseLayout[task.id] ?? { col: 0, total: 1 };
+				const top = this.minutesToPixels(task.startMin!);
 				const isTiny =
-					t.source === TASK_SOURCE_TRACKED &&
-					t.endMin != null &&
-					t.endMin - t.startMin! < TRACKED_TINY_THRESHOLD_MIN;
-				const endMin = isTiny ? t.endMin! : (t.endMin ?? t.startMin! + MINIMUM_VISUAL_MINUTES);
+					task.source === TASK_SOURCE_TRACKED &&
+					task.endMin != null &&
+					task.endMin - task.startMin! < TRACKED_TINY_THRESHOLD_MIN;
+				const endMin = isTiny ? task.endMin! : (task.endMin ?? task.startMin! + MINIMUM_VISUAL_MINUTES);
 				const minHeight = isTiny ? TRACKED_TINY_MIN_HEIGHT_PX : BLOCK_MIN_HEIGHT_PX;
-				const height = Math.max(minHeight, ((endMin - t.startMin!) / 60) * PIXELS_PER_HOUR - 2);
+				const height = Math.max(minHeight, ((endMin - task.startMin!) / 60) * PIXELS_PER_HOUR - 2);
 				const widthPercent = 100 / pos.total;
 				const leftPercent = pos.col * widthPercent;
 				return {
-					task: t,
+					task,
 					isDragging,
-					isRemoving: this.removingIds().includes(t.id),
-					accent: isDone ? TASK_ACCENT_DONE : TASK_ACCENT_MAP[t.source],
+					isRemoving: this.removingIds().includes(task.id),
+					accent: isDone ? TASK_ACCENT_DONE : TASK_ACCENT_MAP[task.source],
 					top,
 					height,
 					widthPercent,
@@ -207,20 +207,20 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					isShort: height < BLOCK_SHORT_THRESHOLD_PX,
 					isTiny,
 					isNarrow: pos.total > 1,
-					draggable: t.source === TASK_SOURCE_LOCAL && this.isDragMoveEnabled(),
-					isEditing: this.editingId() === t.id,
-					leadIcon: isDone ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_MAP[t.source],
-					timeLabel: this.formatMinutes(t.startMin!) + ' – ' + this.formatMinutes(endMin),
-					durationLabel: this.formatDuration(endMin - t.startMin!),
-					hasRecurrence: t.recur !== 'none',
-					recurrenceLabel: TODAY_RECUR_LABELS[t.recur] ?? ''
+					draggable: task.source === TASK_SOURCE_LOCAL && this.isDragMoveEnabled(),
+					isEditing: this.editingId() === task.id,
+					leadIcon: isDone ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_MAP[task.source],
+					timeLabel: this.formatMinutes(task.startMin!) + ' – ' + this.formatMinutes(endMin),
+					durationLabel: this.formatDuration(endMin - task.startMin!),
+					hasRecurrence: task.recur !== 'none',
+					recurrenceLabel: TODAY_RECUR_LABELS[task.recur] ?? ''
 				};
 			});
 	});
 
 	/** Untimed local tasks shown in the anytime lane. */
 	protected readonly untimedTasks = computed(() =>
-		this.tasks().filter((t) => t.source === TASK_SOURCE_LOCAL && t.startMin == null)
+		this.tasks().filter((task) => task.source === TASK_SOURCE_LOCAL && task.startMin == null)
 	);
 
 	/** Pixel top offset of the current-time indicator. */
@@ -290,7 +290,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			const tracking = this.tracking();
 			const pending = this.pendingBlock();
 			const entries = this.tasks()
-				.filter((t) => t.startMin != null)
+				.filter((task) => task.startMin != null)
 				.map((task) => ({ task, isGhost: false as const }));
 			const ghostRange = tracking
 				? { startMin: tracking.startMin, endMin: this.nowMin() }
@@ -410,7 +410,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Clears the input on success.
 	 */
 	protected addUntimed(): void {
-		const title = this.quickAddDraft().trim();
+		const title = this.quickAddText().trim();
 		if (!title) return;
 		this.tasks.update((ts) => [
 			...ts,
@@ -424,7 +424,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 				recur: 'none'
 			}
 		]);
-		this.quickAddDraft.set('');
+		this.quickAddText.set('');
 	}
 
 	/**
@@ -434,7 +434,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected toggleTaskDone(id: string): void {
 		this.tasks.update((ts) =>
-			ts.map((t) => (t.id === id && t.source === TASK_SOURCE_LOCAL ? { ...t, done: !t.done } : t))
+			ts.map((task) => (task.id === id && task.source === TASK_SOURCE_LOCAL ? { ...task, done: !task.done } : task))
 		);
 	}
 
@@ -444,10 +444,10 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param id - The ID of the task to remove (reminders cannot be removed).
 	 */
 	protected removeTask(id: string): void {
-		this.removingIds.update((r) => [...r, id]);
+		this.removingIds.update((removingIds) => [...removingIds, id]);
 		setTimeout(() => {
-			this.tasks.update((ts) => ts.filter((t) => !(t.id === id && t.source !== TASK_SOURCE_REMINDER)));
-			this.removingIds.update((r) => r.filter((x) => x !== id));
+			this.tasks.update((ts) => ts.filter((task) => !(task.id === id && task.source !== TASK_SOURCE_REMINDER)));
+			this.removingIds.update((removingIds) => removingIds.filter((removingId) => removingId !== id));
 		}, TODAY_REMOVE_ANIMATION_MS);
 	}
 
@@ -463,7 +463,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected beginBlockEdit(id: string, title: string): void {
 		this.editingId.set(id);
-		this.editingDraft.set(title);
+		this.editingText.set(title);
 	}
 
 	/**
@@ -472,8 +472,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected saveBlockEdit(): void {
 		const id = this.editingId();
-		const value = this.editingDraft().trim();
-		this.tasks.update((ts) => ts.map((t) => (t.id === id ? { ...t, title: value || t.title } : t)));
+		const value = this.editingText().trim();
+		this.tasks.update((ts) => ts.map((task) => (task.id === id ? { ...task, title: value || task.title } : task)));
 		this.clearBlockEdit();
 	}
 
@@ -647,7 +647,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		event.preventDefault();
 
 		// Guard: task must exist and already have a scheduled start time
-		const task = this.tasks().find((t) => t.id === id);
+		const task = this.tasks().find((candidate) => candidate.id === id);
 		if (!task || task.startMin == null) return;
 		const startMin = task.startMin;
 		const cal = this.calRef.nativeElement;
@@ -661,7 +661,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 				Math.min(24 * 60, this.snapMinutes((relY / PIXELS_PER_HOUR) * 60))
 			);
 			this.tasks.update((ts) =>
-				ts.map((t) => (t.id === id && t.source !== TASK_SOURCE_REMINDER ? { ...t, endMin } : t))
+				ts.map((task) => (task.id === id && task.source !== TASK_SOURCE_REMINDER ? { ...task, endMin } : task))
 			);
 		};
 
@@ -696,11 +696,11 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		event.stopPropagation();
 
 		// Snapshot the task, its original column layout, and duration for the ghost overlay
-		const task = this.tasks().find((t) => t.id === id);
+		const task = this.tasks().find((candidate) => candidate.id === id);
 		if (!task) return;
 		const duration = task.startMin != null ? task.endMin! - task.startMin : 60;
 		const cal = this.calRef.nativeElement;
-		const layout = this.timedBlocks().find((b) => b.task.id === id);
+		const layout = this.timedBlocks().find((block) => block.task.id === id);
 		this.draggingBlockStartMin = task.startMin ?? 0;
 		this.draggingBlockEndMin = task.endMin ?? this.draggingBlockStartMin + duration;
 		this.draggingBlockLeftPercent = layout?.leftPercent ?? 0;
@@ -753,10 +753,10 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					upEvent.clientY <= rect.bottom
 				) {
 					this.tasks.update((ts) =>
-						ts.map((t) =>
-							t.id === id && t.source === TASK_SOURCE_LOCAL
-								? { ...t, startMin: null, endMin: null }
-								: t
+						ts.map((task) =>
+							task.id === id && task.source === TASK_SOURCE_LOCAL
+								? { ...task, startMin: null, endMin: null }
+								: task
 						)
 					);
 					this.draggingBlockId.set(null);
@@ -834,7 +834,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	private clearBlockEdit(): void {
 		this.editingId.set(null);
-		this.editingDraft.set('');
+		this.editingText.set('');
 	}
 
 	/**
@@ -872,21 +872,21 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		// Re-subscribe: filter reminder records to today, map to TodayTask, merge into the signal
 		this.remindersSub = this.databaseService.getReminderTableDetails().subscribe((records) => {
 			const reminderTasks: TodayTask[] = records
-				.filter((r) => {
-					const recDate = r.date != null ? Utilities.coerceDateToString(r.date) : null;
+				.filter((record) => {
+					const recDate = record.date != null ? Utilities.coerceDateToString(record.date) : null;
 					return recDate === this.currentDateStr;
 				})
-				.map((r) => ({
-					id: r.key ?? '',
+				.map((record) => ({
+					id: record.key ?? '',
 					source: TASK_SOURCE_REMINDER,
-					title: r.text ?? '',
+					title: record.text ?? '',
 					done: false,
-					startMin: r.startTime ? Utilities.parseTimeToMinutes(r.startTime as string) : null,
-					endMin: r.endTime ? Utilities.parseTimeToMinutes(r.endTime as string) : null,
+					startMin: record.startTime ? Utilities.parseTimeToMinutes(record.startTime as string) : null,
+					endMin: record.endTime ? Utilities.parseTimeToMinutes(record.endTime as string) : null,
 					recur: 'none' as const
 				}));
 			this.tasks.update((ts) => [
-				...ts.filter((t) => t.source !== TASK_SOURCE_REMINDER),
+				...ts.filter((task) => task.source !== TASK_SOURCE_REMINDER),
 				...reminderTasks
 			]);
 		});
@@ -1015,12 +1015,12 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	private collectGhostOverlapIds(startMin: number, endMin: number, draggedId: string): string[] {
 		const ghostEnd = Math.max(endMin, startMin + MINIMUM_VISUAL_MINUTES);
-		const tasks = this.tasks().filter((t) => t.id !== draggedId && t.startMin != null);
+		const tasks = this.tasks().filter((task) => task.id !== draggedId && task.startMin != null);
 		const selected = new Set<string>();
 		const queue: TodayTask[] = [];
 
-		const overlaps = (aStart: number, aEnd: number, b: TodayTask): boolean =>
-			aStart < this.visualEndMinute(b) && b.startMin! < aEnd;
+		const overlaps = (aStart: number, aEnd: number, task: TodayTask): boolean =>
+			aStart < this.visualEndMinute(task) && task.startMin! < aEnd;
 
 		// Step 1: Seed — collect tasks that directly overlap the ghost span
 		tasks.forEach((task) => {
@@ -1126,7 +1126,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		const preview = this.dragMovePreview();
 		const clientX = this.dragMoveClientX();
 		if (!draggedId || !preview) return null;
-		const dragged = this.tasks().find((t) => t.id === draggedId);
+		const dragged = this.tasks().find((task) => task.id === draggedId);
 		if (!dragged) return null;
 		const isUntimed = dragged.startMin == null;
 
@@ -1166,11 +1166,11 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		// Step 4: Full reflow — pack ghost alongside its overlapping peers and derive placement
 		const overlapSet = new Set(overlapIds);
 		const overlapTasks = this.tasks()
-			.filter((t) => overlapSet.has(t.id))
+			.filter((task) => overlapSet.has(task.id))
 			.sort((a, b) => (a.ord ?? a.startMin!) - (b.ord ?? b.startMin!));
 		const ghostOrd = (() => {
 			const slot = this.resolveGhostSlot(overlapTasks, clientX);
-			const orderKey = (t: TodayTask) => t.ord ?? t.startMin!;
+			const orderKey = (task: TodayTask) => task.ord ?? task.startMin!;
 			if (!overlapTasks.length) return preview.startMin;
 			if (slot <= 0) return orderKey(overlapTasks[0]) - 1;
 			if (slot >= overlapTasks.length) return orderKey(overlapTasks[overlapTasks.length - 1]) + 1;
@@ -1209,7 +1209,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	private rescheduleDraggedBlock(id: string, newStart: number, clientX: number | null): void {
 		// Step 1: Guard and compute the clamped time range (preserves original duration)
 		const allTasks = this.tasks();
-		const target = allTasks.find((t) => t.id === id);
+		const target = allTasks.find((task) => task.id === id);
 		if (!target || target.source === TASK_SOURCE_REMINDER) return;
 		const duration = target.startMin != null ? target.endMin! - target.startMin : 60;
 		let start = newStart,
@@ -1220,15 +1220,15 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 
 		// Step 2: Collect overlapping peers and resolve the column slot from drop position
-		const orderKey = (t: TodayTask) => t.ord ?? t.startMin!;
+		const orderKey = (task: TodayTask) => task.ord ?? task.startMin!;
 		const visualEnd = Math.max(end, start + MINIMUM_VISUAL_MINUTES);
 		const peers = allTasks
 			.filter(
-				(t) =>
-					t.id !== id &&
-					t.startMin != null &&
-					t.startMin < visualEnd &&
-					start < this.visualEndMinute(t)
+				(task) =>
+					task.id !== id &&
+					task.startMin != null &&
+					task.startMin < visualEnd &&
+					start < this.visualEndMinute(task)
 			)
 			.sort((a, b) => orderKey(a) - orderKey(b));
 
@@ -1244,7 +1244,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		// Step 3: Commit the new position and column order to the task signal
 		this.tasks.update((ts) =>
-			ts.map((t) => (t.id === id ? { ...t, startMin: start, endMin: end, ord } : t))
+			ts.map((task) => (task.id === id ? { ...task, startMin: start, endMin: end, ord } : task))
 		);
 	}
 
@@ -1255,8 +1255,8 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns A formatted MM:SS string.
 	 */
 	private formatElapsed(seconds: number): string {
-		const s = Math.floor(seconds);
-		return `${Utilities.padTwoDigits(Math.floor(s / 60))}:${Utilities.padTwoDigits(s % 60)}`;
+		const wholeSeconds = Math.floor(seconds);
+		return `${Utilities.padTwoDigits(Math.floor(wholeSeconds / 60))}:${Utilities.padTwoDigits(wholeSeconds % 60)}`;
 	}
 
 	/**
@@ -1293,23 +1293,23 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns A formatted time string.
 	 */
 	protected formatMinutes(minutes: number): string {
-		const h = Math.floor(minutes / 60);
-		const mm = Math.round(minutes % 60);
-		const ap = h < 12 ? TODAY_LABEL_AM : TODAY_LABEL_PM;
-		const hh = h % 12 || 12;
-		return `${hh}:${Utilities.padTwoDigits(mm)} ${ap}`;
+		const hour = Math.floor(minutes / 60);
+		const minute = Math.round(minutes % 60);
+		const meridiem = hour < 12 ? TODAY_LABEL_AM : TODAY_LABEL_PM;
+		const hour12 = hour % 12 || 12;
+		return `${hour12}:${Utilities.padTwoDigits(minute)} ${meridiem}`;
 	}
 
 	/**
 	 * Formats an hour index as a short 12-hour label (e.g. "9 AM").
 	 *
-	 * @param h - The 0-based hour index (0–23).
+	 * @param hour - The 0-based hour index (0–23).
 	 * @returns A short hour label string.
 	 */
-	protected formatHourLabel(h: number): string {
-		const ap = h < 12 ? TODAY_LABEL_AM : TODAY_LABEL_PM;
-		const hh = h % 12 || 12;
-		return `${hh} ${ap}`;
+	protected formatHourLabel(hour: number): string {
+		const meridiem = hour < 12 ? TODAY_LABEL_AM : TODAY_LABEL_PM;
+		const hour12 = hour % 12 || 12;
+		return `${hour12} ${meridiem}`;
 	}
 
 	/**

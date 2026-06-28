@@ -138,10 +138,13 @@
 				<span
 					class="orbital-panel-header-badge"
 					[style.color]="openReminderCount > 0 ? '#d53369' : '#22c55e'">
-					{{ openReminderCount }} open
+					{{ openReminderCount }} {{ ORBITAL_PANEL_BADGE_OPEN }}
 				</span>
 			</div>
 			<div class="orbital-panel-scroll">
+				@if (reminderRows.length === 0) {
+					<div class="orbital-panel-empty">{{ ORBITAL_PANEL_EMPTY_REMINDERS }}</div>
+				}
 				@for (reminder of reminderRows; track reminder.id) {
 					<div class="orbital-reminder-row">
 						<span class="orbital-row-dot" aria-hidden="true"></span>
@@ -211,7 +214,7 @@
 				<span
 					class="orbital-panel-header-badge"
 					[style.color]="openDebtCount > 0 ? '#d53369' : '#22c55e'">
-					{{ openDebtCount }} due
+					{{ openDebtCount }} {{ ORBITAL_PANEL_BADGE_DUE }}
 				</span>
 			</div>
 			<div class="orbital-panel-scroll">

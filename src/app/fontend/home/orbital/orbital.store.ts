@@ -1,10 +1,15 @@
 import { Injectable, OnDestroy, computed, signal } from '@angular/core';
 import { OrbitalAgendaItem, OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
 import {
+	APP_LOCALE,
 	ORBITAL_GREETING_NIGHT,
 	ORBITAL_GREETING_MORNING,
 	ORBITAL_GREETING_AFTERNOON,
 	ORBITAL_GREETING_EVENING,
+	ORBITAL_LABEL_YEAR,
+	ORBITAL_LABEL_MONTH,
+	ORBITAL_LABEL_WEEK,
+	ORBITAL_LABEL_DAY,
 } from '../../../common/locale/locale-strings';
 
 @Injectable()
@@ -19,7 +24,7 @@ export class OrbitalStore implements OnDestroy {
 	 */
 	readonly now = this._now.asReadonly();
 
-	////////////////////// Below are clock computed strings //////////////////////
+	// ── Clock computed strings ────────────────────────────────────────────────
 
 	/**
 	 * Gets the current time formatted as HH:MM.
@@ -60,10 +65,10 @@ export class OrbitalStore implements OnDestroy {
 	 * @returns A locale-formatted date string such as "Monday, June 6".
 	 */
 	readonly dateLong = computed(() =>
-		this.now().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+		this.now().toLocaleDateString(APP_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' })
 	);
 
-	////////////////////// Below are progress ring computed values ////////////////
+	// ── Progress ring computed values ────────────────────────────────────────
 
 	/**
 	 * Gets the current progress percentage for each life-clock ring (year, month, week, day).
@@ -83,28 +88,28 @@ export class OrbitalStore implements OnDestroy {
 		return [
 			{
 				key: 'year',
-				label: 'Year',
+				label: ORBITAL_LABEL_YEAR,
 				percentage: Math.round((dayOfYear / daysInYear) * 100),
 				gradientStart: '#38bdf8',
 				gradientEnd: '#818cf8'
 			},
 			{
 				key: 'month',
-				label: 'Month',
+				label: ORBITAL_LABEL_MONTH,
 				percentage: Math.round((now.getDate() / daysInMonth) * 100),
 				gradientStart: '#f97316',
 				gradientEnd: '#fbbf24'
 			},
 			{
 				key: 'week',
-				label: 'Week',
+				label: ORBITAL_LABEL_WEEK,
 				percentage: Math.round((dayOfWeek / 7) * 100),
 				gradientStart: '#22c55e',
 				gradientEnd: '#059669'
 			},
 			{
 				key: 'day',
-				label: 'Day',
+				label: ORBITAL_LABEL_DAY,
 				percentage: Math.round(dayPercentage),
 				gradientStart: '#a78bfa',
 				gradientEnd: '#ec4899'
@@ -112,7 +117,7 @@ export class OrbitalStore implements OnDestroy {
 		];
 	});
 
-	////////////////////// Below are week strip signals //////////////////////////
+	// ── Week strip signals ────────────────────────────────────────────────────
 
 	private readonly _weekData = signal<OrbitalWeekDay[]>([]);
 	private readonly _agendaData = signal<Record<number, OrbitalAgendaItem[]>>({});
@@ -181,7 +186,7 @@ export class OrbitalStore implements OnDestroy {
 	readonly selectedDateLong = computed(() => {
 		const day = this._weekData()[this.selectedDayIndex()];
 		if (!day) return '';
-		return day.fullDate.toLocaleDateString('en-US', {
+		return day.fullDate.toLocaleDateString(APP_LOCALE, {
 			weekday: 'long',
 			month: 'short',
 			day: 'numeric'

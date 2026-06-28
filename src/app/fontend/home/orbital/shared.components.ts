@@ -32,7 +32,7 @@ import {
 	HOME_WEEK_AGENDA_DUE_HEADER_COLOR,
 	HOME_WEEK_AGENDA_GRADIENT_TODAY
 } from '../../../common/constants';
-import { HOME_WEEK_AGENDA_EMPTY_TEXT } from '../../../common/locale/locale-strings';
+import { HOME_WEEK_AGENDA_EMPTY_TEXT, ORBITAL_WEEK_AGENDA_DUE_HEADER } from '../../../common/locale/locale-strings';
 import { OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
 import { OrbitalStore } from './orbital.store';
 
@@ -52,7 +52,7 @@ export function hexToRgba(hex: string, alpha: number): string {
 	return `rgba(${red},${green},${blue},${alpha})`;
 }
 
-////////////////////// Below is Ring — single gradient SVG progress ring /////
+// ── Ring — single gradient SVG progress ring ─────────────────────────────
 
 @Component({
 	selector: 'ring',
@@ -146,7 +146,7 @@ export class Ring {
 	}
 }
 
-////////////////////// Below is Concentric — stacked rings per metric ////////
+// ── Concentric — stacked rings per metric ────────────────────────────────
 
 interface PlacedMetric extends OrbitalProgressMetric {
 	tipX: number;
@@ -248,12 +248,15 @@ interface PlacedMetric extends OrbitalProgressMetric {
 				display: inline-flex;
 				align-items: center;
 				gap: 4px;
-				padding: 3px 8px;
+				height: 26px;
+				overflow: hidden;
+				padding: 0 8px;
 				border-radius: 9999px;
 				background: rgba(255, 255, 255, 0.97);
 				box-shadow: 0 2px 9px rgba(0, 0, 0, 0.18);
 				font-size: 13px;
 				font-weight: 800;
+				line-height: 1;
 				white-space: nowrap;
 				color: #2a1019;
 				letter-spacing: 0.3px;
@@ -371,7 +374,7 @@ export class Concentric implements OnChanges {
 	}
 }
 
-////////////////////// Below is WeekAgenda — day strip and agenda list ///////
+// ── WeekAgenda — day strip and agenda list ───────────────────────────────
 
 @Component({
 	selector: 'week-agenda',
@@ -396,7 +399,7 @@ export class Concentric implements OnChanges {
 			}
 		</div>
 		<div class="week-agenda-due">
-			<span class="week-agenda-due-header" [style.color]="HOME_WEEK_AGENDA_DUE_HEADER_COLOR">Due</span>
+			<span class="week-agenda-due-header" [style.color]="HOME_WEEK_AGENDA_DUE_HEADER_COLOR">{{ ORBITAL_WEEK_AGENDA_DUE_HEADER }}</span>
 			<span class="week-agenda-due-date" [style.color]="getSubtitleColor()">{{
 				d.selectedDateLong()
 			}}</span>
@@ -531,6 +534,7 @@ export class WeekAgenda {
 
 	protected readonly HOME_WEEK_AGENDA_DUE_HEADER_COLOR = HOME_WEEK_AGENDA_DUE_HEADER_COLOR;
 	protected readonly HOME_WEEK_AGENDA_EMPTY_TEXT = HOME_WEEK_AGENDA_EMPTY_TEXT;
+	protected readonly ORBITAL_WEEK_AGENDA_DUE_HEADER = ORBITAL_WEEK_AGENDA_DUE_HEADER;
 
 	@Input() dark = false;
 

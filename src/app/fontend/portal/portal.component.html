@@ -15,7 +15,7 @@
 		</div>
 
 		<!-- ── Date Calculator ───────────────────────────────────────── -->
-		@if (utilities.getIsUserAlive()) {
+		@if (isAdmin) {
 			<div class="date-calculator-section">
 				<div class="table-wrapper">
 					<div class="header-wrapper" style="cursor: pointer" (click)="toggleDateCalculator()">

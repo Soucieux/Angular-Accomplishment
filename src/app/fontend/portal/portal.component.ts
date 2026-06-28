@@ -211,26 +211,28 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				setTimeout(() => this.openMultiLinkDialog(), 0);
 			}
 
-			////////////////////// Below are subscriptions started on init //////////
+			// ── Subscriptions started on init ────────────────────────────────────
 			this.currentDay = new Date().getDate();
-			const dateCalculatorObservable = this.databaseService.getDateCalculatorTableDetails();
-			this.dateCalculatorSub = dateCalculatorObservable.subscribe(async (rows) => {
-				// Need deep copy here so that we are not copying references
-				this.originalDateCalculatorRows = structuredClone(rows);
-				// Identify rows by content — CloudBase watch() does not guarantee insertion order.
-				this.updatedDateCalculatorRows = structuredClone(rows).filter((row: any) => 'first' in row);
-				this.isNextMonth = rows.find((row: any) => 'isNextMonth' in row)?.isNextMonth ?? false;
-				this.dateCalculatorLoading = false;
-				if (!this.chargedCellsInitialized) {
-					await this.updateChargedCells();
-					this.chargedCellsInitialized = true;
-				}
-				this.refreshConfirmedCount();
-				// markForCheck: async callback runs outside Angular's OnPush zone
-				this.cdr.markForCheck();
-			});
+			if (this.isAdmin) {
+				const dateCalculatorObservable = this.databaseService.getDateCalculatorTableDetails();
+				this.dateCalculatorSub = dateCalculatorObservable.subscribe(async (rows) => {
+					// Need deep copy here so that we are not copying references
+					this.originalDateCalculatorRows = structuredClone(rows);
+					// Identify rows by content — CloudBase watch() does not guarantee insertion order.
+					this.updatedDateCalculatorRows = structuredClone(rows).filter((row: any) => 'first' in row);
+					this.isNextMonth = rows.find((row: any) => 'isNextMonth' in row)?.isNextMonth ?? false;
+					this.dateCalculatorLoading = false;
+					if (!this.chargedCellsInitialized) {
+						await this.updateChargedCells();
+						this.chargedCellsInitialized = true;
+					}
+					this.refreshConfirmedCount();
+					// markForCheck: async callback runs outside Angular's OnPush zone
+					this.cdr.markForCheck();
+				});
+			}
 
-			////////////////////// Below are links and categories subscriptions /////
+			// ── Links and categories subscriptions ───────────────────────────────
 			this.linksSub = this.databaseService.getUsefulLinks().subscribe({
 				next: (data) => {
 					this.links = data as PortalLink[];
@@ -291,7 +293,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
-	////////////////////// Below are Date Calculator interaction handlers //////////////////
+	// ── Date Calculator interaction handlers ─────────────────────────────────
 
 	/**
 	 * Recomputes and caches the count of date calculator cells marked as charged.
@@ -627,7 +629,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		}
 	}
 
-	////////////////////// Below are shared utility methods //////////////////////////////
+	// ── Shared utility methods ────────────────────────────────────────────────
 
 	/**
 	 * Shows the save-confirmation indicator and hides it after one second.
@@ -651,7 +653,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		}, 1000);
 	}
 
-	////////////////////// Below are links handlers ////////////////////////////////////
+	// ── Links handlers ────────────────────────────────────────────────────────
 
 	/**
 	 * Marks the link as having a failed favicon so the initial-letter fallback is displayed.
@@ -937,6 +939,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private handleCategorySave(data: NewCategoryData, existing: PortalCategory | null): void {
 		this.openBlockDialog(async () => {
 			try {
+				// Update the name in-place when editing; append at end of ordered list when adding
 				if (existing) {
 					await this.databaseService.updateLinkCategory(
 						existing._id,
@@ -954,6 +957,8 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_CATEGORY_ADDED);
 				}
 			} catch (error) {
+				/* SessionExpiredError routes to the retry dialog; all other failures show a toast
+				   so the user can retry without re-entering data. */
 				if (error instanceof SessionExpiredError) {
 					this.dialogService.handleError(this.dialogComponentContainer, error);
 				} else {
@@ -1029,10 +1034,13 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param category - The category document to delete.
 	 */
 	private openDeleteCategoryDialog(category: PortalCategory): void {
+		/* Called after the edit dialog closes — opening a second dialog while the first is still
+		   mounted causes z-index conflicts, so the confirm dialog must open in a new stack frame. */
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_CONFIRM,
 			() => {
+				// Delete the category; markForCheck is needed because the list updates via push reference
 				this.databaseService
 					.removeLinkCategory(category._id, category.name)
 					.then(() => {

@@ -197,9 +197,9 @@
 }
 
 /* ─────────────────────────────────────────
-   Responsive ≤ 580 px (mobile)
+   Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
-@media (max-width: 580px) {
+@media (max-width: 940px) {
 	::ng-deep .add-dialog {
 		min-width: 100% !important;
 		min-height: 100dvh !important;

@@ -62,6 +62,11 @@ import { MOVIE_GENRES } from '../../../fontend/entertainment/entertainment.model
 })
 export class AddDialogComponent implements OnInit, OnDestroy {
 	private readonly className = 'AddDialogComponent';
+	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
+	private dialogComponentContainer!: ViewContainerRef;
+	@ViewChild('addMovieForm') private addMovieForm!: NgForm;
+	@Output() closed$ = new EventEmitter<void>();
 	protected readonly ENT_DIALOG_TITLE_ADD_MOVIE = ENT_DIALOG_TITLE_ADD_MOVIE;
 	protected readonly ADD_MOVIE_SUBTITLE = ADD_MOVIE_SUBTITLE;
 	protected readonly ADD_MOVIE_LABEL_GENRE = ADD_MOVIE_LABEL_GENRE;
@@ -75,11 +80,6 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	protected readonly ADD_MOVIE_BTN_SEARCH = ADD_MOVIE_BTN_SEARCH;
 	protected readonly ADD_MOVIE_BTN_SUBMIT = ADD_MOVIE_BTN_SUBMIT;
 	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
-	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
-	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
-	private dialogComponentContainer!: ViewContainerRef;
-	@ViewChild('addMovieForm') private addMovieForm!: NgForm;
-	@Output() closed$ = new EventEmitter<void>();
 	private submitCallback?: (movie: MovieItemVO) => void;
 	private searchCallback?: (movie: MovieItemVO) => Promise<Blob | null>;
 	private movieItemVO: MovieItemVO = new MovieItemVO();
@@ -152,14 +152,14 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 			const movieImage = await this.searchCallback?.(this.movieItemVO);
 			this.movieImageUrl = movieImage ? URL.createObjectURL(movieImage) : null;
 			this.canSubmit = true;
-		} catch (error) {
+		} catch (error: unknown) {
 			// Step 3: Surface domain errors inline; unknown errors go to the unexpected-error dialog
 			/* Each error type maps to a specific user-facing message;
 			   the dialog is shown in-place (not thrown) because this is a search flow. */
 			if (error instanceof MovieIdNotFoundError || error instanceof MovieAlreadyExistsError) {
 				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, error.message);
 			} else {
-				LOG.error(this.className, ENT_MSG_ADD_DIALOG_SEARCH_FAILED, error as Error);
+				LOG.error(this.className, ENT_MSG_ADD_DIALOG_SEARCH_FAILED, error instanceof Error ? error : new Error(String(error)));
 				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		} finally {

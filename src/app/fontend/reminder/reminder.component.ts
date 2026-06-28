@@ -278,7 +278,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Gets the user id of the current item.
 	 *
 	 * @param entryKey - The CloudBase document key identifying the entry.
-	 * @returns user open Id
+	 * @returns The owner's CloudBase open id, or an empty string when not found.
 	 */
 	private getOpenId(entryKey: string): string {
 		return this.items.find((item) => item.key === entryKey)?._openid ?? '';
@@ -512,7 +512,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected get popoverFilterTags(): string[] {
 		const ownCustom = this.tagEditSession?.item?.tag;
 		if (!ownCustom || this.isKnownCategory(ownCustom)) return this.filterBarTags;
-		return this.filterBarTags.filter((t) => t !== ownCustom);
+		return this.filterBarTags.filter((tag) => tag !== ownCustom);
 	}
 
 	/**
@@ -1151,7 +1151,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns True when `tagText` collides with an existing tag other than `currentTag`.
 	 */
 	private isTagDuplicate(tagText: string, currentTag: string): boolean {
-		const matchesExisting = this.filterBarTags.some((t) => this.categoryDisplayLabel(t) === tagText);
+		const matchesExisting = this.filterBarTags.some((tag) => this.categoryDisplayLabel(tag) === tagText);
 		const isOwnTag = this.categoryDisplayLabel(currentTag) === tagText;
 		return matchesExisting && !isOwnTag;
 	}

@@ -34,7 +34,7 @@
 | **Debt Sonata** | Debt tracking canvas with full payment history.<br>- **Card-based ledger** supporting CNY and CAD currencies<br>- Preset and custom **payment chips** with per-card progress bar<br>- Paid-off ribbon state and coral card styling<br>- Summary card with per-currency totals<br>- Full payment history timeline per entry | Active |
 | **Resonance** | Personal quote vault.<br>- Author attribution and timestamps<br>- **Anonymous browsing** support for public quotes<br>- Ownership-based edit and delete permissions | Active |
 | **Recipe** | Personal cookbook with per-category colour theming.<br>- List, detail, and editor views<br>- **Ingredient groups** with type badges and bilingual name support *(Chinese + English)*<br>- Live **servings scaler** and step-by-step instruction view<br>- Category colour themes — *rose · green · purple · amber · pink*<br>- Drag-to-reorder steps | Active |
-| **Patch Notes** | Internal development log with two views.<br>- *Patch Notes* — add, edit, and delete entries per component; bug flag per entry; status filter (Active / Resolved); paginated with correct rowspan recalculation after date sorting<br>- *Release Notes* — versioned release cards with section headings, badge chips, and summaries | Active |
+| **Patch Notes** | Internal development log with two views.<br>- *Patch Notes* — add, edit, and delete entries per component; bug flag per entry; status filter (Active / Resolved); paginated with correct rowspan recalculation after date sorting<br>- **Activity heatmap** popover on the stats strip — monthly entry counts across years with intensity bands and locale-aware month labels<br>- *Release Notes* — versioned release cards with section headings, badge chips, and summaries | Active |
 | **Account** | Personal account management hub with navy sky theme.<br>- Identity card — username editing and email display with verified badge<br>- Password change with strength meter and visibility toggle<br>- **Second Brain stats** — live counts for movies, reminders, debts, and recipes<br>- Milestone timeline with connector lines and colour-coded dates<br>- Danger zone card for account deletion with confirmation guard | Active |
 | **Login** | Authentication entry point.<br>- **Google Sign-In** and email / password login<br>- Sign-up flow for new user registration<br>- Route guards protecting all authenticated pages<br>- Post-login redirect to last-visited route<br>- Sidebar presence row: avatar, online status, and account menu popover | Stable |
 | **About** | Professional history timeline.<br>- Interactive milestone entries<br>- **Animated gradient background** | Stable |
@@ -89,6 +89,7 @@
 
 - Regular security dependency bumps via Dependabot across core packages and Firebase Functions throughout the project lifetime.
 - Gitignore and build configuration maintained to prevent sensitive files and large binaries from being committed.
+- Project-wide coding-style pass — descriptive naming, typed error classes, access modifiers, `940px` mobile breakpoint, standardised save-spinners, and dialog convention alignment across all pages.
 
 ---
 
@@ -112,7 +113,7 @@ src/app/
 │   ├── locale/                   # Locale strings — locale.en.ts (EN), locale.zh.ts (ZH), locale-strings.ts (active-locale barrel)
 │   ├── app.logs.ts               # Logging helpers
 │   ├── blocked-card/             # Reusable full-screen blocked card (access denied, mobile gate)
-│   ├── error/                    # Shared error UI components
+│   ├── error/                    # Shared typed error classes (instanceof-routable)
 │   ├── timeout/                  # Loading timeout service and tests
 │   └── utilities/                # General utility functions and tests
 │

@@ -116,6 +116,7 @@ import {
 	IngredientType,
 	MASTER_TYPE_TABS,
 	RECIPE_CATEGORIES,
+	RECIPE_CATEGORY_KEY_ALL,
 	RECIPE_EDITOR_CATEGORIES,
 	RECIPE_EDITOR_DEFAULT_TYPES,
 	Recipe,
@@ -148,7 +149,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected readonly RECIPE_VIEW_LIST = RECIPE_VIEW_LIST;
 	protected readonly RECIPE_VIEW_DETAIL = RECIPE_VIEW_DETAIL;
 	protected readonly RECIPE_VIEW_ADD = RECIPE_VIEW_ADD;
-	protected readonly LABEL_ALL = LABEL_ALL;
+	protected readonly RECIPE_CATEGORY_KEY_ALL = RECIPE_CATEGORY_KEY_ALL;
 	protected readonly RECIPE_PLACEHOLDER_CATEGORY = RECIPE_PLACEHOLDER_CATEGORY;
 	protected readonly MASTER_TYPE_TABS = MASTER_TYPE_TABS;
 	protected readonly RECIPE_CATEGORIES = RECIPE_CATEGORIES;
@@ -197,7 +198,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected currentView: string = RECIPE_VIEW_LIST;
 	protected currentPage = 0;
 	protected searchQuery = '';
-	protected selectedCategory: string = LABEL_ALL;
+	protected selectedCategory: string = RECIPE_CATEGORY_KEY_ALL;
 
 	protected selectedRecipe: Recipe | null = null;
 	protected servings = 2;
@@ -388,7 +389,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		const query = this.searchQuery.trim().toLowerCase();
 		return this.recipes.filter((recipe) => {
 			const matchesCategory =
-				this.selectedCategory === LABEL_ALL || recipe.category === this.selectedCategory;
+				this.selectedCategory === RECIPE_CATEGORY_KEY_ALL || recipe.category === this.selectedCategory;
 			const matchesQuery = !query || recipe.name.toLowerCase().includes(query);
 			return matchesCategory && matchesQuery;
 		});
@@ -418,7 +419,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	/**
 	 * Sets the active category filter for the recipe list and resets to the first page.
 	 *
-	 * @param cat - The category string to activate (use {@link LABEL_ALL} to show all).
+	 * @param cat - The category string to activate (use {@link RECIPE_CATEGORY_KEY_ALL} to show all).
 	 */
 	protected selectCategory(cat: string): void {
 		this.selectedCategory = cat;
@@ -557,7 +558,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		return group.items.filter((item) => !item.hidden);
 	}
 
-	////////////////////// Below are editor type-tab dialog methods ///////////////////////
+	// ── Editor type-tab dialog methods ───────────────────────────────────────
 
 	/**
 	 * The subset of ingredient type tabs that are currently enabled in the editor,
@@ -591,7 +592,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		);
 	}
 
-	////////////////////// Below are editor add and edit view methods ////////////////////
+	// ── Editor add and edit view methods ─────────────────────────────────────
 
 	/**
 	 * Opens the editor in create mode, resetting all editor fields to their
@@ -1204,7 +1205,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		return tokens.length > 0 ? tokens : [{ kind: 'text', text }];
 	}
 
-	////////////////////// Below are drag-to-reorder step methods ////////////////////////
+	// ── Drag-to-reorder step methods ─────────────────────────────────────────
 
 	/**
 	 * Handles the dragstart event on the step drag handle. Sets the full card as

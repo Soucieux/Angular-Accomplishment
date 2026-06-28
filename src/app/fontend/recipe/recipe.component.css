@@ -271,7 +271,6 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	line-height: 1;
 	transition: all 0.2s ease;
 }
 .chip:hover {
@@ -428,6 +427,10 @@
 	padding: 4px 10px;
 	border-radius: 999px;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.category-tag.cf {
+	font-size: 14px;
+	letter-spacing: 5px;
 }
 .example-badge {
 	position: absolute;

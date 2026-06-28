@@ -118,12 +118,21 @@ export const MASTER_TYPE_TABS: TypeTab[] = [
 	{ id: 'condiment', emoji: '🥫', label: 'Condiment' }
 ];
 
+/** The internal key for the "show all categories" filter chip. */
+export const RECIPE_CATEGORY_KEY_ALL = 'All';
+
 /**
  * All category options used by the list-view filter chips (includes "All").
  * When adding a new category, append its value here and also to
  * RECIPE_EDITOR_CATEGORIES below.
  */
-export const RECIPE_CATEGORIES: string[] = ['All', 'Chinese', 'Western', 'Quick', 'Dessert'];
+export const RECIPE_CATEGORIES: string[] = [
+	RECIPE_CATEGORY_KEY_ALL,
+	'Chinese',
+	'Western',
+	'Quick',
+	'Dessert'
+];
 
 /**
  * Category options available in the recipe editor dropdown (excludes "All").

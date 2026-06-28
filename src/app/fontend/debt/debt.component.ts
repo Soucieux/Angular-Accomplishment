@@ -77,7 +77,7 @@ import {
 	DEBT_STAT_LABEL_PAYMENTS,
 	DEBT_HEADING_YOUR_DEBTS,
 	DEBT_HISTORY_EMPTY,
-	DEBT_MONTHS,
+	MONTH_NAMES_SHORT,
 	DEBT_CATEGORY_LABEL_CARD,
 	DEBT_CATEGORY_LABEL_FINANCING,
 	DEBT_CATEGORY_LABEL_MORTGAGE,
@@ -167,9 +167,9 @@ export class DebtComponent implements OnInit, OnDestroy {
 	private balanceBumpTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
-	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS.map((d) => ({
-		...d,
-		label: ({ card: DEBT_CATEGORY_LABEL_CARD, person: LABEL_PERSONAL, shopping: DEBT_CATEGORY_LABEL_FINANCING, home: DEBT_CATEGORY_LABEL_MORTGAGE } as Record<string, string>)[d.key] ?? d.label,
+	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS.map((categoryDef) => ({
+		...categoryDef,
+		label: ({ card: DEBT_CATEGORY_LABEL_CARD, person: LABEL_PERSONAL, shopping: DEBT_CATEGORY_LABEL_FINANCING, home: DEBT_CATEGORY_LABEL_MORTGAGE } as Record<string, string>)[categoryDef.key] ?? categoryDef.label,
 	}));
 
 	constructor(
@@ -487,7 +487,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 
 		// Filter out the selected entry from history
 		const remainingPayments: Record<number, PaymentEntry> = Object.fromEntries(
-			Object.entries(currentItem).filter(([k]) => Number(k) !== index)
+			Object.entries(currentItem).filter(([paymentKey]) => Number(paymentKey) !== index)
 		) as Record<number, PaymentEntry>;
 
 		// Step 2 : Persist removal via block dialog to prevent duplicate DB calls
@@ -1014,14 +1014,14 @@ export class DebtComponent implements OnInit, OnDestroy {
 		// Step 2: Derive paid amount and progress percentage per currency group
 		/* paidAmount is clamped to 0 to avoid a negative "paid" value when overpayments push debt below zero.
 		   pct is clamped to 100 so the progress bar never overflows its container. */
-		return Object.entries(groups).map(([code, g]) => {
-			const paidAmount = Math.max(0, g.original - g.owed);
-			const pct = g.original > 0 ? Math.min(100, Math.round((paidAmount / g.original) * 100)) : 0;
+		return Object.entries(groups).map(([code, group]) => {
+			const paidAmount = Math.max(0, group.original - group.owed);
+			const pct = group.original > 0 ? Math.min(100, Math.round((paidAmount / group.original) * 100)) : 0;
 			return {
 				code,
 				symbol: code === 'CNY' ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD,
-				owed: g.owed,
-				original: g.original,
+				owed: group.owed,
+				original: group.original,
 				paid: paidAmount,
 				pct
 			};
@@ -1054,8 +1054,8 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected get dueSoonCount(): number {
 		return (this.updatedDebtSonataItems ?? []).filter((item: any) => {
 			if (item.paid) return false;
-			const s = this.getDueStatus(item.date);
-			return s.soon && !s.overdue;
+			const status = this.getDueStatus(item.date);
+			return status.soon && !status.overdue;
 		}).length;
 	}
 
@@ -1077,7 +1077,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @returns The sum of all history entry counts.
 	 */
 	protected get totalPayments(): number {
-		return Object.values(this.paymentsData).reduce((sum, h) => sum + Object.keys(h).length, 0);
+		return Object.values(this.paymentsData).reduce((sum, history) => sum + Object.keys(history).length, 0);
 	}
 
 	/**
@@ -1124,7 +1124,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		   Append 'T00:00' to force local-midnight parsing; omitting the time token causes
 		   Date to interpret the string as UTC, shifting the displayed date by the local timezone offset. */
 		const due = new Date(dateStr + 'T00:00');
-		const m = DEBT_MONTHS[due.getMonth()];
+		const m = MONTH_NAMES_SHORT[due.getMonth()];
 		return `${m} ${due.getDate()}, ${due.getFullYear()}`;
 	}
 

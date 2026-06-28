@@ -66,8 +66,8 @@
 
 .save-spinner {
 	display: block;
-	width: 30px;
-	height: 30px;
+	width: 24px;
+	height: 24px;
 	border: 3px solid rgba(148, 163, 184, 0.3);
 	border-top-color: #94a3b8;
 	border-radius: 50%;
@@ -763,7 +763,7 @@
 	animation: none;
 }
 
-.footer-history-btn {
+.footer-history-button {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
@@ -778,7 +778,7 @@
 	cursor: pointer;
 	transition: color 150ms;
 }
-.footer-history-btn:hover {
+.footer-history-button:hover {
 	color: #0d9488 !important;
 }
 
@@ -1017,6 +1017,10 @@
 	}
 }
 
+.access-denied-wrapper {
+	height: calc(100dvh - 10px);
+}
+
 /* ─────────────────────────────────────────
    Responsive — ≤ 940px
 ───────────────────────────────────────── */
@@ -1067,8 +1071,4 @@
 	::ng-deep .due-date-picker .p-datepicker-input {
 		width: 100px;
 	}
-}
-
-.access-denied-wrapper {
-	height: calc(100dvh - 10px);
 }

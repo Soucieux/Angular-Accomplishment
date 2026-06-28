@@ -1113,15 +1113,11 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise that resolves when the update completes.
 	 */
 	public async updateUserStatsFields(fields: Record<string, any>): Promise<void> {
-		try {
-			const result = await this.database
-				.collection(DATABASE_STATISTICS)
-				.where(this.getUserStatsFilter())
-				.update(fields);
-			this.throwIfCloudbaseError(result);
-		} catch (error) {
-			LOG.error(this.className, 'Error while updating user stats fields', error as Error);
-		}
+		const result = await this.database
+			.collection(DATABASE_STATISTICS)
+			.where(this.getUserStatsFilter())
+			.update(fields);
+		this.throwIfCloudbaseError(result);
 	}
 
 	/**
@@ -1935,29 +1931,26 @@ export class CloudbaseService extends DatabaseService {
 	private async writeActivityLogEntry(activity: any): Promise<void> {
 		const timestamp = Utilities.getCurrentFormattedTime(true);
 		const entry = { ...activity, timestamp };
+		const userStatsFilter = this.getUserStatsFilter();
 		try {
-			/* Step 1: Fetch both documents in parallel — the shared stats doc (for the activity array)
-			   and the per-user stats doc (for the streak). Parallel fetch avoids two sequential round-trips. */
-			const [generalDoc, userStatsRes] = await Promise.all([
-				this.database.collection(DATABASE_STATISTICS).doc(this.statId).get(),
-				this.database.collection(DATABASE_STATISTICS).where(this.getUserStatsFilter()).get()
-			]);
+			// Step 1: Fetch the per-user stats doc — both the activity array and the streak live here.
+			const userStatsRes = await this.database
+				.collection(DATABASE_STATISTICS)
+				.where(userStatsFilter)
+				.get();
 
 			/* Step 2: Prepend the new entry and trim to the cap.
-			   CloudBase may return the array as an object (numeric keys) after update() merges it — hence
-			   the Object.values() fallback to re-hydrate a true array before slicing. */
-			const raw = generalDoc.data?.[0]?.[STATS_FIELD_RECENT_ACTIVITIES];
-			const existing: any[] = raw ? (Array.isArray(raw) ? raw : Object.values(raw)) : [];
-			// Prepend the new item and trim to the cap so CloudBase storage stays bounded.
+			   CloudBase may return the array as an object (numeric keys) after update() merges it —
+			   Utilities.toArray handles both forms. */
+			const userDoc = userStatsRes.data?.[0];
+			const raw = userDoc?.[STATS_FIELD_RECENT_ACTIVITIES];
+			const existing = Utilities.toArray(raw);
 			const updated = [entry, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
-			const result = await this.statisticsRef.update({ [STATS_FIELD_RECENT_ACTIVITIES]: updated });
-			this.throwIfCloudbaseError(result);
 
 			/* Step 3: Compute the new streak value.
 			   If the stored date is today, the streak is unchanged (multiple activities on the same day count once).
 			   If it was yesterday, the streak extends. Otherwise a break is detected and the streak resets to 1. */
 			const today = Utilities.formatDateForStorage(new Date());
-			const userDoc = userStatsRes.data?.[0];
 			const storedStreak = (userDoc?.[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
 			const storedDate = (userDoc?.[STATS_FIELD_ACTIVITY_STREAK_DATE] as string) ?? '';
 			let newStreak: number;
@@ -1969,15 +1962,12 @@ export class CloudbaseService extends DatabaseService {
 				newStreak = storedDate === Utilities.formatDateForStorage(yesterday) ? storedStreak + 1 : 1;
 			}
 
-			// Step 4: Persist the streak and check whether a streak milestone was just hit
-			this.database
-				.collection(DATABASE_STATISTICS)
-				.where(this.getUserStatsFilter())
-				.update({
-					[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
-					[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
-				})
-				.catch(() => {});
+			// Step 4: Persist the activity log and streak together in one round-trip.
+			await this.updateUserStatsFields({
+				[STATS_FIELD_RECENT_ACTIVITIES]: updated,
+				[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
+				[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
+			});
 			this.checkAndWriteCountMilestone(MILESTONE_DOMAIN_STREAK, newStreak, userDoc).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, 'Error while updating activity data', error as Error);

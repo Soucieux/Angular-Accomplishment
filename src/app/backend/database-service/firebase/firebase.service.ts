@@ -691,6 +691,22 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Writes user-scoped statistics fields to the statistics document.
+	 * Firebase uses a single document for all stats, so this writes to the same
+	 * ref as {@link updateStatisticsFields}.
+	 *
+	 * @param fields - Fields to merge into the statistics document.
+	 * @returns A promise that resolves when the update completes.
+	 */
+	public async updateUserStatsFields(fields: Record<string, any>): Promise<void> {
+		try {
+			await update(this.statisticsRef, fields);
+		} catch (error) {
+			LOG.error(this.className, 'Error while updating user stats fields', error as Error);
+		}
+	}
+
+	/**
 	 * Prepends a new entry to the array named recent activity in the statistics document
 	 * keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
 	 * Used for the unified recentActivities feed and any legacy per-source fields.
@@ -701,17 +717,11 @@ export class FirebaseService extends DatabaseService {
 		const timestamp = Utilities.getCurrentFormattedTime(true);
 		const entry = { ...activity, timestamp };
 		try {
-			await runTransaction(this.statisticsRef, (currentData) => {
-				currentData = currentData ?? {};
-				const existing: any[] = Array.isArray(currentData[STATS_FIELD_RECENT_ACTIVITIES])
-					? currentData[STATS_FIELD_RECENT_ACTIVITIES]
-					: [];
-				currentData[STATS_FIELD_RECENT_ACTIVITIES] = [entry, ...existing].slice(
-					0,
-					STATS_CAP_ACTIVITY_LOG
-				);
-				return currentData;
-			});
+			const snapshot = await get(this.statisticsRef);
+			const currentData = snapshot.val() ?? {};
+			const existing = Utilities.toArray(currentData[STATS_FIELD_RECENT_ACTIVITIES]);
+			const updated = [entry, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
+			await this.updateUserStatsFields({ [STATS_FIELD_RECENT_ACTIVITIES]: updated });
 		} catch (error) {
 			LOG.error(this.className, 'Error while appending activity log', error as Error);
 		}

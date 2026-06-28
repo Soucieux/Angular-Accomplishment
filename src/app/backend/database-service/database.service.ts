@@ -310,6 +310,16 @@ export abstract class DatabaseService {
 	 */
 	public abstract updateStatisticsFields(fields: Record<string, any>): Promise<void>;
 
+	/**
+	 * Merges the given fields into the current user's per-user stats document.
+	 * Targets the document flagged with `isUserStats: true` that is owned by the current user —
+	 * distinct from the shared statistics document updated by {@link updateStatisticsFields}.
+	 *
+	 * @param fields - Fields to merge into the per-user stats document.
+	 * @returns A promise that resolves when the update completes.
+	 */
+	public abstract updateUserStatsFields(fields: Record<string, any>): Promise<void>;
+
 	// ── Removal methods ──────────────────────────────────────────────────────
 
 	/**

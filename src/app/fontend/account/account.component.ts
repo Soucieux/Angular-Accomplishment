@@ -96,7 +96,8 @@ import {
 	ACCOUNT_STRENGTH_WEAK,
 	ACCOUNT_STRENGTH_FAIR,
 	ACCOUNT_STRENGTH_GOOD,
-	ACCOUNT_STRENGTH_STRONG
+	ACCOUNT_STRENGTH_STRONG,
+	ACTIVE_LOCALE
 } from '../../common/locale/locale-strings';
 import {
 	AccountMilestone,
@@ -120,6 +121,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	private dialogComponentContainer!: ViewContainerRef;
 
 	// ── Constants re-exposed for template ────────────────────────────────────
+	protected readonly ACTIVE_LOCALE = ACTIVE_LOCALE;
 	protected readonly ACCOUNT_LABEL_PROFILE_TAGLINE = ACCOUNT_LABEL_PROFILE_TAGLINE;
 	protected readonly ACCOUNT_LABEL_MEMBER_SINCE = ACCOUNT_LABEL_MEMBER_SINCE;
 	protected readonly ACCOUNT_LABEL_STREAK_SUFFIX = ACCOUNT_LABEL_STREAK_SUFFIX;

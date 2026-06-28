@@ -6,7 +6,7 @@
 		</p-chip>
 
 		<!-- H1 -->
-		<h1 class="about-h1">A <span class="hl-pill">Mind Vault</span>, Kept In Public.</h1>
+		<h1 class="about-h1">A <span class="highlight-pill">Mind Vault</span>, Kept In Public.</h1>
 
 		<!-- Intro paragraph -->
 		<p class="about-intro">
@@ -51,37 +51,37 @@
 		</div>
 
 		<!-- Timeline -->
-		<div class="tl-rail">
+		<div class="timeline-rail">
 			<div class="rail-bg"></div>
 			<div class="rail-fill" [style.height]="fillHeight()"></div>
 
 			@for (item of TIMELINE; track item.date; let index = $index) {
 				<div
-					#tlEntry
-					class="tl-entry"
+					#timelineEntry
+					class="timeline-entry"
 					[class.is-visible]="visibleEntries.has(index)"
 					[style.transition-delay]="visibleEntries.has(index) ? entryDelay(index) : '0ms'"
 					(mouseenter)="setHoveredEntry(index)"
 					(mouseleave)="resetHoverState()">
 					<div
-						[class]="'tl-node ' + item.tag"
+						[class]="'timeline-node ' + item.tag"
 						[class.is-hovered]="hoveredIndex === index"
 						[style.background]="hoveredIndex === index ? item.color : null"
 						[style.border-color]="hoveredIndex === index ? item.color : null">
-						<span class="material-symbols-outlined tl-icon">{{ item.icon }}</span>
+						<span class="material-symbols-outlined timeline-icon">{{ item.icon }}</span>
 					</div>
-					<div [class]="'tl-card ' + item.tag" [class.is-hovered]="hoveredIndex === index">
-						<div class="tl-card-hd">
-							<h3 class="tl-title">
+					<div [class]="'timeline-card ' + item.tag" [class.is-hovered]="hoveredIndex === index">
+						<div class="timeline-card-header">
+							<h3 class="timeline-title">
 								{{ item.title
 								}}<span class="hide-on-narrow-or-mobile">
-									· <span class="tl-date">{{ item.date }}</span></span
+									· <span class="timeline-date">{{ item.date }}</span></span
 								>
 							</h3>
-							<p-tag [value]="item.tag" class="tl-tag" [rounded]="true" />
+							<p-tag [value]="item.tag" class="timeline-tag" [rounded]="true" />
 						</div>
-						<p class="tl-subheader">{{ item.subheader }}</p>
-						<p class="tl-body">{{ item.body }}</p>
+						<p class="timeline-subheader">{{ item.subheader }}</p>
+						<p class="timeline-body">{{ item.body }}</p>
 					</div>
 				</div>
 			}

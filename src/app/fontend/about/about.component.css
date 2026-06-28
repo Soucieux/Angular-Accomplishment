@@ -53,7 +53,7 @@ p-chip.about-chip {
 	color: rgba(255, 255, 255, 0.97);
 }
 
-.hl-pill {
+.highlight-pill {
 	display: inline-block;
 	background: rgba(156, 39, 176, 0.32);
 	color: #fff;
@@ -139,7 +139,7 @@ p-chip.about-chip {
 /* ─────────────────────────────────────────
    Timeline rail
 ───────────────────────────────────────── */
-.tl-rail {
+.timeline-rail {
 	position: relative;
 	padding-left: 72px;
 }
@@ -168,7 +168,7 @@ p-chip.about-chip {
 /* ─────────────────────────────────────────
    Timeline entry
 ───────────────────────────────────────── */
-.tl-entry {
+.timeline-entry {
 	position: relative;
 	padding-bottom: 28px;
 	opacity: 0;
@@ -178,13 +178,13 @@ p-chip.about-chip {
 		opacity 0.6s ease;
 }
 
-.tl-entry.is-visible {
+.timeline-entry.is-visible {
 	opacity: 1;
 	transform: translateY(0);
 }
 
 /* Node circle */
-.tl-node {
+.timeline-node {
 	position: absolute;
 	left: -64px;
 	top: 6px;
@@ -207,16 +207,16 @@ p-chip.about-chip {
 		border-color 0.3s;
 }
 
-.tl-node.is-hovered {
+.timeline-node.is-hovered {
 	transform: scale(1.08);
 }
 
-.tl-icon {
+.timeline-icon {
 	font-size: 22px;
 }
 
 /* Glass card */
-.tl-card {
+.timeline-card {
 	background: rgba(255, 255, 255, 0.16);
 	backdrop-filter: blur(18px);
 	-webkit-backdrop-filter: blur(18px);
@@ -230,13 +230,13 @@ p-chip.about-chip {
 		background 0.3s;
 }
 
-.tl-card.is-hovered {
+.timeline-card.is-hovered {
 	transform: translateX(6px);
 	background: rgba(255, 255, 255, 0.2);
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
-.tl-card-hd {
+.timeline-card-header {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
@@ -244,14 +244,14 @@ p-chip.about-chip {
 	margin-bottom: 6px;
 }
 
-.tl-date {
+.timeline-date {
 	font-size: 20px;
 	font-weight: 400;
 	color: rgba(255, 255, 255, 0.65);
 }
 
 /* p-tag override */
-::ng-deep p-tag.tl-tag .p-tag {
+::ng-deep p-tag.timeline-tag .p-tag {
 	font-size: 10px;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
@@ -263,7 +263,7 @@ p-chip.about-chip {
 	flex-shrink: 0;
 }
 
-.tl-title {
+.timeline-title {
 	font-size: 22px;
 	font-weight: 600;
 	letter-spacing: -0.01em;
@@ -271,13 +271,13 @@ p-chip.about-chip {
 	color: rgba(255, 255, 255, 0.97);
 }
 
-.tl-subheader {
+.timeline-subheader {
 	font-size: 15px;
 	color: rgba(255, 255, 255, 0.65);
 	margin: 0 0 8px;
 }
 
-.tl-body {
+.timeline-body {
 	font-size: 15px;
 	line-height: 1.65;
 	color: rgba(255, 255, 255, 0.78);
@@ -289,8 +289,8 @@ p-chip.about-chip {
 /* ─────────────────────────────────────────
    Tag-colour tints — nodes and cards at rest
 ───────────────────────────────────────── */
-.tl-node.work,
-.tl-node.career {
+.timeline-node.work,
+.timeline-node.career {
 	background: rgba(156, 39, 176, 0.32);
 	border-color: rgba(156, 39, 176, 0.75);
 	box-shadow:
@@ -298,7 +298,7 @@ p-chip.about-chip {
 		0 0 10px rgba(156, 39, 176, 0.2);
 }
 
-.tl-node.education {
+.timeline-node.education {
 	background: rgba(255, 152, 0, 0.28);
 	border-color: rgba(255, 152, 0, 0.7);
 	box-shadow:
@@ -306,12 +306,12 @@ p-chip.about-chip {
 		0 0 10px rgba(255, 152, 0, 0.18);
 }
 
-.tl-card.work,
-.tl-card.career {
+.timeline-card.work,
+.timeline-card.career {
 	border-left: 3px solid rgba(156, 39, 176, 0.75);
 }
 
-.tl-card.education {
+.timeline-card.education {
 	border-left: 3px solid rgba(255, 152, 0, 0.72);
 }
 
@@ -327,7 +327,7 @@ p-chip.about-chip {
 		font-size: 28px;
 	}
 
-	.hl-pill {
+	.highlight-pill {
 		padding: 5px 12px;
 		border-radius: 14px;
 	}
@@ -356,7 +356,7 @@ p-chip.about-chip {
 		font-size: 20px;
 	}
 
-	.tl-rail {
+	.timeline-rail {
 		padding-left: 52px;
 	}
 
@@ -365,29 +365,29 @@ p-chip.about-chip {
 		left: 23px;
 	}
 
-	.tl-node {
+	.timeline-node {
 		width: 36px;
 		height: 36px;
 		left: -46px;
 	}
 
-	.tl-icon {
+	.timeline-icon {
 		font-size: 18px;
 	}
 
-	.tl-date {
+	.timeline-date {
 		font-size: 14px;
 	}
 
-	.tl-title {
+	.timeline-title {
 		font-size: 19px;
 	}
 
-	.tl-subheader {
+	.timeline-subheader {
 		font-size: 14px;
 	}
 
-	.tl-body {
+	.timeline-body {
 		font-size: 13px;
 	}
 }

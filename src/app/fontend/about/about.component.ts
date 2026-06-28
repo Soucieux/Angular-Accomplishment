@@ -26,7 +26,7 @@ import { TIMELINE } from './about.model';
 export class AboutComponent implements AfterViewInit, OnDestroy {
 	private readonly className = 'AboutComponent';
 
-	@ViewChildren('tlEntry') private entryRefs!: QueryList<ElementRef<HTMLElement>>;
+	@ViewChildren('timelineEntry') private entryRefs!: QueryList<ElementRef<HTMLElement>>;
 
 	protected readonly TIMELINE = TIMELINE;
 

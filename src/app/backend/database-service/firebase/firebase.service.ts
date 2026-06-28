@@ -25,9 +25,24 @@ import {
 	ACTIVITY_TYPE_GENRE_UPDATED,
 	ACTIVITY_TYPE_FAVOURITE_UPDATED,
 	DATABASE_USER_PREFERENCES,
-	STATS_FIELD_TAURI_NOTIF_ENABLED
+	STATS_FIELD_TAURI_NOTIF_ENABLED,
+	STATS_FIELD_MINIMIZE_ON_CLOSE,
+	STATS_FIELD_LOCALE,
+	LOCALE_KEY_EN,
+	LOCALE_KEY_ZH,
+	ENT_LOG_SPAN_CLASS_RATE_DOWN,
+	ENT_LOG_SPAN_CLASS_RATE_UP
 } from '../../../common/constants';
-import { REMINDER_TABLE_MESSAGES } from '../../../common/locale/locale-strings';
+import {
+	REMINDER_TABLE_MESSAGES,
+	ENT_LOG_RATE_PRE,
+	ENT_LOG_RATE_IS,
+	ENT_LOG_RATE_BY,
+	ENT_LOG_RATE_TO,
+	ENT_LOG_RATE_SAME,
+	ENT_LOG_RATE_UP,
+	ENT_LOG_RATE_DOWN
+} from '../../../common/locale/locale-strings';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Inject, Injectable } from '@angular/core';
 import {
@@ -76,7 +91,7 @@ export class FirebaseService extends DatabaseService {
 		this.statisticsRef = dbRef(this.db, 'statistics');
 	}
 
-	////////////////////// Below are Retrieval methods for database records ////////////////
+	// ── Retrieval methods ────────────────────────────────────────────────────
 
 	/**
 	 * Gets the statistics from Firebase as a reactive observable.
@@ -347,7 +362,7 @@ export class FirebaseService extends DatabaseService {
 		});
 	}
 
-	////////////////////// Below are Update methods for database records /////////////////////
+	// ── Update methods ───────────────────────────────────────────────────────
 
 	/**
 	 * Updates the date calculator table in the Firebase Realtime Database.
@@ -438,15 +453,15 @@ export class FirebaseService extends DatabaseService {
 				}).catch(() => {});
 				const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
 				this.searchStreamService.addSearchLog(
-					`The rate of ${movieItemVO.getMovieName()} is <span ${
-						rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
-					}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
+					`${ENT_LOG_RATE_PRE}${movieItemVO.getMovieName()}${ENT_LOG_RATE_IS}<span ${
+						rateDifference > 0 ? ENT_LOG_SPAN_CLASS_RATE_UP : ENT_LOG_SPAN_CLASS_RATE_DOWN
+					}>${rateDifference > 0 ? ENT_LOG_RATE_UP : ENT_LOG_RATE_DOWN}${ENT_LOG_RATE_BY}${Math.abs(
 						rateDifference
-					)}</span> to ${movieItemVO.getMovieRate()}`
+					)}${ENT_LOG_RATE_TO}${movieItemVO.getMovieRate()}`
 				);
 			} else {
 				this.searchStreamService.addSearchLog(
-					`The rate of ${movieItemVO.getMovieName()} stays the same`
+					`${ENT_LOG_RATE_PRE}${movieItemVO.getMovieName()}${ENT_LOG_RATE_SAME}`
 				);
 			}
 		} catch (error) {
@@ -727,7 +742,7 @@ export class FirebaseService extends DatabaseService {
 		}
 	}
 
-	////////////////////// Below are Removal methods for database records ////////////////
+	// ── Removal methods ──────────────────────────────────────────────────────
 
 	/**
 	 * Not implemented for Firebase — resolves immediately.
@@ -928,9 +943,66 @@ export class FirebaseService extends DatabaseService {
 	public async setTauriNotifEnabled(enabled: boolean): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return;
-		await set(
+		/* update() merges into the node — set() would overwrite the entire preferences object,
+		   erasing minimize-on-close and locale fields stored at the same path. */
+		await update(
 			dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`),
 			{ [STATS_FIELD_TAURI_NOTIF_ENABLED]: enabled }
+		);
+	}
+
+	/**
+	 * Gets whether the desktop app minimizes to Dock on close for the current user.
+	 *
+	 * @returns True when the minimize-on-close flag is set in the user's preferences.
+	 */
+	public async getMinimizeOnClose(): Promise<boolean> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return true;
+		const snap = await get(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`));
+		return snap.val()?.[STATS_FIELD_MINIMIZE_ON_CLOSE] === true;
+	}
+
+	/**
+	 * Persists the minimize-on-close preference for the current user
+	 * by updating the flag in the user's preferences node.
+	 *
+	 * @param enabled - The desired enabled state.
+	 */
+	public async setMinimizeOnClose(enabled: boolean): Promise<void> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return;
+		await update(
+			dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`),
+			{ [STATS_FIELD_MINIMIZE_ON_CLOSE]: enabled }
+		);
+	}
+
+	/**
+	 * Gets the display locale preference for the current user from the user preferences node.
+	 *
+	 * @returns The stored locale ('en' or 'zh'), or null when not yet set.
+	 */
+	public async getLocale(): Promise<'en' | 'zh' | null> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return null;
+		const snap = await get(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`));
+		const value = snap.val()?.[STATS_FIELD_LOCALE];
+		return value === LOCALE_KEY_EN || value === LOCALE_KEY_ZH ? value : null;
+	}
+
+	/**
+	 * Persists the display locale preference for the current user
+	 * by updating the field in the user's preferences node.
+	 *
+	 * @param locale - The locale key to store: 'en' or 'zh'.
+	 */
+	public async setLocale(locale: 'en' | 'zh'): Promise<void> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return;
+		await update(
+			dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`),
+			{ [STATS_FIELD_LOCALE]: locale }
 		);
 	}
 
@@ -956,7 +1028,7 @@ export class FirebaseService extends DatabaseService {
 			});
 	}
 
-	////////////////////// Below are Add methods for database records /////////////////////
+	// ── Add methods ──────────────────────────────────────────────────────────
 
 	/**
 	 * Not implemented for Firebase — resolves immediately.
@@ -1193,7 +1265,7 @@ export class FirebaseService extends DatabaseService {
 			});
 	}
 
-	////////////////////// Below are Utility methods for database records /////////////////////
+	// ── Utility methods ───────────────────────────────────────────────────────
 
 	/**
 	 * Not implemented for Firebase — resolves immediately.

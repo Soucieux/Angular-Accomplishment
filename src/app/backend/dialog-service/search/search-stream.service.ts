@@ -2,7 +2,9 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import {
 	RATE_DECREASED,
-	RATE_INCREASED
+	RATE_INCREASED,
+	ENT_LOG_SPAN_CLASS_RATE_DOWN,
+	ENT_LOG_SPAN_CLASS_RATE_UP
 } from '../../../common/constants';
 
 @Injectable({ providedIn: 'root' })
@@ -31,9 +33,9 @@ export class SearchStreamService {
 	 */
 	public checkLastLogDecreasedOrIncreased(): string | false {
 		const lastLog = this.searchLogsSubject.value[this.searchLogsSubject.value.length - 1];
-		if (lastLog.includes(RATE_DECREASED)) {
+		if (lastLog.includes(ENT_LOG_SPAN_CLASS_RATE_DOWN)) {
 			return RATE_DECREASED;
-		} else if (lastLog.includes(RATE_INCREASED)) {
+		} else if (lastLog.includes(ENT_LOG_SPAN_CLASS_RATE_UP)) {
 			return RATE_INCREASED;
 		} else {
 			return false;

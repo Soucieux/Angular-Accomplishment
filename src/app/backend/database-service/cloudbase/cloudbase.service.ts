@@ -20,6 +20,10 @@ import {
 	DATABASE_RECIPES,
 	DATABASE_USEFUL_LINKS,
 	STATS_FIELD_TAURI_NOTIF_ENABLED,
+	STATS_FIELD_MINIMIZE_ON_CLOSE,
+	STATS_FIELD_LOCALE,
+	LOCALE_KEY_EN,
+	LOCALE_KEY_ZH,
 	USEFUL_LINK_TYPE_LINK,
 	USEFUL_LINK_TYPE_CATEGORY,
 	ACTIVITY_TYPE_UPDATED,
@@ -28,6 +32,8 @@ import {
 	HISTORY_STATUS_DELETED,
 	RATE_DECREASED,
 	RATE_INCREASED,
+	ENT_LOG_SPAN_CLASS_RATE_DOWN,
+	ENT_LOG_SPAN_CLASS_RATE_UP,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_ACTIVITY_STREAK,
@@ -55,6 +61,7 @@ import {
 	DEBT_VALUE_KEY_PAYMENTS,
 	ACTIVITY_SOURCE_DATE_CALCULATOR,
 	ACTIVITY_SOURCE_DEFAULT,
+	ACTIVITY_INVALID_TABLE_TEXT,
 	ACTIVITY_TYPE_STATUS_CHANGED,
 	ACTIVITY_TYPE_EDITED,
 	ACTIVITY_TYPE_RATE_UPDATED,
@@ -77,7 +84,16 @@ import {
 	MILESTONE_DOMAIN_STREAK,
 	CLOUDBASE_ERR_PERMISSION_DENIED
 } from '../../../common/constants';
-import { ERROR_NO_DOCUMENT_UPDATED } from '../../../common/locale/locale-strings';
+import {
+	ERROR_NO_DOCUMENT_UPDATED,
+	ENT_LOG_RATE_PRE,
+	ENT_LOG_RATE_IS,
+	ENT_LOG_RATE_BY,
+	ENT_LOG_RATE_TO,
+	ENT_LOG_RATE_SAME,
+	ENT_LOG_RATE_UP,
+	ENT_LOG_RATE_DOWN
+} from '../../../common/locale/locale-strings';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
 import { SessionExpiredError } from '../../../common/error/session-expired.error';
@@ -238,7 +254,7 @@ export class CloudbaseService extends DatabaseService {
 		return this.database.collection(DATABASE_STATISTICS).doc(this.statId);
 	}
 
-	////////////////////// Below are Retrieval methods for database records ////////////////
+	// ── Retrieval methods ────────────────────────────────────────────────────
 
 	/**
 	 * Gets the statistics from CloudBase as a real-time observable.
@@ -299,16 +315,14 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the link categories list.
 	 */
 	public getLinkCategories(): Observable<any[]> {
-		/* No _openid filter: a user-created category may be saved without an explicit _openid
-		   (addNewRecordToDB omits it for non-admin users). The database security rules
-		   already scope the result to what the current user may read. */
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
 			(docs) =>
 				docs
 					.filter((doc: any) => doc.type === USEFUL_LINK_TYPE_CATEGORY)
 					.map((doc: any) => ({ ...doc })),
-			true
+			true,
+			(col) => col.where({ _openid: CloudbaseService.getUserId() })
 		);
 	}
 
@@ -450,17 +464,21 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the reminder details list.
 	 */
 	public getReminderTableDetails(): Observable<any[]> {
-		return this.watchCollection(DATABASE_REMINDER, (docs) =>
-			docs.map((doc: any) => {
-				const { _id, ...rest } = doc;
-				return { key: _id, ...rest } as {
-					key: string;
-					text: string;
-					date: string;
-					link: string;
-					tags: string[];
-				};
-			})
+		return this.watchCollection(
+			DATABASE_REMINDER,
+			(docs) =>
+				docs.map((doc: any) => {
+					const { _id, ...rest } = doc;
+					return { key: _id, ...rest } as {
+						key: string;
+						text: string;
+						date: string;
+						link: string;
+						tags: string[];
+					};
+				}),
+			false,
+			(col) => col.where({ _openid: CloudbaseService.getUserId() })
 		);
 	}
 
@@ -472,20 +490,24 @@ export class CloudbaseService extends DatabaseService {
 	public getDebtSonataTableDetails(): Observable<any[]> {
 		/* Map CloudBase _id → key so Angular *ngFor can trackBy it;
 		   name and content fields pass through as-is. */
-		return this.watchCollection(DATABASE_DEBT_SONATA, (docs) =>
-			docs.map((doc: any) => {
-				const { _id, ...rest } = doc;
-				return { key: _id, ...rest } as {
-					key: string;
-					name: string;
-					content: {
-						date: string;
-						debt: number;
-						original: number;
-						paid: boolean;
+		return this.watchCollection(
+			DATABASE_DEBT_SONATA,
+			(docs) =>
+				docs.map((doc: any) => {
+					const { _id, ...rest } = doc;
+					return { key: _id, ...rest } as {
+						key: string;
+						name: string;
+						content: {
+							date: string;
+							debt: number;
+							original: number;
+							paid: boolean;
+						};
 					};
-				};
-			})
+				}),
+			false,
+			(col) => col.where({ _openid: CloudbaseService.getUserId() })
 		);
 	}
 
@@ -642,7 +664,7 @@ export class CloudbaseService extends DatabaseService {
 		return movies;
 	}
 
-	////////////////////// Below are Update methods for database records /////////////////////
+	// ── Update methods ───────────────────────────────────────────────────────
 
 	/**
 	 * Updates the date calculator table rows in the database.
@@ -779,15 +801,15 @@ export class CloudbaseService extends DatabaseService {
 
 				const rateDifference = Number((movieItemVO.getMovieRate() - oldRate).toFixed(2));
 				this.searchStreamService.addSearchLog(
-					`The rate of ${movieItemVO.getMovieName()} is <span ${
-						rateDifference > 0 ? 'class="rate-up"' : 'class="rate-down"'
-					}>${rateDifference > 0 ? RATE_INCREASED : RATE_DECREASED} by ${Math.abs(
+					`${ENT_LOG_RATE_PRE}${movieItemVO.getMovieName()}${ENT_LOG_RATE_IS}<span ${
+						rateDifference > 0 ? ENT_LOG_SPAN_CLASS_RATE_UP : ENT_LOG_SPAN_CLASS_RATE_DOWN
+					}>${rateDifference > 0 ? ENT_LOG_RATE_UP : ENT_LOG_RATE_DOWN}${ENT_LOG_RATE_BY}${Math.abs(
 						rateDifference
-					)}</span> to ${movieItemVO.getMovieRate()}`
+					)}${ENT_LOG_RATE_TO}${movieItemVO.getMovieRate()}`
 				);
 			} else {
 				this.searchStreamService.addSearchLog(
-					`The rate of ${movieItemVO.getMovieName()} stays the same`
+					`${ENT_LOG_RATE_PRE}${movieItemVO.getMovieName()}${ENT_LOG_RATE_SAME}`
 				);
 			}
 		} catch (error) {
@@ -1139,7 +1161,7 @@ export class CloudbaseService extends DatabaseService {
 		}
 	}
 
-	////////////////////// Below are Removal methods for database records ////////////////
+	// ── Removal methods ──────────────────────────────────────────────────────
 
 	/**
 	 * Removes a useful link from the database and records the deletion in the activity log.
@@ -1388,12 +1410,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async getTauriNotifEnabled(): Promise<boolean> {
 		try {
-			const result = await this.database
-				.collection(DATABASE_STATISTICS)
-				.where(this.getUserStatsFilter())
-				.limit(1)
-				.get();
-			return result.data?.[0]?.[STATS_FIELD_TAURI_NOTIF_ENABLED] === true;
+			return (await this.readUserStatField(STATS_FIELD_TAURI_NOTIF_ENABLED)) === true;
 		} catch (error: unknown) {
 			LOG.error(this.className, `Error reading Tauri notification preference`, error as Error);
 			return false;
@@ -1410,7 +1427,75 @@ export class CloudbaseService extends DatabaseService {
 		await this.updateUserStatsFields({ [STATS_FIELD_TAURI_NOTIF_ENABLED]: enabled });
 	}
 
-	////////////////////// Below are Add methods for database records /////////////////////
+	/**
+	 * Gets whether the desktop app minimizes to Dock on close for the current user.
+	 *
+	 * @returns True when the minimize-on-close flag is set on the user's stats document.
+	 */
+	public async getMinimizeOnClose(): Promise<boolean> {
+		try {
+			return (await this.readUserStatField(STATS_FIELD_MINIMIZE_ON_CLOSE)) === true;
+		} catch (error: unknown) {
+			LOG.error(this.className, `Error reading minimize-on-close preference`, error as Error);
+			return true;
+		}
+	}
+
+	/**
+	 * Persists the minimize-on-close preference for the current user
+	 * by updating the flag on the per-user statistics document.
+	 *
+	 * @param enabled - The desired enabled state.
+	 */
+	public async setMinimizeOnClose(enabled: boolean): Promise<void> {
+		await this.updateUserStatsFields({ [STATS_FIELD_MINIMIZE_ON_CLOSE]: enabled });
+	}
+
+	/**
+	 * Gets the display locale preference for the current user from the per-user stats document.
+	 *
+	 * @returns The stored locale ('en' or 'zh'), or null when not yet set.
+	 */
+	public async getLocale(): Promise<'en' | 'zh' | null> {
+		try {
+			const value = await this.readUserStatField(STATS_FIELD_LOCALE);
+			return value === LOCALE_KEY_EN || value === LOCALE_KEY_ZH ? value : null;
+		} catch (error: unknown) {
+			LOG.error(this.className, `Error reading locale preference`, error as Error);
+			return null;
+		}
+	}
+
+	/**
+	 * Persists the display locale preference for the current user
+	 * by updating the field on the per-user statistics document.
+	 *
+	 * @param locale - The locale key to store: 'en' or 'zh'.
+	 */
+	public async setLocale(locale: 'en' | 'zh'): Promise<void> {
+		await this.updateUserStatsFields({ [STATS_FIELD_LOCALE]: locale });
+	}
+
+	/**
+	 * Reads a single field value from the current user's statistics document.
+	 *
+	 * {@link getTauriNotifEnabled} - Reads the Tauri notification flag.
+	 * {@link getMinimizeOnClose} - Reads the minimize-on-close flag.
+	 * {@link getLocale} - Reads the display locale preference.
+	 *
+	 * @param field - The field name to read from the stats document.
+	 * @returns The field value, or undefined when the document or field does not exist.
+	 */
+	private async readUserStatField(field: string): Promise<unknown> {
+		const result = await this.database
+			.collection(DATABASE_STATISTICS)
+			.where(this.getUserStatsFilter())
+			.limit(1)
+			.get();
+		return result.data?.[0]?.[field];
+	}
+
+	// ── Add methods ──────────────────────────────────────────────────────────
 
 	/**
 	 * Adds a new useful link to the database.
@@ -1681,51 +1766,43 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The record that was just persisted.
 	 * @returns An object with a source string and a display field appropriate for the table.
 	 */
-	private getRecentActivitySubtitle(tableName: string, newRecord: any): Record<string, string> {
+	private getRecentActivitySubtitle(tableName: string, newRecord: unknown): Record<string, string> {
 		switch (tableName) {
 			case DATABASE_QUOTES:
-				return { source: ACTIVITY_SOURCE_RESONANCE, author: newRecord.author };
+				return { source: ACTIVITY_SOURCE_RESONANCE, author: String((newRecord as { author?: string }).author ?? '') };
 			case DATABASE_DEBT_SONATA:
-				return { source: ACTIVITY_SOURCE_DEBT, name: newRecord.name };
+				return { source: ACTIVITY_SOURCE_DEBT, name: String((newRecord as { name?: string }).name ?? '') };
 			case DATABASE_REMINDER:
-				return { source: ACTIVITY_SOURCE_REMINDER, text: newRecord.text };
+				return { source: ACTIVITY_SOURCE_REMINDER, text: String((newRecord as { text?: string }).text ?? '') };
 			case DATABASE_PATCH_NOTES:
 				return {
 					source: ACTIVITY_SOURCE_PATCH,
-					component: newRecord.component,
-					element: newRecord.element,
-					noteIndex: newRecord.noteIndex
+					component: String((newRecord as { component?: string }).component ?? ''),
+					element: String((newRecord as { element?: string }).element ?? ''),
+					noteIndex: String((newRecord as { noteIndex?: string }).noteIndex ?? '')
 				};
-			case DATABASE_USEFUL_LINKS:
-				if (newRecord.type === USEFUL_LINK_TYPE_LINK)
-					return {
-						source: ACTIVITY_SOURCE_LINK,
-						domain: Utilities.getDomain(newRecord.url)
-					};
-				else if (newRecord.type === USEFUL_LINK_TYPE_CATEGORY) {
-					return {
-						source: ACTIVITY_SOURCE_LINK,
-						domain: newRecord.name
-					};
-				} else if (
-					newRecord.type === HISTORY_STATUS_DELETED ||
-					newRecord.type === ACTIVITY_TYPE_CATEGORY_DELETED
-				) {
-					return {
-						source: ACTIVITY_SOURCE_LINK,
-						domain: newRecord.domain
-					};
-				} else {
-					return { source: ACTIVITY_SOURCE_DEFAULT, text: 'Invalid database name' };
-				}
+			case DATABASE_USEFUL_LINKS: {
+				/* Links and categories share the same collection; the `type` field distinguishes
+				   them at write time — links carry a URL, categories carry a name, deletions carry
+				   the previous domain string from the history document. */
+				const rec = newRecord as { type?: string; url?: string; name?: string; domain?: string };
+				if (rec.type === USEFUL_LINK_TYPE_LINK)
+					return { source: ACTIVITY_SOURCE_LINK, domain: Utilities.getDomain(String(rec.url ?? '')) };
+				else if (rec.type === USEFUL_LINK_TYPE_CATEGORY)
+					return { source: ACTIVITY_SOURCE_LINK, domain: String(rec.name ?? '') };
+				else if (rec.type === HISTORY_STATUS_DELETED || rec.type === ACTIVITY_TYPE_CATEGORY_DELETED)
+					return { source: ACTIVITY_SOURCE_LINK, domain: String(rec.domain ?? '') };
+				else
+					return { source: ACTIVITY_SOURCE_DEFAULT, text: ACTIVITY_INVALID_TABLE_TEXT };
+			}
 			case DATABASE_RECIPES:
-				return { source: ACTIVITY_SOURCE_RECIPE, name: newRecord.name };
+				return { source: ACTIVITY_SOURCE_RECIPE, name: String((newRecord as { name?: string }).name ?? '') };
 			default:
-				return { source: ACTIVITY_SOURCE_DEFAULT, text: 'Invalid database name' };
+				return { source: ACTIVITY_SOURCE_DEFAULT, text: ACTIVITY_INVALID_TABLE_TEXT };
 		}
 	}
 
-	////////////////////// Below are Utility methods for database records /////////////////////
+	// ── Utility methods ───────────────────────────────────────────────────────
 
 	/**
 	 * Increment the visit count for a useful link.

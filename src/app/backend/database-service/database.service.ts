@@ -3,7 +3,15 @@ import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../fontend/recipe/recipe.model';
 import { InjectionToken } from '@angular/core';
-import { NO_RATE } from '../../common/constants';
+import { NO_RATE, HISTORY_STATUS_ADDED, HISTORY_STATUS_DELETED } from '../../common/constants';
+import {
+	ACTIVE_LOCALE,
+	ENT_HISTORY_RATE_OPEN,
+	ENT_HISTORY_RATE_CLOSE,
+	ENT_HISTORY_STATUS_ADDED,
+	ENT_HISTORY_STATUS_DELETED,
+	ENT_HISTORY_SEARCH_STARTED
+} from '../../common/locale/locale-strings';
 import type cloudbase from '@cloudbase/js-sdk';
 import type { Auth } from 'firebase/auth';
 import type { Database } from 'firebase/database';
@@ -18,7 +26,7 @@ export const FIREBASE_STORAGE = new InjectionToken<FirebaseStorage>('FIREBASE_ST
 export abstract class DatabaseService {
 	protected constructor() {}
 
-	////////////////////// Below are Retrieval methods for database records ////////////////
+	// ── Retrieval methods ────────────────────────────────────────────────────
 
 	/**
 	 * Gets the statistics document from the database as a reactive observable.
@@ -111,7 +119,7 @@ export abstract class DatabaseService {
 	 */
 	public abstract getReleaseNotes(): Observable<any[]>;
 
-	////////////////////// Below are Update methods for database records /////////////////////
+	// ── Update methods ───────────────────────────────────────────────────────
 
 	/**
 	 * Updates the date calculator table with the given data.
@@ -302,7 +310,7 @@ export abstract class DatabaseService {
 	 */
 	public abstract updateStatisticsFields(fields: Record<string, any>): Promise<void>;
 
-	////////////////////// Below are Removal methods for database records ////////////////
+	// ── Removal methods ──────────────────────────────────────────────────────
 
 	/**
 	 * Removes a useful link from the database and records the deletion in the activity log.
@@ -404,7 +412,35 @@ export abstract class DatabaseService {
 	 */
 	public abstract setTauriNotifEnabled(enabled: boolean): Promise<void>;
 
-	////////////////////// Below are Add methods for database records /////////////////////
+	/**
+	 * Gets whether the desktop app minimizes to Dock on close for the current user.
+	 *
+	 * @returns True when the minimize-on-close flag is set in the database.
+	 */
+	public abstract getMinimizeOnClose(): Promise<boolean>;
+
+	/**
+	 * Persists the minimize-on-close preference for the current user.
+	 *
+	 * @param enabled - The desired enabled state.
+	 */
+	public abstract setMinimizeOnClose(enabled: boolean): Promise<void>;
+
+	/**
+	 * Gets the display locale preference for the current user.
+	 *
+	 * @returns The stored locale ('en' or 'zh'), or null when not yet set.
+	 */
+	public abstract getLocale(): Promise<'en' | 'zh' | null>;
+
+	/**
+	 * Persists the display locale preference for the current user.
+	 *
+	 * @param locale - The locale key to store: 'en' or 'zh'.
+	 */
+	public abstract setLocale(locale: 'en' | 'zh'): Promise<void>;
+
+	// ── Add methods ──────────────────────────────────────────────────────────
 
 	/**
 	 * Adds a new useful link to the database.
@@ -479,7 +515,7 @@ export abstract class DatabaseService {
 	 */
 	public abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
 
-	////////////////////// Below are Utility methods for database records /////////////////////
+	// ── Utility methods ───────────────────────────────────────────────────────
 
 	/**
 	 * Increments the visit count for a useful link.
@@ -534,8 +570,14 @@ export abstract class DatabaseService {
 	protected buildHistoryMessage(status: string, timestamp: string, movieItemVO?: MovieItemVO): string {
 		if (movieItemVO) {
 			const rate = movieItemVO.getMovieRate() === 0 ? NO_RATE : movieItemVO.getMovieRate();
-			return `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()} (Rate: ${rate}) was ${status} on ${timestamp}`;
+			const rateStr = `${ENT_HISTORY_RATE_OPEN}${rate}${ENT_HISTORY_RATE_CLOSE}`;
+			const nameGenre = `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()}`;
+			const statusLabel = status === HISTORY_STATUS_ADDED ? ENT_HISTORY_STATUS_ADDED : ENT_HISTORY_STATUS_DELETED;
+			if (ACTIVE_LOCALE === 'zh') {
+				return `在${timestamp}${statusLabel} ${nameGenre}${rateStr}`;
+			}
+			return `${nameGenre} ${rateStr} was ${statusLabel} on ${timestamp}`;
 		}
-		return `New rate search was started on ${timestamp}`;
+		return `${ENT_HISTORY_SEARCH_STARTED}${timestamp}`;
 	}
 }

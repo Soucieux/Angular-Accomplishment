@@ -266,17 +266,15 @@ export class AuthService {
 	 * @returns An observable that emits the current CloudBase user or null.
 	 */
 	private cloudbaseGetCurrentUser(): Observable<any> {
-		// Step 1: Fetch the user profile asynchronously — the observable is returned immediately below
 		this.cloudbaseAuth
 			.getUser()
 			.then((response: { data: { user: any } }) => {
 				const data = response?.data;
 
-				/* Step 2: Distinguish a real account from an anonymous session.
+				/* Distinguish a real account from an anonymous session.
 				   Anonymous users have no username in metadata — emit null for them
 				   to keep the dashboard hidden until a proper sign-in occurs. */
 				if (data?.user?.user_metadata?.username) {
-					// Step 2.1: Populate all static auth state for an authenticated user
 					this.utilities.setIsUserAlive(true);
 					CloudbaseService.setUseId(data.user.id);
 					CloudbaseService.setUserRole(data.user.role ?? []);
@@ -285,21 +283,18 @@ export class AuthService {
 					CloudbaseService.markAuthReady();
 					CloudbaseService.setLoginState(true);
 				} else {
-					// Step 2.2: Anonymous or empty response — clear all auth state
 					this.cloudbaseUserSubject.next(null);
 					CloudbaseService.setLoginState(false);
 					this.ngZone.run(() => this.utilities.setIsUserAlive(false));
 				}
 			})
 			.catch(() => {
-				// Auth check failed — treat as logged out so the dashboard is not shown
 				this.cloudbaseUserSubject.next(null);
 				CloudbaseService.markAuthReady();
 				CloudbaseService.setLoginState(false);
 				this.ngZone.run(() => this.utilities.setIsUserAlive(false));
 			});
 
-		// Step 3: Return the subject as an observable so callers can subscribe before the async call resolves
 		return this.cloudbaseUserSubject.asObservable();
 	}
 

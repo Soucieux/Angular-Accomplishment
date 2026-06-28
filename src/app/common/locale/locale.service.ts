@@ -7,7 +7,7 @@ import { ACTIVE_LOCALE } from './locale-strings';
 })
 export class LocaleService {
 	/** Currently active locale key for this session, resolved at module load by locale-strings. */
-	readonly currentLocale: 'en' | 'zh' = ACTIVE_LOCALE;
+	public readonly currentLocale: 'en' | 'zh' = ACTIVE_LOCALE;
 
 	/**
 	 * Persists the chosen locale to localStorage then reloads the page so all

@@ -586,9 +586,9 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		   then stamp all four column values and clear the isCharged flag on every cell. */
 		this.updatedDateCalculatorRows = this.originalDateCalculatorRows
 			.filter((row: any) => 'first' in row)
-			.map((original, index) => ({
-				_id: original._id,
-				_openid: original._openid,
+			.map((originalRecord, index) => ({
+				_id: originalRecord._id,
+				_openid: originalRecord._openid,
 				first: { value: values[index], isCharged: false },
 				second: { value: values[index], isCharged: false },
 				third: { value: values[index], isCharged: false },
@@ -709,7 +709,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * Opens the Multi Link dialog with category names via DialogService.
 	 */
 	protected openMultiLinkDialog(): void {
-		const categoryNames = this.categories.map((c) => c.name);
+		const categoryNames = this.categories.map((category) => category.name);
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_MULTI_LINK,
@@ -1004,7 +1004,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		this.personalFilteredLinks =
 			this.selectedCategory === PORTAL_CATEGORY_ALL
 				? personal
-				: personal.filter((l) => l.category === this.selectedCategory);
+				: personal.filter((link) => link.category === this.selectedCategory);
 	}
 
 	// ── Template helper methods ───────────────────────────────────────────────

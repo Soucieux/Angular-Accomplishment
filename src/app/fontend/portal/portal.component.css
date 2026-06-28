@@ -2,6 +2,7 @@
    Host — fill the drawer-content slot
 ───────────────────────────────────────── */
 :host {
+	font-family: 'app-font';
 	display: block;
 }
 
@@ -84,10 +85,10 @@
 	}
 }
 
-.save-indicator-spinner {
+.save-spinner {
 	display: block;
-	width: 30px;
-	height: 30px;
+	width: 24px;
+	height: 24px;
 	border: 3px solid rgba(148, 163, 184, 0.3);
 	border-top-color: #94a3b8;
 	border-radius: 50%;
@@ -1118,13 +1119,6 @@
 		color: #a07400 !important;
 	}
 
-	.save-indicator-spinner {
-		width: 18px;
-		height: 18px;
-	}
-}
-
-@media (max-width: 940px) {
 	.page-title {
 		font-size: 28px; /* large-header mobile standard */
 	}

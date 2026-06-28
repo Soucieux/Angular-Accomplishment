@@ -324,6 +324,9 @@
 				<span class="orbital-panel-header-title">{{ ORBITAL_LABEL_ACTIVITY }}</span>
 			</div>
 			<div class="orbital-panel-scroll">
+				@if (activityRows.length === 0) {
+					<div class="orbital-panel-empty">{{ ORBITAL_PANEL_EMPTY_ACTIVITY }}</div>
+				}
 				@for (activity of activityRows; track activity.timestamp) {
 					<div class="orbital-activity-row">
 						<div

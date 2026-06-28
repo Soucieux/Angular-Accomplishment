@@ -55,12 +55,15 @@ export class HomeComponent implements OnInit, OnDestroy {
 	private dialogComponentContainer!: ViewContainerRef;
 
 	private statsSub?: Subscription;
+	private userStatsSub?: Subscription;
 	private loginSub?: Subscription;
 	private linksSub?: Subscription;
 	private categoriesSub?: Subscription;
 	private linksLoadingTimer?: ReturnType<typeof setTimeout>;
 	private dashboardTimer?: ReturnType<typeof setTimeout>;
 
+	private genericStats: HomeStats | null = null;
+	private userSpecificStats: HomeStats | null = null;
 	protected stats: HomeStats | null = null;
 	protected loading = true;
 	protected loggedIn = false;
@@ -146,7 +149,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 					this.statsSub = this.databaseService.getStatistics().subscribe({
 						next: (data: HomeStats) => {
 							this.timeoutService.clear(TIMEOUT_KEY_HOME);
-							this.stats = data;
+							this.genericStats = data;
+							this.mergeStats();
 							this.loading = false;
 							this.cdr.detectChanges();
 						},
@@ -156,6 +160,13 @@ export class HomeComponent implements OnInit, OnDestroy {
 							this.loading = false;
 							this.cdr.detectChanges();
 						}
+					});
+
+					this.userStatsSub = this.databaseService.getUserStats().subscribe((userDoc: HomeStats) => {
+						if (!userDoc) return;
+						this.userSpecificStats = userDoc;
+						this.mergeStats();
+						this.cdr.detectChanges();
 					});
 
 					/*
@@ -178,8 +189,11 @@ export class HomeComponent implements OnInit, OnDestroy {
 					clearTimeout(this.linksLoadingTimer);
 					clearTimeout(this.dashboardTimer);
 					this.statsSub?.unsubscribe();
+					this.userStatsSub?.unsubscribe();
 					this.linksSub?.unsubscribe();
 					this.categoriesSub?.unsubscribe();
+					this.genericStats = null;
+					this.userSpecificStats = null;
 					this.stats = null;
 					this.dashLinks = [];
 					this.dashCategories = [];
@@ -202,6 +216,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 		clearTimeout(this.linksLoadingTimer);
 		clearTimeout(this.dashboardTimer);
 		this.statsSub?.unsubscribe();
+		this.userStatsSub?.unsubscribe();
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
 		this.loginSub?.unsubscribe();
@@ -218,6 +233,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 		this.databaseService
 			.incrementLinkVisit(event.id, event.count - 1)
 			.catch((error: Error) => LOG.error(this.className, HOME_MSG_INCREMENT_VISIT_FAILED, error));
+	}
+
+	/**
+	 * Merges the generic and user-specific stats into the single stats object
+	 * consumed by the orbital component. User-specific values win on overlap.
+	 */
+	private mergeStats(): void {
+		this.stats = { ...this.genericStats, ...this.userSpecificStats } as HomeStats;
 	}
 
 }

@@ -164,6 +164,7 @@ export const ORBITAL_PANEL_EMPTY_PAYMENTS = '暂无还款项';
 export const ORBITAL_PANEL_EMPTY_GENRES = '暂无类型数据';
 export const ORBITAL_PANEL_EMPTY_RECIPES = '暂无食谱';
 export const ORBITAL_PANEL_EMPTY_REMINDERS = '暂无提醒';
+export const ORBITAL_PANEL_EMPTY_ACTIVITY = '暂无活动记录';
 export const ORBITAL_DAY_NAMES_SHORT: string[] = ['日', '一', '二', '三', '四', '五', '六'];
 export const ORBITAL_QUICK_ACTION_LABELS: string[] = [
 	'添加影片',

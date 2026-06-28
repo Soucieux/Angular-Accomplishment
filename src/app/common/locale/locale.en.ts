@@ -194,6 +194,7 @@ export const ORBITAL_PANEL_EMPTY_PAYMENTS = 'No upcoming payments';
 export const ORBITAL_PANEL_EMPTY_GENRES = 'No genre data yet';
 export const ORBITAL_PANEL_EMPTY_RECIPES = 'No recipes yet';
 export const ORBITAL_PANEL_EMPTY_REMINDERS = 'No reminders yet';
+export const ORBITAL_PANEL_EMPTY_ACTIVITY = 'No activity yet';
 export const ORBITAL_DAY_NAMES_SHORT: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const ORBITAL_QUICK_ACTION_LABELS: string[] = ['Add Movie', 'Add Quote', 'Add Recipe', 'Add Debt', 'Add Reminder', 'Add Shortcut'];
 export const ORBITAL_GREETING_NIGHT = 'Good night';

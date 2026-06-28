@@ -16,6 +16,7 @@ import {
 	RECIPE_BAND_WESTERN
 } from '../constants';
 import {
+	ACTIVE_LOCALE,
 	RATE_LABEL_AVERAGE,
 	RATE_LABEL_EXCELLENT,
 	RATE_LABEL_GOOD,
@@ -328,18 +329,22 @@ export class Utilities {
 	}
 
 	/**
-	 * Formats a date as "MMM yyyy" for human-readable month-year display (e.g. "Jun 2026").
+	 * Formats a date as a locale-aware month-year string.
+	 * English: "Jun 2026". Chinese: "2026年6月".
 	 *
 	 * @param date - The date to format.
 	 * @returns The formatted month-year string.
 	 */
 	public static formatMonthYear(date: Date): string {
+		if (ACTIVE_LOCALE === 'zh') {
+			return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+		}
 		return format(date, 'MMM yyyy');
 	}
 
 	/**
-	 * Converts a storage date string in "YYYY-MM-DD" format to a human-readable
-	 * "MMM yyyy" string (e.g. "2026-06-19" → "Jun 2026").
+	 * Converts a storage date string in "YYYY-MM-DD" format to a locale-aware
+	 * month-year display string (e.g. "2026-06-19" → "Jun 2026" / "2026年6月").
 	 *
 	 * @param dateStr - The storage date string to convert.
 	 * @returns The month-year display string.

@@ -52,9 +52,54 @@
 
 			@if (!loading) {
 				<div class="stats-strip">
-					<span class="stat-chip">
-						<span class="stat-number">{{ statsTotal }}</span> {{ PATCH_STAT_TOTAL }}
-					</span>
+					<div class="heatmap-anchor">
+						<span
+							class="stat-chip stat-chip--total"
+							[class.is-open]="isHeatmapOpen"
+							(mouseenter)="openHeatmap()"
+							(mouseleave)="scheduleHeatmapClose()">
+							<span class="stat-number">{{ statsTotal }}</span>
+							<span class="stat-label">{{ PATCH_STAT_TOTAL }}</span>
+						</span>
+						<div
+							class="heatmap-popover hide-on-narrow-or-mobile"
+							[class.is-visible]="isHeatmapOpen"
+							(mouseenter)="cancelHeatmapClose()"
+							(mouseleave)="scheduleHeatmapClose()">
+							<div class="heatmap-header">
+								<span class="heatmap-title">{{ PATCH_HEATMAP_TITLE }}</span>
+								<div class="heatmap-legend">
+									<span>{{ PATCH_HEATMAP_LEGEND_LESS }}</span>
+									<div class="heatmap-legend-cells">
+										<div class="heatmap-legend-cell intensity-0"></div>
+										<div class="heatmap-legend-cell intensity-1"></div>
+										<div class="heatmap-legend-cell intensity-2"></div>
+										<div class="heatmap-legend-cell intensity-3"></div>
+										<div class="heatmap-legend-cell intensity-4"></div>
+									</div>
+									<span>{{ PATCH_HEATMAP_LEGEND_MORE }}</span>
+								</div>
+							</div>
+							<div class="heatmap-grid">
+								<div></div>
+								@for (month of MONTH_NAMES_SHORT; track month) {
+									<div class="heatmap-month-label">{{ month }}</div>
+								}
+								@for (year of heatmapYears; track year) {
+									<div class="heatmap-year-label">{{ year }}</div>
+									@for (idx of PATCH_HEATMAP_MONTH_INDICES; track idx) {
+										<div [class]="'heatmap-cell ' + getHeatmapCellClass(year, idx)">
+											{{ getHeatmapCount(year, idx) > 0 && !isHeatmapFuture(year, idx) ? getHeatmapCount(year, idx) : '' }}
+										</div>
+									}
+								}
+							</div>
+							<div class="heatmap-footer">
+								<span>{{ PATCH_HEATMAP_FOOTER_FUTURE }}</span>
+								<span><strong>{{ statsTotal }}</strong> {{ PATCH_HEATMAP_FOOTER_ITEMS }} {{ heatmapYearCount }} {{ PATCH_HEATMAP_FOOTER_YEARS }}</span>
+							</div>
+						</div>
+					</div>
 					<span class="stat-divider">·</span>
 					<span class="stat-chip">
 						<span class="stat-number stat-resolved">{{ statsResolved }}</span> {{ PATCH_STAT_BUGS_RESOLVED }}
@@ -109,13 +154,13 @@
 								</ng-template>
 								<ng-template #filter let-value let-filter="filterCallback">
 									<div class="status-filter">
-										@for (s of allSeverity; track s.severity) {
+										@for (severityOption of allSeverity; track severityOption.severity) {
 											<p-tag
-												[value]="s.severity"
-												[icon]="getSeverityIcon(s.severity)"
-												[severity]="getSeverity(s.severity)"
-												[class.selected]="value === s.severity"
-												(click)="filter(s.severity)">
+												[value]="severityOption.severity"
+												[icon]="getSeverityIcon(severityOption.severity)"
+												[severity]="getSeverity(severityOption.severity)"
+												[class.selected]="value === severityOption.severity"
+												(click)="filter(severityOption.severity)">
 											</p-tag>
 										}
 									</div>
@@ -169,15 +214,15 @@
 								[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
 								class="component">
 								<div class="component-content">
-									@if (getComponentOption(row.component); as opt) {
+									@if (getComponentOption(row.component); as option) {
 										<span
 											[class]="
-												opt.iconClass +
+												option.iconClass +
 												' ' +
-												opt.colorClass +
+												option.colorClass +
 												' hide-on-narrow-or-mobile'
 											"
-											>{{ opt.icon }}</span
+											>{{ option.icon }}</span
 										>
 									}
 									<span>{{ row.component }}</span>
@@ -237,10 +282,10 @@
 											</div>
 										}
 									</ng-template>
-									<ng-template #item let-opt>
+									<ng-template #item let-option>
 										<div class="status-option">
-											<i [class]="getSeverityIcon(opt.severity)"></i>
-											<span>{{ opt.severity }}</span>
+											<i [class]="getSeverityIcon(option.severity)"></i>
+											<span>{{ option.severity }}</span>
 										</div>
 									</ng-template>
 								</p-select>
@@ -301,21 +346,21 @@
 									[(ngModel)]="newRecord.component"
 									class="input">
 									<ng-template #selectedItem let-value>
-										@if (getComponentOption(value); as opt) {
+										@if (getComponentOption(value); as option) {
 											<div class="component-option">
-												<span [class]="opt.iconClass + ' ' + opt.colorClass">{{
-													opt.icon
+												<span [class]="option.iconClass + ' ' + option.colorClass">{{
+													option.icon
 												}}</span>
-												<span>{{ opt.label }}</span>
+												<span>{{ option.label }}</span>
 											</div>
 										}
 									</ng-template>
-									<ng-template #item let-opt>
+									<ng-template #item let-option>
 										<div class="component-option">
-											<span [class]="opt.iconClass + ' ' + opt.colorClass">{{
-												opt.icon
+											<span [class]="option.iconClass + ' ' + option.colorClass">{{
+												option.icon
 											}}</span>
-											<span>{{ opt.label }}</span>
+											<span>{{ option.label }}</span>
 										</div>
 									</ng-template>
 								</p-select>
@@ -357,10 +402,10 @@
 											</div>
 										}
 									</ng-template>
-									<ng-template #item let-opt>
+									<ng-template #item let-option>
 										<div class="status-option">
-											<i [class]="getSeverityIcon(opt.severity)"></i>
-											<span>{{ opt.severity }}</span>
+											<i [class]="getSeverityIcon(option.severity)"></i>
+											<span>{{ option.severity }}</span>
 										</div>
 									</ng-template>
 								</p-select>

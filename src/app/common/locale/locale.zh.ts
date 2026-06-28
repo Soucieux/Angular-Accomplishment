@@ -485,7 +485,7 @@ export const DEBT_HISTORY_EMPTY = '暂无还款记录——在上方开始还款
 export const ADD_DEBT_LABEL_AMOUNT = '金额';
 export const ADD_DEBT_LABEL_CURRENCY = '货币';
 export const ADD_DEBT_LABEL_DUE_DATE = '到期日';
-export const DEBT_MONTHS: string[] = [
+export const MONTH_NAMES_SHORT: string[] = [
 	'1月',
 	'2月',
 	'3月',
@@ -550,6 +550,12 @@ export const PATCH_COL_STATUS = '状态';
 export const PATCH_BTN_CLEAR_FILTER = '清除筛选';
 export const PATCH_DROPDOWN_ALL_PAGES = '全页面';
 export const PATCH_DROPDOWN_ACCOUNT = '账户';
+export const PATCH_HEATMAP_TITLE = '月度活动';
+export const PATCH_HEATMAP_LEGEND_LESS = '少';
+export const PATCH_HEATMAP_LEGEND_MORE = '多';
+export const PATCH_HEATMAP_FOOTER_FUTURE = '未来月份已置灰';
+export const PATCH_HEATMAP_FOOTER_ITEMS = '条记录横跨';
+export const PATCH_HEATMAP_FOOTER_YEARS = '年';
 
 /* ─────────────────────────────────────────
    Context menu

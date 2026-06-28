@@ -585,7 +585,7 @@ export const DEBT_HISTORY_EMPTY = 'No payments yet — chip away at it above.';
 export const ADD_DEBT_LABEL_AMOUNT = 'Amount';
 export const ADD_DEBT_LABEL_CURRENCY = 'Currency';
 export const ADD_DEBT_LABEL_DUE_DATE = 'Due date';
-export const DEBT_MONTHS: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const MONTH_NAMES_SHORT: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export const DEBT_CATEGORY_LABEL_CARD = 'Credit card';
 /** Shared "Personal" label used in debt category and reminder category. */
 export const LABEL_PERSONAL = 'Personal';
@@ -638,6 +638,12 @@ export const PATCH_COL_STATUS = 'Status';
 export const PATCH_BTN_CLEAR_FILTER = 'Clear Filter';
 export const PATCH_DROPDOWN_ALL_PAGES = 'All Pages';
 export const PATCH_DROPDOWN_ACCOUNT = 'Account';
+export const PATCH_HEATMAP_TITLE = 'Activity by month';
+export const PATCH_HEATMAP_LEGEND_LESS = 'Less';
+export const PATCH_HEATMAP_LEGEND_MORE = 'More';
+export const PATCH_HEATMAP_FOOTER_FUTURE = 'Future months dimmed';
+export const PATCH_HEATMAP_FOOTER_ITEMS = 'items logged across';
+export const PATCH_HEATMAP_FOOTER_YEARS = 'years';
 
 /* ─────────────────────────────────────────
    Context menu

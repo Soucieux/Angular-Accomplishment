@@ -71,6 +71,13 @@ import {
 	PATCH_BTN_CLEAR_FILTER,
 	PATCH_DROPDOWN_ALL_PAGES,
 	PATCH_DROPDOWN_ACCOUNT,
+	PATCH_HEATMAP_TITLE,
+	PATCH_HEATMAP_LEGEND_LESS,
+	PATCH_HEATMAP_LEGEND_MORE,
+	PATCH_HEATMAP_FOOTER_FUTURE,
+	PATCH_HEATMAP_FOOTER_ITEMS,
+	PATCH_HEATMAP_FOOTER_YEARS,
+	MONTH_NAMES_SHORT,
 	BTN_ADD,
 	LABEL_EDIT,
 	NAV_LABEL_HOME,
@@ -85,7 +92,7 @@ import {
 	NAV_LABEL_ABOUT,
 	NAV_LABEL_SIGN_IN
 } from '../../common/locale/locale-strings';
-import { ReleaseNote } from './patch.model';
+import { PATCH_HEATMAP_MONTH_INDICES, ReleaseNote } from './patch.model';
 import { Observable, catchError, firstValueFrom, of, startWith, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
@@ -146,6 +153,14 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected readonly PATCH_COL_STATUS = PATCH_COL_STATUS;
 	protected readonly PATCH_BTN_CLEAR_FILTER = PATCH_BTN_CLEAR_FILTER;
 	protected readonly BTN_ADD = BTN_ADD;
+	protected readonly MONTH_NAMES_SHORT = MONTH_NAMES_SHORT;
+	protected readonly PATCH_HEATMAP_MONTH_INDICES = PATCH_HEATMAP_MONTH_INDICES;
+	protected readonly PATCH_HEATMAP_TITLE = PATCH_HEATMAP_TITLE;
+	protected readonly PATCH_HEATMAP_LEGEND_LESS = PATCH_HEATMAP_LEGEND_LESS;
+	protected readonly PATCH_HEATMAP_LEGEND_MORE = PATCH_HEATMAP_LEGEND_MORE;
+	protected readonly PATCH_HEATMAP_FOOTER_FUTURE = PATCH_HEATMAP_FOOTER_FUTURE;
+	protected readonly PATCH_HEATMAP_FOOTER_ITEMS = PATCH_HEATMAP_FOOTER_ITEMS;
+	protected readonly PATCH_HEATMAP_FOOTER_YEARS = PATCH_HEATMAP_FOOTER_YEARS;
 	protected currentView: 'patch' | 'release' = PATCH_VIEW_PATCH;
 	protected releaseNotes$!: Observable<ReleaseNote[] | null>;
 	private releaseNotesLoaded = false;
@@ -278,6 +293,10 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private _isDataUpdate = false;
 	protected newRecord = this.emptyRecord();
 	protected searchQuery = '';
+	protected isHeatmapOpen = false;
+	private _heatmapData: Map<number, number[]> = new Map();
+	private _heatmapYears: number[] = [];
+	private heatmapCloseTimer: ReturnType<typeof setTimeout> | null = null;
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
@@ -371,6 +390,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 						// 3. Keep a local ordered copy for look-ups in edit/delete stats writes.
 						this.patchNotesList = data;
+						this.rebuildHeatmapData();
 
 						/* 4. On first load, heal the denormalised totalPatchNotes statistic.
 						   The Home dashboard satellite reads totalPatchNotes directly, so any
@@ -415,6 +435,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		this.timeoutService.clear(TIMEOUT_KEY_PATCH);
 		this.timeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
 		this.dialogComponentContainer?.clear();
+		if (this.heatmapCloseTimer !== null) clearTimeout(this.heatmapCloseTimer);
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
@@ -657,6 +678,39 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	}
 
 	/**
+	 * Opens the activity heatmap popover and cancels any pending close timer.
+	 */
+	protected openHeatmap(): void {
+		if (this.heatmapCloseTimer !== null) {
+			clearTimeout(this.heatmapCloseTimer);
+			this.heatmapCloseTimer = null;
+		}
+		this.isHeatmapOpen = true;
+	}
+
+	/**
+	 * Schedules the heatmap popover to close after a short delay, allowing the
+	 * cursor to move between the trigger chip and the popover body without flickering.
+	 */
+	protected scheduleHeatmapClose(): void {
+		this.heatmapCloseTimer = setTimeout(() => {
+			this.isHeatmapOpen = false;
+			this.heatmapCloseTimer = null;
+		}, 130);
+	}
+
+	/**
+	 * Cancels a scheduled heatmap close, keeping the popover open when the
+	 * cursor re-enters the popover body from the trigger chip.
+	 */
+	protected cancelHeatmapClose(): void {
+		if (this.heatmapCloseTimer !== null) {
+			clearTimeout(this.heatmapCloseTimer);
+			this.heatmapCloseTimer = null;
+		}
+	}
+
+	/**
 	 * Reconciles the stored totalPatchNotes statistic with the true number of
 	 * loaded patch notes. The Home dashboard satellite reads totalPatchNotes
 	 * directly, so any insert made outside the add/delete flow (e.g. the seeding
@@ -679,6 +733,38 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				[STATS_FIELD_TOTAL_PATCH_NOTES]: actualTotal
 			});
 		}
+	}
+
+	/**
+	 * Rebuilds the year-to-monthly-counts map from the current patch notes list.
+	 * Called whenever patchNotesList is updated by the CloudBase tap.
+	 */
+	private rebuildHeatmapData(): void {
+		const data = new Map<number, number[]>();
+		for (const note of this.patchNotesList) {
+			const ts: string = note.timestamp ?? '';
+			const year = parseInt(ts.substring(0, 4), 10);
+			const month = parseInt(ts.substring(5, 7), 10) - 1;
+			if (isNaN(year) || isNaN(month) || month < 0 || month > 11) continue;
+			if (!data.has(year)) data.set(year, new Array(12).fill(0));
+			data.get(year)![month]++;
+		}
+		this._heatmapData = data;
+		this._heatmapYears = [...data.keys()].sort((a, b) => a - b);
+	}
+
+	/**
+	 * Maps a patch note count to an intensity band (0–4) for heatmap cell colouring.
+	 *
+	 * @param count - The number of patch notes in a month.
+	 * @returns The intensity band index (0 = none, 4 = highest).
+	 */
+	private getHeatmapIntensity(count: number): number {
+		if (count === 0) return 0;
+		if (count <= 4) return 1;
+		if (count <= 9) return 2;
+		if (count <= 14) return 3;
+		return 4;
 	}
 
 	/**
@@ -903,8 +989,64 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *   with a `key` property (e.g. from the PrimeNG selectedItem template context).
 	 * @returns The matching option object, or `null` if not found.
 	 */
-	protected getComponentOption(value: string | { key: string } | any) {
+	protected getComponentOption(value: string | { key: string }) {
 		const key = typeof value === 'string' ? value : (value?.key ?? '');
 		return this.components.find((option) => option.key === key) ?? null;
+	}
+
+	/**
+	 * Gets the sorted list of years that appear in the heatmap data.
+	 *
+	 * @returns The year numbers in ascending order.
+	 */
+	protected get heatmapYears(): number[] {
+		return this._heatmapYears;
+	}
+
+	/**
+	 * Gets the total number of distinct years in the heatmap data.
+	 *
+	 * @returns The year count.
+	 */
+	protected get heatmapYearCount(): number {
+		return this._heatmapYears.length;
+	}
+
+	/**
+	 * Gets the patch note count for a specific year and month from the heatmap data.
+	 *
+	 * @param year - The calendar year.
+	 * @param monthIdx - The zero-based month index.
+	 * @returns The count of patch notes in that month, or 0 if none.
+	 */
+	protected getHeatmapCount(year: number, monthIdx: number): number {
+		return this._heatmapData.get(year)?.[monthIdx] ?? 0;
+	}
+
+	/**
+	 * Returns true when the given year and month falls on or after the current month.
+	 *
+	 * @param year - The calendar year to check.
+	 * @param monthIdx - The zero-based month index to check.
+	 * @returns true if the month is in the future relative to today.
+	 */
+	protected isHeatmapFuture(year: number, monthIdx: number): boolean {
+		const now = new Date();
+		return year > now.getFullYear() || (year === now.getFullYear() && monthIdx > now.getMonth());
+	}
+
+	/**
+	 * Gets the combined CSS class string for a heatmap cell based on its data value
+	 * and whether it falls in the future.
+	 *
+	 * @param year - The calendar year of the cell.
+	 * @param monthIdx - The zero-based month index of the cell.
+	 * @returns The CSS class string to apply (e.g. 'future', 'intensity-0', 'intensity-2 has-data').
+	 */
+	protected getHeatmapCellClass(year: number, monthIdx: number): string {
+		if (this.isHeatmapFuture(year, monthIdx)) return 'future';
+		const count = this.getHeatmapCount(year, monthIdx);
+		const band = this.getHeatmapIntensity(count);
+		return count > 0 ? `intensity-${band} has-data` : 'intensity-0';
 	}
 }

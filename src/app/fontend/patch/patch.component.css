@@ -452,6 +452,182 @@
 /* ─────────────────────────────────────────
    Stats strip
 ───────────────────────────────────────── */
+.heatmap-anchor {
+	position: relative;
+}
+
+.stat-chip--total {
+	cursor: default;
+	padding: 3px 9px;
+	border-radius: 999px;
+	border: 1.5px solid transparent;
+	transition:
+		background 0.15s,
+		border-color 0.15s;
+	margin: -3px -9px;
+}
+
+.stat-chip--total:hover,
+.stat-chip--total.is-open {
+	background: rgba(102, 126, 234, 0.1);
+	border-color: rgba(102, 126, 234, 0.3);
+}
+
+.stat-chip--total .stat-number {
+	color: #667eea;
+	font-weight: 700;
+}
+
+.stat-chip--total .stat-label {
+	color: rgba(30, 15, 35, 0.55);
+	text-decoration: underline;
+	text-decoration-style: dashed;
+	text-decoration-color: rgba(102, 126, 234, 0.4);
+	text-underline-offset: 3px;
+}
+
+/* ─────────────────────────────────────────
+   Activity heatmap popover
+───────────────────────────────────────── */
+.heatmap-popover {
+	position: absolute;
+	top: calc(100% + 12px);
+	left: -5px;
+	width: 672px;
+	background: #fff;
+	border: 1px solid rgba(102, 126, 234, 0.18);
+	border-radius: 24px;
+	box-shadow:
+		0 14px 48px rgba(102, 126, 234, 0.16),
+		0 2px 10px rgba(0, 0, 0, 0.06);
+	padding: 24px 26px 22px;
+	z-index: 200;
+	opacity: 0;
+	pointer-events: none;
+	transform: translateY(-8px) scale(0.97);
+	transform-origin: top left;
+	transition:
+		opacity 0.18s ease,
+		transform 0.18s ease;
+}
+
+.heatmap-popover.is-visible {
+	opacity: 1;
+	pointer-events: all;
+	transform: translateY(0) scale(1);
+}
+
+.heatmap-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 19px;
+}
+
+.heatmap-title {
+	font-size: 15px;
+	font-weight: 700;
+	color: rgba(30, 15, 35, 0.5);
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+}
+
+.heatmap-legend {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	font-size: 13px;
+	color: rgba(30, 15, 35, 0.38);
+}
+
+.heatmap-legend-cells {
+	display: flex;
+	gap: 4px;
+}
+
+.heatmap-legend-cell {
+	width: 16px;
+	height: 16px;
+	border-radius: 5px;
+}
+
+.heatmap-legend-cell.intensity-0 { background: #ede9f8; }
+.heatmap-legend-cell.intensity-1 { background: #cdc5ef; }
+.heatmap-legend-cell.intensity-2 { background: #9d92e2; }
+.heatmap-legend-cell.intensity-3 { background: #7a7cf0; }
+.heatmap-legend-cell.intensity-4 { background: #5a4dd6; }
+
+.heatmap-grid {
+	display: grid;
+	grid-template-columns: 53px repeat(12, 1fr);
+	gap: 6px;
+	align-items: center;
+}
+
+.heatmap-month-label {
+	font-size: 12px;
+	font-weight: 600;
+	color: rgba(30, 15, 35, 0.35);
+	text-align: center;
+	letter-spacing: 0.25px;
+}
+
+.heatmap-year-label {
+	font-size: 14px;
+	font-weight: 700;
+	color: rgba(30, 15, 35, 0.42);
+	text-align: right;
+	padding-right: 10px;
+}
+
+.heatmap-cell {
+	aspect-ratio: 1.15 / 1;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	font-weight: 700;
+	cursor: default;
+	user-select: none;
+	transition:
+		transform 0.12s,
+		box-shadow 0.12s;
+	line-height: 1;
+}
+
+.heatmap-cell.has-data:hover {
+	transform: scale(1.2);
+	box-shadow: 0 3px 12px rgba(102, 126, 234, 0.35);
+}
+
+.heatmap-cell.intensity-0 { background: #ede9f8; color: transparent; }
+.heatmap-cell.intensity-1 { background: #cdc5ef; color: #4e3d9c; }
+.heatmap-cell.intensity-2 { background: #9d92e2; color: #fff; }
+.heatmap-cell.intensity-3 { background: #7a7cf0; color: #fff; }
+.heatmap-cell.intensity-4 { background: #5a4dd6; color: #fff; }
+
+.heatmap-cell.future {
+	background: rgba(220, 215, 240, 0.22);
+	color: transparent;
+}
+
+.heatmap-footer {
+	margin-top: 17px;
+	padding-top: 14px;
+	border-top: 1px solid rgba(102, 126, 234, 0.1);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 14px;
+	color: rgba(30, 15, 35, 0.38);
+}
+
+.heatmap-footer strong {
+	color: #667eea;
+	font-weight: 700;
+}
+
 .stats-strip {
 	display: flex;
 	align-items: center;
@@ -460,6 +636,8 @@
 	margin-left: 5px;
 	font-size: 15px;
 	color: rgba(30, 15, 35, 0.5);
+	position: relative;
+	z-index: 1;
 }
 
 .stat-chip {

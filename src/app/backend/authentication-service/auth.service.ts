@@ -29,12 +29,12 @@ import {
 	CLOUDBASE_ERROR_INVALID_CREDENTIALS,
 	CN
 } from '../../common/constants';
-import { MSG_UNEXPECTED_ERROR } from '../../common/locale/locale-strings';
 import { AccountRateLimitedError } from '../../common/error/account-rate-limited.error';
 import { EmailNotVerifiedError } from '../../common/error/email-not-verified.error';
 import { InvalidEmailError } from '../../common/error/invalid-email.error';
 import { PasswordTooWeakError } from '../../common/error/password-too-weak.error';
 import { SessionExpiredError } from '../../common/error/session-expired.error';
+import { UnexpectedError } from '../../common/error/unexpected.error';
 import { UserNotFoundError } from '../../common/error/user-not-found.error';
 import { WrongOldPasswordError } from '../../common/error/wrong-old-password.error';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
@@ -55,8 +55,9 @@ export class AuthService {
 		Utilities.getCurrentCountry() === CN
 			? this.cloudbaseUserSubject.asObservable()
 			: this.firebaseUserSubject.asObservable();
+
 	constructor(
-		@Inject(EnvironmentInjector) private ei: EnvironmentInjector,
+		@Inject(EnvironmentInjector) private environmentInjector: EnvironmentInjector,
 		private router: Router,
 		private databaseService: DatabaseService,
 		private utilities: Utilities,
@@ -93,7 +94,7 @@ export class AuthService {
 	private firebaseGetCurrentUser(): Observable<User | null> {
 		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
 		return new Observable((observer) => {
-			this.firebaseAuth = this.ei.get(FIREBASE_AUTH);
+			this.firebaseAuth = this.environmentInjector.get(FIREBASE_AUTH);
 
 			// onAuthStateChanged emits the user continuously
 			const unsubscribe = onAuthStateChanged(this.firebaseAuth, (user) => {
@@ -124,7 +125,7 @@ export class AuthService {
 			this.utilities.setIsUserAlive(true);
 		} catch (error: unknown) {
 			LOG.error(this.className, 'Error when signing in with email and password');
-			throw error;
+			throw new UnexpectedError();
 		}
 	}
 
@@ -224,20 +225,20 @@ export class AuthService {
 			if (error && (error as { code?: string }).code === CLOUDBASE_ERROR_INVALID_ARGUMENT) {
 				throw new WrongVerificationCodeError();
 			} else {
-				throw new Error(MSG_UNEXPECTED_ERROR);
+				throw new UnexpectedError();
 			}
 		}
 	}
 
 	/**
 	 * Signs in with username and password via CloudBase. Throws WrongCredentialsError
-	 * when credentials are invalid, or Error on any other auth failure.
+	 * when credentials are invalid, or UnexpectedError on any other auth failure.
 	 *
 	 * @param username - The user's username.
 	 * @param password - The user's password.
 	 * @param returnUrl - The URL to navigate to after sign-in. Defaults to '/'.
 	 * @throws WrongCredentialsError if the username or password is incorrect.
-	 * @throws Error if a different authentication error occurs.
+	 * @throws UnexpectedError if a different authentication error occurs.
 	 */
 	public async signIn(username: string, password: string, returnUrl: string = '/'): Promise<void> {
 		// Step 1: Attempt sign-in — CloudBase returns errors in the response body, not as thrown exceptions
@@ -251,7 +252,7 @@ export class AuthService {
 		if (error && error.category === CLOUDBASE_ERROR_INVALID_CREDENTIALS) {
 			throw new WrongCredentialsError();
 		} else if (error) {
-			throw new Error(MSG_UNEXPECTED_ERROR);
+			throw new UnexpectedError();
 		}
 
 		// Step 3: Populate the user subject and navigate to the requested route
@@ -337,7 +338,7 @@ export class AuthService {
 	 */
 	public async updateUsername(name: string): Promise<void> {
 		const { error } = await this.cloudbaseAuth.updateUser({ username: name });
-		if (error) throw new Error(MSG_UNEXPECTED_ERROR);
+		if (error) throw new UnexpectedError();
 		this.cloudbaseGetCurrentUser();
 	}
 
@@ -350,7 +351,7 @@ export class AuthService {
 	 * @param newPassword - The new password to set.
 	 * @throws WrongOldPasswordError when the old password is incorrect.
 	 * @throws PasswordTooWeakError when the new password fails CloudBase strength requirements.
-	 * @throws Error with MSG_UNEXPECTED_ERROR for all other failures.
+	 * @throws UnexpectedError for all other failures.
 	 */
 	public async changePassword(oldPassword: string, newPassword: string): Promise<void> {
 		let caughtError: unknown;
@@ -373,7 +374,7 @@ export class AuthService {
 		const status = (caughtError as { status?: string }).status;
 		if (status === CLOUDBASE_ERR_INVALID_PASSWORD) throw new WrongOldPasswordError();
 		if (status === CLOUDBASE_ERR_PASSWORD_TOO_WEAK) throw new PasswordTooWeakError();
-		throw new Error(MSG_UNEXPECTED_ERROR);
+		throw new UnexpectedError();
 	}
 
 	/**
@@ -384,7 +385,7 @@ export class AuthService {
 	 * @throws WrongOldPasswordError when the password is incorrect or the user is not found.
 	 * @throws AccountRateLimitedError when too many failed attempts have been made.
 	 * @throws SessionExpiredError when the current session is no longer valid.
-	 * @throws Error with MSG_UNEXPECTED_ERROR for all other failures.
+	 * @throws UnexpectedError for all other failures.
 	 */
 	public async deleteUser(password: string): Promise<void> {
 		let caughtError: unknown;
@@ -408,7 +409,7 @@ export class AuthService {
 		}
 		if (status === CLOUDBASE_ERR_INVALID_STATUS) throw new AccountRateLimitedError();
 		if (status === CLOUDBASE_ERR_PERMISSION_DENIED) throw new SessionExpiredError();
-		throw new Error(MSG_UNEXPECTED_ERROR);
+		throw new UnexpectedError();
 	}
 
 	/**
@@ -444,7 +445,7 @@ export class AuthService {
 	 * @throws UserNotFoundError if no account exists with this email.
 	 * @throws EmailNotVerifiedError if the account email has not been verified.
 	 * @throws AccountRateLimitedError if the reset request rate limit is exceeded.
-	 * @throws Error with MSG_UNEXPECTED_ERROR for all other failures.
+	 * @throws UnexpectedError for all other failures.
 	 */
 	public async sendPasswordResetEmail(email: string): Promise<void> {
 		const { data, error } = await this.cloudbaseAuth.resetPasswordForEmail(email);
@@ -464,7 +465,7 @@ export class AuthService {
 			case CLOUDBASE_ERR_USER_NOT_FOUND:
 				throw new UserNotFoundError();
 			default:
-				throw new Error(MSG_UNEXPECTED_ERROR);
+				throw new UnexpectedError();
 		}
 	}
 
@@ -477,7 +478,7 @@ export class AuthService {
 	 * @param returnUrl - The URL to navigate to after a successful reset. Defaults to '/'.
 	 * @throws WrongVerificationCodeError if the code is incorrect or expired.
 	 * @throws PasswordTooWeakError if the new password fails CloudBase strength requirements.
-	 * @throws Error with MSG_UNEXPECTED_ERROR for all other failures.
+	 * @throws UnexpectedError for all other failures.
 	 */
 	public async resetPassword(code: string, newPassword: string, returnUrl: string = '/'): Promise<void> {
 		if (!this.passwordResetData) throw new SessionExpiredError();
@@ -498,7 +499,7 @@ export class AuthService {
 			case CLOUDBASE_ERR_USER_NOT_FOUND:
 				throw new UserNotFoundError();
 			default:
-				throw new Error(MSG_UNEXPECTED_ERROR);
+				throw new UnexpectedError();
 		}
 	}
 }

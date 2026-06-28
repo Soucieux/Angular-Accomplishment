@@ -30,8 +30,6 @@ import {
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
-	RATE_DECREASED,
-	RATE_INCREASED,
 	ENT_LOG_SPAN_CLASS_RATE_DOWN,
 	ENT_LOG_SPAN_CLASS_RATE_UP,
 	SEARCH,
@@ -1194,7 +1192,11 @@ export class CloudbaseService extends DatabaseService {
 				type: ACTIVITY_TYPE_CATEGORY_DELETED
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, `Error while removing a record from ${DATABASE_USEFUL_LINKS}`);
+			LOG.error(
+				this.className,
+				`Error while removing a record from ${DATABASE_USEFUL_LINKS}`,
+				error as Error
+			);
 			this.rethrowCaught(error);
 		}
 	}
@@ -1378,7 +1380,7 @@ export class CloudbaseService extends DatabaseService {
 	 * {@link removePatchNote} - Removes a patch note from the patch notes collection.
 	 *
 	 * @param tableName - The database collection name.
-	 * @param entryKey - The document key of the record to remove.
+	 * @param newRecord - The record descriptor identifying which document to remove and how to log it.
 	 */
 	private async removeRecordFromDB(tableName: string, newRecord: any): Promise<void> {
 		try {
@@ -1393,8 +1395,8 @@ export class CloudbaseService extends DatabaseService {
 				type: newRecord.type ?? HISTORY_STATUS_DELETED
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, `Error while removing a record from ${tableName}`);
-			throw error;
+			LOG.error(this.className, `Error while removing a record from ${tableName}`, error as Error);
+			this.rethrowCaught(error);
 		}
 	}
 

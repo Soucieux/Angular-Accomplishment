@@ -44,6 +44,8 @@ import { CategoryDialogComponent } from './category/category.component';
 import { NewCategoryData, NewLinkData } from '../../fontend/portal/portal.model';
 import { DeleteAccountDialogComponent } from './delete-account/delete-account.component';
 import { SessionExpiredError } from '../../common/error/session-expired.error';
+import { DialogError } from '../../common/error/dialog.error';
+import { UnexpectedError } from '../../common/error/unexpected.error';
 
 @Injectable({
 	providedIn: 'root'
@@ -54,45 +56,6 @@ export class DialogService {
 	private readonly stackableDialogTypes = new Set([DIALOG_ERROR, DIALOG_BLOCK, DIALOG_RETRY]);
 
 	constructor(private messageService: MessageService) {}
-
-	/**
-	 * Gets the dialog component based on the dialog type
-	 *
-	 * @param dialogType - The type of dialog to get
-	 * @returns The dialog component
-	 */
-	private getDialogComponent(dialogType: string): Type<any> {
-		switch (dialogType) {
-			case DIALOG_CONFIRM:
-				return ConfirmDialogComponent;
-			case DIALOG_ADD:
-				return AddDialogComponent;
-			case DIALOG_HISTORY:
-				return HistoryDialogComponent;
-			case SEARCH:
-				return SearchDialogComponent;
-			case DIALOG_ERROR:
-				return ErrorDialogComponent;
-			case DIALOG_BLOCK:
-				return BlockDialogComponent;
-			case DIALOG_INGREDIENT:
-				return IngredientDialogComponent;
-			case DIALOG_DEBT:
-				return AddDebtDialogComponent;
-			case DIALOG_LINK:
-				return AddLinkDialogComponent;
-			case DIALOG_MULTI_LINK:
-				return MultiLinkDialogComponent;
-			case DIALOG_RETRY:
-				return RetryDialogComponent;
-			case DIALOG_DELETE_ACCOUNT:
-				return DeleteAccountDialogComponent;
-			case DIALOG_CATEGORY:
-				return CategoryDialogComponent;
-			default:
-				throw new Error(MSG_INVALID_DIALOG_TYPE);
-		}
-	}
 
 	// Overload methods to call correct dialog component
 	public openDialog(
@@ -175,12 +138,12 @@ export class DialogService {
 	): void;
 
 	/**
-	 * Opens a dialog
+	 * Opens a dialog.
 	 *
-	 * @param dialogContainerRef - The container where dialogs should be attached
-	 * @param dialogType - The type of dialog to open
-	 * @param dataOrCallback1 - First callback to call or any data to pass
-	 * @param dataOrCallback2 - Second callback to call or any data to pass
+	 * @param dialogContainerRef - The container where dialogs should be attached.
+	 * @param dialogType - The type of dialog to open.
+	 * @param dataOrCallback1 - First callback to call or any data to pass.
+	 * @param dataOrCallback2 - Second callback to call or any data to pass.
 	 */
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
@@ -190,7 +153,7 @@ export class DialogService {
 	): void | Promise<void> {
 		// Step 1: Guard — a null container means the component host is not yet initialized
 		if (!dialogContainerRef) {
-			const error = new Error(MSG_DIALOG_CONTAINER_NOT_FOUND);
+			const error = new DialogError(MSG_DIALOG_CONTAINER_NOT_FOUND);
 			LOG.error(this.className, error.message);
 			throw error;
 		}
@@ -202,7 +165,7 @@ export class DialogService {
 		 */
 		if (this.openedDialogs.has(dialogType)) {
 			if (this.stackableDialogTypes.has(dialogType)) return;
-			const error = new Error(MSG_DIALOG_ALREADY_OPEN);
+			const error = new DialogError(MSG_DIALOG_ALREADY_OPEN);
 			LOG.error(this.className, error.message);
 			throw error;
 		}
@@ -245,9 +208,13 @@ export class DialogService {
 			if (blockPromise) {
 				return blockPromise;
 			}
-		} catch (error) {
-			LOG.error(this.className, (error as Error).message);
-			throw error;
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : MSG_UNEXPECTED_ERROR;
+			LOG.error(this.className, message);
+
+			// Re-propagate already-typed dialog errors as-is; wrap everything else in the typed fallback
+			if (error instanceof DialogError) throw error;
+			throw new UnexpectedError();
 		}
 	}
 
@@ -268,15 +235,6 @@ export class DialogService {
 	 */
 	public showSessionExpired(container: ViewContainerRef): void {
 		this.openDialog(container, 'retry', new SessionExpiredError().message);
-	}
-
-	/**
-	 * Shows a permission-denied error dialog.
-	 *
-	 * @param container - The ViewContainerRef to attach the dialog to.
-	 */
-	private showPermissionError(container: ViewContainerRef) {
-		this.openDialog(container, DIALOG_ERROR, MSG_PERMISSION_DENIED);
 	}
 
 	/**
@@ -329,5 +287,54 @@ export class DialogService {
 	 */
 	public showToast(severity: 'success' | 'info' | 'warn' | 'error', summary: string, detail?: string) {
 		this.messageService.add({ severity, summary, detail });
+	}
+
+	/**
+	 * Gets the dialog component based on the dialog type.
+	 *
+	 * @param dialogType - The type of dialog to get.
+	 * @returns The dialog component for the given type.
+	 * @throws DialogError if the dialog type is not recognised.
+	 */
+	private getDialogComponent(dialogType: string): Type<any> {
+		switch (dialogType) {
+			case DIALOG_CONFIRM:
+				return ConfirmDialogComponent;
+			case DIALOG_ADD:
+				return AddDialogComponent;
+			case DIALOG_HISTORY:
+				return HistoryDialogComponent;
+			case SEARCH:
+				return SearchDialogComponent;
+			case DIALOG_ERROR:
+				return ErrorDialogComponent;
+			case DIALOG_BLOCK:
+				return BlockDialogComponent;
+			case DIALOG_INGREDIENT:
+				return IngredientDialogComponent;
+			case DIALOG_DEBT:
+				return AddDebtDialogComponent;
+			case DIALOG_LINK:
+				return AddLinkDialogComponent;
+			case DIALOG_MULTI_LINK:
+				return MultiLinkDialogComponent;
+			case DIALOG_RETRY:
+				return RetryDialogComponent;
+			case DIALOG_DELETE_ACCOUNT:
+				return DeleteAccountDialogComponent;
+			case DIALOG_CATEGORY:
+				return CategoryDialogComponent;
+			default:
+				throw new DialogError(MSG_INVALID_DIALOG_TYPE);
+		}
+	}
+
+	/**
+	 * Shows a permission-denied error dialog.
+	 *
+	 * @param container - The ViewContainerRef to attach the dialog to.
+	 */
+	private showPermissionError(container: ViewContainerRef) {
+		this.openDialog(container, DIALOG_ERROR, MSG_PERMISSION_DENIED);
 	}
 }

@@ -25,6 +25,7 @@ import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	COMPONENT_DESTROY,
 	DIALOG_CONFIRM,
+	RESONANCE_AUTHOR_ANONYMOUS_LEGACY,
 	RESONANCE_MAX_QUOTE_LENGTH,
 	RESONANCE_SKELETON_COUNT
 } from '../../common/constants';
@@ -167,13 +168,16 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Gets the display name of a quote's author, falling back to 'Anonymous'.
+	 * Gets the display name of a quote's author, falling back to the locale-appropriate anonymous label.
+	 * Treats the legacy stored English value as equivalent to an empty author.
 	 *
 	 * @param quote - The quote object.
-	 * @returns The author name or 'Anonymous'.
+	 * @returns The author name or the locale-appropriate anonymous label.
 	 */
 	protected getAuthorName(quote: QuoteRecord): string {
-		return quote.author || RESONANCE_AUTHOR_ANONYMOUS;
+		return !quote.author || quote.author === RESONANCE_AUTHOR_ANONYMOUS_LEGACY
+			? RESONANCE_AUTHOR_ANONYMOUS
+			: quote.author;
 	}
 
 	/**
@@ -252,10 +256,11 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		try {
 
 			/* Step 2: Resolve the author name.
-			   Signed-in user → CloudBase username; anonymous → manually entered name; fallback → 'Anonymous'. */
+			   Signed-in user → CloudBase username; anonymous → manually entered name; fallback → empty string
+			   so the display layer renders the locale-appropriate anonymous label at read time. */
 			const name = this.isSignedIn
-				? CloudbaseService.getUserName() || RESONANCE_AUTHOR_ANONYMOUS
-				: this.authorName.trim() || RESONANCE_AUTHOR_ANONYMOUS;
+				? CloudbaseService.getUserName() || ''
+				: this.authorName.trim();
 			const timestamp = Utilities.getCurrentFormattedTime(true);
 
 			// Step 3: Persist the quote, then reset the form fields

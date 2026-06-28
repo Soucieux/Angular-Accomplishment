@@ -34,26 +34,26 @@ describe('IngredientDialogComponent', () => {
 			expect((component as any).visible).toBeTrue();
 		});
 
-		it('initialises draft from the provided enabledTypeIds', () => {
+		it('initialises editing selection from the provided enabledTypeIds', () => {
 			const enabledTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE, RECIPE_ITYPE_MEAT]);
 			component.openDialog(() => {}, { masterTabs: [], enabledTypeIds });
-			expect((component as any).draft.has(RECIPE_ITYPE_VEGETABLE)).toBeTrue();
-			expect((component as any).draft.has(RECIPE_ITYPE_MEAT)).toBeTrue();
+			expect((component as any).editingTypes.has(RECIPE_ITYPE_VEGETABLE)).toBeTrue();
+			expect((component as any).editingTypes.has(RECIPE_ITYPE_MEAT)).toBeTrue();
 		});
 	});
 
 	// ── canAddMore ─────────────────────────────────────────────────────────
 
 	describe('canAddMore', () => {
-		it('returns true when draft size is below the maximum', () => {
-			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
+		it('returns true when editing selection size is below the maximum', () => {
+			(component as any).editingTypes = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
 			expect((component as any).canAddMore()).toBeTrue();
 		});
 
-		it('returns false when draft size equals the maximum', () => {
+		it('returns false when editing selection size equals the maximum', () => {
 			// MASTER_TYPE_TABS has 16 types; RECIPE_EDITOR_TYPE_MAX = 9 — supply 10+ so slice(0, 9) hits the cap.
 			const types: IngredientType[] = ['veg', 'meat', 'seas', 'dairy', 'grain', 'liq', 'spice', 'seafood', 'egg', 'nut'];
-			(component as any).draft = new Set<IngredientType>(types.slice(0, RECIPE_EDITOR_TYPE_MAX));
+			(component as any).editingTypes = new Set<IngredientType>(types.slice(0, RECIPE_EDITOR_TYPE_MAX));
 			expect((component as any).canAddMore()).toBeFalse();
 		});
 	});
@@ -61,29 +61,29 @@ describe('IngredientDialogComponent', () => {
 	// ── toggleType ─────────────────────────────────────────────────────────
 
 	describe('toggleType', () => {
-		it('adds a type when it is not in the draft', () => {
-			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
+		it('adds a type when it is not in the editing selection', () => {
+			(component as any).editingTypes = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
 			(component as any).toggleType(RECIPE_ITYPE_MEAT);
-			expect((component as any).draft.has(RECIPE_ITYPE_MEAT)).toBeTrue();
+			expect((component as any).editingTypes.has(RECIPE_ITYPE_MEAT)).toBeTrue();
 		});
 
-		it('removes a type when it is in the draft and at least one other remains', () => {
-			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE, RECIPE_ITYPE_MEAT]);
+		it('removes a type when it is in the editing selection and at least one other remains', () => {
+			(component as any).editingTypes = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE, RECIPE_ITYPE_MEAT]);
 			(component as any).toggleType(RECIPE_ITYPE_MEAT);
-			expect((component as any).draft.has(RECIPE_ITYPE_MEAT)).toBeFalse();
+			expect((component as any).editingTypes.has(RECIPE_ITYPE_MEAT)).toBeFalse();
 		});
 
 		it('does not remove the last remaining type', () => {
-			(component as any).draft = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
+			(component as any).editingTypes = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
 			(component as any).toggleType(RECIPE_ITYPE_VEGETABLE);
-			expect((component as any).draft.has(RECIPE_ITYPE_VEGETABLE)).toBeTrue();
+			expect((component as any).editingTypes.has(RECIPE_ITYPE_VEGETABLE)).toBeTrue();
 		});
 	});
 
 	// ── apply ──────────────────────────────────────────────────────────────
 
 	describe('apply', () => {
-		it('calls the apply callback with a copy of the draft', () => {
+		it('calls the apply callback with a copy of the editing selection', () => {
 			const cb = jasmine.createSpy('applyCallback');
 			const enabledTypeIds = new Set<IngredientType>([RECIPE_ITYPE_VEGETABLE]);
 			component.openDialog(cb, { masterTabs: [], enabledTypeIds });

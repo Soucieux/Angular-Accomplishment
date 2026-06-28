@@ -4,33 +4,33 @@
 	[closable]="true"
 	[resizable]="false"
 	[style]="{ width: '500px', maxWidth: '92vw' }"
-	styleClass="itype-dialog"
+	styleClass="ingredient-type-dialog"
 	appendTo="body"
 	(onHide)="onDialogClosed()">
-	<ng-template #header><span class="itype-dialog-title">{{ RECIPE_ITYPE_DIALOG_TITLE }}</span></ng-template>
-	<div class="itype-body">
-		<div class="itype-counter" [class.at-cap]="!canAddMore()">
+	<ng-template #header><span class="ingredient-type-dialog-title">{{ RECIPE_ITYPE_DIALOG_TITLE }}</span></ng-template>
+	<div class="ingredient-type-body">
+		<div class="ingredient-type-counter" [class.at-cap]="!canAddMore()">
 			<span class="material-symbols-outlined">category</span>
-			{{ draft.size }} / {{ RECIPE_EDITOR_TYPE_MAX }} selected
+			{{ editingTypes.size }} / {{ RECIPE_EDITOR_TYPE_MAX }} selected
 		</div>
-		<p class="itype-hint">
+		<p class="ingredient-type-hint">
 			Choose which ingredient types appear in the recipe editor. At least one must be selected.
 		</p>
-		<div class="itype-grid">
+		<div class="ingredient-type-grid">
 			@for (tab of masterTabs; track tab.id) {
-				@let isSelected = draft.has(tab.id);
+				@let isSelected = editingTypes.has(tab.id);
 				@let isDisabled = !isSelected && !canAddMore();
 				<button
-					class="itype-card"
+					class="ingredient-type-card"
 					[class]="tab.id"
 					[class.selected]="isSelected"
 					[class.at-cap]="isDisabled"
 					[disabled]="isDisabled"
 					(click)="toggleType(tab.id)">
-					<span class="itype-emoji">{{ tab.emoji }}</span>
-					<span class="itype-label">{{ tab.label }}</span>
+					<span class="ingredient-type-emoji">{{ tab.emoji }}</span>
+					<span class="ingredient-type-label">{{ tab.label }}</span>
 					@if (isSelected) {
-						<span class="itype-check material-symbols-outlined">check_circle</span>
+						<span class="ingredient-type-check material-symbols-outlined">check_circle</span>
 					}
 				</button>
 			}

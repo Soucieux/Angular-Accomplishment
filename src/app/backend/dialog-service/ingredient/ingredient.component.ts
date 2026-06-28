@@ -26,12 +26,12 @@ export class IngredientDialogComponent {
 
 	protected visible = false;
 	protected masterTabs: TypeTab[] = [];
-	protected draft = new Set<IngredientType>();
+	protected editingTypes = new Set<IngredientType>();
 
 	private applyCallback!: (newIds: Set<IngredientType>) => void;
 
 	/**
-	 * Opens the ingredient type manager dialog, initialising the draft selection
+	 * Opens the ingredient type manager dialog, initialising the editing selection
 	 * from the provided active type IDs and storing the callback for Apply.
 	 *
 	 * @param applyCallback - Called with the final Set when the user clicks Apply.
@@ -43,44 +43,44 @@ export class IngredientDialogComponent {
 	): void {
 		this.applyCallback = applyCallback;
 		this.masterTabs = data.masterTabs;
-		this.draft = new Set(data.enabledTypeIds);
+		this.editingTypes = new Set(data.enabledTypeIds);
 		this.visible = true;
 	}
 
 	/**
-	 * Returns true when the draft has not yet reached the maximum type count.
+	 * Returns true when the editing selection has not yet reached the maximum type count.
 	 *
-	 * @returns True if the draft size is below {@link RECIPE_EDITOR_TYPE_MAX}.
+	 * @returns True if the editing selection size is below {@link RECIPE_EDITOR_TYPE_MAX}.
 	 */
 	protected canAddMore(): boolean {
-		return this.draft.size < this.RECIPE_EDITOR_TYPE_MAX;
+		return this.editingTypes.size < this.RECIPE_EDITOR_TYPE_MAX;
 	}
 
 	/**
-	 * Toggles an ingredient type in the draft selection.
+	 * Toggles an ingredient type in the editing selection.
 	 * Deselecting is always allowed as long as at least one type remains.
-	 * Selecting is blocked once the draft reaches {@link RECIPE_EDITOR_TYPE_MAX}.
+	 * Selecting is blocked once the editing selection reaches {@link RECIPE_EDITOR_TYPE_MAX}.
 	 *
 	 * @param id - The ingredient type identifier to toggle.
 	 */
 	protected toggleType(id: IngredientType): void {
-		if (this.draft.has(id)) {
-			if (this.draft.size > 1) this.draft.delete(id);
+		if (this.editingTypes.has(id)) {
+			if (this.editingTypes.size > 1) this.editingTypes.delete(id);
 		} else if (this.canAddMore()) {
-			this.draft.add(id);
+			this.editingTypes.add(id);
 		}
 	}
 
 	/**
-	 * Commits the draft by calling the apply callback, then closes the dialog.
+	 * Commits the editing selection by calling the apply callback, then closes the dialog.
 	 */
 	protected apply(): void {
-		this.applyCallback(new Set(this.draft));
+		this.applyCallback(new Set(this.editingTypes));
 		this.close();
 	}
 
 	/**
-	 * Discards the draft and closes the dialog without applying changes.
+	 * Discards the editing selection and closes the dialog without applying changes.
 	 */
 	protected cancel(): void {
 		this.close();

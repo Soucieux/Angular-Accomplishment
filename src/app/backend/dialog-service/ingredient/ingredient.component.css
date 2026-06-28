@@ -1,28 +1,32 @@
 /* ─────────────────────────────────────────
    PrimeNG dialog shell
 ───────────────────────────────────────── */
-::ng-deep .itype-dialog .p-dialog-header {
+
+::ng-deep .ingredient-type-dialog .p-dialog-header {
 	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
 	padding: 20px 24px 16px !important;
 	border-radius: 20px 20px 0 0 !important;
 }
-.itype-dialog-title {
+
+.ingredient-type-dialog-title {
 	font-size: 20px;
 	font-weight: 700;
 	color: #fff;
 }
 
-::ng-deep .itype-dialog .p-dialog-content {
+::ng-deep .ingredient-type-dialog .p-dialog-content {
 	padding: 18px 24px 8px;
 }
-::ng-deep .itype-dialog .p-dialog-footer {
+
+::ng-deep .ingredient-type-dialog .p-dialog-footer {
 	display: flex;
 	justify-content: flex-end;
 	gap: 10px;
 	padding: 12px 24px 16px;
 }
-::ng-deep .itype-dialog .dialog-cancel-button,
-::ng-deep .itype-dialog .dialog-save-button {
+
+::ng-deep .ingredient-type-dialog .dialog-cancel-button,
+::ng-deep .ingredient-type-dialog .dialog-save-button {
 	font: inherit;
 	font-size: 13px;
 	font-weight: 600;
@@ -32,33 +36,38 @@
 	cursor: pointer;
 	border: 1px solid transparent;
 }
-::ng-deep .itype-dialog .dialog-cancel-button {
+
+::ng-deep .ingredient-type-dialog .dialog-cancel-button {
 	background: transparent;
 	color: rgba(213, 51, 105, 0.85);
 	border: 1.5px solid rgba(213, 51, 105, 0.4);
 }
-::ng-deep .itype-dialog .dialog-cancel-button:hover {
+
+::ng-deep .ingredient-type-dialog .dialog-cancel-button:hover {
 	background: rgba(213, 51, 105, 0.06);
 }
-::ng-deep .itype-dialog .dialog-save-button {
+
+::ng-deep .ingredient-type-dialog .dialog-save-button {
 	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
 	color: #fff;
 	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
 }
-::ng-deep .itype-dialog .dialog-save-button:hover {
+
+::ng-deep .ingredient-type-dialog .dialog-save-button:hover {
 	transform: translateY(-1px);
 }
 
 /* ─────────────────────────────────────────
    Template-owned elements
 ───────────────────────────────────────── */
-.itype-body {
+
+.ingredient-type-body {
 	display: flex;
 	flex-direction: column;
 	gap: 14px;
 }
 
-.itype-counter {
+.ingredient-type-counter {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
@@ -70,29 +79,31 @@
 	padding: 5px 12px;
 	border-radius: 999px;
 }
-.itype-counter.at-cap {
+
+.ingredient-type-counter.at-cap {
 	background: #fff4d4;
 	color: #7a5500;
 	border-color: #f0d68a;
 }
-.itype-counter .material-symbols-outlined {
+
+.ingredient-type-counter .material-symbols-outlined {
 	font-size: 14px;
 }
 
-.itype-hint {
+.ingredient-type-hint {
 	font-size: 13px;
 	color: rgba(30, 15, 35, 0.55);
 	margin: 0;
 	line-height: 1.5;
 }
 
-.itype-grid {
+.ingredient-type-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 	gap: 10px;
 }
 
-.itype-card {
+.ingredient-type-card {
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -110,48 +121,68 @@
 		box-shadow 0.2s ease,
 		background 0.2s ease;
 }
-.itype-card:hover:not([disabled]) {
+
+.ingredient-type-card:hover:not([disabled]) {
 	transform: translateY(-2px);
 	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
-.itype-card.selected {
+
+.ingredient-type-card.selected {
 	border-color: currentColor;
 	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
-.itype-card.at-cap {
+
+.ingredient-type-card.at-cap {
 	opacity: 0.4;
 	cursor: not-allowed;
 }
 
-.itype-card.veg       { background: #d4f5d4; color: #2d6a2d; }
-.itype-card.meat      { background: #fde8e8; color: #8b2020; }
-.itype-card.seas      { background: #fff4d4; color: #7a5500; }
-.itype-card.dairy     { background: #fff8ec; color: #7a4f00; }
-.itype-card.grain     { background: #fef3e2; color: #7a5800; }
-.itype-card.liq       { background: #e3f0ff; color: #1a4a7a; }
-.itype-card.spice     { background: #fde8d4; color: #7a2800; }
-.itype-card.seafood   { background: #cce8f5; color: #0a4a6a; }
-.itype-card.egg       { background: #fef8d4; color: #7a5e00; }
-.itype-card.nut       { background: #f5e8d8; color: #6b3800; }
-.itype-card.fruit     { background: #fdd8d8; color: #7a1010; }
-.itype-card.oil       { background: #fef0d4; color: #7a4a00; }
-.itype-card.herb      { background: #e0f5d8; color: #285a18; }
-.itype-card.fungi     { background: #f0d4f5; color: #581a78; }
-.itype-card.sweet     { background: #fde8ef; color: #7a1040; }
-.itype-card.condiment { background: #f5ddd4; color: #7a2400; }
+.ingredient-type-card.veg       { background: #d4f5d4; color: #2d6a2d; }
 
-.itype-emoji {
+.ingredient-type-card.meat      { background: #fde8e8; color: #8b2020; }
+
+.ingredient-type-card.seas      { background: #fff4d4; color: #7a5500; }
+
+.ingredient-type-card.dairy     { background: #fff8ec; color: #7a4f00; }
+
+.ingredient-type-card.grain     { background: #fef3e2; color: #7a5800; }
+
+.ingredient-type-card.liq       { background: #e3f0ff; color: #1a4a7a; }
+
+.ingredient-type-card.spice     { background: #fde8d4; color: #7a2800; }
+
+.ingredient-type-card.seafood   { background: #cce8f5; color: #0a4a6a; }
+
+.ingredient-type-card.egg       { background: #fef8d4; color: #7a5e00; }
+
+.ingredient-type-card.nut       { background: #f5e8d8; color: #6b3800; }
+
+.ingredient-type-card.fruit     { background: #fdd8d8; color: #7a1010; }
+
+.ingredient-type-card.oil       { background: #fef0d4; color: #7a4a00; }
+
+.ingredient-type-card.herb      { background: #e0f5d8; color: #285a18; }
+
+.ingredient-type-card.fungi     { background: #f0d4f5; color: #581a78; }
+
+.ingredient-type-card.sweet     { background: #fde8ef; color: #7a1040; }
+
+.ingredient-type-card.condiment { background: #f5ddd4; color: #7a2400; }
+
+.ingredient-type-emoji {
 	font-size: 28px;
 	line-height: 1;
 }
-.itype-label {
+
+.ingredient-type-label {
 	font-size: 11.5px;
 	font-weight: 600;
 	letter-spacing: 0.4px;
 	text-align: center;
 	line-height: 1.3;
 }
-.itype-check {
+
+.ingredient-type-check {
 	position: absolute;
 	top: 6px;
 	right: 6px;
@@ -160,21 +191,29 @@
 	opacity: 0.85;
 }
 
-@media (max-width: 580px) {
-	::ng-deep .itype-dialog {
+/* ─────────────────────────────────────────
+   Responsive ≤ 940 px (mobile)
+───────────────────────────────────────── */
+
+@media (max-width: 940px) {
+	::ng-deep .ingredient-type-dialog {
 		min-width: 100% !important;
 		min-height: 100dvh !important;
 		border-radius: 0 !important;
 	}
-	::ng-deep .itype-dialog .p-dialog-header {
+
+	::ng-deep .ingredient-type-dialog .p-dialog-header {
 		border-radius: 0 !important;
 	}
-	::ng-deep .itype-dialog .p-dialog-content {
+
+	::ng-deep .ingredient-type-dialog .p-dialog-content {
 		flex: 1 !important;
 		display: flex !important;
 		flex-direction: column !important;
 	}
-	::ng-deep .itype-dialog .p-dialog-footer {
+
+	::ng-deep .ingredient-type-dialog .p-dialog-footer {
 		border-radius: 0 !important;
 	}
+
 }

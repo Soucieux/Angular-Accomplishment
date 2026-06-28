@@ -29,88 +29,88 @@ export class MovieItemVO {
 	}
 
 	/**
-	 * Get the movie name.
+	 * Gets the movie name.
 	 *
 	 * @returns The movie name, or empty string if not set.
 	 */
-	getMovieName(): string {
+	public getMovieName(): string {
 		return this.title ? this.title : '';
 	}
 
 	/**
-	 * Get the Douban movie ID.
+	 * Gets the Douban movie ID.
 	 *
 	 * @returns The movie ID, or -1 if not set.
 	 */
-	getMovieId(): number {
+	public getMovieId(): number {
 		return this.id;
 	}
 
 	/**
-	 * Get the movie genre.
+	 * Gets the movie genre.
 	 *
 	 * @returns The genre string, or empty string if not set.
 	 */
-	getMovieGenre(): string {
+	public getMovieGenre(): string {
 		return this.genre;
 	}
 
 	/**
-	 * Get the movie rating.
+	 * Gets the movie rating.
 	 *
 	 * @returns The rating value, or -1 if not set.
 	 */
-	getMovieRate(): number {
+	public getMovieRate(): number {
 		return this.rate;
 	}
 
 	/**
-	 * Get the downloadable link for the movie cover image.
+	 * Gets the downloadable link for the movie cover image.
 	 *
 	 * @returns The cover image URL, or empty string if not set.
 	 */
-	getMovieCoverImageDownloadableLink(): string {
+	public getMovieCoverImageDownloadableLink(): string {
 		return this.coverImageDownloadableLink;
 	}
 
 	/**
-	 * Get the movie release year.
+	 * Gets the movie release year.
 	 *
 	 * @returns The year, or -1 if not set.
 	 */
-	getMovieYear(): number {
+	public getMovieYear(): number {
 		return this.year ? this.year : -1;
 	}
 
 	/**
-	 * Get the movie first release date.
+	 * Gets the movie first release date.
 	 *
 	 * @returns The release date string (e.g. "2024.01.15"), or empty string if not set.
 	 */
-	getMovieFirstReleaseDate(): string {
+	public getMovieFirstReleaseDate(): string {
 		return this.firstReleaseDate;
 	}
 
 	/**
-	 * Get the total number of episodes.
+	 * Gets the total number of episodes.
 	 *
 	 * @returns The episode count, or -1 if not set.
 	 */
-	getMovieEpisodeNumber(): number {
+	public getMovieEpisodeNumber(): number {
 		return this.episodeNumber;
 	}
 
 	/**
-	 * Get the database key of the movie document.
+	 * Gets the database key of the movie document.
 	 *
 	 * @returns The document key, or empty string if not set.
 	 */
-	getMovieKey(): string {
+	public getMovieKey(): string {
 		return this.movieKey;
 	}
 
 	/**
-	 * Get the cover image Blob.
+	 * Gets the cover image Blob.
 	 *
 	 * @returns The cover image Blob, or null if not set.
 	 */
@@ -119,25 +119,25 @@ export class MovieItemVO {
 	}
 
 	/**
-	 * Get whether the movie is marked as a favourite.
+	 * Gets whether the movie is marked as a favourite.
 	 *
 	 * @returns true if the movie is a favourite.
 	 */
-	getIsFavourite(): boolean {
+	public getIsFavourite(): boolean {
 		return this.isFavourite;
 	}
 
 	/**
-	 * Get the session ID assigned during rate search.
+	 * Gets the session ID assigned during rate search.
 	 *
 	 * @returns The session ID, or -1 if not set.
 	 */
-	getSessionId(): number {
+	public getSessionId(): number {
 		return this.sessionId;
 	}
 
 	/**
-	 * Get the movie description.
+	 * Gets the movie description.
 	 *
 	 * @returns The description string, or empty string if not set.
 	 */
@@ -146,7 +146,7 @@ export class MovieItemVO {
 	}
 
 	/**
-	 * Get the movie actors list.
+	 * Gets the movie actors list.
 	 *
 	 * @returns The actors string, or empty string if not set.
 	 */
@@ -155,90 +155,90 @@ export class MovieItemVO {
 	}
 
 	/**
-	 * Set the movie name.
+	 * Sets the movie name.
 	 *
 	 * @param title - The movie name.
 	 */
-	setMovieName(title: string) {
+	public setMovieName(title: string) {
 		this.title = title;
 	}
 
 	/**
-	 * Set the Douban movie ID. Coerces string values to number.
+	 * Sets the Douban movie ID. Coerces string values to number.
 	 *
 	 * @param id - The movie ID.
 	 */
-	setMovieId(id: number) {
+	public setMovieId(id: number) {
 		this.id = typeof id === 'string' ? Number(id) : id;
 	}
 
 	/**
-	 * Set the movie genre.
+	 * Sets the movie genre.
 	 *
 	 * @param genre - The genre string.
 	 */
-	setMovieGenre(genre: string) {
+	public setMovieGenre(genre: string) {
 		this.genre = genre;
 	}
 
 	/**
-	 * Set the movie rating. Coerces string values to number.
+	 * Sets the movie rating. Coerces string values to number.
 	 * No-ops if the value is null or undefined.
 	 *
 	 * @param rate - The rating value.
 	 */
-	setMovieRate(rate: number) {
+	public setMovieRate(rate: number) {
 		if (rate === null || rate === undefined) return;
 		this.rate = typeof rate === 'string' ? Number(rate) : rate;
 	}
 
 	/**
-	 * Set the movie release year.
+	 * Sets the movie release year.
 	 *
 	 * @param year - The year.
 	 */
-	setMovieYear(year: number) {
+	public setMovieYear(year: number) {
 		this.year = year;
 	}
 
 	/**
-	 * Set the downloadable link for the movie cover image.
+	 * Sets the downloadable link for the movie cover image.
 	 *
 	 * @param coverImageDownloadableLink - The cover image URL.
 	 */
-	setMovieCoverImageDownloadableLink(coverImageDownloadableLink: string) {
+	public setMovieCoverImageDownloadableLink(coverImageDownloadableLink: string) {
 		this.coverImageDownloadableLink = coverImageDownloadableLink;
 	}
 
 	/**
-	 * Set the movie first release date.
+	 * Sets the movie first release date.
 	 *
 	 * @param firstReleaseDate - The release date string.
 	 */
-	setMovieFirstReleaseDate(firstReleaseDate: string) {
+	public setMovieFirstReleaseDate(firstReleaseDate: string) {
 		this.firstReleaseDate = firstReleaseDate;
 	}
 
 	/**
-	 * Set the total number of episodes. Coerces string values to number.
+	 * Sets the total number of episodes. Coerces string values to number.
 	 *
 	 * @param episodeNumber - The episode count.
 	 */
-	setMovieEpisodeNumber(episodeNumber: number) {
+	public setMovieEpisodeNumber(episodeNumber: number) {
 		this.episodeNumber = typeof episodeNumber === 'string' ? Number(episodeNumber) : episodeNumber;
 	}
 
 	/**
-	 * Set the database key of the movie document.
+	 * Sets the database key of the movie document.
 	 *
 	 * @param movieKey - The document key.
 	 */
-	setMovieKey(movieKey: string) {
+	public setMovieKey(movieKey: string) {
 		this.movieKey = movieKey;
 	}
 
 	/**
-	 * Set the cover image Blob.
+	 * Sets the cover image Blob.
 	 *
 	 * @param coverImage - The cover image Blob.
 	 */
@@ -247,38 +247,38 @@ export class MovieItemVO {
 	}
 
 	/**
-	 * Set the session ID for rate search tracking.
+	 * Sets the session ID for rate search tracking.
 	 *
 	 * @param sessionId - The session ID.
 	 */
-	setSessionId(sessionId: number) {
+	public setSessionId(sessionId: number) {
 		this.sessionId = sessionId;
 	}
 
 	/**
-	 * Set whether the movie is a favourite. Falls back to false if null/undefined.
+	 * Sets whether the movie is a favourite. Falls back to false if null/undefined.
 	 *
 	 * @param isFavourite - The favourite flag.
 	 */
-	setIsFavourite(isFavourite: boolean) {
+	public setIsFavourite(isFavourite: boolean) {
 		this.isFavourite = isFavourite ?? false;
 	}
 
 	/**
-	 * Set the movie description.
+	 * Sets the movie description.
 	 *
 	 * @param description - The description string.
 	 */
-	setDescription(description: string) {
+	public setDescription(description: string) {
 		this.description = description;
 	}
 
 	/**
-	 * Set the movie actors list.
+	 * Sets the movie actors list.
 	 *
 	 * @param actors - The actors string.
 	 */
-	setActors(actors: string) {
+	public setActors(actors: string) {
 		this.actors = actors;
 	}
 
@@ -287,7 +287,7 @@ export class MovieItemVO {
 	 *
 	 * @returns The owner openid string, or empty string if not set.
 	 */
-	getOpenId(): string {
+	public getOpenId(): string {
 		return this.openid;
 	}
 
@@ -296,7 +296,7 @@ export class MovieItemVO {
 	 *
 	 * @param openid - The _openid field value from the CloudBase document.
 	 */
-	setOpenId(openid: string) {
+	public setOpenId(openid: string) {
 		this.openid = openid;
 	}
 }

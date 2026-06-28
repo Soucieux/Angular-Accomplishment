@@ -72,10 +72,10 @@
 								<div class="body">
 									<div class="name">{{ recipe.name }}</div>
 									<div class="badge-row">
-										@for (b of recipe.badges; track b.label) {
-											<span class="ipill" [class]="b.type"
-												>{{ b.emoji
-												}}<span class="hide-on-narrow-or-mobile"> {{ b.label }}</span></span
+										@for (badge of recipe.badges; track badge.label) {
+											<span class="ipill" [class]="badge.type"
+												>{{ badge.emoji
+												}}<span class="hide-on-narrow-or-mobile"> {{ badge.label }}</span></span
 											>
 										}
 									</div>
@@ -148,29 +148,33 @@
 
 						<div class="panel-collapse-body" #ingredientsScroll>
 							<div class="servings-row">
-								<button (click)="decServings()" [attr.aria-label]="RECIPE_ARIA_DEC_SERVINGS">−</button>
+								<button (click)="decServings()" [attr.aria-label]="RECIPE_ARIA_DEC_SERVINGS">
+									<span class="material-symbols-outlined">remove</span>
+								</button>
 								<span class="count">{{ servings }} {{ RECIPE_SUFFIX_SERVINGS }}</span>
-								<button (click)="incServings()" [attr.aria-label]="RECIPE_ARIA_INC_SERVINGS">+</button>
+								<button (click)="incServings()" [attr.aria-label]="RECIPE_ARIA_INC_SERVINGS">
+									<span class="material-symbols-outlined">add</span>
+								</button>
 							</div>
 
-							@for (g of selectedRecipe.groups; track g.type) {
-								@let visible = getVisibleItems(g);
+							@for (group of selectedRecipe.groups; track group.type) {
+								@let visible = getVisibleItems(group);
 								@if (visible.length > 0) {
 									<div class="igroup">
-										<div class="igroup-header" [class]="g.type">
-											<span class="emoji">{{ g.emoji }}</span> {{ g.label }}
+										<div class="igroup-header" [class]="group.type">
+											<span class="emoji">{{ group.emoji }}</span> {{ group.label }}
 										</div>
-										@for (it of visible; track it.name) {
-											<div class="irow" [class]="g.type">
+										@for (item of visible; track item.name) {
+											<div class="irow" [class]="group.type">
 												<span class="dot"></span>
-												<span class="iname">{{ it.name }}</span>
-												@if (formatQtyNum(it.baseQty)) {
+												<span class="iname">{{ item.name }}</span>
+												@if (formatQtyNum(item.baseQty)) {
 													<span class="ingredient-quantity">
 														<span class="ingredient-quantity-number">{{
-															formatQtyNum(it.baseQty)
+															formatQtyNum(item.baseQty)
 														}}</span>
-														@if (it.unit && !isNumericUnit(it.unit)) {
-															<span class="ingredient-quantity-unit">{{ it.unit }}</span>
+														@if (item.unit && !isNumericUnit(item.unit)) {
+															<span class="ingredient-quantity-unit">{{ item.unit }}</span>
 														}
 													</span>
 												}
@@ -197,13 +201,13 @@
 									(click)="toggleStepDone(step, $event)">
 									<div class="num">{{ $index + 1 }}</div>
 									<div class="text">
-										@for (tok of step.text; track $index) {
-											@if (tok.kind === 'pill') {
-												<span class="ipill tiny" [class]="tok.pillType ?? ''">{{
-													utilities.capitalizeFirstLetterOnEachWord(tok.text)
+										@for (token of step.text; track $index) {
+											@if (token.kind === 'pill') {
+												<span class="ipill tiny" [class]="token.pillType ?? ''">{{
+													utilities.capitalizeFirstLetterOnEachWord(token.text)
 												}}</span>
 											} @else {
-												<span>{{ tok.text }}</span>
+												<span>{{ token.text }}</span>
 											}
 										}
 									</div>
@@ -341,27 +345,27 @@
 						</h2>
 						<div class="panel-collapse-body editor-body">
 							<div class="editor-groups">
-								@for (g of editorGroupedIngredients; track g.type) {
-									<div class="ing-group" [class]="g.type">
-										<div class="ing-group-head">{{ g.emoji }} {{ g.label }}</div>
-										@for (it of g.items; track $index) {
-											<div class="ing-row" [class]="g.type">
+								@for (group of editorGroupedIngredients; track group.type) {
+									<div class="ing-group" [class]="group.type">
+										<div class="ing-group-head">{{ group.emoji }} {{ group.label }}</div>
+										@for (item of group.items; track $index) {
+											<div class="ing-row" [class]="group.type">
 												<span class="type-dot"></span>
 												<textarea
 													class="name"
 													[placeholder]="RECIPE_PLACEHOLDER_INGREDIENT"
 													rows="1"
-													[(ngModel)]="it.name"></textarea>
+													[(ngModel)]="item.name"></textarea>
 												<div class="ing-qty-group">
 													<input
 														class="quantity"
 														type="text"
 														[placeholder]="RECIPE_PLACEHOLDER_QTY"
-														[(ngModel)]="it.qty" />
+														[(ngModel)]="item.qty" />
 													<p-autocomplete
 														class="unit-ac"
 														panelStyleClass="unit-ac-panel"
-														[class.required]="it.qty && !it.unit"
+														[class.required]="item.qty && !item.unit"
 														[placeholder]="RECIPE_PLACEHOLDER_UNIT"
 														[suggestions]="editorUnitSuggestions"
 														[completeOnFocus]="true"
@@ -371,13 +375,13 @@
 														appendTo="body"
 														(onFocus)="onUnitFocus()"
 														(completeMethod)="filterUnits($event)"
-														[(ngModel)]="it.unit"
+														[(ngModel)]="item.unit"
 														(ngModelChange)="onEditorUnitInput()" />
 													<button
 														class="remove"
 														title="Remove"
-														(click)="removeEditorIngredient(it)">
-														×
+														(click)="removeEditorIngredient(item)">
+														<span class="material-symbols-outlined">close</span>
 													</button>
 												</div>
 											</div>
@@ -451,7 +455,7 @@
 														class="remove"
 														title="Remove"
 														(click)="removeSubpoint(step, sub)">
-														×
+														<span class="material-symbols-outlined">close</span>
 													</button>
 												</div>
 											}
@@ -466,14 +470,14 @@
 											title="Drag to reorder"
 											draggable="true"
 											(dragstart)="onStepDragStart(step, $event)"
-											(dragend)="onStepDragEnd()"
-											>⋮⋮</span
-										>
+											(dragend)="onStepDragEnd()">
+											<span class="material-symbols-outlined">drag_indicator</span>
+										</span>
 										<button
 											class="remove"
 											title="Remove step"
 											(click)="removeEditorStep(step)">
-											×
+											<span class="material-symbols-outlined">close</span>
 										</button>
 									</div>
 								</div>

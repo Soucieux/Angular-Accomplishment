@@ -419,10 +419,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	/**
 	 * Sets the active category filter for the recipe list and resets to the first page.
 	 *
-	 * @param cat - The category string to activate (use {@link RECIPE_CATEGORY_KEY_ALL} to show all).
+	 * @param category - The category string to activate (use {@link RECIPE_CATEGORY_KEY_ALL} to show all).
 	 */
-	protected selectCategory(cat: string): void {
-		this.selectedCategory = cat;
+	protected selectCategory(category: string): void {
+		this.selectedCategory = category;
 		this.currentPage = 0;
 	}
 
@@ -440,7 +440,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	}
 
 	/**
-	 * Navigate back to the recipe list view from the detail or editor view.
+	 * Navigates back to the recipe list view from the detail or editor view.
 	 */
 	protected backToList(): void {
 		this.transitionTo(RECIPE_VIEW_LIST);
@@ -524,7 +524,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 
 	/**
 	 * Toggles the collapsed state of the ingredients panel on mobile only.
-	 * On desktop viewports (> 800 px) the panel is always expanded and this
+	 * On desktop viewports (> 940 px) the panel is always expanded and this
 	 * method is a no-op.
 	 */
 	protected toggleIngredients(): void {
@@ -852,10 +852,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * Removes an ingredient row from the editor list.
 	 * Also clears the unit-invalid flag if the removal resolves all violations.
 	 *
-	 * @param ing - The ingredient row to remove.
+	 * @param ingredientToRemove - The ingredient row to remove.
 	 */
-	protected removeEditorIngredient(ing: EditorIngredient): void {
-		this.editorIngredients = this.editorIngredients.filter((ingredient) => ingredient !== ing);
+	protected removeEditorIngredient(ingredientToRemove: EditorIngredient): void {
+		this.editorIngredients = this.editorIngredients.filter(
+			(ingredient) => ingredient !== ingredientToRemove
+		);
 		if (this.editorIngredientInvalid && !this.hasIngredientUnitViolation) {
 			this.editorIngredientInvalid = false;
 		}
@@ -929,10 +931,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * Selects a category from the custom dropdown, closes the panel,
 	 * and clears the invalid flag if one was showing.
 	 *
-	 * @param cat - The category string the user clicked.
+	 * @param category - The category string the user clicked.
 	 */
-	protected selectCategoryOption(cat: string): void {
-		this.editorCategory = cat;
+	protected selectCategoryOption(category: string): void {
+		this.editorCategory = category;
 		this.editorCategoryOpen = false;
 		this.editorCategoryInvalid = false;
 		// Needed for the same reason as onDocumentClick — HostListener runs outside normal CD.
@@ -1395,10 +1397,10 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	/**
 	 * Gets the locale-resolved display label for a recipe category key.
 	 *
-	 * @param cat - The English category key as stored in the database.
+	 * @param category - The English category key as stored in the database.
 	 * @returns The translated label for the active locale, or the raw key as fallback.
 	 */
-	protected categoryDisplayLabel(cat: string): string {
-		return this.localeCategoryLabels[cat] ?? cat;
+	protected categoryDisplayLabel(category: string): string {
+		return this.localeCategoryLabels[category] ?? category;
 	}
 }

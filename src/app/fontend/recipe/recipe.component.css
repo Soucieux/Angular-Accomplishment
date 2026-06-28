@@ -128,8 +128,7 @@
 	color: var(--ink-muted);
 }
 /* PAGE-TITLE SIZE STANDARD
- * Compact-header pages (Entertainment): 28px desktop / 15px mobile
- * Large-header pages  (Portal, Resonance, Patch Notes, Recipe): 44px desktop / 28px mobile
+ * Large-header pages (Portal, Resonance, Patch Notes, Recipe): 44px desktop / 28px mobile
  * All pages: font-weight 500
  */
 .page-title {
@@ -897,9 +896,16 @@
 	font-weight: 600;
 	cursor: pointer;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	transition:
 		transform 0.15s ease,
 		background 0.15s ease;
+}
+
+.servings-row button .material-symbols-outlined {
+	font-size: 18px;
 }
 .servings-row button:hover {
 	transform: scale(1.08);
@@ -2245,231 +2251,6 @@
 	color: rgba(122, 87, 30, 0.45);
 	font-style: italic;
 }
-
-/* ─────────────────────────────────────────
-   Responsive ≤ 940 px (narrow viewport)
-───────────────────────────────────────── */
-@media (max-width: 940px) {
-	.recipe-card .name {
-		font-size: 18px;
-	}
-	.page-title {
-		font-size: 28px; /* large-header mobile standard */
-	}
-	.detail-title {
-		font-size: 26px;
-	}
-	.detail-grid {
-		grid-template-columns: 1fr;
-		gap: 20px;
-	}
-	.toolbar {
-		flex-direction: column;
-		align-items: stretch;
-	}
-	.search {
-		max-width: none;
-	}
-
-	/* On mobile, ingredients is pushed above steps — collapsible so the user
-	   can swipe past it to reach the steps. */
-	.ingredients-panel {
-		height: auto;
-	}
-	.ingredients-panel .panel-collapse-body {
-		max-height: 45vh;
-		overflow-y: auto;
-		overflow-x: hidden;
-	}
-	.ingredients-panel .panel-heading.collapsible {
-		cursor: pointer;
-	}
-	.ingredients-panel .panel-heading.collapsible:hover {
-		background: rgba(22, 163, 74, 0.05);
-	}
-	.ingredients-panel .panel-heading .chev {
-		display: inline-flex;
-	}
-	.ingredients-panel.collapsed .panel-collapse-body {
-		max-height: 0;
-		opacity: 0;
-	}
-
-	.ipill {
-		font-size: 11px;
-	}
-
-	.meta-chip {
-		font-size: 11px;
-	}
-
-	.view-recipe {
-		font-size: 9px;
-	}
-
-	/* Steps panel sizes to content on mobile */
-	.steps-panel {
-		height: auto !important;
-	}
-	.steps {
-		overflow: visible;
-		padding-right: 0;
-		margin-right: 0;
-	}
-
-	/* Editor view mobile tweaks */
-	.editor-topbar {
-		flex-wrap: wrap;
-		gap: 10px;
-		margin-bottom: 16px;
-	}
-	.editor-actions {
-		margin-left: auto;
-		flex-wrap: wrap;
-		justify-content: flex-end;
-	}
-	.title-field {
-		font-size: 32px;
-		letter-spacing: 1.2px;
-	}
-	.editor-panel {
-		height: auto !important;
-		min-height: 420px;
-		max-height: none;
-	}
-	.add-footer {
-		padding-top: 12px;
-	}
-	.type-tabs {
-		display: flex;
-		flex-wrap: nowrap;
-		overflow-x: auto;
-		overflow-y: hidden;
-		scrollbar-width: thin;
-		scrollbar-color: transparent transparent;
-		transition: scrollbar-color 0.4s ease;
-		padding-bottom: 8px;
-	}
-	.type-tabs::-webkit-scrollbar {
-		height: 3px;
-	}
-	.type-tabs::-webkit-scrollbar-track {
-		background: transparent;
-	}
-	.type-tabs::-webkit-scrollbar-thumb {
-		background: transparent;
-		border-radius: 999px;
-	}
-	.type-tabs.is-scrolling {
-		scrollbar-color: rgba(217, 119, 6, 0.28) transparent;
-	}
-	.type-tabs.is-scrolling::-webkit-scrollbar-thumb {
-		background: rgba(217, 119, 6, 0.28);
-	}
-	.type-tab {
-		flex: none;
-	}
-	.type-tabs .manage-button {
-		flex: none;
-		width: 50px;
-	}
-	.ing-row .remove,
-	.step-card .remove,
-	.sub-row .remove {
-		opacity: 1;
-	}
-
-	/* Category chips — two-element split fixes chipPulse shadow clipping.
-	   overflow:auto clips shadows at the content-box edge (not padding edge),
-	   so we separate the scroll container (.chips-scroll) from the flex
-	   container (.chips).  The 22px padding-left on .chips positions the first
-	   chip 22px inside .chips-scroll's content area, giving the 22px leftward
-	   shadow bleed full room.  20px padding-top covers the 18px upward bleed.
-	   Negative margins on .chips-scroll keep the chip at the same visual
-	   position as on desktop. */
-	/* iOS/WebKit does not support custom scrollbar colour — the native grey
-	   indicator is displayed as-is during scroll. No custom styling applied. */
-	.chips-scroll {
-		overflow-x: auto;
-		margin: -6px 0px 5px -22px;
-	}
-	.chips {
-		flex-wrap: nowrap;
-		gap: 8px;
-		margin: 0;
-		padding: 20px 0 10px 22px;
-	}
-	.chip {
-		flex-shrink: 0;
-		height: 30px;
-		padding: 0 14px;
-		font-size: 12px;
-	}
-
-	/* Slightly smaller action buttons */
-	.btn {
-		height: 40px;
-		padding: 0 16px;
-		font-size: 13px;
-	}
-	.btn .material-symbols-outlined {
-		font-size: 16px;
-	}
-
-	/* Panel heading */
-	.panel-heading {
-		font-size: 18px;
-		margin: 0 0 12px;
-	}
-	.panel-heading .material-symbols-outlined {
-		font-size: 18px;
-	}
-
-	/* Panel padding */
-	.panel {
-		padding: 16px 18px 20px;
-	}
-
-	/* Grid: smaller minimum for narrow phones */
-	.grid {
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-		gap: 16px;
-	}
-
-	/* Spacing reductions */
-	.detail-header {
-		margin-bottom: 18px;
-	}
-	.notes-card {
-		margin-top: 20px;
-	}
-	.header-ornament {
-		margin: 8px 0 16px;
-	}
-
-	/* Notepad: less left indent on narrow screens */
-	.notepad,
-	.editor-notepad {
-		padding: 2px 14px 14px 40px;
-	}
-	.notepad::before {
-		left: 28px;
-	}
-
-	/* Steps tighten */
-	.step {
-		padding: 12px 14px 12px 16px;
-		column-gap: 12px;
-	}
-
-	/* Category dropdown — ensure panel doesn't overflow narrow screens */
-	.category-panel {
-		min-width: 140px;
-		left: 0;
-		right: auto;
-	}
-}
-
 /* ─────────────────────────────────────────
    Skeleton
 ───────────────────────────────────────── */
@@ -3174,4 +2955,228 @@
 	display: flex;
 	justify-content: center;
 	margin-top: 8px;
+}
+
+/* ─────────────────────────────────────────
+   Responsive ≤ 940 px (narrow viewport)
+───────────────────────────────────────── */
+@media (max-width: 940px) {
+	.recipe-card .name {
+		font-size: 18px;
+	}
+	.page-title {
+		font-size: 28px; /* large-header mobile standard */
+	}
+	.detail-title {
+		font-size: 26px;
+	}
+	.detail-grid {
+		grid-template-columns: 1fr;
+		gap: 20px;
+	}
+	.toolbar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.search {
+		max-width: none;
+	}
+
+	/* On mobile, ingredients is pushed above steps — collapsible so the user
+	   can swipe past it to reach the steps. */
+	.ingredients-panel {
+		height: auto;
+	}
+	.ingredients-panel .panel-collapse-body {
+		max-height: 45vh;
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+	.ingredients-panel .panel-heading.collapsible {
+		cursor: pointer;
+	}
+	.ingredients-panel .panel-heading.collapsible:hover {
+		background: rgba(22, 163, 74, 0.05);
+	}
+	.ingredients-panel .panel-heading .chev {
+		display: inline-flex;
+	}
+	.ingredients-panel.collapsed .panel-collapse-body {
+		max-height: 0;
+		opacity: 0;
+	}
+
+	.ipill {
+		font-size: 11px;
+	}
+
+	.meta-chip {
+		font-size: 11px;
+	}
+
+	.view-recipe {
+		font-size: 9px;
+	}
+
+	/* Steps panel sizes to content on mobile */
+	.steps-panel {
+		height: auto !important;
+	}
+	.steps {
+		overflow: visible;
+		padding-right: 0;
+		margin-right: 0;
+	}
+
+	/* Editor view mobile tweaks */
+	.editor-topbar {
+		flex-wrap: wrap;
+		gap: 10px;
+		margin-bottom: 16px;
+	}
+	.editor-actions {
+		margin-left: auto;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+	}
+	.title-field {
+		font-size: 32px;
+		letter-spacing: 1.2px;
+	}
+	.editor-panel {
+		height: auto !important;
+		min-height: 420px;
+		max-height: none;
+	}
+	.add-footer {
+		padding-top: 12px;
+	}
+	.type-tabs {
+		display: flex;
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scrollbar-width: thin;
+		scrollbar-color: transparent transparent;
+		transition: scrollbar-color 0.4s ease;
+		padding-bottom: 8px;
+	}
+	.type-tabs::-webkit-scrollbar {
+		height: 3px;
+	}
+	.type-tabs::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.type-tabs::-webkit-scrollbar-thumb {
+		background: transparent;
+		border-radius: 999px;
+	}
+	.type-tabs.is-scrolling {
+		scrollbar-color: rgba(217, 119, 6, 0.28) transparent;
+	}
+	.type-tabs.is-scrolling::-webkit-scrollbar-thumb {
+		background: rgba(217, 119, 6, 0.28);
+	}
+	.type-tab {
+		flex: none;
+	}
+	.type-tabs .manage-button {
+		flex: none;
+		width: 50px;
+	}
+	.ing-row .remove,
+	.step-card .remove,
+	.sub-row .remove {
+		opacity: 1;
+	}
+
+	/* Category chips — two-element split fixes chipPulse shadow clipping.
+	   overflow:auto clips shadows at the content-box edge (not padding edge),
+	   so we separate the scroll container (.chips-scroll) from the flex
+	   container (.chips).  The 22px padding-left on .chips positions the first
+	   chip 22px inside .chips-scroll's content area, giving the 22px leftward
+	   shadow bleed full room.  20px padding-top covers the 18px upward bleed.
+	   Negative margins on .chips-scroll keep the chip at the same visual
+	   position as on desktop. */
+	/* iOS/WebKit does not support custom scrollbar colour — the native grey
+	   indicator is displayed as-is during scroll. No custom styling applied. */
+	.chips-scroll {
+		overflow-x: auto;
+		margin: -6px 0px 5px -22px;
+	}
+	.chips {
+		flex-wrap: nowrap;
+		gap: 8px;
+		margin: 0;
+		padding: 20px 0 10px 22px;
+	}
+	.chip {
+		flex-shrink: 0;
+		height: 30px;
+		padding: 0 14px;
+		font-size: 12px;
+	}
+
+	/* Slightly smaller action buttons */
+	.btn {
+		height: 40px;
+		padding: 0 16px;
+		font-size: 13px;
+	}
+	.btn .material-symbols-outlined {
+		font-size: 16px;
+	}
+
+	/* Panel heading */
+	.panel-heading {
+		font-size: 18px;
+		margin: 0 0 12px;
+	}
+	.panel-heading .material-symbols-outlined {
+		font-size: 18px;
+	}
+
+	/* Panel padding */
+	.panel {
+		padding: 16px 18px 20px;
+	}
+
+	/* Grid: smaller minimum for narrow phones */
+	.grid {
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: 16px;
+	}
+
+	/* Spacing reductions */
+	.detail-header {
+		margin-bottom: 18px;
+	}
+	.notes-card {
+		margin-top: 20px;
+	}
+	.header-ornament {
+		margin: 8px 0 16px;
+	}
+
+	/* Notepad: less left indent on narrow screens */
+	.notepad,
+	.editor-notepad {
+		padding: 2px 14px 14px 40px;
+	}
+	.notepad::before {
+		left: 28px;
+	}
+
+	/* Steps tighten */
+	.step {
+		padding: 12px 14px 12px 16px;
+		column-gap: 12px;
+	}
+
+	/* Category dropdown — ensure panel doesn't overflow narrow screens */
+	.category-panel {
+		min-width: 140px;
+		left: 0;
+		right: auto;
+	}
 }

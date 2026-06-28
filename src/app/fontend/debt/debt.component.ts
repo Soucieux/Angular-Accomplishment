@@ -787,10 +787,10 @@ export class DebtComponent implements OnInit, OnDestroy {
 			this.syncStatTimer = null;
 
 			// Cap the upcoming list to the activity-log limit — the stats collection has a fixed document size
-			this.databaseService.updateStatisticsFields({
+			this.databaseService.updateUserStatsFields({
 				[STATS_FIELD_DEBT_UPCOMING]: this.upcomingExpenses.slice(0, STATS_CAP_ACTIVITY_LOG),
 				[STATS_FIELD_TOTAL_DEBTS]: this.upcomingExpenses.length
-			});
+			}).catch(() => {});
 		}, 0);
 	}
 

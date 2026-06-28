@@ -85,9 +85,9 @@ export class DeleteAccountDialogComponent {
 			// reset here (not in finally) because the success path closes before this branch runs
 			this.isSubmitting = false;
 			if (error instanceof WrongOldPasswordError) {
-				this.errorMessage = (error as Error).message;
+				this.errorMessage = error.message;
 			} else if (error instanceof AccountRateLimitedError) {
-				this.errorMessage = (error as Error).message;
+				this.errorMessage = error.message;
 			} else if (error instanceof SessionExpiredError) {
 				this.onDialogClosed();
 				this.sessionExpired$.emit();

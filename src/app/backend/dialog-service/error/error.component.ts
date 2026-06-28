@@ -24,6 +24,7 @@ import {
 export class ErrorDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	private confirmationService = inject(ConfirmationService);
+
 	/**
 	 * Opens an error dialog displaying the given error message.
 	 *
@@ -41,8 +42,8 @@ export class ErrorDialogComponent {
 				style: { width: '100px' }
 			}
 		});
-    }
-    
+	}
+
 	/**
 	 * Handles the dialog closed event by emitting the closed event.
 	 */

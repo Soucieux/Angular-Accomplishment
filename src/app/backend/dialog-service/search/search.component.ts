@@ -1,8 +1,9 @@
 import { SearchStreamService } from './search-stream.service';
-import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
+import { Utilities } from '../../../common/utilities/app.utilities';
 import {
 	ENT_DIALOG_TITLE_SEARCH,
 	ENT_BTN_STOP,
@@ -17,9 +18,9 @@ import {
 	templateUrl: './search.component.html',
 	styleUrl: './search.component.css'
 })
-export class SearchDialogComponent {
+export class SearchDialogComponent implements AfterViewInit {
 	@Output() closed$ = new EventEmitter<void>();
-	@ViewChild('logContainer') logContainer!: ElementRef<HTMLDivElement>;
+	@ViewChild('logContainer') private logContainer!: ElementRef<HTMLDivElement>;
 	protected readonly ENT_DIALOG_TITLE_SEARCH = ENT_DIALOG_TITLE_SEARCH;
 	protected readonly ENT_BTN_STOP = ENT_BTN_STOP;
 	protected readonly ENT_BTN_DONE = ENT_BTN_DONE;
@@ -30,6 +31,13 @@ export class SearchDialogComponent {
 	private searchLogsSub!: Subscription;
 
 	constructor(private searchStreamService: SearchStreamService) {}
+
+	/**
+	 * Attaches the auto-hide scrollbar behaviour to the log container after the view initialises.
+	 */
+	ngAfterViewInit(): void {
+		Utilities.attachScrollAutoHide(this.logContainer?.nativeElement);
+	}
 
 	/**
 	 * Opens the search dialog and subscribes to the search log stream.

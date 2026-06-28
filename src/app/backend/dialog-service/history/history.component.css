@@ -108,7 +108,7 @@
 	text-decoration: underline;
 }
 
-@media (max-width: 580px) {
+@media (max-width: 940px) {
 	::ng-deep .history-dialog {
 		min-width: 100% !important;
 		min-height: 100dvh !important;

@@ -24,7 +24,6 @@ export class ConfirmDialogComponent {
 	 * @param data[2] - The accept button label.
 	 */
 	public openDialog(acceptCallback: () => Promise<void>, data: string[]): void {
-
 		// Step 1: Map display data from positional array — callers must pass [message, header, acceptLabel] in order
 		this.confirmationService.confirm({
 			message: data[0],

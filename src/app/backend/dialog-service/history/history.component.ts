@@ -8,6 +8,7 @@ import { DialogService } from '../dialog.service';
 import { MovieAlreadyExistsError } from '../../../common/error/movie-already-exists-error';
 import { LOG } from '../../../common/app.logs';
 import {
+	COMPONENT_DESTROY,
 	DIALOG_CONFIRM,
 	DIALOG_ERROR,
 	ENT_MSG_ADD_DIALOG_SEARCH_FAILED,
@@ -35,12 +36,12 @@ import { HistoryEntry } from './history.model';
 })
 export class HistoryDialogComponent implements OnDestroy {
 	private readonly className = 'HistoryDialogComponent';
-	protected readonly HISTORY_DIALOG_TITLE = HISTORY_DIALOG_TITLE;
-	protected readonly HISTORY_SUBTITLE = HISTORY_SUBTITLE;
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	@Output() closed$ = new EventEmitter<void>();
+	protected readonly HISTORY_DIALOG_TITLE = HISTORY_DIALOG_TITLE;
+	protected readonly HISTORY_SUBTITLE = HISTORY_SUBTITLE;
 	protected visible: boolean = false;
 	protected entries$!: Observable<HistoryEntry[]>;
 	private revertDataCallback!: (movie: MovieItemVO) => Promise<void>;
@@ -63,7 +64,7 @@ export class HistoryDialogComponent implements OnDestroy {
 	 * Gets the CSS background-color string for a history entry based on its status.
 	 *
 	 * @param status - The status of the history entry.
-	 * @returns The CSS border-style string, or empty string if the status is unrecognized.
+	 * @returns The CSS background-color string, or empty string if the status is unrecognized.
 	 */
 	protected getBackgroundColor(status: string): string {
 		if (status === HISTORY_STATUS_ADDED) {
@@ -95,10 +96,10 @@ export class HistoryDialogComponent implements OnDestroy {
 					   Positional splitting is fragile; field order in the message must never change. */
 					const movieToRestore = new MovieItemVO();
 					movieToRestore.setMovieId(entry.id);
-					const msg = entry.message;
-					const movieName = msg.split(' - ')[0];
-					const genre = msg.split(' - ')[1]?.split(' ')[0]?.trim() ?? '';
-					const year = Number(msg.split(' ')[7]?.split('.')[0] ?? '0');
+					const message = entry.message;
+					const movieName = message.split(' - ')[0];
+					const genre = message.split(' - ')[1]?.split(' ')[0]?.trim() ?? '';
+					const year = Number(message.split(' ')[7]?.split('.')[0] ?? '0');
 					movieToRestore.setMovieName(movieName);
 					movieToRestore.setMovieYear(year);
 					movieToRestore.setMovieGenre(genre);
@@ -137,5 +138,6 @@ export class HistoryDialogComponent implements OnDestroy {
 	 */
 	ngOnDestroy() {
 		this.dialogComponentContainer?.clear();
+		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 }

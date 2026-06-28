@@ -21,7 +21,7 @@ const DOT_PALETTE = [
 	'#0d9488', '#38bdf8', '#d53369', '#22c55e', '#f59e0b',
 ];
 
-let seq = 0;
+let sequence = 0;
 
 /**
  * Normalizes a raw string into a URL with host, or null if it is not a URL.
@@ -85,7 +85,7 @@ export function faviconUrl(host: string, size = 64): string {
  */
 function createLink(href: string, host: string): BulkLink {
 	return {
-		id: 'lnk-' + seq++,
+		id: 'lnk-' + sequence++,
 		url: href,
 		host,
 		name: titleFromHost(host),
@@ -102,18 +102,18 @@ function createLink(href: string, host: string): BulkLink {
  * and name edits survive re-parsing. De-dupes by normalized href.
  *
  * @param text - The raw pasted text.
- * @param prev - The previous link array for reconciliation.
+ * @param previousLinks - The previous link array for reconciliation.
  * @returns The parsed and deduplicated link array.
  */
-export function parseLinks(text: string, prev: BulkLink[]): BulkLink[] {
-	const byUrl = new Map(prev.map((link) => [link.url, link]));
+export function parseLinks(text: string, previousLinks: BulkLink[]): BulkLink[] {
+	const byUrl = new Map(previousLinks.map((link) => [link.url, link]));
 	const seen = new Set<string>();
 	const out: BulkLink[] = [];
 	for (const line of text.split(/[\n,;\s]+/)) {
-		const n = normalizeUrl(line);
-		if (!n || seen.has(n.href)) continue;
-		seen.add(n.href);
-		out.push(byUrl.get(n.href) ?? createLink(n.href, n.host));
+		const normalized = normalizeUrl(line);
+		if (!normalized || seen.has(normalized.href)) continue;
+		seen.add(normalized.href);
+		out.push(byUrl.get(normalized.href) ?? createLink(normalized.href, normalized.host));
 	}
 	return out;
 }

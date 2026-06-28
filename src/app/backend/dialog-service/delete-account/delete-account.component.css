@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    p-dialog shell overrides
 ───────────────────────────────────────── */
+
 ::ng-deep .delete-account-dialog {
 	width: 420px;
 	border-radius: 20px !important;
@@ -38,6 +39,7 @@
 /* ─────────────────────────────────────────
    Header title
 ───────────────────────────────────────── */
+
 .delete-account-dialog-title {
 	font-size: 20px;
 	font-weight: 700;
@@ -47,6 +49,7 @@
 /* ─────────────────────────────────────────
    Warning text
 ───────────────────────────────────────── */
+
 .delete-account-warning {
 	font-size: 14px;
 	color: #334155;
@@ -57,6 +60,7 @@
 /* ─────────────────────────────────────────
    Password field
 ───────────────────────────────────────── */
+
 .delete-account-field {
 	display: flex;
 	flex-direction: column;
@@ -104,6 +108,7 @@
 /* ─────────────────────────────────────────
    Footer buttons
 ───────────────────────────────────────── */
+
 .delete-account-button-ghost {
 	border: 1.5px solid rgba(213, 51, 105, 0.4);
 	background: transparent;
@@ -154,6 +159,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	::ng-deep .delete-account-dialog {
 		width: 100% !important;

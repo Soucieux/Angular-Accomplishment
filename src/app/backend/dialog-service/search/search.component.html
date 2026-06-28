@@ -4,9 +4,9 @@
 	[appendTo]="'body'"
 	[resizable]="false"
 	[closable]="false"
-	styleClass="dialog"
+	styleClass="search-dialog"
 	(onHide)="onDialogClosed()">
-	<ng-template #header><span class="dialog-title">{{ ENT_DIALOG_TITLE_SEARCH }}</span></ng-template>
+	<ng-template #header><span class="search-dialog-title">{{ ENT_DIALOG_TITLE_SEARCH }}</span></ng-template>
 	<div class="logs" #logContainer>
 		@for (searchLog of searchLogs; track $index) {
 		<div [innerHTML]="searchLog"></div>

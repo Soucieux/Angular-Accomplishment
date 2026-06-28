@@ -149,7 +149,7 @@ export const DATABASE_USER_PREFERENCES = 'preferences';
 ───────────────────────────────────────── */
 
 // Layout responsive breakpoints
-export const BREAKPOINT_MOBILE = '(max-width: 800px)';
+export const BREAKPOINT_MOBILE = '(max-width: 940px)';
 export const BREAKPOINT_NARROW_QUERY = `(max-width: ${APP_BREAKPOINT_NARROW}px)`;
 
 export const SEARCH = 'search';

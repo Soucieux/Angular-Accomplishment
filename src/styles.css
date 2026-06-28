@@ -81,10 +81,12 @@ html {
 }
 
 /* CJK unified ideographs, CJK symbols/punctuation, and CJK compatibility forms.
-   Any character in these ranges is rendered by the chinese font. */
+   Any character in these ranges is rendered by the chinese font.
+   size-adjust normalises the CJK glyph size to match the Latin font's em metrics. */
 @font-face {
 	font-family: 'app-font';
 	src: url('./assets/chinese-font.ttf');
+	line-gap-override: 0%;
 	unicode-range:
 		U+3000-9FFF,
 		/* CJK symbols, punctuation, and unified ideographs */ U+F900-FAFF,
@@ -132,6 +134,12 @@ textarea {
 button,
 .mat-button {
 	color: black !important;
+}
+
+/* Collapse the font line box to font-size so flex-centered button text
+   positions identically for Latin and CJK text regardless of locale. */
+button {
+	line-height: 1;
 }
 
 /* Hides elements at narrow viewport widths (≤940px) — applies to both actual

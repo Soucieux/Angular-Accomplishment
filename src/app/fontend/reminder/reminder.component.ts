@@ -320,7 +320,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				link: item.link ?? ''
 			}));
 		this.databaseService
-			.updateStatisticsFields({
+			.updateUserStatsFields({
 				[STATS_FIELD_REMINDER_UPCOMING]: upcoming.slice(0, STATS_CAP_ACTIVITY_LOG),
 				[STATS_FIELD_TOTAL_REMINDERS]: this.items.length
 			})

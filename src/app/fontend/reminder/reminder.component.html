@@ -51,7 +51,11 @@
 					@if (isKnownCategory(tag)) {
 						<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
 					} @else {
-						<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagColor(tag)">sell</span>
+						<span
+							class="material-symbols-outlined rm-custom-tag-dot"
+							[style.color]="tagColor(tag)"
+							>sell</span
+						>
 					}
 					{{ categoryDisplayLabel(tag) }}
 				</button>
@@ -119,7 +123,10 @@
 						<div class="rm-card-bar">
 							<div class="rm-bar-link-row">
 								@if (item.link) {
-									<span class="rm-link-chip" [style.background]="tagColor(item.tag) + '14'" (click)="openLinkPopover($event, item)">
+									<span
+										class="rm-link-chip"
+										[style.background]="tagColor(item.tag) + '14'"
+										(click)="openLinkPopover($event, item)">
 										<span
 											class="material-symbols-outlined rm-icon"
 											style="font-size: 13px"
@@ -131,7 +138,7 @@
 											(click)="$event.stopPropagation(); clearLink(item)">
 											<span
 												class="material-symbols-outlined rm-icon"
-												style="font-size: 11px"
+												style="font-size: 13px"
 												>close</span
 											>
 										</button>
@@ -142,13 +149,19 @@
 										rel="noopener noreferrer"
 										class="rm-chip-external"
 										(click)="$event.stopPropagation()">
-										<span class="material-symbols-outlined rm-icon" style="font-size: 16px"
+										<span
+											class="material-symbols-outlined rm-icon"
+											style="font-size: 16px"
 											>open_in_new</span
 										>
 									</a>
 								} @else {
-									<button class="rm-add-field-button" (click)="openLinkPopover($event, item)">
-										<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+									<button
+										class="rm-add-field-button"
+										(click)="openLinkPopover($event, item)">
+										<span
+											class="material-symbols-outlined rm-icon"
+											style="font-size: 13px"
 											>add_link</span
 										>
 										{{ REMINDER_ADD_LINK_LABEL }}
@@ -274,7 +287,11 @@
 							@if (isKnownCategory(tag)) {
 								<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
 							} @else {
-								<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="newItem.tag === tag ? tagColor(tag) : null">sell</span>
+								<span
+									class="material-symbols-outlined rm-custom-tag-dot"
+									[style.color]="newItem.tag === tag ? tagColor(tag) : null"
+									>sell</span
+								>
 							}
 							<span class="hide-on-narrow-or-mobile">{{ categoryDisplayLabel(tag) }}</span>
 						</button>
@@ -300,8 +317,12 @@
 								type="text"
 								[placeholder]="REMINDER_PLACEHOLDER_TAG"
 								[(ngModel)]="tagSessionText"
-								(keyup.enter)="onNewItemTagUpdate()" />
-							<button class="rm-chip-remove" (click)="cancelTagEdit()">
+								(keyup.enter)="onNewItemTagUpdate()"
+								(blur)="cancelTagEdit()" />
+							<button
+								class="rm-chip-remove"
+								(mousedown)="$event.preventDefault()"
+								(click)="onCancelNewItemTagEdit()">
 								<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
 									>close</span
 								>
@@ -316,7 +337,11 @@
 							[style.color]="newItemHasCustomTag ? tagColor(newItem.tag) : null"
 							(click)="startNewItemTagEdit(-1)">
 							@if (newItemHasCustomTag) {
-								<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagColor(newItem.tag)">sell</span>
+								<span
+									class="material-symbols-outlined rm-custom-tag-dot"
+									[style.color]="tagColor(newItem.tag)"
+									>sell</span
+								>
 							} @else {
 								<span class="rm-filter-dot" style="background: #94a3b8"></span>
 							}
@@ -335,9 +360,7 @@
 							<button
 								class="rm-chip-remove"
 								(click)="$event.stopPropagation(); clearNewItemLink()">
-								<span
-									class="material-symbols-outlined rm-icon"
-									style="font-size: 11px"
+								<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
 									>close</span
 								>
 							</button>
@@ -518,15 +541,17 @@
 					<button
 						class="rm-category-chip"
 						[class.rm-category-chip-selected]="tagEditSession?.item?.tag === tag"
-						[style.background]="
-							tagEditSession?.item?.tag === tag ? tagColor(tag) + '1f' : null
-						"
+						[style.background]="tagEditSession?.item?.tag === tag ? tagColor(tag) + '1f' : null"
 						[style.color]="tagEditSession?.item?.tag === tag ? tagColor(tag) : null"
 						(click)="onSelectItemCategory(tag)">
 						@if (isKnownCategory(tag)) {
 							<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
 						} @else {
-							<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagEditSession?.item?.tag === tag ? tagColor(tag) : null">sell</span>
+							<span
+								class="material-symbols-outlined rm-custom-tag-dot"
+								[style.color]="tagEditSession?.item?.tag === tag ? tagColor(tag) : null"
+								>sell</span
+							>
 						}
 						{{ categoryDisplayLabel(tag) }}
 					</button>
@@ -554,7 +579,11 @@
 						[style.background]="tagColor(tagEditSession!.item!.tag) + '1f'"
 						[style.color]="tagColor(tagEditSession!.item!.tag)"
 						(click)="startTagPickerCustomInput()">
-						<span class="material-symbols-outlined rm-custom-tag-dot" [style.color]="tagColor(tagEditSession!.item!.tag)">sell</span>
+						<span
+							class="material-symbols-outlined rm-custom-tag-dot"
+							[style.color]="tagColor(tagEditSession!.item!.tag)"
+							>sell</span
+						>
 						{{ tagEditSession!.item!.tag }}
 					</button>
 				} @else {

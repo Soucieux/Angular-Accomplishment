@@ -161,7 +161,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		Personal: LABEL_PERSONAL,
 		Work: REMINDER_CATEGORY_WORK,
 		Utility: REMINDER_CATEGORY_UTILITY,
-		Other: REMINDER_CATEGORY_OTHER,
+		Other: REMINDER_CATEGORY_OTHER
 	};
 	private gridResizeObserver?: ResizeObserver;
 	private itemsPerPage = REMINDER_ITEMS_PER_PAGE;
@@ -958,7 +958,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.editingItem.endTime = autoEnd;
 			await Promise.all([
 				this.updateTableSingleValue(this.editingItem.key, REMINDER_VALUE_KEY_START_TIME, value),
-				this.updateTableSingleValue(this.editingItem.key, REMINDER_VALUE_KEY_END_TIME, autoEnd),
+				this.updateTableSingleValue(this.editingItem.key, REMINDER_VALUE_KEY_END_TIME, autoEnd)
 			]);
 		} else {
 			// Update new-item form state only — no DB write until addNewItem()
@@ -1051,9 +1051,13 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		// Step 2: Reject new custom tag names that collide with any existing tag (custom chip only)
 		if (session.index === -1) {
-			const isDuplicate = this.filterBarTags.includes(tagText) && tagText !== item.tag;
+			const isDuplicate = this.isTagDuplicate(tagText, item.tag);
 			if (isDuplicate) {
-				this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, REMINDER_MSG_TAG_DUPLICATE);
+				this.dialogService.openDialog(
+					this.dialogComponentContainer,
+					DIALOG_ERROR,
+					REMINDER_MSG_TAG_DUPLICATE
+				);
 				return;
 			}
 		}
@@ -1086,11 +1090,26 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.cancelTagEdit();
 			return;
 		}
-		if (this.filterBarTags.includes(tagText) && tagText !== this.newItem.tag) {
-			this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_ERROR, REMINDER_MSG_TAG_DUPLICATE);
+		if (this.isTagDuplicate(tagText, this.newItem.tag)) {
+			this.dialogService.openDialog(
+				this.dialogComponentContainer,
+				DIALOG_ERROR,
+				REMINDER_MSG_TAG_DUPLICATE
+			);
 			return;
 		}
 		this.newItem.tag = tagText;
+		this.cancelTagEdit();
+	}
+
+	/**
+	 * Cancels the custom-tag edit for the new-item card, clears any applied custom
+	 * tag from the new item, and closes the editing chip.
+	 */
+	protected onCancelNewItemTagEdit(): void {
+		if (this.newItemHasCustomTag) {
+			this.newItem.tag = LABEL_PERSONAL;
+		}
 		this.cancelTagEdit();
 	}
 
@@ -1121,6 +1140,22 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.tagEditSession) this.tagEditSession = { ...this.tagEditSession, tagText: value };
 	}
 
+	/**
+	 * Checks whether the given tag text is a duplicate of any existing tag in the
+	 * filter bar, comparing against both stored keys and locale display labels so
+	 * Chinese-locale known-category names (e.g. '工作') are caught alongside their
+	 * English counterparts (e.g. 'Work').
+	 *
+	 * @param tagText - The candidate tag string entered by the user.
+	 * @param currentTag - The tag already applied to the item being edited; exempted from the check.
+	 * @returns True when `tagText` collides with an existing tag other than `currentTag`.
+	 */
+	private isTagDuplicate(tagText: string, currentTag: string): boolean {
+		const matchesExisting = this.filterBarTags.some((t) => this.categoryDisplayLabel(t) === tagText);
+		const isOwnTag = this.categoryDisplayLabel(currentTag) === tagText;
+		return matchesExisting && !isOwnTag;
+	}
+
 	// ── tag editing handlers for the new-item card ───────────────────────────
 
 	/**
@@ -1131,7 +1166,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param index - The 0-based tag index to edit, or -1 to add a new tag.
 	 */
 	protected async startNewItemTagEdit(index: number): Promise<void> {
-		const existingCustom = index === -1 && !this.isKnownCategory(this.newItem.tag) ? this.newItem.tag : '';
+		const existingCustom =
+			index === -1 && !this.isKnownCategory(this.newItem.tag) ? this.newItem.tag : '';
 		this.tagEditSession = {
 			item: null,
 			index,
@@ -1179,7 +1215,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		// Step 4: Persist all cleared values and refresh the upcoming-reminders statistics
 		if (item.key) {
-			const writes: Promise<void>[] = [this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_DATE, null)];
+			const writes: Promise<void>[] = [
+				this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_DATE, null)
+			];
 			if (hadTime) {
 				writes.push(this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_START_TIME, null));
 				writes.push(this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_END_TIME, null));
@@ -1214,7 +1252,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (item.key) {
 			await Promise.all([
 				this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_START_TIME, null),
-				this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_END_TIME, null),
+				this.updateTableSingleValue(item.key, REMINDER_VALUE_KEY_END_TIME, null)
 			]);
 		}
 	}
@@ -1393,7 +1431,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected async startTagPickerCustomInput(): Promise<void> {
 		const existingCustom = this.tagEditSession?.item
-			? (!this.isKnownCategory(this.tagEditSession.item.tag) ? this.tagEditSession.item.tag : '')
+			? !this.isKnownCategory(this.tagEditSession.item.tag)
+				? this.tagEditSession.item.tag
+				: ''
 			: '';
 		this.tagPickerCustomMode = true;
 		if (this.tagEditSession) {

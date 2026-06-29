@@ -7,6 +7,7 @@ export interface ReminderItem {
 	tag: string;
 	startTime: string | null;
 	endTime: string | null;
+	isShared?: boolean;
 }
 
 export type ReminderValueKey = 'text' | 'date' | 'link' | 'tag' | 'startTime' | 'endTime';
@@ -21,6 +22,8 @@ export interface ReminderDbRecord {
 	tag: string;
 	startTime?: string | null;
 	endTime?: string | null;
+	isShared?: boolean;
+	sharedWith?: string[];
 }
 
 /** A single option entry for the start/end time p-select dropdowns. */

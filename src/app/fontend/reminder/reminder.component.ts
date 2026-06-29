@@ -62,6 +62,7 @@ import {
 	REMINDER_ADD_LINK_LABEL,
 	REMINDER_ADD_TIME_LABEL,
 	REMINDER_CHIP_CUSTOM,
+	REMINDER_CHIP_SHARED,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
 	REMINDER_DUE_SOON_LABEL,
@@ -154,6 +155,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_AWAIT_SUFFIX_CN = REMINDER_AWAIT_SUFFIX_CN;
 	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
 	protected readonly REMINDER_CHIP_CUSTOM = REMINDER_CHIP_CUSTOM;
+	protected readonly REMINDER_CHIP_SHARED = REMINDER_CHIP_SHARED;
 	protected readonly NAV_LABEL_REMINDER = NAV_LABEL_REMINDER;
 	private readonly categoryColorMap = REMINDER_CATEGORY_COLOR_MAP;
 	private readonly baseCategorySet = new Set<string>(REMINDER_KNOWN_CATEGORIES);
@@ -169,6 +171,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected loading = true;
 	protected items: ReminderItem[] = [];
 	protected filterBarTags: string[] = [];
+	protected hasSharedItems = false;
 	protected page = 0;
 	protected editingItem: ReminderItem | null = null;
 	protected editingDateModel: Date | null = null;
@@ -185,6 +188,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		endTime: null
 	};
 	protected saveIndicator = false;
+	protected sharedFilterActive = false;
 	protected tagFilter = new Set<string>();
 	protected tagEditSession: TagEditSession | null = null;
 	protected tagPickerCustomMode = false;
@@ -224,9 +228,11 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 					link: record.link ?? null,
 					tag: record.tag ?? '',
 					startTime: record.startTime ?? null,
-					endTime: record.endTime ?? null
+					endTime: record.endTime ?? null,
+					isShared: record.isShared ?? false
 				}));
 				this.filterBarTags = this.computeFilterBarTags();
+				this.hasSharedItems = this.items.some((item) => item.isShared);
 				// Step 2: Remove any selected tag filters that no longer exist in the item set
 				this.removeStaleTag();
 				// Step 3: Sync upcoming items to the statistics collection
@@ -573,14 +579,15 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── tag filter methods for the item list ─────────────────────────────────
 
 	/**
-	 * Gets the non-blank items matching the selected tag filters (OR logic) or all non-blank items when
-	 * no tags are selected. Blank-text records are excluded so the paginator count and grid both reflect
-	 * only real items.
+	 * Gets the non-blank items matching the active filter. When the shared filter is active,
+	 * returns only shared items. Otherwise applies OR-logic tag filter, or all items when no
+	 * tags are selected. Blank-text records are excluded throughout.
 	 *
 	 * @returns The filtered subset of items with non-empty text.
 	 */
 	protected get filteredItems(): ReminderItem[] {
 		const nonBlank = this.items.filter((item) => item.text.trim() !== '');
+		if (this.sharedFilterActive) return nonBlank.filter((item) => item.isShared);
 		if (this.tagFilter.size === 0) return nonBlank;
 		return nonBlank.filter((item) => this.tagFilter.has(item.tag));
 	}
@@ -596,10 +603,12 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Toggles a tag in the tag filter selection and resets to the first page.
+	 * Clears the shared filter when a tag is activated.
 	 *
 	 * @param tag - The tag string to activate or deactivate.
 	 */
 	protected toggleTagFilter(tag: string): void {
+		this.sharedFilterActive = false;
 		const updatedTagFilter = new Set(this.tagFilter);
 		if (updatedTagFilter.has(tag)) {
 			updatedTagFilter.delete(tag);
@@ -621,9 +630,19 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Clears the tag filter selection and resets to the first page.
+	 * Activates the shared filter, showing only shared reminder items, and resets to the first page.
+	 */
+	protected applySharedFilter(): void {
+		this.sharedFilterActive = true;
+		this.tagFilter = new Set<string>();
+		this.page = 0;
+	}
+
+	/**
+	 * Clears the tag filter and the shared filter, returning to the full item list.
 	 */
 	protected clearTagFilter(): void {
+		this.sharedFilterActive = false;
 		this.tagFilter = new Set<string>();
 		this.page = 0;
 	}

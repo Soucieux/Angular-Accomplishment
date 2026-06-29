@@ -36,9 +36,18 @@
 		<!-- ── Filter bar ─────────────────────────────────────────────── -->
 		<div class="rm-filter-bar">
 			<span class="rm-filter-label">{{ REMINDER_FILTER_LABEL }}</span>
+			@if (hasSharedItems) {
+				<button
+					class="rm-shared-filter-button"
+					[class.rm-shared-filter-button-active]="sharedFilterActive"
+					(click)="applySharedFilter()">
+					<span class="material-symbols-outlined rm-shared-filter-icon">group</span>
+					{{ REMINDER_CHIP_SHARED }}
+				</button>
+			}
 			<button
 				class="rm-filter-chip"
-				[class.rm-filter-chip-active]="tagFilter.size === 0"
+				[class.rm-filter-chip-active]="tagFilter.size === 0 && !sharedFilterActive"
 				(click)="clearTagFilter()">
 				{{ LABEL_ALL }}
 			</button>
@@ -106,10 +115,15 @@
 									[(ngModel)]="item.text"
 									(keyup.enter)="onCardTextUpdate(item)"
 									(blur)="onCardTextUpdate(item)" />
-								<div
-									class="rm-card-category rm-card-category-clickable"
-									(click)="openTagPicker($event, item)">
-									{{ categoryDisplayLabel(item.tag) || REMINDER_CHIP_CUSTOM }}
+								<div class="rm-card-category-row">
+									<div
+										class="rm-card-category rm-card-category-clickable"
+										(click)="openTagPicker($event, item)">
+										{{ categoryDisplayLabel(item.tag) || REMINDER_CHIP_CUSTOM }}
+									</div>
+									@if (item.isShared) {
+										<span class="material-symbols-outlined rm-shared-badge">group</span>
+									}
 								</div>
 							</div>
 							<button class="rm-delete-button" (click)="openDeleteConfirmationDialog(item.key)">

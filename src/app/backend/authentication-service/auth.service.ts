@@ -27,7 +27,10 @@ import {
 	CLOUDBASE_ERR_USER_NOT_FOUND,
 	CLOUDBASE_ERROR_INVALID_ARGUMENT,
 	CLOUDBASE_ERROR_INVALID_CREDENTIALS,
-	CN
+	CN,
+	AUTH_LOG_SIGN_IN_FAILED,
+	AUTH_LOG_GOOGLE_SIGN_IN_FAILED,
+	AUTH_LOG_SIGN_OUT_FAILED
 } from '../../common/constants';
 import { AccountRateLimitedError } from '../../common/error/account-rate-limited.error';
 import { EmailNotVerifiedError } from '../../common/error/email-not-verified.error';
@@ -124,7 +127,7 @@ export class AuthService {
 			this.router.navigate([returnUrl]).catch(() => {});
 			this.utilities.setIsUserAlive(true);
 		} catch (error: unknown) {
-			LOG.error(this.className, 'Error when signing in with email and password');
+			LOG.error(this.className, AUTH_LOG_SIGN_IN_FAILED);
 			throw new UnexpectedError();
 		}
 	}
@@ -147,7 +150,7 @@ export class AuthService {
 					}
 				});
 			})
-			.catch(() => LOG.error(this.className, 'ERROR when signing in through Google'));
+			.catch(() => LOG.error(this.className, AUTH_LOG_GOOGLE_SIGN_IN_FAILED));
 	}
 
 	/**
@@ -162,7 +165,7 @@ export class AuthService {
 					this.utilities.setIsUserAlive(false);
 				});
 			})
-			.catch(() => LOG.error(this.className, 'ERROR when signing out current user'));
+			.catch(() => LOG.error(this.className, AUTH_LOG_SIGN_OUT_FAILED));
 	}
 
 	// ── CloudBase authentication methods ─────────────────────────────────────
@@ -432,7 +435,7 @@ export class AuthService {
 				CloudbaseService.setLoginState(false);
 			});
 		} catch {
-			LOG.error(this.className, 'ERROR when signing out current user');
+			LOG.error(this.className, AUTH_LOG_SIGN_OUT_FAILED);
 		}
 	}
 

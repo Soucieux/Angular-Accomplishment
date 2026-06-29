@@ -26,7 +26,10 @@ import {
 	ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX,
 	ENT_LOG_SEARCH_CANCEL_REQUESTED,
 	ENT_LOG_MOVIE_DETAILS_RETRIEVED,
-	ENT_LOG_UPDATE_FAVOURITE_FAILED
+	ENT_LOG_UPDATE_FAVOURITE_FAILED,
+	ENT_LOG_COVER_RETRIEVED,
+	ENT_LOG_COVER_UPLOADED,
+	ENT_LOG_SEARCHING_MOVIE_ID
 } from '../../common/constants';
 import {
 	SEARCH_CANCEL,
@@ -629,7 +632,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				this.doubanService.searchMovieCover(movieCoverImageLink, movieItemVO.getMovieName())
 			);
 			movieItemVO.setMovieCoverImage(movieCoverImage);
-			LOG.info(this.className, `Movie cover retrieved for ${movieItemVO.getMovieName()}`);
+			LOG.info(this.className, `${ENT_LOG_COVER_RETRIEVED} ${movieItemVO.getMovieName()}`);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -656,7 +659,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				movieItemVO.getMovieName()
 			);
 			movieItemVO.setMovieCoverImageDownloadableLink(downloadableLink);
-			LOG.info(this.className, `Movie cover uploaded for ${movieItemVO.getMovieName()}`);
+			LOG.info(this.className, `${ENT_LOG_COVER_UPLOADED} ${movieItemVO.getMovieName()}`);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -1016,7 +1019,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		   getNewMovieDataGivenYearAndTitle is called after, NOT getNewMovieDataGivenMovieId, because
 		   the ID was resolved from the search index and the year/title on the VO are already correct. */
 		if (newMovieItemVO.getMovieId() === -1) {
-			LOG.info(this.className, `Movie ID not given, start searching for it.`);
+			LOG.info(this.className, ENT_LOG_SEARCHING_MOVIE_ID);
 			await this.getMovieId(newMovieItemVO);
 			await this.getNewMovieDataGivenYearAndTitle(newMovieItemVO);
 		}

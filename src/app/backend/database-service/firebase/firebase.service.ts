@@ -29,7 +29,39 @@ import {
 	LOCALE_KEY_EN,
 	LOCALE_KEY_ZH,
 	ENT_LOG_SPAN_CLASS_RATE_DOWN,
-	ENT_LOG_SPAN_CLASS_RATE_UP
+	ENT_LOG_SPAN_CLASS_RATE_UP,
+	FIREBASE_LOG_TABLE_RECORD_UPDATED,
+	FIREBASE_LOG_DATE_CALC_UPDATE_FAILED,
+	FIREBASE_LOG_MOVIE_RATE_UPDATE_FAILED,
+	FIREBASE_LOG_MOVIE_GENRE_UPDATED,
+	FIREBASE_LOG_MOVIE_STATS_UPDATED,
+	FIREBASE_LOG_MOVIE_GENRE_UPDATE_FAILED,
+	FIREBASE_LOG_MOVIE_FAVOURITE_UPDATED,
+	FIREBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED,
+	FIREBASE_LOG_PATCH_NOTES_UPDATED,
+	FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED,
+	FIREBASE_LOG_STATS_UPDATE_FAILED,
+	FIREBASE_LOG_USER_STATS_UPDATE_FAILED,
+	FIREBASE_LOG_ACTIVITY_APPEND_FAILED,
+	FIREBASE_LOG_RECORD_TABLE_UPDATED,
+	FIREBASE_LOG_TABLE_UPDATE_FAILED,
+	FIREBASE_LOG_QUOTE_REMOVE_FAILED,
+	FIREBASE_LOG_MOVIE_REMOVED,
+	FIREBASE_LOG_RECORD_REMOVED_FROM,
+	FIREBASE_LOG_RECORD_REMOVE_FAILED,
+	FIREBASE_LOG_QUOTE_ADDED,
+	FIREBASE_LOG_QUOTE_ADD_FAILED,
+	FIREBASE_LOG_MOVIE_ADDED,
+	FIREBASE_LOG_HISTORY_ADDED,
+	FIREBASE_LOG_HISTORY_ADD_FAILED,
+	FIREBASE_LOG_PATCH_NOTES_ADDED,
+	FIREBASE_LOG_PATCH_NOTES_ADD_FAILED,
+	FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED,
+	FIREBASE_LOG_COVER_UPLOADED,
+	FIREBASE_LOG_REUSABLE_KEYS_RETRIEVED,
+	FIREBASE_LOG_REUSABLE_KEYS_GET_FAILED,
+	FIREBASE_LOG_REUSABLE_KEYS_UPDATED,
+	FIREBASE_LOG_REUSABLE_KEYS_SAVE_FAILED
 } from '../../../common/constants';
 import {
 	REMINDER_TABLE_MESSAGES,
@@ -373,13 +405,13 @@ export class FirebaseService extends DatabaseService {
 	public async updateDateCalculatorTable(updatedTable: any): Promise<void> {
 		try {
 			await update(dbRef(this.db, DATABASE_DATE_CALCULATOR), { ...updatedTable });
-			LOG.info(this.className, 'Table record has been updated');
+			LOG.info(this.className, FIREBASE_LOG_TABLE_RECORD_UPDATED);
 			this.appendToActivityLog({
 				source: ACTIVITY_SOURCE_REMINDER,
 				type: ACTIVITY_TYPE_CALCULATOR_UPDATED
 			}).catch(() => {});
 		} catch (error: unknown) {
-			LOG.error(this.className, 'Error while updating date calculator table', error as Error);
+			LOG.error(this.className, FIREBASE_LOG_DATE_CALC_UPDATE_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -463,7 +495,7 @@ export class FirebaseService extends DatabaseService {
 				);
 			}
 		} catch (error) {
-			LOG.error(this.className, 'Error while updating movie rate', error as Error);
+			LOG.error(this.className, FIREBASE_LOG_MOVIE_RATE_UPDATE_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -488,7 +520,7 @@ export class FirebaseService extends DatabaseService {
 		// Step 1 : Update movie genre
 		return update(movieRef, { genre: newGenre })
 			.then(() => {
-				LOG.info(this.className, `Movie genre has been updated`);
+				LOG.info(this.className, FIREBASE_LOG_MOVIE_GENRE_UPDATED);
 
 				// Step 2 : Update movie statistics
 				return runTransaction(dbRef(this.db, `statistics`), (currentData) => {
@@ -498,7 +530,7 @@ export class FirebaseService extends DatabaseService {
 				});
 			})
 			.then(() => {
-				LOG.info(this.className, `Movie statistics have been updated`);
+				LOG.info(this.className, FIREBASE_LOG_MOVIE_STATS_UPDATED);
 				this.appendToActivityLog({
 					source: ACTIVITY_SOURCE_MOVIE,
 					type: ACTIVITY_TYPE_GENRE_UPDATED,
@@ -506,7 +538,7 @@ export class FirebaseService extends DatabaseService {
 				}).catch(() => {});
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, 'Error while updating movie genre', error);
+				LOG.error(this.className, FIREBASE_LOG_MOVIE_GENRE_UPDATE_FAILED, error);
 				throw error;
 			});
 	}
@@ -525,7 +557,7 @@ export class FirebaseService extends DatabaseService {
 		// Step 1 : Update movie favourite
 		return update(movieRef, { isFavourite })
 			.then(() => {
-				LOG.info(this.className, `Movie favourite tag has been updated`);
+				LOG.info(this.className, FIREBASE_LOG_MOVIE_FAVOURITE_UPDATED);
 
 				// Step 2 : Update movie statistics
 				return runTransaction(dbRef(this.db, `statistics`), (currentData) => {
@@ -538,7 +570,7 @@ export class FirebaseService extends DatabaseService {
 				});
 			})
 			.then(() => {
-				LOG.info(this.className, `Movie statistics have been updated`);
+				LOG.info(this.className, FIREBASE_LOG_MOVIE_STATS_UPDATED);
 				this.appendToActivityLog({
 					source: ACTIVITY_SOURCE_MOVIE,
 					type: ACTIVITY_TYPE_FAVOURITE_UPDATED,
@@ -546,7 +578,7 @@ export class FirebaseService extends DatabaseService {
 				}).catch(() => {});
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, 'Error while updating movie favourite', error);
+				LOG.error(this.className, FIREBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED, error);
 				throw error;
 			});
 	}
@@ -583,7 +615,13 @@ export class FirebaseService extends DatabaseService {
 	 * @param _ - The debt entry name (unused in this backend).
 	 * @param _type - The activity log type (unused in this backend).
 	 */
-	public updateSingleValueForDebtTable(entryKey: string, valueKey: string, value: any, _: string, _type?: string): Promise<void> {
+	public updateSingleValueForDebtTable(
+		entryKey: string,
+		valueKey: string,
+		value: any,
+		_: string,
+		_type?: string
+	): Promise<void> {
 		return this.updateTableExistingFields(DATABASE_DEBT_SONATA, entryKey, { [valueKey]: value });
 	}
 
@@ -645,10 +683,10 @@ export class FirebaseService extends DatabaseService {
 	): Promise<void> {
 		return update(dbRef(this.db, `${DATABASE_PATCH_NOTES}/${key}`), { ...updatedRecord })
 			.then(() => {
-				LOG.info(this.className, 'Patch notes record has been updated');
+				LOG.info(this.className, FIREBASE_LOG_PATCH_NOTES_UPDATED);
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, 'Error while updating patch notes record', error);
+				LOG.error(this.className, FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED, error);
 				throw error;
 			});
 	}
@@ -684,7 +722,7 @@ export class FirebaseService extends DatabaseService {
 		try {
 			await update(this.statisticsRef, fields);
 		} catch (error) {
-			LOG.error(this.className, 'Error while updating statistics fields', error as Error);
+			LOG.error(this.className, FIREBASE_LOG_STATS_UPDATE_FAILED, error as Error);
 		}
 	}
 
@@ -700,7 +738,7 @@ export class FirebaseService extends DatabaseService {
 		try {
 			await update(this.statisticsRef, fields);
 		} catch (error) {
-			LOG.error(this.className, 'Error while updating user stats fields', error as Error);
+			LOG.error(this.className, FIREBASE_LOG_USER_STATS_UPDATE_FAILED, error as Error);
 		}
 	}
 
@@ -721,7 +759,7 @@ export class FirebaseService extends DatabaseService {
 			const updated = [entry, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
 			await this.updateUserStatsFields({ [STATS_FIELD_RECENT_ACTIVITIES]: updated });
 		} catch (error) {
-			LOG.error(this.className, 'Error while appending activity log', error as Error);
+			LOG.error(this.className, FIREBASE_LOG_ACTIVITY_APPEND_FAILED, error as Error);
 		}
 	}
 
@@ -743,9 +781,9 @@ export class FirebaseService extends DatabaseService {
 	): Promise<void> {
 		try {
 			await update(dbRef(this.db, `${tableName}/${entryKey}`), fields);
-			LOG.info(this.className, `Record on ${tableName} has been updated`);
+			LOG.info(this.className, `${FIREBASE_LOG_RECORD_TABLE_UPDATED} ${tableName}`);
 		} catch (error) {
-			LOG.error(this.className, `Error while updating ${tableName}`, error as Error);
+			LOG.error(this.className, `${FIREBASE_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
 			throw error;
 		}
 	}
@@ -793,7 +831,7 @@ export class FirebaseService extends DatabaseService {
 				author
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, `Error while removing quote ${key}`, error as Error);
+			LOG.error(this.className, `${FIREBASE_LOG_QUOTE_REMOVE_FAILED} ${key}`, error as Error);
 			throw error;
 		}
 	}
@@ -850,7 +888,7 @@ export class FirebaseService extends DatabaseService {
 				type: HISTORY_STATUS_DELETED,
 				title: movieItemVO.getMovieName()
 			}).catch(() => {});
-			LOG.info(this.className, `Movie removed and statistics have been updated`);
+			LOG.info(this.className, FIREBASE_LOG_MOVIE_REMOVED);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -953,10 +991,9 @@ export class FirebaseService extends DatabaseService {
 		if (!uid) return;
 		/* update() merges into the node — set() would overwrite the entire preferences object,
 		   erasing minimize-on-close and locale fields stored at the same path. */
-		await update(
-			dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`),
-			{ [STATS_FIELD_TAURI_NOTIF_ENABLED]: enabled }
-		);
+		await update(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`), {
+			[STATS_FIELD_TAURI_NOTIF_ENABLED]: enabled
+		});
 	}
 
 	/**
@@ -980,10 +1017,9 @@ export class FirebaseService extends DatabaseService {
 	public async setMinimizeOnClose(enabled: boolean): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return;
-		await update(
-			dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`),
-			{ [STATS_FIELD_MINIMIZE_ON_CLOSE]: enabled }
-		);
+		await update(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`), {
+			[STATS_FIELD_MINIMIZE_ON_CLOSE]: enabled
+		});
 	}
 
 	/**
@@ -1008,10 +1044,7 @@ export class FirebaseService extends DatabaseService {
 	public async setLocale(locale: 'en' | 'zh'): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return;
-		await update(
-			dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`),
-			{ [STATS_FIELD_LOCALE]: locale }
-		);
+		await update(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`), { [STATS_FIELD_LOCALE]: locale });
 	}
 
 	/**
@@ -1028,10 +1061,10 @@ export class FirebaseService extends DatabaseService {
 	private removeSingleItemFromDatabase(tablePath: string, key: string): Promise<void> {
 		return remove(dbRef(this.db, `${tablePath}/${key}`))
 			.then(() => {
-				LOG.info(this.className, `Record has been removed from ${tablePath}`);
+				LOG.info(this.className, `${FIREBASE_LOG_RECORD_REMOVED_FROM} ${tablePath}`);
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, `Error while removing record from ${tablePath}`, error);
+				LOG.error(this.className, `${FIREBASE_LOG_RECORD_REMOVE_FAILED} ${tablePath}`, error);
 				throw error;
 			});
 	}
@@ -1073,7 +1106,7 @@ export class FirebaseService extends DatabaseService {
 	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		try {
 			await push(dbRef(this.db, DATABASE_QUOTES), { text, author, timestamp });
-			LOG.info(this.className, 'New quote has been added');
+			LOG.info(this.className, FIREBASE_LOG_QUOTE_ADDED);
 			await runTransaction(this.statisticsRef, (currentData) => {
 				currentData = currentData ?? {};
 				currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
@@ -1085,7 +1118,7 @@ export class FirebaseService extends DatabaseService {
 				author
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, 'Error while adding quote', error as Error);
+			LOG.error(this.className, FIREBASE_LOG_QUOTE_ADD_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -1147,7 +1180,7 @@ export class FirebaseService extends DatabaseService {
 				currentData.totalFilms = (currentData.totalFilms ?? 0) + 1;
 				return currentData;
 			});
-			LOG.info(this.className, `Movie added and statistics have been updated`);
+			LOG.info(this.className, FIREBASE_LOG_MOVIE_ADDED);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -1193,9 +1226,9 @@ export class FirebaseService extends DatabaseService {
 					type: SEARCH
 				}).catch(() => {});
 			}
-			LOG.info(this.className, 'New history entry has been added');
+			LOG.info(this.className, FIREBASE_LOG_HISTORY_ADDED);
 		} catch (error) {
-			LOG.error(this.className, 'Error while adding new history entry', error as Error);
+			LOG.error(this.className, FIREBASE_LOG_HISTORY_ADD_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -1235,10 +1268,10 @@ export class FirebaseService extends DatabaseService {
 			isBug: newRecord.isBug
 		})
 			.then(() => {
-				LOG.info(this.className, 'New patch notes record has been added');
+				LOG.info(this.className, FIREBASE_LOG_PATCH_NOTES_ADDED);
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, 'Error while adding new patch notes record', error);
+				LOG.error(this.className, FIREBASE_LOG_PATCH_NOTES_ADD_FAILED, error);
 				throw error;
 			});
 	}
@@ -1257,7 +1290,7 @@ export class FirebaseService extends DatabaseService {
 			content: { ...newRecord }
 		})
 			.then(() => {
-				LOG.info(this.className, 'Table record has been updated');
+				LOG.info(this.className, FIREBASE_LOG_TABLE_RECORD_UPDATED);
 				if (tableName === DATABASE_REMINDER) {
 					this.appendToActivityLog({
 						source: ACTIVITY_SOURCE_REMINDER,
@@ -1268,7 +1301,7 @@ export class FirebaseService extends DatabaseService {
 				}
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, 'Error while adding new record for reminder table', error);
+				LOG.error(this.className, FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED, error);
 				throw error;
 			});
 	}
@@ -1338,7 +1371,7 @@ export class FirebaseService extends DatabaseService {
 			await uploadBytes(storageRefer, coverImage, {
 				contentType: 'image/jpeg'
 			});
-			LOG.info(this.className, `Movie cover image uploaded`);
+			LOG.info(this.className, FIREBASE_LOG_COVER_UPLOADED);
 			return await getDownloadURL(storageRefer);
 		} catch (error) {
 			LOG.error(
@@ -1368,10 +1401,10 @@ export class FirebaseService extends DatabaseService {
 	private async getReusableKeys(): Promise<string[]> {
 		try {
 			const snapshot = await get(dbRef(this.db, 'statistics/reusableKeys'));
-			LOG.info(this.className, `Reusable keys retrieved`);
+			LOG.info(this.className, FIREBASE_LOG_REUSABLE_KEYS_RETRIEVED);
 			return snapshot.exists() ? (Object.values(snapshot.val()) as string[]) : [];
 		} catch (error) {
-			LOG.error(this.className, `Error while getting reusable keys`, error as Error);
+			LOG.error(this.className, FIREBASE_LOG_REUSABLE_KEYS_GET_FAILED, error as Error);
 			return [];
 		}
 	}
@@ -1384,10 +1417,10 @@ export class FirebaseService extends DatabaseService {
 	private saveReusableKeys(keys: string[]): Promise<void> {
 		return update(dbRef(this.db, 'statistics'), { reusableKeys: keys })
 			.then(() => {
-				LOG.info(this.className, `Reusable keys have been updated`);
+				LOG.info(this.className, FIREBASE_LOG_REUSABLE_KEYS_UPDATED);
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, 'Error while saving reusable keys', error);
+				LOG.error(this.className, FIREBASE_LOG_REUSABLE_KEYS_SAVE_FAILED, error);
 				throw error;
 			});
 	}

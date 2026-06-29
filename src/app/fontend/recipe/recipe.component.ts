@@ -47,7 +47,10 @@ import {
 	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
-	BREAKPOINT_MOBILE
+	BREAKPOINT_MOBILE,
+	RECIPE_LOG_DELETED,
+	RECIPE_LOG_UPDATED,
+	RECIPE_LOG_CREATED
 } from '../../common/constants';
 import {
 	DIALOG_BTN_DELETE,
@@ -748,7 +751,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 				this.databaseService
 					.removeRecipe(id, recipeName)
 					.then(() => {
-						LOG.info(this.className, `Recipe deleted: ${id}`);
+						LOG.info(this.className, `${RECIPE_LOG_DELETED} ${id}`);
 						this.dialogService.showToast(TOAST_INFO, RECIPE_MSG_DELETED);
 						this.transitionTo(RECIPE_VIEW_LIST);
 					})
@@ -1132,12 +1135,12 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		try {
 			if (isEdit) {
 				await this.databaseService.updateRecipe(recipe);
-				LOG.info(this.className, `Recipe updated: ${recipe.id} "${recipe.name}"`);
+				LOG.info(this.className, `${RECIPE_LOG_UPDATED} ${recipe.id} "${recipe.name}"`);
 				this.dialogService.showToast(SUCCESS, RECIPE_MSG_UPDATED);
 				this.selectedRecipe = recipe;
 			} else {
 				await this.databaseService.addRecipe(recipe);
-				LOG.info(this.className, `Recipe created: "${recipe.name}"`);
+				LOG.info(this.className, `${RECIPE_LOG_CREATED} "${recipe.name}"`);
 				this.dialogService.showToast(SUCCESS, RECIPE_MSG_ADDED);
 				/* pendingDetailName lets the subscription callback select the newly created recipe
 				   automatically once the database emits it with its generated id. */

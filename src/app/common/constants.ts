@@ -124,6 +124,9 @@ export const ROLE_ADMIN = 'administrator';
 export const CLOUDBASE_ERROR_INVALID_ARGUMENT = 'invalid_argument';
 /** CloudBase error category returned when credentials are wrong. */
 export const CLOUDBASE_ERROR_INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
+export const AUTH_LOG_SIGN_IN_FAILED = 'Error when signing in with email and password';
+export const AUTH_LOG_GOOGLE_SIGN_IN_FAILED = 'Error when signing in through Google';
+export const AUTH_LOG_SIGN_OUT_FAILED = 'Error when signing out current user';
 
 /* ─────────────────────────────────────────
    Database collection names
@@ -143,6 +146,78 @@ export const DATABASE_STATISTICS = 'statistics';
 export const DATABASE_USEFUL_LINKS = 'useful_links';
 /** Per-user preferences stored as a keyed object under each user's uid. */
 export const DATABASE_USER_PREFERENCES = 'preferences';
+
+/* ─────────────────────────────────────────
+   Database service log messages
+───────────────────────────────────────── */
+
+export const CLOUDBASE_LOG_MOVIE_LIST_FAILED = 'Error while retrieving movie list';
+export const CLOUDBASE_LOG_TEMP_URLS_FAILED = 'Error while getting temp file URLs';
+export const CLOUDBASE_LOG_DATE_CALC_UPDATED = 'Date calculator has been updated';
+export const CLOUDBASE_LOG_DATE_CALC_UPDATE_FAILED = 'Error while updating date calculator table';
+export const CLOUDBASE_LOG_MOVIE_RATE_UPDATE_FAILED = 'Error while updating movie rate';
+export const CLOUDBASE_LOG_MOVIE_GENRE_UPDATE_FAILED = 'Error while updating movie genre';
+export const CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED = 'Error while updating movie favourite';
+export const CLOUDBASE_LOG_STATS_UPDATE_FAILED = 'Error while updating statistics fields';
+export const CLOUDBASE_LOG_HISTORY_ADDED = 'New history entry has been added';
+export const CLOUDBASE_LOG_HISTORY_ADD_FAILED = 'Error while adding new history entry';
+export const CLOUDBASE_LOG_ACTIVITY_UPDATE_FAILED = 'Error while updating activity data';
+export const CLOUDBASE_LOG_USER_STAT_UPDATE_FAILED = 'User stat update failed';
+export const CLOUDBASE_LOG_USER_STATS_SEEDED = 'User stats seeded successfully';
+export const CLOUDBASE_LOG_USER_STATS_SEED_FAILED = 'Error while seeding user stats';
+export const CLOUDBASE_LOG_MOVIE_GENRE_UPDATED = 'Movie genre has been updated';
+export const CLOUDBASE_LOG_MOVIE_STATS_UPDATED = 'Movie statistics have been updated';
+export const CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATED = 'Movie favourite tag has been updated';
+export const CLOUDBASE_LOG_TAURI_PREF_FAILED = 'Error reading Tauri notification preference';
+export const CLOUDBASE_LOG_MINIMIZE_PREF_FAILED = 'Error reading minimize-on-close preference';
+export const CLOUDBASE_LOG_LOCALE_PREF_FAILED = 'Error reading locale preference';
+export const CLOUDBASE_LOG_MOVIE_ADDED = 'Movie added and statistics have been updated';
+export const CLOUDBASE_LOG_VISIT_INCREMENTED = 'Link visit count has been incremented';
+export const CLOUDBASE_LOG_RECORD_TABLE_UPDATED = 'Record updated on table';
+export const CLOUDBASE_LOG_TABLE_UPDATE_FAILED = 'Error while updating';
+export const CLOUDBASE_LOG_RECORD_REMOVED_FROM = 'Record has been removed from';
+export const CLOUDBASE_LOG_MOVIE_DOC_REMOVED = 'Movie document removed for';
+export const CLOUDBASE_LOG_COVER_REMOVED = 'Cover image removed for';
+export const CLOUDBASE_LOG_STATS_AFTER_REMOVE = 'Statistics updated after removing';
+export const CLOUDBASE_LOG_RECORD_REMOVE_FAILED = 'Error while removing a record from';
+export const CLOUDBASE_LOG_HAS_BEEN_UPDATED = 'has been updated';
+export const CLOUDBASE_LOG_RECORD_ADD_FAILED = 'Error while adding new record to';
+export const CLOUDBASE_LOG_VISIT_INCREMENT_FAILED = 'Error while incrementing visit count for link';
+export const CLOUDBASE_LOG_COVER_UPLOADED = 'Movie cover image uploaded successfully for';
+export const CLOUDBASE_LOG_FETCH_URL_ERROR = '/api/fetch-url error for';
+export const CLOUDBASE_LOG_PROXY_FETCH_FAILED = 'Error while proxying fetch for';
+export const FIREBASE_LOG_TABLE_RECORD_UPDATED = 'Table record has been updated';
+export const FIREBASE_LOG_DATE_CALC_UPDATE_FAILED = 'Error while updating date calculator table';
+export const FIREBASE_LOG_MOVIE_RATE_UPDATE_FAILED = 'Error while updating movie rate';
+export const FIREBASE_LOG_MOVIE_GENRE_UPDATED = 'Movie genre has been updated';
+export const FIREBASE_LOG_MOVIE_STATS_UPDATED = 'Movie statistics have been updated';
+export const FIREBASE_LOG_MOVIE_GENRE_UPDATE_FAILED = 'Error while updating movie genre';
+export const FIREBASE_LOG_MOVIE_FAVOURITE_UPDATED = 'Movie favourite tag has been updated';
+export const FIREBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED = 'Error while updating movie favourite';
+export const FIREBASE_LOG_PATCH_NOTES_UPDATED = 'Patch notes record has been updated';
+export const FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED = 'Error while updating patch notes record';
+export const FIREBASE_LOG_STATS_UPDATE_FAILED = 'Error while updating statistics fields';
+export const FIREBASE_LOG_USER_STATS_UPDATE_FAILED = 'Error while updating user stats fields';
+export const FIREBASE_LOG_ACTIVITY_APPEND_FAILED = 'Error while appending activity log';
+export const FIREBASE_LOG_RECORD_TABLE_UPDATED = 'Record updated on table';
+export const FIREBASE_LOG_TABLE_UPDATE_FAILED = 'Error while updating';
+export const FIREBASE_LOG_QUOTE_REMOVE_FAILED = 'Error while removing quote';
+export const FIREBASE_LOG_MOVIE_REMOVED = 'Movie removed and statistics have been updated';
+export const FIREBASE_LOG_RECORD_REMOVED_FROM = 'Record has been removed from';
+export const FIREBASE_LOG_RECORD_REMOVE_FAILED = 'Error while removing record from';
+export const FIREBASE_LOG_QUOTE_ADDED = 'New quote has been added';
+export const FIREBASE_LOG_QUOTE_ADD_FAILED = 'Error while adding quote';
+export const FIREBASE_LOG_MOVIE_ADDED = 'Movie added and statistics have been updated';
+export const FIREBASE_LOG_HISTORY_ADDED = 'New history entry has been added';
+export const FIREBASE_LOG_HISTORY_ADD_FAILED = 'Error while adding new history entry';
+export const FIREBASE_LOG_PATCH_NOTES_ADDED = 'New patch notes record has been added';
+export const FIREBASE_LOG_PATCH_NOTES_ADD_FAILED = 'Error while adding new patch notes record';
+export const FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED = 'Error while adding new record for reminder table';
+export const FIREBASE_LOG_COVER_UPLOADED = 'Movie cover image uploaded';
+export const FIREBASE_LOG_REUSABLE_KEYS_RETRIEVED = 'Reusable keys retrieved';
+export const FIREBASE_LOG_REUSABLE_KEYS_GET_FAILED = 'Error while getting reusable keys';
+export const FIREBASE_LOG_REUSABLE_KEYS_UPDATED = 'Reusable keys have been updated';
+export const FIREBASE_LOG_REUSABLE_KEYS_SAVE_FAILED = 'Error while saving reusable keys';
 
 /* ─────────────────────────────────────────
    Shared UI constants
@@ -397,6 +472,9 @@ export const ENT_LOG_SPAN_CLASS_RATE_DOWN = 'class="rate-down"';
 export const ENT_LOG_SPAN_CLASS_RATE_UP = 'class="rate-up"';
 /** Genre key used as the favourites category — written to the DB and shown as the genre label. */
 export const GENRE_FAVOURITE = '特别关注';
+export const ENT_LOG_COVER_RETRIEVED = 'Movie cover retrieved for';
+export const ENT_LOG_COVER_UPLOADED = 'Movie cover uploaded for';
+export const ENT_LOG_SEARCHING_MOVIE_ID = 'Movie ID not given, start searching for it.';
 
 /* ─────────────────────────────────────────
    Resonance page constants
@@ -448,6 +526,9 @@ export const RECIPE_PAGE_SIZE = 8;
 export const RECIPE_ROWS_PER_PAGE = 5;
 /** Maximum number of ingredient type tabs shown in the add/edit editor. */
 export const RECIPE_EDITOR_TYPE_MAX = 9;
+export const RECIPE_LOG_DELETED = 'Recipe deleted:';
+export const RECIPE_LOG_UPDATED = 'Recipe updated:';
+export const RECIPE_LOG_CREATED = 'Recipe created:';
 
 /* ─────────────────────────────────────────
    Portal page constants
@@ -468,6 +549,16 @@ export const MULTI_LINK_LABEL_ARROW = '→';
 export const ADD_LINK_LABEL_URL = 'URL *';
 /** URL field placeholder in the add-link dialog — identical in all locales. */
 export const ADD_LINK_PLACEHOLDER_URL = 'https://example.com';
+export const PORTAL_LOG_FAVICON_UNAVAILABLE = 'Favicon unavailable for';
+export const PORTAL_LOG_VISIT_INCREMENT_FAILED = 'Failed to increment visit count for';
+export const PORTAL_LOG_LINK_UPDATED = 'Link updated:';
+export const PORTAL_LOG_LINK_SAVED = 'Link saved:';
+export const PORTAL_LOG_LINKS_SAVED = 'links saved';
+export const PORTAL_LOG_LINK_DELETED = 'Link deleted:';
+export const PORTAL_LOG_LINK_DELETE_FAILED = 'Failed to delete link:';
+export const PORTAL_LOG_CATEGORY_UPDATED = 'Category updated:';
+export const PORTAL_LOG_CATEGORY_ADDED = 'Category added:';
+export const PORTAL_LOG_CATEGORY_DELETED = 'Category deleted:';
 
 /* ─────────────────────────────────────────
    Reminder page constants

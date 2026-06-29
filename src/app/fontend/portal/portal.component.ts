@@ -36,7 +36,17 @@ import {
 	DIALOG_MULTI_LINK,
 	SUCCESS,
 	TOAST_ERROR,
-	TOAST_INFO
+	TOAST_INFO,
+	PORTAL_LOG_FAVICON_UNAVAILABLE,
+	PORTAL_LOG_VISIT_INCREMENT_FAILED,
+	PORTAL_LOG_LINK_UPDATED,
+	PORTAL_LOG_LINK_SAVED,
+	PORTAL_LOG_LINKS_SAVED,
+	PORTAL_LOG_LINK_DELETED,
+	PORTAL_LOG_LINK_DELETE_FAILED,
+	PORTAL_LOG_CATEGORY_UPDATED,
+	PORTAL_LOG_CATEGORY_ADDED,
+	PORTAL_LOG_CATEGORY_DELETED
 } from '../../common/constants';
 import {
 	DIALOG_BTN_CONFIRM,
@@ -663,7 +673,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 */
 	protected onFaviconError(link: PortalLink): void {
 		this.faviconFailedIds.add(link._id);
-		LOG.warn(this.className, `Favicon unavailable for ${link.title} (${link.url})`);
+		LOG.warn(this.className, `${PORTAL_LOG_FAVICON_UNAVAILABLE} ${link.title} (${link.url})`);
 		// markForCheck required: called from a DOM event outside Angular's zone.
 		this.cdr.markForCheck();
 	}
@@ -678,7 +688,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		this.databaseService
 			.incrementLinkVisit(link._id, link.visitCount ?? 0)
 			.catch((error: unknown) =>
-				LOG.error(this.className, `Failed to increment visit count for ${link.title}`, error as Error)
+				LOG.error(this.className, `${PORTAL_LOG_VISIT_INCREMENT_FAILED} ${link.title}`, error as Error)
 			);
 	}
 
@@ -765,7 +775,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 						},
 						domain
 					);
-					LOG.info(this.className, `Link updated: ${finalUrl}`);
+					LOG.info(this.className, `${PORTAL_LOG_LINK_UPDATED} ${finalUrl}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_LINK_UPDATED);
 				} else {
 					await this.databaseService.addUsefulLink({
@@ -776,7 +786,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 						createdAt: new Date().toISOString(),
 						isPinned: formData.isPinned
 					});
-					LOG.info(this.className, `Link saved: ${finalUrl}`);
+					LOG.info(this.className, `${PORTAL_LOG_LINK_SAVED} ${finalUrl}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_LINK_SAVED);
 				}
 			} catch (error) {
@@ -821,7 +831,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				);
 
 				// Step 2: Confirm all writes succeeded with a single success toast
-				LOG.info(this.className, `${links.length} links saved`);
+				LOG.info(this.className, `${links.length} ${PORTAL_LOG_LINKS_SAVED}`);
 				this.dialogService.showToast(SUCCESS, PORTAL_MSG_MULTI_LINK_SAVED);
 			} catch (error) {
 				if (error instanceof SessionExpiredError) {
@@ -870,11 +880,11 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				this.databaseService
 					.removeUsefulLink(link._id, domain)
 					.then(() => {
-						LOG.info(this.className, `Link deleted: ${link.title}`);
+						LOG.info(this.className, `${PORTAL_LOG_LINK_DELETED} ${link.title}`);
 						this.dialogService.showToast(TOAST_INFO, PORTAL_MSG_LINK_DELETED);
 					})
 					.catch((error: unknown) => {
-						LOG.error(this.className, `Failed to delete link: ${link.title}`, error as Error);
+						LOG.error(this.className, `${PORTAL_LOG_LINK_DELETE_FAILED} ${link.title}`, error as Error);
 						this.dialogService.showToast(
 							TOAST_ERROR,
 							MSG_DELETE_FAILED,
@@ -946,14 +956,14 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 						{ name: data.name },
 						data.name
 					);
-					LOG.info(this.className, `Category updated: ${data.name}`);
+					LOG.info(this.className, `${PORTAL_LOG_CATEGORY_UPDATED} ${data.name}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_CATEGORY_UPDATED);
 				} else {
 					await this.databaseService.addLinkCategory({
 						name: data.name,
 						order: this.categories.length
 					});
-					LOG.info(this.className, `Category added: ${data.name}`);
+					LOG.info(this.className, `${PORTAL_LOG_CATEGORY_ADDED} ${data.name}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_CATEGORY_ADDED);
 				}
 			} catch (error) {
@@ -1044,7 +1054,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				this.databaseService
 					.removeLinkCategory(category._id, category.name)
 					.then(() => {
-						LOG.info(this.className, `Category deleted: ${category.name}`);
+						LOG.info(this.className, `${PORTAL_LOG_CATEGORY_DELETED} ${category.name}`);
 						this.dialogService.showToast(TOAST_INFO, PORTAL_MSG_CATEGORY_DELETED);
 						this.cdr.markForCheck();
 					})

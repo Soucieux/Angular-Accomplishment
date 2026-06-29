@@ -30,7 +30,8 @@ export const NAV_ITEMS: NavItem[] = [
 		icon: 'note_stack',
 		gradient: 'linear-gradient(135deg,#a5b4fc,#3730a3)'
 	},
-	{ id: 'about', label: 'About', icon: 'badge', gradient: 'linear-gradient(135deg,#f0abfc,#7e22ce)' }
+	{ id: 'about', label: 'About', icon: 'badge', gradient: 'linear-gradient(135deg,#f0abfc,#7e22ce)' },
+	{ id: 'vault', label: 'Vault', icon: 'hub', gradient: 'linear-gradient(135deg,#334155,#64748b)' }
 ];
 
 /** The destinations promoted to the always-visible dock (in display order). */
@@ -48,6 +49,7 @@ export const ROUTE_TO_NAV_ID: Record<string, string> = {
 	'/debt': 'debt',
 	'/patch': 'patch',
 	'/about': 'about',
+	'/vault': 'vault',
 	'/account': 'account'
 };
 
@@ -63,5 +65,6 @@ export const NAV_ID_TO_ROUTE: Record<string, string> = {
 	debt: '/debt',
 	patch: '/patch',
 	about: '/about',
+	vault: '/vault',
 	account: '/account'
 };

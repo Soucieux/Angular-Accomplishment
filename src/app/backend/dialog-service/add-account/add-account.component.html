@@ -1,0 +1,125 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	[draggable]="false"
+	[resizable]="false"
+	[dismissableMask]="true"
+	[style]="{ width: '440px', maxWidth: '94vw' }"
+	styleClass="add-account-dialog"
+	(onHide)="onDialogClosed()">
+	<ng-template #header>
+		<span class="add-account-dialog-title">{{ VAULT_DIALOG_TITLE }}</span>
+	</ng-template>
+
+	<div class="add-account-body">
+		<p class="add-account-subtitle">{{ VAULT_DIALOG_SUBTITLE }}</p>
+
+		<label class="field-label" for="vault-account-name">{{ VAULT_DIALOG_NAME_LABEL }}</label>
+		<input
+			id="vault-account-name"
+			class="text-input"
+			type="text"
+			[(ngModel)]="name"
+			(keyup.enter)="onSubmit()"
+			[placeholder]="VAULT_DIALOG_NAME_PLACEHOLDER" />
+
+		<div class="field-label">{{ VAULT_DIALOG_CATEGORY_LABEL }}</div>
+		<div class="category-row">
+			@for (category of categoryChips; track category.key) {
+				<button
+					type="button"
+					class="category-chip"
+					[class.selected]="category.isSelected"
+					(click)="selectCategory(category.key)">
+					<span class="category-dot" [style.background]="category.hex"></span>
+					{{ category.label }}
+				</button>
+			}
+			@if (pendingNewCategory) {
+				<button
+					type="button"
+					class="category-chip"
+					[class.selected]="isNewSelected"
+					(click)="selectPendingNewCategory()">
+					<span class="category-dot" [style.background]="pendingNewCategory.hex"></span>
+					{{ pendingNewCategory.label }}
+				</button>
+			}
+			@if (showNewCategory) {
+				<input
+					class="new-category-input"
+					type="text"
+					[(ngModel)]="newCategoryName"
+					(keyup.enter)="commitNewCategory()"
+					(keyup.escape)="cancelNewCategory()"
+					(blur)="commitNewCategory()"
+					[placeholder]="VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER" />
+			} @else {
+				<button type="button" class="new-category-button" (click)="openNewCategory()">
+					<span class="material-symbols-outlined">add</span>
+					{{ VAULT_DIALOG_NEW_CATEGORY }}
+				</button>
+			}
+		</div>
+
+		<div class="verified-field">
+			<span class="field-label">{{ VAULT_DIALOG_VERIFIED_LABEL }}</span>
+			<button
+				type="button"
+				class="verified-switch"
+				[class.on]="verified"
+				[attr.aria-pressed]="verified"
+				(click)="toggleVerified()">
+				<span class="verified-knob"></span>
+			</button>
+		</div>
+
+		<div class="connections-header">
+			<span class="field-label">
+				{{ VAULT_DIALOG_CONNECTIONS_LABEL }}
+				<span class="optional">{{ VAULT_DIALOG_CONNECTIONS_OPTIONAL }}</span>
+			</span>
+			<span class="connections-hint">{{ VAULT_DIALOG_CONNECTIONS_HINT }}</span>
+		</div>
+
+		<div class="connection-rows">
+			@for (connection of connections; track trackByIndex($index); let i = $index) {
+				<div class="connection-row">
+					<span class="material-symbols-outlined connection-icon">{{
+						iconForType(connection.type)
+					}}</span>
+					<p-select
+						class="connection-type"
+						[(ngModel)]="connection.type"
+						[options]="connectionTypeOptions"
+						optionLabel="label"
+						optionValue="value"
+						[appendTo]="'body'"
+						panelStyleClass="dropdown-panel-font" />
+					<input
+						class="text-input connection-input"
+						type="text"
+						[(ngModel)]="connection.value"
+						[placeholder]="VAULT_DIALOG_CONNECTION_PLACEHOLDER" />
+					<button type="button" class="connection-remove" (click)="removeConnectionRow(i)">
+						<span class="material-symbols-outlined">close</span>
+					</button>
+				</div>
+			}
+		</div>
+
+		<button type="button" class="add-connection-button" (click)="addConnectionRow()">
+			<span class="material-symbols-outlined">add</span>
+			{{ VAULT_DIALOG_ADD_CONNECTION }}
+		</button>
+
+		<div class="dialog-footer">
+			<button type="button" class="ghost-button" (click)="onDialogClosed()">
+				{{ DIALOG_BTN_CANCEL }}
+			</button>
+			<button type="button" class="submit-button" [disabled]="!isValid" (click)="onSubmit()">
+				{{ VAULT_DIALOG_SUBMIT }}
+			</button>
+		</div>
+	</div>
+</p-dialog>

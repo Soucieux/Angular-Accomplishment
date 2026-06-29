@@ -38,6 +38,7 @@
 | **Account** | Personal account management hub with navy sky theme.<br>- Identity card — username editing and email display with verified badge<br>- Password change with strength meter and visibility toggle<br>- **Second Brain stats** — live counts for movies, reminders, debts, and recipes<br>- Milestone timeline with connector lines and colour-coded dates<br>- Danger zone card for account deletion with confirmation guard | Active |
 | **Login** | Authentication entry point.<br>- **Google Sign-In** and email / password login<br>- Sign-up flow for new user registration<br>- Route guards protecting all authenticated pages<br>- Post-login redirect to last-visited route<br>- Sidebar presence row: avatar, online status, and account menu popover | Stable |
 | **About** | Professional history timeline.<br>- Interactive milestone entries<br>- **Animated gradient background** | Stable |
+| **Vault** | Account links graph with a **Slate Steel** theme.<br>- **Force-directed graph** of accounts (app-tile nodes, coloured by category), emails (circles), and phones (diamonds)<br>- **Click-to-trace** — highlights linked nodes by hop distance (direct / second-degree) and dims the rest; drag, pan, and zoom<br>- **Category overview** chips and **type filters** with identifier hover popovers<br>- **Add-account dialog** with inline custom categories and multi-connection wiring; **link-mode** to connect nodes by hand<br>- List view with inline link editing; per-user CloudBase persistence | Beta |
 
 ---
 
@@ -129,6 +130,7 @@ src/app/
     ├── patch/                    # Patch notes / internal dev log
     ├── about/                    # Professional history timeline
     ├── account/                  # Account management hub (identity, stats, milestones, danger zone)
+    ├── vault/                    # Vault — account links force-directed graph
     ├── desktop-context-menu/     # Right-click overlay menu (desktop app only)
     ├── mobile-bottom-nav/        # Bottom nav bar component and data
     └── login/                    # Authentication entry point

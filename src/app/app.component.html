@@ -34,6 +34,17 @@
 						<span class="nav-label">{{ NAV_LABEL_HOME }}</span>
 					</a>
 				</li>
+				<li class="nav-item" data-nav-id="vault">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/vault"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">hub</span>
+						<span class="nav-label">{{ NAV_LABEL_VAULT }}</span>
+					</a>
+				</li>
 				<li class="nav-item" data-nav-id="today">
 					<a
 						mat-button
@@ -56,15 +67,26 @@
 						<span class="nav-label">{{ NAV_LABEL_PORTAL }}</span>
 					</a>
 				</li>
-				<li class="nav-item" data-nav-id="resonance">
+				<li class="nav-item" data-nav-id="reminder">
 					<a
 						mat-button
 						class="nav-button"
 						matRipple
-						routerLink="/resonance"
+						routerLink="/reminder"
 						routerLinkActive="nav-active">
-						<span class="material-symbols-outlined nav-icon">format_quote</span>
-						<span class="nav-label">{{ NAV_LABEL_RESONANCE }}</span>
+						<span class="material-symbols-outlined nav-icon">alarm</span>
+						<span class="nav-label">{{ NAV_LABEL_REMINDER }}</span>
+					</a>
+				</li>
+				<li class="nav-item" data-nav-id="debt">
+					<a
+						mat-button
+						class="nav-button"
+						matRipple
+						routerLink="/debt"
+						routerLinkActive="nav-active">
+						<span class="material-symbols-outlined nav-icon">account_balance</span>
+						<span class="nav-label">{{ NAV_LABEL_DEBT_SONATA }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="recipes">
@@ -89,26 +111,15 @@
 						<span class="nav-label">{{ NAV_LABEL_ENTERTAINMENT }}</span>
 					</a>
 				</li>
-				<li class="nav-item" data-nav-id="reminder">
+				<li class="nav-item" data-nav-id="resonance">
 					<a
 						mat-button
 						class="nav-button"
 						matRipple
-						routerLink="/reminder"
+						routerLink="/resonance"
 						routerLinkActive="nav-active">
-						<span class="material-symbols-outlined nav-icon">alarm</span>
-						<span class="nav-label">{{ NAV_LABEL_REMINDER }}</span>
-					</a>
-				</li>
-				<li class="nav-item" data-nav-id="debt">
-					<a
-						mat-button
-						class="nav-button"
-						matRipple
-						routerLink="/debt"
-						routerLinkActive="nav-active">
-						<span class="material-symbols-outlined nav-icon">account_balance</span>
-						<span class="nav-label">{{ NAV_LABEL_DEBT_SONATA }}</span>
+						<span class="material-symbols-outlined nav-icon">format_quote</span>
+						<span class="nav-label">{{ NAV_LABEL_RESONANCE }}</span>
 					</a>
 				</li>
 				<li class="nav-item" data-nav-id="patch">
@@ -191,13 +202,18 @@
 											<span class="material-symbols-outlined">{{
 												minimizeOnClose() ? 'close_fullscreen' : 'open_in_full'
 											}}</span>
-											{{ minimizeOnClose() ? NAV_MINIMIZE_ON_CLOSE_DISABLE : NAV_MINIMIZE_ON_CLOSE_ENABLE }}
+											{{
+												minimizeOnClose()
+													? NAV_MINIMIZE_ON_CLOSE_DISABLE
+													: NAV_MINIMIZE_ON_CLOSE_ENABLE
+											}}
 										</button>
 									}
 									<button
 										class="account-menu-popover-item account-menu-popover-item--danger"
 										(click)="logout()">
-										<span class="material-symbols-outlined">logout</span>{{ NAV_LABEL_SIGN_OUT }}
+										<span class="material-symbols-outlined">logout</span
+										>{{ NAV_LABEL_SIGN_OUT }}
 									</button>
 								</div>
 							}

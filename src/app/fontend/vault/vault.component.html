@@ -1,0 +1,239 @@
+<div class="container-vault">
+	<!-- ===== Header ===== -->
+	<header class="vault-header">
+		<div class="vault-title-block">
+			<div class="page-title-row">
+				<h1 class="vault-title">{{ NAV_LABEL_VAULT }}</h1>
+				@if (saveIndicator) {
+					<div class="save-indicator"><span class="save-spinner"></span></div>
+				}
+			</div>
+			<p class="vault-subtitle">{{ VAULT_PAGE_SUBTITLE }}</p>
+		</div>
+
+		<div class="vault-controls">
+			<div class="vault-search">
+				<span class="material-symbols-outlined vault-search-icon">search</span>
+				<input
+					class="vault-search-input"
+					type="text"
+					[(ngModel)]="query"
+					[placeholder]="VAULT_SEARCH_PLACEHOLDER" />
+			</div>
+
+			<div class="vault-view-toggle">
+				<button
+					type="button"
+					class="vault-tab"
+					[class.active]="isGraphView"
+					(click)="showGraphView()">
+					<span class="material-symbols-outlined">hub</span>
+					{{ VAULT_TAB_GRAPH }}
+				</button>
+				<button type="button" class="vault-tab" [class.active]="isListView" (click)="showListView()">
+					<span class="material-symbols-outlined">format_list_bulleted</span>
+					{{ VAULT_TAB_LIST }}
+				</button>
+			</div>
+
+			<button type="button" class="vault-add-button" (click)="openAddDialog()">
+				<span class="material-symbols-outlined">add</span>
+				{{ VAULT_BTN_ADD }}
+			</button>
+		</div>
+	</header>
+
+	<!-- ===== Info bar (selection detail / category overview) ===== -->
+	@if (hasAccounts) {
+		<div class="vault-info-bar">
+			@if (selectionDetail; as detail) {
+				<div class="vault-selection">
+					<div class="vault-selection-identity">
+						<span class="vault-selection-avatar" [style.background]="detail.avatarGradient">
+							@if (detail.isIcon) {
+								<span class="material-symbols-outlined">{{ detail.icon }}</span>
+							} @else {
+								{{ detail.letter }}
+							}
+						</span>
+						<div class="vault-selection-text">
+							<div class="vault-selection-name">{{ detail.name }}</div>
+							<span class="vault-selection-type">{{ detail.typeLabel }}</span>
+						</div>
+					</div>
+					<div class="vault-stat-pills">
+						<div class="vault-stat-pill vault-stat-accounts">
+							<span class="vault-stat-dot"></span>
+							<span class="vault-stat-value">{{ detail.accountCount }}</span>
+							<span class="vault-stat-label">{{ VAULT_LABEL_ACCOUNTS }}</span>
+						</div>
+						<div class="vault-stat-pill vault-stat-identifiers">
+							<span class="vault-stat-dot"></span>
+							<span class="vault-stat-value">{{ detail.identifierCount }}</span>
+							<span class="vault-stat-label">{{ VAULT_LABEL_IDENTIFIERS }}</span>
+						</div>
+					</div>
+					@if (detail.isAccount) {
+						<div class="vault-selection-divider"></div>
+						<button type="button" class="vault-link-button" (click)="startLinkMode()">
+							<span class="material-symbols-outlined">add_link</span>
+							{{ VAULT_BTN_ADD_CONNECTIONS }}
+						</button>
+					}
+				</div>
+			} @else {
+				<div class="vault-overview">
+					@for (stat of overviewStats; track stat.key) {
+						<button
+							type="button"
+							class="vault-overview-chip"
+							[class.active]="stat.isActive"
+							(click)="pickCategory(stat.key)">
+							<span class="vault-overview-icon" [style.background]="stat.gradient">
+								<span class="material-symbols-outlined">{{ stat.icon }}</span>
+							</span>
+							<div class="vault-overview-text">
+								<div class="vault-overview-value">{{ stat.value }}</div>
+								<div class="vault-overview-label">{{ stat.label }}</div>
+							</div>
+						</button>
+					}
+				</div>
+			}
+		</div>
+	}
+
+	<!-- ===== Content ===== -->
+	<div class="vault-content" #vaultContent>
+		@if (isListView) {
+			@if (hasAccounts) {
+				<div class="vault-list">
+					@for (account of accountRows; track account.id) {
+						<div class="vault-card">
+							<div class="vault-card-top">
+								<span class="vault-avatar" [style.background]="account.gradient">{{
+									account.letter
+								}}</span>
+								<div class="vault-card-id">
+									<div class="vault-card-name">
+										{{ account.name }}
+										@if (account.verified) {
+											<span class="vault-verified-badge">
+												<span class="material-symbols-outlined">verified</span>
+											</span>
+										}
+									</div>
+									<div class="vault-card-category">{{ account.categoryLabel }}</div>
+								</div>
+								<div class="vault-card-actions">
+									<div class="vault-link-count">
+										<span class="material-symbols-outlined">link</span
+										>{{ account.linkCount }}
+									</div>
+									@if (account.hasLinks) {
+										<button
+											type="button"
+											class="vault-edit-button"
+											[class.active]="account.isEditing"
+											(click)="toggleEditMode(account.id, $event)">
+											<span class="material-symbols-outlined">{{
+												account.isEditing ? 'check' : 'edit'
+											}}</span>
+											{{ account.isEditing ? VAULT_LIST_DONE : VAULT_LIST_EDIT }}
+										</button>
+									}
+								</div>
+							</div>
+							@if (account.hasLinks) {
+								<div class="vault-chips">
+									@for (link of account.links; track link.edgeKey) {
+										<span class="vault-chip">
+											<span
+												class="vault-dot {{ link.shapeClass }}"
+												[style.background]="link.gradient"></span>
+											{{ link.name }}
+											@if (account.isEditing) {
+												<button
+													type="button"
+													class="vault-chip-remove"
+													(click)="removeLink(link.edgeKey, $event)">
+													<span class="material-symbols-outlined">close</span>
+												</button>
+											}
+										</span>
+									}
+								</div>
+							}
+						</div>
+					}
+				</div>
+			} @else {
+				<div class="vault-empty">
+					<div class="vault-empty-icon"><span class="material-symbols-outlined">hub</span></div>
+					<div class="vault-empty-title">{{ VAULT_EMPTY_TITLE }}</div>
+					<div class="vault-empty-body">{{ VAULT_EMPTY_BODY }}</div>
+					<button type="button" class="vault-add-button vault-empty-add" (click)="openAddDialog()">
+						<span class="material-symbols-outlined">add</span>
+						{{ VAULT_BTN_ADD }}
+					</button>
+				</div>
+			}
+		} @else {
+			<div class="vault-graph-area">
+				<div class="vault-filters">
+					@for (filter of filterDefs; track filter.type) {
+						<div class="vault-filter-wrap">
+							<button
+								type="button"
+								class="vault-filter-chip"
+								[class.active]="filter.isActive"
+								(click)="toggleFilter(filter.type)">
+								<span
+									class="vault-filter-dot"
+									[style.background]="filter.dotColor"
+									[style.opacity]="filter.isActive ? 1 : 0.3"></span>
+								{{ filter.label }}
+								<span class="vault-filter-count">{{ filter.count }}</span>
+							</button>
+							@if (filter.hasItems) {
+								<div class="vault-filter-popover">
+									@for (item of filter.items; track item) {
+										<div class="vault-filter-popover-row">
+											<span class="material-symbols-outlined">{{ filter.icon }}</span
+											>{{ item }}
+										</div>
+									}
+								</div>
+							}
+						</div>
+					}
+				</div>
+				@if (linkMode) {
+					<div class="vault-banner">
+						<span class="material-symbols-outlined">add_link</span>
+						<span>{{ VAULT_BANNER_SECOND }}</span>
+						<button type="button" class="vault-banner-cancel" (click)="cancelLinkMode()">
+							<span class="material-symbols-outlined">close</span>
+							{{ VAULT_BANNER_CANCEL }}
+						</button>
+					</div>
+				}
+				<graph-canvas
+					[nodes]="nodes"
+					[edges]="edges"
+					[customCategories]="customCategories"
+					[selectedId]="selectedId"
+					[query]="query"
+					[filters]="filters"
+					[categoryFilter]="categoryFilter"
+					[linkMode]="linkMode"
+					[linkSourceId]="linkSourceId"
+					(nodeSelect)="onGraphNodeSelect($event)"
+					(linkTarget)="handleLinkTarget($event)">
+				</graph-canvas>
+			</div>
+		}
+	</div>
+
+	<ng-template #dialogComponentContainer></ng-template>
+</div>

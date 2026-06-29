@@ -1,0 +1,33 @@
+<div class="graph-wrap">
+	<svg #svg class="graph-svg" width="100%" height="100%">
+		<g #pan>
+			<g #edges></g>
+			<g #nodes></g>
+		</g>
+	</svg>
+
+	<div class="legend hide-on-narrow-or-mobile">
+		<div class="legend-title">{{ VAULT_LEGEND_TITLE }}</div>
+		<div class="legend-row"><span class="legend-tile"></span>{{ VAULT_TYPE_ACCOUNT }}</div>
+		<div class="legend-row"><span class="legend-circle"></span>{{ VAULT_TYPE_EMAIL }}</div>
+		<div class="legend-row"><span class="legend-diamond"></span>{{ VAULT_TYPE_PHONE }}</div>
+		<div class="legend-row"><span class="legend-hexagon"></span>{{ VAULT_TYPE_LINK }}</div>
+		<div class="legend-row legend-row-verified">
+			<span class="legend-verified"><span class="material-symbols-outlined">verified</span></span>
+			{{ VAULT_LEGEND_VERIFIED }}
+			<span class="legend-count">{{ verifiedCount }}</span>
+		</div>
+	</div>
+
+	<div class="zoom-controls">
+		<button type="button" class="zoom-button" (click)="zoomIn()">
+			<span class="material-symbols-outlined">add</span>
+		</button>
+		<button type="button" class="zoom-button" (click)="zoomOut()">
+			<span class="material-symbols-outlined">remove</span>
+		</button>
+		<button type="button" class="zoom-button" (click)="resetView()">
+			<span class="material-symbols-outlined">recenter</span>
+		</button>
+	</div>
+</div>

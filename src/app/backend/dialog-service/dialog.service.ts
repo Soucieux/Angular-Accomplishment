@@ -11,6 +11,7 @@ import { BlockDialogComponent } from './block/block.component';
 import { RetryDialogComponent } from './retry/retry.component';
 import {
 	DIALOG_ADD,
+	DIALOG_ADD_ACCOUNT,
 	DIALOG_BLOCK,
 	DIALOG_CATEGORY,
 	DIALOG_CONFIRM,
@@ -41,7 +42,9 @@ import { NewDebtData } from '../../fontend/debt/debt.model';
 import { AddLinkDialogComponent } from './add-link/add-link.component';
 import { MultiLinkDialogComponent } from './multi-link/multi-link.component';
 import { CategoryDialogComponent } from './category/category.component';
+import { AddAccountDialogComponent } from './add-account/add-account.component';
 import { NewCategoryData, NewLinkData } from '../../fontend/portal/portal.model';
+import { NewAccountData, VaultCategoryDef } from '../../fontend/vault/vault.model';
 import { DeleteAccountDialogComponent } from './delete-account/delete-account.component';
 import { SessionExpiredError } from '../../common/error/session-expired.error';
 import { DialogError } from '../../common/error/dialog.error';
@@ -135,6 +138,13 @@ export class DialogService {
 		dialogType: 'category',
 		submitCallback: (data: NewCategoryData) => void,
 		options: { prefillData: Partial<NewCategoryData> | null; onDelete?: () => void }
+	): void;
+
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'add-account',
+		submitCallback: (data: NewAccountData) => void,
+		existingCategories: VaultCategoryDef[]
 	): void;
 
 	/**
@@ -324,6 +334,8 @@ export class DialogService {
 				return DeleteAccountDialogComponent;
 			case DIALOG_CATEGORY:
 				return CategoryDialogComponent;
+			case DIALOG_ADD_ACCOUNT:
+				return AddAccountDialogComponent;
 			default:
 				throw new DialogError(MSG_INVALID_DIALOG_TYPE);
 		}

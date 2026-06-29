@@ -90,6 +90,7 @@ import {
 	NAV_LABEL_DEBT_SONATA,
 	NAV_LABEL_PATCH_NOTES,
 	NAV_LABEL_ABOUT,
+	NAV_LABEL_VAULT,
 	NAV_LABEL_SIGN_IN
 } from '../../common/locale/locale-strings';
 import { PATCH_HEATMAP_MONTH_INDICES, ReleaseNote } from './patch.model';
@@ -252,6 +253,13 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				icon: 'badge',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-about'
+			},
+			{
+				key: 'Vault',
+				label: NAV_LABEL_VAULT,
+				icon: 'hub',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-vault'
 			},
 			{ key: 'Login', label: NAV_LABEL_SIGN_IN, icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' }, // pi icon — CSS only, no ligature text
 			{

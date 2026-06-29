@@ -13,6 +13,7 @@ import { PortalComponent } from './fontend/portal/portal.component';
 import { RecipeComponent } from './fontend/recipe/recipe.component';
 import { DebtComponent } from './fontend/debt/debt.component';
 import { TodayComponent } from './fontend/today/today.component';
+import { VaultComponent } from './fontend/vault/vault.component';
 
 export const routes: Routes = [
 	{ path: '', component: HomeComponent },
@@ -26,5 +27,6 @@ export const routes: Routes = [
 	{ path: 'portal', component: PortalComponent },
 	{ path: 'recipe', component: RecipeComponent },
 	{ path: 'debt', component: DebtComponent },
-	{ path: 'today', component: TodayComponent }
+	{ path: 'today', component: TodayComponent },
+	{ path: 'vault', component: VaultComponent }
 ];

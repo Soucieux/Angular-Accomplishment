@@ -72,7 +72,7 @@
 }
 
 .view-switch__button.is-active {
-	color: #fff;
+	color: #fff !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1403,6 +1403,13 @@
 
 .icon-about {
 	background: linear-gradient(135deg, #4ade80, #9c27b0);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.icon-vault {
+	background: linear-gradient(135deg, #334155, #64748b);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;

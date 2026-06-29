@@ -305,6 +305,14 @@ li[data-nav-id='about'] .nav-icon {
 	-webkit-text-fill-color: transparent;
 }
 
+/* Vault — slate steel */
+li[data-nav-id='vault'] .nav-icon {
+	background: linear-gradient(135deg, #334155, #64748b);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
 /* ── Account section ─────────────────────────────────────────────────────── */
 .account-menu-container {
 	margin-top: auto;

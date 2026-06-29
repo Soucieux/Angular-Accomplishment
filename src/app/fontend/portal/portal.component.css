@@ -165,7 +165,7 @@
 	font-size: 13px;
 	font-weight: 600;
 	background: transparent;
-	color: rgba(255, 255, 255, 0.82);
+	color: rgba(255, 255, 255, 0.82) !important;
 	border: 1px solid rgba(255, 255, 255, 0.38);
 	border-radius: 8px;
 	cursor: pointer;
@@ -180,7 +180,7 @@
 
 .date-calculator-reset-button:hover {
 	background: rgba(255, 255, 255, 0.14);
-	color: #ffffff;
+	color: #ffffff !important;
 }
 
 /* ─────────────────────────────────────────

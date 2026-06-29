@@ -9,7 +9,6 @@ import {
 	ViewContainerRef
 } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
-import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -48,7 +47,6 @@ import { MOVIE_GENRES } from '../../../fontend/entertainment/entertainment.model
 	standalone: true,
 	imports: [
 		DialogModule,
-		ButtonModule,
 		AvatarModule,
 		FormsModule,
 		SelectModule,

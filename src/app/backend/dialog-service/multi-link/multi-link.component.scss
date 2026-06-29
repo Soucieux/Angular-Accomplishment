@@ -3,7 +3,7 @@
 ───────────────────────────────────────── */
 ::ng-deep .multi-link-dialog {
 	width: 760px;
-	border-radius: 22px !important;
+	border-radius: 20px !important;
 	overflow: hidden !important;
 	background: rgba(255, 255, 255, 0.96) !important;
 	backdrop-filter: blur(24px);
@@ -15,7 +15,7 @@
 ::ng-deep .multi-link-dialog .p-dialog-header {
 	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
 	padding: 20px 24px 16px !important;
-	border-radius: 22px 22px 0 0 !important;
+	border-radius: 20px 20px 0 0 !important;
 	display: flex !important;
 	flex-direction: column !important;
 	gap: 3px !important;
@@ -31,8 +31,8 @@
 
 ::ng-deep .multi-link-dialog .p-dialog-footer {
 	padding: 16px 24px !important;
-	background: #fcfdfe !important;
-	border-top: 1px solid #eef2f6 !important;
+	background: transparent !important;
+	border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
 	display: flex !important;
 	align-items: center !important;
 	gap: 16px !important;
@@ -63,8 +63,8 @@
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	font-size: 11px;
-	font-weight: 700;
+	font-size: 13px;
+	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.6px;
 	color: #64748b;
@@ -108,9 +108,9 @@
 	}
 
 	&.is-selected {
-		background: #d53369;
+		background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
 		border-color: #d53369;
-		color: #fff;
+		color: #fff !important;
 		box-shadow: 0 3px 10px rgba(213, 51, 105, 0.28);
 	}
 }
@@ -401,7 +401,7 @@
 
 .multi-link-footer-actions {
 	display: flex;
-	gap: 10px;
+	gap: 8px;
 	flex-shrink: 0;
 }
 
@@ -427,7 +427,7 @@
 	cursor: pointer;
 	font-size: 13px;
 	font-weight: 600;
-	color: #fff;
+	color: #fff !important;
 	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
 	height: 32px;
 	padding: 0 14px;

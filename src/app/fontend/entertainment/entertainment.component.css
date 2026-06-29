@@ -324,7 +324,7 @@
 .content-container {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(var(--individual-item-width), 1fr));
-	align-items: start;
+	align-items: stretch;
 	gap: var(--individual-item-gap);
 	position: relative;
 	flex: 1;
@@ -413,7 +413,6 @@
 
 .image-container {
 	width: 180px;
-	height: calc(100% - 20px);
 	min-height: 265px;
 	margin: 10px;
 
@@ -656,6 +655,7 @@
 ::ng-deep .delete-button .p-button-danger {
 	width: 30px;
 	height: 30px;
+	border-radius: 50%;
 }
 
 .douban-button {

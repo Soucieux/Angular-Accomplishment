@@ -22,61 +22,41 @@
 }
 
 ::ng-deep .search-dialog .p-dialog-content {
-	padding: 20px 20px 16px !important;
+	padding: 20px 24px 8px !important;
 	background: transparent !important;
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 16px !important;
 }
 
 ::ng-deep .search-dialog .p-dialog-footer {
-	padding: 0 24px !important;
-	height: 50px !important;
-	background: rgba(248, 245, 252, 0.9) !important;
-	border-top: 1px solid rgba(102, 126, 234, 0.12) !important;
-	border-radius: 0 0 20px 20px !important;
+	padding: 12px 24px 16px !important;
+	background: transparent !important;
+	border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
 	display: flex !important;
-	align-items: center !important;
 	justify-content: flex-end !important;
 	gap: 8px !important;
 }
 
 /* ─────────────────────────────────────────
-   Shared button sizing — matches add dialog footer buttons
+   Footer button — Stop (rose-gold) / Done (green)
 ───────────────────────────────────────── */
 
-::ng-deep .search-dialog .p-dialog-footer .p-button {
-	height: 32px !important;
-	padding: 0 14px !important;
-	font-size: 13px !important;
-	border-radius: 9px !important;
-}
-
-/* ─────────────────────────────────────────
-   Done button
-───────────────────────────────────────── */
-
-::ng-deep .search-dialog .p-dialog-footer .submit-button .p-button[severity='success'] {
-	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
-	border: none !important;
-	border-radius: 9px !important;
-	color: rgba(0, 40, 20, 0.9) !important;
-	font-size: 13px !important;
-	font-weight: 600 !important;
-	height: 32px !important;
-	padding: 0 14px !important;
-}
-
-/* ─────────────────────────────────────────
-   Stop button
-───────────────────────────────────────── */
-
-::ng-deep .search-dialog .p-dialog-footer .submit-button .p-button[severity='danger'] {
-	background: linear-gradient(135deg, #d53369 0%, #daae51 100%) !important;
-	border: none !important;
-	border-radius: 9px !important;
+.search-dialog-button {
+	height: 32px;
+	padding: 0 14px;
+	border-radius: 9px;
+	font-size: 13px;
+	font-weight: 600;
+	border: none;
+	cursor: pointer;
 	color: #fff !important;
-	font-size: 13px !important;
-	font-weight: 600 !important;
-	height: 32px !important;
-	padding: 0 14px !important;
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+}
+
+.search-dialog-button.is-done {
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+	color: rgba(0, 40, 20, 0.9) !important;
 }
 
 .logs {

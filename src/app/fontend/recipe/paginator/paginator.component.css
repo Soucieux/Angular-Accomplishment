@@ -36,7 +36,7 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	color: #fff;
+	color: #fff !important;
 	background: rgba(255, 255, 255, 0.18);
 	border: 1px solid rgba(255, 255, 255, 0.30);
 	backdrop-filter: blur(12px);
@@ -81,12 +81,12 @@
 	border-radius: var(--paginator-radius);
 	font-size: 14px;
 	font-weight: 600;
-	color: rgba(255, 255, 255, 0.82);
+	color: rgba(255, 255, 255, 0.82) !important;
 	background: transparent;
 	transition: all var(--paginator-duration) var(--paginator-ease);
 }
 .paginator-segment:hover:not(.is-selected) {
-	color: #fff;
+	color: #fff !important;
 	background: rgba(255, 255, 255, 0.16);
 }
 

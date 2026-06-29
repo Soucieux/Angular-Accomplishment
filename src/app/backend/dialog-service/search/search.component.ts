@@ -1,7 +1,6 @@
 import { SearchStreamService } from './search-stream.service';
 import { AfterViewInit, Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
-import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
 import { Utilities } from '../../../common/utilities/app.utilities';
 import {
@@ -14,7 +13,7 @@ import {
 
 @Component({
 	selector: 'search-dialog',
-	imports: [DialogModule, ButtonModule],
+	imports: [DialogModule],
 	templateUrl: './search.component.html',
 	styleUrl: './search.component.css'
 })

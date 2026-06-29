@@ -13,12 +13,11 @@
 		}
 	</div>
 	<ng-template #footer>
-		<p-button
-			[label]="searchCompleteOrInterrupted ? ENT_BTN_DONE : ENT_BTN_STOP"
+		<button
 			type="button"
-			class="submit-button"
-			[severity]="searchCompleteOrInterrupted ? 'success' : 'danger'"
-			(click)="
-				searchCompleteOrInterrupted ? onDialogClosed() : triggerStopSearching()
-			"></p-button> </ng-template
+			class="search-dialog-button"
+			[class.is-done]="searchCompleteOrInterrupted"
+			(click)="searchCompleteOrInterrupted ? onDialogClosed() : triggerStopSearching()">
+			{{ searchCompleteOrInterrupted ? ENT_BTN_DONE : ENT_BTN_STOP }}
+		</button> </ng-template
 ></p-dialog>

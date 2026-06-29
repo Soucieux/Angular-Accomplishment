@@ -93,20 +93,24 @@
 			<p-checkBox inputId="favourite" [(ngModel)]="isFavourite" [binary]="true"></p-checkBox>
 			<label for="favourite">{{ ADD_MOVIE_LABEL_FAVOURITE }}</label>
 		</div>
-		<p-button
-			[label]="ADD_MOVIE_BTN_SEARCH"
+		<button
 			type="button"
-			severity="primary"
+			class="add-dialog-button-search"
 			[attr.form]="'addMovieForm'"
 			[disabled]="addMovieForm.invalid"
-			(click)="searchCurrentMovie(addMovieForm.value)" />
-		<p-button [label]="DIALOG_BTN_CANCEL" type="button" severity="secondary" (click)="onDialogClosed()" />
-		<p-button
-			[label]="ADD_MOVIE_BTN_SUBMIT"
-			type="submit"
-			class="submit-button"
+			(click)="searchCurrentMovie(addMovieForm.value)">
+			{{ ADD_MOVIE_BTN_SEARCH }}
+		</button>
+		<button type="button" class="add-dialog-button-ghost" (click)="onDialogClosed()">
+			{{ DIALOG_BTN_CANCEL }}
+		</button>
+		<button
+			type="button"
+			class="add-dialog-button-gradient"
 			[disabled]="!canSubmit"
-			(click)="addMovieForm.ngSubmit.emit()"></p-button>
+			(click)="addMovieForm.ngSubmit.emit()">
+			{{ ADD_MOVIE_BTN_SUBMIT }}
+		</button>
 	</ng-template>
 </p-dialog>
 <ng-container #dialogComponentContainer></ng-container>

@@ -82,6 +82,7 @@ export const NAV_LABEL_REMINDER = 'Reminder';
 export const NAV_LABEL_DEBT_SONATA = 'Debt Sonata';
 export const NAV_LABEL_PATCH_NOTES = 'Patch Notes';
 export const NAV_LABEL_ABOUT = 'About';
+export const NAV_LABEL_VAULT = 'Vault';
 export const NAV_LABEL_SIGN_OUT = 'Sign out';
 export const NAV_LABEL_SIGN_IN = 'Sign in';
 export const NAV_STATUS_OFFLINE = 'Offline';
@@ -160,6 +161,7 @@ export const HOME_ACTIVITY_LABEL_DEBT_PAYMENT_REMOVED = 'Debt Payment Entry Remo
 export const HOME_ACTIVITY_LABEL_LINK_CATEGORY_ADDED = 'Link Category Added';
 export const HOME_ACTIVITY_LABEL_DATE_CALCULATOR_UPDATED = 'Date Calculator Updated';
 export const HOME_ACTIVITY_LABEL_DEBT_LOCK_UPDATED = 'Debt Lock Updated';
+export const ACTIVITY_INVALID_TABLE_TEXT = 'Invalid database name';
 
 /** Overflow-row label for the reminders panel. */
 export const HOME_OVERFLOW_LABEL_REMINDERS = 'View all in Reminders';
@@ -535,6 +537,8 @@ export const REMINDER_CATEGORY_UTILITY = 'Utility';
 export const REMINDER_CATEGORY_OTHER = 'Other';
 /** Label for the chip that opens the free-text custom tag input. */
 export const REMINDER_CHIP_CUSTOM = 'Custom';
+/** Label for the filter button that shows only shared reminder items. */
+export const REMINDER_CHIP_SHARED = 'Shared';
 /** Title for push notifications sent when a reminder is due in 3 days. */
 export const REMINDER_NOTIF_TITLE_3DAY = 'Due in 3 days';
 /** Title for push notifications sent when a reminder is due today. */
@@ -762,3 +766,104 @@ export const MOBILE_BLOCKED_BODY =
 export const TODAY_RECUR_LABELS: Partial<Record<string, string>> = {
 	daily: 'Daily', weekdays: 'Weekdays', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly',
 };
+
+/* ─────────────────────────────────────────
+   Vault page
+───────────────────────────────────────── */
+
+/** Word for accounts in the Vault header subtitle and the selected-node stat pill. */
+export const VAULT_LABEL_ACCOUNTS = 'accounts';
+/** Label for the email/phone count stat pill on a selected account. */
+export const VAULT_LABEL_IDENTIFIERS = 'email / phone';
+/** Descriptive page subtitle shown beneath the Vault title. */
+export const VAULT_PAGE_SUBTITLE = 'How your accounts, emails, and phones connect';
+/** Placeholder shown in the Vault search field. */
+export const VAULT_SEARCH_PLACEHOLDER = 'Search account, email, phone…';
+/** Label for the graph-view toggle tab. */
+export const VAULT_TAB_GRAPH = 'Graph';
+/** Label for the list-view toggle tab. */
+export const VAULT_TAB_LIST = 'List';
+/** Label for the header Add button. */
+export const VAULT_BTN_ADD = 'Add';
+/** Label for the link button on a selected account in the info bar. */
+export const VAULT_BTN_ADD_CONNECTIONS = 'Add new connections';
+
+/** Heading of the graph legend panel. */
+export const VAULT_LEGEND_TITLE = 'Legend';
+/** Legend row label for the count of verified accounts. */
+export const VAULT_LEGEND_VERIFIED = 'Verified';
+/** Type label for a website / app account (legend row and detail bar). */
+export const VAULT_TYPE_ACCOUNT = 'Website account';
+/** Type label for an email address identifier (legend row and detail bar). */
+export const VAULT_TYPE_EMAIL = 'Email address';
+/** Type label for a phone number identifier (legend row and detail bar). */
+export const VAULT_TYPE_PHONE = 'Phone number';
+/** Type label for a web-link identifier (legend row and detail bar). */
+export const VAULT_TYPE_LINK = 'Link';
+
+/** Accounts type-filter chip label. */
+export const VAULT_FILTER_ACCOUNTS = 'Accounts';
+/** Email type-filter chip label. */
+export const VAULT_FILTER_EMAIL = 'Email';
+/** Phone type-filter chip label. */
+export const VAULT_FILTER_PHONE = 'Phone';
+/** Link type-filter chip label (also reused as the add-dialog connection-type label). */
+export const VAULT_FILTER_LINK = 'Link';
+
+/** Edit button label on a list-view account card. */
+export const VAULT_LIST_EDIT = 'Edit';
+/** Done button label shown while editing a list-view account card. */
+export const VAULT_LIST_DONE = 'Done';
+/** Title shown on the empty-state card when the vault has no accounts yet. */
+export const VAULT_EMPTY_TITLE = 'Your vault is empty';
+/** Body shown on the empty-state card prompting the user to add an account. */
+export const VAULT_EMPTY_BODY = 'Add an account to start mapping your connections';
+
+/** Link-mode banner text shown before the source node is picked. */
+export const VAULT_BANNER_START = 'Link mode · click a node to start';
+/** Link-mode banner text shown after the source node is picked. */
+export const VAULT_BANNER_SECOND = 'Now click the second node to link it';
+/** Cancel button label on the link-mode banner. */
+export const VAULT_BANNER_CANCEL = 'Cancel';
+
+/** Title of the add-account dialog. */
+export const VAULT_DIALOG_TITLE = 'Add an account';
+/** Subtitle of the add-account dialog. */
+export const VAULT_DIALOG_SUBTITLE = 'Name it, then attach any connections';
+/** Field label for the account name input. */
+export const VAULT_DIALOG_NAME_LABEL = 'Account name';
+/** Placeholder for the account name input. */
+export const VAULT_DIALOG_NAME_PLACEHOLDER = 'e.g. Spotify, my bank, work laptop…';
+/** Field label for the category picker. */
+export const VAULT_DIALOG_CATEGORY_LABEL = 'Category';
+/** Field label for the verified/not-verified toggle in the add-account dialog. */
+export const VAULT_DIALOG_VERIFIED_LABEL = 'Verified';
+/** Label for the new-category chip. */
+export const VAULT_DIALOG_NEW_CATEGORY = 'New category';
+/** Placeholder for the inline new-category name input. */
+export const VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER = 'Name, then Enter';
+/** Field label for the connections section. */
+export const VAULT_DIALOG_CONNECTIONS_LABEL = 'Connections';
+/** Optional hint appended to the connections label. */
+export const VAULT_DIALOG_CONNECTIONS_OPTIONAL = '(optional)';
+/** Helper hint shown beside the connections label. */
+export const VAULT_DIALOG_CONNECTIONS_HINT = 'type a name — existing or new';
+/** Placeholder for each connection input row. */
+export const VAULT_DIALOG_CONNECTION_PLACEHOLDER = 'Search or add a connection…';
+/** Label for the add-another-connection button. */
+export const VAULT_DIALOG_ADD_CONNECTION = 'Add connection';
+/** Submit button label on the add-account dialog. */
+export const VAULT_DIALOG_SUBMIT = 'Add to map';
+
+/** Toast shown when an account is added to the vault. */
+export const VAULT_MSG_ACCOUNT_SAVED = 'Account added';
+/** Toast shown when a link is created between two nodes. */
+export const VAULT_MSG_LINK_ADDED = 'Link added';
+/** Toast shown when a link is removed. */
+export const VAULT_MSG_LINK_REMOVED = 'Link removed';
+/** Toast detail shown when a vault write fails. */
+export const VAULT_MSG_SAVE_FAILED_DETAIL = 'Could not save to the vault. Please try again.';
+/** Block-dialog message shown while a vault write is in flight. */
+export const VAULT_MSG_SAVING = 'Saving…';
+/** Block-dialog message shown while a link is being removed. */
+export const VAULT_MSG_REMOVING_LINK = 'Removing link…';

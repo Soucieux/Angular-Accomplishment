@@ -6,6 +6,21 @@ import {
 	DATABASE_PATCH_NOTES,
 	DATABASE_QUOTES,
 	DATABASE_REMINDER,
+	DATABASE_VAULT,
+	VAULT_KIND_NODE,
+	VAULT_KIND_EDGE,
+	VAULT_KIND_CATEGORY,
+	VAULT_VALUE_KEY_KIND,
+	VAULT_VALUE_KEY_NODE_TYPE,
+	VAULT_VALUE_KEY_NAME,
+	VAULT_VALUE_KEY_CATEGORY,
+	VAULT_VALUE_KEY_SOURCE_ID,
+	VAULT_VALUE_KEY_TARGET_ID,
+	VAULT_VALUE_KEY_RELATION,
+	VAULT_VALUE_KEY_LABEL,
+	VAULT_VALUE_KEY_HEX,
+	VAULT_VALUE_KEY_GRADIENT,
+	VAULT_VALUE_KEY_VERIFIED,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
@@ -31,6 +46,7 @@ import {
 	ENT_LOG_SPAN_CLASS_RATE_DOWN,
 	ENT_LOG_SPAN_CLASS_RATE_UP,
 	FIREBASE_LOG_TABLE_RECORD_UPDATED,
+	FIREBASE_LOG_VAULT_ADD_FAILED,
 	FIREBASE_LOG_DATE_CALC_UPDATE_FAILED,
 	FIREBASE_LOG_MOVIE_RATE_UPDATE_FAILED,
 	FIREBASE_LOG_MOVIE_GENRE_UPDATED,
@@ -100,6 +116,7 @@ import type { Auth } from 'firebase/auth';
 import { Observable, map, of } from 'rxjs';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
+import { VaultRecord, VaultNodeType } from '../../../fontend/vault/vault.model';
 import { DatabaseService, FIREBASE_AUTH, FIREBASE_DATABASE, FIREBASE_STORAGE } from '../database.service';
 
 @Injectable({
@@ -316,6 +333,19 @@ export class FirebaseService extends DatabaseService {
 						};
 					};
 				})
+			)
+		);
+	}
+
+	/**
+	 * Gets the current user's vault graph from Firebase as a reactive observable.
+	 *
+	 * @returns An observable that emits the vault records list (nodes, edges, and custom categories).
+	 */
+	public getVault(): Observable<VaultRecord[]> {
+		return this.listAsObservable(dbRef(this.db, DATABASE_VAULT)).pipe(
+			map((snapshots: any[]) =>
+				snapshots.map((snapshot: any) => ({ key: snapshot.key, ...snapshot.val() }) as VaultRecord)
 			)
 		);
 	}
@@ -929,6 +959,15 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Removes a link (edge) from the vault collection.
+	 *
+	 * @param key - The document key of the edge to remove.
+	 */
+	public removeVaultEdge(key: string): Promise<void> {
+		return this.removeSingleItemFromDatabase(DATABASE_VAULT, key);
+	}
+
+	/**
 	 * Not implemented for Firebase — throws immediately.
 	 *
 	 * @param _entryKey - The key of the debt record (unused in this backend).
@@ -1277,6 +1316,64 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Adds a new node (account, email, or phone) to the vault collection.
+	 *
+	 * @param node - The node content to persist.
+	 * @returns The database id of the newly created node document.
+	 */
+	public addVaultNode(node: {
+		nodeType: VaultNodeType;
+		name: string;
+		category: string;
+		verified: boolean;
+	}): Promise<string> {
+		return this.addVaultRecord({
+			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_NODE,
+			[VAULT_VALUE_KEY_NODE_TYPE]: node.nodeType,
+			[VAULT_VALUE_KEY_NAME]: node.name,
+			[VAULT_VALUE_KEY_CATEGORY]: node.category,
+			[VAULT_VALUE_KEY_VERIFIED]: node.verified
+		});
+	}
+
+	/**
+	 * Adds a new link between two vault nodes.
+	 *
+	 * @param edge - The edge content to persist.
+	 */
+	public async addVaultEdge(edge: {
+		sourceId: string;
+		targetId: string;
+		relation: string;
+	}): Promise<void> {
+		await this.addVaultRecord({
+			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_EDGE,
+			[VAULT_VALUE_KEY_SOURCE_ID]: edge.sourceId,
+			[VAULT_VALUE_KEY_TARGET_ID]: edge.targetId,
+			[VAULT_VALUE_KEY_RELATION]: edge.relation
+		});
+	}
+
+	/**
+	 * Adds a new custom account category to the vault collection.
+	 *
+	 * @param category - The category content to persist.
+	 * @returns The database id of the newly created category document.
+	 */
+	public async addVaultCategory(category: {
+		label: string;
+		hex: string;
+		gradient: string;
+	}): Promise<string> {
+		return this.addVaultRecord({
+			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_CATEGORY,
+			[VAULT_VALUE_KEY_LABEL]: category.label,
+			[VAULT_VALUE_KEY_HEX]: category.hex,
+			[VAULT_VALUE_KEY_GRADIENT]: category.gradient
+		});
+	}
+
+	/**
 	 * Pushes a new record under the given table in Firebase Realtime Database.
 	 *
 	 * {@link addNewRecordToReminder} - Adds a new record to the reminder collection.
@@ -1304,6 +1401,28 @@ export class FirebaseService extends DatabaseService {
 				LOG.error(this.className, FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED, error);
 				throw error;
 			});
+	}
+
+	/**
+	 * Pushes a vault document under the vault node and returns its generated key.
+	 *
+	 * {@link addVaultNode} - Adds an account / email / phone node.
+	 * {@link addVaultEdge} - Adds a link between two nodes.
+	 * {@link addVaultCategory} - Adds a custom category.
+	 *
+	 * @param content - The document content with its kind discriminator and value fields.
+	 * @returns The database key of the newly created document.
+	 */
+	private async addVaultRecord(content: Record<string, unknown>): Promise<string> {
+		const reference = push(dbRef(this.db, DATABASE_VAULT), content);
+		try {
+			await reference;
+			LOG.info(this.className, FIREBASE_LOG_TABLE_RECORD_UPDATED);
+			return reference.key ?? '';
+		} catch (error) {
+			LOG.error(this.className, FIREBASE_LOG_VAULT_ADD_FAILED, error as Error);
+			throw error;
+		}
 	}
 
 	// ── Utility methods ───────────────────────────────────────────────────────

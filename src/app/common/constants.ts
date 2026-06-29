@@ -41,6 +41,8 @@ export const DIALOG_RETRY = 'retry';
 export const DIALOG_DELETE_ACCOUNT = 'delete-account';
 /** Dialog type for the add/edit category dialog on the Portal page. */
 export const DIALOG_CATEGORY = 'category';
+/** Dialog type for the add-account dialog on the Vault page. */
+export const DIALOG_ADD_ACCOUNT = 'add-account';
 
 /* ─────────────────────────────────────────
    History dialog constants
@@ -146,6 +148,8 @@ export const DATABASE_STATISTICS = 'statistics';
 export const DATABASE_USEFUL_LINKS = 'useful_links';
 /** Per-user preferences stored as a keyed object under each user's uid. */
 export const DATABASE_USER_PREFERENCES = 'preferences';
+/** Per-user account-links graph (nodes, edges, custom categories) for the Vault page. */
+export const DATABASE_VAULT = 'vault';
 
 /* ─────────────────────────────────────────
    Database service log messages
@@ -213,6 +217,7 @@ export const FIREBASE_LOG_HISTORY_ADD_FAILED = 'Error while adding new history e
 export const FIREBASE_LOG_PATCH_NOTES_ADDED = 'New patch notes record has been added';
 export const FIREBASE_LOG_PATCH_NOTES_ADD_FAILED = 'Error while adding new patch notes record';
 export const FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED = 'Error while adding new record for reminder table';
+export const FIREBASE_LOG_VAULT_ADD_FAILED = 'Error while adding new record for vault';
 export const FIREBASE_LOG_COVER_UPLOADED = 'Movie cover image uploaded';
 export const FIREBASE_LOG_REUSABLE_KEYS_RETRIEVED = 'Reusable keys retrieved';
 export const FIREBASE_LOG_REUSABLE_KEYS_GET_FAILED = 'Error while getting reusable keys';
@@ -264,7 +269,6 @@ export const ACTIVITY_SOURCE_LINK = 'link';
 export const ACTIVITY_SOURCE_DEBT = 'debt';
 export const ACTIVITY_SOURCE_RECIPE = 'recipe';
 export const ACTIVITY_SOURCE_DEFAULT = 'default';
-export const ACTIVITY_INVALID_TABLE_TEXT = 'Invalid database name';
 export const ACTIVITY_SOURCE_DATE_CALCULATOR = 'date_calculator';
 
 /* ─────────────────────────────────────────
@@ -579,6 +583,8 @@ export const REMINDER_VALUE_KEY_TAG = 'tag';
 export const REMINDER_VALUE_KEY_START_TIME = 'startTime';
 /** CloudBase content entry key for the reminder end time (HH:mm). */
 export const REMINDER_VALUE_KEY_END_TIME = 'endTime';
+/** CloudBase field key for the array of member openids a shared reminder is shared with. */
+export const REMINDER_VALUE_KEY_SHARED_WITH = 'sharedWith';
 
 /** Items shown per page in the Reminder grid (default: 2 columns × 7 rows). */
 export const REMINDER_ITEMS_PER_PAGE = 14;
@@ -734,3 +740,59 @@ export const TODAY_LABEL_AM = 'AM';
 export const TODAY_LABEL_PM = 'PM';
 /** Duration of the task removal fade-out animation in milliseconds. */
 export const TODAY_REMOVE_ANIMATION_MS = 220;
+
+/* ─────────────────────────────────────────
+   Vault page constants
+───────────────────────────────────────── */
+
+/** CloudBase content key tagging which kind of vault document this is. */
+export const VAULT_VALUE_KEY_KIND = 'kind';
+/** CloudBase content key for a node's type (account / email / phone). */
+export const VAULT_VALUE_KEY_NODE_TYPE = 'nodeType';
+/** CloudBase content key for a node's display name. */
+export const VAULT_VALUE_KEY_NAME = 'name';
+/** CloudBase content key for an account node's category. */
+export const VAULT_VALUE_KEY_CATEGORY = 'category';
+/** CloudBase content key for an edge's source node id. */
+export const VAULT_VALUE_KEY_SOURCE_ID = 'sourceId';
+/** CloudBase content key for an edge's target node id. */
+export const VAULT_VALUE_KEY_TARGET_ID = 'targetId';
+/** CloudBase content key for an edge's relation label. */
+export const VAULT_VALUE_KEY_RELATION = 'relation';
+/** CloudBase content key for a custom category's display label. */
+export const VAULT_VALUE_KEY_LABEL = 'label';
+/** CloudBase content key for a custom category's solid color. */
+export const VAULT_VALUE_KEY_HEX = 'hex';
+/** CloudBase content key for a custom category's gradient. */
+export const VAULT_VALUE_KEY_GRADIENT = 'gradient';
+/** CloudBase content key for an account node's verified flag. */
+export const VAULT_VALUE_KEY_VERIFIED = 'verified';
+
+/** Document-kind discriminator for a graph node. */
+export const VAULT_KIND_NODE = 'node';
+/** Document-kind discriminator for a graph edge. */
+export const VAULT_KIND_EDGE = 'edge';
+/** Document-kind discriminator for a custom category. */
+export const VAULT_KIND_CATEGORY = 'category';
+
+/** Node-type value for a website / app account. */
+export const VAULT_NODE_ACCOUNT = 'account';
+/** Node-type value for an email address identifier. */
+export const VAULT_NODE_EMAIL = 'email';
+/** Node-type value for a phone number identifier. */
+export const VAULT_NODE_PHONE = 'phone';
+/** Node-type value for a web-link identifier. */
+export const VAULT_NODE_LINK = 'link';
+
+/** Category key used for accounts created without an explicit category. */
+export const VAULT_CATEGORY_KEY_OTHER = 'other';
+
+/** Relation label stored on a link created from the add-account dialog. */
+export const VAULT_RELATION_LINKED = 'linked';
+/** Relation label stored on a link created by hand in graph link-mode. */
+export const VAULT_RELATION_MANUAL = 'manually linked';
+
+/** View discriminator for the force-directed graph view. */
+export const VAULT_VIEW_GRAPH = 'graph';
+/** View discriminator for the account list view. */
+export const VAULT_VIEW_LIST = 'list';

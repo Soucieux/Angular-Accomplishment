@@ -708,6 +708,22 @@ export class Utilities {
 	}
 
 	/**
+	 * Gets a de-duplicated array, collapsing items that share a key so each key
+	 * appears once. The last occurrence of a key wins; the input is not mutated.
+	 *
+	 * @param items - The items to de-duplicate.
+	 * @param keyOf - The function deriving each item's unique key.
+	 * @returns A new array with duplicate keys collapsed.
+	 */
+	public static uniqueByKey<T>(items: T[], keyOf: (item: T) => string): T[] {
+		const byKey = new Map<string, T>();
+		for (const item of items) {
+			byKey.set(keyOf(item), item);
+		}
+		return [...byKey.values()];
+	}
+
+	/**
 	 * Pads a number to two digits with a leading zero.
 	 *
 	 * @param n - The number to pad.

@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
-import { shareReplay, switchMap, take, filter } from 'rxjs/operators';
+import { BehaviorSubject, Observable, ReplaySubject, combineLatest, of } from 'rxjs';
+import { shareReplay, switchMap, take, filter, map, startWith, catchError } from 'rxjs/operators';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
 import { LOG } from '../../../common/app.logs';
@@ -16,9 +16,25 @@ import {
 	DATABASE_RELEASE_NOTES,
 	DATABASE_QUOTES,
 	DATABASE_REMINDER,
+	REMINDER_VALUE_KEY_SHARED_WITH,
 	DATABASE_STATISTICS,
 	DATABASE_RECIPES,
 	DATABASE_USEFUL_LINKS,
+	DATABASE_VAULT,
+	VAULT_KIND_NODE,
+	VAULT_KIND_EDGE,
+	VAULT_KIND_CATEGORY,
+	VAULT_VALUE_KEY_KIND,
+	VAULT_VALUE_KEY_NODE_TYPE,
+	VAULT_VALUE_KEY_NAME,
+	VAULT_VALUE_KEY_CATEGORY,
+	VAULT_VALUE_KEY_SOURCE_ID,
+	VAULT_VALUE_KEY_TARGET_ID,
+	VAULT_VALUE_KEY_RELATION,
+	VAULT_VALUE_KEY_LABEL,
+	VAULT_VALUE_KEY_HEX,
+	VAULT_VALUE_KEY_GRADIENT,
+	VAULT_VALUE_KEY_VERIFIED,
 	STATS_FIELD_TAURI_NOTIF_ENABLED,
 	STATS_FIELD_MINIMIZE_ON_CLOSE,
 	STATS_FIELD_LOCALE,
@@ -59,7 +75,6 @@ import {
 	DEBT_VALUE_KEY_PAYMENTS,
 	ACTIVITY_SOURCE_DATE_CALCULATOR,
 	ACTIVITY_SOURCE_DEFAULT,
-	ACTIVITY_INVALID_TABLE_TEXT,
 	ACTIVITY_TYPE_STATUS_CHANGED,
 	ACTIVITY_TYPE_EDITED,
 	ACTIVITY_TYPE_RATE_UPDATED,
@@ -125,10 +140,12 @@ import {
 	ENT_LOG_RATE_TO,
 	ENT_LOG_RATE_SAME,
 	ENT_LOG_RATE_UP,
-	ENT_LOG_RATE_DOWN
+	ENT_LOG_RATE_DOWN,
+	ACTIVITY_INVALID_TABLE_TEXT
 } from '../../../common/locale/locale-strings';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
+import { VaultRecord, VaultNodeType } from '../../../fontend/vault/vault.model';
 import { SessionExpiredError } from '../../../common/error/session-expired.error';
 import { UnexpectedError } from '../../../common/error/unexpected.error';
 
@@ -198,6 +215,7 @@ export class CloudbaseService extends DatabaseService {
 			const fetchStatId = () =>
 				this.database
 					.collection(DATABASE_STATISTICS)
+					.where(this.getGlobalStatsFilter())
 					.limit(1)
 					.get()
 					.then((response: any) => {
@@ -295,7 +313,14 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the statistics document.
 	 */
 	public getStatistics(): Observable<any> {
-		return this.watchCollection(DATABASE_STATISTICS, (docs) => docs[0]);
+		// Scope to the global stats doc (isUserStats != true). Per-user docs are no longer
+		// readable by non-owners, so watching the whole collection fails the security rule.
+		return this.watchCollection(
+			DATABASE_STATISTICS,
+			(docs) => docs[0],
+			false,
+			(col) => col.where(this.getGlobalStatsFilter())
+		);
 	}
 
 	/**
@@ -493,25 +518,38 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Gets the reminder details from CloudBase as a real-time observable.
+	 * Merges two watchers: reminders the user owns, and shared reminders where the
+	 * user's openid appears in the sharedWith array. The shared watcher is fail-safe —
+	 * if the security rule denies it (or array queries are unsupported) it yields an
+	 * empty list, so the owned-reminders stream is never affected.
 	 *
-	 * @returns An observable that emits the reminder details list.
+	 * @returns An observable that emits the merged reminder details list.
 	 */
 	public getReminderTableDetails(): Observable<any[]> {
-		return this.watchCollection(
-			DATABASE_REMINDER,
-			(docs) =>
-				docs.map((doc: any) => {
-					const { _id, ...rest } = doc;
-					return { key: _id, ...rest } as {
-						key: string;
-						text: string;
-						date: string;
-						link: string;
-						tags: string[];
-					};
-				}),
-			false,
-			(col) => col.where({ _openid: CloudbaseService.getUserId() })
+		const userId = CloudbaseService.getUserId();
+		const mapDocs = (docs: any[]) =>
+			docs.map((doc: any) => {
+				const { _id, ...rest } = doc;
+				return { key: _id, ...rest };
+			});
+
+		const owned$ = this.watchCollection(DATABASE_REMINDER, mapDocs, false, (col) =>
+			col.where({ _openid: userId })
+		);
+
+		/* Fail-safe shared watcher: startWith keeps owned reminders flowing before this watcher
+		   first emits, and catchError guards a synchronous query-builder throw — a runtime watch
+		   error is logged-and-swallowed inside watchCollection, leaving the startWith([]) value. */
+		const shared$ = this.watchCollection(DATABASE_REMINDER, mapDocs, false, (col) =>
+			col.where({ [REMINDER_VALUE_KEY_SHARED_WITH]: this._.in([userId]) })
+		).pipe(
+			startWith([] as any[]),
+			catchError(() => of([] as any[]))
+		);
+
+		// De-duplicate by key so a reminder the user both owns and is shared into appears once.
+		return combineLatest([owned$, shared$]).pipe(
+			map(([owned, shared]) => Utilities.uniqueByKey([...owned, ...shared], (item) => item.key))
 		);
 	}
 
@@ -538,6 +576,24 @@ export class CloudbaseService extends DatabaseService {
 							paid: boolean;
 						};
 					};
+				}),
+			false,
+			(col) => col.where({ _openid: CloudbaseService.getUserId() })
+		);
+	}
+
+	/**
+	 * Gets the current user's vault graph from CloudBase as a real-time observable.
+	 *
+	 * @returns An observable that emits the vault records list (nodes, edges, and custom categories).
+	 */
+	public getVault(): Observable<VaultRecord[]> {
+		return this.watchCollection(
+			DATABASE_VAULT,
+			(docs) =>
+				docs.map((doc: any) => {
+					const { _id, ...rest } = doc;
+					return { key: _id, ...rest } as VaultRecord;
 				}),
 			false,
 			(col) => col.where({ _openid: CloudbaseService.getUserId() })
@@ -1356,6 +1412,25 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Removes a link (edge) from the vault collection.
+	 *
+	 * @param key - The document key of the edge to remove.
+	 */
+	public async removeVaultEdge(key: string): Promise<void> {
+		try {
+			const result = await this.database
+				.collection(DATABASE_VAULT)
+				.where(this.buildWhereClause(key))
+				.remove();
+			this.throwIfCloudbaseError(result);
+			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
+		} catch (error) {
+			LOG.error(this.className, `${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`, error as Error);
+			this.rethrowCaught(error);
+		}
+	}
+
+	/**
 	 * Removes the payment entry at the given index from a debt document and restores the
 	 * debt balance, both in a single DB write. Records the removal in the activity log.
 	 *
@@ -1746,6 +1821,64 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Adds a new node (account, email, or phone) to the vault collection.
+	 *
+	 * @param node - The node content to persist.
+	 * @returns The database id of the newly created node document.
+	 */
+	public async addVaultNode(node: {
+		nodeType: VaultNodeType;
+		name: string;
+		category: string;
+		verified: boolean;
+	}): Promise<string> {
+		return this.addVaultRecord({
+			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_NODE,
+			[VAULT_VALUE_KEY_NODE_TYPE]: node.nodeType,
+			[VAULT_VALUE_KEY_NAME]: node.name,
+			[VAULT_VALUE_KEY_CATEGORY]: node.category,
+			[VAULT_VALUE_KEY_VERIFIED]: node.verified
+		});
+	}
+
+	/**
+	 * Adds a new link between two vault nodes.
+	 *
+	 * @param edge - The edge content to persist.
+	 */
+	public async addVaultEdge(edge: {
+		sourceId: string;
+		targetId: string;
+		relation: string;
+	}): Promise<void> {
+		await this.addVaultRecord({
+			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_EDGE,
+			[VAULT_VALUE_KEY_SOURCE_ID]: edge.sourceId,
+			[VAULT_VALUE_KEY_TARGET_ID]: edge.targetId,
+			[VAULT_VALUE_KEY_RELATION]: edge.relation
+		});
+	}
+
+	/**
+	 * Adds a new custom account category to the vault collection.
+	 *
+	 * @param category - The category content to persist.
+	 * @returns The database id of the newly created category document.
+	 */
+	public async addVaultCategory(category: {
+		label: string;
+		hex: string;
+		gradient: string;
+	}): Promise<string> {
+		return this.addVaultRecord({
+			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_CATEGORY,
+			[VAULT_VALUE_KEY_LABEL]: category.label,
+			[VAULT_VALUE_KEY_HEX]: category.hex,
+			[VAULT_VALUE_KEY_GRADIENT]: category.gradient
+		});
+	}
+
+	/**
 	 * Adds a new entry to the specified database collection and records an activity log entry.
 	 *
 	 * {@link addUsefulLink} - Adds a link to the useful-links collection.
@@ -1787,6 +1920,30 @@ export class CloudbaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, `${CLOUDBASE_LOG_RECORD_ADD_FAILED} ${tableName}`, error as Error);
+			this.rethrowCaught(error);
+		}
+	}
+
+	/**
+	 * Adds a vault document and returns its new id. Injects _openid for admin users so they can
+	 * manage another user's vault; non-admins let CloudBase set ownership from the auth context.
+	 *
+	 * {@link addVaultNode} - Adds an account / email / phone node.
+	 * {@link addVaultEdge} - Adds a link between two nodes.
+	 * {@link addVaultCategory} - Adds a custom category.
+	 *
+	 * @param content - The document content with its kind discriminator and value fields.
+	 * @returns The database id of the newly created document.
+	 */
+	private async addVaultRecord(content: Record<string, unknown>): Promise<string> {
+		try {
+			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
+			const result = await this.database.collection(DATABASE_VAULT).add({ ...userId, ...content });
+			this.throwIfCloudbaseError(result);
+			LOG.info(this.className, `${DATABASE_VAULT} ${CLOUDBASE_LOG_HAS_BEEN_UPDATED}`);
+			return result.id;
+		} catch (error) {
+			LOG.error(this.className, `${CLOUDBASE_LOG_RECORD_ADD_FAILED} ${DATABASE_VAULT}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2183,6 +2340,16 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	private getUserStatsFilter(): Record<string, unknown> {
 		return { _openid: CloudbaseService.getUserId(), [STATS_FIELD_IS_USER_STATS]: true };
+	}
+
+	/**
+	 * Gets the CloudBase where-clause object that identifies the single global stats
+	 * document (the one without the per-user flag). Mirrors {@link getUserStatsFilter}.
+	 *
+	 * @returns The where-clause object matching the global stats document.
+	 */
+	private getGlobalStatsFilter(): Record<string, unknown> {
+		return { [STATS_FIELD_IS_USER_STATS]: this._.neq(true) };
 	}
 
 	/**

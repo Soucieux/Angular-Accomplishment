@@ -63,6 +63,7 @@ export const NAV_LABEL_REMINDER = '提醒';
 export const NAV_LABEL_DEBT_SONATA = '债务';
 export const NAV_LABEL_PATCH_NOTES = '日志';
 export const NAV_LABEL_ABOUT = '关于';
+export const NAV_LABEL_VAULT = '保险库';
 export const NAV_LABEL_SIGN_OUT = '退出登录';
 export const NAV_LABEL_SIGN_IN = '登录';
 export const NAV_STATUS_OFFLINE = '离线';
@@ -138,6 +139,7 @@ export const HOME_ACTIVITY_LABEL_DEBT_PAYMENT_REMOVED = '还款记录已删除';
 export const HOME_ACTIVITY_LABEL_LINK_CATEGORY_ADDED = '链接类别已添加';
 export const HOME_ACTIVITY_LABEL_DATE_CALCULATOR_UPDATED = '日期日历已更新';
 export const HOME_ACTIVITY_LABEL_DEBT_LOCK_UPDATED = '债务锁已更新';
+export const ACTIVITY_INVALID_TABLE_TEXT = '数据库无效';
 
 export const HOME_OVERFLOW_LABEL_REMINDERS = '前往提醒页面以查看全部';
 export const HOME_OVERFLOW_LABEL_DEBT = '前往债务页面以查看全部';
@@ -438,6 +440,7 @@ export const REMINDER_CATEGORY_WORK = '工作';
 export const REMINDER_CATEGORY_UTILITY = '日常';
 export const REMINDER_CATEGORY_OTHER = '其他';
 export const REMINDER_CHIP_CUSTOM = '自定义';
+export const REMINDER_CHIP_SHARED = '共享';
 export const REMINDER_NOTIF_TITLE_3DAY = '3 天后截止';
 export const REMINDER_NOTIF_TITLE_TODAY = '今日截止';
 
@@ -673,3 +676,59 @@ export const TODAY_RECUR_LABELS: Partial<Record<string, string>> = {
 	monthly: '每月',
 	yearly: '每年'
 };
+
+/* ─────────────────────────────────────────
+   Vault page
+───────────────────────────────────────── */
+
+export const VAULT_LABEL_ACCOUNTS = '账户';
+export const VAULT_LABEL_IDENTIFIERS = '邮箱 / 电话';
+export const VAULT_PAGE_SUBTITLE = '你的账户、邮箱与电话如何相互关联';
+export const VAULT_SEARCH_PLACEHOLDER = '搜索账户、邮箱、电话…';
+export const VAULT_TAB_GRAPH = '图谱';
+export const VAULT_TAB_LIST = '列表';
+export const VAULT_BTN_ADD = '添加';
+export const VAULT_BTN_ADD_CONNECTIONS = '添加新关联';
+
+export const VAULT_LEGEND_TITLE = '图例';
+export const VAULT_LEGEND_VERIFIED = '已验证';
+export const VAULT_TYPE_ACCOUNT = '网站账户';
+export const VAULT_TYPE_EMAIL = '邮箱地址';
+export const VAULT_TYPE_PHONE = '电话号码';
+export const VAULT_TYPE_LINK = '链接';
+
+export const VAULT_FILTER_ACCOUNTS = '账户';
+export const VAULT_FILTER_EMAIL = '邮箱';
+export const VAULT_FILTER_PHONE = '电话';
+export const VAULT_FILTER_LINK = '链接';
+
+export const VAULT_LIST_EDIT = '编辑';
+export const VAULT_LIST_DONE = '完成';
+export const VAULT_EMPTY_TITLE = '保险库还是空的';
+export const VAULT_EMPTY_BODY = '添加一个账户，开始梳理你的关联';
+
+export const VAULT_BANNER_START = '关联模式 · 点击一个节点开始';
+export const VAULT_BANNER_SECOND = '再点击第二个节点完成关联';
+export const VAULT_BANNER_CANCEL = '取消';
+
+export const VAULT_DIALOG_TITLE = '添加账户';
+export const VAULT_DIALOG_SUBTITLE = '命名后即可附加任意关联';
+export const VAULT_DIALOG_NAME_LABEL = '账户名称';
+export const VAULT_DIALOG_NAME_PLACEHOLDER = '例如 Spotify、我的银行、工作电脑…';
+export const VAULT_DIALOG_CATEGORY_LABEL = '类别';
+export const VAULT_DIALOG_VERIFIED_LABEL = '已验证';
+export const VAULT_DIALOG_NEW_CATEGORY = '新类别';
+export const VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER = '输入名称后回车';
+export const VAULT_DIALOG_CONNECTIONS_LABEL = '关联';
+export const VAULT_DIALOG_CONNECTIONS_OPTIONAL = '（可选）';
+export const VAULT_DIALOG_CONNECTIONS_HINT = '输入名称 — 已有或新建';
+export const VAULT_DIALOG_CONNECTION_PLACEHOLDER = '搜索或添加关联…';
+export const VAULT_DIALOG_ADD_CONNECTION = '添加关联';
+export const VAULT_DIALOG_SUBMIT = '加入图谱';
+
+export const VAULT_MSG_ACCOUNT_SAVED = '账户已添加';
+export const VAULT_MSG_LINK_ADDED = '关联已添加';
+export const VAULT_MSG_LINK_REMOVED = '关联已移除';
+export const VAULT_MSG_SAVE_FAILED_DETAIL = '无法保存到保险库，请重试。';
+export const VAULT_MSG_SAVING = '保存中…';
+export const VAULT_MSG_REMOVING_LINK = '移除关联中…';

@@ -13,7 +13,6 @@ import {
 	isDevMode,
 	signal
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router, RouterOutlet, RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -74,6 +73,7 @@ import {
 	NAV_LABEL_DEBT_SONATA,
 	NAV_LABEL_PATCH_NOTES,
 	NAV_LABEL_ABOUT,
+	NAV_LABEL_VAULT,
 	NAV_LABEL_SIGN_OUT,
 	NAV_LABEL_SIGN_IN,
 	NAV_STATUS_OFFLINE,
@@ -143,15 +143,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly NAV_LABEL_DEBT_SONATA = NAV_LABEL_DEBT_SONATA;
 	protected readonly NAV_LABEL_PATCH_NOTES = NAV_LABEL_PATCH_NOTES;
 	protected readonly NAV_LABEL_ABOUT = NAV_LABEL_ABOUT;
+	protected readonly NAV_LABEL_VAULT = NAV_LABEL_VAULT;
 	protected readonly NAV_LABEL_SIGN_OUT = NAV_LABEL_SIGN_OUT;
 	protected readonly NAV_LABEL_SIGN_IN = NAV_LABEL_SIGN_IN;
 	protected readonly LABEL_ONLINE = LABEL_ONLINE;
 	protected readonly NAV_STATUS_OFFLINE = NAV_STATUS_OFFLINE;
 	protected readonly localeSwitchLabel: string =
 		this.localeService.currentLocale === 'en' ? NAV_LOCALE_SWITCH_TO_ZH : NAV_LOCALE_SWITCH_TO_EN;
-	protected readonly notifSubscribed = toSignal(this.notificationService.isSubscribed$, {
-		initialValue: false
-	});
+	protected readonly notifSubscribed = this.notificationService.isSubscribed;
 	protected readonly navItems: NavItem[] = NAV_ITEMS;
 	protected readonly primaryIds: string[] = PRIMARY_IDS;
 	protected currentUser$!: Observable<any>;

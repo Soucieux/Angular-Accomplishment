@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../fontend/recipe/recipe.model';
+import { VaultRecord, VaultNodeType } from '../../fontend/vault/vault.model';
 import { InjectionToken } from '@angular/core';
 import { NO_RATE, HISTORY_STATUS_ADDED, HISTORY_STATUS_DELETED } from '../../common/constants';
 import {
@@ -118,6 +119,13 @@ export abstract class DatabaseService {
 	 * @returns An observable that emits the release notes list.
 	 */
 	public abstract getReleaseNotes(): Observable<any[]>;
+
+	/**
+	 * Gets the current user's vault graph (nodes, edges, custom categories) as a real-time observable.
+	 *
+	 * @returns An observable that emits the vault records list.
+	 */
+	public abstract getVault(): Observable<VaultRecord[]>;
 
 	// ── Update methods ───────────────────────────────────────────────────────
 
@@ -408,6 +416,13 @@ export abstract class DatabaseService {
 	): Promise<void>;
 
 	/**
+	 * Removes a link (edge) from the vault graph.
+	 *
+	 * @param key - The document key of the edge to remove.
+	 */
+	public abstract removeVaultEdge(key: string): Promise<void>;
+
+	/**
 	 * Gets whether Tauri desktop push notifications are enabled for the current user.
 	 *
 	 * @returns True when a Tauri notification preference record exists in the database.
@@ -524,6 +539,42 @@ export abstract class DatabaseService {
 	 * @param newRecord - The record to add, with a noteIndex field appended by the caller.
 	 */
 	public abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
+
+	/**
+	 * Adds a new node (account, email, or phone) to the vault graph.
+	 *
+	 * @param node - The node content to persist.
+	 * @returns The database id of the newly created node document.
+	 */
+	public abstract addVaultNode(node: {
+		nodeType: VaultNodeType;
+		name: string;
+		category: string;
+		verified: boolean;
+	}): Promise<string>;
+
+	/**
+	 * Adds a new link between two vault nodes.
+	 *
+	 * @param edge - The edge content to persist.
+	 */
+	public abstract addVaultEdge(edge: {
+		sourceId: string;
+		targetId: string;
+		relation: string;
+	}): Promise<void>;
+
+	/**
+	 * Adds a new custom account category to the vault.
+	 *
+	 * @param category - The category content to persist.
+	 * @returns The database id of the newly created category document.
+	 */
+	public abstract addVaultCategory(category: {
+		label: string;
+		hex: string;
+		gradient: string;
+	}): Promise<string>;
 
 	// ── Utility methods ───────────────────────────────────────────────────────
 

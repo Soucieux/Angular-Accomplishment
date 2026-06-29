@@ -1,7 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { PLATFORM_ID } from '@angular/core';
-import { SwPush } from '@angular/service-worker';
-import { of } from 'rxjs';
+import { PLATFORM_ID, signal } from '@angular/core';
 
 import { BottomNavComponent } from './bottom-nav.component';
 import { NotificationService } from '../../backend/notification-service/notification.service';
@@ -17,25 +15,18 @@ describe('BottomNavComponent', () => {
 	let mockNotif: jasmine.SpyObj<NotificationService>;
 
 	beforeEach(async () => {
-		const swPush = jasmine.createSpyObj<SwPush>('SwPush', ['requestSubscription', 'unsubscribe'], {
-			subscription: of(null),
-			isEnabled: false
-		});
-
 		mockNotif = jasmine.createSpyObj<NotificationService>(
 			'NotificationService',
-			['isSupported', 'getPermission', 'subscribe', 'unsubscribe'],
-			{ isSubscribed$: of(false) }
+			['isSupported', 'subscribe', 'unsubscribe'],
+			{ isSubscribed: signal(false) }
 		);
 		mockNotif.isSupported.and.returnValue(false);
-		mockNotif.getPermission.and.returnValue('default');
 
 		await TestBed.configureTestingModule({
 			imports: [BottomNavComponent],
 			providers: [
 				{ provide: PLATFORM_ID, useValue: 'server' },
-				{ provide: NotificationService, useValue: mockNotif },
-				{ provide: SwPush, useValue: swPush }
+				{ provide: NotificationService, useValue: mockNotif }
 			]
 		}).compileComponents();
 

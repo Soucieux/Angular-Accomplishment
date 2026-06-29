@@ -1,32 +1,29 @@
 import { TestBed } from '@angular/core/testing';
 import { PLATFORM_ID } from '@angular/core';
-import { SwPush } from '@angular/service-worker';
-import { of } from 'rxjs';
 
 import { NotificationService } from './notification.service';
 import { DatabaseService } from '../database-service/database.service';
 
 describe('NotificationService', () => {
 	let service: NotificationService;
-	let mockSwPush: jasmine.SpyObj<SwPush>;
 	let mockDb: jasmine.SpyObj<DatabaseService>;
 
+	/**
+	 * Configures the testing module for the given platform with a mocked DatabaseService.
+	 *
+	 * @param platformId - The platform token to provide ('browser' or 'server').
+	 */
 	function setup(platformId: string): void {
-		mockSwPush = jasmine.createSpyObj<SwPush>('SwPush', ['requestSubscription', 'unsubscribe'], {
-			subscription: of(null),
-			isEnabled: false
-		});
 		mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
-			'addPushSubscription',
-			'deletePushSubscription'
+			'getTauriNotifEnabled',
+			'setTauriNotifEnabled'
 		]);
-		mockDb.addPushSubscription.and.returnValue(Promise.resolve());
-		mockDb.deletePushSubscription.and.returnValue(Promise.resolve());
+		mockDb.getTauriNotifEnabled.and.returnValue(Promise.resolve(false));
+		mockDb.setTauriNotifEnabled.and.returnValue(Promise.resolve());
 
 		TestBed.configureTestingModule({
 			providers: [
 				NotificationService,
-				{ provide: SwPush, useValue: mockSwPush },
 				{ provide: DatabaseService, useValue: mockDb },
 				{ provide: PLATFORM_ID, useValue: platformId }
 			]
@@ -35,12 +32,21 @@ describe('NotificationService', () => {
 		service = TestBed.inject(NotificationService);
 	}
 
+	/** Simulates the Tauri desktop runtime by attaching the global marker to window. */
+	function enableTauri(): void {
+		(window as unknown as Record<string, unknown>)['__TAURI__'] = {};
+	}
+
+	afterEach(() => {
+		delete (window as unknown as Record<string, unknown>)['__TAURI__'];
+	});
+
 	it('should create', () => {
 		setup('browser');
 		expect(service).toBeTruthy();
 	});
 
-	// ── isSupported ─────────────────────────────────────────────────────────────
+	// ── isSupported ──────────────────────────────────────────────────────────────
 
 	describe('isSupported', () => {
 		it('returns false on a server platform', () => {
@@ -48,57 +54,79 @@ describe('NotificationService', () => {
 			expect(service.isSupported()).toBeFalse();
 		});
 
-		it('returns false when swPush.isEnabled is false', () => {
+		it('returns false in a browser without the Tauri runtime', () => {
 			setup('browser');
 			expect(service.isSupported()).toBeFalse();
 		});
-	});
 
-	// ── getPermission ────────────────────────────────────────────────────────────
-
-	describe('getPermission', () => {
-		it('returns denied on a server platform', () => {
-			setup('server');
-			expect(service.getPermission()).toBe('denied');
-		});
-	});
-
-	// ── isSubscribed$ ─────────────────────────────────────────────────────────────
-
-	describe('isSubscribed$', () => {
-		it('emits false when subscription is null', (done) => {
+		it('returns true in a browser with the Tauri runtime', () => {
 			setup('browser');
-			service.isSubscribed$.subscribe((value) => {
-				expect(value).toBeFalse();
-				done();
-			});
+			enableTauri();
+			expect(service.isSupported()).toBeTrue();
+		});
+	});
+
+	// ── isSubscribed ─────────────────────────────────────────────────────────────
+
+	describe('isSubscribed', () => {
+		it('is false initially', () => {
+			setup('browser');
+			expect(service.isSubscribed()).toBeFalse();
+		});
+	});
+
+	// ── init ─────────────────────────────────────────────────────────────────────
+
+	describe('init', () => {
+		it('does nothing outside the Tauri runtime', async () => {
+			setup('browser');
+			await service.init();
+			expect(mockDb.getTauriNotifEnabled).not.toHaveBeenCalled();
+			expect(service.isSubscribed()).toBeFalse();
 		});
 
-		it('emits true when an active subscription exists', (done) => {
-			const swPushWithSub = jasmine.createSpyObj<SwPush>(
-				'SwPush',
-				['requestSubscription', 'unsubscribe'],
-				{ subscription: of({} as PushSubscription), isEnabled: false }
-			);
-			const db = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
-				'addPushSubscription',
-				'deletePushSubscription'
-			]);
+		it('loads the persisted preference inside the Tauri runtime', async () => {
+			setup('browser');
+			enableTauri();
+			mockDb.getTauriNotifEnabled.and.returnValue(Promise.resolve(true));
+			await service.init();
+			expect(service.isSubscribed()).toBeTrue();
+		});
+	});
 
-			TestBed.configureTestingModule({
-				providers: [
-					NotificationService,
-					{ provide: SwPush, useValue: swPushWithSub },
-					{ provide: DatabaseService, useValue: db },
-					{ provide: PLATFORM_ID, useValue: 'browser' }
-				]
-			});
+	// ── subscribe ────────────────────────────────────────────────────────────────
 
-			const svc = TestBed.inject(NotificationService);
-			svc.isSubscribed$.subscribe((value) => {
-				expect(value).toBeTrue();
-				done();
-			});
+	describe('subscribe', () => {
+		it('enables the preference and persists it', async () => {
+			setup('browser');
+			await service.subscribe();
+			expect(service.isSubscribed()).toBeTrue();
+			expect(mockDb.setTauriNotifEnabled).toHaveBeenCalledWith(true);
+		});
+
+		it('reverts the flag when persistence fails', async () => {
+			setup('browser');
+			mockDb.setTauriNotifEnabled.and.returnValue(Promise.reject(new Error('write failed')));
+			await service.subscribe();
+			expect(service.isSubscribed()).toBeFalse();
+		});
+	});
+
+	// ── unsubscribe ──────────────────────────────────────────────────────────────
+
+	describe('unsubscribe', () => {
+		it('disables the preference and persists it', async () => {
+			setup('browser');
+			await service.unsubscribe();
+			expect(service.isSubscribed()).toBeFalse();
+			expect(mockDb.setTauriNotifEnabled).toHaveBeenCalledWith(false);
+		});
+
+		it('reverts the flag when persistence fails', async () => {
+			setup('browser');
+			mockDb.setTauriNotifEnabled.and.returnValue(Promise.reject(new Error('write failed')));
+			await service.unsubscribe();
+			expect(service.isSubscribed()).toBeTrue();
 		});
 	});
 });

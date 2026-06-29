@@ -15,7 +15,6 @@ import {
 	signal
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { LOG } from '../../common/app.logs';
 import {
 	NAV_AVATAR_FALLBACK_INITIAL,
@@ -81,9 +80,7 @@ export class BottomNavComponent implements AfterViewInit {
 
 	protected readonly gridOpen = signal(false);
 	protected readonly accountOpen = signal(false);
-	protected readonly notificationSubscribed = toSignal(this.notificationService.isSubscribed$, {
-		initialValue: false
-	});
+	protected readonly notificationSubscribed = this.notificationService.isSubscribed;
 	protected readonly notificationSupported = this.notificationService.isSupported();
 
 	constructor(

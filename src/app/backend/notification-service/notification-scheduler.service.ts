@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/utilities/app.utilities';
@@ -29,7 +30,8 @@ export class NotificationSchedulerService {
 
 	constructor(
 		private readonly notificationService: NotificationService,
-		private readonly databaseService: DatabaseService
+		private readonly databaseService: DatabaseService,
+		private readonly injector: Injector
 	) {}
 
 	/**
@@ -40,7 +42,9 @@ export class NotificationSchedulerService {
 	public start(): void {
 		this.notificationService.init()
 			.then(() => {
-				this.subscriptionSub = this.notificationService.isSubscribed$.subscribe((subscribed) => {
+				this.subscriptionSub = toObservable(this.notificationService.isSubscribed, {
+					injector: this.injector
+				}).subscribe((subscribed) => {
 					this.subscribed = subscribed;
 					if (subscribed) this.runScheduledChecks().catch(() => {});
 				});

@@ -1,7 +1,6 @@
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { invoke } from '@tauri-apps/api/tauri';
-import { BehaviorSubject, Observable } from 'rxjs';
 import { DatabaseService } from '../database-service/database.service';
 import { LOG } from '../../common/app.logs';
 import {
@@ -17,12 +16,14 @@ import {
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
 	private readonly className = 'NotificationService';
-	private readonly tauriSubscribed = new BehaviorSubject<boolean>(false);
+	private readonly _isSubscribed = signal(false);
 
 	/**
-	 * Emits true when the Tauri notification preference is enabled.
+	 * Gets whether the Tauri notification preference is enabled.
+	 *
+	 * @returns A readonly signal that is true when notifications are enabled.
 	 */
-	public readonly isSubscribed$: Observable<boolean> = this.tauriSubscribed.asObservable();
+	public readonly isSubscribed = this._isSubscribed.asReadonly();
 
 	constructor(
 		private readonly databaseService: DatabaseService,
@@ -46,7 +47,7 @@ export class NotificationService {
 	public async init(): Promise<void> {
 		if (!this.isTauri) return;
 		const enabled = await this.databaseService.getTauriNotifEnabled();
-		this.tauriSubscribed.next(enabled);
+		this._isSubscribed.set(enabled);
 	}
 
 	/**
@@ -55,7 +56,7 @@ export class NotificationService {
 	 * block the other. Reverts state if the DB write fails.
 	 */
 	public async subscribe(): Promise<void> {
-		this.tauriSubscribed.next(true);
+		this._isSubscribed.set(true);
 		this.sendNotification(NOTIF_ENABLED_TITLE, NOTIF_ENABLED_BODY).catch((error: unknown) => {
 			LOG.error(this.className, NOTIF_SEND_FAILED, error as Error);
 		});
@@ -63,7 +64,7 @@ export class NotificationService {
 			await this.databaseService.setTauriNotifEnabled(true);
 		} catch (error: unknown) {
 			LOG.error(this.className, NOTIF_SUBSCRIBE_FAILED, error as Error);
-			this.tauriSubscribed.next(false);
+			this._isSubscribed.set(false);
 		}
 	}
 
@@ -72,12 +73,12 @@ export class NotificationService {
 	 * the button responds without waiting for the DB write. Reverts on failure.
 	 */
 	public async unsubscribe(): Promise<void> {
-		this.tauriSubscribed.next(false);
+		this._isSubscribed.set(false);
 		try {
 			await this.databaseService.setTauriNotifEnabled(false);
 		} catch (error: unknown) {
 			LOG.error(this.className, NOTIF_UNSUBSCRIBE_FAILED, error as Error);
-			this.tauriSubscribed.next(true);
+			this._isSubscribed.set(true);
 		}
 	}
 

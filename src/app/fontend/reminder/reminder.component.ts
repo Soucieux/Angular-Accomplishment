@@ -95,6 +95,7 @@ import {
 	TimeOption
 } from './reminder.model';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TimeoutService } from '../../common/timeout/timeout.service';
 import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
@@ -172,6 +173,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected items: ReminderItem[] = [];
 	protected filterBarTags: string[] = [];
 	protected hasSharedItems = false;
+	protected memberProfiles: Record<string, string> = {};
+	private currentUserId = '';
 	protected page = 0;
 	protected editingItem: ReminderItem | null = null;
 	protected editingDateModel: Date | null = null;
@@ -213,6 +216,15 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
+			this.currentUserId = CloudbaseService.getUserId() ?? '';
+			// Load creator display names for shared items; fills in asynchronously, no-op when ungrouped.
+			this.databaseService
+				.getGroupMemberProfiles()
+				.then((profiles) => {
+					this.memberProfiles = profiles;
+					this.cdr.detectChanges();
+				})
+				.catch(() => {});
 			this.timeoutService.start(TIMEOUT_KEY_REMINDER, () => {
 				this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
 			});
@@ -229,7 +241,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 					tag: record.tag ?? '',
 					startTime: record.startTime ?? null,
 					endTime: record.endTime ?? null,
-					isShared: record.isShared ?? false
+					// A reminder is "shared" when owned by another group member, not the current user.
+					isShared: (record._openid ?? '') !== this.currentUserId
 				}));
 				this.filterBarTags = this.computeFilterBarTags();
 				this.hasSharedItems = this.items.some((item) => item.isShared);
@@ -1394,6 +1407,16 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected categoryDisplayLabel(tag: string | undefined): string {
 		if (!tag) return '';
 		return this.localeCategoryLabels[tag] ?? tag;
+	}
+
+	/**
+	 * Gets the display name of the member who owns a shared reminder, for the creator label.
+	 *
+	 * @param item - The reminder item to resolve the creator name for.
+	 * @returns The owning member's display name, or an empty string when unknown.
+	 */
+	protected creatorLabel(item: ReminderItem): string {
+		return this.memberProfiles[item._openid] ?? '';
 	}
 
 	/**

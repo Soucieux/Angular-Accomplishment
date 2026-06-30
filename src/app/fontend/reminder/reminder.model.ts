@@ -22,8 +22,6 @@ export interface ReminderDbRecord {
 	tag: string;
 	startTime?: string | null;
 	endTime?: string | null;
-	isShared?: boolean;
-	sharedWith?: string[];
 }
 
 /** A single option entry for the start/end time p-select dropdowns. */

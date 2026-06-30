@@ -96,6 +96,7 @@
 						class="rm-card"
 						[class.rm-card-done]="isDone(item.key)"
 						[class.rm-card-due-soon]="isDueSoon(item) && !isDone(item.key)"
+						[class.rm-card-shared]="item.isShared"
 						[style.--card-color]="tagColor(item.tag)">
 						<!-- Top: checkbox + title + category label + delete -->
 						<div class="rm-card-top">
@@ -122,7 +123,12 @@
 										{{ categoryDisplayLabel(item.tag) || REMINDER_CHIP_CUSTOM }}
 									</div>
 									@if (item.isShared) {
-										<span class="material-symbols-outlined rm-shared-badge">group</span>
+										<span class="rm-shared-badge-wrap">
+											<span class="material-symbols-outlined rm-shared-badge">group</span>
+											@if (creatorLabel(item)) {
+												<span class="rm-shared-by">{{ creatorLabel(item) }}</span>
+											}
+										</span>
 									}
 								</div>
 							</div>

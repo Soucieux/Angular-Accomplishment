@@ -369,6 +369,36 @@
 	flex-shrink: 0;
 }
 
+.rm-shared-badge-wrap {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	flex-shrink: 0;
+}
+
+.rm-shared-by {
+	font-size: 11px;
+	font-weight: 600;
+	color: #7c3aed;
+	opacity: 0.85;
+	white-space: nowrap;
+	max-width: 90px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Reminders owned by another group member get a faint lavender tint to set them apart from own cards. */
+.rm-card-shared {
+	background: #faf8ff;
+	border-color: rgba(124, 58, 237, 0.18);
+}
+
+@media (max-width: 940px) {
+	.rm-shared-by {
+		max-width: 70px;
+	}
+}
+
 .rm-chip-custom {
 	color: #64748b;
 }

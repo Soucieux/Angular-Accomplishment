@@ -587,6 +587,10 @@
 	flex-direction: row;
 }
 
+:host-context(body.locale-en) .text {
+	font-size: 15px;
+}
+
 .rate {
 	/* Compact badge — shrinks to fit its number, no stretching */
 	flex-shrink: 0;

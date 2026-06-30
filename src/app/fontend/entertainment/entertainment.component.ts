@@ -45,8 +45,14 @@ import {
 	ENT_TOOLTIP_HISTORY,
 	ENT_TITLE_PAGE,
 	ENT_SEARCH_PLACEHOLDER,
+	ENT_LABEL_TYPE,
+	ENT_LABEL_EPISODES,
+	ENT_LABEL_YEAR,
+	ENT_LABEL_SYNOPSIS,
+	ENT_LABEL_CAST,
 	ENT_LABEL_FILMS,
 	ENT_LABEL_TO_WATCH,
+	genreLabel as resolveGenreLabel,
 	ENT_LOG_START_SEARCHING,
 	ENT_LOG_SUMMARY_HEADER,
 	ENT_LOG_RATE_INCREASED_LABEL,
@@ -139,6 +145,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected readonly ENT_TOOLTIP_HISTORY = ENT_TOOLTIP_HISTORY;
 	protected readonly ENT_TITLE_PAGE = ENT_TITLE_PAGE;
 	protected readonly ENT_SEARCH_PLACEHOLDER = ENT_SEARCH_PLACEHOLDER;
+	protected readonly ENT_LABEL_TYPE = ENT_LABEL_TYPE;
+	protected readonly ENT_LABEL_EPISODES = ENT_LABEL_EPISODES;
+	protected readonly ENT_LABEL_YEAR = ENT_LABEL_YEAR;
+	protected readonly ENT_LABEL_SYNOPSIS = ENT_LABEL_SYNOPSIS;
+	protected readonly ENT_LABEL_CAST = ENT_LABEL_CAST;
 	protected readonly ENT_MSG_LOADING = ENT_MSG_LOADING;
 	protected readonly ENT_LABEL_FILMS = ENT_LABEL_FILMS;
 	protected readonly ENT_LABEL_TO_WATCH = ENT_LABEL_TO_WATCH;
@@ -153,7 +164,10 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected statistics$!: Observable<any>;
 	private searchSummary!: Map<string, string[]>;
 	protected editedItems = new Map<string, { originalGenre: string; genre: string }>();
-	protected genres = MOVIE_GENRES;
+	protected genres = MOVIE_GENRES.map((movieGenre) => ({
+		label: resolveGenreLabel(movieGenre.genre),
+		value: movieGenre.genre
+	}));
 	private latestMovieList: MovieItemVO[] = [];
 	private readonly vtClassMap = new Map<string, string>();
 	private movieListSub?: Subscription;
@@ -680,6 +694,16 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 */
 	protected getRateLabel(rate: number): string {
 		return Utilities.getMovieRateLabel(rate);
+	}
+
+	/**
+	 * Gets the localized display label for a movie genre, keyed by its stored value.
+	 *
+	 * @param genre - The stored genre value (Chinese key).
+	 * @returns The localized genre label, or the raw value if unmapped.
+	 */
+	protected genreLabel(genre: string): string {
+		return resolveGenreLabel(genre);
 	}
 
 	/**

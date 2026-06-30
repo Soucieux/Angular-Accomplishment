@@ -5,7 +5,8 @@ import { RECIPE_EDITOR_TYPE_MAX } from '../../../common/constants';
 import {
 	RECIPE_ITYPE_DIALOG_TITLE,
 	DIALOG_BTN_CANCEL,
-	INGREDIENT_BTN_APPLY
+	INGREDIENT_BTN_APPLY,
+	ingredientTypeLabel
 } from '../../../common/locale/locale-strings';
 import { IngredientType, TypeTab } from '../../../fontend/recipe/recipe.model';
 
@@ -29,6 +30,8 @@ export class IngredientDialogComponent {
 	protected editingTypes = new Set<IngredientType>();
 
 	private applyCallback!: (newIds: Set<IngredientType>) => void;
+
+	protected readonly typeLabel = ingredientTypeLabel;
 
 	/**
 	 * Opens the ingredient type manager dialog, initialising the editing selection

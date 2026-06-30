@@ -59,7 +59,7 @@
 						[style.background]="getGenreColor(i)"
 						[style.box-shadow]="'0 2px 8px ' + getGenreColor(i) + '88'">
 					</span>
-					<span class="card-genre-name">{{ genre.key }}</span>
+					<span class="card-genre-name">{{ genreLabel($any(genre.key)) }}</span>
 					<div class="card-count-row">
 						<span class="card-count" [style.color]="getGenreColor(i)">{{ genre.value }}</span>
 						<span class="card-watch-label">{{ ENT_LABEL_TO_WATCH }}</span>
@@ -124,22 +124,22 @@
 							<div class="info-default">
 								<div class="rate-divider"></div>
 								<span class="text"
-									>类型:
+									>{{ ENT_LABEL_TYPE }}
 									@if (editedItems.has(movie.getMovieKey())) {
 										<p-select
 											[options]="genres"
-											optionLabel="genre"
-											optionValue="genre"
+											optionLabel="label"
+											optionValue="value"
 											[appendTo]="'body'"
 											class="dropdown"
 											panelStyleClass="dropdown-panel-font"
 											[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
 									} @else {
-										{{ movie.getMovieGenre() }}
+										{{ genreLabel(movie.getMovieGenre()) }}
 									}
 								</span>
-								<span class="text">集数：{{ movie.getMovieEpisodeNumber() }}</span>
-								<span class="text">年份：{{ movie.getMovieFirstReleaseDate() }}</span>
+								<span class="text">{{ ENT_LABEL_EPISODES }} {{ movie.getMovieEpisodeNumber() }}</span>
+								<span class="text">{{ ENT_LABEL_YEAR }} {{ movie.getMovieFirstReleaseDate() }}</span>
 								<div class="buttons-group">
 									<a
 										class="douban-button"
@@ -195,10 +195,10 @@
 							</div>
 							<div class="info-hover">
 								@if (movie.getDescription()) {
-									<p class="hover-description">简介：{{ movie.getDescription() }}</p>
+									<p class="hover-description">{{ ENT_LABEL_SYNOPSIS }} {{ movie.getDescription() }}</p>
 								}
 								@if (movie.getActors()) {
-									<p class="hover-actors">演员：{{ movie.getActors() }}</p>
+									<p class="hover-actors">{{ ENT_LABEL_CAST }} {{ movie.getActors() }}</p>
 								}
 							</div>
 						</div>

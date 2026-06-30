@@ -28,6 +28,7 @@ import {
 	ENT_DIALOG_TITLE_ADD_MOVIE,
 	ADD_MOVIE_SUBTITLE,
 	ADD_MOVIE_LABEL_GENRE,
+	genreLabel,
 	ADD_MOVIE_LABEL_FAVOURITE,
 	ADD_MOVIE_LABEL_NAME,
 	ADD_MOVIE_LABEL_NAME_REQUIRED,
@@ -85,7 +86,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	protected isLoading: boolean = false;
 	protected canSubmit: boolean = false;
 	protected years: { year: string }[] | undefined;
-	protected genres: { genre: string }[] | undefined;
+	protected genres: { genre: string; label: string }[] | undefined;
 	protected isFavourite: boolean = false;
 	protected movieImageUrl: string | null = null;
 
@@ -100,7 +101,10 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	ngOnInit() {
 		const currentYear = new Date().getFullYear();
 		this.years = Array.from({ length: 8 }, (_, i) => ({ year: (currentYear - i).toString() }));
-		this.genres = MOVIE_GENRES;
+		this.genres = MOVIE_GENRES.map((movieGenre) => ({
+			genre: movieGenre.genre,
+			label: genreLabel(movieGenre.genre)
+		}));
 	}
 
 	/**

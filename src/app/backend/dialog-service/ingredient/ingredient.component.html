@@ -28,7 +28,7 @@
 					[disabled]="isDisabled"
 					(click)="toggleType(tab.id)">
 					<span class="ingredient-type-emoji">{{ tab.emoji }}</span>
-					<span class="ingredient-type-label">{{ tab.label }}</span>
+					<span class="ingredient-type-label">{{ typeLabel(tab.id) }}</span>
 					@if (isSelected) {
 						<span class="ingredient-type-check material-symbols-outlined">check_circle</span>
 					}

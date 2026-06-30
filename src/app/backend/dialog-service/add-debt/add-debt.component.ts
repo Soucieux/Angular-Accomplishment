@@ -25,10 +25,7 @@ import {
 	ADD_DEBT_LABEL_AMOUNT,
 	ADD_DEBT_LABEL_CURRENCY,
 	ADD_DEBT_LABEL_DUE_DATE,
-	DEBT_CATEGORY_LABEL_CARD,
-	LABEL_PERSONAL,
-	DEBT_CATEGORY_LABEL_FINANCING,
-	DEBT_CATEGORY_LABEL_MORTGAGE
+	DEBT_CATEGORY_LABELS
 } from '../../../common/locale/locale-strings';
 import { DEBT_CATEGORY_DEFS, NewDebtData } from '../../../fontend/debt/debt.model';
 
@@ -64,7 +61,7 @@ export class AddDebtDialogComponent {
 	protected readonly DEBT_CURRENCY_CAD = DEBT_CURRENCY_CAD;
 	protected readonly categoryDefs = DEBT_CATEGORY_DEFS.map((categoryDef) => ({
 		...categoryDef,
-		label: ({ card: DEBT_CATEGORY_LABEL_CARD, person: LABEL_PERSONAL, shopping: DEBT_CATEGORY_LABEL_FINANCING, home: DEBT_CATEGORY_LABEL_MORTGAGE } as Record<string, string>)[categoryDef.key] ?? categoryDef.label,
+		label: DEBT_CATEGORY_LABELS[categoryDef.key] ?? '',
 	}));
 
 	protected isEditMode = false;

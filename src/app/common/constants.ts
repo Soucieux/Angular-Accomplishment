@@ -69,6 +69,8 @@ export const APP_BREAKPOINT_COMPACT = 1300;
 export const APP_BREAKPOINT_NARROW = 940;
 /** CSS class added to body when running inside the Tauri desktop app — scopes Tauri-only global styles. */
 export const TAURI_MODE_CLASS = 'tauri-mode';
+/** CSS class added to body when the active locale is English — allows locale-specific CSS overrides via :host-context(). */
+export const LOCALE_EN_BODY_CLASS = 'locale-en';
 /** Tauri backend command name that toggles the minimize-on-close window behaviour. */
 export const TAURI_CMD_SET_MINIMIZE_ON_CLOSE = 'set_minimize_on_close';
 /** Milliseconds before the loading-timeout retry dialog appears when a page is stuck loading. */

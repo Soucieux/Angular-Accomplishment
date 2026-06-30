@@ -78,12 +78,9 @@ import {
 	DEBT_HEADING_YOUR_DEBTS,
 	DEBT_HISTORY_EMPTY,
 	MONTH_NAMES_SHORT,
-	DEBT_CATEGORY_LABEL_CARD,
-	DEBT_CATEGORY_LABEL_FINANCING,
-	DEBT_CATEGORY_LABEL_MORTGAGE,
+	DEBT_CATEGORY_LABELS,
 	DEBT_DIALOG_TITLE,
 	NAV_LABEL_DEBT_SONATA,
-	LABEL_PERSONAL,
 	DEBT_LABEL_PCT_CLEARED,
 	DEBT_LABEL_PCT_PAID,
 	DEBT_LABEL_OF,
@@ -169,7 +166,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
 	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS.map((categoryDef) => ({
 		...categoryDef,
-		label: ({ card: DEBT_CATEGORY_LABEL_CARD, person: LABEL_PERSONAL, shopping: DEBT_CATEGORY_LABEL_FINANCING, home: DEBT_CATEGORY_LABEL_MORTGAGE } as Record<string, string>)[categoryDef.key] ?? categoryDef.label,
+		label: DEBT_CATEGORY_LABELS[categoryDef.key] ?? '',
 	}));
 
 	constructor(

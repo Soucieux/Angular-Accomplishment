@@ -180,8 +180,8 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── Mutable state ─────────────────────────────────────────────────────────
 	protected userStats: AccountStat[] = ACCOUNT_STATS.map((stat) => ({
 		...stat,
-		label: this.localeStatLabels[stat.field] ?? stat.label,
-		unit: this.localeStatUnits[stat.field] ?? stat.unit,
+		label: this.localeStatLabels[stat.field] ?? '',
+		unit: this.localeStatUnits[stat.field] ?? '',
 	}));
 	protected streakCount = 0;
 	protected memberSince = '';

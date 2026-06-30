@@ -159,11 +159,15 @@ export interface VaultAccountRow {
 /** Built-in account categories — intentionally empty; accounts use only user-created custom categories. This slot remains the single place to reintroduce presets if ever needed. */
 export const VAULT_CATEGORY_DEFS: VaultCategoryDef[] = [];
 
-/** Fallback category for accounts whose category is unknown or freshly typed without one chosen. */
+/**
+ * Fallback category for accounts whose category is unknown or freshly typed without one chosen.
+ * Technical metadata only — `label` / `categoryLabel` hold the key as a placeholder; the localized
+ * "Other" / "Uncategorized" display text is resolved in the component from locale (recipe pattern).
+ */
 export const VAULT_CATEGORY_OTHER: VaultCategoryDef = {
 	key: 'other',
-	label: 'Other',
-	categoryLabel: 'Uncategorized',
+	label: 'other',
+	categoryLabel: 'other',
 	icon: 'category',
 	hex: '#94a3b8',
 	gradient: 'linear-gradient(135deg, #94a3b8, #64748b)'

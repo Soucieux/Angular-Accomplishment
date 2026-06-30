@@ -91,7 +91,7 @@ import {
 	RECIPE_PLACEHOLDER_UNIT,
 	RECIPE_SUFFIX_MIN,
 	RECIPE_SUFFIX_SERVINGS,
-	RECIPE_ITYPE_LABELS,
+	ingredientTypeLabel,
 	RECIPE_BTN_ADD,
 	RECIPE_BTN_EDIT,
 	RECIPE_BTN_SAVE,
@@ -823,7 +823,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected get editorGroupedIngredients(): EditorGroup[] {
 		return MASTER_TYPE_TABS.flatMap((tab) => {
 			const items = this.editorIngredients.filter((ingredient) => ingredient.type === tab.id);
-			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: RECIPE_ITYPE_LABELS[tab.id] ?? tab.label, items }];
+			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: ingredientTypeLabel(tab.id), items }];
 		});
 	}
 
@@ -1090,7 +1090,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 					baseQty: Number(ingredient.qty) || 0,
 					unit: ingredient.unit.trim()
 				}));
-			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: RECIPE_ITYPE_LABELS[tab.id] ?? tab.label, items }];
+			return items.length === 0 ? [] : [{ type: tab.id, emoji: tab.emoji, label: ingredientTypeLabel(tab.id), items }];
 		});
 
 		/* Step 4: Convert editor step rows to RecipeStep objects, running autoPillStepText
@@ -1110,7 +1110,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		const presentTypes = new Set(validIngredients.map((ingredient) => ingredient.type));
 		const badges: BadgeTag[] = MASTER_TYPE_TABS.filter((tab) => presentTypes.has(tab.id))
 			.slice(0, RECIPE_MAX_BADGES)
-			.map((tab) => ({ type: tab.id, emoji: tab.emoji, label: tab.label }));
+			.map((tab) => ({ type: tab.id, emoji: tab.emoji, label: ingredientTypeLabel(tab.id) }));
 
 		/* Step 6: Assemble the final Recipe object.
 		   For edits, preserve the existing id and openid; for creates, openid comes from the

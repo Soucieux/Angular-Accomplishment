@@ -65,7 +65,9 @@ import {
 	VAULT_MSG_ACCOUNT_SAVED,
 	VAULT_MSG_LINK_ADDED,
 	VAULT_MSG_LINK_REMOVED,
-	VAULT_MSG_SAVE_FAILED_DETAIL
+	VAULT_MSG_SAVE_FAILED_DETAIL,
+	VAULT_CATEGORY_OTHER_LABEL,
+	VAULT_CATEGORY_UNCATEGORIZED_LABEL
 } from '../../common/locale/locale-strings';
 import {
 	NewAccountData,
@@ -131,6 +133,12 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected nodes: VaultNode[] = [];
 	protected edges: VaultEdge[] = [];
 	protected customCategories: VaultCategoryDef[] = [];
+	/** Uncategorized fallback def — model metadata plus the locale-resolved display labels (recipe pattern). */
+	private readonly otherCategory: VaultCategoryDef = {
+		...VAULT_CATEGORY_OTHER,
+		label: VAULT_CATEGORY_OTHER_LABEL,
+		categoryLabel: VAULT_CATEGORY_UNCATEGORIZED_LABEL
+	};
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
 	constructor(
@@ -462,7 +470,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		return (
 			VAULT_CATEGORY_DEFS.find((categoryDef) => categoryDef.key === categoryKey) ??
 			this.customCategories.find((categoryDef) => categoryDef.key === categoryKey) ??
-			VAULT_CATEGORY_OTHER
+			this.otherCategory
 		);
 	}
 

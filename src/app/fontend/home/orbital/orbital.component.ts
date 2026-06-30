@@ -235,7 +235,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	protected readonly HOME_ACTIVITY_FOOTER_ZH = HOME_ACTIVITY_FOOTER_ZH;
 	protected readonly HOME_ACTIVITY_FOOTER_EN = HOME_ACTIVITY_FOOTER_EN;
 	protected readonly HOME_CONCENTRIC_SIZE_DEFAULT = HOME_CONCENTRIC_SIZE_DEFAULT;
-	protected readonly QUICK_ACTIONS = QUICK_ACTIONS.map((quickAction, i) => ({ ...quickAction, label: ORBITAL_QUICK_ACTION_LABELS[i] ?? quickAction.label }));
+	protected readonly QUICK_ACTIONS = QUICK_ACTIONS.map((quickAction, i) => ({ ...quickAction, label: ORBITAL_QUICK_ACTION_LABELS[i] ?? '' }));
 	protected readonly HOME_OVERFLOW_LABEL_REMINDERS = HOME_OVERFLOW_LABEL_REMINDERS;
 	protected readonly HOME_OVERFLOW_LABEL_DEBT = HOME_OVERFLOW_LABEL_DEBT;
 	protected readonly HOME_OVERFLOW_LABEL_RECIPES = HOME_OVERFLOW_LABEL_RECIPES;

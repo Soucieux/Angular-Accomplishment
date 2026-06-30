@@ -84,46 +84,15 @@ export interface OrbitalQuickAction {
 /** Cycling colour palette for the genre bar chart on the Home dashboard. */
 export const HOME_GENRE_COLORS: string[] = ['#4776e6', '#e91e8c', '#f7971e', '#78d000', '#8e54e9', '#22d3ee'];
 
-/** Data array of quick-action pills shown at the top of the orbital dashboard layout. */
-export const QUICK_ACTIONS: OrbitalQuickAction[] = [
-	{
-		icon: 'movie',
-		label: 'Add Movie',
-		gradient: 'linear-gradient(135deg,#4ade80,#22c55e)',
-		route: '/entertainment',
-		state: { openAddDialog: true }
-	},
-	{
-		icon: 'format_quote',
-		label: 'Add Quote',
-		gradient: 'linear-gradient(135deg,#f59e0b,#d97706)',
-		route: '/resonance'
-	},
-	{
-		icon: 'restaurant',
-		label: 'Add Recipe',
-		gradient: 'linear-gradient(135deg,#d53369,#b82d5a)',
-		route: '/recipe',
-		state: { openAddView: true }
-	},
-	{
-		icon: 'account_balance',
-		label: 'Add Debt',
-		gradient: 'linear-gradient(135deg,#f97316,#e879f9)',
-		route: '/debt',
-		state: { openAddDialog: true }
-	},
-	{
-		icon: 'add_task',
-		label: 'Add Reminder',
-		gradient: 'linear-gradient(135deg,#1a6dff,#00d2ff)',
-		route: '/reminder'
-	},
-	{
-		icon: 'add_link',
-		label: 'Add Shortcut',
-		gradient: 'linear-gradient(135deg,#a3e635,#84cc16)',
-		route: '/portal',
-		state: { openMultiLinkDialog: true }
-	}
+/**
+ * Data array of quick-action pills shown at the top of the orbital dashboard layout.
+ * label is user-facing and varies by language — supplied from locale in the component (recipe pattern).
+ */
+export const QUICK_ACTIONS: Omit<OrbitalQuickAction, 'label'>[] = [
+	{ icon: 'movie', gradient: 'linear-gradient(135deg,#4ade80,#22c55e)', route: '/entertainment', state: { openAddDialog: true } },
+	{ icon: 'format_quote', gradient: 'linear-gradient(135deg,#f59e0b,#d97706)', route: '/resonance' },
+	{ icon: 'restaurant', gradient: 'linear-gradient(135deg,#d53369,#b82d5a)', route: '/recipe', state: { openAddView: true } },
+	{ icon: 'account_balance', gradient: 'linear-gradient(135deg,#f97316,#e879f9)', route: '/debt', state: { openAddDialog: true } },
+	{ icon: 'add_task', gradient: 'linear-gradient(135deg,#1a6dff,#00d2ff)', route: '/reminder' },
+	{ icon: 'add_link', gradient: 'linear-gradient(135deg,#a3e635,#84cc16)', route: '/portal', state: { openMultiLinkDialog: true } }
 ];

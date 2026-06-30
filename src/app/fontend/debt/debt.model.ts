@@ -23,25 +23,13 @@ export interface DebtCategoryDef {
 	gradient: string;
 }
 
-/** Static category definitions used to assign icons, labels, and gradients to debt items. */
-export const DEBT_CATEGORY_DEFS: DebtCategoryDef[] = [
-	{
-		key: 'card',
-		icon: 'credit_card',
-		label: 'Credit card',
-		gradient: 'linear-gradient(90deg,#e91e8c,#f7971e)'
-	},
-	{
-		key: 'person',
-		icon: 'handshake',
-		label: 'Personal',
-		gradient: 'linear-gradient(90deg,#fda085,#f6d365)'
-	},
-	{
-		key: 'shopping',
-		icon: 'shopping_bag',
-		label: 'Financing',
-		gradient: 'linear-gradient(90deg,#8e54e9,#e91e8c)'
-	},
-	{ key: 'home', icon: 'home', label: 'Mortgage', gradient: 'linear-gradient(90deg,#11998e,#38ef7d)' }
+/**
+ * Static category definitions used to assign icons and gradients to debt items.
+ * label is user-facing and varies by language — supplied from locale in the component (recipe pattern).
+ */
+export const DEBT_CATEGORY_DEFS: Omit<DebtCategoryDef, 'label'>[] = [
+	{ key: 'card', icon: 'credit_card', gradient: 'linear-gradient(90deg,#e91e8c,#f7971e)' },
+	{ key: 'person', icon: 'handshake', gradient: 'linear-gradient(90deg,#fda085,#f6d365)' },
+	{ key: 'shopping', icon: 'shopping_bag', gradient: 'linear-gradient(90deg,#8e54e9,#e91e8c)' },
+	{ key: 'home', icon: 'home', gradient: 'linear-gradient(90deg,#11998e,#38ef7d)' }
 ];

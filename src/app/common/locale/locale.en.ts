@@ -227,6 +227,21 @@ export const ENT_MSG_DELETE_CONFIRM_PREFIX = 'Are you sure you want to delete ';
 export const ENT_DIALOG_TITLE_ADD_MOVIE = 'Add New Movie';
 export const ADD_MOVIE_SUBTITLE = 'Enter either Name or ID to start searching';
 export const ADD_MOVIE_LABEL_GENRE = 'Genre*';
+/** Localized display labels for movie genres, keyed by the stored Chinese genre value. */
+export const ENT_GENRE_LABELS: Record<string, string> = {
+	刑侦: 'Crime',
+	古装: 'Ancient',
+	悬疑: 'Suspense',
+	校园: 'Campus',
+	现代: 'Modern',
+	谍战: 'Spy',
+	特别关注: 'Favourites'
+};
+export const ENT_LABEL_TYPE = 'Type:';
+export const ENT_LABEL_EPISODES = 'Eps.';
+export const ENT_LABEL_YEAR = 'Year:';
+export const ENT_LABEL_SYNOPSIS = 'Synopsis:';
+export const ENT_LABEL_CAST = 'Cast:';
 export const ADD_MOVIE_LABEL_FAVOURITE = 'Favourite';
 export const ENT_DIALOG_TITLE_SEARCH = 'Searching latest rate for each movie...';
 export const ENT_DIALOG_TITLE_DELETE_MOVIE = 'Delete Movie';
@@ -867,3 +882,7 @@ export const VAULT_MSG_SAVE_FAILED_DETAIL = 'Could not save to the vault. Please
 export const VAULT_MSG_SAVING = 'Saving…';
 /** Block-dialog message shown while a link is being removed. */
 export const VAULT_MSG_REMOVING_LINK = 'Removing link…';
+/** Chip label for the fallback category used when no category is chosen. */
+export const VAULT_CATEGORY_OTHER_LABEL = 'Other';
+/** Full category label for uncategorized accounts. */
+export const VAULT_CATEGORY_UNCATEGORIZED_LABEL = 'Uncategorized';

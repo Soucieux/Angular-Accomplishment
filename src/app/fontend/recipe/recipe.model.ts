@@ -19,7 +19,6 @@ export type IngredientType =
 export interface TypeTab {
 	id: IngredientType;
 	emoji: string;
-	label: string;
 }
 
 export interface Ingredient {
@@ -100,22 +99,22 @@ export type EditingMode = 'create' | 'edit';
 export type DropPosition = 'above' | 'below';
 
 export const MASTER_TYPE_TABS: TypeTab[] = [
-	{ id: 'veg', emoji: '🥬', label: 'Vegetables' },
-	{ id: 'meat', emoji: '🥩', label: 'Meat' },
-	{ id: 'seas', emoji: '🧂', label: 'Seasoning' },
-	{ id: 'dairy', emoji: '🧈', label: 'Dairy' },
-	{ id: 'grain', emoji: '🌾', label: 'Grain' },
-	{ id: 'liq', emoji: '💧', label: 'Liquid' },
-	{ id: 'spice', emoji: '🌶️', label: 'Spice' },
-	{ id: 'seafood', emoji: '🦐', label: 'Seafood' },
-	{ id: 'egg', emoji: '🥚', label: 'Eggs' },
-	{ id: 'nut', emoji: '🥜', label: 'Nuts' },
-	{ id: 'fruit', emoji: '🍎', label: 'Fruit' },
-	{ id: 'oil', emoji: '🫙', label: 'Oil' },
-	{ id: 'herb', emoji: '🌿', label: 'Herb' },
-	{ id: 'fungi', emoji: '🍄', label: 'Fungi' },
-	{ id: 'sweet', emoji: '🍯', label: 'Sweetener' },
-	{ id: 'condiment', emoji: '🥫', label: 'Condiment' }
+	{ id: 'veg', emoji: '🥬' },
+	{ id: 'meat', emoji: '🥩' },
+	{ id: 'seas', emoji: '🧂' },
+	{ id: 'dairy', emoji: '🧈' },
+	{ id: 'grain', emoji: '🌾' },
+	{ id: 'liq', emoji: '💧' },
+	{ id: 'spice', emoji: '🌶️' },
+	{ id: 'seafood', emoji: '🦐' },
+	{ id: 'egg', emoji: '🥚' },
+	{ id: 'nut', emoji: '🥜' },
+	{ id: 'fruit', emoji: '🍎' },
+	{ id: 'oil', emoji: '🫙' },
+	{ id: 'herb', emoji: '🌿' },
+	{ id: 'fungi', emoji: '🍄' },
+	{ id: 'sweet', emoji: '🍯' },
+	{ id: 'condiment', emoji: '🥫' }
 ];
 
 /** The internal key for the "show all categories" filter chip. */

@@ -178,6 +178,12 @@ export const {
 	ENT_DIALOG_TITLE_ADD_MOVIE,
 	ADD_MOVIE_SUBTITLE,
 	ADD_MOVIE_LABEL_GENRE,
+	ENT_GENRE_LABELS,
+	ENT_LABEL_TYPE,
+	ENT_LABEL_EPISODES,
+	ENT_LABEL_YEAR,
+	ENT_LABEL_SYNOPSIS,
+	ENT_LABEL_CAST,
 	ADD_MOVIE_LABEL_FAVOURITE,
 	ENT_DIALOG_TITLE_SEARCH,
 	ENT_DIALOG_TITLE_DELETE_MOVIE,
@@ -611,5 +617,35 @@ export const {
 	VAULT_MSG_LINK_REMOVED,
 	VAULT_MSG_SAVE_FAILED_DETAIL,
 	VAULT_MSG_SAVING,
-	VAULT_MSG_REMOVING_LINK
+	VAULT_MSG_REMOVING_LINK,
+	VAULT_CATEGORY_OTHER_LABEL,
+	VAULT_CATEGORY_UNCATEGORIZED_LABEL
 } = LOCALE_STRINGS;
+
+/**
+ * Resolves the localized display label for a stored movie genre key.
+ *
+ * @param genre - The stored genre value (Chinese key).
+ * @returns The localized label, or the raw key if unmapped.
+ */
+export function genreLabel(genre: string): string {
+	return ENT_GENRE_LABELS[genre] ?? genre;
+}
+
+/**
+ * Resolves the localized display label for an ingredient type key.
+ *
+ * @param typeId - The ingredient type key.
+ * @returns The localized label, or empty string if unmapped.
+ */
+export function ingredientTypeLabel(typeId: string): string {
+	return RECIPE_ITYPE_LABELS[typeId] ?? '';
+}
+
+/** Localized display labels for debt categories, keyed by category key. */
+export const DEBT_CATEGORY_LABELS: Record<string, string> = {
+	card: DEBT_CATEGORY_LABEL_CARD,
+	person: LABEL_PERSONAL,
+	shopping: DEBT_CATEGORY_LABEL_FINANCING,
+	home: DEBT_CATEGORY_LABEL_MORTGAGE
+};

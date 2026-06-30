@@ -14,66 +14,25 @@ export interface AccountMilestone {
 }
 
 export interface AccountStrengthLevel {
-	label: string;
 	color: string;
 	minLength: number;
 }
 
-export const ACCOUNT_STATS: AccountStat[] = [
-	{
-		icon: 'live_tv',
-		gradient: 'linear-gradient(135deg,#11998e,#38ef7d)',
-		label: 'Films Logged',
-		value: 0,
-		unit: 'film',
-		field: 'totalFilms'
-	},
-	{
-		icon: 'format_quote',
-		gradient: 'linear-gradient(135deg,#fde68a,#b45309)',
-		label: 'Quotes',
-		value: 0,
-		unit: 'quote',
-		field: 'totalQuotes'
-	},
-	{
-		icon: 'menu_book',
-		gradient: 'linear-gradient(135deg,#fda4af,#9f1239)',
-		label: 'Recipes',
-		value: 0,
-		unit: 'recipe',
-		field: 'totalRecipes'
-	},
-	{
-		icon: 'alarm',
-		gradient: 'linear-gradient(135deg,#1a6dff,#00d2ff)',
-		label: 'Reminders',
-		value: 0,
-		unit: 'reminder',
-		field: 'totalReminders'
-	},
-	{
-		icon: 'account_balance',
-		gradient: 'linear-gradient(135deg,#0d9488,#134e4a)',
-		label: 'Debts Tracked',
-		value: 0,
-		unit: 'debt',
-		field: 'totalDebts'
-	},
-	{
-		icon: 'link',
-		gradient: 'linear-gradient(135deg,#6366f1,#a855f7)',
-		label: 'Links Saved',
-		value: 0,
-		unit: 'link',
-		field: 'totalLinks'
-	}
+// label + unit are user-facing and vary by language — supplied from locale in the component (recipe pattern).
+export const ACCOUNT_STATS: Omit<AccountStat, 'label' | 'unit'>[] = [
+	{ icon: 'live_tv', gradient: 'linear-gradient(135deg,#11998e,#38ef7d)', value: 0, field: 'totalFilms' },
+	{ icon: 'format_quote', gradient: 'linear-gradient(135deg,#fde68a,#b45309)', value: 0, field: 'totalQuotes' },
+	{ icon: 'menu_book', gradient: 'linear-gradient(135deg,#fda4af,#9f1239)', value: 0, field: 'totalRecipes' },
+	{ icon: 'alarm', gradient: 'linear-gradient(135deg,#1a6dff,#00d2ff)', value: 0, field: 'totalReminders' },
+	{ icon: 'account_balance', gradient: 'linear-gradient(135deg,#0d9488,#134e4a)', value: 0, field: 'totalDebts' },
+	{ icon: 'link', gradient: 'linear-gradient(135deg,#6366f1,#a855f7)', value: 0, field: 'totalLinks' }
 ];
 
+// label is user-facing and varies by language — strength labels come from locale (localeStrengthLabels) by index.
 export const ACCOUNT_STRENGTH_LEVELS: AccountStrengthLevel[] = [
-	{ label: 'Too short', color: '#94a3b8', minLength: 0 },
-	{ label: 'Weak', color: '#ef4444', minLength: 6 },
-	{ label: 'Fair', color: '#f97316', minLength: 8 },
-	{ label: 'Good', color: '#eab308', minLength: 10 },
-	{ label: 'Strong', color: '#22c55e', minLength: 12 }
+	{ color: '#94a3b8', minLength: 0 },
+	{ color: '#ef4444', minLength: 6 },
+	{ color: '#f97316', minLength: 8 },
+	{ color: '#eab308', minLength: 10 },
+	{ color: '#22c55e', minLength: 12 }
 ];

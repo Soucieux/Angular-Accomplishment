@@ -49,7 +49,8 @@ import {
 	LS_NAV_COLLAPSED_KEY,
 	LS_LOCALE_KEY,
 	TAURI_MODE_CLASS,
-	TAURI_CMD_SET_MINIMIZE_ON_CLOSE
+	TAURI_CMD_SET_MINIMIZE_ON_CLOSE,
+	LOCALE_EN_BODY_CLASS
 } from './common/constants';
 import {
 	CTX_LABEL_COPY,
@@ -84,9 +85,7 @@ import {
 	NAV_LOCALE_SWITCH_TO_EN,
 	NAV_MINIMIZE_ON_CLOSE_ENABLE,
 	NAV_MINIMIZE_ON_CLOSE_DISABLE,
-	DIALOG_LOCALE_SWITCH_HEADER,
-	DIALOG_LOCALE_SWITCH_MSG,
-	DIALOG_LOCALE_SWITCH_BTN
+	ACTIVE_LOCALE
 } from './common/locale/locale-strings';
 import { DesktopContextMenuComponent } from './fontend/desktop-context-menu/context-menu.component';
 import { ContextMenuAction } from './fontend/desktop-context-menu/context-menu.model';
@@ -199,6 +198,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.isTauriApp = '__TAURI__' in window;
 			if (this.isTauriApp) {
 				document.body.classList.add(TAURI_MODE_CLASS);
+			}
+			if (ACTIVE_LOCALE === 'en') {
+				document.body.classList.add(LOCALE_EN_BODY_CLASS);
 			}
 		}
 	}
@@ -745,18 +747,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Opens a confirmation dialog for switching the display language, then
-	 * applies the opposite locale and reloads the page when the user accepts.
+	 * Switches the display language and reloads the page immediately.
 	 * Used by both the desktop account popover and the mobile bottom-nav.
 	 */
-	protected doSwitchLocale(): void {
+	protected async doSwitchLocale(): Promise<void> {
 		const targetLocale: 'en' | 'zh' = this.localeService.currentLocale === 'en' ? 'zh' : 'en';
-		this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_CONFIRM, async () => {
-			/* Must complete before applyLocale() — applyLocale calls window.location.reload()
-			   immediately, which would kill the in-flight DB write if not awaited first. */
-			await this.databaseService.setLocale(targetLocale).catch(() => {});
-			this.localeService.applyLocale(targetLocale);
-		}, [DIALOG_LOCALE_SWITCH_MSG, DIALOG_LOCALE_SWITCH_HEADER, DIALOG_LOCALE_SWITCH_BTN]);
+		/* Must complete before applyLocale() — applyLocale calls window.location.reload()
+		   immediately, which would kill the in-flight DB write if not awaited first. */
+		await this.databaseService.setLocale(targetLocale).catch(() => {});
+		this.localeService.applyLocale(targetLocale);
 	}
 
 	// ── Template helpers ──────────────────────────────────────────────────────

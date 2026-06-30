@@ -9,11 +9,13 @@ import { TimeoutService } from '../../common/timeout/timeout.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import { LOG } from '../../common/app.logs';
 import { PortalCategory, PortalLink } from '../portal/portal.model';
-import { HomeStats } from './home.model';
+import { HomeStats, RecentActivityItem } from './home.model';
 import {
 	COMPONENT_DESTROY,
 	HOME_EST_YEAR,
-	TIMEOUT_KEY_HOME
+	TIMEOUT_KEY_HOME,
+	STATS_FIELD_RECENT_ACTIVITIES,
+	STATS_CAP_ACTIVITY_LOG
 } from '../../common/constants';
 import {
 	HOME_MSG_INCREMENT_VISIT_FAILED,
@@ -64,6 +66,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 	private genericStats: HomeStats | null = null;
 	private userSpecificStats: HomeStats | null = null;
+	private sharedActivities: RecentActivityItem[] = [];
 	protected stats: HomeStats | null = null;
 	protected loading = true;
 	protected loggedIn = false;
@@ -169,6 +172,16 @@ export class HomeComponent implements OnInit, OnDestroy {
 						this.cdr.detectChanges();
 					});
 
+					// Load shared-group activity once and fold it into the merged feed; no-op when ungrouped.
+					this.databaseService
+						.getSharedRecentActivity()
+						.then((shared) => {
+							this.sharedActivities = shared as RecentActivityItem[];
+							this.mergeStats();
+							this.cdr.detectChanges();
+						})
+						.catch(() => {});
+
 					/*
 					 * Step 5: Trigger the CSS enter-transition for the dashboard panel.
 					 * The 600 ms delay lets the transitioning flag drive an animation before
@@ -194,6 +207,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 					this.categoriesSub?.unsubscribe();
 					this.genericStats = null;
 					this.userSpecificStats = null;
+					this.sharedActivities = [];
 					this.stats = null;
 					this.dashLinks = [];
 					this.dashCategories = [];
@@ -236,11 +250,37 @@ export class HomeComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Merges the generic and user-specific stats into the single stats object
-	 * consumed by the orbital component. User-specific values win on overlap.
+	 * Merges the generic and user-specific stats into the single stats object consumed by the
+	 * orbital component. User-specific values win on overlap, and any shared-group activity is
+	 * folded into the recent-activity feed via {@link mergeActivityFeeds}.
 	 */
 	private mergeStats(): void {
-		this.stats = { ...this.genericStats, ...this.userSpecificStats } as HomeStats;
+		const merged = { ...this.genericStats, ...this.userSpecificStats } as HomeStats;
+		if (this.sharedActivities.length) {
+			const own = Utilities.toArray(merged[STATS_FIELD_RECENT_ACTIVITIES]) as RecentActivityItem[];
+			merged[STATS_FIELD_RECENT_ACTIVITIES] = this.mergeActivityFeeds(own, this.sharedActivities);
+		}
+		this.stats = merged;
+	}
+
+	/**
+	 * Merges personal and shared-group activity entries into a single feed, sorted newest-first and
+	 * capped to STATS_CAP_ACTIVITY_LOG. The two arrays never overlap — a reminder mutation is stored
+	 * in exactly one of them — so no de-duplication is needed.
+	 *
+	 * {@link mergeStats} - Builds the activity feed array consumed by the orbital component.
+	 *
+	 * @param own - The current user's personal activity entries.
+	 * @param shared - The shared-group activity entries.
+	 * @returns The merged, newest-first, capped activity list.
+	 */
+	private mergeActivityFeeds(
+		own: RecentActivityItem[],
+		shared: RecentActivityItem[]
+	): RecentActivityItem[] {
+		return [...own, ...shared]
+			.sort((a, b) => String(b?.timestamp ?? '').localeCompare(String(a?.timestamp ?? '')))
+			.slice(0, STATS_CAP_ACTIVITY_LOG);
 	}
 
 }

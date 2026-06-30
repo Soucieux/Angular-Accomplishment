@@ -146,6 +146,8 @@ export const DATABASE_DATE_CALCULATOR = 'date_calculator';
 export const DATABASE_DEBT_SONATA = 'debt_sonata';
 export const DATABASE_REMINDER = 'reminder';
 export const DATABASE_STATISTICS = 'statistics';
+/** Per-user stats documents (totals, recent activity, milestones, streak), one doc per user keyed by _id == _openid. */
+export const DATABASE_USERS = 'users';
 // stores both links (type:'link') and categories (type:'category')
 export const DATABASE_USEFUL_LINKS = 'useful_links';
 /** Per-user preferences stored as a keyed object under each user's uid. */
@@ -171,6 +173,8 @@ export const CLOUDBASE_LOG_ACTIVITY_UPDATE_FAILED = 'Error while updating activi
 export const CLOUDBASE_LOG_USER_STAT_UPDATE_FAILED = 'User stat update failed';
 export const CLOUDBASE_LOG_USER_STATS_SEEDED = 'User stats seeded successfully';
 export const CLOUDBASE_LOG_USER_STATS_SEED_FAILED = 'Error while seeding user stats';
+export const CLOUDBASE_LOG_USER_STATS_MIGRATED = 'Legacy user stats migrated to users collection';
+export const CLOUDBASE_LOG_USER_STATS_MIGRATE_FAILED = 'Error while migrating legacy user stats';
 export const CLOUDBASE_LOG_MOVIE_GENRE_UPDATED = 'Movie genre has been updated';
 export const CLOUDBASE_LOG_MOVIE_STATS_UPDATED = 'Movie statistics have been updated';
 export const CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATED = 'Movie favourite tag has been updated';
@@ -292,6 +296,16 @@ export const STATS_FIELD_GENRE = 'genre';
 export const STATS_FIELD_ACTIVITY_STREAK = 'activityStreak';
 export const STATS_FIELD_ACTIVITY_STREAK_DATE = 'activityStreakLastDate';
 export const STATS_FIELD_IS_USER_STATS = 'isUserStats';
+/** Discriminates a shared-group document from the single global stats document within the statistics collection. */
+export const STATS_FIELD_IS_GROUP = 'isGroup';
+/** Foreign key on a user's document pointing at their shared-group document's _id. */
+export const STATS_FIELD_GROUP_ID = 'groupId';
+/** Member openid list on a shared-group document — the pool of users whose reminders are shared. */
+export const STATS_FIELD_SHARED_WITH = 'sharedWith';
+/** Map of member openid to display profile ({ name }) on a shared-group document. */
+export const STATS_FIELD_MEMBER_PROFILES = 'memberProfiles';
+/** Shared activity log array on a shared-group document — mutations to any member's reminders. */
+export const STATS_FIELD_SHARED_RECENT_ACTIVITY = 'sharedRecentActivity';
 export const STATS_FIELD_TOTAL_FILMS = 'totalFilms';
 export const STATS_FIELD_TOTAL_LINKS = 'totalLinks';
 export const STATS_FIELD_TOTAL_QUOTES = 'totalQuotes';
@@ -585,8 +599,6 @@ export const REMINDER_VALUE_KEY_TAG = 'tag';
 export const REMINDER_VALUE_KEY_START_TIME = 'startTime';
 /** CloudBase content entry key for the reminder end time (HH:mm). */
 export const REMINDER_VALUE_KEY_END_TIME = 'endTime';
-/** CloudBase field key for the array of member openids a shared reminder is shared with. */
-export const REMINDER_VALUE_KEY_SHARED_WITH = 'sharedWith';
 
 /** Items shown per page in the Reminder grid (default: 2 columns × 7 rows). */
 export const REMINDER_ITEMS_PER_PAGE = 14;

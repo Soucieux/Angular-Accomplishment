@@ -100,6 +100,20 @@ export abstract class DatabaseService {
 	public abstract getReminderTableDetails(): Observable<any[]>;
 
 	/**
+	 * Gets the display-name map for the current user's shared group, keyed by member openid.
+	 *
+	 * @returns A promise resolving to an openid→name map, empty when the user belongs to no group.
+	 */
+	public abstract getGroupMemberProfiles(): Promise<Record<string, string>>;
+
+	/**
+	 * Gets the shared activity log for the current user's group, merged into the home feed.
+	 *
+	 * @returns A promise resolving to the shared activity entries, empty when the user has no group.
+	 */
+	public abstract getSharedRecentActivity(): Promise<any[]>;
+
+	/**
 	 * Gets the Account Expenses (debt sonata) table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the Account Expenses table details.

@@ -1,6 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { BehaviorSubject, Observable, ReplaySubject, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject, combineLatest, from, of } from 'rxjs';
 import { shareReplay, switchMap, take, filter, map, startWith, catchError } from 'rxjs/operators';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
@@ -16,8 +16,8 @@ import {
 	DATABASE_RELEASE_NOTES,
 	DATABASE_QUOTES,
 	DATABASE_REMINDER,
-	REMINDER_VALUE_KEY_SHARED_WITH,
 	DATABASE_STATISTICS,
+	DATABASE_USERS,
 	DATABASE_RECIPES,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_VAULT,
@@ -53,6 +53,11 @@ import {
 	STATS_FIELD_ACTIVITY_STREAK,
 	STATS_FIELD_ACTIVITY_STREAK_DATE,
 	STATS_FIELD_IS_USER_STATS,
+	STATS_FIELD_IS_GROUP,
+	STATS_FIELD_GROUP_ID,
+	STATS_FIELD_SHARED_WITH,
+	STATS_FIELD_MEMBER_PROFILES,
+	STATS_FIELD_SHARED_RECENT_ACTIVITY,
 	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_TOTAL_DEBTS,
 	STATS_FIELD_TOTAL_REMINDERS,
@@ -110,6 +115,8 @@ import {
 	CLOUDBASE_LOG_USER_STAT_UPDATE_FAILED,
 	CLOUDBASE_LOG_USER_STATS_SEEDED,
 	CLOUDBASE_LOG_USER_STATS_SEED_FAILED,
+	CLOUDBASE_LOG_USER_STATS_MIGRATED,
+	CLOUDBASE_LOG_USER_STATS_MIGRATE_FAILED,
 	CLOUDBASE_LOG_MOVIE_GENRE_UPDATED,
 	CLOUDBASE_LOG_MOVIE_STATS_UPDATED,
 	CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATED,
@@ -313,8 +320,8 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the statistics document.
 	 */
 	public getStatistics(): Observable<any> {
-		// Scope to the global stats doc (isUserStats != true). Per-user docs are no longer
-		// readable by non-owners, so watching the whole collection fails the security rule.
+		// Scope to the global stats doc (isGroup != true). Group docs are members-only,
+		// so watching the whole collection would fail the security rule.
 		return this.watchCollection(
 			DATABASE_STATISTICS,
 			(docs) => docs[0],
@@ -330,7 +337,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getUserStats(): Observable<any> {
 		return this.watchCollection(
-			DATABASE_STATISTICS,
+			DATABASE_USERS,
 			(docs) => docs[0],
 			false,
 			(col) => col.where(this.getUserStatsFilter())
@@ -518,10 +525,10 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Gets the reminder details from CloudBase as a real-time observable.
-	 * Merges two watchers: reminders the user owns, and shared reminders where the
-	 * user's openid appears in the sharedWith array. The shared watcher is fail-safe —
-	 * if the security rule denies it (or array queries are unsupported) it yields an
-	 * empty list, so the owned-reminders stream is never affected.
+	 * Merges two watchers: reminders the user owns, and reminders owned by the other members
+	 * of the user's shared group (resolved from the group document's sharedWith list). The shared
+	 * watcher is fail-safe — when the user is in no group, or the security rule denies the read,
+	 * it yields an empty list so the owned-reminders stream is never affected.
 	 *
 	 * @returns An observable that emits the merged reminder details list.
 	 */
@@ -537,12 +544,17 @@ export class CloudbaseService extends DatabaseService {
 			col.where({ _openid: userId })
 		);
 
-		/* Fail-safe shared watcher: startWith keeps owned reminders flowing before this watcher
-		   first emits, and catchError guards a synchronous query-builder throw — a runtime watch
-		   error is logged-and-swallowed inside watchCollection, leaving the startWith([]) value. */
-		const shared$ = this.watchCollection(DATABASE_REMINDER, mapDocs, false, (col) =>
-			col.where({ [REMINDER_VALUE_KEY_SHARED_WITH]: this._.in([userId]) })
-		).pipe(
+		/* Fail-safe shared watcher: resolve the user's other group members once, then watch their
+		   reminders live. startWith keeps owned reminders flowing before this watcher first emits,
+		   and catchError guards any rejection — an empty list means only the owned reminders show. */
+		const shared$ = from(this.getGroupMemberIds()).pipe(
+			switchMap((memberIds) =>
+				memberIds.length
+					? this.watchCollection(DATABASE_REMINDER, mapDocs, false, (col) =>
+							col.where({ _openid: this._.in(memberIds) })
+						)
+					: of([] as any[])
+			),
 			startWith([] as any[]),
 			catchError(() => of([] as any[]))
 		);
@@ -551,6 +563,31 @@ export class CloudbaseService extends DatabaseService {
 		return combineLatest([owned$, shared$]).pipe(
 			map(([owned, shared]) => Utilities.uniqueByKey([...owned, ...shared], (item) => item.key))
 		);
+	}
+
+	/**
+	 * Gets the display-name map for the current user's shared group, keyed by member openid.
+	 * Used by the reminder page to label reminders owned by other members with the creator's name.
+	 *
+	 * @returns A promise resolving to an openid→name map, empty when the user belongs to no group.
+	 */
+	public async getGroupMemberProfiles(): Promise<Record<string, string>> {
+		const group = await this.getGroupDocument();
+		const profiles = (group?.[STATS_FIELD_MEMBER_PROFILES] as Record<string, { name?: string }>) ?? {};
+		return Object.fromEntries(
+			Object.entries(profiles).map(([openid, profile]) => [openid, profile?.name ?? ''])
+		);
+	}
+
+	/**
+	 * Gets the shared activity log for the current user's group — mutations to any member's
+	 * reminders. Merged with the user's personal recent activity to form the home feed.
+	 *
+	 * @returns A promise resolving to the shared activity entries, empty when the user has no group.
+	 */
+	public async getSharedRecentActivity(): Promise<any[]> {
+		const group = await this.getGroupDocument();
+		return Utilities.toArray(group?.[STATS_FIELD_SHARED_RECENT_ACTIVITY]);
 	}
 
 	/**
@@ -800,12 +837,13 @@ export class CloudbaseService extends DatabaseService {
 		updates: Partial<{ url: string; title: string; category: string; isPinned: boolean }>,
 		domain: string
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, entryKey, { ...updates });
-		this.appendToActivityLog({
+		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, {
+			entryKey,
+			fields: { ...updates },
 			source: ACTIVITY_SOURCE_LINK,
 			type: ACTIVITY_TYPE_UPDATED,
 			domain
-		}).catch(() => {});
+		});
 	}
 
 	/**
@@ -820,12 +858,13 @@ export class CloudbaseService extends DatabaseService {
 		updates: Partial<{ name: string; order: number }>,
 		name: string
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, entryKey, { ...updates });
-		this.appendToActivityLog({
+		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, {
+			entryKey,
+			fields: { ...updates },
 			source: ACTIVITY_SOURCE_LINK,
 			type: ACTIVITY_TYPE_CATEGORY_UPDATED,
 			domain: name
-		}).catch(() => {});
+		});
 	}
 
 	/**
@@ -835,15 +874,13 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateRecipe(recipe: Recipe): Promise<void> {
 		const { id, ...payload } = recipe;
-		await this.updateTableExistingFields(DATABASE_RECIPES, id, {
-			...payload,
-			steps: payload.steps.map((step) => ({ ...step, done: false }))
-		});
-		this.appendToActivityLog({
+		await this.updateTableExistingFields(DATABASE_RECIPES, {
+			entryKey: id,
+			fields: { ...payload, steps: payload.steps.map((step) => ({ ...step, done: false })) },
 			source: ACTIVITY_SOURCE_RECIPE,
 			type: ACTIVITY_TYPE_UPDATED,
 			name: recipe.name
-		}).catch(() => {});
+		});
 	}
 
 	/**
@@ -1006,12 +1043,13 @@ export class CloudbaseService extends DatabaseService {
 		value: any,
 		text: string
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_REMINDER, entryKey, { [valueKey]: value });
-		this.appendToActivityLog({
+		await this.updateTableExistingFields(DATABASE_REMINDER, {
+			entryKey,
+			fields: { [valueKey]: value },
 			source: ACTIVITY_SOURCE_REMINDER,
 			type: ACTIVITY_TYPE_UPDATED,
 			text
-		}).catch(() => {});
+		});
 	}
 
 	/**
@@ -1030,12 +1068,13 @@ export class CloudbaseService extends DatabaseService {
 		name: string,
 		type = ACTIVITY_TYPE_LOCK_UPDATED
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, entryKey, { [valueKey]: value });
-		this.appendToActivityLog({
+		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields: { [valueKey]: value },
 			source: ACTIVITY_SOURCE_DEBT,
 			type,
 			name
-		}).catch(() => {});
+		});
 	}
 
 	/**
@@ -1051,14 +1090,12 @@ export class CloudbaseService extends DatabaseService {
 		fields: Record<string, unknown>,
 		name?: string
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, entryKey, fields);
-		if (name !== undefined) {
-			this.appendToActivityLog({
-				source: ACTIVITY_SOURCE_DEBT,
-				type: ACTIVITY_TYPE_UPDATED,
-				name
-			}).catch(() => {});
-		}
+		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields,
+			// Include the activity values only when a name is supplied so no entry is logged otherwise.
+			...(name !== undefined ? { source: ACTIVITY_SOURCE_DEBT, type: ACTIVITY_TYPE_UPDATED, name } : {})
+		});
 	}
 
 	/**
@@ -1078,16 +1115,17 @@ export class CloudbaseService extends DatabaseService {
 		paid: boolean,
 		name: string
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, entryKey, {
-			[DEBT_VALUE_KEY_DEBT]: originalAmount,
-			[DEBT_VALUE_KEY_PAID]: paid,
-			[DEBT_VALUE_KEY_PAYMENTS]: this._.remove()
-		});
-		this.appendToActivityLog({
+		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields: {
+				[DEBT_VALUE_KEY_DEBT]: originalAmount,
+				[DEBT_VALUE_KEY_PAID]: paid,
+				[DEBT_VALUE_KEY_PAYMENTS]: this._.remove()
+			},
 			source: ACTIVITY_SOURCE_DEBT,
 			type: ACTIVITY_TYPE_RESET,
 			name
-		}).catch(() => {});
+		});
 	}
 
 	/**
@@ -1164,14 +1202,15 @@ export class CloudbaseService extends DatabaseService {
 		noteIndex: number,
 		activityType: string
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_PATCH_NOTES, key, { ...updatedRecord });
-		this.appendToActivityLog({
+		await this.updateTableExistingFields(DATABASE_PATCH_NOTES, {
+			entryKey: key,
+			fields: { ...updatedRecord },
 			source: ACTIVITY_SOURCE_PATCH,
 			type: activityType,
 			component,
 			element,
 			noteIndex
-		}).catch(() => {});
+		});
 	}
 
 	/**
@@ -1194,25 +1233,26 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Updates specific fields in the current user's per-user stats document.
-	 * Targets the document matched by {@link getUserStatsFilter} (owned by the current user,
-	 * flagged with `isUserStats: true`) — distinct from the shared statistics document.
+	 * Updates specific fields in the current user's per-user stats document in the users collection.
+	 * Targets the document matched by {@link getUserStatsFilter} (owned by the current user).
 	 *
 	 * @param fields - Fields to merge into the per-user stats document.
 	 * @returns A promise that resolves when the update completes.
 	 */
 	public async updateUserStatsFields(fields: Record<string, any>): Promise<void> {
 		const result = await this.database
-			.collection(DATABASE_STATISTICS)
+			.collection(DATABASE_USERS)
 			.where(this.getUserStatsFilter())
 			.update(fields);
 		this.throwIfCloudbaseError(result);
 	}
 
 	/**
-	 * Updates multiple fields in a single table record in one round-trip.
+	 * Updates the given fields on a single table record in one round-trip, then records the supplied
+	 * activity entry. Mirrors {@link addNewRecordToDB} and {@link removeRecordFromDB} — the document
+	 * key, the fields to write, and the activity payload are all passed as one record descriptor, so
+	 * callers no longer record activity themselves.
 	 *
-	 * {@link updateDateCalculatorTable} - Each individual row update delegates here.
 	 * {@link updateUsefulLink} - Updates link fields in the useful-links collection.
 	 * {@link updateLinkCategory} - Updates category fields in the useful-links collection.
 	 * {@link updateRecipe} - Updates recipe fields in the recipes collection.
@@ -1220,18 +1260,16 @@ export class CloudbaseService extends DatabaseService {
 	 * {@link updateSingleValueForDebtTable} - Updates a single field in the debt collection.
 	 * {@link updateDebtFields} - Updates multiple fields in the debt collection.
 	 * {@link resetDebtRecord} - Resets debt amount and removes payment history.
-	 * {@link updateStatusForOnePatchNote} - Updates a patch note record.
+	 * {@link updateOnePatchNote} - Updates a patch note record.
 	 * {@link removeSingleHistoryFromDebt} - Uses the CloudBase remove command via an update call.
 	 *
 	 * @param tableName - The database collection name.
-	 * @param entryKey - The document key of the entry to update.
-	 * @param fields - A record of field names and their new values.
+	 * @param newRecord - The update descriptor: the document key (entryKey), the fields to write
+	 *   (fields), and the activity values to record (source, type, and subtitle) as flat sibling
+	 *   properties. When no activity property is supplied, no entry is logged.
 	 */
-	private async updateTableExistingFields(
-		tableName: string,
-		entryKey: string,
-		fields: Record<string, unknown>
-	): Promise<void> {
+	private async updateTableExistingFields(tableName: string, newRecord: any): Promise<void> {
+		const { entryKey, fields, ...activity } = newRecord;
 		try {
 			const result = await this.database
 				.collection(tableName)
@@ -1240,6 +1278,9 @@ export class CloudbaseService extends DatabaseService {
 			if (result.updated === 0) throw new Error(ERROR_NO_DOCUMENT_UPDATED);
 			else this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_TABLE_UPDATED} ${tableName}`);
+			if (Object.keys(activity).length > 0) {
+				this.appendToActivityLog(activity).catch(() => {});
+			}
 		} catch (error) {
 			LOG.error(this.className, `${CLOUDBASE_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
 			this.rethrowCaught(error);
@@ -1425,12 +1466,18 @@ export class CloudbaseService extends DatabaseService {
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
 		} catch (error) {
-			LOG.error(this.className, `${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`, error as Error);
+			LOG.error(
+				this.className,
+				`${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
+				error as Error
+			);
 			this.rethrowCaught(error);
 		}
 	}
 
 	/**
+	 * This is done by updating the data in DB.
+	 *
 	 * Removes the payment entry at the given index from a debt document and restores the
 	 * debt balance, both in a single DB write. Records the removal in the activity log.
 	 *
@@ -1445,15 +1492,16 @@ export class CloudbaseService extends DatabaseService {
 		updatedDebt: number,
 		name: string
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, entryKey, {
-			[`${DEBT_VALUE_KEY_PAYMENTS}.${index}`]: this._.remove(),
-			[DEBT_VALUE_KEY_DEBT]: updatedDebt
-		});
-		this.appendToActivityLog({
+		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields: {
+				[`${DEBT_VALUE_KEY_PAYMENTS}.${index}`]: this._.remove(),
+				[DEBT_VALUE_KEY_DEBT]: updatedDebt
+			},
 			source: ACTIVITY_SOURCE_DEBT,
 			type: ACTIVITY_TYPE_PAYMENT_REMOVED,
 			name
-		}).catch(() => {});
+		});
 	}
 
 	/**
@@ -1482,7 +1530,6 @@ export class CloudbaseService extends DatabaseService {
 	 * Removes a record from a given table by document key.
 	 *
 	 * {@link removeUsefulLink} - Removes a link from the useful-links collection.
-	 * {@link removeLinkCategory} - Removes a category from the useful-links collection.
 	 * {@link removeQuote} - Removes a quote from the quotes collection.
 	 * {@link removeRecipe} - Removes a recipe from the recipes collection.
 	 * {@link removeRecordFromReminderTable} - Removes a record from the reminder collection.
@@ -1585,7 +1632,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Reads a single field value from the current user's statistics document.
+	 * Reads a single field value from the current user's stats document in the users collection.
 	 *
 	 * {@link getTauriNotifEnabled} - Reads the Tauri notification flag.
 	 * {@link getMinimizeOnClose} - Reads the minimize-on-close flag.
@@ -1596,7 +1643,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	private async readUserStatField(field: string): Promise<unknown> {
 		const result = await this.database
-			.collection(DATABASE_STATISTICS)
+			.collection(DATABASE_USERS)
 			.where(this.getUserStatsFilter())
 			.limit(1)
 			.get();
@@ -1846,11 +1893,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param edge - The edge content to persist.
 	 */
-	public async addVaultEdge(edge: {
-		sourceId: string;
-		targetId: string;
-		relation: string;
-	}): Promise<void> {
+	public async addVaultEdge(edge: { sourceId: string; targetId: string; relation: string }): Promise<void> {
 		await this.addVaultRecord({
 			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_EDGE,
 			[VAULT_VALUE_KEY_SOURCE_ID]: edge.sourceId,
@@ -1959,11 +2002,20 @@ export class CloudbaseService extends DatabaseService {
 	private getRecentActivitySubtitle(tableName: string, newRecord: unknown): Record<string, string> {
 		switch (tableName) {
 			case DATABASE_QUOTES:
-				return { source: ACTIVITY_SOURCE_RESONANCE, author: String((newRecord as { author?: string }).author ?? '') };
+				return {
+					source: ACTIVITY_SOURCE_RESONANCE,
+					author: String((newRecord as { author?: string }).author ?? '')
+				};
 			case DATABASE_DEBT_SONATA:
-				return { source: ACTIVITY_SOURCE_DEBT, name: String((newRecord as { name?: string }).name ?? '') };
+				return {
+					source: ACTIVITY_SOURCE_DEBT,
+					name: String((newRecord as { name?: string }).name ?? '')
+				};
 			case DATABASE_REMINDER:
-				return { source: ACTIVITY_SOURCE_REMINDER, text: String((newRecord as { text?: string }).text ?? '') };
+				return {
+					source: ACTIVITY_SOURCE_REMINDER,
+					text: String((newRecord as { text?: string }).text ?? '')
+				};
 			case DATABASE_PATCH_NOTES:
 				return {
 					source: ACTIVITY_SOURCE_PATCH,
@@ -1977,16 +2029,21 @@ export class CloudbaseService extends DatabaseService {
 				   the previous domain string from the history document. */
 				const rec = newRecord as { type?: string; url?: string; name?: string; domain?: string };
 				if (rec.type === USEFUL_LINK_TYPE_LINK)
-					return { source: ACTIVITY_SOURCE_LINK, domain: Utilities.getDomain(String(rec.url ?? '')) };
+					return {
+						source: ACTIVITY_SOURCE_LINK,
+						domain: Utilities.getDomain(String(rec.url ?? ''))
+					};
 				else if (rec.type === USEFUL_LINK_TYPE_CATEGORY)
 					return { source: ACTIVITY_SOURCE_LINK, domain: String(rec.name ?? '') };
 				else if (rec.type === HISTORY_STATUS_DELETED || rec.type === ACTIVITY_TYPE_CATEGORY_DELETED)
 					return { source: ACTIVITY_SOURCE_LINK, domain: String(rec.domain ?? '') };
-				else
-					return { source: ACTIVITY_SOURCE_DEFAULT, text: ACTIVITY_INVALID_TABLE_TEXT };
+				else return { source: ACTIVITY_SOURCE_DEFAULT, text: ACTIVITY_INVALID_TABLE_TEXT };
 			}
 			case DATABASE_RECIPES:
-				return { source: ACTIVITY_SOURCE_RECIPE, name: String((newRecord as { name?: string }).name ?? '') };
+				return {
+					source: ACTIVITY_SOURCE_RECIPE,
+					name: String((newRecord as { name?: string }).name ?? '')
+				};
 			default:
 				return { source: ACTIVITY_SOURCE_DEFAULT, text: ACTIVITY_INVALID_TABLE_TEXT };
 		}
@@ -2114,9 +2171,10 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Performs the actual read-then-write for a single activity log entry.
-	 * Prepends the entry to the stored array and trims to STATS_CAP_ACTIVITY_LOG.
-	 * Reads and updates the persistent activity streak in the per-user stats document.
+	 * Performs the actual read-then-write for a single activity log entry, and updates the
+	 * persistent activity streak. The entry lives in exactly one array: reminder mutations made by a
+	 * group member go to the group document's shared activity (so every member sees them once with no
+	 * duplication); all other entries go to the user's personal activity. The streak always updates.
 	 *
 	 * {@link appendToActivityLog} - The queue wrapper that serializes all calls here.
 	 *
@@ -2127,21 +2185,11 @@ export class CloudbaseService extends DatabaseService {
 		const entry = { ...activity, timestamp };
 		const userStatsFilter = this.getUserStatsFilter();
 		try {
-			// Step 1: Fetch the per-user stats doc — both the activity array and the streak live here.
-			const userStatsRes = await this.database
-				.collection(DATABASE_STATISTICS)
-				.where(userStatsFilter)
-				.get();
-
-			/* Step 2: Prepend the new entry and trim to the cap.
-			   CloudBase may return the array as an object (numeric keys) after update() merges it —
-			   Utilities.toArray handles both forms. */
+			// Step 1: Fetch the per-user stats doc — the activity array, streak, and groupId live here.
+			const userStatsRes = await this.database.collection(DATABASE_USERS).where(userStatsFilter).get();
 			const userDoc = userStatsRes.data?.[0];
-			const raw = userDoc?.[STATS_FIELD_RECENT_ACTIVITIES];
-			const existing = Utilities.toArray(raw);
-			const updated = [entry, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
 
-			/* Step 3: Compute the new streak value.
+			/* Step 2: Compute the new streak value, regardless of where the entry is stored.
 			   If the stored date is today, the streak is unchanged (multiple activities on the same day count once).
 			   If it was yesterday, the streak extends. Otherwise a break is detected and the streak resets to 1. */
 			const today = Utilities.formatDateForStorage(new Date());
@@ -2156,12 +2204,30 @@ export class CloudbaseService extends DatabaseService {
 				newStreak = storedDate === Utilities.formatDateForStorage(yesterday) ? storedStreak + 1 : 1;
 			}
 
-			// Step 4: Persist the activity log and streak together in one round-trip.
-			await this.updateUserStatsFields({
-				[STATS_FIELD_RECENT_ACTIVITIES]: updated,
-				[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
-				[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
-			});
+			/* Step 3: Route the entry to a single array — the group's shared activity for reminder
+			   mutations by a group member, otherwise the user's personal activity. The streak is
+			   always persisted on the user document. */
+			// Reminder is currently the only group-shared domain; extend this check if another is added.
+			const groupId = userDoc?.[STATS_FIELD_GROUP_ID] as string | undefined;
+			const goesToSharedFeed = entry.source === ACTIVITY_SOURCE_REMINDER && !!groupId;
+			if (goesToSharedFeed) {
+				await this.updateUserStatsFields({
+					[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
+					[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
+				});
+				await this.appendSharedActivity(entry, groupId);
+			} else {
+				const updated = Utilities.prependCapped(
+					userDoc?.[STATS_FIELD_RECENT_ACTIVITIES],
+					entry,
+					STATS_CAP_ACTIVITY_LOG
+				);
+				await this.updateUserStatsFields({
+					[STATS_FIELD_RECENT_ACTIVITIES]: updated,
+					[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
+					[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
+				});
+			}
 			this.checkAndWriteCountMilestone(MILESTONE_DOMAIN_STREAK, newStreak, userDoc).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, CLOUDBASE_LOG_ACTIVITY_UPDATE_FAILED, error as Error);
@@ -2170,8 +2236,36 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Appends an activity entry to the given shared-group document, prepended newest-first and
+	 * capped to STATS_CAP_ACTIVITY_LOG. The single home for reminder mutations made by a group member.
+	 *
+	 * {@link writeActivityLogEntry} - Calls this for reminder entries when the user is in a group.
+	 *
+	 * @param entry - The timestamped activity entry to append.
+	 * @param groupId - The _id of the user's shared-group document.
+	 * @returns A promise that resolves when the append completes.
+	 */
+	private async appendSharedActivity(entry: Record<string, unknown>, groupId: string): Promise<void> {
+		const groupRes = await this.database
+			.collection(DATABASE_STATISTICS)
+			.where({ _id: groupId })
+			.limit(1)
+			.get();
+		const updated = Utilities.prependCapped(
+			groupRes.data?.[0]?.[STATS_FIELD_SHARED_RECENT_ACTIVITY],
+			entry,
+			STATS_CAP_ACTIVITY_LOG
+		);
+		const result = await this.database
+			.collection(DATABASE_STATISTICS)
+			.where({ _id: groupId })
+			.update({ [STATS_FIELD_SHARED_RECENT_ACTIVITY]: updated });
+		this.throwIfCloudbaseError(result);
+	}
+
+	/**
 	 * Atomically increments or decrements a single counter field on the current user's
-	 * stats document in the statistics collection. Errors are logged but not propagated —
+	 * stats document in the users collection. Errors are logged but not propagated —
 	 * all callers treat stat updates as fire-and-forget.
 	 *
 	 * @param field - The field name constant to update (e.g. STATS_FIELD_TOTAL_FILMS).
@@ -2180,7 +2274,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async updateUserStatCount(field: string, delta: 1 | -1): Promise<void> {
 		const result = await this.database
-			.collection(DATABASE_STATISTICS)
+			.collection(DATABASE_USERS)
 			.where(this.getUserStatsFilter())
 			.update({ [field]: this._.inc(delta) });
 		if (result.code) {
@@ -2189,25 +2283,61 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Checks whether a per-user stats document exists and seeds it if absent.
+	 * Checks whether a per-user stats document exists in the users collection and provisions it
+	 * if absent — migrating a legacy statistics document when one exists, otherwise seeding fresh.
 	 * Uses a one-time `.get()` so the check is not watcher-dependent — safe to call on every
 	 * page load because it exits immediately when the doc already exists.
 	 *
-	 * @returns A promise that resolves when the check (and optional seed) completes.
+	 * @returns A promise that resolves when the check (and optional migration or seed) completes.
 	 */
 	public async ensureUserStatsExist(): Promise<void> {
-		const result = await this.database
+		const result = await this.database.collection(DATABASE_USERS).where(this.getUserStatsFilter()).get();
+		if (result.data?.length) return;
+		// No users doc yet — migrate a legacy statistics doc if one exists, otherwise seed fresh.
+		const migrated = await this.migrateLegacyUserStats();
+		if (!migrated) await this.seedUserStats();
+	}
+
+	/**
+	 * Copies a legacy per-user stats document from the statistics collection into the users
+	 * collection, preserving recent activity, milestones, totals, and streak. The new document is
+	 * keyed by `_id == _openid` to satisfy the users-collection security rule.
+	 *
+	 * {@link ensureUserStatsExist} - Calls this before falling back to a fresh seed.
+	 *
+	 * @returns A promise resolving to true when a legacy document was migrated, otherwise false.
+	 */
+	private async migrateLegacyUserStats(): Promise<boolean> {
+		const userId = CloudbaseService.getUserId();
+		const legacy = await this.database
 			.collection(DATABASE_STATISTICS)
-			.where(this.getUserStatsFilter())
+			.where({ _openid: userId, [STATS_FIELD_IS_USER_STATS]: true })
 			.get();
-		if (!result.data?.length) {
-			await this.seedUserStats();
+		const doc = legacy.data?.[0];
+		if (!doc) return false;
+
+		// Strip CloudBase-managed _id and the legacy discriminator; the new doc is keyed by _id == _openid.
+		const fields: Record<string, any> = { ...doc };
+		delete fields['_id'];
+		delete fields[STATS_FIELD_IS_USER_STATS];
+		try {
+			const result = await this.database
+				.collection(DATABASE_USERS)
+				.doc(userId)
+				.set({ ...fields, _openid: userId });
+			this.throwIfCloudbaseError(result);
+			LOG.info(this.className, CLOUDBASE_LOG_USER_STATS_MIGRATED);
+			return true;
+		} catch (error) {
+			LOG.error(this.className, CLOUDBASE_LOG_USER_STATS_MIGRATE_FAILED, error as Error);
+			return false;
 		}
 	}
 
 	/**
-	 * Seeds the current user's per-user stats document with live counts from each collection.
-	 * Intended to be called once from the browser to initialise the stats doc, then removed.
+	 * Seeds the current user's per-user stats document in the users collection with live counts
+	 * from each collection. Called by {@link ensureUserStatsExist} when no document exists and no
+	 * legacy document is available to migrate. The document is keyed by `_id == _openid`.
 	 *
 	 * @returns A promise that resolves when the seed write completes.
 	 */
@@ -2232,7 +2362,6 @@ export class CloudbaseService extends DatabaseService {
 		   is visible immediately without waiting for the first stat increment. */
 		const payload = {
 			_openid: userId,
-			[STATS_FIELD_IS_USER_STATS]: true,
 			[STATS_FIELD_TOTAL_FILMS]: films.data?.length ?? 0,
 			[STATS_FIELD_TOTAL_QUOTES]: quotes.data?.length ?? 0,
 			[STATS_FIELD_TOTAL_RECIPES]: recipes.data?.length ?? 0,
@@ -2246,9 +2375,9 @@ export class CloudbaseService extends DatabaseService {
 			}
 		};
 
-		// Step 3: Write the document; fail loudly so the caller knows seeding did not complete
+		// Step 3: Write the document keyed by _id == _openid; fail loudly so the caller knows seeding did not complete
 		try {
-			const result = await this.database.collection(DATABASE_STATISTICS).add(payload);
+			const result = await this.database.collection(DATABASE_USERS).doc(userId).set(payload);
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, CLOUDBASE_LOG_USER_STATS_SEEDED);
 		} catch (error) {
@@ -2333,23 +2462,66 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets the CloudBase where-clause object that identifies the current user's stats document.
-	 * Used by all per-user stats reads and writes to ensure consistency.
+	 * Gets the CloudBase where-clause object that identifies the current user's stats document
+	 * within the users collection. Used by all per-user stats reads and writes to ensure consistency.
 	 *
-	 * @returns The where-clause object with _openid and isUserStats fields.
+	 * @returns The where-clause object matching the current user's document by _openid.
 	 */
 	private getUserStatsFilter(): Record<string, unknown> {
-		return { _openid: CloudbaseService.getUserId(), [STATS_FIELD_IS_USER_STATS]: true };
+		return { _openid: CloudbaseService.getUserId() };
 	}
 
 	/**
 	 * Gets the CloudBase where-clause object that identifies the single global stats
-	 * document (the one without the per-user flag). Mirrors {@link getUserStatsFilter}.
+	 * document — the one in the statistics collection that is not a shared-group document.
+	 * Mirrors {@link getUserStatsFilter}.
 	 *
 	 * @returns The where-clause object matching the global stats document.
 	 */
 	private getGlobalStatsFilter(): Record<string, unknown> {
-		return { [STATS_FIELD_IS_USER_STATS]: this._.neq(true) };
+		return { [STATS_FIELD_IS_GROUP]: this._.neq(true) };
+	}
+
+	/**
+	 * Reads the current user's shared-group document from the statistics collection — first the
+	 * groupId on the user's own document, then the group document it points at.
+	 *
+	 * {@link getGroupMemberIds} - Derives the shared reminder pool from the members list.
+	 * {@link getGroupMemberProfiles} - Derives creator display names from the member profiles.
+	 *
+	 * @returns A promise resolving to the group document, or null when the user belongs to no group.
+	 */
+	private async getGroupDocument(): Promise<Record<string, any> | null> {
+		const userRes = await this.database
+			.collection(DATABASE_USERS)
+			.where(this.getUserStatsFilter())
+			.limit(1)
+			.get();
+		const groupId = userRes.data?.[0]?.[STATS_FIELD_GROUP_ID] as string | undefined;
+		if (!groupId) return null;
+		const groupRes = await this.database
+			.collection(DATABASE_STATISTICS)
+			.where({ _id: groupId })
+			.limit(1)
+			.get();
+		return groupRes.data?.[0] ?? null;
+	}
+
+	/**
+	 * Resolves the openids of the other members of the current user's shared group — every member
+	 * in the group's sharedWith list except the current user. Returns an empty array when the user
+	 * belongs to no group.
+	 *
+	 * {@link getReminderTableDetails} - Watches these members' reminders as the shared pool.
+	 *
+	 * @returns A promise resolving to the other group members' openids, or an empty array.
+	 */
+	private async getGroupMemberIds(): Promise<string[]> {
+		const group = await this.getGroupDocument();
+		if (!group) return [];
+		const userId = CloudbaseService.getUserId();
+		const members = (group[STATS_FIELD_SHARED_WITH] as string[]) ?? [];
+		return members.filter((id) => id !== userId);
 	}
 
 	/**
@@ -2361,10 +2533,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param domain - The milestone domain prefix (e.g. MILESTONE_DOMAIN_FILM).
 	 */
 	private async checkAndWriteDomainMilestone(field: string, domain: string): Promise<void> {
-		const res = await this.database
-			.collection(DATABASE_STATISTICS)
-			.where(this.getUserStatsFilter())
-			.get();
+		const res = await this.database.collection(DATABASE_USERS).where(this.getUserStatsFilter()).get();
 		const doc = res?.data?.[0];
 		if (!doc) return;
 		const count = (doc[field] as number) ?? 0;
@@ -2393,7 +2562,7 @@ export class CloudbaseService extends DatabaseService {
 
 		// Step 3: Write only the new milestone key using dot-notation to avoid overwriting sibling keys
 		await this.database
-			.collection(DATABASE_STATISTICS)
+			.collection(DATABASE_USERS)
 			.where(this.getUserStatsFilter())
 			.update({ [`${STATS_FIELD_MILESTONES}.${key}`]: Utilities.formatDateForStorage(new Date()) });
 	}

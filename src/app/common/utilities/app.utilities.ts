@@ -696,6 +696,19 @@ export class Utilities {
 	}
 
 	/**
+	 * Prepends an entry to a raw CloudBase array field (newest-first) and trims the result to `cap`.
+	 * Normalizes the raw value via {@link toArray} so both array and index-keyed object forms work.
+	 *
+	 * @param raw - The raw field value from a CloudBase snapshot (array or index-keyed object).
+	 * @param entry - The entry to place at the front.
+	 * @param cap - The maximum number of entries to keep.
+	 * @returns A new array with the entry prepended and the length capped.
+	 */
+	public static prependCapped<T>(raw: unknown, entry: T, cap: number): T[] {
+		return [entry, ...(Utilities.toArray(raw) as T[])].slice(0, cap);
+	}
+
+	/**
 	 * Sort an array of objects by their optional `order` field ascending.
 	 * Items without an `order` field are treated as order 0.
 	 * The original array is not mutated.

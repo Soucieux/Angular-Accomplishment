@@ -309,6 +309,26 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Gets the display-name map for the current user's shared group. Shared reminder groups are a
+	 * CloudBase-only feature, so the Firebase backend always resolves to an empty map.
+	 *
+	 * @returns A promise resolving to an empty openid→name map.
+	 */
+	public getGroupMemberProfiles(): Promise<Record<string, string>> {
+		return Promise.resolve({});
+	}
+
+	/**
+	 * Gets the shared activity log for the current user's group. Shared reminder groups are a
+	 * CloudBase-only feature, so the Firebase backend always resolves to an empty list.
+	 *
+	 * @returns A promise resolving to an empty activity list.
+	 */
+	public getSharedRecentActivity(): Promise<any[]> {
+		return Promise.resolve([]);
+	}
+
+	/**
 	 * Gets the Account Expenses (debt sonata) table details from Firebase as a reactive observable.
 	 *
 	 * @returns An observable that emits the Account Expenses table details.

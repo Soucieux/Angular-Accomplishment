@@ -172,7 +172,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 						this.cdr.detectChanges();
 					});
 
-					// Load shared-group activity once and fold it into the merged feed; no-op when ungrouped.
+					// Load shared activity once and fold it into the merged feed; no-op when unconnected.
 					this.databaseService
 						.getSharedRecentActivity()
 						.then((shared) => {
@@ -251,7 +251,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Merges the generic and user-specific stats into the single stats object consumed by the
-	 * orbital component. User-specific values win on overlap, and any shared-group activity is
+	 * orbital component. User-specific values win on overlap, and any shared activity is
 	 * folded into the recent-activity feed via {@link mergeActivityFeeds}.
 	 */
 	private mergeStats(): void {
@@ -264,14 +264,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Merges personal and shared-group activity entries into a single feed, sorted newest-first and
+	 * Merges personal and shared activity entries into a single feed, sorted newest-first and
 	 * capped to STATS_CAP_ACTIVITY_LOG. The two arrays never overlap — a reminder mutation is stored
 	 * in exactly one of them — so no de-duplication is needed.
 	 *
 	 * {@link mergeStats} - Builds the activity feed array consumed by the orbital component.
 	 *
 	 * @param own - The current user's personal activity entries.
-	 * @param shared - The shared-group activity entries.
+	 * @param shared - The shared activity entries.
 	 * @returns The merged, newest-first, capped activity list.
 	 */
 	private mergeActivityFeeds(

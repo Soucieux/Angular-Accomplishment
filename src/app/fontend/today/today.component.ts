@@ -14,6 +14,7 @@ import {
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Utilities } from '../../common/utilities/app.utilities';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Subscription } from 'rxjs';
 import {
 	KEY_ENTER,
@@ -260,7 +261,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/** Elapsed time string, updated every second via the nowMin signal. */
 	protected readonly trackElapsedLabel = computed(() => {
-		const _ = this.nowMin();
+		this.nowMin();
 		const track = this.tracking();
 		return track ? this.formatElapsed((Date.now() - track.startedAt) / 1000) : '';
 	});
@@ -270,7 +271,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/** Formatted current date, updated every second via the clock signal. */
 	protected readonly dateLabel = computed(() => {
-		const _ = this.clock();
+		this.clock();
 		return new Date().toLocaleDateString(APP_LOCALE, { weekday: 'long', month: 'long', day: 'numeric' });
 	});
 
@@ -507,7 +508,6 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 
 		// Snap the initial click to the nearest 15-minute mark and begin the drag range
-		const cal = this.calRef.nativeElement;
 		const grid = this.gridRef.nativeElement;
 		const startMin = Math.max(
 			0,
@@ -868,6 +868,10 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		// Cancel the previous subscription and snapshot today's date string for filtering
 		this.remindersSub?.unsubscribe();
 		this.currentDateStr = Utilities.formatDateForStorage(new Date());
+
+		// Skip the reminder query entirely for a signed-out visitor — the collection
+		// requires a non-anonymous _openid, so an unauthenticated call would only fail.
+		if (!CloudbaseService.getUserId()) return;
 
 		// Re-subscribe: filter reminder records to today, map to TodayTask, merge into the signal
 		this.remindersSub = this.databaseService.getReminderTableDetails().subscribe((records) => {

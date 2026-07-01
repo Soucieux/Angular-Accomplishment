@@ -101,7 +101,6 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TimeoutService } from '../../common/timeout/timeout.service';
 import { PaginatorModule } from 'primeng/paginator';
 import { DatabaseService } from '../../backend/database-service/database.service';
-import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 
 @Component({
 	selector: 'patch',
@@ -114,8 +113,7 @@ import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.com
 		Select,
 		FormsModule,
 		CommonModule,
-		PaginatorModule,
-		BlockedCardComponent
+		PaginatorModule
 	],
 	templateUrl: './patch.component.html',
 	styleUrls: ['../../common/glass-card.css', './patch.component.css']

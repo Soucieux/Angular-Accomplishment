@@ -1,539 +1,538 @@
-@if (utilities.getIsUserAlive()) {
-	<div class="glass-card container-patch">
-		<div class="page-header-row">
-			<div class="page-header">
-				<div class="eyebrow">{{ PATCH_EYEBROW }}</div>
-				<h1 class="page-title">
-					{{
-						currentView === PATCH_VIEW_PATCH ? PATCH_LABEL_PATCH_NOTES : PATCH_LABEL_RELEASE_NOTES
-					}}
-				</h1>
-				<p class="page-subtitle">
-					{{
-						currentView === PATCH_VIEW_PATCH
-							? PATCH_SUBTITLE_PATCH_NOTES
-							: PATCH_SUBTITLE_RELEASE_NOTES
-					}}
-				</p>
-				<div class="header-ornament"></div>
-			</div>
-			<div class="view-switch">
-				<span
-					class="view-switch__thumb"
-					[class.is-release]="currentView === PATCH_VIEW_RELEASE"></span>
-				<button
-					type="button"
-					class="view-switch__button"
-					[class.is-active]="currentView === PATCH_VIEW_PATCH"
-					(click)="selectView(PATCH_VIEW_PATCH)">
-					{{ PATCH_SWITCH_PREFIX_SPRINT }}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
-				</button>
-				<button
-					type="button"
-					class="view-switch__button"
-					[class.is-active]="currentView === PATCH_VIEW_RELEASE"
-					(click)="selectView(PATCH_VIEW_RELEASE)">
-					{{ PATCH_SWITCH_PREFIX_RELEASE }}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
-				</button>
-			</div>
+<div class="glass-card container-patch">
+	<div class="page-header-row">
+		<div class="page-header">
+			<div class="eyebrow">{{ PATCH_EYEBROW }}</div>
+			<h1 class="page-title">
+				{{
+					currentView === PATCH_VIEW_PATCH ? PATCH_LABEL_PATCH_NOTES : PATCH_LABEL_RELEASE_NOTES
+				}}
+			</h1>
+			<p class="page-subtitle">
+				{{
+					currentView === PATCH_VIEW_PATCH
+						? PATCH_SUBTITLE_PATCH_NOTES
+						: PATCH_SUBTITLE_RELEASE_NOTES
+				}}
+			</p>
+			<div class="header-ornament"></div>
+		</div>
+		<div class="view-switch">
+			<span
+				class="view-switch__thumb"
+				[class.is-release]="currentView === PATCH_VIEW_RELEASE"></span>
+			<button
+				type="button"
+				class="view-switch__button"
+				[class.is-active]="currentView === PATCH_VIEW_PATCH"
+				(click)="selectView(PATCH_VIEW_PATCH)">
+				{{ PATCH_SWITCH_PREFIX_SPRINT }}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
+			</button>
+			<button
+				type="button"
+				class="view-switch__button"
+				[class.is-active]="currentView === PATCH_VIEW_RELEASE"
+				(click)="selectView(PATCH_VIEW_RELEASE)">
+				{{ PATCH_SWITCH_PREFIX_RELEASE }}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
+			</button>
+		</div>
+	</div>
+
+	@if (currentView === 'patch') {
+		<div class="toolbar">
+			<label class="search">
+				<span class="material-symbols-outlined">search</span>
+				<input
+					type="text"
+					[placeholder]="PATCH_PLACEHOLDER_SEARCH"
+					[(ngModel)]="searchQuery"
+					(ngModelChange)="t.filterGlobal($event, 'contains')" />
+			</label>
 		</div>
 
-		@if (currentView === 'patch') {
-			<div class="toolbar">
-				<label class="search">
-					<span class="material-symbols-outlined">search</span>
-					<input
-						type="text"
-						[placeholder]="PATCH_PLACEHOLDER_SEARCH"
-						[(ngModel)]="searchQuery"
-						(ngModelChange)="t.filterGlobal($event, 'contains')" />
-				</label>
-			</div>
-
-			@if (!loading) {
-				<div class="stats-strip">
-					<div class="heatmap-anchor">
-						<span
-							class="stat-chip stat-chip--total"
-							[class.is-open]="isHeatmapOpen"
-							(mouseenter)="openHeatmap()"
-							(mouseleave)="scheduleHeatmapClose()">
-							<span class="stat-number">{{ statsTotal }}</span>
-							<span class="stat-label">{{ PATCH_STAT_TOTAL }}</span>
-						</span>
-						<div
-							class="heatmap-popover hide-on-narrow-or-mobile"
-							[class.is-visible]="isHeatmapOpen"
-							(mouseenter)="cancelHeatmapClose()"
-							(mouseleave)="scheduleHeatmapClose()">
-							<div class="heatmap-header">
-								<span class="heatmap-title">{{ PATCH_HEATMAP_TITLE }}</span>
-								<div class="heatmap-legend">
-									<span>{{ PATCH_HEATMAP_LEGEND_LESS }}</span>
-									<div class="heatmap-legend-cells">
-										<div class="heatmap-legend-cell intensity-0"></div>
-										<div class="heatmap-legend-cell intensity-1"></div>
-										<div class="heatmap-legend-cell intensity-2"></div>
-										<div class="heatmap-legend-cell intensity-3"></div>
-										<div class="heatmap-legend-cell intensity-4"></div>
-									</div>
-									<span>{{ PATCH_HEATMAP_LEGEND_MORE }}</span>
+		@if (!loading) {
+			<div class="stats-strip">
+				<div class="heatmap-anchor">
+					<span
+						class="stat-chip stat-chip--total"
+						[class.is-open]="isHeatmapOpen"
+						(mouseenter)="openHeatmap()"
+						(mouseleave)="scheduleHeatmapClose()">
+						<span class="stat-number">{{ statsTotal }}</span>
+						<span class="stat-label">{{ PATCH_STAT_TOTAL }}</span>
+					</span>
+					<div
+						class="heatmap-popover hide-on-narrow-or-mobile"
+						[class.is-visible]="isHeatmapOpen"
+						(mouseenter)="cancelHeatmapClose()"
+						(mouseleave)="scheduleHeatmapClose()">
+						<div class="heatmap-header">
+							<span class="heatmap-title">{{ PATCH_HEATMAP_TITLE }}</span>
+							<div class="heatmap-legend">
+								<span>{{ PATCH_HEATMAP_LEGEND_LESS }}</span>
+								<div class="heatmap-legend-cells">
+									<div class="heatmap-legend-cell intensity-0"></div>
+									<div class="heatmap-legend-cell intensity-1"></div>
+									<div class="heatmap-legend-cell intensity-2"></div>
+									<div class="heatmap-legend-cell intensity-3"></div>
+									<div class="heatmap-legend-cell intensity-4"></div>
 								</div>
-							</div>
-							<div class="heatmap-grid">
-								<div></div>
-								@for (month of MONTH_NAMES_SHORT; track month) {
-									<div class="heatmap-month-label">{{ month }}</div>
-								}
-								@for (year of heatmapYears; track year) {
-									<div class="heatmap-year-label">{{ year }}</div>
-									@for (idx of PATCH_HEATMAP_MONTH_INDICES; track idx) {
-										<div [class]="'heatmap-cell ' + getHeatmapCellClass(year, idx)">
-											{{ getHeatmapCount(year, idx) > 0 && !isHeatmapFuture(year, idx) ? getHeatmapCount(year, idx) : '' }}
-										</div>
-									}
-								}
-							</div>
-							<div class="heatmap-footer">
-								<span>{{ PATCH_HEATMAP_FOOTER_FUTURE }}</span>
-								<span><strong>{{ statsTotal }}</strong> {{ PATCH_HEATMAP_FOOTER_ITEMS }} {{ heatmapYearCount }} {{ PATCH_HEATMAP_FOOTER_YEARS }}</span>
+								<span>{{ PATCH_HEATMAP_LEGEND_MORE }}</span>
 							</div>
 						</div>
-					</div>
-					<span class="stat-divider">·</span>
-					<span class="stat-chip">
-						<span class="stat-number stat-resolved">{{ statsResolved }}</span> {{ PATCH_STAT_BUGS_RESOLVED }}
-					</span>
-					<span class="stat-divider stat-mobile-hidden">·</span>
-					<span class="stat-chip stat-mobile-hidden">
-						<span class="stat-number stat-progress">{{ statsInProgress }}</span> {{ PATCH_STAT_IN_PROGRESS }}
-					</span>
-					<span class="stat-divider stat-mobile-hidden">·</span>
-					<span class="stat-chip stat-mobile-hidden">
-						<span class="stat-number stat-bug">{{ statsOpenBugs }}</span> {{ PATCH_STAT_OPEN_BUGS }}
-					</span>
-				</div>
-			}
-
-			<p-table
-				#t
-				[value]="(patchNotes$ | async) ?? []"
-				[totalRecords]="statsTotal"
-				[paginator]="true"
-				[rows]="itemsPerPage"
-				[(first)]="indexOfFirstItem"
-				[showCurrentPageReport]="!isNarrowViewport"
-				[currentPageReportTemplate]="PATCH_PAGINATION_TEMPLATE"
-				[showFirstLastIcon]="true"
-				[showPageLinks]="!isNarrowViewport"
-				[loading]="loading"
-				[showLoader]="false"
-				[globalFilterFields]="['component', 'element', 'details']"
-				(onPage)="pageChange($event)"
-				(onFilter)="onTableFilter()">
-				<ng-template pTemplate="header">
-					<tr>
-						<th class="component">{{ PATCH_TABLE_HEADER_COMPONENT }}</th>
-						<th class="element">{{ PATCH_TABLE_HEADER_ELEMENT }}</th>
-						<th class="details">{{ PATCH_TABLE_HEADER_DETAILS }}</th>
-						<th class="status">
-							{{ PATCH_COL_STATUS }}
-							<p-columnFilter
-								class="column-filter"
-								#columnFilter
-								display="menu"
-								field="status"
-								matchMode="equals"
-								[showOperator]="false"
-								[showMatchModes]="false"
-								[showAddButton]="false"
-								[showApplyButton]="false"
-								[showClearButton]="false">
-								<ng-template pTemplate="filtericon">
-									<i class="pi pi-filter custom-filter-icon"></i>
-								</ng-template>
-								<ng-template #filter let-value let-filter="filterCallback">
-									<div class="status-filter">
-										@for (severityOption of allSeverity; track severityOption.severity) {
-											<p-tag
-												[value]="severityOption.severity"
-												[icon]="getSeverityIcon(severityOption.severity)"
-												[severity]="getSeverity(severityOption.severity)"
-												[class.selected]="value === severityOption.severity"
-												(click)="filter(severityOption.severity)">
-											</p-tag>
-										}
-									</div>
-									<!-- Custom clear -->
-									<p-tag
-										[value]="PATCH_BTN_CLEAR_FILTER"
-										icon="pi pi-times"
-										severity="secondary"
-										class="clear-tag"
-										(click)="filter(null); columnFilter.hide()">
-									</p-tag>
-								</ng-template>
-							</p-columnFilter>
-						</th>
-						<th class="timestamp">{{ PATCH_TABLE_HEADER_TIMESTAMP }}</th>
-						<th class="edit-button hide-on-narrow-or-mobile">{{ LABEL_EDIT }}</th>
-					</tr>
-				</ng-template>
-				<ng-template pTemplate="loadingbody">
-					@for (_ of skeletonRows; track $index) {
-						<tr class="skeleton-row">
-							<td><p-skeleton /></td>
-							<td><p-skeleton /></td>
-							<td><p-skeleton /></td>
-							<td><p-skeleton /></td>
-							<td><p-skeleton /></td>
-							@if (!isNarrowViewport) {
-								<td><p-skeleton /></td>
+						<div class="heatmap-grid">
+							<div></div>
+							@for (month of MONTH_NAMES_SHORT; track month) {
+								<div class="heatmap-month-label">{{ month }}</div>
 							}
-						</tr>
-					}
-				</ng-template>
-				<ng-template pTemplate="emptymessage">
-					<tr>
-						<td [attr.colspan]="isNarrowViewport ? 5 : 6">
-							<div class="empty-state">
-								<span class="material-symbols-outlined empty-icon">note_stack</span>
-								<p>{{ PATCH_EMPTY_SEARCH }}</p>
+							@for (year of heatmapYears; track year) {
+								<div class="heatmap-year-label">{{ year }}</div>
+								@for (idx of PATCH_HEATMAP_MONTH_INDICES; track idx) {
+									<div [class]="'heatmap-cell ' + getHeatmapCellClass(year, idx)">
+										{{ getHeatmapCount(year, idx) > 0 && !isHeatmapFuture(year, idx) ? getHeatmapCount(year, idx) : '' }}
+									</div>
+								}
+							}
+						</div>
+						<div class="heatmap-footer">
+							<span>{{ PATCH_HEATMAP_FOOTER_FUTURE }}</span>
+							<span><strong>{{ statsTotal }}</strong> {{ PATCH_HEATMAP_FOOTER_ITEMS }} {{ heatmapYearCount }} {{ PATCH_HEATMAP_FOOTER_YEARS }}</span>
+						</div>
+					</div>
+				</div>
+				<span class="stat-divider">·</span>
+				<span class="stat-chip">
+					<span class="stat-number stat-resolved">{{ statsResolved }}</span> {{ PATCH_STAT_BUGS_RESOLVED }}
+				</span>
+				<span class="stat-divider stat-mobile-hidden">·</span>
+				<span class="stat-chip stat-mobile-hidden">
+					<span class="stat-number stat-progress">{{ statsInProgress }}</span> {{ PATCH_STAT_IN_PROGRESS }}
+				</span>
+				<span class="stat-divider stat-mobile-hidden">·</span>
+				<span class="stat-chip stat-mobile-hidden">
+					<span class="stat-number stat-bug">{{ statsOpenBugs }}</span> {{ PATCH_STAT_OPEN_BUGS }}
+				</span>
+			</div>
+		}
+
+		<p-table
+			#t
+			[value]="(patchNotes$ | async) ?? []"
+			[totalRecords]="statsTotal"
+			[paginator]="true"
+			[rows]="itemsPerPage"
+			[(first)]="indexOfFirstItem"
+			[showCurrentPageReport]="!isNarrowViewport"
+			[currentPageReportTemplate]="PATCH_PAGINATION_TEMPLATE"
+			[showFirstLastIcon]="true"
+			[showPageLinks]="!isNarrowViewport"
+			[loading]="loading"
+			[showLoader]="false"
+			[globalFilterFields]="['component', 'element', 'details']"
+			(onPage)="pageChange($event)"
+			(onFilter)="onTableFilter()">
+			<ng-template pTemplate="header">
+				<tr>
+					<th class="component">{{ PATCH_TABLE_HEADER_COMPONENT }}</th>
+					<th class="element">{{ PATCH_TABLE_HEADER_ELEMENT }}</th>
+					<th class="details">{{ PATCH_TABLE_HEADER_DETAILS }}</th>
+					<th class="status">
+						{{ PATCH_COL_STATUS }}
+						<p-columnFilter
+							class="column-filter"
+							#columnFilter
+							display="menu"
+							field="status"
+							matchMode="equals"
+							[showOperator]="false"
+							[showMatchModes]="false"
+							[showAddButton]="false"
+							[showApplyButton]="false"
+							[showClearButton]="false">
+							<ng-template pTemplate="filtericon">
+								<i class="pi pi-filter custom-filter-icon"></i>
+							</ng-template>
+							<ng-template #filter let-value let-filter="filterCallback">
+								<div class="status-filter">
+									@for (severityOption of allSeverity; track severityOption.severity) {
+										<p-tag
+											[value]="severityOption.severity"
+											[icon]="getSeverityIcon(severityOption.severity)"
+											[severity]="getSeverity(severityOption.severity)"
+											[class.selected]="value === severityOption.severity"
+											(click)="filter(severityOption.severity)">
+										</p-tag>
+									}
+								</div>
+								<!-- Custom clear -->
+								<p-tag
+									[value]="PATCH_BTN_CLEAR_FILTER"
+									icon="pi pi-times"
+									severity="secondary"
+									class="clear-tag"
+									(click)="filter(null); columnFilter.hide()">
+								</p-tag>
+							</ng-template>
+						</p-columnFilter>
+					</th>
+					<th class="timestamp">{{ PATCH_TABLE_HEADER_TIMESTAMP }}</th>
+					<th class="edit-button hide-on-narrow-or-mobile">{{ LABEL_EDIT }}</th>
+				</tr>
+			</ng-template>
+			<ng-template pTemplate="loadingbody">
+				@for (_ of skeletonRows; track $index) {
+					<tr class="skeleton-row">
+						<td><p-skeleton /></td>
+						<td><p-skeleton /></td>
+						<td><p-skeleton /></td>
+						<td><p-skeleton /></td>
+						<td><p-skeleton /></td>
+						@if (!isNarrowViewport) {
+							<td><p-skeleton /></td>
+						}
+					</tr>
+				}
+			</ng-template>
+			<ng-template pTemplate="emptymessage">
+				<tr>
+					<td [attr.colspan]="isNarrowViewport ? 5 : 6">
+						<div class="empty-state">
+							<span class="material-symbols-outlined empty-icon">note_stack</span>
+							<p>{{ PATCH_EMPTY_SEARCH }}</p>
+						</div>
+					</td>
+				</tr>
+			</ng-template>
+			<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+				<tr
+					(mouseenter)="hoveredRowIndex = rowIndex"
+					(mouseleave)="hoveredRowIndex = null"
+					[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
+					[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
+					@if (shouldShowComponent(getRenderedData(t), rowIndex)) {
+						<td
+							[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
+							class="component">
+							<div class="component-content">
+								@if (getComponentOption(row.component); as option) {
+									<span
+										[class]="
+											option.iconClass +
+											' ' +
+											option.colorClass +
+											' hide-on-narrow-or-mobile'
+										"
+										>{{ option.icon }}</span
+									>
+								}
+								<span>{{ row.component }}</span>
 							</div>
 						</td>
-					</tr>
-				</ng-template>
-				<ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
-					<tr
-						(mouseenter)="hoveredRowIndex = rowIndex"
-						(mouseleave)="hoveredRowIndex = null"
-						[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
-						[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
-						@if (shouldShowComponent(getRenderedData(t), rowIndex)) {
-							<td
-								[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
-								class="component">
-								<div class="component-content">
-									@if (getComponentOption(row.component); as option) {
-										<span
-											[class]="
-												option.iconClass +
-												' ' +
-												option.colorClass +
-												' hide-on-narrow-or-mobile'
-											"
-											>{{ option.icon }}</span
-										>
-									}
-									<span>{{ row.component }}</span>
-								</div>
-							</td>
-						}
-						@if (shouldShowElement(getRenderedData(t), rowIndex)) {
-							<td
-								[attr.rowspan]="getElementRowSpan(getRenderedData(t), rowIndex)"
-								class="element">
-								<!-- This one is not needed as we are not updating the element name -->
-								<!-- @if(editedRows.has(row.key)){
+					}
+					@if (shouldShowElement(getRenderedData(t), rowIndex)) {
+						<td
+							[attr.rowspan]="getElementRowSpan(getRenderedData(t), rowIndex)"
+							class="element">
+							<!-- This one is not needed as we are not updating the element name -->
+							<!-- @if(editedRows.has(row.key)){
                             <input
                                 pInputText
                                 [(ngModel)]="editedRows.get(row.key).updated.element"
                                 class="input"
                                 (keyup.enter)="completeEdit(row)" />
                             } @else{ -->
-								{{ row.element }}
+							{{ row.element }}
 
-								<!-- } -->
-							</td>
+							<!-- } -->
+						</td>
+					}
+
+					<td class="details">
+						@if (editedRows.has(row.key)) {
+							<textarea
+								pTextarea
+								variant="filled"
+								fluid
+								[(ngModel)]="editedRows.get(row.key).updated.details"
+								class="input textarea-input"
+								(keyup.enter)="completeEdit(row)"></textarea>
+						} @else {
+							{{ row.details }}
 						}
+					</td>
 
-						<td class="details">
-							@if (editedRows.has(row.key)) {
-								<textarea
-									pTextarea
-									variant="filled"
-									fluid
-									[(ngModel)]="editedRows.get(row.key).updated.details"
-									class="input textarea-input"
-									(keyup.enter)="completeEdit(row)"></textarea>
-							} @else {
-								{{ row.details }}
-							}
-						</td>
-
-						<td class="status">
-							@if (editedRows.has(row.key)) {
-								<p-select
-									optionLabel="severity"
-									optionValue="severity"
-									[options]="
-										editedRows.get(row.key).original.isBug ? bugSeverity : severity
-									"
-									[appendTo]="'body'"
-									panelStyleClass="dropdown-panel-font"
-									[(ngModel)]="editedRows.get(row.key).updated.status"
-									class="input"
-									(keyup.enter)="completeEdit(row)">
-									<ng-template #selectedItem let-value>
-										@if (value) {
-											<div class="status-option">
-												<i [class]="getSeverityIcon(value.severity)"></i>
-												<span>{{ value.severity }}</span>
-											</div>
-										}
-									</ng-template>
-									<ng-template #item let-option>
+					<td class="status">
+						@if (editedRows.has(row.key)) {
+							<p-select
+								optionLabel="severity"
+								optionValue="severity"
+								[options]="
+									editedRows.get(row.key).original.isBug ? bugSeverity : severity
+								"
+								[appendTo]="'body'"
+								panelStyleClass="dropdown-panel-font"
+								[(ngModel)]="editedRows.get(row.key).updated.status"
+								class="input"
+								(keyup.enter)="completeEdit(row)">
+								<ng-template #selectedItem let-value>
+									@if (value) {
 										<div class="status-option">
-											<i [class]="getSeverityIcon(option.severity)"></i>
-											<span>{{ option.severity }}</span>
+											<i [class]="getSeverityIcon(value.severity)"></i>
+											<span>{{ value.severity }}</span>
 										</div>
-									</ng-template>
-								</p-select>
-							} @else {
-								<p-tag
-									[value]="row.status"
-									[icon]="getSeverityIcon(row.status)"
-									[severity]="getSeverity(row.status)"
-									[class]="getSeverityClass(row.status)"
-									class="tag"></p-tag>
-							}
-						</td>
+									}
+								</ng-template>
+								<ng-template #item let-option>
+									<div class="status-option">
+										<i [class]="getSeverityIcon(option.severity)"></i>
+										<span>{{ option.severity }}</span>
+									</div>
+								</ng-template>
+							</p-select>
+						} @else {
+							<p-tag
+								[value]="row.status"
+								[icon]="getSeverityIcon(row.status)"
+								[severity]="getSeverity(row.status)"
+								[class]="getSeverityClass(row.status)"
+								class="tag"></p-tag>
+						}
+					</td>
 
-						<td class="timestamp">
-							<div>{{ Utilities.getTimestampDate(row.timestamp) }}</div>
-							@if (Utilities.getTimestampTime(row.timestamp)) {
-								<div class="timestamp-time">
-									{{ Utilities.getTimestampTime(row.timestamp) }}
-								</div>
-							}
-						</td>
+					<td class="timestamp">
+						<div>{{ Utilities.getTimestampDate(row.timestamp) }}</div>
+						@if (Utilities.getTimestampTime(row.timestamp)) {
+							<div class="timestamp-time">
+								{{ Utilities.getTimestampTime(row.timestamp) }}
+							</div>
+						}
+					</td>
 
-						<td class="edit-button hide-on-narrow-or-mobile">
-							@if (editedRows.has(row.key)) {
-								<div class="edit-button-group">
-									<p-button
-										severity="secondary"
-										icon="pi pi-check"
-										rounded="true"
-										(click)="completeEdit(row)"></p-button>
-									<p-button
-										severity="secondary"
-										icon="pi pi-trash"
-										rounded="true"
-										(click)="openDeleteConfirmationDialog(row.key)"></p-button>
-								</div>
-							} @else {
+					<td class="edit-button hide-on-narrow-or-mobile">
+						@if (editedRows.has(row.key)) {
+							<div class="edit-button-group">
 								<p-button
 									severity="secondary"
-									icon="pi pi-pen-to-square"
+									icon="pi pi-check"
 									rounded="true"
-									(click)="startEdit(row)"></p-button>
-							}
-						</td>
-					</tr>
-				</ng-template>
-				<ng-template pTemplate="footer">
-					@if (!loading && t.rows && (t.first ?? 0) + t.rows > t.totalRecords - 1) {
-						<tr class="hide-on-narrow-or-mobile">
-							<td class="component">
-								<p-select
-									[options]="components"
-									optionLabel="label"
-									optionValue="key"
-									[placeholder]="PATCH_TABLE_HEADER_COMPONENT"
-									[appendTo]="'body'"
-									panelStyleClass="dropdown-panel-font component-dropdown-panel"
-									[(ngModel)]="newRecord.component"
-									class="input">
-									<ng-template #selectedItem let-value>
-										@if (getComponentOption(value); as option) {
-											<div class="component-option">
-												<span [class]="option.iconClass + ' ' + option.colorClass">{{
-													option.icon
-												}}</span>
-												<span>{{ option.label }}</span>
-											</div>
-										}
-									</ng-template>
-									<ng-template #item let-option>
+									(click)="completeEdit(row)"></p-button>
+								<p-button
+									severity="secondary"
+									icon="pi pi-trash"
+									rounded="true"
+									(click)="openDeleteConfirmationDialog(row.key)"></p-button>
+							</div>
+						} @else {
+							<p-button
+								severity="secondary"
+								icon="pi pi-pen-to-square"
+								rounded="true"
+								(click)="startEdit(row)"></p-button>
+						}
+					</td>
+				</tr>
+			</ng-template>
+			<ng-template pTemplate="footer">
+				@if (
+				!loading &&
+				t.rows &&
+				(t.first ?? 0) + t.rows > t.totalRecords - 1 &&
+				utilities.getIsUserAlive()
+			) {
+					<tr class="hide-on-narrow-or-mobile">
+						<td class="component">
+							<p-select
+								[options]="components"
+								optionLabel="label"
+								optionValue="key"
+								[placeholder]="PATCH_TABLE_HEADER_COMPONENT"
+								[appendTo]="'body'"
+								panelStyleClass="dropdown-panel-font component-dropdown-panel"
+								[(ngModel)]="newRecord.component"
+								class="input">
+								<ng-template #selectedItem let-value>
+									@if (getComponentOption(value); as option) {
 										<div class="component-option">
 											<span [class]="option.iconClass + ' ' + option.colorClass">{{
 												option.icon
 											}}</span>
 											<span>{{ option.label }}</span>
 										</div>
-									</ng-template>
-								</p-select>
-							</td>
-							<td class="element">
-								<input
-									pInputText
-									type="text"
-									[placeholder]="PATCH_TABLE_HEADER_ELEMENT"
-									[(ngModel)]="newRecord.element"
-									class="input"
-									(keyup.enter)="submitNewRecord()" />
-							</td>
-							<td class="details">
-								<textarea
-									pTextarea
-									variant="filled"
-									fluid
-									[placeholder]="PATCH_TABLE_HEADER_DETAILS"
-									[(ngModel)]="newRecord.details"
-									class="input textarea-input"
-									(keyup.enter)="submitNewRecord()"></textarea>
-							</td>
-							<td class="status">
-								<p-select
-									optionLabel="severity"
-									optionValue="severity"
-									[options]="allSeverity"
-									[appendTo]="'body'"
-									panelStyleClass="dropdown-panel-font"
-									[(ngModel)]="newRecord.status"
-									class="input"
-									(keyup.enter)="submitNewRecord()">
-									<ng-template #selectedItem let-value>
-										@if (value) {
-											<div class="status-option">
-												<i [class]="getSeverityIcon(value.severity)"></i>
-												<span>{{ value.severity }}</span>
-											</div>
-										}
-									</ng-template>
-									<ng-template #item let-option>
+									}
+								</ng-template>
+								<ng-template #item let-option>
+									<div class="component-option">
+										<span [class]="option.iconClass + ' ' + option.colorClass">{{
+											option.icon
+										}}</span>
+										<span>{{ option.label }}</span>
+									</div>
+								</ng-template>
+							</p-select>
+						</td>
+						<td class="element">
+							<input
+								pInputText
+								type="text"
+								[placeholder]="PATCH_TABLE_HEADER_ELEMENT"
+								[(ngModel)]="newRecord.element"
+								class="input"
+								(keyup.enter)="submitNewRecord()" />
+						</td>
+						<td class="details">
+							<textarea
+								pTextarea
+								variant="filled"
+								fluid
+								[placeholder]="PATCH_TABLE_HEADER_DETAILS"
+								[(ngModel)]="newRecord.details"
+								class="input textarea-input"
+								(keyup.enter)="submitNewRecord()"></textarea>
+						</td>
+						<td class="status">
+							<p-select
+								optionLabel="severity"
+								optionValue="severity"
+								[options]="allSeverity"
+								[appendTo]="'body'"
+								panelStyleClass="dropdown-panel-font"
+								[(ngModel)]="newRecord.status"
+								class="input"
+								(keyup.enter)="submitNewRecord()">
+								<ng-template #selectedItem let-value>
+									@if (value) {
 										<div class="status-option">
-											<i [class]="getSeverityIcon(option.severity)"></i>
-											<span>{{ option.severity }}</span>
-										</div>
-									</ng-template>
-								</p-select>
-							</td>
-							<td class="timeStamp" colspan="2">
-								<p-button
-									[label]="BTN_ADD"
-									icon="pi pi-plus"
-									severity="secondary"
-									[disabled]="
-										!newRecord.component.trim() ||
-										!newRecord.details.trim() ||
-										!newRecord.element.trim() ||
-										!newRecord.status
-									"
-									(onClick)="submitNewRecord()"
-									styleClass="input"></p-button>
-							</td>
-						</tr>
-					}
-				</ng-template>
-			</p-table>
-		} @else {
-			@if (releaseNotes$ | async; as notes) {
-				@if (notes[0]; as latest) {
-					<section class="release-hero">
-						<div class="hero-body">
-							<span class="release-badge"
-								>{{ latest.badge }} &middot; {{ latest.version }}</span
-							>
-							<h2 class="hero-title">{{ latest.title }}</h2>
-							<div class="hero-date">{{ latest.date }}</div>
-							<p class="hero-summary">{{ latest.summary }}</p>
-							<div class="release-sections">
-								@for (section of latest.sections; track section.heading) {
-									@if (section.items.length > 0) {
-										<div class="release-section">
-											<div class="section-heading">{{ section.heading }}</div>
-											<ul class="section-items">
-												@for (item of section.items; track item) {
-													<li class="section-item">{{ item }}</li>
-												}
-											</ul>
+											<i [class]="getSeverityIcon(value.severity)"></i>
+											<span>{{ value.severity }}</span>
 										</div>
 									}
-								}
-							</div>
-							<div class="chips">
-								@for (section of latest.sections; track section.heading) {
-									<span class="chip">
-										<span class="dot"></span>{{ section.items.length }}
-										{{ section.heading }}
-									</span>
-								}
-							</div>
-						</div>
-					</section>
-					@if (notes.length > 1) {
-						<div class="previous-label">{{ PATCH_LABEL_PREVIOUS_RELEASES }}</div>
-						<div class="release-list">
-							@for (rel of notes.slice(1); track rel.version) {
-								<div class="release-row">
-									<span class="rel-version">{{ rel.version }}</span>
-									<div class="rel-main">
-										<div class="rel-title">{{ rel.title }}</div>
-										<div class="rel-summary">{{ rel.summary }}</div>
+								</ng-template>
+								<ng-template #item let-option>
+									<div class="status-option">
+										<i [class]="getSeverityIcon(option.severity)"></i>
+										<span>{{ option.severity }}</span>
 									</div>
-									<div class="rel-counts">
-										@for (section of rel.sections.slice(0, 3); track section.heading) {
-											<span class="count"
-												>{{ section.items.length }} {{ section.heading }}</span
-											>
-										}
-									</div>
-									<span class="rel-date">{{ rel.date }}</span>
-								</div>
-							}
-						</div>
-					}
+								</ng-template>
+							</p-select>
+						</td>
+						<td class="timeStamp" colspan="2">
+							<p-button
+								[label]="BTN_ADD"
+								icon="pi pi-plus"
+								severity="secondary"
+								[disabled]="
+									!newRecord.component.trim() ||
+									!newRecord.details.trim() ||
+									!newRecord.element.trim() ||
+									!newRecord.status
+								"
+								(onClick)="submitNewRecord()"
+								styleClass="input"></p-button>
+						</td>
+					</tr>
 				}
-			} @else {
-				<section class="release-hero release-hero--loading">
+			</ng-template>
+		</p-table>
+	} @else {
+		@if (releaseNotes$ | async; as notes) {
+			@if (notes[0]; as latest) {
+				<section class="release-hero">
 					<div class="hero-body">
-						<div class="hero-skeleton-row">
-							<p-skeleton width="9rem" height="1.25rem" borderRadius="999px" />
-						</div>
-						<div class="hero-skeleton-row"><p-skeleton width="20rem" height="2.25rem" /></div>
-						<div class="hero-skeleton-row"><p-skeleton width="7rem" height="0.9rem" /></div>
-						<div class="hero-skeleton-row"><p-skeleton width="100%" height="1rem" /></div>
-						<div class="hero-skeleton-row"><p-skeleton width="85%" height="1rem" /></div>
-						<div class="hero-skeleton-row"><p-skeleton width="70%" height="1rem" /></div>
+						<span class="release-badge"
+							>{{ latest.badge }} &middot; {{ latest.version }}</span
+						>
+						<h2 class="hero-title">{{ latest.title }}</h2>
+						<div class="hero-date">{{ latest.date }}</div>
+						<p class="hero-summary">{{ latest.summary }}</p>
 						<div class="release-sections">
-							@for (_ of [0, 1, 2, 3, 4]; track $index) {
-								<div class="release-section">
-									<div class="hero-skeleton-row">
-										<p-skeleton width="4rem" height="0.75rem" />
+							@for (section of latest.sections; track section.heading) {
+								@if (section.items.length > 0) {
+									<div class="release-section">
+										<div class="section-heading">{{ section.heading }}</div>
+										<ul class="section-items">
+											@for (item of section.items; track item) {
+												<li class="section-item">{{ item }}</li>
+											}
+										</ul>
 									</div>
-									<div class="hero-skeleton-row">
-										<p-skeleton width="100%" height="0.85rem" />
-									</div>
-									<div class="hero-skeleton-row">
-										<p-skeleton width="88%" height="0.85rem" />
-									</div>
-									<div class="hero-skeleton-row">
-										<p-skeleton width="95%" height="0.85rem" />
-									</div>
-									<div class="hero-skeleton-row">
-										<p-skeleton width="75%" height="0.85rem" />
-									</div>
-									<div class="hero-skeleton-row">
-										<p-skeleton width="92%" height="0.85rem" />
-									</div>
-								</div>
+								}
 							}
 						</div>
 						<div class="chips">
-							@for (_ of [0, 1, 2, 3]; track $index) {
-								<p-skeleton width="5.5rem" height="2rem" borderRadius="999px" />
+							@for (section of latest.sections; track section.heading) {
+								<span class="chip">
+									<span class="dot"></span>{{ section.items.length }}
+									{{ section.heading }}
+								</span>
 							}
 						</div>
 					</div>
 				</section>
+				@if (notes.length > 1) {
+					<div class="previous-label">{{ PATCH_LABEL_PREVIOUS_RELEASES }}</div>
+					<div class="release-list">
+						@for (rel of notes.slice(1); track rel.version) {
+							<div class="release-row">
+								<span class="rel-version">{{ rel.version }}</span>
+								<div class="rel-main">
+									<div class="rel-title">{{ rel.title }}</div>
+									<div class="rel-summary">{{ rel.summary }}</div>
+								</div>
+								<div class="rel-counts">
+									@for (section of rel.sections.slice(0, 3); track section.heading) {
+										<span class="count"
+											>{{ section.items.length }} {{ section.heading }}</span
+										>
+									}
+								</div>
+								<span class="rel-date">{{ rel.date }}</span>
+							</div>
+						}
+					</div>
+				}
 			}
+		} @else {
+			<section class="release-hero release-hero--loading">
+				<div class="hero-body">
+					<div class="hero-skeleton-row">
+						<p-skeleton width="9rem" height="1.25rem" borderRadius="999px" />
+					</div>
+					<div class="hero-skeleton-row"><p-skeleton width="20rem" height="2.25rem" /></div>
+					<div class="hero-skeleton-row"><p-skeleton width="7rem" height="0.9rem" /></div>
+					<div class="hero-skeleton-row"><p-skeleton width="100%" height="1rem" /></div>
+					<div class="hero-skeleton-row"><p-skeleton width="85%" height="1rem" /></div>
+					<div class="hero-skeleton-row"><p-skeleton width="70%" height="1rem" /></div>
+					<div class="release-sections">
+						@for (_ of [0, 1, 2, 3, 4]; track $index) {
+							<div class="release-section">
+								<div class="hero-skeleton-row">
+									<p-skeleton width="4rem" height="0.75rem" />
+								</div>
+								<div class="hero-skeleton-row">
+									<p-skeleton width="100%" height="0.85rem" />
+								</div>
+								<div class="hero-skeleton-row">
+									<p-skeleton width="88%" height="0.85rem" />
+								</div>
+								<div class="hero-skeleton-row">
+									<p-skeleton width="95%" height="0.85rem" />
+								</div>
+								<div class="hero-skeleton-row">
+									<p-skeleton width="75%" height="0.85rem" />
+								</div>
+								<div class="hero-skeleton-row">
+									<p-skeleton width="92%" height="0.85rem" />
+								</div>
+							</div>
+						}
+					</div>
+					<div class="chips">
+						@for (_ of [0, 1, 2, 3]; track $index) {
+							<p-skeleton width="5.5rem" height="2rem" borderRadius="999px" />
+						}
+					</div>
+				</div>
+			</section>
 		}
-		<ng-container #dialogComponentContainer></ng-container>
-	</div>
-} @else {
-	<div class="access-denied-wrapper">
-		<blocked-card icon="lock" />
-	</div>
-}
+	}
+	<ng-container #dialogComponentContainer></ng-container>
+</div>

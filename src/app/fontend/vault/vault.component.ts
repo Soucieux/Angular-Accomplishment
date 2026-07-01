@@ -92,10 +92,11 @@ import {
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { GraphCanvasComponent } from './graph-canvas/graph-canvas.component';
+import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 
 @Component({
 	selector: 'vault',
-	imports: [FormsModule, GraphCanvasComponent],
+	imports: [FormsModule, GraphCanvasComponent, BlockedCardComponent],
 	templateUrl: './vault.component.html',
 	styleUrls: ['./vault.component.css']
 })

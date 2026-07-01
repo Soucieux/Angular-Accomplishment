@@ -15,7 +15,7 @@ import { firstValueFrom, Observable, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
-import { DatabaseService } from '../../backend/database-service/database.service';
+import { ConnectedMember, DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
@@ -24,6 +24,18 @@ import {
 	STATS_FIELD_MILESTONES,
 	STATS_FIELD_USERNAME_CHANGED,
 	STATS_FIELD_PASSWORD_CHANGED,
+	STATS_FIELD_CONNECT_CODE,
+	STATS_FIELD_INCOMING_REQUESTS,
+	STATS_FIELD_OUTGOING_REQUESTS,
+	STATS_FIELD_CONNECTIONS,
+	CONNECT_STATUS_PENDING,
+	CONNECT_STATUS_CONNECTED,
+	CONNECT_STATUS_DECLINED,
+	CONNECT_STATUS_LEAVE,
+	CONNECT_ERROR_CODE_NOT_FOUND,
+	CONNECT_ERROR_SELF,
+	CONNECT_ERROR_ALREADY_CONNECTED,
+	CONNECT_ERROR_ALREADY_REQUESTED,
 	SUCCESS,
 	TOAST_WARN
 } from '../../common/constants';
@@ -49,6 +61,31 @@ import {
 	ACCOUNT_MSG_DELETING_ACCOUNT,
 	ACCOUNT_PLACEHOLDER_USERNAME,
 	ACCOUNT_MSG_USERNAME_UPDATED,
+	ACCOUNT_LABEL_CONNECTIONS_TITLE,
+	ACCOUNT_LABEL_CONNECT_CODE,
+	ACCOUNT_LABEL_COPY,
+	ACCOUNT_MSG_CODE_COPIED,
+	ACCOUNT_LABEL_CONNECTED_TITLE,
+	ACCOUNT_PLACEHOLDER_CONNECT_CODE,
+	ACCOUNT_LABEL_SEND_REQUEST,
+	ACCOUNT_LABEL_APPROVE,
+	ACCOUNT_LABEL_DECLINE,
+	ACCOUNT_LABEL_NO_CONNECTIONS,
+	ACCOUNT_LABEL_LINK_ACCOUNT,
+	ACCOUNT_LABEL_REQUESTS,
+	ACCOUNT_STATUS_PENDING,
+	ACCOUNT_STATUS_CONNECTED,
+	ACCOUNT_STATUS_DECLINED,
+	ACCOUNT_STATUS_LEFT,
+	ACCOUNT_MSG_REQUEST_SENT,
+	ACCOUNT_MSG_REQUEST_CANCELED,
+	ACCOUNT_MSG_REQUEST_FAILED,
+	ACCOUNT_MSG_INVALID_CODE,
+	ACCOUNT_MSG_SELF_CODE,
+	ACCOUNT_MSG_ALREADY_CONNECTED,
+	ACCOUNT_MSG_ALREADY_REQUESTED,
+	ACCOUNT_MSG_CONNECTED,
+	ACCOUNT_MSG_DISCONNECTED,
 	ACCOUNT_LABEL_VERIFIED,
 	ACCOUNT_MSG_NO_EMAIL,
 	ACCOUNT_MSG_PASSWORD_MISMATCH,
@@ -102,6 +139,8 @@ import {
 import {
 	AccountMilestone,
 	AccountStat,
+	IncomingConnectRequest,
+	OutgoingConnectRequest,
 	ACCOUNT_STATS,
 	ACCOUNT_STRENGTH_LEVELS
 } from './account.model';
@@ -133,6 +172,20 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_LABEL_DANGER_ZONE_TITLE = ACCOUNT_LABEL_DANGER_ZONE_TITLE;
 	protected readonly LABEL_USERNAME = LABEL_USERNAME;
 	protected readonly ACCOUNT_LABEL_SECURITY_TITLE = ACCOUNT_LABEL_SECURITY_TITLE;
+	protected readonly ACCOUNT_LABEL_CONNECTIONS_TITLE = ACCOUNT_LABEL_CONNECTIONS_TITLE;
+	protected readonly ACCOUNT_LABEL_CONNECT_CODE = ACCOUNT_LABEL_CONNECT_CODE;
+	protected readonly ACCOUNT_LABEL_COPY = ACCOUNT_LABEL_COPY;
+	protected readonly ACCOUNT_LABEL_CONNECTED_TITLE = ACCOUNT_LABEL_CONNECTED_TITLE;
+	protected readonly ACCOUNT_PLACEHOLDER_CONNECT_CODE = ACCOUNT_PLACEHOLDER_CONNECT_CODE;
+	protected readonly ACCOUNT_LABEL_SEND_REQUEST = ACCOUNT_LABEL_SEND_REQUEST;
+	protected readonly ACCOUNT_LABEL_APPROVE = ACCOUNT_LABEL_APPROVE;
+	protected readonly ACCOUNT_LABEL_DECLINE = ACCOUNT_LABEL_DECLINE;
+	protected readonly ACCOUNT_LABEL_NO_CONNECTIONS = ACCOUNT_LABEL_NO_CONNECTIONS;
+	protected readonly ACCOUNT_LABEL_LINK_ACCOUNT = ACCOUNT_LABEL_LINK_ACCOUNT;
+	protected readonly ACCOUNT_LABEL_REQUESTS = ACCOUNT_LABEL_REQUESTS;
+	protected readonly CONNECT_STATUS_CONNECTED = CONNECT_STATUS_CONNECTED;
+	protected readonly CONNECT_STATUS_DECLINED = CONNECT_STATUS_DECLINED;
+	protected readonly CONNECT_STATUS_LEAVE = CONNECT_STATUS_LEAVE;
 	protected readonly ACCOUNT_LABEL_LAST_LOGIN = ACCOUNT_LABEL_LAST_LOGIN;
 	protected readonly ACCOUNT_LABEL_USERNAME_CHANGED = ACCOUNT_LABEL_USERNAME_CHANGED;
 	protected readonly ACCOUNT_LABEL_PASSWORD_CHANGED = ACCOUNT_LABEL_PASSWORD_CHANGED;
@@ -190,6 +243,12 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected lastLoginDate = '';
 	protected usernameChangedDate = '';
 	protected passwordChangedDate = '';
+	protected connectCode = '';
+	protected connectCodeInput = '';
+	protected incomingRequests: IncomingConnectRequest[] = [];
+	protected outgoingRequests: OutgoingConnectRequest[] = [];
+	protected connectedMembers: ConnectedMember[] = [];
+	protected connectBusy = false;
 	protected currentUser$!: Observable<any>;
 	protected usernameInput = '';
 	protected oldPasswordInput = '';
@@ -224,6 +283,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		firstValueFrom(this.currentUser$)
 			.then((user) => {
 				if (!user) return;
+				// Ensure the users doc exists (and carries a connect code) before the live stream reads it.
 				(this.databaseService as CloudbaseService).ensureUserStatsExist().catch(() => {});
 				this.authService
 					.getLastLoginTimestamp()
@@ -252,6 +312,12 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.milestoneList = this.buildMilestoneList(milestones);
 			this.usernameChangedDate = (doc[STATS_FIELD_USERNAME_CHANGED] as string) ?? '';
 			this.passwordChangedDate = (doc[STATS_FIELD_PASSWORD_CHANGED] as string) ?? '';
+			// Connections data lives on this same live user document — real-time, no one-shot loads.
+			this.connectCode = (doc[STATS_FIELD_CONNECT_CODE] as string) ?? '';
+			this.incomingRequests = Utilities.toArray(doc[STATS_FIELD_INCOMING_REQUESTS]) as IncomingConnectRequest[];
+			this.outgoingRequests = Utilities.toArray(doc[STATS_FIELD_OUTGOING_REQUESTS]) as OutgoingConnectRequest[];
+			// Connection records (connected + left) live on the same own document — fully real-time.
+			this.connectedMembers = Utilities.toArray(doc[STATS_FIELD_CONNECTIONS]) as ConnectedMember[];
 			this.isStatsLoaded = true;
 			this.cdr.detectChanges();
 		});
@@ -349,6 +415,113 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 	}
 
+	// ── Connected accounts handlers ────────────────────────────────────────────
+
+	/**
+	 * Copies the user's connect code to the clipboard and confirms with a toast.
+	 */
+	protected async copyConnectCode(): Promise<void> {
+		try {
+			await Utilities.copyToClipboard(this.connectCode);
+			this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_CODE_COPIED);
+		} catch {
+			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+		}
+	}
+
+	/**
+	 * Sends a connect request to the account owning the entered connect code, then clears the input
+	 * and confirms (or warns on a known failure).
+	 */
+	protected async sendConnectRequest(): Promise<void> {
+		const code = this.connectCodeInput.trim();
+		if (!code) return;
+		await this.runConnectAction(async () => {
+			try {
+				const result = await this.databaseService.sendConnectRequest(code);
+				if (result.success) {
+					this.connectCodeInput = '';
+					this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_REQUEST_SENT);
+				} else {
+					this.dialogService.showToast(TOAST_WARN, this.connectErrorMessage(result.error));
+				}
+			} catch {
+				this.dialogService.showToast(TOAST_WARN, ACCOUNT_MSG_REQUEST_FAILED);
+			}
+		});
+	}
+
+	/**
+	 * Approves a pending connect request, linking the accounts, then refreshes the lists.
+	 *
+	 * @param fromOpenid - The openid of the requesting account.
+	 */
+	protected async approveRequest(fromOpenid: string): Promise<void> {
+		await this.runConnectAction(async () => {
+			try {
+				const result = await this.databaseService.respondConnectRequest(fromOpenid, true);
+				if (result.success) this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_CONNECTED);
+			} catch {
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+			}
+		});
+	}
+
+	/**
+	 * Declines a pending connect request, then refreshes the request list.
+	 *
+	 * @param fromOpenid - The openid of the requesting account.
+	 */
+	protected async declineRequest(fromOpenid: string): Promise<void> {
+		await this.runConnectAction(async () => {
+			try {
+				await this.databaseService.respondConnectRequest(fromOpenid, false);
+			} catch {
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+			}
+		});
+	}
+
+	/**
+	 * Handles the × on a connected account. A still-connected row leaves the connection (removing the
+	 * link on both sides and marking both records 'leave'); an already-left row is cleared from the
+	 * user's own list. The live stream updates the row either way.
+	 *
+	 * @param member - The connection record, carrying its openid and status.
+	 */
+	protected async onConnectionRemove(member: ConnectedMember): Promise<void> {
+		await this.runConnectAction(async () => {
+			try {
+				if (member.status === CONNECT_STATUS_LEAVE) {
+					await this.databaseService.clearConnection(member.openid);
+					return;
+				}
+				const result = await this.databaseService.disconnect(member.openid);
+				if (result.success) this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_DISCONNECTED);
+			} catch {
+				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+			}
+		});
+	}
+
+	/**
+	 * Handles the × on a sent request. A still-pending request is cancelled (withdrawn from both
+	 * sides) with a toast; a resolved (connected/declined) row is just cleared from the user's list.
+	 * The live stream removes the row either way.
+	 *
+	 * @param request - The sent-request entry, carrying its target openid and status.
+	 */
+	protected async removeOutgoingRequest(request: OutgoingConnectRequest): Promise<void> {
+		await this.runConnectAction(async () => {
+			if (request.status === CONNECT_STATUS_PENDING) {
+				await this.databaseService.cancelConnectRequest(request.toOpenid).catch(() => {});
+				this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_REQUEST_CANCELED);
+			} else {
+				await this.databaseService.clearOutgoingRequest(request.toOpenid).catch(() => {});
+			}
+		});
+	}
+
 	/**
 	 * Toggles the old-password field between masked and plain-text display.
 	 */
@@ -404,6 +577,46 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── Private helpers ───────────────────────────────────────────────────────
 
 	/**
+	 * Runs a connection action under a single-flight guard so rapid repeat clicks cannot fire duplicate
+	 * requests. Ignores the call while another connection action is in flight, and always clears the
+	 * busy flag when the action settles.
+	 *
+	 * @param action - The connection action to run exclusively.
+	 */
+	private async runConnectAction(action: () => Promise<void>): Promise<void> {
+		if (this.connectBusy) return;
+		this.connectBusy = true;
+		this.cdr.detectChanges();
+		try {
+			await action();
+		} finally {
+			this.connectBusy = false;
+			this.cdr.detectChanges();
+		}
+	}
+
+	/**
+	 * Maps a connect Cloud Function error code to a user-facing message, so raw codes are never shown.
+	 *
+	 * @param code - The error code returned by the send-request Cloud Function, if any.
+	 * @returns The localized message for the code, or a generic failure message when unrecognised.
+	 */
+	private connectErrorMessage(code: string | undefined): string {
+		switch (code) {
+			case CONNECT_ERROR_CODE_NOT_FOUND:
+				return ACCOUNT_MSG_INVALID_CODE;
+			case CONNECT_ERROR_SELF:
+				return ACCOUNT_MSG_SELF_CODE;
+			case CONNECT_ERROR_ALREADY_CONNECTED:
+				return ACCOUNT_MSG_ALREADY_CONNECTED;
+			case CONNECT_ERROR_ALREADY_REQUESTED:
+				return ACCOUNT_MSG_ALREADY_REQUESTED;
+			default:
+				return ACCOUNT_MSG_REQUEST_FAILED;
+		}
+	}
+
+	/**
 	 * Converts the raw milestones map from the per-user stats doc into a sorted
 	 * list of AccountMilestone objects. Entries are sorted newest first by their
 	 * storage date (YYYY-MM-DD), and the date is converted to a human-readable
@@ -445,6 +658,28 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	// ── Template helper methods ───────────────────────────────────────────────
+
+	/**
+	 * Gets the localized status label for a connection record.
+	 *
+	 * @param status - The stored connection status value.
+	 * @returns The display label — "Left" for a left connection, otherwise "Connected".
+	 */
+	protected connectionStatusLabel(status: string | undefined): string {
+		return status === CONNECT_STATUS_LEAVE ? ACCOUNT_STATUS_LEFT : ACCOUNT_STATUS_CONNECTED;
+	}
+
+	/**
+	 * Gets the localized display label for a sent-request status.
+	 *
+	 * @param status - The stored request status value.
+	 * @returns The display label for the status.
+	 */
+	protected outgoingStatusLabel(status: string): string {
+		if (status === CONNECT_STATUS_CONNECTED) return ACCOUNT_STATUS_CONNECTED;
+		if (status === CONNECT_STATUS_DECLINED) return ACCOUNT_STATUS_DECLINED;
+		return ACCOUNT_STATUS_PENDING;
+	}
 
 	/**
 	 * Gets the strength level index (0–4) for the given password based on its length.

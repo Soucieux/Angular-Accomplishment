@@ -41,8 +41,8 @@
 
 		<!-- 2×2 card grid -->
 		<div class="account-grid">
-			<!-- Identity & Security -->
-			<div class="account-card">
+			<!-- Identity -->
+			<div class="account-card account-card--wide">
 				<div class="card-header">
 					<span class="material-symbols-outlined card-icon">shield_person</span>
 					<span class="card-title">{{ ACCOUNT_LABEL_IDENTITY_TITLE }}</span>
@@ -158,16 +158,15 @@
 					</div>
 					<div class="field-group">
 						<span class="skeleton skeleton-identity-label"></span>
-						<div class="skeleton skeleton-identity-input"></div>
-						<div class="skeleton skeleton-identity-input"></div>
-						<div class="skeleton skeleton-identity-input"></div>
-						<div class="skeleton skeleton-identity-btn"></div>
+						@for (placeholder of [1, 2, 3, 4, 5]; track $index) {
+							<div class="skeleton skeleton-identity-input"></div>
+						}
 					</div>
 				}
 			</div>
 
 			<!-- Inner World -->
-			<div class="account-card">
+			<div class="account-card account-card--wide">
 				<div class="card-header">
 					<span class="material-symbols-outlined card-icon">hub</span>
 					<span class="card-title">{{ ACCOUNT_LABEL_INNER_WORLD_TITLE }}</span>
@@ -182,7 +181,13 @@
 								<span class="stat-label">{{ stat.label }}</span>
 								<span class="stat-value"
 									>{{ stat.value }}
-									{{ ACTIVE_LOCALE === 'zh' ? stat.unit : (stat.value === 1 ? stat.unit : stat.unit + 's') }}</span
+									{{
+										ACTIVE_LOCALE === 'zh'
+											? stat.unit
+											: stat.value === 1
+												? stat.unit
+												: stat.unit + 's'
+									}}</span
 								>
 							</div>
 						}
@@ -256,9 +261,135 @@
 					</div>
 				} @else {
 					<div class="security-log-entries">
-						<div class="skeleton skeleton-security-log-row"></div>
-						<div class="skeleton skeleton-security-log-row"></div>
-						<div class="skeleton skeleton-security-log-row"></div>
+						@for (placeholder of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track $index) {
+							<div class="skeleton skeleton-security-log-row"></div>
+						}
+					</div>
+				}
+			</div>
+
+			<!-- Connections -->
+			<div class="account-card account-card--connections">
+				<div class="card-header">
+					<span class="material-symbols-outlined card-icon">groups</span>
+					<span class="card-title">{{ ACCOUNT_LABEL_CONNECTIONS_TITLE }}</span>
+				</div>
+				@if (isStatsLoaded) {
+					<div class="field-group">
+						<label class="field-label">{{ ACCOUNT_LABEL_CONNECT_CODE }}</label>
+						<div class="field-row">
+							<span class="connect-code-value">{{ connectCode || '—' }}</span>
+							<button class="save-button" (click)="copyConnectCode()">
+								{{ ACCOUNT_LABEL_COPY }}
+							</button>
+						</div>
+					</div>
+
+					<div class="connected-accounts">
+						<div class="connected-section-label">{{ ACCOUNT_LABEL_LINK_ACCOUNT }}</div>
+						<div class="field-row connect-input-row">
+							<input
+								class="account-input"
+								type="text"
+								[(ngModel)]="connectCodeInput"
+								[placeholder]="ACCOUNT_PLACEHOLDER_CONNECT_CODE"
+								(keyup.enter)="sendConnectRequest()" />
+							<button
+								class="save-button"
+								[disabled]="connectBusy"
+								(click)="sendConnectRequest()">
+								{{ ACCOUNT_LABEL_SEND_REQUEST }}
+							</button>
+						</div>
+
+						@if (incomingRequests.length || outgoingRequests.length) {
+							<div class="connected-section-label">{{ ACCOUNT_LABEL_REQUESTS }}</div>
+							@for (request of incomingRequests; track request.fromOpenid) {
+								<div class="connected-row">
+									<span class="connected-name">{{
+										request.fromName || request.fromOpenid
+									}}</span>
+									<div class="connected-actions">
+										<button
+											class="connect-approve"
+											[disabled]="connectBusy"
+											(click)="approveRequest(request.fromOpenid)">
+											{{ ACCOUNT_LABEL_APPROVE }}
+										</button>
+										<button
+											class="connect-decline"
+											[disabled]="connectBusy"
+											(click)="declineRequest(request.fromOpenid)">
+											{{ ACCOUNT_LABEL_DECLINE }}
+										</button>
+									</div>
+								</div>
+							}
+							@for (request of outgoingRequests; track request.toOpenid) {
+								<div class="connected-row">
+									<span class="connected-name">{{
+										request.toCode || request.toOpenid
+									}}</span>
+									<div class="connected-actions">
+										<span
+											class="connect-status"
+											[class.connect-status-connected]="
+												request.status === CONNECT_STATUS_CONNECTED
+											"
+											[class.connect-status-declined]="
+												request.status === CONNECT_STATUS_DECLINED
+											">
+											{{ outgoingStatusLabel(request.status) }}
+										</span>
+										<button
+											class="connect-decline"
+											[disabled]="connectBusy"
+											(click)="removeOutgoingRequest(request)">
+											<span class="material-symbols-outlined" style="font-size: 14px"
+												>close</span
+											>
+										</button>
+									</div>
+								</div>
+							}
+						}
+
+						<div class="connected-section-label">{{ ACCOUNT_LABEL_CONNECTED_TITLE }}</div>
+						@if (connectedMembers.length) {
+							@for (member of connectedMembers; track member.openid) {
+								<div class="connected-row">
+									<span class="connected-name">{{ member.name || member.openid }}</span>
+									<div class="connected-actions">
+										<span
+											class="connect-status"
+											[class.connect-status-connected]="
+												member.status !== CONNECT_STATUS_LEAVE
+											"
+											[class.connect-status-declined]="
+												member.status === CONNECT_STATUS_LEAVE
+											">
+											{{ connectionStatusLabel(member.status) }}
+										</span>
+										<button
+											class="connect-decline"
+											[disabled]="connectBusy"
+											(click)="onConnectionRemove(member)">
+											<span class="material-symbols-outlined" style="font-size: 14px"
+												>close</span
+											>
+										</button>
+									</div>
+								</div>
+							}
+						} @else {
+							<div class="connected-empty">{{ ACCOUNT_LABEL_NO_CONNECTIONS }}</div>
+						}
+					</div>
+				} @else {
+					<div class="security-log-entries">
+						@for (placeholder of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track $index) {
+							<div class="skeleton skeleton-security-log-row"></div>
+						}
 					</div>
 				}
 			</div>

@@ -18,6 +18,19 @@ export interface AccountStrengthLevel {
 	minLength: number;
 }
 
+export interface IncomingConnectRequest {
+	fromOpenid: string;
+	fromName: string;
+	ts: number;
+}
+
+export interface OutgoingConnectRequest {
+	toOpenid: string;
+	toCode: string;
+	status: string;
+	ts: number;
+}
+
 // label + unit are user-facing and vary by language — supplied from locale in the component (recipe pattern).
 export const ACCOUNT_STATS: Omit<AccountStat, 'label' | 'unit'>[] = [
 	{ icon: 'live_tv', gradient: 'linear-gradient(135deg,#11998e,#38ef7d)', value: 0, field: 'totalFilms' },

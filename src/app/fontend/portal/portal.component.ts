@@ -186,7 +186,6 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	protected linksLoading = true;
 	protected hoveredLinkId: string | null = null;
-	protected readonly isAdmin = CloudbaseService.userHasAllRights();
 	protected sharedFilteredLinks: PortalLink[] = [];
 	protected personalFilteredLinks: PortalLink[] = [];
 
@@ -223,24 +222,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 			// ── Subscriptions started on init ────────────────────────────────────
 			this.currentDay = new Date().getDate();
-			if (this.isAdmin) {
-				const dateCalculatorObservable = this.databaseService.getDateCalculatorTableDetails();
-				this.dateCalculatorSub = dateCalculatorObservable.subscribe(async (rows) => {
-					// Need deep copy here so that we are not copying references
-					this.originalDateCalculatorRows = structuredClone(rows);
-					// Identify rows by content — CloudBase watch() does not guarantee insertion order.
-					this.updatedDateCalculatorRows = structuredClone(rows).filter((row: any) => 'first' in row);
-					this.isNextMonth = rows.find((row: any) => 'isNextMonth' in row)?.isNextMonth ?? false;
-					this.dateCalculatorLoading = false;
-					if (!this.chargedCellsInitialized) {
-						await this.updateChargedCells();
-						this.chargedCellsInitialized = true;
-					}
-					this.refreshConfirmedCount();
-					// markForCheck: async callback runs outside Angular's OnPush zone
-					this.cdr.markForCheck();
-				});
-			}
+			this.startDateCalculatorSubIfAdmin();
 
 			// ── Links and categories subscriptions ───────────────────────────────
 			this.linksSub = this.databaseService.getUsefulLinks().subscribe({
@@ -270,8 +252,15 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			});
 			/* Subscribe directly to the auth-alive stream so the links column
 			   switches between the real content and the access-denied card
-			   immediately on login/logout — without waiting for a zone event. */
+			   immediately on login/logout — without waiting for a zone event. Also
+			   re-evaluates the date calculator, since the async role fetch may resolve
+			   (or the user may sign out) after this component was already constructed. */
 			this.userAliveSub = this.utilities.getIsUserAlive$().subscribe(() => {
+				if (this.isAdmin) {
+					this.startDateCalculatorSubIfAdmin();
+				} else {
+					this.stopDateCalculatorSub();
+				}
 				// markForCheck required: auth stream fires outside Angular's zone.
 				this.cdr.markForCheck();
 			});
@@ -306,6 +295,45 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	// ── Date Calculator interaction handlers ─────────────────────────────────
 
 	/**
+	 * Starts the date calculator subscription if the current user is an admin and it
+	 * has not already been started. Safe to call repeatedly — called both at init and
+	 * on every auth-alive change, since the async role fetch may resolve after this
+	 * component was already constructed.
+	 */
+	private startDateCalculatorSubIfAdmin(): void {
+		if (!this.isAdmin || this.dateCalculatorSub) return;
+		const dateCalculatorObservable = this.databaseService.getDateCalculatorTableDetails();
+		this.dateCalculatorSub = dateCalculatorObservable.subscribe(async (rows) => {
+			// Need deep copy here so that we are not copying references
+			this.originalDateCalculatorRows = structuredClone(rows);
+			// Identify rows by content — CloudBase watch() does not guarantee insertion order.
+			this.updatedDateCalculatorRows = structuredClone(rows).filter((row: any) => 'first' in row);
+			this.isNextMonth = rows.find((row: any) => 'isNextMonth' in row)?.isNextMonth ?? false;
+			this.dateCalculatorLoading = false;
+			if (!this.chargedCellsInitialized) {
+				await this.updateChargedCells();
+				this.chargedCellsInitialized = true;
+			}
+			this.refreshConfirmedCount();
+			// markForCheck: async callback runs outside Angular's OnPush zone
+			this.cdr.markForCheck();
+		});
+	}
+
+	/**
+	 * Stops the date calculator subscription and clears its state so a subsequent
+	 * non-admin user (signed in without a page reload) never sees stale admin-only data.
+	 */
+	private stopDateCalculatorSub(): void {
+		this.dateCalculatorSub?.unsubscribe();
+		this.dateCalculatorSub = undefined;
+		this.originalDateCalculatorRows = [];
+		this.updatedDateCalculatorRows = [];
+		this.chargedCellsInitialized = false;
+		this.dateCalculatorLoading = true;
+	}
+
+	/**
 	 * Recomputes and caches the count of date calculator cells marked as charged.
 	 * Called whenever rows or any cell's isCharged flag changes.
 	 */
@@ -313,6 +341,17 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		this.confirmedCount = (this.updatedDateCalculatorRows ?? [])
 			.flatMap((row: any) => this.fields.map((field: string) => row[field] as { isCharged: boolean }))
 			.filter((cell) => cell?.isCharged === true).length;
+	}
+
+	/**
+	 * Whether the current user is an administrator. Read live on every access rather than
+	 * cached, so it reflects the correct value once the async role fetch resolves after
+	 * this component was constructed.
+	 *
+	 * @returns True if the current user has administrator rights.
+	 */
+	protected get isAdmin(): boolean {
+		return CloudbaseService.userHasAllRights();
 	}
 
 	/**
@@ -744,7 +783,8 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				url: link.url,
 				title: link.title,
 				category: link.category ?? '',
-				isPinned: link.isPinned ?? false
+				isPinned: link.isPinned ?? false,
+				isShared: link.isShared ?? false
 			}
 		);
 	}
@@ -784,7 +824,8 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 						category: formData.category,
 						visitCount: 0,
 						createdAt: new Date().toISOString(),
-						isPinned: formData.isPinned
+						isPinned: formData.isPinned,
+						isShared: formData.isShared
 					});
 					LOG.info(this.className, `${PORTAL_LOG_LINK_SAVED} ${finalUrl}`);
 					this.dialogService.showToast(SUCCESS, PORTAL_MSG_LINK_SAVED);
@@ -994,8 +1035,8 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	/**
 	 * Partitions `this.links` in a single pass, updating both the shared and personal
-	 * filtered-link caches. Shared links have no `_openid`; personal links belong to the
-	 * signed-in user and are additionally filtered by the active category when one is set.
+	 * filtered-link caches. Shared links carry `isShared: true`; personal links belong to
+	 * the signed-in user and are additionally filtered by the active category when one is set.
 	 *
 	 * {@link selectCategory} - Updates both caches whenever the active category changes.
 	 */
@@ -1004,7 +1045,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		const shared: PortalLink[] = [];
 		const personal: PortalLink[] = [];
 		for (const link of this.links) {
-			if (!link._openid) {
+			if (link.isShared) {
 				shared.push(link);
 			} else if (link._openid === userId) {
 				personal.push(link);

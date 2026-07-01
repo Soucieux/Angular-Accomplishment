@@ -48,9 +48,12 @@ import {
 	REMINDER_VALUE_KEY_DATE,
 	REMINDER_VALUE_KEY_END_TIME,
 	REMINDER_VALUE_KEY_LINK,
+	REMINDER_VALUE_KEY_SHARED,
 	REMINDER_VALUE_KEY_START_TIME,
 	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
+	STATS_FIELD_SHARED_WITH,
+	STATS_FIELD_CONNECTIONS,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_TOTAL_REMINDERS,
 	STATS_FIELD_REMINDER_UPCOMING,
@@ -63,6 +66,8 @@ import {
 	REMINDER_ADD_TIME_LABEL,
 	REMINDER_CHIP_CUSTOM,
 	REMINDER_CHIP_SHARED,
+	REMINDER_SHARE_LABEL,
+	REMINDER_SHARE_TOOLTIP_PENDING,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
 	REMINDER_DUE_SOON_LABEL,
@@ -94,7 +99,7 @@ import {
 	TagEditSession,
 	TimeOption
 } from './reminder.model';
-import { DatabaseService } from '../../backend/database-service/database.service';
+import { ConnectedMember, DatabaseService } from '../../backend/database-service/database.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TimeoutService } from '../../common/timeout/timeout.service';
@@ -157,6 +162,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
 	protected readonly REMINDER_CHIP_CUSTOM = REMINDER_CHIP_CUSTOM;
 	protected readonly REMINDER_CHIP_SHARED = REMINDER_CHIP_SHARED;
+	protected readonly REMINDER_SHARE_LABEL = REMINDER_SHARE_LABEL;
+	protected readonly REMINDER_SHARE_TOOLTIP_PENDING = REMINDER_SHARE_TOOLTIP_PENDING;
 	protected readonly NAV_LABEL_REMINDER = NAV_LABEL_REMINDER;
 	private readonly categoryColorMap = REMINDER_CATEGORY_COLOR_MAP;
 	private readonly baseCategorySet = new Set<string>(REMINDER_KNOWN_CATEGORIES);
@@ -173,6 +180,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected items: ReminderItem[] = [];
 	protected filterBarTags: string[] = [];
 	protected hasSharedItems = false;
+	protected hasConnections = false;
 	protected memberProfiles: Record<string, string> = {};
 	private currentUserId = '';
 	protected page = 0;
@@ -188,7 +196,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		link: '',
 		tag: LABEL_PERSONAL,
 		startTime: null,
-		endTime: null
+		endTime: null,
+		isShared: false
 	};
 	protected saveIndicator = false;
 	protected sharedFilterActive = false;
@@ -197,6 +206,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected tagPickerCustomMode = false;
 	private originalItems: ReminderDbRecord[] = [];
 	private itemsSub?: Subscription;
+	private statsSub?: Subscription;
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 
 	constructor(
@@ -217,14 +227,19 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			this.currentUserId = CloudbaseService.getUserId() ?? '';
-			// Load creator display names for shared items; fills in asynchronously, no-op when ungrouped.
-			this.databaseService
-				.getGroupMemberProfiles()
-				.then((profiles) => {
-					this.memberProfiles = profiles;
-					this.cdr.detectChanges();
-				})
-				.catch(() => {});
+			/* Derive connection-dependent state from the live user document so it stays current even when
+			   the other account approves the link while this page is open: creator display names for
+			   shared items (from connections) and whether the share toggle is unlocked (from sharedWith). */
+			this.statsSub = (this.databaseService as CloudbaseService).getUserStats().subscribe((doc) => {
+				if (!doc) return;
+				const connections = Utilities.toArray(doc[STATS_FIELD_CONNECTIONS]) as ConnectedMember[];
+				this.memberProfiles = Object.fromEntries(
+					connections.map((entry) => [entry.openid, entry.name ?? ''])
+				);
+				this.hasConnections = (Utilities.toArray(doc[STATS_FIELD_SHARED_WITH]) as string[]).length > 0;
+				if (!this.hasConnections) this.sharedFilterActive = false;
+				this.cdr.detectChanges();
+			});
 			this.timeoutService.start(TIMEOUT_KEY_REMINDER, () => {
 				this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
 			});
@@ -241,8 +256,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 					tag: record.tag ?? '',
 					startTime: record.startTime ?? null,
 					endTime: record.endTime ?? null,
-					// A reminder is "shared" when owned by another group member, not the current user.
-					isShared: (record._openid ?? '') !== this.currentUserId
+					// isShared = marked shared on creation (DB flag); isFromOtherMember = owned by another member.
+					isShared: record.isShared ?? false,
+					isFromOtherMember: (record._openid ?? '') !== this.currentUserId
 				}));
 				this.filterBarTags = this.computeFilterBarTags();
 				this.hasSharedItems = this.items.some((item) => item.isShared);
@@ -286,6 +302,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.timeoutService.clear(TIMEOUT_KEY_REMINDER);
 		this.gridResizeObserver?.disconnect();
 		this.itemsSub?.unsubscribe();
+		this.statsSub?.unsubscribe();
 		Object.values(this.saveIndicatorTimeouts).forEach(clearTimeout);
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
@@ -430,11 +447,13 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	): Promise<void> {
 		try {
 			// Step 1: Persist the single-value change to CloudBase
+			const item = this.items.find((candidate) => candidate.key === entryKey);
 			await this.databaseService.updateReminderTable(
 				entryKey,
 				valueKey,
 				singleValue,
-				this.items.find((item) => item.key === entryKey)?.text ?? ''
+				item?.text ?? '',
+				item?.isShared ?? false
 			);
 
 			// Step 2: Flash the save indicator
@@ -458,9 +477,13 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param entryKey - The CloudBase document key identifying the entry to remove.
 	 */
 	private async removeRecordFromDatabase(entryKey: string): Promise<void> {
-		const itemText = this.items.find((item) => item.key === entryKey)?.text ?? '';
+		const item = this.items.find((candidate) => candidate.key === entryKey);
 		try {
-			await this.databaseService.removeRecordFromReminderTable(entryKey, itemText);
+			await this.databaseService.removeRecordFromReminderTable(
+				entryKey,
+				item?.text ?? '',
+				item?.isShared ?? false
+			);
 			this.triggerSaveIndicator();
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
@@ -477,7 +500,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			link: '',
 			tag: LABEL_PERSONAL,
 			startTime: null,
-			endTime: null
+			endTime: null,
+			isShared: false
 		};
 		this.editingStartTime = null;
 		this.editingEndTime = null;
@@ -643,10 +667,11 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Activates the shared filter, showing only shared reminder items, and resets to the first page.
+	 * Toggles the shared filter: activating shows only shared reminder items, deactivating
+	 * returns to the full item list. Clears any tag filter and resets to the first page.
 	 */
-	protected applySharedFilter(): void {
-		this.sharedFilterActive = true;
+	protected toggleSharedFilter(): void {
+		this.sharedFilterActive = !this.sharedFilterActive;
 		this.tagFilter = new Set<string>();
 		this.page = 0;
 	}
@@ -816,6 +841,10 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			text: this.newItem.text.trim(),
 			tag: this.newItem.tag
 		};
+		// Persist the shared flag only when toggled on (the toggle is gated on group membership).
+		if (this.newItem.isShared) {
+			newRecord[REMINDER_VALUE_KEY_SHARED] = true;
+		}
 
 		// Step 2: Include optional fields unless text-only mode
 		if (!textOnly) {
@@ -1427,6 +1456,15 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected selectNewItemCategory(tag: string): void {
 		this.newItem.tag = tag;
+	}
+
+	/**
+	 * Toggles whether the new item will be marked shared on creation. No-op when the user has no
+	 * connections, since sharing requires a linked account.
+	 */
+	protected toggleNewItemShared(): void {
+		if (!this.hasConnections) return;
+		this.newItem.isShared = !this.newItem.isShared;
 	}
 
 	/**

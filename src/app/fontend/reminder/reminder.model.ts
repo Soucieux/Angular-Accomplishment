@@ -7,7 +7,10 @@ export interface ReminderItem {
 	tag: string;
 	startTime: string | null;
 	endTime: string | null;
+	/** True when the item was marked shared on creation (stored on the document). */
 	isShared?: boolean;
+	/** True when the item is owned by another group member, not the current user (derived). */
+	isFromOtherMember?: boolean;
 }
 
 export type ReminderValueKey = 'text' | 'date' | 'link' | 'tag' | 'startTime' | 'endTime';
@@ -22,6 +25,7 @@ export interface ReminderDbRecord {
 	tag: string;
 	startTime?: string | null;
 	endTime?: string | null;
+	isShared?: boolean;
 }
 
 /** A single option entry for the start/end time p-select dropdowns. */
@@ -46,6 +50,7 @@ export interface NewItem {
 	tag: string;
 	startTime: string | null;
 	endTime: string | null;
+	isShared: boolean;
 }
 
 /** Tag categories available for reminder items. */

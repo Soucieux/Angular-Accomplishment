@@ -36,11 +36,11 @@
 		<!-- ── Filter bar ─────────────────────────────────────────────── -->
 		<div class="rm-filter-bar">
 			<span class="rm-filter-label">{{ REMINDER_FILTER_LABEL }}</span>
-			@if (hasSharedItems) {
+			@if (hasConnections && hasSharedItems) {
 				<button
 					class="rm-shared-filter-button"
 					[class.rm-shared-filter-button-active]="sharedFilterActive"
-					(click)="applySharedFilter()">
+					(click)="toggleSharedFilter()">
 					<span class="material-symbols-outlined rm-shared-filter-icon">group</span>
 					{{ REMINDER_CHIP_SHARED }}
 				</button>
@@ -96,7 +96,7 @@
 						class="rm-card"
 						[class.rm-card-done]="isDone(item.key)"
 						[class.rm-card-due-soon]="isDueSoon(item) && !isDone(item.key)"
-						[class.rm-card-shared]="item.isShared"
+						[class.rm-card-shared]="item.isShared || item.isFromOtherMember"
 						[style.--card-color]="tagColor(item.tag)">
 						<!-- Top: checkbox + title + category label + delete -->
 						<div class="rm-card-top">
@@ -122,13 +122,27 @@
 										(click)="openTagPicker($event, item)">
 										{{ categoryDisplayLabel(item.tag) || REMINDER_CHIP_CUSTOM }}
 									</div>
-									@if (item.isShared) {
+									@if (item.isFromOtherMember) {
 										<span class="rm-shared-badge-wrap">
-											<span class="material-symbols-outlined rm-shared-badge">group</span>
+											<span class="material-symbols-outlined rm-shared-badge"
+												>group</span
+											>
 											@if (creatorLabel(item)) {
 												<span class="rm-shared-by">{{ creatorLabel(item) }}</span>
 											}
 										</span>
+									} @else if (item.isShared && hasConnections) {
+										<span
+											class="material-symbols-outlined rm-shared-badge rm-shared-badge-own"
+											>group</span
+										>
+									} @else if (item.isShared) {
+										<span
+											class="material-symbols-outlined rm-shared-badge rm-shared-badge-pending"
+											[pTooltip]="REMINDER_SHARE_TOOLTIP_PENDING"
+											tooltipPosition="top"
+											>group</span
+										>
 									}
 								</div>
 							</div>
@@ -451,6 +465,17 @@
 								>schedule</span
 							>
 							{{ REMINDER_ADD_TIME_LABEL }}
+						</button>
+					}
+					@if (hasConnections) {
+						<button
+							class="rm-add-field-button rm-share-toggle"
+							[class.rm-share-toggle-active]="newItem.isShared"
+							(click)="toggleNewItemShared()">
+							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+								>group</span
+							>
+							{{ REMINDER_SHARE_LABEL }}
 						</button>
 					}
 					<div class="rm-new-card-divider"></div>

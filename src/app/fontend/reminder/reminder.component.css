@@ -184,24 +184,29 @@
 	text-transform: uppercase;
 	padding: 5px 11px;
 	border-radius: 7px;
-	border: 1.5px solid #7c3aed;
-	background: transparent;
+	border: 1.5px solid rgba(124, 58, 237, 0.55);
+	background: rgba(124, 58, 237, 0.07);
 	color: #7c3aed;
 	cursor: pointer;
 	white-space: nowrap;
 	line-height: 1;
 	transition:
-		background 0.12s,
-		color 0.12s;
+		background 0.14s,
+		color 0.14s,
+		box-shadow 0.14s,
+		border-color 0.14s;
 }
 
 .rm-shared-filter-button:hover {
-	background: rgba(124, 58, 237, 0.08);
+	background: rgba(124, 58, 237, 0.13);
+	border-color: #7c3aed;
 }
 
 .rm-shared-filter-button-active {
-	background: #7c3aed !important;
+	background: linear-gradient(135deg, #7c3aed 0%, #9d5cff 100%) !important;
+	border-color: transparent !important;
 	color: #fff !important;
+	box-shadow: 0 3px 10px rgba(124, 58, 237, 0.3);
 }
 
 .rm-shared-filter-icon {
@@ -363,6 +368,7 @@
 }
 
 .rm-shared-badge {
+	margin-top: 5px;
 	font-size: 12px;
 	color: #7c3aed;
 	opacity: 0.75;
@@ -376,8 +382,24 @@
 	flex-shrink: 0;
 }
 
+/* Own item you marked shared — muted marker, distinct from another member's vivid badge. */
+.rm-shared-badge-own {
+	color: #94a3b8;
+	opacity: 0.7;
+}
+
+/* Armed to share but no connections yet — dashed ring signals "pending, not yet active". */
+.rm-shared-badge-pending {
+	color: #94a3b8;
+	opacity: 0.6;
+	border: 1px dashed rgba(148, 163, 184, 0.6);
+	border-radius: 999px;
+	cursor: help;
+}
+
 .rm-shared-by {
-	font-size: 11px;
+	margin-top: 3px;
+	font-size: 12px;
 	font-weight: 600;
 	color: #7c3aed;
 	opacity: 0.85;
@@ -387,7 +409,8 @@
 	text-overflow: ellipsis;
 }
 
-/* Reminders owned by another group member get a faint lavender tint to set them apart from own cards. */
+/* All shared reminders — your own marked-shared items and those received from a connection —
+   get a faint lavender tint to set them apart from private cards. */
 .rm-card-shared {
 	background: #faf8ff;
 	border-color: rgba(124, 58, 237, 0.18);
@@ -605,6 +628,37 @@
 	color: #475569;
 	border-color: rgba(0, 0, 0, 0.25);
 	background: rgba(0, 0, 0, 0.02);
+}
+
+/* New-item share toggle — a premium, feature-gated control that mirrors the shared filter chip:
+   a solid purple outline once an account is linked, filling purple when active; dimmed and locked
+   (not-allowed) until the user connects an account. Placed after the base button so it wins the cascade. */
+.rm-share-toggle {
+	color: #7c3aed;
+	border: 1.5px solid rgba(124, 58, 237, 0.55);
+	background: rgba(124, 58, 237, 0.07);
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	transition:
+		background 0.14s,
+		color 0.14s,
+		box-shadow 0.14s,
+		border-color 0.14s;
+}
+
+.rm-share-toggle:hover {
+	color: #7c3aed;
+	border-color: #7c3aed;
+	background: rgba(124, 58, 237, 0.13);
+}
+
+.rm-share-toggle-active,
+.rm-share-toggle-active:hover {
+	background: linear-gradient(135deg, #7c3aed 0%, #9d5cff 100%);
+	border-color: transparent;
+	color: #fff !important;
+	box-shadow: 0 3px 10px rgba(124, 58, 237, 0.3);
 }
 
 /* ── Delete button ───────────────────────────────────────────────────────── */

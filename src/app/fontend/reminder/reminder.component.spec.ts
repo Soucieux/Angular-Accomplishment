@@ -48,14 +48,12 @@ describe('ReminderComponent', () => {
 	beforeEach(async () => {
 		mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
 			'getReminderTableDetails',
-			'getGroupMemberProfiles',
 			'updateReminderTable',
 			'removeRecordFromReminderTable',
 			'addNewRecordToReminder',
 			'updateStatisticsFields'
 		]);
 		mockDb.getReminderTableDetails.and.returnValue(of([]));
-		mockDb.getGroupMemberProfiles.and.returnValue(Promise.resolve({}));
 		mockDb.updateReminderTable.and.returnValue(Promise.resolve());
 		mockDb.removeRecordFromReminderTable.and.returnValue(Promise.resolve());
 		mockDb.addNewRecordToReminder.and.returnValue(Promise.resolve());

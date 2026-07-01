@@ -1,7 +1,7 @@
-# CloudBase Cloud Functions — Shared Reminder Groups
+# CloudBase Cloud Functions — Connected Accounts
 
-These three functions implement the server-side half of the Shared Reminder Groups
-feature (see `docs/plans/2026-06-29-shared-reminder-groups-design.md`).
+These three functions implement the server-side half of the Connected Accounts (account
+linking) feature (see `docs/plans/2026-06-30-connected-accounts-design.md`).
 
 They are **NOT part of the Angular build**. They live here as deploy-ready source for
 you to push to your CloudBase environment. The Angular app calls them via
@@ -9,9 +9,12 @@ you to push to your CloudBase environment. The Angular app calls them via
 
 | Function | Purpose | Triggered by |
 |----------|---------|--------------|
-| `joinGroup` | Adds the caller to another user's share group; re-syncs `sharedWith` on both sides' shared reminders | Account page "Join" (deferred UI) |
-| `leaveGroup` | Removes the caller from every shared reminder's `sharedWith` | Account page "Leave" (deferred UI) |
-| `broadcastActivity` | Fans out one activity entry to every group member's `recentActivities` | Reminder mutation on a shared item |
+| `sendConnectRequest` | Looks up a target by connect code and appends a pending request to their `users.incomingRequests` | Account → Connections → "Send request" |
+| `respondConnectRequest` | Approves (create / join / **merge** groups) or declines a pending request | Account → Connections → Approve / Decline |
+| `disconnect` | Removes the caller from their group; dissolves the group when one member remains | Account → Connections → Disconnect |
+
+> The previous v1 trio (`joinGroup`, `leaveGroup`, `broadcastActivity`) was for the abandoned
+> denormalized `sharedWith`-per-reminder design and has been deleted.
 
 ## Deploying
 
@@ -21,12 +24,15 @@ as the app (`vision-canvas-2gs531jy76d7aaa9`). Runtime: Node.js 16+.
 
 ## ⚠️ Verify before relying on these (read this first)
 
-1. **Caller openid resolution.** Each function derives the caller's identity with:
+1. **Caller identity resolution.** Each function derives the caller with:
    ```js
-   const { openId: callerOpenid } = app.auth().getUserInfo();
+   const { openId, uid } = app.auth().getUserInfo();
+   const callerOpenid = openId || uid;
    ```
-   This is the `openId` from the auth context — matching the `_openid` field on documents
-   and the `auth.openid` your security rules see. (`uid` is intentionally not used.)
+   **`openId` is empty under web/email auth** (it is only populated for WeChat), so the `uid`
+   fallback is required — omitting it returns `NO_AUTH`. In this app `_openid == auth.uid == uid`,
+   so `callerOpenid` matches the `_openid` field on documents and the `auth.uid` your rules compare.
+   The display **name** is taken from the request body (cosmetic only); identity never is.
 
 2. **`@cloudbase/node-sdk` is correct HERE.** The project rule "never use `@cloudbase/node-sdk`"
    applies to *local seeding scripts you run on your machine* (which would need a secretId).
@@ -34,19 +40,29 @@ as the app (`vision-canvas-2gs531jy76d7aaa9`). Runtime: Node.js 16+.
    built-in admin credentials — no secret needed. This is the documented pattern.
 
 3. **No `pull` / `addToSet`.** CloudBase `db.command` only has `push / pop / shift / unshift`.
-   Removing a specific array element and de-duplicated appends are done as read-modify-write
-   with `_.set(newArray)` — that is why these functions read, compute in JS, then write.
+   Removing a request, removing a member, and merging arrays are done as read-modify-write with
+   `_.set(newArray)`. New requests are appended with `_.push([entry])`.
 
-4. **Activity cap = 20.** `recentActivities` is prepended (newest first) and trimmed to 20,
-   matching `STATS_CAP_ACTIVITY_LOG` in `src/app/common/constants.ts`. Keep these in sync.
+4. **`users._id == _openid`.** The migration guarantees each `users` doc is keyed by its owner's
+   openid, so `db.collection('users').doc(openid)` targets that user. The same holds for `doc(user._id)`.
 
-5. **Security.** The caller openid is always taken from the auth context, never from the
-   request body, so a client cannot impersonate another user. `broadcastActivity` additionally
-   verifies the caller is a member of the reminder's `sharedWith` before fanning out.
+5. **Activity cap = 20.** On a group merge, the two `sharedRecentActivity` arrays are concatenated,
+   sorted newest-first by `timestamp`, and trimmed to 20 — matching `STATS_CAP_ACTIVITY_LOG`.
+
+## Linking policy (respondConnectRequest)
+
+On approve, the two `groupId`s decide the outcome:
+
+- **both null** → create a new group doc (`statistics`, `isGroup: true`) with both members.
+- **exactly one set** → the other joins that group.
+- **both set & different** → **merge**: union members, merge `memberProfiles`, concat+cap
+  `sharedRecentActivity` into the **approver's** group (survivor), re-point every absorbed member's
+  `users.groupId`, then delete the absorbed group doc.
+- **both set & same** → no-op (already connected).
 
 ## Field/collection names (must match the app)
 
-- reminder collection: `reminder`
-- statistics collection: `statistics`
-- reminder fields: `_openid`, `isShared`, `sharedWith`
-- statistics fields: `_openid`, `isUserStats`, `recentActivities`
+- collections: `users`, `statistics`, `reminder`
+- `users` fields: `_openid`, `connectCode`, `groupId`, `incomingRequests` (`{ fromOpenid, fromName, ts }`)
+- `statistics` group docs: `_id`, `isGroup`, `sharedWith` (openid[]), `memberProfiles` (`{ openid: { name } }`), `sharedRecentActivity`
+- `reminder` fields: `_openid`, `isShared`

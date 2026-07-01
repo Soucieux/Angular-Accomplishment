@@ -521,6 +521,22 @@ export class Utilities {
 		return value.trim() !== '' && isFinite(Number(value));
 	}
 
+	/**
+	 * Builds a random code of the given length by sampling characters from the supplied alphabet.
+	 * Intended for shareable, non-secret identifiers (e.g. account connect codes).
+	 *
+	 * @param length - The number of characters in the generated code.
+	 * @param alphabet - The set of characters to sample from.
+	 * @returns A random string of the requested length.
+	 */
+	public static randomCode(length: number, alphabet: string): string {
+		let code = '';
+		for (let i = 0; i < length; i++) {
+			code += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+		}
+		return code;
+	}
+
 	/* ─────────────────────────────────────────
 	   URL & web
 	───────────────────────────────────────── */
@@ -779,6 +795,16 @@ export class Utilities {
 	/* ─────────────────────────────────────────
 	   DOM
 	───────────────────────────────────────── */
+
+	/**
+	 * Copies the given text to the system clipboard.
+	 *
+	 * @param text - The text to copy.
+	 * @returns A promise that resolves when the copy completes.
+	 */
+	public static copyToClipboard(text: string): Promise<void> {
+		return navigator.clipboard.writeText(text);
+	}
 
 	/**
 	 * Attach a scroll-activity listener to a scrollable element that adds the

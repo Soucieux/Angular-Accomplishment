@@ -4,7 +4,7 @@ import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../fontend/recipe/recipe.model';
 import { VaultRecord, VaultNodeType } from '../../fontend/vault/vault.model';
 import { InjectionToken } from '@angular/core';
-import { NO_RATE, HISTORY_STATUS_ADDED, HISTORY_STATUS_DELETED } from '../../common/constants';
+import { NO_RATE, HISTORY_STATUS_ADDED } from '../../common/constants';
 import {
 	ACTIVE_LOCALE,
 	ENT_HISTORY_RATE_OPEN,
@@ -22,6 +22,19 @@ export const CLOUDBASE = new InjectionToken<CloudbaseApp>('CLOUDBASE');
 export const FIREBASE_AUTH = new InjectionToken<Auth>('FIREBASE_AUTH');
 export const FIREBASE_DATABASE = new InjectionToken<Database>('FIREBASE_DATABASE');
 export const FIREBASE_STORAGE = new InjectionToken<FirebaseStorage>('FIREBASE_STORAGE');
+
+/** Result returned by the connect/disconnect Cloud Functions. */
+export interface ConnectResult {
+	success: boolean;
+	error?: string;
+}
+
+/** A connected group member, surfaced in the Account security panel. */
+export interface ConnectedMember {
+	openid: string;
+	name: string;
+	status?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export abstract class DatabaseService {
@@ -100,18 +113,60 @@ export abstract class DatabaseService {
 	public abstract getReminderTableDetails(): Observable<any[]>;
 
 	/**
-	 * Gets the display-name map for the current user's shared group, keyed by member openid.
+	 * Gets the shared activity feed for the current user and their connections, merged into the home feed.
 	 *
-	 * @returns A promise resolving to an openid→name map, empty when the user belongs to no group.
-	 */
-	public abstract getGroupMemberProfiles(): Promise<Record<string, string>>;
-
-	/**
-	 * Gets the shared activity log for the current user's group, merged into the home feed.
-	 *
-	 * @returns A promise resolving to the shared activity entries, empty when the user has no group.
+	 * @returns A promise resolving to the shared activity entries, empty when the user has no connections.
 	 */
 	public abstract getSharedRecentActivity(): Promise<any[]>;
+
+	/**
+	 * Sends a connect request to the account owning the given connect code.
+	 *
+	 * @param code - The target account's connect code.
+	 * @returns A promise resolving to the request result.
+	 */
+	public abstract sendConnectRequest(code: string): Promise<ConnectResult>;
+
+	/**
+	 * Dismisses one of the user's own sent connect requests by the target openid.
+	 *
+	 * @param toOpenid - The target openid of the outgoing request to remove.
+	 * @returns A promise that resolves when the dismissal completes.
+	 */
+	public abstract clearOutgoingRequest(toOpenid: string): Promise<void>;
+
+	/**
+	 * Cancels a still-pending connect request the user sent, withdrawing it from both sides.
+	 *
+	 * @param toOpenid - The target openid the request was sent to.
+	 * @returns A promise resolving to the cancel result.
+	 */
+	public abstract cancelConnectRequest(toOpenid: string): Promise<ConnectResult>;
+
+	/**
+	 * Approves or declines a pending connect request from the given account.
+	 *
+	 * @param fromOpenid - The openid of the requesting account.
+	 * @param accept - True to approve and link, false to decline.
+	 * @returns A promise resolving to the response result.
+	 */
+	public abstract respondConnectRequest(fromOpenid: string, accept: boolean): Promise<ConnectResult>;
+
+	/**
+	 * Leaves a single connection — removes the pairwise link and marks both records 'leave'.
+	 *
+	 * @param otherOpenid - The openid of the connected account to leave.
+	 * @returns A promise resolving to the disconnect result.
+	 */
+	public abstract disconnect(otherOpenid: string): Promise<ConnectResult>;
+
+	/**
+	 * Clears a resolved (left) connection record from the current user's own connections list.
+	 *
+	 * @param otherOpenid - The openid of the connection record to remove.
+	 * @returns A promise that resolves when the update completes.
+	 */
+	public abstract clearConnection(otherOpenid: string): Promise<void>;
 
 	/**
 	 * Gets the Account Expenses (debt sonata) table details from the database as a reactive observable.
@@ -230,12 +285,14 @@ export abstract class DatabaseService {
 	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to store.
 	 * @param text - The reminder text, recorded in the activity log.
+	 * @param isShared - Whether the reminder is shared, so its activity routes to the group feed.
 	 */
 	public abstract updateReminderTable(
 		entryKey: string,
 		valueKey: string,
 		value: any,
-		text: string
+		text: string,
+		isShared: boolean
 	): Promise<void>;
 
 	/**
@@ -388,8 +445,9 @@ export abstract class DatabaseService {
 	 *
 	 * @param key - The key of the record to remove.
 	 * @param text - The reminder text, recorded in the activity log.
+	 * @param isShared - Whether the reminder is shared, so its deletion routes to the group feed.
 	 */
-	public abstract removeRecordFromReminderTable(key: string, text: string): Promise<void>;
+	public abstract removeRecordFromReminderTable(key: string, text: string, isShared: boolean): Promise<void>;
 
 	/**
 	 * Removes a record from the debt table and records the deletion in the activity log.
@@ -493,6 +551,7 @@ export abstract class DatabaseService {
 		visitCount: number;
 		createdAt: string;
 		isPinned: boolean;
+		isShared?: boolean;
 	}): Promise<void>;
 
 	/**

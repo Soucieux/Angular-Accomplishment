@@ -516,6 +516,8 @@ export const LABEL_EDIT = 'Edit';
 export const ADD_LINK_LABEL_LOADING = 'fetching…';
 export const ADD_LINK_PLACEHOLDER_NAME = 'My favourite resource';
 export const ADD_LINK_LABEL_CATEGORY = 'Category *';
+export const ADD_LINK_LABEL_CATEGORY_OPTIONAL = 'Category';
+export const ADD_LINK_HINT_CATEGORY_SHARED = 'Disabled because this link is shared';
 export const ADD_LINK_PLACEHOLDER_CATEGORY = 'Select a category';
 
 /* ─────────────────────────────────────────
@@ -554,6 +556,10 @@ export const REMINDER_CATEGORY_OTHER = 'Other';
 export const REMINDER_CHIP_CUSTOM = 'Custom';
 /** Label for the filter button that shows only shared reminder items. */
 export const REMINDER_CHIP_SHARED = 'Shared';
+/** Label for the new-item toggle that marks a reminder shared on creation. */
+export const REMINDER_SHARE_LABEL = 'Share';
+/** Tooltip on the pending-share badge shown on armed items while the user has no connections. */
+export const REMINDER_SHARE_TOOLTIP_PENDING = 'Will be shared when you connect an account';
 /** Title for push notifications sent when a reminder is due in 3 days. */
 export const REMINDER_NOTIF_TITLE_3DAY = 'Due in 3 days';
 /** Title for push notifications sent when a reminder is due today. */
@@ -686,7 +692,7 @@ export const ACCOUNT_LABEL_MEMBER_SINCE = 'Member Since';
 export const ACCOUNT_LABEL_STREAK_SUFFIX = ' Day Streak';
 export const ACCOUNT_LABEL_VERIFIED = 'Verified';
 export const ACCOUNT_MSG_NO_EMAIL = 'No email address';
-export const ACCOUNT_LABEL_IDENTITY_TITLE = 'Identity & Security';
+export const ACCOUNT_LABEL_IDENTITY_TITLE = 'Identity';
 export const ACCOUNT_LABEL_INNER_WORLD_TITLE = 'Inner World';
 export const ACCOUNT_LABEL_MILESTONES_TITLE = 'Milestones';
 export const ACCOUNT_LABEL_DANGER_ZONE_TITLE = 'Danger Zone';
@@ -698,6 +704,32 @@ export const ACCOUNT_LABEL_PASSWORD_CHANGED = 'Password last changed';
 export const ACCOUNT_LABEL_UPDATE_USERNAME = 'Update Username';
 export const ACCOUNT_PLACEHOLDER_USERNAME = 'Enter your username';
 export const ACCOUNT_MSG_USERNAME_UPDATED = 'Username updated';
+export const ACCOUNT_LABEL_CONNECTIONS_TITLE = 'Connections';
+export const ACCOUNT_LABEL_CONNECT_CODE = 'Connect code';
+export const ACCOUNT_LABEL_COPY = 'Copy';
+export const ACCOUNT_MSG_CODE_COPIED = 'Connect code copied';
+export const ACCOUNT_LABEL_CONNECTED_TITLE = 'Connected accounts';
+export const ACCOUNT_PLACEHOLDER_CONNECT_CODE = 'Enter a connect code';
+export const ACCOUNT_LABEL_SEND_REQUEST = 'Send request';
+export const ACCOUNT_LABEL_APPROVE = 'Approve';
+export const ACCOUNT_LABEL_DECLINE = 'Decline';
+export const ACCOUNT_LABEL_DISCONNECT = 'Disconnect';
+export const ACCOUNT_LABEL_NO_CONNECTIONS = 'No connected accounts yet';
+export const ACCOUNT_LABEL_LINK_ACCOUNT = 'Link an account';
+export const ACCOUNT_LABEL_REQUESTS = 'Requests';
+export const ACCOUNT_STATUS_PENDING = 'Pending';
+export const ACCOUNT_STATUS_CONNECTED = 'Connected';
+export const ACCOUNT_STATUS_DECLINED = 'Declined';
+export const ACCOUNT_STATUS_LEFT = 'Left';
+export const ACCOUNT_MSG_REQUEST_SENT = 'Request sent';
+export const ACCOUNT_MSG_REQUEST_CANCELED = 'Request canceled';
+export const ACCOUNT_MSG_REQUEST_FAILED = 'Could not send request';
+export const ACCOUNT_MSG_INVALID_CODE = 'Invalid code';
+export const ACCOUNT_MSG_SELF_CODE = 'That code is your own';
+export const ACCOUNT_MSG_ALREADY_CONNECTED = 'Already connected';
+export const ACCOUNT_MSG_ALREADY_REQUESTED = 'Request already sent';
+export const ACCOUNT_MSG_CONNECTED = 'Accounts connected';
+export const ACCOUNT_MSG_DISCONNECTED = 'Disconnected';
 export const ACCOUNT_LABEL_CHANGE_PASSWORD = 'Change Password';
 export const ACCOUNT_LABEL_OLD_PASSWORD = 'Current password';
 export const ACCOUNT_LABEL_CONFIRM_PASSWORD = 'Confirm password';

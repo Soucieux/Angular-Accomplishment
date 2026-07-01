@@ -296,16 +296,39 @@ export const STATS_FIELD_GENRE = 'genre';
 export const STATS_FIELD_ACTIVITY_STREAK = 'activityStreak';
 export const STATS_FIELD_ACTIVITY_STREAK_DATE = 'activityStreakLastDate';
 export const STATS_FIELD_IS_USER_STATS = 'isUserStats';
-/** Discriminates a shared-group document from the single global stats document within the statistics collection. */
+/** Marks a document as non-global within the statistics collection; the single global stats document has it unset. */
 export const STATS_FIELD_IS_GROUP = 'isGroup';
-/** Foreign key on a user's document pointing at their shared-group document's _id. */
-export const STATS_FIELD_GROUP_ID = 'groupId';
-/** Member openid list on a shared-group document — the pool of users whose reminders are shared. */
+/** Flat openid list on a user's own document — the accounts they are connected to (bidirectional). */
 export const STATS_FIELD_SHARED_WITH = 'sharedWith';
-/** Map of member openid to display profile ({ name }) on a shared-group document. */
-export const STATS_FIELD_MEMBER_PROFILES = 'memberProfiles';
-/** Shared activity log array on a shared-group document — mutations to any member's reminders. */
+/** Connection records on a user's own document — { openid, name, status } for the account page. */
+export const STATS_FIELD_CONNECTIONS = 'connections';
+/** Shared activity log array on a user's own document — that user's mutations to their shared reminders. */
 export const STATS_FIELD_SHARED_RECENT_ACTIVITY = 'sharedRecentActivity';
+/** Revision counter on a user's own document — bumped by a connection to signal a shared-reminder change. */
+export const STATS_FIELD_SHARED_REV = 'sharedRev';
+/** Per-user share code another account enters to send a connect request. */
+export const STATS_FIELD_CONNECT_CODE = 'connectCode';
+/** Array of connect requests the user has sent, each carrying a status the receiver updates. */
+export const STATS_FIELD_OUTGOING_REQUESTS = 'outgoingRequests';
+/** Pending connect requests awaiting the user's approval, stored on their own document. */
+export const STATS_FIELD_INCOMING_REQUESTS = 'incomingRequests';
+/** Outgoing-request status — awaiting the receiver's response. */
+export const CONNECT_STATUS_PENDING = 'pending';
+/** Outgoing-request status — the receiver approved and the accounts are linked. */
+export const CONNECT_STATUS_CONNECTED = 'connected';
+/** Outgoing-request status — the receiver declined the request. */
+export const CONNECT_STATUS_DECLINED = 'declined';
+/** Connection-record status — the accounts were connected but one side left; awaiting clear or re-connect. */
+export const CONNECT_STATUS_LEAVE = 'leave';
+/** Connect Cloud Function error codes — mapped to user-facing messages before display. */
+export const CONNECT_ERROR_CODE_NOT_FOUND = 'CODE_NOT_FOUND';
+export const CONNECT_ERROR_SELF = 'SELF';
+export const CONNECT_ERROR_ALREADY_CONNECTED = 'ALREADY_CONNECTED';
+export const CONNECT_ERROR_ALREADY_REQUESTED = 'ALREADY_REQUESTED';
+/** Alphabet for generated connect codes — excludes ambiguous 0/O/1/I. */
+export const CONNECT_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+/** Length of a generated connect code. */
+export const CONNECT_CODE_LENGTH = 7;
 export const STATS_FIELD_TOTAL_FILMS = 'totalFilms';
 export const STATS_FIELD_TOTAL_LINKS = 'totalLinks';
 export const STATS_FIELD_TOTAL_QUOTES = 'totalQuotes';
@@ -599,6 +622,8 @@ export const REMINDER_VALUE_KEY_TAG = 'tag';
 export const REMINDER_VALUE_KEY_START_TIME = 'startTime';
 /** CloudBase content entry key for the reminder end time (HH:mm). */
 export const REMINDER_VALUE_KEY_END_TIME = 'endTime';
+/** CloudBase field key marking a reminder as shared on creation (visible to connected accounts). */
+export const REMINDER_VALUE_KEY_SHARED = 'isShared';
 
 /** Items shown per page in the Reminder grid (default: 2 columns × 7 rows). */
 export const REMINDER_ITEMS_PER_PAGE = 14;

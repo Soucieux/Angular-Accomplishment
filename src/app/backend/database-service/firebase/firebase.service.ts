@@ -109,15 +109,20 @@ import {
 	update,
 	remove,
 	get,
-	push,
-	set
+	push
 } from 'firebase/database';
 import type { Auth } from 'firebase/auth';
 import { Observable, map, of } from 'rxjs';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
 import { VaultRecord, VaultNodeType } from '../../../fontend/vault/vault.model';
-import { DatabaseService, FIREBASE_AUTH, FIREBASE_DATABASE, FIREBASE_STORAGE } from '../database.service';
+import {
+	ConnectResult,
+	DatabaseService,
+	FIREBASE_AUTH,
+	FIREBASE_DATABASE,
+	FIREBASE_STORAGE
+} from '../database.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -309,23 +314,75 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets the display-name map for the current user's shared group. Shared reminder groups are a
-	 * CloudBase-only feature, so the Firebase backend always resolves to an empty map.
-	 *
-	 * @returns A promise resolving to an empty openid→name map.
-	 */
-	public getGroupMemberProfiles(): Promise<Record<string, string>> {
-		return Promise.resolve({});
-	}
-
-	/**
-	 * Gets the shared activity log for the current user's group. Shared reminder groups are a
+	 * Gets the shared activity feed for the current user and their connections. Account linking is a
 	 * CloudBase-only feature, so the Firebase backend always resolves to an empty list.
 	 *
 	 * @returns A promise resolving to an empty activity list.
 	 */
 	public getSharedRecentActivity(): Promise<any[]> {
 		return Promise.resolve([]);
+	}
+
+	/**
+	 * Sends a connect request. Account linking is CloudBase-only, so the Firebase backend reports
+	 * failure without contacting any function.
+	 *
+	 * @param _code - The target account's connect code (unused).
+	 * @returns A promise resolving to a failed result.
+	 */
+	public sendConnectRequest(_code: string): Promise<ConnectResult> {
+		return Promise.resolve({ success: false });
+	}
+
+	/**
+	 * Dismisses a sent connect request. CloudBase-only feature — resolves immediately.
+	 *
+	 * @param _toOpenid - The target openid (unused).
+	 * @returns A promise that resolves immediately.
+	 */
+	public clearOutgoingRequest(_toOpenid: string): Promise<void> {
+		return Promise.resolve();
+	}
+
+	/**
+	 * Cancels a sent connect request. CloudBase-only feature — resolves to a failed result.
+	 *
+	 * @param _toOpenid - The target openid (unused).
+	 * @returns A promise resolving to a failed result.
+	 */
+	public cancelConnectRequest(_toOpenid: string): Promise<ConnectResult> {
+		return Promise.resolve({ success: false });
+	}
+
+	/**
+	 * Responds to a connect request. CloudBase-only feature — resolves to a failed result.
+	 *
+	 * @param _fromOpenid - The requesting account openid (unused).
+	 * @param _accept - Whether to approve (unused).
+	 * @returns A promise resolving to a failed result.
+	 */
+	public respondConnectRequest(_fromOpenid: string, _accept: boolean): Promise<ConnectResult> {
+		return Promise.resolve({ success: false });
+	}
+
+	/**
+	 * Leaves a connection. CloudBase-only feature — resolves to a failed result.
+	 *
+	 * @param _otherOpenid - The connected account openid (unused).
+	 * @returns A promise resolving to a failed result.
+	 */
+	public disconnect(_otherOpenid: string): Promise<ConnectResult> {
+		return Promise.resolve({ success: false });
+	}
+
+	/**
+	 * Clears a left connection record. CloudBase-only feature — resolves immediately.
+	 *
+	 * @param _otherOpenid - The connection openid (unused).
+	 * @returns A promise that resolves immediately.
+	 */
+	public clearConnection(_otherOpenid: string): Promise<void> {
+		return Promise.resolve();
 	}
 
 	/**
@@ -640,12 +697,14 @@ export class FirebaseService extends DatabaseService {
 	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to store.
 	 * @param text - The reminder text, recorded in the activity log.
+	 * @param _isShared - Group-feed routing flag; unused in the Firebase backend (no shared groups).
 	 */
 	public async updateReminderTable(
 		entryKey: string,
 		valueKey: string,
 		value: any,
-		text: string
+		text: string,
+		_isShared?: boolean
 	): Promise<void> {
 		await this.updateTableExistingFields(DATABASE_REMINDER, entryKey, { [valueKey]: value });
 		this.appendToActivityLog({
@@ -953,8 +1012,9 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the record to remove.
 	 * @param text - The reminder text, recorded in the activity log.
+	 * @param _isShared - Group-feed routing flag; unused in the Firebase backend (no shared groups).
 	 */
-	public async removeRecordFromReminderTable(key: string, text: string): Promise<void> {
+	public async removeRecordFromReminderTable(key: string, text: string, _isShared?: boolean): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_REMINDER, key);
 		this.appendToActivityLog({
 			source: ACTIVITY_SOURCE_REMINDER,
@@ -1142,6 +1202,7 @@ export class FirebaseService extends DatabaseService {
 		visitCount: number;
 		createdAt: string;
 		isPinned: boolean;
+		isShared?: boolean;
 	}): Promise<void> {
 		return Promise.resolve();
 	}

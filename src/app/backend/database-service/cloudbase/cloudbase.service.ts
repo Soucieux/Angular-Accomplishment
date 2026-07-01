@@ -1,9 +1,24 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, ReplaySubject, combineLatest, from, of } from 'rxjs';
-import { shareReplay, switchMap, take, filter, map, startWith, catchError } from 'rxjs/operators';
+import {
+	shareReplay,
+	switchMap,
+	take,
+	filter,
+	map,
+	startWith,
+	catchError,
+	distinctUntilChanged
+} from 'rxjs/operators';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
-import { CLOUDBASE, CloudbaseApp, DatabaseService } from '../database.service';
+import {
+	CLOUDBASE,
+	CloudbaseApp,
+	ConnectResult,
+	ConnectedMember,
+	DatabaseService
+} from '../database.service';
 import { LOG } from '../../../common/app.logs';
 import { Utilities } from '../../../common/utilities/app.utilities';
 import { environment } from '../../../../environment/environment';
@@ -16,6 +31,7 @@ import {
 	DATABASE_RELEASE_NOTES,
 	DATABASE_QUOTES,
 	DATABASE_REMINDER,
+	REMINDER_VALUE_KEY_SHARED,
 	DATABASE_STATISTICS,
 	DATABASE_USERS,
 	DATABASE_RECIPES,
@@ -54,10 +70,14 @@ import {
 	STATS_FIELD_ACTIVITY_STREAK_DATE,
 	STATS_FIELD_IS_USER_STATS,
 	STATS_FIELD_IS_GROUP,
-	STATS_FIELD_GROUP_ID,
 	STATS_FIELD_SHARED_WITH,
-	STATS_FIELD_MEMBER_PROFILES,
+	STATS_FIELD_CONNECTIONS,
+	STATS_FIELD_SHARED_REV,
 	STATS_FIELD_SHARED_RECENT_ACTIVITY,
+	STATS_FIELD_CONNECT_CODE,
+	STATS_FIELD_OUTGOING_REQUESTS,
+	CONNECT_CODE_ALPHABET,
+	CONNECT_CODE_LENGTH,
 	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_TOTAL_DEBTS,
 	STATS_FIELD_TOTAL_REMINDERS,
@@ -166,6 +186,9 @@ export class CloudbaseService extends DatabaseService {
 	private static userName: string;
 	// '_' is a reserved keyword in the CloudBase SDK used to access its command builder
 	private _!: any;
+	// Single shared watch on the current user's document — reused by every getUserStats() caller so
+	// CloudBase never opens duplicate watches on the same doc (duplicates cause dropped "nextevent ignored").
+	private userStats$?: Observable<any>;
 	private tempUrlCache = new Map<string, string>();
 	// Serializes activity log writes so each read-before-write completes before the next begins.
 	private activityLogQueue: Promise<void> = Promise.resolve();
@@ -336,12 +359,14 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the user's stats document, or undefined when absent.
 	 */
 	public getUserStats(): Observable<any> {
-		return this.watchCollection(
+		// Memoized so all consumers (account page, reminder toggle, shared-reminder watcher) share one
+		// watch on the user document; watchCollection already applies shareReplay(1) to fan it out.
+		return (this.userStats$ ??= this.watchCollection(
 			DATABASE_USERS,
 			(docs) => docs[0],
 			false,
 			(col) => col.where(this.getUserStatsFilter())
-		);
+		));
 	}
 
 	/**
@@ -361,9 +386,9 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the useful links list.
 	 */
 	public getUsefulLinks(): Observable<any[]> {
-		/* No _openid filter: returns both shared docs (no _openid) and the user's own docs.
-		   Security rules at the database level enforce what each user may read.
-		   The portal component splits the result into Shared / My Links by _openid presence. */
+		/* No _openid filter: returns every user's links, since the read rule allows any
+		   non-anonymous user to read the full collection. The portal component splits the
+		   result into Shared / My Links by the persisted `isShared` flag. */
 		return this.watchCollection(
 			DATABASE_USEFUL_LINKS,
 			(docs) =>
@@ -525,10 +550,12 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Gets the reminder details from CloudBase as a real-time observable.
-	 * Merges two watchers: reminders the user owns, and reminders owned by the other members
-	 * of the user's shared group (resolved from the group document's sharedWith list). The shared
-	 * watcher is fail-safe — when the user is in no group, or the security rule denies the read,
-	 * it yields an empty list so the owned-reminders stream is never affected.
+	 * Merges two sources: reminders the user owns (a live watch), and the shared reminders of the
+	 * accounts the user is connected to. CloudBase realtime watch cannot reliably push another user's
+	 * documents, so the shared set is fetched through an admin Cloud Function and re-fetched whenever
+	 * the live user document signals a change — either the connection set (sharedWith) or a connection's
+	 * shared-reminder edit (sharedRev). The shared source is fail-safe: any rejection yields an empty
+	 * list so the owned-reminders stream is never affected.
 	 *
 	 * @returns An observable that emits the merged reminder details list.
 	 */
@@ -544,17 +571,24 @@ export class CloudbaseService extends DatabaseService {
 			col.where({ _openid: userId })
 		);
 
-		/* Fail-safe shared watcher: resolve the user's other group members once, then watch their
-		   reminders live. startWith keeps owned reminders flowing before this watcher first emits,
-		   and catchError guards any rejection — an empty list means only the owned reminders show. */
-		const shared$ = from(this.getGroupMemberIds()).pipe(
-			switchMap((memberIds) =>
-				memberIds.length
-					? this.watchCollection(DATABASE_REMINDER, mapDocs, false, (col) =>
-							col.where({ _openid: this._.in(memberIds) })
-						)
-					: of([] as any[])
+		/* Shared reminders, signal-driven: the live user document carries both the connection set and a
+		   sharedRev counter that connections bump on any shared-reminder change. On either signal, re-fetch
+		   the shared set via the admin Cloud Function. startWith keeps owned reminders flowing before the
+		   first fetch; catchError guards any rejection so an empty list means only owned reminders show. */
+		const shared$ = this.getUserStats().pipe(
+			map((doc) => ({
+				// sharedWith comes from an unordered watch() snapshot; sort so distinctUntilChanged
+				// compares membership by content, not position, avoiding spurious shared re-fetches.
+				members: [...((doc?.[STATS_FIELD_SHARED_WITH] as string[]) ?? [])].sort(),
+				rev: (doc?.[STATS_FIELD_SHARED_REV] as number) ?? 0
+			})),
+			distinctUntilChanged(
+				(a, b) =>
+					a.rev === b.rev &&
+					a.members.length === b.members.length &&
+					a.members.every((id, i) => id === b.members[i])
 			),
+			switchMap((signal) => (signal.members.length ? from(this.getSharedReminders()) : of([] as any[]))),
 			startWith([] as any[]),
 			catchError(() => of([] as any[]))
 		);
@@ -566,28 +600,139 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets the display-name map for the current user's shared group, keyed by member openid.
-	 * Used by the reminder page to label reminders owned by other members with the creator's name.
+	 * Gets the shared reminders of the current user's connected accounts via the admin Cloud Function,
+	 * mapped to the same view shape as owned reminders (CloudBase _id → key).
 	 *
-	 * @returns A promise resolving to an openid→name map, empty when the user belongs to no group.
+	 * {@link getReminderTableDetails} - Merges these with the user's owned reminders.
+	 *
+	 * @returns A promise resolving to the connected accounts' shared reminder view models.
 	 */
-	public async getGroupMemberProfiles(): Promise<Record<string, string>> {
-		const group = await this.getGroupDocument();
-		const profiles = (group?.[STATS_FIELD_MEMBER_PROFILES] as Record<string, { name?: string }>) ?? {};
-		return Object.fromEntries(
-			Object.entries(profiles).map(([openid, profile]) => [openid, profile?.name ?? ''])
-		);
+	private async getSharedReminders(): Promise<any[]> {
+		const response: any = await this.cloudbase.callFunction({ name: 'getSharedReminders', data: {} });
+		return Utilities.toArray(response?.result?.items).map((doc: any) => {
+			const { _id, ...rest } = doc;
+			return { key: _id, ...rest };
+		});
 	}
 
 	/**
-	 * Gets the shared activity log for the current user's group — mutations to any member's
-	 * reminders. Merged with the user's personal recent activity to form the home feed.
+	 * Signals the current user's connections that a shared reminder changed, via the Cloud Function
+	 * (it bumps sharedRev on each connection's own document, which their live user-document watch then
+	 * observes and re-fetches on). Fire-and-forget — a failure only delays their next refresh.
 	 *
-	 * @returns A promise resolving to the shared activity entries, empty when the user has no group.
+	 * {@link addNewRecordToReminder} - Signals after creating a shared reminder.
+	 * {@link updateReminderTable} - Signals after editing a shared reminder.
+	 * {@link removeRecordFromReminderTable} - Signals after deleting a shared reminder.
+	 */
+	private notifySharedChange(): void {
+		this.cloudbase.callFunction({ name: 'notifySharedChange', data: {} }).catch(() => {});
+	}
+
+	/**
+	 * Gets the shared activity feed for the current user — the user's own and their connections'
+	 * mutations to shared reminders, aggregated by the Cloud Function (admin context reads each
+	 * connection's document). Merged with the user's personal recent activity to form the home feed.
+	 *
+	 * @returns A promise resolving to the shared activity entries, empty when the user has no connections.
 	 */
 	public async getSharedRecentActivity(): Promise<any[]> {
-		const group = await this.getGroupDocument();
-		return Utilities.toArray(group?.[STATS_FIELD_SHARED_RECENT_ACTIVITY]);
+		const response: any = await this.cloudbase.callFunction({ name: 'getSharedActivity', data: {} });
+		return Utilities.toArray(response?.result?.activity);
+	}
+
+	/**
+	 * Sends a connect request to the account owning the given connect code, via the Cloud Function
+	 * (admin context — clients cannot look up or write another user's document directly).
+	 *
+	 * @param code - The target account's connect code.
+	 * @returns A promise resolving to the request result.
+	 */
+	public async sendConnectRequest(code: string): Promise<ConnectResult> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'sendConnectRequest',
+			data: { code, name: CloudbaseService.getUserName() }
+		});
+		return response?.result ?? { success: false };
+	}
+
+	/**
+	 * Cancels a still-pending connect request the user sent, via the Cloud Function — it withdraws the
+	 * request from both the sender's outgoing list and the target's incoming list (admin context).
+	 *
+	 * @param toOpenid - The target openid the request was sent to.
+	 * @returns A promise resolving to the cancel result.
+	 */
+	public async cancelConnectRequest(toOpenid: string): Promise<ConnectResult> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'cancelConnectRequest',
+			data: { toOpenid }
+		});
+		return response?.result ?? { success: false };
+	}
+
+	/**
+	 * Dismisses one of the user's own sent connect requests by the target openid (owner write —
+	 * the entry is removed from their own outgoingRequests array). Used to clear a resolved
+	 * "connected" / "declined" notice from the sent-requests list.
+	 *
+	 * @param toOpenid - The target openid of the outgoing request to remove.
+	 * @returns A promise that resolves when the update completes.
+	 */
+	public async clearOutgoingRequest(toOpenid: string): Promise<void> {
+		const res = await this.database
+			.collection(DATABASE_USERS)
+			.where(this.getUserStatsFilter())
+			.limit(1)
+			.get();
+		const existing = Utilities.toArray(res.data?.[0]?.[STATS_FIELD_OUTGOING_REQUESTS]) as Array<{
+			toOpenid?: string;
+		}>;
+		const remaining = existing.filter((entry) => entry.toOpenid !== toOpenid);
+		await this.updateUserStatsFields({ [STATS_FIELD_OUTGOING_REQUESTS]: remaining });
+	}
+
+	/**
+	 * Approves or declines a pending connect request, via the Cloud Function (the approval adds the
+	 * bidirectional connection in admin context).
+	 *
+	 * @param fromOpenid - The openid of the requesting account.
+	 * @param accept - True to approve and link, false to decline.
+	 * @returns A promise resolving to the response result.
+	 */
+	public async respondConnectRequest(fromOpenid: string, accept: boolean): Promise<ConnectResult> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'respondConnectRequest',
+			data: { fromOpenid, accept, name: CloudbaseService.getUserName() }
+		});
+		return response?.result ?? { success: false };
+	}
+
+	/**
+	 * Leaves a single connection, via the Cloud Function (admin context — it removes the pairwise edge
+	 * and flips both accounts' connection records to 'leave').
+	 *
+	 * @param otherOpenid - The openid of the connected account to leave.
+	 * @returns A promise resolving to the disconnect result.
+	 */
+	public async disconnect(otherOpenid: string): Promise<ConnectResult> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'disconnect',
+			data: { otherOpenid }
+		});
+		return response?.result ?? { success: false };
+	}
+
+	/**
+	 * Clears a resolved connection record (status 'leave') from the user's own connections list — an
+	 * owner write, since it only touches the current user's document.
+	 *
+	 * @param otherOpenid - The openid of the connection record to remove.
+	 * @returns A promise that resolves when the update completes.
+	 */
+	public async clearConnection(otherOpenid: string): Promise<void> {
+		const connections = await this.getMyConnections();
+		const remaining = connections.filter((entry) => entry.openid !== otherOpenid);
+		await this.updateUserStatsFields({ [STATS_FIELD_CONNECTIONS]: remaining });
 	}
 
 	/**
@@ -734,7 +879,11 @@ export class CloudbaseService extends DatabaseService {
 						})
 				)
 			)
-			.pipe(shareReplay(1));
+			/* refCount closes the underlying watch when the last subscriber unsubscribes. Without it the
+			   watch leaks: a switchMap re-subscription (e.g. the shared-reminder watcher re-keying on a
+			   connection change) would stack a second watch on the same query, and CloudBase then drops
+			   events as duplicate ("nextevent … ignored"), breaking real-time sync. */
+			.pipe(shareReplay({ bufferSize: 1, refCount: true }));
 	}
 
 	/**
@@ -1036,20 +1185,26 @@ export class CloudbaseService extends DatabaseService {
 	 * @param valueKey - The field name to update.
 	 * @param value - The new value to store.
 	 * @param text - The reminder text, recorded in the activity log.
+	 * @param isShared - Whether the reminder is shared, so its activity routes to the group feed.
 	 */
 	public async updateReminderTable(
 		entryKey: string,
 		valueKey: string,
 		value: any,
-		text: string
+		text: string,
+		isShared: boolean
 	): Promise<void> {
 		await this.updateTableExistingFields(DATABASE_REMINDER, {
 			entryKey,
 			fields: { [valueKey]: value },
 			source: ACTIVITY_SOURCE_REMINDER,
 			type: ACTIVITY_TYPE_UPDATED,
-			text
+			text,
+			isShared
 		});
+
+		// Editing a shared item must reach connections, who can't watch it live — signal them to re-fetch.
+		if (isShared) this.notifySharedChange();
 	}
 
 	/**
@@ -1435,10 +1590,14 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param key - The document key of the record to remove.
 	 * @param text - The reminder text, recorded in the activity log.
+	 * @param isShared - Whether the reminder is shared, so its deletion routes to the group feed.
 	 */
-	public async removeRecordFromReminderTable(key: string, text: string): Promise<void> {
-		await this.removeRecordFromDB(DATABASE_REMINDER, { entryKey: key, text });
+	public async removeRecordFromReminderTable(key: string, text: string, isShared: boolean): Promise<void> {
+		await this.removeRecordFromDB(DATABASE_REMINDER, { entryKey: key, text, isShared });
 		this.updateUserStatCount(STATS_FIELD_TOTAL_REMINDERS, -1).catch(() => {});
+
+		// Deleting a shared item must reach connections, who can't watch it live — signal them to re-fetch.
+		if (isShared) this.notifySharedChange();
 	}
 
 	/**
@@ -1549,7 +1708,9 @@ export class CloudbaseService extends DatabaseService {
 			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${tableName}`);
 			this.appendToActivityLog({
 				...this.getRecentActivitySubtitle(tableName, newRecord),
-				type: newRecord.type ?? HISTORY_STATUS_DELETED
+				type: newRecord.type ?? HISTORY_STATUS_DELETED,
+				// Carry the shared flag so reminder deletions route to the group feed (ignored elsewhere).
+				...(newRecord.isShared ? { isShared: true } : {})
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, `${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${tableName}`, error as Error);
@@ -1654,20 +1815,23 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Adds a new useful link to the database.
-	 * Omits _openid for shared links so they are visible to all users; personal links
-	 * carry the owner's _openid so CloudBase security rules scope them correctly.
+	 * CloudBase always auto-stamps `_openid` from the caller's identity — it cannot be
+	 * omitted client-side. Shared links are instead flagged with `isShared: true`, which
+	 * the portal reads to classify links into the Shared and Private sections regardless
+	 * of who created them. Shared links never carry a `category`, since categories are a
+	 * personal-organization concept that does not apply once a link is shared.
 	 *
-	 * @param link - The link object to add. When link.isShared is true, _openid is omitted.
+	 * @param link - The link object to add. `isShared` is persisted as a top-level flag.
 	 */
 	public async addUsefulLink(link: any): Promise<void> {
 		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, 1)
 			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_LINKS, MILESTONE_DOMAIN_LINK))
 			.catch(() => {});
-		const { isShared, ...linkData } = link;
+		const { isShared, category, ...linkData } = link;
 		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, {
-			...(isShared ? {} : { _openid: CloudbaseService.getUserId() }),
 			type: USEFUL_LINK_TYPE_LINK,
-			...linkData
+			...linkData,
+			...(isShared ? { isShared: true } : { category })
 		});
 	}
 
@@ -1839,7 +2003,10 @@ export class CloudbaseService extends DatabaseService {
 				this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER)
 			)
 			.catch(() => {});
-		return this.addNewRecordToDB(DATABASE_REMINDER, newRecord);
+		await this.addNewRecordToDB(DATABASE_REMINDER, newRecord);
+
+		// A shared item must reach connections, who can't watch it live — signal them to re-fetch.
+		if (newRecord[REMINDER_VALUE_KEY_SHARED]) this.notifySharedChange();
 	}
 
 	/**
@@ -1959,7 +2126,9 @@ export class CloudbaseService extends DatabaseService {
 					? ACTIVITY_TYPE_BUG_LOGGED
 					: isCategoryAdd
 						? ACTIVITY_TYPE_CATEGORY_ADDED
-						: HISTORY_STATUS_ADDED
+						: HISTORY_STATUS_ADDED,
+				// Carry the shared flag so a new shared reminder routes to the group feed (ignored elsewhere).
+				...(newRecord.isShared ? { isShared: true } : {})
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, `${CLOUDBASE_LOG_RECORD_ADD_FAILED} ${tableName}`, error as Error);
@@ -2172,9 +2341,9 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Performs the actual read-then-write for a single activity log entry, and updates the
-	 * persistent activity streak. The entry lives in exactly one array: reminder mutations made by a
-	 * group member go to the group document's shared activity (so every member sees them once with no
-	 * duplication); all other entries go to the user's personal activity. The streak always updates.
+	 * persistent activity streak. The entry lives in exactly one array on the user's own document:
+	 * mutations to a shared reminder go to sharedRecentActivity (aggregated into each connection's
+	 * home feed); all other entries go to the user's personal activity. The streak always updates.
 	 *
 	 * {@link appendToActivityLog} - The queue wrapper that serializes all calls here.
 	 *
@@ -2185,7 +2354,7 @@ export class CloudbaseService extends DatabaseService {
 		const entry = { ...activity, timestamp };
 		const userStatsFilter = this.getUserStatsFilter();
 		try {
-			// Step 1: Fetch the per-user stats doc — the activity array, streak, and groupId live here.
+			// Step 1: Fetch the per-user stats doc — both activity arrays and the streak live here.
 			const userStatsRes = await this.database.collection(DATABASE_USERS).where(userStatsFilter).get();
 			const userDoc = userStatsRes.data?.[0];
 
@@ -2204,63 +2373,25 @@ export class CloudbaseService extends DatabaseService {
 				newStreak = storedDate === Utilities.formatDateForStorage(yesterday) ? storedStreak + 1 : 1;
 			}
 
-			/* Step 3: Route the entry to a single array — the group's shared activity for reminder
-			   mutations by a group member, otherwise the user's personal activity. The streak is
-			   always persisted on the user document. */
-			// Reminder is currently the only group-shared domain; extend this check if another is added.
-			const groupId = userDoc?.[STATS_FIELD_GROUP_ID] as string | undefined;
-			const goesToSharedFeed = entry.source === ACTIVITY_SOURCE_REMINDER && !!groupId;
-			if (goesToSharedFeed) {
-				await this.updateUserStatsFields({
-					[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
-					[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
-				});
-				await this.appendSharedActivity(entry, groupId);
-			} else {
-				const updated = Utilities.prependCapped(
-					userDoc?.[STATS_FIELD_RECENT_ACTIVITIES],
-					entry,
-					STATS_CAP_ACTIVITY_LOG
-				);
-				await this.updateUserStatsFields({
-					[STATS_FIELD_RECENT_ACTIVITIES]: updated,
-					[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
-					[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
-				});
-			}
+			/* Step 3: Route the entry to a single array on the user's own document — the shared activity
+			   feed when the mutated reminder is itself shared, otherwise personal activity. The shared
+			   feed is aggregated into connections' home feeds by the getSharedActivity Cloud Function. */
+			// Reminder is currently the only shared domain; extend this check if another is added.
+			const field =
+				entry.source === ACTIVITY_SOURCE_REMINDER && !!entry.isShared
+					? STATS_FIELD_SHARED_RECENT_ACTIVITY
+					: STATS_FIELD_RECENT_ACTIVITIES;
+			const updated = Utilities.prependCapped(userDoc?.[field], entry, STATS_CAP_ACTIVITY_LOG);
+			await this.updateUserStatsFields({
+				[field]: updated,
+				[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
+				[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
+			});
 			this.checkAndWriteCountMilestone(MILESTONE_DOMAIN_STREAK, newStreak, userDoc).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, CLOUDBASE_LOG_ACTIVITY_UPDATE_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
-	}
-
-	/**
-	 * Appends an activity entry to the given shared-group document, prepended newest-first and
-	 * capped to STATS_CAP_ACTIVITY_LOG. The single home for reminder mutations made by a group member.
-	 *
-	 * {@link writeActivityLogEntry} - Calls this for reminder entries when the user is in a group.
-	 *
-	 * @param entry - The timestamped activity entry to append.
-	 * @param groupId - The _id of the user's shared-group document.
-	 * @returns A promise that resolves when the append completes.
-	 */
-	private async appendSharedActivity(entry: Record<string, unknown>, groupId: string): Promise<void> {
-		const groupRes = await this.database
-			.collection(DATABASE_STATISTICS)
-			.where({ _id: groupId })
-			.limit(1)
-			.get();
-		const updated = Utilities.prependCapped(
-			groupRes.data?.[0]?.[STATS_FIELD_SHARED_RECENT_ACTIVITY],
-			entry,
-			STATS_CAP_ACTIVITY_LOG
-		);
-		const result = await this.database
-			.collection(DATABASE_STATISTICS)
-			.where({ _id: groupId })
-			.update({ [STATS_FIELD_SHARED_RECENT_ACTIVITY]: updated });
-		this.throwIfCloudbaseError(result);
 	}
 
 	/**
@@ -2292,7 +2423,19 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async ensureUserStatsExist(): Promise<void> {
 		const result = await this.database.collection(DATABASE_USERS).where(this.getUserStatsFilter()).get();
-		if (result.data?.length) return;
+		const existing = result.data?.[0];
+		if (existing) {
+			// Backfill a connect code for documents created before the connect feature, so the live
+			// stats stream always carries one (the account page reads connectCode from that stream).
+			if (!existing[STATS_FIELD_CONNECT_CODE]) {
+				await this.database
+					.collection(DATABASE_USERS)
+					.doc(CloudbaseService.getUserId())
+					.update({ [STATS_FIELD_CONNECT_CODE]: Utilities.randomCode(CONNECT_CODE_LENGTH, CONNECT_CODE_ALPHABET) })
+					.catch(() => {});
+			}
+			return;
+		}
 		// No users doc yet — migrate a legacy statistics doc if one exists, otherwise seed fresh.
 		const migrated = await this.migrateLegacyUserStats();
 		if (!migrated) await this.seedUserStats();
@@ -2320,11 +2463,14 @@ export class CloudbaseService extends DatabaseService {
 		const fields: Record<string, any> = { ...doc };
 		delete fields['_id'];
 		delete fields[STATS_FIELD_IS_USER_STATS];
+		// Legacy docs predate the connect code — generate one so migrated users can be linked.
+		const connectCode =
+			fields[STATS_FIELD_CONNECT_CODE] ?? Utilities.randomCode(CONNECT_CODE_LENGTH, CONNECT_CODE_ALPHABET);
 		try {
 			const result = await this.database
 				.collection(DATABASE_USERS)
 				.doc(userId)
-				.set({ ...fields, _openid: userId });
+				.set({ ...fields, _openid: userId, [STATS_FIELD_CONNECT_CODE]: connectCode });
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, CLOUDBASE_LOG_USER_STATS_MIGRATED);
 			return true;
@@ -2370,6 +2516,7 @@ export class CloudbaseService extends DatabaseService {
 			[STATS_FIELD_TOTAL_LINKS]: links.data?.length ?? 0,
 			[STATS_FIELD_ACTIVITY_STREAK]: 0,
 			[STATS_FIELD_ACTIVITY_STREAK_DATE]: '',
+			[STATS_FIELD_CONNECT_CODE]: Utilities.randomCode(CONNECT_CODE_LENGTH, CONNECT_CODE_ALPHABET),
 			[STATS_FIELD_MILESTONES]: {
 				[MILESTONE_KEY_ACCOUNT_CREATED]: Utilities.formatDateForStorage(new Date())
 			}
@@ -2473,7 +2620,7 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Gets the CloudBase where-clause object that identifies the single global stats
-	 * document — the one in the statistics collection that is not a shared-group document.
+	 * document — the one document in the statistics collection with its isGroup flag unset.
 	 * Mirrors {@link getUserStatsFilter}.
 	 *
 	 * @returns The where-clause object matching the global stats document.
@@ -2483,45 +2630,20 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Reads the current user's shared-group document from the statistics collection — first the
-	 * groupId on the user's own document, then the group document it points at.
+	 * Reads the current user's connection records from their own document — { openid, name, status }
+	 * for every account they have connected to or left.
 	 *
-	 * {@link getGroupMemberIds} - Derives the shared reminder pool from the members list.
-	 * {@link getGroupMemberProfiles} - Derives creator display names from the member profiles.
+	 * {@link clearConnection} - Removes a left record from this list.
 	 *
-	 * @returns A promise resolving to the group document, or null when the user belongs to no group.
+	 * @returns A promise resolving to the connection records, or an empty array when none exist.
 	 */
-	private async getGroupDocument(): Promise<Record<string, any> | null> {
-		const userRes = await this.database
+	private async getMyConnections(): Promise<ConnectedMember[]> {
+		const res = await this.database
 			.collection(DATABASE_USERS)
 			.where(this.getUserStatsFilter())
 			.limit(1)
 			.get();
-		const groupId = userRes.data?.[0]?.[STATS_FIELD_GROUP_ID] as string | undefined;
-		if (!groupId) return null;
-		const groupRes = await this.database
-			.collection(DATABASE_STATISTICS)
-			.where({ _id: groupId })
-			.limit(1)
-			.get();
-		return groupRes.data?.[0] ?? null;
-	}
-
-	/**
-	 * Resolves the openids of the other members of the current user's shared group — every member
-	 * in the group's sharedWith list except the current user. Returns an empty array when the user
-	 * belongs to no group.
-	 *
-	 * {@link getReminderTableDetails} - Watches these members' reminders as the shared pool.
-	 *
-	 * @returns A promise resolving to the other group members' openids, or an empty array.
-	 */
-	private async getGroupMemberIds(): Promise<string[]> {
-		const group = await this.getGroupDocument();
-		if (!group) return [];
-		const userId = CloudbaseService.getUserId();
-		const members = (group[STATS_FIELD_SHARED_WITH] as string[]) ?? [];
-		return members.filter((id) => id !== userId);
+		return Utilities.toArray(res.data?.[0]?.[STATS_FIELD_CONNECTIONS]) as ConnectedMember[];
 	}
 
 	/**

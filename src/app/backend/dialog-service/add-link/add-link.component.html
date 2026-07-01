@@ -12,6 +12,19 @@
 		}}</span>
 	</ng-template>
 
+	@if (!isEditMode) {
+		<div class="link-dialog-field link-dialog-field-checkbox">
+			<input
+				type="checkbox"
+				id="linkDialogIsShared"
+				class="link-dialog-checkbox"
+				[(ngModel)]="isShared" />
+			<label for="linkDialogIsShared" class="link-dialog-label link-dialog-label-checkbox">
+				{{ PORTAL_LABEL_SHARED_LINK }}
+			</label>
+		</div>
+	}
+
 	<div class="link-dialog-field">
 		<span class="link-dialog-label">{{ ADD_LINK_LABEL_URL }}</span>
 		<input
@@ -45,12 +58,18 @@
 	</div>
 
 	<div class="link-dialog-field">
-		<span class="link-dialog-label">{{ ADD_LINK_LABEL_CATEGORY }}</span>
+		<span class="link-dialog-label">
+			{{ isShared ? ADD_LINK_LABEL_CATEGORY_OPTIONAL : ADD_LINK_LABEL_CATEGORY }}
+			@if (isEditMode && isShared) {
+				<span class="link-dialog-field-hint">{{ ADD_LINK_HINT_CATEGORY_SHARED }}</span>
+			}
+		</span>
 		<p-select
 			[options]="categories"
 			optionLabel="name"
 			optionValue="_id"
 			[appendTo]="'body'"
+			[disabled]="isShared"
 			[placeholder]="ADD_LINK_PLACEHOLDER_CATEGORY"
 			panelStyleClass="dropdown-panel-font"
 			[(ngModel)]="category" />
@@ -66,19 +85,6 @@
 			{{ PORTAL_LABEL_PIN_TO_DASHBOARD }}
 		</label>
 	</div>
-
-	@if (!isEditMode) {
-		<div class="link-dialog-field link-dialog-field-checkbox">
-			<input
-				type="checkbox"
-				id="linkDialogIsShared"
-				class="link-dialog-checkbox"
-				[(ngModel)]="isShared" />
-			<label for="linkDialogIsShared" class="link-dialog-label link-dialog-label-checkbox">
-				{{ PORTAL_LABEL_SHARED_LINK }}
-			</label>
-		</div>
-	}
 
 	<ng-template #footer>
 		<button class="link-dialog-button-ghost" (click)="onDialogClosed()">

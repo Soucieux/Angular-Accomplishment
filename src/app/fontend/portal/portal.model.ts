@@ -20,6 +20,7 @@ export interface PortalLink {
 	title: string;
 	category: string;
 	isPinned?: boolean;
+	isShared?: boolean;
 	visitCount?: number;
 	lastVisited?: string;
 	createdAt?: string;

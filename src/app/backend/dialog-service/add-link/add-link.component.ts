@@ -21,6 +21,8 @@ import {
 	ADD_LINK_LABEL_LOADING,
 	ADD_LINK_PLACEHOLDER_NAME,
 	ADD_LINK_LABEL_CATEGORY,
+	ADD_LINK_LABEL_CATEGORY_OPTIONAL,
+	ADD_LINK_HINT_CATEGORY_SHARED,
 	ADD_LINK_PLACEHOLDER_CATEGORY
 } from '../../../common/locale/locale-strings';
 import { PortalCategory, NewLinkData } from '../../../fontend/portal/portal.model';
@@ -49,6 +51,8 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	protected readonly ADD_LINK_LABEL_LOADING = ADD_LINK_LABEL_LOADING;
 	protected readonly ADD_LINK_PLACEHOLDER_NAME = ADD_LINK_PLACEHOLDER_NAME;
 	protected readonly ADD_LINK_LABEL_CATEGORY = ADD_LINK_LABEL_CATEGORY;
+	protected readonly ADD_LINK_LABEL_CATEGORY_OPTIONAL = ADD_LINK_LABEL_CATEGORY_OPTIONAL;
+	protected readonly ADD_LINK_HINT_CATEGORY_SHARED = ADD_LINK_HINT_CATEGORY_SHARED;
 	protected readonly ADD_LINK_PLACEHOLDER_CATEGORY = ADD_LINK_PLACEHOLDER_CATEGORY;
 
 	protected isEditMode = false;
@@ -140,12 +144,16 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Returns true when the form has enough valid data to submit.
-	 * URL, title, and category are all required.
+	 * URL and title are always required; category is required unless the link is shared.
 	 *
-	 * @returns True when the URL, title, and category fields are all non-empty.
+	 * @returns True when the URL and title are non-empty, and category is set or the link is shared.
 	 */
 	protected get isValid(): boolean {
-		return this.url.trim().length > 0 && this.title.trim().length > 0 && this.category.length > 0;
+		return (
+			this.url.trim().length > 0 &&
+			this.title.trim().length > 0 &&
+			(this.isShared || this.category.length > 0)
+		);
 	}
 
 	/**

@@ -52,6 +52,8 @@ export const DIALOG_ADD_ACCOUNT = 'add-account';
 export const HISTORY_STATUS_ADDED = 'added';
 /** History-entry status when a movie is deleted — appears in the history message text. */
 export const HISTORY_STATUS_DELETED = 'deleted';
+/** History-entry status when a reminder is completed (marked done) — distinct from deletion. */
+export const HISTORY_STATUS_COMPLETED = 'completed';
 /** Sentinel movie ID string used when a history entry has no valid numeric ID. */
 export const HISTORY_MOVIE_ID_UNKNOWN = 'unknown';
 /** Inline border style for an "added" history entry. */
@@ -181,6 +183,7 @@ export const CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATED = 'Movie favourite tag has be
 export const CLOUDBASE_LOG_TAURI_PREF_FAILED = 'Error reading Tauri notification preference';
 export const CLOUDBASE_LOG_MINIMIZE_PREF_FAILED = 'Error reading minimize-on-close preference';
 export const CLOUDBASE_LOG_LOCALE_PREF_FAILED = 'Error reading locale preference';
+export const CLOUDBASE_LOG_TODAY_ITEMS_FAILED = 'Error reading Today items backup';
 export const CLOUDBASE_LOG_MOVIE_ADDED = 'Movie added and statistics have been updated';
 export const CLOUDBASE_LOG_VISIT_INCREMENTED = 'Link visit count has been incremented';
 export const CLOUDBASE_LOG_RECORD_TABLE_UPDATED = 'Record updated on table';
@@ -276,6 +279,7 @@ export const ACTIVITY_SOURCE_DEBT = 'debt';
 export const ACTIVITY_SOURCE_RECIPE = 'recipe';
 export const ACTIVITY_SOURCE_DEFAULT = 'default';
 export const ACTIVITY_SOURCE_DATE_CALCULATOR = 'date_calculator';
+export const ACTIVITY_SOURCE_VAULT = 'vault';
 
 /* ─────────────────────────────────────────
    Statistics field names
@@ -286,6 +290,10 @@ export const ACTIVITY_SOURCE_DATE_CALCULATOR = 'date_calculator';
 export const STATS_FIELD_RECENT_ACTIVITIES = 'recentActivities';
 export const STATS_FIELD_REMINDER_UPCOMING = 'reminderUpcoming';
 export const STATS_FIELD_TOTAL_REMINDERS = 'totalReminders';
+/** Monotonic count of the user's own (private) reminders they have marked done. */
+export const STATS_FIELD_COMPLETED_PRIVATE = 'completedPrivate';
+/** Monotonic count of shared reminders completed by anyone in the user's link — bumped for every linked member. */
+export const STATS_FIELD_COMPLETED_SHARED = 'completedShared';
 export const STATS_FIELD_TOTAL_PATCH_NOTES = 'totalPatchNotes';
 export const STATS_FIELD_DEBT_UPCOMING = 'debtUpcoming';
 /** Total count of all unpaid debts — written separately because debtUpcoming is capped at 20. */
@@ -341,6 +349,8 @@ export const STATS_FIELD_TAURI_NOTIF_ENABLED = 'tauriNotifEnabled';
 export const STATS_FIELD_MINIMIZE_ON_CLOSE = 'minimizeOnClose';
 /** Locale key stored on the per-user stats document — 'en' or 'zh'. */
 export const STATS_FIELD_LOCALE = 'locale';
+/** Backup of the Today page's locally created items (timed, untimed, and tracked) stored on the per-user stats document. */
+export const STATS_FIELD_TODAY_ITEMS = 'todayItems';
 /** Locale identifier value for English. */
 export const LOCALE_KEY_EN = 'en';
 /** Locale identifier value for Chinese. */
@@ -385,6 +395,9 @@ export const HOME_ACTIVITY_ICON_RECIPE_REMOVED = 'no_meals';
 /** Shared delete icon used for all activity-feed deleted events. */
 export const HOME_ACTIVITY_ICON_DELETED = 'delete';
 export const HOME_ACTIVITY_ICON_DATE_CALCULATOR_UPDATED = 'calculate';
+export const HOME_ACTIVITY_ICON_VAULT_ADDED = 'person_add';
+/** Icon marking an activity entry that came from a connected account's shared reminder. */
+export const HOME_ACTIVITY_ICON_SHARED = 'groups';
 
 /** Shared entertainment teal colour for all non-deleted movie activity entries. */
 export const HOME_ACTIVITY_COLOR_MOVIE = '#11998e';
@@ -396,6 +409,9 @@ export const HOME_ACTIVITY_COLOR_LINK = '#60a5fa';
 export const HOME_ACTIVITY_COLOR_DEBT = '#06b6d4';
 export const HOME_ACTIVITY_COLOR_RECIPE = '#22c55e';
 export const HOME_ACTIVITY_COLOR_DATE_CALCULATOR = '#6366f1';
+export const HOME_ACTIVITY_COLOR_VAULT = '#475569';
+/** Violet accent distinguishing a connected account's shared reminder activity from the user's own. */
+export const HOME_ACTIVITY_COLOR_SHARED = '#a855f7';
 /** Shared delete color used for all activity-feed deleted events. */
 export const HOME_ACTIVITY_COLOR_DELETED = '#ef4444';
 
@@ -461,6 +477,8 @@ export const HOME_CONCENTRIC_SIZE_DEFAULT = 400;
 export const HOME_ORBITAL_PANEL_SCROLL_SELECTOR = '.orbital-panel-scroll';
 /** SimpleChanges key for the stats @Input on OrbitalComponent. */
 export const HOME_ORBITAL_CHANGES_KEY_STATS = 'stats';
+/** SimpleChanges key for the links @Input on OrbitalComponent. */
+export const HOME_ORBITAL_CHANGES_KEY_LINKS = 'links';
 /** Chinese footer quote displayed below the activity feed — identical in all locales. */
 export const HOME_ACTIVITY_FOOTER_ZH = '往日已成历史';
 /** English footer quote displayed below the activity feed — identical in all locales. */
@@ -585,6 +603,12 @@ export const USEFUL_LINK_TYPE_CATEGORY = 'category';
 export const PORTAL_CATEGORY_ALL = 'all';
 /** Default colour applied to new and un-styled link categories. */
 export const PORTAL_DEFAULT_CATEGORY_COLOR = '#d53369';
+/**
+ * Firebase Cloud Function that proxies a site favicon through Google's favicon service. The mainland
+ * browser reaches this function (its host clears the GFW), and the function fetches the icon from
+ * Google server-side. Same gen2 host family as the douban image proxy.
+ */
+export const PORTAL_FAVICON_PROXY_URL = 'https://favicon-tfsps4dwza-uc.a.run.app';
 export const PORTAL_LABEL_CONFIRMED = 'confirmed';
 /** Arrow glyph used as the add-link suffix in the multi-link dialog — identical in all locales. */
 export const MULTI_LINK_LABEL_ARROW = '→';
@@ -592,7 +616,6 @@ export const MULTI_LINK_LABEL_ARROW = '→';
 export const ADD_LINK_LABEL_URL = 'URL *';
 /** URL field placeholder in the add-link dialog — identical in all locales. */
 export const ADD_LINK_PLACEHOLDER_URL = 'https://example.com';
-export const PORTAL_LOG_FAVICON_UNAVAILABLE = 'Favicon unavailable for';
 export const PORTAL_LOG_VISIT_INCREMENT_FAILED = 'Failed to increment visit count for';
 export const PORTAL_LOG_LINK_UPDATED = 'Link updated:';
 export const PORTAL_LOG_LINK_SAVED = 'Link saved:';
@@ -779,6 +802,8 @@ export const TODAY_LABEL_AM = 'AM';
 export const TODAY_LABEL_PM = 'PM';
 /** Duration of the task removal fade-out animation in milliseconds. */
 export const TODAY_REMOVE_ANIMATION_MS = 220;
+/** Debounce delay before backing up locally created Today items to the database, in milliseconds. */
+export const TODAY_AUTOSAVE_DEBOUNCE_MS = 800;
 
 /* ─────────────────────────────────────────
    Vault page constants
@@ -822,6 +847,8 @@ export const VAULT_NODE_EMAIL = 'email';
 export const VAULT_NODE_PHONE = 'phone';
 /** Node-type value for a web-link identifier. */
 export const VAULT_NODE_LINK = 'link';
+/** Filter key toggling visibility of verified accounts in the graph. */
+export const VAULT_FILTER_KEY_VERIFIED = 'verified';
 
 /** Category key used for accounts created without an explicit category. */
 export const VAULT_CATEGORY_KEY_OTHER = 'other';

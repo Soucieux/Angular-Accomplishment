@@ -140,6 +140,23 @@ export const HOME_ACTIVITY_LABEL_PATCH_DELETED = 'Patch Deleted';
 export const HOME_ACTIVITY_LABEL_REMINDER_ADDED = 'Reminder Added';
 export const HOME_ACTIVITY_LABEL_REMINDER_DELETED = 'Reminder Removed';
 export const HOME_ACTIVITY_LABEL_REMINDER_UPDATED = 'Reminder Updated';
+/** Sentence templates for shared-reminder activity subtitles — {who}, {text}, and {aspect} tokens are replaced at render time. */
+export const HOME_SHARED_ACTIVITY_ADDED = '{who} added "{text}"';
+export const HOME_SHARED_ACTIVITY_DELETED = '{who} deleted "{text}"';
+export const HOME_SHARED_ACTIVITY_EDITED_ASPECT = '{who} changed the {aspect} of "{text}"';
+export const HOME_SHARED_ACTIVITY_EDITED = '{who} edited "{text}"';
+/** Author name used in shared-activity sentences when the author is the signed-in user. */
+export const HOME_SHARED_ACTIVITY_SELF = 'You';
+/** Fallback author name when a shared entry's author is no longer in the connections list. */
+export const HOME_SHARED_ACTIVITY_MEMBER_FALLBACK = 'A connection';
+/** Aspect labels naming which reminder field a shared edit changed. */
+export const HOME_SHARED_ASPECT_TEXT = 'content';
+export const HOME_SHARED_ASPECT_DATE = 'date';
+export const HOME_SHARED_ASPECT_LINK = 'link';
+export const HOME_SHARED_ASPECT_TAG = 'tag';
+export const HOME_SHARED_ASPECT_START_TIME = 'start time';
+export const HOME_SHARED_ASPECT_END_TIME = 'end time';
+export const HOME_SHARED_ASPECT_SHARED = 'sharing';
 export const HOME_ACTIVITY_LABEL_RESONANCE_ADDED = 'Quote Added';
 export const HOME_ACTIVITY_LABEL_RESONANCE_REMOVED = 'Quote Removed';
 export const HOME_ACTIVITY_LABEL_LINK_ADDED = 'Link Added';
@@ -161,6 +178,8 @@ export const HOME_ACTIVITY_LABEL_DEBT_PAYMENT_REMOVED = 'Debt Payment Entry Remo
 export const HOME_ACTIVITY_LABEL_LINK_CATEGORY_ADDED = 'Link Category Added';
 export const HOME_ACTIVITY_LABEL_DATE_CALCULATOR_UPDATED = 'Date Calculator Updated';
 export const HOME_ACTIVITY_LABEL_DEBT_LOCK_UPDATED = 'Debt Lock Updated';
+export const HOME_ACTIVITY_LABEL_VAULT_ADDED = 'Vault Account Added';
+export const HOME_ACTIVITY_LABEL_VAULT_REMOVED = 'Vault Account Removed';
 export const ACTIVITY_INVALID_TABLE_TEXT = 'Invalid database name';
 
 /** Overflow-row label for the reminders panel. */
@@ -526,6 +545,14 @@ export const ADD_LINK_PLACEHOLDER_CATEGORY = 'Select a category';
 
 /** Confirmation message shown before deleting a reminder entry. */
 export const REMINDER_MSG_DELETE_CONFIRM = 'Proceed with deleting this entry?\nThis cannot be undone.';
+/** Confirmation prompt shown before completing (and removing) a reminder. */
+export const REMINDER_MSG_COMPLETE_CONFIRM = 'Mark this reminder as done?\nIt will be removed and counted as completed.';
+/** Header title for the complete-reminder confirmation dialog. */
+export const REMINDER_COMPLETE_TITLE = 'Complete';
+/** Progress message shown in the blocking overlay while a reminder deletion is in flight. */
+export const REMINDER_MSG_DELETING = 'Deleting reminder...';
+/** Progress message shown in the blocking overlay while a reminder completion is in flight. */
+export const REMINDER_MSG_COMPLETING = 'Completing reminder...';
 /** Error shown when a custom tag name conflicts with an existing tag. */
 export const REMINDER_MSG_TAG_DUPLICATE = 'This name already belongs to an existing tag.';
 /** Placeholder for the reminder message text input. */
@@ -538,6 +565,10 @@ export const REMINDER_ADD_LINK_LABEL = 'Add link';
 export const REMINDER_ADD_DATE_LABEL = 'Add date';
 /** Ghost button label for adding a start/end time to a reminder card. */
 export const REMINDER_ADD_TIME_LABEL = 'Add time';
+/** Placeholder for the start-time selector in the reminder time row. */
+export const REMINDER_START_TIME_LABEL = 'Start';
+/** Placeholder for the end-time selector in the reminder time row. */
+export const REMINDER_END_TIME_LABEL = 'End';
 /** Section label above the filter chips. */
 export const REMINDER_FILTER_LABEL = 'FILTER';
 /** Primary label on the due-soon stat card. */
@@ -546,6 +577,10 @@ export const REMINDER_DUE_SOON_LABEL = 'due soon';
 export const REMINDER_GREETING_SINGULAR = 'reminder';
 /** Plural reminder unit used in the open-item greeting. */
 export const REMINDER_GREETING_PLURAL = 'reminders';
+/** Greeting label for the count of the user's own reminders they have completed. */
+export const REMINDER_GREETING_COMPLETED = 'completed';
+/** Greeting label for the count of shared reminders completed across the user's link. */
+export const REMINDER_GREETING_SHARED_COMPLETED = 'shared done';
 
 /** Display name for the third reminder table — used in stat writes and the Recent Activity widget. */
 export const REMINDER_TABLE_MESSAGES = 'Messages';
@@ -801,6 +836,12 @@ export const TODAY_BTN_START_TRACKING = 'Start tracking';
 export const TODAY_BTN_STOP_TRACKING = 'Stop';
 export const TODAY_BTN_DRAG_CREATE = 'Drag to create';
 export const TODAY_BTN_DRAG_MOVE = 'Drag to move';
+export const TODAY_BTN_CLEAR_ALL = 'Clear all';
+/** Confirm-dialog body shown before wiping every locally created Today item. */
+export const TODAY_CONFIRM_CLEAR_MESSAGE =
+	'This removes every item you added on Today and clears its backup. This cannot be undone.';
+/** Confirm-dialog header for the clear-all action. */
+export const TODAY_CONFIRM_CLEAR_HEADER = 'Clear all items';
 export const TODAY_TRACKING_PREFIX = 'Tracking · ';
 /** Heading shown on the mobile-blocked card for the Today planner. */
 export const NAV_MOBILE_ALL_SECTIONS = 'All sections';
@@ -825,7 +866,7 @@ export const VAULT_LABEL_IDENTIFIERS = 'email / phone';
 /** Descriptive page subtitle shown beneath the Vault title. */
 export const VAULT_PAGE_SUBTITLE = 'How your accounts, emails, and phones connect';
 /** Placeholder shown in the Vault search field. */
-export const VAULT_SEARCH_PLACEHOLDER = 'Search account, email, phone…';
+export const VAULT_SEARCH_PLACEHOLDER = 'Search';
 /** Label for the graph-view toggle tab. */
 export const VAULT_TAB_GRAPH = 'Graph';
 /** Label for the list-view toggle tab. */
@@ -834,6 +875,8 @@ export const VAULT_TAB_LIST = 'List';
 export const VAULT_BTN_ADD = 'Add';
 /** Label for the link button on a selected account in the info bar. */
 export const VAULT_BTN_ADD_CONNECTIONS = 'Add new connections';
+/** Placeholder text shown in the category overview bar when no account has a category yet. */
+export const VAULT_OVERVIEW_EMPTY = 'No categorized accounts yet';
 
 /** Heading of the graph legend panel. */
 export const VAULT_LEGEND_TITLE = 'Legend';
@@ -914,6 +957,24 @@ export const VAULT_MSG_SAVE_FAILED_DETAIL = 'Could not save to the vault. Please
 export const VAULT_MSG_SAVING = 'Saving…';
 /** Block-dialog message shown while a link is being removed. */
 export const VAULT_MSG_REMOVING_LINK = 'Removing link…';
+/** Confirm-dialog title for deleting a vault node. */
+export const VAULT_MSG_DELETE_NODE_TITLE = 'Delete Account';
+/** Confirm-delete message prefix for a vault node; node name is appended at the call site. */
+export const VAULT_MSG_DELETE_NODE_CONFIRM_PREFIX = 'Are you sure you want to delete "';
+/** Confirm-delete message suffix for a vault node — also warns that connections are removed. */
+export const VAULT_MSG_DELETE_NODE_CONFIRM_SUFFIX = '"? Its connections will also be removed.';
+/** Toast shown when a node is removed from the vault. */
+export const VAULT_MSG_NODE_REMOVED = 'Account removed';
+/** Toast detail shown when a vault node removal fails. */
+export const VAULT_MSG_REMOVE_NODE_FAILED_DETAIL = 'Could not delete the account. Please try again.';
+/** Confirm dialog title for deleting a custom vault category. */
+export const VAULT_MSG_DELETE_CATEGORY_TITLE = 'Delete Category';
+/** Confirm dialog body for deleting a custom vault category. */
+export const VAULT_MSG_DELETE_CATEGORY_CONFIRM = 'Delete this category? Its accounts move to Uncategorized.';
+/** Toast shown after a custom vault category is removed. */
+export const VAULT_MSG_CATEGORY_REMOVED = 'Category removed';
+/** Toast detail shown when a vault category removal fails. */
+export const VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL = 'Could not delete the category. Please try again.';
 /** Chip label for the fallback category used when no category is chosen. */
 export const VAULT_CATEGORY_OTHER_LABEL = 'Other';
 /** Full category label for uncategorized accounts. */

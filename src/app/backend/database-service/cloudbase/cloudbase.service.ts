@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Inject, Injectable, NgZone, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, ReplaySubject, combineLatest, from, of } from 'rxjs';
 import {
 	shareReplay,
@@ -21,6 +21,7 @@ import {
 } from '../database.service';
 import { LOG } from '../../../common/app.logs';
 import { Utilities } from '../../../common/utilities/app.utilities';
+import { LocaleService } from '../../../common/locale/locale.service';
 import { environment } from '../../../../environment/environment';
 import {
 	DATABASE_DATE_CALCULATOR,
@@ -54,6 +55,8 @@ import {
 	STATS_FIELD_TAURI_NOTIF_ENABLED,
 	STATS_FIELD_MINIMIZE_ON_CLOSE,
 	STATS_FIELD_LOCALE,
+	STATS_FIELD_TODAY_ITEMS,
+	CLOUDBASE_LOG_TODAY_ITEMS_FAILED,
 	LOCALE_KEY_EN,
 	LOCALE_KEY_ZH,
 	USEFUL_LINK_TYPE_LINK,
@@ -62,6 +65,7 @@ import {
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
+	HISTORY_STATUS_COMPLETED,
 	ENT_LOG_SPAN_CLASS_RATE_DOWN,
 	ENT_LOG_SPAN_CLASS_RATE_UP,
 	SEARCH,
@@ -81,6 +85,8 @@ import {
 	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_TOTAL_DEBTS,
 	STATS_FIELD_TOTAL_REMINDERS,
+	STATS_FIELD_COMPLETED_PRIVATE,
+	STATS_FIELD_COMPLETED_SHARED,
 	STATS_FIELD_TOTAL_FILMS,
 	STATS_FIELD_TOTAL_LINKS,
 	STATS_FIELD_TOTAL_QUOTES,
@@ -92,6 +98,7 @@ import {
 	ACTIVITY_SOURCE_PATCH,
 	ACTIVITY_SOURCE_RECIPE,
 	ACTIVITY_SOURCE_REMINDER,
+	ACTIVITY_SOURCE_VAULT,
 	ACTIVITY_SOURCE_RESONANCE,
 	ACTIVITY_TYPE_BUG_LOGGED,
 	ACTIVITY_TYPE_RESET,
@@ -172,7 +179,8 @@ import {
 } from '../../../common/locale/locale-strings';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
-import { VaultRecord, VaultNodeType } from '../../../fontend/vault/vault.model';
+import { VaultRecord, VaultNodeType, VAULT_CATEGORY_OTHER } from '../../../fontend/vault/vault.model';
+import { TodayTask } from '../../../fontend/today/today.model';
 import { SessionExpiredError } from '../../../common/error/session-expired.error';
 import { UnexpectedError } from '../../../common/error/unexpected.error';
 
@@ -189,6 +197,9 @@ export class CloudbaseService extends DatabaseService {
 	// Single shared watch on the current user's document — reused by every getUserStats() caller so
 	// CloudBase never opens duplicate watches on the same doc (duplicates cause dropped "nextevent ignored").
 	private userStats$?: Observable<any>;
+	// Memoized reminder stream — kept warm so navigating back to the reminder page replays instantly
+	// instead of rebuilding the (refCount) watch from scratch on every visit.
+	private reminderDetails$?: Observable<any[]>;
 	private tempUrlCache = new Map<string, string>();
 	// Serializes activity log writes so each read-before-write completes before the next begins.
 	private activityLogQueue: Promise<void> = Promise.resolve();
@@ -235,7 +246,9 @@ export class CloudbaseService extends DatabaseService {
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: Object,
 		@Inject(CLOUDBASE) private cloudbase: CloudbaseApp,
-		private searchStreamService: SearchStreamService
+		private searchStreamService: SearchStreamService,
+		private ngZone: NgZone,
+		private localeService: LocaleService
 	) {
 		super();
 		if (isPlatformBrowser(this.platformId)) {
@@ -375,10 +388,16 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the date calculator row list.
 	 */
 	public getDateCalculatorTableDetails(): Observable<any[]> {
-		/* Date calculator rows are flat — emit as-is. Fallback to [] prevents
-		   downstream .length errors when the collection is empty. */
-		return this.watchCollection(DATABASE_DATE_CALCULATOR, (docs) => docs ?? []);
+		/* Date calculator rows are flat — emit as-is. Fallback to [] prevents downstream .length errors
+		   when the collection is empty. The watch is scoped to the caller's own documents: an unscoped
+		   whole-collection watch is denied by the ownership rule and fails init with an opaque SDK error
+		   ("Cannot read property 'code' of undefined"). getUserId() is read inside the builder so it
+		   resolves after watchCollection's authReady gate. */
+		return this.watchCollection(DATABASE_DATE_CALCULATOR, (docs) => docs ?? [], false, (col) =>
+			col.where({ _openid: CloudbaseService.getUserId() })
+		);
 	}
+
 
 	/**
 	 * Gets the useful links from the database as a real-time observable.
@@ -560,15 +579,19 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns An observable that emits the merged reminder details list.
 	 */
 	public getReminderTableDetails(): Observable<any[]> {
-		const userId = CloudbaseService.getUserId();
+		if (this.reminderDetails$) return this.reminderDetails$;
+
 		const mapDocs = (docs: any[]) =>
 			docs.map((doc: any) => {
 				const { _id, ...rest } = doc;
 				return { key: _id, ...rest };
 			});
 
+		// getUserId() is read inside the query builder so it resolves after watchCollection's authReady
+		// gate — capturing it here would use an undefined openid on a cold reminder load and the watch
+		// would silently never emit, hanging the loading state.
 		const owned$ = this.watchCollection(DATABASE_REMINDER, mapDocs, false, (col) =>
-			col.where({ _openid: userId })
+			col.where({ _openid: CloudbaseService.getUserId() })
 		);
 
 		/* Shared reminders, signal-driven: the live user document carries both the connection set and a
@@ -593,10 +616,13 @@ export class CloudbaseService extends DatabaseService {
 			catchError(() => of([] as any[]))
 		);
 
-		// De-duplicate by key so a reminder the user both owns and is shared into appears once.
-		return combineLatest([owned$, shared$]).pipe(
-			map(([owned, shared]) => Utilities.uniqueByKey([...owned, ...shared], (item) => item.key))
+		// De-duplicate by key so a reminder the user both owns and is shared into appears once. shareReplay
+		// keeps the merged stream (and its underlying watch) warm across navigations for instant re-entry.
+		this.reminderDetails$ = combineLatest([owned$, shared$]).pipe(
+			map(([owned, shared]) => Utilities.uniqueByKey([...owned, ...shared], (item) => item.key)),
+			shareReplay(1)
 		);
+		return this.reminderDetails$;
 	}
 
 	/**
@@ -613,6 +639,97 @@ export class CloudbaseService extends DatabaseService {
 			const { _id, ...rest } = doc;
 			return { key: _id, ...rest };
 		});
+	}
+
+	/**
+	 * Edits a single field on a connected account's shared reminder via the admin Cloud Function. The
+	 * reminder collection rule is own-only, so a non-owner's write must go through the function, which
+	 * re-checks the link server-side before writing. Signals connections on success.
+	 *
+	 * @param entryKey - The reminder document id to update.
+	 * @param valueKey - The field to update.
+	 * @param value - The new value for the field.
+	 * @param text - The reminder text, recorded in the caller's shared activity feed.
+	 * @returns A promise resolving to the edit result ({ success, error }).
+	 */
+	public async updateSharedReminderField(
+		entryKey: string,
+		valueKey: string,
+		value: unknown,
+		text: string
+	): Promise<ConnectResult> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'editSharedReminder',
+			data: { entryKey, updates: { [valueKey]: value } }
+		});
+		const result: ConnectResult = response?.result ?? { success: false };
+		if (result.success) {
+			// Records the edit on the caller's own shared feed so connections see "who changed what".
+			this.appendToActivityLog({
+				source: ACTIVITY_SOURCE_REMINDER,
+				type: ACTIVITY_TYPE_UPDATED,
+				text,
+				isShared: true,
+				element: valueKey
+			}).catch(() => {});
+			this.notifySharedChange();
+		}
+		return result;
+	}
+
+	/**
+	 * Deletes a connected account's shared reminder via the admin Cloud Function, which re-checks the
+	 * link server-side before removing it. Signals connections on success.
+	 *
+	 * @param entryKey - The reminder document id to delete.
+	 * @param text - The reminder text, recorded in the caller's shared activity feed.
+	 * @returns A promise resolving to the delete result ({ success, error }).
+	 */
+	public async removeSharedReminder(entryKey: string, text: string): Promise<ConnectResult> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'editSharedReminder',
+			data: { entryKey, action: 'delete' }
+		});
+		const result: ConnectResult = response?.result ?? { success: false };
+		if (result.success) {
+			// Records the deletion on the caller's own shared feed so connections see who removed it.
+			this.appendToActivityLog({
+				source: ACTIVITY_SOURCE_REMINDER,
+				type: HISTORY_STATUS_DELETED,
+				text,
+				isShared: true
+			}).catch(() => {});
+			this.notifySharedChange();
+		}
+		return result;
+	}
+
+	/**
+	 * Completes a shared reminder: the Cloud Function removes the document and bumps the
+	 * shared-completed counter for every linked member (owner plus everyone in their link), so the
+	 * caller's own completedShared is incremented server-side — never here, to avoid double-counting.
+	 * Records the completion on the caller's shared feed and signals connections to re-fetch.
+	 *
+	 * @param entryKey - The document key of the shared reminder being completed.
+	 * @param text - The reminder text, recorded in the shared activity log.
+	 * @returns The Cloud Function result indicating whether the completion succeeded.
+	 */
+	public async completeSharedReminder(entryKey: string, text: string): Promise<ConnectResult> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'editSharedReminder',
+			data: { entryKey, action: 'complete' }
+		});
+		const result: ConnectResult = response?.result ?? { success: false };
+		if (result.success) {
+			this.appendToActivityLog({
+				source: ACTIVITY_SOURCE_REMINDER,
+				type: HISTORY_STATUS_COMPLETED,
+				text,
+				isShared: true
+			}).catch(() => {});
+			this.notifySharedChange();
+		}
+		return result;
 	}
 
 	/**
@@ -796,11 +913,14 @@ export class CloudbaseService extends DatabaseService {
 					.get()
 					.then((res: any) => {
 						const docs: any[] = res.data ?? [];
+						const locale = this.localeService.currentLocale;
 						observer.next(
-							docs.map((doc: any) => {
-								const { _id, _openid, order, ...rest } = doc;
-								return rest;
-							})
+							docs
+								.filter((doc: any) => (doc.lang ?? 'en') === locale)
+								.map((doc: any) => {
+									const { _id, _openid, order, lang, ...rest } = doc;
+									return rest;
+								})
 						);
 						observer.complete();
 					})
@@ -864,7 +984,10 @@ export class CloudbaseService extends DatabaseService {
 							const query = queryBuilder ? queryBuilder(col) : col;
 							const watcher = query.watch({
 								onChange: (snapshot: any) => {
-									observer.next(mapper(snapshot.docs));
+									// Emit inside Angular's zone — CloudBase fires watch callbacks outside it, so
+									// otherwise Default change detection never runs and the view only updates on the
+									// next user interaction (e.g. the reminder list staying blank after a refresh).
+									this.ngZone.run(() => observer.next(mapper(snapshot.docs)));
 								},
 								onError: (err: any) => {
 									LOG.error(
@@ -879,11 +1002,13 @@ export class CloudbaseService extends DatabaseService {
 						})
 				)
 			)
-			/* refCount closes the underlying watch when the last subscriber unsubscribes. Without it the
-			   watch leaks: a switchMap re-subscription (e.g. the shared-reminder watcher re-keying on a
-			   connection change) would stack a second watch on the same query, and CloudBase then drops
-			   events as duplicate ("nextevent … ignored"), breaking real-time sync. */
-			.pipe(shareReplay({ bufferSize: 1, refCount: true }));
+			/* shareReplay keeps each watch warm for the app's lifetime so navigating away and back replays
+			   the last snapshot instantly instead of tearing the CloudBase watch down and rebuilding it —
+			   the rebuild churns the realtime socket and can fail watch init with a transient SDK error
+			   ("Cannot read property 'code' of undefined"). refCount is intentionally omitted: under the
+			   adjacency model no consumer re-keys a watch via switchMap (shared reminders now read through a
+			   Cloud Function, not a watch), so warm watches never stack the duplicates refCount guarded against. */
+			.pipe(shareReplay(1));
 	}
 
 	/**
@@ -1200,7 +1325,9 @@ export class CloudbaseService extends DatabaseService {
 			source: ACTIVITY_SOURCE_REMINDER,
 			type: ACTIVITY_TYPE_UPDATED,
 			text,
-			isShared
+			isShared,
+			// Records which field changed so the shared feed can say "who changed the date of what".
+			element: valueKey
 		});
 
 		// Editing a shared item must reach connections, who can't watch it live — signal them to re-fetch.
@@ -1601,6 +1728,24 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Completes the current user's own (private) reminder: removes the document, logs the completion as
+	 * a distinct 'completed' activity (not a deletion), decrements the total-reminders count, and bumps
+	 * the monotonic private-completed counter. Shared reminders use {@link completeSharedReminder} instead.
+	 *
+	 * @param key - The document key of the reminder being completed.
+	 * @param text - The reminder text, recorded in the activity log.
+	 */
+	public async completeReminder(key: string, text: string): Promise<void> {
+		await this.removeRecordFromDB(DATABASE_REMINDER, {
+			entryKey: key,
+			text,
+			type: HISTORY_STATUS_COMPLETED
+		});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_REMINDERS, -1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_COMPLETED_PRIVATE, 1).catch(() => {});
+	}
+
+	/**
 	 * Removes a record from the debt table and records the deletion in the activity log.
 	 *
 	 * @param key - The document key of the record to remove.
@@ -1624,6 +1769,43 @@ export class CloudbaseService extends DatabaseService {
 				.remove();
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
+		} catch (error) {
+			LOG.error(
+				this.className,
+				`${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
+				error as Error
+			);
+			this.rethrowCaught(error);
+		}
+	}
+
+	/**
+	 * Removes a vault node and every edge connected to it, then records the removal
+	 * in the activity log. Edges are cleaned up first so none is ever left pointing
+	 * at a deleted node.
+	 *
+	 * @param nodeId - The document key of the node to remove.
+	 * @param connectedEdgeIds - The document keys of every edge attached to this node.
+	 * @param name - The node's display name, recorded in the activity log.
+	 */
+	public async removeVaultNode(
+		nodeId: string,
+		connectedEdgeIds: string[],
+		name: string
+	): Promise<void> {
+		try {
+			await Promise.all(connectedEdgeIds.map((edgeId) => this.removeVaultEdge(edgeId)));
+			const result = await this.database
+				.collection(DATABASE_VAULT)
+				.where(this.buildWhereClause(nodeId))
+				.remove();
+			this.throwIfCloudbaseError(result);
+			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
+			this.appendToActivityLog({
+				source: ACTIVITY_SOURCE_VAULT,
+				name,
+				type: HISTORY_STATUS_DELETED
+			}).catch(() => {});
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -1793,11 +1975,37 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Gets the backed-up Today page items for the current user from the per-user stats document.
+	 *
+	 * @returns The stored Today items, or an empty array when none are backed up or the read fails.
+	 */
+	public async getTodayItems(): Promise<TodayTask[]> {
+		try {
+			const value = await this.readUserStatField(STATS_FIELD_TODAY_ITEMS);
+			return Array.isArray(value) ? (value as TodayTask[]) : [];
+		} catch (error: unknown) {
+			LOG.error(this.className, CLOUDBASE_LOG_TODAY_ITEMS_FAILED, error as Error);
+			return [];
+		}
+	}
+
+	/**
+	 * Persists the full set of locally created Today items for the current user
+	 * by replacing the backup field on the per-user stats document.
+	 *
+	 * @param items - The complete list of Today items to store; an empty array clears the backup.
+	 */
+	public async saveTodayItems(items: TodayTask[]): Promise<void> {
+		await this.updateUserStatsFields({ [STATS_FIELD_TODAY_ITEMS]: items });
+	}
+
+	/**
 	 * Reads a single field value from the current user's stats document in the users collection.
 	 *
 	 * {@link getTauriNotifEnabled} - Reads the Tauri notification flag.
 	 * {@link getMinimizeOnClose} - Reads the minimize-on-close flag.
 	 * {@link getLocale} - Reads the display locale preference.
+	 * {@link getTodayItems} - Reads the Today page items backup.
 	 *
 	 * @param field - The field name to read from the stats document.
 	 * @returns The field value, or undefined when the document or field does not exist.
@@ -2046,13 +2254,19 @@ export class CloudbaseService extends DatabaseService {
 		category: string;
 		verified: boolean;
 	}): Promise<string> {
-		return this.addVaultRecord({
+		const nodeId = await this.addVaultRecord({
 			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_NODE,
 			[VAULT_VALUE_KEY_NODE_TYPE]: node.nodeType,
 			[VAULT_VALUE_KEY_NAME]: node.name,
 			[VAULT_VALUE_KEY_CATEGORY]: node.category,
 			[VAULT_VALUE_KEY_VERIFIED]: node.verified
 		});
+		this.appendToActivityLog({
+			source: ACTIVITY_SOURCE_VAULT,
+			name: node.name,
+			type: HISTORY_STATUS_ADDED
+		}).catch(() => {});
+		return nodeId;
 	}
 
 	/**
@@ -2086,6 +2300,63 @@ export class CloudbaseService extends DatabaseService {
 			[VAULT_VALUE_KEY_HEX]: category.hex,
 			[VAULT_VALUE_KEY_GRADIENT]: category.gradient
 		});
+	}
+
+	/**
+	 * Removes a custom account category and reassigns every account that used it to Uncategorized.
+	 * The accounts are reassigned by _id (the safe owner-scoped write path) before the category
+	 * record itself is removed, so no account is left pointing at a category that no longer exists.
+	 *
+	 * @param categoryKey - The document id of the category to remove.
+	 * @param accountIds - The ids of the account nodes currently in that category.
+	 * @returns A promise that resolves when the category is removed and its accounts reassigned.
+	 */
+	public async removeVaultCategory(categoryKey: string, accountIds: string[]): Promise<void> {
+		try {
+			await Promise.all(
+				accountIds.map((id) =>
+					this.database
+						.collection(DATABASE_VAULT)
+						.where(this.buildWhereClause(id))
+						.update({ [VAULT_VALUE_KEY_CATEGORY]: VAULT_CATEGORY_OTHER.key })
+				)
+			);
+			const result = await this.database
+				.collection(DATABASE_VAULT)
+				.where(this.buildWhereClause(categoryKey))
+				.remove();
+			this.throwIfCloudbaseError(result);
+			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
+		} catch (error) {
+			LOG.error(
+				this.className,
+				`${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
+				error as Error
+			);
+			this.rethrowCaught(error);
+		}
+	}
+
+	/**
+	 * Reassigns a single account node to the given category. Writes by _id (the owner-scoped path),
+	 * used to categorize an account after creation.
+	 *
+	 * @param nodeId - The id of the account node to update.
+	 * @param categoryKey - The category key to assign.
+	 * @returns A promise that resolves when the account's category is updated.
+	 */
+	public async updateVaultNodeCategory(nodeId: string, categoryKey: string): Promise<void> {
+		try {
+			const result = await this.database
+				.collection(DATABASE_VAULT)
+				.where(this.buildWhereClause(nodeId))
+				.update({ [VAULT_VALUE_KEY_CATEGORY]: categoryKey });
+			this.throwIfCloudbaseError(result);
+			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_TABLE_UPDATED} ${DATABASE_VAULT}`);
+		} catch (error) {
+			LOG.error(this.className, `${CLOUDBASE_LOG_TABLE_UPDATE_FAILED} ${DATABASE_VAULT}`, error as Error);
+			this.rethrowCaught(error);
+		}
 	}
 
 	/**
@@ -2512,6 +2783,8 @@ export class CloudbaseService extends DatabaseService {
 			[STATS_FIELD_TOTAL_QUOTES]: quotes.data?.length ?? 0,
 			[STATS_FIELD_TOTAL_RECIPES]: recipes.data?.length ?? 0,
 			[STATS_FIELD_TOTAL_REMINDERS]: reminders.data?.length ?? 0,
+			[STATS_FIELD_COMPLETED_PRIVATE]: 0,
+			[STATS_FIELD_COMPLETED_SHARED]: 0,
 			[STATS_FIELD_TOTAL_DEBTS]: debts.data?.length ?? 0,
 			[STATS_FIELD_TOTAL_LINKS]: links.data?.length ?? 0,
 			[STATS_FIELD_ACTIVITY_STREAK]: 0,

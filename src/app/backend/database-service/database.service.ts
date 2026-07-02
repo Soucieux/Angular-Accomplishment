@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../fontend/recipe/recipe.model';
 import { VaultRecord, VaultNodeType } from '../../fontend/vault/vault.model';
+import { TodayTask } from '../../fontend/today/today.model';
 import { InjectionToken } from '@angular/core';
 import { NO_RATE, HISTORY_STATUS_ADDED } from '../../common/constants';
 import {
@@ -450,6 +451,15 @@ export abstract class DatabaseService {
 	public abstract removeRecordFromReminderTable(key: string, text: string, isShared: boolean): Promise<void>;
 
 	/**
+	 * Completes the current user's own (private) reminder: removes the document and records the
+	 * completion as a distinct 'completed' activity (not a deletion).
+	 *
+	 * @param key - The document key of the reminder being completed.
+	 * @param text - The reminder text, recorded in the activity log.
+	 */
+	public abstract completeReminder(key: string, text: string): Promise<void>;
+
+	/**
 	 * Removes a record from the debt table and records the deletion in the activity log.
 	 *
 	 * @param key - The key of the record to remove.
@@ -495,6 +505,20 @@ export abstract class DatabaseService {
 	public abstract removeVaultEdge(key: string): Promise<void>;
 
 	/**
+	 * Removes a vault node and every edge connected to it, then records the
+	 * removal in the activity log.
+	 *
+	 * @param nodeId - The document key of the node to remove.
+	 * @param connectedEdgeIds - The document keys of every edge attached to this node.
+	 * @param name - The node's display name, recorded in the activity log.
+	 */
+	public abstract removeVaultNode(
+		nodeId: string,
+		connectedEdgeIds: string[],
+		name: string
+	): Promise<void>;
+
+	/**
 	 * Gets whether Tauri desktop push notifications are enabled for the current user.
 	 *
 	 * @returns True when a Tauri notification preference record exists in the database.
@@ -536,6 +560,20 @@ export abstract class DatabaseService {
 	 * @param locale - The locale key to store: 'en' or 'zh'.
 	 */
 	public abstract setLocale(locale: 'en' | 'zh'): Promise<void>;
+
+	/**
+	 * Gets the backed-up Today page items (timed, untimed, and tracked) for the current user.
+	 *
+	 * @returns The stored Today items, or an empty array when none are backed up or the user is signed out.
+	 */
+	public abstract getTodayItems(): Promise<TodayTask[]>;
+
+	/**
+	 * Persists the full set of locally created Today items for the current user, replacing any prior backup.
+	 *
+	 * @param items - The complete list of Today items to store; an empty array clears the backup.
+	 */
+	public abstract saveTodayItems(items: TodayTask[]): Promise<void>;
 
 	// ── Add methods ──────────────────────────────────────────────────────────
 
@@ -648,6 +686,26 @@ export abstract class DatabaseService {
 		hex: string;
 		gradient: string;
 	}): Promise<string>;
+
+	/**
+	 * Removes a custom account category and reassigns every account that used it to Uncategorized,
+	 * so no account is left orphaned under a category that no longer exists.
+	 *
+	 * @param categoryKey - The document id of the category to remove.
+	 * @param accountIds - The ids of the account nodes currently in that category.
+	 * @returns A promise that resolves when the category is removed and its accounts reassigned.
+	 */
+	public abstract removeVaultCategory(categoryKey: string, accountIds: string[]): Promise<void>;
+
+	/**
+	 * Reassigns a single account node to the given category — used to categorize an account after
+	 * creation (e.g. moving an Uncategorized account into a custom category).
+	 *
+	 * @param nodeId - The id of the account node to update.
+	 * @param categoryKey - The category key to assign.
+	 * @returns A promise that resolves when the account's category is updated.
+	 */
+	public abstract updateVaultNodeCategory(nodeId: string, categoryKey: string): Promise<void>;
 
 	// ── Utility methods ───────────────────────────────────────────────────────
 

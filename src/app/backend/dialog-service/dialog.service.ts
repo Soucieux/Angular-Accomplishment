@@ -346,7 +346,7 @@ export class DialogService {
 	 *
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
-	private showPermissionError(container: ViewContainerRef) {
+	public showPermissionError(container: ViewContainerRef) {
 		this.openDialog(container, DIALOG_ERROR, MSG_PERMISSION_DENIED);
 	}
 }

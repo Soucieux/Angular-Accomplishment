@@ -24,6 +24,7 @@ import {
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
+	HISTORY_STATUS_COMPLETED,
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_RECENT_ACTIVITIES,
@@ -32,6 +33,7 @@ import {
 	ACTIVITY_SOURCE_PATCH,
 	ACTIVITY_SOURCE_REMINDER,
 	ACTIVITY_SOURCE_RESONANCE,
+	ACTIVITY_SOURCE_VAULT,
 	ACTIVITY_TYPE_UPDATED,
 	ACTIVITY_TYPE_CALCULATOR_UPDATED,
 	ACTIVITY_TYPE_RATE_UPDATED,
@@ -41,6 +43,7 @@ import {
 	STATS_FIELD_TAURI_NOTIF_ENABLED,
 	STATS_FIELD_MINIMIZE_ON_CLOSE,
 	STATS_FIELD_LOCALE,
+	STATS_FIELD_TODAY_ITEMS,
 	LOCALE_KEY_EN,
 	LOCALE_KEY_ZH,
 	ENT_LOG_SPAN_CLASS_RATE_DOWN,
@@ -115,7 +118,8 @@ import type { Auth } from 'firebase/auth';
 import { Observable, map, of } from 'rxjs';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
-import { VaultRecord, VaultNodeType } from '../../../fontend/vault/vault.model';
+import { VaultRecord, VaultNodeType, VAULT_CATEGORY_OTHER } from '../../../fontend/vault/vault.model';
+import { TodayTask } from '../../../fontend/today/today.model';
 import {
 	ConnectResult,
 	DatabaseService,
@@ -1024,6 +1028,22 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Completes the current user's own (private) reminder: removes the document and records the
+	 * completion as a distinct 'completed' activity (not a deletion).
+	 *
+	 * @param key - The document key of the reminder being completed.
+	 * @param text - The reminder text, recorded in the activity log.
+	 */
+	public async completeReminder(key: string, text: string): Promise<void> {
+		await this.removeSingleItemFromDatabase(DATABASE_REMINDER, key);
+		this.appendToActivityLog({
+			source: ACTIVITY_SOURCE_REMINDER,
+			type: HISTORY_STATUS_COMPLETED,
+			text
+		}).catch(() => {});
+	}
+
+	/**
 	 * Removes a record from the debt table and records the deletion in the activity log.
 	 *
 	 * @param key - The key of the record to remove.
@@ -1045,6 +1065,29 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public removeVaultEdge(key: string): Promise<void> {
 		return this.removeSingleItemFromDatabase(DATABASE_VAULT, key);
+	}
+
+	/**
+	 * Removes a vault node and every edge connected to it, then records the removal
+	 * in the activity log. Edges are cleaned up first so none is ever left pointing
+	 * at a deleted node.
+	 *
+	 * @param nodeId - The document key of the node to remove.
+	 * @param connectedEdgeIds - The document keys of every edge attached to this node.
+	 * @param name - The node's display name, recorded in the activity log.
+	 */
+	public async removeVaultNode(
+		nodeId: string,
+		connectedEdgeIds: string[],
+		name: string
+	): Promise<void> {
+		await Promise.all(connectedEdgeIds.map((edgeId) => this.removeVaultEdge(edgeId)));
+		await this.removeSingleItemFromDatabase(DATABASE_VAULT, nodeId);
+		this.appendToActivityLog({
+			source: ACTIVITY_SOURCE_VAULT,
+			name,
+			type: HISTORY_STATUS_DELETED
+		}).catch(() => {});
 	}
 
 	/**
@@ -1164,6 +1207,33 @@ export class FirebaseService extends DatabaseService {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return;
 		await update(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`), { [STATS_FIELD_LOCALE]: locale });
+	}
+
+	/**
+	 * Gets the backed-up Today page items for the current user from the user preferences node.
+	 *
+	 * @returns The stored Today items, or an empty array when none are backed up or the user is signed out.
+	 */
+	public async getTodayItems(): Promise<TodayTask[]> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return [];
+		const snap = await get(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`));
+		const value = snap.val()?.[STATS_FIELD_TODAY_ITEMS];
+		return Array.isArray(value) ? (value as TodayTask[]) : [];
+	}
+
+	/**
+	 * Persists the full set of locally created Today items for the current user
+	 * by replacing the backup field in the user's preferences node.
+	 *
+	 * @param items - The complete list of Today items to store; an empty array clears the backup.
+	 */
+	public async saveTodayItems(items: TodayTask[]): Promise<void> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return;
+		await update(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`), {
+			[STATS_FIELD_TODAY_ITEMS]: items
+		});
 	}
 
 	/**
@@ -1402,19 +1472,25 @@ export class FirebaseService extends DatabaseService {
 	 * @param node - The node content to persist.
 	 * @returns The database id of the newly created node document.
 	 */
-	public addVaultNode(node: {
+	public async addVaultNode(node: {
 		nodeType: VaultNodeType;
 		name: string;
 		category: string;
 		verified: boolean;
 	}): Promise<string> {
-		return this.addVaultRecord({
+		const nodeId = await this.addVaultRecord({
 			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_NODE,
 			[VAULT_VALUE_KEY_NODE_TYPE]: node.nodeType,
 			[VAULT_VALUE_KEY_NAME]: node.name,
 			[VAULT_VALUE_KEY_CATEGORY]: node.category,
 			[VAULT_VALUE_KEY_VERIFIED]: node.verified
 		});
+		this.appendToActivityLog({
+			source: ACTIVITY_SOURCE_VAULT,
+			name: node.name,
+			type: HISTORY_STATUS_ADDED
+		}).catch(() => {});
+		return nodeId;
 	}
 
 	/**
@@ -1451,6 +1527,39 @@ export class FirebaseService extends DatabaseService {
 			[VAULT_VALUE_KEY_LABEL]: category.label,
 			[VAULT_VALUE_KEY_HEX]: category.hex,
 			[VAULT_VALUE_KEY_GRADIENT]: category.gradient
+		});
+	}
+
+	/**
+	 * Removes a custom account category and reassigns every account that used it to Uncategorized,
+	 * so no account is left pointing at a category that no longer exists.
+	 *
+	 * @param categoryKey - The document id of the category to remove.
+	 * @param accountIds - The ids of the account nodes currently in that category.
+	 * @returns A promise that resolves when the category is removed and its accounts reassigned.
+	 */
+	public async removeVaultCategory(categoryKey: string, accountIds: string[]): Promise<void> {
+		await Promise.all(
+			accountIds.map((id) =>
+				update(dbRef(this.db, `${DATABASE_VAULT}/${id}`), {
+					[VAULT_VALUE_KEY_CATEGORY]: VAULT_CATEGORY_OTHER.key
+				})
+			)
+		);
+		await this.removeSingleItemFromDatabase(DATABASE_VAULT, categoryKey);
+	}
+
+	/**
+	 * Reassigns a single account node to the given category, used to categorize an account after
+	 * creation.
+	 *
+	 * @param nodeId - The id of the account node to update.
+	 * @param categoryKey - The category key to assign.
+	 * @returns A promise that resolves when the account's category is updated.
+	 */
+	public async updateVaultNodeCategory(nodeId: string, categoryKey: string): Promise<void> {
+		await update(dbRef(this.db, `${DATABASE_VAULT}/${nodeId}`), {
+			[VAULT_VALUE_KEY_CATEGORY]: categoryKey
 		});
 	}
 

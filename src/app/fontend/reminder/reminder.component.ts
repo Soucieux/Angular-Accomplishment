@@ -30,9 +30,9 @@ import { LOG } from '../../common/app.logs';
 import {
 	COMPONENT_DESTROY,
 	DATABASE_REMINDER,
+	DIALOG_BLOCK,
 	DIALOG_CONFIRM,
 	DIALOG_ERROR,
-	FAILURE,
 	REMINDER_AWAIT_SUFFIX_CN,
 	REMINDER_AWAIT_SUFFIX_EN,
 	REMINDER_CATEGORY_COLOR_DEFAULT,
@@ -56,14 +56,17 @@ import {
 	STATS_FIELD_CONNECTIONS,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_TOTAL_REMINDERS,
+	STATS_FIELD_COMPLETED_PRIVATE,
+	STATS_FIELD_COMPLETED_SHARED,
 	STATS_FIELD_REMINDER_UPCOMING,
-	SUCCESS,
 	TIMEOUT_KEY_REMINDER
 } from '../../common/constants';
 import {
 	REMINDER_ADD_DATE_LABEL,
 	REMINDER_ADD_LINK_LABEL,
 	REMINDER_ADD_TIME_LABEL,
+	REMINDER_START_TIME_LABEL,
+	REMINDER_END_TIME_LABEL,
 	REMINDER_CHIP_CUSTOM,
 	REMINDER_CHIP_SHARED,
 	REMINDER_SHARE_LABEL,
@@ -75,6 +78,12 @@ import {
 	REMINDER_GREETING_PLURAL,
 	REMINDER_GREETING_SINGULAR,
 	REMINDER_MSG_DELETE_CONFIRM,
+	REMINDER_MSG_DELETING,
+	REMINDER_MSG_COMPLETING,
+	REMINDER_MSG_COMPLETE_CONFIRM,
+	REMINDER_COMPLETE_TITLE,
+	REMINDER_GREETING_COMPLETED,
+	REMINDER_GREETING_SHARED_COMPLETED,
 	REMINDER_MSG_TAG_DUPLICATE,
 	REMINDER_PLACEHOLDER_TAG,
 	REMINDER_PLACEHOLDER_TEXT,
@@ -151,6 +160,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_ADD_LINK_LABEL = REMINDER_ADD_LINK_LABEL;
 	protected readonly REMINDER_ADD_DATE_LABEL = REMINDER_ADD_DATE_LABEL;
 	protected readonly REMINDER_ADD_TIME_LABEL = REMINDER_ADD_TIME_LABEL;
+	protected readonly REMINDER_START_TIME_LABEL = REMINDER_START_TIME_LABEL;
+	protected readonly REMINDER_END_TIME_LABEL = REMINDER_END_TIME_LABEL;
 	protected readonly BTN_ADD = BTN_ADD;
 	protected readonly REMINDER_TIME_OPTIONS = REMINDER_TIME_OPTIONS;
 	protected readonly REMINDER_END_TIME_OPTIONS = REMINDER_END_TIME_OPTIONS;
@@ -158,6 +169,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_DUE_SOON_SUBTITLE = REMINDER_DUE_SOON_SUBTITLE;
 	protected readonly REMINDER_GREETING_SINGULAR = REMINDER_GREETING_SINGULAR;
 	protected readonly REMINDER_GREETING_PLURAL = REMINDER_GREETING_PLURAL;
+	protected readonly REMINDER_GREETING_COMPLETED = REMINDER_GREETING_COMPLETED;
+	protected readonly REMINDER_GREETING_SHARED_COMPLETED = REMINDER_GREETING_SHARED_COMPLETED;
 	protected readonly REMINDER_AWAIT_SUFFIX_CN = REMINDER_AWAIT_SUFFIX_CN;
 	protected readonly REMINDER_AWAIT_SUFFIX_EN = REMINDER_AWAIT_SUFFIX_EN;
 	protected readonly REMINDER_CHIP_CUSTOM = REMINDER_CHIP_CUSTOM;
@@ -175,14 +188,15 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	};
 	private gridResizeObserver?: ResizeObserver;
 	private itemsPerPage = REMINDER_ITEMS_PER_PAGE;
-	private doneKeys = new Set<string>();
+	protected completedPrivateCount = 0;
+	protected completedSharedCount = 0;
 	protected loading = true;
 	protected items: ReminderItem[] = [];
 	protected filterBarTags: string[] = [];
 	protected hasSharedItems = false;
+	protected openCount = 0;
 	protected hasConnections = false;
 	protected memberProfiles: Record<string, string> = {};
-	private currentUserId = '';
 	protected page = 0;
 	protected editingItem: ReminderItem | null = null;
 	protected editingDateModel: Date | null = null;
@@ -208,6 +222,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private itemsSub?: Subscription;
 	private statsSub?: Subscription;
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
+	// Re-entry guard so rapid add clicks (or Enter presses) cannot fire duplicate DB writes.
+	private isAddingItem = false;
 
 	constructor(
 		@Inject(PLATFORM_ID) private readonly platformId: object,
@@ -226,7 +242,6 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			this.currentUserId = CloudbaseService.getUserId() ?? '';
 			/* Derive connection-dependent state from the live user document so it stays current even when
 			   the other account approves the link while this page is open: creator display names for
 			   shared items (from connections) and whether the share toggle is unlocked (from sharedWith). */
@@ -238,13 +253,17 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				);
 				this.hasConnections = (Utilities.toArray(doc[STATS_FIELD_SHARED_WITH]) as string[]).length > 0;
 				if (!this.hasConnections) this.sharedFilterActive = false;
+				this.completedPrivateCount = (doc[STATS_FIELD_COMPLETED_PRIVATE] as number) ?? 0;
+				this.completedSharedCount = (doc[STATS_FIELD_COMPLETED_SHARED] as number) ?? 0;
 				this.cdr.detectChanges();
 			});
 			this.timeoutService.start(TIMEOUT_KEY_REMINDER, () => {
 				this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
 			});
 			this.itemsSub = this.databaseService.getReminderTableDetails().subscribe((raw) => {
-				// Step 1: Parse raw DB records into ReminderItem view models
+				// Step 1: Parse raw DB records into ReminderItem view models. getUserId() is valid here
+				// because the stream only emits after watchCollection's auth-ready gate.
+				const currentUserId = CloudbaseService.getUserId() ?? '';
 				const records = raw as ReminderDbRecord[];
 				this.originalItems = structuredClone(records);
 				this.items = records.map((record) => ({
@@ -258,20 +277,19 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 					endTime: record.endTime ?? null,
 					// isShared = marked shared on creation (DB flag); isFromOtherMember = owned by another member.
 					isShared: record.isShared ?? false,
-					isFromOtherMember: (record._openid ?? '') !== this.currentUserId
+					isFromOtherMember: (record._openid ?? '') !== currentUserId
 				}));
 				this.filterBarTags = this.computeFilterBarTags();
 				this.hasSharedItems = this.items.some((item) => item.isShared);
+				this.openCount = this.items.filter((item) => item.text.trim() !== '').length;
 				// Step 2: Remove any selected tag filters that no longer exist in the item set
 				this.removeStaleTag();
 				// Step 3: Sync upcoming items to the statistics collection
 				this.updateUpcomingToStatistics();
 				this.timeoutService.clear(TIMEOUT_KEY_REMINDER);
 				this.loading = false;
-				// CloudBase subscription callbacks may emit outside Angular's zone — detectChanges ensures the template updates.
+				// detectChanges forces a synchronous render so updateGridLayout below measures the laid-out grid.
 				this.cdr.detectChanges();
-				// cardGrid becomes available after loading clears; apply the column layout immediately
-				// so the first render has the correct column count without waiting for a resize event.
 				this.updateGridLayout();
 			});
 		}
@@ -318,6 +336,21 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	private getOpenId(entryKey: string): string {
 		return this.items.find((item) => item.key === entryKey)?._openid ?? '';
+	}
+
+	/**
+	 * Front-end edit guard for a reminder entry. Owners (and admins) may always edit; a connected
+	 * account may edit a shared item received from a linked owner — getSharedReminders only surfaces
+	 * shared items from live links, so isFromOtherMember implies a connection, and the admin Cloud
+	 * Function re-verifies it server-side on write. Everything else shows the permission-denied dialog.
+	 *
+	 * @param entryKey - The document key of the entry being edited.
+	 * @returns True when the current user may edit the entry.
+	 */
+	private ensureEditPermission(entryKey: string): boolean {
+		const item = this.items.find((candidate) => candidate.key === entryKey);
+		if (item?.isFromOtherMember) return true;
+		return this.dialogService.ensurePermission(this.dialogComponentContainer, this.getOpenId(entryKey));
 	}
 
 	/**
@@ -445,23 +478,38 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		valueKey: ReminderValueKey,
 		singleValue: string | string[] | null
 	): Promise<void> {
+		const item = this.items.find((candidate) => candidate.key === entryKey);
 		try {
-			// Step 1: Persist the single-value change to CloudBase
-			const item = this.items.find((candidate) => candidate.key === entryKey);
-			await this.databaseService.updateReminderTable(
-				entryKey,
-				valueKey,
-				singleValue,
-				item?.text ?? '',
-				item?.isShared ?? false
-			);
+			// Step 1: Persist — a shared item from a connection routes through the admin Cloud Function
+			// (the own-only rule blocks a direct write to another account's document).
+			if (item?.isFromOtherMember) {
+				const result = await (this.databaseService as CloudbaseService).updateSharedReminderField(
+					entryKey,
+					valueKey,
+					singleValue,
+					item.text ?? ''
+				);
+				if (!result.success) {
+					const originalRecord = this.originalItems.find((candidate) => candidate.key === entryKey);
+					if (originalRecord) this.rollbackSingleValue(item, originalRecord, valueKey);
+					this.dialogService.showPermissionError(this.dialogComponentContainer);
+					return;
+				}
+			} else {
+				await this.databaseService.updateReminderTable(
+					entryKey,
+					valueKey,
+					singleValue,
+					item?.text ?? '',
+					item?.isShared ?? false
+				);
+			}
 
 			// Step 2: Flash the save indicator
 			this.triggerSaveIndicator();
 		} catch (error) {
 			// Roll back the local single value if the session expired, then show error dialog
 			if (error instanceof SessionExpiredError) {
-				const item = this.items.find((candidate) => candidate.key === entryKey);
 				const originalRecord = this.originalItems.find((candidate) => candidate.key === entryKey);
 				if (item && originalRecord) {
 					this.rollbackSingleValue(item, originalRecord, valueKey);
@@ -479,11 +527,23 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private async removeRecordFromDatabase(entryKey: string): Promise<void> {
 		const item = this.items.find((candidate) => candidate.key === entryKey);
 		try {
-			await this.databaseService.removeRecordFromReminderTable(
-				entryKey,
-				item?.text ?? '',
-				item?.isShared ?? false
-			);
+			// A shared item from a connection routes through the admin Cloud Function (own-only rule).
+			if (item?.isFromOtherMember) {
+				const result = await (this.databaseService as CloudbaseService).removeSharedReminder(
+					entryKey,
+					item.text ?? ''
+				);
+				if (!result.success) {
+					this.dialogService.showPermissionError(this.dialogComponentContainer);
+					return;
+				}
+			} else {
+				await this.databaseService.removeRecordFromReminderTable(
+					entryKey,
+					item?.text ?? '',
+					item?.isShared ?? false
+				);
+			}
 			this.triggerSaveIndicator();
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
@@ -580,37 +640,81 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Gets the count of items not yet marked done in the local done-key set.
+	 * Opens a confirm dialog and, on confirm, runs the given write behind a fire-and-forget blocking
+	 * overlay. The block dialog is deliberately NOT awaited: the confirm closes immediately on accept
+	 * and only the blocking overlay stays up until the write completes, so the two dialogs never linger
+	 * and vanish one after the other, and a repeat tap cannot fire a duplicate write.
 	 *
-	 * @returns The number of open (not-done) items.
+	 * @param confirmData - The confirm dialog display data (message, header, accept label).
+	 * @param blockMessage - The message shown on the blocking overlay while the write runs.
+	 * @param write - The async write to perform once the user confirms.
 	 */
-	protected get openCount(): number {
-		return this.items.filter((item) => !this.doneKeys.has(item.key)).length;
+	private confirmThenBlockingWrite(
+		confirmData: string[],
+		blockMessage: string,
+		write: () => Promise<void>
+	): void {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_CONFIRM,
+			async () => {
+				this.dialogService
+					.openDialog(
+						this.dialogComponentContainer,
+						DIALOG_BLOCK,
+						async () => {
+							await write();
+						},
+						blockMessage
+					)
+					.catch(() => {});
+			},
+			confirmData
+		);
 	}
 
 	/**
-	 * Returns whether the given item key is in the local done-key set.
+	 * Marks a reminder done: permanently removes it (like delete) while incrementing the completed
+	 * counter — the private counter for the user's own items, or, for a shared item, the shared counter
+	 * of every linked member via the Cloud Function. Opens a confirmation dialog first; on confirm the
+	 * write runs behind the blocking overlay so a repeat tap cannot fire a duplicate.
 	 *
-	 * @param key - The item's CloudBase document key.
-	 * @returns True when the item is marked done.
+	 * @param item - The reminder item being completed.
 	 */
-	protected isDone(key: string): boolean {
-		return this.doneKeys.has(key);
+	protected completeItem(item: ReminderItem): void {
+		if (!this.ensureEditPermission(item.key)) return;
+		this.confirmThenBlockingWrite(
+			[REMINDER_MSG_COMPLETE_CONFIRM, REMINDER_COMPLETE_TITLE, DIALOG_BTN_CONFIRM],
+			REMINDER_MSG_COMPLETING,
+			() => this.completeItemWrite(item)
+		);
 	}
 
 	/**
-	 * Toggles the done state for a given item key in the local done-key set.
+	 * Performs the completion write behind the blocking overlay: a shared item routes through the admin
+	 * Cloud Function (which deletes it and fans the shared counter out to every linked member), while a
+	 * private item is removed and counted on the current user's own document.
 	 *
-	 * @param key - The item's CloudBase document key.
+	 * @param item - The reminder item being completed.
 	 */
-	protected toggleDone(key: string): void {
-		const updated = new Set(this.doneKeys);
-		if (updated.has(key)) {
-			updated.delete(key);
-		} else {
-			updated.add(key);
+	private async completeItemWrite(item: ReminderItem): Promise<void> {
+		try {
+			if (item.isShared || item.isFromOtherMember) {
+				const result = await (this.databaseService as CloudbaseService).completeSharedReminder(
+					item.key,
+					item.text ?? ''
+				);
+				if (!result.success) {
+					this.dialogService.showPermissionError(this.dialogComponentContainer);
+					return;
+				}
+			} else {
+				await this.databaseService.completeReminder(item.key, item.text ?? '');
+			}
+			this.triggerSaveIndicator();
+		} catch (error) {
+			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}
-		this.doneKeys = updated;
 	}
 
 	// ── tag filter methods for the item list ─────────────────────────────────
@@ -834,7 +938,10 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param textOnly - When true, skips date and link fields and suppresses popover cleanup.
 	 */
 	private async addNewItem(textOnly: boolean): Promise<void> {
+		// Re-entry guard: ignore further clicks or Enter presses while a write is already in flight.
+		if (this.isAddingItem) return;
 		if (!this.newItem.text.trim()) return;
+		this.isAddingItem = true;
 
 		// Step 1: Build the flat record payload
 		const newRecord: Partial<ReminderDbRecord> = {
@@ -876,6 +983,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			}
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
+		} finally {
+			this.isAddingItem = false;
 		}
 	}
 
@@ -885,25 +994,12 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param entryKey - The CloudBase document key identifying the entry to remove.
 	 */
 	protected openDeleteConfirmationDialog(entryKey: string): void {
-		// Step 1: Guard with a permission check — only the record owner may delete
-		const returnCode = this.dialogService.ensurePermission(
-			this.dialogComponentContainer,
-			this.getOpenId(entryKey)
-		)
-			? SUCCESS
-			: FAILURE;
-
-		if (returnCode === FAILURE) return;
-
-		/* Step 2: Open the confirm dialog; the actual DB removal runs inside the async callback
-		   so it only fires after the user explicitly confirms and not on accidental taps. */
-		this.dialogService.openDialog(
-			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
-			async () => {
-				await this.removeRecordFromDatabase(entryKey);
-			},
-			[REMINDER_MSG_DELETE_CONFIRM, DIALOG_BTN_DELETE, DIALOG_BTN_CONFIRM]
+		// Guard with a permission check — only the record owner may delete
+		if (!this.ensureEditPermission(entryKey)) return;
+		this.confirmThenBlockingWrite(
+			[REMINDER_MSG_DELETE_CONFIRM, DIALOG_BTN_DELETE, DIALOG_BTN_CONFIRM],
+			REMINDER_MSG_DELETING,
+			() => this.removeRecordFromDatabase(entryKey)
 		);
 	}
 
@@ -921,13 +1017,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (originalIndex === -1 || item.text === (this.originalItems[originalIndex].text ?? '')) return;
 
 		// Step 2: Guard with a permission check before touching the database
-		const returnCode = this.dialogService.ensurePermission(
-			this.dialogComponentContainer,
-			this.getOpenId(item.key)
-		)
-			? SUCCESS
-			: FAILURE;
-		if (returnCode === FAILURE) return;
+		if (!this.ensureEditPermission(item.key)) return;
 
 		// Step 3: Persist the trimmed text to CloudBase
 		const savedText = item.text.trim();
@@ -973,13 +1063,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (!this.editingItem) return;
 
 		// Step 2: Guard with a permission check — must happen after the null guard on editingItem
-		const returnCode = this.dialogService.ensurePermission(
-			this.dialogComponentContainer,
-			this.getOpenId(this.editingItem.key)
-		)
-			? SUCCESS
-			: FAILURE;
-		if (returnCode === FAILURE) return;
+		if (!this.ensureEditPermission(this.editingItem.key)) return;
 
 		// Step 3: Persist the selected date and refresh the statistics upcoming list
 		this.editingItem.date = date ? Utilities.formatDateForStorage(date) : null;
@@ -1051,13 +1135,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected async onPopoverLinkUpdate(): Promise<void> {
 		if (this.editingItem) {
 			// Step 1: Guard with a permission check before writing to the database
-			const returnCode = this.dialogService.ensurePermission(
-				this.dialogComponentContainer,
-				this.getOpenId(this.editingItem.key)
-			)
-				? SUCCESS
-				: FAILURE;
-			if (returnCode === FAILURE) return;
+			if (!this.ensureEditPermission(this.editingItem.key)) return;
 
 			/* Step 2: Normalize the URL before persisting — empty input clears the field rather
 			   than storing a blank string, matching the null-vs-string distinction used elsewhere. */
@@ -1124,13 +1202,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 
 		// Step 3: Guard with a permission check before writing to the database
-		const returnCode = this.dialogService.ensurePermission(
-			this.dialogComponentContainer,
-			this.getOpenId(item.key)
-		)
-			? SUCCESS
-			: FAILURE;
-		if (returnCode === FAILURE) return;
+		if (!this.ensureEditPermission(item.key)) return;
 
 		// Step 4: Apply the new tag and persist
 		item.tag = tagText;
@@ -1258,13 +1330,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected async clearDate(item: ReminderItem): Promise<void> {
 		// Step 1: Guard with a permission check before touching the database
-		const returnCode = this.dialogService.ensurePermission(
-			this.dialogComponentContainer,
-			this.getOpenId(item.key)
-		)
-			? SUCCESS
-			: FAILURE;
-		if (returnCode === FAILURE) return;
+		if (!this.ensureEditPermission(item.key)) return;
 
 		// Step 2: Capture whether time fields need clearing before nulling everything
 		const hadTime = item.startTime !== null || item.endTime !== null;
@@ -1295,13 +1361,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected async clearTime(item: ReminderItem): Promise<void> {
 		// Step 1: Guard with a permission check before touching the database
-		const returnCode = this.dialogService.ensurePermission(
-			this.dialogComponentContainer,
-			this.getOpenId(item.key)
-		)
-			? SUCCESS
-			: FAILURE;
-		if (returnCode === FAILURE) return;
+		if (!this.ensureEditPermission(item.key)) return;
 
 		// Step 2: Clear both time fields on the view model for instant UI feedback
 		item.startTime = null;
@@ -1350,13 +1410,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected async clearLink(item: ReminderItem): Promise<void> {
 		// Step 1: Guard with a permission check before touching the database
-		const returnCode = this.dialogService.ensurePermission(
-			this.dialogComponentContainer,
-			this.getOpenId(item.key)
-		)
-			? SUCCESS
-			: FAILURE;
-		if (returnCode === FAILURE) return;
+		if (!this.ensureEditPermission(item.key)) return;
 
 		/* Step 2: Clear the link on the view model and reset the popover input if this card
 		   is currently open in the link popover — prevents a stale URL showing when it re-opens. */

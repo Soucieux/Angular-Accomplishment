@@ -258,10 +258,6 @@
 	background: var(--card-color, #6b7280);
 }
 
-.rm-card-done {
-	background: rgba(255, 255, 255, 0.6);
-}
-
 @keyframes rm-due-soon-pulse {
 	0%,
 	100% {
@@ -305,18 +301,18 @@
 
 .rm-checkbox .rm-icon {
 	font-size: 15px;
-	color: #fff;
-	opacity: 0;
-	transition: opacity 0.12s;
+	color: #cbd5e1;
+	opacity: 1;
+	transition: color 0.12s;
 }
 
-.rm-checkbox-checked {
+.rm-checkbox:hover {
 	background: var(--check-color, #1a6dff);
 	border-color: var(--check-color, #1a6dff);
 }
 
-.rm-checkbox-checked .rm-icon {
-	opacity: 1;
+.rm-checkbox:hover .rm-icon {
+	color: #fff;
 }
 
 .rm-card-title-input {
@@ -338,12 +334,6 @@
 .rm-card-title-input::placeholder {
 	color: #9aa3af;
 	font-weight: 400;
-}
-
-.rm-card-done .rm-card-title-input {
-	color: #9aa3af;
-	text-decoration: line-through;
-	text-decoration-color: #cbd5e1;
 }
 
 .rm-card-category {
@@ -525,7 +515,7 @@
 	font-weight: 600;
 	color: var(--card-color, #1a6dff);
 	cursor: pointer;
-	padding: 8px 8px;
+	padding: 6px 8px;
 	border-radius: 6px;
 	line-height: 1;
 	transition: background 0.12s;
@@ -548,7 +538,7 @@
 	font-weight: 600;
 	color: var(--card-color, #1a6dff);
 	cursor: pointer;
-	padding: 8px 8px;
+	padding: 5px 8px;
 	border-radius: 6px;
 	line-height: 1;
 	transition: background 0.12s;

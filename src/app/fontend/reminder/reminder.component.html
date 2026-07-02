@@ -19,6 +19,10 @@
 					{{ openCount }}
 					{{ openCount === 1 ? REMINDER_GREETING_SINGULAR : REMINDER_GREETING_PLURAL }}
 					{{ REMINDER_AWAIT_SUFFIX_EN }} <span class="cf">{{ REMINDER_AWAIT_SUFFIX_CN }}</span>
+					· {{ completedPrivateCount }} {{ REMINDER_GREETING_COMPLETED }}
+					@if (hasConnections) {
+						· {{ completedSharedCount }} {{ REMINDER_GREETING_SHARED_COMPLETED }}
+					}
 				</div>
 			</div>
 			<div
@@ -94,17 +98,15 @@
 				@for (item of pagedItems; track item.key) {
 					<div
 						class="rm-card"
-						[class.rm-card-done]="isDone(item.key)"
-						[class.rm-card-due-soon]="isDueSoon(item) && !isDone(item.key)"
+						[class.rm-card-due-soon]="isDueSoon(item)"
 						[class.rm-card-shared]="item.isShared || item.isFromOtherMember"
 						[style.--card-color]="tagColor(item.tag)">
 						<!-- Top: checkbox + title + category label + delete -->
 						<div class="rm-card-top">
 							<div
 								class="rm-checkbox"
-								[class.rm-checkbox-checked]="isDone(item.key)"
 								[style.--check-color]="tagColor(item.tag)"
-								(click)="toggleDone(item.key)">
+								(click)="completeItem(item)">
 								<span class="material-symbols-outlined rm-icon">check</span>
 							</div>
 							<div class="rm-card-meta">
@@ -501,7 +503,7 @@
 							[options]="REMINDER_TIME_OPTIONS"
 							optionLabel="label"
 							optionValue="value"
-							[placeholder]="REMINDER_ADD_TIME_LABEL"
+							[placeholder]="REMINDER_START_TIME_LABEL"
 							[appendTo]="'body'"
 							panelStyleClass="dropdown-panel-font"
 							[disabled]="isTimeInputDisabled"
@@ -513,7 +515,7 @@
 							[options]="filteredEndTimeOptions"
 							optionLabel="label"
 							optionValue="value"
-							[placeholder]="REMINDER_ADD_TIME_LABEL"
+							[placeholder]="REMINDER_END_TIME_LABEL"
 							[appendTo]="'body'"
 							panelStyleClass="dropdown-panel-font"
 							[disabled]="isTimeInputDisabled || !editingStartTime"

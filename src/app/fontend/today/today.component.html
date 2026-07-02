@@ -97,13 +97,17 @@
 			</div>
 			<div class="tp-legend-spacer"></div>
 			<div class="tp-actions">
+				<button class="tp-button-clear" (click)="clearAllLocalItems()">
+					<span class="material-symbols-outlined">delete_sweep</span>
+					<span class="hide-on-narrow-or-mobile">{{ TODAY_BTN_CLEAR_ALL }}</span>
+				</button>
 				@if (!tracking()) {
-					<button class="tp-btn-track" (click)="beginTracking()">
+					<button class="tp-button-track" (click)="beginTracking()">
 						<span class="material-symbols-outlined">play_circle</span>
 						<span class="hide-on-narrow-or-mobile">{{ TODAY_BTN_START_TRACKING }}</span>
 					</button>
 				} @else {
-					<button class="tp-btn-track is-live" (click)="stopTracking()">
+					<button class="tp-button-track is-live" (click)="stopTracking()">
 						<span class="material-symbols-outlined">stop_circle</span>
 						<span class="hide-on-narrow-or-mobile"
 							>{{ TODAY_BTN_STOP_TRACKING }} · {{ trackElapsedLabel() }}</span
@@ -356,5 +360,8 @@
 				{{ draggedTitle() }}
 			</div>
 		}
+
+		<!-- Host for DialogService-rendered dialogs (clear-all confirmation) -->
+		<ng-template #dialogComponentContainer></ng-template>
 	</div>
 }

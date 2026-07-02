@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { of } from 'rxjs';
 
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TodayComponent } from './today.component';
 import { TodayTask } from './today.model';
 import { TASK_SOURCE_LOCAL } from './today.model';
@@ -24,12 +25,22 @@ describe('TodayComponent', () => {
 	let fixture: ComponentFixture<TodayComponent>;
 
 	beforeEach(async () => {
-		const mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', ['getReminderTableDetails']);
+		const mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
+			'getReminderTableDetails',
+			'getTodayItems',
+			'saveTodayItems'
+		]);
 		mockDb.getReminderTableDetails.and.returnValue(of([]));
+		mockDb.getTodayItems.and.resolveTo([]);
+		mockDb.saveTodayItems.and.resolveTo();
+		const mockDialog = jasmine.createSpyObj<DialogService>('DialogService', ['openDialog']);
 
 		await TestBed.configureTestingModule({
 			imports: [TodayComponent],
-			providers: [{ provide: DatabaseService, useValue: mockDb }]
+			providers: [
+				{ provide: DatabaseService, useValue: mockDb },
+				{ provide: DialogService, useValue: mockDialog }
+			]
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(TodayComponent);

@@ -7,6 +7,7 @@ import {
 	OnInit,
 	PLATFORM_ID,
 	ViewChild,
+	ViewContainerRef,
 	computed,
 	effect,
 	signal
@@ -15,10 +16,13 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Utilities } from '../../common/utilities/app.utilities';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
+import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 import {
 	KEY_ENTER,
 	KEY_ESCAPE,
+	TODAY_AUTOSAVE_DEBOUNCE_MS,
 	TODAY_LABEL_AM,
 	TODAY_LABEL_PM,
 	TODAY_LOCAL_TASK_ID_PREFIX,
@@ -31,6 +35,9 @@ import {
 	TODAY_BTN_DRAG_MOVE,
 	TODAY_BTN_START_TRACKING,
 	TODAY_BTN_STOP_TRACKING,
+	TODAY_BTN_CLEAR_ALL,
+	TODAY_CONFIRM_CLEAR_MESSAGE,
+	TODAY_CONFIRM_CLEAR_HEADER,
 	TODAY_EYEBROW,
 	TODAY_HINT_DRAG_UNTIMED,
 	TODAY_LABEL_TASKS,
@@ -84,6 +91,9 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	@ViewChild('untimedZone') private untimedZoneRef!: ElementRef<HTMLDivElement>;
 	@ViewChild('pendingInput') private pendingInputRef?: ElementRef<HTMLInputElement>;
 	@ViewChild('editInput') private editInputRef?: ElementRef<HTMLInputElement>;
+	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
+	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
+	private dialogComponentContainer!: ViewContainerRef;
 
 	/* ─────────────────────────────────────────
 	   Constants re-exposed for the template
@@ -101,6 +111,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly TODAY_LABEL_TRACKED = TODAY_LABEL_TRACKED;
 	protected readonly TODAY_BTN_START_TRACKING = TODAY_BTN_START_TRACKING;
 	protected readonly TODAY_BTN_STOP_TRACKING = TODAY_BTN_STOP_TRACKING;
+	protected readonly TODAY_BTN_CLEAR_ALL = TODAY_BTN_CLEAR_ALL;
 	protected readonly TODAY_BTN_DRAG_CREATE = TODAY_BTN_DRAG_CREATE;
 	protected readonly TODAY_BTN_DRAG_MOVE = TODAY_BTN_DRAG_MOVE;
 	protected readonly TODAY_TRACKING_PREFIX = TODAY_TRACKING_PREFIX;
@@ -155,6 +166,12 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly pendingSource = signal<TodayTask['source'] | null>(null);
 	private tasks = signal<TodayTask[]>([]);
 	private remindersSub: Subscription | undefined;
+	private hasRestored = false;
+	private persistTimeout: ReturnType<typeof setTimeout> | undefined;
+	/** The locally created items (timed, untimed, and tracked) that get backed up — reminders are excluded. */
+	private readonly persistableItems = computed(() =>
+		this.tasks().filter((task) => task.source !== TASK_SOURCE_REMINDER)
+	);
 	/** Live layout state for the dragged ghost and the blocks it reflows. */
 	private readonly dragMoveLayoutState = computed(() => this.buildDragMoveLayoutState());
 	/** Geometry of the dragged ghost while it is previewed. */
@@ -349,15 +366,29 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 	});
 
+	/**
+	 * Backs up the locally created items to the database, debounced, whenever they change after the
+	 * initial restore. Runs only for a signed-in user; a signed-out board is never persisted.
+	 */
+	protected readonly autosaveLocalItems = effect(() => {
+		const items = this.persistableItems();
+		if (!this.hasRestored || !CloudbaseService.getUserId()) return;
+		clearTimeout(this.persistTimeout);
+		this.persistTimeout = setTimeout(() => {
+			this.databaseService.saveTodayItems(items).catch(() => {});
+		}, TODAY_AUTOSAVE_DEBOUNCE_MS);
+	});
+
 	constructor(
 		@Inject(PLATFORM_ID) private readonly platformId: object,
 		private readonly databaseService: DatabaseService,
+		private readonly dialogService: DialogService,
 		protected utilities: Utilities
 	) {}
 
 	/**
 	 * Detects the initial viewport width, starts the clock tick, subscribes to today's reminders,
-	 * and schedules a 1-second interval to keep the clock current.
+	 * restores the backed-up local items, and schedules a 1-second interval to keep the clock current.
 	 */
 	ngOnInit(): void {
 		this.isMobile = this.utilities.isNarrowViewport();
@@ -365,6 +396,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.clockInterval = setInterval(() => this.tick(), 1000);
 		if (isPlatformBrowser(this.platformId)) {
 			this.refreshReminderSub();
+			this.restoreLocalItems();
 		}
 	}
 
@@ -383,11 +415,12 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Clears the clock interval, unsubscribes from the reminders stream, and removes
-	 * any active drag event listeners.
+	 * Clears the clock interval and any pending autosave, unsubscribes from the reminders stream,
+	 * and removes any active drag event listeners.
 	 */
 	ngOnDestroy(): void {
 		clearInterval(this.clockInterval);
+		clearTimeout(this.persistTimeout);
 		this.remindersSub?.unsubscribe();
 		this.dragCleanup?.();
 	}
@@ -395,6 +428,22 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	/* ─────────────────────────────────────────
 	   Quick-add / untimed task actions
 	───────────────────────────────────────── */
+
+	/**
+	 * Opens a confirmation dialog and, once confirmed, removes every locally created item
+	 * (timed, untimed, and tracked) from the board and clears the database backup.
+	 */
+	protected clearAllLocalItems(): void {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'confirm',
+			() => {
+				this.tasks.update((ts) => ts.filter((task) => task.source === TASK_SOURCE_REMINDER));
+				this.databaseService.saveTodayItems([]).catch(() => {});
+			},
+			[TODAY_CONFIRM_CLEAR_MESSAGE, TODAY_CONFIRM_CLEAR_HEADER, TODAY_BTN_CLEAR_ALL]
+		);
+	}
 
 	/**
 	 * Adds a new untimed local task from the quick-add input when Enter is pressed.
@@ -893,6 +942,35 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 				...ts.filter((task) => task.source !== TASK_SOURCE_REMINDER),
 				...reminderTasks
 			]);
+		});
+	}
+
+	/**
+	 * Restores the backed-up local items once authentication is ready, then enables autosave.
+	 * Skips seeding for a signed-out user, and leaves an in-progress board untouched when the user
+	 * added items during the auth gap, so a slow backup read never clobbers fresh work.
+	 */
+	private restoreLocalItems(): void {
+		CloudbaseService.authReady$.pipe(take(1)).subscribe(() => {
+			if (!CloudbaseService.getUserId()) {
+				this.hasRestored = true;
+				return;
+			}
+			this.databaseService
+				.getTodayItems()
+				.then((items) => {
+					if (!items.length) return;
+					// Leave the board untouched if the user already added local/tracked items during the auth gap.
+					if (this.tasks().some((task) => task.source !== TASK_SOURCE_REMINDER)) return;
+					this.tasks.update((ts) => [
+						...ts.filter((task) => task.source === TASK_SOURCE_REMINDER),
+						...items
+					]);
+				})
+				.catch(() => {})
+				.then(() => {
+					this.hasRestored = true;
+				});
 		});
 	}
 

@@ -23,47 +23,59 @@ describe('ConfirmDialogComponent', () => {
     // ── openDialog ─────────────────────────────────────────────────────────
 
     describe('openDialog', () => {
-        it('calls confirmationService.confirm with the correct message and header', () => {
-            const confirmSpy = spyOn((component as any).confirmationService, 'confirm');
-            const cb = async () => {};
-            component.openDialog(cb, ['Are you sure?', 'Confirm Action', 'Delete']);
+        it('sets message, header, and acceptLabel from the data array', () => {
+            component.openDialog(async () => {}, ['Are you sure?', 'Confirm Action', 'Delete']);
 
-            expect(confirmSpy).toHaveBeenCalledWith(
-                jasmine.objectContaining({ message: 'Are you sure?', header: 'Confirm Action' })
-            );
+            expect((component as any).message).toBe('Are you sure?');
+            expect((component as any).header).toBe('Confirm Action');
+            expect((component as any).acceptLabel).toBe('Delete');
         });
 
-        it('passes the acceptButtonProps label from data[2]', () => {
-            const confirmSpy = spyOn((component as any).confirmationService, 'confirm');
-            component.openDialog(async () => {}, ['msg', 'header', 'Remove Item']);
+        it('makes the dialog visible', () => {
+            component.openDialog(async () => {}, ['msg', 'header', 'OK']);
 
-            expect(confirmSpy).toHaveBeenCalledWith(
-                jasmine.objectContaining({
-                    acceptButtonProps: jasmine.objectContaining({ label: 'Remove Item' })
-                })
-            );
+            expect((component as any).visible).toBeTrue();
         });
+    });
 
-        it('calls the acceptCallback when the accept handler is invoked', async () => {
+    // ── onAccept ───────────────────────────────────────────────────────────
+
+    describe('onAccept', () => {
+        it('calls the acceptCallback', async () => {
             let accepted = false;
-            const cb = async () => { accepted = true; };
-            let capturedConfig: any;
-            spyOn((component as any).confirmationService, 'confirm').and.callFake((config: any) => {
-                capturedConfig = config;
-            });
-
+            const cb = async () => {
+                accepted = true;
+            };
             component.openDialog(cb, ['msg', 'header', 'OK']);
-            await capturedConfig.accept();
+
+            await (component as any).onAccept();
+
             expect(accepted).toBeTrue();
         });
 
-        it('sets closable to false', () => {
-            let capturedConfig: any;
-            spyOn((component as any).confirmationService, 'confirm').and.callFake((config: any) => {
-                capturedConfig = config;
-            });
+        it('closes the dialog after the callback resolves', async () => {
             component.openDialog(async () => {}, ['msg', 'header', 'OK']);
-            expect(capturedConfig.closable).toBeFalse();
+
+            await (component as any).onAccept();
+
+            expect((component as any).visible).toBeFalse();
+        });
+    });
+
+    // ── onReject ───────────────────────────────────────────────────────────
+
+    describe('onReject', () => {
+        it('closes the dialog without calling the acceptCallback', () => {
+            let accepted = false;
+            const cb = async () => {
+                accepted = true;
+            };
+            component.openDialog(cb, ['msg', 'header', 'OK']);
+
+            (component as any).onReject();
+
+            expect(accepted).toBeFalse();
+            expect((component as any).visible).toBeFalse();
         });
     });
 
@@ -82,6 +94,14 @@ describe('ConfirmDialogComponent', () => {
             component.closed$.subscribe((v) => (emittedValue = v));
             (component as any).onDialogClosed();
             expect(emittedValue).toBeUndefined();
+        });
+    });
+
+    // ── focusAcceptButton ──────────────────────────────────────────────────
+
+    describe('focusAcceptButton', () => {
+        it('does not throw when the accept button ref is not yet available', () => {
+            expect(() => (component as any).focusAcceptButton()).not.toThrow();
         });
     });
 

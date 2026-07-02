@@ -1,0 +1,32 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	[closable]="false"
+	[dismissableMask]="false"
+	[closeOnEscape]="true"
+	[focusOnShow]="false"
+	[motionOptions]="{ disabled: true }"
+	[maskMotionOptions]="{ disabled: true }"
+	[appendTo]="'body'"
+	role="alertdialog"
+	[header]="header"
+	styleClass="confirm-dialog"
+	(onShow)="focusAcceptButton()"
+	(onHide)="onDialogClosed()">
+	<div class="confirm-dialog-body">
+		<i class="pi pi-info-circle confirm-dialog-icon"></i>
+		<span class="confirm-dialog-message">{{ message }}</span>
+	</div>
+	<ng-template #footer>
+		<button type="button" class="confirm-dialog-button-ghost" (click)="onReject()">
+			{{ DIALOG_BTN_CANCEL }}
+		</button>
+		<button
+			type="button"
+			class="confirm-dialog-button-gradient"
+			autofocus
+			(click)="onAccept()">
+			{{ acceptLabel }}
+		</button>
+	</ng-template>
+</p-dialog>

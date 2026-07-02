@@ -60,12 +60,13 @@
 }
 
 .category-dialog-field input[type='text'] {
-	font-size: 15px;
+	font-size: 14px;
 	color: #1a1a1a;
 	background: rgba(255, 255, 255, 0.8);
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-radius: 12px;
-	padding: 11px 14px;
+	border: 1.5px solid rgba(213, 51, 105, 0.25);
+	border-radius: 6px;
+	height: 35px;
+	padding: 0 12px;
 	outline: none;
 	transition:
 		background 150ms,
@@ -74,7 +75,7 @@
 	box-sizing: border-box;
 
 	&:focus {
-		border: 1px solid transparent;
+		border: 1.5px solid transparent;
 		background:
 			rgba(255, 255, 255, 0.8) padding-box,
 			linear-gradient(135deg, #d53369 0%, #daae51 100%) border-box;

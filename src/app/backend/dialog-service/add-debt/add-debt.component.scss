@@ -62,12 +62,13 @@
 .add-debt-field input[type='text'],
 .add-debt-field input[type='number'],
 .add-debt-field input[type='date'] {
-	font-size: 15px;
+	font-size: 14px;
 	color: #1a1a1a;
 	background: rgba(255, 255, 255, 0.8);
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-radius: 12px;
-	padding: 11px 14px;
+	border: 1.5px solid rgba(213, 51, 105, 0.25);
+	border-radius: 6px;
+	height: 35px;
+	padding: 0 12px;
 	outline: none;
 	transition:
 		background 150ms,
@@ -76,12 +77,37 @@
 	box-sizing: border-box;
 
 	&:focus {
-		border: 1px solid transparent;
+		border: 1.5px solid transparent;
 		background:
 			rgba(255, 255, 255, 0.8) padding-box,
 			linear-gradient(135deg, #d53369 0%, #daae51 100%) border-box;
 		box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.1);
 	}
+}
+
+::ng-deep .add-debt-dialog .p-datepicker {
+	width: 100%;
+}
+
+::ng-deep .add-debt-dialog .p-datepicker-input {
+	height: 35px !important;
+	padding: 0 12px !important;
+	border: 1.5px solid rgba(213, 51, 105, 0.25) !important;
+	border-radius: 6px !important;
+	background: rgba(255, 255, 255, 0.8) !important;
+	font-size: 14px !important;
+	color: #1a1a1a !important;
+	box-shadow: none !important;
+	box-sizing: border-box !important;
+}
+
+::ng-deep .add-debt-dialog .p-datepicker-input:enabled:focus {
+	outline: none !important;
+	border: 1.5px solid transparent !important;
+	background:
+		rgba(255, 255, 255, 0.8) padding-box,
+		linear-gradient(135deg, #d53369 0%, #daae51 100%) border-box !important;
+	box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.1) !important;
 }
 
 .add-debt-field-row {

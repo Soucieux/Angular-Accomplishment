@@ -21,7 +21,8 @@ import {
 	VAULT_DIALOG_VERIFIED_LABEL,
 	VAULT_FILTER_EMAIL,
 	VAULT_FILTER_PHONE,
-	VAULT_FILTER_LINK
+	VAULT_FILTER_LINK,
+	VAULT_CATEGORY_UNCATEGORIZED_LABEL
 } from '../../../common/locale/locale-strings';
 import {
 	NewAccountData,
@@ -29,6 +30,7 @@ import {
 	VaultConnectionInput,
 	VaultNodeType,
 	VAULT_CATEGORY_DEFS,
+	VAULT_CATEGORY_OTHER,
 	VAULT_CATEGORY_SWATCHES,
 	VAULT_CONNECTION_TYPES
 } from '../../../fontend/vault/vault.model';
@@ -63,7 +65,7 @@ export class AddAccountDialogComponent {
 	protected visible = false;
 	protected name = '';
 	protected verified = false;
-	protected selectedCategoryKey = '';
+	protected selectedCategoryKey = VAULT_CATEGORY_OTHER.key;
 	protected connections: VaultConnectionInput[] = [{ value: '', type: VAULT_NODE_EMAIL }];
 	protected existingCategories: VaultCategoryDef[] = [];
 	protected showNewCategory = false;
@@ -95,7 +97,7 @@ export class AddAccountDialogComponent {
 		this.existingCategories = existingCategories ?? [];
 		this.name = '';
 		this.verified = false;
-		this.selectedCategoryKey = '';
+		this.selectedCategoryKey = VAULT_CATEGORY_OTHER.key;
 		this.connections = [{ value: '', type: VAULT_NODE_EMAIL }];
 		this.showNewCategory = false;
 		this.newCategoryName = '';
@@ -218,12 +220,21 @@ export class AddAccountDialogComponent {
 	 * @returns The category chip view-models.
 	 */
 	protected get categoryChips(): { key: string; label: string; hex: string; isSelected: boolean }[] {
-		return [...VAULT_CATEGORY_DEFS, ...this.existingCategories].map((categoryDef) => ({
-			key: categoryDef.key,
-			label: categoryDef.label,
-			hex: categoryDef.hex,
-			isSelected: !this.isNewSelected && this.selectedCategoryKey === categoryDef.key
-		}));
+		return [
+			// Uncategorized is the default category, always offered first as a selectable chip.
+			{
+				key: VAULT_CATEGORY_OTHER.key,
+				label: VAULT_CATEGORY_UNCATEGORIZED_LABEL,
+				hex: VAULT_CATEGORY_OTHER.hex,
+				isSelected: !this.isNewSelected && this.selectedCategoryKey === VAULT_CATEGORY_OTHER.key
+			},
+			...[...VAULT_CATEGORY_DEFS, ...this.existingCategories].map((categoryDef) => ({
+				key: categoryDef.key,
+				label: categoryDef.label,
+				hex: categoryDef.hex,
+				isSelected: !this.isNewSelected && this.selectedCategoryKey === categoryDef.key
+			}))
+		];
 	}
 
 	/**

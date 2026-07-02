@@ -1,18 +1,25 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
-import { ConfirmationService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { Component, EventEmitter, Output } from '@angular/core';
+import { DialogModule } from 'primeng/dialog';
+import { DIALOG_BTN_CANCEL } from '../../../common/locale/locale-strings';
 
 @Component({
 	selector: 'confirm-dialog',
-	template: ` <p-confirmdialog styleClass="confirm-dialog" (onHide)="onDialogClosed()" />`,
-	styleUrl: './confirm.component.scss',
 	standalone: true,
-	imports: [ConfirmDialogModule],
-	providers: [ConfirmationService]
+	imports: [DialogModule],
+	templateUrl: './confirm.component.html',
+	styleUrl: './confirm.component.scss'
 })
 export class ConfirmDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
-	private confirmationService = inject(ConfirmationService);
+
+	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
+
+	protected visible = false;
+	protected message = '';
+	protected header = '';
+	protected acceptLabel = '';
+
+	private acceptCallback!: () => Promise<void>;
 
 	/**
 	 * Opens the confirm dialog with the given message, header, and accept label.
@@ -24,39 +31,44 @@ export class ConfirmDialogComponent {
 	 * @param data[2] - The accept button label.
 	 */
 	public openDialog(acceptCallback: () => Promise<void>, data: string[]): void {
-		// Step 1: Map display data from positional array — callers must pass [message, header, acceptLabel] in order
-		this.confirmationService.confirm({
-			message: data[0],
-			header: data[1],
+		this.message = data[0];
+		this.header = data[1];
+		this.acceptLabel = data[2];
+		this.acceptCallback = acceptCallback;
+		this.visible = true;
+	}
 
-			// Step 2: Lock down dismissal — closable:false forces the user to pick Accept or Cancel explicitly
-			closable: false,
-			closeOnEscape: true,
-			icon: 'pi pi-info-circle',
+	/**
+	 * Backup focus call for the accept button, in case its native autofocus attribute
+	 * did not take (e.g. the browser suppressed it since the dialog opens via a JS
+	 * event rather than a page load). The button lives inside the p-dialog footer's
+	 * <ng-template>, which is rendered by p-dialog's own view, not this component's —
+	 * a ViewChild query here cannot reliably resolve it, so a direct DOM lookup is used
+	 * instead. With [focusOnShow]="false" on p-dialog, nothing else competes for focus.
+	 */
+	protected focusAcceptButton(): void {
+		document.querySelector<HTMLButtonElement>('.confirm-dialog-button-gradient')?.focus();
+	}
 
-			// Step 3: Configure button appearance — reject is neutral/outlined; accept is danger-styled to signal destructiveness
-			rejectButtonProps: {
-				label: 'Cancel',
-				severity: 'secondary',
-				outlined: true
-			},
-			acceptButtonProps: {
-				label: data[2],
-				severity: 'danger'
-			},
+	/**
+	 * Invokes the accept callback, then closes the dialog.
+	 */
+	protected async onAccept(): Promise<void> {
+		await this.acceptCallback();
+		this.visible = false;
+	}
 
-			// Step 4: Wire accept callback — async wrapper is required because PrimeNG's accept handler is synchronous by signature
-			accept: async () => {
-				await acceptCallback();
-			},
-			reject: () => {}
-		});
+	/**
+	 * Closes the dialog without invoking the accept callback.
+	 */
+	protected onReject(): void {
+		this.visible = false;
 	}
 
 	/**
 	 * Handles the dialog closed event by emitting the closed event.
 	 */
-	protected onDialogClosed() {
+	protected onDialogClosed(): void {
 		this.closed$.emit();
 	}
 }

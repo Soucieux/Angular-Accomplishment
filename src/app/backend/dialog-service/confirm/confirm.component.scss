@@ -24,36 +24,9 @@
 	color: white !important;
 }
 
-::ng-deep .confirm-dialog .p-confirmdialog-icon {
-	color: rgba(247, 151, 30, 0.9) !important;
-	font-size: 30px !important;
-	flex-shrink: 0;
-}
-
 ::ng-deep .confirm-dialog .p-dialog-content {
 	padding: 24px 40px 16px 24px !important;
 	background: transparent !important;
-	display: flex !important;
-	align-items: center !important;
-	gap: 14px !important;
-}
-
-::ng-deep .confirm-dialog .p-confirmdialog-content {
-	display: flex !important;
-	flex-direction: column !important;
-	align-items: center !important;
-	justify-content: center !important;
-	width: 100% !important;
-	gap: 6px !important;
-}
-
-::ng-deep .confirm-dialog .p-confirmdialog-message {
-	font-size: 15px !important;
-	color: rgba(40, 15, 35, 0.82) !important;
-	line-height: 1.5 !important;
-	white-space: pre-line !important;
-	text-align: center !important;
-	width: 100% !important;
 }
 
 ::ng-deep .confirm-dialog .p-dialog-footer {
@@ -68,37 +41,65 @@
 	gap: 10px !important;
 }
 
-::ng-deep .confirm-dialog .p-dialog-footer .p-confirmdialog-reject-button,
-::ng-deep .confirm-dialog .p-dialog-footer .p-confirmdialog-accept-button {
-	display: inline-flex !important;
-	align-items: center !important;
-	justify-content: center !important;
-	height: 32px !important;
-	padding: 0 14px !important;
-	font-size: 13px !important;
-	font-weight: 600 !important;
-	border-radius: 9px !important;
+/* ─────────────────────────────────────────
+   Component styles
+───────────────────────────────────────── */
+.confirm-dialog-body {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	width: 100%;
 }
 
-::ng-deep .confirm-dialog .p-dialog-footer .p-confirmdialog-reject-button {
-	background: transparent !important;
-	border: 1.5px solid rgba(213, 51, 105, 0.4) !important;
-	color: rgba(213, 51, 105, 0.85) !important;
+.confirm-dialog-icon {
+	color: rgba(247, 151, 30, 0.9);
+	font-size: 30px;
+	flex-shrink: 0;
 }
 
-::ng-deep .confirm-dialog .p-dialog-footer .p-confirmdialog-reject-button:hover {
-	background: rgba(213, 51, 105, 0.05) !important;
+.confirm-dialog-message {
+	font-size: 15px;
+	color: rgba(40, 15, 35, 0.82);
+	line-height: 1.5;
+	white-space: pre-line;
+	text-align: center;
+	flex: 1;
 }
 
-::ng-deep .confirm-dialog .p-dialog-footer .p-confirmdialog-accept-button {
-	background: linear-gradient(135deg, #d53369 0%, #ef5350 100%) !important;
-	border: none !important;
+.confirm-dialog-button-ghost,
+.confirm-dialog-button-gradient {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 32px;
+	padding: 0 14px;
+	font-size: 13px;
+	font-weight: 600;
+	border-radius: 9px;
+	cursor: pointer;
+	transition: background 150ms;
+}
+
+.confirm-dialog-button-ghost {
+	background: transparent;
+	border: 1.5px solid rgba(213, 51, 105, 0.4);
+	color: rgba(213, 51, 105, 0.85);
+}
+
+.confirm-dialog-button-ghost:hover {
+	background: rgba(213, 51, 105, 0.05);
+}
+
+.confirm-dialog-button-gradient {
+	background: linear-gradient(135deg, #d53369 0%, #ef5350 100%);
+	border: none;
 	color: #fff !important;
 }
 
-::ng-deep .confirm-dialog .p-dialog-footer .p-button .p-button-label {
-	font-size: 13px !important;
-	font-weight: 600 !important;
+.confirm-dialog-button-ghost:focus-visible,
+.confirm-dialog-button-gradient:focus-visible {
+	outline: 2px solid rgba(213, 51, 105, 0.55);
+	outline-offset: 2px;
 }
 
 /* ─────────────────────────────────────────

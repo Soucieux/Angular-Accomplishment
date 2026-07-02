@@ -68,12 +68,13 @@
 }
 
 .delete-account-field input[type='password'] {
-	font-size: 15px;
+	font-size: 14px;
 	color: #1a1a1a;
 	background: rgba(255, 255, 255, 0.8);
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-radius: 12px;
-	padding: 11px 14px;
+	border: 1.5px solid rgba(220, 38, 38, 0.25);
+	border-radius: 6px;
+	height: 35px;
+	padding: 0 12px;
 	outline: none;
 	width: 100%;
 	box-sizing: border-box;
@@ -84,7 +85,7 @@
 	letter-spacing: 1.5px;
 
 	&:focus {
-		border: 1px solid transparent;
+		border: 1.5px solid transparent;
 		background:
 			rgba(255, 255, 255, 0.8) padding-box,
 			linear-gradient(135deg, #dc2626 0%, #9b1c1c 100%) border-box;
@@ -94,7 +95,7 @@
 	&::placeholder {
 		font-family: 'app-font', sans-serif;
 		letter-spacing: normal;
-		font-size: 14px;
+		font-size: 13px;
 		color: rgba(100, 116, 139, 0.7);
 	}
 }

@@ -1,19 +1,18 @@
 <p-dialog
 	[(visible)]="visible"
 	[modal]="true"
-	[draggable]="false"
+	appendTo="body"
 	[resizable]="false"
-	[dismissableMask]="true"
-	[style]="{ width: '440px', maxWidth: '94vw' }"
-	styleClass="add-account-dialog"
-	(onHide)="onDialogClosed()">
+	[closable]="false"
+	(onHide)="onDialogClosed()"
+	styleClass="add-account-dialog">
 	<ng-template #header>
 		<span class="add-account-dialog-title">{{ VAULT_DIALOG_TITLE }}</span>
 	</ng-template>
 
-	<div class="add-account-body">
-		<p class="add-account-subtitle">{{ VAULT_DIALOG_SUBTITLE }}</p>
+	<p class="add-account-subtitle">{{ VAULT_DIALOG_SUBTITLE }}</p>
 
+	<div class="add-account-field">
 		<label class="field-label" for="vault-account-name">{{ VAULT_DIALOG_NAME_LABEL }}</label>
 		<input
 			id="vault-account-name"
@@ -22,7 +21,9 @@
 			[(ngModel)]="name"
 			(keyup.enter)="onSubmit()"
 			[placeholder]="VAULT_DIALOG_NAME_PLACEHOLDER" />
+	</div>
 
+	<div class="add-account-field">
 		<div class="field-label">{{ VAULT_DIALOG_CATEGORY_LABEL }}</div>
 		<div class="category-row">
 			@for (category of categoryChips; track category.key) {
@@ -61,19 +62,21 @@
 				</button>
 			}
 		</div>
+	</div>
 
-		<div class="verified-field">
-			<span class="field-label">{{ VAULT_DIALOG_VERIFIED_LABEL }}</span>
-			<button
-				type="button"
-				class="verified-switch"
-				[class.on]="verified"
-				[attr.aria-pressed]="verified"
-				(click)="toggleVerified()">
-				<span class="verified-knob"></span>
-			</button>
-		</div>
+	<div class="verified-field">
+		<span class="field-label">{{ VAULT_DIALOG_VERIFIED_LABEL }}</span>
+		<button
+			type="button"
+			class="verified-switch"
+			[class.on]="verified"
+			[attr.aria-pressed]="verified"
+			(click)="toggleVerified()">
+			<span class="verified-knob"></span>
+		</button>
+	</div>
 
+	<div class="add-account-field">
 		<div class="connections-header">
 			<span class="field-label">
 				{{ VAULT_DIALOG_CONNECTIONS_LABEL }}
@@ -107,19 +110,23 @@
 				</div>
 			}
 		</div>
-
-		<button type="button" class="add-connection-button" (click)="addConnectionRow()">
-			<span class="material-symbols-outlined">add</span>
-			{{ VAULT_DIALOG_ADD_CONNECTION }}
-		</button>
-
-		<div class="dialog-footer">
-			<button type="button" class="ghost-button" (click)="onDialogClosed()">
-				{{ DIALOG_BTN_CANCEL }}
-			</button>
-			<button type="button" class="submit-button" [disabled]="!isValid" (click)="onSubmit()">
-				{{ VAULT_DIALOG_SUBMIT }}
-			</button>
-		</div>
 	</div>
+
+	<button type="button" class="add-connection-button" (click)="addConnectionRow()">
+		<span class="material-symbols-outlined">add</span>
+		{{ VAULT_DIALOG_ADD_CONNECTION }}
+	</button>
+
+	<ng-template #footer>
+		<button type="button" class="add-account-dialog-button-ghost" (click)="onDialogClosed()">
+			{{ DIALOG_BTN_CANCEL }}
+		</button>
+		<button
+			type="button"
+			class="add-account-dialog-button-gradient"
+			[disabled]="!isValid"
+			(click)="onSubmit()">
+			{{ VAULT_DIALOG_SUBMIT }}
+		</button>
+	</ng-template>
 </p-dialog>

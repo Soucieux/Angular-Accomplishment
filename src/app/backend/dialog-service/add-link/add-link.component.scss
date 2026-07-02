@@ -64,12 +64,13 @@
 
 .link-dialog-field input[type='url'],
 .link-dialog-field input[type='text'] {
-	font-size: 15px;
+	font-size: 14px;
 	color: #1a1a1a;
 	background: rgba(255, 255, 255, 0.8);
-	border: 1px solid rgba(0, 0, 0, 0.1);
-	border-radius: 12px;
-	padding: 11px 14px;
+	border: 1.5px solid rgba(213, 51, 105, 0.25);
+	border-radius: 6px;
+	height: 35px;
+	padding: 0 12px;
 	outline: none;
 	transition:
 		background 150ms,
@@ -78,12 +79,41 @@
 	box-sizing: border-box;
 
 	&:focus {
-		border: 1px solid transparent;
+		border: 1.5px solid transparent;
 		background:
 			rgba(255, 255, 255, 0.8) padding-box,
 			linear-gradient(135deg, #d53369 0%, #daae51 100%) border-box;
 		box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.1);
 	}
+}
+
+::ng-deep .link-dialog .p-select {
+	height: 35px !important;
+	width: 100% !important;
+	border-radius: 6px !important;
+	border: 1.5px solid rgba(213, 51, 105, 0.25) !important;
+	background: rgba(255, 255, 255, 0.8) !important;
+	box-sizing: border-box !important;
+	align-items: center !important;
+}
+
+::ng-deep .link-dialog .p-select .p-select-label {
+	display: flex;
+	align-items: center;
+	padding: 0 12px !important;
+	font-size: 14px !important;
+}
+
+::ng-deep .link-dialog .p-select:not(.p-disabled):hover {
+	border-color: rgba(213, 51, 105, 0.45) !important;
+}
+
+::ng-deep .link-dialog .p-select.p-focus {
+	border: 1.5px solid transparent !important;
+	background:
+		rgba(255, 255, 255, 0.8) padding-box,
+		linear-gradient(135deg, #d53369 0%, #daae51 100%) border-box !important;
+	box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.1) !important;
 }
 
 /* ─────────────────────────────────────────

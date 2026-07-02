@@ -70,6 +70,7 @@ export interface OrbitalActivityRow {
 	time: string;
 	color: string;
 	timestamp: string;
+	isShared: boolean;
 }
 
 /** Shape of one quick-action pill button at the top of the orbital layout. */

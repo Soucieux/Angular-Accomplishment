@@ -15,6 +15,7 @@ import {
 	HOME_EST_YEAR,
 	TIMEOUT_KEY_HOME,
 	STATS_FIELD_RECENT_ACTIVITIES,
+	STATS_FIELD_SHARED_REV,
 	STATS_CAP_ACTIVITY_LOG
 } from '../../common/constants';
 import {
@@ -67,6 +68,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	private genericStats: HomeStats | null = null;
 	private userSpecificStats: HomeStats | null = null;
 	private sharedActivities: RecentActivityItem[] = [];
+	private lastSharedRev?: number;
 	protected stats: HomeStats | null = null;
 	protected loading = true;
 	protected loggedIn = false;
@@ -169,18 +171,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 						if (!userDoc) return;
 						this.userSpecificStats = userDoc;
 						this.mergeStats();
+						// The first emission loads the shared feed; later sharedRev bumps keep it live.
+						this.refreshSharedActivityOnRevChange(userDoc);
 						this.cdr.detectChanges();
 					});
-
-					// Load shared activity once and fold it into the merged feed; no-op when unconnected.
-					this.databaseService
-						.getSharedRecentActivity()
-						.then((shared) => {
-							this.sharedActivities = shared as RecentActivityItem[];
-							this.mergeStats();
-							this.cdr.detectChanges();
-						})
-						.catch(() => {});
 
 					/*
 					 * Step 5: Trigger the CSS enter-transition for the dashboard panel.
@@ -208,6 +202,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 					this.genericStats = null;
 					this.userSpecificStats = null;
 					this.sharedActivities = [];
+					this.lastSharedRev = undefined;
 					this.stats = null;
 					this.dashLinks = [];
 					this.dashCategories = [];
@@ -278,9 +273,31 @@ export class HomeComponent implements OnInit, OnDestroy {
 		own: RecentActivityItem[],
 		shared: RecentActivityItem[]
 	): RecentActivityItem[] {
-		return [...own, ...shared]
+		return [...own, ...shared.map((entry) => ({ ...entry, isShared: true }))]
 			.sort((a, b) => String(b?.timestamp ?? '').localeCompare(String(a?.timestamp ?? '')))
 			.slice(0, STATS_CAP_ACTIVITY_LOG);
+	}
+
+	/**
+	 * Re-fetches the shared activity feed whenever the live user document's sharedRev counter moves.
+	 * Connections (and the user's own shared writes) bump the counter on every shared-reminder change,
+	 * so the dashboard feed stays live without polling; the first watch emission performs the initial
+	 * load. No-op when the counter is unchanged.
+	 *
+	 * @param userDoc - The latest user document emitted by the live user-stats watch.
+	 */
+	private refreshSharedActivityOnRevChange(userDoc: HomeStats): void {
+		const rev = (userDoc[STATS_FIELD_SHARED_REV] as number) ?? 0;
+		if (rev === this.lastSharedRev) return;
+		this.lastSharedRev = rev;
+		this.databaseService
+			.getSharedRecentActivity()
+			.then((shared) => {
+				this.sharedActivities = shared as RecentActivityItem[];
+				this.mergeStats();
+				this.cdr.detectChanges();
+			})
+			.catch(() => {});
 	}
 
 }

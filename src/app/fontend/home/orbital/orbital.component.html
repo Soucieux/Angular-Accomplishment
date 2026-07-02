@@ -177,13 +177,13 @@
 					(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_PORTAL)"
 					>{{ ORBITAL_LABEL_SHORTCUTS }}</span
 				>
-				<span class="orbital-panel-header-badge">{{ links.length }}</span>
+				<span class="orbital-panel-header-badge">{{ shortcutLinks.length }}</span>
 			</div>
 			<div class="orbital-panel-scroll">
-				@if (links.length === 0) {
+				@if (shortcutLinks.length === 0) {
 					<div class="orbital-panel-empty">{{ ORBITAL_PANEL_EMPTY_LINKS }}</div>
 				} @else {
-					@for (link of links; track link._id) {
+					@for (link of shortcutLinks; track link._id) {
 						<div class="orbital-saved-link-row" (click)="openLink(link)">
 							<div class="orbital-link-dot" [style.background]="getLinkColor(link)"></div>
 							<span class="orbital-saved-link-title">{{ link.title }}</span>
@@ -337,7 +337,7 @@
 							}}</span>
 						</div>
 						<div class="orbital-activity-body">
-							<div class="orbital-activity-label">{{ activity.label }}</div>
+							<div class="orbital-activity-label" [style.color]="activity.isShared ? activity.color : null">{{ activity.label }}</div>
 							<div class="orbital-activity-detail">{{ activity.detail }}</div>
 						</div>
 						<span class="orbital-activity-time">{{ activity.time }}</span>

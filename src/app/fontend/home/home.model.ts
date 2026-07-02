@@ -23,4 +23,6 @@ export interface RecentActivityItem {
 	element?: string;
 	noteIndex?: number;
 	timestamp?: string;
+	isShared?: boolean;
+	authorOpenid?: string;
 }

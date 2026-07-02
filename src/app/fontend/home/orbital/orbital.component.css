@@ -912,11 +912,17 @@
 	text-transform: capitalize;
 }
 
+/* Shared "who did what" sentences can exceed one line — allow up to two, then ellipsize,
+   so a long detail grows its own row instead of painting over the next one. */
 .orbital-activity-detail {
 	font-size: 12px;
 	color: #9a6480;
 	overflow-wrap: break-word;
-	height: 17px;
+	line-height: 17px;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
 }
 
 .orbital-activity-time {

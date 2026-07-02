@@ -15,7 +15,8 @@ import {
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
-import { DatabaseService } from '../../../backend/database-service/database.service';
+import { ConnectedMember, DatabaseService } from '../../../backend/database-service/database.service';
+import { CloudbaseService } from '../../../backend/database-service/cloudbase/cloudbase.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../../backend/authentication-service/auth.service';
 import { OrbitalStore } from './orbital.store';
@@ -45,6 +46,7 @@ import {
 	ACTIVITY_SOURCE_RECIPE,
 	ACTIVITY_SOURCE_REMINDER,
 	ACTIVITY_SOURCE_RESONANCE,
+	ACTIVITY_SOURCE_VAULT,
 	ACTIVITY_TYPE_BUG_LOGGED,
 	ACTIVITY_TYPE_EDITED,
 	ACTIVITY_TYPE_RESET,
@@ -62,11 +64,19 @@ import {
 	HISTORY_STATUS_DELETED,
 	LINK_TARGET_BLANK,
 	SEARCH,
+	STATS_FIELD_CONNECTIONS,
 	STATS_FIELD_DEBT_UPCOMING,
 	STATS_FIELD_GENRE,
 	STATS_FIELD_RECENT_ACTIVITIES,
 	STATS_FIELD_RECIPE_LIST,
 	STATS_FIELD_REMINDER_UPCOMING,
+	REMINDER_VALUE_KEY_TEXT,
+	REMINDER_VALUE_KEY_DATE,
+	REMINDER_VALUE_KEY_LINK,
+	REMINDER_VALUE_KEY_TAG,
+	REMINDER_VALUE_KEY_START_TIME,
+	REMINDER_VALUE_KEY_END_TIME,
+	REMINDER_VALUE_KEY_SHARED,
 	HOME_ACTIVITY_COLOR_DATE_CALCULATOR,
 	HOME_ACTIVITY_COLOR_DEBT,
 	HOME_ACTIVITY_COLOR_DELETED,
@@ -76,6 +86,8 @@ import {
 	HOME_ACTIVITY_COLOR_PATCH,
 	HOME_ACTIVITY_COLOR_RECIPE,
 	HOME_ACTIVITY_COLOR_REMINDER,
+	HOME_ACTIVITY_COLOR_SHARED,
+	HOME_ACTIVITY_COLOR_VAULT,
 	HOME_ACTIVITY_COLOR_RESONANCE,
 	HOME_ACTIVITY_ICON_DEBT_ADDED,
 	HOME_ACTIVITY_ICON_DEBT_REMOVED,
@@ -97,9 +109,11 @@ import {
 	HOME_ACTIVITY_ICON_PATCH_STATUS,
 	HOME_ACTIVITY_ICON_PATCH_UPDATED,
 	HOME_ACTIVITY_ICON_RECIPE_ADDED,
+	HOME_ACTIVITY_ICON_VAULT_ADDED,
 	HOME_ACTIVITY_ICON_RECIPE_REMOVED,
 	HOME_ACTIVITY_ICON_RECIPE_UPDATED,
 	HOME_ACTIVITY_ICON_REMINDER_ADDED,
+	HOME_ACTIVITY_ICON_SHARED,
 	HOME_ACTIVITY_ICON_REMINDER_UPDATED,
 	HOME_ACTIVITY_ICON_RESONANCE_ADDED,
 	HOME_ACTIVITY_ICON_RESONANCE_REMOVED,
@@ -108,6 +122,7 @@ import {
 	HOME_DEBT_ROW_ID_PREFIX,
 	HOME_LINKS_DOT_FALLBACK,
 	HOME_ORBITAL_CHANGES_KEY_STATS,
+	HOME_ORBITAL_CHANGES_KEY_LINKS,
 	HOME_ORBITAL_PANEL_SCROLL_SELECTOR,
 	HOME_QUICK_ACTION_ROUTE_DEBT,
 	HOME_QUICK_ACTION_ROUTE_ENTERTAINMENT,
@@ -142,11 +157,26 @@ import {
 	HOME_ACTIVITY_LABEL_PATCH_STATUS,
 	HOME_ACTIVITY_LABEL_PATCH_UPDATED,
 	HOME_ACTIVITY_LABEL_RECIPE_ADDED,
+	HOME_ACTIVITY_LABEL_VAULT_ADDED,
+	HOME_ACTIVITY_LABEL_VAULT_REMOVED,
 	HOME_ACTIVITY_LABEL_RECIPE_REMOVED,
 	HOME_ACTIVITY_LABEL_RECIPE_UPDATED,
 	HOME_ACTIVITY_LABEL_REMINDER_ADDED,
 	HOME_ACTIVITY_LABEL_REMINDER_DELETED,
 	HOME_ACTIVITY_LABEL_REMINDER_UPDATED,
+	HOME_SHARED_ACTIVITY_ADDED,
+	HOME_SHARED_ACTIVITY_DELETED,
+	HOME_SHARED_ACTIVITY_EDITED_ASPECT,
+	HOME_SHARED_ACTIVITY_EDITED,
+	HOME_SHARED_ACTIVITY_SELF,
+	HOME_SHARED_ACTIVITY_MEMBER_FALLBACK,
+	HOME_SHARED_ASPECT_TEXT,
+	HOME_SHARED_ASPECT_DATE,
+	HOME_SHARED_ASPECT_LINK,
+	HOME_SHARED_ASPECT_TAG,
+	HOME_SHARED_ASPECT_START_TIME,
+	HOME_SHARED_ASPECT_END_TIME,
+	HOME_SHARED_ASPECT_SHARED,
 	HOME_ACTIVITY_LABEL_RESONANCE_ADDED,
 	HOME_ACTIVITY_LABEL_RESONANCE_REMOVED,
 	HOME_ACTIVITY_LABEL_MOVIE_RATE_UPDATED,
@@ -280,6 +310,8 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	protected debtRows: OrbitalDebtRow[] = [];
 	protected activityRows: OrbitalActivityRow[] = [];
 	protected addedThisWeek = 0;
+	protected pinnedLinks: PortalLink[] = [];
+	protected shortcutLinks: PortalLink[] = [];
 	protected activityStreak = 0;
 	private userStatsSub?: Subscription;
 
@@ -291,6 +323,20 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	 */
 	private readonly truncateDetail = (value: string | undefined): string =>
 		Utilities.truncate(value ?? '', 32);
+
+	/**
+	 * Maps the reminder value key recorded on a shared activity entry to its localized aspect label,
+	 * so the shared sentence can name exactly which field was changed.
+	 */
+	private readonly sharedAspectLabels: Record<string, string> = {
+		[REMINDER_VALUE_KEY_TEXT]: HOME_SHARED_ASPECT_TEXT,
+		[REMINDER_VALUE_KEY_DATE]: HOME_SHARED_ASPECT_DATE,
+		[REMINDER_VALUE_KEY_LINK]: HOME_SHARED_ASPECT_LINK,
+		[REMINDER_VALUE_KEY_TAG]: HOME_SHARED_ASPECT_TAG,
+		[REMINDER_VALUE_KEY_START_TIME]: HOME_SHARED_ASPECT_START_TIME,
+		[REMINDER_VALUE_KEY_END_TIME]: HOME_SHARED_ASPECT_END_TIME,
+		[REMINDER_VALUE_KEY_SHARED]: HOME_SHARED_ASPECT_SHARED
+	};
 
 	/**
 	 * Lookup table mapping activity source keys to their display configuration.
@@ -468,6 +514,19 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 					color: HOME_ACTIVITY_COLOR_DELETED
 				}
 			}
+		},
+		[ACTIVITY_SOURCE_VAULT]: {
+			icon: HOME_ACTIVITY_ICON_VAULT_ADDED,
+			label: HOME_ACTIVITY_LABEL_VAULT_ADDED,
+			color: HOME_ACTIVITY_COLOR_VAULT,
+			getDetail: (entry) => this.truncateDetail(entry.name),
+			types: {
+				[HISTORY_STATUS_DELETED]: {
+					icon: HOME_ACTIVITY_ICON_DELETED,
+					label: HOME_ACTIVITY_LABEL_VAULT_REMOVED,
+					color: HOME_ACTIVITY_COLOR_DELETED
+				}
+			}
 		}
 	};
 
@@ -516,16 +575,10 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 			this.addedThisWeek = this.buildAddedThisWeek();
 			this.syncWeekData();
 		}
-	}
-
-	/**
-	 * Gets links marked as pinned for display in the top quick-access strip,
-	 * capped at the first six pinned items.
-	 *
-	 * @returns Up to six PortalLink items where isPinned is true.
-	 */
-	protected get pinnedLinks(): PortalLink[] {
-		return this.links.filter((link) => link.isPinned === true).slice(0, 6);
+		if (changes[HOME_ORBITAL_CHANGES_KEY_LINKS]) {
+			this.pinnedLinks = this.links.filter((link) => link.isPinned === true && !link.isShared).slice(0, 6);
+			this.shortcutLinks = this.links.filter((link) => !link.isShared);
+		}
 	}
 
 	/**
@@ -898,17 +951,53 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 			/* Step 3: Apply per-type overrides — only the fields that differ from the source default
 			   are overridden; getDetail falls back to the source-level function when the override omits it. */
 			const ov = def.types[entry.type ?? ''];
+			/* Step 4: A shared entry (a connected account's reminder) gets a distinct group icon and
+			   violet accent so it reads apart from the user's own activity. */
+			const isShared = entry.isShared ?? false;
 			rows.push({
-				icon: ov?.icon ?? def.icon,
+				icon: isShared ? HOME_ACTIVITY_ICON_SHARED : (ov?.icon ?? def.icon),
 				label: ov?.label ?? def.label,
-				color: ov?.color ?? def.color,
-				detail: (ov?.getDetail ?? def.getDetail)(entry),
+				color: isShared ? HOME_ACTIVITY_COLOR_SHARED : (ov?.color ?? def.color),
+				detail: isShared ? this.buildSharedActivityDetail(entry) : (ov?.getDetail ?? def.getDetail)(entry),
 				time: Utilities.getRelativeTime(entry.timestamp),
-				timestamp: entry.timestamp
+				timestamp: entry.timestamp,
+				isShared
 			});
 		}
 
 		return rows;
+	}
+
+	/**
+	 * Builds the "who did what" sentence shown as the detail line of a shared activity row.
+	 * The author openid is tagged onto each entry by the getSharedActivity Cloud Function; the
+	 * signed-in user's own entries read as "You", others resolve to their connection name. Edits
+	 * name the exact changed aspect when the entry records one.
+	 *
+	 * {@link buildActivityRows} - Uses this sentence for rows flagged isShared.
+	 *
+	 * @param entry - The shared activity entry to describe.
+	 * @returns The localized sentence describing who changed what.
+	 */
+	private buildSharedActivityDetail(entry: RecentActivityItem): string {
+		const connections = Utilities.toArray(this.stats?.[STATS_FIELD_CONNECTIONS]) as ConnectedMember[];
+		const who =
+			entry.authorOpenid === CloudbaseService.getUserId()
+				? HOME_SHARED_ACTIVITY_SELF
+				: (connections.find((member) => member.openid === entry.authorOpenid)?.name ??
+					HOME_SHARED_ACTIVITY_MEMBER_FALLBACK);
+		const text = this.truncateDetail(entry.text);
+
+		if (entry.type === HISTORY_STATUS_DELETED) {
+			return Utilities.formatTemplate(HOME_SHARED_ACTIVITY_DELETED, { who, text });
+		}
+		if (entry.type === ACTIVITY_TYPE_UPDATED) {
+			const aspect = this.sharedAspectLabels[entry.element ?? ''];
+			return aspect
+				? Utilities.formatTemplate(HOME_SHARED_ACTIVITY_EDITED_ASPECT, { who, text, aspect })
+				: Utilities.formatTemplate(HOME_SHARED_ACTIVITY_EDITED, { who, text });
+		}
+		return Utilities.formatTemplate(HOME_SHARED_ACTIVITY_ADDED, { who, text });
 	}
 
 	/**

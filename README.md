@@ -1,3 +1,5 @@
+**Read this in other languages:** English | [简体中文](README.zh-CN.md)
+
 # 🌌 Vision Canvas
 
 > A private, self-designed personal management suite built with **Angular 21** — centralizing entertainment tracking, financial reminders, development logging, and daily life analytics in one cohesive, secure interface.
@@ -12,7 +14,6 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Core Features](#-core-features)
 - [Development Timeline](#-development-timeline)
 - [Project Structure](#-project-structure)

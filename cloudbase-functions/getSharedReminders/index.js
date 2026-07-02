@@ -1,18 +1,6 @@
-const tcb = require('@cloudbase/node-sdk');
+const { db, _, REMINDER, loadUser, getCallerOpenid } = require('./lib');
 
-const app = tcb.init({ env: tcb.SYMBOL_CURRENT_ENV });
-const db = app.database();
-const _ = db.command;
-
-const USERS = 'users';
-const REMINDER = 'reminder';
 const MAX_SHARED = 1000;
-
-/** Loads a single user document by its openid (keyed by _id == _openid). */
-const loadUser = async (openid) => {
-	const res = await db.collection(USERS).where({ _openid: openid }).limit(1).get();
-	return res.data && res.data[0];
-};
 
 /**
  * Returns the shared reminders of every account the caller is connected to. Runs in admin context so
@@ -23,9 +11,7 @@ const loadUser = async (openid) => {
  * @returns {Promise<object>} { success, items }
  */
 exports.main = async () => {
-	// Web/email auth populates uid (openId is empty for non-WeChat); _openid == auth.uid == uid here.
-	const { openId, uid } = app.auth().getUserInfo();
-	const callerOpenid = openId || uid;
+	const callerOpenid = getCallerOpenid();
 	if (!callerOpenid) return { success: false, items: [] };
 
 	const caller = await loadUser(callerOpenid);

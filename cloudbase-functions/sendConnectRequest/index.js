@@ -1,10 +1,4 @@
-const tcb = require('@cloudbase/node-sdk');
-
-const app = tcb.init({ env: tcb.SYMBOL_CURRENT_ENV });
-const db = app.database();
-const _ = db.command;
-
-const USERS = 'users';
+const { db, _, USERS, getCallerOpenid } = require('./lib');
 
 /**
  * Sends a connect request to the account that owns the given connect code.
@@ -18,9 +12,7 @@ const USERS = 'users';
  * @returns {Promise<object>} { success, error? }
  */
 exports.main = async (event) => {
-	// Web/email auth populates uid (openId is empty for non-WeChat); _openid == auth.uid == uid here.
-	const { openId, uid } = app.auth().getUserInfo();
-	const callerOpenid = openId || uid;
+	const callerOpenid = getCallerOpenid();
 	const code = event && event.code;
 	const callerName = (event && event.name) || '';
 	if (!callerOpenid) return { success: false, error: 'NO_AUTH' };

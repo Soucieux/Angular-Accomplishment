@@ -1,16 +1,4 @@
-const tcb = require('@cloudbase/node-sdk');
-
-const app = tcb.init({ env: tcb.SYMBOL_CURRENT_ENV });
-const db = app.database();
-const _ = db.command;
-
-const USERS = 'users';
-
-/** Loads a single user document by its openid (keyed by _id == _openid). */
-const loadUser = async (openid) => {
-	const res = await db.collection(USERS).where({ _openid: openid }).limit(1).get();
-	return res.data && res.data[0];
-};
+const { db, _, USERS, loadUser, getCallerOpenid } = require('./lib');
 
 /** Removes an openid from a sharedWith list. */
 const dropEdge = (sharedWith, openid) => (Array.isArray(sharedWith) ? sharedWith : []).filter((id) => id !== openid);
@@ -31,9 +19,7 @@ const markLeft = (connections, openid) =>
  * @returns {Promise<object>} { success, error? }
  */
 exports.main = async (event) => {
-	// Web/email auth populates uid (openId is empty for non-WeChat); _openid == auth.uid == uid here.
-	const { openId, uid } = app.auth().getUserInfo();
-	const callerOpenid = openId || uid;
+	const callerOpenid = getCallerOpenid();
 	const otherOpenid = event && event.otherOpenid;
 	if (!callerOpenid) return { success: false, error: 'NO_AUTH' };
 	if (!otherOpenid) return { success: false, error: 'NO_TARGET' };

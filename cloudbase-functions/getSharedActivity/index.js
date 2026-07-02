@@ -1,17 +1,6 @@
-const tcb = require('@cloudbase/node-sdk');
+const { db, _, USERS, loadUser, getCallerOpenid } = require('./lib');
 
-const app = tcb.init({ env: tcb.SYMBOL_CURRENT_ENV });
-const db = app.database();
-const _ = db.command;
-
-const USERS = 'users';
 const ACTIVITY_CAP = 20;
-
-/** Loads a single user document by its openid (keyed by _id == _openid). */
-const loadUser = async (openid) => {
-	const res = await db.collection(USERS).where({ _openid: openid }).limit(1).get();
-	return res.data && res.data[0];
-};
 
 /**
  * Aggregates the caller's shared-reminder activity feed under the adjacency model. Reads the caller's
@@ -22,9 +11,7 @@ const loadUser = async (openid) => {
  * @returns {Promise<object>} { success, activity }
  */
 exports.main = async () => {
-	// Web/email auth populates uid (openId is empty for non-WeChat); _openid == auth.uid == uid here.
-	const { openId, uid } = app.auth().getUserInfo();
-	const callerOpenid = openId || uid;
+	const callerOpenid = getCallerOpenid();
 	if (!callerOpenid) return { success: false, activity: [] };
 
 	const caller = await loadUser(callerOpenid);
@@ -36,9 +23,15 @@ exports.main = async () => {
 		? (await db.collection(USERS).where({ _openid: _.in(neighbours) }).limit(neighbours.length).get()).data || []
 		: [];
 
+	// Each entry lives on its author's own document, so tag authorship as the docs are flattened —
+	// the client resolves the openid to a display name from its connections list.
 	const activity = [caller, ...neighbourDocs]
 		.filter(Boolean)
-		.flatMap((doc) => (Array.isArray(doc.sharedRecentActivity) ? doc.sharedRecentActivity : []))
+		.flatMap((doc) =>
+			(Array.isArray(doc.sharedRecentActivity) ? doc.sharedRecentActivity : []).map((entry) =>
+				Object.assign({}, entry, { authorOpenid: doc._openid })
+			)
+		)
 		.sort((a, b) => String((b && b.timestamp) || '').localeCompare(String((a && a.timestamp) || '')))
 		.slice(0, ACTIVITY_CAP);
 

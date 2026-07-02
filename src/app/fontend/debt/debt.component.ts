@@ -458,7 +458,11 @@ export class DebtComponent implements OnInit, OnDestroy {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'confirm',
-			() => this.deletePaymentEntry(item.key, entry.index),
+			// Fire-and-forget so the confirm closes at once; only the block overlay lingers, then
+			// vanishes alone (never `() => this.deletePaymentEntry(...)`, which the confirm would await).
+			() => {
+				this.deletePaymentEntry(item.key, entry.index).catch(() => {});
+			},
 			[
 				DEBT_CONFIRM_DELETE_PAYMENT_MSG,
 				DEBT_CONFIRM_DELETE_PAYMENT_HEADER,

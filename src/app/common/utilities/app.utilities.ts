@@ -7,6 +7,7 @@ import { LOG } from '../app.logs';
 import {
 	APP_BREAKPOINT_NARROW,
 	CN,
+	PORTAL_FAVICON_PROXY_URL,
 	LS_AUTH_HINT_KEY,
 	UTILITIES_LOG_COUNTRY_FAILED,
 	UTILITIES_LOG_DEFAULT_COUNTRY,
@@ -492,6 +493,18 @@ export class Utilities {
 	}
 
 	/**
+	 * Fills a locale template string by replacing each `{token}` with its value from the params map.
+	 * Tokens without a matching param are left in place.
+	 *
+	 * @param template - The template string containing `{token}` placeholders.
+	 * @param params - The map of token names to their replacement values.
+	 * @returns The template with all matched tokens replaced.
+	 */
+	public static formatTemplate(template: string, params: Record<string, string>): string {
+		return template.replace(/\{(\w+)\}/g, (token, key) => params[key] ?? token);
+	}
+
+	/**
 	 * Safely extract a human-readable error message from any thrown value.
 	 * Guards against SDK objects whose `.message` getter itself throws.
 	 *
@@ -559,16 +572,16 @@ export class Utilities {
 	}
 
 	/**
-	 * Extract a favicon URL from any site URL by reading the hostname and
-	 * constructing the conventional /favicon.ico path.
+	 * Gets a favicon URL for a site routed through the Firebase proxy, so the icon loads on mainland
+	 * networks that cannot reach the favicon source directly.
 	 *
 	 * @param url - The full URL of the website.
-	 * @returns A favicon image URL string, or '' if the URL is unparseable.
+	 * @returns A proxied favicon image URL string, or '' if the URL is unparseable.
 	 */
-	public static getFavicon(url: string): string {
+	public static getFaviconProxy(url: string): string {
 		try {
 			const hostname = new URL(url).hostname;
-			return `https://${hostname}/favicon.ico`;
+			return `${PORTAL_FAVICON_PROXY_URL}?domain=${hostname}`;
 		} catch {
 			return '';
 		}
@@ -900,15 +913,13 @@ export class Utilities {
 	───────────────────────────────────────── */
 
 	/**
-	 * Instance wrapper around {@link Utilities.getFavicon} so templates that
-	 * inject `Utilities` as an instance can call `utilities.getFavicon(url)`
-	 * without needing a per-component wrapper method.
+	 * Instance wrapper around {@link Utilities.getFaviconProxy} for use in Angular templates.
 	 *
 	 * @param url - The full URL of the website.
-	 * @returns A favicon image URL string, or '' if the URL is unparseable.
+	 * @returns A proxied favicon image URL string, or '' if the URL is unparseable.
 	 */
-	public getFavicon(url: string): string {
-		return Utilities.getFavicon(url);
+	public getFaviconProxy(url: string): string {
+		return Utilities.getFaviconProxy(url);
 	}
 
 	/**

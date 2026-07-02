@@ -658,19 +658,7 @@
 	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
-/* Large ghost favicon — top-right watermark */
-.ghost-icon {
-	position: absolute;
-	top: -10px;
-	right: -8px;
-	width: 88px;
-	height: 88px;
-	opacity: 0.08;
-	filter: brightness(3) invert(1);
-	pointer-events: none;
-}
-
-/* Ghost initial letter — shown when favicon fails */
+/* Ghost initial letter — the large top-right watermark of the link's first letter */
 .ghost-initial {
 	position: absolute;
 	top: -8px;
@@ -684,6 +672,17 @@
 	user-select: none;
 }
 
+/* Large favicon watermark — replaces the letter in the ghost slot once the icon loads.
+   brightness(1) invert(1) flattens the icon to a white silhouette so it reads as a faint
+   watermark like the letter, rather than a muddy colour blob. */
+.ghost-favicon {
+	width: 92px;
+	height: 92px;
+	object-fit: contain;
+	display: block;
+	filter: brightness(1) invert(1);
+}
+
 /* Dark vignette bottom gradient */
 .gradient-overlay {
 	position: absolute;
@@ -693,16 +692,7 @@
 	pointer-events: none;
 }
 
-/* Small favicon — top-left */
-.link-favicon {
-	border-radius: 7px;
-	display: block;
-	position: relative;
-	z-index: 1;
-	flex-shrink: 0;
-	object-fit: contain;
-}
-
+/* Small avatar — top-left */
 .link-favicon-fallback {
 	width: 30px;
 	height: 30px;
@@ -717,6 +707,16 @@
 	flex-shrink: 0;
 	position: relative;
 	z-index: 1;
+}
+
+/* Proxied favicon — covers the letter fallback; removed on load error to reveal the letter */
+.link-favicon {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: inherit;
 }
 
 /* Title + domain — bottom of tile */

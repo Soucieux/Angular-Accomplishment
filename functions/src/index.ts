@@ -48,17 +48,11 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 
 		// Allow-list of hostnames or domains we proxy for (adjust as needed)
 		const hostname = parsed.hostname.toLowerCase();
-		const allowedHostnames = [
-			'movie.douban.com',
-			'api.wmdb.tv',
-			'img.wmdb.tv'
-		];
-		const allowedSuffixes = [
-			'.doubanio.com'
-		];
+		const allowedHostnames = ['movie.douban.com', 'api.wmdb.tv', 'img.wmdb.tv'];
+		const allowedSuffixes = ['.doubanio.com'];
 
 		const isExactAllowed = allowedHostnames.includes(hostname);
-		const isSuffixAllowed = allowedSuffixes.some(suffix => hostname.endsWith(suffix));
+		const isSuffixAllowed = allowedSuffixes.some((suffix) => hostname.endsWith(suffix));
 
 		if (!isExactAllowed && !isSuffixAllowed) {
 			res.set('Access-Control-Allow-Origin', '*');
@@ -108,6 +102,54 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 		res.status(500).send('Internal server error');
 	}
 });
+
+/**
+ * Proxies a site favicon through Google's favicon service so a mainland-China browser can load it.
+ * The browser cannot reach Google directly (GFW), but this function runs on Google infrastructure
+ * overseas and can, then streams the icon back with permissive CORS. The only outbound host is
+ * www.google.com, so there is no SSRF surface — the caller-supplied domain is a query value, never
+ * the host. On any upstream failure the status is forwarded so the client falls back to a letter avatar.
+ */
+const getFavicon = functions.https.onRequest(async (req, res) => {
+	res.set('Access-Control-Allow-Origin', '*');
+
+	const domain = ((req.query.domain as string) || '').trim().toLowerCase();
+	if (!domain) {
+		res.status(400).json({ error: 'Missing domain' });
+		return;
+	}
+
+	// Reject anything that is not a bare hostname before building the fixed-host upstream URL.
+	if (!/^[a-z0-9.-]+$/.test(domain)) {
+		res.status(400).json({ error: 'Invalid domain' });
+		return;
+	}
+
+	const target = `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(domain)}`;
+
+	try {
+		const response = await fetch(target);
+
+		if (!response.ok) {
+			res.status(response.status).send('Favicon unavailable');
+			return;
+		}
+
+		res.setHeader('Content-Type', response.headers.get('content-type') ?? 'image/png');
+		res.setHeader('Cache-Control', 'public, max-age=86400');
+
+		if (response.body) {
+			response.body.pipe(res);
+		} else {
+			res.status(502).send('No favicon data received');
+		}
+	} catch (error: unknown) {
+		console.error(error);
+		res.status(500).send('Internal server error');
+	}
+});
+
+export const favicon = functions.https.onRequest(getFavicon);
 
 export const thread1 = functions.https.onRequest(getMovieData);
 export const thread2 = functions.https.onRequest(getMovieData);

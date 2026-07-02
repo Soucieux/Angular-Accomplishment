@@ -119,7 +119,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 			this.category = prefillData.category ?? '';
 			this.isPinned = prefillData.isPinned ?? false;
 			this.isShared = prefillData.isShared ?? false;
-			this.faviconPreview = this.url ? Utilities.getFavicon(this.url) : '';
+			this.faviconPreview = this.url ? Utilities.getFaviconProxy(this.url) : '';
 		}
 
 		// Step 4: Clear any in-flight loading state from the previous session before making the dialog visible
@@ -169,7 +169,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 		// Step 1: Normalize the URL and immediately update the favicon — this happens even when title fetch is skipped
 		const normalizedUrl = Utilities.normalizeUrl(rawUrl);
 		this.url = normalizedUrl;
-		this.faviconPreview = Utilities.getFavicon(normalizedUrl);
+		this.faviconPreview = Utilities.getFaviconProxy(normalizedUrl);
 
 		/*
 		 * Step 2: Guard against redundant fetches — skip if a title already exists, a fetch is

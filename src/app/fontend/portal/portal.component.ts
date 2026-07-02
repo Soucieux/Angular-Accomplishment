@@ -37,7 +37,6 @@ import {
 	SUCCESS,
 	TOAST_ERROR,
 	TOAST_INFO,
-	PORTAL_LOG_FAVICON_UNAVAILABLE,
 	PORTAL_LOG_VISIT_INCREMENT_FAILED,
 	PORTAL_LOG_LINK_UPDATED,
 	PORTAL_LOG_LINK_SAVED,
@@ -181,11 +180,11 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 	protected links: PortalLink[] = [];
 	protected categories: PortalCategory[] = [];
-	protected faviconFailedIds = new Set<string>();
 	protected selectedCategory = PORTAL_CATEGORY_ALL;
 
 	protected linksLoading = true;
 	protected hoveredLinkId: string | null = null;
+	protected failedFavicons = new Set<string>();
 	protected sharedFilteredLinks: PortalLink[] = [];
 	protected personalFilteredLinks: PortalLink[] = [];
 
@@ -705,19 +704,6 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	// ── Links handlers ────────────────────────────────────────────────────────
 
 	/**
-	 * Marks the link as having a failed favicon so the initial-letter fallback is displayed.
-	 * Logs a warning and triggers change detection.
-	 *
-	 * @param link - The link document whose favicon failed to load.
-	 */
-	protected onFaviconError(link: PortalLink): void {
-		this.faviconFailedIds.add(link._id);
-		LOG.warn(this.className, `${PORTAL_LOG_FAVICON_UNAVAILABLE} ${link.title} (${link.url})`);
-		// markForCheck required: called from a DOM event outside Angular's zone.
-		this.cdr.markForCheck();
-	}
-
-	/**
 	 * Opens a saved link in a new tab and increments its visit count.
 	 *
 	 * @param link - The link document to open.
@@ -729,6 +715,16 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 			.catch((error: unknown) =>
 				LOG.error(this.className, `${PORTAL_LOG_VISIT_INCREMENT_FAILED} ${link.title}`, error as Error)
 			);
+	}
+
+	/**
+	 * Records that a link's proxied favicon failed to load, so the template drops the image and reveals
+	 * the letter avatar underneath.
+	 *
+	 * @param linkId - The _id of the link whose favicon failed to load.
+	 */
+	protected onFaviconError(linkId: string): void {
+		this.failedFavicons.add(linkId);
 	}
 
 	/**

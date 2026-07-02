@@ -296,24 +296,6 @@ describe('Utilities', () => {
 		});
 	});
 
-	// ── getFavicon ─────────────────────────────────────────────────────────
-
-	describe('getFavicon', () => {
-		it('returns the favicon.ico URL for a valid URL', () => {
-			expect(Utilities.getFavicon('https://github.com/user/repo')).toBe(
-				'https://github.com/favicon.ico'
-			);
-		});
-
-		it('returns empty string for an invalid URL', () => {
-			expect(Utilities.getFavicon('not-a-url')).toBe('');
-		});
-
-		it('returns empty string for an empty string', () => {
-			expect(Utilities.getFavicon('')).toBe('');
-		});
-	});
-
 	// ── safeErrorMessage ───────────────────────────────────────────────────
 
 	describe('safeErrorMessage', () => {

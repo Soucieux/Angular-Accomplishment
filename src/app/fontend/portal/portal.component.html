@@ -190,7 +190,6 @@
 					</div>
 				</ng-template>
 				<ng-template #linkCard let-link let-showActions="showActions">
-					@let faviconUrl = utilities.getFavicon(link.url);
 					<div
 						class="card-wrapper"
 						(mouseenter)="hoveredLinkId = link._id"
@@ -200,26 +199,30 @@
 							(click)="openLink(link)"
 							[title]="link.url"
 							[style.background]="getLinkCardColor(link)">
-							@if (faviconFailedIds.has(link._id)) {
-								<div class="ghost-initial">{{ link.title.charAt(0).toUpperCase() }}</div>
-							} @else {
-								<img class="ghost-icon" [src]="faviconUrl" alt="" />
-							}
+							@let faviconUrl = utilities.getFaviconProxy(link.url);
+							@let linkInitial = link.title.charAt(0).toUpperCase();
+							<div class="ghost-initial">
+								@if (!failedFavicons.has(link._id)) {
+									<img
+										class="ghost-favicon"
+										[src]="faviconUrl"
+										(error)="onFaviconError(link._id)"
+										alt="" />
+								} @else {
+									{{ linkInitial }}
+								}
+							</div>
 							<div class="gradient-overlay"></div>
-							@if (faviconFailedIds.has(link._id)) {
-								<div class="link-favicon-fallback">
-									{{ link.title.charAt(0).toUpperCase() }}
-								</div>
-							} @else {
-								<img
-									class="link-favicon"
-									[src]="faviconUrl"
-									[alt]="link.title"
-									(error)="onFaviconError(link)"
-									loading="lazy"
-									width="30"
-									height="30" />
-							}
+							<div class="link-favicon-fallback">
+								{{ linkInitial }}
+								@if (!failedFavicons.has(link._id)) {
+									<img
+										class="link-favicon"
+										[src]="faviconUrl"
+										(error)="onFaviconError(link._id)"
+										alt="" />
+								}
+							</div>
 							<div class="card-text">
 								<p class="card-title">{{ link.title }}</p>
 								<span class="card-domain">{{ utilities.getDomain(link.url) }}</span>

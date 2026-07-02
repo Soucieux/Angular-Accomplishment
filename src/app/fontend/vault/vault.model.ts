@@ -82,12 +82,13 @@ export interface VaultLinkChip {
 	shapeClass: string;
 }
 
-/** Visibility toggles for the node types in the graph. */
-export interface VaultTypeFilters {
-	account: boolean;
-	email: boolean;
-	phone: boolean;
-	link: boolean;
+/** Per-type node tallies shown in the graph legend. */
+export interface VaultLegendCounts {
+	account: number;
+	email: number;
+	phone: number;
+	link: number;
+	verified: number;
 }
 
 /** A category-overview chip shown in the info bar when nothing is selected. */
@@ -98,22 +99,12 @@ export interface VaultOverviewStat {
 	value: number;
 	label: string;
 	isActive: boolean;
-}
-
-/** A type-filter chip with an optional identifier popover, floating over the graph. */
-export interface VaultFilterDef {
-	type: VaultNodeType;
-	label: string;
-	count: number;
-	dotColor: string;
-	icon: string;
-	isActive: boolean;
-	items: string[];
-	hasItems: boolean;
+	isCustom: boolean;
 }
 
 /** The detail shown in the info bar for the currently selected node. */
 export interface VaultSelectionDetail {
+	id: string;
 	name: string;
 	typeLabel: string;
 	avatarGradient: string;
@@ -147,6 +138,7 @@ export interface VaultAccountRow {
 	name: string;
 	letter: string;
 	gradient: string;
+	category: string;
 	categoryLabel: string;
 	verified: boolean;
 	linkCount: number;
@@ -223,5 +215,3 @@ export const VAULT_LABEL_COLOR_ACCOUNT = '#334155';
 export const VAULT_LABEL_COLOR_IDENTIFIER = '#7c6c74';
 /** Label color for the currently selected node. */
 export const VAULT_LABEL_COLOR_SELECTED = '#b02257';
-/** Dot color on the Accounts type-filter chip. */
-export const VAULT_FILTER_DOT_ACCOUNT = '#ff8c2e';

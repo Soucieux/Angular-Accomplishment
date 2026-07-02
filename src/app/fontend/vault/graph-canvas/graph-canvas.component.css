@@ -7,11 +7,7 @@
 .graph-wrap {
 	position: relative;
 	height: 100%;
-	border-radius: 18px;
 	overflow: hidden;
-	background: rgba(255, 255, 255, 0.92);
-	border: 1px solid rgba(255, 255, 255, 0.8);
-	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
 }
 
 .graph-svg {
@@ -52,9 +48,36 @@
 }
 
 .legend-row {
-	display: flex;
+	display: grid;
+	grid-template-columns: 20px 1fr auto;
 	align-items: center;
 	gap: 8px;
+	width: 100%;
+	padding: 0;
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+	transition: opacity 0.15s ease;
+}
+
+.legend-row.is-muted {
+	opacity: 0.4;
+}
+
+.legend-row.is-active .legend-label {
+	font-weight: 700;
+	color: #334155;
+}
+
+.legend-row > :first-child {
+	justify-self: center;
+}
+
+.legend-label {
+	white-space: nowrap;
 }
 
 .legend-tile {
@@ -102,7 +125,7 @@
 }
 
 .legend-count {
-	margin-left: auto;
+	text-align: right;
 	font-weight: 700;
 	color: #334155;
 }

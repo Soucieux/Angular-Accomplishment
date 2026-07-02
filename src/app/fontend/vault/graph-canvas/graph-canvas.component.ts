@@ -19,7 +19,8 @@ import {
 	VAULT_NODE_ACCOUNT,
 	VAULT_NODE_EMAIL,
 	VAULT_NODE_PHONE,
-	VAULT_NODE_LINK
+	VAULT_NODE_LINK,
+	VAULT_FILTER_KEY_VERIFIED
 } from '../../../common/constants';
 import {
 	VAULT_LEGEND_TITLE,
@@ -32,9 +33,9 @@ import {
 import {
 	VaultCategoryDef,
 	VaultEdge,
+	VaultLegendCounts,
 	VaultNode,
 	VaultSimNode,
-	VaultTypeFilters,
 	VAULT_CATEGORY_DEFS,
 	VAULT_CATEGORY_OTHER,
 	VAULT_EDGE_RESTING_COLOR,
@@ -65,12 +66,13 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	@ViewChild('nodes', { static: true }) private nodeGroupRef!: ElementRef<SVGGElement>;
 	@Output() nodeSelect = new EventEmitter<string | null>();
 	@Output() linkTarget = new EventEmitter<string>();
+	@Output() filterToggle = new EventEmitter<string>();
 	@Input() nodes: VaultNode[] = [];
 	@Input() edges: VaultEdge[] = [];
 	@Input() customCategories: VaultCategoryDef[] = [];
 	@Input() selectedId: string | null = null;
 	@Input() query = '';
-	@Input() filters: VaultTypeFilters = { account: true, email: true, phone: true, link: true };
+	@Input() typeFilter: string | null = null;
 	@Input() categoryFilter: string | null = null;
 	@Input() linkMode = false;
 	@Input() linkSourceId: string | null = null;
@@ -80,6 +82,11 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	protected readonly VAULT_TYPE_EMAIL = VAULT_TYPE_EMAIL;
 	protected readonly VAULT_TYPE_PHONE = VAULT_TYPE_PHONE;
 	protected readonly VAULT_TYPE_LINK = VAULT_TYPE_LINK;
+	protected readonly VAULT_NODE_ACCOUNT = VAULT_NODE_ACCOUNT;
+	protected readonly VAULT_NODE_EMAIL = VAULT_NODE_EMAIL;
+	protected readonly VAULT_NODE_PHONE = VAULT_NODE_PHONE;
+	protected readonly VAULT_NODE_LINK = VAULT_NODE_LINK;
+	protected readonly VAULT_FILTER_KEY_VERIFIED = VAULT_FILTER_KEY_VERIFIED;
 
 	// ── Force-simulation tuning ──────────────────────────────────────────────
 	private readonly accountRadius = 22;
@@ -98,6 +105,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	private readonly settleFrames = 260;
 	private readonly maxReachLevel = 2;
 	private readonly verifiedBadgeColor = '#0d9488';
+
+	protected legendCounts: VaultLegendCounts = { account: 0, email: 0, phone: 0, link: 0, verified: 0 };
 
 	private simNodes: VaultSimNode[] = [];
 	private nodeById: Record<string, VaultSimNode> = {};
@@ -152,6 +161,9 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	 * @param changes - The set of changed input properties.
 	 */
 	ngOnChanges(changes: SimpleChanges): void {
+		// Tally the legend counts whenever the node set changes — independent of viewReady so the
+		// legend is correct on first render, before the simulation view has measured its size.
+		if (changes['nodes']) this.updateLegendCounts();
 		if (!this.viewReady) return;
 		if (changes['nodes'] || changes['edges'] || changes['customCategories']) {
 			this.buildSimulation();
@@ -160,7 +172,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		} else if (
 			changes['selectedId'] ||
 			changes['query'] ||
-			changes['filters'] ||
+			changes['typeFilter'] ||
 			changes['categoryFilter'] ||
 			changes['linkMode'] ||
 			changes['linkSourceId']
@@ -205,6 +217,16 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		this.applyCamera();
 		this.layoutInitialPositions();
 		this.kickSimulation();
+	}
+
+	/**
+	 * Emits a request to isolate the clicked legend row's type, or clear it when that
+	 * type is already the active filter.
+	 *
+	 * @param key - The filter key the clicked legend row controls.
+	 */
+	protected toggleFilterRow(key: string): void {
+		this.filterToggle.emit(key);
 	}
 
 	// ── Simulation + rendering ───────────────────────────────────────────────
@@ -577,7 +599,9 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			const label = this.nodeLabelEls[index];
 			group.style.display = this.matchFilter(node, categoryVisible) ? '' : 'none';
 			const reach =
-				selectedId && levels ? levels[node.id] !== undefined && levels[node.id] <= this.maxReachLevel : true;
+				selectedId && levels
+					? levels[node.id] !== undefined && levels[node.id] <= this.maxReachLevel
+					: true;
 			let dim = false;
 			// While arming a link, keep every node full-colour so any target is easy to pick
 			if (selectedId && !this.linkMode) dim = !reach;
@@ -589,7 +613,10 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			if (selectedId && levels && reach) {
 				const level = levels[node.id];
 				shape.setAttribute('stroke', level === 0 ? VAULT_NODE_STROKE : this.levelColor(level));
-				shape.setAttribute('stroke-width', String(level === 0 ? this.borderSelected : this.borderConnected));
+				shape.setAttribute(
+					'stroke-width',
+					String(level === 0 ? this.borderSelected : this.borderConnected)
+				);
 			} else {
 				shape.setAttribute('stroke', VAULT_NODE_STROKE);
 				shape.setAttribute('stroke-width', String(baseWidth));
@@ -617,7 +644,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				!!target &&
 				this.matchFilter(source, categoryVisible) &&
 				this.matchFilter(target, categoryVisible);
-			if (visible && categoryBase) visible = categoryBase.has(edge.sourceId) || categoryBase.has(edge.targetId);
+			if (visible && categoryBase)
+				visible = categoryBase.has(edge.sourceId) || categoryBase.has(edge.targetId);
 			line.style.display = visible ? '' : 'none';
 			const sourceLevel = levels ? levels[edge.sourceId] : undefined;
 			const targetLevel = levels ? levels[edge.targetId] : undefined;
@@ -634,16 +662,21 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
-	 * Returns true when a node should be visible given the active type filters and
-	 * category filter. A category filter restricts visibility to that category's
-	 * accounts and their first-degree neighbours.
+	 * Returns true when a node should be visible given the active type filter and the
+	 * category filter. The type filter isolates a single node type — or, for the verified
+	 * key, only verified accounts — while a category filter restricts visibility to that
+	 * category's accounts and their first-degree neighbours.
 	 *
 	 * @param node - The simulation node to test.
 	 * @param categoryVisible - The set of node ids visible under the active category filter, or null.
 	 * @returns Whether the node should be shown.
 	 */
 	private matchFilter(node: VaultSimNode, categoryVisible: Set<string> | null): boolean {
-		if (!this.filters[node.nodeType]) return false;
+		if (this.typeFilter === VAULT_FILTER_KEY_VERIFIED) {
+			if (!(node.nodeType === VAULT_NODE_ACCOUNT && node.verified)) return false;
+		} else if (this.typeFilter && node.nodeType !== this.typeFilter) {
+			return false;
+		}
 		if (this.categoryFilter) return categoryVisible ? categoryVisible.has(node.id) : false;
 		return true;
 	}
@@ -843,12 +876,25 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
-	 * Gets the number of verified accounts among the current nodes.
-	 *
-	 * @returns The verified account count.
+	 * Tallies the legend counts — per node type plus verified accounts — in a single pass over the
+	 * current nodes. Called from ngOnChanges when the node set changes, so the template binds a stored
+	 * object instead of re-scanning the nodes on every change-detection pass.
 	 */
-	protected get verifiedCount(): number {
-		return this.nodes.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT && node.verified).length;
+	private updateLegendCounts(): void {
+		const counts: VaultLegendCounts = { account: 0, email: 0, phone: 0, link: 0, verified: 0 };
+		for (const node of this.nodes) {
+			if (node.nodeType === VAULT_NODE_ACCOUNT) {
+				counts.account++;
+				if (node.verified) counts.verified++;
+			} else if (node.nodeType === VAULT_NODE_EMAIL) {
+				counts.email++;
+			} else if (node.nodeType === VAULT_NODE_PHONE) {
+				counts.phone++;
+			} else if (node.nodeType === VAULT_NODE_LINK) {
+				counts.link++;
+			}
+		}
+		this.legendCounts = counts;
 	}
 
 	/**

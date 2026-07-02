@@ -8,15 +8,56 @@
 
 	<div class="legend hide-on-narrow-or-mobile">
 		<div class="legend-title">{{ VAULT_LEGEND_TITLE }}</div>
-		<div class="legend-row"><span class="legend-tile"></span>{{ VAULT_TYPE_ACCOUNT }}</div>
-		<div class="legend-row"><span class="legend-circle"></span>{{ VAULT_TYPE_EMAIL }}</div>
-		<div class="legend-row"><span class="legend-diamond"></span>{{ VAULT_TYPE_PHONE }}</div>
-		<div class="legend-row"><span class="legend-hexagon"></span>{{ VAULT_TYPE_LINK }}</div>
-		<div class="legend-row legend-row-verified">
+		<button
+			type="button"
+			class="legend-row"
+			[class.is-active]="typeFilter === VAULT_NODE_ACCOUNT"
+			[class.is-muted]="typeFilter && typeFilter !== VAULT_NODE_ACCOUNT"
+			(click)="toggleFilterRow(VAULT_NODE_ACCOUNT)">
+			<span class="legend-tile"></span>
+			<span class="legend-label">{{ VAULT_TYPE_ACCOUNT }}</span>
+			<span class="legend-count">{{ legendCounts.account }}</span>
+		</button>
+		<button
+			type="button"
+			class="legend-row"
+			[class.is-active]="typeFilter === VAULT_NODE_EMAIL"
+			[class.is-muted]="typeFilter && typeFilter !== VAULT_NODE_EMAIL"
+			(click)="toggleFilterRow(VAULT_NODE_EMAIL)">
+			<span class="legend-circle"></span>
+			<span class="legend-label">{{ VAULT_TYPE_EMAIL }}</span>
+			<span class="legend-count">{{ legendCounts.email }}</span>
+		</button>
+		<button
+			type="button"
+			class="legend-row"
+			[class.is-active]="typeFilter === VAULT_NODE_PHONE"
+			[class.is-muted]="typeFilter && typeFilter !== VAULT_NODE_PHONE"
+			(click)="toggleFilterRow(VAULT_NODE_PHONE)">
+			<span class="legend-diamond"></span>
+			<span class="legend-label">{{ VAULT_TYPE_PHONE }}</span>
+			<span class="legend-count">{{ legendCounts.phone }}</span>
+		</button>
+		<button
+			type="button"
+			class="legend-row"
+			[class.is-active]="typeFilter === VAULT_NODE_LINK"
+			[class.is-muted]="typeFilter && typeFilter !== VAULT_NODE_LINK"
+			(click)="toggleFilterRow(VAULT_NODE_LINK)">
+			<span class="legend-hexagon"></span>
+			<span class="legend-label">{{ VAULT_TYPE_LINK }}</span>
+			<span class="legend-count">{{ legendCounts.link }}</span>
+		</button>
+		<button
+			type="button"
+			class="legend-row legend-row-verified"
+			[class.is-active]="typeFilter === VAULT_FILTER_KEY_VERIFIED"
+			[class.is-muted]="typeFilter && typeFilter !== VAULT_FILTER_KEY_VERIFIED"
+			(click)="toggleFilterRow(VAULT_FILTER_KEY_VERIFIED)">
 			<span class="legend-verified"><span class="material-symbols-outlined">verified</span></span>
-			{{ VAULT_LEGEND_VERIFIED }}
-			<span class="legend-count">{{ verifiedCount }}</span>
-		</div>
+			<span class="legend-label">{{ VAULT_LEGEND_VERIFIED }}</span>
+			<span class="legend-count">{{ legendCounts.verified }}</span>
+		</button>
 	</div>
 
 	<div class="zoom-controls">

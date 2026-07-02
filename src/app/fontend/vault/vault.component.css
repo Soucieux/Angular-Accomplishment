@@ -8,11 +8,11 @@
 	font-family: 'app-font';
 }
 
+/* Layout only — the glass-card chrome (background, blur, border, shadow, radius,
+   reveal, height, padding) comes from the shared glass-card.css. */
 .container-vault {
-	height: 100%;
 	display: flex;
 	flex-direction: column;
-	padding: 20px 20px 10px;
 	box-sizing: border-box;
 }
 
@@ -71,24 +71,13 @@
 .vault-search {
 	position: relative;
 	flex: 1 1 180px;
-	min-width: 150px;
-	max-width: 320px;
-}
-
-.vault-search-icon {
-	position: absolute;
-	left: 14px;
-	top: 50%;
-	transform: translateY(-50%);
-	color: #94a3b8;
-	font-size: 20px;
-	pointer-events: none;
+	width: 20dvw;
 }
 
 .vault-search-input {
 	width: 100%;
 	height: 41px;
-	padding: 0 16px 0 42px;
+	padding: 0 16px;
 	border: none;
 	border-radius: 20px;
 	background: rgba(255, 255, 255, 0.8);
@@ -167,6 +156,8 @@
 .vault-content {
 	flex: 1;
 	min-height: 0;
+	/* Shared outer padding for both the list and the map — tune this one value. */
+	padding: 2px;
 	overflow-y: auto;
 	overflow-x: hidden;
 	scrollbar-width: thin;
@@ -208,11 +199,10 @@
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	padding: 2px;
 }
 
 .vault-card {
-	padding: 14px 16px;
+	padding: 15px 16px;
 	border-radius: 16px;
 	background: #ffffff;
 	border: 1px solid rgba(0, 0, 0, 0.05);
@@ -261,9 +251,94 @@
 	font-size: 16px;
 }
 
+/* Category picker — the label is a button; clicking it slides the options in from the left. */
+.vault-category-picker {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	overflow: hidden;
+}
+
 .vault-card-category {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	flex-shrink: 0;
+	padding: 1px 6px 1px 7px;
+	border: none;
+	border-radius: 9999px;
+	background: #f1f5f9;
 	font-size: 11px;
 	color: #64748b;
+	cursor: pointer;
+	transition: background 0.15s;
+}
+
+.vault-card-category:hover {
+	background: #e2e8f0;
+}
+
+.vault-category-caret {
+	font-size: 14px;
+	transition: transform 0.2s ease;
+}
+
+.vault-card-category.open .vault-category-caret {
+	transform: rotate(90deg);
+}
+
+/* The options strip stays in the DOM and animates open/closed so both reveal and hide are smooth. */
+.vault-category-options {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	max-width: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition:
+		max-width 0.3s ease,
+		opacity 0.2s ease;
+}
+
+.vault-category-options.open {
+	max-width: 70vw;
+	opacity: 1;
+}
+
+.vault-category-option {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+	padding: 2px 9px;
+	border: 1px solid #e2e8f0;
+	border-radius: 9999px;
+	background: #ffffff;
+	font-size: 11px;
+	color: #475569;
+	white-space: nowrap;
+	cursor: pointer;
+	transition:
+		background 0.15s,
+		border-color 0.15s;
+}
+
+.vault-category-option:hover {
+	background: #f8fafc;
+}
+
+.vault-category-option.current {
+	border-color: var(--vault-glow);
+	background: var(--vault-soft);
+	color: #1e293b;
+	font-weight: 600;
+}
+
+.vault-category-option-dot {
+	width: 9px;
+	height: 9px;
+	border-radius: 9999px;
+	flex-shrink: 0;
 }
 
 .vault-card-actions {
@@ -453,8 +528,8 @@
 
 .vault-info-bar {
 	flex-shrink: 0;
-	margin-bottom: 12px;
-	padding: 12px 16px;
+	margin-bottom: 7px;
+	padding: 5px 8px;
 	border-radius: 18px;
 	background: rgba(255, 255, 255, 0.92);
 	backdrop-filter: blur(20px);
@@ -566,6 +641,12 @@
 	overflow-x: auto;
 }
 
+.vault-overview-empty {
+	padding: 8px 2px;
+	font-size: 13px;
+	color: #64748b;
+}
+
 .vault-overview-chip {
 	display: flex;
 	align-items: center;
@@ -581,6 +662,24 @@
 .vault-overview-chip.active {
 	background: var(--vault-soft);
 	box-shadow: inset 0 0 0 1.5px var(--vault-glow);
+}
+
+/* Delete (×) control shown on an active custom-category chip. */
+.vault-overview-delete {
+	font-size: 17px;
+	line-height: 1;
+	color: #94a3b8;
+	border-radius: 9999px;
+	padding: 2px;
+	flex-shrink: 0;
+	transition:
+		color 0.15s,
+		background 0.15s;
+}
+
+.vault-overview-delete:hover {
+	color: #e11d48;
+	background: rgba(225, 29, 72, 0.12);
 }
 
 .vault-overview-icon {
@@ -622,98 +721,11 @@
 .vault-graph-area {
 	position: relative;
 	height: 100%;
-}
-
-.vault-filters {
-	position: absolute;
-	top: 14px;
-	left: 16px;
-	z-index: 4;
-	display: flex;
-	gap: 8px;
-}
-
-.vault-filter-wrap {
-	position: relative;
-}
-
-.vault-filter-chip {
-	display: flex;
-	align-items: center;
-	gap: 7px;
-	height: 34px;
-	padding: 0 13px;
-	border: none;
-	border-radius: 9999px;
-	cursor: pointer;
-	font-family: 'app-font';
-	font-size: 13px;
-	font-weight: 600;
-	background: rgba(255, 255, 255, 0.55);
-	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
-}
-
-.vault-filter-chip.active {
-	background: #fff;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.vault-filter-dot {
-	width: 11px;
-	height: 11px;
-	border-radius: 50%;
-}
-
-.vault-filter-count {
-	font-size: 11px;
-	font-weight: 700;
-	opacity: 0.65;
-}
-
-.vault-filter-popover {
-	position: absolute;
-	top: 40px;
-	left: 0;
-	z-index: 6;
-	min-width: 170px;
-	max-height: 240px;
-	overflow-y: auto;
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	padding: 8px;
-	border-radius: 12px;
-	background: #fff;
-	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+	background: #ffffff;
 	border: 1px solid rgba(0, 0, 0, 0.05);
-	opacity: 0;
-	visibility: hidden;
-	transform: translateY(-4px);
-	transition: all 140ms cubic-bezier(0.22, 1, 0.36, 1);
-	pointer-events: none;
-}
-
-.vault-filter-wrap:hover .vault-filter-popover {
-	opacity: 1;
-	visibility: visible;
-	transform: translateY(0);
-}
-
-.vault-filter-popover-row {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 5px 8px;
-	border-radius: 8px;
-	font-size: 11px;
-	font-weight: 600;
-	color: #334155;
-	white-space: nowrap;
-}
-
-.vault-filter-popover-row .material-symbols-outlined {
-	font-size: 15px;
-	color: #64748b;
+	border-radius: 16px;
+	overflow: hidden;
+	box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
 }
 
 /* ─────────────────────────────────────────
@@ -745,6 +757,36 @@
 
 .vault-link-button .material-symbols-outlined {
 	font-size: 18px;
+}
+
+.vault-delete-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	border: 1.5px solid rgba(192, 57, 43, 0.3);
+	border-radius: 9999px;
+	background: transparent;
+	color: #c0392b;
+	cursor: pointer;
+	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.vault-delete-button .material-symbols-outlined {
+	font-size: 18px;
+}
+
+.vault-delete-button:hover {
+	background: #c0392b;
+	border-color: transparent;
+	color: #fff !important;
+}
+
+.vault-card-actions .vault-delete-button {
+	width: 30px;
+	height: 30px;
 }
 
 .vault-banner {
@@ -796,10 +838,6 @@
 ───────────────────────────────────────── */
 
 @media (max-width: 940px) {
-	.container-vault {
-		padding: 20px 10px 10px;
-	}
-
 	.vault-title {
 		font-size: 28px;
 	}
@@ -820,10 +858,5 @@
 
 	.vault-stat-pills {
 		flex-wrap: wrap;
-	}
-
-	.vault-filters {
-		top: 10px;
-		left: 10px;
 	}
 }

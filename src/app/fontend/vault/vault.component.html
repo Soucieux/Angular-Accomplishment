@@ -1,5 +1,5 @@
 @if (utilities.getIsUserAlive()) {
-	<div class="container-vault">
+	<div class="glass-card container-vault">
 		<!-- ===== Header ===== -->
 		<header class="vault-header">
 			<div class="vault-title-block">
@@ -14,7 +14,6 @@
 
 			<div class="vault-controls">
 				<div class="vault-search">
-					<span class="material-symbols-outlined vault-search-icon">search</span>
 					<input
 						class="vault-search-input"
 						type="text"
@@ -74,16 +73,26 @@
 								<span class="vault-stat-label">{{ VAULT_LABEL_IDENTIFIERS }}</span>
 							</div>
 						</div>
+						<div class="vault-selection-divider"></div>
 						@if (detail.isAccount) {
-							<div class="vault-selection-divider"></div>
 							<button type="button" class="vault-link-button" (click)="startLinkMode()">
 								<span class="material-symbols-outlined">add_link</span>
 								{{ VAULT_BTN_ADD_CONNECTIONS }}
 							</button>
 						}
+						<button
+							type="button"
+							class="vault-delete-button"
+							[attr.aria-label]="VAULT_MSG_DELETE_NODE_TITLE"
+							(click)="openDeleteNodeDialog(detail.id, $event)">
+							<span class="material-symbols-outlined">delete</span>
+						</button>
 					</div>
 				} @else {
 					<div class="vault-overview">
+						@if (overviewStats.length === 0) {
+							<span class="vault-overview-empty">{{ VAULT_OVERVIEW_EMPTY }}</span>
+						}
 						@for (stat of overviewStats; track stat.key) {
 							<button
 								type="button"
@@ -97,6 +106,13 @@
 									<div class="vault-overview-value">{{ stat.value }}</div>
 									<div class="vault-overview-label">{{ stat.label }}</div>
 								</div>
+								@if (stat.isActive && stat.isCustom) {
+									<span
+										class="vault-overview-delete material-symbols-outlined"
+										(click)="deleteCategory(stat.key, $event)"
+										>close</span
+									>
+								}
 							</button>
 						}
 					</div>
@@ -124,7 +140,34 @@
 												</span>
 											}
 										</div>
-										<div class="vault-card-category">{{ account.categoryLabel }}</div>
+										<div class="vault-category-picker">
+											<button
+												type="button"
+												class="vault-card-category"
+												[class.open]="categoryPickerId === account.id"
+												(click)="toggleCategoryPicker(account.id, $event)">
+												{{ account.categoryLabel }}
+												<span class="material-symbols-outlined vault-category-caret">chevron_right</span>
+											</button>
+											<div
+												class="vault-category-options"
+												[class.open]="categoryPickerId === account.id">
+												@for (option of assignableCategories; track option.key) {
+													<button
+														type="button"
+														class="vault-category-option"
+														[class.current]="option.key === account.category"
+														(click)="
+															assignCategory(account.id, option.key, account.category, $event)
+														">
+														<span
+															class="vault-category-option-dot"
+															[style.background]="option.gradient"></span>
+														{{ option.label }}
+													</button>
+												}
+											</div>
+										</div>
 									</div>
 									<div class="vault-card-actions">
 										<div class="vault-link-count">
@@ -143,6 +186,13 @@
 												{{ account.isEditing ? VAULT_LIST_DONE : VAULT_LIST_EDIT }}
 											</button>
 										}
+										<button
+											type="button"
+											class="vault-delete-button"
+											[attr.aria-label]="VAULT_MSG_DELETE_NODE_TITLE"
+											(click)="openDeleteNodeDialog(account.id, $event)">
+											<span class="material-symbols-outlined">delete</span>
+										</button>
 									</div>
 								</div>
 								@if (account.hasLinks) {
@@ -181,34 +231,6 @@
 				}
 			} @else {
 				<div class="vault-graph-area">
-					<div class="vault-filters">
-						@for (filter of filterDefs; track filter.type) {
-							<div class="vault-filter-wrap">
-								<button
-									type="button"
-									class="vault-filter-chip"
-									[class.active]="filter.isActive"
-									(click)="toggleFilter(filter.type)">
-									<span
-										class="vault-filter-dot"
-										[style.background]="filter.dotColor"
-										[style.opacity]="filter.isActive ? 1 : 0.3"></span>
-									{{ filter.label }}
-									<span class="vault-filter-count">{{ filter.count }}</span>
-								</button>
-								@if (filter.hasItems) {
-									<div class="vault-filter-popover">
-										@for (item of filter.items; track item) {
-											<div class="vault-filter-popover-row">
-												<span class="material-symbols-outlined">{{ filter.icon }}</span
-												>{{ item }}
-											</div>
-										}
-									</div>
-								}
-							</div>
-						}
-					</div>
 					@if (linkMode) {
 						<div class="vault-banner">
 							<span class="material-symbols-outlined">add_link</span>
@@ -225,12 +247,13 @@
 						[customCategories]="customCategories"
 						[selectedId]="selectedId"
 						[query]="query"
-						[filters]="filters"
+						[typeFilter]="typeFilter"
 						[categoryFilter]="categoryFilter"
 						[linkMode]="linkMode"
 						[linkSourceId]="linkSourceId"
 						(nodeSelect)="onGraphNodeSelect($event)"
-						(linkTarget)="handleLinkTarget($event)">
+						(linkTarget)="handleLinkTarget($event)"
+						(filterToggle)="toggleFilter($event)">
 					</graph-canvas>
 				</div>
 			}

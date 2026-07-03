@@ -61,6 +61,8 @@ test('backupCollection writes the keyed payload and returns the count', async ()
 	assert.strictEqual(fbDb.writes.movies, undefined);
 	assert.deepStrictEqual(Object.keys(fbDb.writes['backup/movies']), ['m1', 'm2']);
 	assert.strictEqual(fbDb.writes['backup/movies'].m1._openid, 'u1');
+	// _id lives in the key, not duplicated in the body.
+	assert.ok(!('_id' in fbDb.writes['backup/movies'].m1));
 });
 
 test('runBackup backs up every configured collection and returns a summary', async () => {

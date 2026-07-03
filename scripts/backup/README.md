@@ -115,6 +115,9 @@ npm test   # node --test — pure logic + orchestration (no network, no creds)
 - `COLLECTIONS` in `config.js` duplicates the `DATABASE_*` names from
   `src/app/common/constants.ts` (standalone Node tooling can't import the Angular
   TS constants). Keep them in sync when a collection is added or renamed.
+- Each document's `_id` is stored as the **Firebase key**, not duplicated as a
+  field in the body. Restore reattaches the key as `_id` before writing back to
+  CloudBase, so the round-trip is lossless.
 - The Firebase-only `preferences` node is intentionally excluded — it has no
   CloudBase counterpart.
 - The backup runs from a GitHub runner (outside China) because it must reach

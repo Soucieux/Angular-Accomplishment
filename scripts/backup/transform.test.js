@@ -13,6 +13,8 @@ test('toFirebaseShape keys each record by its _id', () => {
 
 	assert.deepStrictEqual(Object.keys(result), ['a1', 'b2']);
 	assert.strictEqual(result.a1.name, 'first');
+	// _id is the key only — it must not be duplicated in the stored body.
+	assert.ok(!('_id' in result.a1));
 });
 
 test('toFirebaseShape preserves _openid on every record', () => {
@@ -33,8 +35,9 @@ test('toFirebaseShape throws when a record has no _id', () => {
 	assert.throws(() => toFirebaseShape(records), /_id/);
 });
 
-test('fromFirebaseShape converts a keyed node back to an array of records', () => {
-	const node = { a1: { _id: 'a1', _openid: 'user1', name: 'first' } };
+test('fromFirebaseShape reattaches each key as the record _id', () => {
+	// The stored body has no _id — the key is the id (as toFirebaseShape stores it).
+	const node = { a1: { _openid: 'user1', name: 'first' } };
 
 	const result = fromFirebaseShape(node);
 

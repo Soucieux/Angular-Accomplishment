@@ -36,7 +36,7 @@ function fakeCbDb() {
 }
 
 test('restoreCollection writes each record to CloudBase preserving _openid', async () => {
-	const fbDb = fakeFbDb({ reminder: { a1: { _id: 'a1', _openid: 'u1', text: 'buy milk' } } });
+	const fbDb = fakeFbDb({ reminder: { a1: { _openid: 'u1', text: 'buy milk' } } });
 	const cbDb = fakeCbDb();
 
 	const result = await restoreCollection(fbDb, cbDb, 'reminder', {});
@@ -50,7 +50,7 @@ test('restoreCollection writes each record to CloudBase preserving _openid', asy
 });
 
 test('restoreCollection in dry-run reads but performs zero writes', async () => {
-	const fbDb = fakeFbDb({ reminder: { a1: { _id: 'a1', _openid: 'u1' } } });
+	const fbDb = fakeFbDb({ reminder: { a1: { _openid: 'u1' } } });
 	const cbDb = fakeCbDb();
 
 	const result = await restoreCollection(fbDb, cbDb, 'reminder', { dryRun: true });
@@ -62,8 +62,8 @@ test('restoreCollection in dry-run reads but performs zero writes', async () => 
 test('runRestore restores every configured collection', async () => {
 	const config = { COLLECTIONS: ['reminder', 'quotes'], PAGE_SIZE: 1000, BACKUP_ROOT: 'backup' };
 	const fbDb = fakeFbDb({
-		'backup/reminder': { a1: { _id: 'a1', _openid: 'u1' } },
-		'backup/quotes': { q1: { _id: 'q1', _openid: 'u2' }, q2: { _id: 'q2', _openid: 'u2' } }
+		'backup/reminder': { a1: { _openid: 'u1' } },
+		'backup/quotes': { q1: { _openid: 'u2' }, q2: { _openid: 'u2' } }
 	});
 	const cbDb = fakeCbDb();
 
@@ -76,8 +76,8 @@ test('runRestore restores every configured collection', async () => {
 test('runRestore honours the --only filter', async () => {
 	const config = { COLLECTIONS: ['reminder', 'quotes'], PAGE_SIZE: 1000, BACKUP_ROOT: 'backup' };
 	const fbDb = fakeFbDb({
-		'backup/reminder': { a1: { _id: 'a1', _openid: 'u1' } },
-		'backup/quotes': { q1: { _id: 'q1', _openid: 'u2' } }
+		'backup/reminder': { a1: { _openid: 'u1' } },
+		'backup/quotes': { q1: { _openid: 'u2' } }
 	});
 	const cbDb = fakeCbDb();
 

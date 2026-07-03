@@ -62,7 +62,7 @@ describe('AuthService', () => {
 
     afterEach(() => {
         CloudbaseService['userId'] = '';
-        CloudbaseService['userRole'] = '';
+        CloudbaseService['userRole'] = [];
         CloudbaseService['userName'] = '';
         CloudbaseService['_authReady$'] = new ReplaySubject<boolean>(1);
         CloudbaseService['_loginState$'] = new BehaviorSubject<boolean>(false);
@@ -108,7 +108,7 @@ describe('AuthService', () => {
             (service as any).verification = { verification_id: 'vid' };
 
             // Dynamically import to access the constant
-            const { CLOUDBASE_ERROR_INVALID_ARGUMENT } = await import('../../common/app.constant');
+            const { CLOUDBASE_ERROR_INVALID_ARGUMENT } = await import('../../common/constants');
             const cloudbaseError = { code: CLOUDBASE_ERROR_INVALID_ARGUMENT };
             mockCloudbaseAuth.verify.and.returnValue(Promise.reject(cloudbaseError));
 

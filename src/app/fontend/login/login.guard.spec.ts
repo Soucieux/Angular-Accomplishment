@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { GuardResult, MaybeAsync, Router } from '@angular/router';
 import { PLATFORM_ID } from '@angular/core';
 
 import { loginGuard } from './login.guard';
@@ -8,7 +8,7 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 describe('loginGuard', () => {
 	let mockRouter: jasmine.SpyObj<Router>;
 
-	function runGuard(): boolean | ReturnType<Router['parseUrl']> {
+	function runGuard(): MaybeAsync<GuardResult> {
 		return TestBed.runInInjectionContext(() => loginGuard({} as any, {} as any));
 	}
 

@@ -1,3 +1,7 @@
 node_modules/
 *.serviceaccount.json
 .env
+
+# The repo-root .gitignore ignores every package.json; re-include this one so the
+# CI backup job (npm install in this dir) can read it.
+!package.json

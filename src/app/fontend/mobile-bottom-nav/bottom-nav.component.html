@@ -10,7 +10,7 @@
 	[cdkTrapFocusAutoCapture]="gridOpen()">
 	<div class="grid-head">{{ NAV_MOBILE_ALL_SECTIONS }}</div>
 	<div class="grid-cells" #gridCells>
-		@for (navItem of items; track navItem.id) {
+		@for (navItem of secondary; track navItem.id) {
 			<button
 				class="cell"
 				type="button"
@@ -69,16 +69,11 @@
 				{{ notificationSubscribed() ? NAV_NOTIF_LABEL_DISABLE : NAV_NOTIF_LABEL_ENABLE }}
 			</button>
 		}
-		<button
-			class="account-popover-item"
-			type="button"
-			(click)="doNavigateToAccount()">
-			<span class="material-symbols-outlined" style="font-size: 20px">manage_accounts</span><span>{{ ACCOUNT_TITLE_PAGE }}</span>
+		<button class="account-popover-item" type="button" (click)="doNavigateToAccount()">
+			<span class="material-symbols-outlined" style="font-size: 20px">manage_accounts</span
+			><span>{{ ACCOUNT_TITLE_PAGE }}</span>
 		</button>
-		<button
-			class="account-popover-item"
-			type="button"
-			(click)="doSwitchLocale()">
+		<button class="account-popover-item" type="button" (click)="doSwitchLocale()">
 			<span class="material-symbols-outlined" style="font-size: 20px">language</span>
 			{{ localeSwitchLabel }}
 		</button>
@@ -87,7 +82,8 @@
 			type="button"
 			cdkFocusInitial
 			(click)="doSignOut()">
-			<span class="material-symbols-outlined" style="font-size: 20px">logout</span>{{ NAV_LABEL_SIGN_OUT }}
+			<span class="material-symbols-outlined" style="font-size: 20px">logout</span
+			>{{ NAV_LABEL_SIGN_OUT }}
 		</button>
 	} @else {
 		<div class="account-popover-header">
@@ -104,7 +100,8 @@
 			type="button"
 			cdkFocusInitial
 			(click)="doSignIn()">
-			<span class="material-symbols-outlined" style="font-size: 20px">login</span>{{ NAV_LABEL_SIGN_IN }}
+			<span class="material-symbols-outlined" style="font-size: 20px">login</span
+			>{{ NAV_LABEL_SIGN_IN }}
 		</button>
 	}
 </div>

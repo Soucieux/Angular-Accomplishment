@@ -16,10 +16,7 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
-import {
-	NAV_AVATAR_FALLBACK_INITIAL,
-	NAV_AVATAR_GRADIENT
-} from '../../common/constants';
+import { NAV_AVATAR_FALLBACK_INITIAL, NAV_AVATAR_GRADIENT } from '../../common/constants';
 import {
 	ACCOUNT_TITLE_PAGE,
 	ACTIVE_LOCALE,
@@ -111,6 +108,18 @@ export class BottomNavComponent implements AfterViewInit {
 		return ids
 			.map((id) => this.items.find((navItem) => navItem.id === id))
 			.filter((navItem): navItem is NavItem => !!navItem);
+	}
+
+	/**
+	 * Gets the sections shown in the "All sections" overlay — every nav item that
+	 * is not already promoted to the always-visible dock, so the grid never
+	 * duplicates a dock destination.
+	 *
+	 * @returns The list of `NavItem` entries absent from the dock.
+	 */
+	protected get secondary(): NavItem[] {
+		const dockIds = new Set(this.primary.map((navItem) => navItem.id));
+		return this.items.filter((navItem) => !dockIds.has(navItem.id));
 	}
 
 	/**

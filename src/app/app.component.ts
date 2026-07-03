@@ -223,8 +223,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 					.catch(() => {});
 			}
 
-			// Step 2: Wire the auth observable and track the active route for the bottom nav
+			// Step 2: Wire the auth observable and track the active route for the bottom nav.
+			// Seed activeRoute from the current URL first — the router's initial navigation can
+			// finish before this subscription attaches, so without seeding the dock would show no
+			// (or a stale) active page on a direct load or hard refresh.
 			this.currentUser$ = this.authService.getCurrentUser();
+			this.activeRoute = ROUTE_TO_NAV_ID[this.router.url.split('?')[0]] ?? '';
 			this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
 				const url = (event as NavigationEnd).urlAfterRedirects.split('?')[0];
 				this.activeRoute = ROUTE_TO_NAV_ID[url] ?? '';

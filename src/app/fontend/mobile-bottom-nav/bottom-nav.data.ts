@@ -2,7 +2,12 @@ import { NavItem } from './bottom-nav.model';
 
 export const NAV_ITEMS: NavItem[] = [
 	{ id: 'home', label: 'Home', icon: 'home_app_logo', gradient: 'linear-gradient(135deg,#ff6b35,#ffd700)' },
-	{ id: 'today', label: 'Today', icon: 'calendar_today', gradient: 'linear-gradient(135deg,#16a34a,#065f46)' },
+	{
+		id: 'today',
+		label: 'Today',
+		icon: 'calendar_today',
+		gradient: 'linear-gradient(135deg,#16a34a,#065f46)'
+	},
 	{ id: 'portal', label: 'Portal', icon: 'language', gradient: 'linear-gradient(135deg,#a3e635,#84cc16)' },
 	{
 		id: 'resonance',
@@ -10,7 +15,12 @@ export const NAV_ITEMS: NavItem[] = [
 		icon: 'format_quote',
 		gradient: 'linear-gradient(135deg,#fde68a,#b45309)'
 	},
-	{ id: 'recipes', label: 'Recipes', icon: 'menu_book', gradient: 'linear-gradient(135deg,#fda4af,#9f1239)' },
+	{
+		id: 'recipes',
+		label: 'Recipes',
+		icon: 'menu_book',
+		gradient: 'linear-gradient(135deg,#fda4af,#9f1239)'
+	},
 	{
 		id: 'entertainment',
 		label: 'Entertainment',

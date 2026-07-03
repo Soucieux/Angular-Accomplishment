@@ -34,7 +34,7 @@ describe('AppComponent', () => {
 
     afterEach(() => {
         CloudbaseService['userId'] = '';
-        CloudbaseService['userRole'] = '';
+        CloudbaseService['userRole'] = [];
         CloudbaseService['userName'] = '';
         CloudbaseService['_authReady$'] = new ReplaySubject<boolean>(1);
         CloudbaseService['_loginState$'] = new BehaviorSubject<boolean>(false);

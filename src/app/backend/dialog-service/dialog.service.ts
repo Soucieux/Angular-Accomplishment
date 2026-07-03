@@ -58,7 +58,10 @@ export class DialogService {
 	private openedDialogs = new Map<string, ComponentRef<any>>();
 	private readonly stackableDialogTypes = new Set([DIALOG_ERROR, DIALOG_BLOCK, DIALOG_RETRY]);
 
-	constructor(private messageService: MessageService) {}
+	constructor(
+		private messageService: MessageService,
+		private utilities: Utilities
+	) {}
 
 	// Overload methods to call correct dialog component
 	public openDialog(
@@ -229,6 +232,49 @@ export class DialogService {
 	}
 
 	/**
+	 * Opens a confirm dialog and, on accept, runs the given async work behind a blocking overlay.
+	 * The block dialog is opened fire-and-forget so the confirm closes at once and the overlay
+	 * replaces it; the overlay auto-removes when the work resolves. A repeat trigger while the
+	 * overlay is up is silently skipped (stackable rule), so the work can never double-fire.
+	 * The work callback owns its own error handling (try/catch with handleError) — a rejection
+	 * only closes the overlay.
+	 *
+	 * @param container - The ViewContainerRef to attach the dialogs to.
+	 * @param confirmData - The confirm dialog display data (fixed three-element array).
+	 * @param confirmData[0] - The message to display in the dialog body.
+	 * @param confirmData[1] - The header title of the dialog.
+	 * @param confirmData[2] - The accept button label.
+	 * @param blockMessage - The message shown on the blocking overlay while the work runs.
+	 * @param work - The async DB work to run after the user confirms.
+	 */
+	public confirmThenBlock(
+		container: ViewContainerRef,
+		confirmData: [string, string, string],
+		blockMessage: string,
+		work: () => Promise<void>
+	): void {
+		this.openDialog(container, 'confirm', () => {
+			this.runBlocking(container, blockMessage, work);
+		}, confirmData);
+	}
+
+	/**
+	 * Runs the given async work behind a blocking overlay that auto-removes when the work
+	 * resolves. A repeat call while the overlay is up is silently skipped (stackable rule),
+	 * which makes this the standard duplicate-click guard for dialog-triggered DB writes.
+	 * The work callback owns its own error handling — a rejection only closes the overlay.
+	 *
+	 * @param container - The ViewContainerRef to attach the overlay to.
+	 * @param blockMessage - The message shown on the blocking overlay while the work runs.
+	 * @param work - The async DB work to run behind the overlay.
+	 * @returns A promise that resolves when the work settles, so callers that need to sequence
+	 *   after completion can await it; fire-and-forget callers may safely ignore it.
+	 */
+	public runBlocking(container: ViewContainerRef, blockMessage: string, work: () => Promise<void>): Promise<void> {
+		return this.openDialog(container, 'block', work, blockMessage).catch(() => {});
+	}
+
+	/**
 	 * Shows the loading-timeout retry dialog with the standard message.
 	 *
 	 * @param container - The ViewContainerRef to attach the dialog to.
@@ -289,13 +335,15 @@ export class DialogService {
 	}
 
 	/**
-	 * Shows a PrimeNG toast notification.
+	 * Shows a PrimeNG toast notification. Suppressed entirely on mobile so no
+	 * toast surfaces on phones, where the floating dock leaves no room for them.
 	 *
 	 * @param severity - Visual style: 'success' | 'info' | 'warn' | 'error'.
 	 * @param summary - Short title shown in the toast.
 	 * @param detail - Optional longer message shown below the title.
 	 */
 	public showToast(severity: 'success' | 'info' | 'warn' | 'error', summary: string, detail?: string) {
+		if (this.utilities.isMobile()) return;
 		this.messageService.add({ severity, summary, detail });
 	}
 

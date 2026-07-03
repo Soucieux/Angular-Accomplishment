@@ -3,7 +3,7 @@ import { MessageService } from 'primeng/api';
 
 import { MOVIE_GENRES } from '../../../fontend/entertainment/entertainment.model';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
-import { AddDialogComponent } from './add.component';
+import { AddDialogComponent } from './add-movie.component';
 
 describe('AddMovieDialogComponent', () => {
 	let component: AddDialogComponent;
@@ -37,7 +37,10 @@ describe('AddMovieDialogComponent', () => {
 		});
 
 		it('populates genres from MOVIE_GENRES', () => {
-			expect((component as any).genres).toEqual(MOVIE_GENRES);
+			const genres = (component as any).genres as { genre: string; label: string }[];
+			expect(genres.length).toBe(MOVIE_GENRES.length);
+			expect(genres.map((g) => g.genre)).toEqual(MOVIE_GENRES.map((g) => g.genre));
+			genres.forEach((g) => expect(typeof g.label).toBe('string'));
 		});
 	});
 

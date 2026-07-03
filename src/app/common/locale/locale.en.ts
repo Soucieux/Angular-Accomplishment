@@ -31,6 +31,12 @@ export const ACCESS_DENIED_BODY = 'You do not have permission to access this pag
 export const MSG_PERMISSION_DENIED = 'User does not have permission';
 /** User-facing message shown when an unhandled exception occurs. */
 export const MSG_UNEXPECTED_ERROR = 'Unexpected error occurred';
+/** Block-overlay message shown while a delete write is in flight. */
+export const MSG_DELETING = 'Deleting...';
+/** Block-overlay message shown while a save write is in flight. */
+export const MSG_SAVING = 'Saving...';
+/** Block-overlay message shown while a bulk clear write is in flight. */
+export const MSG_CLEARING = 'Clearing...';
 /** Error message thrown when an unknown dialog type is requested. */
 export const MSG_INVALID_DIALOG_TYPE = 'Invalid dialog type';
 /** Error message thrown when the dialog container reference is missing. */
@@ -210,6 +216,7 @@ export const ORBITAL_LABEL_LIFE_CLOCK = 'LIFE CLOCK';
 export const ORBITAL_LABEL_REMINDERS = 'Reminders';
 export const ORBITAL_LABEL_SHORTCUTS = 'Shortcuts';
 export const ORBITAL_LABEL_ACTIVITY = 'Activity';
+export const ORBITAL_LABEL_LOADING = 'Loading…';
 export const ORBITAL_PANEL_EMPTY_LINKS = 'No links yet';
 export const ORBITAL_PANEL_EMPTY_PAYMENTS = 'No upcoming payments';
 export const ORBITAL_PANEL_EMPTY_GENRES = 'No genre data yet';

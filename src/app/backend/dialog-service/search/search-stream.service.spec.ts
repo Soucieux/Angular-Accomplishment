@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 
 import {
 	RATE_DECREASED,
-	RATE_INCREASED
+	RATE_INCREASED,
+	ENT_LOG_SPAN_CLASS_RATE_DOWN,
+	ENT_LOG_SPAN_CLASS_RATE_UP
 } from '../../../common/constants';
 import { SearchStreamService } from './search-stream.service';
 
@@ -34,12 +36,12 @@ describe('SearchStreamService', () => {
 
 	describe('checkLastLogDecreasedOrIncreased', () => {
 		it('returns RATE_DECREASED when the last log contains the decrease indicator', () => {
-			service.addSearchLog(`rate ${RATE_DECREASED} today`);
+			service.addSearchLog(`rate <span ${ENT_LOG_SPAN_CLASS_RATE_DOWN}>down</span>`);
 			expect(service.checkLastLogDecreasedOrIncreased()).toBe(RATE_DECREASED);
 		});
 
 		it('returns RATE_INCREASED when the last log contains the increase indicator', () => {
-			service.addSearchLog(`rate ${RATE_INCREASED} today`);
+			service.addSearchLog(`rate <span ${ENT_LOG_SPAN_CLASS_RATE_UP}>up</span>`);
 			expect(service.checkLastLogDecreasedOrIncreased()).toBe(RATE_INCREASED);
 		});
 

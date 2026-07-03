@@ -14,7 +14,9 @@ import {
 	RECIPE_BAND_CHINESE,
 	RECIPE_BAND_DESSERT,
 	RECIPE_BAND_QUICK,
-	RECIPE_BAND_WESTERN
+	RECIPE_BAND_WESTERN,
+	DEBT_CURRENCY_SYMBOL_CNY,
+	DEBT_CURRENCY_SYMBOL_CAD
 } from '../constants';
 import {
 	ACTIVE_LOCALE,
@@ -207,6 +209,36 @@ export class Utilities {
 		const datePart = timestamp.split(' ')[0];
 		const [, monthStr, dayStr] = datePart.split('.');
 		return `${months[Number(monthStr) - 1]} ${Number(dayStr)}`;
+	}
+
+	/**
+	 * Formats an amount as a currency string with the locale-appropriate symbol,
+	 * keeping the negative sign ahead of the symbol (e.g. -$1,250.50).
+	 *
+	 * @param amount - The numeric value to format.
+	 * @param isChinese - Whether to use the ¥ symbol instead of $.
+	 * @returns The formatted currency string.
+	 */
+	public static formatMoney(amount: number, isChinese: boolean): string {
+		const symbol = isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
+		const formatted = Math.abs(amount).toLocaleString('en-US', {
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 2
+		});
+		return amount < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
+	}
+
+	/**
+	 * Formats an amount as a compact currency string (e.g. $1k for 1000).
+	 *
+	 * @param amount - The numeric value to format.
+	 * @param isChinese - Whether to use the ¥ symbol instead of $.
+	 * @returns A compact currency label string.
+	 */
+	public static formatCompactMoney(amount: number, isChinese: boolean): string {
+		const symbol = isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
+		if (amount >= 1000) return `${symbol}${Math.floor(amount / 1000)}k`;
+		return `${symbol}${amount}`;
 	}
 
 	/**

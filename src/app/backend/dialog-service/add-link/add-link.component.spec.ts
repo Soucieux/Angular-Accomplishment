@@ -15,7 +15,7 @@ describe('AddLinkDialogComponent', () => {
 			'proxyFetch'
 		]);
 		mockDb.getLinkCategories.and.returnValue(of([]));
-		mockDb.proxyFetch.and.returnValue(Promise.resolve({ content: '' }));
+		mockDb.proxyFetch.and.returnValue(Promise.resolve({ content: '', contentType: '' }));
 
 		await TestBed.configureTestingModule({
 			imports: [AddLinkDialogComponent],

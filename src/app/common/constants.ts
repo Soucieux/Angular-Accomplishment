@@ -211,6 +211,8 @@ export const FIREBASE_LOG_PATCH_NOTES_UPDATED = 'Patch notes record has been upd
 export const FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED = 'Error while updating patch notes record';
 export const FIREBASE_LOG_STATS_UPDATE_FAILED = 'Error while updating statistics fields';
 export const FIREBASE_LOG_USER_STATS_UPDATE_FAILED = 'Error while updating user stats fields';
+export const FIREBASE_LOG_STAT_COUNT_UPDATE_FAILED = 'Error while updating stat count';
+export const FIREBASE_LOG_MILESTONE_WRITE_FAILED = 'Error while writing milestone';
 export const FIREBASE_LOG_ACTIVITY_APPEND_FAILED = 'Error while appending activity log';
 export const FIREBASE_LOG_RECORD_TABLE_UPDATED = 'Record updated on table';
 export const FIREBASE_LOG_TABLE_UPDATE_FAILED = 'Error while updating';
@@ -625,6 +627,7 @@ export const PORTAL_LOG_LINK_DELETE_FAILED = 'Failed to delete link:';
 export const PORTAL_LOG_CATEGORY_UPDATED = 'Category updated:';
 export const PORTAL_LOG_CATEGORY_ADDED = 'Category added:';
 export const PORTAL_LOG_CATEGORY_DELETED = 'Category deleted:';
+export const PORTAL_LOG_CATEGORY_DELETE_FAILED = 'Failed to delete category:';
 
 /* ─────────────────────────────────────────
    Reminder page constants

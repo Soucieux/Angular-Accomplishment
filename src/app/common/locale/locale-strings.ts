@@ -31,6 +31,9 @@ export const {
 	ACCESS_DENIED_BODY,
 	MSG_PERMISSION_DENIED,
 	MSG_UNEXPECTED_ERROR,
+	MSG_DELETING,
+	MSG_SAVING,
+	MSG_CLEARING,
 	MSG_INVALID_DIALOG_TYPE,
 	MSG_DIALOG_CONTAINER_NOT_FOUND,
 	MSG_DIALOG_ALREADY_OPEN,
@@ -170,6 +173,7 @@ export const {
 	ORBITAL_LABEL_REMINDERS,
 	ORBITAL_LABEL_SHORTCUTS,
 	ORBITAL_LABEL_ACTIVITY,
+	ORBITAL_LABEL_LOADING,
 	ORBITAL_PANEL_EMPTY_LINKS,
 	ORBITAL_PANEL_EMPTY_PAYMENTS,
 	ORBITAL_PANEL_EMPTY_GENRES,
@@ -715,3 +719,41 @@ export const DEBT_CATEGORY_LABELS: Record<string, string> = {
 	shopping: DEBT_CATEGORY_LABEL_FINANCING,
 	home: DEBT_CATEGORY_LABEL_MORTGAGE
 };
+
+/** Localized display labels for recipe categories, keyed by the stored English category key. */
+const RECIPE_CATEGORY_LABELS: Record<string, string> = {
+	All: LABEL_ALL,
+	Chinese: RECIPE_CATEGORY_CHINESE,
+	Western: RECIPE_CATEGORY_WESTERN,
+	Quick: RECIPE_CATEGORY_QUICK,
+	Dessert: RECIPE_CATEGORY_DESSERT
+};
+
+/**
+ * Resolves the localized display label for a stored recipe category key.
+ *
+ * @param category - The stored category value (English key).
+ * @returns The localized label, or the raw key if unmapped.
+ */
+export function recipeCategoryLabel(category: string): string {
+	return RECIPE_CATEGORY_LABELS[category] ?? category;
+}
+
+/** Localized display labels for reminder tags, keyed by the stored English tag. */
+const REMINDER_TAG_LABELS: Record<string, string> = {
+	Personal: LABEL_PERSONAL,
+	Work: REMINDER_CATEGORY_WORK,
+	Utility: REMINDER_CATEGORY_UTILITY,
+	Other: REMINDER_CATEGORY_OTHER
+};
+
+/**
+ * Resolves the localized display label for a stored reminder tag.
+ *
+ * @param tag - The stored tag value (English key), possibly undefined for untagged items.
+ * @returns The localized label, the raw tag if unmapped, or empty string when undefined.
+ */
+export function reminderTagLabel(tag: string | undefined): string {
+	if (!tag) return '';
+	return REMINDER_TAG_LABELS[tag] ?? tag;
+}

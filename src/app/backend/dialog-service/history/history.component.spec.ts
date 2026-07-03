@@ -44,19 +44,19 @@ describe('HistoryDialogComponent', () => {
 		});
 	});
 
-	// ── setBackgroundColor ─────────────────────────────────────────────────
+	// ── getBackgroundColor ─────────────────────────────────────────────────
 
-	describe('setBackgroundColor', () => {
+	describe('getBackgroundColor', () => {
 		it('returns the added style for HISTORY_STATUS_ADDED', () => {
-			expect((component as any).setBackgroundColor(HISTORY_STATUS_ADDED)).toBe(HISTORY_STYLE_ADDED);
+			expect((component as any).getBackgroundColor(HISTORY_STATUS_ADDED)).toBe(HISTORY_STYLE_ADDED);
 		});
 
 		it('returns the deleted style for HISTORY_STATUS_DELETED', () => {
-			expect((component as any).setBackgroundColor(HISTORY_STATUS_DELETED)).toBe(HISTORY_STYLE_DELETED);
+			expect((component as any).getBackgroundColor(HISTORY_STATUS_DELETED)).toBe(HISTORY_STYLE_DELETED);
 		});
 
 		it('returns empty string for an unrecognised status', () => {
-			expect((component as any).setBackgroundColor('unknown')).toBe('');
+			expect((component as any).getBackgroundColor('unknown')).toBe('');
 		});
 	});
 

@@ -92,7 +92,7 @@
 
 - Regular security dependency bumps via Dependabot across core packages and Firebase Functions throughout the project lifetime.
 - Gitignore and build configuration maintained to prevent sensitive files and large binaries from being committed.
-- Project-wide coding-style pass — descriptive naming, typed error classes, access modifiers, `940px` mobile breakpoint, standardised save-spinners, and dialog convention alignment across all pages.
+- Project-wide coding-style pass — descriptive naming, typed error classes, access modifiers, `940px` mobile breakpoint, standardised save-spinners, dialog convention alignment, all string literals extracted to constants and locale files, and consistent CSS spacing, section dividers, and method-section ordering across all pages.
 
 ---
 

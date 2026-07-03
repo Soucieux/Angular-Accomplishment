@@ -5,7 +5,9 @@ import {
 	DATABASE_HISTORY,
 	DATABASE_PATCH_NOTES,
 	DATABASE_QUOTES,
+	DATABASE_RECIPES,
 	DATABASE_REMINDER,
+	DATABASE_USEFUL_LINKS,
 	DATABASE_VAULT,
 	VAULT_KIND_NODE,
 	VAULT_KIND_EDGE,
@@ -28,17 +30,52 @@ import {
 	SEARCH,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_RECENT_ACTIVITIES,
+	STATS_FIELD_ACTIVITY_STREAK,
+	STATS_FIELD_ACTIVITY_STREAK_DATE,
+	STATS_FIELD_MILESTONES,
+	STATS_FIELD_TOTAL_REMINDERS,
+	STATS_FIELD_TOTAL_DEBTS,
+	STATS_FIELD_TOTAL_QUOTES,
+	STATS_FIELD_TOTAL_FILMS,
+	STATS_FIELD_TOTAL_RECIPES,
+	STATS_FIELD_TOTAL_LINKS,
+	STATS_FIELD_COMPLETED_PRIVATE,
+	MILESTONE_DOMAIN_STREAK,
+	MILESTONE_DOMAIN_REMINDER,
+	MILESTONE_DOMAIN_DEBT,
+	MILESTONE_DOMAIN_QUOTE,
+	MILESTONE_DOMAIN_FILM,
+	MILESTONE_DOMAIN_RECIPE,
+	MILESTONE_DOMAIN_LINK,
+	USEFUL_LINK_TYPE_LINK,
+	USEFUL_LINK_TYPE_CATEGORY,
+	DEBT_VALUE_KEY_DEBT,
+	DEBT_VALUE_KEY_PAID,
+	DEBT_VALUE_KEY_PAYMENTS,
 	ACTIVITY_SOURCE_DEBT,
+	ACTIVITY_SOURCE_LINK,
 	ACTIVITY_SOURCE_MOVIE,
 	ACTIVITY_SOURCE_PATCH,
+	ACTIVITY_SOURCE_RECIPE,
 	ACTIVITY_SOURCE_REMINDER,
 	ACTIVITY_SOURCE_RESONANCE,
 	ACTIVITY_SOURCE_VAULT,
+	ACTIVITY_SOURCE_DEFAULT,
+	ACTIVITY_SOURCE_DATE_CALCULATOR,
 	ACTIVITY_TYPE_UPDATED,
+	ACTIVITY_TYPE_BUG_LOGGED,
+	ACTIVITY_TYPE_CATEGORY_ADDED,
+	ACTIVITY_TYPE_CATEGORY_UPDATED,
 	ACTIVITY_TYPE_CALCULATOR_UPDATED,
+	ACTIVITY_TYPE_CATEGORY_DELETED,
+	ACTIVITY_TYPE_PAYMENT_REMOVED,
 	ACTIVITY_TYPE_RATE_UPDATED,
 	ACTIVITY_TYPE_GENRE_UPDATED,
 	ACTIVITY_TYPE_FAVOURITE_UPDATED,
+	ACTIVITY_TYPE_RESET,
+	ACTIVITY_TYPE_STATUS_CHANGED,
+	ACTIVITY_TYPE_EDITED,
+	ACTIVITY_TYPE_LOCK_UPDATED,
 	DATABASE_USER_PREFERENCES,
 	STATS_FIELD_TAURI_NOTIF_ENABLED,
 	STATS_FIELD_MINIMIZE_ON_CLOSE,
@@ -61,6 +98,8 @@ import {
 	FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED,
 	FIREBASE_LOG_STATS_UPDATE_FAILED,
 	FIREBASE_LOG_USER_STATS_UPDATE_FAILED,
+	FIREBASE_LOG_STAT_COUNT_UPDATE_FAILED,
+	FIREBASE_LOG_MILESTONE_WRITE_FAILED,
 	FIREBASE_LOG_ACTIVITY_APPEND_FAILED,
 	FIREBASE_LOG_RECORD_TABLE_UPDATED,
 	FIREBASE_LOG_TABLE_UPDATE_FAILED,
@@ -73,8 +112,6 @@ import {
 	FIREBASE_LOG_MOVIE_ADDED,
 	FIREBASE_LOG_HISTORY_ADDED,
 	FIREBASE_LOG_HISTORY_ADD_FAILED,
-	FIREBASE_LOG_PATCH_NOTES_ADDED,
-	FIREBASE_LOG_PATCH_NOTES_ADD_FAILED,
 	FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED,
 	FIREBASE_LOG_COVER_UPLOADED,
 	FIREBASE_LOG_REUSABLE_KEYS_RETRIEVED,
@@ -83,14 +120,14 @@ import {
 	FIREBASE_LOG_REUSABLE_KEYS_SAVE_FAILED
 } from '../../../common/constants';
 import {
-	REMINDER_TABLE_MESSAGES,
 	ENT_LOG_RATE_PRE,
 	ENT_LOG_RATE_IS,
 	ENT_LOG_RATE_BY,
 	ENT_LOG_RATE_TO,
 	ENT_LOG_RATE_SAME,
 	ENT_LOG_RATE_UP,
-	ENT_LOG_RATE_DOWN
+	ENT_LOG_RATE_DOWN,
+	ACTIVITY_INVALID_TABLE_TEXT
 } from '../../../common/locale/locale-strings';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Inject, Injectable } from '@angular/core';
@@ -197,21 +234,35 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Not implemented for Firebase — returns an empty observable.
+	 * Gets the useful links from the database as a reactive observable.
+	 * Category rows are filtered out so only actual links remain.
 	 *
-	 * @returns An observable that emits an empty useful links list.
+	 * @returns An observable that emits the useful links list.
 	 */
 	public getUsefulLinks(): Observable<any[]> {
-		return of([]);
+		return this.listAsObservable(dbRef(this.db, DATABASE_USEFUL_LINKS)).pipe(
+			map((snapshots: any[]) =>
+				snapshots
+					.map((snapshot: any) => ({ key: snapshot.key, ...snapshot.val() }))
+					.filter((link: any) => link.type !== USEFUL_LINK_TYPE_CATEGORY)
+			)
+		);
 	}
 
 	/**
-	 * Not implemented for Firebase — returns an empty observable.
+	 * Gets the link categories from the database as a reactive observable.
+	 * Only category rows are kept; actual links are filtered out.
 	 *
-	 * @returns An observable that emits an empty link categories list.
+	 * @returns An observable that emits the link categories list.
 	 */
 	public getLinkCategories(): Observable<any[]> {
-		return of([]);
+		return this.listAsObservable(dbRef(this.db, DATABASE_USEFUL_LINKS)).pipe(
+			map((snapshots: any[]) =>
+				snapshots
+					.map((snapshot: any) => ({ key: snapshot.key, ...snapshot.val() }))
+					.filter((category: any) => category.type === USEFUL_LINK_TYPE_CATEGORY)
+			)
+		);
 	}
 
 	/**
@@ -233,12 +284,33 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Not implemented for Firebase — returns an empty observable.
+	 * Gets the recipes from the database as a reactive observable.
+	 * Each snapshot is mapped to the Recipe shape, with every step reset to not-done.
 	 *
-	 * @returns An observable that emits an empty recipe list.
+	 * @returns An observable that emits the recipe list.
 	 */
 	public getRecipes(): Observable<Recipe[]> {
-		return of([]);
+		return this.listAsObservable(dbRef(this.db, DATABASE_RECIPES)).pipe(
+			map((snapshots: any[]) =>
+				snapshots.map((snapshot: any) => {
+					const recipe = snapshot.val();
+					return {
+						id: snapshot.key,
+						openid: recipe._openid ?? '',
+						name: recipe.name,
+						detailName: recipe.detailName,
+						category: recipe.category,
+						bandClass: recipe.bandClass,
+						cookTimeMin: recipe.cookTimeMin ?? 0,
+						baseServings: recipe.baseServings ?? 1,
+						badges: recipe.badges ?? [],
+						groups: recipe.groups ?? [],
+						steps: (recipe.steps ?? []).map((step: any) => ({ ...step, done: false })),
+						notes: recipe.notes ?? ''
+					};
+				}) as Recipe[]
+			)
+		);
 	}
 
 	/**
@@ -518,7 +590,7 @@ export class FirebaseService extends DatabaseService {
 			await update(dbRef(this.db, DATABASE_DATE_CALCULATOR), { ...updatedTable });
 			LOG.info(this.className, FIREBASE_LOG_TABLE_RECORD_UPDATED);
 			this.appendToActivityLog({
-				source: ACTIVITY_SOURCE_REMINDER,
+				source: ACTIVITY_SOURCE_DATE_CALCULATOR,
 				type: ACTIVITY_TYPE_CALCULATOR_UPDATED
 			}).catch(() => {});
 		} catch (error: unknown) {
@@ -528,41 +600,61 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Updates an existing useful link in the database and records the change in the activity log.
 	 *
-	 * @param _key - The key of the link to update (unused in this backend).
-	 * @param _updates - The fields to update (unused in this backend).
-	 * @param _domain - The hostname of the updated link (unused in this backend).
+	 * @param key - The document key of the link to update.
+	 * @param updates - The fields to update.
+	 * @param domain - The hostname of the updated link, recorded in the activity log.
 	 */
-	public updateUsefulLink(
-		_key: string,
-		_updates: Partial<{ url: string; title: string; category: string; isPinned: boolean }>,
-		_domain: string
+	public async updateUsefulLink(
+		key: string,
+		updates: Partial<{ url: string; title: string; category: string; isPinned: boolean }>,
+		domain: string
 	): Promise<void> {
-		return Promise.resolve();
+		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, {
+			entryKey: key,
+			fields: { ...updates },
+			source: ACTIVITY_SOURCE_LINK,
+			type: ACTIVITY_TYPE_UPDATED,
+			domain
+		});
 	}
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Updates an existing link category in the database and records the change in the activity log.
 	 *
-	 * @param _key - The key of the category to update (unused in this backend).
-	 * @param _updates - The fields to update (unused in this backend).
+	 * @param key - The document key of the category to update.
+	 * @param updates - The fields to update.
+	 * @param name - The category name, recorded in the activity log.
 	 */
-	public updateLinkCategory(
-		_key: string,
-		_updates: Partial<{ name: string; color: string; order: number }>,
-		_name: string
+	public async updateLinkCategory(
+		key: string,
+		updates: Partial<{ name: string; order: number }>,
+		name: string
 	): Promise<void> {
-		return Promise.resolve();
+		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, {
+			entryKey: key,
+			fields: { ...updates },
+			source: ACTIVITY_SOURCE_LINK,
+			type: ACTIVITY_TYPE_CATEGORY_UPDATED,
+			domain: name
+		});
 	}
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Updates an existing recipe in the database.
 	 *
-	 * @param _recipe - The recipe to update (unused in this backend).
+	 * @param recipe - The recipe with updated fields. The `id` field identifies the document.
 	 */
-	public updateRecipe(_recipe: Recipe): Promise<void> {
-		return Promise.resolve();
+	public async updateRecipe(recipe: Recipe): Promise<void> {
+		const { id, ...payload } = recipe;
+		await this.updateTableExistingFields(DATABASE_RECIPES, {
+			entryKey: id,
+			fields: { ...payload, steps: payload.steps.map((step) => ({ ...step, done: false })) },
+			source: ACTIVITY_SOURCE_RECIPE,
+			type: ACTIVITY_TYPE_UPDATED,
+			name: recipe.name
+		});
 	}
 
 	/**
@@ -701,41 +793,50 @@ export class FirebaseService extends DatabaseService {
 	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to store.
 	 * @param text - The reminder text, recorded in the activity log.
-	 * @param _isShared - Group-feed routing flag; unused in the Firebase backend (no shared groups).
+	 * @param isShared - Whether the reminder is shared, so its activity routes to the group feed.
 	 */
 	public async updateReminderTable(
 		entryKey: string,
 		valueKey: string,
 		value: any,
 		text: string,
-		_isShared?: boolean
+		isShared?: boolean
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_REMINDER, entryKey, { [valueKey]: value });
-		this.appendToActivityLog({
+		await this.updateTableExistingFields(DATABASE_REMINDER, {
+			entryKey,
+			fields: { [valueKey]: value },
 			source: ACTIVITY_SOURCE_REMINDER,
 			type: ACTIVITY_TYPE_UPDATED,
-			text
-		}).catch(() => {});
+			text,
+			isShared,
+			// Records which field changed so the shared feed can say "who changed the date of what".
+			element: valueKey
+		});
 	}
 
 	/**
-	 * Not implemented for Firebase — updates a single field value in the debt table
-	 * without recording an activity log entry.
+	 * Updates a single field value in the debt table and records the change in the activity log.
 	 *
 	 * @param entryKey - The key of the entry to update.
 	 * @param valueKey - The key of the value to update.
 	 * @param value - The new value to store.
-	 * @param _ - The debt entry name (unused in this backend).
-	 * @param _type - The activity log type (unused in this backend).
+	 * @param name - The debt entry name, recorded in the activity log.
+	 * @param type - The activity log type. Defaults to ACTIVITY_TYPE_LOCK_UPDATED.
 	 */
 	public updateSingleValueForDebtTable(
 		entryKey: string,
 		valueKey: string,
 		value: any,
-		_: string,
-		_type?: string
+		name: string,
+		type = ACTIVITY_TYPE_LOCK_UPDATED
 	): Promise<void> {
-		return this.updateTableExistingFields(DATABASE_DEBT_SONATA, entryKey, { [valueKey]: value });
+		return this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields: { [valueKey]: value },
+			source: ACTIVITY_SOURCE_DEBT,
+			type,
+			name
+		});
 	}
 
 	/**
@@ -751,76 +852,132 @@ export class FirebaseService extends DatabaseService {
 		fields: Record<string, unknown>,
 		name?: string
 	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, entryKey, fields);
-		if (name !== undefined) {
-			this.appendToActivityLog({
-				source: ACTIVITY_SOURCE_DEBT,
-				type: ACTIVITY_TYPE_UPDATED,
-				name
-			}).catch(() => {});
-		}
+		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields,
+			// Include the activity values only when a name is supplied so no entry is logged otherwise.
+			...(name !== undefined ? { source: ACTIVITY_SOURCE_DEBT, type: ACTIVITY_TYPE_UPDATED, name } : {})
+		});
 	}
 
 	/**
-	 * Not implemented for Firebase — throws immediately.
+	 * Resets a debt record to its original amount and removes all payment history
+	 * in a single round-trip. Setting the payments field to null deletes that child node
+	 * entirely, the RTDB analogue of CloudBase's remove command. Records the reset in the
+	 * activity log.
 	 *
-	 * @param _entryKey - The key of the entry to reset (unused in this backend).
-	 * @param _originalAmount - The original debt amount to restore (unused in this backend).
-	 * @param _paid - The paid status to restore (unused in this backend).
-	 * @param _name - The debt entry name (unused in this backend).
+	 * @param entryKey - The key of the entry to reset.
+	 * @param originalAmount - The original debt amount to restore.
+	 * @param paid - The paid status to restore.
+	 * @param name - The debt entry name, recorded in the activity log.
 	 */
 	public resetDebtRecord(
-		_entryKey: string,
-		_originalAmount: number,
-		_paid: boolean,
-		_name: string
+		entryKey: string,
+		originalAmount: number,
+		paid: boolean,
+		name: string
 	): Promise<void> {
-		throw new Error('Method not implemented.');
+		return this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields: {
+				[DEBT_VALUE_KEY_DEBT]: originalAmount,
+				[DEBT_VALUE_KEY_PAID]: paid,
+				[DEBT_VALUE_KEY_PAYMENTS]: null
+			},
+			source: ACTIVITY_SOURCE_DEBT,
+			type: ACTIVITY_TYPE_RESET,
+			name
+		});
 	}
 
 	/**
-	 * Updates the status of an existing record in the patch notes collection.
+	 * Updates the status of an existing record in the patch notes collection
+	 * and records the change in the activity log.
 	 *
 	 * @param key - The document key of the patch note to update.
 	 * @param updatedRecord - The updated record data.
-	 * @param _component - Unused in Firebase; present for interface compatibility.
-	 * @param _element - Unused in Firebase; present for interface compatibility.
-	 * @param _noteIndex - Unused in Firebase; present for interface compatibility.
+	 * @param component - The component the note belongs to, recorded in the activity log.
+	 * @param element - The element the note belongs to, recorded in the activity log.
+	 * @param noteIndex - The 1-based position of the note in the table.
 	 */
 	public updateStatusForOnePatchNote(
 		key: string,
 		updatedRecord: any,
-		_component: string,
-		_element: string,
-		_noteIndex: number
+		component: string,
+		element: string,
+		noteIndex: number
 	): Promise<void> {
-		return update(dbRef(this.db, `${DATABASE_PATCH_NOTES}/${key}`), { ...updatedRecord })
-			.then(() => {
-				LOG.info(this.className, FIREBASE_LOG_PATCH_NOTES_UPDATED);
-			})
-			.catch((error: Error) => {
-				LOG.error(this.className, FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED, error);
-				throw error;
-			});
+		return this.updateOnePatchNote(
+			key,
+			updatedRecord,
+			component,
+			element,
+			noteIndex,
+			ACTIVITY_TYPE_STATUS_CHANGED
+		);
 	}
 
 	/**
-	 * Updates the details of an existing record in the patch notes collection.
+	 * Updates the details of an existing record in the patch notes collection
+	 * and records the change in the activity log.
 	 *
-	 * @param _key - Unused in Firebase; present for interface compatibility.
-	 * @param _updatedRecord - Unused in Firebase; present for interface compatibility.
-	 * @param _component - Unused in Firebase; present for interface compatibility.
-	 * @param _element - Unused in Firebase; present for interface compatibility.
-	 * @param _noteIndex - Unused in Firebase; present for interface compatibility.
+	 * @param key - The document key of the patch note to update.
+	 * @param updatedRecord - The updated record data.
+	 * @param component - The component the note belongs to, recorded in the activity log.
+	 * @param element - The element the note belongs to, recorded in the activity log.
+	 * @param noteIndex - The 1-based position of the note in the table.
 	 */
 	public updateDetailsForOnePatchNote(
-		_key: string,
-		_updatedRecord: any,
-		_component: string,
-		_element: string,
-		_noteIndex: number
+		key: string,
+		updatedRecord: any,
+		component: string,
+		element: string,
+		noteIndex: number
 	): Promise<void> {
-		return Promise.resolve();
+		return this.updateOnePatchNote(
+			key,
+			updatedRecord,
+			component,
+			element,
+			noteIndex,
+			ACTIVITY_TYPE_EDITED
+		);
+	}
+
+	/**
+	 * Writes updated fields to a patch note document and appends an activity log entry.
+	 * Shared by {@link updateStatusForOnePatchNote} and {@link updateDetailsForOnePatchNote},
+	 * which differ only in the activity type they record.
+	 *
+	 * @param key - The document key of the patch note to update.
+	 * @param updatedRecord - The updated record data.
+	 * @param component - The component the note belongs to, recorded in the activity log.
+	 * @param element - The element the note belongs to, recorded in the activity log.
+	 * @param noteIndex - The 1-based position of the note in the table.
+	 * @param activityType - The activity type constant to record in the log.
+	 */
+	private async updateOnePatchNote(
+		key: string,
+		updatedRecord: any,
+		component: string,
+		element: string,
+		noteIndex: number,
+		activityType: string
+	): Promise<void> {
+		try {
+			await update(dbRef(this.db, `${DATABASE_PATCH_NOTES}/${key}`), { ...updatedRecord });
+			LOG.info(this.className, FIREBASE_LOG_PATCH_NOTES_UPDATED);
+			this.appendToActivityLog({
+				source: ACTIVITY_SOURCE_PATCH,
+				type: activityType,
+				component,
+				element,
+				noteIndex
+			}).catch(() => {});
+		} catch (error) {
+			LOG.error(this.className, FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -856,45 +1013,81 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Prepends a new entry to the array named recent activity in the statistics document
-	 * keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first).
-	 * Used for the unified recentActivities feed and any legacy per-source fields.
+	 * Prepends a new entry to the array named recent activity in the statistics document,
+	 * keeping at most STATS_CAP_ACTIVITY_LOG entries (newest first), and updates the persistent
+	 * activity streak. Firebase has no shared reminders, so the entry always goes to the personal
+	 * recent-activity feed. The streak extends when the last activity was yesterday, holds when it
+	 * was today, and resets to 1 otherwise; a streak milestone is recorded when the threshold is met.
 	 *
 	 * @param activity - The activity object to record.
+	 * @returns A promise that resolves when the activity and streak have been written.
 	 */
 	private async appendToActivityLog(activity: any): Promise<void> {
 		const timestamp = Utilities.getCurrentFormattedTime(true);
 		const entry = { ...activity, timestamp };
 		try {
+			// Step 1: Read the current stats — both the activity feed and the streak live on this node.
 			const snapshot = await get(this.statisticsRef);
 			const currentData = snapshot.val() ?? {};
+
+			/* Step 2: Compute the new streak. If the stored date is today the streak is unchanged
+			   (multiple activities in one day count once); if it was yesterday the streak extends;
+			   otherwise a break is detected and the streak resets to 1. */
+			const today = Utilities.formatDateForStorage(new Date());
+			const storedStreak = (currentData[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
+			const storedDate = (currentData[STATS_FIELD_ACTIVITY_STREAK_DATE] as string) ?? '';
+			let newStreak: number;
+			if (storedDate === today) {
+				newStreak = storedStreak;
+			} else {
+				const yesterday = new Date();
+				yesterday.setDate(yesterday.getDate() - 1);
+				newStreak = storedDate === Utilities.formatDateForStorage(yesterday) ? storedStreak + 1 : 1;
+			}
+
+			// Step 3: Prepend the capped entry to the personal feed and write it alongside the streak.
 			const existing = Utilities.toArray(currentData[STATS_FIELD_RECENT_ACTIVITIES]);
 			const updated = [entry, ...existing].slice(0, STATS_CAP_ACTIVITY_LOG);
-			await this.updateUserStatsFields({ [STATS_FIELD_RECENT_ACTIVITIES]: updated });
+			await this.updateUserStatsFields({
+				[STATS_FIELD_RECENT_ACTIVITIES]: updated,
+				[STATS_FIELD_ACTIVITY_STREAK]: newStreak,
+				[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
+			});
+			this.checkAndWriteCountMilestone(MILESTONE_DOMAIN_STREAK, newStreak).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, FIREBASE_LOG_ACTIVITY_APPEND_FAILED, error as Error);
 		}
 	}
 
 	/**
-	 * Updates multiple fields in a single table record in one round-trip.
+	 * Updates the given fields on a single table record in one round-trip, then records the supplied
+	 * activity entry. Mirrors {@link addNewRecordToDB} — the document key, the fields to write, and the
+	 * activity payload are all passed as one record descriptor, so callers no longer record activity
+	 * themselves. Firebase's RTDB `update()` cannot report "0 rows updated", so there is no missing-
+	 * document guard.
 	 *
-	 * {@link updateReminderTable} - Updates a single field value in the reminder table.
-	 * {@link updateSingleValueForDebtTable} - Updates a single field value in the debt table.
-	 * {@link updateDebtFields} - Updates multiple debt fields in one round-trip.
+	 * {@link updateUsefulLink} - Updates link fields in the useful-links collection.
+	 * {@link updateLinkCategory} - Updates category fields in the useful-links collection.
+	 * {@link updateRecipe} - Updates recipe fields in the recipes collection.
+	 * {@link updateReminderTable} - Updates a single field in the reminder collection.
+	 * {@link updateSingleValueForDebtTable} - Updates a single field in the debt collection.
+	 * {@link updateDebtFields} - Updates multiple fields in the debt collection.
+	 * {@link resetDebtRecord} - Resets debt amount and removes payment history.
+	 * {@link updateOnePatchNote} - Updates a patch note record.
 	 *
 	 * @param tableName - The database collection name.
-	 * @param entryKey - The key of the entry to update.
-	 * @param fields - A record of field names and their new values.
+	 * @param newRecord - The update descriptor: the document key (entryKey), the fields to write
+	 *   (fields), and the activity values to record (source, type, and subtitle) as flat sibling
+	 *   properties. When no activity property is supplied, no entry is logged.
 	 */
-	private async updateTableExistingFields(
-		tableName: string,
-		entryKey: string,
-		fields: Record<string, unknown>
-	): Promise<void> {
+	private async updateTableExistingFields(tableName: string, newRecord: any): Promise<void> {
+		const { entryKey, fields, ...activity } = newRecord;
 		try {
 			await update(dbRef(this.db, `${tableName}/${entryKey}`), fields);
 			LOG.info(this.className, `${FIREBASE_LOG_RECORD_TABLE_UPDATED} ${tableName}`);
+			if (Object.keys(activity).length > 0) {
+				this.appendToActivityLog(activity).catch(() => {});
+			}
 		} catch (error) {
 			LOG.error(this.className, `${FIREBASE_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
 			throw error;
@@ -904,22 +1097,37 @@ export class FirebaseService extends DatabaseService {
 	// ── Removal methods ──────────────────────────────────────────────────────
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Removes a link from the useful-links collection, records the deletion in the activity log,
+	 * and decrements the total-links count. Mirrors cloudbase.removeUsefulLink.
 	 *
-	 * @param _key - The key of the link to remove (unused in this backend).
-	 * @param _domain - The hostname of the removed link (unused in this backend).
+	 * @param key - The key of the link to remove.
+	 * @param domain - The hostname of the removed link, recorded in the activity log.
 	 */
-	public removeUsefulLink(_key: string, _domain: string): Promise<void> {
-		return Promise.resolve();
+	public async removeUsefulLink(key: string, domain: string): Promise<void> {
+		await this.removeSingleItemFromDatabase(DATABASE_USEFUL_LINKS, key);
+		this.appendToActivityLog({
+			source: ACTIVITY_SOURCE_LINK,
+			type: HISTORY_STATUS_DELETED,
+			domain
+		}).catch(() => {});
+		this.updateStatCount(STATS_FIELD_TOTAL_LINKS, -1).catch(() => {});
 	}
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Removes a category from the useful-links collection and records the deletion in the activity
+	 * log. Categories share the collection with links but do not count toward totalLinks, so no
+	 * count is changed. Mirrors cloudbase.removeLinkCategory.
 	 *
-	 * @param _key - The key of the category to remove (unused in this backend).
+	 * @param key - The key of the category to remove.
+	 * @param name - The category name, recorded in the activity log.
 	 */
-	public removeLinkCategory(_key: string, _name: string): Promise<void> {
-		return Promise.resolve();
+	public async removeLinkCategory(key: string, name: string): Promise<void> {
+		await this.removeSingleItemFromDatabase(DATABASE_USEFUL_LINKS, key);
+		this.appendToActivityLog({
+			source: ACTIVITY_SOURCE_LINK,
+			domain: name,
+			type: ACTIVITY_TYPE_CATEGORY_DELETED
+		}).catch(() => {});
 	}
 
 	/**
@@ -950,13 +1158,20 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Removes a recipe from the recipes collection, records the deletion in the activity log,
+	 * and decrements the total-recipes count. Mirrors cloudbase.removeRecipe.
 	 *
-	 * @param _recipeId - The database ID of the recipe to delete (unused in this backend).
-	 * @param _name - The recipe name (unused in this backend).
+	 * @param recipeId - The database key of the recipe to delete.
+	 * @param name - The recipe name, recorded in the activity log.
 	 */
-	public removeRecipe(_recipeId: string, _name: string): Promise<void> {
-		return Promise.resolve();
+	public async removeRecipe(recipeId: string, name: string): Promise<void> {
+		await this.removeSingleItemFromDatabase(DATABASE_RECIPES, recipeId);
+		this.appendToActivityLog({
+			source: ACTIVITY_SOURCE_RECIPE,
+			type: HISTORY_STATUS_DELETED,
+			name
+		}).catch(() => {});
+		this.updateStatCount(STATS_FIELD_TOTAL_RECIPES, -1).catch(() => {});
 	}
 
 	/**
@@ -1025,6 +1240,7 @@ export class FirebaseService extends DatabaseService {
 			type: HISTORY_STATUS_DELETED,
 			text
 		}).catch(() => {});
+		this.updateStatCount(STATS_FIELD_TOTAL_REMINDERS, -1).catch(() => {});
 	}
 
 	/**
@@ -1041,6 +1257,8 @@ export class FirebaseService extends DatabaseService {
 			type: HISTORY_STATUS_COMPLETED,
 			text
 		}).catch(() => {});
+		this.updateStatCount(STATS_FIELD_TOTAL_REMINDERS, -1).catch(() => {});
+		this.updateStatCount(STATS_FIELD_COMPLETED_PRIVATE, 1).catch(() => {});
 	}
 
 	/**
@@ -1056,6 +1274,7 @@ export class FirebaseService extends DatabaseService {
 			type: HISTORY_STATUS_DELETED,
 			name
 		}).catch(() => {});
+		this.updateStatCount(STATS_FIELD_TOTAL_DEBTS, -1).catch(() => {});
 	}
 
 	/**
@@ -1091,18 +1310,32 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Not implemented for Firebase — throws immediately.
+	 * Removes a single payment-history entry from a debt record and updates the outstanding
+	 * amount in one round-trip. Setting the payments child at the given index to null deletes it,
+	 * the RTDB analogue of CloudBase's remove command. Records the removal in the activity log.
+	 * Mirrors cloudbase.removeSingleHistoryFromDebt.
 	 *
-	 * @param _entryKey - The key of the debt record (unused in this backend).
-	 * @param _index - The index of the payment history entry to remove (unused in this backend).
+	 * @param entryKey - The key of the debt record.
+	 * @param index - The index of the payment-history entry to remove.
+	 * @param updatedDebt - The recomputed outstanding debt amount after removing the payment.
+	 * @param name - The debt entry name, recorded in the activity log.
 	 */
 	public removeSingleHistoryFromDebt(
-		_entryKey: string,
-		_index: number,
-		_updatedDebt: number,
-		_name: string
+		entryKey: string,
+		index: number,
+		updatedDebt: number,
+		name: string
 	): Promise<void> {
-		throw new Error('Method not implemented.');
+		return this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields: {
+				[`${DEBT_VALUE_KEY_PAYMENTS}/${index}`]: null,
+				[DEBT_VALUE_KEY_DEBT]: updatedDebt
+			},
+			source: ACTIVITY_SOURCE_DEBT,
+			type: ACTIVITY_TYPE_PAYMENT_REMOVED,
+			name
+		});
 	}
 
 	/**
@@ -1261,11 +1494,13 @@ export class FirebaseService extends DatabaseService {
 	// ── Add methods ──────────────────────────────────────────────────────────
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Adds a new useful link to the database. Shared links are flagged with `isShared` and never carry
+	 * a category; private links carry their category instead. Bumps the link total and records the
+	 * count milestone once the threshold is met.
 	 *
-	 * @param _link - The link object to add (unused in this backend).
+	 * @param link - The link object to add. `isShared` is persisted as a top-level flag.
 	 */
-	public addUsefulLink(_link: {
+	public async addUsefulLink(link: {
 		url: string;
 		title: string;
 		category: string;
@@ -1274,16 +1509,27 @@ export class FirebaseService extends DatabaseService {
 		isPinned: boolean;
 		isShared?: boolean;
 	}): Promise<void> {
-		return Promise.resolve();
+		const { isShared, category, ...linkData } = link;
+		await this.addNewRecordToDB(DATABASE_USEFUL_LINKS, {
+			type: USEFUL_LINK_TYPE_LINK,
+			...linkData,
+			...(isShared ? { isShared: true } : { category })
+		});
+		this.updateStatCount(STATS_FIELD_TOTAL_LINKS, 1)
+			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_LINKS, MILESTONE_DOMAIN_LINK))
+			.catch(() => {});
 	}
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Adds a new link category to the database.
 	 *
-	 * @param _category - The category object to add (unused in this backend).
+	 * @param category - The category object to add.
 	 */
-	public addLinkCategory(_category: { name: string; color: string; order: number }): Promise<void> {
-		return Promise.resolve();
+	public addLinkCategory(category: { name: string; color: string; order: number }): Promise<void> {
+		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, {
+			type: USEFUL_LINK_TYPE_CATEGORY,
+			...category
+		});
 	}
 
 	/**
@@ -1307,6 +1553,10 @@ export class FirebaseService extends DatabaseService {
 				type: HISTORY_STATUS_ADDED,
 				author
 			}).catch(() => {});
+
+			/* The runTransaction above already bumped totalQuotes — record the milestone only, never
+			   a second increment, or the quote total would double. Fire-and-forget: the add succeeded. */
+			this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_QUOTES, MILESTONE_DOMAIN_QUOTE).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, FIREBASE_LOG_QUOTE_ADD_FAILED, error as Error);
 			throw error;
@@ -1314,12 +1564,21 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Adds a new recipe to the database. Steps are persisted with `done: false` so the cooking state
+	 * is always reset on load. Bumps the recipe total and records the count milestone once the
+	 * threshold is met.
 	 *
-	 * @param _recipe - The recipe to persist (unused in this backend).
+	 * @param recipe - The recipe to persist. The `id` field is ignored; the database assigns one.
 	 */
-	public addRecipe(_recipe: Recipe): Promise<void> {
-		return Promise.resolve();
+	public async addRecipe(recipe: Recipe): Promise<void> {
+		const { id: _, ...payload } = recipe;
+		await this.addNewRecordToDB(DATABASE_RECIPES, {
+			...payload,
+			steps: payload.steps.map((step) => ({ ...step, done: false }))
+		});
+		this.updateStatCount(STATS_FIELD_TOTAL_RECIPES, 1)
+			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_RECIPES, MILESTONE_DOMAIN_RECIPE))
+			.catch(() => {});
 	}
 
 	/**
@@ -1370,6 +1629,10 @@ export class FirebaseService extends DatabaseService {
 				currentData.totalFilms = (currentData.totalFilms ?? 0) + 1;
 				return currentData;
 			});
+
+			/* The runTransaction above already bumped totalFilms — record the milestone only, never a
+			   second increment, or the film total would double. Fire-and-forget: the add succeeded. */
+			this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_FILMS, MILESTONE_DOMAIN_FILM).catch(() => {});
 			LOG.info(this.className, FIREBASE_LOG_MOVIE_ADDED);
 		} catch (error) {
 			LOG.error(
@@ -1424,46 +1687,44 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Adds a new record to the reminder collection.
+	 * Adds a new record to the reminder collection, bumps the reminder total, records the count
+	 * milestone once the threshold is met, and signals connections when the reminder is shared.
 	 *
 	 * @param newRecord - The new record to add.
 	 */
-	public addNewRecordToReminder(newRecord: any): Promise<void> {
-		return this.addNewRecordToTable(DATABASE_REMINDER, newRecord);
+	public async addNewRecordToReminder(newRecord: any): Promise<void> {
+		this.updateStatCount(STATS_FIELD_TOTAL_REMINDERS, 1)
+			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER))
+			.catch(() => {});
+		await this.addNewRecordToDB(DATABASE_REMINDER, newRecord);
 	}
 
 	/**
-	 * Adds a new record to the debt collection.
+	 * Adds a new record to the debt collection, bumps the debt total, and records the count milestone
+	 * once the threshold is met.
 	 *
 	 * @param newRecord - The new record to add.
 	 */
 	public addNewRecordToDebt(newRecord: any): Promise<void> {
-		return this.addNewRecordToTable(DATABASE_DEBT_SONATA, newRecord);
+		this.updateStatCount(STATS_FIELD_TOTAL_DEBTS, 1)
+			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_DEBTS, MILESTONE_DOMAIN_DEBT))
+			.catch(() => {});
+		return this.addNewRecordToDB(DATABASE_DEBT_SONATA, newRecord);
 	}
 
 	/**
-	 * Adds a new record to the patch notes collection.
+	 * Adds a new record to the patch notes collection. Routes through the shared helper so the add is
+	 * recorded in the activity log with the correct discriminator (bug or added). Only element and
+	 * details are normalized; component is left untouched to mirror the CloudBase backend.
 	 *
-	 * @param newRecord - The record to add.
+	 * @param newRecord - The record to add, with a noteIndex field appended by the caller.
 	 */
 	public addNewRecordToPatchNotes(newRecord: any): Promise<void> {
-		return push(dbRef(this.db, DATABASE_PATCH_NOTES), {
-			/* Normalize text casing so patch note entries have consistent formatting
-			   regardless of how the user typed them. */
-			component: Utilities.capitalizeFirstLetterOnEachWord(newRecord.component),
+		return this.addNewRecordToDB(DATABASE_PATCH_NOTES, {
+			...newRecord,
 			element: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
-			details: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim()),
-			status: newRecord.status,
-			timestamp: newRecord.timestamp,
-			isBug: newRecord.isBug
-		})
-			.then(() => {
-				LOG.info(this.className, FIREBASE_LOG_PATCH_NOTES_ADDED);
-			})
-			.catch((error: Error) => {
-				LOG.error(this.className, FIREBASE_LOG_PATCH_NOTES_ADD_FAILED, error);
-				throw error;
-			});
+			details: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim())
+		});
 	}
 
 	/**
@@ -1564,33 +1825,44 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Pushes a new record under the given table in Firebase Realtime Database.
+	 * Pushes a new record under the given table in Firebase Realtime Database and records an activity
+	 * log entry for every table. Reads spread the pushed document flat (`{key, ...val}`), so the record
+	 * is written flat — never wrapped — so writes and reads round-trip. The activity discriminator is
+	 * `bug_logged` for a bug patch note, `category_added` for a link category, otherwise `added`.
 	 *
 	 * {@link addNewRecordToReminder} - Adds a new record to the reminder collection.
 	 * {@link addNewRecordToDebt} - Adds a new record to the debt collection.
+	 * {@link addNewRecordToPatchNotes} - Adds a new record to the patch notes collection.
+	 * {@link addQuote} - Adds a quote to the quotes collection.
+	 * {@link addRecipe} - Adds a recipe to the recipes collection.
+	 * {@link addUsefulLink} - Adds a link to the useful-links collection.
+	 * {@link addLinkCategory} - Adds a category to the useful-links collection.
 	 *
 	 * @param tableName - The database collection name.
 	 * @param newRecord - The new record data to persist.
 	 */
-	private addNewRecordToTable(tableName: string, newRecord: any): Promise<void> {
-		return push(dbRef(this.db, tableName), {
-			content: { ...newRecord }
-		})
-			.then(() => {
-				LOG.info(this.className, FIREBASE_LOG_TABLE_RECORD_UPDATED);
-				if (tableName === DATABASE_REMINDER) {
-					this.appendToActivityLog({
-						source: ACTIVITY_SOURCE_REMINDER,
-						type: HISTORY_STATUS_ADDED,
-						table: REMINDER_TABLE_MESSAGES,
-						text: newRecord.text ?? ''
-					}).catch(() => {});
-				}
-			})
-			.catch((error: Error) => {
-				LOG.error(this.className, FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED, error);
-				throw error;
-			});
+	private async addNewRecordToDB(tableName: string, newRecord: any): Promise<void> {
+		try {
+			// Step 1: Push the record flat so the matching read's {key, ...val} spread round-trips.
+			await push(dbRef(this.db, tableName), { ...newRecord });
+			LOG.info(this.className, FIREBASE_LOG_TABLE_RECORD_UPDATED);
+
+			/* Step 2: Derive the correct activity type before enqueueing the log entry.
+			   Links and categories share the same collection — detect a category add by checking
+			   the type field, so the activity log gets the right discriminator instead of ADDED. */
+			const isCategoryAdd = tableName === DATABASE_USEFUL_LINKS && newRecord.type !== USEFUL_LINK_TYPE_LINK;
+			this.appendToActivityLog({
+				...this.getRecentActivitySubtitle(tableName, newRecord),
+				type: newRecord.isBug
+					? ACTIVITY_TYPE_BUG_LOGGED
+					: isCategoryAdd
+						? ACTIVITY_TYPE_CATEGORY_ADDED
+						: HISTORY_STATUS_ADDED
+			}).catch(() => {});
+		} catch (error) {
+			LOG.error(this.className, FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED, error as Error);
+			throw error;
+		}
 	}
 
 	/**
@@ -1618,13 +1890,20 @@ export class FirebaseService extends DatabaseService {
 	// ── Utility methods ───────────────────────────────────────────────────────
 
 	/**
-	 * Not implemented for Firebase — resolves immediately.
+	 * Increments a link's visit count and stamps the last-visited time. A plain DB write with no
+	 * activity-log entry, mirroring cloudbase.incrementLinkVisit.
 	 *
-	 * @param _key - The key of the link (unused in this backend).
-	 * @param _currentCount - The current visit count (unused in this backend).
+	 * @param key - The key of the link whose visit count to increment.
+	 * @param currentCount - The link's current visit count, incremented by one.
 	 */
-	public incrementLinkVisit(_key: string, _currentCount: number): Promise<void> {
-		return Promise.resolve();
+	public incrementLinkVisit(key: string, currentCount: number): Promise<void> {
+		return this.updateTableExistingFields(DATABASE_USEFUL_LINKS, {
+			entryKey: key,
+			fields: {
+				visitCount: currentCount + 1,
+				lastVisited: new Date().toISOString()
+			}
+		});
 	}
 
 	/**
@@ -1700,6 +1979,132 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public proxyFetch(_url: string): Promise<{ content: string; contentType: string }> {
 		return Promise.resolve({ content: '', contentType: '' });
+	}
+
+	/**
+	 * Maps a table name to the activity subtitle shape for a newly added record — a source plus the
+	 * one display field that matters for that domain. Quotes surface the author; debt surfaces the
+	 * record name; reminder surfaces the text; patch surfaces the component, element, and note index;
+	 * links surface the domain (or category name, or the previous domain on deletion); recipes surface
+	 * the name. Any other table yields the default source with an invalid-table message.
+	 *
+	 * @param tableName - The database collection name of the record being added.
+	 * @param newRecord - The record that was just persisted.
+	 * @returns An object carrying a source string and the display field appropriate for the table.
+	 */
+	private getRecentActivitySubtitle(tableName: string, newRecord: any): { source: string; [k: string]: any } {
+		const record = newRecord as {
+			author?: string;
+			name?: string;
+			text?: string;
+			component?: string;
+			element?: string;
+			noteIndex?: string | number;
+			type?: string;
+			url?: string;
+			domain?: string;
+		};
+		switch (tableName) {
+			case DATABASE_QUOTES:
+				return { source: ACTIVITY_SOURCE_RESONANCE, author: record.author ?? '' };
+			case DATABASE_DEBT_SONATA:
+				return { source: ACTIVITY_SOURCE_DEBT, name: record.name ?? '' };
+			case DATABASE_REMINDER:
+				return { source: ACTIVITY_SOURCE_REMINDER, text: record.text ?? '' };
+			case DATABASE_PATCH_NOTES:
+				return {
+					source: ACTIVITY_SOURCE_PATCH,
+					component: record.component ?? '',
+					element: record.element ?? '',
+					noteIndex: String(record.noteIndex ?? '')
+				};
+			case DATABASE_USEFUL_LINKS:
+				/* Links and categories share the same collection; the `type` field distinguishes
+				   them at write time — links carry a URL, categories carry a name, deletions carry
+				   the previous domain string from the history document. */
+				if (record.type === USEFUL_LINK_TYPE_LINK)
+					return { source: ACTIVITY_SOURCE_LINK, domain: Utilities.getDomain(record.url ?? '') };
+				else if (record.type === USEFUL_LINK_TYPE_CATEGORY)
+					return { source: ACTIVITY_SOURCE_LINK, domain: record.name ?? '' };
+				else if (record.type === HISTORY_STATUS_DELETED || record.type === ACTIVITY_TYPE_CATEGORY_DELETED)
+					return { source: ACTIVITY_SOURCE_LINK, domain: record.domain ?? '' };
+				else return { source: ACTIVITY_SOURCE_DEFAULT, text: ACTIVITY_INVALID_TABLE_TEXT };
+			case DATABASE_RECIPES:
+				return { source: ACTIVITY_SOURCE_RECIPE, name: record.name ?? '' };
+			default:
+				return { source: ACTIVITY_SOURCE_DEFAULT, text: ACTIVITY_INVALID_TABLE_TEXT };
+		}
+	}
+
+	/**
+	 * Atomically increments or decrements a single counter field on the global statistics node.
+	 * Errors are logged but not propagated — all callers treat stat updates as fire-and-forget.
+	 *
+	 * @param field - The stat field name to update (e.g. STATS_FIELD_TOTAL_FILMS).
+	 * @param delta - The amount to change the counter by — positive to increment, negative to decrement.
+	 * @returns A promise that resolves when the update completes.
+	 */
+	private async updateStatCount(field: string, delta: number): Promise<void> {
+		try {
+			await runTransaction(this.statisticsRef, (current: any) => {
+				current ??= {};
+				current[field] = (current[field] ?? 0) + delta;
+				return current;
+			});
+		} catch (error) {
+			LOG.error(this.className, FIREBASE_LOG_STAT_COUNT_UPDATE_FAILED, error as Error);
+		}
+	}
+
+	/**
+	 * Reads the current count of `field` from the global statistics node, then delegates to
+	 * {@link checkAndWriteCountMilestone} to record the milestone when the threshold is met.
+	 * Called fire-and-forget after each domain stat increment.
+	 *
+	 * @param field - The stat field to read the count from.
+	 * @param domain - The milestone domain prefix (e.g. MILESTONE_DOMAIN_LINK).
+	 * @returns A promise that resolves when the check (and optional milestone write) completes.
+	 */
+	private async checkAndWriteDomainMilestone(field: string, domain: string): Promise<void> {
+		const snapshot = await get(this.statisticsRef);
+		const currentData = snapshot.val() ?? {};
+		const count = (currentData[field] as number) ?? 0;
+		await this.checkAndWriteCountMilestone(domain, count);
+	}
+
+	/**
+	 * Checks whether `count` is a milestone threshold (count === 1 or a multiple of 5) and, when the
+	 * key is not already present in the milestones map on the global statistics node, writes the
+	 * current date for it. Never overwrites a milestone that was already reached.
+	 *
+	 * {@link checkAndWriteDomainMilestone} - Calls this after reading the count from the stats node.
+	 * {@link appendToActivityLog} - Calls this with the streak domain after updating the streak.
+	 *
+	 * @param domain - The milestone domain prefix (e.g. "link", "streak").
+	 * @param count - The new count value to evaluate.
+	 * @returns A promise that resolves when the check (and optional write) completes.
+	 */
+	private async checkAndWriteCountMilestone(domain: string, count: number): Promise<void> {
+		// Step 1: Derive the milestone key — null when count is not a milestone threshold.
+		const key = Utilities.getMilestoneKey(domain, count);
+		if (!key) return;
+
+		try {
+			// Step 2: Read the current milestones map and guard against overwriting a reached milestone.
+			const snapshot = await get(this.statisticsRef);
+			const currentData = snapshot.val() ?? {};
+			const milestones = (currentData[STATS_FIELD_MILESTONES] as Record<string, string>) ?? {};
+			if (milestones[key]) return;
+
+			/* Step 3: Write only the new milestone key, preserving sibling keys already in the map.
+			   Firebase update() treats the slash-separated key as a deep path relative to statisticsRef,
+			   so this writes statistics/milestones/<key> without touching other milestones. */
+			await update(this.statisticsRef, {
+				[`${STATS_FIELD_MILESTONES}/${key}`]: Utilities.formatDateForStorage(new Date())
+			});
+		} catch (error) {
+			LOG.error(this.className, FIREBASE_LOG_MILESTONE_WRITE_FAILED, error as Error);
+		}
 	}
 
 	/**

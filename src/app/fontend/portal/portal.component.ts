@@ -27,8 +27,6 @@ import { SessionExpiredError } from '../../common/error/session-expired.error';
 import {
 	COMPONENT_DESTROY,
 	DATABASE_DATE_CALCULATOR,
-	DIALOG_BLOCK,
-	DIALOG_CONFIRM,
 	PORTAL_CATEGORY_ALL,
 	PORTAL_LABEL_CONFIRMED,
 	DIALOG_CATEGORY,
@@ -45,14 +43,17 @@ import {
 	PORTAL_LOG_LINK_DELETE_FAILED,
 	PORTAL_LOG_CATEGORY_UPDATED,
 	PORTAL_LOG_CATEGORY_ADDED,
-	PORTAL_LOG_CATEGORY_DELETED
+	PORTAL_LOG_CATEGORY_DELETED,
+	PORTAL_LOG_CATEGORY_DELETE_FAILED
 } from '../../common/constants';
 import {
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
 	LABEL_EDIT,
 	MSG_DELETE_FAILED,
+	MSG_DELETING,
 	MSG_SAVE_FAILED,
+	MSG_SAVING,
 	PORTAL_LABEL_CELL_DONE,
 	PORTAL_LABEL_CELL_TODAY,
 	PORTAL_LABEL_CURRENT_MONTH,
@@ -610,13 +611,11 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		)
 			return;
 
-		this.dialogService.openDialog(
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
-			() => {
-				this.setDateCalculatorDefaults();
-			},
-			[PORTAL_MSG_RESET_CONFIRM, PORTAL_LABEL_RESET, DIALOG_BTN_CONFIRM]
+			[PORTAL_MSG_RESET_CONFIRM, PORTAL_LABEL_RESET, DIALOG_BTN_CONFIRM],
+			MSG_SAVING,
+			() => this.setDateCalculatorDefaults()
 		);
 	}
 
@@ -793,7 +792,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param existingLink - The existing DB record when editing, or null when adding.
 	 */
 	private handleLinkSave(formData: NewLinkData, existingLink: PortalLink | null): void {
-		this.openBlockDialog(async () => {
+		this.dialogService.runBlocking(this.dialogComponentContainer, PORTAL_MSG_SAVING_LINK, async () => {
 			// Step 1: Normalise the URL before any read or write (adds https:// if scheme is absent)
 			const finalUrl = Utilities.normalizeUrl(formData.url);
 			try {
@@ -839,7 +838,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 					);
 				}
 			}
-		}, PORTAL_MSG_SAVING_LINK).catch(() => {});
+		});
 	}
 
 	/**
@@ -849,7 +848,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param links - The batch of validated link data submitted by the multi-link dialog.
 	 */
 	private handleMultiLinkSave(links: NewLinkData[]): void {
-		this.openBlockDialog(async () => {
+		this.dialogService.runBlocking(this.dialogComponentContainer, PORTAL_MSG_SAVING_LINKS, async () => {
 			try {
 				/* Step 1: Fan out all writes in parallel — Promise.all rejects at the first failure,
 				   so a partial batch is never silently committed without an error toast. */
@@ -883,18 +882,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 					);
 				}
 			}
-		}, PORTAL_MSG_SAVING_LINKS).catch(() => {});
-	}
-
-	/**
-	 * Opens a blocking progress dialog that prevents user interaction while the
-	 * given async callback executes. Used during link save, update, and category save flows.
-	 *
-	 * @param callback - The async operation to run while the dialog is shown.
-	 * @param message - The status message displayed inside the dialog.
-	 */
-	private openBlockDialog(callback: () => Promise<void>, message: string): Promise<void> {
-		return this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_BLOCK, callback, message);
+		});
 	}
 
 	/**
@@ -907,33 +895,32 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		// Step 1: Prevent the link card click handler from firing underneath the delete button
 		event.stopPropagation();
 
-		// Step 2: Open the confirmation dialog; the delete runs only if the user confirms
-		this.dialogService.openDialog(
+		/* Step 2: Open the confirmation dialog; the delete runs behind the blocking overlay
+		   so a repeat click cannot fire a duplicate database call. */
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
-			() => {
-				// Step 3: On confirmation, delete the link and show result toast
-				const domain = Utilities.getDomain(link.url);
-				this.databaseService
-					.removeUsefulLink(link._id, domain)
-					.then(() => {
-						LOG.info(this.className, `${PORTAL_LOG_LINK_DELETED} ${link.title}`);
-						this.dialogService.showToast(TOAST_INFO, PORTAL_MSG_LINK_DELETED);
-					})
-					.catch((error: unknown) => {
-						LOG.error(this.className, `${PORTAL_LOG_LINK_DELETE_FAILED} ${link.title}`, error as Error);
-						this.dialogService.showToast(
-							TOAST_ERROR,
-							MSG_DELETE_FAILED,
-							PORTAL_MSG_LINK_DELETE_FAILED_DETAIL
-						);
-					});
-			},
 			[
 				PORTAL_MSG_DELETE_LINK_CONFIRM_PREFIX + link.title + PORTAL_MSG_DELETE_LINK_CONFIRM_SUFFIX,
 				PORTAL_MSG_DELETE_LINK_TITLE,
 				DIALOG_BTN_DELETE
-			]
+			],
+			MSG_DELETING,
+			async () => {
+				// Step 3: On confirmation, delete the link and show result toast
+				const domain = Utilities.getDomain(link.url);
+				try {
+					await this.databaseService.removeUsefulLink(link._id, domain);
+					LOG.info(this.className, `${PORTAL_LOG_LINK_DELETED} ${link.title}`);
+					this.dialogService.showToast(TOAST_INFO, PORTAL_MSG_LINK_DELETED);
+				} catch (error: unknown) {
+					LOG.error(this.className, `${PORTAL_LOG_LINK_DELETE_FAILED} ${link.title}`, error as Error);
+					this.dialogService.showToast(
+						TOAST_ERROR,
+						MSG_DELETE_FAILED,
+						PORTAL_MSG_LINK_DELETE_FAILED_DETAIL
+					);
+				}
+			}
 		);
 	}
 
@@ -984,7 +971,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * @param existing - The existing DB record when editing, or null when adding.
 	 */
 	private handleCategorySave(data: NewCategoryData, existing: PortalCategory | null): void {
-		this.openBlockDialog(async () => {
+		this.dialogService.runBlocking(this.dialogComponentContainer, PORTAL_MSG_SAVING_CATEGORY, async () => {
 			try {
 				// Update the name in-place when editing; append at end of ordered list when adding
 				if (existing) {
@@ -1017,7 +1004,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 					);
 				}
 			}
-		}, PORTAL_MSG_SAVING_CATEGORY).catch(() => {});
+		});
 	}
 
 	/**
@@ -1083,38 +1070,32 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private openDeleteCategoryDialog(category: PortalCategory): void {
 		/* Called after the edit dialog closes — opening a second dialog while the first is still
 		   mounted causes z-index conflicts, so the confirm dialog must open in a new stack frame. */
-		this.dialogService.openDialog(
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
-			() => {
-				// Delete the category; markForCheck is needed because the list updates via push reference
-				this.databaseService
-					.removeLinkCategory(category._id, category.name)
-					.then(() => {
-						LOG.info(this.className, `${PORTAL_LOG_CATEGORY_DELETED} ${category.name}`);
-						this.dialogService.showToast(TOAST_INFO, PORTAL_MSG_CATEGORY_DELETED);
-						this.cdr.markForCheck();
-					})
-					.catch((error: unknown) => {
-						LOG.error(
-							this.className,
-							`Failed to delete category: ${category.name}`,
-							error as Error
-						);
-						this.dialogService.showToast(
-							TOAST_ERROR,
-							MSG_DELETE_FAILED,
-							PORTAL_MSG_CATEGORY_DELETE_FAILED_DETAIL
-						);
-					});
-			},
 			[
 				PORTAL_MSG_DELETE_CATEGORY_CONFIRM_PREFIX +
 					category.name +
 					PORTAL_MSG_DELETE_CATEGORY_CONFIRM_SUFFIX,
 				PORTAL_MSG_DELETE_CATEGORY_TITLE,
 				DIALOG_BTN_DELETE
-			]
+			],
+			MSG_DELETING,
+			async () => {
+				// Delete the category; markForCheck is needed because the list updates via push reference
+				try {
+					await this.databaseService.removeLinkCategory(category._id, category.name);
+					LOG.info(this.className, `${PORTAL_LOG_CATEGORY_DELETED} ${category.name}`);
+					this.dialogService.showToast(TOAST_INFO, PORTAL_MSG_CATEGORY_DELETED);
+					this.cdr.markForCheck();
+				} catch (error: unknown) {
+					LOG.error(this.className, `${PORTAL_LOG_CATEGORY_DELETE_FAILED} ${category.name}`, error as Error);
+					this.dialogService.showToast(
+						TOAST_ERROR,
+						MSG_DELETE_FAILED,
+						PORTAL_MSG_CATEGORY_DELETE_FAILED_DETAIL
+					);
+				}
+			}
 		);
 	}
 }

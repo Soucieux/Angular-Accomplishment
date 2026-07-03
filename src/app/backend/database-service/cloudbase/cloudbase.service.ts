@@ -1594,10 +1594,14 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async removeLinkCategory(key: string, name: string): Promise<void> {
 		try {
-			/* Delete by _id only — categories created before the _openid fix have no _openid field,
-			   so the standard buildWhereClause (which adds _openid for non-admin users) would
-			   match zero rows and silently skip the delete. doc(key).remove() avoids that. */
-			const result = await this.database.collection(DATABASE_USEFUL_LINKS).doc(key).remove();
+			/* Delete via the ownership where-clause, like every other removal. A bare doc(key).remove()
+			   sends only { _id }, which fails CloudBase's security-rule subset check (the delete rule
+			   requires _openid == auth.uid) and is denied. Categories are always read back scoped to the
+			   user's _openid (see getLinkCategories), so this clause always matches the row being deleted. */
+			const result = await this.database
+				.collection(DATABASE_USEFUL_LINKS)
+				.where(this.buildWhereClause(key))
+				.remove();
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_USEFUL_LINKS}`);
 			this.appendToActivityLog({

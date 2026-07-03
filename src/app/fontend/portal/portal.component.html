@@ -12,6 +12,9 @@
 			</div>
 			<p class="page-subtitle">{{ PORTAL_SUBTITLE }}</p>
 			<div class="header-ornament"></div>
+			@if (utilities.isMobile()) {
+				<ng-container *ngTemplateOutlet="toolbarButtons"></ng-container>
+			}
 		</div>
 
 		<!-- ── Date Calculator ───────────────────────────────────────── -->
@@ -169,16 +172,9 @@
 							<span class="material-symbols-outlined">add</span>
 						</button>
 					</div>
-					<div class="toolbar-right">
-						<button class="add-link-button" (click)="openMultiLinkDialog()">
-							<span class="material-symbols-outlined">playlist_add</span>
-							{{ PORTAL_BTN_BATCH }}
-						</button>
-						<button class="add-link-button" (click)="openAddLinkDialog()">
-							<span class="material-symbols-outlined">add</span>
-							{{ PORTAL_BTN_ADD_LINK }}
-						</button>
-					</div>
+					@if (!utilities.isMobile()) {
+						<ng-container *ngTemplateOutlet="toolbarButtons"></ng-container>
+					}
 				</div>
 
 				<!-- Link grid -->
@@ -234,7 +230,7 @@
 						@if (showActions) {
 							<div class="card-actions" [class.visible]="hoveredLinkId === link._id">
 								<button
-									class="action-btn"
+									class="action-button"
 									(click)="openEditLinkDialog(link, $event)"
 									[title]="LABEL_EDIT">
 									<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
@@ -246,7 +242,7 @@
 									</svg>
 								</button>
 								<button
-									class="action-btn action-btn--delete"
+									class="action-button action-button--delete"
 									(click)="openDeleteLinkDialog(link, $event)"
 									[title]="DIALOG_BTN_DELETE">
 									<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
@@ -335,6 +331,19 @@
 		</div>
 	</div>
 	<ng-container #dialogComponentContainer></ng-container>
+
+	<ng-template #toolbarButtons>
+		<div class="toolbar-right">
+			<button class="add-link-button" (click)="openMultiLinkDialog()">
+				<span class="material-symbols-outlined">playlist_add</span>
+				{{ PORTAL_BTN_BATCH }}
+			</button>
+			<button class="add-link-button" (click)="openAddLinkDialog()">
+				<span class="material-symbols-outlined">add</span>
+				{{ PORTAL_BTN_ADD_LINK }}
+			</button>
+		</div>
+	</ng-template>
 } @else {
 	<div class="access-denied-wrapper">
 		<blocked-card icon="lock" />

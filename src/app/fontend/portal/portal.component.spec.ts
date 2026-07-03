@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { PORTAL_CATEGORY_ALL } from '../../common/constants';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { PortalComponent } from './portal.component';
 
 /** Minimal date calculator row factory. */
@@ -245,47 +246,44 @@ describe('PortalComponent', () => {
 		});
 	});
 
-	// ── filteredLinks ──────────────────────────────────────────────────────
+	// ── updateFilteredLinks ──────────────────────────────────────────────────
 
-	describe('filteredLinks', () => {
-		it('returns all links when selectedCategory is ALL and there is no search query', () => {
-			(component as any).links = [
-				{ _id: '1', title: 'Angular', category: 'dev' },
-				{ _id: '2', title: 'Vue', category: 'dev' }
-			];
-			(component as any).selectedCategory = PORTAL_CATEGORY_ALL;
-			(component as any).linkSearch = '';
-			expect((component as any).filteredLinks.length).toBe(2);
+	describe('updateFilteredLinks', () => {
+		beforeEach(() => {
+			spyOn(CloudbaseService, 'getUserId').and.returnValue('uid1');
 		});
 
-		it('filters by category when a specific category is active', () => {
+		it('keeps all personal links when selectedCategory is ALL', () => {
 			(component as any).links = [
-				{ _id: '1', title: 'Angular', category: 'dev' },
-				{ _id: '2', title: 'Google', category: 'search' }
+				{ _id: '1', _openid: 'uid1', title: 'Angular', category: 'dev' },
+				{ _id: '2', _openid: 'uid1', title: 'Vue', category: 'dev' }
+			];
+			(component as any).selectedCategory = PORTAL_CATEGORY_ALL;
+			(component as any).updateFilteredLinks();
+			expect((component as any).personalFilteredLinks.length).toBe(2);
+		});
+
+		it('filters personal links by category when a specific category is active', () => {
+			(component as any).links = [
+				{ _id: '1', _openid: 'uid1', title: 'Angular', category: 'dev' },
+				{ _id: '2', _openid: 'uid1', title: 'Google', category: 'search' }
 			];
 			(component as any).selectedCategory = 'dev';
-			(component as any).linkSearch = '';
-			expect((component as any).filteredLinks.length).toBe(1);
-			expect((component as any).filteredLinks[0]._id).toBe('1');
+			(component as any).updateFilteredLinks();
+			expect((component as any).personalFilteredLinks.length).toBe(1);
+			expect((component as any).personalFilteredLinks[0]._id).toBe('1');
 		});
 
-		it('filters by search query (case-insensitive)', () => {
+		it('partitions shared links into the shared cache regardless of category', () => {
 			(component as any).links = [
-				{ _id: '1', title: 'Angular Docs', category: 'dev' },
-				{ _id: '2', title: 'Vue Guide', category: 'dev' }
+				{ _id: '1', _openid: 'other', isShared: true, title: 'Shared', category: 'dev' },
+				{ _id: '2', _openid: 'uid1', title: 'Mine', category: 'dev' }
 			];
-			(component as any).selectedCategory = PORTAL_CATEGORY_ALL;
-			(component as any).linkSearch = 'angular';
-			expect((component as any).filteredLinks.length).toBe(1);
-		});
-
-		it('returns empty array when no link matches the search query', () => {
-			(component as any).links = [
-				{ _id: '1', title: 'Angular Docs', category: 'dev' }
-			];
-			(component as any).selectedCategory = PORTAL_CATEGORY_ALL;
-			(component as any).linkSearch = 'xyz';
-			expect((component as any).filteredLinks.length).toBe(0);
+			(component as any).selectedCategory = 'search';
+			(component as any).updateFilteredLinks();
+			expect((component as any).sharedFilteredLinks.length).toBe(1);
+			expect((component as any).sharedFilteredLinks[0]._id).toBe('1');
+			expect((component as any).personalFilteredLinks.length).toBe(0);
 		});
 	});
 
@@ -357,40 +355,22 @@ describe('PortalComponent', () => {
 	// ── openAddCategoryDialog ──────────────────────────────────────────────
 
 	describe('openAddCategoryDialog', () => {
-		it('sets showCategoryDialog to true', () => {
+		it('opens the category dialog via DialogService', () => {
 			(component as any).openAddCategoryDialog();
-			expect((component as any).showCategoryDialog).toBeTrue();
-		});
-
-		it('resets editingCategory to null', () => {
-			(component as any).editingCategory = { _id: 'c1', name: 'Dev' };
-			(component as any).openAddCategoryDialog();
-			expect((component as any).editingCategory).toBeNull();
-		});
-
-		it('resets the category form name to empty', () => {
-			(component as any).categoryForm = { name: 'Old', color: '#fff' };
-			(component as any).openAddCategoryDialog();
-			expect((component as any).categoryForm.name).toBe('');
+			expect(mockDialogService.openDialog).toHaveBeenCalled();
+			expect(mockDialogService.openDialog.calls.mostRecent().args[1]).toBe('category');
 		});
 	});
 
 	// ── openEditCategoryDialog ─────────────────────────────────────────────
 
 	describe('openEditCategoryDialog', () => {
-		it('pre-fills the form with the category name and colour', () => {
+		it('opens the category dialog via DialogService', () => {
 			const category = { _id: 'c1', name: 'Dev', color: '#ff0000' };
 			const event = jasmine.createSpyObj<Event>('Event', ['stopPropagation']);
 			(component as any).openEditCategoryDialog(category, event);
-			expect((component as any).categoryForm.name).toBe('Dev');
-			expect((component as any).categoryForm.color).toBe('#ff0000');
-		});
-
-		it('sets editingCategory to the provided category', () => {
-			const category = { _id: 'c1', name: 'Dev', color: '#ff0000' };
-			const event = jasmine.createSpyObj<Event>('Event', ['stopPropagation']);
-			(component as any).openEditCategoryDialog(category, event);
-			expect((component as any).editingCategory).toBe(category);
+			expect(mockDialogService.openDialog).toHaveBeenCalled();
+			expect(mockDialogService.openDialog.calls.mostRecent().args[1]).toBe('category');
 		});
 
 		it('stops event propagation', () => {
@@ -398,80 +378,6 @@ describe('PortalComponent', () => {
 			const event = jasmine.createSpyObj<Event>('Event', ['stopPropagation']);
 			(component as any).openEditCategoryDialog(category, event);
 			expect(event.stopPropagation).toHaveBeenCalled();
-		});
-	});
-
-	// ── toggleLinkSearch ───────────────────────────────────────────────────
-
-	describe('toggleLinkSearch', () => {
-		it('shows the search input when it was hidden', () => {
-			(component as any).linkSearchVisible = false;
-			(component as any).toggleLinkSearch();
-			expect((component as any).linkSearchVisible).toBeTrue();
-		});
-
-		it('hides the search input when it was visible', () => {
-			(component as any).linkSearchVisible = true;
-			(component as any).toggleLinkSearch();
-			expect((component as any).linkSearchVisible).toBeFalse();
-		});
-
-		it('clears the search query when collapsing', () => {
-			(component as any).linkSearchVisible = true;
-			(component as any).linkSearch = 'query';
-			(component as any).toggleLinkSearch();
-			expect((component as any).linkSearch).toBe('');
-		});
-
-		it('does not clear the search query when expanding', () => {
-			(component as any).linkSearchVisible = false;
-			(component as any).linkSearch = 'kept';
-			(component as any).toggleLinkSearch();
-			expect((component as any).linkSearch).toBe('kept');
-		});
-	});
-
-	// ── onLinkSearchExit ───────────────────────────────────────────────────
-
-	describe('onLinkSearchExit', () => {
-		it('hides the search input when the query is empty and focus leaves to a non-icon element', () => {
-			(component as any).linkSearchVisible = true;
-			(component as any).linkSearch = '';
-			const event = { relatedTarget: document.createElement('div') } as unknown as FocusEvent;
-			(component as any).onLinkSearchExit(event);
-			expect((component as any).linkSearchVisible).toBeFalse();
-		});
-
-		it('keeps the search visible when the query is not empty', () => {
-			(component as any).linkSearchVisible = true;
-			(component as any).linkSearch = 'angular';
-			const event = { relatedTarget: null } as unknown as FocusEvent;
-			(component as any).onLinkSearchExit(event);
-			expect((component as any).linkSearchVisible).toBeTrue();
-		});
-	});
-
-	// ── getLogoFallbackColor ───────────────────────────────────────────────
-
-	describe('getLogoFallbackColor', () => {
-		it('returns the brand colour for a known tool ID', () => {
-			const color = (component as any).getLogoFallbackColor('chatgpt');
-			expect(color).toBe('#10a37f');
-		});
-
-		it('returns the generic fallback for an unknown tool ID', () => {
-			const color = (component as any).getLogoFallbackColor('unknown-tool');
-			expect(color).toBe('#888');
-		});
-	});
-
-	// ── onLogoError ────────────────────────────────────────────────────────
-
-	describe('onLogoError', () => {
-		it('adds the tool ID to the failedLogos set', () => {
-			(component as any).failedLogos = new Set<string>();
-			(component as any).onLogoError('claude');
-			expect((component as any).failedLogos.has('claude')).toBeTrue();
 		});
 	});
 });

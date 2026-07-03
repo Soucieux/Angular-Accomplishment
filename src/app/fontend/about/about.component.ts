@@ -12,9 +12,18 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { ChipModule } from 'primeng/chip';
 import { TagModule } from 'primeng/tag';
-import { COMPONENT_DESTROY } from '../../common/constants';
+import {
+	ABOUT_CHIP_LABEL,
+	ABOUT_H1_LEAD,
+	ABOUT_H1_PILL,
+	ABOUT_H1_TAIL,
+	ABOUT_INTRO,
+	ABOUT_MILESTONES_SUFFIX,
+	ABOUT_SECTION_TITLE,
+	COMPONENT_DESTROY
+} from '../../common/constants';
 import { LOG } from '../../common/app.logs';
-import { TIMELINE } from './about.model';
+import { ABOUT_STATS, TIMELINE } from './about.model';
 
 @Component({
 	selector: 'about',
@@ -29,6 +38,14 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 	@ViewChildren('timelineEntry') private entryRefs!: QueryList<ElementRef<HTMLElement>>;
 
 	protected readonly TIMELINE = TIMELINE;
+	protected readonly ABOUT_STATS = ABOUT_STATS;
+	protected readonly ABOUT_CHIP_LABEL = ABOUT_CHIP_LABEL;
+	protected readonly ABOUT_H1_LEAD = ABOUT_H1_LEAD;
+	protected readonly ABOUT_H1_PILL = ABOUT_H1_PILL;
+	protected readonly ABOUT_H1_TAIL = ABOUT_H1_TAIL;
+	protected readonly ABOUT_INTRO = ABOUT_INTRO;
+	protected readonly ABOUT_SECTION_TITLE = ABOUT_SECTION_TITLE;
+	protected readonly ABOUT_MILESTONES_SUFFIX = ABOUT_MILESTONES_SUFFIX;
 
 	private observers: IntersectionObserver[] = [];
 	protected maxSeen = 0;

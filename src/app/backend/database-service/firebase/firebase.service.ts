@@ -6,6 +6,7 @@ import {
 	DATABASE_PATCH_NOTES,
 	DATABASE_QUOTES,
 	DATABASE_RECIPES,
+	DATABASE_RELEASE_NOTES,
 	DATABASE_REMINDER,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_VAULT,
@@ -40,6 +41,8 @@ import {
 	STATS_FIELD_TOTAL_RECIPES,
 	STATS_FIELD_TOTAL_LINKS,
 	STATS_FIELD_COMPLETED_PRIVATE,
+	DB_MOVIE_LIST_EMPTY,
+	MIME_IMAGE_JPEG,
 	MILESTONE_DOMAIN_STREAK,
 	MILESTONE_DOMAIN_REMINDER,
 	MILESTONE_DOMAIN_DEBT,
@@ -85,41 +88,42 @@ import {
 	LOCALE_KEY_ZH,
 	ENT_LOG_SPAN_CLASS_RATE_DOWN,
 	ENT_LOG_SPAN_CLASS_RATE_UP,
-	FIREBASE_LOG_TABLE_RECORD_UPDATED,
-	FIREBASE_LOG_VAULT_ADD_FAILED,
-	FIREBASE_LOG_DATE_CALC_UPDATE_FAILED,
-	FIREBASE_LOG_MOVIE_RATE_UPDATE_FAILED,
-	FIREBASE_LOG_MOVIE_GENRE_UPDATED,
-	FIREBASE_LOG_MOVIE_STATS_UPDATED,
-	FIREBASE_LOG_MOVIE_GENRE_UPDATE_FAILED,
-	FIREBASE_LOG_MOVIE_FAVOURITE_UPDATED,
-	FIREBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED,
-	FIREBASE_LOG_PATCH_NOTES_UPDATED,
-	FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED,
-	FIREBASE_LOG_STATS_UPDATE_FAILED,
-	FIREBASE_LOG_USER_STATS_UPDATE_FAILED,
-	FIREBASE_LOG_STAT_COUNT_UPDATE_FAILED,
-	FIREBASE_LOG_MILESTONE_WRITE_FAILED,
-	FIREBASE_LOG_ACTIVITY_APPEND_FAILED,
-	FIREBASE_LOG_RECORD_TABLE_UPDATED,
-	FIREBASE_LOG_TABLE_UPDATE_FAILED,
-	FIREBASE_LOG_QUOTE_REMOVE_FAILED,
-	FIREBASE_LOG_MOVIE_REMOVED,
-	FIREBASE_LOG_RECORD_REMOVED_FROM,
-	FIREBASE_LOG_RECORD_REMOVE_FAILED,
-	FIREBASE_LOG_QUOTE_ADDED,
-	FIREBASE_LOG_QUOTE_ADD_FAILED,
-	FIREBASE_LOG_MOVIE_ADDED,
-	FIREBASE_LOG_HISTORY_ADDED,
-	FIREBASE_LOG_HISTORY_ADD_FAILED,
-	FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED,
-	FIREBASE_LOG_COVER_UPLOADED,
-	FIREBASE_LOG_REUSABLE_KEYS_RETRIEVED,
-	FIREBASE_LOG_REUSABLE_KEYS_GET_FAILED,
-	FIREBASE_LOG_REUSABLE_KEYS_UPDATED,
-	FIREBASE_LOG_REUSABLE_KEYS_SAVE_FAILED
+	DB_LOG_TABLE_RECORD_UPDATED,
+	DB_LOG_VAULT_ADD_FAILED,
+	DB_LOG_DATE_CALC_UPDATE_FAILED,
+	DB_LOG_MOVIE_RATE_UPDATE_FAILED,
+	DB_LOG_MOVIE_GENRE_UPDATED,
+	DB_LOG_MOVIE_STATS_UPDATED,
+	DB_LOG_MOVIE_GENRE_UPDATE_FAILED,
+	DB_LOG_MOVIE_FAVOURITE_UPDATED,
+	DB_LOG_MOVIE_FAVOURITE_UPDATE_FAILED,
+	DB_LOG_PATCH_NOTES_UPDATED,
+	DB_LOG_PATCH_NOTES_UPDATE_FAILED,
+	DB_LOG_STATS_UPDATE_FAILED,
+	DB_LOG_USER_STATS_UPDATE_FAILED,
+	DB_LOG_STAT_COUNT_UPDATE_FAILED,
+	DB_LOG_MILESTONE_WRITE_FAILED,
+	DB_LOG_ACTIVITY_APPEND_FAILED,
+	DB_LOG_RECORD_TABLE_UPDATED,
+	DB_LOG_TABLE_UPDATE_FAILED,
+	DB_LOG_QUOTE_REMOVE_FAILED,
+	DB_LOG_MOVIE_REMOVED,
+	DB_LOG_RECORD_REMOVED_FROM,
+	DB_LOG_RECORD_REMOVE_FAILED,
+	DB_LOG_QUOTE_ADDED,
+	DB_LOG_QUOTE_ADD_FAILED,
+	DB_LOG_MOVIE_ADDED,
+	DB_LOG_HISTORY_ADDED,
+	DB_LOG_HISTORY_ADD_FAILED,
+	DB_LOG_REMINDER_RECORD_ADD_FAILED,
+	DB_LOG_COVER_UPLOADED,
+	DB_LOG_REUSABLE_KEYS_RETRIEVED,
+	DB_LOG_REUSABLE_KEYS_GET_FAILED,
+	DB_LOG_REUSABLE_KEYS_UPDATED,
+	DB_LOG_REUSABLE_KEYS_SAVE_FAILED
 } from '../../../common/constants';
 import {
+	ACTIVE_LOCALE,
 	ENT_LOG_RATE_PRE,
 	ENT_LOG_RATE_IS,
 	ENT_LOG_RATE_BY,
@@ -389,9 +393,22 @@ export class FirebaseService extends DatabaseService {
 		);
 	}
 
+	/* ─────────────────────────────────────────
+	   Shared reminders & account-connect stubs
+
+	   These are documented no-ops on the Firebase backend by design, not oversight. Account linking and
+	   shared reminders are a CloudBase-hosted, cross-account feature whose Cloud Functions authenticate
+	   the caller via CloudBase's auth context (getCallerOpenid) and read/write CloudBase's own
+	   users/reminder collections. A Firebase-backend session authenticates through Firebase and holds no
+	   CloudBase identity, so it cannot invoke those functions as itself — delegating to them would run
+	   under an anonymous/foreign openid and operate on data the user does not own. True parity would
+	   require a cross-cloud identity bridge (or native Firebase Functions), tracked as separate work.
+	───────────────────────────────────────── */
+
 	/**
 	 * Gets the shared activity feed for the current user and their connections. Account linking is a
-	 * CloudBase-only feature, so the Firebase backend always resolves to an empty list.
+	 * CloudBase-only feature (see the boundary note above), so the Firebase backend always resolves
+	 * to an empty list.
 	 *
 	 * @returns A promise resolving to an empty activity list.
 	 */
@@ -504,12 +521,25 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets the release notes. Firebase is not used in production; returns an empty list.
+	 * Gets the release notes for the active locale from the release_notes node, ordered newest first.
+	 * Mirrors cloudbase.getReleaseNotes: filters by the document's lang, sorts by order descending, and
+	 * strips the internal key/_openid/order/lang fields from each emitted entry.
 	 *
-	 * @returns An observable that immediately emits an empty array.
+	 * @returns An observable of the locale-filtered, order-sorted release-note entries.
 	 */
 	public getReleaseNotes(): Observable<any[]> {
-		return of([]);
+		return this.listAsObservable(dbRef(this.db, DATABASE_RELEASE_NOTES)).pipe(
+			map((snapshots: any[]) =>
+				snapshots
+					.map((snapshot: any) => ({ key: snapshot.key, ...snapshot.val() }))
+					.filter((doc: any) => (doc.lang ?? 'en') === ACTIVE_LOCALE)
+					.sort((a: any, b: any) => (b.order ?? 0) - (a.order ?? 0))
+					.map((doc: any) => {
+						const { key, _openid, order, lang, ...rest } = doc;
+						return rest;
+					})
+			)
+		);
 	}
 
 	/**
@@ -588,13 +618,13 @@ export class FirebaseService extends DatabaseService {
 	public async updateDateCalculatorTable(updatedTable: any): Promise<void> {
 		try {
 			await update(dbRef(this.db, DATABASE_DATE_CALCULATOR), { ...updatedTable });
-			LOG.info(this.className, FIREBASE_LOG_TABLE_RECORD_UPDATED);
+			LOG.info(this.className, DB_LOG_TABLE_RECORD_UPDATED);
 			this.appendToActivityLog({
 				source: ACTIVITY_SOURCE_DATE_CALCULATOR,
 				type: ACTIVITY_TYPE_CALCULATOR_UPDATED
 			}).catch(() => {});
 		} catch (error: unknown) {
-			LOG.error(this.className, FIREBASE_LOG_DATE_CALC_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_DATE_CALC_UPDATE_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -698,7 +728,7 @@ export class FirebaseService extends DatabaseService {
 				);
 			}
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_MOVIE_RATE_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_MOVIE_RATE_UPDATE_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -723,7 +753,7 @@ export class FirebaseService extends DatabaseService {
 		// Step 1 : Update movie genre
 		return update(movieRef, { genre: newGenre })
 			.then(() => {
-				LOG.info(this.className, FIREBASE_LOG_MOVIE_GENRE_UPDATED);
+				LOG.info(this.className, DB_LOG_MOVIE_GENRE_UPDATED);
 
 				// Step 2 : Update movie statistics
 				return runTransaction(dbRef(this.db, `statistics`), (currentData) => {
@@ -733,7 +763,7 @@ export class FirebaseService extends DatabaseService {
 				});
 			})
 			.then(() => {
-				LOG.info(this.className, FIREBASE_LOG_MOVIE_STATS_UPDATED);
+				LOG.info(this.className, DB_LOG_MOVIE_STATS_UPDATED);
 				this.appendToActivityLog({
 					source: ACTIVITY_SOURCE_MOVIE,
 					type: ACTIVITY_TYPE_GENRE_UPDATED,
@@ -741,7 +771,7 @@ export class FirebaseService extends DatabaseService {
 				}).catch(() => {});
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, FIREBASE_LOG_MOVIE_GENRE_UPDATE_FAILED, error);
+				LOG.error(this.className, DB_LOG_MOVIE_GENRE_UPDATE_FAILED, error);
 				throw error;
 			});
 	}
@@ -760,7 +790,7 @@ export class FirebaseService extends DatabaseService {
 		// Step 1 : Update movie favourite
 		return update(movieRef, { isFavourite })
 			.then(() => {
-				LOG.info(this.className, FIREBASE_LOG_MOVIE_FAVOURITE_UPDATED);
+				LOG.info(this.className, DB_LOG_MOVIE_FAVOURITE_UPDATED);
 
 				// Step 2 : Update movie statistics
 				return runTransaction(dbRef(this.db, `statistics`), (currentData) => {
@@ -773,7 +803,7 @@ export class FirebaseService extends DatabaseService {
 				});
 			})
 			.then(() => {
-				LOG.info(this.className, FIREBASE_LOG_MOVIE_STATS_UPDATED);
+				LOG.info(this.className, DB_LOG_MOVIE_STATS_UPDATED);
 				this.appendToActivityLog({
 					source: ACTIVITY_SOURCE_MOVIE,
 					type: ACTIVITY_TYPE_FAVOURITE_UPDATED,
@@ -781,7 +811,7 @@ export class FirebaseService extends DatabaseService {
 				}).catch(() => {});
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, FIREBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED, error);
+				LOG.error(this.className, DB_LOG_MOVIE_FAVOURITE_UPDATE_FAILED, error);
 				throw error;
 			});
 	}
@@ -966,7 +996,7 @@ export class FirebaseService extends DatabaseService {
 	): Promise<void> {
 		try {
 			await update(dbRef(this.db, `${DATABASE_PATCH_NOTES}/${key}`), { ...updatedRecord });
-			LOG.info(this.className, FIREBASE_LOG_PATCH_NOTES_UPDATED);
+			LOG.info(this.className, DB_LOG_PATCH_NOTES_UPDATED);
 			this.appendToActivityLog({
 				source: ACTIVITY_SOURCE_PATCH,
 				type: activityType,
@@ -975,7 +1005,7 @@ export class FirebaseService extends DatabaseService {
 				noteIndex
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_PATCH_NOTES_UPDATE_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -992,7 +1022,7 @@ export class FirebaseService extends DatabaseService {
 		try {
 			await update(this.statisticsRef, fields);
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_STATS_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_STATS_UPDATE_FAILED, error as Error);
 		}
 	}
 
@@ -1008,7 +1038,7 @@ export class FirebaseService extends DatabaseService {
 		try {
 			await update(this.statisticsRef, fields);
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_USER_STATS_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_USER_STATS_UPDATE_FAILED, error as Error);
 		}
 	}
 
@@ -1055,7 +1085,7 @@ export class FirebaseService extends DatabaseService {
 			});
 			this.checkAndWriteCountMilestone(MILESTONE_DOMAIN_STREAK, newStreak).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_ACTIVITY_APPEND_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_ACTIVITY_APPEND_FAILED, error as Error);
 		}
 	}
 
@@ -1084,12 +1114,12 @@ export class FirebaseService extends DatabaseService {
 		const { entryKey, fields, ...activity } = newRecord;
 		try {
 			await update(dbRef(this.db, `${tableName}/${entryKey}`), fields);
-			LOG.info(this.className, `${FIREBASE_LOG_RECORD_TABLE_UPDATED} ${tableName}`);
+			LOG.info(this.className, `${DB_LOG_RECORD_TABLE_UPDATED} ${tableName}`);
 			if (Object.keys(activity).length > 0) {
 				this.appendToActivityLog(activity).catch(() => {});
 			}
 		} catch (error) {
-			LOG.error(this.className, `${FIREBASE_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
+			LOG.error(this.className, `${DB_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
 			throw error;
 		}
 	}
@@ -1152,7 +1182,7 @@ export class FirebaseService extends DatabaseService {
 				author
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, `${FIREBASE_LOG_QUOTE_REMOVE_FAILED} ${key}`, error as Error);
+			LOG.error(this.className, `${DB_LOG_QUOTE_REMOVE_FAILED} ${key}`, error as Error);
 			throw error;
 		}
 	}
@@ -1216,7 +1246,7 @@ export class FirebaseService extends DatabaseService {
 				type: HISTORY_STATUS_DELETED,
 				title: movieItemVO.getMovieName()
 			}).catch(() => {});
-			LOG.info(this.className, FIREBASE_LOG_MOVIE_REMOVED);
+			LOG.info(this.className, DB_LOG_MOVIE_REMOVED);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -1483,10 +1513,10 @@ export class FirebaseService extends DatabaseService {
 	private removeSingleItemFromDatabase(tablePath: string, key: string): Promise<void> {
 		return remove(dbRef(this.db, `${tablePath}/${key}`))
 			.then(() => {
-				LOG.info(this.className, `${FIREBASE_LOG_RECORD_REMOVED_FROM} ${tablePath}`);
+				LOG.info(this.className, `${DB_LOG_RECORD_REMOVED_FROM} ${tablePath}`);
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, `${FIREBASE_LOG_RECORD_REMOVE_FAILED} ${tablePath}`, error);
+				LOG.error(this.className, `${DB_LOG_RECORD_REMOVE_FAILED} ${tablePath}`, error);
 				throw error;
 			});
 	}
@@ -1542,7 +1572,7 @@ export class FirebaseService extends DatabaseService {
 	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		try {
 			await push(dbRef(this.db, DATABASE_QUOTES), { text, author, timestamp });
-			LOG.info(this.className, FIREBASE_LOG_QUOTE_ADDED);
+			LOG.info(this.className, DB_LOG_QUOTE_ADDED);
 			await runTransaction(this.statisticsRef, (currentData) => {
 				currentData = currentData ?? {};
 				currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
@@ -1558,7 +1588,7 @@ export class FirebaseService extends DatabaseService {
 			   a second increment, or the quote total would double. Fire-and-forget: the add succeeded. */
 			this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_QUOTES, MILESTONE_DOMAIN_QUOTE).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_QUOTE_ADD_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_QUOTE_ADD_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -1633,7 +1663,7 @@ export class FirebaseService extends DatabaseService {
 			/* The runTransaction above already bumped totalFilms — record the milestone only, never a
 			   second increment, or the film total would double. Fire-and-forget: the add succeeded. */
 			this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_FILMS, MILESTONE_DOMAIN_FILM).catch(() => {});
-			LOG.info(this.className, FIREBASE_LOG_MOVIE_ADDED);
+			LOG.info(this.className, DB_LOG_MOVIE_ADDED);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -1679,9 +1709,9 @@ export class FirebaseService extends DatabaseService {
 					type: SEARCH
 				}).catch(() => {});
 			}
-			LOG.info(this.className, FIREBASE_LOG_HISTORY_ADDED);
+			LOG.info(this.className, DB_LOG_HISTORY_ADDED);
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_HISTORY_ADD_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_HISTORY_ADD_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -1845,7 +1875,7 @@ export class FirebaseService extends DatabaseService {
 		try {
 			// Step 1: Push the record flat so the matching read's {key, ...val} spread round-trips.
 			await push(dbRef(this.db, tableName), { ...newRecord });
-			LOG.info(this.className, FIREBASE_LOG_TABLE_RECORD_UPDATED);
+			LOG.info(this.className, DB_LOG_TABLE_RECORD_UPDATED);
 
 			/* Step 2: Derive the correct activity type before enqueueing the log entry.
 			   Links and categories share the same collection — detect a category add by checking
@@ -1860,7 +1890,7 @@ export class FirebaseService extends DatabaseService {
 						: HISTORY_STATUS_ADDED
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_REMINDER_RECORD_ADD_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -1879,10 +1909,10 @@ export class FirebaseService extends DatabaseService {
 		const reference = push(dbRef(this.db, DATABASE_VAULT), content);
 		try {
 			await reference;
-			LOG.info(this.className, FIREBASE_LOG_TABLE_RECORD_UPDATED);
+			LOG.info(this.className, DB_LOG_TABLE_RECORD_UPDATED);
 			return reference.key ?? '';
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_VAULT_ADD_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_VAULT_ADD_FAILED, error as Error);
 			throw error;
 		}
 	}
@@ -1925,7 +1955,7 @@ export class FirebaseService extends DatabaseService {
 			   like CloudBase, so we must iterate all movies to check for duplicates. */
 			const allMovies = snapshot.val();
 
-			if (!allMovies) throw new Error('Movie list empty');
+			if (!allMovies) throw new Error(DB_MOVIE_LIST_EMPTY);
 
 			for (const key of Object.keys(allMovies)) {
 				const movie = allMovies[key];
@@ -1957,9 +1987,9 @@ export class FirebaseService extends DatabaseService {
 			/* Firebase Storage separates upload from URL generation:
 			   first upload the Blob, then get a downloadable link. */
 			await uploadBytes(storageRefer, coverImage, {
-				contentType: 'image/jpeg'
+				contentType: MIME_IMAGE_JPEG
 			});
-			LOG.info(this.className, FIREBASE_LOG_COVER_UPLOADED);
+			LOG.info(this.className, DB_LOG_COVER_UPLOADED);
 			return await getDownloadURL(storageRefer);
 		} catch (error) {
 			LOG.error(
@@ -1972,9 +2002,12 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Not implemented for Firebase — returns an empty response.
+	 * Documented no-op on the Firebase backend. proxyFetch is a server-side CORS bypass — CloudBase
+	 * proxies the request through its own Express endpoint / Cloud Function. Firebase has no equivalent
+	 * deployed HTTP proxy, and the browser cannot fetch cross-origin URLs directly, so there is nothing
+	 * to call from the client. True parity needs a Firebase HTTPS Function mirroring /api/fetch-url.
 	 *
-	 * @param _url - The URL to proxy (unused in this backend).
+	 * @param _url - The URL to proxy (no Firebase proxy endpoint exists to forward it to).
 	 * @returns A resolved promise with empty content and contentType.
 	 */
 	public proxyFetch(_url: string): Promise<{ content: string; contentType: string }> {
@@ -2052,7 +2085,7 @@ export class FirebaseService extends DatabaseService {
 				return current;
 			});
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_STAT_COUNT_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_STAT_COUNT_UPDATE_FAILED, error as Error);
 		}
 	}
 
@@ -2103,7 +2136,7 @@ export class FirebaseService extends DatabaseService {
 				[`${STATS_FIELD_MILESTONES}/${key}`]: Utilities.formatDateForStorage(new Date())
 			});
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_MILESTONE_WRITE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_MILESTONE_WRITE_FAILED, error as Error);
 		}
 	}
 
@@ -2115,10 +2148,10 @@ export class FirebaseService extends DatabaseService {
 	private async getReusableKeys(): Promise<string[]> {
 		try {
 			const snapshot = await get(dbRef(this.db, 'statistics/reusableKeys'));
-			LOG.info(this.className, FIREBASE_LOG_REUSABLE_KEYS_RETRIEVED);
+			LOG.info(this.className, DB_LOG_REUSABLE_KEYS_RETRIEVED);
 			return snapshot.exists() ? (Object.values(snapshot.val()) as string[]) : [];
 		} catch (error) {
-			LOG.error(this.className, FIREBASE_LOG_REUSABLE_KEYS_GET_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_REUSABLE_KEYS_GET_FAILED, error as Error);
 			return [];
 		}
 	}
@@ -2131,10 +2164,10 @@ export class FirebaseService extends DatabaseService {
 	private saveReusableKeys(keys: string[]): Promise<void> {
 		return update(dbRef(this.db, 'statistics'), { reusableKeys: keys })
 			.then(() => {
-				LOG.info(this.className, FIREBASE_LOG_REUSABLE_KEYS_UPDATED);
+				LOG.info(this.className, DB_LOG_REUSABLE_KEYS_UPDATED);
 			})
 			.catch((error: Error) => {
-				LOG.error(this.className, FIREBASE_LOG_REUSABLE_KEYS_SAVE_FAILED, error);
+				LOG.error(this.className, DB_LOG_REUSABLE_KEYS_SAVE_FAILED, error);
 				throw error;
 			});
 	}

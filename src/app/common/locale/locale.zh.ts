@@ -69,6 +69,11 @@ export const NAV_LABEL_ABOUT = '关于';
 export const NAV_LABEL_VAULT = '保险';
 export const NAV_LABEL_SIGN_OUT = '退出登录';
 export const NAV_LABEL_SIGN_IN = '登录';
+export const NAV_ARIA_ACCOUNT = '账户';
+export const NAV_ARIA_PRIMARY = '主导航';
+export const NAV_ARIA_CLOSE_SECTIONS = '关闭所有板块';
+export const NAV_ARIA_SHOW_SECTIONS = '显示所有板块';
+export const NAV_ARIA_ACCOUNT_PREFIX = '账户：';
 export const NAV_STATUS_OFFLINE = '离线';
 export const LABEL_ONLINE = '在线';
 export const LOGIN_LABEL_CREATE_ACCOUNT = '创建账号';
@@ -87,6 +92,10 @@ export const LOGIN_LABEL_FORGOT_PASSWORD = '忘记密码？';
 export const LOGIN_LABEL_SEND_RESET_CODE = '发送重置码';
 export const LOGIN_LABEL_RESET_PASSWORD = '重置密码';
 export const LOGIN_LABEL_BACK_TO_SIGN_IN = '返回登录';
+export const LOGIN_TOGGLE_HAS_ACCOUNT = '已经有账号了？';
+export const LOGIN_TOGGLE_NO_ACCOUNT = '还没有账号？';
+export const LOGIN_TOGGLE_SIGN_IN = '登录';
+export const LOGIN_TOGGLE_SIGN_UP = '立即注册';
 export const LOGIN_FLAVOUR_TEXT = '欢迎回到隐秘国度';
 export const LOGIN_MSG_EMAIL_REQUIRED = '请输入邮箱地址。';
 export const LABEL_EMAIL = '邮箱';
@@ -206,6 +215,7 @@ export const ORBITAL_LABEL_DAY = '日';
 export const ORBITAL_WEEK_AGENDA_DUE_HEADER = '截止';
 export const ORBITAL_PANEL_BADGE_OPEN = '待办';
 export const ORBITAL_PANEL_BADGE_DUE = '待还';
+export const ORBITAL_TOOLTIP_ACTIVITY_7DAYS = '过去 7 天内添加的活动记录';
 
 /* ─────────────────────────────────────────
    Entertainment page constants
@@ -285,6 +295,8 @@ export const RESONANCE_PLACEHOLDER_NAME = '名字（选填）';
 export const RESONANCE_BTN_POST = '发布';
 export const RESONANCE_EMPTY_TEXT = '还没有心声，也许你的声音会是第一个。';
 export const RESONANCE_ARIA_DELETE = '删除心声';
+export const RESONANCE_MSG_OVER_LIMIT_PREFIX = '你的心声超过了';
+export const RESONANCE_MSG_OVER_LIMIT_SUFFIX = '个字符，请缩短后再发布。';
 
 /* ─────────────────────────────────────────
    Recipe page constants
@@ -340,6 +352,15 @@ export const RECIPE_BTN_ADD_INGREDIENT = '+ 添加食材';
 export const RECIPE_BTN_ADD_SUBPOINT = '+ 添加细项';
 export const RECIPE_BTN_ADD_STEP = '+ 添加步骤';
 export const RECIPE_BADGE_EXAMPLE = '示例';
+export const RECIPE_TOOLTIP_REMOVE = '移除';
+export const RECIPE_TOOLTIP_REMOVE_STEP = '移除步骤';
+export const RECIPE_TOOLTIP_MANAGE_TYPES = '管理食材类型';
+export const RECIPE_TOOLTIP_DRAG_REORDER = '拖动以重新排序';
+export const RECIPE_PLACEHOLDER_STEP = '描述这一步…';
+export const RECIPE_PLACEHOLDER_SUBPOINT = '细项（选填）';
+export const RECIPE_PLACEHOLDER_NOTES = '心得、调整，或下次要记住的事…';
+export const RECIPE_EDITOR_TYPE_SELECTED = '已选';
+export const RECIPE_EDITOR_TYPE_HINT = '选择在食谱编辑器中显示的食材类型，至少需选择一项。';
 export const INGREDIENT_BTN_APPLY = '应用';
 export const RECIPE_ITYPE_LABELS: Record<string, string> = {
 	veg: '蔬菜',
@@ -440,6 +461,7 @@ export const PORTAL_BTN_TITLE_EDIT_CATEGORY = '编辑类别';
 export const PORTAL_BTN_TITLE_NEW_CATEGORY = '新建类别';
 export const LABEL_EDIT = '编辑';
 export const ADD_LINK_LABEL_LOADING = '获取中…';
+export const ADD_LINK_LABEL_TITLE = '标题 *';
 export const ADD_LINK_PLACEHOLDER_NAME = '我喜欢的资源';
 export const ADD_LINK_LABEL_CATEGORY = '类别 *';
 export const ADD_LINK_LABEL_CATEGORY_OPTIONAL = '类别';
@@ -491,6 +513,8 @@ export const DEBT_DIALOG_LABEL_ADD = '添加债务';
 export const DEBT_DIALOG_LABEL_CANCEL = '取消';
 export const DEBT_DIALOG_LABEL_PERMANENT = '永久账户';
 export const DEBT_DIALOG_LABEL_PERMANENT_DESC = '不可删除——解锁后方可移除';
+export const DEBT_TOOLTIP_UNLOCK = '永久——点击解锁';
+export const DEBT_TOOLTIP_MARK_PERMANENT = '标记为永久';
 export const DEBT_DIALOG_LABEL_CURRENCY_CNY = '¥ 人民币';
 export const DEBT_DIALOG_LABEL_CURRENCY_CAD = '$ 加元';
 export const DEBT_EMPTY_STATE_MSG = '暂无债务记录。添加一条开始追踪——或好好享受零债务。';
@@ -608,6 +632,7 @@ export const CTX_LABEL_SELECT_ALL = '全选';
 export const CTX_LABEL_MY_ACCOUNT = '我的账户';
 export const CTX_LABEL_INSPECT = '检查';
 export const CTX_SEARCH_PLACEHOLDER = '搜索…';
+export const CTX_LABEL_NO_RESULTS = '无结果';
 
 /* ─────────────────────────────────────────
    Account page
@@ -722,6 +747,7 @@ export const TODAY_PENDING_PLACEHOLDER = '为事件命名…';
 export const TODAY_PENDING_HINT = '↵ 保存 · Esc 取消';
 export const TODAY_LABEL_TASKS = '事件';
 export const TODAY_LABEL_TRACKED = '计时';
+export const TODAY_LABEL_REMINDER_READONLY = '提醒 · 只读';
 export const TODAY_BTN_START_TRACKING = '开始计时';
 export const TODAY_BTN_STOP_TRACKING = '停止';
 export const TODAY_BTN_DRAG_CREATE = '拖拽以创建';

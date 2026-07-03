@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    Host
 ───────────────────────────────────────── */
+
 :host {
 	font-family: 'app-font';
 	display: flex;
@@ -14,6 +15,7 @@
 /* ─────────────────────────────────────────
    Loading skeleton
 ───────────────────────────────────────── */
+
 .orbital-loading {
 	display: flex;
 	flex-direction: column;
@@ -45,6 +47,7 @@
 /* ─────────────────────────────────────────
    Artboard root
 ───────────────────────────────────────── */
+
 .orbital-root {
 	width: 100%;
 	height: 100%;
@@ -59,6 +62,7 @@
 /* ─────────────────────────────────────────
    Decorative dashed orbit circles
 ───────────────────────────────────────── */
+
 .orbital-ring-inner {
 	position: absolute;
 	/* top and left places top-left corner, need transform to move back by half its value*/
@@ -90,6 +94,7 @@
 /* ─────────────────────────────────────────
    Top branding & greeting
 ───────────────────────────────────────── */
+
 .orbital-greeting {
 	position: absolute;
 	top: 20px;
@@ -115,6 +120,7 @@
 /* ─────────────────────────────────────────
    Urgency strip (desktop only)
 ───────────────────────────────────────── */
+
 .orbital-urgency-strip {
 	position: absolute;
 	top: 60px;
@@ -185,6 +191,7 @@
 /* ─────────────────────────────────────────
    Quick actions row
 ───────────────────────────────────────── */
+
 .orbital-quick-actions {
 	position: absolute;
 	top: 100px;
@@ -231,6 +238,7 @@
 /* ─────────────────────────────────────────
    Quick-access links row
 ───────────────────────────────────────── */
+
 .orbital-links {
 	position: absolute;
 	top: 170px;
@@ -277,6 +285,7 @@
 /* ─────────────────────────────────────────
    Stat satellites — glass discs in a ∩ arc
 ───────────────────────────────────────── */
+
 .orbital-satellites {
 	position: absolute;
 	top: 240px;
@@ -440,6 +449,7 @@
 /* ─────────────────────────────────────────
    Central life-clock core
 ───────────────────────────────────────── */
+
 .orbital-core-concentric-wrapper {
 	position: relative;
 	width: fit-content;
@@ -507,6 +517,7 @@
 /* ─────────────────────────────────────────
    Shared glass panel base
 ───────────────────────────────────────── */
+
 .orbital-glass {
 	position: absolute;
 	background: rgba(255, 255, 255, 0.16);
@@ -526,6 +537,7 @@
 /* ─────────────────────────────────────────
    Shared panel scroll container
 ───────────────────────────────────────── */
+
 .orbital-panel-scroll {
 	flex: 1;
 	min-height: 0;
@@ -567,6 +579,7 @@
 /* ─────────────────────────────────────────
    Shared panel header
 ───────────────────────────────────────── */
+
 .orbital-panel-header {
 	display: flex;
 	align-items: center;
@@ -637,6 +650,7 @@
 /* ─────────────────────────────────────────
    Shared panel empty state
 ───────────────────────────────────────── */
+
 .orbital-panel-empty {
 	flex: 1;
 	display: flex;
@@ -653,6 +667,7 @@
 /* ─────────────────────────────────────────
    Shared panel overflow row
 ───────────────────────────────────────── */
+
 .orbital-panel-overflow-row {
 	display: flex;
 	align-items: center;
@@ -686,6 +701,7 @@
 /* ─────────────────────────────────────────
    Panel positions
 ───────────────────────────────────────── */
+
 .orbital-entertainment {
 	--panel-accent: #4ade80;
 	left: calc(24% - 254px);
@@ -741,6 +757,7 @@
 /* ─────────────────────────────────────────
    Entertainment panel — genre bar chart
 ───────────────────────────────────────── */
+
 .orbital-entertainment-bar-row {
 	display: flex;
 	align-items: center;
@@ -786,6 +803,7 @@
 /* ─────────────────────────────────────────
    Debt Sonata bar rows
 ───────────────────────────────────────── */
+
 .orbital-debt-bar-row {
 	display: flex;
 	flex-direction: column;
@@ -826,6 +844,7 @@
 /* ─────────────────────────────────────────
    Reminders panel
 ───────────────────────────────────────── */
+
 .orbital-row-dot {
 	width: 6px;
 	height: 6px;
@@ -856,6 +875,7 @@
 /* ─────────────────────────────────────────
    Shortcuts panel
 ───────────────────────────────────────── */
+
 .orbital-saved-link-row {
 	display: flex;
 	align-items: center;
@@ -884,6 +904,7 @@
 /* ─────────────────────────────────────────
    Activity panel
 ───────────────────────────────────────── */
+
 .orbital-activity-row {
 	display: flex;
 	align-items: center;
@@ -946,6 +967,7 @@
 /* ─────────────────────────────────────────
    Recipes panel
 ───────────────────────────────────────── */
+
 .orbital-recipe-row {
 	display: flex;
 	align-items: center;
@@ -976,6 +998,7 @@
 /* ─────────────────────────────────────────
    Progress cards (narrow viewport only)
 ───────────────────────────────────────── */
+
 .orbital-progress-cards {
 	display: none;
 }
@@ -983,6 +1006,7 @@
 /* ─────────────────────────────────────────
    Activity panel footer
 ───────────────────────────────────────── */
+
 .orbital-activity-footer {
 	position: absolute;
 	width: 100%;
@@ -1008,6 +1032,7 @@
 /* ─────────────────────────────────────────
    Mobile — stack panels vertically
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	:host {
 		align-items: flex-start;
@@ -1205,7 +1230,10 @@
 
 }
 
-/* ── Mobile only bottom navigation ─────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Mobile only bottom navigation
+───────────────────────────────────────── */
+
 @media (max-width: 900px) and (pointer: coarse) {
 	.orbital-quick-actions {
 		display: none;

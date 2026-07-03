@@ -55,6 +55,7 @@ describe('DebtComponent', () => {
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
 			'openDialog',
+			'runBlocking',
 			'handleError',
 			'ensurePermission',
 			'showUnexpectedError'
@@ -62,6 +63,10 @@ describe('DebtComponent', () => {
 		mockDialogService.ensurePermission.and.returnValue(true);
 		mockDialogService.openDialog.and.callFake(async (_container: any, type: string, callback: any) => {
 			if (type === 'block' && typeof callback === 'function') await callback();
+		});
+		// runBlocking(container, message, callback) — invoke the callback so the guarded write runs.
+		mockDialogService.runBlocking.and.callFake(async (_container: any, _message: string, callback: any) => {
+			if (typeof callback === 'function') await callback();
 		});
 		mockDialogService.handleError.and.stub();
 

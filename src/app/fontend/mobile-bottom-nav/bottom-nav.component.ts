@@ -30,7 +30,12 @@ import {
 	NAV_LABEL_SIGN_OUT,
 	NAV_MOBILE_WELCOME,
 	NAV_MOBILE_OFFLINE,
-	NAV_LABEL_SIGN_IN
+	NAV_LABEL_SIGN_IN,
+	NAV_ARIA_ACCOUNT,
+	NAV_ARIA_PRIMARY,
+	NAV_ARIA_CLOSE_SECTIONS,
+	NAV_ARIA_SHOW_SECTIONS,
+	NAV_ARIA_ACCOUNT_PREFIX
 } from '../../common/locale/locale-strings';
 import { NotificationService } from '../../backend/notification-service/notification.service';
 import { NavItem } from './bottom-nav.model';
@@ -72,6 +77,11 @@ export class BottomNavComponent implements AfterViewInit {
 	protected readonly NAV_MOBILE_WELCOME = NAV_MOBILE_WELCOME;
 	protected readonly NAV_MOBILE_OFFLINE = NAV_MOBILE_OFFLINE;
 	protected readonly NAV_LABEL_SIGN_IN = NAV_LABEL_SIGN_IN;
+	protected readonly NAV_ARIA_ACCOUNT = NAV_ARIA_ACCOUNT;
+	protected readonly NAV_ARIA_PRIMARY = NAV_ARIA_PRIMARY;
+	protected readonly NAV_ARIA_CLOSE_SECTIONS = NAV_ARIA_CLOSE_SECTIONS;
+	protected readonly NAV_ARIA_SHOW_SECTIONS = NAV_ARIA_SHOW_SECTIONS;
+	protected readonly NAV_ARIA_ACCOUNT_PREFIX = NAV_ARIA_ACCOUNT_PREFIX;
 	protected readonly localeSwitchLabel: string =
 		ACTIVE_LOCALE === 'en' ? NAV_LOCALE_SWITCH_TO_ZH : NAV_LOCALE_SWITCH_TO_EN;
 

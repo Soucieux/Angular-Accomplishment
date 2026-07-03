@@ -56,7 +56,7 @@ import {
 	STATS_FIELD_MINIMIZE_ON_CLOSE,
 	STATS_FIELD_LOCALE,
 	STATS_FIELD_TODAY_ITEMS,
-	CLOUDBASE_LOG_TODAY_ITEMS_FAILED,
+	DB_LOG_TODAY_ITEMS_FAILED,
 	LOCALE_KEY_EN,
 	LOCALE_KEY_ZH,
 	USEFUL_LINK_TYPE_LINK,
@@ -98,6 +98,8 @@ import {
 	ACTIVITY_SOURCE_PATCH,
 	ACTIVITY_SOURCE_RECIPE,
 	ACTIVITY_SOURCE_REMINDER,
+	SHARED_REMINDER_ACTION_DELETE,
+	SHARED_REMINDER_ACTION_COMPLETE,
 	ACTIVITY_SOURCE_VAULT,
 	ACTIVITY_SOURCE_RESONANCE,
 	ACTIVITY_TYPE_BUG_LOGGED,
@@ -128,43 +130,43 @@ import {
 	MILESTONE_DOMAIN_LINK,
 	MILESTONE_DOMAIN_STREAK,
 	CLOUDBASE_ERR_PERMISSION_DENIED,
-	CLOUDBASE_LOG_MOVIE_LIST_FAILED,
-	CLOUDBASE_LOG_TEMP_URLS_FAILED,
-	CLOUDBASE_LOG_DATE_CALC_UPDATED,
-	CLOUDBASE_LOG_DATE_CALC_UPDATE_FAILED,
-	CLOUDBASE_LOG_MOVIE_RATE_UPDATE_FAILED,
-	CLOUDBASE_LOG_MOVIE_GENRE_UPDATE_FAILED,
-	CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED,
-	CLOUDBASE_LOG_STATS_UPDATE_FAILED,
-	CLOUDBASE_LOG_HISTORY_ADDED,
-	CLOUDBASE_LOG_HISTORY_ADD_FAILED,
-	CLOUDBASE_LOG_ACTIVITY_UPDATE_FAILED,
-	CLOUDBASE_LOG_USER_STAT_UPDATE_FAILED,
-	CLOUDBASE_LOG_USER_STATS_SEEDED,
-	CLOUDBASE_LOG_USER_STATS_SEED_FAILED,
-	CLOUDBASE_LOG_USER_STATS_MIGRATED,
-	CLOUDBASE_LOG_USER_STATS_MIGRATE_FAILED,
-	CLOUDBASE_LOG_MOVIE_GENRE_UPDATED,
-	CLOUDBASE_LOG_MOVIE_STATS_UPDATED,
-	CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATED,
-	CLOUDBASE_LOG_TAURI_PREF_FAILED,
-	CLOUDBASE_LOG_MINIMIZE_PREF_FAILED,
-	CLOUDBASE_LOG_LOCALE_PREF_FAILED,
-	CLOUDBASE_LOG_MOVIE_ADDED,
-	CLOUDBASE_LOG_VISIT_INCREMENTED,
-	CLOUDBASE_LOG_RECORD_TABLE_UPDATED,
-	CLOUDBASE_LOG_TABLE_UPDATE_FAILED,
-	CLOUDBASE_LOG_RECORD_REMOVED_FROM,
-	CLOUDBASE_LOG_MOVIE_DOC_REMOVED,
-	CLOUDBASE_LOG_COVER_REMOVED,
-	CLOUDBASE_LOG_STATS_AFTER_REMOVE,
-	CLOUDBASE_LOG_RECORD_REMOVE_FAILED,
-	CLOUDBASE_LOG_HAS_BEEN_UPDATED,
-	CLOUDBASE_LOG_RECORD_ADD_FAILED,
-	CLOUDBASE_LOG_VISIT_INCREMENT_FAILED,
-	CLOUDBASE_LOG_COVER_UPLOADED,
-	CLOUDBASE_LOG_FETCH_URL_ERROR,
-	CLOUDBASE_LOG_PROXY_FETCH_FAILED
+	DB_LOG_MOVIE_LIST_FAILED,
+	DB_LOG_TEMP_URLS_FAILED,
+	DB_LOG_DATE_CALC_UPDATED,
+	DB_LOG_DATE_CALC_UPDATE_FAILED,
+	DB_LOG_MOVIE_RATE_UPDATE_FAILED,
+	DB_LOG_MOVIE_GENRE_UPDATE_FAILED,
+	DB_LOG_MOVIE_FAVOURITE_UPDATE_FAILED,
+	DB_LOG_STATS_UPDATE_FAILED,
+	DB_LOG_HISTORY_ADDED,
+	DB_LOG_HISTORY_ADD_FAILED,
+	DB_LOG_ACTIVITY_UPDATE_FAILED,
+	DB_LOG_USER_STAT_UPDATE_FAILED,
+	DB_LOG_USER_STATS_SEEDED,
+	DB_LOG_USER_STATS_SEED_FAILED,
+	DB_LOG_USER_STATS_MIGRATED,
+	DB_LOG_USER_STATS_MIGRATE_FAILED,
+	DB_LOG_MOVIE_GENRE_UPDATED,
+	DB_LOG_MOVIE_STATS_UPDATED,
+	DB_LOG_MOVIE_FAVOURITE_UPDATED,
+	DB_LOG_TAURI_PREF_FAILED,
+	DB_LOG_MINIMIZE_PREF_FAILED,
+	DB_LOG_LOCALE_PREF_FAILED,
+	DB_LOG_MOVIE_ADDED,
+	DB_LOG_VISIT_INCREMENTED,
+	DB_LOG_RECORD_TABLE_UPDATED,
+	DB_LOG_TABLE_UPDATE_FAILED,
+	DB_LOG_RECORD_REMOVED_FROM,
+	DB_LOG_MOVIE_DOC_REMOVED,
+	DB_LOG_COVER_REMOVED,
+	DB_LOG_STATS_AFTER_REMOVE,
+	DB_LOG_RECORD_REMOVE_FAILED,
+	DB_LOG_HAS_BEEN_UPDATED,
+	DB_LOG_RECORD_ADD_FAILED,
+	DB_LOG_VISIT_INCREMENT_FAILED,
+	DB_LOG_COVER_UPLOADED,
+	DB_LOG_FETCH_URL_ERROR,
+	DB_LOG_PROXY_FETCH_FAILED
 } from '../../../common/constants';
 import {
 	ERROR_NO_DOCUMENT_UPDATED,
@@ -398,7 +400,6 @@ export class CloudbaseService extends DatabaseService {
 		);
 	}
 
-
 	/**
 	 * Gets the useful links from the database as a real-time observable.
 	 *
@@ -541,7 +542,7 @@ export class CloudbaseService extends DatabaseService {
 										});
 								},
 								onError: (err: any) => {
-									LOG.error(this.className, CLOUDBASE_LOG_MOVIE_LIST_FAILED, err);
+									LOG.error(this.className, DB_LOG_MOVIE_LIST_FAILED, err);
 								}
 							});
 							return () => watcher.close();
@@ -688,7 +689,7 @@ export class CloudbaseService extends DatabaseService {
 	public async removeSharedReminder(entryKey: string, text: string): Promise<ConnectResult> {
 		const response: any = await this.cloudbase.callFunction({
 			name: 'editSharedReminder',
-			data: { entryKey, action: 'delete' }
+			data: { entryKey, action: SHARED_REMINDER_ACTION_DELETE }
 		});
 		const result: ConnectResult = response?.result ?? { success: false };
 		if (result.success) {
@@ -717,7 +718,7 @@ export class CloudbaseService extends DatabaseService {
 	public async completeSharedReminder(entryKey: string, text: string): Promise<ConnectResult> {
 		const response: any = await this.cloudbase.callFunction({
 			name: 'editSharedReminder',
-			data: { entryKey, action: 'complete' }
+			data: { entryKey, action: SHARED_REMINDER_ACTION_COMPLETE }
 		});
 		const result: ConnectResult = response?.result ?? { success: false };
 		if (result.success) {
@@ -1049,7 +1050,7 @@ export class CloudbaseService extends DatabaseService {
 						}
 					}
 				} catch (error) {
-					LOG.error(this.className, CLOUDBASE_LOG_TEMP_URLS_FAILED, error as Error);
+					LOG.error(this.className, DB_LOG_TEMP_URLS_FAILED, error as Error);
 				}
 			}
 		}
@@ -1088,13 +1089,13 @@ export class CloudbaseService extends DatabaseService {
 					this.throwIfCloudbaseError(result);
 				})
 			);
-			LOG.info(this.className, CLOUDBASE_LOG_DATE_CALC_UPDATED);
+			LOG.info(this.className, DB_LOG_DATE_CALC_UPDATED);
 			this.appendToActivityLog({
 				source: ACTIVITY_SOURCE_DATE_CALCULATOR,
 				type: ACTIVITY_TYPE_CALCULATOR_UPDATED
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, CLOUDBASE_LOG_DATE_CALC_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_DATE_CALC_UPDATE_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -1213,7 +1214,7 @@ export class CloudbaseService extends DatabaseService {
 				);
 			}
 		} catch (error) {
-			LOG.error(this.className, CLOUDBASE_LOG_MOVIE_RATE_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_MOVIE_RATE_UPDATE_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -1241,7 +1242,7 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(movieKey))
 				.update({ genre: newGenre });
 			this.throwIfCloudbaseError(movieRes);
-			LOG.info(this.className, CLOUDBASE_LOG_MOVIE_GENRE_UPDATED);
+			LOG.info(this.className, DB_LOG_MOVIE_GENRE_UPDATED);
 
 			// Step 2 : Update movie statistics
 			const statRes = await this.statisticsRef.update({
@@ -1249,7 +1250,7 @@ export class CloudbaseService extends DatabaseService {
 				[`genre.${newGenre}`]: this._.inc(1)
 			});
 			this.throwIfCloudbaseError(statRes);
-			LOG.info(this.className, CLOUDBASE_LOG_MOVIE_STATS_UPDATED);
+			LOG.info(this.className, DB_LOG_MOVIE_STATS_UPDATED);
 
 			this.appendToActivityLog({
 				source: ACTIVITY_SOURCE_MOVIE,
@@ -1257,7 +1258,7 @@ export class CloudbaseService extends DatabaseService {
 				title
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, CLOUDBASE_LOG_MOVIE_GENRE_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_MOVIE_GENRE_UPDATE_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -1279,7 +1280,7 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(movieKey))
 				.update({ isFavourite });
 			this.throwIfCloudbaseError(movieRes);
-			LOG.info(this.className, CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATED);
+			LOG.info(this.className, DB_LOG_MOVIE_FAVOURITE_UPDATED);
 
 			// Step 2 : Update movie statistics
 			const updatedData: any = {};
@@ -1290,7 +1291,7 @@ export class CloudbaseService extends DatabaseService {
 			}
 			const statRes = await this.statisticsRef.update(updatedData);
 			this.throwIfCloudbaseError(statRes);
-			LOG.info(this.className, CLOUDBASE_LOG_MOVIE_STATS_UPDATED);
+			LOG.info(this.className, DB_LOG_MOVIE_STATS_UPDATED);
 
 			this.appendToActivityLog({
 				source: ACTIVITY_SOURCE_MOVIE,
@@ -1298,7 +1299,7 @@ export class CloudbaseService extends DatabaseService {
 				title
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_MOVIE_FAVOURITE_UPDATE_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -1510,7 +1511,7 @@ export class CloudbaseService extends DatabaseService {
 			const result = await this.statisticsRef.update(fields);
 			this.throwIfCloudbaseError(result);
 		} catch (error) {
-			LOG.error(this.className, CLOUDBASE_LOG_STATS_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_STATS_UPDATE_FAILED, error as Error);
 		}
 	}
 
@@ -1559,12 +1560,12 @@ export class CloudbaseService extends DatabaseService {
 				.update(fields);
 			if (result.updated === 0) throw new Error(ERROR_NO_DOCUMENT_UPDATED);
 			else this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_TABLE_UPDATED} ${tableName}`);
+			LOG.info(this.className, `${DB_LOG_RECORD_TABLE_UPDATED} ${tableName}`);
 			if (Object.keys(activity).length > 0) {
 				this.appendToActivityLog(activity).catch(() => {});
 			}
 		} catch (error) {
-			LOG.error(this.className, `${CLOUDBASE_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
+			LOG.error(this.className, `${DB_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -1603,7 +1604,7 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(key))
 				.remove();
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_USEFUL_LINKS}`);
+			LOG.info(this.className, `${DB_LOG_RECORD_REMOVED_FROM} ${DATABASE_USEFUL_LINKS}`);
 			this.appendToActivityLog({
 				source: ACTIVITY_SOURCE_LINK,
 				domain: name,
@@ -1662,7 +1663,7 @@ export class CloudbaseService extends DatabaseService {
 				.remove();
 			this.throwIfCloudbaseError(removeRes);
 
-			LOG.info(this.className, `${CLOUDBASE_LOG_MOVIE_DOC_REMOVED} ${movieItemVO.getMovieName()}`);
+			LOG.info(this.className, `${DB_LOG_MOVIE_DOC_REMOVED} ${movieItemVO.getMovieName()}`);
 
 			// Step 2: Remove the cover image from CloudBase Storage
 			const coverRes: any = await this.cloudbase.callFunction({
@@ -1679,7 +1680,7 @@ export class CloudbaseService extends DatabaseService {
 					`Cover image removal failed for ${movieItemVO.getMovieName()}: ${coverRes?.result?.error ?? 'unknown error'}`
 				);
 			} else {
-				LOG.info(this.className, `${CLOUDBASE_LOG_COVER_REMOVED} ${movieItemVO.getMovieName()}`);
+				LOG.info(this.className, `${DB_LOG_COVER_REMOVED} ${movieItemVO.getMovieName()}`);
 			}
 
 			// Step 3: Add a history entry
@@ -1705,7 +1706,7 @@ export class CloudbaseService extends DatabaseService {
 			}).catch(() => {});
 			this.updateUserStatCount(STATS_FIELD_TOTAL_FILMS, -1).catch(() => {});
 
-			LOG.info(this.className, `${CLOUDBASE_LOG_STATS_AFTER_REMOVE} ${movieItemVO.getMovieName()}`);
+			LOG.info(this.className, `${DB_LOG_STATS_AFTER_REMOVE} ${movieItemVO.getMovieName()}`);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -1772,11 +1773,11 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(key))
 				.remove();
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
+			LOG.info(this.className, `${DB_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
+				`${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
 				error as Error
 			);
 			this.rethrowCaught(error);
@@ -1804,7 +1805,7 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(nodeId))
 				.remove();
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
+			LOG.info(this.className, `${DB_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
 			this.appendToActivityLog({
 				source: ACTIVITY_SOURCE_VAULT,
 				name,
@@ -1813,7 +1814,7 @@ export class CloudbaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
+				`${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
 				error as Error
 			);
 			this.rethrowCaught(error);
@@ -1891,7 +1892,7 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(newRecord.entryKey))
 				.remove();
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${tableName}`);
+			LOG.info(this.className, `${DB_LOG_RECORD_REMOVED_FROM} ${tableName}`);
 			this.appendToActivityLog({
 				...this.getRecentActivitySubtitle(tableName, newRecord),
 				type: newRecord.type ?? HISTORY_STATUS_DELETED,
@@ -1899,7 +1900,7 @@ export class CloudbaseService extends DatabaseService {
 				...(newRecord.isShared ? { isShared: true } : {})
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, `${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${tableName}`, error as Error);
+			LOG.error(this.className, `${DB_LOG_RECORD_REMOVE_FAILED} ${tableName}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -1914,7 +1915,7 @@ export class CloudbaseService extends DatabaseService {
 		try {
 			return (await this.readUserStatField(STATS_FIELD_TAURI_NOTIF_ENABLED)) === true;
 		} catch (error: unknown) {
-			LOG.error(this.className, CLOUDBASE_LOG_TAURI_PREF_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_TAURI_PREF_FAILED, error as Error);
 			return false;
 		}
 	}
@@ -1938,7 +1939,7 @@ export class CloudbaseService extends DatabaseService {
 		try {
 			return (await this.readUserStatField(STATS_FIELD_MINIMIZE_ON_CLOSE)) === true;
 		} catch (error: unknown) {
-			LOG.error(this.className, CLOUDBASE_LOG_MINIMIZE_PREF_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_MINIMIZE_PREF_FAILED, error as Error);
 			return true;
 		}
 	}
@@ -1963,7 +1964,7 @@ export class CloudbaseService extends DatabaseService {
 			const value = await this.readUserStatField(STATS_FIELD_LOCALE);
 			return value === LOCALE_KEY_EN || value === LOCALE_KEY_ZH ? value : null;
 		} catch (error: unknown) {
-			LOG.error(this.className, CLOUDBASE_LOG_LOCALE_PREF_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_LOCALE_PREF_FAILED, error as Error);
 			return null;
 		}
 	}
@@ -1988,7 +1989,7 @@ export class CloudbaseService extends DatabaseService {
 			const value = await this.readUserStatField(STATS_FIELD_TODAY_ITEMS);
 			return Array.isArray(value) ? (value as TodayTask[]) : [];
 		} catch (error: unknown) {
-			LOG.error(this.className, CLOUDBASE_LOG_TODAY_ITEMS_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_TODAY_ITEMS_FAILED, error as Error);
 			return [];
 		}
 	}
@@ -2143,7 +2144,7 @@ export class CloudbaseService extends DatabaseService {
 				.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_FILMS, MILESTONE_DOMAIN_FILM))
 				.catch(() => {});
 
-			LOG.info(this.className, CLOUDBASE_LOG_MOVIE_ADDED);
+			LOG.info(this.className, DB_LOG_MOVIE_ADDED);
 		} catch (error) {
 			LOG.error(
 				this.className,
@@ -2197,9 +2198,9 @@ export class CloudbaseService extends DatabaseService {
 					type: SEARCH
 				}).catch(() => {});
 			}
-			LOG.info(this.className, CLOUDBASE_LOG_HISTORY_ADDED);
+			LOG.info(this.className, DB_LOG_HISTORY_ADDED);
 		} catch (error) {
-			LOG.error(this.className, CLOUDBASE_LOG_HISTORY_ADD_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_HISTORY_ADD_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2330,11 +2331,11 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(categoryKey))
 				.remove();
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
+			LOG.info(this.className, `${DB_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`${CLOUDBASE_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
+				`${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
 				error as Error
 			);
 			this.rethrowCaught(error);
@@ -2356,9 +2357,9 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(nodeId))
 				.update({ [VAULT_VALUE_KEY_CATEGORY]: categoryKey });
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${CLOUDBASE_LOG_RECORD_TABLE_UPDATED} ${DATABASE_VAULT}`);
+			LOG.info(this.className, `${DB_LOG_RECORD_TABLE_UPDATED} ${DATABASE_VAULT}`);
 		} catch (error) {
-			LOG.error(this.className, `${CLOUDBASE_LOG_TABLE_UPDATE_FAILED} ${DATABASE_VAULT}`, error as Error);
+			LOG.error(this.className, `${DB_LOG_TABLE_UPDATE_FAILED} ${DATABASE_VAULT}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2388,7 +2389,7 @@ export class CloudbaseService extends DatabaseService {
 				...newRecord
 			});
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${tableName} ${CLOUDBASE_LOG_HAS_BEEN_UPDATED}`);
+			LOG.info(this.className, `${tableName} ${DB_LOG_HAS_BEEN_UPDATED}`);
 
 			/* Step 2: Derive the correct activity type before enqueueing the log entry.
 			   Links and categories share the same collection — detect a category add by checking
@@ -2406,7 +2407,7 @@ export class CloudbaseService extends DatabaseService {
 				...(newRecord.isShared ? { isShared: true } : {})
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, `${CLOUDBASE_LOG_RECORD_ADD_FAILED} ${tableName}`, error as Error);
+			LOG.error(this.className, `${DB_LOG_RECORD_ADD_FAILED} ${tableName}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2427,10 +2428,10 @@ export class CloudbaseService extends DatabaseService {
 			const userId = CloudbaseService.userHasAllRights() ? { _openid: CloudbaseService.userId } : {};
 			const result = await this.database.collection(DATABASE_VAULT).add({ ...userId, ...content });
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${DATABASE_VAULT} ${CLOUDBASE_LOG_HAS_BEEN_UPDATED}`);
+			LOG.info(this.className, `${DATABASE_VAULT} ${DB_LOG_HAS_BEEN_UPDATED}`);
 			return result.id;
 		} catch (error) {
-			LOG.error(this.className, `${CLOUDBASE_LOG_RECORD_ADD_FAILED} ${DATABASE_VAULT}`, error as Error);
+			LOG.error(this.className, `${DB_LOG_RECORD_ADD_FAILED} ${DATABASE_VAULT}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2508,9 +2509,9 @@ export class CloudbaseService extends DatabaseService {
 				.where({ _id: key, _openid: CloudbaseService.getUserId() })
 				.update({ visitCount: currentCount + 1, lastVisited: new Date().toISOString() });
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, CLOUDBASE_LOG_VISIT_INCREMENTED);
+			LOG.info(this.className, DB_LOG_VISIT_INCREMENTED);
 		} catch (error) {
-			LOG.error(this.className, `${CLOUDBASE_LOG_VISIT_INCREMENT_FAILED} ${key}`, error as Error);
+			LOG.error(this.className, `${DB_LOG_VISIT_INCREMENT_FAILED} ${key}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2586,7 +2587,7 @@ export class CloudbaseService extends DatabaseService {
 				throw new Error(result?.result?.error ?? 'uploadCoverImage did not return a fileID');
 			}
 
-			LOG.info(this.className, `${CLOUDBASE_LOG_COVER_UPLOADED} ${movieName}`);
+			LOG.info(this.className, `${DB_LOG_COVER_UPLOADED} ${movieName}`);
 
 			// Step 3: Return the cloud:// file ID — callers resolve it to a signed temp URL via resolveMovieCoverUrls()
 			return result.result.fileID;
@@ -2664,7 +2665,7 @@ export class CloudbaseService extends DatabaseService {
 			});
 			this.checkAndWriteCountMilestone(MILESTONE_DOMAIN_STREAK, newStreak, userDoc).catch(() => {});
 		} catch (error) {
-			LOG.error(this.className, CLOUDBASE_LOG_ACTIVITY_UPDATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_ACTIVITY_UPDATE_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2684,7 +2685,7 @@ export class CloudbaseService extends DatabaseService {
 			.where(this.getUserStatsFilter())
 			.update({ [field]: this._.inc(delta) });
 		if (result.code) {
-			LOG.error(this.className, result.message ?? CLOUDBASE_LOG_USER_STAT_UPDATE_FAILED);
+			LOG.error(this.className, result.message ?? DB_LOG_USER_STAT_UPDATE_FAILED);
 		}
 	}
 
@@ -2747,10 +2748,10 @@ export class CloudbaseService extends DatabaseService {
 				.doc(userId)
 				.set({ ...fields, _openid: userId, [STATS_FIELD_CONNECT_CODE]: connectCode });
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, CLOUDBASE_LOG_USER_STATS_MIGRATED);
+			LOG.info(this.className, DB_LOG_USER_STATS_MIGRATED);
 			return true;
 		} catch (error) {
-			LOG.error(this.className, CLOUDBASE_LOG_USER_STATS_MIGRATE_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_USER_STATS_MIGRATE_FAILED, error as Error);
 			return false;
 		}
 	}
@@ -2803,9 +2804,9 @@ export class CloudbaseService extends DatabaseService {
 		try {
 			const result = await this.database.collection(DATABASE_USERS).doc(userId).set(payload);
 			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, CLOUDBASE_LOG_USER_STATS_SEEDED);
+			LOG.info(this.className, DB_LOG_USER_STATS_SEEDED);
 		} catch (error) {
-			LOG.error(this.className, CLOUDBASE_LOG_USER_STATS_SEED_FAILED, error as Error);
+			LOG.error(this.className, DB_LOG_USER_STATS_SEED_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2842,7 +2843,7 @@ export class CloudbaseService extends DatabaseService {
 					return { content: json.content ?? '', contentType: json.contentType ?? '' };
 				}
 				// Endpoint exists but reported an error — log and fall through to CloudBase.
-				LOG.warn(this.className, `${CLOUDBASE_LOG_FETCH_URL_ERROR} ${url}: ${json.error}`);
+				LOG.warn(this.className, `${DB_LOG_FETCH_URL_ERROR} ${url}: ${json.error}`);
 			}
 			/* Non-JSON response means the Express server is not running (ng serve).
 			   Fall through silently to CloudBase. */
@@ -2864,7 +2865,7 @@ export class CloudbaseService extends DatabaseService {
 				contentType: result.result.contentType ?? ''
 			};
 		} catch (error) {
-			LOG.error(this.className, `${CLOUDBASE_LOG_PROXY_FETCH_FAILED} ${url}`, error as Error);
+			LOG.error(this.className, `${DB_LOG_PROXY_FETCH_FAILED} ${url}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}

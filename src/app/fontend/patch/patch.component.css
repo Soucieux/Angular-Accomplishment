@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    Host — fill the drawer-content slot
 ───────────────────────────────────────── */
+
 :host {
 	font-family: 'app-font';
 	display: block;
@@ -9,6 +10,7 @@
 /* ─────────────────────────────────────────
    Page header
 ───────────────────────────────────────── */
+
 .page-header-row {
 	display: flex;
 	align-items: flex-start;
@@ -24,6 +26,7 @@
 /* ─────────────────────────────────────────
    View switch — sliding thumb (inline)
 ───────────────────────────────────────── */
+
 .view-switch {
 	--view-switch-width: 150px;
 	position: absolute;
@@ -75,17 +78,10 @@
 	color: #fff !important;
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.view-switch__thumb,
-	.view-switch__button {
-		transition: none;
-	}
-
-}
-
 /* ─────────────────────────────────────────
    Release Notes — hero spotlight
 ───────────────────────────────────────── */
+
 .release-hero {
 	background: linear-gradient(135deg, #ffffff 0%, #fbf2fb 100%);
 	border: 1px solid #efe2ef;
@@ -289,6 +285,7 @@
 /* ─────────────────────────────────────────
    Release Notes — previous releases list
 ───────────────────────────────────────── */
+
 .previous-label {
 	font-size: 12px;
 	font-weight: 700;
@@ -412,6 +409,7 @@
 /* ─────────────────────────────────────────
    Toolbar + search
 ───────────────────────────────────────── */
+
 .toolbar {
 	display: flex;
 	gap: 10px;
@@ -466,6 +464,7 @@
 /* ─────────────────────────────────────────
    Stats strip
 ───────────────────────────────────────── */
+
 .heatmap-anchor {
 	position: relative;
 }
@@ -503,6 +502,7 @@
 /* ─────────────────────────────────────────
    Activity heatmap popover
 ───────────────────────────────────────── */
+
 .heatmap-popover {
 	position: absolute;
 	top: calc(100% + 12px);
@@ -717,6 +717,7 @@
 /* ─────────────────────────────────────────
    Empty state
 ───────────────────────────────────────── */
+
 .empty-state {
 	display: flex;
 	flex-direction: column;
@@ -743,6 +744,7 @@
 /* ─────────────────────────────────────────
    Table wrapper
 ───────────────────────────────────────── */
+
 .p-datatable {
 	border-radius: 14px;
 	overflow: hidden;
@@ -756,6 +758,7 @@
 /* ─────────────────────────────────────────
    Table header — purple (Entertainment search-button colour)
 ───────────────────────────────────────── */
+
 ::ng-deep .p-datatable .p-datatable-thead > tr > th {
 	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 	color: rgba(255, 255, 255, 0.95) !important;
@@ -787,6 +790,7 @@
 /* ─────────────────────────────────────────
    Table body rows — clean white base
 ───────────────────────────────────────── */
+
 ::ng-deep .p-datatable .p-datatable-tbody > tr {
 	background: #ffffff !important;
 	color: rgba(30, 15, 35, 0.88) !important;
@@ -804,6 +808,7 @@
    adding the class to ALL rows in that group and targeting td.component
    as a direct child naturally selects only the row that has it.
 ───────────────────────────────────────── */
+
 ::ng-deep .p-datatable .p-datatable-tbody > tr.component-group-hovered > td.component {
 	background: rgba(102, 126, 234, 0.09) !important;
 }
@@ -815,6 +820,7 @@
 /* ─────────────────────────────────────────
    Cell height & borders
 ───────────────────────────────────────── */
+
 ::ng-deep .p-datatable .p-datatable-tbody > tr > td,
 ::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
 	height: 8.5vh;
@@ -831,6 +837,7 @@
 /* ─────────────────────────────────────────
    Footer row (add new record)
 ───────────────────────────────────────── */
+
 ::ng-deep .p-datatable .p-datatable-tfoot > tr {
 	background: #f3f4f6 !important;
 	border-top: 2px solid rgba(0, 0, 0, 0.06) !important;
@@ -859,6 +866,7 @@
 /* ─────────────────────────────────────────
    Input fields
 ───────────────────────────────────────── */
+
 ::ng-deep .input {
 	width: 100%;
 }
@@ -886,6 +894,7 @@
 /* ─────────────────────────────────────────
    Select dropdown
 ───────────────────────────────────────── */
+
 ::ng-deep .p-datatable .p-select {
 	border-radius: 8px !important;
 	border: 1.5px solid rgba(0, 0, 0, 0.14) !important;
@@ -904,6 +913,7 @@
 /* ─────────────────────────────────────────
    Edit buttons — coloured ghost
 ───────────────────────────────────────── */
+
 ::ng-deep .p-datatable .edit-button .p-button .p-button-icon {
 	font-size: 17px !important;
 	border: none;
@@ -961,6 +971,7 @@
 /* ─────────────────────────────────────────
    Paginator
 ───────────────────────────────────────── */
+
 ::ng-deep .p-datatable .p-paginator {
 	background: #f9f9fb !important;
 	border: none !important;
@@ -1008,6 +1019,7 @@
 /* ─────────────────────────────────────────
    Skeleton loading rows
 ───────────────────────────────────────── */
+
 ::ng-deep .p-datatable .p-skeleton {
 	background: #e8e8f0 !important;
 	border-radius: 6px !important;
@@ -1021,6 +1033,7 @@
 /* ─────────────────────────────────────────
    Filter icon button (own custom icon instead of the default icon)
 ───────────────────────────────────────── */
+
 .custom-filter-icon {
 	color: rgba(255, 255, 255, 0.65);
 	padding: 6px;
@@ -1039,6 +1052,7 @@
 /* ─────────────────────────────────────────
   Neutralize PrimeNG's theme to override the filter button's style
 ───────────────────────────────────────── */
+
 /* 1. Neutralize the PrimeNG Button Container */
 :host ::ng-deep .column-filter p-button button {
 	background: transparent !important;
@@ -1075,6 +1089,7 @@
 /* ─────────────────────────────────────────
    Column-filter overlay popup
 ───────────────────────────────────────── */
+
 ::ng-deep .p-columnfilter-overlay {
 	background: #ffffff !important;
 	border-radius: 16px !important;
@@ -1143,6 +1158,7 @@
 /* ─────────────────────────────────────────
    Tags (status badges in table)
 ───────────────────────────────────────── */
+
 .tag {
 	font-size: 15px;
 }
@@ -1155,6 +1171,7 @@
 /* ─────────────────────────────────────────
    Status filter panel
 ───────────────────────────────────────── */
+
 .status-filter {
 	display: flex;
 	flex-direction: column;
@@ -1190,6 +1207,7 @@
 /* ─────────────────────────────────────────
    Clear filter button
 ───────────────────────────────────────── */
+
 .clear-tag {
 	width: 100%;
 	margin: 8px 0 0 0;
@@ -1217,6 +1235,7 @@
 /* ─────────────────────────────────────────
    Resolved-bug outline tag
 ───────────────────────────────────────── */
+
 .tag-debug-success {
 	padding-left: 10px;
 	padding-right: 10px;
@@ -1226,6 +1245,7 @@
 /* ─────────────────────────────────────────
    Component icon + label (table cell display)
 ───────────────────────────────────────── */
+
 .component-content {
 	display: flex;
 	align-items: center;
@@ -1290,6 +1310,7 @@
    Status option (icon + label row in select)
    Icon class names mirror getSeverityIcon() — update both together.
 ───────────────────────────────────────── */
+
 ::ng-deep .dropdown-panel-font .status-option,
 .status-option {
 	display: flex;
@@ -1333,6 +1354,7 @@
 /* ─────────────────────────────────────────
    Column dimensions
 ───────────────────────────────────────── */
+
 .p-datatable th.component,
 .p-datatable td.component {
 	width: 100px;
@@ -1386,6 +1408,7 @@
    Per-component icon gradients
    Mirrors the nav panel colours in app.component.css
 ───────────────────────────────────────── */
+
 .icon-all-pages {
 	background: linear-gradient(135deg, #d53369, #daae51);
 	background-clip: text;
@@ -1487,6 +1510,7 @@
 /* ─────────────────────────────────────────
    Entrance animations
 ───────────────────────────────────────── */
+
 @keyframes pnReveal {
 	from {
 		opacity: 0;
@@ -1510,9 +1534,18 @@
 	animation: pnReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both;
 }
 
+@media (prefers-reduced-motion: reduce) {
+	.view-switch__thumb,
+	.view-switch__button {
+		transition: none;
+	}
+
+}
+
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	.page-title {
 		font-size: 28px;
@@ -1583,6 +1616,7 @@
 	/* ─────────────────────────────────────────
    Release Notes
 ───────────────────────────────────────── */
+
 	.view-switch__button {
 		padding: 10px 0;
 		font-size: 11px;

@@ -273,6 +273,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
+	// ── Movie rate update and data retrieval ─────────────────────────────────
+
 	/**
 	 * Iterates through every movie in the currently filtered movie list, fetches
 	 * the latest rating for each from the Douban API with a delay between requests,
@@ -684,131 +686,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	// ── Utilities Functions used by HTML template ────────────────────────────
-	/**
-	 * Gets the human-readable quality label for a movie rate ("Excellent", "Good",
-	 * "Average", or "Poor") by delegating to the shared utility method.
-	 *
-	 * @param rate - The numeric movie rate.
-	 * @returns A quality label string.
-	 */
-	protected getRateLabel(rate: number): string {
-		return Utilities.getMovieRateLabel(rate);
-	}
-
-	/**
-	 * Gets the localized display label for a movie genre, keyed by its stored value.
-	 *
-	 * @param genre - The stored genre value (Chinese key).
-	 * @returns The localized genre label, or the raw value if unmapped.
-	 */
-	protected genreLabel(genre: string): string {
-		return resolveGenreLabel(genre);
-	}
-
-	/**
-	 * Gets the pushpin colour for a corkboard category card, cycling through
-	 * ENT_CORK_PIN_COLORS by card index.
-	 *
-	 * @param index - The zero-based position of the card in the category row.
-	 * @returns A CSS colour string.
-	 */
-	protected getGenreColor(index: number): string {
-		return ENT_CORK_PIN_COLORS[index % ENT_CORK_PIN_COLORS.length];
-	}
-
-	/**
-	 * Gets the CSS rotation value for a corkboard category card, cycling through
-	 * ENT_CORK_ROTATIONS by card index.
-	 *
-	 * @param index - The zero-based position of the card in the category row.
-	 * @returns A CSS rotation string (e.g. "-2.4deg").
-	 */
-	protected getGenreRotation(index: number): string {
-		return ENT_CORK_ROTATIONS[index % ENT_CORK_ROTATIONS.length] + 'deg';
-	}
-
-	/**
-	 * Delegates to Utilities.filledBlocks using the cork-board block count.
-	 *
-	 * @param count - The number of titles in this genre.
-	 * @param max - The maximum count across all genres, used as the scale denominator.
-	 * @returns A boolean array of length ENT_CORK_BLOCKS.
-	 */
-	protected getFilledBlocks(count: number, max: number): boolean[] {
-		return Utilities.filledBlocks(count, max, ENT_CORK_BLOCKS);
-	}
-
-	/**
-	 * Computes the maximum genre count from the statistics genre map.
-	 * Used as the denominator when scaling the corkboard progress bar.
-	 *
-	 * @param genre - The genre map keyed by genre name with count values.
-	 * @returns The highest count, or 1 when the map is empty.
-	 */
-	protected getCorkMax(genre: Record<string, number>): number {
-		const values = Object.values(genre ?? {})
-			.map(Number)
-			.filter((n) => !isNaN(n));
-		return values.length > 0 ? Math.max(...values) : 1;
-	}
-
-	/**
-	 * Gets the background style for a category card. Inactive cards use a
-	 * plain white background; the active card gets a gradient built from its
-	 * own pin colour for per-card colour variety.
-	 *
-	 * @param index - The zero-based position of the card in the category row.
-	 * @param isActive - Whether this card is currently selected.
-	 * @returns A CSS background string.
-	 */
-	protected getCardBackground(index: number, isActive: boolean): string {
-		if (!isActive) return '#ffffff';
-		const color = this.getGenreColor(index);
-		return `linear-gradient(135deg, ${color}ee 0%, ${color}99 100%)`;
-	}
-
-	/**
-	 * Gets the box-shadow style for a category card. Inactive cards get an
-	 * empty string (falling back to the CSS default shadow); the active card
-	 * gets a coloured glow matching its own pin colour.
-	 *
-	 * @param index - The zero-based position of the card in the category row.
-	 * @param isActive - Whether this card is currently selected.
-	 * @returns A CSS box-shadow string.
-	 */
-	protected getCardShadow(index: number, isActive: boolean): string {
-		if (!isActive) return '';
-		const color = this.getGenreColor(index);
-		return `0 10px 10px ${color}66, inset 0 1px 0 rgba(255,255,255,0.35)`;
-	}
-
-	/**
-	 * Calculates a responsive font size for displaying a movie name, shrinking the
-	 * text as the name gets longer to prevent overflow. Uses different base sizes
-	 * for mobile and desktop viewports.
-	 *
-	 * @param length - The character length of the movie name.
-	 * @returns A CSS font-size string (e.g., "18px").
-	 */
-	protected calculateFontSize(length: number) {
-		if (this.utilities.isMobile()) {
-			return length <= 6 ? '21px' : String(18 - (length - 8) * 2 + 'px');
-		}
-		return length <= 7 ? '23px' : String(20 - (length - 8.5) * 2 + 'px');
-	}
-
-	/**
-	 * Pushes the current search input text into the searchQuery$ stream, which
-	 * triggers a re-filter of the filteredMovieList$ observable to only show
-	 * movies whose name contains the search text.
-	 *
-	 * @param value - The current text value from the search input field.
-	 */
-	protected updateSearchQuery(value: string) {
-		this.searchQuery$.next(value);
-	}
-
 	// ── Event Handlers triggered by user actions ─────────────────────────────
 	/**
 	 * Toggles the genre filter with a View Transition animation.
@@ -906,7 +783,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 */
 	protected openSearchDialog() {
 		this.dialogService.openDialog(this.dialogComponentContainer, SEARCH, this.cancelSearch.bind(this));
-		this.updateAllMoviesRate();
+		this.updateAllMoviesRate().catch(() => {});
 	}
 
 	/**
@@ -1144,4 +1021,130 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			LOG.error(this.className, ENT_LOG_UPDATE_FAVOURITE_FAILED);
 		}
 	}
+
+	// ── Utilities Functions used by HTML template ────────────────────────────
+	/**
+	 * Gets the human-readable quality label for a movie rate ("Excellent", "Good",
+	 * "Average", or "Poor") by delegating to the shared utility method.
+	 *
+	 * @param rate - The numeric movie rate.
+	 * @returns A quality label string.
+	 */
+	protected getRateLabel(rate: number): string {
+		return Utilities.getMovieRateLabel(rate);
+	}
+
+	/**
+	 * Gets the localized display label for a movie genre, keyed by its stored value.
+	 *
+	 * @param genre - The stored genre value (Chinese key).
+	 * @returns The localized genre label, or the raw value if unmapped.
+	 */
+	protected genreLabel(genre: string): string {
+		return resolveGenreLabel(genre);
+	}
+
+	/**
+	 * Gets the pushpin colour for a corkboard category card, cycling through
+	 * ENT_CORK_PIN_COLORS by card index.
+	 *
+	 * @param index - The zero-based position of the card in the category row.
+	 * @returns A CSS colour string.
+	 */
+	protected getGenreColor(index: number): string {
+		return ENT_CORK_PIN_COLORS[index % ENT_CORK_PIN_COLORS.length];
+	}
+
+	/**
+	 * Gets the CSS rotation value for a corkboard category card, cycling through
+	 * ENT_CORK_ROTATIONS by card index.
+	 *
+	 * @param index - The zero-based position of the card in the category row.
+	 * @returns A CSS rotation string (e.g. "-2.4deg").
+	 */
+	protected getGenreRotation(index: number): string {
+		return ENT_CORK_ROTATIONS[index % ENT_CORK_ROTATIONS.length] + 'deg';
+	}
+
+	/**
+	 * Delegates to Utilities.filledBlocks using the cork-board block count.
+	 *
+	 * @param count - The number of titles in this genre.
+	 * @param max - The maximum count across all genres, used as the scale denominator.
+	 * @returns A boolean array of length ENT_CORK_BLOCKS.
+	 */
+	protected getFilledBlocks(count: number, max: number): boolean[] {
+		return Utilities.filledBlocks(count, max, ENT_CORK_BLOCKS);
+	}
+
+	/**
+	 * Computes the maximum genre count from the statistics genre map.
+	 * Used as the denominator when scaling the corkboard progress bar.
+	 *
+	 * @param genre - The genre map keyed by genre name with count values.
+	 * @returns The highest count, or 1 when the map is empty.
+	 */
+	protected getCorkMax(genre: Record<string, number>): number {
+		const values = Object.values(genre ?? {})
+			.map(Number)
+			.filter((n) => !isNaN(n));
+		return values.length > 0 ? Math.max(...values) : 1;
+	}
+
+	/**
+	 * Gets the background style for a category card. Inactive cards use a
+	 * plain white background; the active card gets a gradient built from its
+	 * own pin colour for per-card colour variety.
+	 *
+	 * @param index - The zero-based position of the card in the category row.
+	 * @param isActive - Whether this card is currently selected.
+	 * @returns A CSS background string.
+	 */
+	protected getCardBackground(index: number, isActive: boolean): string {
+		if (!isActive) return '#ffffff';
+		const color = this.getGenreColor(index);
+		return `linear-gradient(135deg, ${color}ee 0%, ${color}99 100%)`;
+	}
+
+	/**
+	 * Gets the box-shadow style for a category card. Inactive cards get an
+	 * empty string (falling back to the CSS default shadow); the active card
+	 * gets a coloured glow matching its own pin colour.
+	 *
+	 * @param index - The zero-based position of the card in the category row.
+	 * @param isActive - Whether this card is currently selected.
+	 * @returns A CSS box-shadow string.
+	 */
+	protected getCardShadow(index: number, isActive: boolean): string {
+		if (!isActive) return '';
+		const color = this.getGenreColor(index);
+		return `0 10px 10px ${color}66, inset 0 1px 0 rgba(255,255,255,0.35)`;
+	}
+
+	/**
+	 * Calculates a responsive font size for displaying a movie name, shrinking the
+	 * text as the name gets longer to prevent overflow. Uses different base sizes
+	 * for mobile and desktop viewports.
+	 *
+	 * @param length - The character length of the movie name.
+	 * @returns A CSS font-size string (e.g., "18px").
+	 */
+	protected calculateFontSize(length: number) {
+		if (this.utilities.isMobile()) {
+			return length <= 6 ? '21px' : String(18 - (length - 8) * 2 + 'px');
+		}
+		return length <= 7 ? '23px' : String(20 - (length - 8.5) * 2 + 'px');
+	}
+
+	/**
+	 * Pushes the current search input text into the searchQuery$ stream, which
+	 * triggers a re-filter of the filteredMovieList$ observable to only show
+	 * movies whose name contains the search text.
+	 *
+	 * @param value - The current text value from the search input field.
+	 */
+	protected updateSearchQuery(value: string) {
+		this.searchQuery$.next(value);
+	}
+
 }

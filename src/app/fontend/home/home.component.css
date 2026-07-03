@@ -106,7 +106,6 @@
 	isolation: isolate;
 }
 
-
 /* Printed inner frame */
 .ed::before {
 	content: '';
@@ -383,4 +382,5 @@
 	.ed-issue {
 		font-size: clamp(11px, 3vw, 13px);
 	}
+
 }

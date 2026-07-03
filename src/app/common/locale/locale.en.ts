@@ -91,6 +91,11 @@ export const NAV_LABEL_ABOUT = 'About';
 export const NAV_LABEL_VAULT = 'Vault';
 export const NAV_LABEL_SIGN_OUT = 'Sign out';
 export const NAV_LABEL_SIGN_IN = 'Sign in';
+export const NAV_ARIA_ACCOUNT = 'Account';
+export const NAV_ARIA_PRIMARY = 'Primary navigation';
+export const NAV_ARIA_CLOSE_SECTIONS = 'Close all sections';
+export const NAV_ARIA_SHOW_SECTIONS = 'Show all sections';
+export const NAV_ARIA_ACCOUNT_PREFIX = 'Account: ';
 export const NAV_STATUS_OFFLINE = 'Offline';
 /** Shared "Online" label used across nav and mobile-nav status indicators. */
 export const LABEL_ONLINE = 'Online';
@@ -110,6 +115,10 @@ export const LOGIN_LABEL_FORGOT_PASSWORD = 'Forgot password?';
 export const LOGIN_LABEL_SEND_RESET_CODE = 'Send reset code';
 export const LOGIN_LABEL_RESET_PASSWORD = 'Reset password';
 export const LOGIN_LABEL_BACK_TO_SIGN_IN = 'Back to sign in';
+export const LOGIN_TOGGLE_HAS_ACCOUNT = 'Already have an account?';
+export const LOGIN_TOGGLE_NO_ACCOUNT = 'No account yet?';
+export const LOGIN_TOGGLE_SIGN_IN = 'Sign in';
+export const LOGIN_TOGGLE_SIGN_UP = 'Sign up now';
 export const LOGIN_FLAVOUR_TEXT = 'Welcome back to the hidden kingdom';
 export const LOGIN_MSG_EMAIL_REQUIRED = 'Email is required.';
 /** Shared "Email" label used in login and account pages. */
@@ -243,6 +252,7 @@ export const ORBITAL_WEEK_AGENDA_DUE_HEADER = 'Due';
 export const ORBITAL_PANEL_BADGE_OPEN = 'open';
 /** Suffix appended to the open-debt count badge in the debt panel. */
 export const ORBITAL_PANEL_BADGE_DUE = 'due';
+export const ORBITAL_TOOLTIP_ACTIVITY_7DAYS = 'Activity entries added in the past 7 days';
 
 /* ─────────────────────────────────────────
    Entertainment page constants
@@ -350,6 +360,7 @@ export const RATE_LABEL_EXCELLENT = 'Excellent';
 export const RATE_LABEL_GOOD = 'Good';
 export const RATE_LABEL_AVERAGE = 'Average';
 export const RATE_LABEL_POOR = 'Poor';
+
 /* ─────────────────────────────────────────
    Resonance page constants
 ───────────────────────────────────────── */
@@ -365,6 +376,8 @@ export const RESONANCE_PLACEHOLDER_NAME = 'Your name (optional)';
 export const RESONANCE_BTN_POST = 'Post';
 export const RESONANCE_EMPTY_TEXT = 'No voices yet. Yours could be the first to resonate.';
 export const RESONANCE_ARIA_DELETE = 'Delete quote';
+export const RESONANCE_MSG_OVER_LIMIT_PREFIX = 'Your quote exceeds';
+export const RESONANCE_MSG_OVER_LIMIT_SUFFIX = 'characters. Please shorten it before posting.';
 
 /* ─────────────────────────────────────────
    Recipe page constants
@@ -429,6 +442,16 @@ export const RECIPE_BTN_ADD_INGREDIENT = '+ Add ingredient';
 export const RECIPE_BTN_ADD_SUBPOINT = '+ Add sub-point';
 export const RECIPE_BTN_ADD_STEP = '+ Add step';
 export const RECIPE_BADGE_EXAMPLE = 'Example';
+export const RECIPE_TOOLTIP_REMOVE = 'Remove';
+export const RECIPE_TOOLTIP_REMOVE_STEP = 'Remove step';
+export const RECIPE_TOOLTIP_MANAGE_TYPES = 'Manage ingredient types';
+export const RECIPE_TOOLTIP_DRAG_REORDER = 'Drag to reorder';
+export const RECIPE_PLACEHOLDER_STEP = 'Describe this step…';
+export const RECIPE_PLACEHOLDER_SUBPOINT = 'Sub-point (optional)';
+export const RECIPE_PLACEHOLDER_NOTES = 'Tips, tweaks, or things to remember next time…';
+export const RECIPE_EDITOR_TYPE_SELECTED = 'selected';
+export const RECIPE_EDITOR_TYPE_HINT =
+	'Choose which ingredient types appear in the recipe editor. At least one must be selected.';
 export const INGREDIENT_BTN_APPLY = 'Apply';
 export const RECIPE_ITYPE_LABELS: Record<string, string> = {
 	veg: 'Vegetables', meat: 'Meat', seas: 'Seasoning', dairy: 'Dairy',
@@ -540,6 +563,7 @@ export const PORTAL_BTN_TITLE_NEW_CATEGORY = 'New category';
 /** Shared "Edit" label used in portal and patch notes. */
 export const LABEL_EDIT = 'Edit';
 export const ADD_LINK_LABEL_LOADING = 'fetching…';
+export const ADD_LINK_LABEL_TITLE = 'Title *';
 export const ADD_LINK_PLACEHOLDER_NAME = 'My favourite resource';
 export const ADD_LINK_LABEL_CATEGORY = 'Category *';
 export const ADD_LINK_LABEL_CATEGORY_OPTIONAL = 'Category';
@@ -617,6 +641,8 @@ export const DEBT_DIALOG_LABEL_ADD = 'Add debt';
 export const DEBT_DIALOG_LABEL_CANCEL = 'Cancel';
 export const DEBT_DIALOG_LABEL_PERMANENT = 'Permanent account';
 export const DEBT_DIALOG_LABEL_PERMANENT_DESC = 'Protected from deletion — stays until you remove the lock';
+export const DEBT_TOOLTIP_UNLOCK = 'Permanent — click to unlock';
+export const DEBT_TOOLTIP_MARK_PERMANENT = 'Mark as permanent';
 export const DEBT_DIALOG_LABEL_CURRENCY_CNY = '¥ CNY';
 export const DEBT_DIALOG_LABEL_CURRENCY_CAD = '$ CAD';
 export const DEBT_EMPTY_STATE_MSG = 'No debts here. Add one to start tracking — or enjoy being debt-free.';
@@ -723,6 +749,7 @@ export const CTX_LABEL_SELECT_ALL = 'Select All';
 export const CTX_LABEL_MY_ACCOUNT = 'My account';
 export const CTX_LABEL_INSPECT = 'Inspect';
 export const CTX_SEARCH_PLACEHOLDER = 'Search…';
+export const CTX_LABEL_NO_RESULTS = 'No results';
 
 /* ─────────────────────────────────────────
    Account page
@@ -839,6 +866,7 @@ export const TODAY_PENDING_PLACEHOLDER = 'Name this task…';
 export const TODAY_PENDING_HINT = '↵ save · Esc cancel';
 export const TODAY_LABEL_TASKS = 'Tasks';
 export const TODAY_LABEL_TRACKED = 'Tracked';
+export const TODAY_LABEL_REMINDER_READONLY = 'REMINDER · read-only';
 export const TODAY_BTN_START_TRACKING = 'Start tracking';
 export const TODAY_BTN_STOP_TRACKING = 'Stop';
 export const TODAY_BTN_DRAG_CREATE = 'Drag to create';

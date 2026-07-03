@@ -27,7 +27,7 @@
 			</div>
 		}
 		@if (isOverLimit) {
-			<p class="char-warning">Your quote exceeds {{ RESONANCE_MAX_QUOTE_LENGTH }} characters. Please shorten it before posting.</p>
+			<p class="char-warning">{{ RESONANCE_MSG_OVER_LIMIT_PREFIX }} {{ RESONANCE_MAX_QUOTE_LENGTH }} {{ RESONANCE_MSG_OVER_LIMIT_SUFFIX }}</p>
 		}
 		<div class="submit-footer">
 			<span class="char-count" [class.over-limit]="isOverLimit">{{ newQuoteText.length }} / {{ RESONANCE_MAX_QUOTE_LENGTH }}</span>
@@ -79,7 +79,7 @@
 										[text]="true"
 										size="small"
 										severity="contrast"
-										pTooltip="Delete"
+										[pTooltip]="RESONANCE_ARIA_DELETE"
 										tooltipPosition="top"
 										[attr.aria-label]="RESONANCE_ARIA_DELETE"
 										(click)="openDeleteConfirmationDialog(quote)">

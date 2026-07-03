@@ -416,14 +416,14 @@
 					>
 				} @else {
 					<span class="toggle-text">{{
-						isSignUp ? 'Already have an account?' : 'No account yet?'
+						isSignUp ? LOGIN_TOGGLE_HAS_ACCOUNT : LOGIN_TOGGLE_NO_ACCOUNT
 					}}</span>
 					<span
 						class="toggle-link"
 						(click)="toggleMode()"
 						(keydown.enter)="toggleMode()"
 						tabindex="0"
-						>{{ isSignUp ? 'Sign in' : 'Sign up now' }}</span
+						>{{ isSignUp ? LOGIN_TOGGLE_SIGN_IN : LOGIN_TOGGLE_SIGN_UP }}</span
 					>
 				}
 			</div>

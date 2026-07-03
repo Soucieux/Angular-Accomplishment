@@ -90,7 +90,9 @@ import {
 	DEBT_LABEL_CUSTOM_PAY,
 	DEBT_DAYS_LEFT_SUFFIX,
 	DEBT_DAYS_OVERDUE_PREFIX,
-	DEBT_DAYS_OVERDUE_SUFFIX
+	DEBT_DAYS_OVERDUE_SUFFIX,
+	DEBT_TOOLTIP_UNLOCK,
+	DEBT_TOOLTIP_MARK_PERMANENT
 } from '../../common/locale/locale-strings';
 import {
 	DEBT_CATEGORY_DEFS,
@@ -126,6 +128,8 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected readonly DEBT_EMPTY_STATE_MSG = DEBT_EMPTY_STATE_MSG;
 	protected readonly DEBT_EMPTY_STATE_BTN = DEBT_EMPTY_STATE_BTN;
 	protected readonly DEBT_CUSTOM_INPUT_PLACEHOLDER = DEBT_CUSTOM_INPUT_PLACEHOLDER;
+	protected readonly DEBT_TOOLTIP_UNLOCK = DEBT_TOOLTIP_UNLOCK;
+	protected readonly DEBT_TOOLTIP_MARK_PERMANENT = DEBT_TOOLTIP_MARK_PERMANENT;
 	protected readonly DEBT_LABEL_DELETE_CONFIRM = DEBT_LABEL_DELETE_CONFIRM;
 	protected readonly DEBT_CONFIRM_DELETE_PAYMENT_MSG = DEBT_CONFIRM_DELETE_PAYMENT_MSG;
 	protected readonly DEBT_CONFIRM_DELETE_PAYMENT_HEADER = DEBT_CONFIRM_DELETE_PAYMENT_HEADER;
@@ -436,6 +440,15 @@ export class DebtComponent implements OnInit, OnDestroy {
 			...this.expandedItems,
 			[entryKey]: !this.expandedItems[entryKey]
 		};
+
+		// Attach auto-hide scroll behaviour once the newly expanded panel has rendered
+		if (isPlatformBrowser(this.platformId) && this.expandedItems[entryKey]) {
+			setTimeout(() => {
+				document
+					.querySelectorAll<HTMLElement>('.history-panel')
+					.forEach((el) => Utilities.attachScrollAutoHide(el));
+			});
+		}
 	}
 
 	/**

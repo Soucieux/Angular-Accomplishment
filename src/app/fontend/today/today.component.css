@@ -13,7 +13,7 @@
 	--teal: #0d9488;
 	--blue: #1a6dff;
 
-	--grad-brand: linear-gradient(135deg, #16a34a 0%, #065f46 100%);
+	--gradient-brand: linear-gradient(135deg, #16a34a 0%, #065f46 100%);
 
 	--ink: #1a1a1a;
 	--ink-soft: #334155;
@@ -64,7 +64,7 @@
 	line-height: 1;
 	padding-bottom: 0.2em;
 	margin-top: 6px;
-	background: var(--grad-brand);
+	background: var(--gradient-brand);
 	-webkit-background-clip: text;
 	background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -136,7 +136,7 @@
 
 .tp-quickadd button {
 	border: none;
-	background: var(--grad-brand);
+	background: var(--gradient-brand);
 	color: #fff !important;
 	font-weight: 700;
 	font-size: 14px;
@@ -250,7 +250,7 @@
 	align-items: center;
 	gap: 5px;
 	border: none;
-	background: var(--grad-brand);
+	background: var(--gradient-brand);
 	color: #fff !important;
 	font-weight: 700;
 	font-size: 11px;

@@ -830,7 +830,8 @@
 	overflow-y: auto;
 	padding-right: 4px;
 	scrollbar-width: thin;
-	scrollbar-color: rgba(13, 148, 136, 0.3) transparent;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.4s ease;
 	animation: histIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -844,12 +845,21 @@
 }
 
 .history-panel::-webkit-scrollbar-thumb {
-	background: rgba(13, 148, 136, 0.3);
+	background: transparent;
 	border-radius: 999px;
+	transition: background 0.4s ease;
 }
 
-.history-panel::-webkit-scrollbar-thumb:hover {
-	background: #0d9488;
+.history-panel.is-scrolling {
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+}
+
+.history-panel.is-scrolling::-webkit-scrollbar-thumb {
+	background: rgba(213, 51, 105, 0.28);
+}
+
+.history-panel.is-scrolling::-webkit-scrollbar-thumb:hover {
+	background: #d53369;
 }
 
 @keyframes histIn {

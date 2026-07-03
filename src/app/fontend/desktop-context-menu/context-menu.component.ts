@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CTX_SEARCH_PLACEHOLDER } from '../../common/locale/locale-strings';
+import { CTX_SEARCH_PLACEHOLDER, CTX_LABEL_NO_RESULTS } from '../../common/locale/locale-strings';
 import { ContextMenuAction } from './context-menu.model';
 
 @Component({
@@ -21,13 +21,14 @@ import { ContextMenuAction } from './context-menu.model';
 	styleUrl: './context-menu.component.scss'
 })
 export class DesktopContextMenuComponent implements OnChanges {
+	@Output() public readonly close = new EventEmitter<void>();
 	@Input() visible = false;
 	@Input() x = 0;
 	@Input() y = 0;
 	@Input() actions: ContextMenuAction[] = [];
-	@Output() public readonly close = new EventEmitter<void>();
 
 	protected readonly CTX_SEARCH_PLACEHOLDER = CTX_SEARCH_PLACEHOLDER;
+	protected readonly CTX_LABEL_NO_RESULTS = CTX_LABEL_NO_RESULTS;
 	protected searchQuery = '';
 
 	constructor(private readonly hostRef: ElementRef<HTMLElement>) {}

@@ -13,20 +13,20 @@
 			<div
 				class="icon-badge"
 				[ngClass]="{
-					'badge-search': entry.status === 'search',
-					'badge-added': entry.status === 'added',
-					'badge-deleted': entry.status === 'deleted'
+					'badge-search': entry.status === HISTORY_STATUS_SEARCH,
+					'badge-added': entry.status === HISTORY_STATUS_ADDED,
+					'badge-deleted': entry.status === HISTORY_STATUS_DELETED
 				}">
 				<span class="material-symbols-outlined badge-icon">
-					@if(entry.status === 'search'){ search }
-					@else if(entry.status === 'added'){ add }
-					@else if(entry.status === 'deleted'){ cancel }
+					@if(entry.status === HISTORY_STATUS_SEARCH){ search }
+					@else if(entry.status === HISTORY_STATUS_ADDED){ add }
+					@else if(entry.status === HISTORY_STATUS_DELETED){ cancel }
 				</span>
 			</div>
 			<p
 				class="message"
-				[class.message-deleted]="entry.status === 'deleted'"
-				(click)="entry.status === 'deleted' ? openRestoreEntryDialog(entry) : null">
+				[class.message-deleted]="entry.status === HISTORY_STATUS_DELETED"
+				(click)="entry.status === HISTORY_STATUS_DELETED ? openRestoreEntryDialog(entry) : null">
 				{{ entry.message }}
 			</p>
 		</div>

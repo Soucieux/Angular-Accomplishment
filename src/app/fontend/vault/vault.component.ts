@@ -28,6 +28,10 @@ import {
 	VAULT_KIND_CATEGORY,
 	VAULT_NODE_ACCOUNT,
 	VAULT_NODE_EMAIL,
+	VAULT_DOT_CLASS_EMAIL,
+	VAULT_DOT_CLASS_PHONE,
+	VAULT_DOT_CLASS_LINK,
+	VAULT_DOT_CLASS_ACCOUNT,
 	VAULT_NODE_PHONE,
 	VAULT_NODE_LINK,
 	VAULT_VIEW_GRAPH,
@@ -129,7 +133,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly VAULT_BANNER_CANCEL = VAULT_BANNER_CANCEL;
 	protected readonly VAULT_MSG_DELETE_NODE_TITLE = VAULT_MSG_DELETE_NODE_TITLE;
 	protected loading = true;
-	protected view: string = VAULT_VIEW_GRAPH;
+	protected view: typeof VAULT_VIEW_GRAPH | typeof VAULT_VIEW_LIST = VAULT_VIEW_GRAPH;
 	protected query = '';
 	protected editId: string | null = null;
 	protected selectedId: string | null = null;
@@ -609,10 +613,10 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns The dot shape CSS class name.
 	 */
 	private getNodeShapeClass(nodeType: VaultNodeType): string {
-		if (nodeType === VAULT_NODE_EMAIL) return 'vault-dot-email';
-		if (nodeType === VAULT_NODE_PHONE) return 'vault-dot-phone';
-		if (nodeType === VAULT_NODE_LINK) return 'vault-dot-link';
-		return 'vault-dot-account';
+		if (nodeType === VAULT_NODE_EMAIL) return VAULT_DOT_CLASS_EMAIL;
+		if (nodeType === VAULT_NODE_PHONE) return VAULT_DOT_CLASS_PHONE;
+		if (nodeType === VAULT_NODE_LINK) return VAULT_DOT_CLASS_LINK;
+		return VAULT_DOT_CLASS_ACCOUNT;
 	}
 
 	/**

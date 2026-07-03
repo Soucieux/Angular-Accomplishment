@@ -6,7 +6,9 @@ import { Utilities } from '../../../common/utilities/app.utilities';
 import {
 	DEBT_CURRENCY_CAD,
 	DEBT_CURRENCY_CNY,
-	DEBT_DIALOG_PLACEHOLDER_AMOUNT
+	DEBT_DIALOG_PLACEHOLDER_AMOUNT,
+	DEBT_ICON_LOCK,
+	DEBT_ICON_LOCK_OPEN
 } from '../../../common/constants';
 import {
 	DEBT_DIALOG_LABEL_ADD,
@@ -50,6 +52,8 @@ export class AddDebtDialogComponent {
 	protected readonly DEBT_DIALOG_LABEL_CANCEL = DEBT_DIALOG_LABEL_CANCEL;
 	protected readonly DEBT_DIALOG_LABEL_PERMANENT = DEBT_DIALOG_LABEL_PERMANENT;
 	protected readonly DEBT_DIALOG_LABEL_PERMANENT_DESC = DEBT_DIALOG_LABEL_PERMANENT_DESC;
+	protected readonly DEBT_ICON_LOCK = DEBT_ICON_LOCK;
+	protected readonly DEBT_ICON_LOCK_OPEN = DEBT_ICON_LOCK_OPEN;
 	protected readonly DEBT_DIALOG_LABEL_CURRENCY_CNY = DEBT_DIALOG_LABEL_CURRENCY_CNY;
 	protected readonly DEBT_DIALOG_LABEL_CURRENCY_CAD = DEBT_DIALOG_LABEL_CURRENCY_CAD;
 	protected readonly LABEL_NAME = LABEL_NAME;
@@ -67,7 +71,7 @@ export class AddDebtDialogComponent {
 	protected isEditMode = false;
 	protected visible = false;
 	protected name = '';
-	protected selectedCategoryKey = 'card';
+	protected selectedCategoryKey = DEBT_CATEGORY_DEFS[0].key;
 	protected amount = '';
 	protected dueDateModel: Date | null = null;
 	protected selectedCurrency = '';
@@ -112,7 +116,7 @@ export class AddDebtDialogComponent {
 		} else {
 			// Step 2 (add mode): Reset every field and seed due date 30 days out as a sensible default
 			this.name = '';
-			this.selectedCategoryKey = 'card';
+			this.selectedCategoryKey = DEBT_CATEGORY_DEFS[0].key;
 			this.amount = '';
 			this.dueDateModel = new Date(Date.now() + 30 * 86400000);
 			this.selectedCurrency = '';

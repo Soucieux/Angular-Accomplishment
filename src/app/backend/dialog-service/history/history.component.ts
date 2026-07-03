@@ -15,6 +15,7 @@ import {
 	HISTORY_MOVIE_ID_UNKNOWN,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
+	HISTORY_STATUS_SEARCH,
 	HISTORY_STYLE_ADDED,
 	HISTORY_STYLE_DELETED
 } from '../../../common/constants';
@@ -42,6 +43,9 @@ export class HistoryDialogComponent implements OnDestroy {
 	@Output() closed$ = new EventEmitter<void>();
 	protected readonly HISTORY_DIALOG_TITLE = HISTORY_DIALOG_TITLE;
 	protected readonly HISTORY_SUBTITLE = HISTORY_SUBTITLE;
+	protected readonly HISTORY_STATUS_SEARCH = HISTORY_STATUS_SEARCH;
+	protected readonly HISTORY_STATUS_ADDED = HISTORY_STATUS_ADDED;
+	protected readonly HISTORY_STATUS_DELETED = HISTORY_STATUS_DELETED;
 	protected visible: boolean = false;
 	protected entries$!: Observable<HistoryEntry[]>;
 	private revertDataCallback!: (movie: MovieItemVO) => Promise<void>;

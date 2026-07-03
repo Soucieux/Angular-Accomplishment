@@ -101,7 +101,14 @@ import {
 	RECIPE_BTN_ADD_INGREDIENT,
 	RECIPE_BTN_ADD_SUBPOINT,
 	RECIPE_BTN_ADD_STEP,
-	RECIPE_BADGE_EXAMPLE
+	RECIPE_BADGE_EXAMPLE,
+	RECIPE_TOOLTIP_REMOVE,
+	RECIPE_TOOLTIP_REMOVE_STEP,
+	RECIPE_TOOLTIP_MANAGE_TYPES,
+	RECIPE_TOOLTIP_DRAG_REORDER,
+	RECIPE_PLACEHOLDER_STEP,
+	RECIPE_PLACEHOLDER_SUBPOINT,
+	RECIPE_PLACEHOLDER_NOTES
 } from '../../common/locale/locale-strings';
 import {
 	BadgeTag,
@@ -184,6 +191,13 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected readonly RECIPE_BTN_ADD_SUBPOINT = RECIPE_BTN_ADD_SUBPOINT;
 	protected readonly RECIPE_BTN_ADD_STEP = RECIPE_BTN_ADD_STEP;
 	protected readonly RECIPE_BADGE_EXAMPLE = RECIPE_BADGE_EXAMPLE;
+	protected readonly RECIPE_TOOLTIP_REMOVE = RECIPE_TOOLTIP_REMOVE;
+	protected readonly RECIPE_TOOLTIP_REMOVE_STEP = RECIPE_TOOLTIP_REMOVE_STEP;
+	protected readonly RECIPE_TOOLTIP_MANAGE_TYPES = RECIPE_TOOLTIP_MANAGE_TYPES;
+	protected readonly RECIPE_TOOLTIP_DRAG_REORDER = RECIPE_TOOLTIP_DRAG_REORDER;
+	protected readonly RECIPE_PLACEHOLDER_STEP = RECIPE_PLACEHOLDER_STEP;
+	protected readonly RECIPE_PLACEHOLDER_SUBPOINT = RECIPE_PLACEHOLDER_SUBPOINT;
+	protected readonly RECIPE_PLACEHOLDER_NOTES = RECIPE_PLACEHOLDER_NOTES;
 	protected pageSize = RECIPE_PAGE_SIZE;
 
 	private recipesSub?: Subscription;
@@ -356,16 +370,13 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		document
 			.querySelectorAll<HTMLElement>('.chips-scroll')
 			.forEach((el) => Utilities.attachScrollAutoHide(el));
-		document
-			.querySelectorAll<HTMLElement>('.container-recipe')
-			.forEach((el) => Utilities.attachScrollAutoHide(el));
 
 		/* Step 2: Scroll the newly added ingredient row into view and focus its name textarea.
 		   Done here rather than in addEditorIngredient because the DOM row does not exist until
 		   after Angular has completed the current change-detection pass. */
 		if (this.pendingScrollToNewIngredient) {
 			this.pendingScrollToNewIngredient = false;
-			const rows = document.querySelectorAll<HTMLElement>(`.ing-row.${this.selectedEditorType}`);
+			const rows = document.querySelectorAll<HTMLElement>(`.ingredient-editor-row.${this.selectedEditorType}`);
 			const lastRow = rows[rows.length - 1];
 			if (lastRow) {
 				lastRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1011,7 +1022,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * PrimeNG fires onFocus before completeMethod, so the flag is always set
 	 * before filterUnits consumes it.
 	 */
-	protected onUnitFocus(): void {
+	protected markUnitFieldActive(): void {
 		this.unitFocused = true;
 	}
 
@@ -1142,7 +1153,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			this.servings = recipe.baseServings || 1;
 			this.ingredientsCollapsed = false;
 			this.transitionTo(RECIPE_VIEW_DETAIL);
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, MSG_SAVE_FAILED, error as Error);
 			this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, RECIPE_MSG_SAVE_FAILED_DETAIL);
 		} finally {

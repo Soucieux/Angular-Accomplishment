@@ -42,7 +42,9 @@ import {
 	RESONANCE_PLACEHOLDER_NAME,
 	RESONANCE_BTN_POST,
 	RESONANCE_EMPTY_TEXT,
-	RESONANCE_ARIA_DELETE
+	RESONANCE_ARIA_DELETE,
+	RESONANCE_MSG_OVER_LIMIT_PREFIX,
+	RESONANCE_MSG_OVER_LIMIT_SUFFIX
 } from '../../common/locale/locale-strings';
 import { LOG } from '../../common/app.logs';
 import { RESONANCE_GRADIENTS, QuoteRecord } from './resonance.model';
@@ -80,6 +82,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	protected readonly RESONANCE_BTN_POST = RESONANCE_BTN_POST;
 	protected readonly RESONANCE_EMPTY_TEXT = RESONANCE_EMPTY_TEXT;
 	protected readonly RESONANCE_ARIA_DELETE = RESONANCE_ARIA_DELETE;
+	protected readonly RESONANCE_MSG_OVER_LIMIT_PREFIX = RESONANCE_MSG_OVER_LIMIT_PREFIX;
+	protected readonly RESONANCE_MSG_OVER_LIMIT_SUFFIX = RESONANCE_MSG_OVER_LIMIT_SUFFIX;
 
 	protected quotes$!: Observable<QuoteRecord[]>;
 	protected newQuoteText = '';

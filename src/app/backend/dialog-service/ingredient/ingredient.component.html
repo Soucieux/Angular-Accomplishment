@@ -11,10 +11,10 @@
 	<div class="ingredient-type-body">
 		<div class="ingredient-type-counter" [class.at-cap]="!canAddMore()">
 			<span class="material-symbols-outlined">category</span>
-			{{ editingTypes.size }} / {{ RECIPE_EDITOR_TYPE_MAX }} selected
+			{{ editingTypes.size }} / {{ RECIPE_EDITOR_TYPE_MAX }} {{ RECIPE_EDITOR_TYPE_SELECTED }}
 		</div>
 		<p class="ingredient-type-hint">
-			Choose which ingredient types appear in the recipe editor. At least one must be selected.
+			{{ RECIPE_EDITOR_TYPE_HINT }}
 		</p>
 		<div class="ingredient-type-grid">
 			@for (tab of masterTabs; track tab.id) {

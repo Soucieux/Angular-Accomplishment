@@ -19,6 +19,7 @@
 }
 
 :host {
+	font-family: 'app-font';
 	display: contents;
 }
 

@@ -43,7 +43,7 @@
 							class="material-symbols-outlined tp-check"
 							(mousedown)="$event.stopPropagation()"
 							(click)="toggleTaskDone(item.id)">
-							{{ item.done ? 'check_circle' : 'radio_button_unchecked' }}
+							{{ item.done ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_UNCHECKED }}
 						</span>
 						@if (editingId() === item.id) {
 							<input
@@ -273,7 +273,7 @@
 								@if (b.task.source === TASK_SOURCE_REMINDER && !b.isShort) {
 									<div class="tp-block-remhead">
 										<span class="material-symbols-outlined">alarm</span>
-										<span class="tp-remhead-label">REMINDER · read-only</span>
+										<span class="tp-remhead-label">{{ TODAY_LABEL_REMINDER_READONLY }}</span>
 										<span class="tp-dur-pill">{{ b.durationLabel }}</span>
 									</div>
 								}

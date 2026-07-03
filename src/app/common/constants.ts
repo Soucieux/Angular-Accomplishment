@@ -48,6 +48,8 @@ export const DIALOG_ADD_ACCOUNT = 'add-account';
    History dialog constants
 ───────────────────────────────────────── */
 
+/** History-entry status when a rate-search is logged — appears in the history message text. */
+export const HISTORY_STATUS_SEARCH = 'search';
 /** History-entry status when a movie is added — appears in the history message text. */
 export const HISTORY_STATUS_ADDED = 'added';
 /** History-entry status when a movie is deleted — appears in the history message text. */
@@ -133,6 +135,8 @@ export const CLOUDBASE_ERROR_INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
 export const AUTH_LOG_SIGN_IN_FAILED = 'Error when signing in with email and password';
 export const AUTH_LOG_GOOGLE_SIGN_IN_FAILED = 'Error when signing in through Google';
 export const AUTH_LOG_SIGN_OUT_FAILED = 'Error when signing out current user';
+/** CloudBase behaviour-log event type queried for the last sign-in timestamp. */
+export const AUTH_BEHAVIOR_LOG_TYPE_LOGIN = 'LOGIN';
 
 /* ─────────────────────────────────────────
    Database collection names
@@ -161,79 +165,67 @@ export const DATABASE_VAULT = 'vault';
    Database service log messages
 ───────────────────────────────────────── */
 
-export const CLOUDBASE_LOG_MOVIE_LIST_FAILED = 'Error while retrieving movie list';
-export const CLOUDBASE_LOG_TEMP_URLS_FAILED = 'Error while getting temp file URLs';
-export const CLOUDBASE_LOG_DATE_CALC_UPDATED = 'Date calculator has been updated';
-export const CLOUDBASE_LOG_DATE_CALC_UPDATE_FAILED = 'Error while updating date calculator table';
-export const CLOUDBASE_LOG_MOVIE_RATE_UPDATE_FAILED = 'Error while updating movie rate';
-export const CLOUDBASE_LOG_MOVIE_GENRE_UPDATE_FAILED = 'Error while updating movie genre';
-export const CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED = 'Error while updating movie favourite';
-export const CLOUDBASE_LOG_STATS_UPDATE_FAILED = 'Error while updating statistics fields';
-export const CLOUDBASE_LOG_HISTORY_ADDED = 'New history entry has been added';
-export const CLOUDBASE_LOG_HISTORY_ADD_FAILED = 'Error while adding new history entry';
-export const CLOUDBASE_LOG_ACTIVITY_UPDATE_FAILED = 'Error while updating activity data';
-export const CLOUDBASE_LOG_USER_STAT_UPDATE_FAILED = 'User stat update failed';
-export const CLOUDBASE_LOG_USER_STATS_SEEDED = 'User stats seeded successfully';
-export const CLOUDBASE_LOG_USER_STATS_SEED_FAILED = 'Error while seeding user stats';
-export const CLOUDBASE_LOG_USER_STATS_MIGRATED = 'Legacy user stats migrated to users collection';
-export const CLOUDBASE_LOG_USER_STATS_MIGRATE_FAILED = 'Error while migrating legacy user stats';
-export const CLOUDBASE_LOG_MOVIE_GENRE_UPDATED = 'Movie genre has been updated';
-export const CLOUDBASE_LOG_MOVIE_STATS_UPDATED = 'Movie statistics have been updated';
-export const CLOUDBASE_LOG_MOVIE_FAVOURITE_UPDATED = 'Movie favourite tag has been updated';
-export const CLOUDBASE_LOG_TAURI_PREF_FAILED = 'Error reading Tauri notification preference';
-export const CLOUDBASE_LOG_MINIMIZE_PREF_FAILED = 'Error reading minimize-on-close preference';
-export const CLOUDBASE_LOG_LOCALE_PREF_FAILED = 'Error reading locale preference';
-export const CLOUDBASE_LOG_TODAY_ITEMS_FAILED = 'Error reading Today items backup';
-export const CLOUDBASE_LOG_MOVIE_ADDED = 'Movie added and statistics have been updated';
-export const CLOUDBASE_LOG_VISIT_INCREMENTED = 'Link visit count has been incremented';
-export const CLOUDBASE_LOG_RECORD_TABLE_UPDATED = 'Record updated on table';
-export const CLOUDBASE_LOG_TABLE_UPDATE_FAILED = 'Error while updating';
-export const CLOUDBASE_LOG_RECORD_REMOVED_FROM = 'Record has been removed from';
-export const CLOUDBASE_LOG_MOVIE_DOC_REMOVED = 'Movie document removed for';
-export const CLOUDBASE_LOG_COVER_REMOVED = 'Cover image removed for';
-export const CLOUDBASE_LOG_STATS_AFTER_REMOVE = 'Statistics updated after removing';
-export const CLOUDBASE_LOG_RECORD_REMOVE_FAILED = 'Error while removing a record from';
-export const CLOUDBASE_LOG_HAS_BEEN_UPDATED = 'has been updated';
-export const CLOUDBASE_LOG_RECORD_ADD_FAILED = 'Error while adding new record to';
-export const CLOUDBASE_LOG_VISIT_INCREMENT_FAILED = 'Error while incrementing visit count for link';
-export const CLOUDBASE_LOG_COVER_UPLOADED = 'Movie cover image uploaded successfully for';
-export const CLOUDBASE_LOG_FETCH_URL_ERROR = '/api/fetch-url error for';
-export const CLOUDBASE_LOG_PROXY_FETCH_FAILED = 'Error while proxying fetch for';
-export const FIREBASE_LOG_TABLE_RECORD_UPDATED = 'Table record has been updated';
-export const FIREBASE_LOG_DATE_CALC_UPDATE_FAILED = 'Error while updating date calculator table';
-export const FIREBASE_LOG_MOVIE_RATE_UPDATE_FAILED = 'Error while updating movie rate';
-export const FIREBASE_LOG_MOVIE_GENRE_UPDATED = 'Movie genre has been updated';
-export const FIREBASE_LOG_MOVIE_STATS_UPDATED = 'Movie statistics have been updated';
-export const FIREBASE_LOG_MOVIE_GENRE_UPDATE_FAILED = 'Error while updating movie genre';
-export const FIREBASE_LOG_MOVIE_FAVOURITE_UPDATED = 'Movie favourite tag has been updated';
-export const FIREBASE_LOG_MOVIE_FAVOURITE_UPDATE_FAILED = 'Error while updating movie favourite';
-export const FIREBASE_LOG_PATCH_NOTES_UPDATED = 'Patch notes record has been updated';
-export const FIREBASE_LOG_PATCH_NOTES_UPDATE_FAILED = 'Error while updating patch notes record';
-export const FIREBASE_LOG_STATS_UPDATE_FAILED = 'Error while updating statistics fields';
-export const FIREBASE_LOG_USER_STATS_UPDATE_FAILED = 'Error while updating user stats fields';
-export const FIREBASE_LOG_STAT_COUNT_UPDATE_FAILED = 'Error while updating stat count';
-export const FIREBASE_LOG_MILESTONE_WRITE_FAILED = 'Error while writing milestone';
-export const FIREBASE_LOG_ACTIVITY_APPEND_FAILED = 'Error while appending activity log';
-export const FIREBASE_LOG_RECORD_TABLE_UPDATED = 'Record updated on table';
-export const FIREBASE_LOG_TABLE_UPDATE_FAILED = 'Error while updating';
-export const FIREBASE_LOG_QUOTE_REMOVE_FAILED = 'Error while removing quote';
-export const FIREBASE_LOG_MOVIE_REMOVED = 'Movie removed and statistics have been updated';
-export const FIREBASE_LOG_RECORD_REMOVED_FROM = 'Record has been removed from';
-export const FIREBASE_LOG_RECORD_REMOVE_FAILED = 'Error while removing record from';
-export const FIREBASE_LOG_QUOTE_ADDED = 'New quote has been added';
-export const FIREBASE_LOG_QUOTE_ADD_FAILED = 'Error while adding quote';
-export const FIREBASE_LOG_MOVIE_ADDED = 'Movie added and statistics have been updated';
-export const FIREBASE_LOG_HISTORY_ADDED = 'New history entry has been added';
-export const FIREBASE_LOG_HISTORY_ADD_FAILED = 'Error while adding new history entry';
-export const FIREBASE_LOG_PATCH_NOTES_ADDED = 'New patch notes record has been added';
-export const FIREBASE_LOG_PATCH_NOTES_ADD_FAILED = 'Error while adding new patch notes record';
-export const FIREBASE_LOG_REMINDER_RECORD_ADD_FAILED = 'Error while adding new record for reminder table';
-export const FIREBASE_LOG_VAULT_ADD_FAILED = 'Error while adding new record for vault';
-export const FIREBASE_LOG_COVER_UPLOADED = 'Movie cover image uploaded';
-export const FIREBASE_LOG_REUSABLE_KEYS_RETRIEVED = 'Reusable keys retrieved';
-export const FIREBASE_LOG_REUSABLE_KEYS_GET_FAILED = 'Error while getting reusable keys';
-export const FIREBASE_LOG_REUSABLE_KEYS_UPDATED = 'Reusable keys have been updated';
-export const FIREBASE_LOG_REUSABLE_KEYS_SAVE_FAILED = 'Error while saving reusable keys';
+export const DB_LOG_MOVIE_LIST_FAILED = 'Error while retrieving movie list';
+export const DB_LOG_TEMP_URLS_FAILED = 'Error while getting temp file URLs';
+export const DB_LOG_DATE_CALC_UPDATED = 'Date calculator has been updated';
+export const DB_LOG_DATE_CALC_UPDATE_FAILED = 'Error while updating date calculator table';
+export const DB_LOG_MOVIE_RATE_UPDATE_FAILED = 'Error while updating movie rate';
+export const DB_LOG_MOVIE_GENRE_UPDATE_FAILED = 'Error while updating movie genre';
+export const DB_LOG_MOVIE_FAVOURITE_UPDATE_FAILED = 'Error while updating movie favourite';
+export const DB_LOG_STATS_UPDATE_FAILED = 'Error while updating statistics fields';
+export const DB_LOG_HISTORY_ADDED = 'New history entry has been added';
+export const DB_LOG_HISTORY_ADD_FAILED = 'Error while adding new history entry';
+export const DB_LOG_ACTIVITY_UPDATE_FAILED = 'Error while updating activity data';
+export const DB_LOG_USER_STAT_UPDATE_FAILED = 'User stat update failed';
+export const DB_LOG_USER_STATS_SEEDED = 'User stats seeded successfully';
+export const DB_LOG_USER_STATS_SEED_FAILED = 'Error while seeding user stats';
+export const DB_LOG_USER_STATS_MIGRATED = 'Legacy user stats migrated to users collection';
+export const DB_LOG_USER_STATS_MIGRATE_FAILED = 'Error while migrating legacy user stats';
+export const DB_LOG_MOVIE_GENRE_UPDATED = 'Movie genre has been updated';
+export const DB_LOG_MOVIE_STATS_UPDATED = 'Movie statistics have been updated';
+export const DB_LOG_MOVIE_FAVOURITE_UPDATED = 'Movie favourite tag has been updated';
+export const DB_LOG_TAURI_PREF_FAILED = 'Error reading Tauri notification preference';
+export const DB_LOG_MINIMIZE_PREF_FAILED = 'Error reading minimize-on-close preference';
+export const DB_LOG_LOCALE_PREF_FAILED = 'Error reading locale preference';
+export const DB_LOG_TODAY_ITEMS_FAILED = 'Error reading Today items backup';
+export const DB_LOG_MOVIE_ADDED = 'Movie added and statistics have been updated';
+export const DB_LOG_VISIT_INCREMENTED = 'Link visit count has been incremented';
+export const DB_LOG_RECORD_TABLE_UPDATED = 'Record updated on table';
+export const DB_LOG_TABLE_UPDATE_FAILED = 'Error while updating';
+export const DB_LOG_RECORD_REMOVED_FROM = 'Record has been removed from';
+export const DB_LOG_MOVIE_DOC_REMOVED = 'Movie document removed for';
+export const DB_LOG_COVER_REMOVED = 'Cover image removed for';
+export const DB_LOG_STATS_AFTER_REMOVE = 'Statistics updated after removing';
+export const DB_LOG_RECORD_REMOVE_FAILED = 'Error while removing a record from';
+export const DB_LOG_HAS_BEEN_UPDATED = 'has been updated';
+export const DB_LOG_RECORD_ADD_FAILED = 'Error while adding new record to';
+export const DB_LOG_VISIT_INCREMENT_FAILED = 'Error while incrementing visit count for link';
+export const DB_LOG_COVER_UPLOADED = 'Movie cover image uploaded successfully for';
+export const DB_LOG_FETCH_URL_ERROR = '/api/fetch-url error for';
+export const DB_LOG_PROXY_FETCH_FAILED = 'Error while proxying fetch for';
+export const DB_LOG_TABLE_RECORD_UPDATED = 'Table record has been updated';
+export const DB_LOG_PATCH_NOTES_UPDATED = 'Patch notes record has been updated';
+export const DB_LOG_PATCH_NOTES_UPDATE_FAILED = 'Error while updating patch notes record';
+export const DB_LOG_USER_STATS_UPDATE_FAILED = 'Error while updating user stats fields';
+export const DB_LOG_STAT_COUNT_UPDATE_FAILED = 'Error while updating stat count';
+export const DB_LOG_MILESTONE_WRITE_FAILED = 'Error while writing milestone';
+export const DB_LOG_ACTIVITY_APPEND_FAILED = 'Error while appending activity log';
+export const DB_LOG_QUOTE_REMOVE_FAILED = 'Error while removing quote';
+export const DB_LOG_MOVIE_REMOVED = 'Movie removed and statistics have been updated';
+export const DB_LOG_QUOTE_ADDED = 'New quote has been added';
+export const DB_LOG_QUOTE_ADD_FAILED = 'Error while adding quote';
+export const DB_LOG_PATCH_NOTES_ADDED = 'New patch notes record has been added';
+export const DB_LOG_PATCH_NOTES_ADD_FAILED = 'Error while adding new patch notes record';
+export const DB_LOG_REMINDER_RECORD_ADD_FAILED = 'Error while adding new record for reminder table';
+export const DB_LOG_VAULT_ADD_FAILED = 'Error while adding new record for vault';
+export const DB_LOG_REUSABLE_KEYS_RETRIEVED = 'Reusable keys retrieved';
+export const DB_LOG_REUSABLE_KEYS_GET_FAILED = 'Error while getting reusable keys';
+export const DB_LOG_REUSABLE_KEYS_UPDATED = 'Reusable keys have been updated';
+export const DB_LOG_REUSABLE_KEYS_SAVE_FAILED = 'Error while saving reusable keys';
+/** Error thrown when the movie collection is empty during a duplicate-key scan. */
+export const DB_MOVIE_LIST_EMPTY = 'Movie list empty';
+/** MIME type used when uploading movie cover images to storage. */
+export const MIME_IMAGE_JPEG = 'image/jpeg';
 
 /* ─────────────────────────────────────────
    Shared UI constants
@@ -460,7 +452,7 @@ export const HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_LIGHT = 'rgba(255,255,255,0.9)'
 export const HOME_WEEK_AGENDA_COLOR_DAY_SELECTED_DARK = 'rgba(255,255,255,0.14)';
 export const HOME_WEEK_AGENDA_COLOR_DAY_DEFAULT_LIGHT = 'rgba(255,255,255,0.4)';
 export const HOME_WEEK_AGENDA_COLOR_DAY_DEFAULT_DARK = 'rgba(255,255,255,0.05)';
-export const HOME_WEEK_AGENDA_GRADIENT_TODAY = 'var(--grad-brand)';
+export const HOME_WEEK_AGENDA_GRADIENT_TODAY = 'var(--gradient-brand)';
 export const HOME_WEEK_AGENDA_COLOR_TODAY_TEXT = '#fff';
 export const HOME_WEEK_AGENDA_BORDER_COLOR_LIGHT = 'rgba(213,51,105,0.4)';
 export const HOME_WEEK_AGENDA_BORDER_COLOR_DARK = 'rgba(255,255,255,0.3)';
@@ -636,6 +628,11 @@ export const PORTAL_LOG_CATEGORY_DELETE_FAILED = 'Failed to delete category:';
 /** Type value for a Messages item in the reminder upcoming list. */
 export const REMINDER_ITEM_MESSAGE = 'message';
 
+/** Cloud Function action payload value for deleting a shared reminder. */
+export const SHARED_REMINDER_ACTION_DELETE = 'delete';
+/** Cloud Function action payload value for completing a shared reminder. */
+export const SHARED_REMINDER_ACTION_COMPLETE = 'complete';
+
 /** CloudBase content entry key for the reminder message text. */
 export const REMINDER_VALUE_KEY_TEXT = 'text';
 /** CloudBase content entry key for the reminder date. */
@@ -742,6 +739,10 @@ export const DEBT_DUE_CLASS_OVERDUE = 'is-over';
 export const DEBT_DUE_CLASS_SOON = 'is-soon';
 export const DEBT_DUE_ICON_OVERDUE = 'error';
 export const DEBT_DUE_ICON_DEFAULT = 'event';
+/** Icon shown when a debt is marked permanent. */
+export const DEBT_ICON_LOCK = 'lock';
+/** Icon shown when a debt is not permanent. */
+export const DEBT_ICON_LOCK_OPEN = 'lock_open';
 
 /* ─────────────────────────────────────────
    Patch Notes page constants
@@ -749,6 +750,15 @@ export const DEBT_DUE_ICON_DEFAULT = 'event';
 
 export const PATCH_VIEW_PATCH = 'patch';
 export const PATCH_VIEW_RELEASE = 'release';
+
+/** CSS class applied to a resolved-status severity tag. */
+export const PATCH_CLASS_TAG_SUCCESS = 'tag-debug-success';
+/** CSS class for a heatmap cell in a future month. */
+export const PATCH_CLASS_HEATMAP_FUTURE = 'future';
+/** CSS class prefix for a heatmap cell's intensity band. */
+export const PATCH_CLASS_HEATMAP_INTENSITY_PREFIX = 'intensity-';
+/** CSS class marking a heatmap cell that has activity. */
+export const PATCH_CLASS_HEATMAP_HAS_DATA = 'has-data';
 
 /* ─────────────────────────────────────────
    Context menu
@@ -865,3 +875,32 @@ export const VAULT_RELATION_MANUAL = 'manually linked';
 export const VAULT_VIEW_GRAPH = 'graph';
 /** View discriminator for the account list view. */
 export const VAULT_VIEW_LIST = 'list';
+
+/** Connection-chip dot shape class for an email node. */
+export const VAULT_DOT_CLASS_EMAIL = 'vault-dot-email';
+/** Connection-chip dot shape class for a phone node. */
+export const VAULT_DOT_CLASS_PHONE = 'vault-dot-phone';
+/** Connection-chip dot shape class for a link node. */
+export const VAULT_DOT_CLASS_LINK = 'vault-dot-link';
+/** Connection-chip dot shape class for an account node. */
+export const VAULT_DOT_CLASS_ACCOUNT = 'vault-dot-account';
+
+/* ─────────────────────────────────────────
+   About page constants
+───────────────────────────────────────── */
+
+/** Status chip label at the top of the About page. */
+export const ABOUT_CHIP_LABEL = 'About · last updated May 2026';
+/** Leading word of the About headline, before the highlighted pill. */
+export const ABOUT_H1_LEAD = 'A';
+/** Highlighted pill text in the About headline. */
+export const ABOUT_H1_PILL = 'Mind Vault';
+/** Trailing text of the About headline, after the highlighted pill. */
+export const ABOUT_H1_TAIL = ', Kept In Public.';
+/** Intro paragraph describing the purpose of the site. */
+export const ABOUT_INTRO =
+	"Welcome to my personal corner of the web. This space serves as my mind vault: a repository for the films that stay with me, a compass for my most important dates, my life task-engine, and a roadmap of what's coming next. Stay a while — there's always more being built here, with new features landing and growing every single week.";
+/** Heading above the career and education timeline. */
+export const ABOUT_SECTION_TITLE = 'The Long Way Here';
+/** Suffix appended after the milestone count in the section meta. */
+export const ABOUT_MILESTONES_SUFFIX = 'milestones';

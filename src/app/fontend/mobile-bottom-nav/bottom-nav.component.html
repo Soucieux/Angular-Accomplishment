@@ -44,7 +44,7 @@
 	[class.show]="accountOpen()"
 	role="dialog"
 	aria-modal="true"
-	aria-label="Account"
+	[attr.aria-label]="NAV_ARIA_ACCOUNT"
 	[cdkTrapFocus]="accountOpen()"
 	[cdkTrapFocusAutoCapture]="accountOpen()">
 	@if (signedIn) {
@@ -107,7 +107,7 @@
 </div>
 
 <div class="dock-wrap">
-	<div class="dock" role="tablist" aria-label="Primary navigation">
+	<div class="dock" role="tablist" [attr.aria-label]="NAV_ARIA_PRIMARY">
 		@for (navItem of primary; track navItem.id) {
 			<button
 				class="item"
@@ -148,7 +148,7 @@
 			[class.open]="gridOpen()"
 			aria-haspopup="dialog"
 			[attr.aria-expanded]="gridOpen()"
-			[attr.aria-label]="gridOpen() ? 'Close all sections' : 'Show all sections'"
+			[attr.aria-label]="gridOpen() ? NAV_ARIA_CLOSE_SECTIONS : NAV_ARIA_SHOW_SECTIONS"
 			(click)="toggleGrid()">
 			<span class="material-symbols-outlined" style="color: var(--vc-rose); font-size: 25px">{{
 				gridOpen() ? 'close' : 'grid_view'
@@ -163,7 +163,7 @@
 			[class.open]="accountOpen()"
 			aria-haspopup="dialog"
 			[attr.aria-expanded]="accountOpen()"
-			[attr.aria-label]="signedIn ? 'Account: ' + userName : 'Sign in'"
+			[attr.aria-label]="signedIn ? NAV_ARIA_ACCOUNT_PREFIX + userName : NAV_LABEL_SIGN_IN"
 			(click)="toggleAccount()">
 			@if (signedIn) {
 				<span class="avatar" [style.background]="NAV_AVATAR_GRADIENT"

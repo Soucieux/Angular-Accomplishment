@@ -655,7 +655,7 @@
 		<!-- ── Paginator ──────────────────────────────────────────────── -->
 		<div class="rm-paginator">
 			<div class="rm-paginator-info">
-				<b>{{ rangeStart }}–{{ rangeEnd }}</b> of {{ filteredItems.length }}
+				<b>{{ rangeStart }}–{{ rangeEnd }}</b> {{ DEBT_LABEL_OF }} {{ filteredItems.length }}
 			</div>
 			<div class="rm-paginator-controls">
 				<button class="rm-page-button" [disabled]="page === 0" (click)="prevPage()">

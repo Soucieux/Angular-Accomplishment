@@ -30,7 +30,8 @@ import {
 	CN,
 	AUTH_LOG_SIGN_IN_FAILED,
 	AUTH_LOG_GOOGLE_SIGN_IN_FAILED,
-	AUTH_LOG_SIGN_OUT_FAILED
+	AUTH_LOG_SIGN_OUT_FAILED,
+	AUTH_BEHAVIOR_LOG_TYPE_LOGIN
 } from '../../common/constants';
 import { AccountRateLimitedError } from '../../common/error/account-rate-limited.error';
 import { EmailNotVerifiedError } from '../../common/error/email-not-verified.error';
@@ -41,7 +42,7 @@ import { UnexpectedError } from '../../common/error/unexpected.error';
 import { UserNotFoundError } from '../../common/error/user-not-found.error';
 import { WrongOldPasswordError } from '../../common/error/wrong-old-password.error';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
-import { WrongVerificationCodeError } from '../../common/error/wrong-verification-code';
+import { WrongVerificationCodeError } from '../../common/error/wrong-verification-code.error';
 
 @Injectable({
 	providedIn: 'root'
@@ -311,7 +312,7 @@ export class AuthService {
 	public async getLastLoginTimestamp(): Promise<string> {
 		try {
 			// Step 1: Fetch the most recent LOGIN event from the CloudBase behaviour log
-			const res = await this.cloudbaseAuth.getUserBehaviorLog({ type: 'LOGIN', limit: 1 });
+			const res = await this.cloudbaseAuth.getUserBehaviorLog({ type: AUTH_BEHAVIOR_LOG_TYPE_LOGIN, limit: 1 });
 
 			/* Step 2: Normalise the response shape — CloudBase returns either { data: { list: [] } }
 			   or a flat array depending on the SDK version, so both are handled defensively. */

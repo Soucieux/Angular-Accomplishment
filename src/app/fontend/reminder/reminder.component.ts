@@ -89,6 +89,7 @@ import {
 	LABEL_ALL,
 	LABEL_PERSONAL,
 	NAV_LABEL_REMINDER,
+	DEBT_LABEL_OF,
 	reminderTagLabel
 } from '../../common/locale/locale-strings';
 import {
@@ -174,6 +175,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_SHARE_LABEL = REMINDER_SHARE_LABEL;
 	protected readonly REMINDER_SHARE_TOOLTIP_PENDING = REMINDER_SHARE_TOOLTIP_PENDING;
 	protected readonly NAV_LABEL_REMINDER = NAV_LABEL_REMINDER;
+	protected readonly DEBT_LABEL_OF = DEBT_LABEL_OF;
 	private readonly categoryColorMap = REMINDER_CATEGORY_COLOR_MAP;
 	private readonly baseCategorySet = new Set<string>(REMINDER_KNOWN_CATEGORIES);
 	private gridResizeObserver?: ResizeObserver;
@@ -315,248 +317,6 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		Object.values(this.saveIndicatorTimeouts).forEach(clearTimeout);
 		this.dialogComponentContainer?.clear();
 		LOG.info(this.className, COMPONENT_DESTROY);
-	}
-
-	// ── DB helper and permission check methods ───────────────────────────────
-
-	/**
-	 * Gets the user id of the current item.
-	 *
-	 * @param entryKey - The CloudBase document key identifying the entry.
-	 * @returns The owner's CloudBase open id, or an empty string when not found.
-	 */
-	private getOpenId(entryKey: string): string {
-		return this.items.find((item) => item.key === entryKey)?._openid ?? '';
-	}
-
-	/**
-	 * Front-end edit guard for a reminder entry. Owners (and admins) may always edit; a connected
-	 * account may edit a shared item received from a linked owner — getSharedReminders only surfaces
-	 * shared items from live links, so isFromOtherMember implies a connection, and the admin Cloud
-	 * Function re-verifies it server-side on write. Everything else shows the permission-denied dialog.
-	 *
-	 * @param entryKey - The document key of the entry being edited.
-	 * @returns True when the current user may edit the entry.
-	 */
-	private ensureEditPermission(entryKey: string): boolean {
-		const item = this.items.find((candidate) => candidate.key === entryKey);
-		if (item?.isFromOtherMember) return true;
-		return this.dialogService.ensurePermission(this.dialogComponentContainer, this.getOpenId(entryKey));
-	}
-
-	/**
-	 * Shows a save-confirmation indicator and automatically hides it after one second.
-	 * If a previous timeout is still active, it is cleared and restarted to avoid
-	 * overlapping triggers.
-	 */
-	private triggerSaveIndicator(): void {
-		this.saveIndicator = true;
-		this.cdr.detectChanges();
-
-		/* Clear any previous timeout before setting a new one — rapid successive
-		   saves should restart the indicator timer rather than flash on/off. */
-		if (this.saveIndicatorTimeouts[DATABASE_REMINDER]) {
-			clearTimeout(this.saveIndicatorTimeouts[DATABASE_REMINDER]);
-		}
-
-		this.saveIndicatorTimeouts[DATABASE_REMINDER] = setTimeout(() => {
-			this.saveIndicator = false;
-			// setTimeout runs outside Angular's zone — detectChanges required to hide the indicator.
-			this.cdr.detectChanges();
-		}, 1000);
-	}
-
-	/**
-	 * Writes the current upcoming messages (items with a date) and total pin count
-	 * to the statistics collection, keeping the home-page reminder widget current.
-	 */
-	private updateUpcomingToStatistics(): void {
-		const upcoming = this.items
-			.filter((item) => !!item.date)
-			.map((item) => ({
-				type: REMINDER_ITEM_MESSAGE,
-				name: item.text,
-				date: item.date,
-				link: item.link ?? ''
-			}));
-		this.databaseService
-			.updateUserStatsFields({
-				[STATS_FIELD_REMINDER_UPCOMING]: upcoming.slice(0, STATS_CAP_ACTIVITY_LOG),
-				[STATS_FIELD_TOTAL_REMINDERS]: this.items.length
-			})
-			.catch(() => {});
-	}
-
-	/**
-	 * Removes any selected tag from the filter that no longer exist in the current item set.
-	 */
-	private removeStaleTag(): void {
-		const remaining = new Set(this.items.map((item) => item.tag));
-		this.tagFilter = new Set([...this.tagFilter].filter((tag) => remaining.has(tag)));
-	}
-
-	/**
-	 * Computes the auto-filled end time by adding 60 minutes to the given start time.
-	 * Caps the result at "24:00" when the computed time would exceed midnight.
-	 *
-	 * @param startTime - The start time string in "HH:mm" format.
-	 * @returns The computed end time string in "HH:mm" format.
-	 */
-	private computeEndTimeFromStart(startTime: string): string {
-		const totalMinutes = Utilities.parseTimeToMinutes(startTime) + 60;
-		if (totalMinutes >= 24 * 60) return '24:00';
-		return `${Utilities.padTwoDigits(Math.floor(totalMinutes / 60))}:${Utilities.padTwoDigits(totalMinutes % 60)}`;
-	}
-
-	/**
-	 * Restores one single value on a view-model item from the latest database snapshot.
-	 *
-	 * @param item - The view-model item whose single value will be restored.
-	 * @param originalRecord - The raw DB snapshot record to restore from.
-	 * @param valueKey - The value key identifying which property inside the entry to restore.
-	 */
-	private rollbackSingleValue(
-		item: ReminderItem,
-		originalRecord: ReminderDbRecord,
-		valueKey: ReminderValueKey
-	): void {
-		switch (valueKey) {
-			case REMINDER_VALUE_KEY_TEXT:
-				item.text = originalRecord.text ?? '';
-				break;
-			case REMINDER_VALUE_KEY_DATE:
-				item.date =
-					originalRecord.date != null ? Utilities.coerceDateToString(originalRecord.date) : null;
-				break;
-			case REMINDER_VALUE_KEY_LINK:
-				item.link = originalRecord.link ?? null;
-				break;
-			case REMINDER_VALUE_KEY_TAG:
-				item.tag = originalRecord.tag ?? '';
-				break;
-			case REMINDER_VALUE_KEY_START_TIME:
-				item.startTime = originalRecord.startTime ?? null;
-				break;
-			case REMINDER_VALUE_KEY_END_TIME:
-				item.endTime = originalRecord.endTime ?? null;
-				break;
-		}
-	}
-
-	/**
-	 * Persists a single-value change for an existing item to CloudBase,
-	 * triggers the save indicator, and appends to the activity log.
-	 * Rolls back the local single value to its original snapshot value if the
-	 * server rejects the write with a permission error.
-	 *
-	 * {@link onCardTextUpdate} - Persists text edits from the card input.
-	 * {@link onPopoverDateUpdate} - Persists date changes from the popover date-picker.
-	 * {@link onPopoverLinkUpdate} - Persists link changes from the popover link input.
-	 * {@link onTagUpdate} - Persists tag array updates for existing cards.
-	 * {@link removeExistingCardTag} - Persists tag removal for existing cards.
-	 * {@link clearDate} - Clears the date (and cascades to clear time) on a pin.
-	 * {@link clearLink} - Clears the link value on a pin.
-	 * {@link clearTime} - Clears both start and end time on a pin.
-	 * {@link onStartTimeSelect} - Persists start time (and auto-filled end time) for an existing pin.
-	 * {@link onEndTimeSelect} - Persists the adjusted end time for an existing pin.
-	 *
-	 * @param entryKey - The CloudBase document key identifying which entry to update.
-	 * @param valueKey - The value key identifying which property inside the entry to update (e.g. REMINDER_VALUE_KEY_TEXT).
-	 * @param singleValue - The new value to store.
-	 */
-	private async updateTableSingleValue(
-		entryKey: string,
-		valueKey: ReminderValueKey,
-		singleValue: string | string[] | null
-	): Promise<void> {
-		const item = this.items.find((candidate) => candidate.key === entryKey);
-		try {
-			// Step 1: Persist — a shared item from a connection routes through the admin Cloud Function
-			// (the own-only rule blocks a direct write to another account's document).
-			if (item?.isFromOtherMember) {
-				const result = await (this.databaseService as CloudbaseService).updateSharedReminderField(
-					entryKey,
-					valueKey,
-					singleValue,
-					item.text ?? ''
-				);
-				if (!result.success) {
-					const originalRecord = this.originalItems.find((candidate) => candidate.key === entryKey);
-					if (originalRecord) this.rollbackSingleValue(item, originalRecord, valueKey);
-					this.dialogService.showPermissionError(this.dialogComponentContainer);
-					return;
-				}
-			} else {
-				await this.databaseService.updateReminderTable(
-					entryKey,
-					valueKey,
-					singleValue,
-					item?.text ?? '',
-					item?.isShared ?? false
-				);
-			}
-
-			// Step 2: Flash the save indicator
-			this.triggerSaveIndicator();
-		} catch (error) {
-			// Roll back the local single value if the session expired, then show error dialog
-			if (error instanceof SessionExpiredError) {
-				const originalRecord = this.originalItems.find((candidate) => candidate.key === entryKey);
-				if (item && originalRecord) {
-					this.rollbackSingleValue(item, originalRecord, valueKey);
-				}
-			}
-			this.dialogService.handleError(this.dialogComponentContainer, error);
-		}
-	}
-
-	/**
-	 * Removes an entry from CloudBase and appends the deletion to the activity log.
-	 *
-	 * @param entryKey - The CloudBase document key identifying the entry to remove.
-	 */
-	private async removeRecordFromDatabase(entryKey: string): Promise<void> {
-		const item = this.items.find((candidate) => candidate.key === entryKey);
-		try {
-			// A shared item from a connection routes through the admin Cloud Function (own-only rule).
-			if (item?.isFromOtherMember) {
-				const result = await (this.databaseService as CloudbaseService).removeSharedReminder(
-					entryKey,
-					item.text ?? ''
-				);
-				if (!result.success) {
-					this.dialogService.showPermissionError(this.dialogComponentContainer);
-					return;
-				}
-			} else {
-				await this.databaseService.removeRecordFromReminderTable(
-					entryKey,
-					item?.text ?? '',
-					item?.isShared ?? false
-				);
-			}
-			this.triggerSaveIndicator();
-		} catch (error) {
-			this.dialogService.handleError(this.dialogComponentContainer, error);
-		}
-	}
-
-	/**
-	 * Resets all new-item form fields to their empty state.
-	 */
-	private resetNewItem(): void {
-		this.newItem = {
-			text: '',
-			date: null,
-			link: '',
-			tag: LABEL_PERSONAL,
-			startTime: null,
-			endTime: null,
-			isShared: false
-		};
-		this.editingStartTime = null;
-		this.editingEndTime = null;
-		if (this.tagEditSession?.isNewItem) this.tagEditSession = null;
 	}
 
 	// ── category, done state, and due-soon helpers ───────────────────────────
@@ -818,9 +578,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Hides the shared date-or-link popover.
 	 */
 	protected closePopover(): void {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(this.editingDatepicker as any)?.hideOverlay();
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(this.newItemDatepicker as any)?.hideOverlay();
 		this.dateOrLinkPopover.hide();
 	}
@@ -993,6 +751,248 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		];
 	}
 
+	// ── DB helper and permission check methods ───────────────────────────────
+
+	/**
+	 * Gets the user id of the current item.
+	 *
+	 * @param entryKey - The CloudBase document key identifying the entry.
+	 * @returns The owner's CloudBase open id, or an empty string when not found.
+	 */
+	private getOpenId(entryKey: string): string {
+		return this.items.find((item) => item.key === entryKey)?._openid ?? '';
+	}
+
+	/**
+	 * Front-end edit guard for a reminder entry. Owners (and admins) may always edit; a connected
+	 * account may edit a shared item received from a linked owner — getSharedReminders only surfaces
+	 * shared items from live links, so isFromOtherMember implies a connection, and the admin Cloud
+	 * Function re-verifies it server-side on write. Everything else shows the permission-denied dialog.
+	 *
+	 * @param entryKey - The document key of the entry being edited.
+	 * @returns True when the current user may edit the entry.
+	 */
+	private ensureEditPermission(entryKey: string): boolean {
+		const item = this.items.find((candidate) => candidate.key === entryKey);
+		if (item?.isFromOtherMember) return true;
+		return this.dialogService.ensurePermission(this.dialogComponentContainer, this.getOpenId(entryKey));
+	}
+
+	/**
+	 * Shows a save-confirmation indicator and automatically hides it after one second.
+	 * If a previous timeout is still active, it is cleared and restarted to avoid
+	 * overlapping triggers.
+	 */
+	private triggerSaveIndicator(): void {
+		this.saveIndicator = true;
+		this.cdr.detectChanges();
+
+		/* Clear any previous timeout before setting a new one — rapid successive
+		   saves should restart the indicator timer rather than flash on/off. */
+		if (this.saveIndicatorTimeouts[DATABASE_REMINDER]) {
+			clearTimeout(this.saveIndicatorTimeouts[DATABASE_REMINDER]);
+		}
+
+		this.saveIndicatorTimeouts[DATABASE_REMINDER] = setTimeout(() => {
+			this.saveIndicator = false;
+			// setTimeout runs outside Angular's zone — detectChanges required to hide the indicator.
+			this.cdr.detectChanges();
+		}, 1000);
+	}
+
+	/**
+	 * Writes the current upcoming messages (items with a date) and total pin count
+	 * to the statistics collection, keeping the home-page reminder widget current.
+	 */
+	private updateUpcomingToStatistics(): void {
+		const upcoming = this.items
+			.filter((item) => !!item.date)
+			.map((item) => ({
+				type: REMINDER_ITEM_MESSAGE,
+				name: item.text,
+				date: item.date,
+				link: item.link ?? ''
+			}));
+		this.databaseService
+			.updateUserStatsFields({
+				[STATS_FIELD_REMINDER_UPCOMING]: upcoming.slice(0, STATS_CAP_ACTIVITY_LOG),
+				[STATS_FIELD_TOTAL_REMINDERS]: this.items.length
+			})
+			.catch(() => {});
+	}
+
+	/**
+	 * Removes any selected tag from the filter that no longer exist in the current item set.
+	 */
+	private removeStaleTag(): void {
+		const remaining = new Set(this.items.map((item) => item.tag));
+		this.tagFilter = new Set([...this.tagFilter].filter((tag) => remaining.has(tag)));
+	}
+
+	/**
+	 * Computes the auto-filled end time by adding 60 minutes to the given start time.
+	 * Caps the result at "24:00" when the computed time would exceed midnight.
+	 *
+	 * @param startTime - The start time string in "HH:mm" format.
+	 * @returns The computed end time string in "HH:mm" format.
+	 */
+	private computeEndTimeFromStart(startTime: string): string {
+		const totalMinutes = Utilities.parseTimeToMinutes(startTime) + 60;
+		if (totalMinutes >= 24 * 60) return '24:00';
+		return `${Utilities.padTwoDigits(Math.floor(totalMinutes / 60))}:${Utilities.padTwoDigits(totalMinutes % 60)}`;
+	}
+
+	/**
+	 * Restores one single value on a view-model item from the latest database snapshot.
+	 *
+	 * @param item - The view-model item whose single value will be restored.
+	 * @param originalRecord - The raw DB snapshot record to restore from.
+	 * @param valueKey - The value key identifying which property inside the entry to restore.
+	 */
+	private rollbackSingleValue(
+		item: ReminderItem,
+		originalRecord: ReminderDbRecord,
+		valueKey: ReminderValueKey
+	): void {
+		switch (valueKey) {
+			case REMINDER_VALUE_KEY_TEXT:
+				item.text = originalRecord.text ?? '';
+				break;
+			case REMINDER_VALUE_KEY_DATE:
+				item.date =
+					originalRecord.date != null ? Utilities.coerceDateToString(originalRecord.date) : null;
+				break;
+			case REMINDER_VALUE_KEY_LINK:
+				item.link = originalRecord.link ?? null;
+				break;
+			case REMINDER_VALUE_KEY_TAG:
+				item.tag = originalRecord.tag ?? '';
+				break;
+			case REMINDER_VALUE_KEY_START_TIME:
+				item.startTime = originalRecord.startTime ?? null;
+				break;
+			case REMINDER_VALUE_KEY_END_TIME:
+				item.endTime = originalRecord.endTime ?? null;
+				break;
+		}
+	}
+
+	/**
+	 * Persists a single-value change for an existing item to CloudBase,
+	 * triggers the save indicator, and appends to the activity log.
+	 * Rolls back the local single value to its original snapshot value if the
+	 * server rejects the write with a permission error.
+	 *
+	 * {@link onCardTextUpdate} - Persists text edits from the card input.
+	 * {@link onPopoverDateUpdate} - Persists date changes from the popover date-picker.
+	 * {@link onPopoverLinkUpdate} - Persists link changes from the popover link input.
+	 * {@link onTagUpdate} - Persists tag array updates for existing cards.
+	 * {@link removeExistingCardTag} - Persists tag removal for existing cards.
+	 * {@link clearDate} - Clears the date (and cascades to clear time) on a pin.
+	 * {@link clearLink} - Clears the link value on a pin.
+	 * {@link clearTime} - Clears both start and end time on a pin.
+	 * {@link onStartTimeSelect} - Persists start time (and auto-filled end time) for an existing pin.
+	 * {@link onEndTimeSelect} - Persists the adjusted end time for an existing pin.
+	 *
+	 * @param entryKey - The CloudBase document key identifying which entry to update.
+	 * @param valueKey - The value key identifying which property inside the entry to update (e.g. REMINDER_VALUE_KEY_TEXT).
+	 * @param singleValue - The new value to store.
+	 */
+	private async updateTableSingleValue(
+		entryKey: string,
+		valueKey: ReminderValueKey,
+		singleValue: string | string[] | null
+	): Promise<void> {
+		const item = this.items.find((candidate) => candidate.key === entryKey);
+		try {
+			// Step 1: Persist — a shared item from a connection routes through the admin Cloud Function
+			// (the own-only rule blocks a direct write to another account's document).
+			if (item?.isFromOtherMember) {
+				const result = await (this.databaseService as CloudbaseService).updateSharedReminderField(
+					entryKey,
+					valueKey,
+					singleValue,
+					item.text ?? ''
+				);
+				if (!result.success) {
+					const originalRecord = this.originalItems.find((candidate) => candidate.key === entryKey);
+					if (originalRecord) this.rollbackSingleValue(item, originalRecord, valueKey);
+					this.dialogService.showPermissionError(this.dialogComponentContainer);
+					return;
+				}
+			} else {
+				await this.databaseService.updateReminderTable(
+					entryKey,
+					valueKey,
+					singleValue,
+					item?.text ?? '',
+					item?.isShared ?? false
+				);
+			}
+
+			// Step 2: Flash the save indicator
+			this.triggerSaveIndicator();
+		} catch (error) {
+			// Roll back the local single value if the session expired, then show error dialog
+			if (error instanceof SessionExpiredError) {
+				const originalRecord = this.originalItems.find((candidate) => candidate.key === entryKey);
+				if (item && originalRecord) {
+					this.rollbackSingleValue(item, originalRecord, valueKey);
+				}
+			}
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+		}
+	}
+
+	/**
+	 * Removes an entry from CloudBase and appends the deletion to the activity log.
+	 *
+	 * @param entryKey - The CloudBase document key identifying the entry to remove.
+	 */
+	private async removeRecordFromDatabase(entryKey: string): Promise<void> {
+		const item = this.items.find((candidate) => candidate.key === entryKey);
+		try {
+			// A shared item from a connection routes through the admin Cloud Function (own-only rule).
+			if (item?.isFromOtherMember) {
+				const result = await (this.databaseService as CloudbaseService).removeSharedReminder(
+					entryKey,
+					item.text ?? ''
+				);
+				if (!result.success) {
+					this.dialogService.showPermissionError(this.dialogComponentContainer);
+					return;
+				}
+			} else {
+				await this.databaseService.removeRecordFromReminderTable(
+					entryKey,
+					item?.text ?? '',
+					item?.isShared ?? false
+				);
+			}
+			this.triggerSaveIndicator();
+		} catch (error) {
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+		}
+	}
+
+	/**
+	 * Resets all new-item form fields to their empty state.
+	 */
+	private resetNewItem(): void {
+		this.newItem = {
+			text: '',
+			date: null,
+			link: '',
+			tag: LABEL_PERSONAL,
+			startTime: null,
+			endTime: null,
+			isShared: false
+		};
+		this.editingStartTime = null;
+		this.editingEndTime = null;
+		if (this.tagEditSession?.isNewItem) this.tagEditSession = null;
+	}
+
 	// ── global index display helpers for paged items ─────────────────────────
 
 	/**
@@ -1017,7 +1017,6 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected async onEditingDateSelected(date: Date): Promise<void> {
 		/* Step 1: Dismiss only the calendar overlay — keep the popover open so the user can
 		   continue setting start and end times immediately after picking the date. */
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(this.editingDatepicker as any)?.hideOverlay();
 		if (!this.editingItem) return;
 
@@ -1039,7 +1038,6 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * keeping the popover open so the user can continue setting start and end times.
 	 */
 	protected onNewItemDateSelected(): void {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(this.newItemDatepicker as any)?.hideOverlay();
 	}
 
@@ -1572,6 +1570,39 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		return Math.min((this.page + 1) * this.itemsPerPage, this.filteredItems.length);
 	}
 
+	// ── grid layout helpers ──────────────────────────────────────────────────
+
+	/**
+	 * Recalculates the grid column count and page size based on the current container
+	 * width and the CSS custom properties (--individual-item-width and
+	 * --individual-item-gap). Clamps the current page when the new page count shrinks.
+	 */
+	private updateGridLayout(): void {
+		const container = this.reminderPanel?.nativeElement;
+		const grid = this.cardGrid?.nativeElement;
+		if (!container || !grid) return;
+
+		/* Step 1: Read column sizing from CSS custom properties rather than hardcoded values
+		   so the layout stays in sync with the stylesheet without duplicating constants in TS. */
+		const style = getComputedStyle(container);
+		const itemWidthPx = parseInt(style.getPropertyValue('--individual-item-width'));
+		const itemGapPx = parseInt(style.getPropertyValue('--individual-item-gap'));
+
+		// Step 2: Compute column count from available container width and apply it to the grid
+		const containerWidth = container.clientWidth;
+		const itemsPerRow = Math.max(1, Math.floor((containerWidth - itemGapPx) / (itemWidthPx + itemGapPx)));
+		grid.style.gridTemplateColumns = `repeat(${itemsPerRow}, minmax(${itemWidthPx}px, 1fr))`;
+
+		/* Step 3: Recalculate page size and clamp the current page index.
+		   The page must be clamped before updating itemsPerPage — otherwise pagedItems
+		   computes a slice from the old page size and can briefly show the wrong items. */
+		const rowsPerPage = itemsPerRow === 1 ? REMINDER_ROWS_PER_PAGE_NARROW : REMINDER_ROWS_PER_PAGE;
+		const newPageSize = itemsPerRow * rowsPerPage;
+		const maxPage = Math.max(0, Math.ceil(this.filteredItems.length / newPageSize) - 1);
+		if (this.page > maxPage) this.page = maxPage;
+		this.itemsPerPage = newPageSize;
+	}
+
 	// ── utility counter getters used by the template ─────────────────────────
 
 	/**
@@ -1666,38 +1697,5 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private formatTimeRange(start: string | null | undefined, end: string | null | undefined): string {
 		if (!start || !end) return '';
 		return `${start} – ${end}`;
-	}
-
-	// ── grid layout helpers ──────────────────────────────────────────────────
-
-	/**
-	 * Recalculates the grid column count and page size based on the current container
-	 * width and the CSS custom properties (--individual-item-width and
-	 * --individual-item-gap). Clamps the current page when the new page count shrinks.
-	 */
-	private updateGridLayout(): void {
-		const container = this.reminderPanel?.nativeElement;
-		const grid = this.cardGrid?.nativeElement;
-		if (!container || !grid) return;
-
-		/* Step 1: Read column sizing from CSS custom properties rather than hardcoded values
-		   so the layout stays in sync with the stylesheet without duplicating constants in TS. */
-		const style = getComputedStyle(container);
-		const itemWidthPx = parseInt(style.getPropertyValue('--individual-item-width'));
-		const itemGapPx = parseInt(style.getPropertyValue('--individual-item-gap'));
-
-		// Step 2: Compute column count from available container width and apply it to the grid
-		const containerWidth = container.clientWidth;
-		const itemsPerRow = Math.max(1, Math.floor((containerWidth - itemGapPx) / (itemWidthPx + itemGapPx)));
-		grid.style.gridTemplateColumns = `repeat(${itemsPerRow}, minmax(${itemWidthPx}px, 1fr))`;
-
-		/* Step 3: Recalculate page size and clamp the current page index.
-		   The page must be clamped before updating itemsPerPage — otherwise pagedItems
-		   computes a slice from the old page size and can briefly show the wrong items. */
-		const rowsPerPage = itemsPerRow === 1 ? REMINDER_ROWS_PER_PAGE_NARROW : REMINDER_ROWS_PER_PAGE;
-		const newPageSize = itemsPerRow * rowsPerPage;
-		const maxPage = Math.max(0, Math.ceil(this.filteredItems.length / newPageSize) - 1);
-		if (this.page > maxPage) this.page = maxPage;
-		this.itemsPerPage = newPageSize;
 	}
 }

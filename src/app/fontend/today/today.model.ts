@@ -70,6 +70,9 @@ export const TASK_SOURCE_LOCAL: TodayTaskSource = 'local';
 export const TASK_SOURCE_REMINDER: TodayTaskSource = 'reminder';
 export const TASK_SOURCE_TRACKED: TodayTaskSource = 'tracked';
 
+/** Recurrence value for a task that does not repeat. */
+export const TASK_RECUR_NONE = 'none' as const;
+
 /** Left-border accent colour per task source. */
 export const TASK_ACCENT_MAP: Record<TodayTaskSource, string> = {
 	reminder: '#1a6dff',
@@ -89,3 +92,6 @@ export const TASK_LEAD_ICON_MAP: Record<TodayTaskSource, string> = {
 
 /** Icon override for completed local tasks. */
 export const TASK_LEAD_ICON_DONE = 'check_circle';
+
+/** Icon for an incomplete untimed task chip. */
+export const TASK_LEAD_ICON_UNCHECKED = 'radio_button_unchecked';

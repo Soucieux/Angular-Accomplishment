@@ -309,6 +309,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
+	// ── User action handlers ─────────────────────────────────────────────────
+
 	/**
 	 * Updates the navMobile flag and compact-mode state on every window resize
 	 * so the nav drawer and content margin track the viewport correctly.

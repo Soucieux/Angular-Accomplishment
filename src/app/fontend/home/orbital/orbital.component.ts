@@ -218,6 +218,7 @@ import {
 	NAV_LABEL_DEBT_SONATA,
 	NAV_LABEL_ENTERTAINMENT,
 	NAV_LABEL_RECIPES,
+	ORBITAL_TOOLTIP_ACTIVITY_7DAYS,
 	recipeCategoryLabel,
 } from '../../../common/locale/locale-strings';
 
@@ -282,6 +283,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	protected readonly ORBITAL_LABEL_LOADING = ORBITAL_LABEL_LOADING;
 	protected readonly ORBITAL_LABEL_REMINDERS = ORBITAL_LABEL_REMINDERS;
 	protected readonly ORBITAL_LABEL_SHORTCUTS = ORBITAL_LABEL_SHORTCUTS;
+	protected readonly ORBITAL_TOOLTIP_ACTIVITY_7DAYS = ORBITAL_TOOLTIP_ACTIVITY_7DAYS;
 	protected readonly NAV_LABEL_DEBT_SONATA = NAV_LABEL_DEBT_SONATA;
 	protected readonly NAV_LABEL_ENTERTAINMENT = NAV_LABEL_ENTERTAINMENT;
 	protected readonly NAV_LABEL_RECIPES = NAV_LABEL_RECIPES;

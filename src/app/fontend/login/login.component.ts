@@ -51,6 +51,10 @@ import {
 	LOGIN_LABEL_SEND_RESET_CODE,
 	LOGIN_LABEL_RESET_PASSWORD,
 	LOGIN_LABEL_BACK_TO_SIGN_IN,
+	LOGIN_TOGGLE_HAS_ACCOUNT,
+	LOGIN_TOGGLE_NO_ACCOUNT,
+	LOGIN_TOGGLE_SIGN_IN,
+	LOGIN_TOGGLE_SIGN_UP,
 	LOGIN_FLAVOUR_TEXT,
 	LABEL_EMAIL,
 	LOGIN_MSG_EMAIL_REQUIRED,
@@ -73,7 +77,7 @@ import { PasswordTooWeakError } from '../../common/error/password-too-weak.error
 import { UserNotFoundError } from '../../common/error/user-not-found.error';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 import { WrongParametersError } from '../../common/error/wrong-parameters.error';
-import { WrongVerificationCodeError } from '../../common/error/wrong-verification-code';
+import { WrongVerificationCodeError } from '../../common/error/wrong-verification-code.error';
 
 @Component({
 	selector: 'login',
@@ -128,6 +132,10 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly LOGIN_LABEL_SEND_RESET_CODE = LOGIN_LABEL_SEND_RESET_CODE;
 	protected readonly LOGIN_LABEL_RESET_PASSWORD = LOGIN_LABEL_RESET_PASSWORD;
 	protected readonly LOGIN_LABEL_BACK_TO_SIGN_IN = LOGIN_LABEL_BACK_TO_SIGN_IN;
+	protected readonly LOGIN_TOGGLE_HAS_ACCOUNT = LOGIN_TOGGLE_HAS_ACCOUNT;
+	protected readonly LOGIN_TOGGLE_NO_ACCOUNT = LOGIN_TOGGLE_NO_ACCOUNT;
+	protected readonly LOGIN_TOGGLE_SIGN_IN = LOGIN_TOGGLE_SIGN_IN;
+	protected readonly LOGIN_TOGGLE_SIGN_UP = LOGIN_TOGGLE_SIGN_UP;
 
 	protected loginForm!: FormGroup;
 	protected formSubmitted = false;

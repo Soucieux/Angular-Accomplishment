@@ -98,7 +98,7 @@
 			[class.on]="isPermanent"
 			(click)="isPermanent = !isPermanent">
 			<span class="material-symbols-outlined add-debt-permanent-icon">{{
-				isPermanent ? 'lock' : 'lock_open'
+				isPermanent ? DEBT_ICON_LOCK : DEBT_ICON_LOCK_OPEN
 			}}</span>
 			<span class="add-debt-permanent-text">
 				<b>{{ DEBT_DIALOG_LABEL_PERMANENT }}</b>

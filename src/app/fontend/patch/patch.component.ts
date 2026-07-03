@@ -42,6 +42,10 @@ import {
 	STATUS_DRAFT,
 	STATUS_IN_PROGRESS,
 	STATUS_RESOLVED,
+	PATCH_CLASS_TAG_SUCCESS,
+	PATCH_CLASS_HEATMAP_FUTURE,
+	PATCH_CLASS_HEATMAP_INTENSITY_PREFIX,
+	PATCH_CLASS_HEATMAP_HAS_DATA,
 	STATUS_TODO,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
@@ -445,6 +449,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
+	// ── User action handlers ─────────────────────────────────────────────────
+
 	/**
 	 * Switches the active view between Patch Notes and Release Notes.
 	 * Cancels the outgoing tab's timer and starts the incoming tab's timer
@@ -475,33 +481,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		} else if (view === PATCH_VIEW_RELEASE && !this.releaseNotesLoaded) {
 			this.timeoutService.start(TIMEOUT_KEY_PATCH_RELEASE, () => this.onLoadingTimeout());
 		}
-	}
-
-	/**
-	 * Delegates to DialogService to show the loading-timeout retry dialog,
-	 * using this component's dialog container. Used as the timeout callback
-	 * for both patch-notes and release-notes timers.
-	 */
-	private onLoadingTimeout(): void {
-		this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
-	}
-
-	/**
-	 * Gets a blank patch-note record used both for field initialisation
-	 * and to reset the form after a successful submission.
-	 *
-	 * @returns A zeroed-out patch note record object.
-	 */
-	private emptyRecord(): PatchNote {
-		return {
-			key: '',
-			component: '',
-			element: '',
-			details: '',
-			status: undefined,
-			timestamp: '',
-			isBug: false
-		};
 	}
 
 	/**
@@ -709,6 +688,35 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		}
 	}
 
+	// ── Internal data and private helpers ────────────────────────────────────
+
+	/**
+	 * Delegates to DialogService to show the loading-timeout retry dialog,
+	 * using this component's dialog container. Used as the timeout callback
+	 * for both patch-notes and release-notes timers.
+	 */
+	private onLoadingTimeout(): void {
+		this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
+	}
+
+	/**
+	 * Gets a blank patch-note record used both for field initialisation
+	 * and to reset the form after a successful submission.
+	 *
+	 * @returns A zeroed-out patch note record object.
+	 */
+	private emptyRecord(): PatchNote {
+		return {
+			key: '',
+			component: '',
+			element: '',
+			details: '',
+			status: undefined,
+			timestamp: '',
+			isBug: false
+		};
+	}
+
 	/**
 	 * Reconciles the stored totalPatchNotes statistic with the true number of
 	 * loaded patch notes. The Home dashboard satellite reads totalPatchNotes
@@ -765,6 +773,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		if (count <= 14) return 3;
 		return 4;
 	}
+
+	// ── Template helper methods ──────────────────────────────────────────────
 
 	/**
 	 * Calculates the rowspan for a component cell by counting consecutive rows
@@ -886,7 +896,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected getSeverityClass(status: string) {
 		switch (status) {
 			case STATUS_RESOLVED:
-				return 'tag-debug-success';
+				return PATCH_CLASS_TAG_SUCCESS;
 			default:
 				return '';
 		}
@@ -1043,10 +1053,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The CSS class string to apply (e.g. 'future', 'intensity-0', 'intensity-2 has-data').
 	 */
 	protected getHeatmapCellClass(year: number, monthIdx: number): string {
-		if (this.isHeatmapFuture(year, monthIdx)) return 'future';
+		if (this.isHeatmapFuture(year, monthIdx)) return PATCH_CLASS_HEATMAP_FUTURE;
 		const count = this.getHeatmapCount(year, monthIdx);
 		const band = this.getHeatmapIntensity(count);
-		return count > 0 ? `intensity-${band} has-data` : 'intensity-0';
+		return count > 0
+			? `${PATCH_CLASS_HEATMAP_INTENSITY_PREFIX}${band} ${PATCH_CLASS_HEATMAP_HAS_DATA}`
+			: `${PATCH_CLASS_HEATMAP_INTENSITY_PREFIX}0`;
 	}
 
 	/**

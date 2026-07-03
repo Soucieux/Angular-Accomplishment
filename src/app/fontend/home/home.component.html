@@ -1,7 +1,16 @@
 <ng-container #dialogComponentContainer></ng-container>
 <div class="container-home">
+	<!-- ── Logged in → orbital dashboard ───────────────────────────────── -->
+	@if (showDashboard) {
+		<orbital
+			[stats]="stats"
+			[links]="dashLinks"
+			[dashCategories]="dashCategories"
+			(linkVisit)="onOrbitalLinkVisit($event)" />
+	}
+
 	<!-- ── Not logged in → editorial landing ───────────────────────────── -->
-	@if (!showDashboard) {
+	@else {
 		<div class="logged-out-view" [class.fade-out]="transitioning">
 			<main class="ed">
 				<div class="ed-orb ed-orb-a"></div>
@@ -48,15 +57,6 @@
 				</div>
 			</main>
 		</div>
-	}
-
-	<!-- ── Logged in → orbital dashboard ───────────────────────────────── -->
-	@else {
-		<orbital
-			[stats]="stats"
-			[links]="dashLinks"
-			[dashCategories]="dashCategories"
-			(linkVisit)="onOrbitalLinkVisit($event)" />
 	}
 </div>
 

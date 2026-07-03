@@ -63,6 +63,8 @@ export class DialogService {
 		private utilities: Utilities
 	) {}
 
+	// ── Dialog dispatch ──────────────────────────────────────────────────────
+
 	// Overload methods to call correct dialog component
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
@@ -83,7 +85,7 @@ export class DialogService {
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'confirm',
 		acceptCallback: () => void,
-		data: any[]
+		data: string[]
 	): void;
 
 	public openDialog(
@@ -231,6 +233,8 @@ export class DialogService {
 		}
 	}
 
+	// ── Blocking and confirm helpers ─────────────────────────────────────────
+
 	/**
 	 * Opens a confirm dialog and, on accept, runs the given async work behind a blocking overlay.
 	 * The block dialog is opened fire-and-forget so the confirm closes at once and the overlay
@@ -274,6 +278,8 @@ export class DialogService {
 		return this.openDialog(container, 'block', work, blockMessage).catch(() => {});
 	}
 
+	// ── Prebuilt dialog openers ──────────────────────────────────────────────
+
 	/**
 	 * Shows the loading-timeout retry dialog with the standard message.
 	 *
@@ -301,6 +307,17 @@ export class DialogService {
 	public showUnexpectedError(container: ViewContainerRef) {
 		this.openDialog(container, DIALOG_ERROR, MSG_UNEXPECTED_ERROR);
 	}
+
+	/**
+	 * Shows a permission-denied error dialog.
+	 *
+	 * @param container - The ViewContainerRef to attach the dialog to.
+	 */
+	public showPermissionError(container: ViewContainerRef) {
+		this.openDialog(container, DIALOG_ERROR, MSG_PERMISSION_DENIED);
+	}
+
+	// ── Permission and error handling ────────────────────────────────────────
 
 	/**
 	 * Front-end permission guard. Checks whether the current user owns the
@@ -334,6 +351,8 @@ export class DialogService {
 		}
 	}
 
+	// ── Toast ────────────────────────────────────────────────────────────────
+
 	/**
 	 * Shows a PrimeNG toast notification. Suppressed entirely on mobile so no
 	 * toast surfaces on phones, where the floating dock leaves no room for them.
@@ -346,6 +365,8 @@ export class DialogService {
 		if (this.utilities.isMobile()) return;
 		this.messageService.add({ severity, summary, detail });
 	}
+
+	// ── Private helpers ──────────────────────────────────────────────────────
 
 	/**
 	 * Gets the dialog component based on the dialog type.
@@ -387,14 +408,5 @@ export class DialogService {
 			default:
 				throw new DialogError(MSG_INVALID_DIALOG_TYPE);
 		}
-	}
-
-	/**
-	 * Shows a permission-denied error dialog.
-	 *
-	 * @param container - The ViewContainerRef to attach the dialog to.
-	 */
-	public showPermissionError(container: ViewContainerRef) {
-		this.openDialog(container, DIALOG_ERROR, MSG_PERMISSION_DENIED);
 	}
 }

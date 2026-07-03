@@ -366,6 +366,7 @@
 	& .buttons-group {
 		border-top-color: rgba(255, 255, 255, 0.25);
 	}
+
 }
 
 .individual-item::before {
@@ -386,12 +387,15 @@
 .individual-item.very-high-rate::before {
 	background: linear-gradient(-45deg, #e21f1f 0%, #e21f1f 100%);
 }
+
 .individual-item.high-rate::before {
 	background: linear-gradient(-45deg, #f89b29 0%, #ff0f7b 100%);
 }
+
 .individual-item.medium-rate::before {
 	background: linear-gradient(-45deg, #e8c602 0%, #e47a00 100%);
 }
+
 .individual-item.low-rate::before {
 	background: linear-gradient(-45deg, #c5e50d 0%, #e8c602 100%);
 }
@@ -400,13 +404,16 @@
 .individual-item.very-high-rate .rate {
 	background: #e21f1f;
 }
+
 .individual-item.high-rate .rate {
 	background: #f89b29;
 }
+
 .individual-item.medium-rate .rate {
 	background: #e8c602;
 	color: rgba(0, 0, 0, 0.75);
 }
+
 .individual-item.low-rate .rate {
 	background: #97b80a;
 }
@@ -566,12 +573,15 @@
 .very-high-rate .rate-label {
 	color: #b81010;
 }
+
 .high-rate .rate-label {
 	color: #c96000;
 }
+
 .medium-rate .rate-label {
 	color: #9a7200;
 }
+
 .low-rate .rate-label {
 	color: #5a7a00;
 }
@@ -705,6 +715,7 @@
 /* ─────────────────────────────────────────
    Entrance animations
 ───────────────────────────────────────── */
+
 @keyframes entReveal {
 	from { opacity: 0; transform: translateY(14px); }
 	to   { opacity: 1; transform: translateY(0); }
@@ -749,6 +760,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (narrow viewport)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	.container-entertainment {
 		padding: 10px;
@@ -895,4 +907,5 @@
 		font-size: 14px;
 		padding: 3px 8px;
 	}
+
 }

@@ -43,6 +43,7 @@ import {
 	TODAY_HINT_DRAG_UNTIMED,
 	TODAY_LABEL_TASKS,
 	TODAY_LABEL_TRACKED,
+	TODAY_LABEL_REMINDER_READONLY,
 	TODAY_PENDING_HINT,
 	TODAY_PENDING_PLACEHOLDER,
 	TODAY_QUICKADD_PLACEHOLDER,
@@ -69,6 +70,8 @@ import {
 	TASK_ACCENT_MAP,
 	TASK_LEAD_ICON_DONE,
 	TASK_LEAD_ICON_MAP,
+	TASK_LEAD_ICON_UNCHECKED,
+	TASK_RECUR_NONE,
 	TASK_SOURCE_LOCAL,
 	TASK_SOURCE_REMINDER,
 	TASK_SOURCE_TRACKED,
@@ -120,6 +123,9 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly TASK_SOURCE_LOCAL = TASK_SOURCE_LOCAL;
 	protected readonly TASK_SOURCE_REMINDER = TASK_SOURCE_REMINDER;
 	protected readonly TASK_SOURCE_TRACKED = TASK_SOURCE_TRACKED;
+	protected readonly TASK_LEAD_ICON_DONE = TASK_LEAD_ICON_DONE;
+	protected readonly TASK_LEAD_ICON_UNCHECKED = TASK_LEAD_ICON_UNCHECKED;
+	protected readonly TODAY_LABEL_REMINDER_READONLY = TODAY_LABEL_REMINDER_READONLY;
 	protected readonly MOBILE_BLOCKED_TITLE = MOBILE_BLOCKED_TITLE;
 	protected readonly MOBILE_BLOCKED_BODY = MOBILE_BLOCKED_BODY;
 
@@ -231,7 +237,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					leadIcon: isDone ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_MAP[task.source],
 					timeLabel: this.formatMinutes(task.startMin!) + ' – ' + this.formatMinutes(endMin),
 					durationLabel: this.formatDuration(endMin - task.startMin!),
-					hasRecurrence: task.recur !== 'none',
+					hasRecurrence: task.recur !== TASK_RECUR_NONE,
 					recurrenceLabel: TODAY_RECUR_LABELS[task.recur] ?? ''
 				};
 			});
@@ -473,7 +479,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 				done: false,
 				startMin: null,
 				endMin: null,
-				recur: 'none'
+				recur: TASK_RECUR_NONE
 			}
 		]);
 		this.quickAddText.set('');
@@ -627,7 +633,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 				done: false,
 				startMin: block.startMin,
 				endMin: block.endMin,
-				recur: 'none'
+				recur: TASK_RECUR_NONE
 			}
 		]);
 		this.clearPendingState();
@@ -938,7 +944,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					done: false,
 					startMin: record.startTime ? Utilities.parseTimeToMinutes(record.startTime as string) : null,
 					endMin: record.endTime ? Utilities.parseTimeToMinutes(record.endTime as string) : null,
-					recur: 'none' as const
+					recur: TASK_RECUR_NONE
 				}));
 			this.tasks.update((ts) => [
 				...ts.filter((task) => task.source !== TASK_SOURCE_REMINDER),
@@ -1035,7 +1041,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			done: false,
 			startMin,
 			endMin,
-			recur: 'none',
+			recur: TASK_RECUR_NONE,
 			ord: -1e9
 		};
 	}

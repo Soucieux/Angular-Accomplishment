@@ -274,8 +274,8 @@
 									(click)="toggleLock(item.key)"
 									[title]="
 										isItemPermanent(item)
-											? 'Permanent — click to unlock'
-											: 'Mark as permanent'
+											? DEBT_TOOLTIP_UNLOCK
+											: DEBT_TOOLTIP_MARK_PERMANENT
 									">
 									<span class="material-symbols-outlined" style="font-size: 15px">{{
 										isItemPermanent(item) ? 'lock' : 'lock_open'

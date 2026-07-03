@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    Host — fill the drawer-content slot
 ───────────────────────────────────────── */
+
 :host {
 	font-family: 'app-font';
 	display: block;
@@ -9,6 +10,7 @@
 /* ─────────────────────────────────────────
    Page container — flex column so .links-section can flex: 1
 ───────────────────────────────────────── */
+
 .container-portal {
 	display: flex;
 	flex-direction: column;
@@ -17,6 +19,7 @@
 /* ─────────────────────────────────────────
    Date Calculator section wrapper
 ───────────────────────────────────────── */
+
 .date-calculator-section {
 	margin-bottom: 16px;
 }
@@ -24,6 +27,7 @@
 /* ─────────────────────────────────────────
    Table wrapper — section card
 ───────────────────────────────────────── */
+
 .table-wrapper {
 	border-radius: 14px;
 	overflow: hidden;
@@ -34,6 +38,7 @@
 /* ─────────────────────────────────────────
    Header bar — indigo-purple for Date Calculator
 ───────────────────────────────────────── */
+
 .header-wrapper {
 	position: relative;
 	display: flex;
@@ -72,6 +77,7 @@
 /* ─────────────────────────────────────────
    Save indicator
 ───────────────────────────────────────── */
+
 .save-indicator {
 	display: flex;
 	align-items: center;
@@ -99,6 +105,7 @@
 /* ─────────────────────────────────────────
    Month segmented toggle + Reset button
 ───────────────────────────────────────── */
+
 .date-calculator-toggle-wrapper {
 	display: flex;
 	align-items: center;
@@ -186,6 +193,7 @@
 /* ─────────────────────────────────────────
    First table footer
 ───────────────────────────────────────── */
+
 .date-calculator-footer {
 	display: flex;
 	align-items: center;
@@ -220,6 +228,7 @@
 /* ─────────────────────────────────────────
    DATE CALCULATOR table internals
 ───────────────────────────────────────── */
+
 .skeleton-row {
 	height: 50px;
 }
@@ -365,6 +374,7 @@
 /* ─────────────────────────────────────────
    Header
 ───────────────────────────────────────── */
+
 .page-header {
 	margin-bottom: 16px;
 	flex-shrink: 0;
@@ -418,6 +428,7 @@
 /* ─────────────────────────────────────────
    Links section
 ───────────────────────────────────────── */
+
 .links-section {
 	display: flex;
 	flex-direction: column;
@@ -428,6 +439,7 @@
 /* ─────────────────────────────────────────
    Toolbar
 ───────────────────────────────────────── */
+
 .links-toolbar {
 	display: flex;
 	align-items: center;
@@ -522,6 +534,7 @@
 /* ─────────────────────────────────────────
    Toolbar right side
 ───────────────────────────────────────── */
+
 .toolbar-right {
 	display: flex;
 	align-items: center;
@@ -591,6 +604,7 @@
 /* ─────────────────────────────────────────
    Links section headers (Shared / My Links)
 ───────────────────────────────────────── */
+
 .links-section-header {
 	display: flex;
 	align-items: baseline;
@@ -620,6 +634,7 @@
 /* ─────────────────────────────────────────
    Links grid
 ───────────────────────────────────────── */
+
 .links-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -629,6 +644,7 @@
 /* ─────────────────────────────────────────
    Card wrapper (hover scope for actions)
 ───────────────────────────────────────── */
+
 .card-wrapper {
 	position: relative;
 	border-radius: 14px;
@@ -637,6 +653,7 @@
 /* ─────────────────────────────────────────
    Link card — colored tile
 ───────────────────────────────────────── */
+
 .link-card {
 	display: flex;
 	flex-direction: column;
@@ -764,6 +781,7 @@
 /* ─────────────────────────────────────────
    Card actions — hover-reveal edit/delete
 ───────────────────────────────────────── */
+
 .card-actions {
 	position: absolute;
 	top: 8px;
@@ -802,6 +820,7 @@
 /* ─────────────────────────────────────────
    Skeleton
 ───────────────────────────────────────── */
+
 .links-grid--skeleton {
 	max-height: 120px;
 	overflow: hidden;
@@ -832,6 +851,7 @@
 /* ─────────────────────────────────────────
    Empty state
 ───────────────────────────────────────── */
+
 .links-empty {
 	display: flex;
 	flex-direction: column;
@@ -856,6 +876,7 @@
 /* ─────────────────────────────────────────
    Mini access-denied
 ───────────────────────────────────────── */
+
 .mini-access-denied {
 	flex: 1;
 	position: relative;
@@ -995,18 +1016,10 @@
 	color: rgba(255, 255, 255, 0.82);
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.mini-access-denied__card::before,
-	.mini-access-denied__card::after,
-	.mini-access-denied__card {
-		animation: none;
-	}
-
-}
-
 /* ─────────────────────────────────────────
    Entrance animations
 ───────────────────────────────────────── */
+
 @keyframes nxReveal {
 	from {
 		opacity: 0;
@@ -1026,9 +1039,19 @@
 	animation: nxReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
 
+@media (prefers-reduced-motion: reduce) {
+	.mini-access-denied__card::before,
+	.mini-access-denied__card::after,
+	.mini-access-denied__card {
+		animation: none;
+	}
+
+}
+
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (narrow viewport)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	.header-wrapper {
 		flex-direction: row;

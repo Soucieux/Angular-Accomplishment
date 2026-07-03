@@ -9,6 +9,12 @@ export interface TimelineItem {
 	tag: string;
 }
 
+/** A single quick-stat card on the About page. */
+export interface AboutStat {
+	number: string;
+	label: string;
+}
+
 /** Career and education timeline entries for the About page. */
 export const TIMELINE: TimelineItem[] = [
 	{
@@ -65,4 +71,14 @@ export const TIMELINE: TimelineItem[] = [
 		color: '#FF9800',
 		tag: 'education'
 	}
+];
+
+/** Quick-stat cards summarizing background at a glance. */
+export const ABOUT_STATS: AboutStat[] = [
+	{ number: '10+', label: 'years in cs' },
+	{ number: '2', label: 'degrees' },
+	{ number: '3+', label: 'years at cra' },
+	{ number: '2+', label: 'yrs indie dev' },
+	{ number: '5+', label: 'yrs experience' },
+	{ number: '3', label: 'career roles' }
 ];

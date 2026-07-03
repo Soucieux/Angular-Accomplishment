@@ -32,7 +32,10 @@ import {
 	HOME_WEEK_AGENDA_DUE_HEADER_COLOR,
 	HOME_WEEK_AGENDA_GRADIENT_TODAY
 } from '../../../common/constants';
-import { HOME_WEEK_AGENDA_EMPTY_TEXT, ORBITAL_WEEK_AGENDA_DUE_HEADER } from '../../../common/locale/locale-strings';
+import {
+	HOME_WEEK_AGENDA_EMPTY_TEXT,
+	ORBITAL_WEEK_AGENDA_DUE_HEADER
+} from '../../../common/locale/locale-strings';
 import { OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
 import { OrbitalStore } from './orbital.store';
 
@@ -182,7 +185,11 @@ interface PlacedMetric extends OrbitalProgressMetric {
 					<line
 						[attr.x1]="placedMetric.tipX"
 						[attr.y1]="placedMetric.tipY"
-						[attr.x2]="placedMetric.side === HOME_CONCENTRIC_LEADER_SIDE_RIGHT ? placedMetric.labelX - 2 : placedMetric.labelX + 2"
+						[attr.x2]="
+							placedMetric.side === HOME_CONCENTRIC_LEADER_SIDE_RIGHT
+								? placedMetric.labelX - 2
+								: placedMetric.labelX + 2
+						"
 						[attr.y2]="placedMetric.labelY"
 						[attr.stroke]="placedMetric.gradientEnd"
 						stroke-width="1.5"
@@ -210,7 +217,11 @@ interface PlacedMetric extends OrbitalProgressMetric {
 					">
 					<i
 						[style.background]="
-							'linear-gradient(90deg,' + placedMetric.gradientStart + ',' + placedMetric.gradientEnd + ')'
+							'linear-gradient(90deg,' +
+							placedMetric.gradientStart +
+							',' +
+							placedMetric.gradientEnd +
+							')'
 						"></i>
 					{{ placedMetric.label }}&nbsp;<em>{{ placedMetric.percentage }}%</em>
 				</div>
@@ -398,7 +409,9 @@ export class Concentric implements OnChanges {
 			}
 		</div>
 		<div class="week-agenda-due">
-			<span class="week-agenda-due-header" [style.color]="HOME_WEEK_AGENDA_DUE_HEADER_COLOR">{{ ORBITAL_WEEK_AGENDA_DUE_HEADER }}</span>
+			<span class="week-agenda-due-header" [style.color]="HOME_WEEK_AGENDA_DUE_HEADER_COLOR">{{
+				ORBITAL_WEEK_AGENDA_DUE_HEADER
+			}}</span>
 			<span class="week-agenda-due-date" [style.color]="getSubtitleColor()">{{
 				d.selectedDateLong()
 			}}</span>
@@ -470,13 +483,13 @@ export class Concentric implements OnChanges {
 				gap: 8px;
 			}
 			.week-agenda-due-header {
-				font-size: 13px;
+				font-size: 14px;
 				font-weight: 600;
 				letter-spacing: 0.6px;
 				text-transform: uppercase;
 			}
 			.week-agenda-due-date {
-				font-size: 13px;
+				font-size: 14px;
 				font-weight: 600;
 			}
 			.week-agenda-list {
@@ -488,10 +501,14 @@ export class Concentric implements OnChanges {
 				min-height: 0;
 			}
 			.week-agenda-empty {
-				font-size: 13px;
+				font-size: 14px;
 				font-weight: 600;
 				padding: 6px 0;
 				font-style: italic;
+				height: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
 			}
 			.week-agenda-row {
 				display: flex;

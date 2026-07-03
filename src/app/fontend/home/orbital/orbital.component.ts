@@ -200,6 +200,7 @@ import {
 	ORBITAL_LABEL_PATCH,
 	ORBITAL_LABEL_THIS_WEEK,
 	ORBITAL_LABEL_LIFE_CLOCK,
+	ORBITAL_LABEL_LOADING,
 	ORBITAL_LABEL_REMINDERS,
 	ORBITAL_LABEL_SHORTCUTS,
 	ORBITAL_LABEL_ACTIVITY,
@@ -217,11 +218,7 @@ import {
 	NAV_LABEL_DEBT_SONATA,
 	NAV_LABEL_ENTERTAINMENT,
 	NAV_LABEL_RECIPES,
-	LABEL_ALL,
-	RECIPE_CATEGORY_CHINESE,
-	RECIPE_CATEGORY_WESTERN,
-	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_DESSERT,
+	recipeCategoryLabel,
 } from '../../../common/locale/locale-strings';
 
 type OrbitalActivityOverride = {
@@ -282,6 +279,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	protected readonly NAV_LABEL_RESONANCE = NAV_LABEL_RESONANCE;
 	protected readonly ORBITAL_LABEL_THIS_WEEK = ORBITAL_LABEL_THIS_WEEK;
 	protected readonly ORBITAL_LABEL_LIFE_CLOCK = ORBITAL_LABEL_LIFE_CLOCK;
+	protected readonly ORBITAL_LABEL_LOADING = ORBITAL_LABEL_LOADING;
 	protected readonly ORBITAL_LABEL_REMINDERS = ORBITAL_LABEL_REMINDERS;
 	protected readonly ORBITAL_LABEL_SHORTCUTS = ORBITAL_LABEL_SHORTCUTS;
 	protected readonly NAV_LABEL_DEBT_SONATA = NAV_LABEL_DEBT_SONATA;
@@ -296,13 +294,6 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	protected readonly ORBITAL_PANEL_EMPTY_ACTIVITY = ORBITAL_PANEL_EMPTY_ACTIVITY;
 	protected readonly ORBITAL_PANEL_BADGE_OPEN = ORBITAL_PANEL_BADGE_OPEN;
 	protected readonly ORBITAL_PANEL_BADGE_DUE = ORBITAL_PANEL_BADGE_DUE;
-	private readonly localeCategoryLabels: Record<string, string> = {
-		'All':     LABEL_ALL,
-		'Chinese': RECIPE_CATEGORY_CHINESE,
-		'Western': RECIPE_CATEGORY_WESTERN,
-		'Quick':   RECIPE_CATEGORY_QUICK,
-		'Dessert': RECIPE_CATEGORY_DESSERT,
-	};
 	protected currentUser$!: Observable<any>;
 	protected genreBars: { label: string; count: number; percentage: number; color: string }[] = [];
 	protected reminderRows: OrbitalReminderRow[] = [];
@@ -1085,6 +1076,6 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	 * @returns The translated category label, or the raw key when no mapping exists.
 	 */
 	protected categoryDisplayLabel(categoryKey: string): string {
-		return this.localeCategoryLabels[categoryKey] ?? categoryKey;
+		return recipeCategoryLabel(categoryKey);
 	}
 }

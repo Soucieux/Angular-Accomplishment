@@ -1,7 +1,7 @@
 @if (!stats) {
 	<div class="orbital-loading">
 		<div class="orbital-loading-ring"></div>
-		Loading…
+		{{ ORBITAL_LABEL_LOADING }}
 	</div>
 } @else {
 	<div class="orbital-root">
@@ -22,10 +22,7 @@
 
 		<!-- Stat satellites -->
 		<div class="orbital-satellites">
-			<div
-				class="orbital-satellite"
-				[pTooltip]="HOME_SATELLITE_TOOLTIP_STREAK"
-				tooltipPosition="top">
+			<div class="orbital-satellite" [pTooltip]="HOME_SATELLITE_TOOLTIP_STREAK" tooltipPosition="top">
 				<div class="orbital-satellite-disc">
 					<span class="material-symbols-outlined">local_fire_department</span>
 					<div class="orbital-satellite-number">{{ activityStreak }}</div>
@@ -301,7 +298,9 @@
 						<div class="orbital-recipe-row">
 							<span class="orbital-row-dot" aria-hidden="true"></span>
 							<span class="orbital-recipe-row-name">{{ recipe.name }}</span>
-							<span class="orbital-recipe-row-category">{{ categoryDisplayLabel(recipe.category) }}</span>
+							<span class="orbital-recipe-row-category">{{
+								categoryDisplayLabel(recipe.category)
+							}}</span>
 						</div>
 					}
 					@if (recipeRows.length === 20) {
@@ -337,7 +336,11 @@
 							}}</span>
 						</div>
 						<div class="orbital-activity-body">
-							<div class="orbital-activity-label" [style.color]="activity.isShared ? activity.color : null">{{ activity.label }}</div>
+							<div
+								class="orbital-activity-label"
+								[style.color]="activity.isShared ? activity.color : null">
+								{{ activity.label }}
+							</div>
 							<div class="orbital-activity-detail">{{ activity.detail }}</div>
 						</div>
 						<span class="orbital-activity-time">{{ activity.time }}</span>

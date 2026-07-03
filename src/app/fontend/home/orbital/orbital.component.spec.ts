@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { OrbitalComponent } from './orbital.component';
 import { OrbitalStore } from './orbital.store';
 import { AuthService } from '../../../backend/authentication-service/auth.service';
+import { DatabaseService } from '../../../backend/database-service/database.service';
 import { PortalCategory, PortalLink } from '../../portal/portal.model';
 
 function makeLink(id: string, category: string, isPinned = false): PortalLink {
@@ -12,7 +13,7 @@ function makeLink(id: string, category: string, isPinned = false): PortalLink {
 }
 
 function makeCategory(id: string, color: string): PortalCategory {
-	return { _id: id, _openid: 'uid1', name: id, color, order: 0 };
+	return { _id: id, name: id, color, order: 0 };
 }
 
 describe('OrbitalComponent', () => {
@@ -26,12 +27,16 @@ describe('OrbitalComponent', () => {
 
 		const mockRouter = jasmine.createSpyObj<Router>('Router', ['navigateByUrl']);
 
+		const mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', ['getUserStats']);
+		mockDb.getUserStats.and.returnValue(of(null));
+
 		await TestBed.configureTestingModule({
 			imports: [OrbitalComponent],
 			providers: [
 				OrbitalStore,
 				{ provide: AuthService, useValue: mockAuth },
-				{ provide: Router, useValue: mockRouter }
+				{ provide: Router, useValue: mockRouter },
+				{ provide: DatabaseService, useValue: mockDb }
 			]
 		}).compileComponents();
 
@@ -53,11 +58,14 @@ describe('OrbitalComponent', () => {
 				makeLink('b', 'dev', false),
 				makeLink('c', 'dev', true)
 			];
+			// pinnedLinks is recomputed in ngOnChanges when the links input changes.
+			(component as any).ngOnChanges({ links: {} });
 			expect((component as any).pinnedLinks.length).toBe(2);
 		});
 
 		it('caps the result at 6 even when more are pinned', () => {
 			component.links = Array.from({ length: 10 }, (_, i) => makeLink(`l${i}`, 'dev', true));
+			(component as any).ngOnChanges({ links: {} });
 			expect((component as any).pinnedLinks.length).toBe(6);
 		});
 

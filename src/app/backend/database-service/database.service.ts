@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../fontend/recipe/recipe.model';
 import { VaultRecord, VaultNodeType } from '../../fontend/vault/vault.model';
@@ -56,6 +57,19 @@ export abstract class DatabaseService {
 	 * @returns An observable that emits the user's stats document, or undefined when absent.
 	 */
 	public abstract getUserStats(): Observable<any>;
+
+	/**
+	 * Gets the global and per-user stats documents combined into one object, with per-user values
+	 * winning on overlap. Emits after both underlying watches have produced a value, then on every
+	 * subsequent change to either. Concrete on the base class so both backends share one implementation.
+	 *
+	 * @returns An observable that emits the merged stats object.
+	 */
+	public getCombinedStats(): Observable<any> {
+		return combineLatest([this.getStatistics(), this.getUserStats()]).pipe(
+			map(([generic, userSpecific]) => ({ ...generic, ...userSpecific }))
+		);
+	}
 
 	/**
 	 * Gets the date calculator table details from the database as a reactive observable.

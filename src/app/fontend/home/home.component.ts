@@ -58,15 +58,13 @@ export class HomeComponent implements OnInit, OnDestroy {
 	private dialogComponentContainer!: ViewContainerRef;
 
 	private statsSub?: Subscription;
-	private userStatsSub?: Subscription;
 	private loginSub?: Subscription;
 	private linksSub?: Subscription;
 	private categoriesSub?: Subscription;
 	private linksLoadingTimer?: ReturnType<typeof setTimeout>;
 	private dashboardTimer?: ReturnType<typeof setTimeout>;
 
-	private genericStats: HomeStats | null = null;
-	private userSpecificStats: HomeStats | null = null;
+	private combinedStats: HomeStats | null = null;
 	private sharedActivities: RecentActivityItem[] = [];
 	private lastSharedRev?: number;
 	protected stats: HomeStats | null = null;
@@ -151,11 +149,13 @@ export class HomeComponent implements OnInit, OnDestroy {
 					 * loading flag. Cancelling the timeout in the error handler prevents the
 					 * timeout dialog from opening on top of an already-failed state.
 					 */
-					this.statsSub = this.databaseService.getStatistics().subscribe({
+					this.statsSub = this.databaseService.getCombinedStats().subscribe({
 						next: (data: HomeStats) => {
 							this.timeoutService.clear(TIMEOUT_KEY_HOME);
-							this.genericStats = data;
-							this.mergeStats();
+							this.combinedStats = data;
+							this.applyStats();
+							// The first emission loads the shared feed; later sharedRev bumps keep it live.
+							this.refreshSharedActivityOnRevChange(data);
 							this.loading = false;
 							this.cdr.detectChanges();
 						},
@@ -165,15 +165,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 							this.loading = false;
 							this.cdr.detectChanges();
 						}
-					});
-
-					this.userStatsSub = this.databaseService.getUserStats().subscribe((userDoc: HomeStats) => {
-						if (!userDoc) return;
-						this.userSpecificStats = userDoc;
-						this.mergeStats();
-						// The first emission loads the shared feed; later sharedRev bumps keep it live.
-						this.refreshSharedActivityOnRevChange(userDoc);
-						this.cdr.detectChanges();
 					});
 
 					/*
@@ -196,11 +187,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 					clearTimeout(this.linksLoadingTimer);
 					clearTimeout(this.dashboardTimer);
 					this.statsSub?.unsubscribe();
-					this.userStatsSub?.unsubscribe();
 					this.linksSub?.unsubscribe();
 					this.categoriesSub?.unsubscribe();
-					this.genericStats = null;
-					this.userSpecificStats = null;
+					this.combinedStats = null;
 					this.sharedActivities = [];
 					this.lastSharedRev = undefined;
 					this.stats = null;
@@ -225,7 +214,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 		clearTimeout(this.linksLoadingTimer);
 		clearTimeout(this.dashboardTimer);
 		this.statsSub?.unsubscribe();
-		this.userStatsSub?.unsubscribe();
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
 		this.loginSub?.unsubscribe();
@@ -245,12 +233,12 @@ export class HomeComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Merges the generic and user-specific stats into the single stats object consumed by the
-	 * orbital component. User-specific values win on overlap, and any shared activity is
-	 * folded into the recent-activity feed via {@link mergeActivityFeeds}.
+	 * Applies the combined stats (from {@link getCombinedStats}) into the single stats object consumed
+	 * by the orbital component, folding any shared activity into the recent-activity feed via
+	 * {@link mergeActivityFeeds}.
 	 */
-	private mergeStats(): void {
-		const merged = { ...this.genericStats, ...this.userSpecificStats } as HomeStats;
+	private applyStats(): void {
+		const merged = { ...this.combinedStats } as HomeStats;
 		if (this.sharedActivities.length) {
 			const own = Utilities.toArray(merged[STATS_FIELD_RECENT_ACTIVITIES]) as RecentActivityItem[];
 			merged[STATS_FIELD_RECENT_ACTIVITIES] = this.mergeActivityFeeds(own, this.sharedActivities);
@@ -263,7 +251,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 	 * capped to STATS_CAP_ACTIVITY_LOG. The two arrays never overlap — a reminder mutation is stored
 	 * in exactly one of them — so no de-duplication is needed.
 	 *
-	 * {@link mergeStats} - Builds the activity feed array consumed by the orbital component.
+	 * {@link applyStats} - Builds the activity feed array consumed by the orbital component.
 	 *
 	 * @param own - The current user's personal activity entries.
 	 * @param shared - The shared activity entries.
@@ -281,20 +269,20 @@ export class HomeComponent implements OnInit, OnDestroy {
 	/**
 	 * Re-fetches the shared activity feed whenever the live user document's sharedRev counter moves.
 	 * Connections (and the user's own shared writes) bump the counter on every shared-reminder change,
-	 * so the dashboard feed stays live without polling; the first watch emission performs the initial
-	 * load. No-op when the counter is unchanged.
+	 * so the dashboard feed stays live without polling; the first combined-stats emission performs the
+	 * initial load. No-op when the counter is unchanged.
 	 *
-	 * @param userDoc - The latest user document emitted by the live user-stats watch.
+	 * @param combinedDoc - The latest combined stats object emitted by the combined-stats stream.
 	 */
-	private refreshSharedActivityOnRevChange(userDoc: HomeStats): void {
-		const rev = (userDoc[STATS_FIELD_SHARED_REV] as number) ?? 0;
+	private refreshSharedActivityOnRevChange(combinedDoc: HomeStats): void {
+		const rev = (combinedDoc[STATS_FIELD_SHARED_REV] as number) ?? 0;
 		if (rev === this.lastSharedRev) return;
 		this.lastSharedRev = rev;
 		this.databaseService
 			.getSharedRecentActivity()
 			.then((shared) => {
 				this.sharedActivities = shared as RecentActivityItem[];
-				this.mergeStats();
+				this.applyStats();
 				this.cdr.detectChanges();
 			})
 			.catch(() => {});

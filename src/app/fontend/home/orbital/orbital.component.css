@@ -1202,6 +1202,7 @@
 	.orbital-shortcuts .orbital-panel-scroll .orbital-saved-link-row:nth-child(n + 9) {
 		display: none;
 	}
+
 }
 
 /* ── Mobile only bottom navigation ─────────────────────────────────── */
@@ -1238,4 +1239,5 @@
 	.orbital-core-concentric-wrapper {
 		zoom: 0.75;
 	}
+
 }

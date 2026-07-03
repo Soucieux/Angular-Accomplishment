@@ -109,6 +109,7 @@
 .new-debt-button:active {
 	transform: scale(0.97);
 }
+
 .new-debt-button .material-symbols-outlined {
 	font-size: 21px;
 }
@@ -225,6 +226,7 @@
 .stat-cell.is-overdue {
 	background: rgba(229, 57, 53, 0.1);
 }
+
 .stat-cell.is-overdue .stat-number {
 	color: #e53935;
 }
@@ -476,6 +478,7 @@
 	outline: none;
 	cursor: pointer;
 }
+
 ::ng-deep .due-date-picker .p-datepicker-input:focus {
 	box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
 }
@@ -514,6 +517,7 @@
 	line-height: 1.2;
 	color: #64748b;
 }
+
 .card-remaining b {
 	color: #334155;
 }
@@ -527,6 +531,7 @@
 	letter-spacing: 0.02em;
 	color: #e5533c;
 }
+
 .card-paid-tag .material-symbols-outlined {
 	font-size: 16px;
 	animation: dcCoda 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
@@ -567,6 +572,7 @@
 	gap: 8px;
 	flex-wrap: wrap;
 }
+
 .payment-chips.is-disabled {
 	opacity: 0.4;
 	pointer-events: none;
@@ -589,10 +595,12 @@
 	cursor: pointer;
 	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 .pay-chip .pay-minus {
 	font-size: 16px;
 	margin-right: 1px;
 }
+
 .pay-chip:hover:not(:disabled) {
 	background: linear-gradient(135deg, #0d9488 0%, #134e4a 100%);
 	color: #fff !important;
@@ -600,9 +608,11 @@
 	transform: translateY(-2px);
 	box-shadow: 0 4px 16px rgba(13, 148, 136, 0.35);
 }
+
 .pay-chip:active:not(:disabled) {
 	transform: scale(0.96);
 }
+
 .pay-chip:disabled {
 	opacity: 0.4;
 	cursor: not-allowed;
@@ -626,6 +636,7 @@
 	border-radius: 8px;
 	box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
 }
+
 .custom-pay-input {
 	width: 100%;
 	min-width: 0;
@@ -636,6 +647,7 @@
 	font-weight: 700;
 	color: #0d9488;
 }
+
 .custom-pay-input::placeholder {
 	color: #0d9488;
 	opacity: 0.45;
@@ -663,9 +675,11 @@
 	cursor: pointer;
 	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 .footer-button .material-symbols-outlined {
 	transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 .footer-button:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -673,13 +687,16 @@
 	color: #0d9488 !important;
 	border-color: transparent;
 }
+
 .footer-button:hover .material-symbols-outlined {
 	transform: rotate(-180deg);
 }
+
 /* Edit button — teal hover, no icon spin */
 .footer-button.edit-button:hover .material-symbols-outlined {
 	transform: none !important;
 }
+
 .footer-button.is-prompted {
 	background: #0d9488;
 	color: #fff !important;
@@ -687,6 +704,7 @@
 	transform: translateY(-1px);
 	animation: dcPromptRose 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
+
 .footer-button.is-prompted .material-symbols-outlined {
 	animation: dcPromptIcon 0.6s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
 }
@@ -720,6 +738,7 @@
 	color: #444a60 !important;
 	border-color: rgba(74, 79, 99, 0.26);
 }
+
 .footer-icon-button.lock-button.is-locked .material-symbols-outlined {
 	font-variation-settings: 'FILL' 1;
 }
@@ -732,15 +751,18 @@
 	box-shadow: 0 4px 14px rgba(229, 57, 53, 0.28);
 	border-color: transparent;
 }
+
 .footer-icon-button.danger-button:hover .material-symbols-outlined {
 	animation: dcShake 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 .footer-icon-button.is-prompted {
 	background: #e53935;
 	color: #fff !important;
 	border-color: transparent;
 	animation: dcPromptRed 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
+
 .footer-icon-button.danger-button.is-prompted {
 	width: auto;
 	padding: 0 9px;
@@ -755,6 +777,7 @@
 	opacity: 0.42;
 	cursor: not-allowed;
 }
+
 .footer-icon-button.danger-button.is-disabled:hover {
 	transform: none;
 	box-shadow: none;
@@ -762,6 +785,7 @@
 	color: #64748b !important;
 	border-color: rgba(0, 0, 0, 0.08);
 }
+
 .footer-icon-button.danger-button.is-disabled:hover .material-symbols-outlined {
 	animation: none;
 }
@@ -781,6 +805,7 @@
 	cursor: pointer;
 	transition: color 150ms;
 }
+
 .footer-history-button:hover {
 	color: #0d9488 !important;
 }
@@ -808,17 +833,21 @@
 	scrollbar-color: rgba(13, 148, 136, 0.3) transparent;
 	animation: histIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
 .history-panel::-webkit-scrollbar {
 	width: 8px;
 }
+
 .history-panel::-webkit-scrollbar-track {
 	background: transparent;
 	margin: 2px;
 }
+
 .history-panel::-webkit-scrollbar-thumb {
 	background: rgba(13, 148, 136, 0.3);
 	border-radius: 999px;
 }
+
 .history-panel::-webkit-scrollbar-thumb:hover {
 	background: #0d9488;
 }
@@ -876,10 +905,12 @@
 	font-variant-numeric: tabular-nums;
 	padding: 0px 5px;
 }
+
 .history-timestamp-date {
 	font-size: 13px;
 	font-weight: 800;
 }
+
 .history-timestamp-time {
 	font-size: 11px;
 	opacity: 0.6;
@@ -899,6 +930,7 @@
 	color: #0d9488;
 	font-variant-numeric: tabular-nums;
 }
+
 .history-balance {
 	display: flex;
 	gap: 2px;
@@ -907,6 +939,7 @@
 	font-variant-numeric: tabular-nums;
 	font-size: 14px;
 }
+
 .history-arrow {
 	padding: 0px 5px;
 	color: #94a3b8;
@@ -954,6 +987,7 @@
 		transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
 		box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 .debts-empty-button:hover {
 	transform: scale(1.03);
 	box-shadow: 0 4px 16px rgba(13, 148, 136, 0.35);
@@ -980,6 +1014,7 @@
 		transform: translateX(1px) rotate(3deg);
 	}
 }
+
 @keyframes dcPromptRose {
 	0% {
 		box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.3);
@@ -989,6 +1024,7 @@
 		box-shadow: 0 0 0 9px transparent;
 	}
 }
+
 @keyframes dcPromptRed {
 	0% {
 		box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5);
@@ -998,6 +1034,7 @@
 		box-shadow: 0 0 0 9px transparent;
 	}
 }
+
 @keyframes dcPromptIcon {
 	from {
 		transform: scale(1);
@@ -1006,6 +1043,7 @@
 		transform: scale(1.18);
 	}
 }
+
 @keyframes dcCoda {
 	0%,
 	72%,
@@ -1070,10 +1108,13 @@
 	.card-head {
 		flex-wrap: wrap;
 	}
+
 	.due-chip {
 		margin-left: auto;
 	}
+
 	::ng-deep .due-date-picker .p-datepicker-input {
 		width: 100px;
 	}
+
 }

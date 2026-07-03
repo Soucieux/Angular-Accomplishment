@@ -148,6 +148,7 @@ button {
 	.hide-on-narrow-or-mobile {
 		display: none !important;
 	}
+
 }
 
 /* ── Tauri app — glass card top-section coverage ────────────────────────────

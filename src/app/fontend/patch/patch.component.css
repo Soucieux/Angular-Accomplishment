@@ -80,6 +80,7 @@
 	.view-switch__button {
 		transition: none;
 	}
+
 }
 
 /* ─────────────────────────────────────────
@@ -172,27 +173,34 @@
 	background: #dcfce7;
 	color: #15803d;
 }
+
 .chip:nth-child(1) .dot {
 	background: #16a34a;
 }
+
 .chip:nth-child(2) {
 	background: #fef3c7;
 	color: #b45309;
 }
+
 .chip:nth-child(2) .dot {
 	background: #d97706;
 }
+
 .chip:nth-child(3) {
 	background: #fee2e2;
 	color: #b91c1c;
 }
+
 .chip:nth-child(3) .dot {
 	background: #dc2626;
 }
+
 .chip:nth-child(4) {
 	background: #eff6ff;
 	color: #1d4ed8;
 }
+
 .chip:nth-child(4) .dot {
 	background: #3b82f6;
 }
@@ -212,9 +220,11 @@
 .release-section:nth-child(1) {
 	border-left-color: #16a34a;
 }
+
 .release-section:nth-child(2) {
 	border-left-color: #d97706;
 }
+
 .release-section:nth-child(3) {
 	border-left-color: #64748b;
 }
@@ -231,9 +241,11 @@
 .release-section:nth-child(1) .section-heading {
 	color: #15803d;
 }
+
 .release-section:nth-child(2) .section-heading {
 	color: #b45309;
 }
+
 .release-section:nth-child(3) .section-heading {
 	color: #475569;
 }
@@ -265,9 +277,11 @@
 .release-section:nth-child(1) .section-item::before {
 	color: #16a34a;
 }
+
 .release-section:nth-child(2) .section-item::before {
 	color: #d97706;
 }
+
 .release-section:nth-child(3) .section-item::before {
 	color: #64748b;
 }
@@ -554,15 +568,19 @@
 .heatmap-legend-cell.intensity-0 {
 	background: #ede9f8;
 }
+
 .heatmap-legend-cell.intensity-1 {
 	background: #cdc5ef;
 }
+
 .heatmap-legend-cell.intensity-2 {
 	background: #9d92e2;
 }
+
 .heatmap-legend-cell.intensity-3 {
 	background: #7a7cf0;
 }
+
 .heatmap-legend-cell.intensity-4 {
 	background: #5a4dd6;
 }
@@ -615,18 +633,22 @@
 	background: #ede9f8;
 	color: transparent;
 }
+
 .heatmap-cell.intensity-1 {
 	background: #cdc5ef;
 	color: #4e3d9c;
 }
+
 .heatmap-cell.intensity-2 {
 	background: #9d92e2;
 	color: #fff;
 }
+
 .heatmap-cell.intensity-3 {
 	background: #7a7cf0;
 	color: #fff;
 }
+
 .heatmap-cell.intensity-4 {
 	background: #5a4dd6;
 	color: #fff;
@@ -1479,9 +1501,11 @@
 .page-header-row {
 	animation: pnReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
 .toolbar {
 	animation: pnReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
 }
+
 .stats-strip {
 	animation: pnReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both;
 }
@@ -1597,4 +1621,5 @@
 	.stat-mobile-hidden {
 		display: none;
 	}
+
 }

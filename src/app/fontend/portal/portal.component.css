@@ -1001,6 +1001,7 @@
 	.mini-access-denied__card {
 		animation: none;
 	}
+
 }
 
 /* ─────────────────────────────────────────
@@ -1020,6 +1021,7 @@
 .page-header {
 	animation: nxReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
 .links-section {
 	animation: nxReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
@@ -1207,4 +1209,5 @@
 		top: 0 !important;
 		left: 0 !important;
 	}
+
 }

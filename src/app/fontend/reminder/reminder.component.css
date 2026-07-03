@@ -411,6 +411,7 @@
 	.rm-shared-by {
 		max-width: 70px;
 	}
+
 }
 
 .rm-chip-custom {
@@ -949,9 +950,11 @@
 .rm-masthead {
 	animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
 .rm-filter-bar {
 	animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
 }
+
 .rm-card-grid {
 	animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
 }
@@ -1020,4 +1023,5 @@
 		flex: 1 1 0;
 		min-width: 0;
 	}
+
 }

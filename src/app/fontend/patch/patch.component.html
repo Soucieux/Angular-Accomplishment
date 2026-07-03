@@ -3,9 +3,7 @@
 		<div class="page-header">
 			<div class="eyebrow">{{ PATCH_EYEBROW }}</div>
 			<h1 class="page-title">
-				{{
-					currentView === PATCH_VIEW_PATCH ? PATCH_LABEL_PATCH_NOTES : PATCH_LABEL_RELEASE_NOTES
-				}}
+				{{ currentView === PATCH_VIEW_PATCH ? PATCH_LABEL_PATCH_NOTES : PATCH_LABEL_RELEASE_NOTES }}
 			</h1>
 			<p class="page-subtitle">
 				{{
@@ -17,22 +15,22 @@
 			<div class="header-ornament"></div>
 		</div>
 		<div class="view-switch">
-			<span
-				class="view-switch__thumb"
-				[class.is-release]="currentView === PATCH_VIEW_RELEASE"></span>
+			<span class="view-switch__thumb" [class.is-release]="currentView === PATCH_VIEW_RELEASE"></span>
 			<button
 				type="button"
 				class="view-switch__button"
 				[class.is-active]="currentView === PATCH_VIEW_PATCH"
 				(click)="selectView(PATCH_VIEW_PATCH)">
-				{{ PATCH_SWITCH_PREFIX_SPRINT }}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
+				{{ PATCH_SWITCH_PREFIX_SPRINT
+				}}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
 			</button>
 			<button
 				type="button"
 				class="view-switch__button"
 				[class.is-active]="currentView === PATCH_VIEW_RELEASE"
 				(click)="selectView(PATCH_VIEW_RELEASE)">
-				{{ PATCH_SWITCH_PREFIX_RELEASE }}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
+				{{ PATCH_SWITCH_PREFIX_RELEASE
+				}}<span class="view-switch__suffix"> {{ PATCH_SWITCH_NOTES }}</span>
 			</button>
 		</div>
 	</div>
@@ -88,24 +86,33 @@
 								<div class="heatmap-year-label">{{ year }}</div>
 								@for (idx of PATCH_HEATMAP_MONTH_INDICES; track idx) {
 									<div [class]="'heatmap-cell ' + getHeatmapCellClass(year, idx)">
-										{{ getHeatmapCount(year, idx) > 0 && !isHeatmapFuture(year, idx) ? getHeatmapCount(year, idx) : '' }}
+										{{
+											getHeatmapCount(year, idx) > 0 && !isHeatmapFuture(year, idx)
+												? getHeatmapCount(year, idx)
+												: ''
+										}}
 									</div>
 								}
 							}
 						</div>
 						<div class="heatmap-footer">
 							<span>{{ PATCH_HEATMAP_FOOTER_FUTURE }}</span>
-							<span><strong>{{ statsTotal }}</strong> {{ PATCH_HEATMAP_FOOTER_ITEMS }} {{ heatmapYearCount }} {{ PATCH_HEATMAP_FOOTER_YEARS }}</span>
+							<span
+								><strong>{{ statsTotal }}</strong> {{ PATCH_HEATMAP_FOOTER_ITEMS }}
+								{{ heatmapYearCount }} {{ PATCH_HEATMAP_FOOTER_YEARS }}</span
+							>
 						</div>
 					</div>
 				</div>
 				<span class="stat-divider">·</span>
 				<span class="stat-chip">
-					<span class="stat-number stat-resolved">{{ statsResolved }}</span> {{ PATCH_STAT_BUGS_RESOLVED }}
+					<span class="stat-number stat-resolved">{{ statsResolved }}</span>
+					{{ PATCH_STAT_BUGS_RESOLVED }}
 				</span>
 				<span class="stat-divider stat-mobile-hidden">·</span>
 				<span class="stat-chip stat-mobile-hidden">
-					<span class="stat-number stat-progress">{{ statsInProgress }}</span> {{ PATCH_STAT_IN_PROGRESS }}
+					<span class="stat-number stat-progress">{{ statsInProgress }}</span>
+					{{ PATCH_STAT_IN_PROGRESS }}
 				</span>
 				<span class="stat-divider stat-mobile-hidden">·</span>
 				<span class="stat-chip stat-mobile-hidden">
@@ -136,43 +143,45 @@
 					<th class="element">{{ PATCH_TABLE_HEADER_ELEMENT }}</th>
 					<th class="details">{{ PATCH_TABLE_HEADER_DETAILS }}</th>
 					<th class="status">
-						{{ PATCH_COL_STATUS }}
-						<p-columnFilter
-							class="column-filter"
-							#columnFilter
-							display="menu"
-							field="status"
-							matchMode="equals"
-							[showOperator]="false"
-							[showMatchModes]="false"
-							[showAddButton]="false"
-							[showApplyButton]="false"
-							[showClearButton]="false">
-							<ng-template pTemplate="filtericon">
-								<i class="pi pi-filter custom-filter-icon"></i>
-							</ng-template>
-							<ng-template #filter let-value let-filter="filterCallback">
-								<div class="status-filter">
-									@for (severityOption of allSeverity; track severityOption.severity) {
-										<p-tag
-											[value]="severityOption.severity"
-											[icon]="getSeverityIcon(severityOption.severity)"
-											[severity]="getSeverity(severityOption.severity)"
-											[class.selected]="value === severityOption.severity"
-											(click)="filter(severityOption.severity)">
-										</p-tag>
-									}
-								</div>
-								<!-- Custom clear -->
-								<p-tag
-									[value]="PATCH_BTN_CLEAR_FILTER"
-									icon="pi pi-times"
-									severity="secondary"
-									class="clear-tag"
-									(click)="filter(null); columnFilter.hide()">
-								</p-tag>
-							</ng-template>
-						</p-columnFilter>
+						<span class="status-th-content">
+							{{ PATCH_COL_STATUS }}
+							<p-columnFilter
+								class="column-filter"
+								#columnFilter
+								display="menu"
+								field="status"
+								matchMode="equals"
+								[showOperator]="false"
+								[showMatchModes]="false"
+								[showAddButton]="false"
+								[showApplyButton]="false"
+								[showClearButton]="false">
+								<ng-template pTemplate="filtericon">
+									<i class="pi pi-filter custom-filter-icon"></i>
+								</ng-template>
+								<ng-template #filter let-value let-filter="filterCallback">
+									<div class="status-filter">
+										@for (severityOption of allSeverity; track severityOption.severity) {
+											<p-tag
+												[value]="severityOption.severity"
+												[icon]="getSeverityIcon(severityOption.severity)"
+												[severity]="getSeverity(severityOption.severity)"
+												[class.selected]="value === severityOption.severity"
+												(click)="filter(severityOption.severity)">
+											</p-tag>
+										}
+									</div>
+									<!-- Custom clear -->
+									<p-tag
+										[value]="PATCH_BTN_CLEAR_FILTER"
+										icon="pi pi-times"
+										severity="secondary"
+										class="clear-tag"
+										(click)="filter(null); columnFilter.hide()">
+									</p-tag>
+								</ng-template>
+							</p-columnFilter>
+						</span>
 					</th>
 					<th class="timestamp">{{ PATCH_TABLE_HEADER_TIMESTAMP }}</th>
 					<th class="edit-button hide-on-narrow-or-mobile">{{ LABEL_EDIT }}</th>
@@ -229,9 +238,7 @@
 						</td>
 					}
 					@if (shouldShowElement(getRenderedData(t), rowIndex)) {
-						<td
-							[attr.rowspan]="getElementRowSpan(getRenderedData(t), rowIndex)"
-							class="element">
+						<td [attr.rowspan]="getElementRowSpan(getRenderedData(t), rowIndex)" class="element">
 							<!-- This one is not needed as we are not updating the element name -->
 							<!-- @if(editedRows.has(row.key)){
                             <input
@@ -252,7 +259,7 @@
 								pTextarea
 								variant="filled"
 								fluid
-								[(ngModel)]="editedRows.get(row.key).updated.details"
+								[(ngModel)]="getEditState(row.key).updated.details"
 								class="input textarea-input"
 								(keyup.enter)="completeEdit(row)"></textarea>
 						} @else {
@@ -265,12 +272,10 @@
 							<p-select
 								optionLabel="severity"
 								optionValue="severity"
-								[options]="
-									editedRows.get(row.key).original.isBug ? bugSeverity : severity
-								"
+								[options]="getEditState(row.key).original.isBug ? bugSeverity : severity"
 								[appendTo]="'body'"
 								panelStyleClass="dropdown-panel-font"
-								[(ngModel)]="editedRows.get(row.key).updated.status"
+								[(ngModel)]="getEditState(row.key).updated.status"
 								class="input"
 								(keyup.enter)="completeEdit(row)">
 								<ng-template #selectedItem let-value>
@@ -333,11 +338,11 @@
 			</ng-template>
 			<ng-template pTemplate="footer">
 				@if (
-				!loading &&
-				t.rows &&
-				(t.first ?? 0) + t.rows > t.totalRecords - 1 &&
-				utilities.getIsUserAlive()
-			) {
+					!loading &&
+					t.rows &&
+					(t.first ?? 0) + t.rows > t.totalRecords - 1 &&
+					utilities.getIsUserAlive()
+				) {
 					<tr class="hide-on-narrow-or-mobile">
 						<td class="component">
 							<p-select
@@ -437,9 +442,7 @@
 			@if (notes[0]; as latest) {
 				<section class="release-hero">
 					<div class="hero-body">
-						<span class="release-badge"
-							>{{ latest.badge }} &middot; {{ latest.version }}</span
-						>
+						<span class="release-badge">{{ latest.badge }} &middot; {{ latest.version }}</span>
 						<h2 class="hero-title">{{ latest.title }}</h2>
 						<div class="hero-date">{{ latest.date }}</div>
 						<p class="hero-summary">{{ latest.summary }}</p>

@@ -10,7 +10,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { Table, TableModule } from 'primeng/table';
+import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { InputText } from 'primeng/inputtext';
@@ -20,7 +20,6 @@ import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	COMPONENT_DESTROY,
-	DIALOG_CONFIRM,
 	STATS_FIELD_TOTAL_PATCH_NOTES,
 	TOAST_INFO,
 	TOAST_WARN,
@@ -46,6 +45,7 @@ import {
 	STATUS_TODO,
 	DIALOG_BTN_CONFIRM,
 	DIALOG_BTN_DELETE,
+	MSG_DELETING,
 	PATCH_MSG_DELETE_CONFIRM,
 	PATCH_LABEL_PATCH_NOTES,
 	PATCH_LABEL_RELEASE_NOTES,
@@ -93,7 +93,7 @@ import {
 	NAV_LABEL_VAULT,
 	NAV_LABEL_SIGN_IN
 } from '../../common/locale/locale-strings';
-import { PATCH_HEATMAP_MONTH_INDICES, ReleaseNote } from './patch.model';
+import { PATCH_HEATMAP_MONTH_INDICES, PatchNote, PatchNoteEditState, ReleaseNote } from './patch.model';
 import { Observable, catchError, firstValueFrom, of, startWith, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
@@ -277,14 +277,14 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected itemsPerPage = 8;
 	protected isNarrowViewport!: boolean;
 	protected skeletonRows = Array.from({ length: this.itemsPerPage });
-	protected editedRows = new Map<string, any>();
+	protected editedRows = new Map<string, PatchNoteEditState>();
 	protected hoveredRowIndex: number | null = null;
 	private previousDataLength: number | null = null;
 	/**
 	 * Full ordered list of patch notes (no dummy row), kept in sync by the subscription tap.
 	 * any: Patch note records are schema-less CloudBase documents with no fixed TypeScript type
 	 */
-	private patchNotesList: any[] = [];
+	private patchNotesList: PatchNote[] = [];
 	/**
 	 * The page (first-item index) the user intends to be on.
 	 * Updated by user navigation and add/delete logic.
@@ -492,15 +492,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @returns A zeroed-out patch note record object.
 	 */
-	private emptyRecord(): {
-		key: string;
-		component: string;
-		element: string;
-		details: string;
-		status: any;
-		timestamp: string;
-		isBug: boolean;
-	} {
+	private emptyRecord(): PatchNote {
 		return {
 			key: '',
 			component: '',
@@ -517,8 +509,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param row - The row to start editing.
 	 */
-	protected async startEdit(row: any) {
-		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, row._openid)) return;
+	protected async startEdit(row: PatchNote) {
+		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, row._openid ?? '')) return;
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
 
@@ -528,12 +520,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param row - The row to complete editing.
 	 */
-	protected async completeEdit(row: any) {
+	protected async completeEdit(row: PatchNote) {
 		const record = this.editedRows.get(row.key);
 		if (!record) return;
 
 		// Step 1: Diff the snapshot against the edited state to find what actually changed
-		const changes: any = {};
+		const changes: Partial<PatchNote> = {};
 
 		if (record.original.details !== record.updated.details.trim()) {
 			changes.details = record.updated.details.trim();
@@ -622,10 +614,12 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const noteIndex = this.patchNotesList.findIndex((note) => note.key === key) + 1;
 		const newTotal = this.patchNotesList.length - 1;
 
-		// Step 2: Open the confirmation dialog; the async callback runs only if the user confirms
-		this.dialogService.openDialog(
+		/* Step 2: Open the confirmation dialog; the delete runs behind the blocking overlay
+		   so a repeat click cannot fire a duplicate database call. */
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
+			[PATCH_MSG_DELETE_CONFIRM, DIALOG_BTN_CONFIRM, DIALOG_BTN_DELETE],
+			MSG_DELETING,
 			async () => {
 				try {
 					await this.databaseService.removePatchNote(
@@ -640,8 +634,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				} catch (error) {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
-			},
-			[PATCH_MSG_DELETE_CONFIRM, DIALOG_BTN_CONFIRM, DIALOG_BTN_DELETE]
+			}
 		);
 	}
 
@@ -652,7 +645,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param event - The PrimeNG paginator event containing the new first-item index.
 	 */
-	protected pageChange(event: any) {
+	protected pageChange(event: TablePageEvent) {
 		this._savedFirst = event.first;
 		this.indexOfFirstItem = event.first;
 	}
@@ -781,7 +774,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param rowIndex - The starting row index.
 	 * @returns The number of consecutive rows with the same component.
 	 */
-	protected getComponentRowSpan(data: any[], rowIndex: number) {
+	protected getComponentRowSpan(data: PatchNote[], rowIndex: number) {
 		const currentComponent = data[rowIndex].component;
 		let span = 1;
 
@@ -804,7 +797,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param rowIndex - The starting row index.
 	 * @returns The number of consecutive rows with the same element.
 	 */
-	protected getElementRowSpan(data: any[], rowIndex: number) {
+	protected getElementRowSpan(data: PatchNote[], rowIndex: number) {
 		const currentElement = data[rowIndex].element;
 		const currentComponent = data[rowIndex].component;
 		let span = 1;
@@ -824,7 +817,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param rowIndex - The row index to check.
 	 * @returns true if the component column should be displayed.
 	 */
-	protected shouldShowComponent(data: any[], rowIndex: number) {
+	protected shouldShowComponent(data: PatchNote[], rowIndex: number) {
 		if (rowIndex === 0 || rowIndex === this.indexOfFirstItem) return true;
 		return data[rowIndex].component !== data[rowIndex - 1].component;
 	}
@@ -837,7 +830,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param rowIndex - The row index to check.
 	 * @returns true if the element column should be displayed.
 	 */
-	protected shouldShowElement(data: any[], rowIndex: number) {
+	protected shouldShowElement(data: PatchNote[], rowIndex: number) {
 		if (rowIndex === 0 || rowIndex === this.indexOfFirstItem) return true;
 		return (
 			data[rowIndex].element !== data[rowIndex - 1].element ||
@@ -852,7 +845,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param data - The PrimeNG table data object.
 	 * @returns The rendered data array.
 	 */
-	protected getRenderedData(data: any) {
+	protected getRenderedData(data: Table): PatchNote[] {
 		return data.filteredValue ?? data.value ?? [];
 	}
 
@@ -864,7 +857,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param rowIndex - The row index to check.
 	 * @returns true if the row shares the same component as the hovered row.
 	 */
-	protected isInSameComponentGroup(data: any[], rowIndex: number): boolean {
+	protected isInSameComponentGroup(data: PatchNote[], rowIndex: number): boolean {
 		if (this.hoveredRowIndex === null) return false;
 		return data[rowIndex]?.component === data[this.hoveredRowIndex]?.component;
 	}
@@ -877,7 +870,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @param rowIndex - The row index to check.
 	 * @returns true if the row shares the same component and element as the hovered row.
 	 */
-	protected isInSameElementGroup(data: any[], rowIndex: number): boolean {
+	protected isInSameElementGroup(data: PatchNote[], rowIndex: number): boolean {
 		if (this.hoveredRowIndex === null) return false;
 		const thisRow = data[rowIndex];
 		const hoveredRow = data[this.hoveredRowIndex];
@@ -962,7 +955,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The count of in-progress records.
 	 */
 	protected get statsInProgress(): number {
-		return this.patchNotesList.filter((note: any) => note.status === STATUS_IN_PROGRESS).length;
+		return this.patchNotesList.filter((note) => note.status === STATUS_IN_PROGRESS).length;
 	}
 
 	/**
@@ -971,7 +964,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The count of open bug records.
 	 */
 	protected get statsOpenBugs(): number {
-		return this.patchNotesList.filter((note: any) => note.status === STATUS_DEBUG).length;
+		return this.patchNotesList.filter((note) => note.status === STATUS_DEBUG).length;
 	}
 
 	/**
@@ -980,7 +973,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * @returns The count of resolved bug records.
 	 */
 	protected get statsResolved(): number {
-		return this.patchNotesList.filter((note: any) => note.status === STATUS_RESOLVED).length;
+		return this.patchNotesList.filter((note) => note.status === STATUS_RESOLVED).length;
 	}
 
 	/**
@@ -1054,5 +1047,16 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		const count = this.getHeatmapCount(year, monthIdx);
 		const band = this.getHeatmapIntensity(count);
 		return count > 0 ? `intensity-${band} has-data` : 'intensity-0';
+	}
+
+	/**
+	 * Gets the active edit snapshot for a row. Only called from template blocks that are
+	 * rendered while the row is being edited, so the entry is guaranteed to exist.
+	 *
+	 * @param key - The document key of the row being edited.
+	 * @returns The original and updated snapshot pair for the row.
+	 */
+	protected getEditState(key: string): PatchNoteEditState {
+		return this.editedRows.get(key)!;
 	}
 }

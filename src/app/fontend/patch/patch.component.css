@@ -14,7 +14,7 @@
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 16px;
-	margin-bottom: 14px;
+	margin-bottom: 10px;
 }
 
 .page-header {
@@ -389,7 +389,7 @@
 .header-ornament {
 	width: 60px;
 	height: 2px;
-	margin: 12px 0 22px;
+	margin: 10px 0;
 	background: linear-gradient(90deg, #667eea, #7c3aed);
 	border-radius: 1px;
 	opacity: 0.7;
@@ -551,11 +551,21 @@
 	border-radius: 5px;
 }
 
-.heatmap-legend-cell.intensity-0 { background: #ede9f8; }
-.heatmap-legend-cell.intensity-1 { background: #cdc5ef; }
-.heatmap-legend-cell.intensity-2 { background: #9d92e2; }
-.heatmap-legend-cell.intensity-3 { background: #7a7cf0; }
-.heatmap-legend-cell.intensity-4 { background: #5a4dd6; }
+.heatmap-legend-cell.intensity-0 {
+	background: #ede9f8;
+}
+.heatmap-legend-cell.intensity-1 {
+	background: #cdc5ef;
+}
+.heatmap-legend-cell.intensity-2 {
+	background: #9d92e2;
+}
+.heatmap-legend-cell.intensity-3 {
+	background: #7a7cf0;
+}
+.heatmap-legend-cell.intensity-4 {
+	background: #5a4dd6;
+}
 
 .heatmap-grid {
 	display: grid;
@@ -601,11 +611,26 @@
 	box-shadow: 0 3px 12px rgba(102, 126, 234, 0.35);
 }
 
-.heatmap-cell.intensity-0 { background: #ede9f8; color: transparent; }
-.heatmap-cell.intensity-1 { background: #cdc5ef; color: #4e3d9c; }
-.heatmap-cell.intensity-2 { background: #9d92e2; color: #fff; }
-.heatmap-cell.intensity-3 { background: #7a7cf0; color: #fff; }
-.heatmap-cell.intensity-4 { background: #5a4dd6; color: #fff; }
+.heatmap-cell.intensity-0 {
+	background: #ede9f8;
+	color: transparent;
+}
+.heatmap-cell.intensity-1 {
+	background: #cdc5ef;
+	color: #4e3d9c;
+}
+.heatmap-cell.intensity-2 {
+	background: #9d92e2;
+	color: #fff;
+}
+.heatmap-cell.intensity-3 {
+	background: #7a7cf0;
+	color: #fff;
+}
+.heatmap-cell.intensity-4 {
+	background: #5a4dd6;
+	color: #fff;
+}
 
 .heatmap-cell.future {
 	background: rgba(220, 215, 240, 0.22);
@@ -725,7 +750,16 @@
 
 ::ng-deep .p-datatable .p-datatable-thead > tr > th .p-column-header-content {
 	color: rgba(255, 255, 255, 0.92) !important;
-	gap: 8px !important;
+	gap: 5px !important;
+}
+
+/* The Status header content (label + filter icon) as one inline group, nudged slightly
+   right so it sits closer to the centre-aligned status cells below it. */
+.status-th-content {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	transform: translateX(7px);
 }
 
 /* ─────────────────────────────────────────
@@ -1000,7 +1034,6 @@
 /* 3. Style the Icon (The only part you actually see) */
 .custom-filter-icon {
 	color: rgba(255, 255, 255, 0.65);
-	padding: 6px;
 	border-radius: 6px;
 	transition: all 0.2s ease;
 }
@@ -1488,11 +1521,6 @@
 
 	::ng-deep .p-datatable .p-datatable-tbody > tr > td:not(.status) {
 		font-size: 13px !important;
-	}
-
-	::ng-deep .p-datatable .p-datatable-thead > tr > th.status {
-		padding-top: 24px !important;
-		padding-bottom: 8px !important;
 	}
 
 	.p-datatable th.status .p-column-header-content {

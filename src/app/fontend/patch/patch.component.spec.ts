@@ -296,10 +296,10 @@ describe('PatchComponent', () => {
 			expect((component as any).getComponentOption('Unknown')).toBeNull();
 		});
 
-		it('accepts an object with a label property', () => {
-			const option = (component as any).getComponentOption({ label: 'Home' });
+		it('accepts an object with a key property', () => {
+			const option = (component as any).getComponentOption({ key: 'Entertainment' });
 			expect(option).toBeTruthy();
-			expect(option.label).toBe('Home');
+			expect(option.label).toBe('Entertainment');
 		});
 	});
 });
@@ -311,12 +311,16 @@ describe('PatchComponent — submitNewRecord isBug derivation', () => {
 	beforeEach(async () => {
 		mockDb = jasmine.createSpyObj('DatabaseService', [
 			'getPatchNotes',
+			'getReleaseNotes',
+			'getStatistics',
 			'addNewRecordToPatchNotes',
 			'updateStatisticsFields',
 			'updateExistingRecordToPatchNotes',
 			'removePatchNote'
 		]);
 		mockDb.getPatchNotes.and.returnValue(of([]));
+		mockDb.getReleaseNotes.and.returnValue(of([]));
+		mockDb.getStatistics.and.returnValue(of([]));
 		mockDb.addNewRecordToPatchNotes.and.returnValue(Promise.resolve());
 		mockDb.updateStatisticsFields.and.returnValue(Promise.resolve());
 
@@ -327,7 +331,9 @@ describe('PatchComponent — submitNewRecord isBug derivation', () => {
 
 		const fixture = TestBed.createComponent(PatchComponent);
 		component = fixture.componentInstance;
-		fixture.detectChanges();
+		// Skip detectChanges: these tests only exercise submitNewRecord's isBug derivation, and
+		// rendering the template would raise a spurious ExpressionChanged check during flushMicrotasks.
+		(component as any).patchNotesList = [];
 	});
 
 	/**

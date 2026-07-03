@@ -1,3 +1,21 @@
+/** A patch note record as read from the database, with the document key attached. */
+export interface PatchNote {
+	key: string;
+	_openid?: string;
+	component: string;
+	element: string;
+	details: string;
+	status: string | undefined;
+	timestamp: string;
+	isBug: boolean;
+}
+
+/** Snapshot pair held per row while an inline edit is active. */
+export interface PatchNoteEditState {
+	original: PatchNote;
+	updated: PatchNote;
+}
+
 export interface ReleaseNoteSection {
 	heading: string;
 	items: string[];

@@ -64,7 +64,8 @@
 						<div class="summary-bar-meta">
 							<span>{{ group.pct }}{{ DEBT_LABEL_PCT_CLEARED }}</span>
 							<span
-								>{{ formatMoney(group.paid, group.code === DEBT_CURRENCY_CNY) }} {{ DEBT_LABEL_OF }}
+								>{{ formatMoney(group.paid, group.code === DEBT_CURRENCY_CNY) }}
+								{{ DEBT_LABEL_OF }}
 								{{ formatMoney(group.original, group.code === DEBT_CURRENCY_CNY) }}</span
 							>
 						</div>
@@ -169,7 +170,7 @@
 									class="card-balance"
 									[class.is-paid]="item.paid"
 									[class.is-bump]="balanceBumpItems[item.key]">
-									{{ formatMoney(item.debt ?? 0, isCnyCurrency(item)) }}
+									{{ formatMoney(item.debt, isCnyCurrency(item)) }}
 								</span>
 								@if (item.paid) {
 									<span class="card-paid-tag">
@@ -191,7 +192,7 @@
 								<div
 									class="card-progress-fill"
 									[style.width.%]="getDebtProgress(item)"
-									[class.is-paid]="item?.paid"></div>
+									[class.is-paid]="item.paid"></div>
 							</div>
 							<div class="card-progress-meta">
 								<span>{{ getDebtProgress(item) }}{{ DEBT_LABEL_PCT_PAID }}</span>
@@ -199,12 +200,13 @@
 									>{{
 										formatMoney(
 											getDebtProgress(item) === 100
-												? (item?.original ?? 0)
-												: (item?.original ?? 0) - (item?.debt ?? 0),
+												? item.original
+												: item.original - item.debt,
 											isCnyCurrency(item)
 										)
 									}}
-									{{ DEBT_LABEL_OF }} {{ formatMoney(item?.original ?? 0, isCnyCurrency(item)) }}</span
+									{{ DEBT_LABEL_OF }}
+									{{ formatMoney(item.original, isCnyCurrency(item)) }}</span
 								>
 							</div>
 

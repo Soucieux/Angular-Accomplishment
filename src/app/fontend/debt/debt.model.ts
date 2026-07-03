@@ -5,6 +5,31 @@ export interface PaymentEntry {
 	timestamp: string;
 }
 
+/** A debt record as read from the database, with the document key attached. */
+export interface DebtItem {
+	key: string;
+	_openid: string;
+	name: string;
+	debt: number;
+	original: number;
+	date: string | null;
+	paid: boolean;
+	type?: string;
+	category?: string;
+	currency?: string;
+	payments?: Record<number, PaymentEntry>;
+}
+
+/** The normalized upcoming-expense shape synced to the statistics document. */
+export interface UpcomingExpense {
+	type: string;
+	name: string;
+	date: string;
+	debt: number;
+	original: number;
+	category: string;
+}
+
 /** Submitted form data returned by the add-debt dialog to its caller. */
 export interface NewDebtData {
 	name: string;

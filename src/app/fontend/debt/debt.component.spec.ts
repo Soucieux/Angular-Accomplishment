@@ -39,7 +39,8 @@ describe('DebtComponent', () => {
 			'resetDebtRecord',
 			'removeRecordFromDebtTable',
 			'addNewRecordToDebt',
-			'updateStatisticsFields'
+			'updateStatisticsFields',
+			'updateUserStatsFields'
 		]);
 		mockDb.getDebtSonataTableDetails.and.returnValue(of([]));
 		mockDb.updateSingleValueForDebtTable.and.returnValue(Promise.resolve());
@@ -48,6 +49,9 @@ describe('DebtComponent', () => {
 		mockDb.removeRecordFromDebtTable.and.returnValue(Promise.resolve());
 		mockDb.addNewRecordToDebt.and.returnValue(Promise.resolve());
 		mockDb.updateStatisticsFields.and.returnValue(Promise.resolve());
+		// Called by the component's syncStatistics debounce timer; without it the 0-delay
+		// setTimeout throws an uncaught TypeError that wedges the Karma runner (30s hang).
+		mockDb.updateUserStatsFields.and.returnValue(Promise.resolve());
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
 			'openDialog',
@@ -77,7 +81,7 @@ describe('DebtComponent', () => {
 
 	afterEach(() => {
 		CloudbaseService['userId'] = '';
-		CloudbaseService['userRole'] = '';
+		CloudbaseService['userRole'] = [];
 		CloudbaseService['userName'] = '';
 		CloudbaseService['_authReady$'] = new ReplaySubject<boolean>(1);
 		CloudbaseService['_loginState$'] = new BehaviorSubject<boolean>(false);

@@ -63,6 +63,7 @@ import {
 	DEBT_DUE_LABEL_TOMORROW,
 	DEBT_MSG_PAYING,
 	DEBT_MSG_DELETING_PAYMENT,
+	MSG_SAVING,
 	DEBT_MSG_RESETTING,
 	DEBT_CONFIRM_DELETE_PAYMENT_MSG,
 	DEBT_CONFIRM_DELETE_PAYMENT_HEADER,
@@ -94,8 +95,10 @@ import {
 import {
 	DEBT_CATEGORY_DEFS,
 	DebtCategoryDef,
+	DebtItem,
 	NewDebtData,
-	PaymentEntry
+	PaymentEntry,
+	UpcomingExpense
 } from './debt.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TimeoutService } from '../../common/timeout/timeout.service';
@@ -147,16 +150,16 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected readonly DEBT_LABEL_CUSTOM_PAY = DEBT_LABEL_CUSTOM_PAY;
 	protected loading = true;
 	protected isHoverCapable!: boolean;
-	protected updatedDebtSonataItems: any[] = [];
-	protected originalDebtSonataItems!: any[];
+	protected updatedDebtSonataItems: DebtItem[] = [];
+	protected originalDebtSonataItems!: DebtItem[];
 	protected expandedItems: Record<string, boolean> = {};
 	protected balanceBumpItems: Record<string, boolean> = {};
 	protected isPromptedReset: Record<string, boolean> = {};
 	protected isPromptedDelete: Record<string, boolean> = {};
 	protected customInputState: Record<string, string | null> = {};
 	protected saveIndicator = false;
-	protected debtItems$!: Observable<any[]>;
-	private upcomingExpenses: any[] = [];
+	protected debtItems$!: Observable<DebtItem[]>;
+	private upcomingExpenses: UpcomingExpense[] = [];
 	private paymentsData: Record<string, Record<number, PaymentEntry>> = {};
 	private activeWriteKeys = new Set<string>();
 	private promptedResetTimers: Record<string, ReturnType<typeof setTimeout>> = {};
@@ -166,7 +169,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
 	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS.map((categoryDef) => ({
 		...categoryDef,
-		label: DEBT_CATEGORY_LABELS[categoryDef.key] ?? '',
+		label: DEBT_CATEGORY_LABELS[categoryDef.key] ?? ''
 	}));
 
 	constructor(
@@ -215,7 +218,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 						const currentByKey = new Map(
 							this.updatedDebtSonataItems.map((item) => [item.key, item])
 						);
-						this.updatedDebtSonataItems = rows.map((row: any) =>
+						this.updatedDebtSonataItems = rows.map((row) =>
 							this.activeWriteKeys.has(row.key)
 								? (currentByKey.get(row.key) ?? structuredClone(row))
 								: structuredClone(row)
@@ -223,7 +226,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 						this.timeoutService.clear(TIMEOUT_KEY_DEBT);
 						this.loading = false;
 						this.paymentsData = rows.reduce(
-							(acc: Record<string, Record<number, PaymentEntry>>, item: any) => ({
+							(acc: Record<string, Record<number, PaymentEntry>>, item) => ({
 								...acc,
 								[item.key]: this.activeWriteKeys.has(item.key)
 									? (this.paymentsData[item.key] ?? {})
@@ -232,8 +235,8 @@ export class DebtComponent implements OnInit, OnDestroy {
 							{}
 						);
 						this.upcomingExpenses = rows
-							.filter((item: any) => item.date && !item.paid)
-							.map((item: any) => this.toUpcomingExpense(item));
+							.filter((item) => item.date && !item.paid)
+							.map((item) => this.toUpcomingExpense(item));
 						this.syncStatistics();
 					});
 				})
@@ -291,7 +294,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 			timestamp: Utilities.getCurrentFormattedTime(true)
 		};
 		// Step 2 : Persist payment and balance update via block dialog
-		await this.openBlockDialog(async () => {
+		await this.dialogService.runBlocking(this.dialogComponentContainer, DEBT_MSG_PAYING, async () => {
 			/* Apply mutations synchronously before any DB write — immune to subscription replacements.
 			   activeWriteKeys shields this entry from subscription overwrites until the write settles. */
 			this.activeWriteKeys.add(entryKey);
@@ -310,7 +313,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 			} finally {
 				this.activeWriteKeys.delete(entryKey);
 			}
-		}, DEBT_MSG_PAYING);
+		});
 		this.paymentsData = {
 			...this.paymentsData,
 			[entryKey]: { ...currentPayments, [nextIndex]: newEntry }
@@ -442,7 +445,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The debt entry to check ownership for.
 	 * @returns True if the current user is permitted to act on the item.
 	 */
-	protected isOwner(item: any): boolean {
+	protected isOwner(item: DebtItem): boolean {
 		return Utilities.checkPermission(item._openid);
 	}
 
@@ -453,7 +456,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The debt entry that owns the payment history row.
 	 * @param entry - The indexed payment entry the user clicked.
 	 */
-	protected onHistoryRowClick(item: any, entry: { index: number; value: PaymentEntry }): void {
+	protected onHistoryRowClick(item: DebtItem, entry: { index: number; value: PaymentEntry }): void {
 		if (!this.isOwner(item)) return;
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
@@ -480,6 +483,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 */
 	protected async deletePaymentEntry(entryKey: string, index: number): Promise<void> {
 		const item = this.findUpdatedItem(entryKey);
+		if (!item) return;
 		const currentItem = this.paymentsData[entryKey];
 
 		// Step 1 : Compute restored balance and filtered payment history
@@ -492,7 +496,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		) as Record<number, PaymentEntry>;
 
 		// Step 2 : Persist removal via block dialog to prevent duplicate DB calls
-		await this.openBlockDialog(async () => {
+		await this.dialogService.runBlocking(this.dialogComponentContainer, DEBT_MSG_DELETING_PAYMENT, async () => {
 			this.activeWriteKeys.add(entryKey);
 
 			item.debt = updatedDebt;
@@ -513,7 +517,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 			} finally {
 				this.activeWriteKeys.delete(entryKey);
 			}
-		}, DEBT_MSG_DELETING_PAYMENT);
+		});
 
 		// Step 3 : Refresh the open history panel — paymentsData changed inside the block dialog
 		this.cdr.detectChanges();
@@ -568,25 +572,28 @@ export class DebtComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Creates a new debt record in CloudBase from the data returned by the add-debt dialog.
+	 * The write runs behind a blocking overlay so a duplicate submission cannot fire twice.
 	 *
 	 * @param debtData - The validated form data submitted from the add-debt dialog.
 	 */
-	private async addNewDebt(debtData: NewDebtData): Promise<void> {
-		try {
-			await this.databaseService.addNewRecordToDebt({
-				name: debtData.name,
-				[DEBT_VALUE_KEY_DEBT]: debtData.amount,
-				[DEBT_VALUE_KEY_ORIGINAL]: debtData.amount,
-				[DEBT_VALUE_KEY_DATE]: debtData.dueDate,
-				[DEBT_VALUE_KEY_PAID]: this.isDebtFullySettled(debtData.amount),
-				[DEBT_VALUE_KEY_TYPE]: debtData.isPermanent ? DEBT_TYPE_PERMANENT : DEBT_TYPE_TEMP,
-				[DEBT_VALUE_KEY_CATEGORY]: debtData.category,
-				[DEBT_VALUE_KEY_CURRENCY]: debtData.currency
-			});
-			this.triggerSaveIndicator();
-		} catch (error) {
-			this.dialogService.handleError(this.dialogComponentContainer, error);
-		}
+	private addNewDebt(debtData: NewDebtData): void {
+		this.dialogService.runBlocking(this.dialogComponentContainer, MSG_SAVING, async () => {
+			try {
+				await this.databaseService.addNewRecordToDebt({
+					name: debtData.name,
+					[DEBT_VALUE_KEY_DEBT]: debtData.amount,
+					[DEBT_VALUE_KEY_ORIGINAL]: debtData.amount,
+					[DEBT_VALUE_KEY_DATE]: debtData.dueDate,
+					[DEBT_VALUE_KEY_PAID]: this.isDebtFullySettled(debtData.amount),
+					[DEBT_VALUE_KEY_TYPE]: debtData.isPermanent ? DEBT_TYPE_PERMANENT : DEBT_TYPE_TEMP,
+					[DEBT_VALUE_KEY_CATEGORY]: debtData.category,
+					[DEBT_VALUE_KEY_CURRENCY]: debtData.currency
+				});
+				this.triggerSaveIndicator();
+			} catch (error) {
+				this.dialogService.handleError(this.dialogComponentContainer, error);
+			}
+		});
 	}
 
 	/**
@@ -639,7 +646,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		const previousPayments = { ...(this.paymentsData[entryKey] ?? {}) };
 
 		// Step 3: Apply local mutation, persist to DB, and roll back on failure
-		await this.openBlockDialog(async () => {
+		await this.dialogService.runBlocking(this.dialogComponentContainer, DEBT_MSG_RESETTING, async () => {
 			this.activeWriteKeys.add(entryKey);
 			item.debt = originalAmount;
 			item.paid = newPaid;
@@ -659,7 +666,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 			} finally {
 				this.activeWriteKeys.delete(entryKey);
 			}
-		}, DEBT_MSG_RESETTING);
+		});
 
 		// Step 4: Wipe the in-session payment cache and refresh upcoming stats after the write settles
 		this.paymentsData = { ...this.paymentsData, [entryKey]: {} };
@@ -695,7 +702,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param entryKey - The unique key of the entry to update.
 	 * @param valueKey - The field name inside the entry's object.
 	 */
-	private async updateTableSingleValue(entryKey: string, valueKey: string): Promise<void> {
+	private async updateTableSingleValue(entryKey: string, valueKey: keyof DebtItem): Promise<void> {
 		const updatedItem = this.findUpdatedItem(entryKey);
 		const originalItem = this.findOriginalItem(entryKey);
 		if (!updatedItem || !originalItem) return;
@@ -709,34 +716,24 @@ export class DebtComponent implements OnInit, OnDestroy {
 		try {
 			// Step 3: Skip the round-trip when the value has not changed — avoids unnecessary DB writes on toggle flicker
 			if (updatedValue !== oldValue) {
-				await this.databaseService.updateSingleValueForDebtTable(entryKey, valueKey, updatedValue, updatedItem.name);
+				await this.databaseService.updateSingleValueForDebtTable(
+					entryKey,
+					valueKey,
+					updatedValue,
+					updatedItem.name
+				);
 				this.triggerSaveIndicator();
 			}
 		} catch (error) {
 			/* Restore the previous value only if the session expired — other errors indicate a server failure
 			   and the local state is still the intended value the user wanted. */
 			if (error instanceof SessionExpiredError) {
-				updatedItem[valueKey] = oldValue;
+				(updatedItem as Record<keyof DebtItem, unknown>)[valueKey] = oldValue;
 			}
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		} finally {
 			this.activeWriteKeys.delete(entryKey);
 		}
-	}
-
-	/**
-	 * Opens the block dialog with the given message and executes the callback,
-	 * blocking the UI until the callback settles to prevent duplicate DB calls.
-	 *
-	 * {@link payDebt} - Blocks while payment chip DB writes are in-flight.
-	 * {@link deletePaymentEntry} - Blocks while the history-delete DB write is in-flight.
-	 *
-	 * @param callback - The async operation to run while the dialog is open.
-	 * @param message - The loading message to display in the block dialog.
-	 * @returns A promise that resolves when the callback completes.
-	 */
-	private openBlockDialog(callback: () => Promise<void>, message: string): Promise<void> {
-		return this.dialogService.openDialog(this.dialogComponentContainer, 'block', callback, message);
 	}
 
 	/**
@@ -762,7 +759,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param entryKey - The unique key of the item to find.
 	 * @returns The matching item, or undefined if not found.
 	 */
-	private findUpdatedItem(entryKey: string): any {
+	private findUpdatedItem(entryKey: string): DebtItem | undefined {
 		return (this.updatedDebtSonataItems ?? []).find((item) => item.key === entryKey);
 	}
 
@@ -772,7 +769,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param entryKey - The unique key of the item to find.
 	 * @returns The matching item, or undefined if not found.
 	 */
-	private findOriginalItem(entryKey: string): any {
+	private findOriginalItem(entryKey: string): DebtItem | undefined {
 		return (this.originalDebtSonataItems ?? []).find((item) => item.key === entryKey);
 	}
 
@@ -788,10 +785,12 @@ export class DebtComponent implements OnInit, OnDestroy {
 			this.syncStatTimer = null;
 
 			// Cap the upcoming list to the activity-log limit — the stats collection has a fixed document size
-			this.databaseService.updateUserStatsFields({
-				[STATS_FIELD_DEBT_UPCOMING]: this.upcomingExpenses.slice(0, STATS_CAP_ACTIVITY_LOG),
-				[STATS_FIELD_TOTAL_DEBTS]: this.upcomingExpenses.length
-			}).catch(() => {});
+			this.databaseService
+				.updateUserStatsFields({
+					[STATS_FIELD_DEBT_UPCOMING]: this.upcomingExpenses.slice(0, STATS_CAP_ACTIVITY_LOG),
+					[STATS_FIELD_TOTAL_DEBTS]: this.upcomingExpenses.length
+				})
+				.catch(() => {});
 		}, 0);
 	}
 
@@ -801,18 +800,11 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The raw debt record from the database.
 	 * @returns The normalized upcoming-expense object.
 	 */
-	private toUpcomingExpense(item: any): {
-		type: string;
-		name: string;
-		date: string;
-		debt: number;
-		original: number;
-		category: string;
-	} {
+	private toUpcomingExpense(item: DebtItem): UpcomingExpense {
 		return {
 			type: DEBT_ITEM_EXPENSE,
 			name: item.name,
-			date: item.date,
+			date: item.date ?? '',
 			debt: item.debt ?? 0,
 			original: item.original ?? 0,
 			category: item.category ?? ''
@@ -825,8 +817,8 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 */
 	private resyncUpcomingFromLocalData(): void {
 		this.upcomingExpenses = (this.updatedDebtSonataItems ?? [])
-			.filter((item: any) => item.date && !item.paid)
-			.map((item: any) => this.toUpcomingExpense(item));
+			.filter((item) => item.date && !item.paid)
+			.map((item) => this.toUpcomingExpense(item));
 		this.syncStatistics();
 	}
 
@@ -840,7 +832,8 @@ export class DebtComponent implements OnInit, OnDestroy {
 		this.cdr.detectChanges();
 
 		// Step 2: Cancel any in-flight hide timer so rapid consecutive saves do not race-dismiss the indicator early
-		if (this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA]) clearTimeout(this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA]);
+		if (this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA])
+			clearTimeout(this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA]);
 
 		// Step 3: Schedule the hide after 1 s and trigger another paint when it fires
 		this.saveIndicatorTimeouts[DATABASE_DEBT_SONATA] = setTimeout(() => {
@@ -857,7 +850,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns The index into {@link categoryDefs} for the item's deterministic category.
 	 */
-	private getCategoryIndexForItem(item: any): number {
+	private getCategoryIndexForItem(item: DebtItem): number {
 		const name: string = item.name ?? '';
 
 		// Step 1: Compute a polynomial rolling hash over the item name characters
@@ -953,7 +946,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 */
 	private buildDebtCycleDiff(
 		data: NewDebtData,
-		original: any,
+		original: DebtItem,
 		newPaid: boolean
 	): Record<string, unknown> {
 		const fields: Record<string, unknown> = {};
@@ -1017,7 +1010,8 @@ export class DebtComponent implements OnInit, OnDestroy {
 		   pct is clamped to 100 so the progress bar never overflows its container. */
 		return Object.entries(groups).map(([code, group]) => {
 			const paidAmount = Math.max(0, group.original - group.owed);
-			const pct = group.original > 0 ? Math.min(100, Math.round((paidAmount / group.original) * 100)) : 0;
+			const pct =
+				group.original > 0 ? Math.min(100, Math.round((paidAmount / group.original) * 100)) : 0;
 			return {
 				code,
 				symbol: code === 'CNY' ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD,
@@ -1035,7 +1029,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @returns The number of unpaid items.
 	 */
 	protected get activeCount(): number {
-		return (this.updatedDebtSonataItems ?? []).filter((item: any) => !item.paid).length;
+		return (this.updatedDebtSonataItems ?? []).filter((item) => !item.paid).length;
 	}
 
 	/**
@@ -1044,7 +1038,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @returns The number of paid items.
 	 */
 	protected get paidCount(): number {
-		return (this.updatedDebtSonataItems ?? []).filter((item: any) => item.paid).length;
+		return (this.updatedDebtSonataItems ?? []).filter((item) => item.paid).length;
 	}
 
 	/**
@@ -1053,7 +1047,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @returns The count of items due within 14 days.
 	 */
 	protected get dueSoonCount(): number {
-		return (this.updatedDebtSonataItems ?? []).filter((item: any) => {
+		return (this.updatedDebtSonataItems ?? []).filter((item) => {
 			if (item.paid) return false;
 			const status = this.getDueStatus(item.date);
 			return status.soon && !status.overdue;
@@ -1066,7 +1060,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @returns The count of overdue items.
 	 */
 	protected get overdueCount(): number {
-		return (this.updatedDebtSonataItems ?? []).filter((item: any) => {
+		return (this.updatedDebtSonataItems ?? []).filter((item) => {
 			if (item.paid) return false;
 			return this.getDueStatus(item.date).overdue;
 		}).length;
@@ -1078,7 +1072,10 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @returns The sum of all history entry counts.
 	 */
 	protected get totalPayments(): number {
-		return Object.values(this.paymentsData).reduce((sum, history) => sum + Object.keys(history).length, 0);
+		return Object.values(this.paymentsData).reduce(
+			(sum, history) => sum + Object.keys(history).length,
+			0
+		);
 	}
 
 	/**
@@ -1088,7 +1085,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns The DebtCategoryDef containing icon, label, and gradient.
 	 */
-	protected getCategoryForItem(item: any): DebtCategoryDef {
+	protected getCategoryForItem(item: DebtItem): DebtCategoryDef {
 		if (item[DEBT_VALUE_KEY_CATEGORY]) {
 			const stored = this.categoryDefs.find(
 				(categoryDef) => categoryDef.key === item[DEBT_VALUE_KEY_CATEGORY]
@@ -1106,7 +1103,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns The due label string.
 	 */
-	protected getDueLabelForItem(item: any): string {
+	protected getDueLabelForItem(item: DebtItem): string {
 		const dateStr: string | null | undefined = item.date;
 		if (!dateStr) return DEBT_DUE_LABEL_NONE;
 
@@ -1115,7 +1112,8 @@ export class DebtComponent implements OnInit, OnDestroy {
 		if (diffDays === null) return DEBT_DUE_LABEL_NONE;
 
 		// Step 2: Return the most specific short label for near-term dates
-		if (diffDays < 0) return `${DEBT_DAYS_OVERDUE_PREFIX}${Math.abs(diffDays)}${DEBT_DAYS_OVERDUE_SUFFIX}`;
+		if (diffDays < 0)
+			return `${DEBT_DAYS_OVERDUE_PREFIX}${Math.abs(diffDays)}${DEBT_DAYS_OVERDUE_SUFFIX}`;
 		if (diffDays === 0) return DEBT_DUE_LABEL_TODAY;
 		if (diffDays === 1) return DEBT_DUE_LABEL_TOMORROW;
 		if (diffDays <= 30) return `${diffDays}${DEBT_DAYS_LEFT_SUFFIX}`;
@@ -1135,7 +1133,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns The icon ligature string.
 	 */
-	protected getDueIconForItem(item: any): string {
+	protected getDueIconForItem(item: DebtItem): string {
 		const status = this.getDueStatus(item.date);
 		if (status.overdue) return DEBT_DUE_ICON_OVERDUE;
 		return DEBT_DUE_ICON_DEFAULT;
@@ -1147,7 +1145,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns 'is-over', 'is-soon', or empty string.
 	 */
-	protected getDueClassForItem(item: any): string {
+	protected getDueClassForItem(item: DebtItem): string {
 		const status = this.getDueStatus(item.date);
 		if (status.overdue) return DEBT_DUE_CLASS_OVERDUE;
 		if (status.soon) return DEBT_DUE_CLASS_SOON;
@@ -1164,26 +1162,19 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @returns A formatted currency string.
 	 */
 	protected formatMoney(amount: number, isChinese: boolean): string {
-		const symbol = isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
-		const formatted = Math.abs(amount).toLocaleString('en-US', {
-			minimumFractionDigits: 0,
-			maximumFractionDigits: 2
-		});
-		return amount < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
+		return Utilities.formatMoney(amount, isChinese);
 	}
 
 	/**
-	 * Formats an amount as a compact currency string (e.g. $1k for 1000).
-	 * Used for the preset chip labels.
+	 * Delegates to Utilities to format an amount as a compact currency string
+	 * (e.g. $1k for 1000). Used for the preset chip labels.
 	 *
 	 * @param amount - The numeric value to format.
 	 * @param isChinese - Whether to use the ¥ symbol.
 	 * @returns A compact currency label string.
 	 */
 	protected formatCompact(amount: number, isChinese: boolean): string {
-		const symbol = isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
-		if (amount >= 1000) return `${symbol}${Math.floor(amount / 1000)}k`;
-		return `${symbol}${amount}`;
+		return Utilities.formatCompactMoney(amount, isChinese);
 	}
 
 	/**
@@ -1192,7 +1183,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns A whole-number percentage between 0 and 100.
 	 */
-	protected getDebtProgress(item: any): number {
+	protected getDebtProgress(item: DebtItem): number {
 		const original: number = item.original ?? 0;
 		if (original <= 0) return item.paid ? 100 : 0;
 		const repaid = Math.max(0, original - (item.debt ?? 0));
@@ -1226,7 +1217,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns Whether the item has type 'permanent'.
 	 */
-	protected isItemPermanent(item: any): boolean {
+	protected isItemPermanent(item: DebtItem): boolean {
 		return item.type === DEBT_TYPE_PERMANENT;
 	}
 
@@ -1238,7 +1229,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns Whether the item's currency is CNY.
 	 */
-	protected isCnyCurrency(item: any): boolean {
+	protected isCnyCurrency(item: DebtItem): boolean {
 		const stored = item[DEBT_VALUE_KEY_CURRENCY];
 		if (stored) return stored === DEBT_CURRENCY_CNY;
 		return Utilities.checkIfChinese(item.name ?? '');
@@ -1252,7 +1243,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param item - The Account Expenses item (schema-less CloudBase document).
 	 * @returns Whether the payment chips should be in a disabled state.
 	 */
-	protected isPayDisabled(item: any): boolean {
+	protected isPayDisabled(item: DebtItem): boolean {
 		return item.paid || item.debt <= 0;
 	}
 

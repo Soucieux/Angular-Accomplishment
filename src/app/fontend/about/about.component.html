@@ -1,89 +1,89 @@
 <div class="container-about">
-		<!-- Status chip -->
-		<p-chip class="about-chip">
-			<span class="chip-dot"></span>
-			<span>About · last updated May 2026</span>
-		</p-chip>
+	<!-- Status chip -->
+	<p-chip class="about-chip">
+		<span class="chip-dot"></span>
+		<span>About · last updated May 2026</span>
+	</p-chip>
 
-		<!-- H1 -->
-		<h1 class="about-h1">A <span class="highlight-pill">Mind Vault</span>, Kept In Public.</h1>
+	<!-- H1 -->
+	<h1 class="about-h1">A <span class="highlight-pill">Mind Vault</span>, Kept In Public.</h1>
 
-		<!-- Intro paragraph -->
-		<p class="about-intro">
-			Welcome to my personal corner of the web. This space serves as my mind vault: a repository for
-			the films that stay with me, a compass for my most important dates, my life task-engine, and a
-			roadmap of what's coming next. Stay a while — there's always more being built here, with new
-			features landing and growing every single week.
-		</p>
+	<!-- Intro paragraph -->
+	<p class="about-intro">
+		Welcome to my personal corner of the web. This space serves as my mind vault: a repository for the
+		films that stay with me, a compass for my most important dates, my life task-engine, and a roadmap of
+		what's coming next. Stay a while — there's always more being built here, with new features landing and
+		growing every single week.
+	</p>
 
-		<!-- Quick stats -->
-		<div class="about-stats">
-			<div class="stat-card">
-				<div class="stat-number">10+</div>
-				<div class="stat-label">years in cs</div>
-			</div>
-			<div class="stat-card">
-				<div class="stat-number">2</div>
-				<div class="stat-label">degrees</div>
-			</div>
-			<div class="stat-card">
-				<div class="stat-number">3+</div>
-				<div class="stat-label">years at cra</div>
-			</div>
-			<div class="stat-card">
-				<div class="stat-number">2+</div>
-				<div class="stat-label">yrs indie dev</div>
-			</div>
-			<div class="stat-card">
-				<div class="stat-number">5+</div>
-				<div class="stat-label">yrs experience</div>
-			</div>
-			<div class="stat-card">
-				<div class="stat-number">3</div>
-				<div class="stat-label">career roles</div>
-			</div>
+	<!-- Quick stats -->
+	<div class="about-stats">
+		<div class="stat-card">
+			<div class="stat-number">10+</div>
+			<div class="stat-label">years in cs</div>
 		</div>
-
-		<!-- Section heading -->
-		<div class="section-head">
-			<h2 class="section-title">The Long Way Here</h2>
-			<span class="section-meta">{{ TIMELINE.length }} milestones</span>
+		<div class="stat-card">
+			<div class="stat-number">2</div>
+			<div class="stat-label">degrees</div>
 		</div>
-
-		<!-- Timeline -->
-		<div class="timeline-rail">
-			<div class="rail-bg"></div>
-			<div class="rail-fill" [style.height]="fillHeight()"></div>
-
-			@for (item of TIMELINE; track item.date; let index = $index) {
-				<div
-					#timelineEntry
-					class="timeline-entry"
-					[class.is-visible]="visibleEntries.has(index)"
-					[style.transition-delay]="visibleEntries.has(index) ? entryDelay(index) : '0ms'"
-					(mouseenter)="setHoveredEntry(index)"
-					(mouseleave)="resetHoverState()">
-					<div
-						[class]="'timeline-node ' + item.tag"
-						[class.is-hovered]="hoveredIndex === index"
-						[style.background]="hoveredIndex === index ? item.color : null"
-						[style.border-color]="hoveredIndex === index ? item.color : null">
-						<span class="material-symbols-outlined timeline-icon">{{ item.icon }}</span>
-					</div>
-					<div [class]="'timeline-card ' + item.tag" [class.is-hovered]="hoveredIndex === index">
-						<div class="timeline-card-header">
-							<h3 class="timeline-title">
-								{{ item.title
-								}}<span class="hide-on-narrow-or-mobile">
-									· <span class="timeline-date">{{ item.date }}</span></span
-								>
-							</h3>
-							<p-tag [value]="item.tag" class="timeline-tag" [rounded]="true" />
-						</div>
-						<p class="timeline-subheader">{{ item.subheader }}</p>
-						<p class="timeline-body">{{ item.body }}</p>
-					</div>
-				</div>
-			}
+		<div class="stat-card">
+			<div class="stat-number">3+</div>
+			<div class="stat-label">years at cra</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-number">2+</div>
+			<div class="stat-label">yrs indie dev</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-number">5+</div>
+			<div class="stat-label">yrs experience</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-number">3</div>
+			<div class="stat-label">career roles</div>
 		</div>
 	</div>
+
+	<!-- Section heading -->
+	<div class="section-head">
+		<h2 class="section-title">The Long Way Here</h2>
+		<span class="section-meta">{{ TIMELINE.length }} milestones</span>
+	</div>
+
+	<!-- Timeline -->
+	<div class="timeline-rail">
+		<div class="rail-bg"></div>
+		<div class="rail-fill" [style.height]="fillHeight()"></div>
+
+		@for (item of TIMELINE; track item.date; let index = $index) {
+			<div
+				#timelineEntry
+				class="timeline-entry"
+				[class.is-visible]="visibleEntries.has(index)"
+				[style.transition-delay]="visibleEntries.has(index) ? entryDelay(index) : '0ms'"
+				(mouseenter)="setHoveredEntry(index)"
+				(mouseleave)="resetHoverState()">
+				<div
+					[class]="'timeline-node ' + item.tag"
+					[class.is-hovered]="hoveredIndex === index"
+					[style.background]="hoveredIndex === index ? item.color : null"
+					[style.border-color]="hoveredIndex === index ? item.color : null">
+					<span class="material-symbols-outlined timeline-icon">{{ item.icon }}</span>
+				</div>
+				<div [class]="'timeline-card ' + item.tag" [class.is-hovered]="hoveredIndex === index">
+					<div class="timeline-card-header">
+						<h3 class="timeline-title">
+							{{ item.title
+							}}<span class="hide-on-narrow-or-mobile">
+								· <span class="timeline-date">{{ item.date }}</span></span
+							>
+						</h3>
+						<p-tag [value]="item.tag" class="timeline-tag" [rounded]="true" />
+					</div>
+					<p class="timeline-subheader">{{ item.subheader }}</p>
+					<p class="timeline-body">{{ item.body }}</p>
+				</div>
+			</div>
+		}
+	</div>
+</div>

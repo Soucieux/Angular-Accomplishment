@@ -25,12 +25,12 @@ p-chip.about-chip {
 	-webkit-backdrop-filter: blur(8px);
 	border: 1px solid rgba(74, 222, 128, 0.55);
 	border-radius: 999px;
-	padding: 6px 12px 6px 8px;
-	font-size: 12px;
+	padding: 5px 12px;
+	font-size: 16px;
 	font-weight: 500;
 	letter-spacing: 0.04em;
 	color: rgba(255, 255, 255, 0.9);
-	margin-bottom: 28px;
+	margin-bottom: 20px;
 }
 
 .chip-dot {
@@ -81,7 +81,7 @@ p-chip.about-chip {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 1rem;
-	margin-top: 32px;
+	margin-top: 26px;
 }
 
 .stat-card {
@@ -97,13 +97,14 @@ p-chip.about-chip {
 
 .stat-number {
 	font-size: 22px;
-	font-weight: 700;
+	font-weight: 800;
 	color: #fff;
 	letter-spacing: -0.02em;
 }
 
 .stat-label {
-	font-size: 11px;
+	font-size: 13px;
+    font-weight: 500;
 	color: rgba(255, 255, 255, 0.65);
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
@@ -130,7 +131,8 @@ p-chip.about-chip {
 }
 
 .section-meta {
-	font-size: 12px;
+	font-size: 14px;
+	font-weight: 800;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: rgba(255, 255, 255, 0.55);
@@ -319,6 +321,11 @@ p-chip.about-chip {
    Narrow viewport
 ───────────────────────────────────────── */
 @media (max-width: 940px) {
+	p-chip.about-chip {
+		font-size: 15px;
+		padding: 3px 12px;
+	}
+
 	.container-about {
 		padding: 10px;
 	}
@@ -345,7 +352,7 @@ p-chip.about-chip {
 		flex: 0 0 auto;
 		padding: 10px 14px;
 		margin: 0;
-		min-width: 140px;
+		width: 48%;
 	}
 
 	.stat-number {

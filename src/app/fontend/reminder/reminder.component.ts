@@ -30,8 +30,6 @@ import { LOG } from '../../common/app.logs';
 import {
 	COMPONENT_DESTROY,
 	DATABASE_REMINDER,
-	DIALOG_BLOCK,
-	DIALOG_CONFIRM,
 	DIALOG_ERROR,
 	REMINDER_AWAIT_SUFFIX_CN,
 	REMINDER_AWAIT_SUFFIX_EN,
@@ -87,13 +85,11 @@ import {
 	REMINDER_MSG_TAG_DUPLICATE,
 	REMINDER_PLACEHOLDER_TAG,
 	REMINDER_PLACEHOLDER_TEXT,
-	REMINDER_CATEGORY_WORK,
-	REMINDER_CATEGORY_UTILITY,
-	REMINDER_CATEGORY_OTHER,
 	BTN_ADD,
 	LABEL_ALL,
 	LABEL_PERSONAL,
-	NAV_LABEL_REMINDER
+	NAV_LABEL_REMINDER,
+	reminderTagLabel
 } from '../../common/locale/locale-strings';
 import {
 	NewItem,
@@ -180,12 +176,6 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly NAV_LABEL_REMINDER = NAV_LABEL_REMINDER;
 	private readonly categoryColorMap = REMINDER_CATEGORY_COLOR_MAP;
 	private readonly baseCategorySet = new Set<string>(REMINDER_KNOWN_CATEGORIES);
-	private readonly localeCategoryLabels: Record<string, string> = {
-		Personal: LABEL_PERSONAL,
-		Work: REMINDER_CATEGORY_WORK,
-		Utility: REMINDER_CATEGORY_UTILITY,
-		Other: REMINDER_CATEGORY_OTHER
-	};
 	private gridResizeObserver?: ResizeObserver;
 	private itemsPerPage = REMINDER_ITEMS_PER_PAGE;
 	protected completedPrivateCount = 0;
@@ -308,7 +298,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.gridResizeObserver = new ResizeObserver(() =>
 				this.ngZone.run(() => this.updateGridLayout())
 			);
-			this.gridResizeObserver.observe(this.reminderPanel.nativeElement);
+			// Guard the observe: the panel is absent in the access-denied state (glass-card @if is false).
+			if (this.reminderPanel) this.gridResizeObserver.observe(this.reminderPanel.nativeElement);
 		}
 	}
 
@@ -640,40 +631,6 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Opens a confirm dialog and, on confirm, runs the given write behind a fire-and-forget blocking
-	 * overlay. The block dialog is deliberately NOT awaited: the confirm closes immediately on accept
-	 * and only the blocking overlay stays up until the write completes, so the two dialogs never linger
-	 * and vanish one after the other, and a repeat tap cannot fire a duplicate write.
-	 *
-	 * @param confirmData - The confirm dialog display data (message, header, accept label).
-	 * @param blockMessage - The message shown on the blocking overlay while the write runs.
-	 * @param write - The async write to perform once the user confirms.
-	 */
-	private confirmThenBlockingWrite(
-		confirmData: string[],
-		blockMessage: string,
-		write: () => Promise<void>
-	): void {
-		this.dialogService.openDialog(
-			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
-			async () => {
-				this.dialogService
-					.openDialog(
-						this.dialogComponentContainer,
-						DIALOG_BLOCK,
-						async () => {
-							await write();
-						},
-						blockMessage
-					)
-					.catch(() => {});
-			},
-			confirmData
-		);
-	}
-
-	/**
 	 * Marks a reminder done: permanently removes it (like delete) while incrementing the completed
 	 * counter — the private counter for the user's own items, or, for a shared item, the shared counter
 	 * of every linked member via the Cloud Function. Opens a confirmation dialog first; on confirm the
@@ -683,7 +640,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected completeItem(item: ReminderItem): void {
 		if (!this.ensureEditPermission(item.key)) return;
-		this.confirmThenBlockingWrite(
+		this.dialogService.confirmThenBlock(
+			this.dialogComponentContainer,
 			[REMINDER_MSG_COMPLETE_CONFIRM, REMINDER_COMPLETE_TITLE, DIALOG_BTN_CONFIRM],
 			REMINDER_MSG_COMPLETING,
 			() => this.completeItemWrite(item)
@@ -996,7 +954,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected openDeleteConfirmationDialog(entryKey: string): void {
 		// Guard with a permission check — only the record owner may delete
 		if (!this.ensureEditPermission(entryKey)) return;
-		this.confirmThenBlockingWrite(
+		this.dialogService.confirmThenBlock(
+			this.dialogComponentContainer,
 			[REMINDER_MSG_DELETE_CONFIRM, DIALOG_BTN_DELETE, DIALOG_BTN_CONFIRM],
 			REMINDER_MSG_DELETING,
 			() => this.removeRecordFromDatabase(entryKey)
@@ -1488,8 +1447,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns The translated label, or the tag itself if not a known category.
 	 */
 	protected categoryDisplayLabel(tag: string | undefined): string {
-		if (!tag) return '';
-		return this.localeCategoryLabels[tag] ?? tag;
+		return reminderTagLabel(tag);
 	}
 
 	/**

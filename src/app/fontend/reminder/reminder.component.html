@@ -19,10 +19,11 @@
 					{{ openCount }}
 					{{ openCount === 1 ? REMINDER_GREETING_SINGULAR : REMINDER_GREETING_PLURAL }}
 					{{ REMINDER_AWAIT_SUFFIX_EN }} <span class="cf">{{ REMINDER_AWAIT_SUFFIX_CN }}</span>
-					· {{ completedPrivateCount }} {{ REMINDER_GREETING_COMPLETED }}
-					@if (hasConnections) {
-						· {{ completedSharedCount }} {{ REMINDER_GREETING_SHARED_COMPLETED }}
-					}
+					<span class="hide-on-narrow-or-mobile">·</span>
+					<div>
+						{{ completedPrivateCount }} {{ REMINDER_GREETING_COMPLETED }} ·
+						{{ completedSharedCount }} {{ REMINDER_GREETING_SHARED_COMPLETED }}
+					</div>
 				</div>
 			</div>
 			<div
@@ -313,162 +314,171 @@
 						(keyup.enter)="addNewTextOnly()" />
 				</div>
 				<div class="rm-new-card-row2">
-					@for (tag of filterBarTags; track tag) {
-						<button
-							class="rm-category-chip"
-							[class.rm-category-chip-selected]="newItem.tag === tag"
-							[style.background]="newItem.tag === tag ? tagColor(tag) + '1f' : null"
-							[style.color]="newItem.tag === tag ? tagColor(tag) : null"
-							(click)="selectNewItemCategory(tag)">
-							@if (isKnownCategory(tag)) {
-								<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
-							} @else {
-								<span
-									class="material-symbols-outlined rm-custom-tag-dot"
-									[style.color]="newItem.tag === tag ? tagColor(tag) : null"
-									>sell</span
-								>
-							}
-							<span class="hide-on-narrow-or-mobile">{{ categoryDisplayLabel(tag) }}</span>
-						</button>
-					}
-					@if (isAddingNewTag()) {
-						<span
-							class="rm-category-chip rm-chip-editing"
-							[style.background]="
-								newItem.tag && !isKnownCategory(newItem.tag)
-									? tagColor(newItem.tag) + '1f'
-									: null
-							">
+					<div class="rm-category-chips">
+						@for (tag of filterBarTags; track tag) {
+							<button
+								class="rm-category-chip"
+								[class.rm-category-chip-selected]="newItem.tag === tag"
+								[style.background]="newItem.tag === tag ? tagColor(tag) + '1f' : null"
+								[style.color]="newItem.tag === tag ? tagColor(tag) : null"
+								(click)="selectNewItemCategory(tag)">
+								@if (isKnownCategory(tag)) {
+									<span class="rm-filter-dot" [style.background]="tagColor(tag)"></span>
+								} @else {
+									<span
+										class="material-symbols-outlined rm-custom-tag-dot"
+										[style.color]="newItem.tag === tag ? tagColor(tag) : null"
+										>sell</span
+									>
+								}
+								<span class="hide-on-narrow-or-mobile">{{ categoryDisplayLabel(tag) }}</span>
+							</button>
+						}
+						@if (isAddingNewTag()) {
 							<span
-								class="rm-filter-dot"
+								class="rm-category-chip rm-chip-editing"
 								[style.background]="
 									newItem.tag && !isKnownCategory(newItem.tag)
-										? tagColor(newItem.tag)
-										: '#94a3b8'
-								"></span>
-							<input
-								#tagInlineInput
-								class="rm-tag-chip-input"
-								type="text"
-								[placeholder]="REMINDER_PLACEHOLDER_TAG"
-								[(ngModel)]="tagSessionText"
-								(keyup.enter)="onNewItemTagUpdate()"
-								(blur)="cancelTagEdit()" />
-							<button
-								class="rm-chip-remove"
-								(mousedown)="$event.preventDefault()"
-								(click)="onCancelNewItemTagEdit()">
-								<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
-									>close</span
-								>
-							</button>
-						</span>
-					} @else {
-						<button
-							class="rm-category-chip rm-chip-custom"
-							[class.rm-category-chip-selected]="newItemHasCustomTag"
-							[class.rm-chip-custom-owner]="newItemHasCustomTag"
-							[style.background]="newItemHasCustomTag ? tagColor(newItem.tag) + '1f' : null"
-							[style.color]="newItemHasCustomTag ? tagColor(newItem.tag) : null"
-							(click)="startNewItemTagEdit(-1)">
-							@if (newItemHasCustomTag) {
+										? tagColor(newItem.tag) + '1f'
+										: null
+								">
 								<span
-									class="material-symbols-outlined rm-custom-tag-dot"
-									[style.color]="tagColor(newItem.tag)"
-									>sell</span
-								>
-							} @else {
-								<span class="rm-filter-dot" style="background: #94a3b8"></span>
-							}
-							{{ newItemHasCustomTag ? newItem.tag : REMINDER_CHIP_CUSTOM }}
-						</button>
-					}
+									class="rm-filter-dot"
+									[style.background]="
+										newItem.tag && !isKnownCategory(newItem.tag)
+											? tagColor(newItem.tag)
+											: '#94a3b8'
+									"></span>
+								<input
+									#tagInlineInput
+									class="rm-tag-chip-input"
+									type="text"
+									[placeholder]="REMINDER_PLACEHOLDER_TAG"
+									[(ngModel)]="tagSessionText"
+									(keyup.enter)="onNewItemTagUpdate()"
+									(blur)="cancelTagEdit()" />
+								<button
+									class="rm-chip-remove"
+									(mousedown)="$event.preventDefault()"
+									(click)="onCancelNewItemTagEdit()">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
+										>close</span
+									>
+								</button>
+							</span>
+						} @else {
+							<button
+								class="rm-category-chip rm-chip-custom"
+								[class.rm-category-chip-selected]="newItemHasCustomTag"
+								[class.rm-chip-custom-owner]="newItemHasCustomTag"
+								[style.background]="newItemHasCustomTag ? tagColor(newItem.tag) + '1f' : null"
+								[style.color]="newItemHasCustomTag ? tagColor(newItem.tag) : null"
+								(click)="startNewItemTagEdit(-1)">
+								@if (newItemHasCustomTag) {
+									<span
+										class="material-symbols-outlined rm-custom-tag-dot"
+										[style.color]="tagColor(newItem.tag)"
+										>sell</span
+									>
+								} @else {
+									<span class="rm-filter-dot" style="background: #94a3b8"></span>
+								}
+								{{ newItemHasCustomTag ? newItem.tag : REMINDER_CHIP_CUSTOM }}
+							</button>
+						}
+					</div>
 					<span class="rm-bar-spacer"></span>
-					@if (newItemLinkLabel) {
-						<span class="rm-link-chip" (click)="openLinkPopover($event)">
+					<div class="rm-new-bar-link">
+						@if (newItemLinkLabel) {
 							<span
-								class="material-symbols-outlined rm-icon"
-								style="font-size: 15px; padding-top: 5px"
-								>link</span
-							>
-							{{ newItemLinkLabel }}
-							<button
-								class="rm-chip-remove"
-								(click)="$event.stopPropagation(); clearNewItemLink()">
-								<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
-									>close</span
+								class="rm-link-chip"
+								[style.background]="tagColor(newItem.tag) + '14'"
+								(click)="openLinkPopover($event)">
+								<span
+									class="material-symbols-outlined rm-icon"
+									style="font-size: 15px; padding-top: 5px"
+									>link</span
 								>
-							</button>
-						</span>
-						<a
-							[href]="newItem.link"
-							target="_blank"
-							rel="noopener noreferrer"
-							class="rm-chip-external"
-							(click)="$event.stopPropagation()">
-							<span class="material-symbols-outlined rm-icon" style="font-size: 16px"
-								>open_in_new</span
-							>
-						</a>
-					} @else {
-						<button class="rm-add-field-button" (click)="openLinkPopover($event)">
-							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-								>add_link</span
-							>
-							{{ REMINDER_ADD_LINK_LABEL }}
-						</button>
-					}
-					@if (newItem.date) {
-						<span
-							class="rm-date-chip"
-							[style.background]="tagColor(newItem.tag) + '14'"
-							(click)="openDatePopover($event)">
-							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-								>calendar_today</span
-							>
-							{{ newItemDateLabel }}
-							<button
-								class="rm-chip-remove"
-								(click)="$event.stopPropagation(); clearNewItemDate()">
-								<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
-									>close</span
+								{{ newItemLinkLabel }}
+								<button
+									class="rm-chip-remove"
+									(click)="$event.stopPropagation(); clearNewItemLink()">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
+										>close</span
+									>
+								</button>
+							</span>
+							<a
+								[href]="newItem.link"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="rm-chip-external"
+								(click)="$event.stopPropagation()">
+								<span class="material-symbols-outlined rm-icon" style="font-size: 16px"
+									>open_in_new</span
 								>
-							</button>
-						</span>
-					} @else {
-						<button class="rm-add-field-button" (click)="openDatePopover($event)">
-							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-								>calendar_today</span
-							>
-							{{ REMINDER_ADD_DATE_LABEL }}
-						</button>
-					}
-					@if (newItemTimeLabel) {
-						<span
-							class="rm-date-chip"
-							[style.background]="tagColor(newItem.tag) + '14'"
-							(click)="openDatePopover($event)">
-							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-								>schedule</span
-							>
-							{{ newItemTimeLabel }}
-							<button
-								class="rm-chip-remove"
-								(click)="$event.stopPropagation(); clearNewItemTime()">
-								<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
-									>close</span
+							</a>
+						} @else {
+							<button class="rm-add-field-button" (click)="openLinkPopover($event)">
+								<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+									>add_link</span
 								>
+								{{ REMINDER_ADD_LINK_LABEL }}
 							</button>
-						</span>
-					} @else if (newItem.date) {
-						<button class="rm-add-field-button" (click)="openDatePopover($event)">
-							<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
-								>schedule</span
-							>
-							{{ REMINDER_ADD_TIME_LABEL }}
-						</button>
-					}
+						}
+					</div>
+					<div class="rm-new-bar-datetime">
+						@if (newItem.date) {
+							<span
+								class="rm-date-chip"
+								[style.background]="tagColor(newItem.tag) + '14'"
+								(click)="openDatePopover($event)">
+								<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+									>calendar_today</span
+								>
+								{{ newItemDateLabel }}
+								<button
+									class="rm-chip-remove"
+									(click)="$event.stopPropagation(); clearNewItemDate()">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
+										>close</span
+									>
+								</button>
+							</span>
+						} @else {
+							<button class="rm-add-field-button" (click)="openDatePopover($event)">
+								<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+									>calendar_today</span
+								>
+								{{ REMINDER_ADD_DATE_LABEL }}
+							</button>
+						}
+						@if (newItemTimeLabel) {
+							<span
+								class="rm-date-chip"
+								[style.background]="tagColor(newItem.tag) + '14'"
+								(click)="openDatePopover($event)">
+								<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+									>schedule</span
+								>
+								{{ newItemTimeLabel }}
+								<button
+									class="rm-chip-remove"
+									(click)="$event.stopPropagation(); clearNewItemTime()">
+									<span class="material-symbols-outlined rm-icon" style="font-size: 11px"
+										>close</span
+									>
+								</button>
+							</span>
+						} @else if (newItem.date) {
+							<button class="rm-add-field-button" (click)="openDatePopover($event)">
+								<span class="material-symbols-outlined rm-icon" style="font-size: 13px"
+									>schedule</span
+								>
+								{{ REMINDER_ADD_TIME_LABEL }}
+							</button>
+						}
+					</div>
 					@if (hasConnections) {
 						<button
 							class="rm-add-field-button rm-share-toggle"
@@ -480,7 +490,7 @@
 							{{ REMINDER_SHARE_LABEL }}
 						</button>
 					}
-					<div class="rm-new-card-divider"></div>
+					<div class="rm-new-card-divider hide-on-narrow-or-mobile"></div>
 					<button
 						class="rm-confirm-button"
 						[style.background]="tagColor(newItem.tag)"

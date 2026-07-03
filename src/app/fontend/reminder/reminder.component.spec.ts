@@ -9,9 +9,9 @@ import {
 	REMINDER_VALUE_KEY_LINK,
 	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
-	STATS_FIELD_REMINDER_UPCOMING
+	STATS_FIELD_REMINDER_UPCOMING,
+	STATS_FIELD_TOTAL_REMINDERS
 } from '../../common/constants';
-import { STATS_FIELD_REMINDER_TOTAL } from '../../common/locale/locale.en';
 import { LABEL_PERSONAL } from '../../common/locale/locale-strings';
 import { ReminderComponent } from './reminder.component';
 import { ReminderItem } from './reminder.model';
@@ -35,7 +35,7 @@ function makeItem(
 	link: string | null = null,
 	tag = ''
 ): ReminderItem {
-	return { key, _openid: 'uid1', text, date, link, tag };
+	return { key, _openid: 'uid1', text, date, link, tag, startTime: null, endTime: null };
 }
 
 describe('ReminderComponent', () => {
@@ -51,29 +51,41 @@ describe('ReminderComponent', () => {
 			'updateReminderTable',
 			'removeRecordFromReminderTable',
 			'addNewRecordToReminder',
-			'updateStatisticsFields'
+			'updateStatisticsFields',
+			'updateUserStatsFields',
+			'completeReminder'
 		]);
 		mockDb.getReminderTableDetails.and.returnValue(of([]));
 		mockDb.updateReminderTable.and.returnValue(Promise.resolve());
 		mockDb.removeRecordFromReminderTable.and.returnValue(Promise.resolve());
 		mockDb.addNewRecordToReminder.and.returnValue(Promise.resolve());
 		mockDb.updateStatisticsFields.and.returnValue(Promise.resolve());
+		mockDb.updateUserStatsFields.and.returnValue(Promise.resolve());
+		mockDb.completeReminder.and.returnValue(Promise.resolve());
+		// getUserStats is a CloudbaseService-only method the component reaches via a cast in ngOnInit.
+		(mockDb as unknown as { getUserStats: jasmine.Spy }).getUserStats = jasmine
+			.createSpy('getUserStats')
+			.and.returnValue(of(null));
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
 			'openDialog',
+			'confirmThenBlock',
 			'handleError',
 			'ensurePermission',
 			'showUnexpectedError'
 		]);
 		mockDialogService.ensurePermission.and.returnValue(true);
 		mockDialogService.openDialog.and.stub();
+		mockDialogService.confirmThenBlock.and.stub();
 		mockDialogService.handleError.and.stub();
 
 		mockUtilities = jasmine.createSpyObj<Utilities>('Utilities', [
 			'getIsUserAlive',
-			'checkIfHoverCapable'
+			'checkIfHoverCapable',
+			'checkIfChinese'
 		]);
 		mockUtilities.getIsUserAlive.and.returnValue(true);
+		mockUtilities.checkIfChinese.and.returnValue(false);
 
 		await TestBed.configureTestingModule({
 			imports: [ReminderComponent],
@@ -160,6 +172,7 @@ describe('ReminderComponent', () => {
 
 	describe('pagedItems', () => {
 		it('returns only items for the current page', () => {
+			(component as any).itemsPerPage = 10;
 			(component as any).items = Array.from({ length: 15 }, (_, i) => makeItem(`k${i}`));
 			(component as any).tagFilter = new Set<string>();
 			(component as any).page = 1;
@@ -201,10 +214,11 @@ describe('ReminderComponent', () => {
 			expect(component['totalPages']).toBe(1);
 		});
 
-		it('includes the add-card slot when no tag filter is active', () => {
-			(component as any).items = Array.from({ length: 10 }, (_, i) => makeItem(`k${i}`));
+		it('splits items across pages by the per-page size', () => {
+			(component as any).itemsPerPage = 10;
+			(component as any).items = Array.from({ length: 15 }, (_, i) => makeItem(`k${i}`));
 			(component as any).tagFilter = new Set<string>();
-			// 10 items + 1 add slot = 11, ceil(11/10) = 2 pages
+			// 15 items, ceil(15/10) = 2 pages
 			expect(component['totalPages']).toBe(2);
 		});
 	});
@@ -275,6 +289,7 @@ describe('ReminderComponent', () => {
 		});
 
 		it('offsets by page when not on the first page', () => {
+			(component as any).itemsPerPage = 10;
 			(component as any).page = 1;
 			expect((component as any).globalLabel(0)).toBe('11');
 		});
@@ -305,12 +320,12 @@ describe('ReminderComponent', () => {
 		it('writes upcoming items and total count to statistics', () => {
 			(component as any).items = [makeItem('k1', 'meet', '2025-12-01'), makeItem('k2', 'buy')];
 			(component as any).updateUpcomingToStatistics();
-			expect(mockDb.updateStatisticsFields).toHaveBeenCalledWith(
+			expect(mockDb.updateUserStatsFields).toHaveBeenCalledWith(
 				jasmine.objectContaining({
 					[STATS_FIELD_REMINDER_UPCOMING]: jasmine.arrayContaining([
 						jasmine.objectContaining({ name: 'meet', date: '2025-12-01' })
 					]),
-					[STATS_FIELD_REMINDER_TOTAL]: 2
+					[STATS_FIELD_TOTAL_REMINDERS]: 2
 				})
 			);
 		});
@@ -318,9 +333,9 @@ describe('ReminderComponent', () => {
 		it('excludes items without a date from the upcoming list', () => {
 			(component as any).items = [makeItem('k1', 'no date')];
 			(component as any).updateUpcomingToStatistics();
-			const call = mockDb.updateStatisticsFields.calls.mostRecent().args[0] as Record<string, unknown>;
+			const call = mockDb.updateUserStatsFields.calls.mostRecent().args[0] as Record<string, unknown>;
 			expect((call[STATS_FIELD_REMINDER_UPCOMING] as unknown[]).length).toBe(0);
-			expect(call[STATS_FIELD_REMINDER_TOTAL]).toBe(1);
+			expect(call[STATS_FIELD_TOTAL_REMINDERS]).toBe(1);
 		});
 	});
 
@@ -370,7 +385,8 @@ describe('ReminderComponent', () => {
 				'k1',
 				REMINDER_VALUE_KEY_TEXT,
 				'updated text',
-				'updated text'
+				'updated text',
+				false
 			);
 		});
 
@@ -396,13 +412,13 @@ describe('ReminderComponent', () => {
 
 		it('opens a dialog when permission is granted', () => {
 			(component as any).openDeleteConfirmationDialog('k1');
-			expect(mockDialogService.openDialog).toHaveBeenCalled();
+			expect(mockDialogService.confirmThenBlock).toHaveBeenCalled();
 		});
 
 		it('does not open a dialog when permission is denied', () => {
 			mockDialogService.ensurePermission.and.returnValue(false);
 			(component as any).openDeleteConfirmationDialog('k1');
-			expect(mockDialogService.openDialog).not.toHaveBeenCalled();
+			expect(mockDialogService.confirmThenBlock).not.toHaveBeenCalled();
 		});
 	});
 
@@ -414,7 +430,7 @@ describe('ReminderComponent', () => {
 			const item = (component as any).items[0];
 			await (component as any).clearDate(item);
 			expect(item.date).toBeNull();
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_DATE, null, 'text');
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_DATE, null, 'text', false);
 		});
 
 		it('does nothing when permission is denied', async () => {
@@ -434,7 +450,7 @@ describe('ReminderComponent', () => {
 			const item = (component as any).items[0];
 			await (component as any).clearLink(item);
 			expect(item.link).toBeNull();
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_LINK, null, 'text');
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_LINK, null, 'text', false);
 		});
 
 		it('does nothing when permission is denied', async () => {
@@ -479,29 +495,6 @@ describe('ReminderComponent', () => {
 		});
 	});
 
-	describe('isEditingTag', () => {
-		it('returns true for the exact item and index being edited', () => {
-			const item = makeItem('k1');
-			(component as any).tagEditSession = { item, index: 1, isNewItem: false, tagText: 'x' };
-			expect((component as any).isEditingTag(item, 1)).toBeTrue();
-		});
-
-		it('returns false for a different item', () => {
-			const item1 = makeItem('k1');
-			const item2 = makeItem('k2');
-			(component as any).tagEditSession = { item: item1, index: 0, isNewItem: false, tagText: 'x' };
-			expect((component as any).isEditingTag(item2, 0)).toBeFalse();
-		});
-	});
-
-	describe('isAddingTag', () => {
-		it('returns true when session index is -1 for the given item', () => {
-			const item = makeItem('k1');
-			(component as any).tagEditSession = { item, index: -1, isNewItem: false, tagText: '' };
-			expect((component as any).isAddingTag(item)).toBeTrue();
-		});
-	});
-
 	describe('onTagUpdate', () => {
 		it('sets the tag when index is -1 and text is non-empty', async () => {
 			(component as any).items = [makeItem('k1')];
@@ -509,52 +502,29 @@ describe('ReminderComponent', () => {
 			(component as any).tagEditSession = { item, index: -1, isNewItem: false, tagText: 'newtag' };
 			await (component as any).onTagUpdate();
 			expect(item.tag).toBe('newtag');
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, 'newtag', 'hello');
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, 'newtag', 'hello', false);
 		});
 
-		it('clears the tag when editing text is empty', async () => {
+		it('cancels without changing the tag when editing text is empty', async () => {
 			(component as any).items = [makeItem('k1', 'text', null, null, 'work')];
 			const item = (component as any).items[0];
 			(component as any).tagEditSession = { item, index: 0, isNewItem: false, tagText: '' };
 			await (component as any).onTagUpdate();
-			expect(item.tag).toBe('');
-		});
-	});
-
-	describe('removeExistingCardTag', () => {
-		it('clears the tag and persists to DB', async () => {
-			(component as any).items = [makeItem('k1', 'text', null, null, 'work')];
-			const item = (component as any).items[0];
-			await (component as any).removeExistingCardTag(0, item);
-			expect(item.tag).toBe('');
-			expect(mockDb.updateReminderTable).toHaveBeenCalledWith('k1', REMINDER_VALUE_KEY_TAG, '', 'text');
-		});
-
-		it('does nothing when permission is denied', async () => {
-			mockDialogService.ensurePermission.and.returnValue(false);
-			(component as any).items = [makeItem('k1', 'text', null, null, 'work')];
-			const item = (component as any).items[0];
-			await (component as any).removeExistingCardTag(0, item);
-			expect(mockDb.updateReminderTable).not.toHaveBeenCalled();
+			// Empty input cancels the edit; the existing tag is left untouched.
+			expect(item.tag).toBe('work');
+			expect((component as any).tagEditSession).toBeNull();
 		});
 	});
 
 	// ── new-item tag editing ──────────────────────────────────────────────────
 
 	describe('startNewItemTagEdit', () => {
-		it('opens a new-item tag-edit session', () => {
-			(component as any).newItem = { text: '', date: null, link: '', tag: 'work' };
-			(component as any).startNewItemTagEdit(0);
+		it('opens a new-item tag-edit session prefilled with the current custom tag', () => {
+			(component as any).newItem = { text: '', date: null, link: '', tag: 'mycustom' };
+			(component as any).startNewItemTagEdit(-1);
 			expect((component as any).tagEditSession).toEqual(
-				jasmine.objectContaining({ isNewItem: true, index: 0, tagText: 'work' })
+				jasmine.objectContaining({ isNewItem: true, index: -1, tagText: 'mycustom' })
 			);
-		});
-	});
-
-	describe('isEditingNewTag', () => {
-		it('returns true when the new-item session matches the given index', () => {
-			(component as any).tagEditSession = { item: null, index: 1, isNewItem: true, tagText: 'x' };
-			expect((component as any).isEditingNewTag(1)).toBeTrue();
 		});
 	});
 
@@ -562,14 +532,6 @@ describe('ReminderComponent', () => {
 		it('returns true when session is for new-item and index is -1', () => {
 			(component as any).tagEditSession = { item: null, index: -1, isNewItem: true, tagText: '' };
 			expect((component as any).isAddingNewTag()).toBeTrue();
-		});
-	});
-
-	describe('removeNewItemTag', () => {
-		it('removes the tag at the given index from newItem', () => {
-			(component as any).newItem = { text: '', date: null, link: '', tag: 'work' };
-			(component as any).removeNewItemTag(0);
-			expect((component as any).newItem.tag).toBe('');
 		});
 	});
 

@@ -38,6 +38,7 @@ import {
 	TODAY_BTN_CLEAR_ALL,
 	TODAY_CONFIRM_CLEAR_MESSAGE,
 	TODAY_CONFIRM_CLEAR_HEADER,
+	MSG_CLEARING,
 	TODAY_EYEBROW,
 	TODAY_HINT_DRAG_UNTIMED,
 	TODAY_LABEL_TASKS,
@@ -434,14 +435,15 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * (timed, untimed, and tracked) from the board and clears the database backup.
 	 */
 	protected clearAllLocalItems(): void {
-		this.dialogService.openDialog(
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			'confirm',
-			() => {
+			[TODAY_CONFIRM_CLEAR_MESSAGE, TODAY_CONFIRM_CLEAR_HEADER, TODAY_BTN_CLEAR_ALL],
+			MSG_CLEARING,
+			async () => {
 				this.tasks.update((ts) => ts.filter((task) => task.source === TASK_SOURCE_REMINDER));
-				this.databaseService.saveTodayItems([]).catch(() => {});
-			},
-			[TODAY_CONFIRM_CLEAR_MESSAGE, TODAY_CONFIRM_CLEAR_HEADER, TODAY_BTN_CLEAR_ALL]
+				// A failed clear is deliberately swallowed — the autosave effect re-syncs the backup.
+				await this.databaseService.saveTodayItems([]).catch(() => {});
+			}
 		);
 	}
 

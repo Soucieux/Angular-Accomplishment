@@ -145,15 +145,15 @@ describe('TodayComponent', () => {
 
 	it('focuses the pending name input after stopping a tracking session', fakeAsync(() => {
 		const focusSpy = jasmine.createSpy('focus');
-		(component as any).pendingInputRef = {
-			nativeElement: {
-				focus: focusSpy
-			}
-		};
 		(component as any).tracking.set({ startMin: 60, startedAt: Date.now() });
 		(component as any).nowMin.set(90);
 
+		// stopTracking sets the pending block; the focus/scroll runs in a signal effect that
+		// schedules a setTimeout. detectChanges flushes the effect; the fake ref is read when
+		// the timer fires, so set it after the effect is scheduled.
 		(component as any).stopTracking();
+		fixture.detectChanges();
+		(component as any).pendingInputRef = { nativeElement: { focus: focusSpy } };
 		tick();
 
 		expect(focusSpy).toHaveBeenCalled();
@@ -161,20 +161,13 @@ describe('TodayComponent', () => {
 
 	it('scrolls the calendar to the pending block after stopping a tracking session', fakeAsync(() => {
 		const scrollToSpy = jasmine.createSpy('scrollTo');
-		(component as any).calRef = {
-			nativeElement: {
-				scrollTo: scrollToSpy
-			}
-		};
-		(component as any).pendingInputRef = {
-			nativeElement: {
-				focus: () => {}
-			}
-		};
 		(component as any).tracking.set({ startMin: 120, startedAt: Date.now() });
 		(component as any).nowMin.set(150);
 
 		(component as any).stopTracking();
+		fixture.detectChanges();
+		(component as any).pendingInputRef = { nativeElement: { focus: () => {} } };
+		(component as any).calRef = { nativeElement: { scrollTo: scrollToSpy } };
 		tick();
 
 		expect(scrollToSpy).toHaveBeenCalledWith({

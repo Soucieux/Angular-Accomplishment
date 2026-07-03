@@ -55,12 +55,8 @@ import {
 import {
 	DIALOG_BTN_DELETE,
 	MSG_DELETE_FAILED,
+	MSG_DELETING,
 	MSG_SAVE_FAILED,
-	LABEL_ALL,
-	RECIPE_CATEGORY_CHINESE,
-	RECIPE_CATEGORY_WESTERN,
-	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_DESSERT,
 	RECIPE_PLACEHOLDER_CATEGORY,
 	RECIPE_DELETE_MESSAGE,
 	RECIPE_DELETE_TITLE,
@@ -92,6 +88,7 @@ import {
 	RECIPE_SUFFIX_MIN,
 	RECIPE_SUFFIX_SERVINGS,
 	ingredientTypeLabel,
+	recipeCategoryLabel,
 	RECIPE_BTN_ADD,
 	RECIPE_BTN_EDIT,
 	RECIPE_BTN_SAVE,
@@ -187,13 +184,6 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected readonly RECIPE_BTN_ADD_SUBPOINT = RECIPE_BTN_ADD_SUBPOINT;
 	protected readonly RECIPE_BTN_ADD_STEP = RECIPE_BTN_ADD_STEP;
 	protected readonly RECIPE_BADGE_EXAMPLE = RECIPE_BADGE_EXAMPLE;
-	private readonly localeCategoryLabels: Record<string, string> = {
-		'All':     LABEL_ALL,
-		'Chinese': RECIPE_CATEGORY_CHINESE,
-		'Western': RECIPE_CATEGORY_WESTERN,
-		'Quick':   RECIPE_CATEGORY_QUICK,
-		'Dessert': RECIPE_CATEGORY_DESSERT,
-	};
 	protected pageSize = RECIPE_PAGE_SIZE;
 
 	private recipesSub?: Subscription;
@@ -222,6 +212,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected editorCategoryInvalid = false;
 	/** True only after a failed save attempt where a named ingredient has qty but no unit. */
 	protected editorIngredientInvalid = false;
+	/** Re-entry guard: true while the editor save write is in flight. */
+	private isSavingRecipe = false;
 	/** Filtered unit suggestions shown by the unit autocomplete dropdown. */
 	protected editorUnitSuggestions: string[] = [];
 	/** True for one completeMethod cycle after focus, so focus always shows the full list. */
@@ -737,34 +729,29 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	protected removeCurrentRecipe(): void {
 		const recipeName = this.selectedRecipe?.name ?? '';
 
-		// Step 1: Show confirmation dialog before any destructive database call.
-		this.dialogService.openDialog(
+		// Confirm first; the delete then runs behind the blocking overlay so a repeat
+		// click cannot fire a duplicate database call.
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
-			() => {
-				// Step 2: Re-guard inside the callback — the ID could theoretically be cleared
+			[RECIPE_DELETE_MESSAGE, RECIPE_DELETE_TITLE, DIALOG_BTN_DELETE],
+			MSG_DELETING,
+			async () => {
+				// Re-guard inside the callback — the ID could theoretically be cleared
 				// between the dialog opening and the user confirming.
 				if (!this.editingRecipeId) return;
 				const id = this.editingRecipeId;
 
-				// Step 3: Delete from the database; navigate to the list on success, toast on failure.
-				this.databaseService
-					.removeRecipe(id, recipeName)
-					.then(() => {
-						LOG.info(this.className, `${RECIPE_LOG_DELETED} ${id}`);
-						this.dialogService.showToast(TOAST_INFO, RECIPE_MSG_DELETED);
-						this.transitionTo(RECIPE_VIEW_LIST);
-					})
-					.catch((error: unknown) => {
-						LOG.error(this.className, MSG_DELETE_FAILED, error as Error);
-						this.dialogService.showToast(
-							TOAST_ERROR,
-							MSG_DELETE_FAILED,
-							RECIPE_MSG_DELETE_FAILED_DETAIL
-						);
-					});
-			},
-			[RECIPE_DELETE_MESSAGE, RECIPE_DELETE_TITLE, DIALOG_BTN_DELETE]
+				// Delete from the database; navigate to the list on success, toast on failure.
+				try {
+					await this.databaseService.removeRecipe(id, recipeName);
+					LOG.info(this.className, `${RECIPE_LOG_DELETED} ${id}`);
+					this.dialogService.showToast(TOAST_INFO, RECIPE_MSG_DELETED);
+					this.transitionTo(RECIPE_VIEW_LIST);
+				} catch (error: unknown) {
+					LOG.error(this.className, MSG_DELETE_FAILED, error as Error);
+					this.dialogService.showToast(TOAST_ERROR, MSG_DELETE_FAILED, RECIPE_MSG_DELETE_FAILED_DETAIL);
+				}
+			}
 		);
 	}
 
@@ -1050,12 +1037,16 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 
 	/**
 	 * Validates and persists the current editor state as a new or updated recipe.
+	 * Ignores repeat clicks while a save write is already in flight.
 	 * Marks required fields invalid and returns early if validation fails.
 	 * Also blocks save if any ingredient has a quantity without a unit.
 	 * On success, writes to the database and navigates back to the list view.
 	 * The recipe watcher keeps the local list in sync automatically.
 	 */
 	protected async saveRecipe(): Promise<void> {
+		// Re-entry guard: ignore further clicks while a save write is already in flight.
+		if (this.isSavingRecipe) return;
+
 		// Step 1: Short-circuit in edit mode when nothing was changed — no database call needed.
 		if (this.editingMode === RECIPE_EDITING_MODE_EDIT && !this.isEditorDirty) {
 			this.transitionTo(RECIPE_VIEW_DETAIL);
@@ -1132,6 +1123,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		};
 
 		// Step 7: Persist and navigate to the detail view; toast and log on both success and failure.
+		this.isSavingRecipe = true;
 		try {
 			if (isEdit) {
 				await this.databaseService.updateRecipe(recipe);
@@ -1153,6 +1145,8 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 		} catch (error) {
 			LOG.error(this.className, MSG_SAVE_FAILED, error as Error);
 			this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, RECIPE_MSG_SAVE_FAILED_DETAIL);
+		} finally {
+			this.isSavingRecipe = false;
 		}
 	}
 
@@ -1404,6 +1398,6 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 * @returns The translated label for the active locale, or the raw key as fallback.
 	 */
 	protected categoryDisplayLabel(category: string): string {
-		return this.localeCategoryLabels[category] ?? category;
+		return recipeCategoryLabel(category);
 	}
 }

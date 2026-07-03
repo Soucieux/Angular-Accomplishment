@@ -24,7 +24,6 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	COMPONENT_DESTROY,
-	DIALOG_CONFIRM,
 	RESONANCE_AUTHOR_ANONYMOUS_LEGACY,
 	RESONANCE_MAX_QUOTE_LENGTH,
 	RESONANCE_SKELETON_COUNT
@@ -32,6 +31,7 @@ import {
 import {
 	DIALOG_BTN_DELETE,
 	RESONANCE_AUTHOR_ANONYMOUS,
+	MSG_DELETING,
 	RESONANCE_MSG_DELETE_CONFIRM,
 	RESONANCE_DIALOG_TITLE_DELETE,
 	RESONANCE_MSG_POSTED,
@@ -296,17 +296,17 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	 * @param quote - The quote object to delete.
 	 */
 	protected openDeleteConfirmationDialog(quote: QuoteRecord): void {
-		this.dialogService.openDialog(
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
+			[RESONANCE_MSG_DELETE_CONFIRM, RESONANCE_DIALOG_TITLE_DELETE, DIALOG_BTN_DELETE],
+			MSG_DELETING,
 			async () => {
 				try {
 					await this.databaseService.removeQuote(quote.key ?? '', quote.author ?? '');
 				} catch {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
-			},
-			[RESONANCE_MSG_DELETE_CONFIRM, RESONANCE_DIALOG_TITLE_DELETE, DIALOG_BTN_DELETE]
+			}
 		);
 	}
 }

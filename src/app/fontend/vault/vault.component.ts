@@ -21,7 +21,6 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_VAULT,
 	DIALOG_ADD_ACCOUNT,
-	DIALOG_CONFIRM,
 	SUCCESS,
 	TOAST_ERROR,
 	VAULT_KIND_NODE,
@@ -58,6 +57,7 @@ import {
 	VAULT_BANNER_SECOND,
 	VAULT_BANNER_CANCEL,
 	MSG_SAVE_FAILED,
+	MSG_DELETING,
 	DIALOG_BTN_DELETE,
 	VAULT_MSG_SAVING,
 	VAULT_MSG_REMOVING_LINK,
@@ -324,7 +324,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected removeLink(edgeKey: string, event: Event): void {
 		event.stopPropagation();
-		this.openBlockDialog(async () => {
+		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_REMOVING_LINK, async () => {
 			try {
 				await this.databaseService.removeVaultEdge(edgeKey);
 				this.triggerSaveIndicator();
@@ -332,7 +332,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			} catch {
 				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
 			}
-		}, VAULT_MSG_REMOVING_LINK).catch(() => {});
+		});
 	}
 
 	/**
@@ -350,9 +350,14 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		const connectedEdgeIds = this.edges
 			.filter((edge) => edge.sourceId === node.id || edge.targetId === node.id)
 			.map((edge) => edge.id);
-		this.dialogService.openDialog(
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
+			[
+				VAULT_MSG_DELETE_NODE_CONFIRM_PREFIX + node.name + VAULT_MSG_DELETE_NODE_CONFIRM_SUFFIX,
+				VAULT_MSG_DELETE_NODE_TITLE,
+				DIALOG_BTN_DELETE
+			],
+			MSG_DELETING,
 			async () => {
 				try {
 					await this.databaseService.removeVaultNode(node.id, connectedEdgeIds, node.name);
@@ -366,12 +371,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 						VAULT_MSG_REMOVE_NODE_FAILED_DETAIL
 					);
 				}
-			},
-			[
-				VAULT_MSG_DELETE_NODE_CONFIRM_PREFIX + node.name + VAULT_MSG_DELETE_NODE_CONFIRM_SUFFIX,
-				VAULT_MSG_DELETE_NODE_TITLE,
-				DIALOG_BTN_DELETE
-			]
+			}
 		);
 	}
 
@@ -388,9 +388,10 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		const accountIds = this.nodes
 			.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT && node.category === categoryKey)
 			.map((node) => node.id);
-		this.dialogService.openDialog(
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
+			[VAULT_MSG_DELETE_CATEGORY_CONFIRM, VAULT_MSG_DELETE_CATEGORY_TITLE, DIALOG_BTN_DELETE],
+			MSG_DELETING,
 			async () => {
 				try {
 					await this.databaseService.removeVaultCategory(categoryKey, accountIds);
@@ -404,8 +405,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 						VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL
 					);
 				}
-			},
-			[VAULT_MSG_DELETE_CATEGORY_CONFIRM, VAULT_MSG_DELETE_CATEGORY_TITLE, DIALOG_BTN_DELETE]
+			}
 		);
 	}
 
@@ -427,7 +427,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 				(edge.sourceId === targetId && edge.targetId === sourceId)
 		);
 		if (alreadyLinked) return;
-		this.openBlockDialog(async () => {
+		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
 				await this.databaseService.addVaultEdge({
 					sourceId,
@@ -439,7 +439,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			} catch {
 				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
 			}
-		}, VAULT_MSG_SAVING).catch(() => {});
+		});
 	}
 
 	// ── Dialog openers ───────────────────────────────────────────────────────
@@ -464,7 +464,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param accountData - The validated form data returned by the add-account dialog.
 	 */
 	private handleAccountSave(accountData: NewAccountData): void {
-		this.openBlockDialog(async () => {
+		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
 				// Resolve the category — persist a freshly created custom category first, then use its id
 				let categoryKey = accountData.category;
@@ -510,7 +510,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			} catch {
 				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
 			}
-		}, VAULT_MSG_SAVING).catch(() => {});
+		});
 	}
 
 	// ── Private helpers ──────────────────────────────────────────────────────
@@ -556,21 +556,6 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.customCategories = categories;
 		this.customCategoryKeys = new Set(categories.map((categoryDef) => categoryDef.key));
 		this.loading = false;
-	}
-
-	/**
-	 * Opens the block dialog with the given message and executes the callback,
-	 * blocking the UI until the callback settles to prevent duplicate DB calls.
-	 *
-	 * {@link removeLink} - Blocks while the edge-removal DB write is in-flight.
-	 * {@link handleAccountSave} - Blocks while the account and its links are persisted.
-	 *
-	 * @param callback - The async operation to run while the dialog is open.
-	 * @param message - The loading message to display in the block dialog.
-	 * @returns A promise that resolves when the callback completes.
-	 */
-	private openBlockDialog(callback: () => Promise<void>, message: string): Promise<void> {
-		return this.dialogService.openDialog(this.dialogComponentContainer, 'block', callback, message);
 	}
 
 	/**

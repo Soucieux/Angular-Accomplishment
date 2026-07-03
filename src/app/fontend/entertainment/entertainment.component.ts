@@ -957,7 +957,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			DIALOG_ADD,
 			// "Submit" button in the "Add New Movie" dialog
 			async (movie: MovieItemVO) => {
-				this.openBlockDialog(async () => await this.handleAddDialogSubmit(movie), ENT_MSG_ADDING);
+				this.dialogService.runBlocking(this.dialogComponentContainer, ENT_MSG_ADDING, () =>
+					this.handleAddDialogSubmit(movie)
+				);
 			},
 			// "Search" button in the "Add New Movie" dialog
 			this.handleAddDialogSearch.bind(this)
@@ -965,12 +967,13 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Open a blocking progress dialog that prevents user interaction while the
-	 * given async callback executes. Used during add and restore flows to lock
-	 * the UI while uploading covers and writing to the database.
+	 * Opens a blocking progress dialog that prevents user interaction while the
+	 * given async callback executes, returning its promise so the restore flow can
+	 * await completion before the history dialog callback resolves.
 	 *
 	 * @param callback - The async operation to run while the dialog is shown.
 	 * @param message - The status message displayed inside the dialog.
+	 * @returns A promise that resolves when the callback completes.
 	 */
 	private openBlockDialog(callback: () => Promise<void>, message: string): Promise<void> {
 		return this.dialogService.openDialog(this.dialogComponentContainer, DIALOG_BLOCK, callback, message);

@@ -818,7 +818,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 						title: formData.title,
 						category: formData.category,
 						visitCount: 0,
-						createdAt: new Date().toISOString(),
+						createdAt: Utilities.getCurrentFormattedTime(true),
 						isPinned: formData.isPinned,
 						isShared: formData.isShared
 					});
@@ -860,7 +860,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 							title: formData.title,
 							category: formData.category,
 							visitCount: 0,
-							createdAt: new Date().toISOString(),
+							createdAt: Utilities.getCurrentFormattedTime(true),
 							isPinned: formData.isPinned
 						});
 					})

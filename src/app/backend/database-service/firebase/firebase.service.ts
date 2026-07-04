@@ -1931,7 +1931,7 @@ export class FirebaseService extends DatabaseService {
 			entryKey: key,
 			fields: {
 				visitCount: currentCount + 1,
-				lastVisited: new Date().toISOString()
+				lastVisited: Utilities.getCurrentFormattedTime(true)
 			}
 		});
 	}

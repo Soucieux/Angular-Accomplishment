@@ -2507,7 +2507,7 @@ export class CloudbaseService extends DatabaseService {
 			const result = await this.database
 				.collection(DATABASE_USEFUL_LINKS)
 				.where({ _id: key, _openid: CloudbaseService.getUserId() })
-				.update({ visitCount: currentCount + 1, lastVisited: new Date().toISOString() });
+				.update({ visitCount: currentCount + 1, lastVisited: Utilities.getCurrentFormattedTime(true) });
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, DB_LOG_VISIT_INCREMENTED);
 		} catch (error) {

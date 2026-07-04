@@ -184,6 +184,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		@Inject(PLATFORM_ID) private platformId: object,
 		private dialogService: DialogService,
 		private databaseService: DatabaseService,
+		private timeoutService: TimeoutService,
 		private cdr: ChangeDetectorRef,
 		private ngZone: NgZone,
 		private destroyRef: DestroyRef,
@@ -191,21 +192,33 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	) {}
 
 	/**
-	 * Subscribes to the per-user vault graph and splits each emission into nodes,
-	 * edges, and custom categories. The callback runs inside ngZone.run() because
-	 * CloudBase WebSocket callbacks fire outside Angular's zone, and calls
-	 * detectChanges() so the first snapshot paints immediately — without it the graph
-	 * and category bar stay blank at load until a user interaction forces a tick.
+	 * Starts the loading-timeout guard, then subscribes to the per-user vault graph and
+	 * splits each emission into nodes, edges, and custom categories. The first emission
+	 * clears the guard; if none arrives within the loading window the retry dialog is shown.
+	 * The callback runs inside ngZone.run() because CloudBase WebSocket callbacks fire
+	 * outside Angular's zone, and calls detectChanges() so the first snapshot paints
+	 * immediately — without it the graph and category bar stay blank at load until a user
+	 * interaction forces a tick.
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
+			this.timeoutService.start(TIMEOUT_KEY_VAULT, () => {
+				this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
+			});
 			this.databaseService
 				.getVault()
 				.pipe(takeUntilDestroyed(this.destroyRef))
 				.subscribe((records) =>
 					this.ngZone.run(() => {
-						this.applyRecords(records);
-						this.cdr.detectChanges();
+						this.timeoutService.clear(TIMEOUT_KEY_VAULT);
+						/* Guard the render so a single bad snapshot cannot throw out of the subscription and
+						   tear the watch down — that would silently stop every later live update until refresh. */
+						try {
+							this.applyRecords(records);
+							this.cdr.detectChanges();
+						} catch (error: unknown) {
+							LOG.error(this.className, VAULT_LOG_APPLY_FAILED, error as Error);
+						}
 					})
 				);
 		}
@@ -221,10 +234,12 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Clears the dialog container, cancels pending save-indicator timers, and logs destruction.
+	 * Clears the dialog container, cancels the loading-timeout guard and pending
+	 * save-indicator timers, and logs destruction.
 	 */
 	ngOnDestroy(): void {
 		this.dialogComponentContainer?.clear();
+		this.timeoutService.clear(TIMEOUT_KEY_VAULT);
 		Object.values(this.saveIndicatorTimeouts).forEach(clearTimeout);
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}

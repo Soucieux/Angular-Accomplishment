@@ -122,7 +122,9 @@
 
 		<!-- ===== Content ===== -->
 		<div class="vault-content" #vaultContent>
-			@if (isListView) {
+			@if (loading) {
+				<div class="vault-loading"><span class="vault-loading-spinner"></span></div>
+			} @else if (isListView) {
 				@if (hasAccounts) {
 					<div class="vault-list">
 						@for (account of accountRows; track account.id) {

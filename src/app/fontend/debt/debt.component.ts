@@ -1,6 +1,7 @@
 import {
 	ChangeDetectorRef,
 	Component,
+	HostListener,
 	Inject,
 	NgZone,
 	OnDestroy,
@@ -425,6 +426,54 @@ export class DebtComponent implements OnInit, OnDestroy {
 				this.isPromptedDelete = { ...this.isPromptedDelete, [entryKey]: false };
 				this.cdr.detectChanges();
 			}, DEBT_PROMPT_TIMEOUT_MS);
+		}
+	}
+
+	/**
+	 * Reverts any pending Reset or Delete confirmation to its first state when the user clicks
+	 * anywhere outside the button that owns it, so the prompt clears at once instead of waiting for
+	 * the auto-dismiss timeout. The button just clicked (if any) keeps whatever state its handler set.
+	 *
+	 * @param event - The document-level click event.
+	 */
+	@HostListener('document:click', ['$event'])
+	protected onDocumentClick(event: Event): void {
+		const target = event.target as HTMLElement | null;
+		const keepResetKey = target?.closest('[data-prompt-reset]')?.getAttribute('data-prompt-reset') ?? null;
+		const keepDeleteKey =
+			target?.closest('[data-prompt-delete]')?.getAttribute('data-prompt-delete') ?? null;
+		this.dismissPromptsExcept(keepResetKey, keepDeleteKey);
+	}
+
+	/**
+	 * Clears every prompted Reset and Delete state (and its auto-dismiss timer) except the entries
+	 * whose buttons were just clicked, reassigning the state maps only when something actually changed
+	 * so unrelated clicks do not churn change detection.
+	 *
+	 * @param keepResetKey - The reset entry key to leave untouched, or null to clear them all.
+	 * @param keepDeleteKey - The delete entry key to leave untouched, or null to clear them all.
+	 */
+	private dismissPromptsExcept(keepResetKey: string | null, keepDeleteKey: string | null): void {
+		const nextReset = { ...this.isPromptedReset };
+		const nextDelete = { ...this.isPromptedDelete };
+		let changed = false;
+		for (const key of Object.keys(nextReset)) {
+			if (nextReset[key] && key !== keepResetKey) {
+				clearTimeout(this.promptedResetTimers[key]);
+				nextReset[key] = false;
+				changed = true;
+			}
+		}
+		for (const key of Object.keys(nextDelete)) {
+			if (nextDelete[key] && key !== keepDeleteKey) {
+				clearTimeout(this.promptedDeleteTimers[key]);
+				nextDelete[key] = false;
+				changed = true;
+			}
+		}
+		if (changed) {
+			this.isPromptedReset = nextReset;
+			this.isPromptedDelete = nextDelete;
 		}
 	}
 

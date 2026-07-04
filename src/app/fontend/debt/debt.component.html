@@ -262,6 +262,7 @@
 								<button
 									class="footer-button"
 									[class.is-prompted]="isPromptedReset[item.key]"
+									[attr.data-prompt-reset]="item.key"
 									(click)="promptOrConfirmReset(item.key)">
 									<span class="material-symbols-outlined" style="font-size: 17px"
 										>restart_alt</span
@@ -285,6 +286,7 @@
 									<button
 										class="footer-icon-button danger-button hide-on-narrow-or-mobile"
 										[class.is-prompted]="isPromptedDelete[item.key]"
+										[attr.data-prompt-delete]="item.key"
 										(click)="promptOrConfirmDelete(item.key)">
 										<span class="material-symbols-outlined" style="font-size: 15px">{{
 											isPromptedDelete[item.key] ? 'help' : 'delete'

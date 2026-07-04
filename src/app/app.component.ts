@@ -535,16 +535,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 				}
 			}
 		} else {
-			/* Step 3: Enter compact mode — auto-collapse and persist only on the first crossing
-			   (!wasCompact) so that subsequent resize events within the compact range do not
-			   fight the user if they manually expanded the overlay. */
+			/* Step 3: Enter compact mode — auto-collapse only on the first crossing (!wasCompact)
+			   so that subsequent resize events within the compact range do not fight the user if
+			   they manually expanded the overlay. The collapse is transient: it is recomputed here
+			   on every load and is deliberately NOT persisted, so it never overwrites the user's
+			   saved wide-screen preference and the panel reopens at wide widths on next startup. */
 			if (!wasCompact) {
 				this.navCollapsed = true;
 				this.navMode = 'side';
 				this.compactOverlayOpen = false;
-				if (isPlatformBrowser(this.platformId)) {
-					localStorage.setItem(LS_NAV_COLLAPSED_KEY, 'true');
-				}
 			}
 			this.navCompact = true;
 		}

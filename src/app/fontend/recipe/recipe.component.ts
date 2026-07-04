@@ -739,6 +739,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	 */
 	protected removeCurrentRecipe(): void {
 		const recipeName = this.selectedRecipe?.name ?? '';
+		const recipeOwnerOpenid = this.selectedRecipe?.openid ?? '';
 
 		// Confirm first; the delete then runs behind the blocking overlay so a repeat
 		// click cannot fire a duplicate database call.
@@ -754,7 +755,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 
 				// Delete from the database; navigate to the list on success, toast on failure.
 				try {
-					await this.databaseService.removeRecipe(id, recipeName);
+					await this.databaseService.removeRecipe(id, recipeName, recipeOwnerOpenid);
 					LOG.info(this.className, `${RECIPE_LOG_DELETED} ${id}`);
 					this.dialogService.showToast(TOAST_INFO, RECIPE_MSG_DELETED);
 					this.transitionTo(RECIPE_VIEW_LIST);

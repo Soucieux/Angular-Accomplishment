@@ -743,9 +743,10 @@ export class DebtComponent implements OnInit, OnDestroy {
 	 * @param entryKey - The unique key of the entry to remove.
 	 */
 	private async removeDebt(entryKey: string): Promise<void> {
-		const debtName = this.findUpdatedItem(entryKey)?.name ?? '';
+		const item = this.findUpdatedItem(entryKey);
+		const debtName = item?.name ?? '';
 		try {
-			await this.databaseService.removeRecordFromDebtTable(entryKey, debtName);
+			await this.databaseService.removeRecordFromDebtTable(entryKey, debtName, item?._openid ?? '');
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		}

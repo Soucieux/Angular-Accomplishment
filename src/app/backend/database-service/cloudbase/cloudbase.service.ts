@@ -1577,14 +1577,15 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param key - The document key of the link to remove.
 	 * @param domain - The hostname of the removed link, recorded in the activity log.
+	 * @param ownerOpenid - The _openid of the link's owner, so only the owner's counter is decremented.
 	 */
-	public async removeUsefulLink(key: string, domain: string): Promise<void> {
+	public async removeUsefulLink(key: string, domain: string, ownerOpenid: string): Promise<void> {
 		await this.removeRecordFromDB(DATABASE_USEFUL_LINKS, {
 			entryKey: key,
 			type: HISTORY_STATUS_DELETED,
 			domain
 		});
-		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, -1).catch(() => {});
+		this.decrementOwnStatCount(STATS_FIELD_TOTAL_LINKS, ownerOpenid);
 	}
 
 	/**
@@ -1625,12 +1626,13 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param entryKey - The document key of the quote to remove.
 	 * @param author - The author of the deleted quote (used for the activity log).
+	 * @param ownerOpenid - The _openid of the quote's owner, so only the owner's counter is decremented.
 	 */
-	public async removeQuote(entryKey: string, author: string): Promise<void> {
+	public async removeQuote(entryKey: string, author: string, ownerOpenid: string): Promise<void> {
 		this.removeRecordFromDB(DATABASE_QUOTES, { entryKey, author });
 
 		await this.statisticsRef.update({ [STATS_FIELD_TOTAL_QUOTES]: this._.inc(-1) });
-		this.updateUserStatCount(STATS_FIELD_TOTAL_QUOTES, -1).catch(() => {});
+		this.decrementOwnStatCount(STATS_FIELD_TOTAL_QUOTES, ownerOpenid);
 	}
 
 	/**
@@ -1639,13 +1641,14 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param recipeKey - The database key of the recipe to delete.
 	 * @param name - The recipe name, recorded in the activity log.
+	 * @param ownerOpenid - The _openid of the recipe's owner, so only the owner's counter is decremented.
 	 */
-	public async removeRecipe(recipeKey: string, name: string): Promise<void> {
+	public async removeRecipe(recipeKey: string, name: string, ownerOpenid: string): Promise<void> {
 		this.removeRecordFromDB(DATABASE_RECIPES, { entryKey: recipeKey, name });
 
 		// Fire-and-forget: keep totalRecipes in sync so the home stat chip updates in realtime.
 		this.statisticsRef.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(-1) }).catch(() => {});
-		this.updateUserStatCount(STATS_FIELD_TOTAL_RECIPES, -1).catch(() => {});
+		this.decrementOwnStatCount(STATS_FIELD_TOTAL_RECIPES, ownerOpenid);
 	}
 
 	/**
@@ -1704,7 +1707,7 @@ export class CloudbaseService extends DatabaseService {
 				type: HISTORY_STATUS_DELETED,
 				title: movieItemVO.getMovieName()
 			}).catch(() => {});
-			this.updateUserStatCount(STATS_FIELD_TOTAL_FILMS, -1).catch(() => {});
+			this.decrementOwnStatCount(STATS_FIELD_TOTAL_FILMS, movieItemVO.getOpenId());
 
 			LOG.info(this.className, `${DB_LOG_STATS_AFTER_REMOVE} ${movieItemVO.getMovieName()}`);
 		} catch (error) {
@@ -1723,10 +1726,16 @@ export class CloudbaseService extends DatabaseService {
 	 * @param key - The document key of the record to remove.
 	 * @param text - The reminder text, recorded in the activity log.
 	 * @param isShared - Whether the reminder is shared, so its deletion routes to the group feed.
+	 * @param ownerOpenid - The _openid of the reminder's owner, so only the owner's counter is decremented.
 	 */
-	public async removeRecordFromReminderTable(key: string, text: string, isShared: boolean): Promise<void> {
+	public async removeRecordFromReminderTable(
+		key: string,
+		text: string,
+		isShared: boolean,
+		ownerOpenid: string
+	): Promise<void> {
 		await this.removeRecordFromDB(DATABASE_REMINDER, { entryKey: key, text, isShared });
-		this.updateUserStatCount(STATS_FIELD_TOTAL_REMINDERS, -1).catch(() => {});
+		this.decrementOwnStatCount(STATS_FIELD_TOTAL_REMINDERS, ownerOpenid);
 
 		// Deleting a shared item must reach connections, who can't watch it live — signal them to re-fetch.
 		if (isShared) this.notifySharedChange();
@@ -1755,10 +1764,11 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * @param key - The document key of the record to remove.
 	 * @param name - The debt entry name, recorded in the activity log.
+	 * @param ownerOpenid - The _openid of the debt's owner, so only the owner's counter is decremented.
 	 */
-	public async removeRecordFromDebtTable(key: string, name: string): Promise<void> {
+	public async removeRecordFromDebtTable(key: string, name: string, ownerOpenid: string): Promise<void> {
 		await this.removeRecordFromDB(DATABASE_DEBT_SONATA, { entryKey: key, name });
-		this.updateUserStatCount(STATS_FIELD_TOTAL_DEBTS, -1).catch(() => {});
+		this.decrementOwnStatCount(STATS_FIELD_TOTAL_DEBTS, ownerOpenid);
 	}
 
 	/**
@@ -2690,6 +2700,26 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Decrements the current user's own item total for a removed item, but only when the item belongs
+	 * to them. When a permitted user (e.g. an admin) removes another user's item, this user's counter
+	 * is left untouched — the owner's totals self-heal on their next account load via reconcileUserStats.
+	 *
+	 * {@link removeUsefulLink} - Decrements the owner's link total after a link is removed.
+	 * {@link removeQuote} - Decrements the owner's quote total after a quote is removed.
+	 * {@link removeRecipe} - Decrements the owner's recipe total after a recipe is removed.
+	 * {@link removeMovieFromDatabase} - Decrements the owner's film total after a movie is removed.
+	 * {@link removeRecordFromReminderTable} - Decrements the owner's reminder total after a reminder is removed.
+	 * {@link removeRecordFromDebtTable} - Decrements the owner's debt total after a debt is removed.
+	 *
+	 * @param field - The stats field to decrement.
+	 * @param ownerOpenid - The _openid of the removed item's owner.
+	 */
+	private decrementOwnStatCount(field: string, ownerOpenid: string): void {
+		if (ownerOpenid !== CloudbaseService.getUserId()) return;
+		this.updateUserStatCount(field, -1).catch(() => {});
+	}
+
+	/**
 	 * Checks whether a per-user stats document exists in the users collection and provisions it
 	 * if absent — migrating a legacy statistics document when one exists, otherwise seeding fresh.
 	 * Uses a one-time `.get()` so the check is not watcher-dependent — safe to call on every
@@ -2715,6 +2745,62 @@ export class CloudbaseService extends DatabaseService {
 		// No users doc yet — migrate a legacy statistics doc if one exists, otherwise seed fresh.
 		const migrated = await this.migrateLegacyUserStats();
 		if (!migrated) await this.seedUserStats();
+	}
+
+	/**
+	 * Recomputes the current user's item totals from the authoritative per-collection counts and
+	 * corrects any drifted stat field on the user's own document. Uses cheap server-side counts scoped
+	 * to the user's _openid, so no documents are transferred. This is the self-heal that keeps a user's
+	 * counters accurate even when a permitted user (e.g. an admin) removed one of their items: the
+	 * remover never writes the owner's counter, so the owner's totals reconcile here on their next
+	 * account-page load. Only the fields that differ are written.
+	 *
+	 * @returns A promise that resolves when any drifted totals have been corrected.
+	 */
+	public async reconcileUserStats(): Promise<void> {
+		const filter = this.getUserStatsFilter();
+		const [reminders, debts, films, quotes, recipes, links] = await Promise.all([
+			this.countOwnedRecords(DATABASE_REMINDER, filter),
+			this.countOwnedRecords(DATABASE_DEBT_SONATA, filter),
+			this.countOwnedRecords(DATABASE_MOVIES, filter),
+			this.countOwnedRecords(DATABASE_QUOTES, filter),
+			this.countOwnedRecords(DATABASE_RECIPES, filter),
+			// useful_links holds both links and categories — count only link-type rows toward totalLinks.
+			this.countOwnedRecords(DATABASE_USEFUL_LINKS, { ...filter, type: USEFUL_LINK_TYPE_LINK })
+		]);
+
+		const statsResult = await this.database.collection(DATABASE_USERS).where(filter).get();
+		const stats = statsResult.data?.[0];
+		if (!stats) return;
+
+		const actualCounts: Record<string, number> = {
+			[STATS_FIELD_TOTAL_REMINDERS]: reminders,
+			[STATS_FIELD_TOTAL_DEBTS]: debts,
+			[STATS_FIELD_TOTAL_FILMS]: films,
+			[STATS_FIELD_TOTAL_QUOTES]: quotes,
+			[STATS_FIELD_TOTAL_RECIPES]: recipes,
+			[STATS_FIELD_TOTAL_LINKS]: links
+		};
+		const corrections: Record<string, number> = {};
+		for (const [field, count] of Object.entries(actualCounts)) {
+			if (stats[field] !== count) corrections[field] = count;
+		}
+		if (Object.keys(corrections).length > 0) {
+			await this.updateUserStatsFields(corrections);
+		}
+	}
+
+	/**
+	 * Gets the authoritative document count for a collection matching the given owner filter, using a
+	 * server-side count so no documents are transferred.
+	 *
+	 * @param collection - The collection name to count within.
+	 * @param filter - The where-clause selecting the owner's documents.
+	 * @returns The matching document count.
+	 */
+	private async countOwnedRecords(collection: string, filter: Record<string, unknown>): Promise<number> {
+		const result = await this.database.collection(collection).where(filter).count();
+		return result.total ?? 0;
 	}
 
 	/**

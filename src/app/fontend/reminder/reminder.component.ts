@@ -966,7 +966,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				await this.databaseService.removeRecordFromReminderTable(
 					entryKey,
 					item?.text ?? '',
-					item?.isShared ?? false
+					item?.isShared ?? false,
+					item?._openid ?? ''
 				);
 			}
 			this.triggerSaveIndicator();

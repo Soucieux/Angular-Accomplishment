@@ -283,8 +283,13 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		firstValueFrom(this.currentUser$)
 			.then((user) => {
 				if (!user) return;
-				// Ensure the users doc exists (and carries a connect code) before the live stream reads it.
-				(this.databaseService as CloudbaseService).ensureUserStatsExist().catch(() => {});
+				/* Ensure the users doc exists (and carries a connect code) before the live stream reads it,
+				   then self-heal any item totals that drifted when a permitted user removed one of this
+				   user's items (the remover never writes this user's counter — see reconcileUserStats). */
+				(this.databaseService as CloudbaseService)
+					.ensureUserStatsExist()
+					.then(() => (this.databaseService as CloudbaseService).reconcileUserStats())
+					.catch(() => {});
 				this.authService
 					.getLastLoginTimestamp()
 					.then((date) => {

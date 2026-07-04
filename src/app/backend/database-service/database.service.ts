@@ -421,8 +421,9 @@ export abstract class DatabaseService {
 	 *
 	 * @param key - The key of the link to remove.
 	 * @param domain - The hostname of the removed link, recorded in the activity log.
+	 * @param ownerOpenid - The _openid of the link's owner, so only the owner's counter is decremented.
 	 */
-	public abstract removeUsefulLink(key: string, domain: string): Promise<void>;
+	public abstract removeUsefulLink(key: string, domain: string, ownerOpenid: string): Promise<void>;
 
 	/**
 	 * Removes a link category from the database and records the deletion in the activity log.
@@ -437,16 +438,18 @@ export abstract class DatabaseService {
 	 *
 	 * @param key - The key of the quote to remove.
 	 * @param author - The author of the quote (used for activity log).
+	 * @param ownerOpenid - The _openid of the quote's owner, so only the owner's counter is decremented.
 	 */
-	public abstract removeQuote(key: string, author: string): Promise<void>;
+	public abstract removeQuote(key: string, author: string, ownerOpenid: string): Promise<void>;
 
 	/**
 	 * Removes a recipe from the database and records the deletion in the activity log.
 	 *
 	 * @param recipeKey - The database ID of the recipe to delete.
 	 * @param name - The recipe name, recorded in the activity log.
+	 * @param ownerOpenid - The _openid of the recipe's owner, so only the owner's counter is decremented.
 	 */
-	public abstract removeRecipe(recipeKey: string, name: string): Promise<void>;
+	public abstract removeRecipe(recipeKey: string, name: string, ownerOpenid: string): Promise<void>;
 
 	/**
 	 * Removes a movie from the database and updates the statistics accordingly.
@@ -461,8 +464,14 @@ export abstract class DatabaseService {
 	 * @param key - The key of the record to remove.
 	 * @param text - The reminder text, recorded in the activity log.
 	 * @param isShared - Whether the reminder is shared, so its deletion routes to the group feed.
+	 * @param ownerOpenid - The _openid of the reminder's owner, so only the owner's counter is decremented.
 	 */
-	public abstract removeRecordFromReminderTable(key: string, text: string, isShared: boolean): Promise<void>;
+	public abstract removeRecordFromReminderTable(
+		key: string,
+		text: string,
+		isShared: boolean,
+		ownerOpenid: string
+	): Promise<void>;
 
 	/**
 	 * Completes the current user's own (private) reminder: removes the document and records the
@@ -478,8 +487,9 @@ export abstract class DatabaseService {
 	 *
 	 * @param key - The key of the record to remove.
 	 * @param name - The debt entry name, recorded in the activity log.
+	 * @param ownerOpenid - The _openid of the debt's owner, so only the owner's counter is decremented.
 	 */
-	public abstract removeRecordFromDebtTable(key: string, name: string): Promise<void>;
+	public abstract removeRecordFromDebtTable(key: string, name: string, ownerOpenid: string): Promise<void>;
 
 	/**
 	 * Removes a single payment entry from the debt record and restores the balance, in one DB write.

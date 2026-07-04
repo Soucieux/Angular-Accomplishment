@@ -909,7 +909,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				// Step 3: On confirmation, delete the link and show result toast
 				const domain = Utilities.getDomain(link.url);
 				try {
-					await this.databaseService.removeUsefulLink(link._id, domain);
+					await this.databaseService.removeUsefulLink(link._id, domain, link._openid ?? '');
 					LOG.info(this.className, `${PORTAL_LOG_LINK_DELETED} ${link.title}`);
 					this.dialogService.showToast(TOAST_INFO, PORTAL_MSG_LINK_DELETED);
 				} catch (error: unknown) {

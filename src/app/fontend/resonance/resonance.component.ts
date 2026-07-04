@@ -306,7 +306,7 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 			MSG_DELETING,
 			async () => {
 				try {
-					await this.databaseService.removeQuote(quote.key ?? '', quote.author ?? '');
+					await this.databaseService.removeQuote(quote.key ?? '', quote.author ?? '', quote._openid ?? '');
 				} catch {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}

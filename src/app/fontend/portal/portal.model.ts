@@ -24,6 +24,7 @@ export interface PortalLink {
 	visitCount?: number;
 	lastVisited?: string;
 	createdAt?: string;
+	cachedFavicon?: string;
 }
 
 /** Shape of a link-category document returned from the useful_links collection. */

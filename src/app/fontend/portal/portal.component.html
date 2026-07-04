@@ -195,7 +195,7 @@
 							(click)="openLink(link)"
 							[title]="link.url"
 							[style.background]="getLinkCardColor(link)">
-							@let faviconUrl = utilities.getFaviconProxy(link.url);
+							@let faviconUrl = link.cachedFavicon || utilities.getFaviconProxy(link.url);
 							@let linkInitial = link.title.charAt(0).toUpperCase();
 							<div class="ghost-initial">
 								@if (!failedFavicons.has(link._id)) {

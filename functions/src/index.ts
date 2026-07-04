@@ -19,7 +19,10 @@
 // });
 
 import * as functions from 'firebase-functions';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { defineSecret } from 'firebase-functions/params';
 import fetch from 'node-fetch';
+import cloudbase from '@cloudbase/node-sdk';
 
 const getMovieData = functions.https.onRequest(async (req, res) => {
 	const url = req.query.url as string;
@@ -156,3 +159,101 @@ export const thread2 = functions.https.onRequest(getMovieData);
 export const thread3 = functions.https.onRequest(getMovieData);
 export const thread4 = functions.https.onRequest(getMovieData);
 export const thread5 = functions.https.onRequest(getMovieData);
+
+/*
+ * Scheduled favicon cache. Once a day it fetches the favicon for every portal
+ * link that is not yet cached and stores it as a base64 data URI on the link's
+ * CloudBase document, so the app renders that copy first — icons then work even
+ * where the favicon proxy (this same Google-hosted service) is unreachable,
+ * notably mainland China. Incremental: already-cached links are skipped, so
+ * there are no duplicate upstream calls. Two markers (faviconCachedAt,
+ * faviconFailed) are written for future age-based refresh / skip-failing logic.
+ *
+ * CloudBase admin credentials come from Secret Manager — set them once with:
+ *   firebase functions:secrets:set CLOUDBASE_SECRET_ID
+ *   firebase functions:secrets:set CLOUDBASE_SECRET_KEY
+ *   firebase functions:secrets:set CLOUDBASE_ENV_ID
+ */
+const USEFUL_LINKS_COLLECTION = 'useful_links';
+const FAVICON_PAGE_SIZE = 1000;
+
+const cloudbaseSecretId = defineSecret('CLOUDBASE_SECRET_ID');
+const cloudbaseSecretKey = defineSecret('CLOUDBASE_SECRET_KEY');
+const cloudbaseEnvId = defineSecret('CLOUDBASE_ENV_ID');
+
+/** Formats a Date as `YYYY.MM.DD HH:MM:SS`, matching the app's timestamp style. */
+function formatTimestamp(date: Date): string {
+	const pad = (value: number) => String(value).padStart(2, '0');
+	return (
+		`${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ` +
+		`${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+	);
+}
+
+/** Fetches a domain's favicon via Google's service and returns a base64 data URI. */
+async function fetchFaviconDataUri(domain: string): Promise<string> {
+	const target = `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(domain)}`;
+	const response = await fetch(target);
+	if (!response.ok) {
+		throw new Error(`HTTP ${response.status}`);
+	}
+	const buffer = await response.buffer();
+	if (buffer.length === 0) {
+		throw new Error('empty favicon body');
+	}
+	const contentType = response.headers.get('content-type') ?? 'image/png';
+	return `data:${contentType};base64,${buffer.toString('base64')}`;
+}
+
+export const cacheFavicons = onSchedule(
+	{
+		schedule: '0 3 * * *',
+		timeZone: 'UTC',
+		secrets: [cloudbaseSecretId, cloudbaseSecretKey, cloudbaseEnvId],
+		timeoutSeconds: 300,
+		memory: '256MiB'
+	},
+	async () => {
+		const app = cloudbase.init({
+			secretId: cloudbaseSecretId.value(),
+			secretKey: cloudbaseSecretKey.value(),
+			env: cloudbaseEnvId.value()
+		});
+		const db = app.database();
+
+		// Read every link, paging past CloudBase's per-query cap.
+		const links: any[] = [];
+		let offset = 0;
+		for (;;) {
+			const res = await db.collection(USEFUL_LINKS_COLLECTION).skip(offset).limit(FAVICON_PAGE_SIZE).get();
+			const page = res.data ?? [];
+			links.push(...page);
+			if (page.length < FAVICON_PAGE_SIZE) {
+				break;
+			}
+			offset += FAVICON_PAGE_SIZE;
+		}
+
+		// Only actual links (not categories) that have no cached favicon yet.
+		const toCache = links.filter((link) => link.type === 'link' && !link.cachedFavicon);
+		const timestamp = formatTimestamp(new Date());
+
+		let cached = 0;
+		let failed = 0;
+		for (const link of toCache) {
+			const doc = db.collection(USEFUL_LINKS_COLLECTION).doc(link._id);
+			try {
+				const hostname = new URL(link.url).hostname;
+				const dataUri = await fetchFaviconDataUri(hostname);
+				await doc.update({ cachedFavicon: dataUri, faviconCachedAt: timestamp, faviconFailed: false });
+				cached += 1;
+			} catch (error: unknown) {
+				await doc.update({ faviconFailed: true });
+				failed += 1;
+				console.error(`favicon cache failed for ${link.url}:`, error);
+			}
+		}
+
+		console.log(`favicon cache: ${cached} cached, ${failed} failed of ${toCache.length} candidates`);
+	}
+);

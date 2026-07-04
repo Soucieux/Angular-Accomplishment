@@ -80,9 +80,6 @@
 }
 
 .new-debt-button {
-	position: absolute;
-	top: 2%;
-	right: 2%;
 	display: inline-flex;
 	align-items: center;
 	gap: 7px;
@@ -1126,5 +1123,12 @@
 	::ng-deep .due-date-picker .p-datepicker-input {
 		width: 100px;
 	}
+}
 
+@media (max-width: 940px) and (pointer: coarse) {
+	.new-debt-button {
+		position: absolute;
+		top: 3%;
+		right: 2%;
+	}
 }

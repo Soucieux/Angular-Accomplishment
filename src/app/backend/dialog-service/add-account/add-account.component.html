@@ -21,6 +21,9 @@
 			[(ngModel)]="name"
 			(keyup.enter)="onSubmit()"
 			[placeholder]="VAULT_DIALOG_NAME_PLACEHOLDER" />
+		@if (isDuplicateName) {
+			<span class="field-error">{{ VAULT_DIALOG_DUPLICATE_NAME }}</span>
+		}
 	</div>
 
 	<div class="add-account-field">
@@ -31,7 +34,7 @@
 					type="button"
 					class="category-chip"
 					[class.selected]="category.isSelected"
-					(click)="selectCategory(category.key)">
+					(click)="toggleCategory(category.key)">
 					<span class="category-dot" [style.background]="category.hex"></span>
 					{{ category.label }}
 				</button>
@@ -39,9 +42,8 @@
 			@if (pendingNewCategory) {
 				<button
 					type="button"
-					class="category-chip"
-					[class.selected]="isNewSelected"
-					(click)="selectPendingNewCategory()">
+					class="category-chip selected"
+					(click)="clearPendingNewCategory()">
 					<span class="category-dot" [style.background]="pendingNewCategory.hex"></span>
 					{{ pendingNewCategory.label }}
 				</button>

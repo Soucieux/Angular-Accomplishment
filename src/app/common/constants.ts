@@ -85,6 +85,8 @@ export const TIMEOUT_KEY_HOME = 'home';
 export const TIMEOUT_KEY_REMINDER = 'reminder';
 /** Timeout key for the Debt Sonata page loading guard. */
 export const TIMEOUT_KEY_DEBT = 'debt';
+/** Timeout key for the Vault page loading guard. */
+export const TIMEOUT_KEY_VAULT = 'vault';
 /** Timeout key for the Patch Notes tab loading guard. */
 export const TIMEOUT_KEY_PATCH = 'patch';
 /** Timeout key for the Release Notes tab loading guard. */
@@ -828,8 +830,10 @@ export const VAULT_VALUE_KEY_KIND = 'kind';
 export const VAULT_VALUE_KEY_NODE_TYPE = 'nodeType';
 /** CloudBase content key for a node's display name. */
 export const VAULT_VALUE_KEY_NAME = 'name';
-/** CloudBase content key for an account node's category. */
+/** CloudBase content key for an account node's legacy single category (read-only migration source). */
 export const VAULT_VALUE_KEY_CATEGORY = 'category';
+/** CloudBase content key for an account node's list of category keys. */
+export const VAULT_VALUE_KEY_CATEGORIES = 'categories';
 /** CloudBase content key for an edge's source node id. */
 export const VAULT_VALUE_KEY_SOURCE_ID = 'sourceId';
 /** CloudBase content key for an edge's target node id. */
@@ -860,6 +864,11 @@ export const VAULT_NODE_EMAIL = 'email';
 export const VAULT_NODE_PHONE = 'phone';
 /** Node-type value for a web-link identifier. */
 export const VAULT_NODE_LINK = 'link';
+/** Node-type value for a private free-form note — stored but never drawn on the graph map. */
+export const VAULT_NODE_NOTES = 'notes';
+/** Legacy node-type value for note nodes created before the password→notes rename; normalized on read.
+    Typed as string since it is no longer part of the VaultNodeType union. */
+export const VAULT_NODE_LEGACY_PASSWORD: string = 'password';
 /** Filter key toggling visibility of verified accounts in the graph. */
 export const VAULT_FILTER_KEY_VERIFIED = 'verified';
 
@@ -884,6 +893,10 @@ export const VAULT_DOT_CLASS_PHONE = 'vault-dot-phone';
 export const VAULT_DOT_CLASS_LINK = 'vault-dot-link';
 /** Connection-chip dot shape class for an account node. */
 export const VAULT_DOT_CLASS_ACCOUNT = 'vault-dot-account';
+/** Connection-chip dot shape class for a notes node. */
+export const VAULT_DOT_CLASS_NOTES = 'vault-dot-notes';
+/** Log message when applying a live vault snapshot fails, kept from tearing down the watch. */
+export const VAULT_LOG_APPLY_FAILED = 'Failed to apply vault snapshot';
 
 /* ─────────────────────────────────────────
    About page constants

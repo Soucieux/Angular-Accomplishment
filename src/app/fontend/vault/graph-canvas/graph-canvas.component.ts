@@ -40,6 +40,7 @@ import {
 	VAULT_CATEGORY_OTHER,
 	VAULT_EDGE_RESTING_COLOR,
 	VAULT_EMAIL_META,
+	VAULT_GLYPH_COLOR_IDENTIFIER,
 	VAULT_LABEL_COLOR_ACCOUNT,
 	VAULT_LABEL_COLOR_IDENTIFIER,
 	VAULT_LABEL_COLOR_SELECTED,
@@ -48,6 +49,7 @@ import {
 	VAULT_NODE_STROKE,
 	VAULT_PHONE_META
 } from '../vault.model';
+import { Utilities } from '../../../common/utilities/app.utilities';
 
 /** SVG namespace used for all imperatively-created graph elements. */
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -243,9 +245,9 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				id: node.id,
 				nodeType: node.nodeType,
 				name: node.name,
-				category: node.category,
-				hex: this.getNodeHex(node),
-				letter: (node.name[0] ?? '').toUpperCase(),
+				categories: node.categories,
+				hexes: this.getNodeHexes(node),
+				letter: Utilities.getInitials(node.name),
 				verified: node.verified,
 				x: existing?.x ?? 0,
 				y: existing?.y ?? 0,
@@ -368,9 +370,14 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		const svg = this.svgRef.nativeElement;
 		if (!svg.querySelector('defs')) {
 			const defs = document.createElementNS(SVG_NS, 'defs');
+			// The clip masks the segmented category wedges to the account tile's rounded-square outline.
+			const clipRadius = this.accountRadius;
+			const clipCornerRadius = clipRadius * 0.62;
 			defs.innerHTML =
 				'<filter id="vault-tile-shadow" x="-60%" y="-60%" width="220%" height="220%">' +
-				'<feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="rgba(60,30,50,0.28)"/></filter>';
+				'<feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="rgba(60,30,50,0.28)"/></filter>' +
+				`<clipPath id="vault-account-clip"><rect x="${-clipRadius}" y="${-clipRadius}" ` +
+				`width="${clipRadius * 2}" height="${clipRadius * 2}" rx="${clipCornerRadius}"/></clipPath>`;
 			svg.insertBefore(defs, svg.firstChild);
 		}
 
@@ -392,6 +399,9 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		this.simNodes.forEach((node) => {
 			const group = document.createElementNS(SVG_NS, 'g');
 			group.setAttribute('class', 'vault-node');
+			// Segmented category fill sits beneath the (transparent-filled) tile shape for multi-category accounts.
+			const fill = this.createNodeFill(node);
+			if (fill) group.appendChild(fill);
 			const shape = this.createNodeShape(node);
 			const glyph = this.createNodeGlyph(node);
 			const label = this.createNodeLabel(node);
@@ -427,7 +437,9 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			rect.setAttribute('x', String(-node.rad));
 			rect.setAttribute('y', String(-node.rad));
 			rect.setAttribute('rx', String(node.rad * 0.62));
-			rect.setAttribute('fill', node.hex);
+			/* A single-category (or uncategorized) account keeps a solid tile; two or more categories
+			   leave the tile transparent so the segmented wedge fill beneath shows through. */
+			rect.setAttribute('fill', node.hexes.length >= 2 ? 'none' : node.hexes[0]);
 			rect.setAttribute('stroke', VAULT_NODE_STROKE);
 			rect.setAttribute('stroke-width', String(this.borderResting));
 			rect.setAttribute('filter', 'url(#vault-tile-shadow)');
@@ -436,7 +448,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		if (node.nodeType === VAULT_NODE_EMAIL) {
 			const circle = document.createElementNS(SVG_NS, 'circle');
 			circle.setAttribute('r', String(node.rad));
-			circle.setAttribute('fill', node.hex);
+			circle.setAttribute('fill', node.hexes[0]);
 			circle.setAttribute('stroke', VAULT_NODE_STROKE);
 			circle.setAttribute('stroke-width', '2');
 			return circle;
@@ -445,7 +457,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			const diamond = document.createElementNS(SVG_NS, 'polygon');
 			const reach = node.rad * 1.2;
 			diamond.setAttribute('points', `0,${-reach} ${reach},0 0,${reach} ${-reach},0`);
-			diamond.setAttribute('fill', node.hex);
+			diamond.setAttribute('fill', node.hexes[0]);
 			diamond.setAttribute('stroke', VAULT_NODE_STROKE);
 			diamond.setAttribute('stroke-width', '2');
 			return diamond;
@@ -459,10 +471,45 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			corners.push(`${(Math.cos(angle) * radius).toFixed(2)},${(Math.sin(angle) * radius).toFixed(2)}`);
 		}
 		hexagon.setAttribute('points', corners.join(' '));
-		hexagon.setAttribute('fill', node.hex);
+		hexagon.setAttribute('fill', node.hexes[0]);
 		hexagon.setAttribute('stroke', VAULT_NODE_STROKE);
 		hexagon.setAttribute('stroke-width', '2');
 		return hexagon;
+	}
+
+	/**
+	 * Creates the segmented category fill for an account with two or more categories — a group of
+	 * pie wedges, one per category color, clipped to the account tile's rounded-square outline.
+	 * Returns null for identifiers and single-category accounts, which fill via their solid shape.
+	 *
+	 * @param node - The simulation node to build a segmented fill for.
+	 * @returns The clipped wedge group, or null when no segmented fill is needed.
+	 */
+	private createNodeFill(node: VaultSimNode): SVGGElement | null {
+		if (node.nodeType !== VAULT_NODE_ACCOUNT || node.hexes.length < 2) return null;
+		const group = document.createElementNS(SVG_NS, 'g');
+		group.setAttribute('clip-path', 'url(#vault-account-clip)');
+		group.style.pointerEvents = 'none';
+		// Radius overshoots the tile so wedges reach into the rounded corners before the clip trims them.
+		const radius = node.rad * 1.7;
+		const count = node.hexes.length;
+		for (let index = 0; index < count; index++) {
+			const startAngle = (index / count) * Math.PI * 2 - Math.PI / 2;
+			const endAngle = ((index + 1) / count) * Math.PI * 2 - Math.PI / 2;
+			const startX = (Math.cos(startAngle) * radius).toFixed(2);
+			const startY = (Math.sin(startAngle) * radius).toFixed(2);
+			const endX = (Math.cos(endAngle) * radius).toFixed(2);
+			const endY = (Math.sin(endAngle) * radius).toFixed(2);
+			const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
+			const wedge = document.createElementNS(SVG_NS, 'path');
+			wedge.setAttribute(
+				'd',
+				`M 0 0 L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY} Z`
+			);
+			wedge.setAttribute('fill', node.hexes[index]);
+			group.appendChild(wedge);
+		}
+		return group;
 	}
 
 	/**
@@ -476,54 +523,88 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		const offset = node.rad * 0.72;
 		badge.setAttribute('transform', `translate(${offset},${-offset})`);
 		badge.style.pointerEvents = 'none';
+		const badgeRadius = node.rad * 0.42;
 		const circle = document.createElementNS(SVG_NS, 'circle');
-		circle.setAttribute('r', String(node.rad * 0.42));
+		circle.setAttribute('r', String(badgeRadius));
 		circle.setAttribute('fill', this.verifiedBadgeColor);
 		circle.setAttribute('stroke', VAULT_NODE_STROKE);
 		circle.setAttribute('stroke-width', '1.5');
-		const check = document.createElementNS(SVG_NS, 'text');
-		check.setAttribute('text-anchor', 'middle');
-		check.setAttribute('dominant-baseline', 'central');
-		check.setAttribute('fill', '#fff');
-		check.setAttribute('font-family', 'Material Symbols Outlined');
-		check.setAttribute('font-size', String(Math.round(node.rad * 0.55)));
-		check.style.fontFeatureSettings = "'liga'";
-		check.textContent = 'check';
+		/* A geometric tick centred on the badge origin, drawn as a path rather than a Material Symbols
+		   glyph so the check always sits inside the circle, free of font-baseline positioning quirks. */
+		const check = document.createElementNS(SVG_NS, 'path');
+		check.setAttribute(
+			'd',
+			`M ${-badgeRadius * 0.42} ${badgeRadius * 0.02} ` +
+				`L ${-badgeRadius * 0.12} ${badgeRadius * 0.34} ` +
+				`L ${badgeRadius * 0.46} ${-badgeRadius * 0.34}`
+		);
+		check.setAttribute('fill', 'none');
+		check.setAttribute('stroke', '#fff');
+		check.setAttribute('stroke-width', String(badgeRadius * 0.26));
+		check.setAttribute('stroke-linecap', 'round');
+		check.setAttribute('stroke-linejoin', 'round');
 		badge.appendChild(circle);
 		badge.appendChild(check);
 		return badge;
 	}
 
 	/**
-	 * Creates the centred glyph for a node — the account's initial letter, or a
-	 * Material Symbols icon for email and phone identifiers.
+	 * Creates the centred glyph for a node — the account's initial letter as SVG text, or a
+	 * Material Symbols icon (email / phone / link) delegated to {@link createIdentifierGlyph}.
 	 *
 	 * @param node - The simulation node to build a glyph for.
-	 * @returns The created SVG text element.
+	 * @returns The account letter text element, or the identifier icon foreignObject.
 	 */
-	private createNodeGlyph(node: VaultSimNode): SVGTextElement {
+	private createNodeGlyph(node: VaultSimNode): SVGElement {
+		if (node.nodeType !== VAULT_NODE_ACCOUNT) return this.createIdentifierGlyph(node);
 		const glyph = document.createElementNS(SVG_NS, 'text');
 		glyph.setAttribute('text-anchor', 'middle');
 		glyph.setAttribute('dominant-baseline', 'central');
 		glyph.setAttribute('fill', '#fff');
 		glyph.style.pointerEvents = 'none';
-		if (node.nodeType === VAULT_NODE_ACCOUNT) {
-			glyph.setAttribute('font-size', String(Math.round(node.rad * 0.95)));
-			glyph.setAttribute('font-weight', '800');
-			glyph.textContent = node.letter;
-		} else {
-			glyph.setAttribute('font-size', String(Math.round(node.rad * 1.25)));
-			glyph.setAttribute('font-weight', '700');
-			glyph.setAttribute('font-family', 'Material Symbols Outlined');
-			glyph.style.fontFeatureSettings = "'liga'";
-			glyph.textContent =
-				node.nodeType === VAULT_NODE_EMAIL
-					? VAULT_EMAIL_META.icon
-					: node.nodeType === VAULT_NODE_LINK
-						? VAULT_LINK_META.icon
-						: VAULT_PHONE_META.icon;
-		}
+		// Shrink the glyph when two initials are shown so both fit inside the tile.
+		const initialScale = Array.from(node.letter).length >= 2 ? 0.62 : 0.95;
+		glyph.setAttribute('font-size', String(Math.round(node.rad * initialScale)));
+		glyph.setAttribute('font-weight', '800');
+		glyph.textContent = node.letter;
 		return glyph;
+	}
+
+	/**
+	 * Creates the identifier icon (email / phone / link) as an HTML span inside a foreignObject so the
+	 * Material Symbols glyph is flex-centred within the node shape. Rendering it as SVG <text> mis-measured
+	 * the ligature width and pushed the icon outside the shape; flexbox recentres it regardless of font load.
+	 *
+	 * @param node - The identifier node to build a centred icon for.
+	 * @returns The foreignObject wrapping the centred icon.
+	 */
+	private createIdentifierGlyph(node: VaultSimNode): SVGForeignObjectElement {
+		const size = node.rad * 2;
+		const wrapper = document.createElementNS(SVG_NS, 'foreignObject');
+		wrapper.setAttribute('x', String(-node.rad));
+		wrapper.setAttribute('y', String(-node.rad));
+		wrapper.setAttribute('width', String(size));
+		wrapper.setAttribute('height', String(size));
+		wrapper.style.pointerEvents = 'none';
+		const icon = document.createElement('span');
+		icon.className = 'material-symbols-outlined';
+		icon.style.display = 'flex';
+		icon.style.width = '100%';
+		icon.style.height = '100%';
+		icon.style.alignItems = 'center';
+		icon.style.justifyContent = 'center';
+		icon.style.lineHeight = '1';
+		// Identifier icons sit on lighter fills, so a dark glyph reads more clearly than white.
+		icon.style.color = VAULT_GLYPH_COLOR_IDENTIFIER;
+		icon.style.fontSize = `${Math.round(node.rad * 1.1)}px`;
+		icon.textContent =
+			node.nodeType === VAULT_NODE_EMAIL
+				? VAULT_EMAIL_META.icon
+				: node.nodeType === VAULT_NODE_LINK
+					? VAULT_LINK_META.icon
+					: VAULT_PHONE_META.icon;
+		wrapper.appendChild(icon);
+		return wrapper;
 	}
 
 	/**
@@ -580,11 +661,15 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		let categoryBase: Set<string> | null = null;
 		let categoryVisible: Set<string> | null = null;
 		if (this.categoryFilter) {
+			const filter = this.categoryFilter;
+			const isUncategorized = filter === VAULT_CATEGORY_OTHER.key;
 			categoryBase = new Set<string>();
 			this.simNodes.forEach((node) => {
-				if (node.nodeType === VAULT_NODE_ACCOUNT && node.category === this.categoryFilter) {
-					categoryBase?.add(node.id);
-				}
+				if (node.nodeType !== VAULT_NODE_ACCOUNT) return;
+				const inCategory = isUncategorized
+					? node.categories.length === 0
+					: node.categories.includes(filter);
+				if (inCategory) categoryBase?.add(node.id);
 			});
 			categoryVisible = new Set<string>(categoryBase);
 			this.edges.forEach((edge) => {
@@ -898,19 +983,32 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
-	 * Gets the solid fill color for a node — its category color for accounts, or the
-	 * fixed identifier color for emails and phones.
+	 * Gets the fill colors for a node — one hex per category for accounts (driving the segmented
+	 * fill), or a single fixed identifier color for email, phone, and link nodes. An account with no
+	 * categories falls back to the single Uncategorized grey.
 	 *
-	 * @param node - The node to resolve a color for.
+	 * @param node - The node to resolve colors for.
+	 * @returns The hex fill colors (always at least one).
+	 */
+	private getNodeHexes(node: VaultNode): string[] {
+		if (node.nodeType === VAULT_NODE_EMAIL) return [VAULT_EMAIL_META.hex];
+		if (node.nodeType === VAULT_NODE_PHONE) return [VAULT_PHONE_META.hex];
+		if (node.nodeType === VAULT_NODE_LINK) return [VAULT_LINK_META.hex];
+		const hexes = node.categories.map((categoryKey) => this.resolveCategoryHex(categoryKey));
+		return hexes.length > 0 ? hexes : [VAULT_CATEGORY_OTHER.hex];
+	}
+
+	/**
+	 * Gets the fill color for a single category key, resolving built-in categories first, then
+	 * user-created custom categories, then the Uncategorized grey fallback.
+	 *
+	 * @param categoryKey - The category key to resolve a color for.
 	 * @returns The hex fill color.
 	 */
-	private getNodeHex(node: VaultNode): string {
-		if (node.nodeType === VAULT_NODE_EMAIL) return VAULT_EMAIL_META.hex;
-		if (node.nodeType === VAULT_NODE_PHONE) return VAULT_PHONE_META.hex;
-		if (node.nodeType === VAULT_NODE_LINK) return VAULT_LINK_META.hex;
-		const builtIn = VAULT_CATEGORY_DEFS.find((categoryDef) => categoryDef.key === node.category);
+	private resolveCategoryHex(categoryKey: string): string {
+		const builtIn = VAULT_CATEGORY_DEFS.find((categoryDef) => categoryDef.key === categoryKey);
 		if (builtIn) return builtIn.hex;
-		const custom = this.customCategories.find((categoryDef) => categoryDef.key === node.category);
+		const custom = this.customCategories.find((categoryDef) => categoryDef.key === categoryKey);
 		return custom ? custom.hex : VAULT_CATEGORY_OTHER.hex;
 	}
 

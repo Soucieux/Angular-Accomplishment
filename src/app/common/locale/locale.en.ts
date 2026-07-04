@@ -896,8 +896,8 @@ export const TODAY_RECUR_LABELS: Partial<Record<string, string>> = {
 
 /** Word for accounts in the Vault header subtitle and the selected-node stat pill. */
 export const VAULT_LABEL_ACCOUNTS = 'accounts';
-/** Label for the email/phone count stat pill on a selected account. */
-export const VAULT_LABEL_IDENTIFIERS = 'email / phone';
+/** Label for the connected-identifiers (email / phone / link) count stat pill on a selected node. */
+export const VAULT_LABEL_IDENTIFIERS = 'identifiers';
 /** Descriptive page subtitle shown beneath the Vault title. */
 export const VAULT_PAGE_SUBTITLE = 'How your accounts, emails, and phones connect';
 /** Placeholder shown in the Vault search field. */
@@ -925,6 +925,8 @@ export const VAULT_TYPE_EMAIL = 'Email address';
 export const VAULT_TYPE_PHONE = 'Phone number';
 /** Type label for a web-link identifier (legend row and detail bar). */
 export const VAULT_TYPE_LINK = 'Link';
+/** Type label for a private free-form note (detail bar and connection chip). */
+export const VAULT_TYPE_NOTES = 'Notes';
 
 /** Accounts type-filter chip label. */
 export const VAULT_FILTER_ACCOUNTS = 'Accounts';
@@ -934,6 +936,8 @@ export const VAULT_FILTER_EMAIL = 'Email';
 export const VAULT_FILTER_PHONE = 'Phone';
 /** Link type-filter chip label (also reused as the add-dialog connection-type label). */
 export const VAULT_FILTER_LINK = 'Link';
+/** Notes connection-type label shown in the add-account dialog. */
+export const VAULT_FILTER_NOTES = 'Notes';
 
 /** Edit button label on a list-view account card. */
 export const VAULT_LIST_EDIT = 'Edit';
@@ -960,13 +964,15 @@ export const VAULT_DIALOG_NAME_LABEL = 'Account name';
 /** Placeholder for the account name input. */
 export const VAULT_DIALOG_NAME_PLACEHOLDER = 'e.g. Spotify, my bank, work laptop…';
 /** Field label for the category picker. */
-export const VAULT_DIALOG_CATEGORY_LABEL = 'Category';
+export const VAULT_DIALOG_CATEGORY_LABEL = 'Categories (select one or more)';
 /** Field label for the verified/not-verified toggle in the add-account dialog. */
 export const VAULT_DIALOG_VERIFIED_LABEL = 'Verified';
 /** Label for the new-category chip. */
 export const VAULT_DIALOG_NEW_CATEGORY = 'New category';
 /** Placeholder for the inline new-category name input. */
 export const VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER = 'Name, then Enter';
+/** Inline error shown when the entered account name already exists. */
+export const VAULT_DIALOG_DUPLICATE_NAME = 'An account with this name already exists';
 /** Field label for the connections section. */
 export const VAULT_DIALOG_CONNECTIONS_LABEL = 'Connections';
 /** Optional hint appended to the connections label. */
@@ -992,6 +998,12 @@ export const VAULT_MSG_SAVE_FAILED_DETAIL = 'Could not save to the vault. Please
 export const VAULT_MSG_SAVING = 'Saving…';
 /** Block-dialog message shown while a link is being removed. */
 export const VAULT_MSG_REMOVING_LINK = 'Removing link…';
+/** Placeholder in the inline add-note field on an account card in edit mode. */
+export const VAULT_NOTE_PLACEHOLDER = 'Add a note…';
+/** Block-dialog message while an inline note is being saved. */
+export const VAULT_MSG_ADDING_NOTE = 'Adding note…';
+/** Toast shown after an inline note is added to an account. */
+export const VAULT_MSG_NOTE_ADDED = 'Note added';
 /** Confirm-dialog title for deleting a vault node. */
 export const VAULT_MSG_DELETE_NODE_TITLE = 'Delete Account';
 /** Confirm-delete message prefix for a vault node; node name is appended at the call site. */
@@ -1008,6 +1020,8 @@ export const VAULT_MSG_DELETE_CATEGORY_TITLE = 'Delete Category';
 export const VAULT_MSG_DELETE_CATEGORY_CONFIRM = 'Delete this category? Its accounts move to Uncategorized.';
 /** Toast shown after a custom vault category is removed. */
 export const VAULT_MSG_CATEGORY_REMOVED = 'Category removed';
+/** Toast shown after a custom vault category is renamed. */
+export const VAULT_MSG_CATEGORY_UPDATED = 'Category updated';
 /** Toast detail shown when a vault category removal fails. */
 export const VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL = 'Could not delete the category. Please try again.';
 /** Chip label for the fallback category used when no category is chosen. */

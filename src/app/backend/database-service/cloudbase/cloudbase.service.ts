@@ -44,7 +44,7 @@ import {
 	VAULT_VALUE_KEY_KIND,
 	VAULT_VALUE_KEY_NODE_TYPE,
 	VAULT_VALUE_KEY_NAME,
-	VAULT_VALUE_KEY_CATEGORY,
+	VAULT_VALUE_KEY_CATEGORIES,
 	VAULT_VALUE_KEY_SOURCE_ID,
 	VAULT_VALUE_KEY_TARGET_ID,
 	VAULT_VALUE_KEY_RELATION,
@@ -181,7 +181,7 @@ import {
 } from '../../../common/locale/locale-strings';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
-import { VaultRecord, VaultNodeType, VAULT_CATEGORY_OTHER } from '../../../fontend/vault/vault.model';
+import { VaultRecord, VaultNodeType } from '../../../fontend/vault/vault.model';
 import { TodayTask } from '../../../fontend/today/today.model';
 import { SessionExpiredError } from '../../../common/error/session-expired.error';
 import { UnexpectedError } from '../../../common/error/unexpected.error';
@@ -2266,14 +2266,14 @@ export class CloudbaseService extends DatabaseService {
 	public async addVaultNode(node: {
 		nodeType: VaultNodeType;
 		name: string;
-		category: string;
+		categories: string[];
 		verified: boolean;
 	}): Promise<string> {
 		const nodeId = await this.addVaultRecord({
 			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_NODE,
 			[VAULT_VALUE_KEY_NODE_TYPE]: node.nodeType,
 			[VAULT_VALUE_KEY_NAME]: node.name,
-			[VAULT_VALUE_KEY_CATEGORY]: node.category,
+			[VAULT_VALUE_KEY_CATEGORIES]: node.categories,
 			[VAULT_VALUE_KEY_VERIFIED]: node.verified
 		});
 		this.appendToActivityLog({
@@ -2318,22 +2318,26 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Removes a custom account category and reassigns every account that used it to Uncategorized.
-	 * The accounts are reassigned by _id (the safe owner-scoped write path) before the category
-	 * record itself is removed, so no account is left pointing at a category that no longer exists.
+	 * Removes a custom account category and pulls its key from every account that carried it.
+	 * Each affected account's new category list is written by _id (the safe owner-scoped write path)
+	 * before the category record itself is removed, so no account is left pointing at a category
+	 * that no longer exists.
 	 *
 	 * @param categoryKey - The document id of the category to remove.
-	 * @param accountIds - The ids of the account nodes currently in that category.
-	 * @returns A promise that resolves when the category is removed and its accounts reassigned.
+	 * @param accountUpdates - The affected accounts, each with its category list already stripped of the removed key.
+	 * @returns A promise that resolves when the category is removed and its accounts updated.
 	 */
-	public async removeVaultCategory(categoryKey: string, accountIds: string[]): Promise<void> {
+	public async removeVaultCategory(
+		categoryKey: string,
+		accountUpdates: { id: string; categories: string[] }[]
+	): Promise<void> {
 		try {
 			await Promise.all(
-				accountIds.map((id) =>
+				accountUpdates.map((account) =>
 					this.database
 						.collection(DATABASE_VAULT)
-						.where(this.buildWhereClause(id))
-						.update({ [VAULT_VALUE_KEY_CATEGORY]: VAULT_CATEGORY_OTHER.key })
+						.where(this.buildWhereClause(account.id))
+						.update({ [VAULT_VALUE_KEY_CATEGORIES]: account.categories })
 				)
 			);
 			const result = await this.database
@@ -2353,19 +2357,41 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Reassigns a single account node to the given category. Writes by _id (the owner-scoped path),
-	 * used to categorize an account after creation.
+	 * Replaces an account node's category list with the given keys. Writes by _id (the owner-scoped
+	 * path), used to re-categorize an account from the inline picker.
 	 *
 	 * @param nodeId - The id of the account node to update.
-	 * @param categoryKey - The category key to assign.
-	 * @returns A promise that resolves when the account's category is updated.
+	 * @param categoryKeys - The full list of category keys to store on the account.
+	 * @returns A promise that resolves when the account's categories are updated.
 	 */
-	public async updateVaultNodeCategory(nodeId: string, categoryKey: string): Promise<void> {
+	public async updateVaultNodeCategories(nodeId: string, categoryKeys: string[]): Promise<void> {
 		try {
 			const result = await this.database
 				.collection(DATABASE_VAULT)
 				.where(this.buildWhereClause(nodeId))
-				.update({ [VAULT_VALUE_KEY_CATEGORY]: categoryKey });
+				.update({ [VAULT_VALUE_KEY_CATEGORIES]: categoryKeys });
+			this.throwIfCloudbaseError(result);
+			LOG.info(this.className, `${DB_LOG_RECORD_TABLE_UPDATED} ${DATABASE_VAULT}`);
+		} catch (error) {
+			LOG.error(this.className, `${DB_LOG_TABLE_UPDATE_FAILED} ${DATABASE_VAULT}`, error as Error);
+			this.rethrowCaught(error);
+		}
+	}
+
+	/**
+	 * Renames a custom account category by updating its stored label. Writes by _id (the owner-scoped
+	 * path), used by the vault category edit dialog.
+	 *
+	 * @param categoryKey - The document id of the category to rename.
+	 * @param label - The new category label.
+	 * @returns A promise that resolves when the category label is updated.
+	 */
+	public async updateVaultCategoryLabel(categoryKey: string, label: string): Promise<void> {
+		try {
+			const result = await this.database
+				.collection(DATABASE_VAULT)
+				.where(this.buildWhereClause(categoryKey))
+				.update({ [VAULT_VALUE_KEY_LABEL]: label });
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `${DB_LOG_RECORD_TABLE_UPDATED} ${DATABASE_VAULT}`);
 		} catch (error) {

@@ -654,6 +654,19 @@ export class Utilities {
 	}
 
 	/**
+	 * Gets the first two leading graphemes of a name, uppercased — for avatar and graph-node initials.
+	 * Splits by code point so surrogate-pair characters (emoji, extended CJK) stay whole, and clamps
+	 * any uppercase expansion (e.g. 'ß' → 'SS') so at most two graphemes are returned.
+	 *
+	 * @param name - The display name to derive initials from.
+	 * @returns The uppercased leading one or two graphemes, or an empty string when the name is empty.
+	 */
+	public static getInitials(name: string): string {
+		const leading = Array.from(name.trim()).slice(0, 2).join('').toUpperCase();
+		return Array.from(leading).slice(0, 2).join('');
+	}
+
+	/**
 	 * Gets the one-or-two-letter initials from the user's display name for avatar circles.
 	 *
 	 * @param user - The authenticated user object from the auth observable.

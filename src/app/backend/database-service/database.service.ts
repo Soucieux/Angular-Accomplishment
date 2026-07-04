@@ -684,7 +684,7 @@ export abstract class DatabaseService {
 	public abstract addVaultNode(node: {
 		nodeType: VaultNodeType;
 		name: string;
-		category: string;
+		categories: string[];
 		verified: boolean;
 	}): Promise<string>;
 
@@ -712,24 +712,36 @@ export abstract class DatabaseService {
 	}): Promise<string>;
 
 	/**
-	 * Removes a custom account category and reassigns every account that used it to Uncategorized,
+	 * Removes a custom account category and pulls its key from every account that carried it,
 	 * so no account is left orphaned under a category that no longer exists.
 	 *
 	 * @param categoryKey - The document id of the category to remove.
-	 * @param accountIds - The ids of the account nodes currently in that category.
-	 * @returns A promise that resolves when the category is removed and its accounts reassigned.
+	 * @param accountUpdates - The affected accounts, each with its category list already stripped of the removed key.
+	 * @returns A promise that resolves when the category is removed and its accounts updated.
 	 */
-	public abstract removeVaultCategory(categoryKey: string, accountIds: string[]): Promise<void>;
+	public abstract removeVaultCategory(
+		categoryKey: string,
+		accountUpdates: { id: string; categories: string[] }[]
+	): Promise<void>;
 
 	/**
-	 * Reassigns a single account node to the given category — used to categorize an account after
-	 * creation (e.g. moving an Uncategorized account into a custom category).
+	 * Renames a custom account category by updating its stored label.
+	 *
+	 * @param categoryKey - The document id of the category to rename.
+	 * @param label - The new category label.
+	 * @returns A promise that resolves when the category label is updated.
+	 */
+	public abstract updateVaultCategoryLabel(categoryKey: string, label: string): Promise<void>;
+
+	/**
+	 * Replaces an account node's category list with the given keys — used by the inline picker to
+	 * add or remove categories on an account.
 	 *
 	 * @param nodeId - The id of the account node to update.
-	 * @param categoryKey - The category key to assign.
-	 * @returns A promise that resolves when the account's category is updated.
+	 * @param categoryKeys - The full list of category keys to store on the account.
+	 * @returns A promise that resolves when the account's categories are updated.
 	 */
-	public abstract updateVaultNodeCategory(nodeId: string, categoryKey: string): Promise<void>;
+	public abstract updateVaultNodeCategories(nodeId: string, categoryKeys: string[]): Promise<void>;
 
 	// ── Utility methods ───────────────────────────────────────────────────────
 

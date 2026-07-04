@@ -21,6 +21,7 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_VAULT,
 	DIALOG_ADD_ACCOUNT,
+	DIALOG_CATEGORY,
 	SUCCESS,
 	TOAST_ERROR,
 	VAULT_KIND_NODE,
@@ -32,12 +33,17 @@ import {
 	VAULT_DOT_CLASS_PHONE,
 	VAULT_DOT_CLASS_LINK,
 	VAULT_DOT_CLASS_ACCOUNT,
+	VAULT_DOT_CLASS_NOTES,
 	VAULT_NODE_PHONE,
 	VAULT_NODE_LINK,
+	VAULT_NODE_NOTES,
+	VAULT_NODE_LEGACY_PASSWORD,
 	VAULT_VIEW_GRAPH,
 	VAULT_VIEW_LIST,
 	VAULT_RELATION_LINKED,
-	VAULT_RELATION_MANUAL
+	VAULT_RELATION_MANUAL,
+	TIMEOUT_KEY_VAULT,
+	VAULT_LOG_APPLY_FAILED
 } from '../../common/constants';
 import {
 	NAV_LABEL_VAULT,
@@ -56,6 +62,7 @@ import {
 	VAULT_TYPE_EMAIL,
 	VAULT_TYPE_PHONE,
 	VAULT_TYPE_LINK,
+	VAULT_TYPE_NOTES,
 	VAULT_BTN_ADD_CONNECTIONS,
 	VAULT_OVERVIEW_EMPTY,
 	VAULT_BANNER_SECOND,
@@ -65,6 +72,9 @@ import {
 	DIALOG_BTN_DELETE,
 	VAULT_MSG_SAVING,
 	VAULT_MSG_REMOVING_LINK,
+	VAULT_NOTE_PLACEHOLDER,
+	VAULT_MSG_ADDING_NOTE,
+	VAULT_MSG_NOTE_ADDED,
 	VAULT_MSG_DELETE_NODE_TITLE,
 	VAULT_MSG_DELETE_NODE_CONFIRM_PREFIX,
 	VAULT_MSG_DELETE_NODE_CONFIRM_SUFFIX,
@@ -73,6 +83,7 @@ import {
 	VAULT_MSG_DELETE_CATEGORY_TITLE,
 	VAULT_MSG_DELETE_CATEGORY_CONFIRM,
 	VAULT_MSG_CATEGORY_REMOVED,
+	VAULT_MSG_CATEGORY_UPDATED,
 	VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL,
 	VAULT_MSG_ACCOUNT_SAVED,
 	VAULT_MSG_LINK_ADDED,
@@ -93,13 +104,17 @@ import {
 	VaultRecord,
 	VaultSelectionDetail,
 	VAULT_CATEGORY_DEFS,
+	VAULT_CATEGORY_ICONS,
 	VAULT_CATEGORY_OTHER,
 	VAULT_EMAIL_META,
 	VAULT_LINK_META,
+	VAULT_NOTES_META,
 	VAULT_PHONE_META
 } from './vault.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { NewCategoryData } from '../portal/portal.model';
+import { TimeoutService } from '../../common/timeout/timeout.service';
 import { GraphCanvasComponent } from './graph-canvas/graph-canvas.component';
 import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 
@@ -122,6 +137,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly VAULT_BTN_ADD = VAULT_BTN_ADD;
 	protected readonly VAULT_LIST_EDIT = VAULT_LIST_EDIT;
 	protected readonly VAULT_LIST_DONE = VAULT_LIST_DONE;
+	protected readonly VAULT_NOTE_PLACEHOLDER = VAULT_NOTE_PLACEHOLDER;
 	protected readonly VAULT_EMPTY_TITLE = VAULT_EMPTY_TITLE;
 	protected readonly VAULT_EMPTY_BODY = VAULT_EMPTY_BODY;
 	protected readonly VAULT_LABEL_ACCOUNTS = VAULT_LABEL_ACCOUNTS;
@@ -132,10 +148,12 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly VAULT_BANNER_SECOND = VAULT_BANNER_SECOND;
 	protected readonly VAULT_BANNER_CANCEL = VAULT_BANNER_CANCEL;
 	protected readonly VAULT_MSG_DELETE_NODE_TITLE = VAULT_MSG_DELETE_NODE_TITLE;
+	protected readonly VAULT_CATEGORY_UNCATEGORIZED_LABEL = VAULT_CATEGORY_UNCATEGORIZED_LABEL;
 	protected loading = true;
 	protected view: typeof VAULT_VIEW_GRAPH | typeof VAULT_VIEW_LIST = VAULT_VIEW_GRAPH;
 	protected query = '';
 	protected editId: string | null = null;
+	protected noteDraft = '';
 	protected selectedId: string | null = null;
 	// The account whose category picker is expanded in the list view, or null when none is open.
 	protected categoryPickerId: string | null = null;
@@ -146,6 +164,10 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected saveIndicator = false;
 	protected nodes: VaultNode[] = [];
 	protected edges: VaultEdge[] = [];
+	/* The map excludes notes nodes (and edges touching them) so private notes never render on the
+	   graph; the full nodes/edges above still drive the list view where notes stay visible. */
+	protected mapNodes: VaultNode[] = [];
+	protected mapEdges: VaultEdge[] = [];
 	protected customCategories: VaultCategoryDef[] = [];
 	// Custom-category keys, precomputed when customCategories is assigned so the overview getter
 	// tests membership without allocating a Set on every change-detection pass.
@@ -283,6 +305,42 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected toggleEditMode(accountId: string, event: Event): void {
 		event.stopPropagation();
 		this.editId = this.editId === accountId ? null : accountId;
+		// Reset the inline note draft so it never carries over between cards.
+		this.noteDraft = '';
+	}
+
+	/**
+	 * Adds the drafted note as a private notes node linked to the account (edit mode only). The note
+	 * then renders as a connection chip and, like all notes, stays off the graph map. Runs inside a
+	 * block dialog so the write cannot be double-submitted. On success flashes the save indicator and
+	 * clears the draft; on failure shows an error toast.
+	 *
+	 * @param accountId - The id of the account the note is attached to.
+	 */
+	protected addNote(accountId: string): void {
+		const value = this.noteDraft.trim();
+		if (!value) return;
+		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_ADDING_NOTE, async () => {
+			try {
+				const noteId = await this.databaseService.addVaultNode({
+					nodeType: VAULT_NODE_NOTES,
+					name: value,
+					categories: [],
+					verified: false
+				});
+				await this.databaseService.addVaultEdge({
+					sourceId: accountId,
+					targetId: noteId,
+					relation: VAULT_RELATION_LINKED
+				});
+				this.noteDraft = '';
+				this.cdr.detectChanges();
+				this.triggerSaveIndicator();
+				this.dialogService.showToast(SUCCESS, VAULT_MSG_NOTE_ADDED);
+			} catch {
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
+			}
+		});
 	}
 
 	/**
@@ -298,24 +356,44 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Assigns the chosen category to the account, then collapses the picker. Skips the write when the
-	 * category is unchanged. On success flashes the save indicator; on failure shows an error toast.
+	 * Adds or removes a category on an account from the inline picker, then persists the full new
+	 * list. The picker stays open so several categories can be toggled in one session. Unselecting the
+	 * last account that used a custom category removes that category too. On success flashes the save
+	 * indicator; on failure shows an error toast.
 	 *
 	 * @param accountId - The id of the account being categorized.
-	 * @param categoryKey - The category key to assign.
-	 * @param currentKey - The account's current category key, to skip a no-op write.
+	 * @param categoryKey - The category key to toggle on the account.
+	 * @param currentKeys - The account's current category keys.
 	 * @param event - The originating click event, stopped so it does not select the card.
 	 */
-	protected assignCategory(accountId: string, categoryKey: string, currentKey: string, event: Event): void {
+	protected toggleAccountCategory(
+		accountId: string,
+		categoryKey: string,
+		currentKeys: string[],
+		event: Event
+	): void {
 		event.stopPropagation();
-		this.categoryPickerId = null;
-		if (categoryKey === currentKey) return;
+		const isRemoval = currentKeys.includes(categoryKey);
+		const nextKeys = isRemoval
+			? currentKeys.filter((key) => key !== categoryKey)
+			: [...currentKeys, categoryKey];
+
+		/* Apply the toggle to local state immediately so the chips and picker update on the first
+		   click; the live DB watch re-emits the authoritative state moments later. */
+		this.setLocalNodeCategories(accountId, nextKeys);
 		this.databaseService
-			.updateVaultNodeCategory(accountId, categoryKey)
-			.then(() => this.triggerSaveIndicator())
-			.catch(() =>
-				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL)
-			);
+			.updateVaultNodeCategories(accountId, nextKeys)
+			.then(() => {
+				this.triggerSaveIndicator();
+				// Unselecting the last account that used a custom category leaves it orphaned — drop it.
+				if (isRemoval) this.removeOrphanedCategories([categoryKey], accountId).catch(() => {});
+			})
+			.catch(() => {
+				// Revert the optimistic change and surface the failure.
+				this.setLocalNodeCategories(accountId, currentKeys);
+				this.cdr.detectChanges();
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
+			});
 	}
 
 	// ── Internal data writes ─────────────────────────────────────────────────
@@ -342,7 +420,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	/**
 	 * Opens the confirm dialog for deleting a vault node, reachable from either the
 	 * graph selection or a list-view card. On confirm, removes the node and every
-	 * edge attached to it, then clears the graph selection if it pointed at this node.
+	 * edge attached to it, drops any custom category the node was the last account to
+	 * use, then clears the graph selection if it pointed at this node.
 	 *
 	 * @param nodeId - The id of the node to delete.
 	 * @param event - The originating click event, stopped so it does not affect selection.
@@ -365,6 +444,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			async () => {
 				try {
 					await this.databaseService.removeVaultNode(node.id, connectedEdgeIds, node.name);
+					// Drop any custom category this node was the last account to use.
+					this.removeOrphanedCategories(node.categories, node.id).catch(() => {});
 					if (this.selectedId === node.id) this.selectedId = null;
 					this.triggerSaveIndicator();
 					this.dialogService.showToast(SUCCESS, VAULT_MSG_NODE_REMOVED);
@@ -380,25 +461,26 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Opens a confirmation dialog to delete a custom category. On confirm, every account in that
-	 * category is reassigned to Uncategorized and the category record is removed. Mirrors the
-	 * node-delete flow (confirm then direct write with toast feedback).
+	 * Opens a confirmation dialog to delete a custom category. On confirm, the category key is pulled
+	 * from every account that carried it and the category record is removed. Mirrors the node-delete
+	 * flow (confirm then direct write with toast feedback). Invoked from the edit dialog's delete action.
 	 *
 	 * @param categoryKey - The document id of the custom category to delete.
-	 * @param event - The originating click event, stopped so it does not toggle the category filter.
 	 */
-	protected deleteCategory(categoryKey: string, event: Event): void {
-		event.stopPropagation();
-		const accountIds = this.nodes
-			.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT && node.category === categoryKey)
-			.map((node) => node.id);
+	private deleteCategoryByKey(categoryKey: string): void {
+		const accountUpdates = this.nodes
+			.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT && node.categories.includes(categoryKey))
+			.map((node) => ({
+				id: node.id,
+				categories: node.categories.filter((key) => key !== categoryKey)
+			}));
 		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
 			[VAULT_MSG_DELETE_CATEGORY_CONFIRM, VAULT_MSG_DELETE_CATEGORY_TITLE, DIALOG_BTN_DELETE],
 			MSG_DELETING,
 			async () => {
 				try {
-					await this.databaseService.removeVaultCategory(categoryKey, accountIds);
+					await this.databaseService.removeVaultCategory(categoryKey, accountUpdates);
 					if (this.categoryFilter === categoryKey) this.categoryFilter = null;
 					this.triggerSaveIndicator();
 					this.dialogService.showToast(SUCCESS, VAULT_MSG_CATEGORY_REMOVED);
@@ -456,7 +538,12 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.dialogComponentContainer,
 			DIALOG_ADD_ACCOUNT,
 			(accountData: NewAccountData) => this.handleAccountSave(accountData),
-			this.customCategories
+			{
+				categories: this.customCategories,
+				existingNames: this.nodes
+					.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT)
+					.map((node) => node.name)
+			}
 		);
 	}
 
@@ -470,17 +557,18 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	private handleAccountSave(accountData: NewAccountData): void {
 		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
-				// Resolve the category — persist a freshly created custom category first, then use its id
-				let categoryKey = accountData.category;
+				// Resolve categories — persist a freshly created custom category first, then append its id
+				const categories = [...accountData.categories];
 				if (accountData.newCategory) {
-					categoryKey = await this.databaseService.addVaultCategory(accountData.newCategory);
+					const newCategoryId = await this.databaseService.addVaultCategory(accountData.newCategory);
+					categories.push(newCategoryId);
 				}
 
 				// Add the primary account node, carrying its verified state
 				const accountId = await this.databaseService.addVaultNode({
 					nodeType: VAULT_NODE_ACCOUNT,
 					name: accountData.name.trim(),
-					category: categoryKey,
+					categories,
 					verified: accountData.verified
 				});
 
@@ -496,7 +584,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 						targetId = await this.databaseService.addVaultNode({
 							nodeType: connection.type,
 							name: connectionName,
-							category: '',
+							categories: [],
 							verified: false
 						});
 						nodeIdsByName.set(connectionName.toLowerCase(), targetId);
@@ -517,10 +605,49 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		});
 	}
 
+	/**
+	 * Opens the shared category dialog in edit mode for a custom category (prefilled with its name),
+	 * wiring submit to rename it and delete to remove it — mirroring the Portal category edit flow.
+	 *
+	 * @param stat - The overview chip whose custom category is being edited.
+	 * @param event - The originating click event, stopped so it does not toggle the category filter.
+	 */
+	protected openEditCategoryDialog(stat: VaultOverviewStat, event: Event): void {
+		event.stopPropagation();
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_CATEGORY,
+			(data: NewCategoryData) => this.handleCategoryRename(data, stat.key),
+			{ prefillData: { name: stat.label }, onDelete: () => this.deleteCategoryByKey(stat.key) }
+		);
+	}
+
+	/**
+	 * Renames a custom category to the submitted name. Skips the write when the name is unchanged,
+	 * flashes the save indicator on success, and shows an error toast on failure.
+	 *
+	 * @param data - The validated category form data from the edit dialog.
+	 * @param categoryKey - The document id of the category being renamed.
+	 */
+	private handleCategoryRename(data: NewCategoryData, categoryKey: string): void {
+		const name = data.name.trim();
+		if (!name || name === this.getCategoryDef(categoryKey).categoryLabel) return;
+		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
+			try {
+				await this.databaseService.updateVaultCategoryLabel(categoryKey, name);
+				this.triggerSaveIndicator();
+				this.dialogService.showToast(SUCCESS, VAULT_MSG_CATEGORY_UPDATED);
+			} catch {
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
+			}
+		});
+	}
+
 	// ── Private helpers ──────────────────────────────────────────────────────
 
 	/**
-	 * Splits a vault emission into typed node, edge, and category collections.
+	 * Splits a vault emission into typed node, edge, and category collections, then derives the
+	 * notes-free map lists (mapNodes / mapEdges) the graph renders.
 	 *
 	 * @param records - The raw vault records emitted by the database watch.
 	 */
@@ -532,9 +659,19 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			if (record.kind === VAULT_KIND_NODE) {
 				nodes.push({
 					id: record.key,
-					nodeType: record.nodeType ?? VAULT_NODE_ACCOUNT,
+					// Normalize legacy 'password' nodes (pre-rename) to 'notes' so old docs display correctly.
+					nodeType:
+						record.nodeType === VAULT_NODE_LEGACY_PASSWORD
+							? VAULT_NODE_NOTES
+							: (record.nodeType ?? VAULT_NODE_ACCOUNT),
 					name: record.name ?? '',
-					category: record.category ?? '',
+					/* Migration: prefer the categories array; fall back to a legacy single category
+					   (dropping the old 'other' sentinel, which now maps to an empty list = Uncategorized). */
+					categories:
+						record.categories ??
+						(record.category && record.category !== VAULT_CATEGORY_OTHER.key
+							? [record.category]
+							: []),
 					verified: record.verified ?? false
 				});
 			} else if (record.kind === VAULT_KIND_EDGE) {
@@ -549,7 +686,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 					key: record.key,
 					label: record.label ?? '',
 					categoryLabel: record.label ?? '',
-					icon: VAULT_CATEGORY_OTHER.icon,
+					icon: this.categoryIconForKey(record.key),
 					hex: record.hex ?? '',
 					gradient: record.gradient ?? ''
 				});
@@ -557,6 +694,15 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 		this.nodes = nodes;
 		this.edges = edges;
+		/* Derive the map's view: drop notes nodes and any edge that touches one, so private
+		   notes never reach the graph while the full lists still feed the list view. */
+		const notesNodeIds = new Set(
+			nodes.filter((node) => node.nodeType === VAULT_NODE_NOTES).map((node) => node.id)
+		);
+		this.mapNodes = nodes.filter((node) => node.nodeType !== VAULT_NODE_NOTES);
+		this.mapEdges = edges.filter(
+			(edge) => !notesNodeIds.has(edge.sourceId) && !notesNodeIds.has(edge.targetId)
+		);
 		this.customCategories = categories;
 		this.customCategoryKeys = new Set(categories.map((categoryDef) => categoryDef.key));
 		this.loading = false;
@@ -575,6 +721,22 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.saveIndicator = false;
 			this.cdr.detectChanges();
 		}, 1000);
+	}
+
+	/**
+	 * Gets a stable, distinct display icon for a custom category by hashing its document id into the
+	 * icon palette. Keyed by the id (not list position) so a category keeps its icon as others are
+	 * added or removed; used when mapping category records so each one reads differently in the overview.
+	 *
+	 * @param categoryKey - The document id of the custom category.
+	 * @returns The Material Symbols icon name for the category.
+	 */
+	private categoryIconForKey(categoryKey: string): string {
+		let hash = 0;
+		for (let index = 0; index < categoryKey.length; index++) {
+			hash = (hash * 31 + categoryKey.charCodeAt(index)) >>> 0;
+		}
+		return VAULT_CATEGORY_ICONS[hash % VAULT_CATEGORY_ICONS.length];
 	}
 
 	/**
@@ -603,7 +765,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (node.nodeType === VAULT_NODE_EMAIL) return VAULT_EMAIL_META.gradient;
 		if (node.nodeType === VAULT_NODE_PHONE) return VAULT_PHONE_META.gradient;
 		if (node.nodeType === VAULT_NODE_LINK) return VAULT_LINK_META.gradient;
-		return this.getCategoryDef(node.category).gradient;
+		if (node.nodeType === VAULT_NODE_NOTES) return VAULT_NOTES_META.gradient;
+		return this.getCategoryDef(node.categories[0] ?? '').gradient;
 	}
 
 	/**
@@ -616,6 +779,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (nodeType === VAULT_NODE_EMAIL) return VAULT_DOT_CLASS_EMAIL;
 		if (nodeType === VAULT_NODE_PHONE) return VAULT_DOT_CLASS_PHONE;
 		if (nodeType === VAULT_NODE_LINK) return VAULT_DOT_CLASS_LINK;
+		if (nodeType === VAULT_NODE_NOTES) return VAULT_DOT_CLASS_NOTES;
 		return VAULT_DOT_CLASS_ACCOUNT;
 	}
 
@@ -641,10 +805,13 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		return {
 			id: account.id,
 			name: account.name,
-			letter: (account.name[0] ?? '').toUpperCase(),
+			letter: Utilities.getInitials(account.name),
 			gradient: this.getNodeGradient(account),
-			category: account.category,
-			categoryLabel: this.getCategoryDef(account.category).categoryLabel,
+			categoryChips: account.categories.map((categoryKey) => {
+				const categoryDef = this.getCategoryDef(categoryKey);
+				return { key: categoryKey, label: categoryDef.categoryLabel, gradient: categoryDef.gradient };
+			}),
+			categoryKeys: account.categories,
 			verified: account.verified,
 			linkCount: links.length,
 			links,
@@ -679,6 +846,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (nodeType === VAULT_NODE_EMAIL) return VAULT_TYPE_EMAIL;
 		if (nodeType === VAULT_NODE_PHONE) return VAULT_TYPE_PHONE;
 		if (nodeType === VAULT_NODE_LINK) return VAULT_TYPE_LINK;
+		if (nodeType === VAULT_NODE_NOTES) return VAULT_TYPE_NOTES;
 		return VAULT_TYPE_ACCOUNT;
 	}
 
@@ -691,6 +859,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	private getIdentifierIcon(nodeType: VaultNodeType): string {
 		if (nodeType === VAULT_NODE_EMAIL) return VAULT_EMAIL_META.icon;
 		if (nodeType === VAULT_NODE_LINK) return VAULT_LINK_META.icon;
+		if (nodeType === VAULT_NODE_NOTES) return VAULT_NOTES_META.icon;
 		return VAULT_PHONE_META.icon;
 	}
 
@@ -702,6 +871,58 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	private findNode(nodeId: string | null): VaultNode | undefined {
 		return nodeId ? this.nodes.find((node) => node.id === nodeId) : undefined;
+	}
+
+	/**
+	 * Returns true when an account passes the active category filter — every account when no filter
+	 * is set, accounts with no categories under the Uncategorized filter, or accounts whose category
+	 * list contains the filtered key.
+	 *
+	 * @param node - The account node to test against the current category filter.
+	 * @returns Whether the account is visible under the category filter.
+	 */
+	private matchesCategoryFilter(node: VaultNode): boolean {
+		if (!this.categoryFilter) return true;
+		if (this.categoryFilter === VAULT_CATEGORY_OTHER.key) return node.categories.length === 0;
+		return node.categories.includes(this.categoryFilter);
+	}
+
+	/**
+	 * Replaces one account node's categories in local state (immutably) so the list view reflects a
+	 * category change before the database watch re-emits. Backs the optimistic inline-picker toggle.
+	 *
+	 * @param accountId - The id of the account node to update.
+	 * @param categories - The new category keys to store locally.
+	 */
+	private setLocalNodeCategories(accountId: string, categories: string[]): void {
+		this.nodes = this.nodes.map((node) =>
+			node.id === accountId ? { ...node, categories } : node
+		);
+	}
+
+	/**
+	 * Removes every custom category in the candidate keys that no remaining node still references, so
+	 * a category is discarded once its last account is deleted or unselects it. Only user-created
+	 * custom categories are removable — the Uncategorized fallback is never a stored record. Clears the
+	 * active category filter when it pointed at a removed category. Each removal reuses
+	 * {@link DatabaseService.removeVaultCategory} with no account updates, since an orphaned category
+	 * has no accounts left to strip.
+	 *
+	 * {@link openDeleteNodeDialog} - Cleans up a deleted node's now-unused categories.
+	 * {@link toggleAccountCategory} - Cleans up a category an account just unselected.
+	 *
+	 * @param candidateKeys - The category keys that may have become orphaned.
+	 * @param excludeNodeId - The id of the node just deleted or re-categorized, excluded from the usage scan.
+	 * @returns A promise that resolves when every orphaned category is removed.
+	 */
+	private async removeOrphanedCategories(candidateKeys: string[], excludeNodeId: string): Promise<void> {
+		const orphanKeys = candidateKeys.filter(
+			(key) =>
+				this.customCategoryKeys.has(key) &&
+				!this.nodes.some((node) => node.id !== excludeNodeId && node.categories.includes(key))
+		);
+		if (this.categoryFilter && orphanKeys.includes(this.categoryFilter)) this.categoryFilter = null;
+		await Promise.all(orphanKeys.map((key) => this.databaseService.removeVaultCategory(key, [])));
 	}
 
 	// ── Template helpers ─────────────────────────────────────────────────────
@@ -752,7 +973,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		const query = this.query.trim().toLowerCase();
 		return this.nodes
 			.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT)
-			.filter((node) => !this.categoryFilter || node.category === this.categoryFilter)
+			.filter((node) => this.matchesCategoryFilter(node))
 			.filter((node) => !query || node.name.toLowerCase().includes(query))
 			.map((account) => this.buildAccountRow(account))
 			.sort((a, b) => b.linkCount - a.linkCount);
@@ -771,7 +992,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		let identifierCount = 0;
 		this.neighborsOf(node.id).forEach((neighbourId) => {
 			const other = this.nodes.find((candidate) => candidate.id === neighbourId);
-			if (!other) return;
+			// Skip private notes nodes so they never contribute to the selection counts.
+			if (!other || other.nodeType === VAULT_NODE_NOTES) return;
 			if (other.nodeType === VAULT_NODE_ACCOUNT) accountCount++;
 			else identifierCount++;
 		});
@@ -784,7 +1006,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			isAccount,
 			isIcon: !isAccount,
 			icon: isAccount ? '' : this.getIdentifierIcon(node.nodeType),
-			letter: (node.name[0] ?? '').toUpperCase(),
+			letter: Utilities.getInitials(node.name),
 			accountCount,
 			identifierCount
 		};
@@ -799,11 +1021,17 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected get overviewStats(): VaultOverviewStat[] {
 		const counts: Record<string, number> = {};
 		this.nodes.forEach((node) => {
-			if (node.nodeType === VAULT_NODE_ACCOUNT) {
-				counts[node.category] = (counts[node.category] ?? 0) + 1;
+			if (node.nodeType !== VAULT_NODE_ACCOUNT) return;
+			// An account counts toward each of its categories; one with none goes to the Uncategorized bucket.
+			if (node.categories.length === 0) {
+				counts[this.otherCategory.key] = (counts[this.otherCategory.key] ?? 0) + 1;
+				return;
 			}
+			node.categories.forEach((categoryKey) => {
+				counts[categoryKey] = (counts[categoryKey] ?? 0) + 1;
+			});
 		});
-		// otherCategory is appended so accounts assigned to Uncategorized ('other') get their own chip.
+		// Built-ins, then custom categories, then the Uncategorized fallback — only those with any account.
 		return [...VAULT_CATEGORY_DEFS, ...this.customCategories, this.otherCategory]
 			.filter((categoryDef) => counts[categoryDef.key])
 			.map((categoryDef) => ({
@@ -819,13 +1047,13 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Gets the categories a user can assign to an account from the inline picker: every custom
-	 * category plus Uncategorized (so an account can also be moved back to Uncategorized).
+	 * Gets the categories a user can toggle on an account from the inline picker — every custom
+	 * category. Toggling all of them off leaves the account Uncategorized (an empty category list).
 	 *
 	 * @returns The assignable category options.
 	 */
 	protected get assignableCategories(): { key: string; label: string; gradient: string }[] {
-		return [...this.customCategories, this.otherCategory].map((categoryDef) => ({
+		return this.customCategories.map((categoryDef) => ({
 			key: categoryDef.key,
 			label: categoryDef.categoryLabel,
 			gradient: categoryDef.gradient

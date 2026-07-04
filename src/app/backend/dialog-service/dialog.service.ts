@@ -44,7 +44,7 @@ import { MultiLinkDialogComponent } from './multi-link/multi-link.component';
 import { CategoryDialogComponent } from './category/category.component';
 import { AddAccountDialogComponent } from './add-account/add-account.component';
 import { NewCategoryData, NewLinkData } from '../../fontend/portal/portal.model';
-import { NewAccountData, VaultCategoryDef } from '../../fontend/vault/vault.model';
+import { NewAccountData, AddAccountDialogData } from '../../fontend/vault/vault.model';
 import { DeleteAccountDialogComponent } from './delete-account/delete-account.component';
 import { SessionExpiredError } from '../../common/error/session-expired.error';
 import { DialogError } from '../../common/error/dialog.error';
@@ -149,7 +149,7 @@ export class DialogService {
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'add-account',
 		submitCallback: (data: NewAccountData) => void,
-		existingCategories: VaultCategoryDef[]
+		dialogData: AddAccountDialogData
 	): void;
 
 	/**

@@ -1,12 +1,12 @@
-/** The kind of a vault node: a website/app account, or an email / phone / link identifier. */
-export type VaultNodeType = 'account' | 'email' | 'phone' | 'link';
+/** The kind of a vault node: an account, an email / phone / link identifier, or a private note. */
+export type VaultNodeType = 'account' | 'email' | 'phone' | 'link' | 'notes';
 
 /** A node in the vault graph — an account or an email / phone / link identifier. */
 export interface VaultNode {
 	id: string;
 	nodeType: VaultNodeType;
 	name: string;
-	category: string;
+	categories: string[];
 	verified: boolean;
 }
 
@@ -32,7 +32,9 @@ export interface VaultRecord {
 	kind: string;
 	nodeType?: VaultNodeType;
 	name?: string;
+	/** Legacy single-category field on older node docs — migrated to `categories` on read. */
 	category?: string;
+	categories?: string[];
 	sourceId?: string;
 	targetId?: string;
 	relation?: string;
@@ -51,10 +53,16 @@ export interface VaultConnectionInput {
 /** Submitted form data returned by the add-account dialog to its caller. */
 export interface NewAccountData {
 	name: string;
-	category: string;
+	categories: string[];
 	verified: boolean;
 	connections: VaultConnectionInput[];
 	newCategory?: { label: string; hex: string; gradient: string };
+}
+
+/** Data passed into the add-account dialog: assignable categories plus existing account names used to reject duplicates. */
+export interface AddAccountDialogData {
+	categories: VaultCategoryDef[];
+	existingNames: string[];
 }
 
 /** Display definition for a built-in account category — drives node fill, avatar gradient, and chip label. */
@@ -121,8 +129,8 @@ export interface VaultSimNode {
 	id: string;
 	nodeType: VaultNodeType;
 	name: string;
-	category: string;
-	hex: string;
+	categories: string[];
+	hexes: string[];
 	letter: string;
 	verified: boolean;
 	x: number;
@@ -132,14 +140,21 @@ export interface VaultSimNode {
 	rad: number;
 }
 
+/** A colored category chip shown on an account row (one per assigned category). */
+export interface VaultAccountCategoryChip {
+	key: string;
+	label: string;
+	gradient: string;
+}
+
 /** A view-model row rendered for one account in the list view. */
 export interface VaultAccountRow {
 	id: string;
 	name: string;
 	letter: string;
 	gradient: string;
-	category: string;
-	categoryLabel: string;
+	categoryChips: VaultAccountCategoryChip[];
+	categoryKeys: string[];
 	verified: boolean;
 	linkCount: number;
 	links: VaultLinkChip[];
@@ -186,11 +201,19 @@ export const VAULT_LINK_META: VaultIdentifierMeta = {
 	gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)'
 };
 
+/** Fixed display metadata for private notes nodes (slate note) — shown in the list, not the map. */
+export const VAULT_NOTES_META: VaultIdentifierMeta = {
+	icon: 'sticky_note_2',
+	hex: '#64748b',
+	gradient: 'linear-gradient(135deg, #94a3b8, #475569)'
+};
+
 /** Selectable connection types in the add-account dialog (value + icon; labels are localized at the call site). */
 export const VAULT_CONNECTION_TYPES: { value: VaultNodeType; icon: string }[] = [
 	{ value: 'email', icon: 'mail' },
 	{ value: 'phone', icon: 'call' },
-	{ value: 'link', icon: 'link' }
+	{ value: 'link', icon: 'link' },
+	{ value: 'notes', icon: 'sticky_note_2' }
 ];
 
 /** Random color swatches assigned to a new custom category on creation. */
@@ -203,10 +226,28 @@ export const VAULT_CATEGORY_SWATCHES: { hex: string; gradient: string }[] = [
 	{ hex: '#3b82f6', gradient: 'linear-gradient(135deg, #60a5fa, #2563eb)' }
 ];
 
+/** Distinct icons cycled across custom categories so each one reads differently in the overview. */
+export const VAULT_CATEGORY_ICONS = [
+	'label',
+	'work',
+	'favorite',
+	'star',
+	'sell',
+	'school',
+	'sports_esports',
+	'flight',
+	'restaurant',
+	'pets',
+	'music_note',
+	'fitness_center'
+];
+
 /** BFS hop-level highlight colors: index 0 = selected, 1 = direct, 2 = second-degree, 3+ = beyond. */
 export const VAULT_LEVEL_COLORS = ['#b02257', '#d53369', '#e8961a', '#0d9488'];
 /** Stroke color for the white ring around every graph node. */
 export const VAULT_NODE_STROKE = '#ffffff';
+/** Icon color for the glyph inside a non-account identifier node — dark for contrast on the fill. */
+export const VAULT_GLYPH_COLOR_IDENTIFIER = '#1e293b';
 /** Edge color when the edge is not part of the selected node's highlighted web. */
 export const VAULT_EDGE_RESTING_COLOR = '#cbb5be';
 /** Label color under an account node. */

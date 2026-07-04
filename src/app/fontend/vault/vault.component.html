@@ -108,9 +108,9 @@
 								</div>
 								@if (stat.isActive && stat.isCustom) {
 									<span
-										class="vault-overview-delete material-symbols-outlined"
-										(click)="deleteCategory(stat.key, $event)"
-										>close</span
+										class="vault-overview-edit material-symbols-outlined"
+										(click)="openEditCategoryDialog(stat, $event)"
+										>tune</span
 									>
 								}
 							</button>
@@ -146,7 +146,20 @@
 												class="vault-card-category"
 												[class.open]="categoryPickerId === account.id"
 												(click)="toggleCategoryPicker(account.id, $event)">
-												{{ account.categoryLabel }}
+												@if (account.categoryChips.length) {
+													@for (chip of account.categoryChips; track chip.key) {
+														<span class="vault-category-chip">
+															<span
+																class="vault-category-chip-dot"
+																[style.background]="chip.gradient"></span>
+															{{ chip.label }}
+														</span>
+													}
+												} @else {
+													<span class="vault-category-chip vault-category-uncategorized">{{
+														VAULT_CATEGORY_UNCATEGORIZED_LABEL
+													}}</span>
+												}
 												<span class="material-symbols-outlined vault-category-caret">chevron_right</span>
 											</button>
 											<div
@@ -156,9 +169,9 @@
 													<button
 														type="button"
 														class="vault-category-option"
-														[class.current]="option.key === account.category"
+														[class.current]="account.categoryKeys.includes(option.key)"
 														(click)="
-															assignCategory(account.id, option.key, account.category, $event)
+															toggleAccountCategory(account.id, option.key, account.categoryKeys, $event)
 														">
 														<span
 															class="vault-category-option-dot"
@@ -174,18 +187,16 @@
 											<span class="material-symbols-outlined">link</span
 											>{{ account.linkCount }}
 										</div>
-										@if (account.hasLinks) {
-											<button
-												type="button"
-												class="vault-edit-button"
-												[class.active]="account.isEditing"
-												(click)="toggleEditMode(account.id, $event)">
-												<span class="material-symbols-outlined">{{
-													account.isEditing ? 'check' : 'edit'
-												}}</span>
-												{{ account.isEditing ? VAULT_LIST_DONE : VAULT_LIST_EDIT }}
-											</button>
-										}
+										<button
+											type="button"
+											class="vault-edit-button"
+											[class.active]="account.isEditing"
+											(click)="toggleEditMode(account.id, $event)">
+											<span class="material-symbols-outlined">{{
+												account.isEditing ? 'check' : 'edit'
+											}}</span>
+											{{ account.isEditing ? VAULT_LIST_DONE : VAULT_LIST_EDIT }}
+										</button>
 										<button
 											type="button"
 											class="vault-delete-button"
@@ -215,6 +226,20 @@
 										}
 									</div>
 								}
+								@if (account.isEditing) {
+									<div class="vault-note-add" (click)="$event.stopPropagation()">
+										<span class="material-symbols-outlined vault-note-add-icon">sticky_note_2</span>
+										<input
+											class="vault-note-input"
+											type="text"
+											[(ngModel)]="noteDraft"
+											[placeholder]="VAULT_NOTE_PLACEHOLDER"
+											(keyup.enter)="addNote(account.id)" />
+										<button type="button" class="vault-note-add-button" (click)="addNote(account.id)">
+											<span class="material-symbols-outlined">add</span>
+										</button>
+									</div>
+								}
 							</div>
 						}
 					</div>
@@ -242,8 +267,8 @@
 						</div>
 					}
 					<graph-canvas
-						[nodes]="nodes"
-						[edges]="edges"
+						[nodes]="mapNodes"
+						[edges]="mapEdges"
 						[customCategories]="customCategories"
 						[selectedId]="selectedId"
 						[query]="query"

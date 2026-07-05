@@ -61,7 +61,14 @@ import {
 	ENT_LOG_SKIPPING
 } from '../../common/locale/locale-strings';
 import { MovieIdNotFoundError } from '../../common/error/movie-id-not-found.error';
-import { ENT_CORK_PIN_COLORS, ENT_CORK_ROTATIONS, MOVIE_GENRES } from './entertainment.model';
+import {
+	ENT_CORK_PIN_COLORS,
+	ENT_CORK_ROTATIONS,
+	ENT_MOVIE_ENTRANCE_BASE_DELAY_MS,
+	ENT_MOVIE_ENTRANCE_MAX_DELAY_MS,
+	ENT_MOVIE_ENTRANCE_STEP_MS,
+	MOVIE_GENRES
+} from './entertainment.model';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
 	ChangeDetectorRef,
@@ -1145,6 +1152,20 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 */
 	protected updateSearchQuery(value: string) {
 		this.searchQuery$.next(value);
+	}
+
+	/**
+	 * Gets the staggered entrance-animation delay for a movie card, capped so a
+	 * long movie list doesn't leave the last cards waiting too long to appear.
+	 *
+	 * @param index - The zero-based position of the movie card in the list.
+	 * @returns The animation delay in milliseconds.
+	 */
+	protected getMovieEntranceDelay(index: number): number {
+		return Math.min(
+			ENT_MOVIE_ENTRANCE_MAX_DELAY_MS,
+			ENT_MOVIE_ENTRANCE_BASE_DELAY_MS + index * ENT_MOVIE_ENTRANCE_STEP_MS
+		);
 	}
 
 }

@@ -56,6 +56,12 @@ export interface NewItem {
 /** Tag categories available for reminder items. */
 export const REMINDER_KNOWN_CATEGORIES = ['Personal', 'Work', 'Utility', 'Other'] as const;
 
+/** Milliseconds of entrance-animation delay added per reminder card position. */
+export const REMINDER_CARD_ENTRANCE_STEP_MS = 35;
+
+/** Upper bound on entrance-animation delay so a full page of cards doesn't wait too long to appear. */
+export const REMINDER_CARD_ENTRANCE_MAX_DELAY_MS = 350;
+
 /** Maps each reminder tag category to its display colour. */
 export const REMINDER_CATEGORY_COLOR_MAP: Record<string, string> = {
 	Work: '#1a6dff',

@@ -216,7 +216,8 @@
 					(mouseenter)="hoveredRowIndex = rowIndex"
 					(mouseleave)="hoveredRowIndex = null"
 					[class.component-group-hovered]="isInSameComponentGroup(getRenderedData(t), rowIndex)"
-					[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)">
+					[class.element-group-hovered]="isInSameElementGroup(getRenderedData(t), rowIndex)"
+					[style.animation-delay.ms]="getRowEntranceDelay(rowIndex)">
 					@if (shouldShowComponent(getRenderedData(t), rowIndex)) {
 						<td
 							[attr.rowspan]="getComponentRowSpan(getRenderedData(t), rowIndex)"
@@ -473,8 +474,8 @@
 				@if (notes.length > 1) {
 					<div class="previous-label">{{ PATCH_LABEL_PREVIOUS_RELEASES }}</div>
 					<div class="release-list">
-						@for (rel of notes.slice(1); track rel.version) {
-							<div class="release-row">
+						@for (rel of notes.slice(1); track rel.version; let index = $index) {
+							<div class="release-row" [style.animation-delay.ms]="getRowEntranceDelay(index)">
 								<span class="rel-version">{{ rel.version }}</span>
 								<div class="rel-main">
 									<div class="rel-title">{{ rel.title }}</div>

@@ -24,6 +24,12 @@
 	font-family: 'app-font';
 }
 
+/* blocked-card's text is styled white-on-gradient for a colorful backdrop; .glass-card's
+   own background is near-white, so this supplies the page's own accent gradient instead. */
+.access-denied-wrapper {
+	background: var(--rm-gradient);
+}
+
 /* ─────────────────────────────────────────
    Masthead
 ───────────────────────────────────────── */
@@ -262,6 +268,23 @@
 	border: 1px solid rgba(0, 0, 0, 0.06);
 	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
 	overflow: hidden;
+	animation: rmCardIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+	transition:
+		transform 0.2s ease,
+		background 0.2s ease,
+		box-shadow 0.2s ease;
+}
+
+/* Skeleton placeholders share the .rm-card class with real cards — override the
+   entrance animation here so a fast load never plays the same reveal twice in a row. */
+.rm-card.skeleton-card {
+	animation: none;
+}
+
+.rm-card:hover {
+	transform: translateY(-2px);
+	background: color-mix(in srgb, var(--card-color, #6b7280) 6%, #fff);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
 
 .rm-card::before {
@@ -272,6 +295,11 @@
 	bottom: 0;
 	width: 4px;
 	background: var(--card-color, #6b7280);
+	transition: width 0.2s ease;
+}
+
+.rm-card:hover::before {
+	width: 7px;
 }
 
 @keyframes rm-due-soon-pulse {
@@ -982,24 +1010,35 @@
 @keyframes rmReveal {
 	from {
 		opacity: 0;
-		transform: translateY(14px);
+		clip-path: inset(0 100% 0 0);
 	}
 	to {
 		opacity: 1;
-		transform: translateY(0);
+		clip-path: inset(0 0 0 0);
+	}
+}
+
+@keyframes rmCardIn {
+	from {
+		opacity: 0;
+		transform: translateX(-24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
 	}
 }
 
 .rm-masthead {
-	animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation: rmReveal 0.55s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 .rm-filter-bar {
-	animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+	animation: rmReveal 0.55s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
 }
 
 .rm-card-grid {
-	animation: rmReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+	animation: rmReveal 0.55s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
 }
 
 /* ─────────────────────────────────────────

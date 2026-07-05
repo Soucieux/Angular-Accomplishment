@@ -20,6 +20,7 @@ import {
 	ABOUT_INTRO,
 	ABOUT_MILESTONES_SUFFIX,
 	ABOUT_SECTION_TITLE,
+	ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS,
 	COMPONENT_DESTROY
 } from '../../common/constants';
 import { LOG } from '../../common/app.logs';
@@ -115,13 +116,15 @@ export class AboutComponent implements AfterViewInit, OnDestroy {
 
 	/**
 	 * Gets the staggered transition-delay for a timeline entry reveal animation.
-	 * Capped at index 4 to prevent very long delays when the page loads deep.
+	 * Offset by ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS so the rail continues the hero
+	 * cascade's rhythm instead of finishing before it. Capped at index 4 to
+	 * prevent very long delays when the page loads deep.
 	 *
 	 * @param index - The zero-based entry index.
-	 * @returns CSS time string, e.g. "120ms".
+	 * @returns CSS time string, e.g. "740ms".
 	 */
 	protected entryDelay(index: number): string {
-		return `${Math.min(index, 4) * 60}ms`;
+		return `${ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS + Math.min(index, 4) * 60}ms`;
 	}
 
 	/**

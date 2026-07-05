@@ -16,6 +16,12 @@
 	flex-direction: column;
 }
 
+/* blocked-card's text is styled white-on-gradient for a colorful backdrop; .glass-card's
+   own background is near-white, so this supplies the page's own accent gradient instead. */
+.access-denied-wrapper {
+	background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+}
+
 /* ─────────────────────────────────────────
    Date Calculator section wrapper
 ───────────────────────────────────────── */
@@ -400,6 +406,7 @@
 	font-size: 44px;
 	font-weight: 500;
 	letter-spacing: 2px;
+	line-height: 1;
 	margin: 0;
 	width: fit-content;
 	background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
@@ -668,11 +675,29 @@
 	transition:
 		transform 0.16s,
 		box-shadow 0.16s;
+	animation: linkCardIn 0.4s cubic-bezier(0.87, 0, 0.13, 1) backwards;
 }
 
-.link-card:hover {
-	transform: translateY(-3px);
-	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+/* Hover is gated to devices that truly support it and to desktop-width layouts —
+   on touch, :hover can stick after a tap, and the old lift+rotate looked wrong on
+   full-width mobile tiles. The scale transform is also confined to widths above
+   the app's mobile breakpoint: scaling the last row's card enlarges the scrollable
+   overflow region of the .glass-card ancestor, letting a narrow layout scroll
+   further than its real content while hovering. */
+@media (min-width: 941px) and (hover: hover) and (pointer: fine) {
+	.link-card:hover {
+		transform: scale(1.02);
+		box-shadow: 0 10px 26px rgba(163, 230, 53, 0.22);
+	}
+
+	.link-card:hover .ghost-initial {
+		opacity: 0.22;
+		transform: scale(1.08);
+	}
+
+	.link-card:hover .gradient-overlay {
+		background: linear-gradient(160deg, transparent 30%, rgba(0, 0, 0, 0.4) 100%);
+	}
 }
 
 /* Ghost initial letter — the large top-right watermark of the link's first letter */
@@ -687,6 +712,9 @@
 	opacity: 0.12;
 	pointer-events: none;
 	user-select: none;
+	transition:
+		opacity 0.2s,
+		transform 0.2s;
 }
 
 /* Large favicon watermark — replaces the letter in the ghost slot once the icon loads.
@@ -707,6 +735,7 @@
 	background: linear-gradient(160deg, transparent 40%, rgba(0, 0, 0, 0.28) 100%);
 	border-radius: inherit;
 	pointer-events: none;
+	transition: background 0.2s;
 }
 
 /* Small avatar — top-left */
@@ -763,10 +792,11 @@
 	text-overflow: ellipsis;
 }
 
-/* Visit count badge — bottom-right overlay */
+/* Visit count badge — top-right overlay. Fades out on hover so it never overlaps
+   the edit/delete action buttons, which reveal in that same corner. */
 .link-visits-badge {
 	position: absolute;
-	bottom: 9px;
+	top: 9px;
 	right: 9px;
 	z-index: 1;
 	font-size: 9px;
@@ -776,6 +806,11 @@
 	border-radius: 999px;
 	padding: 1px 6px;
 	line-height: 1.6;
+	transition: opacity 0.14s;
+}
+
+.link-card:hover .link-visits-badge {
+	opacity: 0;
 }
 
 /* ─────────────────────────────────────────
@@ -1023,20 +1058,31 @@
 @keyframes nxReveal {
 	from {
 		opacity: 0;
-		transform: translateY(14px);
+		clip-path: circle(0% at 0% 0%);
 	}
 	to {
 		opacity: 1;
-		transform: translateY(0);
+		clip-path: circle(150% at 0% 0%);
+	}
+}
+
+@keyframes linkCardIn {
+	from {
+		opacity: 0;
+		transform: scale(0.82) rotate(-6deg);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) rotate(0deg);
 	}
 }
 
 .page-header {
-	animation: nxReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation: nxReveal 0.6s cubic-bezier(0.87, 0, 0.13, 1) both;
 }
 
 .links-section {
-	animation: nxReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+	animation: nxReveal 0.6s cubic-bezier(0.87, 0, 0.13, 1) 0.1s both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1154,15 +1200,8 @@
 		border-radius: 10px;
 	}
 
-	.links-toolbar {
-		flex-direction: column;
-		align-items: stretch;
-		gap: 8px;
-	}
-
 	.category-tabs {
-		flex: none;
-		width: 100%;
+		min-width: 0;
 		overflow-x: auto;
 		flex-wrap: nowrap;
 		padding-bottom: 8px;
@@ -1201,13 +1240,6 @@
 		flex-shrink: 0;
 	}
 
-	.toolbar-right {
-		position: absolute;
-		padding-top: 7px;
-		top: 0;
-		right: 0;
-	}
-
 	.links-grid {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
@@ -1232,5 +1264,13 @@
 		top: 0 !important;
 		left: 0 !important;
 	}
+}
 
+@media (max-width: 900px) and (pointer: coarse) {
+	.toolbar-right {
+		position: absolute;
+		padding-top: 7px;
+		top: 0;
+		right: 1%;
+	}
 }

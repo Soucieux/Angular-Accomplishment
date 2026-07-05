@@ -66,6 +66,12 @@ export const TRACKED_TINY_MIN_HEIGHT_PX = 6;
 /** Duration in minutes below which a completed tracked block renders as a thin band. */
 export const TRACKED_TINY_THRESHOLD_MIN = 15;
 
+/** Milliseconds of entrance-animation delay added per pixel of a task block's vertical time position. */
+export const TASK_ENTRANCE_DELAY_PER_PX_MS = 0.35;
+
+/** Upper bound on entrance-animation delay so late-day blocks don't wait too long to appear. */
+export const TASK_ENTRANCE_MAX_DELAY_MS = 260;
+
 export const TASK_SOURCE_LOCAL: TodayTaskSource = 'local';
 export const TASK_SOURCE_REMINDER: TodayTaskSource = 'reminder';
 export const TASK_SOURCE_TRACKED: TodayTaskSource = 'tracked';

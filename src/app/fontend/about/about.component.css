@@ -31,6 +31,7 @@ p-chip.about-chip {
 	letter-spacing: 0.04em;
 	color: rgba(255, 255, 255, 0.9);
 	margin-bottom: 20px;
+	animation: aboutReveal 0.5s ease both;
 }
 
 .chip-dot {
@@ -51,6 +52,7 @@ p-chip.about-chip {
 	letter-spacing: -0.03em;
 	margin: 0;
 	color: rgba(255, 255, 255, 0.97);
+	animation: aboutReveal 0.5s ease both 90ms;
 }
 
 .highlight-pill {
@@ -61,6 +63,7 @@ p-chip.about-chip {
 	padding: 10px 18px;
 	transform: translateY(-4px);
 	border: 1px solid rgba(156, 39, 176, 0.72);
+	animation: pillPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both 320ms;
 }
 
 /* ─────────────────────────────────────────
@@ -72,6 +75,7 @@ p-chip.about-chip {
 	line-height: 1.7;
 	color: rgba(255, 255, 255, 0.82);
 	font-weight: 400;
+	animation: aboutReveal 0.5s ease both 180ms;
 }
 
 /* ─────────────────────────────────────────
@@ -93,6 +97,28 @@ p-chip.about-chip {
 	border-radius: 16px;
 	padding: 14px 18px;
 	min-width: 130px;
+	animation: aboutReveal 0.4s ease both;
+	animation-delay: 260ms;
+}
+
+.stat-card:nth-child(2) {
+	animation-delay: 320ms;
+}
+
+.stat-card:nth-child(3) {
+	animation-delay: 380ms;
+}
+
+.stat-card:nth-child(4) {
+	animation-delay: 440ms;
+}
+
+.stat-card:nth-child(5) {
+	animation-delay: 500ms;
+}
+
+.stat-card:nth-child(6) {
+	animation-delay: 560ms;
 }
 
 .stat-number {
@@ -120,6 +146,7 @@ p-chip.about-chip {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
+	animation: aboutReveal 0.5s ease both 620ms;
 }
 
 .section-title {
@@ -315,6 +342,36 @@ p-chip.about-chip {
 
 .timeline-card.education {
 	border-left: 3px solid rgba(255, 152, 0, 0.72);
+}
+
+/* ─────────────────────────────────────────
+   Hero entrance
+───────────────────────────────────────── */
+
+@keyframes aboutReveal {
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes pillPop {
+	0% {
+		opacity: 0;
+		transform: translateY(-4px) scale(0.85);
+	}
+	60% {
+		opacity: 1;
+		transform: translateY(-4px) scale(1.08);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(-4px) scale(1);
+	}
 }
 
 /* ────────────────────────────────────────

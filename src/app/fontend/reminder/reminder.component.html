@@ -80,7 +80,7 @@
 		<div class="rm-card-grid" #cardGrid>
 			@if (loading) {
 				@for (_ of skeletonItems; track $index) {
-					<div class="rm-card">
+					<div class="rm-card skeleton-card">
 						<div class="rm-card-top">
 							<p-skeleton
 								width="20px"
@@ -96,12 +96,13 @@
 					</div>
 				}
 			} @else {
-				@for (item of pagedItems; track item.key) {
+				@for (item of pagedItems; track item.key; let index = $index) {
 					<div
 						class="rm-card"
 						[class.rm-card-due-soon]="isDueSoon(item)"
 						[class.rm-card-shared]="item.isShared || item.isFromOtherMember"
-						[style.--card-color]="tagColor(item.tag)">
+						[style.--card-color]="tagColor(item.tag)"
+						[style.animation-delay.ms]="getCardEntranceDelay(index)">
 						<!-- Top: checkbox + title + category label + delete -->
 						<div class="rm-card-top">
 							<div

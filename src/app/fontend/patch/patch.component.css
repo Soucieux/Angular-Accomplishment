@@ -89,12 +89,16 @@
 	padding: 30px;
 	box-shadow: 0 4px 16px rgba(60, 20, 50, 0.07);
 	margin-bottom: 10px;
+	animation: pnReveal 0.45s cubic-bezier(0.5, 0, 0.25, 1) both;
 }
 
+/* Skeleton state shares the .release-hero class with the real content — override the
+   entrance animation here so a fast load never plays the same reveal twice in a row. */
 .release-hero--loading {
 	min-height: calc(100dvh - 210px);
 	display: flex;
 	flex-direction: column;
+	animation: none;
 }
 
 .release-hero--loading .hero-body {
@@ -293,6 +297,7 @@
 	text-transform: uppercase;
 	color: #9a7f96;
 	margin: 0 4px 14px;
+	animation: pnReveal 0.45s cubic-bezier(0.5, 0, 0.25, 1) 0.08s both;
 }
 
 .release-list {
@@ -311,6 +316,7 @@
 	gap: 18px;
 	flex-wrap: wrap;
 	box-shadow: 0 1px 3px rgba(60, 20, 50, 0.04);
+	animation: pnRowIn 0.4s ease both;
 }
 
 .rel-version {
@@ -795,6 +801,7 @@
 	background: #ffffff !important;
 	color: rgba(30, 15, 35, 0.88) !important;
 	transition: none !important;
+	animation: pnRowIn 0.4s ease both;
 }
 
 /* Hover — only the non-spanning cells (Details, Status, Timestamp, Edit) */
@@ -1028,6 +1035,12 @@
 /* Skeleton rows fill the remaining viewport height evenly */
 ::ng-deep .p-datatable .p-datatable-tbody > tr.skeleton-row > td {
 	height: calc((100dvh - 350px) / 8.2);
+}
+
+/* Skeleton rows match the same tbody > tr selector as real data rows — override the
+   entrance animation here so a fast load never plays the same reveal twice in a row. */
+::ng-deep .p-datatable .p-datatable-tbody > tr.skeleton-row {
+	animation: none;
 }
 
 /* ─────────────────────────────────────────
@@ -1512,26 +1525,41 @@
 ───────────────────────────────────────── */
 
 @keyframes pnReveal {
+	0% {
+		opacity: 0;
+		transform: scale(1.12);
+	}
+	40% {
+		opacity: 0.6;
+		transform: scale(1.05);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes pnRowIn {
 	from {
 		opacity: 0;
-		transform: translateY(14px);
+		transform: translateX(6px);
 	}
 	to {
 		opacity: 1;
-		transform: translateY(0);
+		transform: translateX(0);
 	}
 }
 
 .page-header-row {
-	animation: pnReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation: pnReveal 0.45s cubic-bezier(0.5, 0, 0.25, 1) both;
 }
 
 .toolbar {
-	animation: pnReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+	animation: pnReveal 0.45s cubic-bezier(0.5, 0, 0.25, 1) 0.08s both;
 }
 
 .stats-strip {
-	animation: pnReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both;
+	animation: pnReveal 0.45s cubic-bezier(0.5, 0, 0.25, 1) 0.16s both;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -31,3 +31,9 @@ export interface ReleaseNote {
 }
 
 export const PATCH_HEATMAP_MONTH_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
+
+/** Milliseconds of entrance-animation delay added per table row / release-list row position. */
+export const PATCH_ROW_ENTRANCE_STEP_MS = 30;
+
+/** Upper bound on entrance-animation delay so a full page of rows doesn't wait too long to appear. */
+export const PATCH_ROW_ENTRANCE_MAX_DELAY_MS = 300;

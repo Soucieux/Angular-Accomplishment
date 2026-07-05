@@ -917,3 +917,5 @@ export const ABOUT_INTRO =
 export const ABOUT_SECTION_TITLE = 'The Long Way Here';
 /** Suffix appended after the milestone count in the section meta. */
 export const ABOUT_MILESTONES_SUFFIX = 'milestones';
+/** Base transition-delay for the timeline reveal, so it continues the hero cascade's rhythm. */
+export const ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS = 680;

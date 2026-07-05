@@ -44,6 +44,7 @@
 	gap: 20px;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 	padding-bottom: 10px;
+	animation: tp-rise 0.45s ease both;
 }
 
 .tp-eyebrow {
@@ -105,6 +106,7 @@
 	gap: 10px;
 	padding: 12px 0;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+	animation: tp-rise 0.45s ease both 90ms;
 }
 
 .tp-quickadd {
@@ -218,6 +220,7 @@
 	padding: 7px;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 	flex-wrap: nowrap;
+	animation: tp-rise 0.45s ease both 160ms;
 }
 
 .tp-legend-item {
@@ -630,6 +633,7 @@
 		box-shadow 0.15s,
 		left 0.16s cubic-bezier(0.22, 1, 0.36, 1),
 		width 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+	animation: tp-block-in 0.4s ease backwards;
 }
 
 .tp-block.is-short {
@@ -859,6 +863,28 @@
 	}
 	50% {
 		opacity: 0.55;
+	}
+}
+
+@keyframes tp-rise {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes tp-block-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
 	}
 }
 

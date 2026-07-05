@@ -185,7 +185,7 @@
 						}
 					</div>
 				</ng-template>
-				<ng-template #linkCard let-link let-showActions="showActions">
+				<ng-template #linkCard let-link let-showActions="showActions" let-index="index">
 					<div
 						class="card-wrapper"
 						(mouseenter)="hoveredLinkId = link._id"
@@ -194,7 +194,8 @@
 							class="link-card"
 							(click)="openLink(link)"
 							[title]="link.url"
-							[style.background]="getLinkCardColor(link)">
+							[style.background]="getLinkCardColor(link)"
+							[style.animation-delay.ms]="getLinkEntranceDelay(index)">
 							@let faviconUrl = link.cachedFavicon || utilities.getFaviconProxy(link.url);
 							@let linkInitial = link.title.charAt(0).toUpperCase();
 							<div class="ghost-initial">
@@ -285,11 +286,11 @@
 						</div>
 					} @else {
 						<div class="links-grid">
-							@for (link of sharedFilteredLinks; track link._id) {
+							@for (link of sharedFilteredLinks; track link._id; let index = $index) {
 								<ng-container
 									*ngTemplateOutlet="
 										linkCard;
-										context: { $implicit: link, showActions: isAdmin }
+										context: { $implicit: link, showActions: isAdmin, index: index }
 									" />
 							}
 						</div>
@@ -317,11 +318,11 @@
 						</div>
 					} @else {
 						<div class="links-grid">
-							@for (link of personalFilteredLinks; track link._id) {
+							@for (link of personalFilteredLinks; track link._id; let index = $index) {
 								<ng-container
 									*ngTemplateOutlet="
 										linkCard;
-										context: { $implicit: link, showActions: true }
+										context: { $implicit: link, showActions: true, index: index }
 									" />
 							}
 						</div>

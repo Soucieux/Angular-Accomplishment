@@ -11,6 +11,10 @@
 	padding: 10px 20px;
 	display: flex;
 	flex-direction: column;
+	/* Other pages get this for free from glass-card.css; Entertainment uses its own
+	   container and was missing it, letting transient layout overflow (e.g. the
+	   loading spinner state) show as a real horizontal scrollbar. */
+	overflow-x: hidden;
 }
 
 .access-denied-wrapper {
@@ -50,6 +54,7 @@
 	font-weight: 500;
 	color: #4ade80;
 	letter-spacing: -0.5px;
+	line-height: 1;
 	margin: 0;
 	padding: 0;
 	white-space: nowrap;
@@ -328,6 +333,10 @@
 	gap: var(--individual-item-gap);
 	position: relative;
 	flex: 1;
+	/* Without this, a flex item's default min-width:auto floors its size to its
+	   intrinsic content — while the movie list is empty (only the loading spinner
+	   in flow), the grid's own intrinsic width can exceed a narrow viewport. */
+	min-width: 0;
 }
 
 .individual-item {
@@ -346,6 +355,7 @@
 	transition:
 		box-shadow 0.28s ease,
 		transform 0.28s ease;
+	animation: entMovieIn 0.45s ease backwards;
 }
 
 .individual-item:hover {
@@ -716,14 +726,36 @@
    Entrance animations
 ───────────────────────────────────────── */
 
-@keyframes entReveal {
-	from { opacity: 0; transform: translateY(14px); }
-	to   { opacity: 1; transform: translateY(0); }
+@keyframes entRevealLeft {
+	from { opacity: 0; transform: translateX(-20px); }
+	to   { opacity: 1; transform: translateX(0); }
 }
 
-.top-bar           { animation: entReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.category-row      { animation: entReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
-.content-container { animation: entReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both; }
+@keyframes entRevealRight {
+	from { opacity: 0; transform: translateX(20px); }
+	to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes entRevealFocus {
+	from { opacity: 0; transform: scale(0.96); }
+	to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes entMovieIn {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.top-bar           { animation: entRevealLeft 0.5s cubic-bezier(0.65, 0, 0.35, 1) both; }
+.category-row      { animation: entRevealRight 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.1s both; }
+.content-container { animation: entRevealFocus 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.2s both; }
+
 /* ─────────────────────────────────────────
    Movie list loading spinner
 ───────────────────────────────────────── */

@@ -249,6 +249,7 @@
 							[style.left]="'calc(' + b.leftPercent + '% + 4px)'"
 							[style.width]="'calc(' + b.widthPercent + '% - 8px)'"
 							[style.--accent]="b.accent"
+							[style.animation-delay.ms]="entranceDelay(b.top)"
 							(mousedown)="
 								b.draggable ? onBlockMoveStart($event, b.task.id) : $event.stopPropagation()
 							">

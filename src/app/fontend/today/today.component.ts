@@ -68,6 +68,8 @@ import {
 	SCROLL_AHEAD_PX,
 	TASK_ACCENT_DONE,
 	TASK_ACCENT_MAP,
+	TASK_ENTRANCE_DELAY_PER_PX_MS,
+	TASK_ENTRANCE_MAX_DELAY_MS,
 	TASK_LEAD_ICON_DONE,
 	TASK_LEAD_ICON_MAP,
 	TASK_LEAD_ICON_UNCHECKED,
@@ -250,7 +252,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/** Pixel top offset of the current-time indicator. */
 	protected readonly nowLineTop = computed(() =>
-		Math.max(0, Math.min(24 * PIXELS_PER_HOUR, this.minutesToPixels(this.nowMin())))
+		Utilities.clamp(this.minutesToPixels(this.nowMin()), 0, 24 * PIXELS_PER_HOUR)
 	);
 
 	/** Pixel top offset of the live tracking band. */
@@ -1092,7 +1094,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		const columnCount = peers.length + 1;
 		const columnWidth = rect.width / columnCount;
 		let slot = Math.round((clientX - rect.left) / columnWidth - 0.5);
-		return Math.max(0, Math.min(peers.length, slot));
+		return Utilities.clamp(slot, 0, peers.length);
 	}
 
 	/**
@@ -1424,5 +1426,15 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected previewBlockHeight(range: TodayTimeRange): number {
 		const raw = this.minutesToPixels(range.endMin) - this.minutesToPixels(range.startMin);
 		return Math.max(BLOCK_MIN_HEIGHT_PX, raw - 2);
+	}
+
+	/**
+	 * Computes a task block's entrance-animation delay, staggered by its vertical time position.
+	 *
+	 * @param top - The pixel offset of the block from the top of the calendar grid.
+	 * @returns The animation delay in milliseconds, capped at TASK_ENTRANCE_MAX_DELAY_MS.
+	 */
+	protected entranceDelay(top: number): number {
+		return Math.min(TASK_ENTRANCE_MAX_DELAY_MS, top * TASK_ENTRANCE_DELAY_PER_PX_MS);
 	}
 }

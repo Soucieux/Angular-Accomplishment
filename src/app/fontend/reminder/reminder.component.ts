@@ -94,6 +94,8 @@ import {
 } from '../../common/locale/locale-strings';
 import {
 	NewItem,
+	REMINDER_CARD_ENTRANCE_MAX_DELAY_MS,
+	REMINDER_CARD_ENTRANCE_STEP_MS,
 	REMINDER_CATEGORY_COLOR_MAP,
 	REMINDER_CUSTOM_TAG_COLORS,
 	REMINDER_END_TIME_OPTIONS,
@@ -1698,5 +1700,16 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private formatTimeRange(start: string | null | undefined, end: string | null | undefined): string {
 		if (!start || !end) return '';
 		return `${start} – ${end}`;
+	}
+
+	/**
+	 * Gets the staggered entrance-animation delay for a reminder card, capped so a
+	 * full page of cards doesn't leave the last ones waiting too long to appear.
+	 *
+	 * @param index - The zero-based position of the card on the current page.
+	 * @returns The animation delay in milliseconds.
+	 */
+	protected getCardEntranceDelay(index: number): number {
+		return Math.min(REMINDER_CARD_ENTRANCE_MAX_DELAY_MS, index * REMINDER_CARD_ENTRANCE_STEP_MS);
 	}
 }

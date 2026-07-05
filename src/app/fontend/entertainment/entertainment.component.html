@@ -88,11 +88,12 @@
 					<span class="movies-loading-text">{{ ENT_MSG_LOADING }}</span>
 				</div>
 			}
-			@for (movie of filteredMovieList$ | async; track movie.getMovieId()) {
+			@for (movie of filteredMovieList$ | async; track movie.getMovieId(); let index = $index) {
 				<div
 					class="individual-item"
 					[style.view-transition-name]="'movie-' + movie.getMovieId()"
 					[style.view-transition-class]="getMovieVtClass(movie)"
+					[style.animation-delay.ms]="getMovieEntranceDelay(index)"
 					[ngClass]="{
 						'very-high-rate': movie.getMovieRate() >= 9,
 						'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,

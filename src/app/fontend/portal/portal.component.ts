@@ -109,7 +109,9 @@ import {
 	PortalCategory,
 	PortalLink,
 	PORTAL_DATE_CALCULATOR_FIELDS,
-	PORTAL_LINK_CARD_PALETTE
+	PORTAL_LINK_CARD_PALETTE,
+	PORTAL_LINK_ENTRANCE_MAX_DELAY_MS,
+	PORTAL_LINK_ENTRANCE_STEP_MS
 } from './portal.model';
 import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 
@@ -1097,5 +1099,16 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 				}
 			}
 		);
+	}
+
+	/**
+	 * Gets the staggered entrance-animation delay for a link card, capped so a
+	 * long link list doesn't leave the last cards waiting too long to appear.
+	 *
+	 * @param index - The zero-based position of the card within its section.
+	 * @returns The animation delay in milliseconds.
+	 */
+	protected getLinkEntranceDelay(index: number): number {
+		return Math.min(PORTAL_LINK_ENTRANCE_MAX_DELAY_MS, index * PORTAL_LINK_ENTRANCE_STEP_MS);
 	}
 }

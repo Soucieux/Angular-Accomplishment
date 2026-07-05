@@ -97,7 +97,14 @@ import {
 	NAV_LABEL_VAULT,
 	NAV_LABEL_SIGN_IN
 } from '../../common/locale/locale-strings';
-import { PATCH_HEATMAP_MONTH_INDICES, PatchNote, PatchNoteEditState, ReleaseNote } from './patch.model';
+import {
+	PATCH_HEATMAP_MONTH_INDICES,
+	PATCH_ROW_ENTRANCE_MAX_DELAY_MS,
+	PATCH_ROW_ENTRANCE_STEP_MS,
+	PatchNote,
+	PatchNoteEditState,
+	ReleaseNote
+} from './patch.model';
 import { Observable, catchError, firstValueFrom, of, startWith, tap } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
@@ -1070,5 +1077,16 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected getEditState(key: string): PatchNoteEditState {
 		return this.editedRows.get(key)!;
+	}
+
+	/**
+	 * Gets the staggered entrance-animation delay for a table row or release-list row,
+	 * capped so a full page of rows doesn't leave the last ones waiting too long to appear.
+	 *
+	 * @param index - The zero-based row position on the current page.
+	 * @returns The animation delay in milliseconds.
+	 */
+	protected getRowEntranceDelay(index: number): number {
+		return Math.min(PATCH_ROW_ENTRANCE_MAX_DELAY_MS, index * PATCH_ROW_ENTRANCE_STEP_MS);
 	}
 }

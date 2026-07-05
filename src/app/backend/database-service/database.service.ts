@@ -6,7 +6,40 @@ import { Recipe } from '../../fontend/recipe/recipe.model';
 import { VaultRecord, VaultNodeType } from '../../fontend/vault/vault.model';
 import { TodayTask } from '../../fontend/today/today.model';
 import { InjectionToken } from '@angular/core';
-import { NO_RATE, HISTORY_STATUS_ADDED } from '../../common/constants';
+import { Utilities } from '../../common/utilities/app.utilities';
+import {
+	NO_RATE,
+	HISTORY_STATUS_ADDED,
+	DATABASE_USEFUL_LINKS,
+	DATABASE_RECIPES,
+	DATABASE_DEBT_SONATA,
+	DATABASE_PATCH_NOTES,
+	DATABASE_VAULT,
+	ACTIVITY_SOURCE_LINK,
+	ACTIVITY_TYPE_UPDATED,
+	ACTIVITY_TYPE_CATEGORY_UPDATED,
+	ACTIVITY_SOURCE_RECIPE,
+	ACTIVITY_SOURCE_DEBT,
+	ACTIVITY_TYPE_LOCK_UPDATED,
+	ACTIVITY_TYPE_STATUS_CHANGED,
+	ACTIVITY_TYPE_EDITED,
+	VAULT_VALUE_KEY_KIND,
+	VAULT_KIND_NODE,
+	VAULT_VALUE_KEY_NODE_TYPE,
+	VAULT_VALUE_KEY_NAME,
+	VAULT_VALUE_KEY_CATEGORIES,
+	VAULT_VALUE_KEY_VERIFIED,
+	ACTIVITY_SOURCE_VAULT,
+	VAULT_KIND_EDGE,
+	VAULT_VALUE_KEY_SOURCE_ID,
+	VAULT_VALUE_KEY_TARGET_ID,
+	VAULT_VALUE_KEY_RELATION,
+	VAULT_KIND_CATEGORY,
+	VAULT_VALUE_KEY_LABEL,
+	VAULT_VALUE_KEY_HEX,
+	VAULT_VALUE_KEY_GRADIENT,
+	SEARCH
+} from '../../common/constants';
 import {
 	ACTIVE_LOCALE,
 	ENT_HISTORY_RATE_OPEN,
@@ -233,11 +266,19 @@ export abstract class DatabaseService {
 	 * @param updates - The fields to update.
 	 * @param domain - The hostname of the updated link, recorded in the activity log.
 	 */
-	public abstract updateUsefulLink(
+	public async updateUsefulLink(
 		key: string,
 		updates: Partial<{ url: string; title: string; category: string; isPinned: boolean }>,
 		domain: string
-	): Promise<void>;
+	): Promise<void> {
+		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, {
+			entryKey: key,
+			fields: { ...updates },
+			source: ACTIVITY_SOURCE_LINK,
+			type: ACTIVITY_TYPE_UPDATED,
+			domain
+		});
+	}
 
 	/**
 	 * Updates an existing link category in the database.
@@ -246,23 +287,42 @@ export abstract class DatabaseService {
 	 * @param updates - The fields to update.
 	 * @param name - The category name, recorded in the activity log.
 	 */
-	public abstract updateLinkCategory(
+	public async updateLinkCategory(
 		key: string,
 		updates: Partial<{ name: string; order: number }>,
 		name: string
-	): Promise<void>;
+	): Promise<void> {
+		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, {
+			entryKey: key,
+			fields: { ...updates },
+			source: ACTIVITY_SOURCE_LINK,
+			type: ACTIVITY_TYPE_CATEGORY_UPDATED,
+			domain: name
+		});
+	}
 
 	/**
 	 * Updates an existing recipe in the database.
 	 *
 	 * @param recipe - The recipe to update. The `id` field identifies the document.
 	 */
-	public abstract updateRecipe(recipe: Recipe): Promise<void>;
+	public async updateRecipe(recipe: Recipe): Promise<void> {
+		const { id, ...payload } = recipe;
+		await this.updateTableExistingFields(DATABASE_RECIPES, {
+			entryKey: id,
+			fields: { ...payload, steps: payload.steps.map((step) => ({ ...step, done: false })) },
+			source: ACTIVITY_SOURCE_RECIPE,
+			type: ACTIVITY_TYPE_UPDATED,
+			name: recipe.name
+		});
+	}
 
 	/**
 	 * Adds a new entry to history stating that a new rate-search activity has been started.
 	 */
-	public abstract updateHistoryWithNewSearchActivity(): Promise<void>;
+	public async updateHistoryWithNewSearchActivity(): Promise<void> {
+		await this.addNewHistoryEntry(SEARCH);
+	}
 
 	/**
 	 * Updates the movie rate in the database.
@@ -325,13 +385,21 @@ export abstract class DatabaseService {
 	 * @param name - The debt entry name, recorded in the activity log.
 	 * @param type - The activity log type. Defaults to ACTIVITY_TYPE_LOCK_UPDATED.
 	 */
-	public abstract updateSingleValueForDebtTable(
+	public async updateSingleValueForDebtTable(
 		entryKey: string,
 		valueKey: string,
 		value: any,
 		name: string,
-		type?: string
-	): Promise<void>;
+		type = ACTIVITY_TYPE_LOCK_UPDATED
+	): Promise<void> {
+		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields: { [valueKey]: value },
+			source: ACTIVITY_SOURCE_DEBT,
+			type,
+			name
+		});
+	}
 
 	/**
 	 * Updates multiple fields on a single debt record in one round-trip.
@@ -341,11 +409,18 @@ export abstract class DatabaseService {
 	 * @param fields - A record of field names and their new values.
 	 * @param name - The debt entry name, recorded in the activity log. Omit to skip logging.
 	 */
-	public abstract updateDebtFields(
+	public async updateDebtFields(
 		entryKey: string,
 		fields: Record<string, unknown>,
 		name?: string
-	): Promise<void>;
+	): Promise<void> {
+		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
+			entryKey,
+			fields,
+			// Include the activity values only when a name is supplied so no entry is logged otherwise.
+			...(name !== undefined ? { source: ACTIVITY_SOURCE_DEBT, type: ACTIVITY_TYPE_UPDATED, name } : {})
+		});
+	}
 
 	/**
 	 * Resets a debt record to its original amount and removes all payment history
@@ -374,13 +449,22 @@ export abstract class DatabaseService {
 	 * @param element - The element the note belongs to, recorded in the activity log.
 	 * @param noteIndex - The 1-based position of the note in the table.
 	 */
-	public abstract updateStatusForOnePatchNote(
+	public async updateStatusForOnePatchNote(
 		key: string,
 		updatedRecord: any,
 		component: string,
 		element: string,
 		noteIndex: number
-	): Promise<void>;
+	): Promise<void> {
+		await this.updateOnePatchNote(
+			key,
+			updatedRecord,
+			component,
+			element,
+			noteIndex,
+			ACTIVITY_TYPE_STATUS_CHANGED
+		);
+	}
 
 	/**
 	 * Updates the details of an existing record in the patch notes collection
@@ -392,13 +476,22 @@ export abstract class DatabaseService {
 	 * @param element - The element the note belongs to, recorded in the activity log.
 	 * @param noteIndex - The 1-based position of the note in the table.
 	 */
-	public abstract updateDetailsForOnePatchNote(
+	public async updateDetailsForOnePatchNote(
 		key: string,
 		updatedRecord: any,
 		component: string,
 		element: string,
 		noteIndex: number
-	): Promise<void>;
+	): Promise<void> {
+		await this.updateOnePatchNote(
+			key,
+			updatedRecord,
+			component,
+			element,
+			noteIndex,
+			ACTIVITY_TYPE_EDITED
+		);
+	}
 
 	/**
 	 * Updates specific fields in the statistics document.
@@ -419,6 +512,52 @@ export abstract class DatabaseService {
 	 * @returns A promise that resolves when the update completes.
 	 */
 	public abstract updateUserStatsFields(fields: Record<string, any>): Promise<void>;
+
+	/**
+	 * Updates the given fields on a single table record in one round-trip, then records the supplied
+	 * activity entry. The document key, the fields to write, and the activity payload are all passed
+	 * as one record descriptor, so callers no longer record activity themselves. Implemented per
+	 * backend since the underlying write and error-handling mechanics differ.
+	 *
+	 * {@link updateUsefulLink} - Updates link fields in the useful-links collection.
+	 * {@link updateLinkCategory} - Updates category fields in the useful-links collection.
+	 * {@link updateRecipe} - Updates recipe fields in the recipes collection.
+	 * {@link updateSingleValueForDebtTable} - Updates a single field in the debt collection.
+	 * {@link updateDebtFields} - Updates multiple fields in the debt collection.
+	 * {@link updateVaultNodeCategories} - Replaces an account's category list.
+	 * {@link updateVaultNodeVerified} - Sets an account's verified flag.
+	 * {@link updateVaultNodeName} - Sets a node's display name.
+	 * {@link updateVaultCategoryLabel} - Renames a custom category.
+	 *
+	 * @param tableName - The database collection name.
+	 * @param newRecord - The update descriptor: the document key (entryKey), the fields to write
+	 *   (fields), and the activity values to record (source, type, and subtitle) as flat sibling
+	 *   properties. When no activity property is supplied, no entry is logged.
+	 */
+	protected abstract updateTableExistingFields(tableName: string, newRecord: any): Promise<void>;
+
+	/**
+	 * Writes updated fields to a patch note document and appends an activity log entry. Implemented
+	 * per backend since the underlying write mechanics differ.
+	 *
+	 * {@link updateStatusForOnePatchNote} - Records a status change.
+	 * {@link updateDetailsForOnePatchNote} - Records a details edit.
+	 *
+	 * @param key - The document key of the patch note to update.
+	 * @param updatedRecord - The updated record data.
+	 * @param component - The component the note belongs to, recorded in the activity log.
+	 * @param element - The element the note belongs to, recorded in the activity log.
+	 * @param noteIndex - The 1-based position of the note in the table.
+	 * @param activityType - The activity type constant to record in the log.
+	 */
+	protected abstract updateOnePatchNote(
+		key: string,
+		updatedRecord: any,
+		component: string,
+		element: string,
+		noteIndex: number,
+		activityType: string
+	): Promise<void>;
 
 	// ── Removal methods ──────────────────────────────────────────────────────
 
@@ -542,11 +681,7 @@ export abstract class DatabaseService {
 	 * @param connectedEdgeIds - The document keys of every edge attached to this node.
 	 * @param name - The node's display name, recorded in the activity log.
 	 */
-	public abstract removeVaultNode(
-		nodeId: string,
-		connectedEdgeIds: string[],
-		name: string
-	): Promise<void>;
+	public abstract removeVaultNode(nodeId: string, connectedEdgeIds: string[], name: string): Promise<void>;
 
 	/**
 	 * Gets whether Tauri desktop push notifications are enabled for the current user.
@@ -679,7 +814,13 @@ export abstract class DatabaseService {
 	 *
 	 * @param newRecord - The record to add, with a noteIndex field appended by the caller.
 	 */
-	public abstract addNewRecordToPatchNotes(newRecord: any): Promise<void>;
+	public async addNewRecordToPatchNotes(newRecord: any): Promise<void> {
+		return this.addNewRecordToDB(DATABASE_PATCH_NOTES, {
+			...newRecord,
+			element: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
+			details: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim())
+		});
+	}
 
 	/**
 	 * Adds a new node (account, email, or phone) to the vault graph.
@@ -687,23 +828,40 @@ export abstract class DatabaseService {
 	 * @param node - The node content to persist.
 	 * @returns The database id of the newly created node document.
 	 */
-	public abstract addVaultNode(node: {
+	public async addVaultNode(node: {
 		nodeType: VaultNodeType;
 		name: string;
 		categories: string[];
 		verified: boolean;
-	}): Promise<string>;
+	}): Promise<string> {
+		const nodeId = await this.addVaultRecord({
+			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_NODE,
+			[VAULT_VALUE_KEY_NODE_TYPE]: node.nodeType,
+			[VAULT_VALUE_KEY_NAME]: node.name,
+			[VAULT_VALUE_KEY_CATEGORIES]: node.categories,
+			[VAULT_VALUE_KEY_VERIFIED]: node.verified
+		});
+		this.appendToActivityLog({
+			source: ACTIVITY_SOURCE_VAULT,
+			name: node.name,
+			type: HISTORY_STATUS_ADDED
+		}).catch(() => {});
+		return nodeId;
+	}
 
 	/**
 	 * Adds a new link between two vault nodes.
 	 *
 	 * @param edge - The edge content to persist.
 	 */
-	public abstract addVaultEdge(edge: {
-		sourceId: string;
-		targetId: string;
-		relation: string;
-	}): Promise<void>;
+	public async addVaultEdge(edge: { sourceId: string; targetId: string; relation: string }): Promise<void> {
+		await this.addVaultRecord({
+			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_EDGE,
+			[VAULT_VALUE_KEY_SOURCE_ID]: edge.sourceId,
+			[VAULT_VALUE_KEY_TARGET_ID]: edge.targetId,
+			[VAULT_VALUE_KEY_RELATION]: edge.relation
+		});
+	}
 
 	/**
 	 * Adds a new custom account category to the vault.
@@ -711,11 +869,18 @@ export abstract class DatabaseService {
 	 * @param category - The category content to persist.
 	 * @returns The database id of the newly created category document.
 	 */
-	public abstract addVaultCategory(category: {
+	public async addVaultCategory(category: {
 		label: string;
 		hex: string;
 		gradient: string;
-	}): Promise<string>;
+	}): Promise<string> {
+		return this.addVaultRecord({
+			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_CATEGORY,
+			[VAULT_VALUE_KEY_LABEL]: category.label,
+			[VAULT_VALUE_KEY_HEX]: category.hex,
+			[VAULT_VALUE_KEY_GRADIENT]: category.gradient
+		});
+	}
 
 	/**
 	 * Removes a custom account category and pulls its key from every account that carried it,
@@ -737,7 +902,12 @@ export abstract class DatabaseService {
 	 * @param label - The new category label.
 	 * @returns A promise that resolves when the category label is updated.
 	 */
-	public abstract updateVaultCategoryLabel(categoryKey: string, label: string): Promise<void>;
+	public async updateVaultCategoryLabel(categoryKey: string, label: string): Promise<void> {
+		await this.updateTableExistingFields(DATABASE_VAULT, {
+			entryKey: categoryKey,
+			fields: { [VAULT_VALUE_KEY_LABEL]: label }
+		});
+	}
 
 	/**
 	 * Replaces an account node's category list with the given keys — used by the inline picker to
@@ -747,7 +917,12 @@ export abstract class DatabaseService {
 	 * @param categoryKeys - The full list of category keys to store on the account.
 	 * @returns A promise that resolves when the account's categories are updated.
 	 */
-	public abstract updateVaultNodeCategories(nodeId: string, categoryKeys: string[]): Promise<void>;
+	public async updateVaultNodeCategories(nodeId: string, categoryKeys: string[]): Promise<void> {
+		await this.updateTableExistingFields(DATABASE_VAULT, {
+			entryKey: nodeId,
+			fields: { [VAULT_VALUE_KEY_CATEGORIES]: categoryKeys }
+		});
+	}
 
 	/**
 	 * Sets an account node's verified flag — used by the inline verified toggle in the list view.
@@ -756,7 +931,12 @@ export abstract class DatabaseService {
 	 * @param verified - The new verified state to store on the account.
 	 * @returns A promise that resolves when the account's verified flag is updated.
 	 */
-	public abstract updateVaultNodeVerified(nodeId: string, verified: boolean): Promise<void>;
+	public async updateVaultNodeVerified(nodeId: string, verified: boolean): Promise<void> {
+		await this.updateTableExistingFields(DATABASE_VAULT, {
+			entryKey: nodeId,
+			fields: { [VAULT_VALUE_KEY_VERIFIED]: verified }
+		});
+	}
 
 	/**
 	 * Sets a vault node's display name — used by the inline account name edit in the list view and the
@@ -766,7 +946,51 @@ export abstract class DatabaseService {
 	 * @param name - The new display name to store.
 	 * @returns A promise that resolves when the node's name is updated.
 	 */
-	public abstract updateVaultNodeName(nodeId: string, name: string): Promise<void>;
+	public async updateVaultNodeName(nodeId: string, name: string): Promise<void> {
+		await this.updateTableExistingFields(DATABASE_VAULT, {
+			entryKey: nodeId,
+			fields: { [VAULT_VALUE_KEY_NAME]: name }
+		});
+	}
+
+	/**
+	 * Adds a new document to the given collection and records an activity log entry, auto-deriving the
+	 * activity source/subtitle from the table name. Implemented per backend since the underlying write
+	 * and error-handling mechanics differ.
+	 *
+	 * {@link addUsefulLink} - Adds a link to the useful-links collection.
+	 * {@link addLinkCategory} - Adds a category to the useful-links collection.
+	 * {@link addQuote} - Adds a quote to the quotes collection.
+	 * {@link addRecipe} - Adds a recipe to the recipes collection.
+	 * {@link addNewRecordToReminder} - Adds a record to the reminder collection.
+	 * {@link addNewRecordToPatchNotes} - Adds a record to the patch notes collection.
+	 *
+	 * @param tableName - The database collection name.
+	 * @param newRecord - The new record to add.
+	 */
+	protected abstract addNewRecordToDB(tableName: string, newRecord: any): Promise<void>;
+
+	/**
+	 * Adds a vault document and returns its new id. Implemented per backend since the underlying write
+	 * mechanics differ.
+	 *
+	 * {@link addVaultNode} - Adds an account / email / phone node.
+	 * {@link addVaultEdge} - Adds a link between two nodes.
+	 * {@link addVaultCategory} - Adds a custom category.
+	 *
+	 * @param content - The document content with its kind discriminator and value fields.
+	 * @returns The database id of the newly created document.
+	 */
+	protected abstract addVaultRecord(content: Record<string, unknown>): Promise<string>;
+
+	/**
+	 * Records an activity log entry. Implemented per backend since the underlying write mechanics
+	 * differ; called directly by {@link addVaultNode} (the other add/update wrappers log activity
+	 * internally via {@link addNewRecordToDB} or {@link updateTableExistingFields} instead).
+	 *
+	 * @param activity - The activity payload to record.
+	 */
+	protected abstract appendToActivityLog(activity: any): Promise<void>;
 
 	// ── Utility methods ───────────────────────────────────────────────────────
 
@@ -825,7 +1049,8 @@ export abstract class DatabaseService {
 			const rate = movieItemVO.getMovieRate() === 0 ? NO_RATE : movieItemVO.getMovieRate();
 			const rateStr = `${ENT_HISTORY_RATE_OPEN}${rate}${ENT_HISTORY_RATE_CLOSE}`;
 			const nameGenre = `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()}`;
-			const statusLabel = status === HISTORY_STATUS_ADDED ? ENT_HISTORY_STATUS_ADDED : ENT_HISTORY_STATUS_DELETED;
+			const statusLabel =
+				status === HISTORY_STATUS_ADDED ? ENT_HISTORY_STATUS_ADDED : ENT_HISTORY_STATUS_DELETED;
 			if (ACTIVE_LOCALE === 'zh') {
 				return `在${timestamp}${statusLabel} ${nameGenre}${rateStr}`;
 			}

@@ -10,20 +10,7 @@ import {
 	DATABASE_REMINDER,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_VAULT,
-	VAULT_KIND_NODE,
-	VAULT_KIND_EDGE,
-	VAULT_KIND_CATEGORY,
-	VAULT_VALUE_KEY_KIND,
-	VAULT_VALUE_KEY_NODE_TYPE,
-	VAULT_VALUE_KEY_NAME,
 	VAULT_VALUE_KEY_CATEGORIES,
-	VAULT_VALUE_KEY_SOURCE_ID,
-	VAULT_VALUE_KEY_TARGET_ID,
-	VAULT_VALUE_KEY_RELATION,
-	VAULT_VALUE_KEY_LABEL,
-	VAULT_VALUE_KEY_HEX,
-	VAULT_VALUE_KEY_GRADIENT,
-	VAULT_VALUE_KEY_VERIFIED,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
@@ -68,7 +55,6 @@ import {
 	ACTIVITY_TYPE_UPDATED,
 	ACTIVITY_TYPE_BUG_LOGGED,
 	ACTIVITY_TYPE_CATEGORY_ADDED,
-	ACTIVITY_TYPE_CATEGORY_UPDATED,
 	ACTIVITY_TYPE_CALCULATOR_UPDATED,
 	ACTIVITY_TYPE_CATEGORY_DELETED,
 	ACTIVITY_TYPE_PAYMENT_REMOVED,
@@ -76,9 +62,6 @@ import {
 	ACTIVITY_TYPE_GENRE_UPDATED,
 	ACTIVITY_TYPE_FAVOURITE_UPDATED,
 	ACTIVITY_TYPE_RESET,
-	ACTIVITY_TYPE_STATUS_CHANGED,
-	ACTIVITY_TYPE_EDITED,
-	ACTIVITY_TYPE_LOCK_UPDATED,
 	DATABASE_USER_PREFERENCES,
 	STATS_FIELD_TAURI_NOTIF_ENABLED,
 	STATS_FIELD_MINIMIZE_ON_CLOSE,
@@ -159,7 +142,7 @@ import type { Auth } from 'firebase/auth';
 import { Observable, map, of } from 'rxjs';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
-import { VaultRecord, VaultNodeType } from '../../../fontend/vault/vault.model';
+import { VaultRecord } from '../../../fontend/vault/vault.model';
 import { TodayTask } from '../../../fontend/today/today.model';
 import {
 	ConnectResult,
@@ -295,24 +278,25 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getRecipes(): Observable<Recipe[]> {
 		return this.listAsObservable(dbRef(this.db, DATABASE_RECIPES)).pipe(
-			map((snapshots: any[]) =>
-				snapshots.map((snapshot: any) => {
-					const recipe = snapshot.val();
-					return {
-						id: snapshot.key,
-						openid: recipe._openid ?? '',
-						name: recipe.name,
-						detailName: recipe.detailName,
-						category: recipe.category,
-						bandClass: recipe.bandClass,
-						cookTimeMin: recipe.cookTimeMin ?? 0,
-						baseServings: recipe.baseServings ?? 1,
-						badges: recipe.badges ?? [],
-						groups: recipe.groups ?? [],
-						steps: (recipe.steps ?? []).map((step: any) => ({ ...step, done: false })),
-						notes: recipe.notes ?? ''
-					};
-				}) as Recipe[]
+			map(
+				(snapshots: any[]) =>
+					snapshots.map((snapshot: any) => {
+						const recipe = snapshot.val();
+						return {
+							id: snapshot.key,
+							openid: recipe._openid ?? '',
+							name: recipe.name,
+							detailName: recipe.detailName,
+							category: recipe.category,
+							bandClass: recipe.bandClass,
+							cookTimeMin: recipe.cookTimeMin ?? 0,
+							baseServings: recipe.baseServings ?? 1,
+							badges: recipe.badges ?? [],
+							groups: recipe.groups ?? [],
+							steps: (recipe.steps ?? []).map((step: any) => ({ ...step, done: false })),
+							notes: recipe.notes ?? ''
+						};
+					}) as Recipe[]
 			)
 		);
 	}
@@ -630,71 +614,6 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Updates an existing useful link in the database and records the change in the activity log.
-	 *
-	 * @param key - The document key of the link to update.
-	 * @param updates - The fields to update.
-	 * @param domain - The hostname of the updated link, recorded in the activity log.
-	 */
-	public async updateUsefulLink(
-		key: string,
-		updates: Partial<{ url: string; title: string; category: string; isPinned: boolean }>,
-		domain: string
-	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, {
-			entryKey: key,
-			fields: { ...updates },
-			source: ACTIVITY_SOURCE_LINK,
-			type: ACTIVITY_TYPE_UPDATED,
-			domain
-		});
-	}
-
-	/**
-	 * Updates an existing link category in the database and records the change in the activity log.
-	 *
-	 * @param key - The document key of the category to update.
-	 * @param updates - The fields to update.
-	 * @param name - The category name, recorded in the activity log.
-	 */
-	public async updateLinkCategory(
-		key: string,
-		updates: Partial<{ name: string; order: number }>,
-		name: string
-	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_USEFUL_LINKS, {
-			entryKey: key,
-			fields: { ...updates },
-			source: ACTIVITY_SOURCE_LINK,
-			type: ACTIVITY_TYPE_CATEGORY_UPDATED,
-			domain: name
-		});
-	}
-
-	/**
-	 * Updates an existing recipe in the database.
-	 *
-	 * @param recipe - The recipe with updated fields. The `id` field identifies the document.
-	 */
-	public async updateRecipe(recipe: Recipe): Promise<void> {
-		const { id, ...payload } = recipe;
-		await this.updateTableExistingFields(DATABASE_RECIPES, {
-			entryKey: id,
-			fields: { ...payload, steps: payload.steps.map((step) => ({ ...step, done: false })) },
-			source: ACTIVITY_SOURCE_RECIPE,
-			type: ACTIVITY_TYPE_UPDATED,
-			name: recipe.name
-		});
-	}
-
-	/**
-	 * Records a new rate-search event in the history collection.
-	 */
-	public async updateHistoryWithNewSearchActivity(): Promise<void> {
-		await this.addNewHistoryEntry(SEARCH);
-	}
-
-	/**
 	 * Updates the movie rate in the database.
 	 *
 	 * @param movieItemVO - The movie item to update.
@@ -845,52 +764,6 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Updates a single field value in the debt table and records the change in the activity log.
-	 *
-	 * @param entryKey - The key of the entry to update.
-	 * @param valueKey - The key of the value to update.
-	 * @param value - The new value to store.
-	 * @param name - The debt entry name, recorded in the activity log.
-	 * @param type - The activity log type. Defaults to ACTIVITY_TYPE_LOCK_UPDATED.
-	 */
-	public updateSingleValueForDebtTable(
-		entryKey: string,
-		valueKey: string,
-		value: any,
-		name: string,
-		type = ACTIVITY_TYPE_LOCK_UPDATED
-	): Promise<void> {
-		return this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
-			entryKey,
-			fields: { [valueKey]: value },
-			source: ACTIVITY_SOURCE_DEBT,
-			type,
-			name
-		});
-	}
-
-	/**
-	 * Updates multiple fields on a single debt record in one round-trip.
-	 * Appends an activity log entry when a name is provided.
-	 *
-	 * @param entryKey - The key of the entry to update.
-	 * @param fields - A record of field names and their new values.
-	 * @param name - The debt entry name, recorded in the activity log. Omit to skip logging.
-	 */
-	public async updateDebtFields(
-		entryKey: string,
-		fields: Record<string, unknown>,
-		name?: string
-	): Promise<void> {
-		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
-			entryKey,
-			fields,
-			// Include the activity values only when a name is supplied so no entry is logged otherwise.
-			...(name !== undefined ? { source: ACTIVITY_SOURCE_DEBT, type: ACTIVITY_TYPE_UPDATED, name } : {})
-		});
-	}
-
-	/**
 	 * Resets a debt record to its original amount and removes all payment history
 	 * in a single round-trip. Setting the payments field to null deletes that child node
 	 * entirely, the RTDB analogue of CloudBase's remove command. Records the reset in the
@@ -921,60 +794,6 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Updates the status of an existing record in the patch notes collection
-	 * and records the change in the activity log.
-	 *
-	 * @param key - The document key of the patch note to update.
-	 * @param updatedRecord - The updated record data.
-	 * @param component - The component the note belongs to, recorded in the activity log.
-	 * @param element - The element the note belongs to, recorded in the activity log.
-	 * @param noteIndex - The 1-based position of the note in the table.
-	 */
-	public updateStatusForOnePatchNote(
-		key: string,
-		updatedRecord: any,
-		component: string,
-		element: string,
-		noteIndex: number
-	): Promise<void> {
-		return this.updateOnePatchNote(
-			key,
-			updatedRecord,
-			component,
-			element,
-			noteIndex,
-			ACTIVITY_TYPE_STATUS_CHANGED
-		);
-	}
-
-	/**
-	 * Updates the details of an existing record in the patch notes collection
-	 * and records the change in the activity log.
-	 *
-	 * @param key - The document key of the patch note to update.
-	 * @param updatedRecord - The updated record data.
-	 * @param component - The component the note belongs to, recorded in the activity log.
-	 * @param element - The element the note belongs to, recorded in the activity log.
-	 * @param noteIndex - The 1-based position of the note in the table.
-	 */
-	public updateDetailsForOnePatchNote(
-		key: string,
-		updatedRecord: any,
-		component: string,
-		element: string,
-		noteIndex: number
-	): Promise<void> {
-		return this.updateOnePatchNote(
-			key,
-			updatedRecord,
-			component,
-			element,
-			noteIndex,
-			ACTIVITY_TYPE_EDITED
-		);
-	}
-
-	/**
 	 * Writes updated fields to a patch note document and appends an activity log entry.
 	 * Shared by {@link updateStatusForOnePatchNote} and {@link updateDetailsForOnePatchNote},
 	 * which differ only in the activity type they record.
@@ -986,7 +805,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param noteIndex - The 1-based position of the note in the table.
 	 * @param activityType - The activity type constant to record in the log.
 	 */
-	private async updateOnePatchNote(
+	protected async updateOnePatchNote(
 		key: string,
 		updatedRecord: any,
 		component: string,
@@ -1052,7 +871,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param activity - The activity object to record.
 	 * @returns A promise that resolves when the activity and streak have been written.
 	 */
-	private async appendToActivityLog(activity: any): Promise<void> {
+	protected async appendToActivityLog(activity: any): Promise<void> {
 		const timestamp = Utilities.getCurrentFormattedTime(true);
 		const entry = { ...activity, timestamp };
 		try {
@@ -1104,13 +923,17 @@ export class FirebaseService extends DatabaseService {
 	 * {@link updateDebtFields} - Updates multiple fields in the debt collection.
 	 * {@link resetDebtRecord} - Resets debt amount and removes payment history.
 	 * {@link updateOnePatchNote} - Updates a patch note record.
+	 * {@link updateVaultNodeCategories} - Replaces an account's category list.
+	 * {@link updateVaultNodeVerified} - Sets an account's verified flag.
+	 * {@link updateVaultNodeName} - Sets a node's display name.
+	 * {@link updateVaultCategoryLabel} - Renames a custom category.
 	 *
 	 * @param tableName - The database collection name.
 	 * @param newRecord - The update descriptor: the document key (entryKey), the fields to write
 	 *   (fields), and the activity values to record (source, type, and subtitle) as flat sibling
 	 *   properties. When no activity property is supplied, no entry is logged.
 	 */
-	private async updateTableExistingFields(tableName: string, newRecord: any): Promise<void> {
+	protected async updateTableExistingFields(tableName: string, newRecord: any): Promise<void> {
 		const { entryKey, fields, ...activity } = newRecord;
 		try {
 			await update(dbRef(this.db, `${tableName}/${entryKey}`), fields);
@@ -1263,7 +1086,11 @@ export class FirebaseService extends DatabaseService {
 	 * @param text - The reminder text, recorded in the activity log.
 	 * @param _isShared - Group-feed routing flag; unused in the Firebase backend (no shared groups).
 	 */
-	public async removeRecordFromReminderTable(key: string, text: string, _isShared?: boolean): Promise<void> {
+	public async removeRecordFromReminderTable(
+		key: string,
+		text: string,
+		_isShared?: boolean
+	): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_REMINDER, key);
 		this.appendToActivityLog({
 			source: ACTIVITY_SOURCE_REMINDER,
@@ -1325,11 +1152,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param connectedEdgeIds - The document keys of every edge attached to this node.
 	 * @param name - The node's display name, recorded in the activity log.
 	 */
-	public async removeVaultNode(
-		nodeId: string,
-		connectedEdgeIds: string[],
-		name: string
-	): Promise<void> {
+	public async removeVaultNode(nodeId: string, connectedEdgeIds: string[], name: string): Promise<void> {
 		await Promise.all(connectedEdgeIds.map((edgeId) => this.removeVaultEdge(edgeId)));
 		await this.removeSingleItemFromDatabase(DATABASE_VAULT, nodeId);
 		this.appendToActivityLog({
@@ -1586,7 +1409,9 @@ export class FirebaseService extends DatabaseService {
 
 			/* The runTransaction above already bumped totalQuotes — record the milestone only, never
 			   a second increment, or the quote total would double. Fire-and-forget: the add succeeded. */
-			this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_QUOTES, MILESTONE_DOMAIN_QUOTE).catch(() => {});
+			this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_QUOTES, MILESTONE_DOMAIN_QUOTE).catch(
+				() => {}
+			);
 		} catch (error) {
 			LOG.error(this.className, DB_LOG_QUOTE_ADD_FAILED, error as Error);
 			throw error;
@@ -1724,7 +1549,9 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public async addNewRecordToReminder(newRecord: any): Promise<void> {
 		this.updateStatCount(STATS_FIELD_TOTAL_REMINDERS, 1)
-			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER))
+			.then(() =>
+				this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER)
+			)
 			.catch(() => {});
 		await this.addNewRecordToDB(DATABASE_REMINDER, newRecord);
 	}
@@ -1740,85 +1567,6 @@ export class FirebaseService extends DatabaseService {
 			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_DEBTS, MILESTONE_DOMAIN_DEBT))
 			.catch(() => {});
 		return this.addNewRecordToDB(DATABASE_DEBT_SONATA, newRecord);
-	}
-
-	/**
-	 * Adds a new record to the patch notes collection. Routes through the shared helper so the add is
-	 * recorded in the activity log with the correct discriminator (bug or added). Only element and
-	 * details are normalized; component is left untouched to mirror the CloudBase backend.
-	 *
-	 * @param newRecord - The record to add, with a noteIndex field appended by the caller.
-	 */
-	public addNewRecordToPatchNotes(newRecord: any): Promise<void> {
-		return this.addNewRecordToDB(DATABASE_PATCH_NOTES, {
-			...newRecord,
-			element: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.element.trim()),
-			details: Utilities.capitalizeFirstLetterWithOthersUnchanged(newRecord.details.trim())
-		});
-	}
-
-	/**
-	 * Adds a new node (account, email, or phone) to the vault collection.
-	 *
-	 * @param node - The node content to persist.
-	 * @returns The database id of the newly created node document.
-	 */
-	public async addVaultNode(node: {
-		nodeType: VaultNodeType;
-		name: string;
-		categories: string[];
-		verified: boolean;
-	}): Promise<string> {
-		const nodeId = await this.addVaultRecord({
-			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_NODE,
-			[VAULT_VALUE_KEY_NODE_TYPE]: node.nodeType,
-			[VAULT_VALUE_KEY_NAME]: node.name,
-			[VAULT_VALUE_KEY_CATEGORIES]: node.categories,
-			[VAULT_VALUE_KEY_VERIFIED]: node.verified
-		});
-		this.appendToActivityLog({
-			source: ACTIVITY_SOURCE_VAULT,
-			name: node.name,
-			type: HISTORY_STATUS_ADDED
-		}).catch(() => {});
-		return nodeId;
-	}
-
-	/**
-	 * Adds a new link between two vault nodes.
-	 *
-	 * @param edge - The edge content to persist.
-	 */
-	public async addVaultEdge(edge: {
-		sourceId: string;
-		targetId: string;
-		relation: string;
-	}): Promise<void> {
-		await this.addVaultRecord({
-			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_EDGE,
-			[VAULT_VALUE_KEY_SOURCE_ID]: edge.sourceId,
-			[VAULT_VALUE_KEY_TARGET_ID]: edge.targetId,
-			[VAULT_VALUE_KEY_RELATION]: edge.relation
-		});
-	}
-
-	/**
-	 * Adds a new custom account category to the vault collection.
-	 *
-	 * @param category - The category content to persist.
-	 * @returns The database id of the newly created category document.
-	 */
-	public async addVaultCategory(category: {
-		label: string;
-		hex: string;
-		gradient: string;
-	}): Promise<string> {
-		return this.addVaultRecord({
-			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_CATEGORY,
-			[VAULT_VALUE_KEY_LABEL]: category.label,
-			[VAULT_VALUE_KEY_HEX]: category.hex,
-			[VAULT_VALUE_KEY_GRADIENT]: category.gradient
-		});
 	}
 
 	/**
@@ -1844,69 +1592,6 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Replaces an account node's category list with the given keys, used by the inline picker to
-	 * add or remove categories on an account.
-	 *
-	 * @param nodeId - The id of the account node to update.
-	 * @param categoryKeys - The full list of category keys to store on the account.
-	 * @returns A promise that resolves when the account's categories are updated.
-	 */
-	public async updateVaultNodeCategories(nodeId: string, categoryKeys: string[]): Promise<void> {
-		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_CATEGORIES]: categoryKeys });
-	}
-
-	/**
-	 * Sets an account node's verified flag, used by the inline verified toggle in the list view.
-	 *
-	 * @param nodeId - The id of the account node to update.
-	 * @param verified - The new verified state to store on the account.
-	 * @returns A promise that resolves when the account's verified flag is updated.
-	 */
-	public async updateVaultNodeVerified(nodeId: string, verified: boolean): Promise<void> {
-		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_VERIFIED]: verified });
-	}
-
-	/**
-	 * Sets a vault node's display name, used by the inline account name edit in the list view and the
-	 * name-edit dialog for non-account nodes.
-	 *
-	 * @param nodeId - The id of the node to update.
-	 * @param name - The new display name to store.
-	 * @returns A promise that resolves when the node's name is updated.
-	 */
-	public async updateVaultNodeName(nodeId: string, name: string): Promise<void> {
-		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_NAME]: name });
-	}
-
-	/**
-	 * Renames a custom account category by updating its stored label, used by the vault category edit dialog.
-	 *
-	 * @param categoryKey - The document id of the category to rename.
-	 * @param label - The new category label.
-	 * @returns A promise that resolves when the category label is updated.
-	 */
-	public async updateVaultCategoryLabel(categoryKey: string, label: string): Promise<void> {
-		await this.updateOneVaultRecord(categoryKey, { [VAULT_VALUE_KEY_LABEL]: label });
-	}
-
-	/**
-	 * Writes the given fields to a single vault document. Shared by the vault field-update methods,
-	 * which differ only in which field they set.
-	 *
-	 * {@link updateVaultNodeCategories} - Replaces an account's category list.
-	 * {@link updateVaultNodeVerified} - Sets an account's verified flag.
-	 * {@link updateVaultNodeName} - Sets a node's display name.
-	 * {@link updateVaultCategoryLabel} - Renames a custom category.
-	 *
-	 * @param recordId - The document id of the vault record to update.
-	 * @param fields - The content fields to overwrite on the record.
-	 * @returns A promise that resolves when the record is updated.
-	 */
-	private async updateOneVaultRecord(recordId: string, fields: Record<string, unknown>): Promise<void> {
-		await update(dbRef(this.db, `${DATABASE_VAULT}/${recordId}`), fields);
-	}
-
-	/**
 	 * Pushes a new record under the given table in Firebase Realtime Database and records an activity
 	 * log entry for every table. Reads spread the pushed document flat (`{key, ...val}`), so the record
 	 * is written flat — never wrapped — so writes and reads round-trip. The activity discriminator is
@@ -1923,7 +1608,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param tableName - The database collection name.
 	 * @param newRecord - The new record data to persist.
 	 */
-	private async addNewRecordToDB(tableName: string, newRecord: any): Promise<void> {
+	protected async addNewRecordToDB(tableName: string, newRecord: any): Promise<void> {
 		try {
 			// Step 1: Push the record flat so the matching read's {key, ...val} spread round-trips.
 			await push(dbRef(this.db, tableName), { ...newRecord });
@@ -1932,7 +1617,8 @@ export class FirebaseService extends DatabaseService {
 			/* Step 2: Derive the correct activity type before enqueueing the log entry.
 			   Links and categories share the same collection — detect a category add by checking
 			   the type field, so the activity log gets the right discriminator instead of ADDED. */
-			const isCategoryAdd = tableName === DATABASE_USEFUL_LINKS && newRecord.type !== USEFUL_LINK_TYPE_LINK;
+			const isCategoryAdd =
+				tableName === DATABASE_USEFUL_LINKS && newRecord.type !== USEFUL_LINK_TYPE_LINK;
 			this.appendToActivityLog({
 				...this.getRecentActivitySubtitle(tableName, newRecord),
 				type: newRecord.isBug
@@ -1957,7 +1643,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param content - The document content with its kind discriminator and value fields.
 	 * @returns The database key of the newly created document.
 	 */
-	private async addVaultRecord(content: Record<string, unknown>): Promise<string> {
+	protected async addVaultRecord(content: Record<string, unknown>): Promise<string> {
 		const reference = push(dbRef(this.db, DATABASE_VAULT), content);
 		try {
 			await reference;
@@ -2077,7 +1763,10 @@ export class FirebaseService extends DatabaseService {
 	 * @param newRecord - The record that was just persisted.
 	 * @returns An object carrying a source string and the display field appropriate for the table.
 	 */
-	private getRecentActivitySubtitle(tableName: string, newRecord: any): { source: string; [k: string]: any } {
+	private getRecentActivitySubtitle(
+		tableName: string,
+		newRecord: any
+	): { source: string; [k: string]: any } {
 		const record = newRecord as {
 			author?: string;
 			name?: string;
@@ -2111,7 +1800,10 @@ export class FirebaseService extends DatabaseService {
 					return { source: ACTIVITY_SOURCE_LINK, domain: Utilities.getDomain(record.url ?? '') };
 				else if (record.type === USEFUL_LINK_TYPE_CATEGORY)
 					return { source: ACTIVITY_SOURCE_LINK, domain: record.name ?? '' };
-				else if (record.type === HISTORY_STATUS_DELETED || record.type === ACTIVITY_TYPE_CATEGORY_DELETED)
+				else if (
+					record.type === HISTORY_STATUS_DELETED ||
+					record.type === ACTIVITY_TYPE_CATEGORY_DELETED
+				)
 					return { source: ACTIVITY_SOURCE_LINK, domain: record.domain ?? '' };
 				else return { source: ACTIVITY_SOURCE_DEFAULT, text: ACTIVITY_INVALID_TABLE_TEXT };
 			case DATABASE_RECIPES:

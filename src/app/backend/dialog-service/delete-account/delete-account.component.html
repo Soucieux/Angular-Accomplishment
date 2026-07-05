@@ -7,10 +7,10 @@
 	(onHide)="onDialogClosed()"
 	styleClass="delete-account-dialog">
 	<ng-template #header>
-		<span class="delete-account-dialog-title">{{ ACCOUNT_LABEL_DELETE_ACCOUNT }}</span>
+		<span class="delete-account-dialog-title">{{ dialogTitle }}</span>
 	</ng-template>
 
-	<p class="delete-account-warning">{{ ACCOUNT_DIALOG_DELETE_MSG }}</p>
+	<p class="delete-account-warning">{{ dialogMessage }}</p>
 
 	<div class="delete-account-field">
 		<input

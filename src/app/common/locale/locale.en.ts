@@ -847,6 +847,12 @@ export const ACCOUNT_MSG_DELETING_ACCOUNT = 'Deleting account...';
 export const ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER = 'Enter your password to confirm';
 export const ACCOUNT_DIALOG_DELETE_MSG =
 	'This will permanently delete your account and all associated data. This action cannot be undone.';
+export const ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE = 'Delete Vault Passphrase';
+export const ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION =
+	'Removes the vault passphrase if you forgot it.\nYour vault data is kept.';
+export const ACCOUNT_DIALOG_DELETE_VAULT_MSG =
+	'This removes your vault passphrase so you can set a new one on your next visit. Your vault data will not be deleted.';
+export const ACCOUNT_MSG_VAULT_PASSPHRASE_REMOVED = 'Vault passphrase removed';
 export const ACCOUNT_STAT_LABEL_FILMS = 'Films Logged';
 export const ACCOUNT_STAT_LABEL_QUOTES = 'Quotes';
 export const ACCOUNT_STAT_LABEL_DEBTS = 'Debts Tracked';

@@ -312,7 +312,10 @@ export class AuthService {
 	public async getLastLoginTimestamp(): Promise<string> {
 		try {
 			// Step 1: Fetch the most recent LOGIN event from the CloudBase behaviour log
-			const res = await this.cloudbaseAuth.getUserBehaviorLog({ type: AUTH_BEHAVIOR_LOG_TYPE_LOGIN, limit: 1 });
+			const res = await this.cloudbaseAuth.getUserBehaviorLog({
+				type: AUTH_BEHAVIOR_LOG_TYPE_LOGIN,
+				limit: 1
+			});
 
 			/* Step 2: Normalise the response shape — CloudBase returns either { data: { list: [] } }
 			   or a flat array depending on the SDK version, so both are handled defensively. */
@@ -414,6 +417,26 @@ export class AuthService {
 		if (status === CLOUDBASE_ERR_INVALID_STATUS) throw new AccountRateLimitedError();
 		if (status === CLOUDBASE_ERR_PERMISSION_DENIED) throw new SessionExpiredError();
 		throw new UnexpectedError();
+	}
+
+	/**
+	 * Verifies the current user's account password by re-authenticating against CloudBase Auth, the same
+	 * server-side check delete-account relies on. Nothing is deleted or changed — it simply confirms the
+	 * password, so a caller can gate a sensitive action (e.g. removing the vault passphrase) behind it. A
+	 * wrong password surfaces as WrongOldPasswordError so callers can reuse the delete-dialog's inline error.
+	 *
+	 * @param password - The current account password to verify.
+	 * @throws WrongOldPasswordError when the password is incorrect.
+	 * @throws UnexpectedError for all other failures.
+	 */
+	public async verifyPassword(password: string): Promise<void> {
+		const { error } = await this.cloudbaseAuth.signInWithPassword({
+			username: CloudbaseService.getUserName(),
+			password
+		});
+		if (error && error.category === CLOUDBASE_ERROR_INVALID_CREDENTIALS)
+			throw new WrongOldPasswordError();
+		if (error) throw new UnexpectedError();
 	}
 
 	/**

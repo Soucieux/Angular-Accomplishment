@@ -712,6 +712,11 @@ export const ACCOUNT_MSG_DELETE_CONFIRMED = '账号删除请求已提交';
 export const ACCOUNT_MSG_DELETING_ACCOUNT = '正在删除账号...';
 export const ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER = '请输入密码以确认';
 export const ACCOUNT_DIALOG_DELETE_MSG = '此操作将永久删除你的账号及所有相关数据。此操作无法撤销。';
+export const ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE = '删除保险箱口令';
+export const ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION = '忘记保险箱口令时可将其删除。\n你的保险箱数据会被保留。';
+export const ACCOUNT_DIALOG_DELETE_VAULT_MSG =
+	'此操作将删除你的保险箱口令，你可在下次访问时重新设置。你的保险箱数据不会被删除。';
+export const ACCOUNT_MSG_VAULT_PASSPHRASE_REMOVED = '保险箱口令已删除';
 export const ACCOUNT_STAT_LABEL_FILMS = '已记录影片';
 export const ACCOUNT_STAT_LABEL_QUOTES = '心声';
 export const ACCOUNT_STAT_LABEL_DEBTS = '已追踪债务';

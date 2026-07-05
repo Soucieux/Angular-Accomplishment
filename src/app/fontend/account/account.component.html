@@ -403,6 +403,20 @@
 				<div class="danger-content">
 					<div class="danger-action-row">
 						<div class="danger-action-info">
+							<span class="danger-action-name">{{
+								ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE
+							}}</span>
+							<span class="danger-action-description">{{
+								ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION
+							}}</span>
+						</div>
+						<button class="delete-account-button" (click)="openDeleteVaultPassphraseDialog()">
+							<span class="material-symbols-outlined">key_off</span>
+							{{ ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE }}
+						</button>
+					</div>
+					<div class="danger-action-row">
+						<div class="danger-action-info">
 							<span class="danger-action-name">{{ ACCOUNT_LABEL_DELETE_ACCOUNT }}</span>
 							<span class="danger-action-description">{{
 								ACCOUNT_LABEL_DELETE_DESCRIPTION

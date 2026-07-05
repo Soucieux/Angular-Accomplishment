@@ -37,7 +37,8 @@ import {
 	CONNECT_ERROR_ALREADY_CONNECTED,
 	CONNECT_ERROR_ALREADY_REQUESTED,
 	SUCCESS,
-	TOAST_WARN
+	TOAST_WARN,
+	PASSPHRASE_LOCK_KEY_VAULT
 } from '../../common/constants';
 import {
 	ACCOUNT_LABEL_CHANGE_PASSWORD,
@@ -46,6 +47,10 @@ import {
 	ACCOUNT_LABEL_DANGER_ZONE_TITLE,
 	ACCOUNT_LABEL_DELETE_ACCOUNT,
 	ACCOUNT_LABEL_DELETE_DESCRIPTION,
+	ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE,
+	ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION,
+	ACCOUNT_DIALOG_DELETE_VAULT_MSG,
+	ACCOUNT_MSG_VAULT_PASSPHRASE_REMOVED,
 	ACCOUNT_LABEL_IDENTITY_TITLE,
 	ACCOUNT_LABEL_MEMBER_SINCE,
 	ACCOUNT_LABEL_MILESTONES_TITLE,
@@ -146,6 +151,7 @@ import {
 } from './account.model';
 import { PasswordTooWeakError } from '../../common/error/password-too-weak.error';
 import { WrongOldPasswordError } from '../../common/error/wrong-old-password.error';
+import { UnexpectedError } from '../../common/error/unexpected.error';
 
 @Component({
 	selector: 'app-account',
@@ -199,42 +205,60 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_LABEL_UPDATE_PASSWORD = ACCOUNT_LABEL_UPDATE_PASSWORD;
 	protected readonly ACCOUNT_LABEL_DELETE_ACCOUNT = ACCOUNT_LABEL_DELETE_ACCOUNT;
 	protected readonly ACCOUNT_LABEL_DELETE_DESCRIPTION = ACCOUNT_LABEL_DELETE_DESCRIPTION;
+	protected readonly ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE = ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE;
+	protected readonly ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION = ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION;
 	protected readonly ACCOUNT_STRENGTH_LEVELS = ACCOUNT_STRENGTH_LEVELS;
 	private readonly localeStatLabels: Record<string, string> = {
-		totalFilms: ACCOUNT_STAT_LABEL_FILMS, totalQuotes: ACCOUNT_STAT_LABEL_QUOTES,
-		totalRecipes: NAV_LABEL_RECIPES, totalReminders: ORBITAL_LABEL_REMINDERS,
-		totalDebts: ACCOUNT_STAT_LABEL_DEBTS, totalLinks: ACCOUNT_STAT_LABEL_LINKS,
+		totalFilms: ACCOUNT_STAT_LABEL_FILMS,
+		totalQuotes: ACCOUNT_STAT_LABEL_QUOTES,
+		totalRecipes: NAV_LABEL_RECIPES,
+		totalReminders: ORBITAL_LABEL_REMINDERS,
+		totalDebts: ACCOUNT_STAT_LABEL_DEBTS,
+		totalLinks: ACCOUNT_STAT_LABEL_LINKS
 	};
 	private readonly localeStatUnits: Record<string, string> = {
-		totalFilms: ACCOUNT_STAT_UNIT_FILM, totalQuotes: ACCOUNT_STAT_UNIT_QUOTE,
-		totalRecipes: ACCOUNT_STAT_UNIT_RECIPE, totalReminders: ACCOUNT_STAT_UNIT_REMINDER,
-		totalDebts: ACCOUNT_STAT_UNIT_DEBT, totalLinks: ACCOUNT_STAT_UNIT_LINK,
+		totalFilms: ACCOUNT_STAT_UNIT_FILM,
+		totalQuotes: ACCOUNT_STAT_UNIT_QUOTE,
+		totalRecipes: ACCOUNT_STAT_UNIT_RECIPE,
+		totalReminders: ACCOUNT_STAT_UNIT_REMINDER,
+		totalDebts: ACCOUNT_STAT_UNIT_DEBT,
+		totalLinks: ACCOUNT_STAT_UNIT_LINK
 	};
 	private readonly localeMilestoneLabels: Record<string, { title: string; note: string }> = {
-		accountCreated: { title: ACCOUNT_MILESTONE_ACCOUNT_CREATED_TITLE, note: ACCOUNT_MILESTONE_ACCOUNT_CREATED_NOTE },
-		film1st:        { title: ACCOUNT_MILESTONE_FILM_TITLE,            note: ACCOUNT_MILESTONE_FILM_NOTE },
-		quote1st:       { title: ACCOUNT_MILESTONE_QUOTE_TITLE,           note: ACCOUNT_MILESTONE_QUOTE_NOTE },
-		recipe1st:      { title: ACCOUNT_MILESTONE_RECIPE_TITLE,          note: ACCOUNT_MILESTONE_RECIPE_NOTE },
-		reminder1st:    { title: ACCOUNT_MILESTONE_REMINDER_TITLE,        note: ACCOUNT_MILESTONE_REMINDER_NOTE },
-		debt1st:        { title: ACCOUNT_MILESTONE_DEBT_TITLE,            note: ACCOUNT_MILESTONE_DEBT_NOTE },
-		link1st:        { title: ACCOUNT_MILESTONE_LINK_TITLE,            note: ACCOUNT_MILESTONE_LINK_NOTE },
-		streak1st:      { title: ACCOUNT_MILESTONE_STREAK_TITLE,          note: ACCOUNT_MILESTONE_STREAK_NOTE },
+		accountCreated: {
+			title: ACCOUNT_MILESTONE_ACCOUNT_CREATED_TITLE,
+			note: ACCOUNT_MILESTONE_ACCOUNT_CREATED_NOTE
+		},
+		film1st: { title: ACCOUNT_MILESTONE_FILM_TITLE, note: ACCOUNT_MILESTONE_FILM_NOTE },
+		quote1st: { title: ACCOUNT_MILESTONE_QUOTE_TITLE, note: ACCOUNT_MILESTONE_QUOTE_NOTE },
+		recipe1st: { title: ACCOUNT_MILESTONE_RECIPE_TITLE, note: ACCOUNT_MILESTONE_RECIPE_NOTE },
+		reminder1st: { title: ACCOUNT_MILESTONE_REMINDER_TITLE, note: ACCOUNT_MILESTONE_REMINDER_NOTE },
+		debt1st: { title: ACCOUNT_MILESTONE_DEBT_TITLE, note: ACCOUNT_MILESTONE_DEBT_NOTE },
+		link1st: { title: ACCOUNT_MILESTONE_LINK_TITLE, note: ACCOUNT_MILESTONE_LINK_NOTE },
+		streak1st: { title: ACCOUNT_MILESTONE_STREAK_TITLE, note: ACCOUNT_MILESTONE_STREAK_NOTE }
 	};
 	private readonly localeDomainDisplay: Record<string, string> = {
-		film: ACCOUNT_DOMAIN_FILMS, quote: ACCOUNT_DOMAIN_QUOTES, recipe: ACCOUNT_DOMAIN_RECIPES,
-		reminder: ACCOUNT_DOMAIN_REMINDERS, debt: ACCOUNT_DOMAIN_DEBTS, link: ACCOUNT_DOMAIN_LINKS,
-		streak: ACCOUNT_DOMAIN_STREAK,
+		film: ACCOUNT_DOMAIN_FILMS,
+		quote: ACCOUNT_DOMAIN_QUOTES,
+		recipe: ACCOUNT_DOMAIN_RECIPES,
+		reminder: ACCOUNT_DOMAIN_REMINDERS,
+		debt: ACCOUNT_DOMAIN_DEBTS,
+		link: ACCOUNT_DOMAIN_LINKS,
+		streak: ACCOUNT_DOMAIN_STREAK
 	};
 	private readonly localeStrengthLabels: string[] = [
-		ACCOUNT_STRENGTH_TOO_SHORT, ACCOUNT_STRENGTH_WEAK, ACCOUNT_STRENGTH_FAIR,
-		ACCOUNT_STRENGTH_GOOD, ACCOUNT_STRENGTH_STRONG,
+		ACCOUNT_STRENGTH_TOO_SHORT,
+		ACCOUNT_STRENGTH_WEAK,
+		ACCOUNT_STRENGTH_FAIR,
+		ACCOUNT_STRENGTH_GOOD,
+		ACCOUNT_STRENGTH_STRONG
 	];
 
 	// ── Mutable state ─────────────────────────────────────────────────────────
 	protected userStats: AccountStat[] = ACCOUNT_STATS.map((stat) => ({
 		...stat,
 		label: this.localeStatLabels[stat.field] ?? '',
-		unit: this.localeStatUnits[stat.field] ?? '',
+		unit: this.localeStatUnits[stat.field] ?? ''
 	}));
 	protected streakCount = 0;
 	protected memberSince = '';
@@ -319,8 +343,12 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.passwordChangedDate = (doc[STATS_FIELD_PASSWORD_CHANGED] as string) ?? '';
 			// Connections data lives on this same live user document — real-time, no one-shot loads.
 			this.connectCode = (doc[STATS_FIELD_CONNECT_CODE] as string) ?? '';
-			this.incomingRequests = Utilities.toArray(doc[STATS_FIELD_INCOMING_REQUESTS]) as IncomingConnectRequest[];
-			this.outgoingRequests = Utilities.toArray(doc[STATS_FIELD_OUTGOING_REQUESTS]) as OutgoingConnectRequest[];
+			this.incomingRequests = Utilities.toArray(
+				doc[STATS_FIELD_INCOMING_REQUESTS]
+			) as IncomingConnectRequest[];
+			this.outgoingRequests = Utilities.toArray(
+				doc[STATS_FIELD_OUTGOING_REQUESTS]
+			) as OutgoingConnectRequest[];
 			// Connection records (connected + left) live on the same own document — fully real-time.
 			this.connectedMembers = Utilities.toArray(doc[STATS_FIELD_CONNECTIONS]) as ConnectedMember[];
 			this.isStatsLoaded = true;
@@ -576,6 +604,32 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 					ACCOUNT_MSG_DELETING_ACCOUNT
 				);
 			}
+		);
+	}
+
+	/**
+	 * Opens the password-confirm dialog for removing the vault passphrase, reusing the delete-account
+	 * dialog with vault-specific text. On confirmation, calls CloudBase to verify the account password
+	 * server-side and delete only the vault passphrase record — vault data is kept, so the vault returns
+	 * to first-time setup on the next visit. A wrong password keeps the dialog open with an inline error;
+	 * success shows a toast.
+	 */
+	protected openDeleteVaultPassphraseDialog(): void {
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			'delete-account',
+			async (password: string) => {
+				// Verify the account password server-side against CloudBase Auth — the same check
+				// delete-account makes. A wrong password throws WrongOldPasswordError, which the dialog
+				// shows inline without closing; only after it passes is the removal function called.
+				await this.authService.verifyPassword(password);
+				const result = await (this.databaseService as CloudbaseService).removePassphraseLock(
+					PASSPHRASE_LOCK_KEY_VAULT
+				);
+				if (!result.success) throw new UnexpectedError();
+				this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_VAULT_PASSPHRASE_REMOVED);
+			},
+			{ title: ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE, message: ACCOUNT_DIALOG_DELETE_VAULT_MSG }
 		);
 	}
 

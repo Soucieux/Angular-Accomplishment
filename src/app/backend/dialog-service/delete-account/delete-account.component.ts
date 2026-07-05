@@ -13,6 +13,13 @@ import {
 	MSG_UNEXPECTED_ERROR
 } from '../../../common/locale/locale-strings';
 
+/** Overridable title and warning text for the password-confirm dialog, so it can serve actions other
+ * than account deletion (e.g. removing the vault passphrase). Omitted → the delete-account defaults. */
+export interface DeleteConfirmText {
+	title: string;
+	message: string;
+}
+
 @Component({
 	selector: 'delete-account-dialog',
 	standalone: true,
@@ -25,12 +32,13 @@ export class DeleteAccountDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 	@Output() sessionExpired$ = new EventEmitter<void>();
 
-	protected readonly ACCOUNT_LABEL_DELETE_ACCOUNT = ACCOUNT_LABEL_DELETE_ACCOUNT;
-	protected readonly ACCOUNT_DIALOG_DELETE_MSG = ACCOUNT_DIALOG_DELETE_MSG;
 	protected readonly ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER = ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER;
 	protected readonly DIALOG_BTN_DELETE = DIALOG_BTN_DELETE;
 	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
 
+	// Title and warning default to the delete-account copy; openDialog overrides them for other actions.
+	protected dialogTitle = ACCOUNT_LABEL_DELETE_ACCOUNT;
+	protected dialogMessage = ACCOUNT_DIALOG_DELETE_MSG;
 	protected visible = false;
 	protected passwordInput = '';
 	protected errorMessage = '';
@@ -42,14 +50,19 @@ export class DeleteAccountDialogComponent {
 	// ── Dialog API ────────────────────────────────────────────────────────
 
 	/**
-	 * Opens the delete-account dialog and stores the submit callback.
+	 * Opens the password-confirm dialog and stores the submit callback. Optional text overrides let the
+	 * same dialog serve other password-gated actions (e.g. removing the vault passphrase); when omitted
+	 * the title and warning fall back to the delete-account defaults.
 	 *
 	 * @param submitCallback - The async callback invoked with the confirmed password on submit.
+	 * @param text - Optional title and warning overrides; defaults to the delete-account copy.
 	 */
-	public openDialog(submitCallback: (password: string) => Promise<void>): void {
+	public openDialog(submitCallback: (password: string) => Promise<void>, text?: DeleteConfirmText): void {
 		// Step 1: Store the callback and reset all transient state before revealing the dialog —
 		// resetting first prevents the previous error message from flashing on screen during open animation
 		this.submitCallback = submitCallback;
+		this.dialogTitle = text?.title ?? ACCOUNT_LABEL_DELETE_ACCOUNT;
+		this.dialogMessage = text?.message ?? ACCOUNT_DIALOG_DELETE_MSG;
 		this.passwordInput = '';
 		this.errorMessage = '';
 		this.isSubmitting = false;

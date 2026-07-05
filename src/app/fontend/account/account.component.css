@@ -885,11 +885,6 @@ input[type='password']::placeholder {
 		width: 73dvw;
 	}
 
-	/* Override glass-card.css's mobile padding-bottom (designed for single full-page cards) */
-	.glass-card {
-		padding-bottom: 80px;
-	}
-
 	.card-icon {
 		font-size: 20px;
 	}
@@ -927,5 +922,14 @@ input[type='password']::placeholder {
 	.danger-action-row {
 		flex-direction: column;
 		align-items: flex-start;
+	}
+}
+
+/* The extra bottom padding only clears the floating dock, which appears on touch devices — gate it
+   to coarse pointers so narrow mouse windows (e.g. a resized desktop) get no dead space below the
+   full-height card, matching glass-card.css. */
+@media (max-width: 900px) and (pointer: coarse) {
+	.glass-card {
+		padding-bottom: 80px;
 	}
 }

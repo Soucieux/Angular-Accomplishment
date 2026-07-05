@@ -40,16 +40,6 @@
 		</button>
 		<button
 			type="button"
-			class="legend-row"
-			[class.is-active]="typeFilter === VAULT_NODE_LINK"
-			[class.is-muted]="typeFilter && typeFilter !== VAULT_NODE_LINK"
-			(click)="toggleFilterRow(VAULT_NODE_LINK)">
-			<span class="legend-hexagon"></span>
-			<span class="legend-label">{{ VAULT_TYPE_LINK }}</span>
-			<span class="legend-count">{{ legendCounts.link }}</span>
-		</button>
-		<button
-			type="button"
 			class="legend-row legend-row-verified"
 			[class.is-active]="typeFilter === VAULT_FILTER_KEY_VERIFIED"
 			[class.is-muted]="typeFilter && typeFilter !== VAULT_FILTER_KEY_VERIFIED"

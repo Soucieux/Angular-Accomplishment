@@ -27,8 +27,7 @@ import {
 	VAULT_LEGEND_VERIFIED,
 	VAULT_TYPE_ACCOUNT,
 	VAULT_TYPE_EMAIL,
-	VAULT_TYPE_PHONE,
-	VAULT_TYPE_LINK
+	VAULT_TYPE_PHONE
 } from '../../../common/locale/locale-strings';
 import {
 	VaultCategoryDef,
@@ -83,32 +82,39 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	protected readonly VAULT_TYPE_ACCOUNT = VAULT_TYPE_ACCOUNT;
 	protected readonly VAULT_TYPE_EMAIL = VAULT_TYPE_EMAIL;
 	protected readonly VAULT_TYPE_PHONE = VAULT_TYPE_PHONE;
-	protected readonly VAULT_TYPE_LINK = VAULT_TYPE_LINK;
 	protected readonly VAULT_NODE_ACCOUNT = VAULT_NODE_ACCOUNT;
 	protected readonly VAULT_NODE_EMAIL = VAULT_NODE_EMAIL;
 	protected readonly VAULT_NODE_PHONE = VAULT_NODE_PHONE;
-	protected readonly VAULT_NODE_LINK = VAULT_NODE_LINK;
 	protected readonly VAULT_FILTER_KEY_VERIFIED = VAULT_FILTER_KEY_VERIFIED;
 
 	// ── Force-simulation tuning ──────────────────────────────────────────────
 	private readonly accountRadius = 22;
-	private readonly identifierRadius = 9;
+	private readonly identifierRadius = 17;
 	private readonly borderResting = 2.5;
 	private readonly borderSelected = 4;
 	private readonly borderConnected = 3;
-	private readonly repulsionStrength = 6200;
+	private readonly repulsionStrength = 2200;
 	private readonly minSpacingGap = 64;
 	private readonly overlapPush = 0.16;
-	private readonly linkTargetLength = 160;
+	private readonly linkTargetLength = 190;
 	private readonly linkStrength = 0.015;
-	private readonly centeringStrength = 0.0011;
+	private readonly centeringStrength = 0.0016;
 	private readonly velocityDamping = 0.82;
-	private readonly boundaryPadding = 40;
+	/* Node-count base scale: at or below baseScaleNodeThreshold nodes the map opens at 1:1; above it
+	   the resting scale steps down once per baseScaleNodeStep extra nodes (never below minBaseScale) so
+	   a crowded graph is narrowed to fit. */
+	private readonly baseScaleNodeThreshold = 30;
+	private readonly baseScaleNodeStep = 10;
+	private readonly minBaseScale = 0.5;
+	/* Containment margins (world units, added to each node's own radius) keeping every node inside the
+	   visible map edge; nodeLabelExtent reserves extra room below a node for its name label. */
+	private readonly nodeEdgeGap = 10;
+	private readonly nodeLabelExtent = 26;
 	private readonly settleFrames = 260;
 	private readonly maxReachLevel = 2;
 	private readonly verifiedBadgeColor = '#0d9488';
 
-	protected legendCounts: VaultLegendCounts = { account: 0, email: 0, phone: 0, link: 0, verified: 0 };
+	protected legendCounts: VaultLegendCounts = { account: 0, email: 0, phone: 0, verified: 0 };
 
 	private simNodes: VaultSimNode[] = [];
 	private nodeById: Record<string, VaultSimNode> = {};
@@ -150,6 +156,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				this.buildSvg();
 				this.bindPan();
 				this.observeResize();
+				this.applyBaseScale();
 				this.kickSimulation();
 			};
 			requestAnimationFrame(start);
@@ -163,8 +170,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	 * @param changes - The set of changed input properties.
 	 */
 	ngOnChanges(changes: SimpleChanges): void {
-		// Tally the legend counts whenever the node set changes — independent of viewReady so the
-		// legend is correct on first render, before the simulation view has measured its size.
+		/* Tally the legend counts whenever the node set changes — independent of viewReady so the
+		   legend is correct on first render, before the simulation view has measured its size. */
 		if (changes['nodes']) this.updateLegendCounts();
 		if (!this.viewReady) return;
 		if (changes['nodes'] || changes['edges'] || changes['customCategories']) {
@@ -215,9 +222,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	 * Resets the camera to its default position and re-runs the layout.
 	 */
 	protected resetView(): void {
-		this.camera = { scale: 1, x: 0, y: 0 };
-		this.applyCamera();
 		this.layoutInitialPositions();
+		this.applyBaseScale();
 		this.kickSimulation();
 	}
 
@@ -285,8 +291,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 
 	/**
 	 * Runs one frame of the force simulation: node repulsion, edge springs, a gentle
-	 * pull to centre, velocity damping, and viewport clamping. Schedules the next frame
-	 * until the layout settles, unless a node is being dragged.
+	 * pull to centre, and velocity damping. Schedules the next frame until the layout
+	 * settles, unless a node is being dragged.
 	 */
 	private stepSimulation(): void {
 		const width = this.viewportWidth();
@@ -295,6 +301,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		const centreY = height / 2;
 		const nodes = this.simNodes;
 
+		// Repel every node pair (with a minimum-spacing push), then pull each toward the viewport centre
 		for (let i = 0; i < nodes.length; i++) {
 			const first = nodes[i];
 			for (let j = i + 1; j < nodes.length; j++) {
@@ -317,6 +324,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			first.vy += (centreY - first.y) * this.centeringStrength;
 		}
 
+		// Edge springs pull linked nodes toward the target link length
 		this.edges.forEach((edge) => {
 			const source = this.nodeById[edge.sourceId];
 			const target = this.nodeById[edge.targetId];
@@ -333,16 +341,17 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			target.vy -= forceY;
 		});
 
+		// Damp velocity and integrate positions; the dragged node is placed by the pointer handler
 		nodes.forEach((node) => {
 			if (node === this.dragNode) return;
 			node.vx *= this.velocityDamping;
 			node.vy *= this.velocityDamping;
 			node.x += node.vx;
 			node.y += node.vy;
-			node.x = Math.max(this.boundaryPadding, Math.min(width - this.boundaryPadding, node.x));
-			node.y = Math.max(this.boundaryPadding, Math.min(height - this.boundaryPadding, node.y));
 		});
 
+		// Contain every node in view, paint, then schedule the next frame until the layout settles
+		this.clampNodesToView(width, height);
 		this.renderPositions();
 		this.frameCount++;
 		if (this.frameCount < this.settleFrames || this.dragNode) {
@@ -363,6 +372,59 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
+	 * Gets the resting camera scale for the current node count. At or below the threshold the map opens
+	 * at 1:1; above it the scale steps down once per baseScaleNodeStep extra nodes (floored at
+	 * minBaseScale) so a crowded graph is narrowed to fit rather than overflowing the viewport.
+	 *
+	 * @returns The base scale the map opens and resets at.
+	 */
+	private baseScale(): number {
+		const count = this.simNodes.length;
+		if (count <= this.baseScaleNodeThreshold) return 1;
+		/* Quantise the count up to the next baseScaleNodeStep bucket so the zoom-out steps in on each
+		   increment of ten nodes rather than shifting on every single node added. */
+		const steppedCount =
+			this.baseScaleNodeThreshold +
+			Math.ceil((count - this.baseScaleNodeThreshold) / this.baseScaleNodeStep) * this.baseScaleNodeStep;
+		return Math.max(this.minBaseScale, Math.sqrt(this.baseScaleNodeThreshold / steppedCount));
+	}
+
+	/**
+	 * Sets the camera to the resting base scale, centred on the viewport, so the whole graph opens
+	 * framed — at 1:1 for a small graph and zoomed out for a crowded one. Used on first render and reset.
+	 */
+	private applyBaseScale(): void {
+		const scale = this.baseScale();
+		const width = this.viewportWidth();
+		const height = this.viewportHeight();
+		this.camera = { scale, x: (width / 2) * (1 - scale), y: (height / 2) * (1 - scale) };
+		this.applyCamera();
+	}
+
+	/**
+	 * Clamps every node inside the currently visible map region so none can drift or be dragged
+	 * off-screen. The visible rectangle is the viewport corners mapped to world space via
+	 * {@link screenToWorld}, so the room widens automatically when the base scale zooms out for a
+	 * crowded graph; extra space is reserved below each node for its name label.
+	 *
+	 * @param width - The current viewport width in pixels.
+	 * @param height - The current viewport height in pixels.
+	 */
+	private clampNodesToView(width: number, height: number): void {
+		const topLeft = this.screenToWorld(0, 0);
+		const bottomRight = this.screenToWorld(width, height);
+		for (const node of this.simNodes) {
+			const sideMargin = node.rad + this.nodeEdgeGap;
+			node.x = Utilities.clamp(node.x, topLeft.x + sideMargin, bottomRight.x - sideMargin);
+			node.y = Utilities.clamp(
+				node.y,
+				topLeft.y + sideMargin,
+				bottomRight.y - sideMargin - this.nodeLabelExtent
+			);
+		}
+	}
+
+	/**
 	 * Creates the SVG element for every node and edge, wiring node pointer handlers,
 	 * then applies the current visual highlight.
 	 */
@@ -373,11 +435,33 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			// The clip masks the segmented category wedges to the account tile's rounded-square outline.
 			const clipRadius = this.accountRadius;
 			const clipCornerRadius = clipRadius * 0.62;
-			defs.innerHTML =
-				'<filter id="vault-tile-shadow" x="-60%" y="-60%" width="220%" height="220%">' +
-				'<feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="rgba(60,30,50,0.28)"/></filter>' +
-				`<clipPath id="vault-account-clip"><rect x="${-clipRadius}" y="${-clipRadius}" ` +
-				`width="${clipRadius * 2}" height="${clipRadius * 2}" rx="${clipCornerRadius}"/></clipPath>`;
+			/* Build the filter and clipPath with createElementNS (not innerHTML) so both land in the SVG
+			   namespace — WebKit ignores innerHTML-parsed clipPaths, which drops the multi-category fill. */
+			const shadow = this.createSvgElement('feDropShadow', {
+				dx: '0',
+				dy: '3',
+				stdDeviation: '4',
+				'flood-color': 'rgba(60,30,50,0.28)'
+			});
+			const filter = this.createSvgElement('filter', {
+				id: 'vault-tile-shadow',
+				x: '-60%',
+				y: '-60%',
+				width: '220%',
+				height: '220%'
+			});
+			filter.appendChild(shadow);
+			const clipRect = this.createSvgElement('rect', {
+				x: String(-clipRadius),
+				y: String(-clipRadius),
+				width: String(clipRadius * 2),
+				height: String(clipRadius * 2),
+				rx: String(clipCornerRadius)
+			});
+			const clipPath = this.createSvgElement('clipPath', { id: 'vault-account-clip' });
+			clipPath.appendChild(clipRect);
+			defs.appendChild(filter);
+			defs.appendChild(clipPath);
 			svg.insertBefore(defs, svg.firstChild);
 		}
 
@@ -399,6 +483,22 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		this.simNodes.forEach((node) => {
 			const group = document.createElementNS(SVG_NS, 'g');
 			group.setAttribute('class', 'vault-node');
+
+			/* Set inline so it survives view-encapsulation scoping (the group is created imperatively):
+			   every node reads as clickable — to select, or to pick as a link target in link-mode. */
+			group.style.cursor = 'pointer';
+
+			/* Link-mode hover halo — a ring child revealed via opacity. An SVG-native element renders
+			   reliably in WebKit, where a CSS filter on a <g> does not. Sits behind the node shape. */
+			const hoverRing = document.createElementNS(SVG_NS, 'circle');
+			hoverRing.setAttribute('r', String(node.rad + 6));
+			hoverRing.setAttribute('fill', 'none');
+			hoverRing.setAttribute('stroke', this.verifiedBadgeColor);
+			hoverRing.setAttribute('stroke-width', '3');
+			hoverRing.style.opacity = '0';
+			hoverRing.style.transition = 'opacity 0.15s ease';
+			hoverRing.style.pointerEvents = 'none';
+			group.appendChild(hoverRing);
 			// Segmented category fill sits beneath the (transparent-filled) tile shape for multi-category accounts.
 			const fill = this.createNodeFill(node);
 			if (fill) group.appendChild(fill);
@@ -412,6 +512,13 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				group.appendChild(this.createVerifiedBadge(node));
 			}
 			group.addEventListener('pointerdown', (event) => this.onNodeDown(event, node));
+			// Link-mode hover: reveal the halo on the node under the cursor so it reads as a link target.
+			group.addEventListener('pointerenter', () => {
+				if (this.linkMode) hoverRing.style.opacity = '1';
+			});
+			group.addEventListener('pointerleave', () => {
+				hoverRing.style.opacity = '0';
+			});
 			nodeGroup.appendChild(group);
 			this.nodeGroupEls.push(group);
 			this.nodeShapeEls.push(shape);
@@ -419,6 +526,22 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		});
 
 		this.applyVisual();
+	}
+
+	/**
+	 * Creates an SVG element in the SVG namespace with the given attributes set — used to build the
+	 * defs (filter, clipPath) reliably instead of via innerHTML.
+	 *
+	 * @param tag - The SVG tag name to create.
+	 * @param attributes - The attribute name/value pairs to set on the element.
+	 * @returns The created SVG element.
+	 */
+	private createSvgElement(tag: string, attributes: Record<string, string>): SVGElement {
+		const element = document.createElementNS(SVG_NS, tag);
+		for (const [name, value] of Object.entries(attributes)) {
+			element.setAttribute(name, value);
+		}
+		return element;
 	}
 
 	/**
@@ -440,6 +563,9 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			/* A single-category (or uncategorized) account keeps a solid tile; two or more categories
 			   leave the tile transparent so the segmented wedge fill beneath shows through. */
 			rect.setAttribute('fill', node.hexes.length >= 2 ? 'none' : node.hexes[0]);
+			/* Capture pointer events across the whole tile — a multi-category tile is fill:none, so
+			   without this its centre would not register hover/clicks. */
+			rect.setAttribute('pointer-events', 'all');
 			rect.setAttribute('stroke', VAULT_NODE_STROKE);
 			rect.setAttribute('stroke-width', String(this.borderResting));
 			rect.setAttribute('filter', 'url(#vault-tile-shadow)');
@@ -596,7 +722,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		icon.style.lineHeight = '1';
 		// Identifier icons sit on lighter fills, so a dark glyph reads more clearly than white.
 		icon.style.color = VAULT_GLYPH_COLOR_IDENTIFIER;
-		icon.style.fontSize = `${Math.round(node.rad * 1.1)}px`;
+		icon.style.fontSize = `${Math.round(node.rad * 1.3)}px`;
 		icon.textContent =
 			node.nodeType === VAULT_NODE_EMAIL
 				? VAULT_EMAIL_META.icon
@@ -617,7 +743,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		const isAccount = node.nodeType === VAULT_NODE_ACCOUNT;
 		const label = document.createElementNS(SVG_NS, 'text');
 		label.setAttribute('text-anchor', 'middle');
-		label.setAttribute('font-size', isAccount ? '11.5' : '10');
+		label.setAttribute('font-size', isAccount ? '12.5' : '11');
 		label.setAttribute('font-weight', isAccount ? '700' : '500');
 		label.setAttribute('fill', isAccount ? VAULT_LABEL_COLOR_ACCOUNT : VAULT_LABEL_COLOR_IDENTIFIER);
 		label.setAttribute('y', String(node.rad + 15));
@@ -808,8 +934,9 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
-	 * Binds background panning and wheel zoom on the SVG. Pressing on empty canvas
-	 * clears any current selection and begins a pan.
+	 * Binds background panning and wheel zoom on the SVG. Pressing on empty canvas begins a pan and
+	 * clears any current selection — except in link-mode, where the selected source node is kept so a
+	 * stray canvas click while adding a connection does not cancel the selection.
 	 */
 	private bindPan(): void {
 		const svg = this.svgRef.nativeElement;
@@ -826,7 +953,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			originX = this.camera.x;
 			originY = this.camera.y;
 			svg.style.cursor = 'grabbing';
-			if (this.selectedId) this.ngZone.run(() => this.nodeSelect.emit(null));
+			if (this.selectedId && !this.linkMode) this.ngZone.run(() => this.nodeSelect.emit(null));
 		});
 		this.panMoveHandler = (event: PointerEvent): void => {
 			if (!panning) return;
@@ -851,19 +978,32 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
-	 * Converts client coordinates into the simulation's local coordinate space,
-	 * accounting for the current pan and zoom.
+	 * Converts a point in viewport (SVG-host) space into the simulation's world coordinate space,
+	 * accounting for the current pan and zoom. Single source of truth for the inverse camera
+	 * transform — used by pointer hit-testing and by the view-containment bounds.
+	 *
+	 * @param viewportX - The X position in viewport space (0 = left edge of the SVG host).
+	 * @param viewportY - The Y position in viewport space (0 = top edge of the SVG host).
+	 * @returns The point in world coordinates.
+	 */
+	private screenToWorld(viewportX: number, viewportY: number): { x: number; y: number } {
+		return {
+			x: (viewportX - this.camera.x) / this.camera.scale,
+			y: (viewportY - this.camera.y) / this.camera.scale
+		};
+	}
+
+	/**
+	 * Converts client (page) coordinates into world coordinates by subtracting the SVG host's offset
+	 * and delegating to {@link screenToWorld}.
 	 *
 	 * @param clientX - The pointer X position in client space.
 	 * @param clientY - The pointer Y position in client space.
-	 * @returns The point in local simulation coordinates.
+	 * @returns The point in world coordinates.
 	 */
 	private toLocalPoint(clientX: number, clientY: number): { x: number; y: number } {
 		const rect = this.svgRef.nativeElement.getBoundingClientRect();
-		return {
-			x: (clientX - rect.left - this.camera.x) / this.camera.scale,
-			y: (clientY - rect.top - this.camera.y) / this.camera.scale
-		};
+		return this.screenToWorld(clientX - rect.left, clientY - rect.top);
 	}
 
 	/**
@@ -877,7 +1017,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		const rect = this.svgRef.nativeElement.getBoundingClientRect();
 		const pointX = clientX - rect.left;
 		const pointY = clientY - rect.top;
-		const nextScale = Math.max(0.4, Math.min(2.5, this.camera.scale * factor));
+		const nextScale = Utilities.clamp(this.camera.scale * factor, 0.4, 2.5);
 		this.camera.x = pointX - (pointX - this.camera.x) * (nextScale / this.camera.scale);
 		this.camera.y = pointY - (pointY - this.camera.y) * (nextScale / this.camera.scale);
 		this.camera.scale = nextScale;
@@ -966,7 +1106,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	 * object instead of re-scanning the nodes on every change-detection pass.
 	 */
 	private updateLegendCounts(): void {
-		const counts: VaultLegendCounts = { account: 0, email: 0, phone: 0, link: 0, verified: 0 };
+		const counts: VaultLegendCounts = { account: 0, email: 0, phone: 0, verified: 0 };
 		for (const node of this.nodes) {
 			if (node.nodeType === VAULT_NODE_ACCOUNT) {
 				counts.account++;
@@ -975,8 +1115,6 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				counts.email++;
 			} else if (node.nodeType === VAULT_NODE_PHONE) {
 				counts.phone++;
-			} else if (node.nodeType === VAULT_NODE_LINK) {
-				counts.link++;
 			}
 		}
 		this.legendCounts = counts;

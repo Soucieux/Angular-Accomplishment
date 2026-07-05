@@ -828,12 +828,13 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 				const domain = Utilities.getDomain(finalUrl);
 
 				// Step 2: Branch on add vs. edit — existingLink is null for new links
+				const title = Utilities.capitalizeFirstLetterOnEachWord(formData.title);
 				if (existingLink) {
 					await this.databaseService.updateUsefulLink(
 						existingLink._id,
 						{
 							url: finalUrl,
-							title: formData.title,
+							title,
 							category: formData.category,
 							isPinned: formData.isPinned
 						},
@@ -844,7 +845,7 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 				} else {
 					await this.databaseService.addUsefulLink({
 						url: finalUrl,
-						title: formData.title,
+						title,
 						category: formData.category,
 						visitCount: 0,
 						createdAt: Utilities.getCurrentFormattedTime(true),
@@ -886,7 +887,7 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 						const finalUrl = Utilities.normalizeUrl(formData.url);
 						return this.databaseService.addUsefulLink({
 							url: finalUrl,
-							title: formData.title,
+							title: Utilities.capitalizeFirstLetterOnEachWord(formData.title),
 							category: formData.category,
 							visitCount: 0,
 							createdAt: Utilities.getCurrentFormattedTime(true),

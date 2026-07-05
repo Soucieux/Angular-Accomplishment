@@ -49,6 +49,7 @@
 	font-size: 44px;
 	font-weight: 500;
 	letter-spacing: -0.02em;
+	line-height: 1;
 	margin: 0;
 	padding-bottom: 0.2em;
 	background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.82) 100%);
@@ -383,17 +384,17 @@
    Staggered card entrance
 ───────────────────────────────────────── */
 .card-enter {
-	animation: cardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation: cardEnter 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes cardEnter {
 	from {
 		opacity: 0;
-		transform: translateY(24px) scale(0.96);
+		transform: translateY(24px) scale(0.96) rotate(-2.5deg);
 	}
 	to {
 		opacity: 1;
-		transform: translateY(0) scale(1);
+		transform: translateY(0) scale(1) rotate(0deg);
 	}
 }
 
@@ -437,7 +438,7 @@
 
 .quote-card:hover {
 	transform: translateY(-6px) scale(1.02);
-	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.36);
+	box-shadow: 0 14px 32px rgba(245, 158, 11, 0.2);
 	border-color: rgba(0, 0, 0, 0.15);
 	border-left-color: rgba(245, 158, 11, 0.85);
 }

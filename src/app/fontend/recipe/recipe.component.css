@@ -71,6 +71,12 @@
 	--condiment-bd: #e8b090;
 }
 
+/* blocked-card's text is styled white-on-gradient for a colorful backdrop; .glass-card's
+   own background is near-white, so this supplies the page's own accent gradient instead. */
+.access-denied-wrapper {
+	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
+}
+
 @keyframes cardReveal {
 	from {
 		opacity: 0;
@@ -385,7 +391,7 @@
 		transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
 		box-shadow 0.28s ease,
 		border-color 0.25s ease;
-	animation: cardReveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+	animation: cardReveal 0.45s cubic-bezier(0.68, -0.2, 0.32, 1.2) backwards;
 }
 
 .recipe-card:hover {

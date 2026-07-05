@@ -1,21 +1,21 @@
-@keyframes adDrift {
-	0%, 100% { transform: translateY(0) scale(1); }
-	50% { transform: translateY(-36px) scale(1.04); }
-}
-
-@keyframes adCardReveal {
+@keyframes bcCardReveal {
 	from { opacity: 0; transform: translateY(-16px) scale(0.97); }
 	to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes adIconPulse {
-	0%, 100% { filter: drop-shadow(0 2px 16px rgba(255, 255, 255, 0.35)); }
-	50% { filter: drop-shadow(0 2px 30px rgba(255, 255, 255, 0.58)); }
+@keyframes bcBadgePulse {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(213, 51, 105, 0.42); }
+	70% { box-shadow: 0 0 0 16px rgba(213, 51, 105, 0); }
 }
 
-@keyframes adFadeUp {
+@keyframes bcFadeUp {
 	from { opacity: 0; transform: translateY(10px); }
 	to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bcOrbDrift {
+	0%, 100% { transform: translateY(0) scale(1); }
+	50% { transform: translateY(-24px) scale(1.05); }
 }
 
 :host {
@@ -32,81 +32,184 @@
 	text-align: center;
 	position: relative;
 	overflow: hidden;
+	background: linear-gradient(45deg, #fa61da 0%, #ff8891 50%, #ffcd5a 100%);
 }
 
-.blocked-card-container::before {
-	content: '';
+.blocked-card-orb {
 	position: absolute;
-	width: 520px;
-	height: 520px;
-	background: radial-gradient(circle, rgba(255, 255, 255, 0.13) 0%, transparent 68%);
 	border-radius: 50%;
-	top: -120px;
-	right: -160px;
-	animation: adDrift 14s ease-in-out infinite;
 	pointer-events: none;
 	z-index: 0;
 }
 
-.blocked-card-container::after {
-	content: '';
-	position: absolute;
-	width: 420px;
-	height: 420px;
-	background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 65%);
-	border-radius: 50%;
-	bottom: 5%;
-	left: -130px;
-	animation: adDrift 19s ease-in-out infinite reverse;
-	pointer-events: none;
-	z-index: 0;
+.blocked-card-orb-1 {
+	width: 380px;
+	height: 380px;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, transparent 68%);
+	top: -110px;
+	right: -120px;
+	animation: bcOrbDrift 15s ease-in-out infinite;
+}
+
+.blocked-card-orb-2 {
+	width: 300px;
+	height: 300px;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.09) 0%, transparent 65%);
+	bottom: -70px;
+	left: -90px;
+	animation: bcOrbDrift 21s ease-in-out infinite reverse;
 }
 
 .blocked-card-card {
 	position: relative;
 	z-index: 1;
+	width: 440px;
+	max-width: 90vw;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(28px);
+	-webkit-backdrop-filter: blur(28px);
+	border: 1px solid rgba(255, 255, 255, 0.8);
+	border-radius: 32px;
+	box-shadow:
+		0 8px 48px rgba(0, 0, 0, 0.14),
+		inset 0 1px 0 rgba(255, 255, 255, 0.4);
+	animation: bcCardReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Brand accent strip along the card's top edge, matching the app's rose-to-gold identity. */
+.blocked-card-bar {
+	height: 5px;
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+}
+
+.blocked-card-pad {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 16px;
-	padding: 64px 96px;
-	background: rgba(255, 255, 255, 0.07);
-	backdrop-filter: blur(28px);
-	-webkit-backdrop-filter: blur(28px);
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	border-radius: 32px;
-	box-shadow:
-		0 8px 48px rgba(0, 0, 0, 0.08),
-		inset 0 1px 0 rgba(255, 255, 255, 0.28);
-	animation: adCardReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+	gap: 18px;
+	padding: 48px 56px 44px;
+}
+
+.blocked-card-badge {
+	width: 72px;
+	height: 72px;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	animation: bcBadgePulse 2.4s ease-out infinite;
 }
 
 .blocked-card-icon {
-	font-size: 72px;
-	background: linear-gradient(135deg, #ffffff 20%, rgba(255, 218, 120, 0.88) 100%);
-	background-clip: text;
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	filter: drop-shadow(0 2px 16px rgba(255, 255, 255, 0.35));
-	animation: adIconPulse 3s ease-in-out infinite;
+	font-size: 32px;
+	color: #ffffff;
 }
 
 .blocked-card-container h1 {
-	background: linear-gradient(135deg, #ffffff 20%, rgba(255, 218, 120, 0.88) 100%);
-	background-clip: text;
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	filter: drop-shadow(0 2px 20px rgba(255, 255, 255, 0.35));
-	animation: adFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+	margin: 0;
+	font-size: 26px;
+	font-weight: 700;
+	color: #1a1a1a;
+	animation: bcFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
 }
 
 .blocked-card-container p {
-	color: rgba(255, 255, 255, 0.6);
-	animation: adFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+	margin: 0;
+	font-size: 14px;
+	color: #64748b;
+	animation: bcFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+
+.blocked-card-signin {
+	border: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 13px 28px;
+	border-radius: 9999px;
+	background: linear-gradient(135deg, #d53369 0%, #daae51 100%);
+	color: #ffffff;
+	font-family: inherit;
+	font-size: 15px;
+	font-weight: 600;
+	transition:
+		transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+		box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+	animation: bcFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+}
+
+.blocked-card-signin .material-symbols-outlined {
+	font-size: 18px;
+}
+
+.blocked-card-signin:hover {
+	transform: scale(1.03);
+	box-shadow: 0 4px 16px rgba(213, 51, 105, 0.35);
+}
+
+.blocked-card-signin:active {
+	transform: scale(0.985);
+}
+
+.blocked-card-footer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	color: #94a3b8;
+	font-size: 11px;
+	animation: bcFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+}
+
+.blocked-card-footer .material-symbols-outlined {
+	font-size: 13px;
 }
 
 @media (max-width: 940px) {
+	.blocked-card-orb-1 {
+		width: 260px;
+		height: 260px;
+	}
+
+	.blocked-card-orb-2 {
+		width: 200px;
+		height: 200px;
+	}
+
 	.blocked-card-card {
-		padding: 40px 32px;
+		width: 100%;
+		border-radius: 24px;
+	}
+
+	.blocked-card-pad {
+		padding: 32px 24px 28px;
+		gap: 14px;
+	}
+
+	.blocked-card-badge {
+		width: 60px;
+		height: 60px;
+	}
+
+	.blocked-card-icon {
+		font-size: 26px;
+	}
+
+	.blocked-card-container h1 {
+		font-size: 21px;
+	}
+
+	.blocked-card-container p {
+		font-size: 13px;
+	}
+
+	.blocked-card-signin {
+		padding: 11px 22px;
+		font-size: 14px;
 	}
 }

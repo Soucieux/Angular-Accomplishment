@@ -347,6 +347,6 @@
 	</ng-template>
 } @else {
 	<div class="access-denied-wrapper">
-		<blocked-card icon="lock" />
+		<blocked-card icon="lock" [isAccessDenied]="true" />
 	</div>
 }

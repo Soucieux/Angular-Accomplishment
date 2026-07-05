@@ -123,6 +123,10 @@ export const NAV_AVATAR_FALLBACK_INITIAL = '?';
 /** Fallback background gradient for the avatar element when no user-specific colour is set. */
 export const NAV_AVATAR_GRADIENT = 'linear-gradient(135deg,#d53369,#daae51)';
 export const LOGIN_URL_DEFAULT_RETURN = '/';
+/** Route path for the login page, used when redirecting an unauthenticated visitor. */
+export const LOGIN_ROUTE_PATH = '/login';
+/** Query param name carrying the URL to return to after a successful sign-in. */
+export const LOGIN_RETURN_URL_PARAM = 'returnUrl';
 export const LOGIN_ANIM_OUT = 'out';
 export const LOGIN_ANIM_IN = 'in';
 /** Loading indicator character shown on the sign-in button while an auth request is in flight. */

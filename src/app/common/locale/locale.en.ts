@@ -27,6 +27,8 @@ export const MSG_SAVE_FAILED = 'Save failed';
 export const ACCESS_DENIED_TITLE = 'Access Denied';
 /** Body text shown on the access-denied card when the user lacks page permission. */
 export const ACCESS_DENIED_BODY = 'You do not have permission to access this page';
+/** Small footer line shown under the Sign in button on the access-denied card. */
+export const ACCESS_DENIED_FOOTER = 'Error 401 · Authentication required';
 /** User-facing message shown when an action is blocked by insufficient permissions. */
 export const MSG_PERMISSION_DENIED = 'User does not have permission';
 /** User-facing message shown when an unhandled exception occurs. */
@@ -885,8 +887,7 @@ export const NAV_MOBILE_WELCOME = 'Welcome';
 export const NAV_MOBILE_OFFLINE = 'Offline · not signed in';
 export const MOBILE_BLOCKED_TITLE = 'Not Accessible on Mobile';
 /** Body text shown on the mobile-blocked card explaining that the Today planner requires a wider screen. */
-export const MOBILE_BLOCKED_BODY =
-	'The Today planner is built for wider screens. Open it on a desktop, laptop, or tablet to access your daily view.';
+export const MOBILE_BLOCKED_BODY = 'Today needs a wider screen. Open it on a desktop, laptop, or tablet.';
 export const TODAY_RECUR_LABELS: Partial<Record<string, string>> = {
 	daily: 'Daily', weekdays: 'Weekdays', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly',
 };

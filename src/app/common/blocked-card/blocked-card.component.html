@@ -1,7 +1,24 @@
 <div class="blocked-card-container">
+	<div class="blocked-card-orb blocked-card-orb-1"></div>
+	<div class="blocked-card-orb blocked-card-orb-2"></div>
 	<div class="blocked-card-card">
-		<span class="material-symbols-outlined blocked-card-icon">{{ icon }}</span>
-		<h1>{{ title }}</h1>
-		<p>{{ body }}</p>
+		<div class="blocked-card-bar"></div>
+		<div class="blocked-card-pad">
+			<span class="blocked-card-badge">
+				<span class="material-symbols-outlined blocked-card-icon">{{ icon }}</span>
+			</span>
+			<h1>{{ title }}</h1>
+			<p>{{ body }}</p>
+			@if (isAccessDenied) {
+				<button type="button" class="blocked-card-signin" (click)="navigateToSignIn()">
+					<span class="material-symbols-outlined">lock_open</span>
+					{{ NAV_LABEL_SIGN_IN }}
+				</button>
+				<div class="blocked-card-footer">
+					<span class="material-symbols-outlined">shield</span>
+					{{ ACCESS_DENIED_FOOTER }}
+				</div>
+			}
+		</div>
 	</div>
 </div>

@@ -16,12 +16,6 @@
 	flex-direction: column;
 }
 
-/* blocked-card's text is styled white-on-gradient for a colorful backdrop; .glass-card's
-   own background is near-white, so this supplies the page's own accent gradient instead. */
-.access-denied-wrapper {
-	background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
-}
-
 /* ─────────────────────────────────────────
    Date Calculator section wrapper
 ───────────────────────────────────────── */

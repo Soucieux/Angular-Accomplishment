@@ -16,6 +16,7 @@ export const MSG_DELETE_FAILED = '删除失败';
 export const MSG_SAVE_FAILED = '保存失败';
 export const ACCESS_DENIED_TITLE = '无权访问';
 export const ACCESS_DENIED_BODY = '登录以访问此页面';
+export const ACCESS_DENIED_FOOTER = '错误 401 · 需要身份验证';
 export const MSG_PERMISSION_DENIED = '用户没有权限';
 export const MSG_UNEXPECTED_ERROR = '发生未知错误';
 export const MSG_DELETING = '正在删除...';
@@ -760,7 +761,7 @@ export const NAV_MOBILE_ALL_SECTIONS = '全部页面';
 export const NAV_MOBILE_WELCOME = '欢迎';
 export const NAV_MOBILE_OFFLINE = '离线 · 未登录';
 export const MOBILE_BLOCKED_TITLE = '不支持手机端查看';
-export const MOBILE_BLOCKED_BODY = '今日规划需要较宽屏幕才能正常使用。请在桌面端、笔记本或平板上访问。';
+export const MOBILE_BLOCKED_BODY = '今日规划需要更宽的屏幕，请使用桌面端、笔记本或平板访问。';
 export const TODAY_RECUR_LABELS: Partial<Record<string, string>> = {
 	daily: '每天',
 	weekdays: '工作日',

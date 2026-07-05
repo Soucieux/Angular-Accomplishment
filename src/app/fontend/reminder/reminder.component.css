@@ -24,12 +24,6 @@
 	font-family: 'app-font';
 }
 
-/* blocked-card's text is styled white-on-gradient for a colorful backdrop; .glass-card's
-   own background is near-white, so this supplies the page's own accent gradient instead. */
-.access-denied-wrapper {
-	background: var(--rm-gradient);
-}
-
 /* ─────────────────────────────────────────
    Masthead
 ───────────────────────────────────────── */

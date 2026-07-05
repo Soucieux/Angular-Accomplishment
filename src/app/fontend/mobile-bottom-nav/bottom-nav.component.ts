@@ -16,15 +16,18 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
-import { NAV_AVATAR_FALLBACK_INITIAL, NAV_AVATAR_GRADIENT } from '../../common/constants';
+import {
+	NAV_AVATAR_FALLBACK_INITIAL,
+	NAV_AVATAR_GRADIENT,
+	NAV_LOCALE_SWITCH_TO_ZH,
+	NAV_LOCALE_SWITCH_TO_EN
+} from '../../common/constants';
 import {
 	ACCOUNT_TITLE_PAGE,
 	ACTIVE_LOCALE,
 	NAV_NOTIF_LABEL_DISABLE,
 	NAV_NOTIF_LABEL_ENABLE,
 	NAV_NOTIF_TOGGLE_ERROR,
-	NAV_LOCALE_SWITCH_TO_ZH,
-	NAV_LOCALE_SWITCH_TO_EN,
 	NAV_MOBILE_ALL_SECTIONS,
 	LABEL_ONLINE,
 	NAV_LABEL_SIGN_OUT,

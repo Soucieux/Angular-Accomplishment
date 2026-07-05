@@ -75,6 +75,10 @@ export const APP_BREAKPOINT_NARROW = 940;
 export const TAURI_MODE_CLASS = 'tauri-mode';
 /** CSS class added to body when the active locale is English — allows locale-specific CSS overrides via :host-context(). */
 export const LOCALE_EN_BODY_CLASS = 'locale-en';
+/** Locale switch button label, always in Chinese script so it reads as the target language regardless of the active locale. */
+export const NAV_LOCALE_SWITCH_TO_ZH = '切换到中文';
+/** Locale switch button label, always in English script so it reads as the target language regardless of the active locale. */
+export const NAV_LOCALE_SWITCH_TO_EN = 'Switch to English';
 /** Tauri backend command name that toggles the minimize-on-close window behaviour. */
 export const TAURI_CMD_SET_MINIMIZE_ON_CLOSE = 'set_minimize_on_close';
 /** Milliseconds before the loading-timeout retry dialog appears when a page is stuck loading. */

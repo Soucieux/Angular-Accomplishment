@@ -395,8 +395,11 @@ export class CloudbaseService extends DatabaseService {
 		   whole-collection watch is denied by the ownership rule and fails init with an opaque SDK error
 		   ("Cannot read property 'code' of undefined"). getUserId() is read inside the builder so it
 		   resolves after watchCollection's authReady gate. */
-		return this.watchCollection(DATABASE_DATE_CALCULATOR, (docs) => docs ?? [], false, (col) =>
-			col.where({ _openid: CloudbaseService.getUserId() })
+		return this.watchCollection(
+			DATABASE_DATE_CALCULATOR,
+			(docs) => docs ?? [],
+			false,
+			(col) => col.where({ _openid: CloudbaseService.getUserId() })
 		);
 	}
 
@@ -612,7 +615,9 @@ export class CloudbaseService extends DatabaseService {
 					a.members.length === b.members.length &&
 					a.members.every((id, i) => id === b.members[i])
 			),
-			switchMap((signal) => (signal.members.length ? from(this.getSharedReminders()) : of([] as any[]))),
+			switchMap((signal) =>
+				signal.members.length ? from(this.getSharedReminders()) : of([] as any[])
+			),
 			startWith([] as any[]),
 			catchError(() => of([] as any[]))
 		);
@@ -975,41 +980,43 @@ export class CloudbaseService extends DatabaseService {
 		propagateErrors = false,
 		queryBuilder?: (col: any) => any
 	): Observable<T> {
-		return CloudbaseService.authReady$
-			.pipe(
-				take(1),
-				switchMap(
-					() =>
-						new Observable<T>((observer) => {
-							const col = this.database.collection(collectionName);
-							const query = queryBuilder ? queryBuilder(col) : col;
-							const watcher = query.watch({
-								onChange: (snapshot: any) => {
-									// Emit inside Angular's zone — CloudBase fires watch callbacks outside it, so
-									// otherwise Default change detection never runs and the view only updates on the
-									// next user interaction (e.g. the reminder list staying blank after a refresh).
-									this.ngZone.run(() => observer.next(mapper(snapshot.docs)));
-								},
-								onError: (err: any) => {
-									LOG.error(
-										this.className,
-										`Error watching collection ${collectionName}`,
-										err
-									);
-									if (propagateErrors) observer.error(err);
-								}
-							});
-							return () => watcher.close();
-						})
+		return (
+			CloudbaseService.authReady$
+				.pipe(
+					take(1),
+					switchMap(
+						() =>
+							new Observable<T>((observer) => {
+								const col = this.database.collection(collectionName);
+								const query = queryBuilder ? queryBuilder(col) : col;
+								const watcher = query.watch({
+									onChange: (snapshot: any) => {
+										// Emit inside Angular's zone — CloudBase fires watch callbacks outside it, so
+										// otherwise Default change detection never runs and the view only updates on the
+										// next user interaction (e.g. the reminder list staying blank after a refresh).
+										this.ngZone.run(() => observer.next(mapper(snapshot.docs)));
+									},
+									onError: (err: any) => {
+										LOG.error(
+											this.className,
+											`Error watching collection ${collectionName}`,
+											err
+										);
+										if (propagateErrors) observer.error(err);
+									}
+								});
+								return () => watcher.close();
+							})
+					)
 				)
-			)
-			/* shareReplay keeps each watch warm for the app's lifetime so navigating away and back replays
+				/* shareReplay keeps each watch warm for the app's lifetime so navigating away and back replays
 			   the last snapshot instantly instead of tearing the CloudBase watch down and rebuilding it —
 			   the rebuild churns the realtime socket and can fail watch init with a transient SDK error
 			   ("Cannot read property 'code' of undefined"). refCount is intentionally omitted: under the
 			   adjacency model no consumer re-keys a watch via switchMap (shared reminders now read through a
 			   Cloud Function, not a watch), so warm watches never stack the duplicates refCount guarded against. */
-			.pipe(shareReplay(1));
+				.pipe(shareReplay(1))
+		);
 	}
 
 	/**
@@ -1785,11 +1792,7 @@ export class CloudbaseService extends DatabaseService {
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `${DB_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
 		} catch (error) {
-			LOG.error(
-				this.className,
-				`${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
-				error as Error
-			);
+			LOG.error(this.className, `${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -1803,11 +1806,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param connectedEdgeIds - The document keys of every edge attached to this node.
 	 * @param name - The node's display name, recorded in the activity log.
 	 */
-	public async removeVaultNode(
-		nodeId: string,
-		connectedEdgeIds: string[],
-		name: string
-	): Promise<void> {
+	public async removeVaultNode(nodeId: string, connectedEdgeIds: string[], name: string): Promise<void> {
 		try {
 			await Promise.all(connectedEdgeIds.map((edgeId) => this.removeVaultEdge(edgeId)));
 			const result = await this.database
@@ -1822,11 +1821,7 @@ export class CloudbaseService extends DatabaseService {
 				type: HISTORY_STATUS_DELETED
 			}).catch(() => {});
 		} catch (error) {
-			LOG.error(
-				this.className,
-				`${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
-				error as Error
-			);
+			LOG.error(this.className, `${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2347,11 +2342,7 @@ export class CloudbaseService extends DatabaseService {
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `${DB_LOG_RECORD_REMOVED_FROM} ${DATABASE_VAULT}`);
 		} catch (error) {
-			LOG.error(
-				this.className,
-				`${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`,
-				error as Error
-			);
+			LOG.error(this.className, `${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_VAULT}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -2365,17 +2356,31 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise that resolves when the account's categories are updated.
 	 */
 	public async updateVaultNodeCategories(nodeId: string, categoryKeys: string[]): Promise<void> {
-		try {
-			const result = await this.database
-				.collection(DATABASE_VAULT)
-				.where(this.buildWhereClause(nodeId))
-				.update({ [VAULT_VALUE_KEY_CATEGORIES]: categoryKeys });
-			this.throwIfCloudbaseError(result);
-			LOG.info(this.className, `${DB_LOG_RECORD_TABLE_UPDATED} ${DATABASE_VAULT}`);
-		} catch (error) {
-			LOG.error(this.className, `${DB_LOG_TABLE_UPDATE_FAILED} ${DATABASE_VAULT}`, error as Error);
-			this.rethrowCaught(error);
-		}
+		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_CATEGORIES]: categoryKeys });
+	}
+
+	/**
+	 * Sets an account node's verified flag. Writes by _id (the owner-scoped path), used by the inline
+	 * verified toggle in the list view.
+	 *
+	 * @param nodeId - The id of the account node to update.
+	 * @param verified - The new verified state to store on the account.
+	 * @returns A promise that resolves when the account's verified flag is updated.
+	 */
+	public async updateVaultNodeVerified(nodeId: string, verified: boolean): Promise<void> {
+		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_VERIFIED]: verified });
+	}
+
+	/**
+	 * Sets an account node's display name. Writes by _id (the owner-scoped path), used by the inline
+	 * name edit in the list view.
+	 *
+	 * @param nodeId - The id of the account node to update.
+	 * @param name - The new display name to store on the account.
+	 * @returns A promise that resolves when the account's name is updated.
+	 */
+	public async updateVaultNodeName(nodeId: string, name: string): Promise<void> {
+		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_NAME]: name });
 	}
 
 	/**
@@ -2387,11 +2392,28 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise that resolves when the category label is updated.
 	 */
 	public async updateVaultCategoryLabel(categoryKey: string, label: string): Promise<void> {
+		await this.updateOneVaultRecord(categoryKey, { [VAULT_VALUE_KEY_LABEL]: label });
+	}
+
+	/**
+	 * Writes the given fields to a single vault document by _id (the owner-scoped write path). Shared by
+	 * the vault field-update methods, which differ only in which field they set.
+	 *
+	 * {@link updateVaultNodeCategories} - Replaces an account's category list.
+	 * {@link updateVaultNodeVerified} - Sets an account's verified flag.
+	 * {@link updateVaultNodeName} - Sets an account's display name.
+	 * {@link updateVaultCategoryLabel} - Renames a custom category.
+	 *
+	 * @param recordId - The document id of the vault record to update.
+	 * @param fields - The content fields to overwrite on the record.
+	 * @returns A promise that resolves when the record is updated.
+	 */
+	private async updateOneVaultRecord(recordId: string, fields: Record<string, unknown>): Promise<void> {
 		try {
 			const result = await this.database
 				.collection(DATABASE_VAULT)
-				.where(this.buildWhereClause(categoryKey))
-				.update({ [VAULT_VALUE_KEY_LABEL]: label });
+				.where(this.buildWhereClause(recordId))
+				.update(fields);
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, `${DB_LOG_RECORD_TABLE_UPDATED} ${DATABASE_VAULT}`);
 		} catch (error) {
@@ -2543,7 +2565,10 @@ export class CloudbaseService extends DatabaseService {
 			const result = await this.database
 				.collection(DATABASE_USEFUL_LINKS)
 				.where({ _id: key, _openid: CloudbaseService.getUserId() })
-				.update({ visitCount: currentCount + 1, lastVisited: Utilities.getCurrentFormattedTime(true) });
+				.update({
+					visitCount: currentCount + 1,
+					lastVisited: Utilities.getCurrentFormattedTime(true)
+				});
 			this.throwIfCloudbaseError(result);
 			LOG.info(this.className, DB_LOG_VISIT_INCREMENTED);
 		} catch (error) {
@@ -2763,7 +2788,12 @@ export class CloudbaseService extends DatabaseService {
 				await this.database
 					.collection(DATABASE_USERS)
 					.doc(CloudbaseService.getUserId())
-					.update({ [STATS_FIELD_CONNECT_CODE]: Utilities.randomCode(CONNECT_CODE_LENGTH, CONNECT_CODE_ALPHABET) })
+					.update({
+						[STATS_FIELD_CONNECT_CODE]: Utilities.randomCode(
+							CONNECT_CODE_LENGTH,
+							CONNECT_CODE_ALPHABET
+						)
+					})
 					.catch(() => {});
 			}
 			return;
@@ -2853,7 +2883,8 @@ export class CloudbaseService extends DatabaseService {
 		delete fields[STATS_FIELD_IS_USER_STATS];
 		// Legacy docs predate the connect code — generate one so migrated users can be linked.
 		const connectCode =
-			fields[STATS_FIELD_CONNECT_CODE] ?? Utilities.randomCode(CONNECT_CODE_LENGTH, CONNECT_CODE_ALPHABET);
+			fields[STATS_FIELD_CONNECT_CODE] ??
+			Utilities.randomCode(CONNECT_CODE_LENGTH, CONNECT_CODE_ALPHABET);
 		try {
 			const result = await this.database
 				.collection(DATABASE_USERS)

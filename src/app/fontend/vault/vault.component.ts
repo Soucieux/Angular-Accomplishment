@@ -12,7 +12,7 @@ import {
 	ViewChild,
 	ViewContainerRef
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { LOG } from '../../common/app.logs';
@@ -53,6 +53,7 @@ import {
 	VAULT_BTN_ADD,
 	VAULT_LIST_EDIT,
 	VAULT_LIST_DONE,
+	VAULT_DIALOG_VERIFIED_LABEL,
 	VAULT_EMPTY_TITLE,
 	VAULT_EMPTY_BODY,
 	VAULT_LABEL_ACCOUNTS,
@@ -65,11 +66,14 @@ import {
 	VAULT_TYPE_NOTES,
 	VAULT_BTN_ADD_CONNECTIONS,
 	VAULT_OVERVIEW_EMPTY,
+	VAULT_GRAPH_MOBILE_BLOCKED_BODY,
+	MOBILE_BLOCKED_TITLE,
 	VAULT_BANNER_SECOND,
 	VAULT_BANNER_CANCEL,
 	MSG_SAVE_FAILED,
 	MSG_DELETING,
 	DIALOG_BTN_DELETE,
+	MSG_LOADING,
 	VAULT_MSG_SAVING,
 	VAULT_MSG_REMOVING_LINK,
 	VAULT_NOTE_PLACEHOLDER,
@@ -84,13 +88,15 @@ import {
 	VAULT_MSG_DELETE_CATEGORY_CONFIRM,
 	VAULT_MSG_CATEGORY_REMOVED,
 	VAULT_MSG_CATEGORY_UPDATED,
+	VAULT_CATEGORY_DUPLICATE_NAME,
 	VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL,
 	VAULT_MSG_ACCOUNT_SAVED,
 	VAULT_MSG_LINK_ADDED,
 	VAULT_MSG_LINK_REMOVED,
 	VAULT_MSG_SAVE_FAILED_DETAIL,
 	VAULT_CATEGORY_OTHER_LABEL,
-	VAULT_CATEGORY_UNCATEGORIZED_LABEL
+	VAULT_CATEGORY_UNCATEGORIZED_LABEL,
+	vaultCategoryLabel
 } from '../../common/locale/locale-strings';
 import {
 	NewAccountData,
@@ -103,6 +109,10 @@ import {
 	VaultOverviewStat,
 	VaultRecord,
 	VaultSelectionDetail,
+	VaultSelectionIdentifier,
+	VAULT_CARD_ENTRANCE_BASE_DELAY_MS,
+	VAULT_CARD_ENTRANCE_MAX_DELAY_MS,
+	VAULT_CARD_ENTRANCE_STEP_MS,
 	VAULT_CATEGORY_DEFS,
 	VAULT_CATEGORY_ICONS,
 	VAULT_CATEGORY_OTHER,
@@ -120,7 +130,7 @@ import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.com
 
 @Component({
 	selector: 'vault',
-	imports: [FormsModule, GraphCanvasComponent, BlockedCardComponent],
+	imports: [FormsModule, NgTemplateOutlet, GraphCanvasComponent, BlockedCardComponent],
 	templateUrl: './vault.component.html',
 	styleUrls: ['../../common/glass-card.css', './vault.component.css']
 })
@@ -137,6 +147,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly VAULT_BTN_ADD = VAULT_BTN_ADD;
 	protected readonly VAULT_LIST_EDIT = VAULT_LIST_EDIT;
 	protected readonly VAULT_LIST_DONE = VAULT_LIST_DONE;
+	protected readonly VAULT_DIALOG_VERIFIED_LABEL = VAULT_DIALOG_VERIFIED_LABEL;
 	protected readonly VAULT_NOTE_PLACEHOLDER = VAULT_NOTE_PLACEHOLDER;
 	protected readonly VAULT_EMPTY_TITLE = VAULT_EMPTY_TITLE;
 	protected readonly VAULT_EMPTY_BODY = VAULT_EMPTY_BODY;
@@ -145,15 +156,19 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly VAULT_PAGE_SUBTITLE = VAULT_PAGE_SUBTITLE;
 	protected readonly VAULT_BTN_ADD_CONNECTIONS = VAULT_BTN_ADD_CONNECTIONS;
 	protected readonly VAULT_OVERVIEW_EMPTY = VAULT_OVERVIEW_EMPTY;
+	protected readonly VAULT_GRAPH_MOBILE_BLOCKED_BODY = VAULT_GRAPH_MOBILE_BLOCKED_BODY;
+	protected readonly MOBILE_BLOCKED_TITLE = MOBILE_BLOCKED_TITLE;
 	protected readonly VAULT_BANNER_SECOND = VAULT_BANNER_SECOND;
 	protected readonly VAULT_BANNER_CANCEL = VAULT_BANNER_CANCEL;
 	protected readonly VAULT_MSG_DELETE_NODE_TITLE = VAULT_MSG_DELETE_NODE_TITLE;
+	protected readonly MSG_LOADING = MSG_LOADING;
 	protected readonly VAULT_CATEGORY_UNCATEGORIZED_LABEL = VAULT_CATEGORY_UNCATEGORIZED_LABEL;
 	protected loading = true;
 	protected view: typeof VAULT_VIEW_GRAPH | typeof VAULT_VIEW_LIST = VAULT_VIEW_GRAPH;
 	protected query = '';
 	protected editId: string | null = null;
 	protected noteDraft = '';
+	protected nameDraft = '';
 	protected selectedId: string | null = null;
 	// The account whose category picker is expanded in the list view, or null when none is open.
 	protected categoryPickerId: string | null = null;
@@ -178,7 +193,16 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		label: VAULT_CATEGORY_OTHER_LABEL,
 		categoryLabel: VAULT_CATEGORY_UNCATEGORIZED_LABEL
 	};
+	/** Built-in preset categories with their placeholder labels resolved to localized text (recipe pattern). */
+	private readonly presetCategories: VaultCategoryDef[] = VAULT_CATEGORY_DEFS.map((categoryDef) => ({
+		...categoryDef,
+		label: vaultCategoryLabel(categoryDef.key),
+		categoryLabel: vaultCategoryLabel(categoryDef.key)
+	}));
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
+	/* Serializes vault DB mutations so rapid edit-mode actions (verified, category, note, connection)
+	   persist one-at-a-time in the order triggered — no write races another or is lost. */
+	private vaultWriteQueue: Promise<unknown> = Promise.resolve();
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
@@ -216,6 +240,9 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 						try {
 							this.applyRecords(records);
 							this.cdr.detectChanges();
+							// Re-wire the auto-hide scrollbar now the content is rendered — ngAfterViewInit
+							// can run before the content exists; this idempotent call catches that case.
+							Utilities.attachScrollAutoHide(this.vaultContentRef?.nativeElement);
 						} catch (error: unknown) {
 							LOG.error(this.className, VAULT_LOG_APPLY_FAILED, error as Error);
 						}
@@ -258,6 +285,12 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected showListView(): void {
 		this.view = VAULT_VIEW_LIST;
+		// Only the category filter carries into the list view; drop the graph selection, type filter,
+		// and any in-progress link mode so the list starts clean.
+		this.selectedId = null;
+		this.typeFilter = null;
+		this.linkMode = false;
+		this.linkSourceId = null;
 	}
 
 	/**
@@ -320,8 +353,33 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected toggleEditMode(accountId: string, event: Event): void {
 		event.stopPropagation();
 		this.editId = this.editId === accountId ? null : accountId;
-		// Reset the inline note draft so it never carries over between cards.
+		// Close any open category picker and reset the inline drafts so nothing carries over between
+		// cards; seed the name draft with the account's current name when opening edit mode.
+		this.categoryPickerId = null;
 		this.noteDraft = '';
+		this.nameDraft = this.editId === accountId ? (this.findNode(accountId)?.name ?? '') : '';
+	}
+
+	/**
+	 * Persists the edited account name from the inline list-view name field (edit mode). Skips the
+	 * write when the trimmed name is empty or unchanged; otherwise applies it to local state
+	 * immediately, then saves — reverting and toasting on failure.
+	 *
+	 * @param accountId - The id of the account being renamed.
+	 */
+	protected updateAccountName(accountId: string): void {
+		const nextName = this.nameDraft.trim();
+		const currentName = this.findNode(accountId)?.name ?? '';
+		if (!nextName || nextName === currentName) return;
+		this.patchLocalNode(accountId, { name: nextName });
+		this.enqueueVaultWrite(() => this.databaseService.updateVaultNodeName(accountId, nextName))
+			.then(() => this.triggerSaveIndicator())
+			.catch(() => {
+				// Revert the optimistic change and surface the failure.
+				this.patchLocalNode(accountId, { name: currentName });
+				this.cdr.detectChanges();
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
+			});
 	}
 
 	/**
@@ -337,16 +395,18 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (!value) return;
 		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_ADDING_NOTE, async () => {
 			try {
-				const noteId = await this.databaseService.addVaultNode({
-					nodeType: VAULT_NODE_NOTES,
-					name: value,
-					categories: [],
-					verified: false
-				});
-				await this.databaseService.addVaultEdge({
-					sourceId: accountId,
-					targetId: noteId,
-					relation: VAULT_RELATION_LINKED
+				await this.enqueueVaultWrite(async () => {
+					const noteId = await this.databaseService.addVaultNode({
+						nodeType: VAULT_NODE_NOTES,
+						name: value,
+						categories: [],
+						verified: false
+					});
+					await this.databaseService.addVaultEdge({
+						sourceId: accountId,
+						targetId: noteId,
+						relation: VAULT_RELATION_LINKED
+					});
 				});
 				this.noteDraft = '';
 				this.cdr.detectChanges();
@@ -367,6 +427,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected toggleCategoryPicker(accountId: string, event: Event): void {
 		event.stopPropagation();
+		// Category assignment is an edit-mode-only action; the chips read as static until Edit is on.
+		if (this.editId !== accountId) return;
 		this.categoryPickerId = this.categoryPickerId === accountId ? null : accountId;
 	}
 
@@ -395,9 +457,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		/* Apply the toggle to local state immediately so the chips and picker update on the first
 		   click; the live DB watch re-emits the authoritative state moments later. */
-		this.setLocalNodeCategories(accountId, nextKeys);
-		this.databaseService
-			.updateVaultNodeCategories(accountId, nextKeys)
+		this.patchLocalNode(accountId, { categories: nextKeys });
+		this.enqueueVaultWrite(() => this.databaseService.updateVaultNodeCategories(accountId, nextKeys))
 			.then(() => {
 				this.triggerSaveIndicator();
 				// Unselecting the last account that used a custom category leaves it orphaned — drop it.
@@ -405,7 +466,30 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			})
 			.catch(() => {
 				// Revert the optimistic change and surface the failure.
-				this.setLocalNodeCategories(accountId, currentKeys);
+				this.patchLocalNode(accountId, { categories: currentKeys });
+				this.cdr.detectChanges();
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
+			});
+	}
+
+	/**
+	 * Toggles the account's verified flag from the inline list-view control (edit mode). Applies the
+	 * change to local state immediately so the badge updates on the first click, then persists it; on
+	 * failure reverts the optimistic change and shows an error toast.
+	 *
+	 * @param accountId - The id of the account being toggled.
+	 * @param currentVerified - The account's current verified state.
+	 * @param event - The originating click event, stopped so it does not select the card.
+	 */
+	protected toggleAccountVerified(accountId: string, currentVerified: boolean, event: Event): void {
+		event.stopPropagation();
+		const nextVerified = !currentVerified;
+		this.patchLocalNode(accountId, { verified: nextVerified });
+		this.enqueueVaultWrite(() => this.databaseService.updateVaultNodeVerified(accountId, nextVerified))
+			.then(() => this.triggerSaveIndicator())
+			.catch(() => {
+				// Revert the optimistic change and surface the failure.
+				this.patchLocalNode(accountId, { verified: currentVerified });
 				this.cdr.detectChanges();
 				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
 			});
@@ -423,7 +507,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		event.stopPropagation();
 		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_REMOVING_LINK, async () => {
 			try {
-				await this.databaseService.removeVaultEdge(edgeKey);
+				await this.enqueueVaultWrite(() => this.databaseService.removeVaultEdge(edgeKey));
 				this.triggerSaveIndicator();
 				this.dialogService.showToast(SUCCESS, VAULT_MSG_LINK_REMOVED);
 			} catch {
@@ -554,7 +638,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			DIALOG_ADD_ACCOUNT,
 			(accountData: NewAccountData) => this.handleAccountSave(accountData),
 			{
-				categories: this.customCategories,
+				categories: [...this.presetCategories, ...this.customCategories],
 				existingNames: this.nodes
 					.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT)
 					.map((node) => node.name)
@@ -575,7 +659,9 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 				// Resolve categories — persist a freshly created custom category first, then append its id
 				const categories = [...accountData.categories];
 				if (accountData.newCategory) {
-					const newCategoryId = await this.databaseService.addVaultCategory(accountData.newCategory);
+					const newCategoryId = await this.databaseService.addVaultCategory(
+						accountData.newCategory
+					);
 					categories.push(newCategoryId);
 				}
 
@@ -639,7 +725,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Renames a custom category to the submitted name. Skips the write when the name is unchanged,
-	 * flashes the save indicator on success, and shows an error toast on failure.
+	 * rejects it with a toast when it collides with another category, flashes the save indicator on
+	 * success, and shows an error toast on failure.
 	 *
 	 * @param data - The validated category form data from the edit dialog.
 	 * @param categoryKey - The document id of the category being renamed.
@@ -647,6 +734,16 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	private handleCategoryRename(data: NewCategoryData, categoryKey: string): void {
 		const name = data.name.trim();
 		if (!name || name === this.getCategoryDef(categoryKey).categoryLabel) return;
+		// Reject a rename that would collide with another preset or custom category's name.
+		const nameKey = name.toLowerCase();
+		const isDuplicate = [...this.presetCategories, ...this.customCategories].some(
+			(categoryDef) =>
+				categoryDef.key !== categoryKey && categoryDef.categoryLabel.trim().toLowerCase() === nameKey
+		);
+		if (isDuplicate) {
+			this.dialogService.showToast(TOAST_ERROR, VAULT_CATEGORY_DUPLICATE_NAME);
+			return;
+		}
 		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
 				await this.databaseService.updateVaultCategoryLabel(categoryKey, name);
@@ -763,7 +860,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	private getCategoryDef(categoryKey: string): VaultCategoryDef {
 		return (
-			VAULT_CATEGORY_DEFS.find((categoryDef) => categoryDef.key === categoryKey) ??
+			this.presetCategories.find((categoryDef) => categoryDef.key === categoryKey) ??
 			this.customCategories.find((categoryDef) => categoryDef.key === categoryKey) ??
 			this.otherCategory
 		);
@@ -782,6 +879,28 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (node.nodeType === VAULT_NODE_LINK) return VAULT_LINK_META.gradient;
 		if (node.nodeType === VAULT_NODE_NOTES) return VAULT_NOTES_META.gradient;
 		return this.getCategoryDef(node.categories[0] ?? '').gradient;
+	}
+
+	/**
+	 * Gets the list-view avatar background for an account — its single category gradient for one (or
+	 * no) category, or an equal-segment conic gradient across every category's color when it has two
+	 * or more, mirroring the segmented tile on the graph map.
+	 *
+	 * @param account - The account node to build an avatar background for.
+	 * @returns The CSS background string.
+	 */
+	private getAccountAvatarBackground(account: VaultNode): string {
+		if (account.categories.length < 2) return this.getNodeGradient(account);
+		const count = account.categories.length;
+		const segments = account.categories
+			.map((categoryKey, index) => {
+				const hex = this.getCategoryDef(categoryKey).hex;
+				const start = ((index / count) * 100).toFixed(2);
+				const end = (((index + 1) / count) * 100).toFixed(2);
+				return `${hex} ${start}% ${end}%`;
+			})
+			.join(', ');
+		return `conic-gradient(${segments})`;
 	}
 
 	/**
@@ -821,7 +940,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			id: account.id,
 			name: account.name,
 			letter: Utilities.getInitials(account.name),
-			gradient: this.getNodeGradient(account),
+			gradient: this.getAccountAvatarBackground(account),
 			categoryChips: account.categories.map((categoryKey) => {
 				const categoryDef = this.getCategoryDef(categoryKey);
 				return { key: categoryKey, label: categoryDef.categoryLabel, gradient: categoryDef.gradient };
@@ -903,16 +1022,35 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Replaces one account node's categories in local state (immutably) so the list view reflects a
-	 * category change before the database watch re-emits. Backs the optimistic inline-picker toggle.
+	 * Applies a partial patch to one account node in local state (immutably) so the list view reflects
+	 * a change before the database watch re-emits. Backs the optimistic inline category picker and the
+	 * inline verified toggle.
 	 *
 	 * @param accountId - The id of the account node to update.
-	 * @param categories - The new category keys to store locally.
+	 * @param patch - The node fields to overwrite locally.
 	 */
-	private setLocalNodeCategories(accountId: string, categories: string[]): void {
-		this.nodes = this.nodes.map((node) =>
-			node.id === accountId ? { ...node, categories } : node
-		);
+	private patchLocalNode(accountId: string, patch: Partial<VaultNode>): void {
+		this.nodes = this.nodes.map((node) => (node.id === accountId ? { ...node, ...patch } : node));
+	}
+
+	/**
+	 * Chains a vault DB mutation onto the serial write queue so rapid edit-mode actions run one-at-a-time
+	 * in the order triggered — none races another on the same document or is lost. The chain survives a
+	 * failed write (a rejection does not stall the queue) so every later write still runs.
+	 *
+	 * {@link toggleAccountVerified} - Persists a verified-flag toggle.
+	 * {@link toggleAccountCategory} - Persists a category add/remove.
+	 * {@link removeOrphanedCategories} - Drops categories left unused by a toggle or delete.
+	 * {@link removeLink} - Removes a connection (or note) edge.
+	 * {@link addNote} - Adds a note node and its edge.
+	 *
+	 * @param operation - The database mutation to run once the prior queued writes settle.
+	 * @returns A promise that settles with the operation's own result.
+	 */
+	private enqueueVaultWrite<ResultType>(operation: () => Promise<ResultType>): Promise<ResultType> {
+		const run = this.vaultWriteQueue.then(operation, operation);
+		this.vaultWriteQueue = run.catch(() => {});
+		return run;
 	}
 
 	/**
@@ -937,7 +1075,9 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 				!this.nodes.some((node) => node.id !== excludeNodeId && node.categories.includes(key))
 		);
 		if (this.categoryFilter && orphanKeys.includes(this.categoryFilter)) this.categoryFilter = null;
-		await Promise.all(orphanKeys.map((key) => this.databaseService.removeVaultCategory(key, [])));
+		await this.enqueueVaultWrite(() =>
+			Promise.all(orphanKeys.map((key) => this.databaseService.removeVaultCategory(key, [])))
+		);
 	}
 
 	// ── Template helpers ─────────────────────────────────────────────────────
@@ -1004,13 +1144,20 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		const node = this.findNode(this.selectedId);
 		if (!node) return null;
 		let accountCount = 0;
-		let identifierCount = 0;
+		const identifiers: VaultSelectionIdentifier[] = [];
 		this.neighborsOf(node.id).forEach((neighbourId) => {
 			const other = this.nodes.find((candidate) => candidate.id === neighbourId);
 			// Skip private notes nodes so they never contribute to the selection counts.
 			if (!other || other.nodeType === VAULT_NODE_NOTES) return;
-			if (other.nodeType === VAULT_NODE_ACCOUNT) accountCount++;
-			else identifierCount++;
+			if (other.nodeType === VAULT_NODE_ACCOUNT) {
+				accountCount++;
+				return;
+			}
+			identifiers.push({
+				name: other.name,
+				icon: this.getIdentifierIcon(other.nodeType),
+				gradient: this.getNodeGradient(other)
+			});
 		});
 		const isAccount = node.nodeType === VAULT_NODE_ACCOUNT;
 		return {
@@ -1023,7 +1170,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			icon: isAccount ? '' : this.getIdentifierIcon(node.nodeType),
 			letter: Utilities.getInitials(node.name),
 			accountCount,
-			identifierCount
+			identifierCount: identifiers.length,
+			identifiers
 		};
 	}
 
@@ -1046,8 +1194,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 				counts[categoryKey] = (counts[categoryKey] ?? 0) + 1;
 			});
 		});
-		// Built-ins, then custom categories, then the Uncategorized fallback — only those with any account.
-		return [...VAULT_CATEGORY_DEFS, ...this.customCategories, this.otherCategory]
+		// Presets, then custom categories, then the Uncategorized fallback — only those with any account.
+		return [...this.presetCategories, ...this.customCategories, this.otherCategory]
 			.filter((categoryDef) => counts[categoryDef.key])
 			.map((categoryDef) => ({
 				key: categoryDef.key,
@@ -1062,17 +1210,29 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Gets the categories a user can toggle on an account from the inline picker — every custom
-	 * category. Toggling all of them off leaves the account Uncategorized (an empty category list).
+	 * Gets the categories a user can toggle on an account from the inline picker — every preset and
+	 * custom category. Toggling all of them off leaves the account Uncategorized (an empty category list).
 	 *
 	 * @returns The assignable category options.
 	 */
 	protected get assignableCategories(): { key: string; label: string; gradient: string }[] {
-		return this.customCategories.map((categoryDef) => ({
+		return [...this.presetCategories, ...this.customCategories].map((categoryDef) => ({
 			key: categoryDef.key,
 			label: categoryDef.categoryLabel,
 			gradient: categoryDef.gradient
 		}));
 	}
 
+	/**
+	 * Computes an account card's entrance-animation delay, staggered by its position in the list.
+	 *
+	 * @param index - The zero-based row index.
+	 * @returns The animation delay in milliseconds, capped at VAULT_CARD_ENTRANCE_MAX_DELAY_MS.
+	 */
+	protected cardEntranceDelay(index: number): number {
+		return Math.min(
+			VAULT_CARD_ENTRANCE_MAX_DELAY_MS,
+			VAULT_CARD_ENTRANCE_BASE_DELAY_MS + index * VAULT_CARD_ENTRANCE_STEP_MS
+		);
+	}
 }

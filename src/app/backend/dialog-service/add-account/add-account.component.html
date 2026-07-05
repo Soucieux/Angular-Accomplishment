@@ -35,7 +35,9 @@
 					class="category-chip"
 					[class.selected]="category.isSelected"
 					(click)="toggleCategory(category.key)">
-					<span class="category-dot" [style.background]="category.hex"></span>
+					<span class="material-symbols-outlined category-icon" [style.color]="category.hex">{{
+						category.icon
+					}}</span>
 					{{ category.label }}
 				</button>
 			}
@@ -64,6 +66,9 @@
 				</button>
 			}
 		</div>
+		@if (showNewCategory && isDuplicateCategory) {
+			<span class="field-error">{{ VAULT_CATEGORY_DUPLICATE_NAME }}</span>
+		}
 	</div>
 
 	<div class="verified-field">

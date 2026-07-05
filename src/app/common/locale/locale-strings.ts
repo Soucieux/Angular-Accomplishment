@@ -34,6 +34,7 @@ export const {
 	MSG_DELETING,
 	MSG_SAVING,
 	MSG_CLEARING,
+	MSG_LOADING,
 	MSG_INVALID_DIALOG_TYPE,
 	MSG_DIALOG_CONTAINER_NOT_FOUND,
 	MSG_DIALOG_ALREADY_OPEN,
@@ -182,7 +183,6 @@ export const {
 	ORBITAL_LABEL_REMINDERS,
 	ORBITAL_LABEL_SHORTCUTS,
 	ORBITAL_LABEL_ACTIVITY,
-	ORBITAL_LABEL_LOADING,
 	ORBITAL_PANEL_EMPTY_LINKS,
 	ORBITAL_PANEL_EMPTY_PAYMENTS,
 	ORBITAL_PANEL_EMPTY_GENRES,
@@ -672,6 +672,7 @@ export const {
 	VAULT_BTN_ADD,
 	VAULT_BTN_ADD_CONNECTIONS,
 	VAULT_OVERVIEW_EMPTY,
+	VAULT_GRAPH_MOBILE_BLOCKED_BODY,
 	VAULT_LEGEND_TITLE,
 	VAULT_LEGEND_VERIFIED,
 	VAULT_TYPE_ACCOUNT,
@@ -700,6 +701,7 @@ export const {
 	VAULT_DIALOG_NEW_CATEGORY,
 	VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER,
 	VAULT_DIALOG_DUPLICATE_NAME,
+	VAULT_CATEGORY_DUPLICATE_NAME,
 	VAULT_DIALOG_CONNECTIONS_LABEL,
 	VAULT_DIALOG_CONNECTIONS_OPTIONAL,
 	VAULT_DIALOG_CONNECTIONS_HINT,
@@ -726,7 +728,12 @@ export const {
 	VAULT_MSG_CATEGORY_UPDATED,
 	VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL,
 	VAULT_CATEGORY_OTHER_LABEL,
-	VAULT_CATEGORY_UNCATEGORIZED_LABEL
+	VAULT_CATEGORY_UNCATEGORIZED_LABEL,
+	VAULT_CATEGORY_TRANSPORT_LABEL,
+	VAULT_CATEGORY_FINANCE_LABEL,
+	VAULT_CATEGORY_SOCIAL_LABEL,
+	VAULT_CATEGORY_SHOPPING_LABEL,
+	VAULT_CATEGORY_GENERAL_LABEL
 } = LOCALE_STRINGS;
 
 /**
@@ -774,6 +781,25 @@ const RECIPE_CATEGORY_LABELS: Record<string, string> = {
  */
 export function recipeCategoryLabel(category: string): string {
 	return RECIPE_CATEGORY_LABELS[category] ?? category;
+}
+
+/** Localized display labels for the built-in vault preset categories, keyed by the stored preset key. */
+const VAULT_CATEGORY_LABELS: Record<string, string> = {
+	transport: VAULT_CATEGORY_TRANSPORT_LABEL,
+	finance: VAULT_CATEGORY_FINANCE_LABEL,
+	social: VAULT_CATEGORY_SOCIAL_LABEL,
+	shopping: VAULT_CATEGORY_SHOPPING_LABEL,
+	general: VAULT_CATEGORY_GENERAL_LABEL
+};
+
+/**
+ * Resolves the localized display label for a built-in vault preset category key.
+ *
+ * @param key - The preset category key stored on an account node.
+ * @returns The localized label, or the raw key if it is not a preset.
+ */
+export function vaultCategoryLabel(key: string): string {
+	return VAULT_CATEGORY_LABELS[key] ?? key;
 }
 
 /** Localized display labels for reminder tags, keyed by the stored English tag. */

@@ -37,6 +37,8 @@ export const MSG_DELETING = 'Deleting...';
 export const MSG_SAVING = 'Saving...';
 /** Block-overlay message shown while a bulk clear write is in flight. */
 export const MSG_CLEARING = 'Clearing...';
+/** Label shown under a spinner while a page loads its data. */
+export const MSG_LOADING = 'Loading…';
 /** Error message thrown when an unknown dialog type is requested. */
 export const MSG_INVALID_DIALOG_TYPE = 'Invalid dialog type';
 /** Error message thrown when the dialog container reference is missing. */
@@ -225,7 +227,6 @@ export const ORBITAL_LABEL_LIFE_CLOCK = 'LIFE CLOCK';
 export const ORBITAL_LABEL_REMINDERS = 'Reminders';
 export const ORBITAL_LABEL_SHORTCUTS = 'Shortcuts';
 export const ORBITAL_LABEL_ACTIVITY = 'Activity';
-export const ORBITAL_LABEL_LOADING = 'Loading…';
 export const ORBITAL_PANEL_EMPTY_LINKS = 'No links yet';
 export const ORBITAL_PANEL_EMPTY_PAYMENTS = 'No upcoming payments';
 export const ORBITAL_PANEL_EMPTY_GENRES = 'No genre data yet';
@@ -912,6 +913,9 @@ export const VAULT_BTN_ADD = 'Add';
 export const VAULT_BTN_ADD_CONNECTIONS = 'Add new connections';
 /** Placeholder text shown in the category overview bar when no account has a category yet. */
 export const VAULT_OVERVIEW_EMPTY = 'No categorized accounts yet';
+/** Body text shown when Graph view is blocked on mobile, offering List view as an alternative. */
+export const VAULT_GRAPH_MOBILE_BLOCKED_BODY =
+	'The account graph is built for wider screens. Switch to List view, or open Vault on a desktop, laptop, or tablet.';
 
 /** Heading of the graph legend panel. */
 export const VAULT_LEGEND_TITLE = 'Legend';
@@ -973,6 +977,8 @@ export const VAULT_DIALOG_NEW_CATEGORY = 'New category';
 export const VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER = 'Name, then Enter';
 /** Inline error shown when the entered account name already exists. */
 export const VAULT_DIALOG_DUPLICATE_NAME = 'An account with this name already exists';
+/** Error shown when a new or renamed category name matches an existing category. */
+export const VAULT_CATEGORY_DUPLICATE_NAME = 'A category with this name already exists';
 /** Field label for the connections section. */
 export const VAULT_DIALOG_CONNECTIONS_LABEL = 'Connections';
 /** Optional hint appended to the connections label. */
@@ -1028,3 +1034,9 @@ export const VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL = 'Could not delete the cat
 export const VAULT_CATEGORY_OTHER_LABEL = 'Other';
 /** Full category label for uncategorized accounts. */
 export const VAULT_CATEGORY_UNCATEGORIZED_LABEL = 'Uncategorized';
+/** Display labels for the built-in preset categories. */
+export const VAULT_CATEGORY_TRANSPORT_LABEL = 'Transport';
+export const VAULT_CATEGORY_FINANCE_LABEL = 'Finance';
+export const VAULT_CATEGORY_SOCIAL_LABEL = 'Social';
+export const VAULT_CATEGORY_SHOPPING_LABEL = 'Shopping';
+export const VAULT_CATEGORY_GENERAL_LABEL = 'General';

@@ -16,8 +16,11 @@
 	box-sizing: border-box;
 }
 
+/* blocked-card's text is styled white-on-gradient for a colorful backdrop; .glass-card's
+   own background is near-white, so this supplies the page's own accent gradient instead. */
 .access-denied-wrapper {
 	height: 100%;
+	background: var(--vault-gradient);
 }
 
 /* ─────────────────────────────────────────
@@ -36,6 +39,7 @@
 
 .vault-title-block {
 	min-width: 0;
+	animation: vaultSlideLeft 0.5s ease both;
 }
 
 .page-title-row {
@@ -49,6 +53,7 @@
 	font-size: 44px;
 	font-weight: 700;
 	letter-spacing: -0.5px;
+	line-height: 1;
 	background: var(--vault-gradient);
 	background-clip: text;
 	-webkit-background-clip: text;
@@ -66,6 +71,7 @@
 	align-items: center;
 	gap: 10px;
 	flex-wrap: wrap;
+	animation: vaultSlideRight 0.5s ease both 60ms;
 }
 
 .vault-search {
@@ -156,10 +162,14 @@
 .vault-content {
 	flex: 1;
 	min-height: 0;
-	/* Shared outer padding for both the list and the map — tune this one value. */
-	padding: 2px;
+	/* Vertical breathing room only; the scroll gutter (below) handles the right edge so the list
+	   left-aligns with the info bar. */
+	padding: 2px 0;
 	overflow-y: auto;
 	overflow-x: hidden;
+	/* Always reserve the scrollbar gutter so the list width never shifts and its right edge lines
+	   up with the info bar (which is inset by the same width). */
+	scrollbar-gutter: stable;
 	scrollbar-width: thin;
 	scrollbar-color: transparent transparent;
 	transition: scrollbar-color 0.4s ease;
@@ -198,23 +208,34 @@
 .vault-list {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	align-items: start;
+	align-items: stretch;
 	gap: 12px;
 }
 
 .vault-card {
-	padding: 15px 16px;
+	min-height: 78px;
+	padding: 13px 15px;
 	border-radius: 16px;
 	background: rgba(255, 255, 255, 0.92);
 	backdrop-filter: blur(20px);
 	border: 1px solid rgba(255, 255, 255, 0.8);
-	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+	animation: vaultNodeIn 0.45s ease backwards;
+	transition:
+		transform 0.22s ease,
+		box-shadow 0.22s ease,
+		border-color 0.22s ease;
+}
+
+.vault-card:hover {
+	transform: translateY(-3px);
+	border-color: rgba(71, 85, 105, 0.35);
+	box-shadow: 0 10px 24px rgba(71, 85, 105, 0.18);
 }
 
 .vault-card-top {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 10px;
 }
 
 .vault-avatar {
@@ -228,11 +249,19 @@
 	color: #fff;
 	font-weight: 700;
 	font-size: 17px;
+	transition: transform 0.22s ease;
+}
+
+.vault-card:hover .vault-avatar {
+	transform: scale(1.08) rotate(-4deg);
 }
 
 .vault-card-id {
 	min-width: 0;
 	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
 }
 
 .vault-card-name {
@@ -254,12 +283,64 @@
 	font-size: 16px;
 }
 
-/* Category picker — the label is a button; clicking it slides the options in from the left. */
+/* Clickable verified toggle shown in edit mode — a labeled pill so it reads as a control: muted grey
+   when off, teal when on. The color needs !important to beat the global `button { color: black }`. */
+.vault-verified-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 3px 9px 3px 7px;
+	border: none;
+	border-radius: 9999px;
+	background: #f1f5f9;
+	color: #94a3b8 !important;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		background 0.15s,
+		color 0.15s;
+}
+
+.vault-verified-toggle:hover {
+	background: #e2e8f0;
+}
+
+.vault-verified-toggle.active {
+	background: rgba(13, 148, 136, 0.12);
+	color: #0d9488 !important;
+}
+
+.vault-verified-toggle .material-symbols-outlined {
+	font-size: 16px;
+}
+
+/* Inline account-name editor shown in edit mode — sized to sit in the card-name row. */
+.vault-name-input {
+	flex: 1;
+	min-width: 0;
+	height: 28px;
+	padding: 0 8px;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	background: #f8fafc;
+	font-size: 15px;
+	font-weight: 700;
+	color: #1a1a1a;
+	outline: none;
+}
+
+.vault-name-input:focus {
+	border-color: var(--vault-accent);
+	box-shadow: 0 0 0 3px var(--vault-soft);
+}
+
+/* Category picker — the label is a button; clicking it reveals the options wrapping below it. */
 .vault-category-picker {
 	display: flex;
-	align-items: center;
-	gap: 6px;
-	overflow: hidden;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 5px;
 }
 
 .vault-card-category {
@@ -281,14 +362,33 @@
 	background: #f1f5f9;
 }
 
+/* When the picker is open the options below already show the current categories (highlighted), so
+   hide the duplicate chips in the trigger — only the caret remains to collapse it. */
+.vault-card-category.open .vault-category-chip {
+	display: none;
+}
+
+/* Outside edit mode the category chips are read-only — no caret, hover, or pointer affordance. */
+.vault-card-category.readonly {
+	cursor: default;
+}
+
+.vault-card-category.readonly:hover {
+	background: transparent;
+}
+
+.vault-card-category.readonly .vault-category-caret {
+	display: none;
+}
+
 .vault-category-chip {
 	display: inline-flex;
 	align-items: center;
 	gap: 3px;
-	padding: 5px 7px;
+	padding: 4px 8px;
 	border-radius: 9999px;
 	background: #f1f5f9;
-	font-size: 13px;
+	font-size: 12px;
 	color: #475569;
 }
 
@@ -314,21 +414,23 @@
 	transform: rotate(90deg);
 }
 
-/* The options strip stays in the DOM and animates open/closed so both reveal and hide are smooth. */
+/* The options strip stays in the DOM and animates open/closed so both reveal and hide are smooth.
+   Options wrap onto multiple rows so every category stays fully visible within the card width. */
 .vault-category-options {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 5px;
-	max-width: 0;
+	max-height: 0;
 	opacity: 0;
 	overflow: hidden;
 	transition:
-		max-width 0.3s ease,
+		max-height 0.3s ease,
 		opacity 0.2s ease;
 }
 
 .vault-category-options.open {
-	max-width: 70vw;
+	max-height: 300px;
 	opacity: 1;
 }
 
@@ -339,11 +441,11 @@
 	align-items: center;
 	gap: 3px;
 	flex-shrink: 0;
-	padding: 5px 7px;
+	padding: 4px 8px;
 	border: none;
 	border-radius: 9999px;
 	background: #f1f5f9;
-	font-size: 13px;
+	font-size: 12px;
 	color: #475569;
 	white-space: nowrap;
 	cursor: pointer;
@@ -577,6 +679,61 @@
 }
 
 /* ─────────────────────────────────────────
+   Entrance animations
+───────────────────────────────────────── */
+
+@keyframes vaultSlideLeft {
+	from {
+		opacity: 0;
+		transform: translateX(-24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes vaultSlideRight {
+	from {
+		opacity: 0;
+		transform: translateX(24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes vaultPop {
+	from {
+		opacity: 0;
+		transform: scale(0.92);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes vaultNodeIn {
+	0% {
+		opacity: 0;
+		transform: scale(0.96);
+		border-color: var(--vault-glow);
+	}
+	60% {
+		opacity: 1;
+		transform: scale(1);
+		border-color: var(--vault-glow);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+		border-color: rgba(255, 255, 255, 0.8);
+	}
+}
+
+/* ─────────────────────────────────────────
    Save indicator
 ───────────────────────────────────────── */
 
@@ -608,9 +765,11 @@
 .vault-loading {
 	display: flex;
 	flex: 1;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	min-height: 240px;
+	gap: 14px;
+	min-height: 100%;
 }
 
 .vault-loading-spinner {
@@ -623,6 +782,12 @@
 	animation: vault-save-spin 0.8s linear infinite;
 }
 
+.vault-loading-text {
+	font-size: 14px;
+	font-weight: 600;
+	color: #64748b;
+}
+
 /* ─────────────────────────────────────────
    Info bar — selection detail / overview
 ───────────────────────────────────────── */
@@ -630,17 +795,20 @@
 /* A fixed min-height keeps the bar the same size in both states (node selected vs category
    overview) so clicking or clearing a node never resizes it or shifts the graph below. */
 .vault-info-bar {
+	position: relative;
+	z-index: 5;
 	display: flex;
 	align-items: center;
-	min-height: 64px;
+	min-height: 72px;
 	flex-shrink: 0;
-	margin-bottom: 7px;
+	/* Right margin matches the list's reserved scrollbar gutter so both right edges align. */
+	margin: 0 8px 7px 0;
 	padding: 5px 8px;
 	border-radius: 18px;
 	background: rgba(255, 255, 255, 0.92);
 	backdrop-filter: blur(20px);
 	border: 1px solid rgba(255, 255, 255, 0.8);
-	box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+	animation: vaultPop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both 150ms;
 }
 
 .vault-selection {
@@ -655,6 +823,9 @@
 	display: flex;
 	align-items: center;
 	gap: 12px;
+	padding: 8px 14px 8px 9px;
+	border-radius: 9999px;
+	background: #f8fafc;
 }
 
 .vault-selection-avatar {
@@ -675,11 +846,15 @@
 	font-size: 24px;
 }
 
+.vault-selection-text {
+	line-height: 1.2;
+	text-align: left;
+}
+
 .vault-selection-name {
 	font-weight: 700;
 	font-size: 17px;
 	color: #1a1a1a;
-	line-height: 1.15;
 }
 
 .vault-selection-type {
@@ -741,6 +916,89 @@
 	color: #64748b;
 }
 
+/* Hover popover listing the selected node's connected identifiers, anchored under the pill. */
+.vault-stat-identifiers.has-popover {
+	position: relative;
+	cursor: help;
+	transition: background 0.15s ease;
+}
+
+.vault-stat-identifiers.has-popover:hover {
+	background: rgba(232, 150, 26, 0.22);
+}
+
+/* Chevron affordance signalling the pill reveals its identifiers on hover. */
+.vault-stat-more {
+	font-size: 16px;
+	color: #e8961a;
+	transition: transform 0.15s ease;
+}
+
+.vault-stat-identifiers.has-popover:hover .vault-stat-more {
+	transform: rotate(180deg);
+}
+
+.vault-identifier-popover {
+	position: absolute;
+	top: calc(100% + 8px);
+	left: 0;
+	z-index: 20;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 180px;
+	max-width: 280px;
+	max-height: 240px;
+	overflow-y: auto;
+	padding: 10px;
+	border-radius: 12px;
+	background: #ffffff;
+	border: 1px solid rgba(0, 0, 0, 0.06);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-4px);
+	transition:
+		opacity 0.15s ease,
+		transform 0.15s ease,
+		visibility 0.15s;
+}
+
+.vault-stat-identifiers.has-popover:hover .vault-identifier-popover {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+}
+
+.vault-identifier-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.vault-identifier-badge {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	flex-shrink: 0;
+	border-radius: 7px;
+	color: #fff;
+}
+
+.vault-identifier-badge .material-symbols-outlined {
+	font-size: 15px;
+}
+
+.vault-identifier-name {
+	font-size: 13px;
+	color: #334155;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .vault-overview {
 	display: flex;
 	align-items: center;
@@ -759,7 +1017,7 @@
 .vault-overview-chip {
 	display: flex;
 	align-items: center;
-	gap: 11px;
+	gap: 12px;
 	flex-shrink: 0;
 	padding: 8px 14px 8px 9px;
 	border: none;
@@ -792,18 +1050,19 @@
 }
 
 .vault-overview-icon {
-	width: 36px;
-	height: 36px;
+	width: 46px;
+	height: 46px;
 	flex-shrink: 0;
-	border-radius: 10px;
+	border-radius: 14px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: #fff;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .vault-overview-icon .material-symbols-outlined {
-	font-size: 19px;
+	font-size: 24px;
 }
 
 .vault-overview-text {
@@ -835,6 +1094,18 @@
 	border-radius: 16px;
 	overflow: hidden;
 	box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+	animation: vaultPop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both 150ms;
+}
+
+.vault-graph-blocked {
+	height: 100%;
+}
+
+/* blocked-card's text is styled for a colored/dark backdrop (see Today's page) —
+   .vault-graph-area stays its normal white self, so the slate-steel gradient goes
+   on the message card itself rather than the whole graph area. */
+.vault-graph-blocked ::ng-deep .blocked-card-card {
+	background: var(--vault-gradient);
 }
 
 /* ─────────────────────────────────────────
@@ -971,5 +1242,82 @@
 
 	.vault-list {
 		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.vault-tab {
+		height: 30px;
+		padding: 0 10px;
+		font-size: 12px;
+	}
+
+	.vault-add-button {
+		height: 36px;
+		padding: 0 14px;
+		font-size: 12px;
+	}
+
+	.vault-info-bar {
+		min-height: 58px;
+		padding: 4px 6px;
+	}
+
+	.vault-overview {
+		gap: 6px;
+	}
+
+	.vault-overview-chip {
+		gap: 8px;
+		padding: 6px 10px 6px 7px;
+	}
+
+	.vault-overview-icon {
+		width: 36px;
+		height: 36px;
+		border-radius: 11px;
+	}
+
+	.vault-overview-icon .material-symbols-outlined {
+		font-size: 18px;
+	}
+
+	.vault-overview-value {
+		font-size: 14px;
+	}
+
+	.vault-overview-label {
+		font-size: 10px;
+	}
+}
+
+/* Real touch devices only — pull the switch + add button out of the crowded
+   header row into a floating pill, same corner position as Debt's add button. */
+@media (max-width: 900px) and (pointer: coarse) {
+	.vault-mobile-toolbar {
+		position: absolute;
+		top: 0.5%;
+		right: 1%;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.vault-mobile-toolbar .vault-tab {
+		height: auto;
+		padding: 5px 10px;
+		font-size: 11px;
+	}
+
+	.vault-mobile-toolbar .vault-tab .material-symbols-outlined {
+		font-size: 15px;
+	}
+
+	.vault-mobile-toolbar .vault-add-button {
+		height: auto;
+		padding: 5px 14px;
+		font-size: 12px;
+	}
+
+	.vault-mobile-toolbar .vault-add-button .material-symbols-outlined {
+		font-size: 16px;
 	}
 }

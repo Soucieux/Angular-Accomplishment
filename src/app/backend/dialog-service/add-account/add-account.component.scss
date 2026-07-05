@@ -153,6 +153,11 @@
 	border-radius: 50%;
 }
 
+.category-icon {
+	font-size: 16px;
+	flex-shrink: 0;
+}
+
 .new-category-button {
 	display: flex;
 	align-items: center;

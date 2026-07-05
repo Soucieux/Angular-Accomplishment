@@ -1852,9 +1852,29 @@ export class FirebaseService extends DatabaseService {
 	 * @returns A promise that resolves when the account's categories are updated.
 	 */
 	public async updateVaultNodeCategories(nodeId: string, categoryKeys: string[]): Promise<void> {
-		await update(dbRef(this.db, `${DATABASE_VAULT}/${nodeId}`), {
-			[VAULT_VALUE_KEY_CATEGORIES]: categoryKeys
-		});
+		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_CATEGORIES]: categoryKeys });
+	}
+
+	/**
+	 * Sets an account node's verified flag, used by the inline verified toggle in the list view.
+	 *
+	 * @param nodeId - The id of the account node to update.
+	 * @param verified - The new verified state to store on the account.
+	 * @returns A promise that resolves when the account's verified flag is updated.
+	 */
+	public async updateVaultNodeVerified(nodeId: string, verified: boolean): Promise<void> {
+		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_VERIFIED]: verified });
+	}
+
+	/**
+	 * Sets an account node's display name, used by the inline name edit in the list view.
+	 *
+	 * @param nodeId - The id of the account node to update.
+	 * @param name - The new display name to store on the account.
+	 * @returns A promise that resolves when the account's name is updated.
+	 */
+	public async updateVaultNodeName(nodeId: string, name: string): Promise<void> {
+		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_NAME]: name });
 	}
 
 	/**
@@ -1865,9 +1885,24 @@ export class FirebaseService extends DatabaseService {
 	 * @returns A promise that resolves when the category label is updated.
 	 */
 	public async updateVaultCategoryLabel(categoryKey: string, label: string): Promise<void> {
-		await update(dbRef(this.db, `${DATABASE_VAULT}/${categoryKey}`), {
-			[VAULT_VALUE_KEY_LABEL]: label
-		});
+		await this.updateOneVaultRecord(categoryKey, { [VAULT_VALUE_KEY_LABEL]: label });
+	}
+
+	/**
+	 * Writes the given fields to a single vault document. Shared by the vault field-update methods,
+	 * which differ only in which field they set.
+	 *
+	 * {@link updateVaultNodeCategories} - Replaces an account's category list.
+	 * {@link updateVaultNodeVerified} - Sets an account's verified flag.
+	 * {@link updateVaultNodeName} - Sets an account's display name.
+	 * {@link updateVaultCategoryLabel} - Renames a custom category.
+	 *
+	 * @param recordId - The document id of the vault record to update.
+	 * @param fields - The content fields to overwrite on the record.
+	 * @returns A promise that resolves when the record is updated.
+	 */
+	private async updateOneVaultRecord(recordId: string, fields: Record<string, unknown>): Promise<void> {
+		await update(dbRef(this.db, `${DATABASE_VAULT}/${recordId}`), fields);
 	}
 
 	/**

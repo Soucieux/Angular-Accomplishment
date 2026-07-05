@@ -13,7 +13,7 @@
 			</div>
 
 			<div class="vault-controls">
-				<div class="vault-search">
+				<div class="vault-search hide-on-narrow-or-mobile">
 					<input
 						class="vault-search-input"
 						type="text"
@@ -21,27 +21,43 @@
 						[placeholder]="VAULT_SEARCH_PLACEHOLDER" />
 				</div>
 
-				<div class="vault-view-toggle">
-					<button
-						type="button"
-						class="vault-tab"
-						[class.active]="isGraphView"
-						(click)="showGraphView()">
-						<span class="material-symbols-outlined">hub</span>
-						{{ VAULT_TAB_GRAPH }}
-					</button>
-					<button type="button" class="vault-tab" [class.active]="isListView" (click)="showListView()">
-						<span class="material-symbols-outlined">format_list_bulleted</span>
-						{{ VAULT_TAB_LIST }}
-					</button>
-				</div>
+				@if (!utilities.isMobile()) {
+					<ng-container *ngTemplateOutlet="vaultToolbarButtons"></ng-container>
+				}
+			</div>
 
-				<button type="button" class="vault-add-button" (click)="openAddDialog()">
-					<span class="material-symbols-outlined">add</span>
-					{{ VAULT_BTN_ADD }}
+			@if (utilities.isMobile()) {
+				<div class="vault-mobile-toolbar">
+					<ng-container *ngTemplateOutlet="vaultToolbarButtons"></ng-container>
+				</div>
+			}
+		</header>
+
+		<ng-template #vaultToolbarButtons>
+			<div class="vault-view-toggle">
+				<button
+					type="button"
+					class="vault-tab"
+					[class.active]="isGraphView"
+					(click)="showGraphView()">
+					<span class="material-symbols-outlined">hub</span>
+					{{ VAULT_TAB_GRAPH }}
+				</button>
+				<button
+					type="button"
+					class="vault-tab"
+					[class.active]="isListView"
+					(click)="showListView()">
+					<span class="material-symbols-outlined">format_list_bulleted</span>
+					{{ VAULT_TAB_LIST }}
 				</button>
 			</div>
-		</header>
+
+			<button type="button" class="vault-add-button" (click)="openAddDialog()">
+				<span class="material-symbols-outlined">add</span>
+				{{ VAULT_BTN_ADD }}
+			</button>
+		</ng-template>
 
 		<!-- ===== Info bar (selection detail / category overview) ===== -->
 		@if (hasAccounts) {
@@ -67,10 +83,31 @@
 								<span class="vault-stat-value">{{ detail.accountCount }}</span>
 								<span class="vault-stat-label">{{ VAULT_LABEL_ACCOUNTS }}</span>
 							</div>
-							<div class="vault-stat-pill vault-stat-identifiers">
+							<div
+								class="vault-stat-pill vault-stat-identifiers"
+								[class.has-popover]="detail.identifiers.length">
 								<span class="vault-stat-dot"></span>
 								<span class="vault-stat-value">{{ detail.identifierCount }}</span>
 								<span class="vault-stat-label">{{ VAULT_LABEL_IDENTIFIERS }}</span>
+								@if (detail.identifiers.length) {
+									<span class="material-symbols-outlined vault-stat-more">expand_more</span>
+									<div class="vault-identifier-popover">
+										@for (identifier of detail.identifiers; track identifier.name) {
+											<div class="vault-identifier-row">
+												<span
+													class="vault-identifier-badge"
+													[style.background]="identifier.gradient">
+													<span class="material-symbols-outlined">{{
+														identifier.icon
+													}}</span>
+												</span>
+												<span class="vault-identifier-name">{{
+													identifier.name
+												}}</span>
+											</div>
+										}
+									</div>
+								}
 							</div>
 						</div>
 						<div class="vault-selection-divider"></div>
@@ -123,23 +160,51 @@
 		<!-- ===== Content ===== -->
 		<div class="vault-content" #vaultContent>
 			@if (loading) {
-				<div class="vault-loading"><span class="vault-loading-spinner"></span></div>
+				<div class="vault-loading">
+					<span class="vault-loading-spinner"></span>
+					<span class="vault-loading-text">{{ MSG_LOADING }}</span>
+				</div>
 			} @else if (isListView) {
 				@if (hasAccounts) {
 					<div class="vault-list">
-						@for (account of accountRows; track account.id) {
-							<div class="vault-card">
+						@for (account of accountRows; track account.id; let index = $index) {
+							<div class="vault-card" [style.animation-delay.ms]="cardEntranceDelay(index)">
 								<div class="vault-card-top">
 									<span class="vault-avatar" [style.background]="account.gradient">{{
 										account.letter
 									}}</span>
 									<div class="vault-card-id">
 										<div class="vault-card-name">
-											{{ account.name }}
-											@if (account.verified) {
-												<span class="vault-verified-badge">
+											@if (account.isEditing) {
+												<input
+													class="vault-name-input"
+													type="text"
+													[(ngModel)]="nameDraft"
+													(keyup.enter)="updateAccountName(account.id)"
+													(blur)="updateAccountName(account.id)" />
+												<button
+													type="button"
+													class="vault-verified-toggle"
+													[class.active]="account.verified"
+													(click)="
+														toggleAccountVerified(
+															account.id,
+															account.verified,
+															$event
+														)
+													">
 													<span class="material-symbols-outlined">verified</span>
-												</span>
+													{{ VAULT_DIALOG_VERIFIED_LABEL }}
+												</button>
+											} @else {
+												{{ account.name }}
+												@if (account.verified) {
+													<span class="vault-verified-badge">
+														<span class="material-symbols-outlined"
+															>verified</span
+														>
+													</span>
+												}
 											}
 										</div>
 										<div class="vault-category-picker">
@@ -147,6 +212,7 @@
 												type="button"
 												class="vault-card-category"
 												[class.open]="categoryPickerId === account.id"
+												[class.readonly]="!account.isEditing"
 												(click)="toggleCategoryPicker(account.id, $event)">
 												@if (account.categoryChips.length) {
 													@for (chip of account.categoryChips; track chip.key) {
@@ -158,11 +224,14 @@
 														</span>
 													}
 												} @else {
-													<span class="vault-category-chip vault-category-uncategorized">{{
-														VAULT_CATEGORY_UNCATEGORIZED_LABEL
-													}}</span>
+													<span
+														class="vault-category-chip vault-category-uncategorized"
+														>{{ VAULT_CATEGORY_UNCATEGORIZED_LABEL }}</span
+													>
 												}
-												<span class="material-symbols-outlined vault-category-caret">chevron_right</span>
+												<span class="material-symbols-outlined vault-category-caret"
+													>chevron_right</span
+												>
 											</button>
 											<div
 												class="vault-category-options"
@@ -171,9 +240,16 @@
 													<button
 														type="button"
 														class="vault-category-option"
-														[class.current]="account.categoryKeys.includes(option.key)"
+														[class.current]="
+															account.categoryKeys.includes(option.key)
+														"
 														(click)="
-															toggleAccountCategory(account.id, option.key, account.categoryKeys, $event)
+															toggleAccountCategory(
+																account.id,
+																option.key,
+																account.categoryKeys,
+																$event
+															)
 														">
 														<span
 															class="vault-category-option-dot"
@@ -230,14 +306,19 @@
 								}
 								@if (account.isEditing) {
 									<div class="vault-note-add" (click)="$event.stopPropagation()">
-										<span class="material-symbols-outlined vault-note-add-icon">sticky_note_2</span>
+										<span class="material-symbols-outlined vault-note-add-icon"
+											>sticky_note_2</span
+										>
 										<input
 											class="vault-note-input"
 											type="text"
 											[(ngModel)]="noteDraft"
 											[placeholder]="VAULT_NOTE_PLACEHOLDER"
 											(keyup.enter)="addNote(account.id)" />
-										<button type="button" class="vault-note-add-button" (click)="addNote(account.id)">
+										<button
+											type="button"
+											class="vault-note-add-button"
+											(click)="addNote(account.id)">
 											<span class="material-symbols-outlined">add</span>
 										</button>
 									</div>
@@ -250,7 +331,10 @@
 						<div class="vault-empty-icon"><span class="material-symbols-outlined">hub</span></div>
 						<div class="vault-empty-title">{{ VAULT_EMPTY_TITLE }}</div>
 						<div class="vault-empty-body">{{ VAULT_EMPTY_BODY }}</div>
-						<button type="button" class="vault-add-button vault-empty-add" (click)="openAddDialog()">
+						<button
+							type="button"
+							class="vault-add-button vault-empty-add"
+							(click)="openAddDialog()">
 							<span class="material-symbols-outlined">add</span>
 							{{ VAULT_BTN_ADD }}
 						</button>
@@ -258,30 +342,39 @@
 				}
 			} @else {
 				<div class="vault-graph-area">
-					@if (linkMode) {
-						<div class="vault-banner">
-							<span class="material-symbols-outlined">add_link</span>
-							<span>{{ VAULT_BANNER_SECOND }}</span>
-							<button type="button" class="vault-banner-cancel" (click)="cancelLinkMode()">
-								<span class="material-symbols-outlined">close</span>
-								{{ VAULT_BANNER_CANCEL }}
-							</button>
+					@if (utilities.isMobile()) {
+						<div class="vault-graph-blocked">
+							<blocked-card
+								icon="desktop_windows"
+								[title]="MOBILE_BLOCKED_TITLE"
+								[body]="VAULT_GRAPH_MOBILE_BLOCKED_BODY" />
 						</div>
+					} @else {
+						@if (linkMode) {
+							<div class="vault-banner">
+								<span class="material-symbols-outlined">add_link</span>
+								<span>{{ VAULT_BANNER_SECOND }}</span>
+								<button type="button" class="vault-banner-cancel" (click)="cancelLinkMode()">
+									<span class="material-symbols-outlined">close</span>
+									{{ VAULT_BANNER_CANCEL }}
+								</button>
+							</div>
+						}
+						<graph-canvas
+							[nodes]="mapNodes"
+							[edges]="mapEdges"
+							[customCategories]="customCategories"
+							[selectedId]="selectedId"
+							[query]="query"
+							[typeFilter]="typeFilter"
+							[categoryFilter]="categoryFilter"
+							[linkMode]="linkMode"
+							[linkSourceId]="linkSourceId"
+							(nodeSelect)="onGraphNodeSelect($event)"
+							(linkTarget)="handleLinkTarget($event)"
+							(filterToggle)="toggleFilter($event)">
+						</graph-canvas>
 					}
-					<graph-canvas
-						[nodes]="mapNodes"
-						[edges]="mapEdges"
-						[customCategories]="customCategories"
-						[selectedId]="selectedId"
-						[query]="query"
-						[typeFilter]="typeFilter"
-						[categoryFilter]="categoryFilter"
-						[linkMode]="linkMode"
-						[linkSourceId]="linkSourceId"
-						(nodeSelect)="onGraphNodeSelect($event)"
-						(linkTarget)="handleLinkTarget($event)"
-						(filterToggle)="toggleFilter($event)">
-					</graph-canvas>
 				</div>
 			}
 		</div>

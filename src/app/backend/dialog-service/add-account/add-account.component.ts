@@ -19,6 +19,7 @@ import {
 	VAULT_DIALOG_NEW_CATEGORY,
 	VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER,
 	VAULT_DIALOG_DUPLICATE_NAME,
+	VAULT_CATEGORY_DUPLICATE_NAME,
 	VAULT_DIALOG_VERIFIED_LABEL,
 	VAULT_FILTER_EMAIL,
 	VAULT_FILTER_PHONE,
@@ -31,7 +32,6 @@ import {
 	VaultCategoryDef,
 	VaultConnectionInput,
 	VaultNodeType,
-	VAULT_CATEGORY_DEFS,
 	VAULT_CATEGORY_SWATCHES,
 	VAULT_CONNECTION_TYPES
 } from '../../../fontend/vault/vault.model';
@@ -61,6 +61,7 @@ export class AddAccountDialogComponent {
 	protected readonly VAULT_DIALOG_NEW_CATEGORY = VAULT_DIALOG_NEW_CATEGORY;
 	protected readonly VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER = VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER;
 	protected readonly VAULT_DIALOG_DUPLICATE_NAME = VAULT_DIALOG_DUPLICATE_NAME;
+	protected readonly VAULT_CATEGORY_DUPLICATE_NAME = VAULT_CATEGORY_DUPLICATE_NAME;
 	protected readonly VAULT_DIALOG_VERIFIED_LABEL = VAULT_DIALOG_VERIFIED_LABEL;
 	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
 
@@ -95,6 +96,22 @@ export class AddAccountDialogComponent {
 	protected get isDuplicateName(): boolean {
 		const nameKey = this.name.trim().toLowerCase();
 		return nameKey.length > 0 && this.existingNames.has(nameKey);
+	}
+
+	/**
+	 * Returns true when the typed new-category name matches an existing category or the pending new
+	 * one (trimmed, case-insensitive), so the inline warning shows and the category is not created.
+	 *
+	 * @returns Whether the new-category name duplicates an existing category.
+	 */
+	protected get isDuplicateCategory(): boolean {
+		const nameKey = this.newCategoryName.trim().toLowerCase();
+		if (!nameKey) return false;
+		return (
+			this.existingCategories.some(
+				(categoryDef) => categoryDef.categoryLabel.trim().toLowerCase() === nameKey
+			) || this.pendingNewCategory?.label.trim().toLowerCase() === nameKey
+		);
 	}
 
 	/**
@@ -153,16 +170,34 @@ export class AddAccountDialogComponent {
 	}
 
 	/**
-	 * Commits the inline new category: assigns a random color swatch, selects it, and
-	 * closes the input. An empty name simply cancels.
+	 * Commits the inline new category: assigns a unique random color swatch, selects it, and closes
+	 * the input. An empty name cancels; a duplicate name keeps the input open so its warning shows.
 	 */
 	protected commitNewCategory(): void {
 		const label = this.newCategoryName.trim();
+		if (!label) {
+			this.cancelNewCategory();
+			return;
+		}
+		if (this.isDuplicateCategory) return;
 		this.showNewCategory = false;
 		this.newCategoryName = '';
-		if (!label) return;
-		const swatch = VAULT_CATEGORY_SWATCHES[Math.floor(Math.random() * VAULT_CATEGORY_SWATCHES.length)];
+		const swatch = this.pickUniqueSwatch();
 		this.pendingNewCategory = { label, hex: swatch.hex, gradient: swatch.gradient };
+	}
+
+	/**
+	 * Picks a color swatch not already used by an existing category, so each category keeps a unique
+	 * color. Falls back to a fully random swatch only when every swatch is already taken.
+	 *
+	 * @returns The chosen swatch (hex plus gradient).
+	 */
+	private pickUniqueSwatch(): { hex: string; gradient: string } {
+		const used = new Set(this.existingCategories.map((categoryDef) => categoryDef.hex));
+		if (this.pendingNewCategory) used.add(this.pendingNewCategory.hex);
+		const available = VAULT_CATEGORY_SWATCHES.filter((swatch) => !used.has(swatch.hex));
+		const pool = available.length > 0 ? available : VAULT_CATEGORY_SWATCHES;
+		return pool[Math.floor(Math.random() * pool.length)];
 	}
 
 	/**
@@ -234,15 +269,16 @@ export class AddAccountDialogComponent {
 	}
 
 	/**
-	 * Gets the toggleable category chips — the existing custom categories — each flagged with
-	 * whether it is currently selected. Selecting none submits the account as Uncategorized.
+	 * Gets the toggleable category chips — the preset and custom categories — each with its icon and
+	 * flagged with whether it is currently selected. Selecting none submits the account as Uncategorized.
 	 *
 	 * @returns The category chip view-models.
 	 */
-	protected get categoryChips(): { key: string; label: string; hex: string; isSelected: boolean }[] {
-		return [...VAULT_CATEGORY_DEFS, ...this.existingCategories].map((categoryDef) => ({
+	protected get categoryChips(): { key: string; label: string; icon: string; hex: string; isSelected: boolean }[] {
+		return this.existingCategories.map((categoryDef) => ({
 			key: categoryDef.key,
-			label: categoryDef.label,
+			label: categoryDef.categoryLabel,
+			icon: categoryDef.icon,
 			hex: categoryDef.hex,
 			isSelected: this.selectedCategoryKeys.has(categoryDef.key)
 		}));

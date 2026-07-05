@@ -743,6 +743,24 @@ export abstract class DatabaseService {
 	 */
 	public abstract updateVaultNodeCategories(nodeId: string, categoryKeys: string[]): Promise<void>;
 
+	/**
+	 * Sets an account node's verified flag — used by the inline verified toggle in the list view.
+	 *
+	 * @param nodeId - The id of the account node to update.
+	 * @param verified - The new verified state to store on the account.
+	 * @returns A promise that resolves when the account's verified flag is updated.
+	 */
+	public abstract updateVaultNodeVerified(nodeId: string, verified: boolean): Promise<void>;
+
+	/**
+	 * Sets an account node's display name — used by the inline name edit in the list view.
+	 *
+	 * @param nodeId - The id of the account node to update.
+	 * @param name - The new display name to store on the account.
+	 * @returns A promise that resolves when the account's name is updated.
+	 */
+	public abstract updateVaultNodeName(nodeId: string, name: string): Promise<void>;
+
 	// ── Utility methods ───────────────────────────────────────────────────────
 
 	/**

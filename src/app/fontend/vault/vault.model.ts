@@ -95,7 +95,6 @@ export interface VaultLegendCounts {
 	account: number;
 	email: number;
 	phone: number;
-	link: number;
 	verified: number;
 }
 
@@ -110,6 +109,13 @@ export interface VaultOverviewStat {
 	isCustom: boolean;
 }
 
+/** A connected identifier listed in the selection stat-pill hover popover. */
+export interface VaultSelectionIdentifier {
+	name: string;
+	icon: string;
+	gradient: string;
+}
+
 /** The detail shown in the info bar for the currently selected node. */
 export interface VaultSelectionDetail {
 	id: string;
@@ -122,6 +128,7 @@ export interface VaultSelectionDetail {
 	letter: string;
 	accountCount: number;
 	identifierCount: number;
+	identifiers: VaultSelectionIdentifier[];
 }
 
 /** Internal force-simulation node used by the graph canvas — carries display and physics state. */
@@ -163,8 +170,19 @@ export interface VaultAccountRow {
 	isSelected: boolean;
 }
 
-/** Built-in account categories — intentionally empty; accounts use only user-created custom categories. This slot remains the single place to reintroduce presets if ever needed. */
-export const VAULT_CATEGORY_DEFS: VaultCategoryDef[] = [];
+/**
+ * Built-in preset account categories. `label` / `categoryLabel` hold the key as a placeholder; the
+ * localized display text is resolved in the component via `vaultCategoryLabel` (recipe pattern).
+ * Their colors are fixed and deliberately distinct from `VAULT_CATEGORY_SWATCHES`, so a new custom
+ * category (which draws a random swatch) can never land on a preset color.
+ */
+export const VAULT_CATEGORY_DEFS: VaultCategoryDef[] = [
+	{ key: 'transport', label: 'transport', categoryLabel: 'transport', icon: 'near_me', hex: '#3b82f6', gradient: 'linear-gradient(135deg, #60a5fa, #2563eb)' },
+	{ key: 'finance', label: 'finance', categoryLabel: 'finance', icon: 'trending_up', hex: '#22c55e', gradient: 'linear-gradient(135deg, #4ade80, #16a34a)' },
+	{ key: 'social', label: 'social', categoryLabel: 'social', icon: 'diversity_2', hex: '#ec4899', gradient: 'linear-gradient(135deg, #f472b6, #db2777)' },
+	{ key: 'shopping', label: 'shopping', categoryLabel: 'shopping', icon: 'qr_code', hex: '#f59e0b', gradient: 'linear-gradient(135deg, #fbbf24, #d97706)' },
+	{ key: 'general', label: 'general', categoryLabel: 'general', icon: 'token', hex: '#8b5cf6', gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)' }
+];
 
 /**
  * Fallback category for accounts whose category is unknown or freshly typed without one chosen.
@@ -212,18 +230,24 @@ export const VAULT_NOTES_META: VaultIdentifierMeta = {
 export const VAULT_CONNECTION_TYPES: { value: VaultNodeType; icon: string }[] = [
 	{ value: 'email', icon: 'mail' },
 	{ value: 'phone', icon: 'call' },
-	{ value: 'link', icon: 'link' },
 	{ value: 'notes', icon: 'sticky_note_2' }
 ];
 
-/** Random color swatches assigned to a new custom category on creation. */
+/**
+ * Color swatches a new custom category draws from — the dialog picks a random one not already used
+ * by an existing category, so each category stays a unique color. Kept distinct from the preset
+ * colors in VAULT_CATEGORY_DEFS so a custom category never collides with a preset.
+ */
 export const VAULT_CATEGORY_SWATCHES: { hex: string; gradient: string }[] = [
 	{ hex: '#06b6d4', gradient: 'linear-gradient(135deg, #22d3ee, #0891b2)' },
-	{ hex: '#8b5cf6', gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)' },
-	{ hex: '#ec4899', gradient: 'linear-gradient(135deg, #f472b6, #db2777)' },
-	{ hex: '#f59e0b', gradient: 'linear-gradient(135deg, #fbbf24, #d97706)' },
-	{ hex: '#22c55e', gradient: 'linear-gradient(135deg, #4ade80, #16a34a)' },
-	{ hex: '#3b82f6', gradient: 'linear-gradient(135deg, #60a5fa, #2563eb)' }
+	{ hex: '#14b8a6', gradient: 'linear-gradient(135deg, #2dd4bf, #0d9488)' },
+	{ hex: '#6366f1', gradient: 'linear-gradient(135deg, #818cf8, #4f46e5)' },
+	{ hex: '#f97316', gradient: 'linear-gradient(135deg, #fb923c, #ea580c)' },
+	{ hex: '#84cc16', gradient: 'linear-gradient(135deg, #a3e635, #65a30d)' },
+	{ hex: '#f43f5e', gradient: 'linear-gradient(135deg, #fb7185, #e11d48)' },
+	{ hex: '#d946ef', gradient: 'linear-gradient(135deg, #e879f9, #c026d3)' },
+	{ hex: '#0ea5e9', gradient: 'linear-gradient(135deg, #38bdf8, #0284c7)' },
+	{ hex: '#10b981', gradient: 'linear-gradient(135deg, #34d399, #059669)' }
 ];
 
 /** Distinct icons cycled across custom categories so each one reads differently in the overview. */
@@ -256,3 +280,10 @@ export const VAULT_LABEL_COLOR_ACCOUNT = '#334155';
 export const VAULT_LABEL_COLOR_IDENTIFIER = '#7c6c74';
 /** Label color for the currently selected node. */
 export const VAULT_LABEL_COLOR_SELECTED = '#b02257';
+
+/** Starting entrance-animation delay for the first account card in the list. */
+export const VAULT_CARD_ENTRANCE_BASE_DELAY_MS = 150;
+/** Additional entrance-animation delay added per list position. */
+export const VAULT_CARD_ENTRANCE_STEP_MS = 55;
+/** Upper bound on entrance-animation delay so long lists don't wait too long to appear. */
+export const VAULT_CARD_ENTRANCE_MAX_DELAY_MS = 550;

@@ -69,6 +69,14 @@
 @media (max-width: 940px) {
 	.glass-card {
 		padding: 10px;
+	}
+}
+
+/* The extra bottom padding only clears the floating dock, which itself appears
+   only on touch devices — gate it the same way so narrow mouse windows (e.g. a
+   resized desktop window) don't get dead space below full-height content. */
+@media (max-width: 900px) and (pointer: coarse) {
+	.glass-card {
 		padding-bottom: 100px;
 	}
 }

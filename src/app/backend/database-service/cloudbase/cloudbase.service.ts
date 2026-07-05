@@ -17,7 +17,8 @@ import {
 	CloudbaseApp,
 	ConnectResult,
 	ConnectedMember,
-	DatabaseService
+	DatabaseService,
+	PassphraseLockStatus
 } from '../database.service';
 import { LOG } from '../../../common/app.logs';
 import { Utilities } from '../../../common/utilities/app.utilities';
@@ -841,6 +842,54 @@ export class CloudbaseService extends DatabaseService {
 		const response: any = await this.cloudbase.callFunction({
 			name: 'disconnect',
 			data: { otherOpenid }
+		});
+		return response?.result ?? { success: false };
+	}
+
+	/**
+	 * Reports whether the caller has already set a passphrase for the given generic passphrase-lock
+	 * feature key (e.g. 'vault'). Used to decide whether a page shows its first-time setup screen or
+	 * its unlock prompt.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @returns A promise resolving to the status result.
+	 */
+	public async getPassphraseLockStatus(featureKey: string): Promise<PassphraseLockStatus> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'getPassphraseLockStatus',
+			data: { featureKey }
+		});
+		return response?.result ?? { success: false, isSet: false };
+	}
+
+	/**
+	 * Sets or replaces the caller's own passphrase for the given generic passphrase-lock feature key.
+	 * Used for both first-time setup and later changes.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @param passphrase - The new plaintext passphrase.
+	 * @returns A promise resolving to the set result.
+	 */
+	public async setPassphraseLock(featureKey: string, passphrase: string): Promise<ConnectResult> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'setPassphraseLock',
+			data: { featureKey, passphrase }
+		});
+		return response?.result ?? { success: false };
+	}
+
+	/**
+	 * Verifies a passphrase attempt against the caller's stored hash for the given generic
+	 * passphrase-lock feature key. The hash never leaves the server.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @param passphrase - The plaintext passphrase attempt.
+	 * @returns A promise resolving to the verify result.
+	 */
+	public async verifyPassphraseLock(featureKey: string, passphrase: string): Promise<ConnectResult> {
+		const response: any = await this.cloudbase.callFunction({
+			name: 'verifyPassphraseLock',
+			data: { featureKey, passphrase }
 		});
 		return response?.result ?? { success: false };
 	}

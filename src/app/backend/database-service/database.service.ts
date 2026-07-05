@@ -38,6 +38,12 @@ export interface ConnectedMember {
 	status?: string;
 }
 
+/** Result returned by the passphrase-lock status Cloud Function. */
+export interface PassphraseLockStatus {
+	success: boolean;
+	isSet: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export abstract class DatabaseService {
 	protected constructor() {}

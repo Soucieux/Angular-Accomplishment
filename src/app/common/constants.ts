@@ -250,6 +250,23 @@ export const ERROR_DIALOG_ICON_CLASS = 'pi pi-times-circle text-red-500';
 export const ERROR_DIALOG_MSG_CLASS = 'error-dialog-message';
 
 /* ─────────────────────────────────────────
+   Passphrase lock (generic, common)
+───────────────────────────────────────── */
+
+/** Feature key identifying Vault's use of the generic passphrase-lock component. */
+export const PASSPHRASE_LOCK_KEY_VAULT = 'vault';
+/** Minimum accepted length for a passphrase, checked client-side before submitting. */
+export const PASSPHRASE_MIN_LENGTH = 4;
+/** PassphraseLockComponent internal state: checking whether a passphrase has been set yet. */
+export const PASSPHRASE_LOCK_STATE_LOADING = 'loading';
+/** PassphraseLockComponent internal state: no passphrase set yet, showing first-time setup. */
+export const PASSPHRASE_LOCK_STATE_SETUP = 'setup';
+/** PassphraseLockComponent internal state: passphrase already set, showing the unlock prompt. */
+export const PASSPHRASE_LOCK_STATE_LOCKED = 'locked';
+/** Log message when a passphrase-lock Cloud Function call throws (network/deploy issue). */
+export const PASSPHRASE_LOCK_LOG_CALL_FAILED = 'Passphrase lock Cloud Function call failed';
+
+/* ─────────────────────────────────────────
    Activity log type discriminators
 ───────────────────────────────────────── */
 

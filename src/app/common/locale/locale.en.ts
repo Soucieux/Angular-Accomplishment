@@ -58,6 +58,38 @@ export const NOTIF_ENABLED_TITLE = 'Notifications enabled';
 export const NOTIF_ENABLED_BODY = 'You will now receive notifications from Vision Canvas.';
 
 /* ─────────────────────────────────────────
+   Passphrase lock (generic, common)
+───────────────────────────────────────── */
+
+/** Heading shown on first visit to a passphrase-locked page, before any passphrase is set. */
+export const PASSPHRASE_LOCK_SETUP_TITLE = 'Set a Passphrase';
+/** Body text shown on the first-time passphrase setup screen. */
+export const PASSPHRASE_LOCK_SETUP_BODY =
+	'Choose a passphrase to protect this page. You can change it later in your account settings.';
+/** Heading shown on the unlock screen once a passphrase has already been set. */
+export const PASSPHRASE_LOCK_LOCKED_TITLE = 'Enter Passphrase';
+/** Body text shown on the unlock screen once a passphrase has already been set. */
+export const PASSPHRASE_LOCK_LOCKED_BODY = 'This page is protected. Enter your passphrase to continue.';
+/** Placeholder text for the passphrase input field. */
+export const PASSPHRASE_LOCK_PLACEHOLDER = 'Enter your passphrase';
+/** Placeholder text for the confirm-passphrase input field shown during first-time setup. */
+export const PASSPHRASE_LOCK_CONFIRM_PLACEHOLDER = 'Re-enter your passphrase';
+/** Inline error shown when an unlock attempt's passphrase is wrong. */
+export const PASSPHRASE_LOCK_ERROR_WRONG = "That passphrase isn't right";
+/** Inline error shown when the setup screen's two passphrase fields don't match. */
+export const PASSPHRASE_LOCK_ERROR_MISMATCH = "Passphrases don't match";
+/** Inline error shown when the chosen passphrase is shorter than the minimum length. */
+export const PASSPHRASE_LOCK_ERROR_TOO_SHORT = 'Passphrase must be at least 4 characters';
+/** Submit button label on the first-time passphrase setup screen. */
+export const PASSPHRASE_LOCK_BTN_SET = 'Set Passphrase';
+/** Submit button label on the unlock screen. */
+export const PASSPHRASE_LOCK_BTN_UNLOCK = 'Unlock';
+/** Small footer line shown under the submit button on both passphrase-lock screens. */
+export const PASSPHRASE_LOCK_FOOTER = 'This page is private';
+/** Inline error shown when a Cloud Function call fails outright (network/deploy issue), distinct from a wrong passphrase. */
+export const PASSPHRASE_LOCK_ERROR_GENERIC = 'Something went wrong. Please try again.';
+
+/* ─────────────────────────────────────────
    History dialog constants
 ───────────────────────────────────────── */
 

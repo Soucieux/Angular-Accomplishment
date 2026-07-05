@@ -1,0 +1,82 @@
+@if (state !== PASSPHRASE_LOCK_STATE_LOADING) {
+<div class="pl-container">
+	<div class="pl-orb pl-orb-1"></div>
+	<div class="pl-orb pl-orb-2"></div>
+	<div class="pl-card" [class.shake]="shake">
+		<div class="pl-bar"></div>
+		<div class="pl-pad">
+			<span class="pl-badge">
+				<span class="material-symbols-outlined">lock</span>
+			</span>
+
+			@if (state === PASSPHRASE_LOCK_STATE_SETUP) {
+				<h1>{{ PASSPHRASE_LOCK_SETUP_TITLE }}</h1>
+				<p>{{ PASSPHRASE_LOCK_SETUP_BODY }}</p>
+
+				<div class="pl-field" [class.err]="errorMessage">
+					<span class="material-symbols-outlined">key</span>
+					<input
+						class="pl-input"
+						type="password"
+						autofocus
+						[placeholder]="PASSPHRASE_LOCK_PLACEHOLDER"
+						[(ngModel)]="passphraseInput"
+						(keyup.enter)="submitSetup()" />
+				</div>
+				<div class="pl-field" [class.err]="errorMessage">
+					<span class="material-symbols-outlined">key</span>
+					<input
+						class="pl-input"
+						type="password"
+						[placeholder]="PASSPHRASE_LOCK_CONFIRM_PLACEHOLDER"
+						[(ngModel)]="confirmInput"
+						(keyup.enter)="submitSetup()" />
+				</div>
+
+				@if (errorMessage) {
+					<div class="pl-error">
+						<span class="material-symbols-outlined">error</span>
+						<span>{{ errorMessage }}</span>
+					</div>
+				}
+
+				<button type="button" class="pl-submit" [disabled]="isSubmitting" (click)="submitSetup()">
+					<span>{{ PASSPHRASE_LOCK_BTN_SET }}</span>
+					<span class="material-symbols-outlined">arrow_forward</span>
+				</button>
+			} @else if (state === PASSPHRASE_LOCK_STATE_LOCKED) {
+				<h1>{{ PASSPHRASE_LOCK_LOCKED_TITLE }}</h1>
+				<p>{{ PASSPHRASE_LOCK_LOCKED_BODY }}</p>
+
+				<div class="pl-field" [class.err]="errorMessage">
+					<span class="material-symbols-outlined">key</span>
+					<input
+						class="pl-input"
+						type="password"
+						autofocus
+						[placeholder]="PASSPHRASE_LOCK_PLACEHOLDER"
+						[(ngModel)]="passphraseInput"
+						(keyup.enter)="submitUnlock()" />
+				</div>
+
+				@if (errorMessage) {
+					<div class="pl-error">
+						<span class="material-symbols-outlined">error</span>
+						<span>{{ errorMessage }}</span>
+					</div>
+				}
+
+				<button type="button" class="pl-submit" [disabled]="isSubmitting" (click)="submitUnlock()">
+					<span>{{ PASSPHRASE_LOCK_BTN_UNLOCK }}</span>
+					<span class="material-symbols-outlined">arrow_forward</span>
+				</button>
+			}
+
+			<div class="pl-footer">
+				<span class="material-symbols-outlined">shield</span>
+				<span>{{ PASSPHRASE_LOCK_FOOTER }}</span>
+			</div>
+		</div>
+	</div>
+</div>
+}

@@ -34,6 +34,24 @@ export const NOTIF_ENABLED_TITLE = '推送通知已开启';
 export const NOTIF_ENABLED_BODY = '你将收到来自 Vision Canvas 的通知。';
 
 /* ─────────────────────────────────────────
+   Passphrase lock (generic, common)
+───────────────────────────────────────── */
+
+export const PASSPHRASE_LOCK_SETUP_TITLE = '设置口令';
+export const PASSPHRASE_LOCK_SETUP_BODY = '设置一个口令以保护此页面。之后可在账户设置中修改。';
+export const PASSPHRASE_LOCK_LOCKED_TITLE = '输入口令';
+export const PASSPHRASE_LOCK_LOCKED_BODY = '此页面受保护，请输入口令以继续。';
+export const PASSPHRASE_LOCK_PLACEHOLDER = '请输入口令';
+export const PASSPHRASE_LOCK_CONFIRM_PLACEHOLDER = '请再次输入口令';
+export const PASSPHRASE_LOCK_ERROR_WRONG = '口令不正确';
+export const PASSPHRASE_LOCK_ERROR_MISMATCH = '两次输入的口令不一致';
+export const PASSPHRASE_LOCK_ERROR_TOO_SHORT = '口令至少需要 4 个字符';
+export const PASSPHRASE_LOCK_BTN_SET = '设置口令';
+export const PASSPHRASE_LOCK_BTN_UNLOCK = '解锁';
+export const PASSPHRASE_LOCK_FOOTER = '此页面为私密访问';
+export const PASSPHRASE_LOCK_ERROR_GENERIC = '出现问题，请重试。';
+
+/* ─────────────────────────────────────────
    History dialog constants
 ───────────────────────────────────────── */
 

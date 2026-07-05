@@ -168,6 +168,7 @@ export interface VaultAccountRow {
 	name: string;
 	letter: string;
 	gradient: string;
+	iconUrl: string;
 	categoryChips: VaultAccountCategoryChip[];
 	categoryKeys: string[];
 	verified: boolean;

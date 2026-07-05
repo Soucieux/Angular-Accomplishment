@@ -42,6 +42,9 @@ import {
 	VAULT_VIEW_LIST,
 	VAULT_RELATION_LINKED,
 	VAULT_RELATION_MANUAL,
+	VAULT_FILTER_KEY_VERIFIED,
+	VAULT_ICON_VERIFIED,
+	VAULT_GRADIENT_VERIFIED,
 	TIMEOUT_KEY_VAULT,
 	VAULT_LOG_APPLY_FAILED,
 	PASSPHRASE_LOCK_KEY_VAULT
@@ -99,6 +102,7 @@ import {
 	VAULT_MSG_SAVE_FAILED_DETAIL,
 	VAULT_CATEGORY_OTHER_LABEL,
 	VAULT_CATEGORY_UNCATEGORIZED_LABEL,
+	VAULT_LEGEND_VERIFIED,
 	vaultCategoryLabel
 } from '../../common/locale/locale-strings';
 import {
@@ -180,6 +184,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected selectedId: string | null = null;
 	// The account whose category picker is expanded in the list view, or null when none is open.
 	protected categoryPickerId: string | null = null;
+	// Account ids whose brand favicon failed to resolve, so the list avatar shows the letter initials instead.
+	protected failedFavicons = new Set<string>();
 	protected typeFilter: string | null = null;
 	protected categoryFilter: string | null = null;
 	protected linkMode = false;
@@ -384,6 +390,16 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected updateAccountName(accountId: string): void {
 		this.renameNode(accountId, this.nameDraft);
+	}
+
+	/**
+	 * Records that an account's brand favicon failed to load, so the list avatar drops the image and
+	 * reveals the letter initials underneath.
+	 *
+	 * @param accountId - The id of the account whose favicon failed to resolve.
+	 */
+	protected onAvatarImageError(accountId: string): void {
+		this.failedFavicons.add(accountId);
 	}
 
 	/**
@@ -683,7 +699,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 				// Add the primary account node, carrying its verified state
 				const accountId = await this.databaseService.addVaultNode({
 					nodeType: VAULT_NODE_ACCOUNT,
-					name: accountData.name.trim(),
+					name: Utilities.capitalizeFirstLetterOnEachWord(accountData.name.trim()),
 					categories,
 					verified: accountData.verified
 				});
@@ -693,7 +709,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 					this.nodes.map((node) => [node.name.trim().toLowerCase(), node.id])
 				);
 				for (const connection of accountData.connections) {
-					const connectionName = connection.value.trim();
+					const connectionName = Utilities.capitalizeFirstLetterOnEachWord(connection.value.trim());
 					if (!connectionName) continue;
 					let targetId = nodeIdsByName.get(connectionName.toLowerCase());
 					if (!targetId) {
@@ -988,6 +1004,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			name: account.name,
 			letter: Utilities.getInitials(account.name),
 			gradient: this.getAccountAvatarBackground(account),
+			iconUrl: Utilities.getBrandIconUrl(account.name),
 			categoryChips: account.categories.map((categoryKey) => {
 				const categoryDef = this.getCategoryDef(categoryKey);
 				return { key: categoryKey, label: categoryDef.categoryLabel, gradient: categoryDef.gradient };
@@ -1056,14 +1073,15 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Returns true when an account passes the active category filter — every account when no filter
-	 * is set, accounts with no categories under the Uncategorized filter, or accounts whose category
-	 * list contains the filtered key.
+	 * is set, verified accounts under the Verified filter, accounts with no categories under the
+	 * Uncategorized filter, or accounts whose category list contains the filtered key.
 	 *
 	 * @param node - The account node to test against the current category filter.
 	 * @returns Whether the account is visible under the category filter.
 	 */
 	private matchesCategoryFilter(node: VaultNode): boolean {
 		if (!this.categoryFilter) return true;
+		if (this.categoryFilter === VAULT_FILTER_KEY_VERIFIED) return node.verified;
 		if (this.categoryFilter === VAULT_CATEGORY_OTHER.key) return node.categories.length === 0;
 		return node.categories.includes(this.categoryFilter);
 	}
@@ -1109,14 +1127,16 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * {@link handleNodeNameRename} - Commits the dialog-edited name for a non-account node.
 	 *
 	 * @param nodeId - The id of the node being renamed.
-	 * @param nextName - The candidate new name, trimmed before comparison and storage.
+	 * @param nextName - The candidate new name, trimmed and capitalized on each word (English text) before comparison and storage.
 	 */
 	private renameNode(nodeId: string, nextName: string): void {
-		const trimmedName = nextName.trim();
+		const formattedName = Utilities.capitalizeFirstLetterOnEachWord(nextName.trim());
 		const currentName = this.findNode(nodeId)?.name ?? '';
-		if (!trimmedName || trimmedName === currentName) return;
-		this.patchLocalNode(nodeId, { name: trimmedName });
-		this.enqueueVaultWrite(() => this.databaseService.updateVaultNodeName(nodeId, trimmedName))
+		if (!formattedName || formattedName === currentName) return;
+		this.patchLocalNode(nodeId, { name: formattedName });
+		// A renamed account resolves a different brand, so clear any prior failure to re-attempt its icon.
+		this.failedFavicons.delete(nodeId);
+		this.enqueueVaultWrite(() => this.databaseService.updateVaultNodeName(nodeId, formattedName))
 			.then(() => this.triggerSaveIndicator())
 			.catch(() => {
 				// Revert the optimistic change and surface the failure.
@@ -1255,15 +1275,18 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Gets the per-category overview chips shown in the info bar when nothing is selected.
-	 * Only categories that have at least one account appear.
+	 * Gets the per-category overview chips shown in the info bar when nothing is selected, plus a
+	 * trailing Verified chip tallying verified accounts. Only categories (and Verified) that have at
+	 * least one matching account appear.
 	 *
 	 * @returns The overview stat chips.
 	 */
 	protected get overviewStats(): VaultOverviewStat[] {
 		const counts: Record<string, number> = {};
+		let verifiedCount = 0;
 		this.nodes.forEach((node) => {
 			if (node.nodeType !== VAULT_NODE_ACCOUNT) return;
+			if (node.verified) verifiedCount++;
 			// An account counts toward each of its categories; one with none goes to the Uncategorized bucket.
 			if (node.categories.length === 0) {
 				counts[this.otherCategory.key] = (counts[this.otherCategory.key] ?? 0) + 1;
@@ -1274,7 +1297,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			});
 		});
 		// Presets, then custom categories, then the Uncategorized fallback — only those with any account.
-		return [...this.presetCategories, ...this.customCategories, this.otherCategory]
+		const categoryStats = [...this.presetCategories, ...this.customCategories, this.otherCategory]
 			.filter((categoryDef) => counts[categoryDef.key])
 			.map((categoryDef) => ({
 				key: categoryDef.key,
@@ -1286,6 +1309,20 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 				// Only user-created categories are deletable — built-ins and Uncategorized are not.
 				isCustom: this.customCategoryKeys.has(categoryDef.key)
 			}));
+		// Verified is a cross-cutting pseudo-category, not a real one — appended last, same click-to-filter behavior via categoryFilter.
+		if (!verifiedCount) return categoryStats;
+		return [
+			...categoryStats,
+			{
+				key: VAULT_FILTER_KEY_VERIFIED,
+				icon: VAULT_ICON_VERIFIED,
+				gradient: VAULT_GRADIENT_VERIFIED,
+				value: verifiedCount,
+				label: VAULT_LEGEND_VERIFIED,
+				isActive: this.categoryFilter === VAULT_FILTER_KEY_VERIFIED,
+				isCustom: false
+			}
+		];
 	}
 
 	/**

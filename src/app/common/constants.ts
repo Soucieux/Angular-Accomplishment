@@ -926,6 +926,10 @@ export const VAULT_NODE_NOTES = 'notes';
 export const VAULT_NODE_LEGACY_PASSWORD: string = 'password';
 /** Filter key toggling visibility of verified accounts in the graph. */
 export const VAULT_FILTER_KEY_VERIFIED = 'verified';
+/** Material Symbols icon for the Verified overview chip. */
+export const VAULT_ICON_VERIFIED = 'verified';
+/** Icon-badge gradient for the Verified overview chip — teal, distinct from every category preset. */
+export const VAULT_GRADIENT_VERIFIED = 'linear-gradient(135deg, #2dd4bf, #0d9488)';
 
 /** Category key used for accounts created without an explicit category. */
 export const VAULT_CATEGORY_KEY_OTHER = 'other';

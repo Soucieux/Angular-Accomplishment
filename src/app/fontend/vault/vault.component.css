@@ -237,6 +237,7 @@
 }
 
 .vault-avatar {
+	position: relative;
 	width: 38px;
 	height: 38px;
 	flex-shrink: 0;
@@ -247,7 +248,19 @@
 	color: #fff;
 	font-weight: 700;
 	font-size: 17px;
+	overflow: hidden;
 	transition: transform 0.22s ease;
+}
+
+/* The brand favicon overlays the letter initials, covering them when it loads; on load failure the
+   image is removed (see failedFavicons) so the initials beneath show through as the fallback. */
+.vault-avatar-favicon {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	background: #fff;
 }
 
 .vault-card:hover .vault-avatar {
@@ -914,6 +927,7 @@
 .vault-stat-label {
 	font-size: 11px;
 	color: #64748b;
+	line-height: 1;
 }
 
 /* Hover popover listing the selected node's connected accounts or identifiers, anchored under the pill. */

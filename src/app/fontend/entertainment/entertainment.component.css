@@ -130,6 +130,7 @@
 }
 
 .control-button {
+	position: relative;
 	width: 76px !important;
 	height: 46px !important;
 	border-radius: 17px !important;
@@ -159,8 +160,10 @@
 }
 
 .control-button-icon {
-	position: relative;
-	top: 3px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 	font-size: 24px;
 }
 

@@ -45,7 +45,7 @@ import { CategoryDialogComponent } from './category/category.component';
 import { AddAccountDialogComponent } from './add-account/add-account.component';
 import { NewCategoryData, NewLinkData } from '../../fontend/portal/portal.model';
 import { NewAccountData, AddAccountDialogData } from '../../fontend/vault/vault.model';
-import { DeleteAccountDialogComponent } from './delete-account/delete-account.component';
+import { DeleteAccountDialogComponent, DeleteConfirmText } from './delete-account/delete-account.component';
 import { SessionExpiredError } from '../../common/error/session-expired.error';
 import { DialogError } from '../../common/error/dialog.error';
 import { UnexpectedError } from '../../common/error/unexpected.error';
@@ -135,7 +135,8 @@ export class DialogService {
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'delete-account',
-		submitCallback: (password: string) => Promise<void>
+		submitCallback: (password: string) => Promise<void>,
+		text?: DeleteConfirmText
 	): void;
 
 	public openDialog(
@@ -206,7 +207,7 @@ export class DialogService {
 			} else if (dialogType === DIALOG_BLOCK) {
 				blockPromise = dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
 			} else if (dialogType === DIALOG_DELETE_ACCOUNT) {
-				dialogComponentRef.instance.openDialog(dataOrCallback1);
+				dialogComponentRef.instance.openDialog(dataOrCallback1, dataOrCallback2);
 				dialogComponentRef.instance.sessionExpired$.pipe(take(1)).subscribe(() => {
 					this.showSessionExpired(dialogContainerRef);
 				});

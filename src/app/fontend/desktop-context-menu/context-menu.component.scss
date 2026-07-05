@@ -129,10 +129,13 @@
 }
 
 /* ─────────────────────────────────────────
-   Narrow viewport
+   Mobile-sized touch devices
 ───────────────────────────────────────── */
 
-@media (max-width: 940px) {
+/* Hide only when it is both mobile-sized AND touch-primary, matching a real mobile browser / web app.
+   A narrowed desktop window (mouse = pointer: fine) still shows the menu, and a large touch device keeps
+   it too — both conditions must hold, so a narrow desktop under 940px is never hidden. */
+@media (max-width: 940px) and (pointer: coarse) {
 	.context-menu-menu {
 		display: none;
 	}

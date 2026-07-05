@@ -101,15 +101,13 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	private readonly centeringStrength = 0.0016;
 	private readonly velocityDamping = 0.82;
 	/* Node-count base scale: at or below baseScaleNodeThreshold nodes the map opens at 1:1; above it
-	   the resting scale steps down once per baseScaleNodeStep extra nodes (never below minBaseScale) so
-	   a crowded graph is narrowed to fit. */
+	   the resting scale steps down once per baseScaleNodeStep extra nodes, boosted by baseScaleBoost
+	   and floored at minBaseScale, so a crowded graph is narrowed to fit without shrinking too far. */
 	private readonly baseScaleNodeThreshold = 30;
 	private readonly baseScaleNodeStep = 10;
-	private readonly minBaseScale = 0.5;
-	/* Containment margins (world units, added to each node's own radius) keeping every node inside the
-	   visible map edge; nodeLabelExtent reserves extra room below a node for its name label. */
-	private readonly nodeEdgeGap = 10;
-	private readonly nodeLabelExtent = 26;
+	// Two zoom-in clicks (1.15² ≈ 1.3225) — the size confirmed correct for a 61-node graph.
+	private readonly baseScaleBoost = 1.3225;
+	private readonly minBaseScale = 0.66;
 	private readonly settleFrames = 260;
 	private readonly maxReachLevel = 2;
 	private readonly verifiedBadgeColor = '#0d9488';
@@ -350,8 +348,6 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			node.y += node.vy;
 		});
 
-		// Contain every node in view, paint, then schedule the next frame until the layout settles
-		this.clampNodesToView(width, height);
 		this.renderPositions();
 		this.frameCount++;
 		if (this.frameCount < this.settleFrames || this.dragNode) {
@@ -373,8 +369,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 
 	/**
 	 * Gets the resting camera scale for the current node count. At or below the threshold the map opens
-	 * at 1:1; above it the scale steps down once per baseScaleNodeStep extra nodes (floored at
-	 * minBaseScale) so a crowded graph is narrowed to fit rather than overflowing the viewport.
+	 * at 1:1; above it the scale steps down once per baseScaleNodeStep extra nodes, boosted by
+	 * baseScaleBoost so a crowded graph stays readable, capped at 1:1 and floored at minBaseScale.
 	 *
 	 * @returns The base scale the map opens and resets at.
 	 */
@@ -386,7 +382,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		const steppedCount =
 			this.baseScaleNodeThreshold +
 			Math.ceil((count - this.baseScaleNodeThreshold) / this.baseScaleNodeStep) * this.baseScaleNodeStep;
-		return Math.max(this.minBaseScale, Math.sqrt(this.baseScaleNodeThreshold / steppedCount));
+		const boostedScale = Math.sqrt(this.baseScaleNodeThreshold / steppedCount) * this.baseScaleBoost;
+		return Math.min(1, Math.max(this.minBaseScale, boostedScale));
 	}
 
 	/**
@@ -399,29 +396,6 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		const height = this.viewportHeight();
 		this.camera = { scale, x: (width / 2) * (1 - scale), y: (height / 2) * (1 - scale) };
 		this.applyCamera();
-	}
-
-	/**
-	 * Clamps every node inside the currently visible map region so none can drift or be dragged
-	 * off-screen. The visible rectangle is the viewport corners mapped to world space via
-	 * {@link screenToWorld}, so the room widens automatically when the base scale zooms out for a
-	 * crowded graph; extra space is reserved below each node for its name label.
-	 *
-	 * @param width - The current viewport width in pixels.
-	 * @param height - The current viewport height in pixels.
-	 */
-	private clampNodesToView(width: number, height: number): void {
-		const topLeft = this.screenToWorld(0, 0);
-		const bottomRight = this.screenToWorld(width, height);
-		for (const node of this.simNodes) {
-			const sideMargin = node.rad + this.nodeEdgeGap;
-			node.x = Utilities.clamp(node.x, topLeft.x + sideMargin, bottomRight.x - sideMargin);
-			node.y = Utilities.clamp(
-				node.y,
-				topLeft.y + sideMargin,
-				bottomRight.y - sideMargin - this.nodeLabelExtent
-			);
-		}
 	}
 
 	/**

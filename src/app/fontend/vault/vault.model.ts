@@ -116,6 +116,13 @@ export interface VaultSelectionIdentifier {
 	gradient: string;
 }
 
+/** A connected account listed in the selection stat-pill hover popover. */
+export interface VaultSelectionAccount {
+	name: string;
+	letter: string;
+	gradient: string;
+}
+
 /** The detail shown in the info bar for the currently selected node. */
 export interface VaultSelectionDetail {
 	id: string;
@@ -127,6 +134,7 @@ export interface VaultSelectionDetail {
 	icon: string;
 	letter: string;
 	accountCount: number;
+	connectedAccounts: VaultSelectionAccount[];
 	identifierCount: number;
 	identifiers: VaultSelectionIdentifier[];
 }

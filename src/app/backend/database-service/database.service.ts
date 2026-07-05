@@ -759,11 +759,12 @@ export abstract class DatabaseService {
 	public abstract updateVaultNodeVerified(nodeId: string, verified: boolean): Promise<void>;
 
 	/**
-	 * Sets an account node's display name — used by the inline name edit in the list view.
+	 * Sets a vault node's display name — used by the inline account name edit in the list view and the
+	 * name-edit dialog for non-account nodes.
 	 *
-	 * @param nodeId - The id of the account node to update.
-	 * @param name - The new display name to store on the account.
-	 * @returns A promise that resolves when the account's name is updated.
+	 * @param nodeId - The id of the node to update.
+	 * @param name - The new display name to store.
+	 * @returns A promise that resolves when the node's name is updated.
 	 */
 	public abstract updateVaultNodeName(nodeId: string, name: string): Promise<void>;
 

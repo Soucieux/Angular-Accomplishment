@@ -1,388 +1,414 @@
 @if (utilities.getIsUserAlive()) {
-	<div class="glass-card container-vault">
-		<!-- ===== Header ===== -->
-		<header class="vault-header">
-			<div class="vault-title-block">
-				<div class="page-title-row">
-					<h1 class="vault-title">{{ NAV_LABEL_VAULT }}</h1>
-					@if (saveIndicator) {
-						<div class="save-indicator"><span class="save-spinner"></span></div>
+	@if (isUnlocked) {
+		<div class="glass-card container-vault">
+			<!-- ===== Header ===== -->
+			<header class="vault-header">
+				<div class="vault-title-block">
+					<div class="page-title-row">
+						<h1 class="vault-title">{{ NAV_LABEL_VAULT }}</h1>
+						@if (saveIndicator) {
+							<div class="save-indicator"><span class="save-spinner"></span></div>
+						}
+					</div>
+					<p class="vault-subtitle">{{ VAULT_PAGE_SUBTITLE }}</p>
+				</div>
+
+				<div class="vault-controls">
+					<div class="vault-search hide-on-narrow-or-mobile">
+						<input
+							class="vault-search-input"
+							type="text"
+							[(ngModel)]="query"
+							[placeholder]="VAULT_SEARCH_PLACEHOLDER" />
+					</div>
+
+					@if (!utilities.isMobile()) {
+						<ng-container *ngTemplateOutlet="vaultToolbarButtons"></ng-container>
 					}
 				</div>
-				<p class="vault-subtitle">{{ VAULT_PAGE_SUBTITLE }}</p>
-			</div>
 
-			<div class="vault-controls">
-				<div class="vault-search hide-on-narrow-or-mobile">
-					<input
-						class="vault-search-input"
-						type="text"
-						[(ngModel)]="query"
-						[placeholder]="VAULT_SEARCH_PLACEHOLDER" />
-				</div>
-
-				@if (!utilities.isMobile()) {
-					<ng-container *ngTemplateOutlet="vaultToolbarButtons"></ng-container>
-				}
-			</div>
-
-			@if (utilities.isMobile()) {
-				<div class="vault-mobile-toolbar">
-					<ng-container *ngTemplateOutlet="vaultToolbarButtons"></ng-container>
-				</div>
-			}
-		</header>
-
-		<ng-template #vaultToolbarButtons>
-			<div class="vault-view-toggle">
-				<button
-					type="button"
-					class="vault-tab"
-					[class.active]="isGraphView"
-					(click)="showGraphView()">
-					<span class="material-symbols-outlined">hub</span>
-					{{ VAULT_TAB_GRAPH }}
-				</button>
-				<button
-					type="button"
-					class="vault-tab"
-					[class.active]="isListView"
-					(click)="showListView()">
-					<span class="material-symbols-outlined">format_list_bulleted</span>
-					{{ VAULT_TAB_LIST }}
-				</button>
-			</div>
-
-			<button type="button" class="vault-add-button" (click)="openAddDialog()">
-				<span class="material-symbols-outlined">add</span>
-				{{ VAULT_BTN_ADD }}
-			</button>
-		</ng-template>
-
-		<!-- ===== Info bar (selection detail / category overview) ===== -->
-		@if (hasAccounts) {
-			<div class="vault-info-bar">
-				@if (selectionDetail; as detail) {
-					<div class="vault-selection">
-						<div class="vault-selection-identity">
-							<span class="vault-selection-avatar" [style.background]="detail.avatarGradient">
-								@if (detail.isIcon) {
-									<span class="material-symbols-outlined">{{ detail.icon }}</span>
-								} @else {
-									{{ detail.letter }}
-								}
-							</span>
-							<div class="vault-selection-text">
-								<div class="vault-selection-name">{{ detail.name }}</div>
-								<span class="vault-selection-type">{{ detail.typeLabel }}</span>
-							</div>
-						</div>
-						<div class="vault-stat-pills">
-							<div class="vault-stat-pill vault-stat-accounts">
-								<span class="vault-stat-dot"></span>
-								<span class="vault-stat-value">{{ detail.accountCount }}</span>
-								<span class="vault-stat-label">{{ VAULT_LABEL_ACCOUNTS }}</span>
-							</div>
-							<div
-								class="vault-stat-pill vault-stat-identifiers"
-								[class.has-popover]="detail.identifiers.length">
-								<span class="vault-stat-dot"></span>
-								<span class="vault-stat-value">{{ detail.identifierCount }}</span>
-								<span class="vault-stat-label">{{ VAULT_LABEL_IDENTIFIERS }}</span>
-								@if (detail.identifiers.length) {
-									<span class="material-symbols-outlined vault-stat-more">expand_more</span>
-									<div class="vault-identifier-popover">
-										@for (identifier of detail.identifiers; track identifier.name) {
-											<div class="vault-identifier-row">
-												<span
-													class="vault-identifier-badge"
-													[style.background]="identifier.gradient">
-													<span class="material-symbols-outlined">{{
-														identifier.icon
-													}}</span>
-												</span>
-												<span class="vault-identifier-name">{{
-													identifier.name
-												}}</span>
-											</div>
-										}
-									</div>
-								}
-							</div>
-						</div>
-						<div class="vault-selection-divider"></div>
-						@if (detail.isAccount) {
-							<button type="button" class="vault-link-button" (click)="startLinkMode()">
-								<span class="material-symbols-outlined">add_link</span>
-								{{ VAULT_BTN_ADD_CONNECTIONS }}
-							</button>
-						}
-						<button
-							type="button"
-							class="vault-delete-button"
-							[attr.aria-label]="VAULT_MSG_DELETE_NODE_TITLE"
-							(click)="openDeleteNodeDialog(detail.id, $event)">
-							<span class="material-symbols-outlined">delete</span>
-						</button>
+				@if (utilities.isMobile()) {
+					<div class="vault-mobile-toolbar">
+						<ng-container *ngTemplateOutlet="vaultToolbarButtons"></ng-container>
 					</div>
-				} @else {
-					<div class="vault-overview">
-						@if (overviewStats.length === 0) {
-							<span class="vault-overview-empty">{{ VAULT_OVERVIEW_EMPTY }}</span>
-						}
-						@for (stat of overviewStats; track stat.key) {
-							<button
-								type="button"
-								class="vault-overview-chip"
-								[class.active]="stat.isActive"
-								(click)="pickCategory(stat.key)">
-								<span class="vault-overview-icon" [style.background]="stat.gradient">
-									<span class="material-symbols-outlined">{{ stat.icon }}</span>
+				}
+			</header>
+
+			<ng-template #vaultToolbarButtons>
+				<div class="vault-view-toggle">
+					<button
+						type="button"
+						class="vault-tab"
+						[class.active]="isGraphView"
+						(click)="showGraphView()">
+						<span class="material-symbols-outlined">hub</span>
+						{{ VAULT_TAB_GRAPH }}
+					</button>
+					<button
+						type="button"
+						class="vault-tab"
+						[class.active]="isListView"
+						(click)="showListView()">
+						<span class="material-symbols-outlined">format_list_bulleted</span>
+						{{ VAULT_TAB_LIST }}
+					</button>
+				</div>
+
+				<button type="button" class="vault-add-button" (click)="openAddDialog()">
+					<span class="material-symbols-outlined">add</span>
+					{{ VAULT_BTN_ADD }}
+				</button>
+			</ng-template>
+
+			<!-- ===== Info bar (selection detail / category overview) ===== -->
+			@if (hasAccounts) {
+				<div class="vault-info-bar">
+					@if (selectionDetail; as detail) {
+						<div class="vault-selection">
+							<div class="vault-selection-identity">
+								<span class="vault-selection-avatar" [style.background]="detail.avatarGradient">
+									@if (detail.isIcon) {
+										<span class="material-symbols-outlined">{{ detail.icon }}</span>
+									} @else {
+										{{ detail.letter }}
+									}
 								</span>
-								<div class="vault-overview-text">
-									<div class="vault-overview-value">{{ stat.value }}</div>
-									<div class="vault-overview-label">{{ stat.label }}</div>
+								<div class="vault-selection-text">
+									<div class="vault-selection-name">{{ detail.name }}</div>
+									<span class="vault-selection-type">{{ detail.typeLabel }}</span>
 								</div>
-								@if (stat.isActive && stat.isCustom) {
-									<span
-										class="vault-overview-edit material-symbols-outlined"
-										(click)="openEditCategoryDialog(stat, $event)"
-										>tune</span
-									>
-								}
-							</button>
-						}
-					</div>
-				}
-			</div>
-		}
-
-		<!-- ===== Content ===== -->
-		<div class="vault-content" #vaultContent>
-			@if (loading) {
-				<div class="vault-loading">
-					<span class="vault-loading-spinner"></span>
-					<span class="vault-loading-text">{{ MSG_LOADING }}</span>
-				</div>
-			} @else if (isListView) {
-				@if (hasAccounts) {
-					<div class="vault-list">
-						@for (account of accountRows; track account.id; let index = $index) {
-							<div class="vault-card" [style.animation-delay.ms]="cardEntranceDelay(index)">
-								<div class="vault-card-top">
-									<span class="vault-avatar" [style.background]="account.gradient">{{
-										account.letter
-									}}</span>
-									<div class="vault-card-id">
-										<div class="vault-card-name">
-											@if (account.isEditing) {
-												<input
-													class="vault-name-input"
-													type="text"
-													[(ngModel)]="nameDraft"
-													(keyup.enter)="updateAccountName(account.id)"
-													(blur)="updateAccountName(account.id)" />
-												<button
-													type="button"
-													class="vault-verified-toggle"
-													[class.active]="account.verified"
-													(click)="
-														toggleAccountVerified(
-															account.id,
-															account.verified,
-															$event
-														)
-													">
-													<span class="material-symbols-outlined">verified</span>
-													{{ VAULT_DIALOG_VERIFIED_LABEL }}
-												</button>
-											} @else {
-												{{ account.name }}
-												@if (account.verified) {
-													<span class="vault-verified-badge">
-														<span class="material-symbols-outlined"
-															>verified</span
-														>
+							</div>
+							<div class="vault-stat-pills">
+								<div
+									class="vault-stat-pill vault-stat-accounts"
+									[class.has-popover]="detail.connectedAccounts.length">
+									<span class="vault-stat-dot"></span>
+									<span class="vault-stat-value">{{ detail.accountCount }}</span>
+									<span class="vault-stat-label">{{ VAULT_LABEL_ACCOUNTS }}</span>
+									@if (detail.connectedAccounts.length) {
+										<span class="material-symbols-outlined vault-stat-more">expand_more</span>
+										<div class="vault-connection-popover">
+											@for (account of detail.connectedAccounts; track account.name) {
+												<div class="vault-connection-row">
+													<span
+														class="vault-connection-badge"
+														[style.background]="account.gradient">
+														{{ account.letter }}
 													</span>
-												}
+													<span class="vault-connection-name">{{ account.name }}</span>
+												</div>
 											}
 										</div>
-										<div class="vault-category-picker">
-											<button
-												type="button"
-												class="vault-card-category"
-												[class.open]="categoryPickerId === account.id"
-												[class.readonly]="!account.isEditing"
-												(click)="toggleCategoryPicker(account.id, $event)">
-												@if (account.categoryChips.length) {
-													@for (chip of account.categoryChips; track chip.key) {
-														<span class="vault-category-chip">
-															<span
-																class="vault-category-chip-dot"
-																[style.background]="chip.gradient"></span>
-															{{ chip.label }}
-														</span>
-													}
-												} @else {
+									}
+								</div>
+								<div
+									class="vault-stat-pill vault-stat-identifiers"
+									[class.has-popover]="detail.identifiers.length">
+									<span class="vault-stat-dot"></span>
+									<span class="vault-stat-value">{{ detail.identifierCount }}</span>
+									<span class="vault-stat-label">{{ VAULT_LABEL_IDENTIFIERS }}</span>
+									@if (detail.identifiers.length) {
+										<span class="material-symbols-outlined vault-stat-more">expand_more</span>
+										<div class="vault-connection-popover">
+											@for (identifier of detail.identifiers; track identifier.name) {
+												<div class="vault-connection-row">
 													<span
-														class="vault-category-chip vault-category-uncategorized"
-														>{{ VAULT_CATEGORY_UNCATEGORIZED_LABEL }}</span
-													>
-												}
-												<span class="material-symbols-outlined vault-category-caret"
-													>chevron_right</span
-												>
-											</button>
-											<div
-												class="vault-category-options"
-												[class.open]="categoryPickerId === account.id">
-												@for (option of assignableCategories; track option.key) {
+														class="vault-connection-badge"
+														[style.background]="identifier.gradient">
+														<span class="material-symbols-outlined">{{
+															identifier.icon
+														}}</span>
+													</span>
+													<span class="vault-connection-name">{{
+														identifier.name
+													}}</span>
+												</div>
+											}
+										</div>
+									}
+								</div>
+							</div>
+							<div class="vault-selection-divider"></div>
+							@if (detail.isAccount) {
+								@if (linkMode) {
+									<div class="vault-banner">
+										<span class="material-symbols-outlined">add_link</span>
+										<span>{{ VAULT_BANNER_SECOND }}</span>
+										<button
+											type="button"
+											class="vault-banner-cancel"
+											(click)="cancelLinkMode()">
+											<span class="material-symbols-outlined">close</span>
+											{{ VAULT_BANNER_CANCEL }}
+										</button>
+									</div>
+								} @else {
+									<button type="button" class="vault-link-button" (click)="startLinkMode()">
+										<span class="material-symbols-outlined">add_link</span>
+										{{ VAULT_BTN_ADD_CONNECTIONS }}
+									</button>
+								}
+							} @else {
+								<button
+									type="button"
+									class="vault-edit-name-button"
+									[attr.aria-label]="VAULT_BTN_EDIT_NAME"
+									(click)="openEditNodeNameDialog(detail, $event)">
+									<span class="material-symbols-outlined">text_fields</span>
+								</button>
+							}
+						</div>
+					} @else {
+						<div class="vault-overview">
+							@if (overviewStats.length === 0) {
+								<span class="vault-overview-empty">{{ VAULT_OVERVIEW_EMPTY }}</span>
+							}
+							@for (stat of overviewStats; track stat.key) {
+								<button
+									type="button"
+									class="vault-overview-chip"
+									[class.active]="stat.isActive"
+									(click)="pickCategory(stat.key)">
+									<span class="vault-overview-icon" [style.background]="stat.gradient">
+										<span class="material-symbols-outlined">{{ stat.icon }}</span>
+									</span>
+									<div class="vault-overview-text">
+										<div class="vault-overview-value">{{ stat.value }}</div>
+										<div class="vault-overview-label">{{ stat.label }}</div>
+									</div>
+									@if (stat.isActive && stat.isCustom) {
+										<span
+											class="vault-overview-edit material-symbols-outlined"
+											(click)="openEditCategoryDialog(stat, $event)"
+											>tune</span
+										>
+									}
+								</button>
+							}
+						</div>
+					}
+				</div>
+			}
+
+			<!-- ===== Content ===== -->
+			<div class="vault-content" #vaultContent>
+				@if (loading) {
+					<div class="vault-loading">
+						<span class="vault-loading-spinner"></span>
+						<span class="vault-loading-text">{{ MSG_LOADING }}</span>
+					</div>
+				} @else if (isListView) {
+					@if (hasAccounts) {
+						<div class="vault-list">
+							@for (account of accountRows; track account.id; let index = $index) {
+								<div class="vault-card" [style.animation-delay.ms]="cardEntranceDelay(index)">
+									<div class="vault-card-top">
+										<span class="vault-avatar" [style.background]="account.gradient">{{
+											account.letter
+										}}</span>
+										<div class="vault-card-id">
+											<div class="vault-card-name">
+												@if (account.isEditing) {
+													<input
+														class="vault-name-input"
+														type="text"
+														[(ngModel)]="nameDraft"
+														(keyup.enter)="updateAccountName(account.id)"
+														(blur)="updateAccountName(account.id)" />
 													<button
 														type="button"
-														class="vault-category-option"
-														[class.current]="
-															account.categoryKeys.includes(option.key)
-														"
+														class="vault-verified-toggle"
+														[class.active]="account.verified"
 														(click)="
-															toggleAccountCategory(
+															toggleAccountVerified(
 																account.id,
-																option.key,
-																account.categoryKeys,
+																account.verified,
 																$event
 															)
 														">
-														<span
-															class="vault-category-option-dot"
-															[style.background]="option.gradient"></span>
-														{{ option.label }}
+														<span class="material-symbols-outlined">verified</span>
+														{{ VAULT_DIALOG_VERIFIED_LABEL }}
 													</button>
+												} @else {
+													{{ account.name }}
+													@if (account.verified) {
+														<span class="vault-verified-badge">
+															<span class="material-symbols-outlined"
+																>verified</span
+															>
+														</span>
+													}
 												}
 											</div>
+											<div class="vault-category-picker">
+												<button
+													type="button"
+													class="vault-card-category"
+													[class.open]="categoryPickerId === account.id"
+													[class.readonly]="!account.isEditing"
+													(click)="toggleCategoryPicker(account.id, $event)">
+													@if (account.categoryChips.length) {
+														@for (chip of account.categoryChips; track chip.key) {
+															<span class="vault-category-chip">
+																<span
+																	class="vault-category-chip-dot"
+																	[style.background]="chip.gradient"></span>
+																{{ chip.label }}
+															</span>
+														}
+													} @else {
+														<span
+															class="vault-category-chip vault-category-uncategorized"
+															>{{ VAULT_CATEGORY_UNCATEGORIZED_LABEL }}</span
+														>
+													}
+													<span class="material-symbols-outlined vault-category-caret"
+														>chevron_right</span
+													>
+												</button>
+												<div
+													class="vault-category-options"
+													[class.open]="categoryPickerId === account.id">
+													@for (option of assignableCategories; track option.key) {
+														<button
+															type="button"
+															class="vault-category-option"
+															[class.current]="
+																account.categoryKeys.includes(option.key)
+															"
+															(click)="
+																toggleAccountCategory(
+																	account.id,
+																	option.key,
+																	account.categoryKeys,
+																	$event
+																)
+															">
+															<span
+																class="vault-category-option-dot"
+																[style.background]="option.gradient"></span>
+															{{ option.label }}
+														</button>
+													}
+												</div>
+											</div>
+										</div>
+										<div class="vault-card-actions">
+											<div class="vault-link-count">
+												<span class="material-symbols-outlined">link</span
+												>{{ account.linkCount }}
+											</div>
+											<button
+												type="button"
+												class="vault-edit-button"
+												[class.active]="account.isEditing"
+												(click)="toggleEditMode(account.id, $event)">
+												<span class="material-symbols-outlined">{{
+													account.isEditing ? 'check' : 'edit'
+												}}</span>
+												{{ account.isEditing ? VAULT_LIST_DONE : VAULT_LIST_EDIT }}
+											</button>
+											<button
+												type="button"
+												class="vault-delete-button"
+												[attr.aria-label]="VAULT_MSG_DELETE_NODE_TITLE"
+												(click)="openDeleteNodeDialog(account.id, $event)">
+												<span class="material-symbols-outlined">delete</span>
+											</button>
 										</div>
 									</div>
-									<div class="vault-card-actions">
-										<div class="vault-link-count">
-											<span class="material-symbols-outlined">link</span
-											>{{ account.linkCount }}
+									@if (account.hasLinks) {
+										<div class="vault-chips">
+											@for (link of account.links; track link.edgeKey) {
+												<span class="vault-chip">
+													<span
+														class="vault-dot {{ link.shapeClass }}"
+														[style.background]="link.gradient"></span>
+													{{ link.name }}
+													@if (account.isEditing) {
+														<button
+															type="button"
+															class="vault-chip-remove"
+															(click)="removeLink(link.edgeKey, $event)">
+															<span class="material-symbols-outlined">close</span>
+														</button>
+													}
+												</span>
+											}
 										</div>
-										<button
-											type="button"
-											class="vault-edit-button"
-											[class.active]="account.isEditing"
-											(click)="toggleEditMode(account.id, $event)">
-											<span class="material-symbols-outlined">{{
-												account.isEditing ? 'check' : 'edit'
-											}}</span>
-											{{ account.isEditing ? VAULT_LIST_DONE : VAULT_LIST_EDIT }}
-										</button>
-										<button
-											type="button"
-											class="vault-delete-button"
-											[attr.aria-label]="VAULT_MSG_DELETE_NODE_TITLE"
-											(click)="openDeleteNodeDialog(account.id, $event)">
-											<span class="material-symbols-outlined">delete</span>
-										</button>
-									</div>
+									}
+									@if (account.isEditing) {
+										<div class="vault-note-add" (click)="$event.stopPropagation()">
+											<span class="material-symbols-outlined vault-note-add-icon"
+												>sticky_note_2</span
+											>
+											<input
+												class="vault-note-input"
+												type="text"
+												[(ngModel)]="noteDraft"
+												[placeholder]="VAULT_NOTE_PLACEHOLDER"
+												(keyup.enter)="addNote(account.id)" />
+											<button
+												type="button"
+												class="vault-note-add-button"
+												(click)="addNote(account.id)">
+												<span class="material-symbols-outlined">add</span>
+											</button>
+										</div>
+									}
 								</div>
-								@if (account.hasLinks) {
-									<div class="vault-chips">
-										@for (link of account.links; track link.edgeKey) {
-											<span class="vault-chip">
-												<span
-													class="vault-dot {{ link.shapeClass }}"
-													[style.background]="link.gradient"></span>
-												{{ link.name }}
-												@if (account.isEditing) {
-													<button
-														type="button"
-														class="vault-chip-remove"
-														(click)="removeLink(link.edgeKey, $event)">
-														<span class="material-symbols-outlined">close</span>
-													</button>
-												}
-											</span>
-										}
-									</div>
-								}
-								@if (account.isEditing) {
-									<div class="vault-note-add" (click)="$event.stopPropagation()">
-										<span class="material-symbols-outlined vault-note-add-icon"
-											>sticky_note_2</span
-										>
-										<input
-											class="vault-note-input"
-											type="text"
-											[(ngModel)]="noteDraft"
-											[placeholder]="VAULT_NOTE_PLACEHOLDER"
-											(keyup.enter)="addNote(account.id)" />
-										<button
-											type="button"
-											class="vault-note-add-button"
-											(click)="addNote(account.id)">
-											<span class="material-symbols-outlined">add</span>
-										</button>
-									</div>
-								}
-							</div>
-						}
-					</div>
-				} @else {
-					<div class="vault-empty">
-						<div class="vault-empty-icon"><span class="material-symbols-outlined">hub</span></div>
-						<div class="vault-empty-title">{{ VAULT_EMPTY_TITLE }}</div>
-						<div class="vault-empty-body">{{ VAULT_EMPTY_BODY }}</div>
-						<button
-							type="button"
-							class="vault-add-button vault-empty-add"
-							(click)="openAddDialog()">
-							<span class="material-symbols-outlined">add</span>
-							{{ VAULT_BTN_ADD }}
-						</button>
-					</div>
-				}
-			} @else {
-				<div class="vault-graph-area">
-					@if (utilities.isMobile()) {
-						<div class="vault-graph-blocked">
-							<blocked-card
-								icon="desktop_windows"
-								[title]="MOBILE_BLOCKED_TITLE"
-								[body]="VAULT_GRAPH_MOBILE_BLOCKED_BODY" />
+							}
 						</div>
 					} @else {
-						@if (linkMode) {
-							<div class="vault-banner">
-								<span class="material-symbols-outlined">add_link</span>
-								<span>{{ VAULT_BANNER_SECOND }}</span>
-								<button type="button" class="vault-banner-cancel" (click)="cancelLinkMode()">
-									<span class="material-symbols-outlined">close</span>
-									{{ VAULT_BANNER_CANCEL }}
-								</button>
-							</div>
-						}
-						<graph-canvas
-							[nodes]="mapNodes"
-							[edges]="mapEdges"
-							[customCategories]="customCategories"
-							[selectedId]="selectedId"
-							[query]="query"
-							[typeFilter]="typeFilter"
-							[categoryFilter]="categoryFilter"
-							[linkMode]="linkMode"
-							[linkSourceId]="linkSourceId"
-							(nodeSelect)="onGraphNodeSelect($event)"
-							(linkTarget)="handleLinkTarget($event)"
-							(filterToggle)="toggleFilter($event)">
-						</graph-canvas>
+						<div class="vault-empty">
+							<div class="vault-empty-icon"><span class="material-symbols-outlined">hub</span></div>
+							<div class="vault-empty-title">{{ VAULT_EMPTY_TITLE }}</div>
+							<div class="vault-empty-body">{{ VAULT_EMPTY_BODY }}</div>
+							<button
+								type="button"
+								class="vault-add-button vault-empty-add"
+								(click)="openAddDialog()">
+								<span class="material-symbols-outlined">add</span>
+								{{ VAULT_BTN_ADD }}
+							</button>
+						</div>
 					}
-				</div>
-			}
-		</div>
+				} @else {
+					<div class="vault-graph-area">
+						@if (utilities.isMobile()) {
+							<div class="vault-graph-blocked">
+								<blocked-card
+									icon="desktop_windows"
+									[title]="MOBILE_BLOCKED_TITLE"
+									[body]="VAULT_GRAPH_MOBILE_BLOCKED_BODY" />
+							</div>
+						} @else {
+							<graph-canvas
+								[nodes]="mapNodes"
+								[edges]="mapEdges"
+								[customCategories]="customCategories"
+								[selectedId]="selectedId"
+								[query]="query"
+								[typeFilter]="typeFilter"
+								[categoryFilter]="categoryFilter"
+								[linkMode]="linkMode"
+								[linkSourceId]="linkSourceId"
+								(nodeSelect)="onGraphNodeSelect($event)"
+								(linkTarget)="handleLinkTarget($event)"
+								(filterToggle)="toggleFilter($event)">
+							</graph-canvas>
+						}
+					</div>
+				}
+			</div>
 
-		<ng-template #dialogComponentContainer></ng-template>
-	</div>
+			<ng-template #dialogComponentContainer></ng-template>
+		</div>
+	} @else {
+		<passphrase-lock [featureKey]="PASSPHRASE_LOCK_KEY_VAULT" (unlocked)="onVaultUnlocked()" />
+	}
 } @else {
 	<div class="access-denied-wrapper">
-		<blocked-card icon="lock" />
+		<blocked-card icon="lock" [isAccessDenied]="true" />
 	</div>
 }

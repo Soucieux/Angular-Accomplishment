@@ -800,8 +800,10 @@ export const VAULT_TAB_GRAPH = '图谱';
 export const VAULT_TAB_LIST = '列表';
 export const VAULT_BTN_ADD = '添加';
 export const VAULT_BTN_ADD_CONNECTIONS = '添加新关联';
+export const VAULT_BTN_EDIT_NAME = '编辑名称';
+export const VAULT_NODE_NAME_DIALOG_TITLE = '编辑名称';
 export const VAULT_OVERVIEW_EMPTY = '暂无已分类账户';
-export const VAULT_GRAPH_MOBILE_BLOCKED_BODY = '关系图谱需要较宽屏幕才能正常显示。请切换到列表视图，或在桌面端、笔记本或平板上访问。';
+export const VAULT_GRAPH_MOBILE_BLOCKED_BODY = '关系图谱需要更宽的屏幕，可切换到列表视图，或使用桌面端、笔记本或平板访问。';
 
 export const VAULT_LEGEND_TITLE = '图例';
 export const VAULT_LEGEND_VERIFIED = '已验证';

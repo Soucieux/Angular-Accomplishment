@@ -2421,12 +2421,12 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Sets an account node's display name. Writes by _id (the owner-scoped path), used by the inline
-	 * name edit in the list view.
+	 * Sets a vault node's display name. Writes by _id (the owner-scoped path), used by the inline
+	 * account name edit in the list view and the name-edit dialog for non-account nodes.
 	 *
-	 * @param nodeId - The id of the account node to update.
-	 * @param name - The new display name to store on the account.
-	 * @returns A promise that resolves when the account's name is updated.
+	 * @param nodeId - The id of the node to update.
+	 * @param name - The new display name to store.
+	 * @returns A promise that resolves when the node's name is updated.
 	 */
 	public async updateVaultNodeName(nodeId: string, name: string): Promise<void> {
 		await this.updateOneVaultRecord(nodeId, { [VAULT_VALUE_KEY_NAME]: name });
@@ -2450,7 +2450,7 @@ export class CloudbaseService extends DatabaseService {
 	 *
 	 * {@link updateVaultNodeCategories} - Replaces an account's category list.
 	 * {@link updateVaultNodeVerified} - Sets an account's verified flag.
-	 * {@link updateVaultNodeName} - Sets an account's display name.
+	 * {@link updateVaultNodeName} - Sets a node's display name.
 	 * {@link updateVaultCategoryLabel} - Renames a custom category.
 	 *
 	 * @param recordId - The document id of the vault record to update.

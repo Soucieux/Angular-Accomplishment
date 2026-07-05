@@ -944,11 +944,15 @@ export const VAULT_TAB_LIST = 'List';
 export const VAULT_BTN_ADD = 'Add';
 /** Label for the link button on a selected account in the info bar. */
 export const VAULT_BTN_ADD_CONNECTIONS = 'Add new connections';
+/** Label for the edit button on a selected non-account (identifier) node in the info bar. */
+export const VAULT_BTN_EDIT_NAME = 'Edit name';
+/** Title of the shared category dialog when reused to edit a non-account node's name. */
+export const VAULT_NODE_NAME_DIALOG_TITLE = 'Edit Name';
 /** Placeholder text shown in the category overview bar when no account has a category yet. */
 export const VAULT_OVERVIEW_EMPTY = 'No categorized accounts yet';
 /** Body text shown when Graph view is blocked on mobile, offering List view as an alternative. */
 export const VAULT_GRAPH_MOBILE_BLOCKED_BODY =
-	'The account graph is built for wider screens. Switch to List view, or open Vault on a desktop, laptop, or tablet.';
+	'The graph needs a wider screen. Switch to List view, or use a desktop, laptop, or tablet.';
 
 /** Heading of the graph legend panel. */
 export const VAULT_LEGEND_TITLE = 'Legend';

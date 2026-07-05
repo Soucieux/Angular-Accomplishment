@@ -142,7 +142,11 @@ export class DialogService {
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'category',
 		submitCallback: (data: NewCategoryData) => void,
-		options: { prefillData: Partial<NewCategoryData> | null; onDelete?: () => void }
+		options: {
+			prefillData: Partial<NewCategoryData> | null;
+			onDelete?: () => void;
+			editTitle?: string;
+		}
 	): void;
 
 	public openDialog(

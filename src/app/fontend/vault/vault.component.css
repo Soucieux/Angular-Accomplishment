@@ -16,11 +16,8 @@
 	box-sizing: border-box;
 }
 
-/* blocked-card's text is styled white-on-gradient for a colorful backdrop; .glass-card's
-   own background is near-white, so this supplies the page's own accent gradient instead. */
 .access-denied-wrapper {
 	height: 100%;
-	background: var(--vault-gradient);
 }
 
 /* ─────────────────────────────────────────
@@ -34,7 +31,8 @@
 	gap: 16px;
 	flex-wrap: wrap;
 	flex-shrink: 0;
-	margin-bottom: 12px;
+	/* Matches .vault-content's padding-top so the info bar has an even gap above and below it. */
+	margin-bottom: 18px;
 }
 
 .vault-title-block {
@@ -162,9 +160,9 @@
 .vault-content {
 	flex: 1;
 	min-height: 0;
-	/* Vertical breathing room only; the scroll gutter (below) handles the right edge so the list
-	   left-aligns with the info bar. */
-	padding: 2px 0;
+	/* Top padding clears .vault-card's hover lift (translateY(-3px)) plus its shadow's ~14px upward
+	   reach, so the first row's rounded border/shadow isn't clipped by overflow-y on hover. */
+	padding: 18px 0 2px;
 	overflow-y: auto;
 	overflow-x: hidden;
 	/* Always reserve the scrollbar gutter so the list width never shifts and its right edge lines
@@ -261,7 +259,8 @@
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	/* Matches .vault-chips' margin-top below the category row, so the gap above and below it is even. */
+	gap: 11px;
 }
 
 .vault-card-name {
@@ -801,8 +800,9 @@
 	align-items: center;
 	min-height: 72px;
 	flex-shrink: 0;
-	/* Right margin matches the list's reserved scrollbar gutter so both right edges align. */
-	margin: 0 8px 7px 0;
+	/* Right margin matches the list's reserved scrollbar gutter so both right edges align; the gap
+	   below is left to .vault-content's own padding-top so it doesn't double up with it. */
+	margin: 0 8px 0 0;
 	padding: 5px 8px;
 	border-radius: 18px;
 	background: rgba(255, 255, 255, 0.92);
@@ -916,29 +916,42 @@
 	color: #64748b;
 }
 
-/* Hover popover listing the selected node's connected identifiers, anchored under the pill. */
+/* Hover popover listing the selected node's connected accounts or identifiers, anchored under the pill. */
+.vault-stat-accounts.has-popover,
 .vault-stat-identifiers.has-popover {
 	position: relative;
 	cursor: help;
 	transition: background 0.15s ease;
 }
 
+.vault-stat-accounts.has-popover:hover {
+	background: rgba(213, 51, 105, 0.22);
+}
+
 .vault-stat-identifiers.has-popover:hover {
 	background: rgba(232, 150, 26, 0.22);
 }
 
-/* Chevron affordance signalling the pill reveals its identifiers on hover. */
+/* Chevron affordance signalling the pill reveals its connections on hover; colour matches the pill's own dot. */
 .vault-stat-more {
 	font-size: 16px;
-	color: #e8961a;
 	transition: transform 0.15s ease;
 }
 
+.vault-stat-accounts .vault-stat-more {
+	color: #d53369;
+}
+
+.vault-stat-identifiers .vault-stat-more {
+	color: #e8961a;
+}
+
+.vault-stat-accounts.has-popover:hover .vault-stat-more,
 .vault-stat-identifiers.has-popover:hover .vault-stat-more {
 	transform: rotate(180deg);
 }
 
-.vault-identifier-popover {
+.vault-connection-popover {
 	position: absolute;
 	top: calc(100% + 8px);
 	left: 0;
@@ -964,19 +977,21 @@
 		visibility 0.15s;
 }
 
-.vault-stat-identifiers.has-popover:hover .vault-identifier-popover {
+.vault-stat-accounts.has-popover:hover .vault-connection-popover,
+.vault-stat-identifiers.has-popover:hover .vault-connection-popover {
 	opacity: 1;
 	visibility: visible;
 	transform: translateY(0);
 }
 
-.vault-identifier-row {
+.vault-connection-row {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
 
-.vault-identifier-badge {
+/* Holds a Material Symbols icon for identifiers, or a two-letter initial for accounts. */
+.vault-connection-badge {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -985,13 +1000,15 @@
 	flex-shrink: 0;
 	border-radius: 7px;
 	color: #fff;
+	font-size: 10px;
+	font-weight: 700;
 }
 
-.vault-identifier-badge .material-symbols-outlined {
+.vault-connection-badge .material-symbols-outlined {
 	font-size: 15px;
 }
 
-.vault-identifier-name {
+.vault-connection-name {
 	font-size: 13px;
 	color: #334155;
 	white-space: nowrap;
@@ -1101,13 +1118,6 @@
 	height: 100%;
 }
 
-/* blocked-card's text is styled for a colored/dark backdrop (see Today's page) —
-   .vault-graph-area stays its normal white self, so the slate-steel gradient goes
-   on the message card itself rather than the whole graph area. */
-.vault-graph-blocked ::ng-deep .blocked-card-card {
-	background: var(--vault-gradient);
-}
-
 /* ─────────────────────────────────────────
    Link mode — divider, link button, banner
 ───────────────────────────────────────── */
@@ -1137,6 +1147,33 @@
 
 .vault-link-button .material-symbols-outlined {
 	font-size: 18px;
+}
+
+/* Shares .vault-delete-button's circle geometry and hover fill, but in the vault's own slate
+   accent instead of red — this is a rename action, not a destructive one. */
+.vault-edit-name-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	border: 1.5px solid var(--vault-glow);
+	border-radius: 9999px;
+	background: transparent;
+	color: var(--vault-accent);
+	cursor: pointer;
+	transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.vault-edit-name-button .material-symbols-outlined {
+	font-size: 18px;
+}
+
+.vault-edit-name-button:hover {
+	background: var(--vault-accent);
+	border-color: transparent;
+	color: #fff !important;
 }
 
 .vault-delete-button {
@@ -1170,11 +1207,6 @@
 }
 
 .vault-banner {
-	position: absolute;
-	top: 14px;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 5;
 	display: flex;
 	align-items: center;
 	gap: 10px;

@@ -8,7 +8,7 @@
 	styleClass="category-dialog">
 	<ng-template #header>
 		<span class="category-dialog-title">{{
-			isEditMode ? PORTAL_CATEGORY_DIALOG_TITLE_EDIT : PORTAL_CATEGORY_DIALOG_TITLE_ADD
+			isEditMode ? editTitle : PORTAL_CATEGORY_DIALOG_TITLE_ADD
 		}}</span>
 	</ng-template>
 
@@ -23,7 +23,7 @@
 	</div>
 
 	<ng-template #footer>
-		@if (isEditMode) {
+		@if (isEditMode && deleteCallback) {
 			<button class="category-dialog-button-delete" (click)="onDeleteRequested()">
 				{{ DIALOG_BTN_DELETE }}
 			</button>

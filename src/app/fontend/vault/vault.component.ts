@@ -43,7 +43,8 @@ import {
 	VAULT_RELATION_LINKED,
 	VAULT_RELATION_MANUAL,
 	TIMEOUT_KEY_VAULT,
-	VAULT_LOG_APPLY_FAILED
+	VAULT_LOG_APPLY_FAILED,
+	PASSPHRASE_LOCK_KEY_VAULT
 } from '../../common/constants';
 import {
 	NAV_LABEL_VAULT,
@@ -65,6 +66,8 @@ import {
 	VAULT_TYPE_LINK,
 	VAULT_TYPE_NOTES,
 	VAULT_BTN_ADD_CONNECTIONS,
+	VAULT_BTN_EDIT_NAME,
+	VAULT_NODE_NAME_DIALOG_TITLE,
 	VAULT_OVERVIEW_EMPTY,
 	VAULT_GRAPH_MOBILE_BLOCKED_BODY,
 	MOBILE_BLOCKED_TITLE,
@@ -108,6 +111,7 @@ import {
 	VaultNodeType,
 	VaultOverviewStat,
 	VaultRecord,
+	VaultSelectionAccount,
 	VaultSelectionDetail,
 	VaultSelectionIdentifier,
 	VAULT_CARD_ENTRANCE_BASE_DELAY_MS,
@@ -127,10 +131,11 @@ import { NewCategoryData } from '../portal/portal.model';
 import { TimeoutService } from '../../common/timeout/timeout.service';
 import { GraphCanvasComponent } from './graph-canvas/graph-canvas.component';
 import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
+import { PassphraseLockComponent } from '../../common/passphrase-lock/passphrase-lock.component';
 
 @Component({
 	selector: 'vault',
-	imports: [FormsModule, NgTemplateOutlet, GraphCanvasComponent, BlockedCardComponent],
+	imports: [FormsModule, NgTemplateOutlet, GraphCanvasComponent, BlockedCardComponent, PassphraseLockComponent],
 	templateUrl: './vault.component.html',
 	styleUrls: ['../../common/glass-card.css', './vault.component.css']
 })
@@ -155,6 +160,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly VAULT_LABEL_IDENTIFIERS = VAULT_LABEL_IDENTIFIERS;
 	protected readonly VAULT_PAGE_SUBTITLE = VAULT_PAGE_SUBTITLE;
 	protected readonly VAULT_BTN_ADD_CONNECTIONS = VAULT_BTN_ADD_CONNECTIONS;
+	protected readonly VAULT_BTN_EDIT_NAME = VAULT_BTN_EDIT_NAME;
 	protected readonly VAULT_OVERVIEW_EMPTY = VAULT_OVERVIEW_EMPTY;
 	protected readonly VAULT_GRAPH_MOBILE_BLOCKED_BODY = VAULT_GRAPH_MOBILE_BLOCKED_BODY;
 	protected readonly MOBILE_BLOCKED_TITLE = MOBILE_BLOCKED_TITLE;
@@ -163,6 +169,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly VAULT_MSG_DELETE_NODE_TITLE = VAULT_MSG_DELETE_NODE_TITLE;
 	protected readonly MSG_LOADING = MSG_LOADING;
 	protected readonly VAULT_CATEGORY_UNCATEGORIZED_LABEL = VAULT_CATEGORY_UNCATEGORIZED_LABEL;
+	protected readonly PASSPHRASE_LOCK_KEY_VAULT = PASSPHRASE_LOCK_KEY_VAULT;
+	protected isUnlocked = false;
 	protected loading = true;
 	protected view: typeof VAULT_VIEW_GRAPH | typeof VAULT_VIEW_LIST = VAULT_VIEW_GRAPH;
 	protected query = '';
@@ -271,6 +279,15 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
+	// ── Passphrase lock handler ───────────────────────────────────────────────
+
+	/**
+	 * Marks the page as unlocked once the passphrase gate reports success, revealing the real content.
+	 */
+	protected onVaultUnlocked(): void {
+		this.isUnlocked = true;
+	}
+
 	// ── View and selection handlers ──────────────────────────────────────────
 
 	/**
@@ -361,25 +378,12 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Persists the edited account name from the inline list-view name field (edit mode). Skips the
-	 * write when the trimmed name is empty or unchanged; otherwise applies it to local state
-	 * immediately, then saves — reverting and toasting on failure.
+	 * Persists the edited account name from the inline list-view name field (edit mode).
 	 *
 	 * @param accountId - The id of the account being renamed.
 	 */
 	protected updateAccountName(accountId: string): void {
-		const nextName = this.nameDraft.trim();
-		const currentName = this.findNode(accountId)?.name ?? '';
-		if (!nextName || nextName === currentName) return;
-		this.patchLocalNode(accountId, { name: nextName });
-		this.enqueueVaultWrite(() => this.databaseService.updateVaultNodeName(accountId, nextName))
-			.then(() => this.triggerSaveIndicator())
-			.catch(() => {
-				// Revert the optimistic change and surface the failure.
-				this.patchLocalNode(accountId, { name: currentName });
-				this.cdr.detectChanges();
-				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
-			});
+		this.renameNode(accountId, this.nameDraft);
 	}
 
 	/**
@@ -517,16 +521,27 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Opens the confirm dialog for deleting a vault node, reachable from either the
-	 * graph selection or a list-view card. On confirm, removes the node and every
-	 * edge attached to it, drops any custom category the node was the last account to
-	 * use, then clears the graph selection if it pointed at this node.
+	 * Opens the confirm dialog for deleting a vault node from a list-view card.
 	 *
 	 * @param nodeId - The id of the node to delete.
 	 * @param event - The originating click event, stopped so it does not affect selection.
 	 */
 	protected openDeleteNodeDialog(nodeId: string, event: Event): void {
 		event.stopPropagation();
+		this.deleteNode(nodeId);
+	}
+
+	/**
+	 * Opens the confirm dialog for deleting a vault node. On confirm, removes the node and every edge
+	 * attached to it, drops any custom category the node was the last account to use, then clears the
+	 * graph selection if it pointed at this node.
+	 *
+	 * {@link openDeleteNodeDialog} - Triggered from a list-view card's delete button.
+	 * {@link openEditNodeNameDialog} - Triggered from the non-account node-name dialog's delete button.
+	 *
+	 * @param nodeId - The id of the node to delete.
+	 */
+	private deleteNode(nodeId: string): void {
 		const node = this.findNode(nodeId);
 		if (!node) return;
 		const connectedEdgeIds = this.edges
@@ -753,6 +768,38 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
 			}
 		});
+	}
+
+	/**
+	 * Opens the shared category dialog in edit mode for a non-account node's name, prefilled with its
+	 * current name and wired to delete the node — this dialog is the only place a non-account node can
+	 * be renamed or removed, since the map view no longer has its own delete button.
+	 *
+	 * @param detail - The selection detail for the non-account node being renamed.
+	 * @param event - The originating click event, stopped so it does not bubble to the card/graph.
+	 */
+	protected openEditNodeNameDialog(detail: VaultSelectionDetail, event: Event): void {
+		event.stopPropagation();
+		this.dialogService.openDialog(
+			this.dialogComponentContainer,
+			DIALOG_CATEGORY,
+			(data: NewCategoryData) => this.handleNodeNameRename(data, detail.id),
+			{
+				prefillData: { name: detail.name },
+				onDelete: () => this.deleteNode(detail.id),
+				editTitle: VAULT_NODE_NAME_DIALOG_TITLE
+			}
+		);
+	}
+
+	/**
+	 * Renames a non-account node to the submitted name.
+	 *
+	 * @param data - The validated form data from the edit dialog.
+	 * @param nodeId - The id of the node being renamed.
+	 */
+	private handleNodeNameRename(data: NewCategoryData, nodeId: string): void {
+		this.renameNode(nodeId, data.name);
 	}
 
 	// ── Private helpers ──────────────────────────────────────────────────────
@@ -1022,15 +1069,15 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Applies a partial patch to one account node in local state (immutably) so the list view reflects
-	 * a change before the database watch re-emits. Backs the optimistic inline category picker and the
-	 * inline verified toggle.
+	 * Applies a partial patch to one node in local state (immutably) so the view reflects a change
+	 * before the database watch re-emits. Backs the optimistic inline category picker, the inline
+	 * verified toggle, and node renaming.
 	 *
-	 * @param accountId - The id of the account node to update.
+	 * @param nodeId - The id of the node to update.
 	 * @param patch - The node fields to overwrite locally.
 	 */
-	private patchLocalNode(accountId: string, patch: Partial<VaultNode>): void {
-		this.nodes = this.nodes.map((node) => (node.id === accountId ? { ...node, ...patch } : node));
+	private patchLocalNode(nodeId: string, patch: Partial<VaultNode>): void {
+		this.nodes = this.nodes.map((node) => (node.id === nodeId ? { ...node, ...patch } : node));
 	}
 
 	/**
@@ -1038,6 +1085,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * in the order triggered — none races another on the same document or is lost. The chain survives a
 	 * failed write (a rejection does not stall the queue) so every later write still runs.
 	 *
+	 * {@link renameNode} - Persists a node name change.
 	 * {@link toggleAccountVerified} - Persists a verified-flag toggle.
 	 * {@link toggleAccountCategory} - Persists a category add/remove.
 	 * {@link removeOrphanedCategories} - Drops categories left unused by a toggle or delete.
@@ -1054,6 +1102,31 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
+	 * Renames a node to the given name if it actually changed: applies the change to local state
+	 * immediately, then saves — reverting and toasting on failure.
+	 *
+	 * {@link updateAccountName} - Commits the inline-edited account name from the list view.
+	 * {@link handleNodeNameRename} - Commits the dialog-edited name for a non-account node.
+	 *
+	 * @param nodeId - The id of the node being renamed.
+	 * @param nextName - The candidate new name, trimmed before comparison and storage.
+	 */
+	private renameNode(nodeId: string, nextName: string): void {
+		const trimmedName = nextName.trim();
+		const currentName = this.findNode(nodeId)?.name ?? '';
+		if (!trimmedName || trimmedName === currentName) return;
+		this.patchLocalNode(nodeId, { name: trimmedName });
+		this.enqueueVaultWrite(() => this.databaseService.updateVaultNodeName(nodeId, trimmedName))
+			.then(() => this.triggerSaveIndicator())
+			.catch(() => {
+				// Revert the optimistic change and surface the failure.
+				this.patchLocalNode(nodeId, { name: currentName });
+				this.cdr.detectChanges();
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
+			});
+	}
+
+	/**
 	 * Removes every custom category in the candidate keys that no remaining node still references, so
 	 * a category is discarded once its last account is deleted or unselects it. Only user-created
 	 * custom categories are removable — the Uncategorized fallback is never a stored record. Clears the
@@ -1061,7 +1134,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * {@link DatabaseService.removeVaultCategory} with no account updates, since an orphaned category
 	 * has no accounts left to strip.
 	 *
-	 * {@link openDeleteNodeDialog} - Cleans up a deleted node's now-unused categories.
+	 * {@link deleteNode} - Cleans up a deleted node's now-unused categories.
 	 * {@link toggleAccountCategory} - Cleans up a category an account just unselected.
 	 *
 	 * @param candidateKeys - The category keys that may have become orphaned.
@@ -1136,21 +1209,26 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Gets the info-bar detail for the selected node: its identity, type, and the
-	 * counts of connected accounts versus email/phone identifiers.
+	 * connected accounts versus email/phone identifiers, each listed for their
+	 * stat-pill hover popover.
 	 *
 	 * @returns The selection detail, or null when nothing is selected.
 	 */
 	protected get selectionDetail(): VaultSelectionDetail | null {
 		const node = this.findNode(this.selectedId);
 		if (!node) return null;
-		let accountCount = 0;
+		const connectedAccounts: VaultSelectionAccount[] = [];
 		const identifiers: VaultSelectionIdentifier[] = [];
 		this.neighborsOf(node.id).forEach((neighbourId) => {
 			const other = this.nodes.find((candidate) => candidate.id === neighbourId);
 			// Skip private notes nodes so they never contribute to the selection counts.
 			if (!other || other.nodeType === VAULT_NODE_NOTES) return;
 			if (other.nodeType === VAULT_NODE_ACCOUNT) {
-				accountCount++;
+				connectedAccounts.push({
+					name: other.name,
+					letter: Utilities.getInitials(other.name),
+					gradient: this.getNodeGradient(other)
+				});
 				return;
 			}
 			identifiers.push({
@@ -1169,7 +1247,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			isIcon: !isAccount,
 			icon: isAccount ? '' : this.getIdentifierIcon(node.nodeType),
 			letter: Utilities.getInitials(node.name),
-			accountCount,
+			accountCount: connectedAccounts.length,
+			connectedAccounts,
 			identifierCount: identifiers.length,
 			identifiers
 		};

@@ -34,8 +34,9 @@ export class CategoryDialogComponent {
 	protected isEditMode = false;
 	protected visible = false;
 	protected name = '';
+	protected editTitle = PORTAL_CATEGORY_DIALOG_TITLE_EDIT;
 	private submitCallback?: (data: NewCategoryData) => void;
-	private deleteCallback?: () => void;
+	protected deleteCallback?: () => void;
 
 	/**
 	 * Returns true when the name field contains at least one non-whitespace character.
@@ -54,15 +55,22 @@ export class CategoryDialogComponent {
 	 * @param options - Configuration object for the dialog session.
 	 * @param options.prefillData - Prefill values for edit mode, or null for add mode.
 	 * @param options.onDelete - Optional callback invoked when the user triggers deletion.
+	 * @param options.editTitle - Optional edit-mode title override for non-category reuse of this
+	 * dialog (e.g. renaming a vault node); defaults to the category edit title.
 	 */
 	public openDialog(
 		submitCallback: (data: NewCategoryData) => void,
-		options: { prefillData: Partial<NewCategoryData> | null; onDelete?: () => void }
+		options: {
+			prefillData: Partial<NewCategoryData> | null;
+			onDelete?: () => void;
+			editTitle?: string;
+		}
 	): void {
 		this.submitCallback = submitCallback;
 		this.deleteCallback = options.onDelete;
 		this.isEditMode = options.prefillData !== null;
 		this.name = options.prefillData?.name ?? '';
+		this.editTitle = options.editTitle ?? PORTAL_CATEGORY_DIALOG_TITLE_EDIT;
 		this.visible = true;
 	}
 

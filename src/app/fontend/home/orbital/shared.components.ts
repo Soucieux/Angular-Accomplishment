@@ -38,6 +38,7 @@ import {
 } from '../../../common/locale/locale-strings';
 import { OrbitalProgressMetric, OrbitalWeekDay } from './orbital.model';
 import { OrbitalStore } from './orbital.store';
+import { Utilities } from '../../../common/utilities/app.utilities';
 
 let ringIdCounter = 0;
 
@@ -145,7 +146,7 @@ export class Ring {
 	 * @returns The dashoffset value for the SVG stroke animation.
 	 */
 	protected get dashOffset(): number {
-		return this.circumference * (1 - Math.min(100, Math.max(0, this.percentage)) / 100);
+		return this.circumference * (1 - Utilities.clamp(this.percentage, 0, 100) / 100);
 	}
 }
 

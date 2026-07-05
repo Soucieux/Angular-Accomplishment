@@ -60,11 +60,10 @@ export class Utilities {
 	 * @returns True when the viewport matches phone portrait dimensions and a coarse
 	 * touch pointer, false on the server or on desktop.
 	 */
-	public isMobile() {
-		if (isPlatformBrowser(this.platformId)) {
-			return globalThis.matchMedia('(max-width: 900px) and (pointer: coarse)').matches;
-		}
-		return false;
+	public isMobile(): boolean {
+		return this.isBrowserCheck(
+			() => globalThis.matchMedia('(max-width: 900px) and (pointer: coarse)').matches
+		);
 	}
 
 	/**
@@ -76,10 +75,7 @@ export class Utilities {
 	 * false on the server.
 	 */
 	public isNarrowViewport(): boolean {
-		if (isPlatformBrowser(this.platformId)) {
-			return window.innerWidth <= APP_BREAKPOINT_NARROW;
-		}
-		return false;
+		return this.isBrowserCheck(() => window.innerWidth <= APP_BREAKPOINT_NARROW);
 	}
 
 	/**
@@ -88,7 +84,9 @@ export class Utilities {
 	 * @returns True if the device supports hover, otherwise false.
 	 */
 	public checkIfHoverCapable(): boolean {
-		return this.document.defaultView?.matchMedia('(hover: hover)').matches ?? false;
+		return this.isBrowserCheck(
+			() => this.document.defaultView?.matchMedia('(hover: hover)').matches ?? false
+		);
 	}
 
 	/**
@@ -142,6 +140,17 @@ export class Utilities {
 		return this.currentCountry;
 	}
 
+	/**
+	 * Runs a browser-only viewport check, short-circuiting to false during SSR.
+	 * Shared hub for {@link isMobile}, {@link isNarrowViewport}, and {@link checkIfHoverCapable}.
+	 *
+	 * @param check - The function to evaluate when running in a browser context.
+	 * @returns The check's result, or false when rendering on the server.
+	 */
+	private isBrowserCheck(check: () => boolean): boolean {
+		return isPlatformBrowser(this.platformId) ? check() : false;
+	}
+
 	/* ─────────────────────────────────────────
 	   Date & time
 	───────────────────────────────────────── */
@@ -160,20 +169,13 @@ export class Utilities {
 		   when isTimeIncluded=false, formattedTime stays empty → no separator needed. */
 		let formattedTime = '';
 		if (isTimeIncluded) {
-			formattedTime = ` ${now.getHours().toString().padStart(2, '0')}:${now
-				.getMinutes()
-				.toString()
-				.padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+			formattedTime = ` ${Utilities.padTwoDigits(now.getHours())}:${Utilities.padTwoDigits(
+				now.getMinutes()
+			)}:${Utilities.padTwoDigits(now.getSeconds())}`;
 		}
 
 		// Step 2: Concatenate the dot-separated date with the (possibly empty) time segment
-		const formattedDate =
-			`${now.getFullYear()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now
-				.getDate()
-				.toString()
-				.padStart(2, '0')}` + formattedTime;
-
-		return formattedDate;
+		return Utilities.formatDotDate(now) + formattedTime;
 	}
 
 	/**
@@ -220,7 +222,7 @@ export class Utilities {
 	 * @returns The formatted currency string.
 	 */
 	public static formatMoney(amount: number, isChinese: boolean): string {
-		const symbol = isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
+		const symbol = Utilities.currencySymbol(isChinese);
 		const formatted = Math.abs(amount).toLocaleString('en-US', {
 			minimumFractionDigits: 0,
 			maximumFractionDigits: 2
@@ -236,7 +238,7 @@ export class Utilities {
 	 * @returns A compact currency label string.
 	 */
 	public static formatCompactMoney(amount: number, isChinese: boolean): string {
-		const symbol = isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
+		const symbol = Utilities.currencySymbol(isChinese);
 		if (amount >= 1000) return `${symbol}${Math.floor(amount / 1000)}k`;
 		return `${symbol}${amount}`;
 	}
@@ -279,7 +281,7 @@ export class Utilities {
 		if (diffMins < 60) return `${diffMins}m ago`;
 		if (diffHours < 24) return `${diffHours}h ago`;
 		if (diffDays < 7) return `${diffDays}d ago`;
-		return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+		return Utilities.formatDotDate(date);
 	}
 
 	/**
@@ -331,10 +333,7 @@ export class Utilities {
 			if (isNaN(d.getTime())) return '';
 
 			// Step 4: Format the resolved Date into a "YYYY-MM-DD" storage string
-			const y = d.getFullYear();
-			const m = String(d.getMonth() + 1).padStart(2, '0');
-			const day = String(d.getDate()).padStart(2, '0');
-			return `${y}-${m}-${day}`;
+			return Utilities.formatDateForStorage(d);
 		} catch {
 			return '';
 		}
@@ -450,6 +449,28 @@ export class Utilities {
 	public static isOverdue(dateStr: unknown): boolean {
 		const diff = Utilities.getDaysUntilNumber(dateStr);
 		return diff !== null && diff < 0;
+	}
+
+	/**
+	 * Formats a Date as the app's dot-separated date string: "YYYY.MM.DD".
+	 * Shared hub for {@link getCurrentFormattedTime} and {@link getRelativeTime}.
+	 *
+	 * @param date - The Date to format.
+	 * @returns A "YYYY.MM.DD" string.
+	 */
+	private static formatDotDate(date: Date): string {
+		return `${date.getFullYear()}.${Utilities.padTwoDigits(date.getMonth() + 1)}.${Utilities.padTwoDigits(date.getDate())}`;
+	}
+
+	/**
+	 * Gets the locale-appropriate currency symbol.
+	 * Shared hub for {@link formatMoney} and {@link formatCompactMoney}.
+	 *
+	 * @param isChinese - Whether to use the ¥ symbol instead of $.
+	 * @returns The currency symbol string.
+	 */
+	private static currencySymbol(isChinese: boolean): string {
+		return isChinese ? DEBT_CURRENCY_SYMBOL_CNY : DEBT_CURRENCY_SYMBOL_CAD;
 	}
 
 	/* ─────────────────────────────────────────
@@ -611,12 +632,8 @@ export class Utilities {
 	 * @returns A proxied favicon image URL string, or '' if the URL is unparseable.
 	 */
 	public static getFaviconProxy(url: string): string {
-		try {
-			const hostname = new URL(url).hostname;
-			return `${PORTAL_FAVICON_PROXY_URL}?domain=${hostname}`;
-		} catch {
-			return '';
-		}
+		const hostname = Utilities.parseHostname(url);
+		return hostname ? `${PORTAL_FAVICON_PROXY_URL}?domain=${hostname}` : '';
 	}
 
 	/**
@@ -626,10 +643,21 @@ export class Utilities {
 	 * @returns The hostname string (e.g. "openai.com"), or the original value if unparseable.
 	 */
 	public static getDomain(url: string): string {
+		return Utilities.parseHostname(url) ?? url;
+	}
+
+	/**
+	 * Attempts to parse the hostname out of a URL string.
+	 * Shared hub for {@link getDomain} and {@link getFaviconProxy}.
+	 *
+	 * @param url - The full URL of the website.
+	 * @returns The hostname string, or null if the URL is unparseable.
+	 */
+	private static parseHostname(url: string): string | null {
 		try {
 			return new URL(url).hostname;
 		} catch {
-			return url;
+			return null;
 		}
 	}
 
@@ -668,6 +696,8 @@ export class Utilities {
 
 	/**
 	 * Gets the one-or-two-letter initials from the user's display name for avatar circles.
+	 * Two-or-more-word names use one letter per word; single-word names fall back to
+	 * {@link getInitials} for its grapheme-safe two-character slice.
 	 *
 	 * @param user - The authenticated user object from the auth observable.
 	 * @returns The uppercased initials string, or '?' when no display name is available.
@@ -678,7 +708,7 @@ export class Utilities {
 		const parts = displayName.trim().split(' ');
 		return parts.length >= 2
 			? (parts[0][0] + parts[1][0]).toUpperCase()
-			: displayName.slice(0, 2).toUpperCase();
+			: Utilities.getInitials(displayName);
 	}
 
 	/**
@@ -818,6 +848,18 @@ export class Utilities {
 	 */
 	public static padTwoDigits(n: number): string {
 		return String(n).padStart(2, '0');
+	}
+
+	/**
+	 * Clamps a number to the inclusive range [min, max].
+	 *
+	 * @param value - The number to constrain.
+	 * @param min - The lower bound.
+	 * @param max - The upper bound.
+	 * @returns The value constrained to the range.
+	 */
+	public static clamp(value: number, min: number, max: number): number {
+		return Math.max(min, Math.min(max, value));
 	}
 
 	/**

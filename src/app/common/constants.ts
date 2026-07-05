@@ -241,6 +241,9 @@ export const MIME_IMAGE_JPEG = 'image/jpeg';
 export const BREAKPOINT_MOBILE = '(max-width: 940px)';
 export const BREAKPOINT_NARROW_QUERY = `(max-width: ${APP_BREAKPOINT_NARROW}px)`;
 
+/** Skeleton rows rendered when a page's grid is at its minimum column count (its most compact layout), taller so the placeholder still fills a narrow screen. Shared by Debt, Resonance, and Portal. */
+export const SKELETON_MIN_COLUMN_ROWS = 5;
+
 export const SEARCH = 'search';
 export const SUCCESS = 'success';
 export const FAILURE = 'failure';
@@ -560,7 +563,12 @@ export const ENT_LOG_SEARCHING_MOVIE_ID = 'Movie ID not given, start searching f
 
 /** Maximum character count allowed for a new quote submission. */
 export const RESONANCE_MAX_QUOTE_LENGTH = 500;
+/** Fallback skeleton-card count shown before the responsive per-row count is measured. */
 export const RESONANCE_SKELETON_COUNT = 6;
+/** Number of skeleton rows rendered; multiplied by the measured items-per-row for the total. */
+export const RESONANCE_SKELETON_ROWS = 3;
+/** Minimum columns the grid renders (single-column mobile layout); at this count the taller skeleton rows apply. */
+export const RESONANCE_MIN_COLUMNS = 1;
 /** Legacy English value previously stored in the database for anonymous authors. */
 export const RESONANCE_AUTHOR_ANONYMOUS_LEGACY = 'Anonymous';
 
@@ -618,6 +626,12 @@ export const USEFUL_LINK_TYPE_LINK = 'link';
 export const USEFUL_LINK_TYPE_CATEGORY = 'category';
 /** Sentinel value for the "show all categories" filter in the Portal links panel. */
 export const PORTAL_CATEGORY_ALL = 'all';
+/** Fallback skeleton-card count shown before the responsive per-row count is measured. */
+export const PORTAL_SKELETON_COUNT = 12;
+/** Number of skeleton rows rendered; multiplied by the measured items-per-row for the total. */
+export const PORTAL_SKELETON_ROWS = 2;
+/** Minimum columns the grid renders (its mobile layout forces two columns); at this count the taller skeleton rows apply. */
+export const PORTAL_MIN_COLUMNS = 2;
 /** Default colour applied to new and un-styled link categories. */
 export const PORTAL_DEFAULT_CATEGORY_COLOR = '#d53369';
 /**
@@ -717,7 +731,12 @@ export const NOTIF_UNSUBSCRIBE_FAILED = 'Failed to persist notification unsubscr
    Debt Sonata page constants
 ───────────────────────────────────────── */
 
+/** Fallback skeleton-card count shown before the responsive per-row count is measured. */
 export const DEBT_SKELETON_COUNT = 6;
+/** Number of skeleton rows rendered; multiplied by the measured items-per-row for the total. */
+export const DEBT_SKELETON_ROWS = 2;
+/** Minimum columns the grid renders (single-column mobile layout); at this count the taller skeleton rows apply. */
+export const DEBT_MIN_COLUMNS = 1;
 export const DEBT_DIALOG_PLACEHOLDER_AMOUNT = '0';
 /** Placeholder shown in the custom payment-amount input — identical in all locales. */
 export const DEBT_CUSTOM_INPUT_PLACEHOLDER = '−0.00';

@@ -1,11 +1,14 @@
 import {
+	AfterViewInit,
 	Component,
+	ElementRef,
 	OnInit,
 	OnDestroy,
 	ViewChild,
 	ViewContainerRef,
 	ChangeDetectorRef,
 	Inject,
+	NgZone,
 	PLATFORM_ID
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -26,7 +29,10 @@ import {
 	COMPONENT_DESTROY,
 	RESONANCE_AUTHOR_ANONYMOUS_LEGACY,
 	RESONANCE_MAX_QUOTE_LENGTH,
-	RESONANCE_SKELETON_COUNT
+	RESONANCE_SKELETON_COUNT,
+	RESONANCE_SKELETON_ROWS,
+	RESONANCE_MIN_COLUMNS,
+	SKELETON_MIN_COLUMN_ROWS
 } from '../../common/constants';
 import {
 	DIALOG_BTN_DELETE,
@@ -64,7 +70,7 @@ import { RESONANCE_GRADIENTS, QuoteRecord } from './resonance.model';
 	templateUrl: './resonance.component.html',
 	styleUrl: './resonance.component.css'
 })
-export class ResonanceComponent implements OnInit, OnDestroy {
+export class ResonanceComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly className = 'ResonanceComponent';
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
@@ -91,7 +97,9 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	protected submitting = false;
 	private signedInAnonymously = false;
 	protected postSuccess = false;
+	protected skeletonCount = RESONANCE_SKELETON_COUNT;
 	private postSuccessTimer: ReturnType<typeof setTimeout> | null = null;
+	private gridResizeObserver?: ResizeObserver;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
@@ -99,6 +107,8 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 		private dialogService: DialogService,
 		private authService: AuthService,
 		private cdr: ChangeDetectorRef,
+		private ngZone: NgZone,
+		private elementRef: ElementRef,
 		protected utilities: Utilities
 	) {}
 
@@ -141,10 +151,27 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Measures the responsive grid on first render and re-measures on container resize so the
+	 * skeleton loader fills the same number of columns and rows the real quote cards will occupy.
+	 */
+	ngAfterViewInit(): void {
+		if (isPlatformBrowser(this.platformId)) {
+			this.updateSkeletonCount();
+
+			// ResizeObserver fires outside Angular's zone; re-enter so the skeletonCount change is detected.
+			this.gridResizeObserver = new ResizeObserver(() =>
+				this.ngZone.run(() => this.updateSkeletonCount())
+			);
+			this.gridResizeObserver.observe(this.elementRef.nativeElement);
+		}
+	}
+
+	/**
 	 * Signs out the anonymous session if one was started by this component,
 	 * clears the dialog container, resets the flag, and logs the component destruction event.
 	 */
 	ngOnDestroy(): void {
+		this.gridResizeObserver?.disconnect();
 
 		// Step 1: Cancel any pending success-chip timer so it cannot fire after the component is gone
 		if (this.postSuccessTimer !== null) clearTimeout(this.postSuccessTimer);
@@ -224,13 +251,34 @@ export class ResonanceComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Returns the array of indices used to render skeleton loading cards,
-	 * sized to match the fixed skeleton count for this page.
+	 * Recomputes the skeleton-card count from the grid's actual rendered column count, so the loading
+	 * placeholder matches the columns the browser shows — desktop auto-fill and mobile overrides
+	 * alike — times the row count, which grows to {@link SKELETON_MIN_COLUMN_ROWS} when the grid is
+	 * at its minimum column count so a narrow screen still fills.
 	 *
-	 * @returns Array of 0-based indices with length equal to RESONANCE_SKELETON_COUNT.
+	 * {@link ngAfterViewInit} - Runs it on first render and on every container resize.
+	 */
+	private updateSkeletonCount(): void {
+		const host = this.elementRef.nativeElement as HTMLElement;
+		const grid = host.querySelector('.quote-grid') as HTMLElement | null;
+		if (!grid) return;
+		const columns = Utilities.countGridColumns(grid);
+		if (!columns) return;
+
+		// At the page's minimum (mobile) column count use taller rows so a narrow screen still fills.
+		const rows = columns === RESONANCE_MIN_COLUMNS ? SKELETON_MIN_COLUMN_ROWS : RESONANCE_SKELETON_ROWS;
+		this.skeletonCount = columns * rows;
+		this.cdr.markForCheck();
+	}
+
+	/**
+	 * Returns the array of indices used to render skeleton loading cards, sized to the responsive
+	 * per-row count so the placeholder fills the same rows the real quote cards will.
+	 *
+	 * @returns Array of 0-based indices with length equal to the current skeleton count.
 	 */
 	protected get skeletonItems(): number[] {
-		return Array.from({ length: RESONANCE_SKELETON_COUNT }, (_, i) => i);
+		return Array.from({ length: this.skeletonCount }, (_, i) => i);
 	}
 
 	/**

@@ -1,6 +1,8 @@
 import {
+	AfterViewInit,
 	ChangeDetectorRef,
 	Component,
+	ElementRef,
 	HostListener,
 	Inject,
 	NgZone,
@@ -48,6 +50,9 @@ import {
 	DEBT_DUE_ICON_OVERDUE,
 	DEBT_DUE_ICON_DEFAULT,
 	DEBT_SKELETON_COUNT,
+	DEBT_SKELETON_ROWS,
+	DEBT_MIN_COLUMNS,
+	SKELETON_MIN_COLUMN_ROWS,
 	DEBT_VALUE_KEY_PAYMENTS,
 	TIMEOUT_KEY_DEBT
 } from '../../common/constants';
@@ -113,7 +118,7 @@ import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.com
 	templateUrl: './debt.component.html',
 	styleUrls: ['./debt.component.css']
 })
-export class DebtComponent implements OnInit, OnDestroy {
+export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly className = 'DebtComponent';
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
@@ -154,6 +159,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	protected readonly DEBT_LABEL_PAID_IN_FULL = DEBT_LABEL_PAID_IN_FULL;
 	protected readonly DEBT_LABEL_CUSTOM_PAY = DEBT_LABEL_CUSTOM_PAY;
 	protected loading = true;
+	protected skeletonCount = DEBT_SKELETON_COUNT;
 	protected isHoverCapable!: boolean;
 	protected updatedDebtSonataItems: DebtItem[] = [];
 	protected originalDebtSonataItems!: DebtItem[];
@@ -172,6 +178,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 	private balanceBumpTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
 	private syncStatTimer: ReturnType<typeof setTimeout> | null = null;
+	private gridResizeObserver?: ResizeObserver;
 	private readonly categoryDefs: DebtCategoryDef[] = DEBT_CATEGORY_DEFS.map((categoryDef) => ({
 		...categoryDef,
 		label: DEBT_CATEGORY_LABELS[categoryDef.key] ?? ''
@@ -184,6 +191,7 @@ export class DebtComponent implements OnInit, OnDestroy {
 		private databaseService: DatabaseService,
 		private cdr: ChangeDetectorRef,
 		private ngZone: NgZone,
+		private elementRef: ElementRef,
 		protected utilities: Utilities
 	) {}
 
@@ -250,10 +258,27 @@ export class DebtComponent implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Measures the responsive grid on first render and re-measures on container resize so the
+	 * skeleton loader fills the same number of columns and rows the real cards will occupy.
+	 */
+	ngAfterViewInit(): void {
+		if (isPlatformBrowser(this.platformId)) {
+			this.updateSkeletonCount();
+
+			// ResizeObserver fires outside Angular's zone; re-enter so the skeletonCount change is detected.
+			this.gridResizeObserver = new ResizeObserver(() =>
+				this.ngZone.run(() => this.updateSkeletonCount())
+			);
+			this.gridResizeObserver.observe(this.elementRef.nativeElement);
+		}
+	}
+
+	/**
 	 * Unsubscribes from the Account Expenses subscription and clears all
 	 * prompted-button and balance-bump timers.
 	 */
 	ngOnDestroy() {
+		this.gridResizeObserver?.disconnect();
 		this.timeoutService.clear(TIMEOUT_KEY_DEBT);
 		this.dialogComponentContainer?.clear();
 		Object.values(this.promptedResetTimers).forEach(clearTimeout);
@@ -1033,16 +1058,37 @@ export class DebtComponent implements OnInit, OnDestroy {
 		return fields;
 	}
 
+	/**
+	 * Recomputes the skeleton-card count from the grid's actual rendered column count, so the loading
+	 * placeholder matches the columns the browser shows — desktop auto-fill and mobile overrides
+	 * alike — times the row count, which grows to {@link SKELETON_MIN_COLUMN_ROWS} when the grid is
+	 * at its minimum column count so a narrow screen still fills.
+	 *
+	 * {@link ngAfterViewInit} - Runs it on first render and on every container resize.
+	 */
+	private updateSkeletonCount(): void {
+		const host = this.elementRef.nativeElement as HTMLElement;
+		const grid = host.querySelector('.debts-grid') as HTMLElement | null;
+		if (!grid) return;
+		const columns = Utilities.countGridColumns(grid);
+		if (!columns) return;
+
+		// At the page's minimum (mobile) column count use taller rows so a narrow screen still fills.
+		const rows = columns === DEBT_MIN_COLUMNS ? SKELETON_MIN_COLUMN_ROWS : DEBT_SKELETON_ROWS;
+		this.skeletonCount = columns * rows;
+		this.cdr.markForCheck();
+	}
+
 	// ── Template helper methods ───────────────────────────────────────────────
 
 	/**
-	 * Returns the array of indices used to render skeleton loading cards,
-	 * sized to match the fixed skeleton count for this page.
+	 * Returns the array of indices used to render skeleton loading cards, sized to the responsive
+	 * per-row count so the placeholder fills the same rows the real cards will.
 	 *
-	 * @returns Array of 0-based indices with length equal to DEBT_SKELETON_COUNT.
+	 * @returns Array of 0-based indices with length equal to the current skeleton count.
 	 */
 	protected get skeletonItems(): number[] {
-		return Array.from({ length: DEBT_SKELETON_COUNT }, (_, i) => i);
+		return Array.from({ length: this.skeletonCount }, (_, i) => i);
 	}
 
 	/**

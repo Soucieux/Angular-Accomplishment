@@ -1,10 +1,12 @@
 import {
 	AfterViewChecked,
+	AfterViewInit,
 	ChangeDetectionStrategy,
 	ChangeDetectorRef,
 	Component,
 	ElementRef,
 	Inject,
+	NgZone,
 	OnDestroy,
 	OnInit,
 	PLATFORM_ID,
@@ -28,6 +30,10 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_DATE_CALCULATOR,
 	PORTAL_CATEGORY_ALL,
+	PORTAL_SKELETON_COUNT,
+	PORTAL_SKELETON_ROWS,
+	PORTAL_MIN_COLUMNS,
+	SKELETON_MIN_COLUMN_ROWS,
 	PORTAL_LABEL_CONFIRMED,
 	DIALOG_CATEGORY,
 	DIALOG_LINK,
@@ -131,7 +137,7 @@ import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.com
 	templateUrl: './portal.component.html',
 	styleUrls: ['../../common/glass-card.css', './portal.component.css']
 })
-export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
+export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
 	private readonly className = 'PortalComponent';
 
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
@@ -186,6 +192,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	protected selectedCategory = PORTAL_CATEGORY_ALL;
 
 	protected linksLoading = true;
+	protected skeletonCount = PORTAL_SKELETON_COUNT;
 	protected hoveredLinkId: string | null = null;
 	protected failedFavicons = new Set<string>();
 	protected sharedFilteredLinks: PortalLink[] = [];
@@ -194,6 +201,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	private linksSub?: Subscription;
 	private categoriesSub?: Subscription;
 	private userAliveSub?: Subscription;
+	private gridResizeObserver?: ResizeObserver;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
@@ -202,7 +210,9 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 		   subscriptions that Angular's zone cannot detect automatically. */
 		private readonly cdr: ChangeDetectorRef,
 		private readonly dialogService: DialogService,
-		private readonly databaseService: DatabaseService
+		private readonly databaseService: DatabaseService,
+		private readonly ngZone: NgZone,
+		private readonly elementRef: ElementRef
 	) {}
 
 	/**
@@ -270,6 +280,22 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
+	 * Measures the responsive links grid on first render and re-measures on container resize so the
+	 * skeleton loader fills the same number of columns the real link cards will occupy.
+	 */
+	ngAfterViewInit(): void {
+		if (isPlatformBrowser(this.platformId)) {
+			this.updateSkeletonCount();
+
+			// ResizeObserver fires outside Angular's zone; re-enter so the skeletonCount change is detected.
+			this.gridResizeObserver = new ResizeObserver(() =>
+				this.ngZone.run(() => this.updateSkeletonCount())
+			);
+			this.gridResizeObserver.observe(this.elementRef.nativeElement);
+		}
+	}
+
+	/**
 	 * Attaches the auto-hide scroll listener to the portal container after each view check.
 	 * Uses a WeakSet internally so each element is bound exactly once.
 	 */
@@ -286,6 +312,7 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	 * the component destruction event.
 	 */
 	ngOnDestroy(): void {
+		this.gridResizeObserver?.disconnect();
 		this.dateCalculatorSub?.unsubscribe();
 		this.linksSub?.unsubscribe();
 		this.categoriesSub?.unsubscribe();
@@ -1019,6 +1046,27 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	// ── Private helpers ───────────────────────────────────────────────────────
 
 	/**
+	 * Recomputes the skeleton-card count from the grid's actual rendered column count, so the loading
+	 * placeholder matches the columns the browser shows — desktop auto-fill and mobile overrides
+	 * alike — times the row count, which grows to {@link SKELETON_MIN_COLUMN_ROWS} when the grid is
+	 * at its minimum column count (two columns on mobile) so a narrow screen still fills.
+	 *
+	 * {@link ngAfterViewInit} - Runs it on first render and on every container resize.
+	 */
+	private updateSkeletonCount(): void {
+		const host = this.elementRef.nativeElement as HTMLElement;
+		const grid = host.querySelector('.links-grid') as HTMLElement | null;
+		if (!grid) return;
+		const columns = Utilities.countGridColumns(grid);
+		if (!columns) return;
+
+		// At the page's minimum (mobile) column count use taller rows so a narrow screen still fills.
+		const rows = columns === PORTAL_MIN_COLUMNS ? SKELETON_MIN_COLUMN_ROWS : PORTAL_SKELETON_ROWS;
+		this.skeletonCount = columns * rows;
+		this.cdr.markForCheck();
+	}
+
+	/**
 	 * Partitions `this.links` in a single pass, updating both the shared and personal
 	 * filtered-link caches. Shared links carry `isShared: true`; personal links belong to
 	 * the signed-in user and are additionally filtered by the active category when one is set.
@@ -1044,6 +1092,16 @@ export class PortalComponent implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	// ── Template helper methods ───────────────────────────────────────────────
+
+	/**
+	 * Returns the array of indices used to render skeleton loading cards, sized to the responsive
+	 * per-row count so the placeholder fills the visible row the real link cards will.
+	 *
+	 * @returns Array of 0-based indices with length equal to the current skeleton count.
+	 */
+	protected get skeletonItems(): number[] {
+		return Array.from({ length: this.skeletonCount }, (_, i) => i);
+	}
 
 	/**
 	 * Gets the background color for a link tile card.

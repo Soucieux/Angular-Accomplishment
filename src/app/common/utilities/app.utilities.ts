@@ -863,6 +863,23 @@ export class Utilities {
 	}
 
 	/**
+	 * Counts the columns a CSS grid element currently renders by reading its resolved
+	 * grid-template-columns track list. Reflects every applied rule — auto-fill sizing and
+	 * media-query overrides alike — so it always matches what the user actually sees. Returns 0
+	 * when the element is not a grid or has no resolved tracks.
+	 *
+	 * @param grid - The grid element to measure.
+	 * @returns The number of rendered column tracks, or 0 when unmeasurable.
+	 */
+	public static countGridColumns(grid: HTMLElement): number {
+		// The resolved value lists one length per track; 'none' means the element is not a grid, in
+		// which case 0 lets the caller keep its fallback count rather than render zero cards.
+		const template = getComputedStyle(grid).gridTemplateColumns;
+		if (!template || template === 'none') return 0;
+		return template.split(' ').length;
+	}
+
+	/**
 	 * Gets the milestone key for a given domain and count, or null if the count is
 	 * not a milestone threshold. Thresholds are count === 1 ("1st") and every
 	 * multiple of 5 ("5th", "10th", etc.).

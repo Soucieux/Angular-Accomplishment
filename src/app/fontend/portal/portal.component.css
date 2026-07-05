@@ -5,6 +5,8 @@
 :host {
 	font-family: 'app-font';
 	display: block;
+	--individual-item-width: 140px;
+	--individual-item-gap: 10px;
 }
 
 /* ─────────────────────────────────────────
@@ -638,8 +640,8 @@
 
 .links-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-	gap: 10px;
+	grid-template-columns: repeat(auto-fill, minmax(var(--individual-item-width), 1fr));
+	gap: var(--individual-item-gap);
 }
 
 /* ─────────────────────────────────────────
@@ -849,11 +851,6 @@
 /* ─────────────────────────────────────────
    Skeleton
 ───────────────────────────────────────── */
-
-.links-grid--skeleton {
-	max-height: 120px;
-	overflow: hidden;
-}
 
 .skeleton-card {
 	height: 120px;

@@ -179,8 +179,8 @@
 
 				<!-- Link grid -->
 				<ng-template #skeletonGrid>
-					<div class="links-grid links-grid--skeleton">
-						@for (i of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; track i) {
+					<div class="links-grid">
+						@for (i of skeletonItems; track i) {
 							<div class="link-card skeleton-card"></div>
 						}
 					</div>

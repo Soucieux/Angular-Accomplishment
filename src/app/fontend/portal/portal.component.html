@@ -196,7 +196,7 @@
 							[title]="link.url"
 							[style.background]="getLinkCardColor(link)"
 							[style.animation-delay.ms]="getLinkEntranceDelay(index)">
-							@let faviconUrl = link.cachedFavicon || utilities.getFaviconProxy(link.url);
+							@let faviconUrl = link.cachedFavicon || utilities.getBrandLogoUrl(link.url);
 							@let linkInitial = link.title.charAt(0).toUpperCase();
 							<div class="ghost-initial">
 								@if (!failedFavicons.has(link._id)) {

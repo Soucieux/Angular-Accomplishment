@@ -7,7 +7,8 @@ import { LOG } from '../app.logs';
 import {
 	APP_BREAKPOINT_NARROW,
 	CN,
-	PORTAL_FAVICON_PROXY_URL,
+	PORTAL_BRAND_LOGO_PROXY_URL,
+	VAULT_BRAND_ICON_PROXY_URL,
 	LS_AUTH_HINT_KEY,
 	UTILITIES_LOG_COUNTRY_FAILED,
 	UTILITIES_LOG_DEFAULT_COUNTRY,
@@ -625,15 +626,16 @@ export class Utilities {
 	}
 
 	/**
-	 * Gets a favicon URL for a site routed through the Firebase proxy, so the icon loads on mainland
-	 * networks that cannot reach the favicon source directly.
+	 * Gets the best-logo proxy URL for a link — Brandfetch's real brand logo when available, else Google's
+	 * favicon for non-brand sites. Used as a Portal card `<img>` source; the image errors when neither
+	 * source has an icon, so the caller falls back to the link's letter initial.
 	 *
 	 * @param url - The full URL of the website.
-	 * @returns A proxied favicon image URL string, or '' if the URL is unparseable.
+	 * @returns The proxy URL string, or '' if the URL is unparseable.
 	 */
-	public static getFaviconProxy(url: string): string {
+	public static getBrandLogoUrl(url: string): string {
 		const hostname = Utilities.parseHostname(url);
-		return hostname ? `${PORTAL_FAVICON_PROXY_URL}?domain=${hostname}` : '';
+		return hostname ? `${PORTAL_BRAND_LOGO_PROXY_URL}?domain=${hostname}` : '';
 	}
 
 	/**
@@ -647,8 +649,20 @@ export class Utilities {
 	}
 
 	/**
+	 * Builds the brand-icon proxy URL that resolves an account name to its favicon via Brandfetch.
+	 * Used as an `<img>` / SVG `<image>` source on Vault account nodes; the image errors when no brand
+	 * is found, so the caller falls back to the account's letter initials.
+	 *
+	 * @param name - The account or brand name to resolve an icon for.
+	 * @returns The proxy URL string.
+	 */
+	public static getBrandIconUrl(name: string): string {
+		return `${VAULT_BRAND_ICON_PROXY_URL}?name=${encodeURIComponent(name)}`;
+	}
+
+	/**
 	 * Attempts to parse the hostname out of a URL string.
-	 * Shared hub for {@link getDomain} and {@link getFaviconProxy}.
+	 * Shared hub for {@link getDomain} and {@link getBrandLogoUrl}.
 	 *
 	 * @param url - The full URL of the website.
 	 * @returns The hostname string, or null if the URL is unparseable.
@@ -1017,13 +1031,13 @@ export class Utilities {
 	───────────────────────────────────────── */
 
 	/**
-	 * Instance wrapper around {@link Utilities.getFaviconProxy} for use in Angular templates.
+	 * Instance wrapper around {@link Utilities.getBrandLogoUrl} for use in Angular templates.
 	 *
 	 * @param url - The full URL of the website.
-	 * @returns A proxied favicon image URL string, or '' if the URL is unparseable.
+	 * @returns The best-logo proxy URL string, or '' if the URL is unparseable.
 	 */
-	public getFaviconProxy(url: string): string {
-		return Utilities.getFaviconProxy(url);
+	public getBrandLogoUrl(url: string): string {
+		return Utilities.getBrandLogoUrl(url);
 	}
 
 	/**

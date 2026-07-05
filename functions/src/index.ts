@@ -21,12 +21,14 @@
 import * as functions from 'firebase-functions';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { defineSecret } from 'firebase-functions/params';
-import fetch from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
+import type { Response as ExpressResponse } from 'express';
 import cloudbase from '@cloudbase/node-sdk';
 
 const getMovieData = functions.https.onRequest(async (req, res) => {
 	const url = req.query.url as string;
 	const type = req.query.type as string;
+	res.set('Access-Control-Allow-Origin', '*');
 
 	if (!url) {
 		res.status(400).json({ error: 'Missing image URL' });
@@ -58,7 +60,6 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 		const isSuffixAllowed = allowedSuffixes.some((suffix) => hostname.endsWith(suffix));
 
 		if (!isExactAllowed && !isSuffixAllowed) {
-			res.set('Access-Control-Allow-Origin', '*');
 			res.status(400).json({ error: 'Target host is not allowed' });
 			return;
 		}
@@ -78,10 +79,8 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 			}
 		});
 
-		res.set('Access-Control-Allow-Origin', '*');
-
 		if (!response.ok) {
-			res.status(response.status).send(response);
+			res.status(response.status).send('Upstream request failed');
 			return;
 		}
 
@@ -101,58 +100,162 @@ const getMovieData = functions.https.onRequest(async (req, res) => {
 		}
 	} catch (error: unknown) {
 		console.error(error);
-		res.set('Access-Control-Allow-Origin', '*');
 		res.status(500).send('Internal server error');
 	}
 });
 
+/** Brandfetch client ID — used for both the Brand Search and Logo APIs. Read from Secret Manager. */
+const brandfetchClientId = defineSecret('BRANDFETCH_CLIENT_ID');
+
 /**
- * Proxies a site favicon through Google's favicon service so a mainland-China browser can load it.
- * The browser cannot reach Google directly (GFW), but this function runs on Google infrastructure
- * overseas and can, then streams the icon back with permissive CORS. The only outbound host is
- * www.google.com, so there is no SSRF surface — the caller-supplied domain is a query value, never
- * the host. On any upstream failure the status is forwarded so the client falls back to a letter avatar.
+ * Reads the Brandfetch client ID, trimmed. Secrets set via `firebase functions:secrets:set` commonly
+ * carry a trailing newline, which would become `%0A` in the `?c=` query param and be rejected by the
+ * Logo CDN (Brand Search is more lenient, so it can still succeed) — trimming avoids that failure mode.
+ *
+ * @returns The trimmed client ID.
  */
-const getFavicon = functions.https.onRequest(async (req, res) => {
-	res.set('Access-Control-Allow-Origin', '*');
+const brandfetchClientIdValue = (): string => brandfetchClientId.value().trim();
 
-	const domain = ((req.query.domain as string) || '').trim().toLowerCase();
-	if (!domain) {
-		res.status(400).json({ error: 'Missing domain' });
-		return;
+/**
+ * Streams an upstream image response back to the client with a day-long cache, or a 404 when the
+ * response carries no body. Shared by {@link brandicon} and {@link brandlogo}.
+ *
+ * @param res - The outgoing response to stream the image into.
+ * @param upstream - The successful upstream image response to forward.
+ */
+function streamImage(res: ExpressResponse, upstream: Response): void {
+	res.setHeader('Content-Type', upstream.headers.get('content-type') ?? 'image/png');
+	res.setHeader('Cache-Control', 'public, max-age=86400');
+	if (upstream.body) {
+		upstream.body.pipe(res);
+	} else {
+		res.status(404).send('No image data received');
 	}
+}
 
-	// Reject anything that is not a bare hostname before building the fixed-host upstream URL.
-	if (!/^[a-z0-9.-]+$/.test(domain)) {
-		res.status(400).json({ error: 'Invalid domain' });
-		return;
-	}
+/**
+ * Resolves a brand/account name to its logo and streams the image back, so a Vault account node can show
+ * a real favicon from just a typed name. The name is resolved to a domain via Brandfetch's Brand Search
+ * API, then that match's icon (itself a Brandfetch Logo API URL) is fetched and streamed with permissive
+ * CORS. It runs on Google infrastructure overseas, so it also works where Brandfetch is unreachable
+ * directly (mainland China). Any miss — empty search, no icon, or a failed fetch — returns a non-200 so
+ * the client falls back to the account's letter initials. The only outbound host is *.brandfetch.io.
+ */
+export const brandicon = functions.https.onRequest(
+	{ secrets: [brandfetchClientId] },
+	async (req, res) => {
+		res.set('Access-Control-Allow-Origin', '*');
 
-	const target = `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(domain)}`;
-
-	try {
-		const response = await fetch(target);
-
-		if (!response.ok) {
-			res.status(response.status).send('Favicon unavailable');
+		const name = ((req.query.name as string) || '').trim();
+		if (!name) {
+			res.status(400).json({ error: 'Missing name' });
 			return;
 		}
 
-		res.setHeader('Content-Type', response.headers.get('content-type') ?? 'image/png');
-		res.setHeader('Cache-Control', 'public, max-age=86400');
+		const clientId = brandfetchClientIdValue();
+		try {
+			// Step 1: resolve the typed name to a brand match (whose `icon` is a Logo API URL).
+			const searchUrl = `https://api.brandfetch.io/v2/search/${encodeURIComponent(
+				name
+			)}?c=${encodeURIComponent(clientId)}`;
+			const searchResponse = await fetch(searchUrl);
+			if (!searchResponse.ok) {
+				res.status(404).send('Brand search failed');
+				return;
+			}
 
-		if (response.body) {
-			response.body.pipe(res);
-		} else {
-			res.status(502).send('No favicon data received');
+			// Step 2: take the top match's icon — its absence means no brand, so the client shows initials.
+			const matches = (await searchResponse.json()) as { icon?: string }[];
+			const iconUrl = Array.isArray(matches) && matches.length > 0 ? matches[0].icon : undefined;
+			if (!iconUrl) {
+				res.status(404).send('No brand icon');
+				return;
+			}
+
+			// Step 3: fetch the resolved logo (the client ID is required) and stream it back.
+			const logoResponse = await fetch(`${iconUrl}?c=${encodeURIComponent(clientId)}`);
+			if (!isImageResponse(logoResponse)) {
+				res.status(404).send('Logo unavailable');
+				return;
+			}
+			streamImage(res, logoResponse);
+		} catch (error: unknown) {
+			console.error(error);
+			res.status(500).send('Internal server error');
 		}
-	} catch (error: unknown) {
-		console.error(error);
-		res.status(500).send('Internal server error');
 	}
-});
+);
 
-export const favicon = functions.https.onRequest(getFavicon);
+/**
+ * Fetches the best available logo for a domain, preferring quality then falling back for coverage:
+ * Brandfetch's real brand logo when it has one (the `/fallback/404/` path forces a 404 on a miss so its
+ * generic lettermark placeholder is skipped), otherwise Google's favicon for the long tail of non-brand
+ * sites. Shared by the live {@link brandlogo} proxy and the {@link cacheFavicons} job — they diverge only
+ * on how they consume the returned response (stream vs base64 buffer).
+ *
+ * @param domain - The bare hostname to resolve a logo for.
+ * @param clientId - The Brandfetch client ID.
+ * @returns The winning upstream response and its source, or null when neither source has an icon.
+ */
+/**
+ * Reports whether a fetched response is a usable image — a 2xx with an `image/*` content type. Guards
+ * against upstreams that answer a miss with a redirect to an HTML page instead of a proper error status:
+ * Brandfetch's CDN 302s to its hotlinking docs when the client ID is missing or not authorized for the
+ * Logo CDN, and node-fetch follows that to a 200 HTML page — which must never be streamed as an icon.
+ *
+ * @param response - The upstream response to check.
+ * @returns True when the response is a 2xx image.
+ */
+function isImageResponse(response: Response): boolean {
+	return response.ok && (response.headers.get('content-type') ?? '').startsWith('image/');
+}
+
+async function fetchBestLogo(
+	domain: string,
+	clientId: string
+): Promise<{ response: Response; source: 'brandfetch' | 'google' } | null> {
+	const brandfetchUrl = `https://cdn.brandfetch.io/${encodeURIComponent(
+		domain
+	)}/fallback/404/icon?c=${encodeURIComponent(clientId)}`;
+	const brandfetchResponse = await fetch(brandfetchUrl);
+	if (isImageResponse(brandfetchResponse)) return { response: brandfetchResponse, source: 'brandfetch' };
+
+	const googleResponse = await fetch(
+		`https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(domain)}`
+	);
+	return isImageResponse(googleResponse) ? { response: googleResponse, source: 'google' } : null;
+}
+
+/**
+ * Resolves a link domain to its best logo and streams it back, upgrading Portal's link favicons:
+ * Brandfetch's real brand logo when available, otherwise Google's favicon for non-brand sites. Runs on
+ * Google infrastructure overseas, so it also works where the sources are unreachable directly (mainland
+ * China). A total miss returns 404 so the client falls back to the link's letter initial.
+ */
+export const brandlogo = functions.https.onRequest(
+	{ secrets: [brandfetchClientId] },
+	async (req, res) => {
+		res.set('Access-Control-Allow-Origin', '*');
+
+		const domain = ((req.query.domain as string) || '').trim().toLowerCase();
+		if (!domain || !/^[a-z0-9.-]+$/.test(domain)) {
+			res.status(400).json({ error: 'Invalid domain' });
+			return;
+		}
+
+		try {
+			const best = await fetchBestLogo(domain, brandfetchClientIdValue());
+			if (!best) {
+				res.status(404).send('No logo available');
+				return;
+			}
+			streamImage(res, best.response);
+		} catch (error: unknown) {
+			console.error(error);
+			res.status(500).send('Internal server error');
+		}
+	}
+);
 
 export const thread1 = functions.https.onRequest(getMovieData);
 export const thread2 = functions.https.onRequest(getMovieData);
@@ -161,13 +264,13 @@ export const thread4 = functions.https.onRequest(getMovieData);
 export const thread5 = functions.https.onRequest(getMovieData);
 
 /*
- * Scheduled favicon cache. Once a day it fetches the favicon for every portal
- * link that is not yet cached and stores it as a base64 data URI on the link's
- * CloudBase document, so the app renders that copy first — icons then work even
- * where the favicon proxy (this same Google-hosted service) is unreachable,
- * notably mainland China. Incremental: already-cached links are skipped, so
- * there are no duplicate upstream calls. Two markers (faviconCachedAt,
- * faviconFailed) are written for future age-based refresh / skip-failing logic.
+ * Scheduled favicon cache. Once a day it fetches the best logo (via the same Brandfetch-first, Google-
+ * fallback hybrid as the live brandlogo proxy) for every portal link not yet cached at brandfetch
+ * quality, and stores it as a base64 data URI on the link's CloudBase document, so the app renders that
+ * copy first — icons then work even where the sources are unreachable, notably mainland China.
+ * Incremental: a link is (re)cached only until it has a `faviconSource`, so existing Google-cached links
+ * upgrade to Brandfetch exactly once and are skipped thereafter. Markers written: faviconCachedAt,
+ * faviconFailed, faviconSource ('brandfetch' | 'google').
  *
  * CloudBase admin credentials come from Secret Manager — set them once with:
  *   firebase functions:secrets:set CLOUDBASE_SECRET_ID
@@ -190,26 +293,11 @@ function formatTimestamp(date: Date): string {
 	);
 }
 
-/** Fetches a domain's favicon via Google's service and returns a base64 data URI. */
-async function fetchFaviconDataUri(domain: string): Promise<string> {
-	const target = `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(domain)}`;
-	const response = await fetch(target);
-	if (!response.ok) {
-		throw new Error(`HTTP ${response.status}`);
-	}
-	const buffer = await response.buffer();
-	if (buffer.length === 0) {
-		throw new Error('empty favicon body');
-	}
-	const contentType = response.headers.get('content-type') ?? 'image/png';
-	return `data:${contentType};base64,${buffer.toString('base64')}`;
-}
-
 export const cacheFavicons = onSchedule(
 	{
 		schedule: '0 3 * * *',
 		timeZone: 'UTC',
-		secrets: [cloudbaseSecretId, cloudbaseSecretKey, cloudbaseEnvId],
+		secrets: [cloudbaseSecretId, cloudbaseSecretKey, cloudbaseEnvId, brandfetchClientId],
 		timeoutSeconds: 300,
 		memory: '256MiB'
 	},
@@ -234,9 +322,13 @@ export const cacheFavicons = onSchedule(
 			offset += FAVICON_PAGE_SIZE;
 		}
 
-		// Only actual links (not categories) that have no cached favicon yet.
-		const toCache = links.filter((link) => link.type === 'link' && !link.cachedFavicon);
+		/* Actual links (not categories) not yet cached at brandfetch quality: those with no cached favicon,
+		   plus legacy Google-cached links (no faviconSource) that get a one-time upgrade pass. */
+		const toCache = links.filter(
+			(link) => link.type === 'link' && (!link.cachedFavicon || !link.faviconSource)
+		);
 		const timestamp = formatTimestamp(new Date());
+		const clientId = brandfetchClientIdValue();
 
 		let cached = 0;
 		let failed = 0;
@@ -244,8 +336,19 @@ export const cacheFavicons = onSchedule(
 			const doc = db.collection(USEFUL_LINKS_COLLECTION).doc(link._id);
 			try {
 				const hostname = new URL(link.url).hostname;
-				const dataUri = await fetchFaviconDataUri(hostname);
-				await doc.update({ cachedFavicon: dataUri, faviconCachedAt: timestamp, faviconFailed: false });
+				const best = await fetchBestLogo(hostname, clientId);
+				const buffer = best ? await best.response.buffer() : null;
+				if (!best || !buffer || buffer.length === 0) {
+					throw new Error('no logo available');
+				}
+				const contentType = best.response.headers.get('content-type') ?? 'image/png';
+				const dataUri = `data:${contentType};base64,${buffer.toString('base64')}`;
+				await doc.update({
+					cachedFavicon: dataUri,
+					faviconCachedAt: timestamp,
+					faviconFailed: false,
+					faviconSource: best.source
+				});
 				cached += 1;
 			} catch (error: unknown) {
 				await doc.update({ faviconFailed: true });

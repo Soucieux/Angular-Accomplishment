@@ -639,7 +639,18 @@ export const PORTAL_DEFAULT_CATEGORY_COLOR = '#d53369';
  * browser reaches this function (its host clears the GFW), and the function fetches the icon from
  * Google server-side. Same gen2 host family as the douban image proxy.
  */
-export const PORTAL_FAVICON_PROXY_URL = 'https://favicon-tfsps4dwza-uc.a.run.app';
+/**
+ * Firebase Cloud Function that returns the best favicon for a link domain — Brandfetch's real brand logo
+ * when available, else Google's favicon for non-brand sites. gen2 Cloud Run host — verify the exact URL
+ * after first deploy.
+ */
+export const PORTAL_BRAND_LOGO_PROXY_URL = 'https://brandlogo-tfsps4dwza-uc.a.run.app';
+/**
+ * Firebase Cloud Function that resolves a brand/account name to its logo via Brandfetch and streams the
+ * image back, so a Vault account node shows a real favicon from just a typed name. Same gen2 host family
+ * as the favicon proxy above (shared project Cloud Run hash) — verify the exact URL after first deploy.
+ */
+export const VAULT_BRAND_ICON_PROXY_URL = 'https://brandicon-tfsps4dwza-uc.a.run.app';
 export const PORTAL_LABEL_CONFIRMED = 'confirmed';
 /** Arrow glyph used as the add-link suffix in the multi-link dialog — identical in all locales. */
 export const MULTI_LINK_LABEL_ARROW = '→';

@@ -432,9 +432,12 @@
 								ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION
 							}}</span>
 						</div>
-						<button class="delete-account-button" (click)="openDeleteVaultPassphraseDialog()">
+						<button
+							class="delete-account-button"
+							[disabled]="!hasVaultPassphrase"
+							(click)="openDeleteVaultPassphraseDialog()">
 							<span class="material-symbols-outlined">key_off</span>
-							{{ ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE }}
+							{{ DIALOG_BTN_DELETE }}
 						</button>
 					</div>
 					<div class="danger-action-row">

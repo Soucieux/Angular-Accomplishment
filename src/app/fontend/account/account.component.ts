@@ -46,6 +46,7 @@ import {
 	CADENCE_ICON
 } from '../../common/constants';
 import {
+	DIALOG_BTN_DELETE,
 	ACCOUNT_LABEL_CHANGE_PASSWORD,
 	ACCOUNT_LABEL_OLD_PASSWORD,
 	ACCOUNT_LABEL_CONFIRM_PASSWORD,
@@ -222,6 +223,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_LABEL_DELETE_DESCRIPTION = ACCOUNT_LABEL_DELETE_DESCRIPTION;
 	protected readonly ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE = ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE;
 	protected readonly ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION = ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION;
+	protected readonly DIALOG_BTN_DELETE = DIALOG_BTN_DELETE;
 	protected readonly ACCOUNT_STRENGTH_LEVELS = ACCOUNT_STRENGTH_LEVELS;
 	private readonly localeStatLabels: Record<string, string> = {
 		totalFilms: ACCOUNT_STAT_LABEL_FILMS,
@@ -296,6 +298,8 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected showOldPassword = false;
 	protected showNewPassword = false;
 	protected showConfirmPassword = false;
+	// Whether the vault passphrase lock is set — gates (greys out) the delete-vault-passphrase button.
+	protected hasVaultPassphrase = false;
 	// Cadence: the vault passphrase grace preference and its dropdown options.
 	protected vaultGraceValue: number = VAULT_GRACE_ALWAYS;
 	protected readonly graceOptions: { label: string; value: number }[] = [
@@ -343,6 +347,13 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 					.getLastLoginTimestamp()
 					.then((date) => {
 						this.lastLoginDate = date;
+						this.cdr.detectChanges();
+					})
+					.catch(() => {});
+				(this.databaseService as CloudbaseService)
+					.getPassphraseLockStatus(PASSPHRASE_LOCK_KEY_VAULT)
+					.then((status) => {
+						this.hasVaultPassphrase = status.isSet;
 						this.cdr.detectChanges();
 					})
 					.catch(() => {});
@@ -666,6 +677,8 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 					PASSPHRASE_LOCK_KEY_VAULT
 				);
 				if (!result.success) throw new UnexpectedError();
+				this.hasVaultPassphrase = false;
+				this.cdr.detectChanges();
 				this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_VAULT_PASSPHRASE_REMOVED);
 			},
 			{ title: ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE, message: ACCOUNT_DIALOG_DELETE_VAULT_MSG }

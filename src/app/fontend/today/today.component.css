@@ -173,9 +173,18 @@
 	cursor: grab;
 }
 
+.tp-anytime.drag-move-active .tp-anytime-chip.is-reminder .tp-chip-title {
+	cursor: default;
+}
+
 .tp-anytime-chip.is-done .tp-chip-title {
 	text-decoration: line-through;
 	color: var(--ink-faint);
+}
+
+.tp-anytime-chip.is-reminder {
+	background: rgba(26, 109, 255, 0.05);
+	box-shadow: inset 3px 0 0 var(--blue);
 }
 
 .tp-check {
@@ -186,6 +195,17 @@
 
 .tp-anytime-chip.is-done .tp-check {
 	color: var(--ink-faint);
+}
+
+.tp-anytime-chip.is-reminder .tp-check {
+	font-size: 15px;
+	color: var(--blue);
+	cursor: default;
+}
+
+.tp-anytime-chip.is-reminder .tp-chip-title {
+	font-size: 12px;
+	font-weight: 600;
 }
 
 .tp-mini {

@@ -98,6 +98,3 @@ export const TASK_LEAD_ICON_MAP: Record<TodayTaskSource, string> = {
 
 /** Icon override for completed local tasks. */
 export const TASK_LEAD_ICON_DONE = 'check_circle';
-
-/** Icon for an incomplete untimed task chip. */
-export const TASK_LEAD_ICON_UNCHECKED = 'radio_button_unchecked';

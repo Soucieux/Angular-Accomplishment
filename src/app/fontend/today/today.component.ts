@@ -72,7 +72,6 @@ import {
 	TASK_ENTRANCE_MAX_DELAY_MS,
 	TASK_LEAD_ICON_DONE,
 	TASK_LEAD_ICON_MAP,
-	TASK_LEAD_ICON_UNCHECKED,
 	TASK_RECUR_NONE,
 	TASK_SOURCE_LOCAL,
 	TASK_SOURCE_REMINDER,
@@ -125,8 +124,6 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly TASK_SOURCE_LOCAL = TASK_SOURCE_LOCAL;
 	protected readonly TASK_SOURCE_REMINDER = TASK_SOURCE_REMINDER;
 	protected readonly TASK_SOURCE_TRACKED = TASK_SOURCE_TRACKED;
-	protected readonly TASK_LEAD_ICON_DONE = TASK_LEAD_ICON_DONE;
-	protected readonly TASK_LEAD_ICON_UNCHECKED = TASK_LEAD_ICON_UNCHECKED;
 	protected readonly TODAY_LABEL_REMINDER_READONLY = TODAY_LABEL_REMINDER_READONLY;
 	protected readonly MOBILE_BLOCKED_TITLE = MOBILE_BLOCKED_TITLE;
 	protected readonly MOBILE_BLOCKED_BODY = MOBILE_BLOCKED_BODY;
@@ -209,7 +206,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		return this.tasks()
 			.filter((task) => task.startMin != null)
 			.map((task) => {
-				const isDone = task.source === TASK_SOURCE_LOCAL && task.done;
+				const isDone = this.isTaskDone(task);
 				const isDragging = draggingBlockId === task.id;
 				const pos = liveLayout[task.id] ?? baseLayout[task.id] ?? { col: 0, total: 1 };
 				const top = this.minutesToPixels(task.startMin!);
@@ -236,7 +233,7 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 					isNarrow: pos.total > 1,
 					draggable: task.source === TASK_SOURCE_LOCAL && this.isDragMoveEnabled(),
 					isEditing: this.editingId() === task.id,
-					leadIcon: isDone ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_MAP[task.source],
+					leadIcon: this.leadIconFor(task),
 					timeLabel: this.formatMinutes(task.startMin!) + ' – ' + this.formatMinutes(endMin),
 					durationLabel: this.formatDuration(endMin - task.startMin!),
 					hasRecurrence: task.recur !== TASK_RECUR_NONE,
@@ -245,9 +242,13 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 			});
 	});
 
-	/** Untimed local tasks shown in the anytime lane. */
+	/** Untimed local tasks and untimed reminders (read-only) shown in the anytime lane. */
 	protected readonly untimedTasks = computed(() =>
-		this.tasks().filter((task) => task.source === TASK_SOURCE_LOCAL && task.startMin == null)
+		this.tasks().filter(
+			(task) =>
+				task.startMin == null &&
+				(task.source === TASK_SOURCE_LOCAL || task.source === TASK_SOURCE_REMINDER)
+		)
 	);
 
 	/** Pixel top offset of the current-time indicator. */
@@ -1364,6 +1365,20 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 		return remainder ? `${hours}h ${remainder}min` : `${hours}h`;
 	}
 
+	/**
+	 * Returns true when a task counts as done — only local tasks carry a done state;
+	 * reminders and tracked entries are never considered done regardless of their own data.
+	 *
+	 * {@link timedBlocks} - Picks the done vs. active accent color for a timed block.
+	 * {@link leadIconFor} - Picks the checkmark vs. source icon for a task's lead icon.
+	 *
+	 * @param task - The task to check.
+	 * @returns Whether the task is a completed local task.
+	 */
+	private isTaskDone(task: TodayTask): boolean {
+		return task.source === TASK_SOURCE_LOCAL && task.done;
+	}
+
 	/* ─────────────────────────────────────────
 	   Template helpers
 	───────────────────────────────────────── */
@@ -1376,6 +1391,28 @@ export class TodayComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected minutesToPixels(minutes: number): number {
 		return (minutes / 60) * PIXELS_PER_HOUR;
+	}
+
+	/**
+	 * Gets the lead icon for a task, accounting for the done state on local tasks only —
+	 * reminders and tracked entries always show their source icon regardless of done state.
+	 *
+	 * @param task - The task whose lead icon is needed.
+	 * @returns The Material Symbols icon ligature name.
+	 */
+	protected leadIconFor(task: TodayTask): string {
+		return this.isTaskDone(task) ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_MAP[task.source];
+	}
+
+	/**
+	 * Returns true when a task supports user interaction — dragging, toggling done, editing, or
+	 * removal. Only local tasks are editable; reminders and tracked entries render read-only.
+	 *
+	 * @param task - The task to check.
+	 * @returns Whether the task accepts user edits.
+	 */
+	protected isTaskEditable(task: TodayTask): boolean {
+		return task.source === TASK_SOURCE_LOCAL;
 	}
 
 	/**

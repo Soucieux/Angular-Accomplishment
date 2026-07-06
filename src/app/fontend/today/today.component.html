@@ -38,12 +38,17 @@
 					<div
 						class="tp-anytime-chip"
 						[class.is-done]="item.done"
-						(mousedown)="isDragMoveEnabled() ? onBlockMoveStart($event, item.id) : null">
+						[class.is-reminder]="item.source === TASK_SOURCE_REMINDER"
+						(mousedown)="
+							isTaskEditable(item) && isDragMoveEnabled()
+								? onBlockMoveStart($event, item.id)
+								: null
+						">
 						<span
 							class="material-symbols-outlined tp-check"
 							(mousedown)="$event.stopPropagation()"
-							(click)="toggleTaskDone(item.id)">
-							{{ item.done ? TASK_LEAD_ICON_DONE : TASK_LEAD_ICON_UNCHECKED }}
+							(click)="isTaskEditable(item) ? toggleTaskDone(item.id) : null">
+							{{ leadIconFor(item) }}
 						</span>
 						@if (editingId() === item.id) {
 							<input
@@ -58,18 +63,20 @@
 								autofocus />
 						} @else {
 							<span class="tp-chip-title">{{ item.title }}</span>
-							<span
-								class="material-symbols-outlined tp-mini"
-								(mousedown)="$event.stopPropagation()"
-								(click)="beginBlockEdit(item.id, item.title)"
-								>edit</span
-							>
-							<span
-								class="material-symbols-outlined tp-mini"
-								(mousedown)="$event.stopPropagation()"
-								(click)="removeTask(item.id)"
-								>close</span
-							>
+							@if (isTaskEditable(item)) {
+								<span
+									class="material-symbols-outlined tp-mini"
+									(mousedown)="$event.stopPropagation()"
+									(click)="beginBlockEdit(item.id, item.title)"
+									>edit</span
+								>
+								<span
+									class="material-symbols-outlined tp-mini"
+									(mousedown)="$event.stopPropagation()"
+									(click)="removeTask(item.id)"
+									>close</span
+								>
+							}
 						}
 					</div>
 				}

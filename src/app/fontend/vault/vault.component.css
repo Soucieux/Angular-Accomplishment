@@ -233,11 +233,12 @@
 .vault-card-top {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	/* 12px so the name/category left edge (avatar 38px + gap) lands at 50px, matching the
+	   connection chips' padding-left below — name, category, and chips share one edge. */
+	gap: 12px;
 }
 
 .vault-avatar {
-	position: relative;
 	width: 38px;
 	height: 38px;
 	flex-shrink: 0;
@@ -353,6 +354,9 @@
 	flex-shrink: 1;
 	min-width: 0;
 	padding: 1px 4px;
+	/* Cancel the left padding so the chip's left edge lines up with the name text above it,
+	   while the padding still gives the hover highlight breathing room. */
+	margin-left: -4px;
 	border: none;
 	border-radius: 12px;
 	background: transparent;
@@ -362,12 +366,6 @@
 
 .vault-card-category:hover {
 	background: #f1f5f9;
-}
-
-/* When the picker is open the options below already show the current categories (highlighted), so
-   hide the duplicate chips in the trigger — only the caret remains to collapse it. */
-.vault-card-category.open .vault-category-chip {
-	display: none;
 }
 
 /* Outside edit mode the category chips are read-only — no caret, hover, or pointer affordance. */
@@ -387,7 +385,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 3px;
-	padding: 4px 8px;
+	padding: 4px 10px;
 	border-radius: 9999px;
 	background: #f1f5f9;
 	font-size: 12px;
@@ -434,6 +432,10 @@
 .vault-category-options.open {
 	max-height: 300px;
 	opacity: 1;
+	padding: 8px;
+	background: #f8fafc;
+	border-radius: 12px;
+	border: 1px solid #eef2f7;
 }
 
 /* Matches the assigned .vault-category-chip pill so every category renders identically; the
@@ -443,7 +445,7 @@
 	align-items: center;
 	gap: 3px;
 	flex-shrink: 0;
-	padding: 4px 8px;
+	padding: 4px 10px;
 	border: none;
 	border-radius: 9999px;
 	background: #f1f5f9;
@@ -522,6 +524,8 @@
 	flex-wrap: wrap;
 	gap: 7px;
 	margin-top: 11px;
+	/* Match the name/category left edge (avatar 38px + card-top gap 12px) so the connection chips
+	   line up under them on every viewport. */
 	padding-left: 50px;
 }
 
@@ -841,7 +845,9 @@
 	justify-content: center;
 	color: #fff;
 	font-weight: 700;
-	font-size: 22px;
+	/* Sized so a two-character monogram — including full-width CJK glyphs (~1em each) — fits with
+	   clear margin inside the 46px box, rather than sitting flush against the rounded edge. */
+	font-size: 18px;
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
@@ -860,16 +866,17 @@
 	color: #1a1a1a;
 }
 
+/* Background is bound inline to the selected node's legend color (detail.typeGradient); white text keeps
+   the label readable on every type's color. */
 .vault-selection-type {
 	display: inline-flex;
 	align-items: center;
-	margin-top: 3px;
+	margin-top: 8px;
 	padding: 2px 8px;
 	border-radius: 9999px;
-	background: var(--vault-soft);
 	font-size: 11px;
 	font-weight: 600;
-	color: var(--vault-accent);
+	color: #fff;
 }
 
 .vault-stat-pills {
@@ -1268,10 +1275,6 @@
 		max-width: none;
 	}
 
-	.vault-chips {
-		padding-left: 0;
-	}
-
 	.vault-stat-pills {
 		flex-wrap: wrap;
 	}
@@ -1287,7 +1290,7 @@
 	}
 
 	.vault-add-button {
-		height: 36px;
+		height: 38px;
 		padding: 0 14px;
 		font-size: 12px;
 	}
@@ -1338,8 +1341,8 @@
 	}
 
 	.vault-mobile-toolbar .vault-tab {
-		height: auto;
-		padding: 5px 10px;
+		height: 28px;
+		padding: 0 10px;
 		font-size: 11px;
 	}
 
@@ -1348,8 +1351,8 @@
 	}
 
 	.vault-mobile-toolbar .vault-add-button {
-		height: auto;
-		padding: 5px 14px;
+		height: 36px;
+		padding: 0 14px;
 		font-size: 12px;
 	}
 

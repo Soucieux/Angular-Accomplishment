@@ -946,6 +946,21 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
+	 * Gets the type tag's background for the selection detail — the node type's legend color, so the tag
+	 * matches how that type is shown in the legend. Accounts use the default (uncategorized) account color
+	 * — a real map color, since accounts have no single color — rather than their per-category avatar
+	 * color; identifiers reuse their fixed type gradient.
+	 *
+	 * @param node - The selected node.
+	 * @returns The CSS background string matching the legend.
+	 */
+	private typeGradient(node: VaultNode): string {
+		return node.nodeType === VAULT_NODE_ACCOUNT
+			? VAULT_CATEGORY_OTHER.gradient
+			: this.getNodeGradient(node);
+	}
+
+	/**
 	 * Gets the list-view avatar background for an account — its single category gradient for one (or
 	 * no) category, or an equal-segment conic gradient across every category's color when it has two
 	 * or more, mirroring the segmented tile on the graph map.
@@ -1211,7 +1226,9 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Gets the account rows for the list view, filtered by the search query and
-	 * category filter, sorted by connection count (most-connected first).
+	 * category filter, sorted by connection count (most-connected first). The card
+	 * currently in edit mode is kept regardless of the category filter, so editing
+	 * its category (which persists immediately) does not make it vanish before Done.
 	 *
 	 * @returns The filtered, sorted account row view-models.
 	 */
@@ -1219,7 +1236,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		const query = this.query.trim().toLowerCase();
 		return this.nodes
 			.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT)
-			.filter((node) => this.matchesCategoryFilter(node))
+			.filter((node) => node.id === this.editId || this.matchesCategoryFilter(node))
 			.filter((node) => !query || node.name.toLowerCase().includes(query))
 			.map((account) => this.buildAccountRow(account))
 			.sort((a, b) => b.linkCount - a.linkCount);
@@ -1261,6 +1278,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			name: node.name,
 			typeLabel: this.typeLabel(node.nodeType),
 			avatarGradient: this.getNodeGradient(node),
+			typeGradient: this.typeGradient(node),
 			isAccount,
 			isIcon: !isAccount,
 			icon: isAccount ? '' : this.getIdentifierIcon(node.nodeType),

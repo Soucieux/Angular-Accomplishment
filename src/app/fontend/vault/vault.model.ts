@@ -130,6 +130,7 @@ export interface VaultSelectionDetail {
 	name: string;
 	typeLabel: string;
 	avatarGradient: string;
+	typeGradient: string;
 	isAccount: boolean;
 	isIcon: boolean;
 	icon: string;

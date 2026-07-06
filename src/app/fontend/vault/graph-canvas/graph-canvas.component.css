@@ -127,6 +127,9 @@
 }
 
 .legend-count {
+	/* Extra left padding widens the gap between the type name and its count without touching the
+	   icon-to-name spacing. */
+	padding-left: 12px;
 	text-align: right;
 	font-weight: 700;
 	color: #334155;

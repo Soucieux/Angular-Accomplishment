@@ -75,7 +75,9 @@
 								</span>
 								<div class="vault-selection-text">
 									<div class="vault-selection-name">{{ detail.name }}</div>
-									<span class="vault-selection-type">{{ detail.typeLabel }}</span>
+									<span class="vault-selection-type" [style.background]="detail.typeGradient">{{
+										detail.typeLabel
+									}}</span>
 								</div>
 							</div>
 							<div class="vault-stat-pills">

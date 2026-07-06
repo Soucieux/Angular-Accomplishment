@@ -201,6 +201,13 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				colorClass: 'icon-home'
 			},
 			{
+				key: 'Vault',
+				label: NAV_LABEL_VAULT,
+				icon: 'hub',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-vault'
+			},
+			{
 				key: 'Today',
 				label: NAV_LABEL_TODAY,
 				icon: 'calendar_today',
@@ -210,30 +217,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			{
 				key: 'Portal',
 				label: NAV_LABEL_PORTAL,
-				icon: 'language',
+				icon: 'travel_explore',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-portal'
-			},
-			{
-				key: 'Resonance',
-				label: NAV_LABEL_RESONANCE,
-				icon: 'format_quote',
-				iconClass: 'material-symbols-outlined',
-				colorClass: 'icon-resonance'
-			},
-			{
-				key: 'Recipe',
-				label: NAV_LABEL_RECIPES,
-				icon: 'menu_book',
-				iconClass: 'material-symbols-outlined',
-				colorClass: 'icon-recipe'
-			},
-			{
-				key: 'Entertainment',
-				label: NAV_LABEL_ENTERTAINMENT,
-				icon: 'live_tv',
-				iconClass: 'material-symbols-outlined',
-				colorClass: 'icon-entertainment'
 			},
 			{
 				key: 'Reminder',
@@ -250,6 +236,27 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				colorClass: 'icon-debt'
 			},
 			{
+				key: 'Recipe',
+				label: NAV_LABEL_RECIPES,
+				icon: 'menu_book',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-recipe'
+			},
+			{
+				key: 'Entertainment',
+				label: NAV_LABEL_ENTERTAINMENT,
+				icon: 'live_tv',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-entertainment'
+			},
+			{
+				key: 'Resonance',
+				label: NAV_LABEL_RESONANCE,
+				icon: 'format_quote',
+				iconClass: 'material-symbols-outlined',
+				colorClass: 'icon-resonance'
+			},
+			{
 				key: 'Patch Notes',
 				label: NAV_LABEL_PATCH_NOTES,
 				icon: 'note_stack',
@@ -262,13 +269,6 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 				icon: 'badge',
 				iconClass: 'material-symbols-outlined',
 				colorClass: 'icon-about'
-			},
-			{
-				key: 'Vault',
-				label: NAV_LABEL_VAULT,
-				icon: 'hub',
-				iconClass: 'material-symbols-outlined',
-				colorClass: 'icon-vault'
 			},
 			{ key: 'Login', label: NAV_LABEL_SIGN_IN, icon: '', iconClass: 'pi pi-user', colorClass: 'icon-login' }, // pi icon — CSS only, no ligature text
 			{

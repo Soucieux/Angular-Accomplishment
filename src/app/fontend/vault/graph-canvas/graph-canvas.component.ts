@@ -47,11 +47,14 @@ import {
 	VAULT_EDGE_RESTING_COLOR,
 	VAULT_EMAIL_META,
 	VAULT_GLYPH_COLOR_IDENTIFIER,
+	VAULT_GRAPH_ENTRANCE_STYLE_ID,
 	VAULT_LABEL_COLOR_ACCOUNT,
 	VAULT_LABEL_COLOR_IDENTIFIER,
 	VAULT_LABEL_COLOR_SELECTED,
 	VAULT_LEVEL_COLORS,
 	VAULT_LINK_META,
+	VAULT_NODE_ENTRANCE_MAX_DELAY_MS,
+	VAULT_NODE_ENTRANCE_STEP_MS,
 	VAULT_NODE_STROKE,
 	VAULT_PHONE_META
 } from '../vault.model';
@@ -59,6 +62,22 @@ import { Utilities } from '../../../common/utilities/app.utilities';
 
 /** SVG namespace used for all imperatively-created graph elements. */
 const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * Entrance-animation CSS for the graph's imperatively-created node and edge elements, injected
+ * directly into <head> at runtime via {@link Utilities.injectGlobalStyleOnce}. It cannot live in
+ * the component stylesheet because Angular's ViewEncapsulation.Emulated prefixes every selector
+ * with a scoping attribute that only elements created through Angular's own template renderer
+ * receive — nodes and edges here are built via raw document.createElementNS calls, so a scoped
+ * rule would never match them (the same issue documented in entertainment.component.ts for
+ * ::view-transition-* pseudo-elements).
+ */
+const VAULT_GRAPH_ENTRANCE_CSS = `
+.vault-node-visual{transform-origin:center;animation:vaultNodeSettle .42s cubic-bezier(.16,1,.3,1) both}
+@keyframes vaultNodeSettle{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.vault-edge-materialize{animation:vaultEdgeMaterialize .55s ease .3s backwards}
+@keyframes vaultEdgeMaterialize{from{opacity:0}to{opacity:1}}
+`;
 
 @Component({
 	selector: 'graph-canvas',
@@ -160,6 +179,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 					return;
 				}
 				this.viewReady = true;
+				Utilities.injectGlobalStyleOnce(VAULT_GRAPH_ENTRANCE_STYLE_ID, VAULT_GRAPH_ENTRANCE_CSS);
 				this.buildSimulation();
 				this.buildSvg();
 				this.bindPan();
@@ -450,8 +470,19 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
-	 * Creates the SVG element for every node and edge, wiring node pointer handlers,
-	 * then applies the current visual highlight.
+	 * Computes a node's entrance delay, staggered by its position in the simulation's node
+	 * list so the network settles in node-by-node rather than all at once.
+	 *
+	 * @param index - The zero-based index of the node in {@link simNodes}.
+	 * @returns The animation delay in milliseconds, capped at VAULT_NODE_ENTRANCE_MAX_DELAY_MS.
+	 */
+	private nodeEntranceDelay(index: number): number {
+		return Math.min(VAULT_NODE_ENTRANCE_MAX_DELAY_MS, index * VAULT_NODE_ENTRANCE_STEP_MS);
+	}
+
+	/**
+	 * Creates the SVG element for every node and edge — including their staggered entrance —
+	 * wiring node pointer handlers, then applies the current visual highlight.
 	 */
 	private buildSvg(): void {
 		this.computeRenderEdges();
@@ -519,6 +550,11 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		this.edgeEls = this.renderEdges.map((edge) => {
 			const line = document.createElementNS(SVG_NS, 'line');
 			line.setAttribute('stroke-linecap', 'round');
+
+			// Fades in once the graph first builds — see the CSS rule for why its fill-mode is
+			// "backwards" rather than "both" (applyVisual() must regain control of opacity after).
+			line.setAttribute('class', 'vault-edge-materialize');
+
 			// A backup edge (non-account identifier → its backup) reads distinctly as a bold dashed,
 			// arrowed line — see applyVisual() for its always-on styling and renderPositions() for the
 			// shortened endpoint that keeps the arrowhead visible outside the target node's circle.
@@ -539,7 +575,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		this.nodeGroupEls = [];
 		this.nodeShapeEls = [];
 		this.nodeLabelEls = [];
-		this.simNodes.forEach((node) => {
+		this.simNodes.forEach((node, index) => {
 			const group = document.createElementNS(SVG_NS, 'g');
 			group.setAttribute('class', 'vault-node');
 
@@ -558,18 +594,29 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			hoverRing.style.transition = 'opacity 0.15s ease';
 			hoverRing.style.pointerEvents = 'none';
 			group.appendChild(hoverRing);
+
+			/* The node's visual content settles in with a plain fade + gentle scale on this inner
+			   wrapper rather than the outer group — the outer group's position transform is
+			   overwritten every frame by renderPositions(), which would fight a CSS transform set
+			   on that same element. */
+			const visual = document.createElementNS(SVG_NS, 'g');
+			visual.setAttribute('class', 'vault-node-visual');
+			visual.style.animationDelay = `${this.nodeEntranceDelay(index)}ms`;
+
 			// Segmented category fill sits beneath the (transparent-filled) tile shape for multi-category accounts.
 			const fill = this.createNodeFill(node);
-			if (fill) group.appendChild(fill);
+			if (fill) visual.appendChild(fill);
 			const shape = this.createNodeShape(node);
 			const glyph = this.createNodeGlyph(node);
 			const label = this.createNodeLabel(node);
-			group.appendChild(shape);
-			group.appendChild(glyph);
-			group.appendChild(label);
+			visual.appendChild(shape);
+			visual.appendChild(glyph);
+			visual.appendChild(label);
 			if (node.verified && node.nodeType === VAULT_NODE_ACCOUNT) {
-				group.appendChild(this.createVerifiedBadge(node));
+				visual.appendChild(this.createVerifiedBadge(node));
 			}
+			group.appendChild(visual);
+
 			group.addEventListener('pointerdown', (event) => this.onNodeDown(event, node));
 			// Link-mode hover: reveal the halo on the node under the cursor so it reads as a link target.
 			group.addEventListener('pointerenter', () => {

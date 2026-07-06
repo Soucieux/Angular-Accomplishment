@@ -355,3 +355,10 @@ export const VAULT_CARD_ENTRANCE_BASE_DELAY_MS = 150;
 export const VAULT_CARD_ENTRANCE_STEP_MS = 55;
 /** Upper bound on entrance-animation delay so long lists don't wait too long to appear. */
 export const VAULT_CARD_ENTRANCE_MAX_DELAY_MS = 550;
+
+/** Per-node stagger step for the graph's entrance sequence, in ms — later nodes in the simulation's list appear slightly later than earlier ones. */
+export const VAULT_NODE_ENTRANCE_STEP_MS = 18;
+/** Upper bound on the graph's per-node entrance delay so a large graph's last nodes don't wait too long to appear. */
+export const VAULT_NODE_ENTRANCE_MAX_DELAY_MS = 400;
+/** DOM id of the runtime-injected <style> tag carrying the graph's entrance-animation CSS (see graph-canvas.component.ts). */
+export const VAULT_GRAPH_ENTRANCE_STYLE_ID = 'vault-graph-entrance-styles';

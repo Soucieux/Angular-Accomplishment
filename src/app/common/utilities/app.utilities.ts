@@ -969,6 +969,23 @@ export class Utilities {
 		});
 	}
 
+	/**
+	 * Injects a <style> tag into <head> once per DOM id, for CSS that must style content
+	 * Angular's ViewEncapsulation.Emulated cannot scope — elements built via raw DOM APIs
+	 * instead of Angular's template renderer never receive the scoping attribute a component
+	 * stylesheet's rules require. No-ops if a tag with that id already exists.
+	 *
+	 * @param id - The DOM id to tag the injected <style> element with, used as the idempotency guard.
+	 * @param css - The raw CSS text to inject.
+	 */
+	public static injectGlobalStyleOnce(id: string, css: string): void {
+		if (document.getElementById(id)) return;
+		const style = document.createElement('style');
+		style.id = id;
+		style.textContent = css;
+		document.head.appendChild(style);
+	}
+
 	/* ─────────────────────────────────────────
 	   Domain-specific
 	───────────────────────────────────────── */

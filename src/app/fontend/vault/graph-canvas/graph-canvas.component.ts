@@ -128,6 +128,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	private nodeShapeEls: SVGElement[] = [];
 	private nodeLabelEls: SVGTextElement[] = [];
 	private edgeEls: SVGLineElement[] = [];
+	private renderEdges: VaultEdge[] = [];
+	private mutualBackupEdgeIds = new Set<string>();
 	private camera = { scale: 1, x: 0, y: 0 };
 	private animationFrame: number | null = null;
 	private frameCount = 0;
@@ -408,10 +410,51 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
+	 * Collapses a mutual backup pair — two nodes that each declare the other as backup — into a
+	 * single rendered edge, so the map draws one double-headed dashed line instead of two dashed
+	 * lines on the same segment (whose opposite dash phases interleave into what reads as solid).
+	 * The raw {@link edges} input keeps both directed edges for the layout springs, hop-distance
+	 * search, and legend count — only the drawn set is deduplicated.
+	 */
+	private computeRenderEdges(): void {
+		// Record every directed backup edge so a reverse-direction lookup is O(1) below.
+		const backupPairs = new Set<string>();
+		this.edges.forEach((edge) => {
+			if (edge.relation === VAULT_RELATION_BACKUP) backupPairs.add(`${edge.sourceId}>${edge.targetId}`);
+		});
+
+		const seenMutualPairs = new Set<string>();
+		const mutualIds = new Set<string>();
+		const renderEdges: VaultEdge[] = [];
+
+		// Keep every non-backup edge and every one-directional backup edge unchanged; for a mutual
+		// pair, keep only the first-seen direction and mark it for a double-headed arrow.
+		this.edges.forEach((edge) => {
+			if (edge.relation !== VAULT_RELATION_BACKUP) {
+				renderEdges.push(edge);
+				return;
+			}
+			const isMutual = backupPairs.has(`${edge.targetId}>${edge.sourceId}`);
+			if (!isMutual) {
+				renderEdges.push(edge);
+				return;
+			}
+			const pairKey = [edge.sourceId, edge.targetId].sort().join('|');
+			if (seenMutualPairs.has(pairKey)) return;
+			seenMutualPairs.add(pairKey);
+			mutualIds.add(edge.id);
+			renderEdges.push(edge);
+		});
+		this.renderEdges = renderEdges;
+		this.mutualBackupEdgeIds = mutualIds;
+	}
+
+	/**
 	 * Creates the SVG element for every node and edge, wiring node pointer handlers,
 	 * then applies the current visual highlight.
 	 */
 	private buildSvg(): void {
+		this.computeRenderEdges();
 		const svg = this.svgRef.nativeElement;
 		if (!svg.querySelector('defs')) {
 			const defs = document.createElementNS(SVG_NS, 'defs');
@@ -473,7 +516,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		edgeGroup.innerHTML = '';
 		nodeGroup.innerHTML = '';
 
-		this.edgeEls = this.edges.map((edge) => {
+		this.edgeEls = this.renderEdges.map((edge) => {
 			const line = document.createElementNS(SVG_NS, 'line');
 			line.setAttribute('stroke-linecap', 'round');
 			// A backup edge (non-account identifier → its backup) reads distinctly as a bold dashed,
@@ -482,6 +525,12 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			if (edge.relation === VAULT_RELATION_BACKUP) {
 				line.setAttribute('stroke-dasharray', VAULT_EDGE_BACKUP_DASH);
 				line.setAttribute('marker-end', `url(#${VAULT_BACKUP_ARROW_MARKER_ID})`);
+
+				// Mutual backup pair (each node backs up the other) — one line, arrowed at both ends,
+				// instead of two overlapping dashed lines whose opposite phases read as a solid line.
+				if (this.mutualBackupEdgeIds.has(edge.id)) {
+					line.setAttribute('marker-start', `url(#${VAULT_BACKUP_ARROW_MARKER_ID})`);
+				}
 			}
 			edgeGroup.appendChild(line);
 			return line;
@@ -771,7 +820,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			group.setAttribute('transform', `translate(${node.x},${node.y})`);
 		});
 		this.edgeEls.forEach((line, index) => {
-			const edge = this.edges[index];
+			const edge = this.renderEdges[index];
 			const source = this.nodeById[edge.sourceId];
 			const target = this.nodeById[edge.targetId];
 			if (!source || !target) return;
@@ -787,6 +836,14 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				const pullBack = target.rad + VAULT_BACKUP_ARROW_GAP;
 				line.setAttribute('x2', String(target.x - (dx / distance) * pullBack));
 				line.setAttribute('y2', String(target.y - (dy / distance) * pullBack));
+
+				// Mutual pair — the start end also carries an arrowhead, so pull it back off the
+				// source node's radius too, matching the target-side treatment above.
+				if (this.mutualBackupEdgeIds.has(edge.id)) {
+					const sourcePullBack = source.rad + VAULT_BACKUP_ARROW_GAP;
+					line.setAttribute('x1', String(source.x + (dx / distance) * sourcePullBack));
+					line.setAttribute('y1', String(source.y + (dy / distance) * sourcePullBack));
+				}
 			} else {
 				line.setAttribute('x2', String(target.x));
 				line.setAttribute('y2', String(target.y));
@@ -872,7 +929,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		});
 
 		this.edgeEls.forEach((line, index) => {
-			const edge = this.edges[index];
+			const edge = this.renderEdges[index];
 			const source = this.nodeById[edge.sourceId];
 			const target = this.nodeById[edge.targetId];
 			let visible =

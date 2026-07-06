@@ -88,6 +88,8 @@ export const PASSPHRASE_LOCK_ERROR_TOO_SHORT = 'Passphrase must be at least 4 ch
 export const PASSPHRASE_LOCK_BTN_SET = 'Set Passphrase';
 /** Submit button label on the unlock screen. */
 export const PASSPHRASE_LOCK_BTN_UNLOCK = 'Unlock';
+/** Submit button label on the unlock screen while the passphrase is being verified. */
+export const PASSPHRASE_LOCK_BTN_VERIFYING = 'Verifying...';
 /** Small footer line shown under the submit button on both passphrase-lock screens. */
 export const PASSPHRASE_LOCK_FOOTER = 'This page is private';
 /** Inline error shown when a Cloud Function call fails outright (network/deploy issue), distinct from a wrong passphrase. */

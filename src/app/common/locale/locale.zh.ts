@@ -50,6 +50,7 @@ export const PASSPHRASE_LOCK_ERROR_MISMATCH = '两次输入的口令不一致';
 export const PASSPHRASE_LOCK_ERROR_TOO_SHORT = '口令至少需要 4 个字符';
 export const PASSPHRASE_LOCK_BTN_SET = '设置口令';
 export const PASSPHRASE_LOCK_BTN_UNLOCK = '解锁';
+export const PASSPHRASE_LOCK_BTN_VERIFYING = '正在验证...';
 export const PASSPHRASE_LOCK_FOOTER = '此页面为私密访问';
 export const PASSPHRASE_LOCK_ERROR_GENERIC = '出现问题，请重试。';
 

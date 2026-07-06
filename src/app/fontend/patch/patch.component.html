@@ -49,17 +49,19 @@
 
 		@if (!loading) {
 			<div class="stats-strip">
-				<div class="heatmap-anchor">
+				<div class="heatmap-anchor" clickOutside (clickOutside)="onHeatmapClickOutside()">
 					<span
 						class="stat-chip stat-chip--total"
 						[class.is-open]="isHeatmapOpen"
 						(mouseenter)="openHeatmap()"
-						(mouseleave)="scheduleHeatmapClose()">
+						(mouseleave)="scheduleHeatmapClose()"
+						(click)="onHeatmapChipClick($event)">
 						<span class="stat-number">{{ statsTotal }}</span>
 						<span class="stat-label">{{ PATCH_STAT_TOTAL }}</span>
 					</span>
 					<div
-						class="heatmap-popover hide-on-narrow-or-mobile"
+						class="heatmap-popover"
+						#heatmapPopover
 						[class.is-visible]="isHeatmapOpen"
 						(mouseenter)="cancelHeatmapClose()"
 						(mouseleave)="scheduleHeatmapClose()">

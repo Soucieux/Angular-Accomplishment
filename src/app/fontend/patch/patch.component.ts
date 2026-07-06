@@ -1,6 +1,7 @@
 import {
 	AfterViewChecked,
 	Component,
+	ElementRef,
 	HostListener,
 	Inject,
 	NgZone,
@@ -18,6 +19,7 @@ import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { ClickOutsideDirective } from '../../common/click-outside/click-outside.directive';
 import {
 	COMPONENT_DESTROY,
 	STATS_FIELD_TOTAL_PATCH_NOTES,
@@ -124,7 +126,8 @@ import { DatabaseService } from '../../backend/database-service/database.service
 		Select,
 		FormsModule,
 		CommonModule,
-		PaginatorModule
+		PaginatorModule,
+		ClickOutsideDirective
 	],
 	templateUrl: './patch.component.html',
 	styleUrls: ['../../common/glass-card.css', './patch.component.css']
@@ -135,6 +138,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	@ViewChild('dialogComponentContainer', { read: ViewContainerRef })
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
+	@ViewChild('heatmapPopover') set heatmapPopover(ref: ElementRef<HTMLElement> | undefined) {
+		if (ref) Utilities.attachScrollAutoHide(ref.nativeElement);
+	}
 
 	protected readonly Utilities = Utilities;
 	protected readonly PATCH_VIEW_PATCH = PATCH_VIEW_PATCH;
@@ -666,10 +672,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Opens the activity heatmap popover and cancels any pending close timer.
 	 */
 	protected openHeatmap(): void {
-		if (this.heatmapCloseTimer !== null) {
-			clearTimeout(this.heatmapCloseTimer);
-			this.heatmapCloseTimer = null;
-		}
+		this.cancelHeatmapClose();
 		this.isHeatmapOpen = true;
 	}
 
@@ -693,6 +696,30 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			clearTimeout(this.heatmapCloseTimer);
 			this.heatmapCloseTimer = null;
 		}
+	}
+
+	/**
+	 * Toggles the activity heatmap popover open or closed on tap. Touch devices never
+	 * fire mouseenter/mouseleave, so hover alone cannot open the popover there; on
+	 * pointer devices hover already handles it, so this no-ops to avoid closing a
+	 * popover the same click just opened via hover.
+	 *
+	 * @param event - The click event from the total-count stat chip.
+	 */
+	protected onHeatmapChipClick(event: Event): void {
+		if (!this.utilities.isMobile()) return;
+		event.stopPropagation();
+		this.cancelHeatmapClose();
+		this.isHeatmapOpen = !this.isHeatmapOpen;
+	}
+
+	/**
+	 * Closes the activity heatmap popover when a touch device taps outside it, via the shared
+	 * ClickOutsideDirective — the mouseleave-based close used on pointer devices never fires on touch.
+	 */
+	protected onHeatmapClickOutside(): void {
+		if (!this.isHeatmapOpen) return;
+		this.isHeatmapOpen = false;
 	}
 
 	// ── Internal data and private helpers ────────────────────────────────────

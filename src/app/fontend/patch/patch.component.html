@@ -477,7 +477,11 @@
 					<div class="previous-label">{{ PATCH_LABEL_PREVIOUS_RELEASES }}</div>
 					<div class="release-list">
 						@for (rel of notes.slice(1); track rel.version; let index = $index) {
-							<div class="release-row" [style.animation-delay.ms]="getRowEntranceDelay(index)">
+							<div
+								class="release-row"
+								[class.is-expanded]="isReleaseExpanded(rel.version)"
+								[style.animation-delay.ms]="getRowEntranceDelay(index)"
+								(click)="toggleReleaseExpand(rel.version)">
 								<span class="rel-version">{{ rel.version }}</span>
 								<div class="rel-main">
 									<div class="rel-title">{{ rel.title }}</div>
@@ -491,6 +495,25 @@
 									}
 								</div>
 								<span class="rel-date">{{ rel.date }}</span>
+								<span class="material-symbols-outlined rel-chevron">{{
+									isReleaseExpanded(rel.version) ? 'expand_less' : 'expand_more'
+								}}</span>
+								@if (isReleaseExpanded(rel.version)) {
+									<div class="release-sections rel-expanded-sections" (click)="$event.stopPropagation()">
+										@for (section of rel.sections; track section.heading) {
+											@if (section.items.length > 0) {
+												<div class="release-section">
+													<div class="section-heading">{{ section.heading }}</div>
+													<ul class="section-items">
+														@for (item of section.items; track item) {
+															<li class="section-item">{{ item }}</li>
+														}
+													</ul>
+												</div>
+											}
+										}
+									</div>
+								}
 							</div>
 						}
 					</div>

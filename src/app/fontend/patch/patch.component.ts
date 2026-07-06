@@ -180,6 +180,8 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected currentView: 'patch' | 'release' = PATCH_VIEW_PATCH;
 	protected releaseNotes$!: Observable<ReleaseNote[] | null>;
 	private releaseNotesLoaded = false;
+	/** Version of the previous-release row currently expanded to show its full section lists, or null when none is. */
+	private expandedReleaseVersion: string | null = null;
 	/**
 	 * All available components that can be selected in the add-entry dropdown.
 	 *
@@ -494,6 +496,16 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 		} else if (view === PATCH_VIEW_RELEASE && !this.releaseNotesLoaded) {
 			this.timeoutService.start(TIMEOUT_KEY_PATCH_RELEASE, () => this.onLoadingTimeout());
 		}
+	}
+
+	/**
+	 * Toggles inline expansion of a previous-release row to reveal its full section lists.
+	 * Collapses the row instead when it is already the one expanded.
+	 *
+	 * @param version - The version of the previous-release row being toggled.
+	 */
+	protected toggleReleaseExpand(version: string): void {
+		this.expandedReleaseVersion = this.expandedReleaseVersion === version ? null : version;
 	}
 
 	/**
@@ -1115,5 +1127,15 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 */
 	protected getRowEntranceDelay(index: number): number {
 		return Math.min(PATCH_ROW_ENTRANCE_MAX_DELAY_MS, index * PATCH_ROW_ENTRANCE_STEP_MS);
+	}
+
+	/**
+	 * Returns true when the given previous-release version is the one currently expanded.
+	 *
+	 * @param version - The version of the previous-release row being checked.
+	 * @returns True when that row's full section lists are shown.
+	 */
+	protected isReleaseExpanded(version: string): boolean {
+		return this.expandedReleaseVersion === version;
 	}
 }

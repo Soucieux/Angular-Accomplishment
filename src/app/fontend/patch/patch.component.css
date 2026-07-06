@@ -317,6 +317,23 @@
 	flex-wrap: wrap;
 	box-shadow: 0 1px 3px rgba(60, 20, 50, 0.04);
 	animation: pnRowIn 0.4s ease both;
+	cursor: pointer;
+}
+
+.release-row.is-expanded {
+	border-color: #d8c3d6;
+	box-shadow: 0 2px 8px rgba(60, 20, 50, 0.08);
+}
+
+.rel-chevron {
+	font-size: 20px;
+	color: #9a8a96;
+	flex-shrink: 0;
+}
+
+.rel-expanded-sections {
+	flex-basis: 100%;
+	cursor: default;
 }
 
 .rel-version {

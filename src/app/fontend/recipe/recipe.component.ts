@@ -4,7 +4,6 @@ import {
 	ChangeDetectorRef,
 	Component,
 	ElementRef,
-	HostListener,
 	Inject,
 	NgZone,
 	OnDestroy,
@@ -24,6 +23,7 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { ClickOutsideDirective } from '../../common/click-outside/click-outside.directive';
 import {
 	COMPONENT_DESTROY,
 	DIALOG_CONFIRM,
@@ -140,7 +140,7 @@ import { PaginatorComponent } from './paginator/paginator.component';
 @Component({
 	selector: 'recipe',
 	standalone: true,
-	imports: [CommonModule, FormsModule, AutoComplete, BlockedCardComponent, PaginatorComponent],
+	imports: [CommonModule, FormsModule, AutoComplete, BlockedCardComponent, PaginatorComponent, ClickOutsideDirective],
 	templateUrl: './recipe.component.html',
 	styleUrls: ['../../common/glass-card.css', './recipe.component.css']
 })
@@ -153,7 +153,6 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 
 	@ViewChild('stepsScroll') private stepsScrollEl?: ElementRef<HTMLElement>;
 	@ViewChild('ingredientsScroll') private ingredientsScrollEl?: ElementRef<HTMLElement>;
-	@ViewChild('catDropdown') private catDropdownEl?: ElementRef<HTMLElement>;
 
 	protected readonly RECIPE_VIEW_LIST = RECIPE_VIEW_LIST;
 	protected readonly RECIPE_VIEW_DETAIL = RECIPE_VIEW_DETAIL;
@@ -903,17 +902,13 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 	}
 
 	/**
-	 * Closes the category dropdown when a click lands outside it.
+	 * Closes the category dropdown when a click lands outside it, via the shared ClickOutsideDirective.
 	 * No-ops when the dropdown is already closed to avoid spurious change detection.
-	 *
-	 * @param event - The document-level click event.
 	 */
-	@HostListener('document:click', ['$event'])
-	protected onDocumentClick(event: Event): void {
+	protected onCategoryDropdownClickOutside(): void {
 		if (!this.editorCategoryOpen) return;
-		if (this.catDropdownEl?.nativeElement.contains(event.target as Node)) return;
 		this.editorCategoryOpen = false;
-		// HostListener fires outside the component's default CD cycle — mark for check to update dropdown state.
+		// Fires outside the component's default CD cycle — mark for check to update dropdown state.
 		this.cdr.markForCheck();
 	}
 

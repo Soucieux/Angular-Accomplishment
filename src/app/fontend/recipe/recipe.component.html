@@ -284,10 +284,11 @@
 							<span class="suffix">{{ RECIPE_SUFFIX_SERVINGS }}</span>
 						</label>
 						<div
-							#catDropdown
 							class="meta-chip editor-meta-chip select-chip"
 							[class.invalid]="editorCategoryInvalid"
-							[class.open]="editorCategoryOpen">
+							[class.open]="editorCategoryOpen"
+							clickOutside
+							(clickOutside)="onCategoryDropdownClickOutside()">
 							<span class="material-symbols-outlined icon">restaurant</span>
 							<span
 								class="category-trigger"

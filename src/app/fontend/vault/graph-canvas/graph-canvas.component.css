@@ -28,7 +28,7 @@
 .legend {
 	position: absolute;
 	top: 12px;
-	right: 14px;
+	left: 14px;
 	display: flex;
 	flex-direction: column;
 	gap: 7px;

@@ -41,6 +41,8 @@ import {
 	RECIPE_BAND_DEFAULT,
 	RECIPE_PAGE_SIZE,
 	RECIPE_ROWS_PER_PAGE,
+	RECIPE_ROWS_PER_PAGE_NARROW,
+	RECIPE_MIN_COLUMNS,
 	STATS_CAP_ACTIVITY_LOG,
 	STATS_FIELD_RECIPE_LIST,
 	STATS_FIELD_TOTAL_RECIPES,
@@ -1355,9 +1357,9 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 
 	/**
 	 * Recalculates {@link pageSize} based on the glass-card container width and the
-	 * CSS custom properties (--individual-item-width and --individual-item-gap).
-	 * Sets the page size to exactly 5 rows (itemsPerRow × 5), keeping the number
-	 * of visible rows constant regardless of screen width.
+	 * CSS custom properties (--individual-item-width and --individual-item-gap), using
+	 * {@link RECIPE_ROWS_PER_PAGE_NARROW} rows when the grid collapses to a single column
+	 * and {@link RECIPE_ROWS_PER_PAGE} rows otherwise.
 	 * Clamps {@link currentPage} if it would fall outside the new page range.
 	 */
 	private updateGridLayout(): void {
@@ -1393,7 +1395,9 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 			/* Step 4: Recalculate pageSize and clamp currentPage.
 			   The page must be clamped before pageSize is updated; computing maxPage against
 			   the old pageSize would give a stale upper bound. */
-			const newPageSize = itemsPerRow * RECIPE_ROWS_PER_PAGE;
+			const rowsPerPage =
+				itemsPerRow === RECIPE_MIN_COLUMNS ? RECIPE_ROWS_PER_PAGE_NARROW : RECIPE_ROWS_PER_PAGE;
+			const newPageSize = itemsPerRow * rowsPerPage;
 			const maxPage = Math.max(0, Math.ceil(this.filteredRecipes.length / newPageSize) - 1);
 			if (this.currentPage > maxPage) {
 				this.currentPage = maxPage;

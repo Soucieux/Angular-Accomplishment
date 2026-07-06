@@ -43,6 +43,10 @@ export const DIALOG_DELETE_ACCOUNT = 'delete-account';
 export const DIALOG_CATEGORY = 'category';
 /** Dialog type for the add-account dialog on the Vault page. */
 export const DIALOG_ADD_ACCOUNT = 'add-account';
+/** Dialog type for editing a non-account node (name + backup links) on the Vault page. */
+export const DIALOG_EDIT_NON_ACCOUNT = 'edit-non-account';
+/** Dialog type for editing a custom vault category's name and icon. */
+export const DIALOG_EDIT_VAULT_CATEGORY = 'edit-vault-category';
 
 /* ─────────────────────────────────────────
    History dialog constants
@@ -626,7 +630,11 @@ export const RECIPE_MAX_NAME_CHARS = 9;
 /** Maximum number of recipe cards visible on a single paginated page. */
 export const RECIPE_PAGE_SIZE = 8;
 /** Number of rows displayed per paginated page in the recipe grid. */
-export const RECIPE_ROWS_PER_PAGE = 5;
+export const RECIPE_ROWS_PER_PAGE = 3;
+/** Rows per page on narrow viewports where only one column fits — overrides the default. */
+export const RECIPE_ROWS_PER_PAGE_NARROW = 5;
+/** Column count at which the narrow (one-column) row override applies. */
+export const RECIPE_MIN_COLUMNS = 1;
 /** Maximum number of ingredient type tabs shown in the add/edit editor. */
 export const RECIPE_EDITOR_TYPE_MAX = 9;
 export const RECIPE_LOG_DELETED = 'Recipe deleted:';
@@ -707,12 +715,14 @@ export const REMINDER_VALUE_KEY_END_TIME = 'endTime';
 /** CloudBase field key marking a reminder as shared on creation (visible to connected accounts). */
 export const REMINDER_VALUE_KEY_SHARED = 'isShared';
 
-/** Items shown per page in the Reminder grid (default: 2 columns × 7 rows). */
-export const REMINDER_ITEMS_PER_PAGE = 14;
+/** Items shown per page in the Reminder grid (default: 2 columns × 5 rows). */
+export const REMINDER_ITEMS_PER_PAGE = 10;
 /** Fixed number of rows per page in the Reminder grid — page size scales as itemsPerRow × this. */
-export const REMINDER_ROWS_PER_PAGE = 7;
+export const REMINDER_ROWS_PER_PAGE = 5;
 /** Rows per page on narrow viewports where only one column fits — overrides the default. */
 export const REMINDER_ROWS_PER_PAGE_NARROW = 10;
+/** Column count at which the narrow (one-column) row override applies. */
+export const REMINDER_MIN_COLUMNS = 1;
 /** Fallback accent color for unrecognized or absent categories — matches the Reminder section accent. */
 export const REMINDER_CATEGORY_COLOR_DEFAULT = '#1a6dff';
 /** Number of days ahead treated as "due soon". */
@@ -908,6 +918,8 @@ export const VAULT_VALUE_KEY_LABEL = 'label';
 export const VAULT_VALUE_KEY_HEX = 'hex';
 /** CloudBase content key for a custom category's gradient. */
 export const VAULT_VALUE_KEY_GRADIENT = 'gradient';
+/** CloudBase content key for a custom category's icon. */
+export const VAULT_VALUE_KEY_ICON = 'icon';
 /** CloudBase content key for an account node's verified flag. */
 export const VAULT_VALUE_KEY_VERIFIED = 'verified';
 
@@ -917,6 +929,13 @@ export const VAULT_KIND_NODE = 'node';
 export const VAULT_KIND_EDGE = 'edge';
 /** Document-kind discriminator for a custom category. */
 export const VAULT_KIND_CATEGORY = 'category';
+
+/** Add-account dialog step-1 kind discriminator: an account login. */
+export const VAULT_DIALOG_KIND_ACCOUNT = 'account';
+/** Add-account dialog step-1 kind discriminator: a non-account identifier. */
+export const VAULT_DIALOG_KIND_OTHER = 'other';
+/** Add-account dialog step-1 kind discriminator: a standalone custom category. */
+export const VAULT_DIALOG_KIND_CATEGORY = 'category';
 
 /** Node-type value for a website / app account. */
 export const VAULT_NODE_ACCOUNT = 'account';
@@ -937,6 +956,8 @@ export const VAULT_FILTER_KEY_VERIFIED = 'verified';
 export const VAULT_ICON_VERIFIED = 'verified';
 /** Icon-badge gradient for the Verified overview chip — teal, distinct from every category preset. */
 export const VAULT_GRADIENT_VERIFIED = 'linear-gradient(135deg, #2dd4bf, #0d9488)';
+/** Upper bound on icons rendered in the icon-picker search grid, so an empty search stays cheap to render. */
+export const VAULT_ICON_PICKER_RESULT_CAP = 120;
 
 /** Category key used for accounts created without an explicit category. */
 export const VAULT_CATEGORY_KEY_OTHER = 'other';

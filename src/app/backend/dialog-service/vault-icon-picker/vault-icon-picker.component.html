@@ -1,0 +1,42 @@
+<button
+	type="button"
+	class="icon-picker-trigger"
+	[class.icon-picker-trigger-compact]="compact"
+	(click)="togglePicker()">
+	<span class="material-symbols-outlined">{{ icon }}</span>
+</button>
+@if (showPicker) {
+	<div class="icon-picker-panel">
+		<input
+			class="text-input icon-search-input"
+			type="text"
+			[ngModel]="searchQuery"
+			(ngModelChange)="onSearchQueryChange($event)"
+			[placeholder]="VAULT_DIALOG_ICON_SEARCH_PLACEHOLDER" />
+		<div class="icon-category-row">
+			@for (category of VAULT_ICON_CATEGORIES; track category) {
+				<button
+					type="button"
+					class="icon-category-chip"
+					[class.selected]="categoryFilter === category"
+					(click)="toggleCategoryFilter(category)">
+					{{ category }}
+				</button>
+			}
+		</div>
+		<div class="icon-grid" #iconGrid>
+			@for (option of filteredIconOptions; track option.name) {
+				<button
+					type="button"
+					class="icon-grid-item"
+					[class.selected]="option.name === icon"
+					(click)="selectIcon(option.name)">
+					<span class="material-symbols-outlined">{{ option.name }}</span>
+				</button>
+			}
+		</div>
+		@if (filteredIconOptions.length === VAULT_ICON_PICKER_RESULT_CAP) {
+			<span class="icon-picker-hint">{{ VAULT_DIALOG_ICON_RESULT_CAP_HINT }}</span>
+		}
+	</div>
+}

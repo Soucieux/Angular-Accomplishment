@@ -964,6 +964,8 @@ export const VAULT_BTN_ADD_CONNECTIONS = 'Add new connections';
 export const VAULT_BTN_EDIT_NAME = 'Edit name';
 /** Title of the shared category dialog when reused to edit a non-account node's name. */
 export const VAULT_NODE_NAME_DIALOG_TITLE = 'Edit Name';
+/** Title of the dedicated dialog for editing a non-account node's name and backup links. */
+export const VAULT_EDIT_NON_ACCOUNT_TITLE = 'Edit non-account';
 /** Placeholder text shown in the category overview bar when no account has a category yet. */
 export const VAULT_OVERVIEW_EMPTY = 'No categorized accounts yet';
 /** Body text shown when Graph view is blocked on mobile, offering List view as an alternative. */
@@ -974,6 +976,8 @@ export const VAULT_GRAPH_MOBILE_BLOCKED_BODY =
 export const VAULT_LEGEND_TITLE = 'Legend';
 /** Legend row label for the count of verified accounts. */
 export const VAULT_LEGEND_VERIFIED = 'Verified';
+/** Legend row label for the count of backup links between non-account nodes. */
+export const VAULT_LEGEND_BACKUP = 'Backup';
 /** Type label for a website / app account (legend row and detail bar). */
 export const VAULT_TYPE_ACCOUNT = 'Account';
 /** Type label for an email address identifier (legend row and detail bar). */
@@ -1016,8 +1020,14 @@ export const VAULT_BANNER_CANCEL = 'Cancel';
 export const VAULT_DIALOG_TITLE = 'Add an account';
 /** Title of the add-account dialog on the step-1 kind chooser. */
 export const VAULT_DIALOG_TITLE_START = 'Add to your vault';
-/** Title of the add-account dialog on the non-account step. */
-export const VAULT_DIALOG_TITLE_IDENTIFIER = 'Add an identifier';
+/** Title of the add-account dialog on the non-account step when the type is email. */
+export const VAULT_DIALOG_TITLE_IDENTIFIER_EMAIL = 'Add an email';
+/** Title of the add-account dialog on the non-account step when the type is phone. */
+export const VAULT_DIALOG_TITLE_IDENTIFIER_PHONE = 'Add a phone number';
+/** Title of the add-account dialog on the category step. */
+export const VAULT_DIALOG_TITLE_CATEGORY = 'New category';
+/** Title of the edit-vault-category dialog. */
+export const VAULT_EDIT_CATEGORY_TITLE = 'Edit category';
 /** Subtitle of the add-account dialog. */
 export const VAULT_DIALOG_SUBTITLE = 'Name it, then attach any connections';
 /** Step-1 prompt asking what kind of node to add. */
@@ -1030,6 +1040,10 @@ export const VAULT_DIALOG_KIND_ACCOUNT_HINT = 'A website, app, or device login';
 export const VAULT_DIALOG_KIND_OTHER_LABEL = 'Non-account';
 /** Hint under the non-account choice on the step-1 kind chooser. */
 export const VAULT_DIALOG_KIND_OTHER_HINT = 'An email or phone, with backups';
+/** Label for the category choice on the step-1 kind chooser. */
+export const VAULT_DIALOG_KIND_CATEGORY_LABEL = 'Category';
+/** Hint under the category choice on the step-1 kind chooser. */
+export const VAULT_DIALOG_KIND_CATEGORY_HINT = 'Create a new category';
 /** Field label for the non-account node type dropdown. */
 export const VAULT_DIALOG_TYPE_LABEL = 'Type';
 /** Field label for the non-account name input. */
@@ -1038,14 +1052,14 @@ export const VAULT_DIALOG_IDENTIFIER_NAME_LABEL = 'Name';
 export const VAULT_DIALOG_PLACEHOLDER_EMAIL = 'e.g. jane@email.com';
 /** Placeholder for the non-account name input when the phone type is selected. */
 export const VAULT_DIALOG_PLACEHOLDER_PHONE = 'e.g. +1 555 0100';
-/** Placeholder for the non-account name input when the notes type is selected. */
-export const VAULT_DIALOG_PLACEHOLDER_NOTES = 'e.g. recovery codes, a hint…';
 /** Inline error shown when a non-account name already exists. */
 export const VAULT_DIALOG_DUPLICATE_NODE = 'An entry with this name already exists';
 /** Field label for the account name input. */
 export const VAULT_DIALOG_NAME_LABEL = 'Account name';
 /** Placeholder for the account name input. */
 export const VAULT_DIALOG_NAME_PLACEHOLDER = 'e.g. Spotify, my bank, work laptop…';
+/** Field label for the standalone category-name input on the category step. */
+export const VAULT_DIALOG_CATEGORY_NAME_LABEL = 'Category name';
 /** Field label for the category picker. */
 export const VAULT_DIALOG_CATEGORY_LABEL = 'Categories (select one or more)';
 /** Field label for the verified/not-verified toggle in the add-account dialog. */
@@ -1054,6 +1068,10 @@ export const VAULT_DIALOG_VERIFIED_LABEL = 'Verified';
 export const VAULT_DIALOG_NEW_CATEGORY = 'New category';
 /** Placeholder for the inline new-category name input. */
 export const VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER = 'Name, then Enter';
+/** Placeholder text in the icon-picker search input. */
+export const VAULT_DIALOG_ICON_SEARCH_PLACEHOLDER = 'Search icons';
+/** Hint shown when the icon-picker results are capped, prompting a narrower search. */
+export const VAULT_DIALOG_ICON_RESULT_CAP_HINT = 'Showing top matches — search or pick a category to narrow';
 /** Inline error shown when the entered account name already exists. */
 export const VAULT_DIALOG_DUPLICATE_NAME = 'An account with this name already exists';
 /** Error shown when a new or renamed category name matches an existing category. */
@@ -1068,8 +1086,19 @@ export const VAULT_DIALOG_CONNECTIONS_HINT = 'type a name — existing or new';
 export const VAULT_DIALOG_CONNECTION_PLACEHOLDER = 'Search or add a connection…';
 /** Label for the add-another-connection button. */
 export const VAULT_DIALOG_ADD_CONNECTION = 'Add connection';
+/** Field label for the backups section — shared by the edit-non-account dialog and the add-node
+ * dialog's non-account section, so the terminology matches everywhere backups are managed. */
+export const VAULT_DIALOG_BACKUPS_LABEL = 'Backups';
+/** Helper hint shown beside the backups label. */
+export const VAULT_DIALOG_BACKUPS_HINT = 'An email or phone number that backs this one up';
+/** Placeholder for each backup input row. */
+export const VAULT_DIALOG_BACKUP_PLACEHOLDER = 'Email or phone number…';
+/** Label for the add-another-backup button. */
+export const VAULT_DIALOG_ADD_BACKUP = 'Add backup';
 /** Submit button label on the add-account dialog. */
 export const VAULT_DIALOG_SUBMIT = 'Add to map';
+/** Submit button label on the add-account dialog's category step. */
+export const VAULT_DIALOG_SUBMIT_CATEGORY = 'Create category';
 
 /** Toast shown when an account is added to the vault. */
 export const VAULT_MSG_ACCOUNT_SAVED = 'Account added';
@@ -1079,6 +1108,8 @@ export const VAULT_MSG_NODE_SAVED = 'Added to your vault';
 export const VAULT_MSG_LINK_ADDED = 'Link added';
 /** Toast shown when a link is removed. */
 export const VAULT_MSG_LINK_REMOVED = 'Link removed';
+/** Toast shown when a non-account node's name or backup links are saved from its edit dialog. */
+export const VAULT_MSG_IDENTIFIER_UPDATED = 'Identifier updated';
 /** Toast detail shown when a vault write fails. */
 export const VAULT_MSG_SAVE_FAILED_DETAIL = 'Could not save to the vault. Please try again.';
 /** Block-dialog message shown while a vault write is in flight. */
@@ -1109,6 +1140,8 @@ export const VAULT_MSG_DELETE_CATEGORY_CONFIRM = 'Delete this category? Its acco
 export const VAULT_MSG_CATEGORY_REMOVED = 'Category removed';
 /** Toast shown after a custom vault category is renamed. */
 export const VAULT_MSG_CATEGORY_UPDATED = 'Category updated';
+/** Toast shown after a standalone custom vault category is added. */
+export const VAULT_MSG_CATEGORY_ADDED = 'Category added';
 /** Toast detail shown when a vault category removal fails. */
 export const VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL = 'Could not delete the category. Please try again.';
 /** Chip label for the fallback category used when no category is chosen. */

@@ -1,0 +1,40 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	appendTo="body"
+	[resizable]="false"
+	[closable]="false"
+	(onHide)="onDialogClosed()"
+	styleClass="edit-vault-category-dialog">
+	<ng-template #header>
+		<span class="edit-vault-category-dialog-title">{{ VAULT_EDIT_CATEGORY_TITLE }}</span>
+	</ng-template>
+
+	<div class="edit-vault-category-dialog-field">
+		<span class="edit-vault-category-dialog-label">{{ VAULT_DIALOG_CATEGORY_NAME_LABEL }}</span>
+		<div class="category-name-row">
+			<input
+				type="text"
+				class="text-input"
+				[(ngModel)]="name"
+				[placeholder]="VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER"
+				(keyup.enter)="onSubmit()"
+				autocomplete="off" />
+			<vault-icon-picker [(icon)]="icon"></vault-icon-picker>
+		</div>
+	</div>
+
+	<ng-template #footer>
+		@if (deleteCallback) {
+			<button class="edit-vault-category-dialog-button-delete" (click)="onDeleteRequested()">
+				{{ DIALOG_BTN_DELETE }}
+			</button>
+		}
+		<button class="edit-vault-category-dialog-button-ghost" (click)="onDialogClosed()">
+			{{ DIALOG_BTN_CANCEL }}
+		</button>
+		<button class="edit-vault-category-dialog-button-gradient" [disabled]="!isValid" (click)="onSubmit()">
+			{{ DIALOG_BTN_SAVE }}
+		</button>
+	</ng-template>
+</p-dialog>

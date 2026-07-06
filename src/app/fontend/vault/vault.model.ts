@@ -41,6 +41,7 @@ export interface VaultRecord {
 	label?: string;
 	hex?: string;
 	gradient?: string;
+	icon?: string;
 	verified?: boolean;
 }
 
@@ -50,15 +51,37 @@ export interface VaultConnectionInput {
 	type: VaultNodeType;
 }
 
+/** The step-1 kind selection in the add-account wizard — account, a non-account identifier, or a standalone category. */
+export type VaultDialogKind = 'account' | 'other' | 'category';
+
 /** Submitted form data returned by the add-account dialog to its caller. */
 export interface NewAccountData {
+	kind: 'account' | 'other';
 	nodeType: VaultNodeType;
 	name: string;
 	categories: string[];
 	verified: boolean;
 	connections: VaultConnectionInput[];
-	newCategory?: { label: string; hex: string; gradient: string };
+	newCategory?: { label: string; hex: string; gradient: string; icon: string };
 }
+
+/** Submitted form data returned by the add-account dialog when creating a standalone category (no account). */
+export interface NewVaultCategoryData {
+	kind: 'category';
+	label: string;
+	hex: string;
+	gradient: string;
+	icon: string;
+}
+
+/** Submitted form data returned by the edit-vault-category dialog to its caller. */
+export interface EditVaultCategoryData {
+	label: string;
+	icon: string;
+}
+
+/** Discriminated union of the two payload shapes the add-account dialog can submit. */
+export type AddAccountDialogSubmitData = NewAccountData | NewVaultCategoryData;
 
 /** Data passed into the add-account dialog: assignable categories plus existing account names used to reject duplicates. */
 export interface AddAccountDialogData {
@@ -91,12 +114,28 @@ export interface VaultLinkChip {
 	shapeClass: string;
 }
 
+/** A backup link owned by a non-account node, shown as a removable row in its edit dialog. */
+export interface VaultBackupRow {
+	edgeKey: string;
+	name: string;
+	type: 'email' | 'phone';
+	icon: string;
+}
+
+/** Submitted form data returned by the edit-non-account dialog to its caller. */
+export interface EditNonAccountData {
+	name: string;
+	addedBackups: VaultConnectionInput[];
+	removedBackupEdgeKeys: string[];
+}
+
 /** Per-type node tallies shown in the graph legend. */
 export interface VaultLegendCounts {
 	account: number;
 	email: number;
 	phone: number;
 	verified: number;
+	backup: number;
 }
 
 /** A category-overview chip shown in the info bar when nothing is selected. */
@@ -246,6 +285,12 @@ export const VAULT_CONNECTION_TYPES: { value: VaultNodeType; icon: string }[] = 
 	{ value: 'notes', icon: 'sticky_note_2' }
 ];
 
+/** Connection types allowed for a backup link — email/phone only, since a backup is never a note.
+ * Shared by the add-account dialog's non-account section and the edit-non-account dialog. */
+export const VAULT_BACKUP_CONNECTION_TYPES: { value: VaultNodeType; icon: string }[] = VAULT_CONNECTION_TYPES.filter(
+	(entry) => entry.value !== 'notes'
+);
+
 /**
  * Color swatches a new custom category draws from — the dialog picks a random one not already used
  * by an existing category, so each category stays a unique color. Kept distinct from the preset
@@ -288,7 +333,15 @@ export const VAULT_GLYPH_COLOR_IDENTIFIER = '#1e293b';
 /** Edge color when the edge is not part of the selected node's highlighted web. */
 export const VAULT_EDGE_RESTING_COLOR = '#cbb5be';
 /** Dash pattern applied to a backup edge (non-account identifier → its backup) so it reads distinctly. */
-export const VAULT_EDGE_BACKUP_DASH = '5 4';
+export const VAULT_EDGE_BACKUP_DASH = '8 5';
+/** Fixed stroke/arrowhead color for a backup edge — always rendered at full strength, never dimmed by selection or hop-level state, so it stays legible in a crowded map. */
+export const VAULT_BACKUP_LINK_COLOR = '#d97706';
+/** Fixed stroke width for a backup edge — wider than any reach-tier width used by other edges. */
+export const VAULT_BACKUP_LINK_WIDTH = '3';
+/** SVG `<marker>` id for the backup edge's directional arrowhead. */
+export const VAULT_BACKUP_ARROW_MARKER_ID = 'vault-backup-arrow';
+/** Gap, in px, between the backup arrowhead's tip and the target node's circle — keeps the shortened edge endpoint (and its arrow) just outside the node instead of hidden underneath it. */
+export const VAULT_BACKUP_ARROW_GAP = 4;
 /** Label color under an account node. */
 export const VAULT_LABEL_COLOR_ACCOUNT = '#334155';
 /** Label color under an email or phone identifier node. */

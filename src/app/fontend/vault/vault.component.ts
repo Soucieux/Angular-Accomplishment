@@ -21,12 +21,14 @@ import {
 	COMPONENT_DESTROY,
 	DATABASE_VAULT,
 	DIALOG_ADD_ACCOUNT,
-	DIALOG_CATEGORY,
+	DIALOG_EDIT_NON_ACCOUNT,
+	DIALOG_EDIT_VAULT_CATEGORY,
 	SUCCESS,
 	TOAST_ERROR,
 	VAULT_KIND_NODE,
 	VAULT_KIND_EDGE,
 	VAULT_KIND_CATEGORY,
+	VAULT_DIALOG_KIND_CATEGORY,
 	VAULT_NODE_ACCOUNT,
 	VAULT_NODE_EMAIL,
 	VAULT_DOT_CLASS_EMAIL,
@@ -71,7 +73,6 @@ import {
 	VAULT_TYPE_NOTES,
 	VAULT_BTN_ADD_CONNECTIONS,
 	VAULT_BTN_EDIT_NAME,
-	VAULT_NODE_NAME_DIALOG_TITLE,
 	VAULT_OVERVIEW_EMPTY,
 	VAULT_GRAPH_MOBILE_BLOCKED_BODY,
 	MOBILE_BLOCKED_TITLE,
@@ -99,8 +100,10 @@ import {
 	VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL,
 	VAULT_MSG_ACCOUNT_SAVED,
 	VAULT_MSG_NODE_SAVED,
+	VAULT_MSG_CATEGORY_ADDED,
 	VAULT_MSG_LINK_ADDED,
 	VAULT_MSG_LINK_REMOVED,
+	VAULT_MSG_IDENTIFIER_UPDATED,
 	VAULT_MSG_SAVE_FAILED_DETAIL,
 	VAULT_CATEGORY_OTHER_LABEL,
 	VAULT_CATEGORY_UNCATEGORIZED_LABEL,
@@ -108,9 +111,15 @@ import {
 	vaultCategoryLabel
 } from '../../common/locale/locale-strings';
 import {
+	AddAccountDialogSubmitData,
+	EditNonAccountData,
+	EditVaultCategoryData,
 	NewAccountData,
+	NewVaultCategoryData,
 	VaultAccountRow,
+	VaultBackupRow,
 	VaultCategoryDef,
+	VaultConnectionInput,
 	VaultEdge,
 	VaultLinkChip,
 	VaultNode,
@@ -133,7 +142,6 @@ import {
 } from './vault.model';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
-import { NewCategoryData } from '../portal/portal.model';
 import { TimeoutService } from '../../common/timeout/timeout.service';
 import { VaultAccessService } from '../../backend/vault-access-service/vault-access.service';
 import { GraphCanvasComponent } from './graph-canvas/graph-canvas.component';
@@ -661,13 +669,15 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── Dialog openers ───────────────────────────────────────────────────────
 
 	/**
-	 * Opens the add-account dialog and wires its submit callback to persist the new account.
+	 * Opens the add-account dialog and wires its submit callback to persist either the new account
+	 * (or non-account identifier) or a standalone custom category, depending on the chosen kind.
 	 */
 	protected openAddDialog(): void {
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			DIALOG_ADD_ACCOUNT,
-			(accountData: NewAccountData) => this.handleAccountSave(accountData),
+			(data: AddAccountDialogSubmitData) =>
+				data.kind === VAULT_DIALOG_KIND_CATEGORY ? this.handleCategorySave(data) : this.handleAccountSave(data),
 			{
 				categories: [...this.presetCategories, ...this.customCategories],
 				existingNames: this.nodes.map((node) => node.name)
@@ -704,32 +714,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 					verified: accountData.verified
 				});
 
-				// Link each connection — reuse an existing node by name, or create a new identifier of its chosen type
 				const relation = isAccount ? VAULT_RELATION_LINKED : VAULT_RELATION_BACKUP;
-				const nodeIdsByName = new Map(
-					this.nodes.map((node) => [node.name.trim().toLowerCase(), node.id])
-				);
-				for (const connection of accountData.connections) {
-					const connectionName = Utilities.capitalizeFirstLetterOnEachWord(connection.value.trim());
-					if (!connectionName) continue;
-					let targetId = nodeIdsByName.get(connectionName.toLowerCase());
-					if (!targetId) {
-						targetId = await this.databaseService.addVaultNode({
-							nodeType: connection.type,
-							name: connectionName,
-							categories: [],
-							verified: false
-						});
-						nodeIdsByName.set(connectionName.toLowerCase(), targetId);
-					}
-					if (targetId !== primaryId) {
-						await this.databaseService.addVaultEdge({
-							sourceId: primaryId,
-							targetId,
-							relation
-						});
-					}
-				}
+				await this.linkConnectionsByName(primaryId, accountData.connections, relation);
 				this.triggerSaveIndicator();
 				this.dialogService.showToast(SUCCESS, isAccount ? VAULT_MSG_ACCOUNT_SAVED : VAULT_MSG_NODE_SAVED);
 			} catch {
@@ -739,34 +725,94 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Opens the shared category dialog in edit mode for a custom category (prefilled with its name),
-	 * wiring submit to rename it and delete to remove it — mirroring the Portal category edit flow.
+	 * Resolves each connection to an existing node by name (case-insensitive, trimmed), or creates a
+	 * new identifier node of its chosen type, then links it from the source node with the given
+	 * relation — skipping empty values and self-links. Shared by {@link handleAccountSave} (account or
+	 * identifier connections) and {@link handleNonAccountEdit} (backup links), which only differ in
+	 * their source node and relation.
+	 *
+	 * @param sourceId - The id of the node each connection is linked from.
+	 * @param connections - The connection rows to resolve and link.
+	 * @param relation - The edge relation to write for each new link.
+	 */
+	private async linkConnectionsByName(
+		sourceId: string,
+		connections: VaultConnectionInput[],
+		relation: string
+	): Promise<void> {
+		const nodeIdsByName = new Map(this.nodes.map((node) => [node.name.trim().toLowerCase(), node.id]));
+		for (const connection of connections) {
+			const connectionName = Utilities.capitalizeFirstLetterOnEachWord(connection.value.trim());
+			if (!connectionName) continue;
+			let targetId = nodeIdsByName.get(connectionName.toLowerCase());
+			if (!targetId) {
+				targetId = await this.databaseService.addVaultNode({
+					nodeType: connection.type,
+					name: connectionName,
+					categories: [],
+					verified: false
+				});
+				nodeIdsByName.set(connectionName.toLowerCase(), targetId);
+			}
+			if (targetId !== sourceId) {
+				await this.databaseService.addVaultEdge({ sourceId, targetId, relation });
+			}
+		}
+	}
+
+	/**
+	 * Persists a newly created standalone category (no account attached).
+	 *
+	 * @param data - The validated category data returned by the add-account dialog.
+	 */
+	private handleCategorySave(data: NewVaultCategoryData): void {
+		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
+			try {
+				await this.databaseService.addVaultCategory({
+					label: data.label,
+					hex: data.hex,
+					gradient: data.gradient,
+					icon: data.icon
+				});
+				this.triggerSaveIndicator();
+				this.dialogService.showToast(SUCCESS, VAULT_MSG_CATEGORY_ADDED);
+			} catch {
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
+			}
+		});
+	}
+
+	/**
+	 * Opens the dedicated edit-category dialog for a custom category, prefilled with its current name and icon,
+	 * wiring submit to update both and delete to remove it.
 	 *
 	 * @param stat - The overview chip whose custom category is being edited.
 	 * @param event - The originating click event, stopped so it does not toggle the category filter.
 	 */
 	protected openEditCategoryDialog(stat: VaultOverviewStat, event: Event): void {
 		event.stopPropagation();
+		const categoryDef = this.getCategoryDef(stat.key);
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			DIALOG_CATEGORY,
-			(data: NewCategoryData) => this.handleCategoryRename(data, stat.key),
-			{ prefillData: { name: stat.label }, onDelete: () => this.deleteCategoryByKey(stat.key) }
+			DIALOG_EDIT_VAULT_CATEGORY,
+			(data: EditVaultCategoryData) => this.handleCategoryEdit(data, stat.key),
+			{ name: categoryDef.categoryLabel, icon: categoryDef.icon, onDelete: () => this.deleteCategoryByKey(stat.key) }
 		);
 	}
 
 	/**
-	 * Renames a custom category to the submitted name. Skips the write when the name is unchanged,
-	 * rejects it with a toast when it collides with another category, flashes the save indicator on
-	 * success, and shows an error toast on failure.
+	 * Renames a custom category and/or changes its icon. Skips the write entirely when neither changed, rejects a
+	 * name collision with another category via toast, flashes the save indicator on success, and shows an error
+	 * toast on failure.
 	 *
-	 * @param data - The validated category form data from the edit dialog.
-	 * @param categoryKey - The document id of the category being renamed.
+	 * @param data - The validated label and icon from the edit dialog.
+	 * @param categoryKey - The document id of the category being edited.
 	 */
-	private handleCategoryRename(data: NewCategoryData, categoryKey: string): void {
-		const name = data.name.trim();
-		if (!name || name === this.getCategoryDef(categoryKey).categoryLabel) return;
-		// Reject a rename that would collide with another preset or custom category's name.
+	private handleCategoryEdit(data: EditVaultCategoryData, categoryKey: string): void {
+		const name = data.label.trim();
+		const current = this.getCategoryDef(categoryKey);
+		if (!name || (name === current.categoryLabel && data.icon === current.icon)) return;
+		// Reject an edit that would collide with another preset or custom category's name.
 		const nameKey = name.toLowerCase();
 		const isDuplicate = [...this.presetCategories, ...this.customCategories].some(
 			(categoryDef) =>
@@ -778,7 +824,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
-				await this.databaseService.updateVaultCategoryLabel(categoryKey, name);
+				await this.databaseService.updateVaultCategory(categoryKey, { label: name, icon: data.icon });
 				this.triggerSaveIndicator();
 				this.dialogService.showToast(SUCCESS, VAULT_MSG_CATEGORY_UPDATED);
 			} catch {
@@ -788,35 +834,80 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Opens the shared category dialog in edit mode for a non-account node's name, prefilled with its
-	 * current name and wired to delete the node — this dialog is the only place a non-account node can
-	 * be renamed or removed, since the map view no longer has its own delete button.
+	 * Opens the dedicated edit-non-account dialog for a non-account node, prefilled with its current
+	 * name and the backup links it already owns, and wired to delete the node — this dialog is the only
+	 * place a non-account node can be renamed, backed up, or removed, since the map view no longer has
+	 * its own delete button.
 	 *
-	 * @param detail - The selection detail for the non-account node being renamed.
+	 * @param detail - The selection detail for the non-account node being edited.
 	 * @param event - The originating click event, stopped so it does not bubble to the card/graph.
 	 */
 	protected openEditNodeNameDialog(detail: VaultSelectionDetail, event: Event): void {
 		event.stopPropagation();
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
-			DIALOG_CATEGORY,
-			(data: NewCategoryData) => this.handleNodeNameRename(data, detail.id),
+			DIALOG_EDIT_NON_ACCOUNT,
+			(data: EditNonAccountData) => this.handleNonAccountEdit(data, detail.id),
 			{
-				prefillData: { name: detail.name },
-				onDelete: () => this.deleteNode(detail.id),
-				editTitle: VAULT_NODE_NAME_DIALOG_TITLE
+				name: detail.name,
+				icon: detail.icon,
+				backups: this.buildBackupRows(detail.id),
+				onDelete: () => this.deleteNode(detail.id)
 			}
 		);
 	}
 
 	/**
-	 * Renames a non-account node to the submitted name.
+	 * Builds the list of backup links a non-account node owns (edges where it is the source and the
+	 * relation is backup), for display as removable rows in its edit dialog. Only backups this node
+	 * points to are shown — if this node is itself the target of another node's backup edge, that
+	 * relationship is managed from the other node's dialog, not surfaced here.
 	 *
-	 * @param data - The validated form data from the edit dialog.
-	 * @param nodeId - The id of the node being renamed.
+	 * @param nodeId - The id of the node whose owned backup links to collect.
+	 * @returns The node's backup rows, resolved to their target's name, type, and icon.
 	 */
-	private handleNodeNameRename(data: NewCategoryData, nodeId: string): void {
+	private buildBackupRows(nodeId: string): VaultBackupRow[] {
+		return this.edges
+			.filter((edge) => edge.sourceId === nodeId && edge.relation === VAULT_RELATION_BACKUP)
+			.map((edge) => {
+				const target = this.findNode(edge.targetId);
+				const isPhone = target?.nodeType === VAULT_NODE_PHONE;
+				return {
+					edgeKey: edge.id,
+					name: target?.name ?? '',
+					type: isPhone ? VAULT_NODE_PHONE : VAULT_NODE_EMAIL,
+					icon: isPhone ? VAULT_PHONE_META.icon : VAULT_EMAIL_META.icon
+				};
+			});
+	}
+
+	/**
+	 * Renames a non-account node to the submitted name (fire-and-forget, own error handling), then — if
+	 * any backup links were added or removed — persists those under a blocking overlay, since that step
+	 * can involve several writes (new identifier nodes plus their backup edges, or edge removals) and
+	 * deserves explicit save feedback the plain rename does not need.
+	 *
+	 * @param data - The validated form data from the edit-non-account dialog.
+	 * @param nodeId - The id of the node being edited.
+	 */
+	private handleNonAccountEdit(data: EditNonAccountData, nodeId: string): void {
 		this.renameNode(nodeId, data.name);
+		if (data.addedBackups.length === 0 && data.removedBackupEdgeKeys.length === 0) return;
+
+		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
+			try {
+				await this.enqueueVaultWrite(async () => {
+					await this.linkConnectionsByName(nodeId, data.addedBackups, VAULT_RELATION_BACKUP);
+					for (const edgeKey of data.removedBackupEdgeKeys) {
+						await this.databaseService.removeVaultEdge(edgeKey);
+					}
+				});
+				this.triggerSaveIndicator();
+				this.dialogService.showToast(SUCCESS, VAULT_MSG_IDENTIFIER_UPDATED);
+			} catch {
+				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
+			}
+		});
 	}
 
 	// ── Private helpers ──────────────────────────────────────────────────────
@@ -862,7 +953,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 					key: record.key,
 					label: record.label ?? '',
 					categoryLabel: record.label ?? '',
-					icon: this.categoryIconForKey(record.key),
+					icon: record.icon ?? this.categoryIconForKey(record.key),
 					hex: record.hex ?? '',
 					gradient: record.gradient ?? ''
 				});
@@ -1139,7 +1230,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * immediately, then saves — reverting and toasting on failure.
 	 *
 	 * {@link updateAccountName} - Commits the inline-edited account name from the list view.
-	 * {@link handleNodeNameRename} - Commits the dialog-edited name for a non-account node.
+	 * {@link handleNonAccountEdit} - Commits the dialog-edited name (and any backup links) for a non-account node.
 	 *
 	 * @param nodeId - The id of the node being renamed.
 	 * @param nextName - The candidate new name, trimmed and capitalized on each word (English text) before comparison and storage.

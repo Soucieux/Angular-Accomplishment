@@ -1,0 +1,49 @@
+<div class="add-account-field">
+	<div class="connections-header">
+		<span class="field-label">
+			{{ sectionLabel }}
+			<span class="optional">{{ VAULT_DIALOG_CONNECTIONS_OPTIONAL }}</span>
+		</span>
+		<span class="connections-hint">{{ sectionHint }}</span>
+	</div>
+
+	<div class="connection-rows">
+		@for (row of readonlyRows; track row.edgeKey) {
+			<div class="connection-row">
+				<span class="material-symbols-outlined connection-icon">{{ row.icon }}</span>
+				<span class="connection-input connection-existing-name">{{ row.name }}</span>
+				<button type="button" class="connection-remove" (click)="removeReadonlyRow.emit(row.edgeKey)">
+					<span class="material-symbols-outlined">close</span>
+				</button>
+			</div>
+		}
+		@for (row of editableRows; track trackByIndex($index); let i = $index) {
+			<div class="connection-row">
+				<span class="material-symbols-outlined connection-icon">{{ iconForType(row.type) }}</span>
+				<p-select
+					class="connection-type"
+					[ngModel]="row.type"
+					(ngModelChange)="onRowTypeChange(i, $event)"
+					[options]="typeOptions"
+					optionLabel="label"
+					optionValue="value"
+					[appendTo]="'body'"
+					[panelStyleClass]="'dropdown-panel-font ' + panelStyleClass" />
+				<input
+					class="text-input connection-input"
+					type="text"
+					[ngModel]="row.value"
+					(ngModelChange)="onRowValueChange(i, $event)"
+					[placeholder]="rowPlaceholder" />
+				<button type="button" class="connection-remove" (click)="removeRow(i)">
+					<span class="material-symbols-outlined">close</span>
+				</button>
+			</div>
+		}
+	</div>
+</div>
+
+<button type="button" class="add-connection-button" (click)="addRow()">
+	<span class="material-symbols-outlined">add</span>
+	{{ addButtonLabel }}
+</button>

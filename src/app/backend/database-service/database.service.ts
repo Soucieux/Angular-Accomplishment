@@ -38,6 +38,7 @@ import {
 	VAULT_VALUE_KEY_LABEL,
 	VAULT_VALUE_KEY_HEX,
 	VAULT_VALUE_KEY_GRADIENT,
+	VAULT_VALUE_KEY_ICON,
 	SEARCH
 } from '../../common/constants';
 import {
@@ -527,7 +528,7 @@ export abstract class DatabaseService {
 	 * {@link updateVaultNodeCategories} - Replaces an account's category list.
 	 * {@link updateVaultNodeVerified} - Sets an account's verified flag.
 	 * {@link updateVaultNodeName} - Sets a node's display name.
-	 * {@link updateVaultCategoryLabel} - Renames a custom category.
+	 * {@link updateVaultCategory} - Renames a custom category and/or changes its icon.
 	 *
 	 * @param tableName - The database collection name.
 	 * @param newRecord - The update descriptor: the document key (entryKey), the fields to write
@@ -866,19 +867,21 @@ export abstract class DatabaseService {
 	/**
 	 * Adds a new custom account category to the vault.
 	 *
-	 * @param category - The category content to persist.
+	 * @param category - The category content to persist, including its icon.
 	 * @returns The database id of the newly created category document.
 	 */
 	public async addVaultCategory(category: {
 		label: string;
 		hex: string;
 		gradient: string;
+		icon: string;
 	}): Promise<string> {
 		return this.addVaultRecord({
 			[VAULT_VALUE_KEY_KIND]: VAULT_KIND_CATEGORY,
 			[VAULT_VALUE_KEY_LABEL]: category.label,
 			[VAULT_VALUE_KEY_HEX]: category.hex,
-			[VAULT_VALUE_KEY_GRADIENT]: category.gradient
+			[VAULT_VALUE_KEY_GRADIENT]: category.gradient,
+			[VAULT_VALUE_KEY_ICON]: category.icon
 		});
 	}
 
@@ -896,16 +899,16 @@ export abstract class DatabaseService {
 	): Promise<void>;
 
 	/**
-	 * Renames a custom account category by updating its stored label.
+	 * Renames a custom account category and/or changes its icon by updating its stored fields.
 	 *
-	 * @param categoryKey - The document id of the category to rename.
-	 * @param label - The new category label.
-	 * @returns A promise that resolves when the category label is updated.
+	 * @param categoryKey - The document id of the category to update.
+	 * @param fields - The new label and icon to store.
+	 * @returns A promise that resolves when the category's fields are updated.
 	 */
-	public async updateVaultCategoryLabel(categoryKey: string, label: string): Promise<void> {
+	public async updateVaultCategory(categoryKey: string, fields: { label: string; icon: string }): Promise<void> {
 		await this.updateTableExistingFields(DATABASE_VAULT, {
 			entryKey: categoryKey,
-			fields: { [VAULT_VALUE_KEY_LABEL]: label }
+			fields: { [VAULT_VALUE_KEY_LABEL]: fields.label, [VAULT_VALUE_KEY_ICON]: fields.icon }
 		});
 	}
 

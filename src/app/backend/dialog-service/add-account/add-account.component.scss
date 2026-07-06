@@ -128,14 +128,14 @@
 	display: flex;
 	flex: 1;
 	flex-direction: column;
-	align-items: flex-start;
+	align-items: center;
 	gap: 4px;
 	padding: 14px;
 	border: 1.5px solid rgba(0, 0, 0, 0.1);
 	border-radius: 12px;
 	background: #fff;
 	cursor: pointer;
-	text-align: left;
+	text-align: center;
 }
 
 .kind-card.selected {
@@ -159,25 +159,6 @@
 .kind-hint {
 	font-size: 11px;
 	color: #64748b;
-}
-
-/* ─────────────────────────────────────────
-   Identifier name + type row (non-account step)
-───────────────────────────────────────── */
-
-.identifier-name-row {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.identifier-type {
-	flex-shrink: 0;
-	width: 116px;
-}
-
-.identifier-name-row .text-input {
-	flex: 1;
 }
 
 /* ─────────────────────────────────────────
@@ -210,12 +191,6 @@
 		#f8fafc padding-box,
 		linear-gradient(135deg, #d53369 0%, #daae51 100%) border-box;
 	color: #1a1a1a;
-}
-
-.category-dot {
-	width: 11px;
-	height: 11px;
-	border-radius: 50%;
 }
 
 .category-icon {
@@ -255,6 +230,21 @@
 	color: #1a1a1a;
 	outline: none;
 	box-sizing: border-box;
+}
+
+/* ─────────────────────────────────────────
+   Standalone category name row (category step)
+───────────────────────────────────────── */
+
+.category-name-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.category-name-row .text-input {
+	flex: 1;
 }
 
 /* ─────────────────────────────────────────
@@ -302,47 +292,10 @@
 }
 
 /* ─────────────────────────────────────────
-   Connections
+   Shared p-select sizing — used by <p-select> elements rendered inside the
+   vault-node-name-field / vault-connection-rows child components. ::ng-deep
+   pierces child component boundaries, so these rules still apply there.
 ───────────────────────────────────────── */
-
-.connections-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 8px;
-}
-
-.connections-hint {
-	font-size: 11px;
-	color: #94a3b8;
-}
-
-.connection-rows {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
-.connection-row {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.connection-icon {
-	flex-shrink: 0;
-	font-size: 18px;
-	color: #94a3b8;
-}
-
-.connection-input {
-	flex: 1;
-}
-
-.connection-type {
-	flex-shrink: 0;
-	width: 116px;
-}
 
 ::ng-deep .add-account-dialog .p-select {
 	height: 35px !important;
@@ -379,42 +332,6 @@
 	min-height: 35px;
 	padding: 0 12px;
 	font-size: 14px;
-}
-
-.connection-remove {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-	width: 34px;
-	height: 34px;
-	border: none;
-	border-radius: 9px;
-	background: rgba(0, 0, 0, 0.05);
-	color: #64748b;
-	cursor: pointer;
-}
-
-.connection-remove .material-symbols-outlined {
-	font-size: 18px;
-}
-
-.add-connection-button {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 8px 14px;
-	border: 1.5px dashed rgba(213, 51, 105, 0.4);
-	border-radius: 9999px;
-	background: transparent;
-	color: rgba(213, 51, 105, 0.85);
-	cursor: pointer;
-	font-size: 11px;
-	font-weight: 600;
-}
-
-.add-connection-button .material-symbols-outlined {
-	font-size: 17px;
 }
 
 /* ─────────────────────────────────────────

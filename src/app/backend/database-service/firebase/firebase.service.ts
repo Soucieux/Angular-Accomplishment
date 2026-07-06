@@ -926,7 +926,7 @@ export class FirebaseService extends DatabaseService {
 	 * {@link updateVaultNodeCategories} - Replaces an account's category list.
 	 * {@link updateVaultNodeVerified} - Sets an account's verified flag.
 	 * {@link updateVaultNodeName} - Sets a node's display name.
-	 * {@link updateVaultCategoryLabel} - Renames a custom category.
+	 * {@link updateVaultCategory} - Renames a custom category and/or changes its icon.
 	 *
 	 * @param tableName - The database collection name.
 	 * @param newRecord - The update descriptor: the document key (entryKey), the fields to write

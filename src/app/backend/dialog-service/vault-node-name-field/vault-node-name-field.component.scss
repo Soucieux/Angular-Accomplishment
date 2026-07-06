@@ -1,0 +1,99 @@
+:host {
+	font-family: 'app-font';
+}
+
+/* Groups the label with its control so the label sits tight to the control (7px),
+   matching every other dialog field group. */
+.add-account-field {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+}
+
+.field-label {
+	display: block;
+	font-size: 13px;
+	font-weight: 600;
+	color: #334155;
+}
+
+.field-error {
+	display: block;
+	margin-top: 5px;
+	font-size: 12px;
+	color: #e11d48;
+}
+
+/* ─────────────────────────────────────────
+   Name + type row
+───────────────────────────────────────── */
+
+.identifier-name-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.identifier-type {
+	flex-shrink: 0;
+	width: 116px;
+}
+
+/* Read-only type indicator — shown instead of the p-select when the type cannot be changed
+   (editing an existing node). Matches the input's height/border so the row stays visually even. */
+.identifier-type-badge {
+	flex-shrink: 0;
+	width: 35px;
+	height: 35px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1.5px solid rgba(213, 51, 105, 0.25);
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.8);
+	color: #94a3b8;
+	font-size: 18px;
+	box-sizing: border-box;
+}
+
+.identifier-name-row .text-input {
+	flex: 1;
+}
+
+.text-input {
+	width: 100%;
+	height: 35px;
+	padding: 0 12px;
+	border: 1.5px solid rgba(213, 51, 105, 0.25);
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.8);
+	font-size: 14px;
+	color: #1a1a1a;
+	outline: none;
+	box-sizing: border-box;
+	transition:
+		background 150ms,
+		box-shadow 150ms;
+}
+
+.text-input:focus {
+	border: 1.5px solid transparent;
+	background:
+		rgba(255, 255, 255, 0.8) padding-box,
+		linear-gradient(135deg, #d53369 0%, #daae51 100%) border-box;
+	box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.1);
+}
+
+.text-input::placeholder {
+	font-size: 13px;
+}
+
+/* ─────────────────────────────────────────
+   Responsive ≤ 940 px (mobile)
+───────────────────────────────────────── */
+
+@media (max-width: 940px) {
+	.identifier-type {
+		width: 96px;
+	}
+}

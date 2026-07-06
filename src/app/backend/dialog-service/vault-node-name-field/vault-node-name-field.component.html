@@ -1,0 +1,29 @@
+<div class="add-account-field">
+	<label class="field-label" for="vault-node-name-field-input">{{ VAULT_DIALOG_IDENTIFIER_NAME_LABEL }}</label>
+	<div class="identifier-name-row">
+		@if (typeEditable) {
+			<p-select
+				class="identifier-type"
+				[ngModel]="nodeType"
+				(ngModelChange)="nodeTypeChange.emit($event)"
+				[options]="typeOptions"
+				optionLabel="label"
+				optionValue="value"
+				[appendTo]="'body'"
+				[panelStyleClass]="'dropdown-panel-font ' + panelStyleClass" />
+		} @else {
+			<span class="identifier-type-badge material-symbols-outlined">{{ typeIcon }}</span>
+		}
+		<input
+			id="vault-node-name-field-input"
+			class="text-input"
+			type="text"
+			[ngModel]="name"
+			(ngModelChange)="nameChange.emit($event)"
+			(keyup.enter)="submit.emit()"
+			[placeholder]="namePlaceholder" />
+	</div>
+	@if (isDuplicateName) {
+		<span class="field-error">{{ duplicateNameMessage }}</span>
+	}
+</div>

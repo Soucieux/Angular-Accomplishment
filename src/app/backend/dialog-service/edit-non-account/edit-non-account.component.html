@@ -1,0 +1,48 @@
+<p-dialog
+	[(visible)]="visible"
+	[modal]="true"
+	appendTo="body"
+	[resizable]="false"
+	[closable]="false"
+	(onHide)="onDialogClosed()"
+	styleClass="edit-non-account-dialog">
+	<ng-template #header>
+		<span class="edit-non-account-dialog-title">{{ VAULT_EDIT_NON_ACCOUNT_TITLE }}</span>
+	</ng-template>
+
+	<vault-node-name-field
+		[(name)]="name"
+		[typeEditable]="false"
+		[typeIcon]="nodeIcon"
+		panelStyleClass="edit-non-account-dialog-panel"
+		(submit)="onSubmit()" />
+
+	<vault-connection-rows
+		[sectionLabel]="VAULT_DIALOG_BACKUPS_LABEL"
+		[sectionHint]="VAULT_DIALOG_BACKUPS_HINT"
+		[addButtonLabel]="VAULT_DIALOG_ADD_BACKUP"
+		[rowPlaceholder]="VAULT_DIALOG_BACKUP_PLACEHOLDER"
+		[typeOptions]="backupTypeOptions"
+		panelStyleClass="edit-non-account-dialog-panel"
+		[readonlyRows]="existingBackups"
+		(removeReadonlyRow)="removeExistingBackup($event)"
+		[(editableRows)]="addedBackups" />
+
+	<ng-template #footer>
+		@if (deleteCallback) {
+			<button class="edit-non-account-dialog-button-delete" (click)="onDeleteRequested()">
+				{{ DIALOG_BTN_DELETE }}
+			</button>
+		}
+		<button type="button" class="edit-non-account-dialog-button-ghost" (click)="onDialogClosed()">
+			{{ DIALOG_BTN_CANCEL }}
+		</button>
+		<button
+			type="button"
+			class="edit-non-account-dialog-button-gradient"
+			[disabled]="!isValid"
+			(click)="onSubmit()">
+			{{ DIALOG_BTN_SAVE }}
+		</button>
+	</ng-template>
+</p-dialog>

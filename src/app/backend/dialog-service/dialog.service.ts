@@ -17,6 +17,8 @@ import {
 	DIALOG_CONFIRM,
 	DIALOG_DEBT,
 	DIALOG_DELETE_ACCOUNT,
+	DIALOG_EDIT_NON_ACCOUNT,
+	DIALOG_EDIT_VAULT_CATEGORY,
 	DIALOG_ERROR,
 	DIALOG_HISTORY,
 	DIALOG_LINK,
@@ -43,8 +45,16 @@ import { AddLinkDialogComponent } from './add-link/add-link.component';
 import { MultiLinkDialogComponent } from './multi-link/multi-link.component';
 import { CategoryDialogComponent } from './category/category.component';
 import { AddAccountDialogComponent } from './add-account/add-account.component';
+import { EditNonAccountDialogComponent } from './edit-non-account/edit-non-account.component';
+import { EditVaultCategoryDialogComponent } from './edit-vault-category/edit-vault-category.component';
 import { NewCategoryData, NewLinkData } from '../../fontend/portal/portal.model';
-import { NewAccountData, AddAccountDialogData } from '../../fontend/vault/vault.model';
+import {
+	AddAccountDialogData,
+	AddAccountDialogSubmitData,
+	EditNonAccountData,
+	EditVaultCategoryData,
+	VaultBackupRow
+} from '../../fontend/vault/vault.model';
 import { DeleteAccountDialogComponent, DeleteConfirmText } from './delete-account/delete-account.component';
 import { SessionExpiredError } from '../../common/error/session-expired.error';
 import { DialogError } from '../../common/error/dialog.error';
@@ -152,8 +162,22 @@ export class DialogService {
 
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
+		dialogType: 'edit-non-account',
+		submitCallback: (data: EditNonAccountData) => void,
+		data: { name: string; icon: string; backups: VaultBackupRow[]; onDelete?: () => void }
+	): void;
+
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
+		dialogType: 'edit-vault-category',
+		submitCallback: (data: EditVaultCategoryData) => void,
+		dialogData: { name: string; icon: string; onDelete?: () => void }
+	): void;
+
+	public openDialog(
+		dialogContainerRef: ViewContainerRef,
 		dialogType: 'add-account',
-		submitCallback: (data: NewAccountData) => void,
+		submitCallback: (data: AddAccountDialogSubmitData) => void,
 		dialogData: AddAccountDialogData
 	): void;
 
@@ -410,6 +434,10 @@ export class DialogService {
 				return CategoryDialogComponent;
 			case DIALOG_ADD_ACCOUNT:
 				return AddAccountDialogComponent;
+			case DIALOG_EDIT_NON_ACCOUNT:
+				return EditNonAccountDialogComponent;
+			case DIALOG_EDIT_VAULT_CATEGORY:
+				return EditVaultCategoryDialogComponent;
 			default:
 				throw new DialogError(MSG_INVALID_DIALOG_TYPE);
 		}

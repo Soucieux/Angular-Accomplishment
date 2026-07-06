@@ -2,6 +2,9 @@
 	display: block;
 	height: 100%;
 	font-family: 'app-font';
+	/* Mirrors VAULT_BACKUP_LINK_COLOR (vault.model.ts) — a single declaration point so the legend
+	   swatch and arrowhead below can reference it instead of each repeating the hex literal. */
+	--vault-backup-color: #d97706;
 }
 
 .graph-wrap {
@@ -124,6 +127,40 @@
 
 .legend-verified .material-symbols-outlined {
 	font-size: 15px;
+}
+
+.legend-row-backup {
+	/* Display-only — a backup link is an edge property, not a node type to isolate, so this row never
+	   toggles the type filter and never dims to the is-muted state. */
+	cursor: default;
+	margin-top: 2px;
+}
+
+.legend-backup-swatch {
+	position: relative;
+	width: 20px;
+	height: 8px;
+	display: flex;
+	align-items: center;
+}
+
+.legend-backup-swatch::before {
+	content: '';
+	display: block;
+	width: 100%;
+	border-top: 2.5px dashed var(--vault-backup-color);
+}
+
+.legend-backup-arrow {
+	position: absolute;
+	right: -1px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 0;
+	height: 0;
+	border-top: 4px solid transparent;
+	border-bottom: 4px solid transparent;
+	border-left: 6px solid var(--vault-backup-color);
 }
 
 .legend-count {

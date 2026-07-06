@@ -842,6 +842,16 @@ export class Utilities {
 	}
 
 	/**
+	 * Gets a random element from the given array.
+	 *
+	 * @param pool - The array to pick from.
+	 * @returns A randomly chosen element from the pool.
+	 */
+	public static pickRandomElement<T>(pool: T[]): T {
+		return pool[Math.floor(Math.random() * pool.length)];
+	}
+
+	/**
 	 * Pads a number to two digits with a leading zero.
 	 *
 	 * @param n - The number to pad.

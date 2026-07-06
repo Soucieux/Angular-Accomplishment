@@ -26,6 +26,7 @@ import {
 import {
 	VAULT_LEGEND_TITLE,
 	VAULT_LEGEND_VERIFIED,
+	VAULT_LEGEND_BACKUP,
 	VAULT_TYPE_ACCOUNT,
 	VAULT_TYPE_EMAIL,
 	VAULT_TYPE_PHONE
@@ -36,6 +37,10 @@ import {
 	VaultLegendCounts,
 	VaultNode,
 	VaultSimNode,
+	VAULT_BACKUP_ARROW_GAP,
+	VAULT_BACKUP_ARROW_MARKER_ID,
+	VAULT_BACKUP_LINK_COLOR,
+	VAULT_BACKUP_LINK_WIDTH,
 	VAULT_CATEGORY_DEFS,
 	VAULT_CATEGORY_OTHER,
 	VAULT_EDGE_BACKUP_DASH,
@@ -81,6 +86,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	@Input() linkSourceId: string | null = null;
 	protected readonly VAULT_LEGEND_TITLE = VAULT_LEGEND_TITLE;
 	protected readonly VAULT_LEGEND_VERIFIED = VAULT_LEGEND_VERIFIED;
+	protected readonly VAULT_LEGEND_BACKUP = VAULT_LEGEND_BACKUP;
 	protected readonly VAULT_TYPE_ACCOUNT = VAULT_TYPE_ACCOUNT;
 	protected readonly VAULT_TYPE_EMAIL = VAULT_TYPE_EMAIL;
 	protected readonly VAULT_TYPE_PHONE = VAULT_TYPE_PHONE;
@@ -114,7 +120,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	private readonly maxReachLevel = 2;
 	private readonly verifiedBadgeColor = '#0d9488';
 
-	protected legendCounts: VaultLegendCounts = { account: 0, email: 0, phone: 0, verified: 0 };
+	protected legendCounts: VaultLegendCounts = { account: 0, email: 0, phone: 0, verified: 0, backup: 0 };
 
 	private simNodes: VaultSimNode[] = [];
 	private nodeById: Record<string, VaultSimNode> = {};
@@ -170,9 +176,10 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	 * @param changes - The set of changed input properties.
 	 */
 	ngOnChanges(changes: SimpleChanges): void {
-		/* Tally the legend counts whenever the node set changes — independent of viewReady so the
-		   legend is correct on first render, before the simulation view has measured its size. */
-		if (changes['nodes']) this.updateLegendCounts();
+		/* Tally the legend counts whenever the node or edge set changes (backup count is edge-based) —
+		   independent of viewReady so the legend is correct on first render, before the simulation view
+		   has measured its size. */
+		if (changes['nodes'] || changes['edges']) this.updateLegendCounts();
 		if (!this.viewReady) return;
 		if (changes['nodes'] || changes['edges'] || changes['customCategories']) {
 			this.buildSimulation();
@@ -436,8 +443,28 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			});
 			const clipPath = this.createSvgElement('clipPath', { id: 'vault-account-clip' });
 			clipPath.appendChild(clipRect);
+			/* Bold triangular arrowhead for backup edges. refX/refY sit at the triangle's tip (10,5 in the
+			   10x10 viewBox) so the marker's reference point — where it aligns to the line's endpoint —
+			   is the tip itself, not the marker's bounding-box corner. userSpaceOnUse keeps its on-screen
+			   size fixed regardless of the line's stroke-width. */
+			const backupArrowShape = this.createSvgElement('path', {
+				d: 'M 0 0 L 10 5 L 0 10 Z',
+				fill: VAULT_BACKUP_LINK_COLOR
+			});
+			const backupArrowMarker = this.createSvgElement('marker', {
+				id: VAULT_BACKUP_ARROW_MARKER_ID,
+				viewBox: '0 0 10 10',
+				refX: '10',
+				refY: '5',
+				markerWidth: '14',
+				markerHeight: '14',
+				markerUnits: 'userSpaceOnUse',
+				orient: 'auto-start-reverse'
+			});
+			backupArrowMarker.appendChild(backupArrowShape);
 			defs.appendChild(filter);
 			defs.appendChild(clipPath);
+			defs.appendChild(backupArrowMarker);
 			svg.insertBefore(defs, svg.firstChild);
 		}
 
@@ -449,9 +476,12 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		this.edgeEls = this.edges.map((edge) => {
 			const line = document.createElementNS(SVG_NS, 'line');
 			line.setAttribute('stroke-linecap', 'round');
-			// A backup edge (non-account identifier → its backup) reads distinctly as a dashed line.
+			// A backup edge (non-account identifier → its backup) reads distinctly as a bold dashed,
+			// arrowed line — see applyVisual() for its always-on styling and renderPositions() for the
+			// shortened endpoint that keeps the arrowhead visible outside the target node's circle.
 			if (edge.relation === VAULT_RELATION_BACKUP) {
 				line.setAttribute('stroke-dasharray', VAULT_EDGE_BACKUP_DASH);
+				line.setAttribute('marker-end', `url(#${VAULT_BACKUP_ARROW_MARKER_ID})`);
 			}
 			edgeGroup.appendChild(line);
 			return line;
@@ -747,8 +777,20 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			if (!source || !target) return;
 			line.setAttribute('x1', String(source.x));
 			line.setAttribute('y1', String(source.y));
-			line.setAttribute('x2', String(target.x));
-			line.setAttribute('y2', String(target.y));
+			if (edge.relation === VAULT_RELATION_BACKUP) {
+				/* Nodes render on top of edges (edges group, then nodes group), so a marker at the raw
+				   center-to-center endpoint would be hidden underneath the target's opaque circle. Pull
+				   the endpoint back to just outside the target's radius so the arrowhead is visible. */
+				const dx = target.x - source.x;
+				const dy = target.y - source.y;
+				const distance = Math.hypot(dx, dy) || 1;
+				const pullBack = target.rad + VAULT_BACKUP_ARROW_GAP;
+				line.setAttribute('x2', String(target.x - (dx / distance) * pullBack));
+				line.setAttribute('y2', String(target.y - (dy / distance) * pullBack));
+			} else {
+				line.setAttribute('x2', String(target.x));
+				line.setAttribute('y2', String(target.y));
+			}
 		});
 	}
 
@@ -841,6 +883,17 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			if (visible && categoryBase)
 				visible = categoryBase.has(edge.sourceId) || categoryBase.has(edge.targetId);
 			line.style.display = visible ? '' : 'none';
+
+			if (edge.relation === VAULT_RELATION_BACKUP) {
+				/* Always rendered at full bold strength — never dimmed by selection or hop-level state —
+				   so a backup link stays legible in a map full of nodes without anything selected. Filter
+				   visibility above still applies (a backup edge to a filtered-out node still hides). */
+				line.setAttribute('stroke', VAULT_BACKUP_LINK_COLOR);
+				line.setAttribute('stroke-width', VAULT_BACKUP_LINK_WIDTH);
+				line.setAttribute('opacity', '1');
+				return;
+			}
+
 			const sourceLevel = levels ? levels[edge.sourceId] : undefined;
 			const targetLevel = levels ? levels[edge.targetId] : undefined;
 			const reach =
@@ -1084,12 +1137,13 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
-	 * Tallies the legend counts — per node type plus verified accounts — in a single pass over the
-	 * current nodes. Called from ngOnChanges when the node set changes, so the template binds a stored
-	 * object instead of re-scanning the nodes on every change-detection pass.
+	 * Tallies the legend counts — per node type plus verified accounts and backup links — in a single
+	 * pass over the current nodes, plus a pass over edges for the edge-based backup count. Called from
+	 * ngOnChanges when the node or edge set changes, so the template binds a stored object instead of
+	 * re-scanning on every change-detection pass.
 	 */
 	private updateLegendCounts(): void {
-		const counts: VaultLegendCounts = { account: 0, email: 0, phone: 0, verified: 0 };
+		const counts: VaultLegendCounts = { account: 0, email: 0, phone: 0, verified: 0, backup: 0 };
 		for (const node of this.nodes) {
 			if (node.nodeType === VAULT_NODE_ACCOUNT) {
 				counts.account++;
@@ -1099,6 +1153,9 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			} else if (node.nodeType === VAULT_NODE_PHONE) {
 				counts.phone++;
 			}
+		}
+		for (const edge of this.edges) {
+			if (edge.relation === VAULT_RELATION_BACKUP) counts.backup++;
 		}
 		this.legendCounts = counts;
 	}

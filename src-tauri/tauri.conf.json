@@ -1,7 +1,7 @@
 {
 	"package": {
 		"productName": "Vision Canvas",
-		"version": "1.1.0"
+		"version": "2.0.0"
 	},
 	"build": {
 		"beforeBuildCommand": "npm run build && rsync -a --delete --exclude='recipe/' --exclude='resonance/' --exclude='login/' --exclude='portal/' --exclude='patch/' --exclude='debt/' --exclude='entertainment/' --exclude='about/' --exclude='reminder/' --exclude='ngsw-worker.js' --exclude='ngsw.json' --exclude='safety-worker.js' --exclude='worker-basic.min.js' dist/my-own-website/browser/ src-tauri/dist/browser/",

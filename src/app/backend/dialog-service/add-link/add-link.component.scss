@@ -116,6 +116,15 @@
 	box-shadow: 0 0 0 3px rgba(213, 51, 105, 0.1) !important;
 }
 
+/* Panel renders in <body>, so it carries its own class — each option matches the 35px / 14px field. */
+::ng-deep .link-dialog-panel .p-select-option {
+	display: flex;
+	align-items: center;
+	min-height: 35px;
+	padding: 0 12px;
+	font-size: 14px;
+}
+
 /* ─────────────────────────────────────────
    Meta-loading chip
 ───────────────────────────────────────── */

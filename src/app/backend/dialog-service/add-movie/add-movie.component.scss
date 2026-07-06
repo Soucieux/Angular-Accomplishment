@@ -110,6 +110,15 @@
 	font-size: 14px !important;
 }
 
+/* Panel renders in <body>, so it carries its own class — each option matches the 35px / 14px field. */
+::ng-deep .add-dialog-panel .p-select-option {
+	display: flex;
+	align-items: center;
+	min-height: 35px;
+	padding: 0 12px;
+	font-size: 14px;
+}
+
 /* ─────────────────────────────────────────
    Footer buttons — shared compact sizing
 ───────────────────────────────────────── */

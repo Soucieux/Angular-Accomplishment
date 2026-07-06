@@ -48,7 +48,7 @@
 					#year="ngModel"
 					[disabled]="id.value !== '' || isLoading"
 					class="custom-font"
-					panelStyleClass="dropdown-panel-font"
+					panelStyleClass="dropdown-panel-font add-dialog-panel"
 					[required]="movieName.value || year.value"
 					(ngModelChange)="onNameAndYearChange()"></p-select>
 			</div>
@@ -75,7 +75,7 @@
 					optionLabel="label"
 					[appendTo]="'body'"
 					class="custom-font"
-					panelStyleClass="dropdown-panel-font"
+					panelStyleClass="dropdown-panel-font add-dialog-panel"
 					required></p-select>
 			</div>
 		</form>

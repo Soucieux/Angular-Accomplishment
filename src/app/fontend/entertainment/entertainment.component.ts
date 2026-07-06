@@ -69,7 +69,7 @@ import {
 	ENT_MOVIE_ENTRANCE_STEP_MS,
 	MOVIE_GENRES
 } from './entertainment.model';
-import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
 	ChangeDetectorRef,
 	Component,
@@ -181,7 +181,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
-		@Inject(DOCUMENT) private doc: Document,
 		private cdr: ChangeDetectorRef,
 		private doubanService: DoubanService,
 		private databaseService: DatabaseService,
@@ -203,10 +202,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			// Step 1: Inject View Transition animation styles into <head> at runtime.
 			/* ViewEncapsulation.Emulated would prefix ::view-transition-* selectors with
 			   an attribute hash, breaking the browser-generated pseudo-elements on the root. */
-			const vtaStyle = this.doc.createElement('style');
-			vtaStyle.id = ENT_VTA_STYLE_ID;
-			vtaStyle.textContent = ENT_VTA_CSS;
-			this.doc.head.appendChild(vtaStyle);
+			Utilities.injectGlobalStyleOnce(ENT_VTA_STYLE_ID, ENT_VTA_CSS);
 
 			// Step 2: Wire statistics and do a permission pre-check before subscribing to the movie list.
 			/* Statistics is read first as a one-shot probe — if the database rejects the read
@@ -271,7 +267,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * resets the searching flag, and logs the component destruction event.
 	 */
 	ngOnDestroy() {
-		this.doc.getElementById(ENT_VTA_STYLE_ID)?.remove();
 		this.movieListSub?.unsubscribe();
 		this.selectedGenres$.complete();
 		this.searchQuery$.complete();

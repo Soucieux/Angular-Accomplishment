@@ -264,8 +264,6 @@ export const ERROR_DIALOG_MSG_CLASS = 'error-dialog-message';
 export const PASSPHRASE_LOCK_KEY_VAULT = 'vault';
 /** Minimum accepted length for a passphrase, checked client-side before submitting. */
 export const PASSPHRASE_MIN_LENGTH = 4;
-/** PassphraseLockComponent internal state: checking whether a passphrase has been set yet. */
-export const PASSPHRASE_LOCK_STATE_LOADING = 'loading';
 /** PassphraseLockComponent internal state: no passphrase set yet, showing first-time setup. */
 export const PASSPHRASE_LOCK_STATE_SETUP = 'setup';
 /** PassphraseLockComponent internal state: passphrase already set, showing the unlock prompt. */

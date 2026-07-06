@@ -5,7 +5,6 @@ import { DatabaseService } from '../../backend/database-service/database.service
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import {
 	PASSPHRASE_MIN_LENGTH,
-	PASSPHRASE_LOCK_STATE_LOADING,
 	PASSPHRASE_LOCK_STATE_SETUP,
 	PASSPHRASE_LOCK_STATE_LOCKED,
 	PASSPHRASE_LOCK_LOG_CALL_FAILED
@@ -56,9 +55,11 @@ export class PassphraseLockComponent implements OnInit {
 	protected readonly PASSPHRASE_LOCK_FOOTER = PASSPHRASE_LOCK_FOOTER;
 	protected readonly PASSPHRASE_LOCK_STATE_SETUP = PASSPHRASE_LOCK_STATE_SETUP;
 	protected readonly PASSPHRASE_LOCK_STATE_LOCKED = PASSPHRASE_LOCK_STATE_LOCKED;
-	protected readonly PASSPHRASE_LOCK_STATE_LOADING = PASSPHRASE_LOCK_STATE_LOADING;
 
-	protected state: string = PASSPHRASE_LOCK_STATE_LOADING;
+	/* Renders the unlock card immediately (optimistic) instead of a blank loading gate: returning users
+	   already have a passphrase, so the entry screen paints with no Cloud Function wait. ngOnInit
+	   corrects to the setup screen for the rare first-time user whose passphrase is not yet set. */
+	protected state: string = PASSPHRASE_LOCK_STATE_LOCKED;
 	protected passphraseInput = '';
 	protected confirmInput = '';
 	protected errorMessage = '';

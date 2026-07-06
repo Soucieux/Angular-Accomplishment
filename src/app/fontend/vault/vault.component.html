@@ -203,16 +203,9 @@
 							@for (account of accountRows; track account.id; let index = $index) {
 								<div class="vault-card" [style.animation-delay.ms]="cardEntranceDelay(index)">
 									<div class="vault-card-top">
-										<span class="vault-avatar" [style.background]="account.gradient">
-											{{ account.letter }}
-											@if (!failedFavicons.has(account.id)) {
-												<img
-													class="vault-avatar-favicon"
-													[src]="account.iconUrl"
-													(error)="onAvatarImageError(account.id)"
-													alt="" />
-											}
-										</span>
+										<span class="vault-avatar" [style.background]="account.gradient">{{
+											account.letter
+										}}</span>
 										<div class="vault-card-id">
 											<div class="vault-card-name">
 												@if (account.isEditing) {

@@ -187,8 +187,6 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected selectedId: string | null = null;
 	// The account whose category picker is expanded in the list view, or null when none is open.
 	protected categoryPickerId: string | null = null;
-	// Account ids whose brand favicon failed to resolve, so the list avatar shows the letter initials instead.
-	protected failedFavicons = new Set<string>();
 	protected typeFilter: string | null = null;
 	protected categoryFilter: string | null = null;
 	protected linkMode = false;
@@ -402,16 +400,6 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected updateAccountName(accountId: string): void {
 		this.renameNode(accountId, this.nameDraft);
-	}
-
-	/**
-	 * Records that an account's brand favicon failed to load, so the list avatar drops the image and
-	 * reveals the letter initials underneath.
-	 *
-	 * @param accountId - The id of the account whose favicon failed to resolve.
-	 */
-	protected onAvatarImageError(accountId: string): void {
-		this.failedFavicons.add(accountId);
 	}
 
 	/**
@@ -1017,7 +1005,6 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			name: account.name,
 			letter: Utilities.getInitials(account.name),
 			gradient: this.getAccountAvatarBackground(account),
-			iconUrl: Utilities.getBrandIconUrl(account.name),
 			categoryChips: account.categories.map((categoryKey) => {
 				const categoryDef = this.getCategoryDef(categoryKey);
 				return { key: categoryKey, label: categoryDef.categoryLabel, gradient: categoryDef.gradient };
@@ -1147,8 +1134,6 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		const currentName = this.findNode(nodeId)?.name ?? '';
 		if (!formattedName || formattedName === currentName) return;
 		this.patchLocalNode(nodeId, { name: formattedName });
-		// A renamed account resolves a different brand, so clear any prior failure to re-attempt its icon.
-		this.failedFavicons.delete(nodeId);
 		this.enqueueVaultWrite(() => this.databaseService.updateVaultNodeName(nodeId, formattedName))
 			.then(() => this.triggerSaveIndicator())
 			.catch(() => {

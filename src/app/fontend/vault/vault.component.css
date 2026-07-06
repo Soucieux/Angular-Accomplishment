@@ -247,20 +247,10 @@
 	justify-content: center;
 	color: #fff;
 	font-weight: 700;
-	font-size: 17px;
-	overflow: hidden;
+	/* Sized so a two-character monogram — including full-width CJK glyphs (~1em each) — fits with
+	   clear margin inside the 38px box, rather than sitting flush against the rounded edge. */
+	font-size: 15px;
 	transition: transform 0.22s ease;
-}
-
-/* The brand favicon overlays the letter initials, covering them when it loads; on load failure the
-   image is removed (see failedFavicons) so the initials beneath show through as the fallback. */
-.vault-avatar-favicon {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	background: #fff;
 }
 
 .vault-card:hover .vault-avatar {

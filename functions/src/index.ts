@@ -118,7 +118,7 @@ const brandfetchClientIdValue = (): string => brandfetchClientId.value().trim();
 
 /**
  * Streams an upstream image response back to the client with a day-long cache, or a 404 when the
- * response carries no body. Shared by {@link brandicon} and {@link brandlogo}.
+ * response carries no body. Used by {@link brandlogo}.
  *
  * @param res - The outgoing response to stream the image into.
  * @param upstream - The successful upstream image response to forward.
@@ -132,59 +132,6 @@ function streamImage(res: ExpressResponse, upstream: Response): void {
 		res.status(404).send('No image data received');
 	}
 }
-
-/**
- * Resolves a brand/account name to its logo and streams the image back, so a Vault account node can show
- * a real favicon from just a typed name. The name is resolved to a domain via Brandfetch's Brand Search
- * API, then that match's icon (itself a Brandfetch Logo API URL) is fetched and streamed with permissive
- * CORS. It runs on Google infrastructure overseas, so it also works where Brandfetch is unreachable
- * directly (mainland China). Any miss — empty search, no icon, or a failed fetch — returns a non-200 so
- * the client falls back to the account's letter initials. The only outbound host is *.brandfetch.io.
- */
-export const brandicon = functions.https.onRequest(
-	{ secrets: [brandfetchClientId] },
-	async (req, res) => {
-		res.set('Access-Control-Allow-Origin', '*');
-
-		const name = ((req.query.name as string) || '').trim();
-		if (!name) {
-			res.status(400).json({ error: 'Missing name' });
-			return;
-		}
-
-		const clientId = brandfetchClientIdValue();
-		try {
-			// Step 1: resolve the typed name to a brand match (whose `icon` is a Logo API URL).
-			const searchUrl = `https://api.brandfetch.io/v2/search/${encodeURIComponent(
-				name
-			)}?c=${encodeURIComponent(clientId)}`;
-			const searchResponse = await fetch(searchUrl);
-			if (!searchResponse.ok) {
-				res.status(404).send('Brand search failed');
-				return;
-			}
-
-			// Step 2: take the top match's icon — its absence means no brand, so the client shows initials.
-			const matches = (await searchResponse.json()) as { icon?: string }[];
-			const iconUrl = Array.isArray(matches) && matches.length > 0 ? matches[0].icon : undefined;
-			if (!iconUrl) {
-				res.status(404).send('No brand icon');
-				return;
-			}
-
-			// Step 3: fetch the resolved logo (the client ID is required) and stream it back.
-			const logoResponse = await fetch(`${iconUrl}?c=${encodeURIComponent(clientId)}`);
-			if (!isImageResponse(logoResponse)) {
-				res.status(404).send('Logo unavailable');
-				return;
-			}
-			streamImage(res, logoResponse);
-		} catch (error: unknown) {
-			console.error(error);
-			res.status(500).send('Internal server error');
-		}
-	}
-);
 
 /**
  * Fetches the best available logo for a domain, preferring quality then falling back for coverage:

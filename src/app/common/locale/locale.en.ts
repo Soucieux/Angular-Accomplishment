@@ -973,7 +973,7 @@ export const VAULT_LEGEND_TITLE = 'Legend';
 /** Legend row label for the count of verified accounts. */
 export const VAULT_LEGEND_VERIFIED = 'Verified';
 /** Type label for a website / app account (legend row and detail bar). */
-export const VAULT_TYPE_ACCOUNT = 'Website account';
+export const VAULT_TYPE_ACCOUNT = 'Account';
 /** Type label for an email address identifier (legend row and detail bar). */
 export const VAULT_TYPE_EMAIL = 'Email address';
 /** Type label for a phone number identifier (legend row and detail bar). */

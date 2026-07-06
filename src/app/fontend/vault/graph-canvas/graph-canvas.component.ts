@@ -113,8 +113,6 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	private readonly settleFrames = 260;
 	private readonly maxReachLevel = 2;
 	private readonly verifiedBadgeColor = '#0d9488';
-	// Favicon plate size as a fraction of the account radius — leaves a category-colored ring around it.
-	private readonly faviconInsetRatio = 0.64;
 
 	protected legendCounts: VaultLegendCounts = { account: 0, email: 0, phone: 0, verified: 0 };
 
@@ -438,20 +436,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			});
 			const clipPath = this.createSvgElement('clipPath', { id: 'vault-account-clip' });
 			clipPath.appendChild(clipRect);
-			// A smaller rounded clip for the inset favicon plate, so the category fill frames it as a ring.
-			const faviconInset = clipRadius * this.faviconInsetRatio;
-			const faviconClipRect = this.createSvgElement('rect', {
-				x: String(-faviconInset),
-				y: String(-faviconInset),
-				width: String(faviconInset * 2),
-				height: String(faviconInset * 2),
-				rx: String(faviconInset * 0.62)
-			});
-			const faviconClipPath = this.createSvgElement('clipPath', { id: 'vault-favicon-clip' });
-			faviconClipPath.appendChild(faviconClipRect);
 			defs.appendChild(filter);
 			defs.appendChild(clipPath);
-			defs.appendChild(faviconClipPath);
 			svg.insertBefore(defs, svg.firstChild);
 		}
 
@@ -501,9 +487,6 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			const label = this.createNodeLabel(node);
 			group.appendChild(shape);
 			group.appendChild(glyph);
-			// Account favicon sits above the letter glyph so it covers the initials once (and if) it loads.
-			const favicon = this.createAccountFavicon(node);
-			if (favicon) group.appendChild(favicon);
 			group.appendChild(label);
 			if (node.verified && node.nodeType === VAULT_NODE_ACCOUNT) {
 				group.appendChild(this.createVerifiedBadge(node));
@@ -632,51 +615,6 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			wedge.setAttribute('fill', node.hexes[index]);
 			group.appendChild(wedge);
 		}
-		return group;
-	}
-
-	/**
-	 * Creates the brand favicon overlay for an account tile — a white-backed image clipped to the tile's
-	 * rounded outline, hidden until the logo loads so non-brand accounts never flash a blank plate, and
-	 * removed on load failure so the letter glyph beneath shows through as the fallback. Returns null for
-	 * non-account nodes, which have no favicon.
-	 *
-	 * @param node - The simulation node to build a favicon overlay for.
-	 * @returns The favicon group, or null when the node is not an account.
-	 */
-	private createAccountFavicon(node: VaultSimNode): SVGGElement | null {
-		if (node.nodeType !== VAULT_NODE_ACCOUNT) return null;
-		const group = document.createElementNS(SVG_NS, 'g');
-		// Clip to the inset plate, not the full tile, so the category fill still frames it as a ring.
-		group.setAttribute('clip-path', 'url(#vault-favicon-clip)');
-		group.style.pointerEvents = 'none';
-		// Revealed only once the logo loads (see the load listener), so a non-brand tile stays letter-only.
-		group.style.opacity = '0';
-		group.style.transition = 'opacity 0.2s ease';
-		const inset = node.rad * this.faviconInsetRatio;
-		const size = inset * 2;
-		// White backing so a transparent logo stays legible over the tile's category color.
-		const plate = document.createElementNS(SVG_NS, 'rect');
-		plate.setAttribute('x', String(-inset));
-		plate.setAttribute('y', String(-inset));
-		plate.setAttribute('width', String(size));
-		plate.setAttribute('height', String(size));
-		plate.setAttribute('fill', '#ffffff');
-		const image = document.createElementNS(SVG_NS, 'image');
-		image.setAttribute('x', String(-inset));
-		image.setAttribute('y', String(-inset));
-		image.setAttribute('width', String(size));
-		image.setAttribute('height', String(size));
-		image.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-		const iconUrl = Utilities.getBrandIconUrl(node.name);
-		/* Set both href and xlink:href — WebKit (Tauri) historically honours only the xlink form on
-		   <image>, while modern engines use the plain SVG2 href. */
-		image.setAttribute('href', iconUrl);
-		image.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', iconUrl);
-		image.addEventListener('load', () => (group.style.opacity = '1'));
-		image.addEventListener('error', () => group.remove());
-		group.appendChild(plate);
-		group.appendChild(image);
 		return group;
 	}
 

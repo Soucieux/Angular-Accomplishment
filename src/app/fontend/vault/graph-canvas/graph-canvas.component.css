@@ -84,7 +84,9 @@
 	width: 15px;
 	height: 15px;
 	border-radius: 5px;
-	background: linear-gradient(135deg, #ff6b35, #ffd700);
+	/* Default (uncategorized) account colour — mirrors VAULT_CATEGORY_OTHER, a real map node colour,
+	   since accounts have no single colour (each is coloured by its category on the map). */
+	background: linear-gradient(135deg, #94a3b8, #64748b);
 	border: 1.5px solid #fff;
 	box-shadow: 0 1px 2px rgba(60, 30, 50, 0.3);
 }

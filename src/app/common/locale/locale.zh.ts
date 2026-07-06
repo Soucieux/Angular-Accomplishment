@@ -818,7 +818,7 @@ export const VAULT_GRAPH_MOBILE_BLOCKED_BODY = '关系图谱需要更宽的屏�
 
 export const VAULT_LEGEND_TITLE = '图例';
 export const VAULT_LEGEND_VERIFIED = '已验证';
-export const VAULT_TYPE_ACCOUNT = '网站账户';
+export const VAULT_TYPE_ACCOUNT = '账户';
 export const VAULT_TYPE_EMAIL = '邮箱地址';
 export const VAULT_TYPE_PHONE = '电话号码';
 export const VAULT_TYPE_LINK = '链接';

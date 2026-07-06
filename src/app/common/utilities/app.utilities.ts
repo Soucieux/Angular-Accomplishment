@@ -8,7 +8,6 @@ import {
 	APP_BREAKPOINT_NARROW,
 	CN,
 	PORTAL_BRAND_LOGO_PROXY_URL,
-	VAULT_BRAND_ICON_PROXY_URL,
 	LS_AUTH_HINT_KEY,
 	UTILITIES_LOG_COUNTRY_FAILED,
 	UTILITIES_LOG_DEFAULT_COUNTRY,
@@ -646,18 +645,6 @@ export class Utilities {
 	 */
 	public static getDomain(url: string): string {
 		return Utilities.parseHostname(url) ?? url;
-	}
-
-	/**
-	 * Builds the brand-icon proxy URL that resolves an account name to its favicon via Brandfetch.
-	 * Used as an `<img>` / SVG `<image>` source on Vault account nodes; the image errors when no brand
-	 * is found, so the caller falls back to the account's letter initials.
-	 *
-	 * @param name - The account or brand name to resolve an icon for.
-	 * @returns The proxy URL string.
-	 */
-	public static getBrandIconUrl(name: string): string {
-		return `${VAULT_BRAND_ICON_PROXY_URL}?name=${encodeURIComponent(name)}`;
 	}
 
 	/**

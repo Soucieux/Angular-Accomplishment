@@ -3,15 +3,8 @@ import { isPlatformBrowser } from '@angular/common';
 import { invoke } from '@tauri-apps/api/tauri';
 import { DatabaseService } from '../database-service/database.service';
 import { LOG } from '../../common/app.logs';
-import {
-	NOTIF_SEND_FAILED,
-	NOTIF_SUBSCRIBE_FAILED,
-	NOTIF_UNSUBSCRIBE_FAILED
-} from '../../common/constants';
-import {
-	NOTIF_ENABLED_BODY,
-	NOTIF_ENABLED_TITLE
-} from '../../common/locale/locale-strings';
+import { NOTIF_SEND_FAILED, NOTIF_SUBSCRIBE_FAILED, NOTIF_UNSUBSCRIBE_FAILED } from '../../common/constants';
+import { NOTIF_ENABLED_BODY, NOTIF_ENABLED_TITLE } from '../../common/locale/locale-strings';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {

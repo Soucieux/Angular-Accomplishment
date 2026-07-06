@@ -3,6 +3,8 @@
 	--vault-gradient: linear-gradient(135deg, #334155, #64748b);
 	--vault-soft: rgba(71, 85, 105, 0.12);
 	--vault-glow: rgba(71, 85, 105, 0.4);
+	--individual-item-width: 340px;
+	--individual-item-gap: 12px;
 	display: block;
 	height: 100%;
 	font-family: 'app-font';
@@ -205,9 +207,9 @@
 
 .vault-list {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(var(--individual-item-width), 1fr));
 	align-items: stretch;
-	gap: 12px;
+	gap: var(--individual-item-gap);
 }
 
 .vault-card {

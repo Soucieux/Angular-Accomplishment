@@ -39,6 +39,7 @@ import {
 	REMINDER_ITEMS_PER_PAGE,
 	REMINDER_ROWS_PER_PAGE,
 	REMINDER_ROWS_PER_PAGE_NARROW,
+	REMINDER_MIN_COLUMNS,
 	REMINDER_ITEM_MESSAGE,
 	REMINDER_PLACEHOLDER_LINK,
 	REMINDER_SUBTITLE_CN,
@@ -1599,7 +1600,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		/* Step 3: Recalculate page size and clamp the current page index.
 		   The page must be clamped before updating itemsPerPage — otherwise pagedItems
 		   computes a slice from the old page size and can briefly show the wrong items. */
-		const rowsPerPage = itemsPerRow === 1 ? REMINDER_ROWS_PER_PAGE_NARROW : REMINDER_ROWS_PER_PAGE;
+		const rowsPerPage =
+			itemsPerRow === REMINDER_MIN_COLUMNS ? REMINDER_ROWS_PER_PAGE_NARROW : REMINDER_ROWS_PER_PAGE;
 		const newPageSize = itemsPerRow * rowsPerPage;
 		const maxPage = Math.max(0, Math.ceil(this.filteredItems.length / newPageSize) - 1);
 		if (this.page > maxPage) this.page = maxPage;

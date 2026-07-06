@@ -2,11 +2,32 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angul
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
-import { VAULT_NODE_EMAIL, VAULT_NODE_PHONE, VAULT_NODE_NOTES } from '../../../common/constants';
+import {
+	VAULT_NODE_ACCOUNT,
+	VAULT_NODE_EMAIL,
+	VAULT_NODE_PHONE,
+	VAULT_NODE_NOTES,
+	VAULT_GRADIENT_VERIFIED
+} from '../../../common/constants';
 import {
 	DIALOG_BTN_CANCEL,
+	DIALOG_BTN_NEXT,
+	DIALOG_BTN_BACK,
 	VAULT_DIALOG_TITLE,
+	VAULT_DIALOG_TITLE_START,
+	VAULT_DIALOG_TITLE_IDENTIFIER,
 	VAULT_DIALOG_SUBTITLE,
+	VAULT_DIALOG_KIND_LABEL,
+	VAULT_DIALOG_KIND_ACCOUNT_LABEL,
+	VAULT_DIALOG_KIND_ACCOUNT_HINT,
+	VAULT_DIALOG_KIND_OTHER_LABEL,
+	VAULT_DIALOG_KIND_OTHER_HINT,
+	VAULT_DIALOG_TYPE_LABEL,
+	VAULT_DIALOG_IDENTIFIER_NAME_LABEL,
+	VAULT_DIALOG_PLACEHOLDER_EMAIL,
+	VAULT_DIALOG_PLACEHOLDER_PHONE,
+	VAULT_DIALOG_PLACEHOLDER_NOTES,
+	VAULT_DIALOG_DUPLICATE_NODE,
 	VAULT_DIALOG_NAME_LABEL,
 	VAULT_DIALOG_NAME_PLACEHOLDER,
 	VAULT_DIALOG_CATEGORY_LABEL,
@@ -32,8 +53,11 @@ import {
 	VaultCategoryDef,
 	VaultConnectionInput,
 	VaultNodeType,
+	VAULT_CATEGORY_OTHER,
 	VAULT_CATEGORY_SWATCHES,
-	VAULT_CONNECTION_TYPES
+	VAULT_CONNECTION_TYPES,
+	VAULT_EMAIL_META,
+	VAULT_PHONE_META
 } from '../../../fontend/vault/vault.model';
 
 @Component({
@@ -47,8 +71,17 @@ import {
 export class AddAccountDialogComponent {
 	@Output() closed$ = new EventEmitter<void>();
 
-	protected readonly VAULT_DIALOG_TITLE = VAULT_DIALOG_TITLE;
 	protected readonly VAULT_DIALOG_SUBTITLE = VAULT_DIALOG_SUBTITLE;
+	protected readonly VAULT_DIALOG_KIND_LABEL = VAULT_DIALOG_KIND_LABEL;
+	protected readonly VAULT_DIALOG_KIND_ACCOUNT_LABEL = VAULT_DIALOG_KIND_ACCOUNT_LABEL;
+	protected readonly VAULT_DIALOG_KIND_ACCOUNT_HINT = VAULT_DIALOG_KIND_ACCOUNT_HINT;
+	protected readonly VAULT_DIALOG_KIND_OTHER_LABEL = VAULT_DIALOG_KIND_OTHER_LABEL;
+	protected readonly VAULT_DIALOG_KIND_OTHER_HINT = VAULT_DIALOG_KIND_OTHER_HINT;
+	protected readonly VAULT_DIALOG_TYPE_LABEL = VAULT_DIALOG_TYPE_LABEL;
+	protected readonly VAULT_DIALOG_IDENTIFIER_NAME_LABEL = VAULT_DIALOG_IDENTIFIER_NAME_LABEL;
+	protected readonly VAULT_DIALOG_DUPLICATE_NODE = VAULT_DIALOG_DUPLICATE_NODE;
+	protected readonly DIALOG_BTN_NEXT = DIALOG_BTN_NEXT;
+	protected readonly DIALOG_BTN_BACK = DIALOG_BTN_BACK;
 	protected readonly VAULT_DIALOG_NAME_LABEL = VAULT_DIALOG_NAME_LABEL;
 	protected readonly VAULT_DIALOG_NAME_PLACEHOLDER = VAULT_DIALOG_NAME_PLACEHOLDER;
 	protected readonly VAULT_DIALOG_CATEGORY_LABEL = VAULT_DIALOG_CATEGORY_LABEL;
@@ -66,6 +99,12 @@ export class AddAccountDialogComponent {
 	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
 
 	protected visible = false;
+	// Wizard step: 1 = pick account / non-account kind, 2 = the (full or partial) form.
+	protected step = 1;
+	// Whether the account kind is chosen on step 1 — drives which fields step 2 shows.
+	protected isAccountKind = true;
+	// Resolved primary node type: 'account' for the account kind, else the chosen identifier type.
+	protected nodeType: VaultNodeType = VAULT_NODE_ACCOUNT;
 	protected name = '';
 	protected verified = false;
 	protected selectedCategoryKeys = new Set<string>();
@@ -130,6 +169,9 @@ export class AddAccountDialogComponent {
 		this.existingNames = new Set(
 			(dialogData.existingNames ?? []).map((existingName) => existingName.trim().toLowerCase())
 		);
+		this.step = 1;
+		this.isAccountKind = true;
+		this.nodeType = VAULT_NODE_ACCOUNT;
 		this.name = '';
 		this.verified = false;
 		this.selectedCategoryKeys = new Set<string>();
@@ -138,6 +180,31 @@ export class AddAccountDialogComponent {
 		this.newCategoryName = '';
 		this.pendingNewCategory = null;
 		this.visible = true;
+	}
+
+	/**
+	 * Selects the node kind on step 1: the account kind, or the non-account kind (which defaults its
+	 * primary type to email so the step-2 type dropdown starts on a real identifier type).
+	 *
+	 * @param isAccount - Whether the account kind was chosen.
+	 */
+	protected selectKind(isAccount: boolean): void {
+		this.isAccountKind = isAccount;
+		this.nodeType = isAccount ? VAULT_NODE_ACCOUNT : VAULT_NODE_EMAIL;
+	}
+
+	/**
+	 * Advances the wizard from the step-1 kind chooser to the step-2 form.
+	 */
+	protected goToForm(): void {
+		this.step = 2;
+	}
+
+	/**
+	 * Navigates the wizard back to the step-1 kind chooser, keeping entered form values intact.
+	 */
+	protected goBack(): void {
+		this.step = 1;
 	}
 
 	/**
@@ -187,15 +254,30 @@ export class AddAccountDialogComponent {
 	}
 
 	/**
-	 * Picks a color swatch not already used by an existing category, so each category keeps a unique
-	 * color. Falls back to a fully random swatch only when every swatch is already taken.
+	 * Picks a color swatch not already used by an existing category or by the graph legend (account,
+	 * email, phone, verified), so each category keeps a unique color that can't be mistaken for a
+	 * node-type swatch. Falls back to a fully random swatch only when every swatch is already taken.
 	 *
 	 * @returns The chosen swatch (hex plus gradient).
 	 */
 	private pickUniqueSwatch(): { hex: string; gradient: string } {
 		const used = new Set(this.existingCategories.map((categoryDef) => categoryDef.hex));
 		if (this.pendingNewCategory) used.add(this.pendingNewCategory.hex);
-		const available = VAULT_CATEGORY_SWATCHES.filter((swatch) => !used.has(swatch.hex));
+		// Gradients whose colors the legend already shows — skip any swatch that reuses one so its
+		// category chip can't be confused with an account / email / phone / verified swatch.
+		const legendGradients = [
+			VAULT_CATEGORY_OTHER.gradient,
+			VAULT_EMAIL_META.gradient,
+			VAULT_PHONE_META.gradient,
+			VAULT_GRADIENT_VERIFIED
+		];
+		const available = VAULT_CATEGORY_SWATCHES.filter(
+			(swatch) =>
+				!used.has(swatch.hex) &&
+				!legendGradients.some(
+					(gradient) => gradient === swatch.gradient || gradient.includes(swatch.hex)
+				)
+		);
 		const pool = available.length > 0 ? available : VAULT_CATEGORY_SWATCHES;
 		return pool[Math.floor(Math.random() * pool.length)];
 	}
@@ -239,13 +321,14 @@ export class AddAccountDialogComponent {
 	protected onSubmit(): void {
 		if (!this.isValid) return;
 		this.submitCallback?.({
+			nodeType: this.isAccountKind ? VAULT_NODE_ACCOUNT : this.nodeType,
 			name: this.name.trim(),
-			verified: this.verified,
-			categories: [...this.selectedCategoryKeys],
+			verified: this.isAccountKind ? this.verified : false,
+			categories: this.isAccountKind ? [...this.selectedCategoryKeys] : [],
 			connections: this.connections
 				.map((connection) => ({ value: connection.value.trim(), type: connection.type }))
 				.filter((connection) => connection.value.length > 0),
-			newCategory: this.pendingNewCategory ?? undefined
+			newCategory: this.isAccountKind ? (this.pendingNewCategory ?? undefined) : undefined
 		});
 		this.onDialogClosed();
 	}
@@ -266,6 +349,28 @@ export class AddAccountDialogComponent {
 	 */
 	protected trackByIndex(index: number): number {
 		return index;
+	}
+
+	/**
+	 * Gets the dialog header title for the current step: the start prompt on the kind chooser, the
+	 * account title on the account step, or the identifier title on the non-account step.
+	 *
+	 * @returns The localized header title.
+	 */
+	protected get headerTitle(): string {
+		if (this.step === 1) return VAULT_DIALOG_TITLE_START;
+		return this.isAccountKind ? VAULT_DIALOG_TITLE : VAULT_DIALOG_TITLE_IDENTIFIER;
+	}
+
+	/**
+	 * Gets the non-account name placeholder matching the currently selected identifier type.
+	 *
+	 * @returns The localized placeholder for the selected type.
+	 */
+	protected get identifierPlaceholder(): string {
+		if (this.nodeType === VAULT_NODE_PHONE) return VAULT_DIALOG_PLACEHOLDER_PHONE;
+		if (this.nodeType === VAULT_NODE_NOTES) return VAULT_DIALOG_PLACEHOLDER_NOTES;
+		return VAULT_DIALOG_PLACEHOLDER_EMAIL;
 	}
 
 	/**

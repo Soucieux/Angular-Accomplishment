@@ -938,6 +938,8 @@ export const VAULT_CATEGORY_KEY_OTHER = 'other';
 export const VAULT_RELATION_LINKED = 'linked';
 /** Relation label stored on a link created by hand in graph link-mode. */
 export const VAULT_RELATION_MANUAL = 'manually linked';
+/** Relation label stored on a link from a non-account identifier to its backup identifier. */
+export const VAULT_RELATION_BACKUP = 'backup';
 
 /** View discriminator for the force-directed graph view. */
 export const VAULT_VIEW_GRAPH = 'graph';

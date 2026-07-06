@@ -116,6 +116,71 @@
 }
 
 /* ─────────────────────────────────────────
+   Step-1 kind chooser
+───────────────────────────────────────── */
+
+.kind-row {
+	display: flex;
+	gap: 10px;
+}
+
+.kind-card {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	padding: 14px;
+	border: 1.5px solid rgba(0, 0, 0, 0.1);
+	border-radius: 12px;
+	background: #fff;
+	cursor: pointer;
+	text-align: left;
+}
+
+.kind-card.selected {
+	border: 3px solid #d53369;
+	background:
+		#f8fafc padding-box,
+		linear-gradient(135deg, #d53369 0%, #daae51 100%) border-box;
+}
+
+.kind-icon {
+	font-size: 24px;
+	color: #d53369;
+}
+
+.kind-label {
+	font-size: 14px;
+	font-weight: 700;
+	color: #1a1a1a;
+}
+
+.kind-hint {
+	font-size: 11px;
+	color: #64748b;
+}
+
+/* ─────────────────────────────────────────
+   Identifier name + type row (non-account step)
+───────────────────────────────────────── */
+
+.identifier-name-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.identifier-type {
+	flex-shrink: 0;
+	width: 116px;
+}
+
+.identifier-name-row .text-input {
+	flex: 1;
+}
+
+/* ─────────────────────────────────────────
    Category chips
 ───────────────────────────────────────── */
 

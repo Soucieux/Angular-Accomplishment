@@ -52,6 +52,7 @@ export interface VaultConnectionInput {
 
 /** Submitted form data returned by the add-account dialog to its caller. */
 export interface NewAccountData {
+	nodeType: VaultNodeType;
 	name: string;
 	categories: string[];
 	verified: boolean;
@@ -182,12 +183,15 @@ export interface VaultAccountRow {
 /**
  * Built-in preset account categories. `label` / `categoryLabel` hold the key as a placeholder; the
  * localized display text is resolved in the component via `vaultCategoryLabel` (recipe pattern).
- * Their colors are fixed and deliberately distinct from `VAULT_CATEGORY_SWATCHES`, so a new custom
- * category (which draws a random swatch) can never land on a preset color.
+ * Their colors are fixed and deliberately distinct from `VAULT_CATEGORY_SWATCHES` (so a new custom
+ * category can never land on a preset color) and from the graph legend node-type colors — account
+ * slate, email blue, phone lime, verified teal — so a category-coloured account node is never
+ * mistaken for an email / phone / verified swatch. That is why transport is red (not blue) and
+ * finance is gold (not green).
  */
 export const VAULT_CATEGORY_DEFS: VaultCategoryDef[] = [
-	{ key: 'transport', label: 'transport', categoryLabel: 'transport', icon: 'near_me', hex: '#3b82f6', gradient: 'linear-gradient(135deg, #60a5fa, #2563eb)' },
-	{ key: 'finance', label: 'finance', categoryLabel: 'finance', icon: 'trending_up', hex: '#22c55e', gradient: 'linear-gradient(135deg, #4ade80, #16a34a)' },
+	{ key: 'transport', label: 'transport', categoryLabel: 'transport', icon: 'near_me', hex: '#ef4444', gradient: 'linear-gradient(135deg, #f87171, #dc2626)' },
+	{ key: 'finance', label: 'finance', categoryLabel: 'finance', icon: 'trending_up', hex: '#eab308', gradient: 'linear-gradient(135deg, #facc15, #ca8a04)' },
 	{ key: 'social', label: 'social', categoryLabel: 'social', icon: 'diversity_2', hex: '#ec4899', gradient: 'linear-gradient(135deg, #f472b6, #db2777)' },
 	{ key: 'shopping', label: 'shopping', categoryLabel: 'shopping', icon: 'qr_code', hex: '#f59e0b', gradient: 'linear-gradient(135deg, #fbbf24, #d97706)' },
 	{ key: 'general', label: 'general', categoryLabel: 'general', icon: 'token', hex: '#8b5cf6', gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)' }
@@ -283,6 +287,8 @@ export const VAULT_NODE_STROKE = '#ffffff';
 export const VAULT_GLYPH_COLOR_IDENTIFIER = '#1e293b';
 /** Edge color when the edge is not part of the selected node's highlighted web. */
 export const VAULT_EDGE_RESTING_COLOR = '#cbb5be';
+/** Dash pattern applied to a backup edge (non-account identifier → its backup) so it reads distinctly. */
+export const VAULT_EDGE_BACKUP_DASH = '5 4';
 /** Label color under an account node. */
 export const VAULT_LABEL_COLOR_ACCOUNT = '#334155';
 /** Label color under an email or phone identifier node. */

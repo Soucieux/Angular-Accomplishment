@@ -20,7 +20,8 @@ import {
 	VAULT_NODE_EMAIL,
 	VAULT_NODE_PHONE,
 	VAULT_NODE_LINK,
-	VAULT_FILTER_KEY_VERIFIED
+	VAULT_FILTER_KEY_VERIFIED,
+	VAULT_RELATION_BACKUP
 } from '../../../common/constants';
 import {
 	VAULT_LEGEND_TITLE,
@@ -37,6 +38,7 @@ import {
 	VaultSimNode,
 	VAULT_CATEGORY_DEFS,
 	VAULT_CATEGORY_OTHER,
+	VAULT_EDGE_BACKUP_DASH,
 	VAULT_EDGE_RESTING_COLOR,
 	VAULT_EMAIL_META,
 	VAULT_GLYPH_COLOR_IDENTIFIER,
@@ -458,9 +460,13 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		edgeGroup.innerHTML = '';
 		nodeGroup.innerHTML = '';
 
-		this.edgeEls = this.edges.map(() => {
+		this.edgeEls = this.edges.map((edge) => {
 			const line = document.createElementNS(SVG_NS, 'line');
 			line.setAttribute('stroke-linecap', 'round');
+			// A backup edge (non-account identifier → its backup) reads distinctly as a dashed line.
+			if (edge.relation === VAULT_RELATION_BACKUP) {
+				line.setAttribute('stroke-dasharray', VAULT_EDGE_BACKUP_DASH);
+			}
 			edgeGroup.appendChild(line);
 			return line;
 		});

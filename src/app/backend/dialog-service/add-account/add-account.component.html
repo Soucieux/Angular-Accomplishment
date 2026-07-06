@@ -7,133 +7,194 @@
 	(onHide)="onDialogClosed()"
 	styleClass="add-account-dialog">
 	<ng-template #header>
-		<span class="add-account-dialog-title">{{ VAULT_DIALOG_TITLE }}</span>
+		<span class="add-account-dialog-title">{{ headerTitle }}</span>
 	</ng-template>
 
-	<p class="add-account-subtitle">{{ VAULT_DIALOG_SUBTITLE }}</p>
-
-	<div class="add-account-field">
-		<label class="field-label" for="vault-account-name">{{ VAULT_DIALOG_NAME_LABEL }}</label>
-		<input
-			id="vault-account-name"
-			class="text-input"
-			type="text"
-			[(ngModel)]="name"
-			(keyup.enter)="onSubmit()"
-			[placeholder]="VAULT_DIALOG_NAME_PLACEHOLDER" />
-		@if (isDuplicateName) {
-			<span class="field-error">{{ VAULT_DIALOG_DUPLICATE_NAME }}</span>
-		}
-	</div>
-
-	<div class="add-account-field">
-		<div class="field-label">{{ VAULT_DIALOG_CATEGORY_LABEL }}</div>
-		<div class="category-row">
-			@for (category of categoryChips; track category.key) {
+	@if (step === 1) {
+		<div class="add-account-field">
+			<div class="field-label">{{ VAULT_DIALOG_KIND_LABEL }}</div>
+			<div class="kind-row">
 				<button
 					type="button"
-					class="category-chip"
-					[class.selected]="category.isSelected"
-					(click)="toggleCategory(category.key)">
-					<span class="material-symbols-outlined category-icon" [style.color]="category.hex">{{
-						category.icon
-					}}</span>
-					{{ category.label }}
+					class="kind-card"
+					[class.selected]="isAccountKind"
+					(click)="selectKind(true)">
+					<span class="material-symbols-outlined kind-icon">badge</span>
+					<span class="kind-label">{{ VAULT_DIALOG_KIND_ACCOUNT_LABEL }}</span>
+					<span class="kind-hint">{{ VAULT_DIALOG_KIND_ACCOUNT_HINT }}</span>
 				</button>
-			}
-			@if (pendingNewCategory) {
 				<button
 					type="button"
-					class="category-chip selected"
-					(click)="clearPendingNewCategory()">
-					<span class="category-dot" [style.background]="pendingNewCategory.hex"></span>
-					{{ pendingNewCategory.label }}
+					class="kind-card"
+					[class.selected]="!isAccountKind"
+					(click)="selectKind(false)">
+					<span class="material-symbols-outlined kind-icon">alternate_email</span>
+					<span class="kind-label">{{ VAULT_DIALOG_KIND_OTHER_LABEL }}</span>
+					<span class="kind-hint">{{ VAULT_DIALOG_KIND_OTHER_HINT }}</span>
 				</button>
-			}
-			@if (showNewCategory) {
+			</div>
+		</div>
+	} @else {
+		<p class="add-account-subtitle">{{ VAULT_DIALOG_SUBTITLE }}</p>
+
+		@if (isAccountKind) {
+			<div class="add-account-field">
+				<label class="field-label" for="vault-account-name">{{ VAULT_DIALOG_NAME_LABEL }}</label>
 				<input
-					class="new-category-input"
+					id="vault-account-name"
+					class="text-input"
 					type="text"
-					[(ngModel)]="newCategoryName"
-					(keyup.enter)="commitNewCategory()"
-					(keyup.escape)="cancelNewCategory()"
-					(blur)="commitNewCategory()"
-					[placeholder]="VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER" />
-			} @else {
-				<button type="button" class="new-category-button" (click)="openNewCategory()">
-					<span class="material-symbols-outlined">add</span>
-					{{ VAULT_DIALOG_NEW_CATEGORY }}
+					[(ngModel)]="name"
+					(keyup.enter)="onSubmit()"
+					[placeholder]="VAULT_DIALOG_NAME_PLACEHOLDER" />
+				@if (isDuplicateName) {
+					<span class="field-error">{{ VAULT_DIALOG_DUPLICATE_NAME }}</span>
+				}
+			</div>
+
+			<div class="add-account-field">
+				<div class="field-label">{{ VAULT_DIALOG_CATEGORY_LABEL }}</div>
+				<div class="category-row">
+					@for (category of categoryChips; track category.key) {
+						<button
+							type="button"
+							class="category-chip"
+							[class.selected]="category.isSelected"
+							(click)="toggleCategory(category.key)">
+							<span class="material-symbols-outlined category-icon" [style.color]="category.hex">{{
+								category.icon
+							}}</span>
+							{{ category.label }}
+						</button>
+					}
+					@if (pendingNewCategory) {
+						<button
+							type="button"
+							class="category-chip selected"
+							(click)="clearPendingNewCategory()">
+							<span class="category-dot" [style.background]="pendingNewCategory.hex"></span>
+							{{ pendingNewCategory.label }}
+						</button>
+					}
+					@if (showNewCategory) {
+						<input
+							class="new-category-input"
+							type="text"
+							[(ngModel)]="newCategoryName"
+							(keyup.enter)="commitNewCategory()"
+							(keyup.escape)="cancelNewCategory()"
+							(blur)="commitNewCategory()"
+							[placeholder]="VAULT_DIALOG_NEW_CATEGORY_PLACEHOLDER" />
+					} @else {
+						<button type="button" class="new-category-button" (click)="openNewCategory()">
+							<span class="material-symbols-outlined">add</span>
+							{{ VAULT_DIALOG_NEW_CATEGORY }}
+						</button>
+					}
+				</div>
+				@if (showNewCategory && isDuplicateCategory) {
+					<span class="field-error">{{ VAULT_CATEGORY_DUPLICATE_NAME }}</span>
+				}
+			</div>
+
+			<div class="verified-field">
+				<span class="field-label">{{ VAULT_DIALOG_VERIFIED_LABEL }}</span>
+				<button
+					type="button"
+					class="verified-switch"
+					[class.on]="verified"
+					[attr.aria-pressed]="verified"
+					(click)="toggleVerified()">
+					<span class="verified-knob"></span>
 				</button>
-			}
-		</div>
-		@if (showNewCategory && isDuplicateCategory) {
-			<span class="field-error">{{ VAULT_CATEGORY_DUPLICATE_NAME }}</span>
-		}
-	</div>
-
-	<div class="verified-field">
-		<span class="field-label">{{ VAULT_DIALOG_VERIFIED_LABEL }}</span>
-		<button
-			type="button"
-			class="verified-switch"
-			[class.on]="verified"
-			[attr.aria-pressed]="verified"
-			(click)="toggleVerified()">
-			<span class="verified-knob"></span>
-		</button>
-	</div>
-
-	<div class="add-account-field">
-		<div class="connections-header">
-			<span class="field-label">
-				{{ VAULT_DIALOG_CONNECTIONS_LABEL }}
-				<span class="optional">{{ VAULT_DIALOG_CONNECTIONS_OPTIONAL }}</span>
-			</span>
-			<span class="connections-hint">{{ VAULT_DIALOG_CONNECTIONS_HINT }}</span>
-		</div>
-
-		<div class="connection-rows">
-			@for (connection of connections; track trackByIndex($index); let i = $index) {
-				<div class="connection-row">
-					<span class="material-symbols-outlined connection-icon">{{
-						iconForType(connection.type)
-					}}</span>
+			</div>
+		} @else {
+			<div class="add-account-field">
+				<label class="field-label" for="vault-node-name">{{ VAULT_DIALOG_IDENTIFIER_NAME_LABEL }}</label>
+				<div class="identifier-name-row">
 					<p-select
-						class="connection-type"
-						[(ngModel)]="connection.type"
+						class="identifier-type"
+						[(ngModel)]="nodeType"
 						[options]="connectionTypeOptions"
 						optionLabel="label"
 						optionValue="value"
 						[appendTo]="'body'"
-						panelStyleClass="dropdown-panel-font" />
+						panelStyleClass="dropdown-panel-font add-account-dialog-panel" />
 					<input
-						class="text-input connection-input"
+						id="vault-node-name"
+						class="text-input"
 						type="text"
-						[(ngModel)]="connection.value"
-						[placeholder]="VAULT_DIALOG_CONNECTION_PLACEHOLDER" />
-					<button type="button" class="connection-remove" (click)="removeConnectionRow(i)">
-						<span class="material-symbols-outlined">close</span>
-					</button>
+						[(ngModel)]="name"
+						(keyup.enter)="onSubmit()"
+						[placeholder]="identifierPlaceholder" />
 				</div>
-			}
-		</div>
-	</div>
+				@if (isDuplicateName) {
+					<span class="field-error">{{ VAULT_DIALOG_DUPLICATE_NODE }}</span>
+				}
+			</div>
+		}
 
-	<button type="button" class="add-connection-button" (click)="addConnectionRow()">
-		<span class="material-symbols-outlined">add</span>
-		{{ VAULT_DIALOG_ADD_CONNECTION }}
-	</button>
+		<div class="add-account-field">
+			<div class="connections-header">
+				<span class="field-label">
+					{{ VAULT_DIALOG_CONNECTIONS_LABEL }}
+					<span class="optional">{{ VAULT_DIALOG_CONNECTIONS_OPTIONAL }}</span>
+				</span>
+				<span class="connections-hint">{{ VAULT_DIALOG_CONNECTIONS_HINT }}</span>
+			</div>
+
+			<div class="connection-rows">
+				@for (connection of connections; track trackByIndex($index); let i = $index) {
+					<div class="connection-row">
+						<span class="material-symbols-outlined connection-icon">{{
+							iconForType(connection.type)
+						}}</span>
+						<p-select
+							class="connection-type"
+							[(ngModel)]="connection.type"
+							[options]="connectionTypeOptions"
+							optionLabel="label"
+							optionValue="value"
+							[appendTo]="'body'"
+							panelStyleClass="dropdown-panel-font add-account-dialog-panel" />
+						<input
+							class="text-input connection-input"
+							type="text"
+							[(ngModel)]="connection.value"
+							[placeholder]="VAULT_DIALOG_CONNECTION_PLACEHOLDER" />
+						<button type="button" class="connection-remove" (click)="removeConnectionRow(i)">
+							<span class="material-symbols-outlined">close</span>
+						</button>
+					</div>
+				}
+			</div>
+		</div>
+
+		<button type="button" class="add-connection-button" (click)="addConnectionRow()">
+			<span class="material-symbols-outlined">add</span>
+			{{ VAULT_DIALOG_ADD_CONNECTION }}
+		</button>
+	}
 
 	<ng-template #footer>
-		<button type="button" class="add-account-dialog-button-ghost" (click)="onDialogClosed()">
-			{{ DIALOG_BTN_CANCEL }}
-		</button>
-		<button
-			type="button"
-			class="add-account-dialog-button-gradient"
-			[disabled]="!isValid"
-			(click)="onSubmit()">
-			{{ VAULT_DIALOG_SUBMIT }}
-		</button>
+		@if (step === 1) {
+			<button type="button" class="add-account-dialog-button-ghost" (click)="onDialogClosed()">
+				{{ DIALOG_BTN_CANCEL }}
+			</button>
+			<button type="button" class="add-account-dialog-button-gradient" (click)="goToForm()">
+				{{ DIALOG_BTN_NEXT }}
+			</button>
+		} @else {
+			<button type="button" class="add-account-dialog-button-ghost" (click)="goBack()">
+				{{ DIALOG_BTN_BACK }}
+			</button>
+			<button
+				type="button"
+				class="add-account-dialog-button-gradient"
+				[disabled]="!isValid"
+				(click)="onSubmit()">
+				{{ VAULT_DIALOG_SUBMIT }}
+			</button>
+		}
 	</ng-template>
 </p-dialog>

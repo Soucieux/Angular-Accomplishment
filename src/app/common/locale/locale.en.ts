@@ -19,6 +19,10 @@ export const DIALOG_BTN_CONFIRM = 'Confirm';
 export const DIALOG_BTN_CANCEL = 'Cancel';
 /** Shared save button label used across all dialogs. */
 export const DIALOG_BTN_SAVE = 'Save';
+/** Shared next-step button label used across multi-step dialogs. */
+export const DIALOG_BTN_NEXT = 'Next';
+/** Shared previous-step button label used across multi-step dialogs. */
+export const DIALOG_BTN_BACK = 'Back';
 /** Shared toast summary shown when a delete operation fails. */
 export const MSG_DELETE_FAILED = 'Delete failed';
 /** Shared toast summary shown when a save operation fails. */
@@ -1000,10 +1004,36 @@ export const VAULT_BANNER_SECOND = 'Now click the second node to link it';
 /** Cancel button label on the link-mode banner. */
 export const VAULT_BANNER_CANCEL = 'Cancel';
 
-/** Title of the add-account dialog. */
+/** Title of the add-account dialog (account step). */
 export const VAULT_DIALOG_TITLE = 'Add an account';
+/** Title of the add-account dialog on the step-1 kind chooser. */
+export const VAULT_DIALOG_TITLE_START = 'Add to your vault';
+/** Title of the add-account dialog on the non-account step. */
+export const VAULT_DIALOG_TITLE_IDENTIFIER = 'Add an identifier';
 /** Subtitle of the add-account dialog. */
 export const VAULT_DIALOG_SUBTITLE = 'Name it, then attach any connections';
+/** Step-1 prompt asking what kind of node to add. */
+export const VAULT_DIALOG_KIND_LABEL = 'What are you adding?';
+/** Label for the account choice on the step-1 kind chooser. */
+export const VAULT_DIALOG_KIND_ACCOUNT_LABEL = 'Account';
+/** Hint under the account choice on the step-1 kind chooser. */
+export const VAULT_DIALOG_KIND_ACCOUNT_HINT = 'A website, app, or device login';
+/** Label for the non-account choice on the step-1 kind chooser. */
+export const VAULT_DIALOG_KIND_OTHER_LABEL = 'Non-account';
+/** Hint under the non-account choice on the step-1 kind chooser. */
+export const VAULT_DIALOG_KIND_OTHER_HINT = 'An email or phone, with backups';
+/** Field label for the non-account node type dropdown. */
+export const VAULT_DIALOG_TYPE_LABEL = 'Type';
+/** Field label for the non-account name input. */
+export const VAULT_DIALOG_IDENTIFIER_NAME_LABEL = 'Name';
+/** Placeholder for the non-account name input when the email type is selected. */
+export const VAULT_DIALOG_PLACEHOLDER_EMAIL = 'e.g. jane@email.com';
+/** Placeholder for the non-account name input when the phone type is selected. */
+export const VAULT_DIALOG_PLACEHOLDER_PHONE = 'e.g. +1 555 0100';
+/** Placeholder for the non-account name input when the notes type is selected. */
+export const VAULT_DIALOG_PLACEHOLDER_NOTES = 'e.g. recovery codes, a hint…';
+/** Inline error shown when a non-account name already exists. */
+export const VAULT_DIALOG_DUPLICATE_NODE = 'An entry with this name already exists';
 /** Field label for the account name input. */
 export const VAULT_DIALOG_NAME_LABEL = 'Account name';
 /** Placeholder for the account name input. */
@@ -1035,6 +1065,8 @@ export const VAULT_DIALOG_SUBMIT = 'Add to map';
 
 /** Toast shown when an account is added to the vault. */
 export const VAULT_MSG_ACCOUNT_SAVED = 'Account added';
+/** Toast shown when a non-account node is added to the vault. */
+export const VAULT_MSG_NODE_SAVED = 'Added to your vault';
 /** Toast shown when a link is created between two nodes. */
 export const VAULT_MSG_LINK_ADDED = 'Link added';
 /** Toast shown when a link is removed. */

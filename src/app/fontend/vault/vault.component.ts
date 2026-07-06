@@ -42,6 +42,7 @@ import {
 	VAULT_VIEW_LIST,
 	VAULT_RELATION_LINKED,
 	VAULT_RELATION_MANUAL,
+	VAULT_RELATION_BACKUP,
 	VAULT_FILTER_KEY_VERIFIED,
 	VAULT_ICON_VERIFIED,
 	VAULT_GRADIENT_VERIFIED,
@@ -97,6 +98,7 @@ import {
 	VAULT_CATEGORY_DUPLICATE_NAME,
 	VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL,
 	VAULT_MSG_ACCOUNT_SAVED,
+	VAULT_MSG_NODE_SAVED,
 	VAULT_MSG_LINK_ADDED,
 	VAULT_MSG_LINK_REMOVED,
 	VAULT_MSG_SAVE_FAILED_DETAIL,
@@ -670,23 +672,23 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			(accountData: NewAccountData) => this.handleAccountSave(accountData),
 			{
 				categories: [...this.presetCategories, ...this.customCategories],
-				existingNames: this.nodes
-					.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT)
-					.map((node) => node.name)
+				existingNames: this.nodes.map((node) => node.name)
 			}
 		);
 	}
 
 	/**
-	 * Persists a new account plus its connections: adds the (optionally verified) account node,
-	 * then for each connection reuses an existing node by name or creates a new identifier of its
-	 * chosen type (email / phone / link), and links them.
+	 * Persists a new node plus its connections: adds the primary node of the chosen type (account or a
+	 * non-account identifier), then for each connection reuses an existing node by name or creates a new
+	 * identifier of its chosen type, and links them — a `linked` edge from an account, a `backup` edge
+	 * from a non-account identifier.
 	 *
 	 * @param accountData - The validated form data returned by the add-account dialog.
 	 */
 	private handleAccountSave(accountData: NewAccountData): void {
 		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
+				const isAccount = accountData.nodeType === VAULT_NODE_ACCOUNT;
 				// Resolve categories — persist a freshly created custom category first, then append its id
 				const categories = [...accountData.categories];
 				if (accountData.newCategory) {
@@ -696,15 +698,16 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 					categories.push(newCategoryId);
 				}
 
-				// Add the primary account node, carrying its verified state
-				const accountId = await this.databaseService.addVaultNode({
-					nodeType: VAULT_NODE_ACCOUNT,
+				// Add the primary node of the chosen type, carrying its verified state
+				const primaryId = await this.databaseService.addVaultNode({
+					nodeType: accountData.nodeType,
 					name: Utilities.capitalizeFirstLetterOnEachWord(accountData.name.trim()),
 					categories,
 					verified: accountData.verified
 				});
 
 				// Link each connection — reuse an existing node by name, or create a new identifier of its chosen type
+				const relation = isAccount ? VAULT_RELATION_LINKED : VAULT_RELATION_BACKUP;
 				const nodeIdsByName = new Map(
 					this.nodes.map((node) => [node.name.trim().toLowerCase(), node.id])
 				);
@@ -721,16 +724,16 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 						});
 						nodeIdsByName.set(connectionName.toLowerCase(), targetId);
 					}
-					if (targetId !== accountId) {
+					if (targetId !== primaryId) {
 						await this.databaseService.addVaultEdge({
-							sourceId: accountId,
+							sourceId: primaryId,
 							targetId,
-							relation: VAULT_RELATION_LINKED
+							relation
 						});
 					}
 				}
 				this.triggerSaveIndicator();
-				this.dialogService.showToast(SUCCESS, VAULT_MSG_ACCOUNT_SAVED);
+				this.dialogService.showToast(SUCCESS, isAccount ? VAULT_MSG_ACCOUNT_SAVED : VAULT_MSG_NODE_SAVED);
 			} catch {
 				this.dialogService.showToast(TOAST_ERROR, MSG_SAVE_FAILED, VAULT_MSG_SAVE_FAILED_DETAIL);
 			}

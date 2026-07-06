@@ -3,7 +3,7 @@
 	--vault-gradient: linear-gradient(135deg, #334155, #64748b);
 	--vault-soft: rgba(71, 85, 105, 0.12);
 	--vault-glow: rgba(71, 85, 105, 0.4);
-	--individual-item-width: 340px;
+	--individual-item-width: 440px;
 	--individual-item-gap: 12px;
 	display: block;
 	height: 100%;
@@ -233,17 +233,28 @@
 }
 
 .vault-card-top {
-	display: flex;
-	align-items: center;
-	/* 12px so the name/category left edge (avatar 38px + gap) lands at 50px, matching the
+	display: grid;
+	/* Explicit grid, not flex — a flex row's cross-axis alignment only lines up items whose box
+	   heights happen to match; the name row and the (variable-height) category picker used to share
+	   one flex child, so .vault-card-actions could never be guaranteed level with the name row. Fixed
+	   grid rows guarantee it: row 1 is always the name/verified row, row 2 is always the category row,
+	   regardless of how tall the category picker grows when its options panel opens. */
+	grid-template-columns: 38px minmax(0, 1fr) auto;
+	/* 12px column gap so the name/category left edge (avatar 38px + gap) lands at 50px, matching the
 	   connection chips' padding-left below — name, category, and chips share one edge. */
-	gap: 12px;
+	column-gap: 12px;
+	/* Matches .vault-chips' margin-top below the category row, so the gap above and below it is even. */
+	row-gap: 11px;
 }
 
 .vault-avatar {
+	grid-column: 1;
+	grid-row: 1 / 3;
+	/* start, not center — the avatar's top should share the same starting point as the name text
+	   above it, even though the 38px box is taller than the name row and extends further down. */
+	align-self: start;
 	width: 38px;
 	height: 38px;
-	flex-shrink: 0;
 	border-radius: 11px;
 	display: flex;
 	align-items: center;
@@ -260,16 +271,10 @@
 	transform: scale(1.08) rotate(-4deg);
 }
 
-.vault-card-id {
-	min-width: 0;
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	/* Matches .vault-chips' margin-top below the category row, so the gap above and below it is even. */
-	gap: 11px;
-}
-
 .vault-card-name {
+	grid-column: 2;
+	grid-row: 1;
+	min-width: 0;
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -342,6 +347,11 @@
 
 /* Category picker — the label is a button; clicking it reveals the options wrapping below it. */
 .vault-category-picker {
+	/* Spans through the actions column too — row 2 has nothing sitting in column 3 (actions live in
+	   row 1 now), so the picker can use that freed-up width instead of being capped at column 2 alone. */
+	grid-column: 2 / 4;
+	grid-row: 2;
+	min-width: 0;
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
@@ -419,6 +429,10 @@
 /* The options strip stays in the DOM and animates open/closed so both reveal and hide are smooth.
    Options wrap onto multiple rows so every category stays fully visible within the card width. */
 .vault-category-options {
+	/* Stretch across the parent's grid-spanned width — the parent's align-items: flex-start (needed so
+	   the collapsed trigger button hugs its own content) would otherwise shrink this to its own content
+	   width too, leaving unused space on the right instead of reaching the connection chips' edge. */
+	align-self: stretch;
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
@@ -477,10 +491,11 @@
 }
 
 .vault-card-actions {
+	grid-column: 3;
+	grid-row: 1;
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	flex-shrink: 0;
 }
 
 .vault-link-count {
@@ -496,18 +511,18 @@
 	font-size: 16px;
 }
 
+/* Shares .vault-card-actions .vault-delete-button's 30px circle geometry, in a neutral border
+   instead of red — this toggles edit mode, not a destructive action. */
 .vault-edit-button {
 	display: flex;
 	align-items: center;
-	gap: 5px;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 30px;
 	height: 30px;
-	padding: 0 12px;
 	border: 1.5px solid rgba(0, 0, 0, 0.12);
 	border-radius: 9999px;
 	cursor: pointer;
-	font-family: 'app-font';
-	font-size: 11px;
-	font-weight: 600;
 	background: transparent;
 }
 

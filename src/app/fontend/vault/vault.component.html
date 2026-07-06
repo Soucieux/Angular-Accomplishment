@@ -208,92 +208,36 @@
 										<span class="vault-avatar" [style.background]="account.gradient">{{
 											account.letter
 										}}</span>
-										<div class="vault-card-id">
-											<div class="vault-card-name">
-												@if (account.isEditing) {
-													<input
-														class="vault-name-input"
-														type="text"
-														[(ngModel)]="nameDraft"
-														(keyup.enter)="updateAccountName(account.id)"
-														(blur)="updateAccountName(account.id)" />
-													<button
-														type="button"
-														class="vault-verified-toggle"
-														[class.active]="account.verified"
-														(click)="
-															toggleAccountVerified(
-																account.id,
-																account.verified,
-																$event
-															)
-														">
-														<span class="material-symbols-outlined">verified</span>
-														{{ VAULT_DIALOG_VERIFIED_LABEL }}
-													</button>
-												} @else {
-													{{ account.name }}
-													@if (account.verified) {
-														<span class="vault-verified-badge">
-															<span class="material-symbols-outlined"
-																>verified</span
-															>
-														</span>
-													}
-												}
-											</div>
-											<div class="vault-category-picker">
+										<div class="vault-card-name">
+											@if (account.isEditing) {
+												<input
+													class="vault-name-input"
+													type="text"
+													[(ngModel)]="nameDraft"
+													(keyup.enter)="updateAccountName(account.id)"
+													(blur)="updateAccountName(account.id)" />
 												<button
 													type="button"
-													class="vault-card-category"
-													[class.open]="categoryPickerId === account.id"
-													[class.readonly]="!account.isEditing"
-													(click)="toggleCategoryPicker(account.id, $event)">
-													@if (account.categoryChips.length) {
-														@for (chip of account.categoryChips; track chip.key) {
-															<span class="vault-category-chip">
-																<span
-																	class="vault-category-chip-dot"
-																	[style.background]="chip.gradient"></span>
-																{{ chip.label }}
-															</span>
-														}
-													} @else {
-														<span
-															class="vault-category-chip vault-category-uncategorized"
-															>{{ VAULT_CATEGORY_UNCATEGORIZED_LABEL }}</span
-														>
-													}
-													<span class="material-symbols-outlined vault-category-caret"
-														>chevron_right</span
-													>
+													class="vault-verified-toggle"
+													[class.active]="account.verified"
+													(click)="
+														toggleAccountVerified(
+															account.id,
+															account.verified,
+															$event
+														)
+													">
+													<span class="material-symbols-outlined">verified</span>
+													{{ VAULT_DIALOG_VERIFIED_LABEL }}
 												</button>
-												<div
-													class="vault-category-options"
-													[class.open]="categoryPickerId === account.id">
-													@for (option of assignableCategories; track option.key) {
-														<button
-															type="button"
-															class="vault-category-option"
-															[class.current]="
-																account.categoryKeys.includes(option.key)
-															"
-															(click)="
-																toggleAccountCategory(
-																	account.id,
-																	option.key,
-																	account.categoryKeys,
-																	$event
-																)
-															">
-															<span
-																class="vault-category-option-dot"
-																[style.background]="option.gradient"></span>
-															{{ option.label }}
-														</button>
-													}
-												</div>
-											</div>
+											} @else {
+												{{ account.name }}
+												@if (account.verified) {
+													<span class="vault-verified-badge">
+														<span class="material-symbols-outlined">verified</span>
+													</span>
+												}
+											}
 										</div>
 										<div class="vault-card-actions">
 											<div class="vault-link-count">
@@ -304,11 +248,11 @@
 												type="button"
 												class="vault-edit-button"
 												[class.active]="account.isEditing"
+												[attr.aria-label]="account.isEditing ? VAULT_LIST_DONE : VAULT_LIST_EDIT"
 												(click)="toggleEditMode(account.id, $event)">
 												<span class="material-symbols-outlined">{{
 													account.isEditing ? 'check' : 'edit'
 												}}</span>
-												{{ account.isEditing ? VAULT_LIST_DONE : VAULT_LIST_EDIT }}
 											</button>
 											<button
 												type="button"
@@ -317,6 +261,55 @@
 												(click)="openDeleteNodeDialog(account.id, $event)">
 												<span class="material-symbols-outlined">delete</span>
 											</button>
+										</div>
+										<div class="vault-category-picker">
+											<button
+												type="button"
+												class="vault-card-category"
+												[class.open]="categoryPickerId === account.id"
+												[class.readonly]="!account.isEditing"
+												(click)="toggleCategoryPicker(account.id, $event)">
+												@if (account.categoryChips.length) {
+													@for (chip of account.categoryChips; track chip.key) {
+														<span class="vault-category-chip">
+															<span
+																class="vault-category-chip-dot"
+																[style.background]="chip.gradient"></span>
+															{{ chip.label }}
+														</span>
+													}
+												} @else {
+													<span class="vault-category-chip vault-category-uncategorized"
+														>{{ VAULT_CATEGORY_UNCATEGORIZED_LABEL }}</span
+													>
+												}
+												<span class="material-symbols-outlined vault-category-caret"
+													>chevron_right</span
+												>
+											</button>
+											<div
+												class="vault-category-options"
+												[class.open]="categoryPickerId === account.id">
+												@for (option of assignableCategories; track option.key) {
+													<button
+														type="button"
+														class="vault-category-option"
+														[class.current]="account.categoryKeys.includes(option.key)"
+														(click)="
+															toggleAccountCategory(
+																account.id,
+																option.key,
+																account.categoryKeys,
+																$event
+															)
+														">
+														<span
+															class="vault-category-option-dot"
+															[style.background]="option.gradient"></span>
+														{{ option.label }}
+													</button>
+												}
+											</div>
 										</div>
 									</div>
 									@if (account.hasLinks) {

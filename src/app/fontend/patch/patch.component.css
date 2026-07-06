@@ -1303,18 +1303,15 @@
 }
 
 ::ng-deep .component-dropdown-panel .component-option .material-icons,
-::ng-deep .component-dropdown-panel .component-option .material-symbols-outlined {
-	font-size: 18px;
-	width: 22px;
-	text-align: center;
-	flex-shrink: 0;
-	color: #667eea;
-}
-
+::ng-deep .component-dropdown-panel .component-option .material-symbols-outlined,
 ::ng-deep .component-dropdown-panel .component-option .pi {
-	font-size: 15px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	width: 22px;
-	text-align: center;
+	height: 22px;
+	font-size: 18px;
+	line-height: 1;
 	flex-shrink: 0;
 	color: #667eea;
 }

@@ -2,6 +2,7 @@
 
 @if (currentUser$ | async; as user) {
 	<div class="glass-card">
+		<div class="account-top-row">
 		<!-- Profile header -->
 		<div class="profile-header">
 			@if (getUserAvatarUrl(user)) {
@@ -37,6 +38,27 @@
 					}
 				</div>
 			</div>
+		</div>
+
+		<!-- Cadence: timed-access settings -->
+		<div class="cadence-widget">
+			<div class="card-header">
+				<span class="material-symbols-outlined card-icon">{{ CADENCE_ICON }}</span>
+				<span class="card-title">{{ CADENCE_TITLE }}</span>
+			</div>
+			<div class="cadence-row">
+				<label class="field-label">{{ CADENCE_VAULT_PASSPHRASE_LABEL }}</label>
+				<p-select
+					[options]="graceOptions"
+					optionLabel="label"
+					optionValue="value"
+					[appendTo]="'body'"
+					panelStyleClass="dropdown-panel-font cadence-panel"
+					[(ngModel)]="vaultGraceValue"
+					(onChange)="onVaultGraceChange($event.value)"
+					styleClass="cadence-select" />
+			</div>
+		</div>
 		</div>
 
 		<!-- 2×2 card grid -->

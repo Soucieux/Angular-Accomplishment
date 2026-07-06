@@ -274,6 +274,19 @@ export const PASSPHRASE_LOCK_STATE_LOCKED = 'locked';
 export const PASSPHRASE_LOCK_LOG_CALL_FAILED = 'Passphrase lock Cloud Function call failed';
 
 /* ─────────────────────────────────────────
+   Cadence — timed-access (vault passphrase grace)
+───────────────────────────────────────── */
+
+/** Cadence grace value: always require the vault passphrase on every visit (default). */
+export const VAULT_GRACE_ALWAYS = 0;
+/** Cadence grace value: after the first unlock, skip the passphrase for the rest of the session (until reload). */
+export const VAULT_GRACE_UNTIL_RELOAD = -1;
+/** Selectable minute-window grace values, in display order. */
+export const VAULT_GRACE_MINUTE_OPTIONS = [1, 3, 5, 10, 30];
+/** Material symbol shown on the Cadence widget header. */
+export const CADENCE_ICON = 'timer';
+
+/* ─────────────────────────────────────────
    Activity log type discriminators
 ───────────────────────────────────────── */
 
@@ -327,6 +340,8 @@ export const STATS_FIELD_RECIPE_LIST = 'recipeList';
 export const STATS_FIELD_GENRE = 'genre';
 export const STATS_FIELD_ACTIVITY_STREAK = 'activityStreak';
 export const STATS_FIELD_ACTIVITY_STREAK_DATE = 'activityStreakLastDate';
+/** Cadence preference: minutes the vault stays unlocked after leaving (0 = always require, -1 = until reload). */
+export const STATS_FIELD_VAULT_GRACE = 'vaultUnlockGraceMinutes';
 export const STATS_FIELD_IS_USER_STATS = 'isUserStats';
 /** Marks a document as non-global within the statistics collection; the single global stats document has it unset. */
 export const STATS_FIELD_IS_GROUP = 'isGroup';

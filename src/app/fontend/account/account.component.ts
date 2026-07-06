@@ -38,7 +38,12 @@ import {
 	CONNECT_ERROR_ALREADY_REQUESTED,
 	SUCCESS,
 	TOAST_WARN,
-	PASSPHRASE_LOCK_KEY_VAULT
+	PASSPHRASE_LOCK_KEY_VAULT,
+	STATS_FIELD_VAULT_GRACE,
+	VAULT_GRACE_ALWAYS,
+	VAULT_GRACE_UNTIL_RELOAD,
+	VAULT_GRACE_MINUTE_OPTIONS,
+	CADENCE_ICON
 } from '../../common/constants';
 import {
 	ACCOUNT_LABEL_CHANGE_PASSWORD,
@@ -139,8 +144,15 @@ import {
 	ACCOUNT_STRENGTH_FAIR,
 	ACCOUNT_STRENGTH_GOOD,
 	ACCOUNT_STRENGTH_STRONG,
-	ACTIVE_LOCALE
+	ACTIVE_LOCALE,
+	CADENCE_TITLE,
+	CADENCE_VAULT_PASSPHRASE_LABEL,
+	CADENCE_GRACE_ALWAYS,
+	CADENCE_GRACE_UNTIL_RELOAD,
+	CADENCE_GRACE_MINUTE_SUFFIX,
+	CADENCE_MSG_GRACE_SAVED
 } from '../../common/locale/locale-strings';
+import { Select } from 'primeng/select';
 import {
 	AccountMilestone,
 	AccountStat,
@@ -156,7 +168,7 @@ import { UnexpectedError } from '../../common/error/unexpected.error';
 @Component({
 	selector: 'app-account',
 	standalone: true,
-	imports: [CommonModule, FormsModule],
+	imports: [CommonModule, FormsModule, Select],
 	templateUrl: './account.component.html',
 	styleUrls: ['../../common/glass-card.css', './account.component.css']
 })
@@ -176,6 +188,9 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly ACCOUNT_LABEL_INNER_WORLD_TITLE = ACCOUNT_LABEL_INNER_WORLD_TITLE;
 	protected readonly ACCOUNT_LABEL_MILESTONES_TITLE = ACCOUNT_LABEL_MILESTONES_TITLE;
 	protected readonly ACCOUNT_LABEL_DANGER_ZONE_TITLE = ACCOUNT_LABEL_DANGER_ZONE_TITLE;
+	protected readonly CADENCE_TITLE = CADENCE_TITLE;
+	protected readonly CADENCE_VAULT_PASSPHRASE_LABEL = CADENCE_VAULT_PASSPHRASE_LABEL;
+	protected readonly CADENCE_ICON = CADENCE_ICON;
 	protected readonly LABEL_USERNAME = LABEL_USERNAME;
 	protected readonly ACCOUNT_LABEL_SECURITY_TITLE = ACCOUNT_LABEL_SECURITY_TITLE;
 	protected readonly ACCOUNT_LABEL_CONNECTIONS_TITLE = ACCOUNT_LABEL_CONNECTIONS_TITLE;
@@ -281,6 +296,16 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected showOldPassword = false;
 	protected showNewPassword = false;
 	protected showConfirmPassword = false;
+	// Cadence: the vault passphrase grace preference and its dropdown options.
+	protected vaultGraceValue: number = VAULT_GRACE_ALWAYS;
+	protected readonly graceOptions: { label: string; value: number }[] = [
+		{ label: CADENCE_GRACE_ALWAYS, value: VAULT_GRACE_ALWAYS },
+		...VAULT_GRACE_MINUTE_OPTIONS.map((minutes) => ({
+			label: `${minutes}${CADENCE_GRACE_MINUTE_SUFFIX}`,
+			value: minutes
+		})),
+		{ label: CADENCE_GRACE_UNTIL_RELOAD, value: VAULT_GRACE_UNTIL_RELOAD }
+	];
 	private statsSub?: Subscription;
 
 	constructor(
@@ -341,6 +366,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.milestoneList = this.buildMilestoneList(milestones);
 			this.usernameChangedDate = (doc[STATS_FIELD_USERNAME_CHANGED] as string) ?? '';
 			this.passwordChangedDate = (doc[STATS_FIELD_PASSWORD_CHANGED] as string) ?? '';
+			this.vaultGraceValue = (doc[STATS_FIELD_VAULT_GRACE] as number) ?? VAULT_GRACE_ALWAYS;
 			// Connections data lives on this same live user document — real-time, no one-shot loads.
 			this.connectCode = (doc[STATS_FIELD_CONNECT_CODE] as string) ?? '';
 			this.incomingRequests = Utilities.toArray(
@@ -398,6 +424,19 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		} catch {
 			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 		}
+	}
+
+	/**
+	 * Persists the chosen Cadence vault-passphrase grace preference to the stats document, then
+	 * confirms with a success toast. Opens the unexpected-error dialog if the write fails.
+	 *
+	 * @param value - The selected grace value (0 = always require, -1 = until reload, else minutes).
+	 */
+	protected onVaultGraceChange(value: number): void {
+		(this.databaseService as CloudbaseService)
+			.updateUserStatsFields({ [STATS_FIELD_VAULT_GRACE]: value })
+			.then(() => this.dialogService.showToast(SUCCESS, CADENCE_MSG_GRACE_SAVED))
+			.catch(() => this.dialogService.showUnexpectedError(this.dialogComponentContainer));
 	}
 
 	/**

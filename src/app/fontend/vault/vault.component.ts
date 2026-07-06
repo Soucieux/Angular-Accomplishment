@@ -135,6 +135,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { NewCategoryData } from '../portal/portal.model';
 import { TimeoutService } from '../../common/timeout/timeout.service';
+import { VaultAccessService } from '../../backend/vault-access-service/vault-access.service';
 import { GraphCanvasComponent } from './graph-canvas/graph-canvas.component';
 import { BlockedCardComponent } from '../../common/blocked-card/blocked-card.component';
 import { PassphraseLockComponent } from '../../common/passphrase-lock/passphrase-lock.component';
@@ -225,6 +226,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		private dialogService: DialogService,
 		private databaseService: DatabaseService,
 		private timeoutService: TimeoutService,
+		private vaultAccessService: VaultAccessService,
 		private cdr: ChangeDetectorRef,
 		private ngZone: NgZone,
 		private destroyRef: DestroyRef,
@@ -238,10 +240,14 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * The callback runs inside ngZone.run() because CloudBase WebSocket callbacks fire
 	 * outside Angular's zone, and calls detectChanges() so the first snapshot paints
 	 * immediately — without it the graph and category bar stay blank at load until a user
-	 * interaction forces a tick.
+	 * interaction forces a tick. Also skips the passphrase gate up front when the Cadence
+	 * grace window is still open (see {@link VaultAccessService.shouldSkipPassphrase}).
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
+			if (this.vaultAccessService.shouldSkipPassphrase()) {
+				this.isUnlocked = true;
+			}
 			this.timeoutService.start(TIMEOUT_KEY_VAULT, () => {
 				this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
 			});
@@ -278,22 +284,26 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Clears the dialog container, cancels the loading-timeout guard and pending
-	 * save-indicator timers, and logs destruction.
+	 * save-indicator timers, stamps the Cadence grace window's start (leaving the vault),
+	 * and logs destruction.
 	 */
 	ngOnDestroy(): void {
 		this.dialogComponentContainer?.clear();
 		this.timeoutService.clear(TIMEOUT_KEY_VAULT);
 		Object.values(this.saveIndicatorTimeouts).forEach(clearTimeout);
+		this.vaultAccessService.markLeft();
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
 	// ── Passphrase lock handler ───────────────────────────────────────────────
 
 	/**
-	 * Marks the page as unlocked once the passphrase gate reports success, revealing the real content.
+	 * Marks the page as unlocked once the passphrase gate reports success, revealing the real content
+	 * and recording the unlock so the Cadence grace window can skip the gate on later visits.
 	 */
 	protected onVaultUnlocked(): void {
 		this.isUnlocked = true;
+		this.vaultAccessService.markUnlocked();
 	}
 
 	// ── View and selection handlers ──────────────────────────────────────────

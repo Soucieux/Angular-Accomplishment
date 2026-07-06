@@ -719,6 +719,12 @@ export const ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION = '忘记保险箱口令时�
 export const ACCOUNT_DIALOG_DELETE_VAULT_MSG =
 	'此操作将删除你的保险箱口令，你可在下次访问时重新设置。你的保险箱数据不会被删除。';
 export const ACCOUNT_MSG_VAULT_PASSPHRASE_REMOVED = '保险箱口令已删除';
+export const CADENCE_TITLE = '节奏';
+export const CADENCE_VAULT_PASSPHRASE_LABEL = '保险箱口令';
+export const CADENCE_GRACE_ALWAYS = '每次都需要';
+export const CADENCE_GRACE_UNTIL_RELOAD = '直到重新加载';
+export const CADENCE_GRACE_MINUTE_SUFFIX = ' 分钟';
+export const CADENCE_MSG_GRACE_SAVED = '保险箱访问时限已保存';
 export const ACCOUNT_STAT_LABEL_FILMS = '已记录影片';
 export const ACCOUNT_STAT_LABEL_QUOTES = '心声';
 export const ACCOUNT_STAT_LABEL_DEBTS = '已追踪债务';

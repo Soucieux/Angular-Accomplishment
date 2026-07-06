@@ -857,6 +857,12 @@ export const ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION =
 export const ACCOUNT_DIALOG_DELETE_VAULT_MSG =
 	'This removes your vault passphrase so you can set a new one on your next visit. Your vault data will not be deleted.';
 export const ACCOUNT_MSG_VAULT_PASSPHRASE_REMOVED = 'Vault passphrase removed';
+export const CADENCE_TITLE = 'Cadence';
+export const CADENCE_VAULT_PASSPHRASE_LABEL = 'Vault Passphrase';
+export const CADENCE_GRACE_ALWAYS = 'Always require';
+export const CADENCE_GRACE_UNTIL_RELOAD = 'Until I reload';
+export const CADENCE_GRACE_MINUTE_SUFFIX = ' min';
+export const CADENCE_MSG_GRACE_SAVED = 'Vault access timing saved';
 export const ACCOUNT_STAT_LABEL_FILMS = 'Films Logged';
 export const ACCOUNT_STAT_LABEL_QUOTES = 'Quotes';
 export const ACCOUNT_STAT_LABEL_DEBTS = 'Debts Tracked';

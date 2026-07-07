@@ -988,16 +988,6 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				visible = categoryBase.has(edge.sourceId) || categoryBase.has(edge.targetId);
 			line.style.display = visible ? '' : 'none';
 
-			if (edge.relation === VAULT_RELATION_BACKUP) {
-				/* Always rendered at full bold strength — never dimmed by selection or hop-level state —
-				   so a backup link stays legible in a map full of nodes without anything selected. Filter
-				   visibility above still applies (a backup edge to a filtered-out node still hides). */
-				line.setAttribute('stroke', VAULT_BACKUP_LINK_COLOR);
-				line.setAttribute('stroke-width', VAULT_BACKUP_LINK_WIDTH);
-				line.setAttribute('opacity', '1');
-				return;
-			}
-
 			const sourceLevel = levels ? levels[edge.sourceId] : undefined;
 			const targetLevel = levels ? levels[edge.targetId] : undefined;
 			const reach =
@@ -1005,6 +995,18 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				sourceLevel !== undefined &&
 				targetLevel !== undefined &&
 				Math.max(sourceLevel, targetLevel) <= this.maxReachLevel;
+
+			if (edge.relation === VAULT_RELATION_BACKUP) {
+				/* Keeps its bold dashed styling regardless of selection, staying at full strength when
+				   nothing is selected (so it reads clearly at rest) or when it's part of the highlighted
+				   reach — but dims like any other out-of-reach edge once a different node is selected.
+				   Filter visibility above still applies (a backup edge to a filtered-out node still hides). */
+				line.setAttribute('stroke', VAULT_BACKUP_LINK_COLOR);
+				line.setAttribute('stroke-width', VAULT_BACKUP_LINK_WIDTH);
+				line.setAttribute('opacity', !selectedId || reach ? '1' : '0.08');
+				return;
+			}
+
 			const level = reach ? Math.max(sourceLevel ?? 0, targetLevel ?? 0) : 0;
 			line.setAttribute('stroke', reach ? this.levelColor(level) : VAULT_EDGE_RESTING_COLOR);
 			line.setAttribute('stroke-width', reach ? (level <= 1 ? '2.6' : '1.8') : '1.2');

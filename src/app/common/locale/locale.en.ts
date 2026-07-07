@@ -954,6 +954,8 @@ export const VAULT_LABEL_IDENTIFIERS = 'identifiers';
 export const VAULT_PAGE_SUBTITLE = 'How your accounts, emails, and phones connect';
 /** Placeholder shown in the Vault search field. */
 export const VAULT_SEARCH_PLACEHOLDER = 'Search';
+/** Aria-label for the button that clears the Vault search field. */
+export const VAULT_SEARCH_CLEAR = 'Clear search';
 /** Label for the graph-view toggle tab. */
 export const VAULT_TAB_GRAPH = 'Graph';
 /** Label for the list-view toggle tab. */

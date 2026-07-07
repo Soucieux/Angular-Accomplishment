@@ -20,6 +20,15 @@
 							type="text"
 							[(ngModel)]="query"
 							[placeholder]="VAULT_SEARCH_PLACEHOLDER" />
+						@if (query) {
+							<button
+								type="button"
+								class="vault-search-clear"
+								[attr.aria-label]="VAULT_SEARCH_CLEAR"
+								(click)="clearQuery()">
+								<span class="material-symbols-outlined">close</span>
+							</button>
+						}
 					</div>
 
 					@if (!utilities.isMobile()) {
@@ -89,7 +98,7 @@
 									<span class="vault-stat-label">{{ VAULT_LABEL_ACCOUNTS }}</span>
 									@if (detail.connectedAccounts.length) {
 										<span class="material-symbols-outlined vault-stat-more">expand_more</span>
-										<div class="vault-connection-popover">
+										<div class="vault-connection-popover" #connectionPopover>
 											@for (account of detail.connectedAccounts; track account.name) {
 												<div class="vault-connection-row">
 													<span
@@ -111,7 +120,7 @@
 									<span class="vault-stat-label">{{ VAULT_LABEL_IDENTIFIERS }}</span>
 									@if (detail.identifiers.length) {
 										<span class="material-symbols-outlined vault-stat-more">expand_more</span>
-										<div class="vault-connection-popover">
+										<div class="vault-connection-popover" #connectionPopover>
 											@for (identifier of detail.identifiers; track identifier.name) {
 												<div class="vault-connection-row">
 													<span

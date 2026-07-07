@@ -809,6 +809,7 @@ export const VAULT_LABEL_ACCOUNTS = '账户';
 export const VAULT_LABEL_IDENTIFIERS = '标识项';
 export const VAULT_PAGE_SUBTITLE = '你的账户、邮箱与电话如何相互关联';
 export const VAULT_SEARCH_PLACEHOLDER = '搜索';
+export const VAULT_SEARCH_CLEAR = '清除搜索';
 export const VAULT_TAB_GRAPH = '图谱';
 export const VAULT_TAB_LIST = '列表';
 export const VAULT_BTN_ADD = '添加';

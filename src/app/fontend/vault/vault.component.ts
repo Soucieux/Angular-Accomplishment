@@ -9,7 +9,9 @@ import {
 	OnDestroy,
 	OnInit,
 	PLATFORM_ID,
+	QueryList,
 	ViewChild,
+	ViewChildren,
 	ViewContainerRef
 } from '@angular/core';
 import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
@@ -55,6 +57,7 @@ import {
 import {
 	NAV_LABEL_VAULT,
 	VAULT_SEARCH_PLACEHOLDER,
+	VAULT_SEARCH_CLEAR,
 	VAULT_TAB_GRAPH,
 	VAULT_TAB_LIST,
 	VAULT_BTN_ADD,
@@ -160,8 +163,10 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	// This value is automatically assigned to ViewContainerRef (a predefined keyword) after view is initialized
 	private dialogComponentContainer!: ViewContainerRef;
 	@ViewChild('vaultContent') private vaultContentRef?: ElementRef<HTMLElement>;
+	@ViewChildren('connectionPopover') private connectionPopoverRefs!: QueryList<ElementRef<HTMLElement>>;
 	protected readonly NAV_LABEL_VAULT = NAV_LABEL_VAULT;
 	protected readonly VAULT_SEARCH_PLACEHOLDER = VAULT_SEARCH_PLACEHOLDER;
+	protected readonly VAULT_SEARCH_CLEAR = VAULT_SEARCH_CLEAR;
 	protected readonly VAULT_TAB_GRAPH = VAULT_TAB_GRAPH;
 	protected readonly VAULT_TAB_LIST = VAULT_TAB_LIST;
 	protected readonly VAULT_BTN_ADD = VAULT_BTN_ADD;
@@ -268,9 +273,10 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 						try {
 							this.applyRecords(records);
 							this.cdr.detectChanges();
-							// Re-wire the auto-hide scrollbar now the content is rendered — ngAfterViewInit
-							// can run before the content exists; this idempotent call catches that case.
+							/* Re-wire the auto-hide scrollbars now the content is rendered — ngAfterViewInit
+							   can run before the content exists; these idempotent calls catch that case. */
 							Utilities.attachScrollAutoHide(this.vaultContentRef?.nativeElement);
+							this.attachConnectionPopoverScrollbars();
 						} catch (error: unknown) {
 							LOG.error(this.className, VAULT_LOG_APPLY_FAILED, error as Error);
 						}
@@ -280,11 +286,13 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Attaches the auto-hide scrollbar behaviour to the scrolling content area.
+	 * Attaches the auto-hide scrollbar behaviour to the scrolling content area and the
+	 * connection-count popovers.
 	 */
 	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
 			Utilities.attachScrollAutoHide(this.vaultContentRef?.nativeElement);
+			this.attachConnectionPopoverScrollbars();
 		}
 	}
 
@@ -332,6 +340,13 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.typeFilter = null;
 		this.linkMode = false;
 		this.linkSourceId = null;
+	}
+
+	/**
+	 * Clears the search query.
+	 */
+	protected clearQuery(): void {
+		this.query = '';
 	}
 
 	/**
@@ -523,7 +538,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			});
 	}
 
-	// ── Internal data writes ─────────────────────────────────────────────────
+	// ── Removal handlers ─────────────────────────────────────────────────────
 
 	/**
 	 * Removes a link (edge) from the vault and reports the result.
@@ -911,6 +926,13 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	// ── Private helpers ──────────────────────────────────────────────────────
+
+	/**
+	 * Attaches the auto-hide scrollbar behaviour to every rendered connection-count popover.
+	 */
+	private attachConnectionPopoverScrollbars(): void {
+		this.connectionPopoverRefs?.forEach((ref) => Utilities.attachScrollAutoHide(ref.nativeElement));
+	}
 
 	/**
 	 * Splits a vault emission into typed node, edge, and category collections, then derives the

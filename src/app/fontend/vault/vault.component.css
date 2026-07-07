@@ -18,10 +18,6 @@
 	box-sizing: border-box;
 }
 
-.access-denied-wrapper {
-	height: 100%;
-}
-
 /* ─────────────────────────────────────────
    Header
 ───────────────────────────────────────── */
@@ -83,7 +79,7 @@
 .vault-search-input {
 	width: 100%;
 	height: 41px;
-	padding: 0 16px;
+	padding: 0 34px 0 16px;
 	border: none;
 	border-radius: 20px;
 	background: rgba(255, 255, 255, 0.8);
@@ -98,6 +94,32 @@
 
 .vault-search-input:focus {
 	box-shadow: 0 0 0 3px var(--vault-soft);
+}
+
+.vault-search-clear {
+	position: absolute;
+	top: 50%;
+	right: 10px;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border: none;
+	border-radius: 9999px;
+	background: transparent;
+	color: #8a8a8a;
+	cursor: pointer;
+}
+
+.vault-search-clear .material-symbols-outlined {
+	font-size: 16px;
+}
+
+.vault-search-clear:hover {
+	background: rgba(0, 0, 0, 0.06);
+	color: #1a1a1a;
 }
 
 .vault-view-toggle {
@@ -991,6 +1013,8 @@
 	max-width: 280px;
 	max-height: 240px;
 	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
 	padding: 10px;
 	border-radius: 12px;
 	background: #ffffff;
@@ -1002,7 +1026,34 @@
 	transition:
 		opacity 0.15s ease,
 		transform 0.15s ease,
-		visibility 0.15s;
+		visibility 0.15s,
+		scrollbar-color 0.4s ease;
+}
+
+.vault-connection-popover::-webkit-scrollbar {
+	width: 8px;
+}
+
+.vault-connection-popover::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.vault-connection-popover::-webkit-scrollbar-thumb {
+	background: transparent;
+	border-radius: 999px;
+	transition: background 0.4s ease;
+}
+
+.vault-connection-popover.is-scrolling {
+	scrollbar-color: var(--vault-glow) transparent;
+}
+
+.vault-connection-popover.is-scrolling::-webkit-scrollbar-thumb {
+	background: var(--vault-glow);
+}
+
+.vault-connection-popover.is-scrolling::-webkit-scrollbar-thumb:hover {
+	background: var(--vault-accent);
 }
 
 .vault-stat-accounts.has-popover:hover .vault-connection-popover,
@@ -1284,12 +1335,6 @@
 
 	.vault-header {
 		flex-wrap: wrap;
-	}
-
-	.vault-search {
-		order: 3;
-		flex-basis: 100%;
-		max-width: none;
 	}
 
 	.vault-stat-pills {

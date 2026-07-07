@@ -18,6 +18,8 @@ import {
 	ENT_VTA_STYLE_ID,
 	ENT_VT_CLASS_LEAVING,
 	ENT_VT_CLASS_ENTERING,
+	ENT_VT_NAME_PREFIX,
+	ENT_DOUBAN_MOVIE_URL_PREFIX,
 	ENT_MSG_UPDATE_GENRE_FAILED,
 	ENT_MSG_UPDATE_RATE_FAILED_PREFIX,
 	ENT_MSG_API_EMPTY_RESPONSE,
@@ -52,6 +54,7 @@ import {
 	ENT_LABEL_CAST,
 	ENT_LABEL_FILMS,
 	ENT_LABEL_TO_WATCH,
+	ENT_ARIA_DOUBAN_LINK,
 	genreLabel as resolveGenreLabel,
 	ENT_LOG_START_SEARCHING,
 	ENT_LOG_SUMMARY_HEADER,
@@ -160,6 +163,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected readonly ENT_MSG_LOADING = ENT_MSG_LOADING;
 	protected readonly ENT_LABEL_FILMS = ENT_LABEL_FILMS;
 	protected readonly ENT_LABEL_TO_WATCH = ENT_LABEL_TO_WATCH;
+	protected readonly ENT_ARIA_DOUBAN_LINK = ENT_ARIA_DOUBAN_LINK;
+	protected readonly ENT_VT_NAME_PREFIX = ENT_VT_NAME_PREFIX;
+	protected readonly ENT_DOUBAN_MOVIE_URL_PREFIX = ENT_DOUBAN_MOVIE_URL_PREFIX;
 	protected isMoviesLoading = true;
 	protected isSearching: boolean = false;
 	private sessionId: number = 0;

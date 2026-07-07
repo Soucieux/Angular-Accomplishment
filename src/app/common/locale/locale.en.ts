@@ -337,6 +337,8 @@ export const ENT_SEARCH_PLACEHOLDER = 'Search movies...';
 export const ENT_LABEL_FILMS = 'films';
 /** Secondary label on each category card (e.g. "10 to watch"). */
 export const ENT_LABEL_TO_WATCH = 'to watch';
+/** Aria-label for the link to a movie's Douban page. */
+export const ENT_ARIA_DOUBAN_LINK = 'Open on Douban';
 /** Button label shown while a movie-rate search is in progress. */
 export const ENT_BTN_STOP = 'STOP';
 /** Button label shown after a movie-rate search completes or is interrupted. */

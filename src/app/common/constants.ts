@@ -570,6 +570,10 @@ export const ENT_VTA_STYLE_ID = 'ent-vta-styles';
 export const ENT_VT_CLASS_LEAVING = 'vt-leaving';
 /** CSS view-transition-class value applied to movie cards being filtered in. */
 export const ENT_VT_CLASS_ENTERING = 'vt-entering';
+/** Prefix used to build each movie card's unique view-transition-name. */
+export const ENT_VT_NAME_PREFIX = 'movie-';
+/** URL prefix a movie ID is appended to for the "Open on Douban" link. */
+export const ENT_DOUBAN_MOVIE_URL_PREFIX = 'https://movie.douban.com/subject/';
 
 export const NO_RATE = '-1';
 export const RATE_DECREASED = 'decreased';

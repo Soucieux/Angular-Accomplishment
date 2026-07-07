@@ -1,11 +1,11 @@
 @let stats = statistics$ | async;
 @let selectedGenre = selectedGenres$ | async;
-@if (utilities.getIsUserAlive() && stats !== null) {
+@if (utilities.getIsUserAlive()) {
 	<div class="container-entertainment">
 		<div class="top-bar">
 			<div class="top-bar-left">
 				<h1 class="bar-title">{{ ENT_TITLE_PAGE }}</h1>
-				<span class="count-pill">{{ stats.totalFilms }} {{ ENT_LABEL_FILMS }}</span>
+				<span class="count-pill">{{ stats?.totalFilms ?? 0 }} {{ ENT_LABEL_FILMS }}</span>
 			</div>
 			<div class="search-input-wrapper hide-on-narrow-or-mobile">
 				<span class="material-symbols-outlined search-icon-input">search</span>
@@ -44,40 +44,42 @@
 			</div>
 		</div>
 		<div class="category-row">
-			@for (genre of stats.genre | keyvalue; track genre.key; let i = $index) {
-				<button
-					class="category-card"
-					[class.card-active]="selectedGenre === genre.key"
-					[style.transform]="
-						selectedGenre === genre.key ? 'rotate(0deg)' : 'rotate(' + getGenreRotation(i) + ')'
-					"
-					[style.background]="getCardBackground(i, selectedGenre === genre.key)"
-					[style.box-shadow]="getCardShadow(i, selectedGenre === genre.key)"
-					(click)="filterByGenre($any(genre.key))">
-					<span
-						class="pushpin"
-						[style.background]="getGenreColor(i)"
-						[style.box-shadow]="'0 2px 8px ' + getGenreColor(i) + '88'">
-					</span>
-					<span class="card-genre-name">{{ genreLabel($any(genre.key)) }}</span>
-					<div class="card-count-row">
-						<span class="card-count" [style.color]="getGenreColor(i)">{{ genre.value }}</span>
-						<span class="card-watch-label">{{ ENT_LABEL_TO_WATCH }}</span>
-					</div>
-					<div class="card-progress-bar hide-on-narrow-or-mobile">
-						@for (
-							filled of getFilledBlocks(+genre.value, getCorkMax(stats.genre));
-							track $index
-						) {
-							<span
-								class="progress-block"
-								[class.block-filled]="filled"
-								[style.background]="filled ? getGenreColor(i) : 'transparent'"
-								[style.border-color]="filled ? getGenreColor(i) : getGenreColor(i) + '55'">
-							</span>
-						}
-					</div>
-				</button>
+			@if (stats) {
+				@for (genre of stats.genre | keyvalue; track genre.key; let i = $index) {
+					<button
+						class="category-card"
+						[class.card-active]="selectedGenre === genre.key"
+						[style.transform]="
+							selectedGenre === genre.key ? 'rotate(0deg)' : 'rotate(' + getGenreRotation(i) + ')'
+						"
+						[style.background]="getCardBackground(i, selectedGenre === genre.key)"
+						[style.box-shadow]="getCardShadow(i, selectedGenre === genre.key)"
+						(click)="filterByGenre($any(genre.key))">
+						<span
+							class="pushpin"
+							[style.background]="getGenreColor(i)"
+							[style.box-shadow]="'0 2px 8px ' + getGenreColor(i) + '88'">
+						</span>
+						<span class="card-genre-name">{{ genreLabel($any(genre.key)) }}</span>
+						<div class="card-count-row">
+							<span class="card-count" [style.color]="getGenreColor(i)">{{ genre.value }}</span>
+							<span class="card-watch-label">{{ ENT_LABEL_TO_WATCH }}</span>
+						</div>
+						<div class="card-progress-bar hide-on-narrow-or-mobile">
+							@for (
+								filled of getFilledBlocks(+genre.value, getCorkMax(stats.genre));
+								track $index
+							) {
+								<span
+									class="progress-block"
+									[class.block-filled]="filled"
+									[style.background]="filled ? getGenreColor(i) : 'transparent'"
+									[style.border-color]="filled ? getGenreColor(i) : getGenreColor(i) + '55'">
+								</span>
+							}
+						</div>
+					</button>
+				}
 			}
 		</div>
 
@@ -91,7 +93,7 @@
 			@for (movie of filteredMovieList$ | async; track movie.getMovieId(); let index = $index) {
 				<div
 					class="individual-item"
-					[style.view-transition-name]="'movie-' + movie.getMovieId()"
+					[style.view-transition-name]="ENT_VT_NAME_PREFIX + movie.getMovieId()"
 					[style.view-transition-class]="getMovieVtClass(movie)"
 					[style.animation-delay.ms]="getMovieEntranceDelay(index)"
 					[ngClass]="{
@@ -144,10 +146,10 @@
 								<div class="buttons-group">
 									<a
 										class="douban-button"
-										[href]="'https://movie.douban.com/subject/' + movie.getMovieId()"
+										[href]="ENT_DOUBAN_MOVIE_URL_PREFIX + movie.getMovieId()"
 										target="_blank"
 										rel="noopener noreferrer"
-										aria-label="Open on Douban">
+										[attr.aria-label]="ENT_ARIA_DOUBAN_LINK">
 										<img src="./assets/douban.png" class="douban-icon" />
 									</a>
 									@if (editedItems.has(movie.getMovieKey())) {

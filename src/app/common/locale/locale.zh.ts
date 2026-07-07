@@ -265,6 +265,7 @@ export const ENT_TITLE_PAGE = '影片';
 export const ENT_SEARCH_PLACEHOLDER = '搜索影片...';
 export const ENT_LABEL_FILMS = '部影片';
 export const ENT_LABEL_TO_WATCH = '部待观看';
+export const ENT_ARIA_DOUBAN_LINK = '在豆瓣上打开';
 export const ENT_BTN_STOP = '停止';
 export const ENT_BTN_DONE = '完成';
 export const ADD_MOVIE_LABEL_NAME = '片名';

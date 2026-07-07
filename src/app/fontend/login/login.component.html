@@ -61,6 +61,7 @@
 							pInputText
 							type="text"
 							id="reset-email"
+							autocomplete="email"
 							formControlName="email"
 							[invalid]="isInvalid('email')"
 							(keyup.enter)="onSubmit()" />
@@ -105,6 +106,7 @@
 							pInputText
 							type="password"
 							id="reset-password"
+							autocomplete="new-password"
 							formControlName="password"
 							[invalid]="isInvalid('password')"
 							(keyup.enter)="onSubmit()" />
@@ -184,7 +186,7 @@
 							pInputText
 							type="text"
 							id="username"
-							autocomplete="off"
+							autocomplete="username"
 							formControlName="username"
 							[invalid]="isInvalid('username')" />
 						<label for="username">{{ LABEL_USERNAME }}</label>
@@ -206,6 +208,7 @@
 							pInputText
 							type="text"
 							id="email"
+							autocomplete="email"
 							formControlName="email"
 							[invalid]="isInvalid('email')" />
 						<label for="email">{{ LABEL_EMAIL }}</label>
@@ -258,6 +261,7 @@
 							pInputText
 							type="text"
 							id="signup-username"
+							autocomplete="username"
 							formControlName="username"
 							[maxlength]="LOGIN_MAX_USERNAME_LENGTH"
 							[invalid]="isInvalid('username')" />
@@ -279,6 +283,7 @@
 							pInputText
 							type="password"
 							id="password"
+							[attr.autocomplete]="isSignUp ? 'new-password' : 'current-password'"
 							formControlName="password"
 							[invalid]="isInvalid('password')" />
 						<label for="password">{{ LOGIN_LABEL_PASSWORD }}</label>

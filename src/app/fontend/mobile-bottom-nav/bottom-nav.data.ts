@@ -8,7 +8,7 @@ export const NAV_ITEMS: NavItem[] = [
 		icon: 'calendar_today',
 		gradient: 'linear-gradient(135deg,#16a34a,#065f46)'
 	},
-	{ id: 'portal', label: 'Portal', icon: 'language', gradient: 'linear-gradient(135deg,#a3e635,#84cc16)' },
+	{ id: 'portal', label: 'Portal', icon: 'travel_explore', gradient: 'linear-gradient(135deg,#a3e635,#84cc16)' },
 	{
 		id: 'resonance',
 		label: 'Resonance',

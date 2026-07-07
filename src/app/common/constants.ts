@@ -127,6 +127,10 @@ export const LS_AUTH_HINT_KEY = 'auth_hint';
 export const LS_NAV_COLLAPSED_KEY = 'nav_collapsed';
 /** localStorage key used to persist the user's selected display language across page refreshes. */
 export const LS_LOCALE_KEY = 'app_locale';
+/* Stored in localStorage so a brand new device always prompts for the Vault passphrase once,
+   matching LS_AUTH_HINT_KEY's cache-first pattern — the flag alone carries no vault data, only
+   whether this specific device has ever unlocked the vault before. */
+export const LS_VAULT_UNLOCKED_KEY = 'vault_unlocked';
 export const NAV_AVATAR_FALLBACK_INITIAL = '?';
 /** Fallback background gradient for the avatar element when no user-specific colour is set. */
 export const NAV_AVATAR_GRADIENT = 'linear-gradient(135deg,#d53369,#daae51)';
@@ -344,6 +348,8 @@ export const STATS_FIELD_ACTIVITY_STREAK = 'activityStreak';
 export const STATS_FIELD_ACTIVITY_STREAK_DATE = 'activityStreakLastDate';
 /** Cadence preference: minutes the vault stays unlocked after leaving (0 = always require, -1 = until reload). */
 export const STATS_FIELD_VAULT_GRACE = 'vaultUnlockGraceMinutes';
+/** Timestamp (ms) the vault was last left, shared across every device for the Cadence grace window. */
+export const STATS_FIELD_VAULT_LAST_LEFT = 'vaultLastLeftAt';
 export const STATS_FIELD_IS_USER_STATS = 'isUserStats';
 /** Marks a document as non-global within the statistics collection; the single global stats document has it unset. */
 export const STATS_FIELD_IS_GROUP = 'isGroup';

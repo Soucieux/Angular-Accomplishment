@@ -115,6 +115,10 @@ body {
 	margin: 0;
 	font-family: 'app-font';
 	user-select: none;
+	/* Disables the browser's double-tap-to-zoom gesture (and its legacy 300ms tap delay) app-wide,
+	   so the PWA / Capacitor WKWebView shell reads as a native app rather than a mobile website.
+	   Panning and pinch-zoom are unaffected — only the double-tap gesture is removed. */
+	touch-action: manipulation;
 }
 
 /* Browser UA stylesheets reset font-family on form elements to the system font,

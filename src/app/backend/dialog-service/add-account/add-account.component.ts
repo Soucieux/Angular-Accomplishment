@@ -295,31 +295,39 @@ export class AddAccountDialogComponent {
 	 */
 	protected onSubmit(): void {
 		if (!this.isValid) return;
+
+		let payload: AddAccountDialogSubmitData;
 		if (this.kind === VAULT_DIALOG_KIND_CATEGORY) {
 			const swatch = this.pickUniqueSwatch();
-			this.submitCallback?.({
+			payload = {
 				kind: VAULT_DIALOG_KIND_CATEGORY,
 				label: this.newCategoryName.trim(),
 				hex: swatch.hex,
 				gradient: swatch.gradient,
 				icon: this.selectedIcon
-			});
-			this.onDialogClosed();
-			return;
+			};
+		} else {
+			const isAccount = this.kind === VAULT_DIALOG_KIND_ACCOUNT;
+			payload = {
+				kind: isAccount ? VAULT_DIALOG_KIND_ACCOUNT : VAULT_DIALOG_KIND_OTHER,
+				nodeType: isAccount ? VAULT_NODE_ACCOUNT : this.nodeType,
+				name: this.name.trim(),
+				verified: isAccount ? this.verified : false,
+				categories: isAccount ? [...this.selectedCategoryKeys] : [],
+				connections: this.connections
+					.map((connection) => ({ value: connection.value.trim(), type: connection.type }))
+					.filter((connection) => connection.value.length > 0),
+				newCategory: isAccount ? (this.pendingNewCategory ?? undefined) : undefined
+			};
 		}
-		const isAccount = this.kind === VAULT_DIALOG_KIND_ACCOUNT;
-		this.submitCallback?.({
-			kind: isAccount ? VAULT_DIALOG_KIND_ACCOUNT : VAULT_DIALOG_KIND_OTHER,
-			nodeType: isAccount ? VAULT_NODE_ACCOUNT : this.nodeType,
-			name: this.name.trim(),
-			verified: isAccount ? this.verified : false,
-			categories: isAccount ? [...this.selectedCategoryKeys] : [],
-			connections: this.connections
-				.map((connection) => ({ value: connection.value.trim(), type: connection.type }))
-				.filter((connection) => connection.value.length > 0),
-			newCategory: isAccount ? (this.pendingNewCategory ?? undefined) : undefined
-		});
-		this.onDialogClosed();
+
+		/* finally guarantees the dialog still closes even if submitCallback throws (e.g. a stale
+		   block-dialog entry from another in-flight vault write) — never leaves it stuck open. */
+		try {
+			this.submitCallback?.(payload);
+		} finally {
+			this.onDialogClosed();
+		}
 	}
 
 	// ── Private helpers ───────────────────────────────────────────────────────
@@ -328,6 +336,9 @@ export class AddAccountDialogComponent {
 	 * Picks a color swatch not already used by an existing category or by the graph legend (account,
 	 * email, phone, verified), so each category keeps a unique color that can't be mistaken for a
 	 * node-type swatch. Falls back to a fully random swatch only when every swatch is already taken.
+	 *
+	 * {@link commitNewCategory} - Assigns a swatch when the inline category is committed.
+	 * {@link onSubmit} - Assigns a swatch when a standalone category is submitted.
 	 *
 	 * @returns The chosen swatch (hex plus gradient).
 	 */
@@ -356,6 +367,9 @@ export class AddAccountDialogComponent {
 	/**
 	 * Picks an icon not already used by an existing category, so a new category's icon reads distinctly at a glance.
 	 * Falls back to the full icon pool only if every option is already taken.
+	 *
+	 * {@link goToForm} - Defaults the category-step icon when advancing the wizard.
+	 * {@link openNewCategory} - Defaults the icon when opening the inline new-category input.
 	 *
 	 * @returns The chosen icon's Material Symbols ligature name.
 	 */

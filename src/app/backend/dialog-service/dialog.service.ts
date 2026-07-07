@@ -188,6 +188,7 @@ export class DialogService {
 	 * @param dialogType - The type of dialog to open.
 	 * @param dataOrCallback1 - First callback to call or any data to pass.
 	 * @param dataOrCallback2 - Second callback to call or any data to pass.
+	 * @returns A promise that resolves when a 'block' dialog's task settles; undefined for every other dialog type.
 	 */
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
@@ -208,7 +209,11 @@ export class DialogService {
 		 * all other types throw to surface the duplicate-open bug to the caller.
 		 */
 		if (this.openedDialogs.has(dialogType)) {
-			if (this.stackableDialogTypes.has(dialogType)) return;
+			if (this.stackableDialogTypes.has(dialogType)) {
+				/* Block callers chain .catch() on the result (see runBlocking) — a resolved promise
+				   keeps that safe, whereas plain undefined throws a TypeError on the chained .catch(). */
+				return dialogType === DIALOG_BLOCK ? Promise.resolve() : undefined;
+			}
 			const error = new DialogError(MSG_DIALOG_ALREADY_OPEN);
 			LOG.error(this.className, error.message);
 			throw error;

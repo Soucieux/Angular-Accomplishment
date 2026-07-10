@@ -103,7 +103,7 @@ export class AuthService {
 			// onAuthStateChanged emits the user continuously
 			const unsubscribe = onAuthStateChanged(this.firebaseAuth, (user) => {
 				if (user) {
-					this.utilities.setIsUserAlive(true);
+					this.ngZone.run(() => this.utilities.setIsUserAlive(true));
 				} else {
 					this.ngZone.run(() => this.utilities.setIsUserAlive(false));
 				}
@@ -126,7 +126,7 @@ export class AuthService {
 		try {
 			await signInWithEmailAndPassword(this.firebaseAuth, email, password);
 			this.router.navigate([returnUrl]).catch(() => {});
-			this.utilities.setIsUserAlive(true);
+			this.ngZone.run(() => this.utilities.setIsUserAlive(true));
 		} catch (error: unknown) {
 			LOG.error(this.className, AUTH_LOG_SIGN_IN_FAILED);
 			throw new UnexpectedError();
@@ -147,7 +147,7 @@ export class AuthService {
 					unsub();
 					if (user) {
 						this.router.navigate(['/']).catch(() => {});
-						this.utilities.setIsUserAlive(true);
+						this.ngZone.run(() => this.utilities.setIsUserAlive(true));
 					}
 				});
 			})
@@ -280,13 +280,20 @@ export class AuthService {
 				   Anonymous users have no username in metadata — emit null for them
 				   to keep the dashboard hidden until a proper sign-in occurs. */
 				if (data?.user?.user_metadata?.username) {
-					this.utilities.setIsUserAlive(true);
-					CloudbaseService.setUseId(data.user.id);
-					CloudbaseService.setUserRole(data.user.role ?? []);
-					CloudbaseService.setUserName(data.user.user_metadata?.username);
-					this.cloudbaseUserSubject.next(data.user);
-					CloudbaseService.markAuthReady();
-					CloudbaseService.setLoginState(true);
+					/* Inside ngZone for the same reason as signOut() above — this .then()
+					   callback runs outside Angular's zone, so without it Angular never
+					   notices the state change and dependent views (e.g. the home
+					   dashboard) stay stuck on their loading state until an unrelated
+					   zone-patched event (like a route navigation) forces a redraw. */
+					this.ngZone.run(() => {
+						this.utilities.setIsUserAlive(true);
+						CloudbaseService.setUseId(data.user.id);
+						CloudbaseService.setUserRole(data.user.role ?? []);
+						CloudbaseService.setUserName(data.user.user_metadata?.username);
+						this.cloudbaseUserSubject.next(data.user);
+						CloudbaseService.markAuthReady();
+						CloudbaseService.setLoginState(true);
+					});
 				} else {
 					this.cloudbaseUserSubject.next(null);
 					CloudbaseService.setLoginState(false);

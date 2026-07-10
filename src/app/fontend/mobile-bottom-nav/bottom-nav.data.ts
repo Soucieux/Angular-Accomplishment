@@ -49,7 +49,7 @@ export const PRIMARY_IDS: string[] = ['home', 'portal', 'reminder', 'debt'];
 
 /** Maps Angular router URL paths to bottom-nav item ids. */
 export const ROUTE_TO_NAV_ID: Record<string, string> = {
-	'': 'home',
+	'/': 'home',
 	'/today': 'today',
 	'/portal': 'portal',
 	'/resonance': 'resonance',

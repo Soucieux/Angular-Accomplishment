@@ -1,11 +1,14 @@
 /* ─────────────────────────────────────────
    Recipe paginator — self-contained component styles
-   Accent color matches the Recipe page's green brand (#22c55e).
-   The glass track is built for the page's warm gradient backdrop.
+   Accent color matches the Recipe page's rose-crimson brand (#d53369).
+   The track sits on the page's white glass-card, so controls use
+   accent-tinted glass rather than the white-on-color glass elsewhere.
 ───────────────────────────────────────── */
 
 :host {
-	--paginator-accent: #22c55e;
+	--paginator-accent: #d53369;
+	--paginator-accent-dark: #b82d5a;
+	--paginator-ink-muted: rgba(30, 15, 35, 0.55);
 	--paginator-radius: 9999px;
 	--paginator-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--paginator-duration: 150ms;
@@ -36,15 +39,13 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	color: #fff !important;
-	background: rgba(255, 255, 255, 0.18);
-	border: 1px solid rgba(255, 255, 255, 0.30);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
+	color: var(--paginator-accent) !important;
+	background: rgba(213, 51, 105, 0.1);
+	border: 1px solid rgba(213, 51, 105, 0.22);
 	transition: all var(--paginator-duration) var(--paginator-ease);
 }
 .paginator-arrow:hover:not(:disabled) {
-	background: rgba(255, 255, 255, 0.34);
+	background: rgba(213, 51, 105, 0.18);
 }
 .paginator-arrow:disabled {
 	opacity: 0.35;
@@ -63,11 +64,9 @@
 	display: flex;
 	padding: 4px;
 	gap: 2px;
-	background: rgba(255, 255, 255, 0.16);
-	border: 1px solid rgba(255, 255, 255, 0.30);
+	background: rgba(213, 51, 105, 0.06);
+	border: 1px solid rgba(213, 51, 105, 0.18);
 	border-radius: var(--paginator-radius);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
 }
 
 /* ─────────────────────────────────────────
@@ -81,25 +80,25 @@
 	border-radius: var(--paginator-radius);
 	font-size: 14px;
 	font-weight: 600;
-	color: rgba(255, 255, 255, 0.82) !important;
+	color: var(--paginator-ink-muted) !important;
 	background: transparent;
 	transition: all var(--paginator-duration) var(--paginator-ease);
 }
 .paginator-segment:hover:not(.is-selected) {
-	color: #fff !important;
-	background: rgba(255, 255, 255, 0.16);
+	color: var(--paginator-accent) !important;
+	background: rgba(213, 51, 105, 0.08);
 }
 
-/* active page — white lozenge with accent text */
+/* active page — accent gradient lozenge with white text */
 .paginator-segment.is-selected {
-	background: #fff;
-	color: var(--paginator-accent);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+	background: linear-gradient(90deg, var(--paginator-accent), var(--paginator-accent-dark));
+	color: #fff !important;
+	box-shadow: 0 3px 10px rgba(213, 51, 105, 0.35);
 }
 
 /* focus ring for keyboard users */
 .paginator button:focus-visible {
-	outline: 2px solid #fff;
+	outline: 2px solid var(--paginator-accent);
 	outline-offset: 2px;
 }
 

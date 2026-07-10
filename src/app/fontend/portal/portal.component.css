@@ -1264,4 +1264,30 @@
 		top: 0;
 		right: 1%;
 	}
+
+	/* Native iOS app AND standalone web/PWA (utilities.isCapacitorApp() ||
+	   utilities.isStandalonePwa() in the template) — .toolbar-right's containing block
+	   for position:absolute is mat-drawer-container (the nearest positioned ancestor;
+	   .container-portal/.glass-card/.page-header/mat-drawer-content are all
+	   position:static), not .container-portal, so this button's placement is
+	   unaffected by .container-portal's own rise-into-the-notch margin trick. What
+	   actually changed is mat-drawer-container's own reach: with html/body now using
+	   100vh (styles.css) instead of 100%, that box genuinely extends edge-to-edge
+	   including the notch/Dynamic-Island, where previously it fell short — so top:0
+	   (originally safe purely because the box didn't reach that far) now lands inside
+	   the notch and needs the same inset pushed back in. */
+	:host-context(body.ios-safe-area-mode) .toolbar-right {
+		top: env(safe-area-inset-top);
+	}
+
+	/* Tauri desktop (utilities.isTauriApp() in the template) — same containing-block
+	   reasoning as .toolbar-right-native above, but the reserved zone is the fixed
+	   30px floating drag header (.app-header-container, app.component.css) rather
+	   than a dynamic safe-area inset, so the offset is a plain px value instead of
+	   env(). Only reachable if the Tauri window is narrow enough to trigger this
+	   mobile breakpoint — the header bar is unconditional whenever Tauri is running,
+	   regardless of window width. */
+	:host-context(body.tauri-mode) .toolbar-right {
+		top: 30px;
+	}
 }

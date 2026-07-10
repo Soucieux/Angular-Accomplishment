@@ -3,17 +3,25 @@
 @import 'primeicons/primeicons.css';
 @import 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined';
 
-/* Lock the viewport — no page-level scroll */
+/* Lock the viewport — no page-level scroll. 100vh, not 100%: on an installed iOS
+   standalone PWA, height:100% does not reliably extend html/body's own box behind the
+   safe areas (notch, home indicator) even with viewport-fit=cover set, while 100vh
+   does — confirmed via WebKit's canvas-background documentation. Equivalent to 100%
+   on Tauri/Capacitor (WKWebView already extends height:100% behind safe areas on its
+   own there), so this is a no-op change for every other platform. */
 html,
 body {
-	height: 100%;
+	height: 100vh;
 	overflow: hidden;
 }
 
-/* On iOS standalone mode the html painting surface extends behind the safe areas
-   even when the content box does not. Setting the app shell gradient here ensures
-   the home-indicator zone never renders as white. Has no visible effect elsewhere
-   because the app content covers html on all other surfaces. */
+/* The sole gradient source for the entire app — every other element (mat-drawer-container
+   in app.component.css, and everything in front of it) stays background:transparent so
+   this single gradient shows through everywhere, including the iOS notch and
+   home-indicator zones. linear-gradient() percentage stops are computed per-element
+   against that element's own box, so a second element painting the "same" gradient
+   string always produces a visible seam wherever its box size differs from html's —
+   there is no CSS way to align two independently-painted gradients, only to have one. */
 html {
 	background: linear-gradient(45deg, #fa61da 0%, #ff8891 50%, #ffcd5a 100%);
 }
@@ -161,12 +169,34 @@ button {
    No overflow override is needed, preserving mat-drawer-content's scroll ability.
    padding-top is raised to 40px (30px header + 10px original) so content
    inside stays at the same screen position. Only affects the Tauri app. */
-body.tauri-mode .container-home,
 body.tauri-mode .container-entertainment,
 body.tauri-mode .container-resonance,
 body.tauri-mode .container-debt,
 body.tauri-mode .container-about {
 	min-height: calc(100dvh - 40px);
+}
+
+/* Home only — confirmed by testing that Entertainment/Resonance/Debt/About do not
+   have this issue, so they keep the plain min-height reduction above; only Home
+   gets the rise treatment. Same mechanism as .glass-card: margin-top: -30px cancels
+   mat-drawer-content's padding-top: 30px (.nav-content-tauri) so the box rises
+   flush with the window top; padding-top is raised by that same 30px so inner
+   content lands at the exact same screen position as before — only the container's
+   own background now reaches behind the header for its backdrop-filter to blur.
+   Two rules are needed because home.component.css's .container-home:has(orbital)
+   (the logged-in dashboard) switches to a completely different sizing model —
+   padding: 0 and height: 100% instead of the editorial/logged-out state's
+   padding: 10px 20px and min-height: calc(100dvh - 10px) — so each state needs its
+   own compensation derived from its own pre-rise values, not a single shared one. */
+body.tauri-mode .container-home {
+	margin-top: -30px;
+	min-height: calc(100dvh - 10px);
+	padding-top: 40px;
+}
+
+body.tauri-mode .container-home:has(orbital) {
+	height: calc(100% + 30px);
+	padding-top: 30px;
 }
 
 /* access-denied-wrapper uses height: calc(100dvh - 10px) to centre the message.
@@ -181,4 +211,153 @@ body.tauri-mode .glass-card {
 	height: calc(100% + 30px);
 	padding-top: 40px;
 	border-radius: 0 0 18px 18px;
+}
+
+/* ── Native iOS app AND installed mobile web app — status-bar/notch clearance, shared
+   by both since they're the same rendering situation (fullscreen, no OS chrome
+   reserving the notch/home-indicator) — see IOS_SAFE_AREA_CLASS (constants.ts), added
+   to body in app.component.ts for isCapacitorApp() OR (isStandalonePwa() AND
+   isMobile()); a desktop installed web app deliberately never gets this class, since
+   its OS-drawn titlebar already reserves the top edge on its own. Mirrors the Tauri
+   desktop treatment above (card rises to meet the reserved top zone), but via
+   env(safe-area-inset-top) instead of a fixed pixel offset, since only iOS populates
+   that value. Must live here, not in a component stylesheet or on <body> directly —
+   Angular's ViewEncapsulation.Emulated stamps every simple selector in a compound
+   selector with a scoping attribute, including ancestor selectors like body, and body
+   never carries one (it sits outside every component's template), so a
+   body.ios-safe-area-mode selector placed in a component .css file can never match. */
+body.ios-safe-area-mode .nav-content-mobile {
+	margin-top: 0 !important;
+	padding-top: env(safe-area-inset-top);
+}
+
+/* Full-bleed pages (Home, Entertainment, Resonance, Debt, About) have no card
+   background of their own, but still need the same rise treatment as .glass-card
+   below — a min-height shrink alone (the previous approach here) leaves their
+   top edge pinned at the safe-area boundary, so nothing ever renders behind the
+   fixed header for its blur to catch. Rising them the same way lets the shell
+   gradient (and any scrolled content) pass through the notch zone, matching the
+   frosted look card pages already get. 100vh, not 100dvh — 100dvh has a cold-start
+   bug specific to installed standalone PWA that native/WKWebView does not share
+   (see the html/body height comment above); both converge to the same value once
+   settled, so 100vh is the one value that is correct for both surfaces. */
+body.ios-safe-area-mode .container-home,
+body.ios-safe-area-mode .container-entertainment,
+body.ios-safe-area-mode .container-resonance,
+body.ios-safe-area-mode .container-debt,
+body.ios-safe-area-mode .container-about {
+	margin-top: calc(env(safe-area-inset-top) * -1);
+	min-height: calc(100vh - 10px + env(safe-area-inset-top));
+	padding-top: calc(10px + env(safe-area-inset-top));
+}
+
+body.ios-safe-area-mode .access-denied-wrapper {
+	height: calc(100vh - 10px - env(safe-area-inset-top));
+}
+
+/* Card pages (Portal, Today, Reminder, Recipe, Account, Vault, Patch Notes) rise
+   up to fill the reserved zone with their own frosted background instead of
+   leaving the gradient visible above them — margin-top cancels the padding just
+   added above, height grows to match, padding-top keeps inner content clear of
+   the notch, and only the bottom corners stay rounded since the card is now
+   flush with the top edge. */
+body.ios-safe-area-mode .glass-card {
+	margin-top: calc(env(safe-area-inset-top) * -1);
+	height: calc(100% + env(safe-area-inset-top));
+	padding-top: calc(10px + env(safe-area-inset-top));
+	border-radius: 0 0 10px 10px !important;
+}
+
+/* Every dialog in dialog-service/ renders a PrimeNG p-dialog or p-confirmdialog root,
+   which always carries the p-dialog/p-confirmdialog class regardless of the styleClass
+   passed in — so one rule here reaches every dialog's header, instead of each dialog
+   needing its own isCapacitorApp()/isStandalonePwa() styleClass ternary, Utilities
+   injection, and near-identical padding-top SCSS block. Must live here, not in a
+   component stylesheet — same ViewEncapsulation reasoning as body.ios-safe-area-mode
+   .glass-card above: p-dialog's root is rendered outside the opening component's own
+   template (PrimeNG's CDK overlay), so a component-scoped selector could never match it
+   even without the body-ancestor problem. */
+body.ios-safe-area-mode .p-dialog,
+body.ios-safe-area-mode .p-confirmdialog {
+	padding-top: env(safe-area-inset-top);
+}
+
+/* ── Capacitor native iOS app — prevent iOS's auto-zoom on input focus.
+   WebKit automatically zooms the whole page in when a focused <input>/<textarea>/<select>
+   has a computed font-size under 16px — a native app should never do this. Dialog inputs
+   are 14px, page dropdowns/search fields are 13px, so this catches every form control
+   app-wide in one rule rather than raising font-size on each one individually (which
+   would also unintentionally change the web/PWA visual design). !important is required
+   so this wins regardless of selector specificity elsewhere — except a rule that is
+   itself !important with higher specificity (see the Recipe override below); any future
+   page-level rule that adds its own !important font-size under 16px needs the same kind
+   of higher-specificity override here, since specificity — not source order — decides
+   ties between two !important rules. */
+body.capacitor-mode input,
+body.capacitor-mode textarea,
+body.capacitor-mode select {
+	font-size: 16px !important;
+}
+
+/* Login's password field deliberately uses 20px (not the usual 14px) for larger, clearer
+   dots — see login.component.css's [pinputtext][type='password'] rule. Already above the
+   16px auto-zoom threshold, so restore it here rather than letting the blanket rule above
+   shrink it back down; higher selector specificity wins the tie between the two !important rules. */
+body.capacitor-mode .v-lamp-form input[type='password'] {
+	font-size: 20px !important;
+}
+
+/* Recipe's unit autocomplete deliberately uses 13px on desktop (see recipe.component.css's
+   ::ng-deep .unit-ac .p-autocomplete-input rule) with !important, which by specificity alone
+   (2 classes) already beats the blanket rule above (1 class + 2 types) even though both are
+   !important — so on its own the blanket rule silently loses this one field. Restoring 16px
+   here with a 3-class selector (higher specificity than the 2-class original) wins the tie. */
+body.capacitor-mode .ingredient-editor-row .unit-ac .p-autocomplete-input {
+	font-size: 16px !important;
+}
+
+/* Same specificity-tie problem, two more dialog fields found on a second, deeper audit
+   (the first pass only scanned .css files — every dialog under backend/dialog-service
+   is .scss, so these were missed entirely): Add Debt's due-date field (see
+   add-debt.component.scss's ::ng-deep .add-debt-dialog .p-datepicker-input rule, 14px
+   !important, 2 classes) and Add Movie's text fields (see add-movie.component.scss's
+   ::ng-deep .add-dialog [pinputtext] rule, 14px !important, 1 class + 1 attribute). Both
+   tie the blanket rule's specificity on class/attribute count alone, so both need an
+   explicit higher-specificity restore here too. */
+body.capacitor-mode .add-debt-dialog .p-datepicker-input,
+body.capacitor-mode .add-dialog [pinputtext] {
+	font-size: 16px !important;
+}
+
+/* ── Mobile browser + iOS PWA — same auto-zoom fix, app-wide, no JS detection needed.
+   (max-width: 900px) and (pointer: coarse) matches any touch device regardless of
+   display-mode (regular Safari tab or installed home-screen app), and never matches a
+   desktop browser or the desktop Tauri app (both fine-pointer). Originally scoped to
+   .p-dialog only; broadened to every input/textarea/select because page-level fields
+   (Today's quick-add, Resonance's quote form, Recipe's ingredient editor, etc.) hit the
+   same WebKit auto-zoom and were never covered — dialogs were never the only surface
+   with sub-16px fields. Dialog panels render via PrimeNG's CDK overlay, outside the
+   invoking component's DOM subtree, and page-level fields span every component's own
+   stylesheet, so this must live in the global stylesheet rather than any single
+   component's CSS. */
+@media (max-width: 900px) and (pointer: coarse) {
+	input,
+	textarea,
+	select {
+		font-size: 16px !important;
+	}
+
+	/* Same specificity tie as the capacitor-mode overrides above — these three fields
+	   keep their deliberate desktop sizing via an !important selector with class/attribute
+	   count equal to or greater than the blanket rule above (which is a bare type selector
+	   here, specificity (0,0,1)), so each needs its own higher-specificity restore. The
+	   input./select. type-selector prefix breaks what would otherwise be an exact
+	   specificity tie with the original rule (both 2 classes), which source order would
+	   have to resolve — fragile once these files are bundled and reordered by the build. */
+	.ingredient-editor-row .unit-ac .p-autocomplete-input,
+	.add-debt-dialog input.p-datepicker-input,
+	.add-dialog input[pinputtext] {
+		font-size: 16px !important;
+	}
+
 }

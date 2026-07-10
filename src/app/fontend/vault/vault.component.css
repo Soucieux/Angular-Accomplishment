@@ -78,7 +78,7 @@
 
 .vault-search-input {
 	width: 100%;
-	height: 41px;
+	height: 38px;
 	padding: 0 34px 0 16px;
 	border: none;
 	border-radius: 20px;
@@ -160,8 +160,8 @@
 	display: flex;
 	align-items: center;
 	gap: 7px;
-	height: 42px;
-	padding: 0 18px;
+	height: 40px;
+	padding: 14px 18px;
 	border: none;
 	border-radius: 9999px;
 	cursor: pointer;
@@ -1353,7 +1353,7 @@
 
 	.vault-add-button {
 		height: 38px;
-		padding: 0 14px;
+		padding: 0 10px;
 		font-size: 12px;
 	}
 
@@ -1390,9 +1390,11 @@
 	}
 }
 
-/* Real touch devices only — pull the switch + add button out of the crowded
-   header row into a floating pill, same corner position as Debt's add button. */
-@media (max-width: 900px) and (pointer: coarse) {
+/* Pull the switch + add button out of the crowded header row into a floating pill,
+   same corner position as Debt's add button. Widened from a touch-only (pointer: coarse)
+   query to plain max-width so the native/PWA safe-area offset rule below also applies
+   to narrow Tauri desktop windows, which use a mouse (pointer: fine). */
+@media (max-width: 940px) {
 	.vault-mobile-toolbar {
 		position: absolute;
 		top: 0.5%;
@@ -1400,6 +1402,32 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
+	}
+
+	/* Native iOS app AND standalone web/PWA (utilities.isCapacitorApp() ||
+	   utilities.isStandalonePwa() in the template) — .vault-mobile-toolbar's containing
+	   block for position:absolute is mat-drawer-container (the nearest positioned
+	   ancestor; .container-vault/.glass-card/mat-drawer-content are all
+	   position:static), so this button's placement is unaffected by .glass-card's own
+	   rise-into-the-notch margin trick. What actually changed is mat-drawer-container's
+	   own reach: with html/body now using 100vh (styles.css) instead of 100%, that box
+	   genuinely extends edge-to-edge including the notch/Dynamic-Island, where
+	   previously it fell short — so top:0.5% (originally safe purely because the box
+	   didn't reach that far) now lands inside the notch and needs the same inset
+	   pushed back in. */
+	:host-context(body.ios-safe-area-mode) .vault-mobile-toolbar {
+		top: calc(0.5% + env(safe-area-inset-top));
+	}
+
+	/* Tauri desktop (utilities.isTauriApp() in the template) — same containing-block
+	   reasoning as .vault-mobile-toolbar-native above, but the reserved zone is the
+	   fixed 30px floating drag header (.app-header-container, app.component.css)
+	   rather than a dynamic safe-area inset, so the offset is a plain px value
+	   instead of env(). Only reachable if the Tauri window is narrow enough to
+	   trigger this mobile breakpoint — the header bar is unconditional whenever
+	   Tauri is running, regardless of window width. */
+	:host-context(body.tauri-mode) .vault-mobile-toolbar {
+		top: calc(0.5% + 30px);
 	}
 
 	.vault-mobile-toolbar .vault-tab {

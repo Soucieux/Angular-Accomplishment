@@ -214,6 +214,19 @@
 	pointer-events: none;
 }
 
+/* Native iOS app AND installed mobile web app only — both render fullscreen with no
+   OS chrome, so the dock needs the actual home-indicator inset added, with no flat
+   base of its own (on a device with zero inset — older iPhones, Android — this
+   collapses to bottom: 0). Mobile browser is deliberately excluded from this rule
+   entirely — Safari/Chrome's own chrome already reserves the home-indicator zone. */
+:host-context(body.ios-safe-area-mode) .dock-wrap {
+	bottom: calc(env(safe-area-inset-bottom));
+}
+
+:host-context(body.ios-safe-area-mode) .grid {
+	bottom: calc(63px + env(safe-area-inset-bottom));
+}
+
 .dock {
 	pointer-events: auto;
 	display: flex;
@@ -406,6 +419,12 @@
 	transform: scale(1) translateY(0);
 	opacity: 1;
 	pointer-events: auto;
+}
+
+/* Native iOS app AND installed mobile web app only — same reasoning as .dock-wrap
+   above. */
+:host-context(body.ios-safe-area-mode) .account-popover {
+	bottom: calc(64px + env(safe-area-inset-bottom));
 }
 
 .account-popover-header {

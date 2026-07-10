@@ -77,6 +77,12 @@ export const APP_BREAKPOINT_COMPACT = 1300;
 export const APP_BREAKPOINT_NARROW = 940;
 /** CSS class added to body when running inside the Tauri desktop app — scopes Tauri-only global styles. */
 export const TAURI_MODE_CLASS = 'tauri-mode';
+/** CSS class added to body when running inside the Capacitor native iOS app — scopes Capacitor-only global styles. */
+export const CAPACITOR_MODE_CLASS = 'capacitor-mode';
+/** CSS class added to body when running as the native iOS app OR an installed mobile web app — the two share
+ * identical iOS safe-area (notch/home-indicator) treatment, since both render fullscreen with no OS chrome
+ * reserving those zones. Never added for a desktop installed web app, whose OS-drawn titlebar already does. */
+export const IOS_SAFE_AREA_CLASS = 'ios-safe-area-mode';
 /** CSS class added to body when the active locale is English — allows locale-specific CSS overrides via :host-context(). */
 export const LOCALE_EN_BODY_CLASS = 'locale-en';
 /** Locale switch button label, always in Chinese script so it reads as the target language regardless of the active locale. */

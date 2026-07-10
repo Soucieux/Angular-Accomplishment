@@ -1064,6 +1064,16 @@
 		padding: 0 10px 10px 10px;
 	}
 
+	/* Native iOS app AND installed mobile web app — .orbital-root is the actual
+	   scroll/clip boundary for the dashboard (its own overflow-y:auto, not
+	   .container-home's), so it must own its safe-area clearance directly. Without
+	   this, scrolled content can never reach the notch zone: .container-home rises to
+	   cover it but .orbital-root's own box still starts wherever container-home's
+	   content begins, well below the notch. */
+	:host-context(body.ios-safe-area-mode) .orbital-root {
+		padding-top: calc(10px + env(safe-area-inset-top));
+	}
+
 	.orbital-ring-inner,
 	.orbital-ring-outer {
 		display: none;

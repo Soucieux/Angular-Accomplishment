@@ -296,4 +296,7 @@
 		[actions]="contextMenuActions"
 		(close)="closeContextMenu()" />
 }
+@if (isCapacitorApp || isStandalonePwa) {
+	<div class="app-header-container app-header-container-ios"></div>
+}
 <ng-container #dialogComponentContainer></ng-container>

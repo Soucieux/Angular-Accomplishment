@@ -49,6 +49,8 @@ import {
 	LS_NAV_COLLAPSED_KEY,
 	LS_LOCALE_KEY,
 	TAURI_MODE_CLASS,
+	CAPACITOR_MODE_CLASS,
+	IOS_SAFE_AREA_CLASS,
 	TAURI_CMD_SET_MINIMIZE_ON_CLOSE,
 	LOCALE_EN_BODY_CLASS,
 	NAV_LOCALE_SWITCH_TO_ZH,
@@ -161,6 +163,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected navMode: 'side' | 'over' = 'side';
 	protected compactOverlayOpen = false;
 	protected isTauriApp = false;
+	protected isCapacitorApp = false;
+	protected isStandalonePwa = false;
 	private tauriAppWindow: { startDragging: () => Promise<void> } | null = null;
 	private userInitialized = false;
 	protected contextMenuVisible = false;
@@ -195,9 +199,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (isPlatformBrowser(this.platformId)) {
 			this.navCollapsed = localStorage.getItem(LS_NAV_COLLAPSED_KEY) === 'true';
 			this.applyViewportState(window.innerWidth);
-			this.isTauriApp = '__TAURI__' in window;
+			this.isTauriApp = this.utilities.isTauriApp();
 			if (this.isTauriApp) {
 				document.body.classList.add(TAURI_MODE_CLASS);
+			}
+			this.isCapacitorApp = this.utilities.isCapacitorApp();
+			if (this.isCapacitorApp) {
+				document.body.classList.add(CAPACITOR_MODE_CLASS);
+			}
+			this.isStandalonePwa = this.utilities.isStandalonePwa();
+			if (this.isCapacitorApp || (this.isStandalonePwa && this.utilities.isMobile())) {
+				document.body.classList.add(IOS_SAFE_AREA_CLASS);
 			}
 			if (ACTIVE_LOCALE === 'en') {
 				document.body.classList.add(LOCALE_EN_BODY_CLASS);

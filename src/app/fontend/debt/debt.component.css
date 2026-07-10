@@ -1102,8 +1102,6 @@
 
 	.new-debt-button {
 		padding: 5px 10px 5px 8px;
-		top: 3%;
-		right: 3%;
 	}
 
 	.debts-grid {
@@ -1144,10 +1142,34 @@
 	}
 }
 
-@media (max-width: 940px) and (pointer: coarse) {
+@media (max-width: 940px) {
 	.new-debt-button {
 		position: absolute;
-		top: 3%;
+		top: 1%;
 		right: 2%;
+	}
+
+	/* Native iOS app AND standalone web/PWA (utilities.isCapacitorApp() ||
+	   utilities.isStandalonePwa() in the template) — .new-debt-button's containing
+	   block for position:absolute is mat-drawer-container (the nearest positioned
+	   ancestor; .container-debt/mat-drawer-content are position:static), so this
+	   button's placement is unaffected by .container-debt's own rise-into-the-notch
+	   margin trick. What actually changed is mat-drawer-container's own reach: with
+	   html/body now using 100vh (styles.css) instead of 100%, that box genuinely
+	   extends edge-to-edge including the notch/Dynamic-Island, where previously it
+	   fell short — so top:1% (originally safe purely because the box didn't reach
+	   that far) now lands inside the notch and needs the same inset pushed back in. */
+	:host-context(body.ios-safe-area-mode) .new-debt-button {
+		top: calc(1% + env(safe-area-inset-top));
+	}
+
+	/* Tauri desktop — same containing-block reasoning as above, but the reserved zone
+	   is the fixed 30px floating drag header (.app-header-container, app.component.css)
+	   rather than a dynamic safe-area inset, so the offset is a plain px value instead
+	   of env(). Only reachable if the Tauri window is narrow enough to trigger this
+	   mobile breakpoint — the header bar is unconditional whenever Tauri is running,
+	   regardless of window width. */
+	:host-context(body.tauri-mode) .new-debt-button {
+		top: calc(1% + 30px);
 	}
 }

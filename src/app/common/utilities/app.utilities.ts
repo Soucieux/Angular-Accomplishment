@@ -1,5 +1,6 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { format } from 'date-fns';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
@@ -90,6 +91,38 @@ export class Utilities {
 	}
 
 	/**
+	 * Checks whether the app is running inside the native Capacitor iOS/Android shell.
+	 *
+	 * @returns True when running inside the native Capacitor runtime, false in any browser context.
+	 */
+	public isCapacitorApp(): boolean {
+		return this.isBrowserCheck(() => Capacitor.isNativePlatform());
+	}
+
+	/**
+	 * Checks whether the app is running as an installed standalone web app (added to
+	 * the home screen), as opposed to a regular browser tab.
+	 *
+	 * @returns True when running in standalone display mode, false in a regular browser tab.
+	 */
+	public isStandalonePwa(): boolean {
+		return this.isBrowserCheck(
+			() => this.document.defaultView?.matchMedia('(display-mode: standalone)').matches ?? false
+		);
+	}
+
+	/**
+	 * Checks whether the app is running inside the native Tauri desktop shell.
+	 *
+	 * @returns True when running inside the native Tauri runtime, false in any browser context.
+	 */
+	public isTauriApp(): boolean {
+		return this.isBrowserCheck(
+			() => !!this.document.defaultView && '__TAURI__' in this.document.defaultView
+		);
+	}
+
+	/**
 	 * Opens a URL in the system browser. In a Tauri desktop build, delegates to
 	 * the Tauri shell plugin so the link opens outside the webview; in a regular
 	 * browser context, falls back to a temporary anchor click.
@@ -99,7 +132,7 @@ export class Utilities {
 	public openInNewTab(url: string): void {
 		/* `window.__TAURI__` is injected by the Tauri runtime only inside the desktop app.
 		   When present, use the shell plugin — anchor clicks open inside the webview instead. */
-		if ((window as unknown as { __TAURI__?: unknown }).__TAURI__) {
+		if (this.isTauriApp()) {
 			import('@tauri-apps/api/shell').then(({ open }) => open(url)).catch(() => {});
 			return;
 		}
@@ -142,7 +175,8 @@ export class Utilities {
 
 	/**
 	 * Runs a browser-only viewport check, short-circuiting to false during SSR.
-	 * Shared hub for {@link isMobile}, {@link isNarrowViewport}, and {@link checkIfHoverCapable}.
+	 * Shared hub for {@link isMobile}, {@link isNarrowViewport}, {@link checkIfHoverCapable},
+	 * {@link isCapacitorApp}, {@link isStandalonePwa}, and {@link isTauriApp}.
 	 *
 	 * @param check - The function to evaluate when running in a browser context.
 	 * @returns The check's result, or false when rendering on the server.

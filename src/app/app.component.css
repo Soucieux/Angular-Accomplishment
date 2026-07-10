@@ -20,8 +20,11 @@
 	padding-top: 20px;
 }
 
-/* Floating header: blocks pointer events so clicks stay on the bar. Light blur
-   background makes the drag zone clearly visible without being decorative. */
+/* Floating header: blocks pointer events so clicks stay on the bar. Blur strength
+   (3px) is shared by every platform's top-safe-section bar — Tauri's drag region
+   here, and .app-header-container-ios below for native iOS/standalone web PWA —
+   tuned live on-device and confirmed to look right on both card and full-bleed
+   pages, so no per-platform or per-route split is needed. */
 .app-header-container {
 	position: fixed;
 	top: 0;
@@ -32,8 +35,18 @@
 	display: flex;
 	align-items: center;
 	background: rgba(255, 255, 255, 0.18);
-	backdrop-filter: blur(1px);
-	-webkit-backdrop-filter: blur(1px);
+	backdrop-filter: blur(3px);
+	-webkit-backdrop-filter: blur(3px);
+}
+
+/* Native iOS app AND standalone web/PWA (isCapacitorApp || isStandalonePwa in the
+   template) — same frosted bar, resized to the notch/Dynamic-Island inset instead of
+   the fixed 30px title bar, and inert since there is no window to drag. Blur strength
+   is inherited from the base rule above (3px, shared by every platform) — no need to
+   redeclare it here since the value is identical. */
+.app-header-container.app-header-container-ios {
+	height: env(safe-area-inset-top);
+	pointer-events: none;
 }
 
 /* Clears the macOS traffic-light buttons (~76px). mousedown here is forwarded
@@ -58,8 +71,15 @@
 	height: 100%;
 }
 
+/* No background of its own — html (styles.css) is the sole gradient source app-wide.
+   linear-gradient() percentage stops are computed per-element against that element's
+   own box, so a second element painting the "same" gradient string always produces a
+   visible seam wherever its box size differs from html's (e.g. iOS safe-area zones,
+   which html's box reaches but a descendant's may not) — confirmed via WebKit's own
+   "Designing Websites for iPhone X" canvas-background documentation. Transparent here
+   lets html's one gradient show through everywhere, with no possible mismatch. */
 mat-drawer-container {
-	background: linear-gradient(45deg, #fa61da 0%, #ff8891 50%, #ffcd5a 100%);
+	background: transparent;
 	position: relative;
 	width: 100%;
 	height: 100%;
@@ -654,9 +674,26 @@ mat-drawer-container:has(mat-drawer.nav-collapsed) mat-drawer-content {
 	}
 }
 
-/* ── iOS PWA — extend gradient behind the status-bar notch ──────────── */
-@media (display-mode: standalone) and (max-width: 900px) and (pointer: coarse) {
-	mat-drawer-container {
-		padding-top: env(safe-area-inset-top);
-	}
-}
+/* ── iOS PWA — notch/home-indicator coverage, researched and verified (see chat).
+   linear-gradient() percentage stops are computed per-element against that element's
+   OWN box — two elements painting the "same" gradient string at different box sizes
+   always produce different actual colors at their shared edge. There is no CSS
+   mechanism to align two independently-painted gradients; every previous attempt here
+   (extending mat-drawer-container's own box, then a separate fixed bar) was a second
+   paint of the same string and always reproduced the seam. The correct, spec-backed
+   fix (confirmed via WebKit's own "Designing Websites for iPhone X" post) is the
+   canvas-background rule: exactly ONE element paints the gradient — html, in
+   styles.css — and every element in front of it stays transparent, so that single
+   gradient shows through the notch and home-indicator zones automatically, with
+   viewport-fit=cover already set. mat-drawer-container's own background is removed
+   below for this reason. .nav-content-mobile still needs padding-top so page content
+   (e.g. Home's orbital title) clears the notch — that's a layout concern, not a
+   background one, and duplicating padding doesn't cause a seam the way duplicating a
+   background does. The frosted status-bar tint itself (.app-header-container-ios) is
+   NOT duplicated here — isStandalonePwa now also renders that same real element
+   (app.component.html), reusing its existing translucent-overlay CSS as-is: an alpha-
+   blended rgba() tint has no per-box coordinate dependency the way an opaque gradient
+   does, so a second copy of it is safe and does not reproduce the seam problem above.
+   The actual .nav-content-mobile padding lives in styles.css now — body.ios-safe-area-mode
+   .nav-content-mobile — shared with the native app instead of duplicated here via a
+   separate display-mode media query. */

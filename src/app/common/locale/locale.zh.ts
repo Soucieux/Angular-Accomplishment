@@ -128,8 +128,6 @@ export const LABEL_NEW_PASSWORD = '新密码';
 export const LABEL_USERNAME = '用户名';
 export const LOGIN_MSG_USERNAME_REQUIRED = '请输入用户名。';
 export const LOGIN_LABEL_PASSWORD = '密码';
-export const LOGIN_LABEL_DIVIDER = '或';
-export const LOGIN_BTN_GOOGLE = '使用 Google 继续登录';
 export const ERROR_NO_DOCUMENT_UPDATED = '无数据更新';
 
 /* ─────────────────────────────────────────
@@ -546,6 +544,7 @@ export const DEBT_CONFIRM_DELETE_PAYMENT_HEADER = '删除还款记录';
 export const DEBT_CONFIRM_DELETE_PAYMENT_BTN = '删除';
 export const DEBT_MSG_PAYING = '正在保存还款记录...';
 export const DEBT_MSG_DELETING_PAYMENT = '正在删除还款记录...';
+export const DEBT_MSG_DELETING = '正在删除债务...';
 export const DEBT_MSG_RESETTING = '正在重置债务...';
 export const DEBT_DIALOG_LABEL_EDIT = '设置债务';
 export const DEBT_DIALOG_LABEL_SAVE = '设置';

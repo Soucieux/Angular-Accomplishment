@@ -173,8 +173,6 @@ export const LABEL_NEW_PASSWORD = 'New password';
 export const LABEL_USERNAME = 'Username';
 export const LOGIN_MSG_USERNAME_REQUIRED = 'Username is required.';
 export const LOGIN_LABEL_PASSWORD = 'Password';
-export const LOGIN_LABEL_DIVIDER = 'or';
-export const LOGIN_BTN_GOOGLE = 'Continue with Google';
 export const ERROR_NO_DOCUMENT_UPDATED = 'No document was updated';
 
 /* ─────────────────────────────────────────
@@ -694,6 +692,7 @@ export const DEBT_CONFIRM_DELETE_PAYMENT_HEADER = 'Remove payment';
 export const DEBT_CONFIRM_DELETE_PAYMENT_BTN = 'Remove';
 export const DEBT_MSG_PAYING = 'Saving payment...';
 export const DEBT_MSG_DELETING_PAYMENT = 'Removing payment...';
+export const DEBT_MSG_DELETING = 'Deleting debt...';
 export const DEBT_MSG_RESETTING = 'Resetting debt...';
 export const DEBT_DIALOG_LABEL_EDIT = 'Set debt';
 export const DEBT_DIALOG_LABEL_SAVE = 'Set';

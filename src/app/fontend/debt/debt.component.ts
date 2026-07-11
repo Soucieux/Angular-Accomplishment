@@ -69,6 +69,7 @@ import {
 	DEBT_DUE_LABEL_TOMORROW,
 	DEBT_MSG_PAYING,
 	DEBT_MSG_DELETING_PAYMENT,
+	DEBT_MSG_DELETING,
 	MSG_SAVING,
 	DEBT_MSG_RESETTING,
 	DEBT_CONFIRM_DELETE_PAYMENT_MSG,
@@ -311,9 +312,8 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 		const item = this.findUpdatedItem(entryKey);
 		if (!item || amount <= 0 || this.isPayDisabled(item)) return;
 		// Step 1 : Compute new balance and build the payment entry
-		// Round to 2 decimal places to avoid floating-point drift accumulating over multiple payments
 		const currentDebt: number = item.debt ?? 0;
-		const newDebt = Math.round((currentDebt - amount) * 100) / 100;
+		const newDebt = Utilities.roundToTwoDecimals(currentDebt - amount);
 		const isPaidOff = this.isDebtFullySettled(newDebt);
 		const currentPayments = this.paymentsData[entryKey] ?? {};
 		const keys = Object.keys(currentPayments);
@@ -626,9 +626,9 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Opens the Set-debt dialog pre-filled with the entry's current balance,
-	 * due date, and currency. Wires the submit callback to persist the new cycle
-	 * values to CloudBase via {@link setDebtForNewCycle}.
+	 * Opens the Set-debt dialog pre-filled with the entry's current total amount,
+	 * due date, and currency. Wires the submit callback to persist the new total
+	 * to CloudBase via {@link setDebtForNewCycle}.
 	 *
 	 * @param entryKey - The unique key of the entry to set.
 	 */
@@ -642,8 +642,11 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 			return;
 		const item = this.findUpdatedItem(entryKey);
 		if (!item) return;
+		/* Prefill with the total ceiling (original), not the current balance — the Set
+		   dialog edits the total amount, and the balance is derived from it and the
+		   existing payments. */
 		const prefillData: Partial<NewDebtData> = {
-			amount: item.debt ?? 0,
+			amount: item.original ?? item.debt ?? 0,
 			dueDate: item.date ?? '',
 			currency: this.isCnyCurrency(item) ? DEBT_CURRENCY_CNY : DEBT_CURRENCY_CAD
 		};
@@ -690,6 +693,8 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param entryKey - The unique key of the entry to toggle.
 	 */
 	protected async toggleLock(entryKey: string): Promise<void> {
+		// Re-entry guard: ignore repeat clicks while this entry's lock write is already in flight.
+		if (this.activeWriteKeys.has(entryKey)) return;
 		if (
 			!this.dialogService.ensurePermission(
 				this.dialogComponentContainer,
@@ -770,11 +775,18 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 	private async removeDebt(entryKey: string): Promise<void> {
 		const item = this.findUpdatedItem(entryKey);
 		const debtName = item?.name ?? '';
-		try {
-			await this.databaseService.removeRecordFromDebtTable(entryKey, debtName, item?._openid ?? '');
-		} catch (error) {
-			this.dialogService.handleError(this.dialogComponentContainer, error);
-		}
+		// The block dialog overlay guards against a duplicate delete from a rapid second confirm tap.
+		await this.dialogService.runBlocking(this.dialogComponentContainer, DEBT_MSG_DELETING, async () => {
+			try {
+				await this.databaseService.removeRecordFromDebtTable(
+					entryKey,
+					debtName,
+					item?._openid ?? ''
+				);
+			} catch (error) {
+				this.dialogService.handleError(this.dialogComponentContainer, error);
+			}
+		});
 	}
 
 	/**
@@ -831,7 +843,7 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 	 *
 	 * {@link payDebt} - Checks the balance remaining after a chip payment.
 	 * {@link addNewDebt} - Checks the amount on a newly created record.
-	 * {@link setDebtForNewCycle} - Checks the amount entered via the Set dialog.
+	 * {@link setDebtForNewCycle} - Checks the balance recomputed from the new total in the Set dialog.
 	 * {@link resetDebt} - Checks the original amount restored by the reset action.
 	 *
 	 * @param amount - The debt amount to evaluate.
@@ -968,11 +980,15 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Applies the Set-debt dialog submission as a fresh cycle: always resets
-	 * the original ceiling to the entered amount, sets the paid flag to true
-	 * when the entered amount is zero and false otherwise, and persists currency
-	 * and due date when they changed. Clears the in-session payment history
-	 * when the amount changes.
+	 * Applies the Set-debt dialog submission as a total-amount correction: sets the
+	 * original ceiling to the entered amount and recomputes the current balance as
+	 * the new total minus the payments already made, so every total-derived value
+	 * (progress bar, percent paid, paid-off badge, currency summary) follows the new
+	 * total. When the total changes, each history entry's stored running-balance
+	 * snapshot is also recomputed against the new total — the payment amounts and
+	 * timestamps themselves are left untouched, only the displayed balance shifts.
+	 * Persists currency and due date when they changed. Clearing the payment history
+	 * entirely is still the Reset button's job, not this dialog's.
 	 *
 	 * Both `item` and `original` are captured before any await so that realtime
 	 * subscription callbacks (which replace updatedDebtSonataItems and
@@ -987,75 +1003,116 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 		const original = this.findOriginalItem(entryKey);
 		if (!item || !original) return;
 
-		/* Step 1 : Apply all local mutations synchronously before any DB write so the UI
-		   reflects the intended state regardless of subscription timing.
-		   activeWriteKeys shields this entry from subscription overwrites until the write settles. */
-		const newPaid = this.isDebtFullySettled(data.amount);
-		const amountChanged = data.amount !== original.debt;
-		this.activeWriteKeys.add(entryKey);
-		if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY])
-			item[DEBT_VALUE_KEY_CURRENCY] = data.currency;
-		item[DEBT_VALUE_KEY_DEBT] = data.amount;
-		item[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
-		item[DEBT_VALUE_KEY_PAID] = newPaid;
-		if (data.dueDate !== original.date) item[DEBT_VALUE_KEY_DATE] = data.dueDate;
-		if (amountChanged) {
-			this.paymentsData = { ...this.paymentsData, [entryKey]: [] };
-		}
+		/* Step 1 : Recompute the balance from the new total and the payments already made.
+		   Rounded to 2 decimals to avoid floating-point drift, matching payDebt. When the
+		   total itself changed, every history entry's stored balance is now stale against
+		   the new total, so recompute the whole running sequence too. */
+		const currentPayments = this.paymentsData[entryKey] ?? {};
+		const paymentsPaid = Object.values(currentPayments).reduce(
+			(sum, entry) => sum + (entry.amount ?? 0),
+			0
+		);
+		const newDebt = Utilities.roundToTwoDecimals(data.amount - paymentsPaid);
+		const newPaid = this.isDebtFullySettled(newDebt);
+		const totalChanged = data.amount !== original.original;
+		const newPayments =
+			totalChanged && Object.keys(currentPayments).length > 0
+				? this.recomputeHistoryBalances(currentPayments, data.amount)
+				: null;
 
-		// Step 2 : Build a single update object with only changed fields — one round-trip instead of up to five.
-		const fields = this.buildDebtCycleDiff(data, original, newPaid);
-		// Step 3 : Persist changed fields and resync local state
-		try {
-			if (Object.keys(fields).length > 0) {
+		// Step 2 : Build a single update object with only changed fields — one round-trip instead of several.
+		const fields = this.buildDebtCycleDiff(data, original, newDebt, newPaid, newPayments);
+		if (Object.keys(fields).length === 0) return;
+
+		// Step 3 : Persist inside a block dialog — the overlay guards against duplicate submissions.
+		await this.dialogService.runBlocking(this.dialogComponentContainer, MSG_SAVING, async () => {
+			/* Apply mutations synchronously before the write so the UI reflects the intended
+			   state regardless of subscription timing. activeWriteKeys shields this entry from
+			   subscription overwrites until the write settles. */
+			this.activeWriteKeys.add(entryKey);
+			if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY])
+				item[DEBT_VALUE_KEY_CURRENCY] = data.currency;
+			item[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
+			item[DEBT_VALUE_KEY_DEBT] = newDebt;
+			item[DEBT_VALUE_KEY_PAID] = newPaid;
+			if (data.dueDate !== original.date) item[DEBT_VALUE_KEY_DATE] = data.dueDate;
+			if (newPayments) this.paymentsData = { ...this.paymentsData, [entryKey]: newPayments };
+			try {
 				await this.databaseService.updateDebtFields(entryKey, fields, item.name ?? '');
 				this.triggerSaveIndicator();
+			} catch (error) {
+				this.dialogService.handleError(this.dialogComponentContainer, error);
+			} finally {
+				this.activeWriteKeys.delete(entryKey);
 			}
-		} catch (error) {
-			this.dialogService.handleError(this.dialogComponentContainer, error);
-		} finally {
-			this.activeWriteKeys.delete(entryKey);
-		}
+		});
 		this.resyncUpcomingFromLocalData();
 		this.cdr.detectChanges();
 	}
 
 	/**
-	 * Builds the set of changed fields to persist for a new debt cycle.
+	 * Builds the set of changed fields to persist for a total-amount correction.
 	 * Compares incoming data against the original record and returns only the fields
-	 * whose values differ — so callers issue a single round-trip update instead of up to five.
+	 * whose values differ — so callers issue a single round-trip update instead of several.
 	 *
 	 * {@link setDebtForNewCycle} - The sole caller; applies the returned diff to the database.
 	 *
-	 * @param data - The new cycle values supplied by the user via the Set dialog.
+	 * @param data - The new values supplied by the user via the Set dialog (amount = new total).
 	 * @param original - The unmodified debt record as last received from the database.
-	 * @param newPaid - Whether the new amount is fully settled.
+	 * @param newDebt - The balance recomputed as the new total minus payments already made.
+	 * @param newPaid - Whether the recomputed balance is fully settled.
+	 * @param newPayments - The recomputed payment history when the total changed, or null when
+	 * the total is unchanged and history has nothing to recompute.
 	 * @returns A record of field keys to new values, containing only changed fields.
 	 */
 	private buildDebtCycleDiff(
 		data: NewDebtData,
 		original: DebtItem,
-		newPaid: boolean
+		newDebt: number,
+		newPaid: boolean,
+		newPayments: Record<number, PaymentEntry> | null
 	): Record<string, unknown> {
 		const fields: Record<string, unknown> = {};
-		const amountChanged = data.amount !== original.debt;
 
 		// Currency is compared first because the currency symbol affects how all monetary values display
 		if (data.currency !== original[DEBT_VALUE_KEY_CURRENCY])
 			fields[DEBT_VALUE_KEY_CURRENCY] = data.currency;
 
-		/* Payments must be wiped in the same atomic update as the balance change so no orphaned
-		   history entries linger for a balance the user never actually reached. */
-		if (amountChanged) {
-			fields[DEBT_VALUE_KEY_DEBT] = data.amount;
-			fields[DEBT_VALUE_KEY_PAYMENTS] = {};
-		}
-
-		// original ceiling is updated independently — it may differ from the current debt when the user re-uses the dialog without changing the amount
+		// The entered amount is the new total ceiling; the balance follows as total − payments so far.
 		if (data.amount !== original.original) fields[DEBT_VALUE_KEY_ORIGINAL] = data.amount;
-		if (original.paid !== newPaid) fields[DEBT_VALUE_KEY_PAID] = newPaid;
+		if (newDebt !== (original.debt ?? 0)) fields[DEBT_VALUE_KEY_DEBT] = newDebt;
+		if ((original.paid ?? false) !== newPaid) fields[DEBT_VALUE_KEY_PAID] = newPaid;
 		if (data.dueDate !== original.date) fields[DEBT_VALUE_KEY_DATE] = data.dueDate;
+		if (newPayments) fields[DEBT_VALUE_KEY_PAYMENTS] = newPayments;
 		return fields;
+	}
+
+	/**
+	 * Recomputes every history entry's stored balance as a running total starting
+	 * from the new ceiling, walking the entries in chronological (index) order.
+	 * Each entry's amount and timestamp are preserved — only the balance snapshot,
+	 * which is stale once the ceiling it was computed against changes, is replaced.
+	 *
+	 * {@link setDebtForNewCycle} - The sole caller; recomputes history when the total changes.
+	 *
+	 * @param payments - The entry's current payment history, keyed by insertion index.
+	 * @param newTotal - The new total ceiling to recompute the running balance from.
+	 * @returns A new payments record with every entry's balance recalculated.
+	 */
+	private recomputeHistoryBalances(
+		payments: Record<number, PaymentEntry>,
+		newTotal: number
+	): Record<number, PaymentEntry> {
+		const orderedKeys = Object.keys(payments)
+			.map(Number)
+			.sort((a, b) => a - b);
+		let runningBalance = newTotal;
+		const recomputed: Record<number, PaymentEntry> = {};
+		for (const key of orderedKeys) {
+			runningBalance = Utilities.roundToTwoDecimals(runningBalance - payments[key].amount);
+			recomputed[key] = { ...payments[key], balance: runningBalance };
+		}
+		return recomputed;
 	}
 
 	/**

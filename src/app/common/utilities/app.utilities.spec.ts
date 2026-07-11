@@ -1,4 +1,3 @@
-import { TestBed } from '@angular/core/testing';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 
 import { Utilities } from './app.utilities';

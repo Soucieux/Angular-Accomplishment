@@ -1,17 +1,13 @@
 import { TestBed } from '@angular/core/testing';
-import { EnvironmentInjector } from '@angular/core';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
-import { BehaviorSubject, of, ReplaySubject } from 'rxjs';
+import { BehaviorSubject, ReplaySubject } from 'rxjs';
 
 import { AuthService } from './auth.service';
 import { DatabaseService } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/utilities/app.utilities';
-import {
-	CN,
-	CLOUDBASE_ERROR_INVALID_CREDENTIALS
-} from '../../common/constants';
+import { CLOUDBASE_ERROR_INVALID_CREDENTIALS } from '../../common/constants';
 import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 
 describe('AuthService', () => {
@@ -41,9 +37,6 @@ describe('AuthService', () => {
 
         mockUtilities = jasmine.createSpyObj<Utilities>('Utilities', ['setIsUserAlive', 'checkIfHoverCapable']);
         mockUtilities.setIsUserAlive.and.stub();
-
-        // Pre-spy on getCurrentCountry to return CN so cloudbaseAuth is initialized
-        spyOn(Utilities, 'getCurrentCountry').and.returnValue(CN);
 
         TestBed.configureTestingModule({
             providers: [
@@ -147,7 +140,7 @@ describe('AuthService', () => {
         });
     });
 
-    // ── getCurrentUser (CN context — delegates to CloudBase) ─────────────────
+    // ── getCurrentUser (delegates to CloudBase) ──────────────────────────────
 
     describe('getCurrentUser', () => {
         it('returns an observable', () => {

@@ -106,8 +106,8 @@ src/app/
 ├── app.routes.ts             # 顶层路由定义
 │
 ├── backend/                  # 服务层
-│   ├── authentication-service/   # Firebase + Cloudbase 认证抽象层
-│   ├── database-service/         # 统一数据库接口（双后端）
+│   ├── authentication-service/   # Cloudbase 认证抽象层（Firebase 方法保留为未部署的备选）
+│   ├── database-service/         # 统一数据库接口（Cloudbase 在线；Firebase 实现保留）
 │   ├── dialog-service/           # 全局弹窗管理
 │   ├── douban-service/           # 豆瓣 API 代理客户端
 │   ├── notification-service/     # 网页推送通知订阅管理

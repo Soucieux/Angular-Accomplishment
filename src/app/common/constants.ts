@@ -106,14 +106,8 @@ export const TIMEOUT_KEY_PATCH = 'patch';
 /** Timeout key for the Release Notes tab loading guard. */
 export const TIMEOUT_KEY_PATCH_RELEASE = 'patch-release';
 export const COMPONENT_DESTROY = 'Component Destroyed';
-export const UTILITIES_LOG_COUNTRY_FAILED = 'Country detection failed';
-export const UTILITIES_LOG_DEFAULT_COUNTRY = 'Use default country: ';
-/** Country code for mainland China — drives Cloudbase backend selection at startup. */
+/** Language marker for mainland-China entries in bilingual movie API data (e.g. actor names). */
 export const CN = 'CN';
-/** Country code for all non-CN regions — drives Firebase backend selection at startup. */
-export const OVERSEAS = 'INTL';
-/** IANA timezone identifiers for mainland China — used by the timezone-based region detector. */
-export const CN_TIMEZONES = ['Asia/Shanghai', 'Asia/Urumqi'];
 /** DOM keyboard event key value for the Enter key. */
 export const KEY_ENTER = 'Enter';
 /** DOM keyboard event key value for the Escape key. */
@@ -156,8 +150,6 @@ export const ROLE_ADMIN = 'administrator';
 export const CLOUDBASE_ERROR_INVALID_ARGUMENT = 'invalid_argument';
 /** CloudBase error category returned when credentials are wrong. */
 export const CLOUDBASE_ERROR_INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
-export const AUTH_LOG_SIGN_IN_FAILED = 'Error when signing in with email and password';
-export const AUTH_LOG_GOOGLE_SIGN_IN_FAILED = 'Error when signing in through Google';
 export const AUTH_LOG_SIGN_OUT_FAILED = 'Error when signing out current user';
 /** CloudBase behaviour-log event type queried for the last sign-in timestamp. */
 export const AUTH_BEHAVIOR_LOG_TYPE_LOGIN = 'LOGIN';

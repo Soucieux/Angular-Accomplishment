@@ -1,17 +1,9 @@
-import { EnvironmentInjector, Inject, Injectable, NgZone } from '@angular/core';
-import {
-	GoogleAuthProvider,
-	signInWithEmailAndPassword,
-	signInWithPopup,
-	Auth,
-	User,
-	signOut,
-	onAuthStateChanged
-} from 'firebase/auth';
+import { Inject, Injectable, NgZone, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { LOG } from '../../common/app.logs';
-import { DatabaseService, FIREBASE_AUTH } from '../database-service/database.service';
+import { DatabaseService } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
@@ -27,9 +19,6 @@ import {
 	CLOUDBASE_ERR_USER_NOT_FOUND,
 	CLOUDBASE_ERROR_INVALID_ARGUMENT,
 	CLOUDBASE_ERROR_INVALID_CREDENTIALS,
-	CN,
-	AUTH_LOG_SIGN_IN_FAILED,
-	AUTH_LOG_GOOGLE_SIGN_IN_FAILED,
 	AUTH_LOG_SIGN_OUT_FAILED,
 	AUTH_BEHAVIOR_LOG_TYPE_LOGIN
 } from '../../common/constants';
@@ -52,22 +41,20 @@ export class AuthService {
 	private verification: any;
 	private passwordResetData: any = null;
 	private cloudbaseAuth: any;
-	private firebaseAuth!: Auth;
 	private cloudbaseUserSubject = new BehaviorSubject<any>(null);
-	private firebaseUserSubject = new BehaviorSubject<User | null>(null);
-	public readonly currentUser$: Observable<any> =
-		Utilities.getCurrentCountry() === CN
-			? this.cloudbaseUserSubject.asObservable()
-			: this.firebaseUserSubject.asObservable();
+	public readonly currentUser$: Observable<any> = this.cloudbaseUserSubject.asObservable();
 
 	constructor(
-		@Inject(EnvironmentInjector) private environmentInjector: EnvironmentInjector,
 		private router: Router,
 		private databaseService: DatabaseService,
 		private utilities: Utilities,
-		private ngZone: NgZone
+		private ngZone: NgZone,
+		@Inject(PLATFORM_ID) private platformId: object
 	) {
-		if (Utilities.getCurrentCountry() === CN) {
+		/* Browser only — SSR prerendering has no CloudbaseService provider (main.ts
+		   registers it in the browser bootstrap), so the root-provided abstract base
+		   would be injected here and has no getCloudbaseAuth. */
+		if (isPlatformBrowser(this.platformId)) {
 			const cloudbaseService = this.databaseService as CloudbaseService;
 			this.cloudbaseAuth = cloudbaseService.getCloudbaseAuth();
 		}
@@ -76,97 +63,12 @@ export class AuthService {
 	// ── Common methods ───────────────────────────────────────────────────────
 
 	/**
-	 * Gets the current authenticated user as an observable, selecting the correct
-	 * auth provider (CloudBase for CN, Firebase otherwise).
+	 * Gets the current authenticated user as an observable from the CloudBase auth provider.
 	 *
 	 * @returns An observable that emits the current user or null.
 	 */
 	public getCurrentUser(): Observable<any> {
-		return Utilities.getCurrentCountry() === CN
-			? this.cloudbaseGetCurrentUser()
-			: this.firebaseGetCurrentUser();
-	}
-
-	// ── Firebase authentication methods ─────────────────────────────────────
-
-	/**
-	 * Gets the current Firebase user as an observable. Wraps onAuthStateChanged
-	 * so subscribers receive continuous user updates (including null on sign-out).
-	 *
-	 * @returns An observable that emits the current Firebase User or null.
-	 */
-	private firebaseGetCurrentUser(): Observable<User | null> {
-		// Wrapping with an Observable makes sure the user object is updated continuously and we have the option to subscribe to it
-		return new Observable((observer) => {
-			this.firebaseAuth = this.environmentInjector.get(FIREBASE_AUTH);
-
-			// onAuthStateChanged emits the user continuously
-			const unsubscribe = onAuthStateChanged(this.firebaseAuth, (user) => {
-				if (user) {
-					this.ngZone.run(() => this.utilities.setIsUserAlive(true));
-				} else {
-					this.ngZone.run(() => this.utilities.setIsUserAlive(false));
-				}
-				this.firebaseUserSubject.next(user);
-				observer.next(user);
-			});
-
-			return () => unsubscribe();
-		});
-	}
-
-	/**
-	 * Signs in with email and password via Firebase authentication.
-	 *
-	 * @param email - The user's email address.
-	 * @param password - The user's password.
-	 * @param returnUrl - Optional URL to navigate to after sign-in. Defaults to '/'.
-	 */
-	public async emailPasswordLogin(email: string, password: string, returnUrl: string = '/'): Promise<void> {
-		try {
-			await signInWithEmailAndPassword(this.firebaseAuth, email, password);
-			this.router.navigate([returnUrl]).catch(() => {});
-			this.ngZone.run(() => this.utilities.setIsUserAlive(true));
-		} catch (error: unknown) {
-			LOG.error(this.className, AUTH_LOG_SIGN_IN_FAILED);
-			throw new UnexpectedError();
-		}
-	}
-
-	/**
-	 * Initiates Google sign-in via Firebase popup. After the popup completes,
-	 * listens for the auth state change to confirm the user is signed in
-	 * before navigating to the home page.
-	 */
-	public googleLogin(): void {
-		/* CurrentUser in this.auth is still null after signInWithPopup completes
-		   As the credentials are being returned after that and then firebase starts initializing */
-		signInWithPopup(this.firebaseAuth, new GoogleAuthProvider())
-			.then(() => {
-				const unsub = onAuthStateChanged(this.firebaseAuth, (user) => {
-					unsub();
-					if (user) {
-						this.router.navigate(['/']).catch(() => {});
-						this.ngZone.run(() => this.utilities.setIsUserAlive(true));
-					}
-				});
-			})
-			.catch(() => LOG.error(this.className, AUTH_LOG_GOOGLE_SIGN_IN_FAILED));
-	}
-
-	/**
-	 * Signs out the current Firebase user and reactively updates auth state
-	 * without navigating away from the current page.
-	 */
-	public logout(): void {
-		// CurrentUser in this.auth gets removed immediately after signOut
-		signOut(this.firebaseAuth)
-			.then(() => {
-				this.ngZone.run(() => {
-					this.utilities.setIsUserAlive(false);
-				});
-			})
-			.catch(() => LOG.error(this.className, AUTH_LOG_SIGN_OUT_FAILED));
+		return this.cloudbaseGetCurrentUser();
 	}
 
 	// ── CloudBase authentication methods ─────────────────────────────────────

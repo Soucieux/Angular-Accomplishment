@@ -22,9 +22,7 @@ import { Draggable } from 'gsap/Draggable';
 
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-import { Utilities } from '../../common/utilities/app.utilities';
 import {
-	CN,
 	COMPONENT_DESTROY,
 	DIALOG_ERROR,
 	LOGIN_ANIM_IN,
@@ -65,9 +63,7 @@ import {
 	LOGIN_MSG_PASSWORD_REQUIRED,
 	LABEL_USERNAME,
 	LOGIN_MSG_USERNAME_REQUIRED,
-	LOGIN_LABEL_PASSWORD,
-	LOGIN_LABEL_DIVIDER,
-	LOGIN_BTN_GOOGLE
+	LOGIN_LABEL_PASSWORD
 } from '../../common/locale/locale-strings';
 import { LOG } from '../../common/app.logs';
 import { AccountRateLimitedError } from '../../common/error/account-rate-limited.error';
@@ -126,8 +122,6 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly LABEL_USERNAME = LABEL_USERNAME;
 	protected readonly LOGIN_MSG_USERNAME_REQUIRED = LOGIN_MSG_USERNAME_REQUIRED;
 	protected readonly LOGIN_LABEL_PASSWORD = LOGIN_LABEL_PASSWORD;
-	protected readonly LOGIN_LABEL_DIVIDER = LOGIN_LABEL_DIVIDER;
-	protected readonly LOGIN_BTN_GOOGLE = LOGIN_BTN_GOOGLE;
 	protected readonly LOGIN_LABEL_FORGOT_PASSWORD = LOGIN_LABEL_FORGOT_PASSWORD;
 	protected readonly LOGIN_LABEL_SEND_RESET_CODE = LOGIN_LABEL_SEND_RESET_CODE;
 	protected readonly LOGIN_LABEL_RESET_PASSWORD = LOGIN_LABEL_RESET_PASSWORD;
@@ -539,7 +533,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	/**
 	 * Submits the login or sign-up form. Validates first and shows validation
 	 * errors if invalid. Routes to the appropriate auth service method based
-	 * on the current mode and the user's country.
+	 * on the current mode (sign-up, sign-in, or forgot-password).
 	 */
 	protected async onSubmit(): Promise<void> {
 		// Step 1: Mark the form as submitted so validation errors become visible in the template
@@ -591,23 +585,12 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 					this.loginForm.value['verificationCode']
 				);
 			} else {
-				/* Step 2b: Sign-in path — route to the country-appropriate auth method.
-				   CN users go through the CloudBase signIn() flow; all others use the
-				   Firebase emailPasswordLogin() flow. The check is at the call site
-				   rather than inside the service so the service stays stateless. */
-				if (Utilities.getCurrentCountry() === CN) {
-					await this.authService.signIn(
-						this.loginForm.value['username'],
-						this.loginForm.value['password'],
-						this.returnUrl
-					);
-				} else {
-					await this.authService.emailPasswordLogin(
-						this.loginForm.value['username'],
-						this.loginForm.value['password'],
-						this.returnUrl
-					);
-				}
+				// Step 2b: Sign-in path — the CloudBase signIn() flow
+				await this.authService.signIn(
+					this.loginForm.value['username'],
+					this.loginForm.value['password'],
+					this.returnUrl
+				);
 			}
 		} catch (error: unknown) {
 			/* Step 3: Distinguish user-facing errors from unexpected ones.
@@ -629,13 +612,6 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		}
-	}
-
-	/**
-	 * Initiates the Google sign-in flow.
-	 */
-	protected googleLogin(): void {
-		this.authService.googleLogin();
 	}
 
 	// ── Template helper methods ───────────────────────────────────────────────

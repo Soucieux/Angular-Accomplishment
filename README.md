@@ -106,8 +106,8 @@ src/app/
 ├── app.routes.ts             # Top-level route definitions
 │
 ├── backend/                  # Service layer
-│   ├── authentication-service/   # Firebase + Cloudbase auth abstraction
-│   ├── database-service/         # Unified database interface (dual-backend)
+│   ├── authentication-service/   # Cloudbase auth abstraction (Firebase methods kept as the undeployed alternative)
+│   ├── database-service/         # Unified database interface (Cloudbase live; Firebase implementation kept)
 │   ├── dialog-service/           # Global dialog management
 │   ├── douban-service/           # Douban API proxy client
 │   ├── notification-service/     # Web push notification subscription management

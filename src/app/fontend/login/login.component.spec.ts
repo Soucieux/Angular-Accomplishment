@@ -6,12 +6,7 @@ import { BehaviorSubject, ReplaySubject } from 'rxjs';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
-import { Utilities } from '../../common/utilities/app.utilities';
-import {
-	CN,
-	LOGIN_URL_DEFAULT_RETURN
-} from '../../common/constants';
-import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
+import { LOGIN_URL_DEFAULT_RETURN } from '../../common/constants';
 
 describe('LoginComponent', () => {
     let component: LoginComponent;
@@ -202,22 +197,12 @@ describe('LoginComponent', () => {
             expect(mockAuth.signUp).not.toHaveBeenCalled();
         });
 
-        it('calls authService.signIn when country is CN and in sign-in mode', async () => {
-            spyOn(Utilities, 'getCurrentCountry').and.returnValue(CN);
+        it('calls authService.signIn in sign-in mode', async () => {
             const form = (component as any).loginForm;
             form.get('username').setValue('user');
             form.get('password').setValue('pass');
             await (component as any).onSubmit();
             expect(mockAuth.signIn).toHaveBeenCalledWith('user', 'pass', LOGIN_URL_DEFAULT_RETURN);
-        });
-
-        it('calls authService.emailPasswordLogin when country is not CN and in sign-in mode', async () => {
-            spyOn(Utilities, 'getCurrentCountry').and.returnValue('US');
-            const form = (component as any).loginForm;
-            form.get('username').setValue('user@test.com');
-            form.get('password').setValue('pass');
-            await (component as any).onSubmit();
-            expect(mockAuth.emailPasswordLogin).toHaveBeenCalled();
         });
 
         it('calls authService.signUp when in sign-up mode', async () => {

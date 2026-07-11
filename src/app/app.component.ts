@@ -30,7 +30,6 @@ import { ToastModule } from 'primeng/toast';
 import { Utilities } from './common/utilities/app.utilities';
 import {
 	APP_BREAKPOINT_COMPACT,
-	CN,
 	COMPONENT_DESTROY,
 	CTX_COLOR_CLIPBOARD,
 	CTX_COLOR_MY_ACCOUNT,
@@ -91,8 +90,8 @@ import {
 } from './common/locale/locale-strings';
 import { DesktopContextMenuComponent } from './fontend/desktop-context-menu/context-menu.component';
 import { ContextMenuAction } from './fontend/desktop-context-menu/context-menu.model';
-import { readText } from '@tauri-apps/api/clipboard';
-import { invoke } from '@tauri-apps/api/tauri';
+import { readText } from '@tauri-apps/plugin-clipboard-manager';
+import { invoke } from '@tauri-apps/api/core';
 import { Observable, filter } from 'rxjs';
 import { BottomNavComponent } from './fontend/mobile-bottom-nav/bottom-nav.component';
 import { NavItem } from './fontend/mobile-bottom-nav/bottom-nav.model';
@@ -229,8 +228,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 			// the first few ms but that is acceptable (no synchronous Tauri calls occur on load).
 			if (this.isTauriApp) {
 				import('@tauri-apps/api/window')
-					.then(({ appWindow }) => {
-						this.tauriAppWindow = appWindow;
+					.then(({ getCurrentWindow }) => {
+						this.tauriAppWindow = getCurrentWindow();
 					})
 					.catch(() => {});
 			}
@@ -608,9 +607,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Removes the push subscription then signs the current user out using the
-	 * appropriate service based on the detected country (CloudBase for CN,
-	 * Firebase otherwise).
+	 * Removes the push subscription then signs the current user out through
+	 * the CloudBase auth provider.
 	 */
 	protected async logout(): Promise<void> {
 		// Step 1: Close the account popover immediately so the UI does not appear frozen
@@ -620,22 +618,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		// because a stale subscription is harmless and must not block the sign-out flow.
 		await this.notificationService.unsubscribe().catch(() => {});
 
-		/* Step 3: Route to the correct sign-out method based on region — CloudBase (CN)
-		   uses an async signOut(); Firebase uses a synchronous-style logout() wrapper. */
-		if (Utilities.getCurrentCountry() === CN) {
-			await this.authService.signOut();
-		} else {
-			this.authService.logout();
-		}
-	}
-
-	/**
-	 * Returns true when the app is running in the CN region.
-	 *
-	 * @returns True if the current country code is CN.
-	 */
-	protected isCN(): boolean {
-		return Utilities.getCurrentCountry() === CN;
+		// Step 3: Sign out through the CloudBase auth provider
+		await this.authService.signOut();
 	}
 
 	/**
@@ -741,7 +725,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	/**
 	 * Initiates a native window drag when the user presses the left mouse button
 	 * on a designated drag surface in the Tauri desktop app. Delegates to the
-	 * pre-cached appWindow reference loaded in ngOnInit, avoiding per-call import
+	 * pre-cached window reference loaded in ngOnInit, avoiding per-call import
 	 * overhead and the unreliable attribute-based data-tauri-drag-region mechanism.
 	 *
 	 * @param event - The MouseEvent from the mousedown binding on the drag surface.

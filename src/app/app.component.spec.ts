@@ -1,10 +1,8 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed, fakeAsync } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, ReplaySubject } from 'rxjs';
 
-import { CN } from './common/constants';
-import { Utilities } from './common/utilities/app.utilities';
 import { AppComponent } from './app.component';
 import { AuthService } from './backend/authentication-service/auth.service';
 import { CloudbaseService } from './backend/database-service/cloudbase/cloudbase.service';
@@ -46,22 +44,6 @@ describe('AppComponent', () => {
         expect(app).toBeTruthy();
     });
 
-    // ── isCN ───────────────────────────────────────────────────────────────
-
-    describe('isCN', () => {
-        it('returns true when the current country is CN', () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            spyOn(Utilities, 'getCurrentCountry').and.returnValue(CN);
-            expect((fixture.componentInstance as any).isCN()).toBeTrue();
-        });
-
-        it('returns false when the current country is not CN', () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            spyOn(Utilities, 'getCurrentCountry').and.returnValue('US');
-            expect((fixture.componentInstance as any).isCN()).toBeFalse();
-        });
-    });
-
     // ── navigateToLogin ─────────────────────────────────────────────────────
 
     describe('navigateToLogin', () => {
@@ -80,18 +62,10 @@ describe('AppComponent', () => {
     // ── logout ──────────────────────────────────────────────────────────────
 
     describe('logout', () => {
-        it('calls authService.signOut when the country is CN', fakeAsync(async () => {
+        it('signs out through the CloudBase auth provider', fakeAsync(async () => {
             const fixture = TestBed.createComponent(AppComponent);
-            spyOn(Utilities, 'getCurrentCountry').and.returnValue(CN);
             await (fixture.componentInstance as any).logout();
             expect(mockAuth.signOut).toHaveBeenCalled();
         }));
-
-        it('calls authService.logout when the country is not CN', async () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            spyOn(Utilities, 'getCurrentCountry').and.returnValue('US');
-            await (fixture.componentInstance as any).logout();
-            expect(mockAuth.logout).toHaveBeenCalled();
-        });
     });
 });

@@ -4,14 +4,10 @@ import { Capacitor } from '@capacitor/core';
 import { format } from 'date-fns';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
-import { LOG } from '../app.logs';
 import {
 	APP_BREAKPOINT_NARROW,
-	CN,
 	PORTAL_BRAND_LOGO_PROXY_URL,
 	LS_AUTH_HINT_KEY,
-	UTILITIES_LOG_COUNTRY_FAILED,
-	UTILITIES_LOG_DEFAULT_COUNTRY,
 	RECIPE_BAND_CHINESE,
 	RECIPE_BAND_DESSERT,
 	RECIPE_BAND_QUICK,
@@ -34,8 +30,6 @@ import { CloudbaseService } from '../../backend/database-service/cloudbase/cloud
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {
-	private static readonly className = 'Utilities';
-	private static currentCountry: string = '';
 	private static boundScrollEls = new WeakSet<HTMLElement>();
 	private static scrollTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
 	private readonly isUserAliveSubject = new BehaviorSubject<boolean>(false);
@@ -124,16 +118,16 @@ export class Utilities {
 
 	/**
 	 * Opens a URL in the system browser. In a Tauri desktop build, delegates to
-	 * the Tauri shell plugin so the link opens outside the webview; in a regular
+	 * the Tauri opener plugin so the link opens outside the webview; in a regular
 	 * browser context, falls back to a temporary anchor click.
 	 *
 	 * @param url - The fully-qualified URL to open.
 	 */
 	public openInNewTab(url: string): void {
 		/* `window.__TAURI__` is injected by the Tauri runtime only inside the desktop app.
-		   When present, use the shell plugin — anchor clicks open inside the webview instead. */
+		   When present, use the opener plugin — anchor clicks open inside the webview instead. */
 		if (this.isTauriApp()) {
-			import('@tauri-apps/api/shell').then(({ open }) => open(url)).catch(() => {});
+			import('@tauri-apps/plugin-opener').then(({ openUrl }) => openUrl(url)).catch(() => {});
 			return;
 		}
 		const a = this.document.createElement('a');
@@ -143,34 +137,6 @@ export class Utilities {
 		this.document.body.appendChild(a);
 		a.click();
 		this.document.body.removeChild(a);
-	}
-
-	/**
-	 * Checks and stores the current country code in the static field using the
-	 * browser timezone as a region signal. Mainland-China timezones resolve to CN;
-	 * all other timezones resolve to OVERSEAS.
-	 * Only bootstraps should call this method — it must run before any component initialises.
-	 */
-	public static checkCurrentCountry(): void {
-		try {
-			// TODO Dont delete the below code for now, they will be worked on later
-			this.currentCountry = CN;
-			// const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-			// this.currentCountry = CN_TIMEZONES.includes(timezone) ? CN : OVERSEAS;
-		} catch (error: unknown) {
-			LOG.error(this.className, UTILITIES_LOG_COUNTRY_FAILED, error as Error);
-			this.currentCountry = CN;
-			LOG.info(this.className, UTILITIES_LOG_DEFAULT_COUNTRY + this.currentCountry);
-		}
-	}
-
-	/**
-	 * Gets the current country code stored in the static field.
-	 *
-	 * @returns The country code string, or an empty string before detection runs.
-	 */
-	public static getCurrentCountry() {
-		return this.currentCountry;
 	}
 
 	/**
@@ -275,6 +241,18 @@ export class Utilities {
 		const symbol = Utilities.currencySymbol(isChinese);
 		if (amount >= 1000) return `${symbol}${Math.floor(amount / 1000)}k`;
 		return `${symbol}${amount}`;
+	}
+
+	/**
+	 * Rounds a monetary value to 2 decimal places, avoiding the floating-point drift
+	 * that accumulates when currency arithmetic (subtraction, running totals) is
+	 * chained across multiple operations.
+	 *
+	 * @param value - The numeric value to round.
+	 * @returns The value rounded to 2 decimal places.
+	 */
+	public static roundToTwoDecimals(value: number): number {
+		return Math.round(value * 100) / 100;
 	}
 
 	/**
@@ -701,19 +679,15 @@ export class Utilities {
 	───────────────────────────────────────── */
 
 	/**
-	 * Gets the display name for an authenticated user, choosing the correct field
-	 * based on the current country locale (CN uses `user_metadata.username`,
-	 * all others use `displayName`).
+	 * Gets the display name for an authenticated user from the CloudBase
+	 * `user_metadata.username` field.
 	 *
 	 * @param user - The authenticated user object from the auth observable.
 	 * @returns The user's display name, or an empty string if unavailable.
 	 */
 	public static getUserDisplayName(user: any): string {
 		if (!user) return '';
-		if (Utilities.getCurrentCountry() === CN) {
-			return user.user_metadata?.username ?? '';
-		}
-		return user.displayName ?? '';
+		return user.user_metadata?.username ?? '';
 	}
 
 	/**

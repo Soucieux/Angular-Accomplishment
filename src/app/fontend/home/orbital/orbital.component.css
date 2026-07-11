@@ -1074,6 +1074,17 @@
 		padding-top: calc(10px + env(safe-area-inset-top));
 	}
 
+	/* Tauri desktop — same reasoning as the ios-safe-area-mode rule above:
+	   .orbital-root is its own independent scroll/clip boundary, so it needs this
+	   regardless of .container-home:has(orbital)'s own padding-top: 30px
+	   (styles.css) — that only positions container-home's own normal-flow content,
+	   not a nested position:absolute child with its own overflow-y:auto. Matches
+	   .container-home:has(orbital)'s 30px (the dashboard state's own header
+	   clearance, not the 40px used by the editorial/logged-out state). */
+	:host-context(body.tauri-mode) .orbital-root {
+		padding-top: 30px;
+	}
+
 	.orbital-ring-inner,
 	.orbital-ring-outer {
 		display: none;

@@ -4,6 +4,10 @@
    default 4px gap so the content area starts flush with the window top. */
 .nav-content-tauri {
 	margin-top: 0 !important;
+	/* mat-drawer-content's base margin (below) leaves a 2px right-edge gap between
+	   the full-width floating header and the container beneath it — the same seam
+	   pattern fixed for ios-safe-area-mode in styles.css, mirrored here. */
+	margin-right: 0 !important;
 	padding-top: 30px;
 }
 

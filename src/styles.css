@@ -168,48 +168,64 @@ button {
    so it rises to cover the header zone while staying within the container's box.
    No overflow override is needed, preserving mat-drawer-content's scroll ability.
    padding-top is raised to 40px (30px header + 10px original) so content
-   inside stays at the same screen position. Only affects the Tauri app. */
+   inside stays at the same screen position. Only affects the Tauri app.
+   --top-reserve/--top-reserve-inner-padding are shared with the iOS block below —
+   same arithmetic, Tauri's fixed 30px in place of iOS's env(safe-area-inset-top). */
+body.tauri-mode {
+	--top-reserve: 30px;
+	--top-reserve-inner-padding: calc(10px + var(--top-reserve));
+}
+
+/* Entertainment/Resonance/Debt/About deliberately do NOT get the margin/padding
+   "rise" treatment on Tauri (confirmed by testing) — only min-height shrinks. This
+   is an intentional cross-platform difference: the iOS block below DOES rise
+   these same four pages. Do not unify the two into one shared rule shape. */
 body.tauri-mode .container-entertainment,
 body.tauri-mode .container-resonance,
 body.tauri-mode .container-debt,
 body.tauri-mode .container-about {
-	min-height: calc(100dvh - 40px);
+	min-height: calc(100dvh - 10px - var(--top-reserve));
 }
 
 /* Home only — confirmed by testing that Entertainment/Resonance/Debt/About do not
    have this issue, so they keep the plain min-height reduction above; only Home
-   gets the rise treatment. Same mechanism as .glass-card: margin-top: -30px cancels
-   mat-drawer-content's padding-top: 30px (.nav-content-tauri) so the box rises
-   flush with the window top; padding-top is raised by that same 30px so inner
+   gets the rise treatment. Same mechanism as .glass-card: margin-top cancels
+   mat-drawer-content's padding-top (.nav-content-tauri) so the box rises flush
+   with the window top; padding-top is raised by that same reserve so inner
    content lands at the exact same screen position as before — only the container's
    own background now reaches behind the header for its backdrop-filter to blur.
    Two rules are needed because home.component.css's .container-home:has(orbital)
    (the logged-in dashboard) switches to a completely different sizing model —
    padding: 0 and height: 100% instead of the editorial/logged-out state's
    padding: 10px 20px and min-height: calc(100dvh - 10px) — so each state needs its
-   own compensation derived from its own pre-rise values, not a single shared one. */
+   own compensation derived from its own pre-rise values, not a single shared one.
+   min-height intentionally does NOT add the reserve term (unlike the iOS group
+   rule below) — that mirrors this rule's original behavior exactly; the two are
+   genuinely different formulas, not a shared one with different reserve values. */
 body.tauri-mode .container-home {
-	margin-top: -30px;
+	margin-top: calc(var(--top-reserve) * -1);
 	min-height: calc(100dvh - 10px);
-	padding-top: 40px;
+	padding-top: var(--top-reserve-inner-padding);
 }
 
 body.tauri-mode .container-home:has(orbital) {
-	height: calc(100% + 30px);
-	padding-top: 30px;
+	height: calc(100% + var(--top-reserve));
+	padding-top: var(--top-reserve);
 }
 
-/* access-denied-wrapper uses height: calc(100dvh - 10px) to centre the message.
-   In Tauri mode the full height chain eats 58px: 8px mat-drawer-content margin +
-   30px header padding + 20px container or glass-card top+bottom padding. */
+/* access-denied-wrapper's non-reserve baseline is 28px on Tauri (8px mat-drawer-content
+   margin + 20px container/glass-card top+bottom padding) — the two platforms' baselines
+   differ; only the reserve term itself is shared. */
 body.tauri-mode .access-denied-wrapper {
-	height: calc(100dvh - 58px);
+	height: calc(100dvh - 28px - var(--top-reserve));
 }
 
 body.tauri-mode .glass-card {
-	margin-top: -30px;
-	height: calc(100% + 30px);
-	padding-top: 40px;
+	margin-top: calc(var(--top-reserve) * -1);
+	height: calc(100% + var(--top-reserve));
+	padding-top: var(--top-reserve-inner-padding);
+	/* Tauri-specific corner radius — cosmetic, unrelated to the safe-area/reserve
+	   math. Confirmed intentional; do not merge into a shared variable. */
 	border-radius: 0 0 18px 18px;
 }
 
@@ -226,9 +242,21 @@ body.tauri-mode .glass-card {
    selector with a scoping attribute, including ancestor selectors like body, and body
    never carries one (it sits outside every component's template), so a
    body.ios-safe-area-mode selector placed in a component .css file can never match. */
+body.ios-safe-area-mode {
+	--top-reserve: env(safe-area-inset-top);
+	--top-reserve-inner-padding: calc(10px + var(--top-reserve));
+}
+
 body.ios-safe-area-mode .nav-content-mobile {
 	margin-top: 0 !important;
-	padding-top: env(safe-area-inset-top);
+	/* mat-drawer-content's own base rule (app.component.css) still applies 4px of
+	   left/right margin, which the fixed frosted header (app.component.css,
+	   left:0/right:0) never has — zeroing only margin-top left an 8px seam where
+	   the header was flush with the true edge but the risen container beneath it
+	   was inset, producing a hairline gradient sliver at both top corners. */
+	margin-right: 0 !important;
+	margin-left: 0 !important;
+	padding-top: var(--top-reserve);
 }
 
 /* Full-bleed pages (Home, Entertainment, Resonance, Debt, About) have no card
@@ -240,19 +268,24 @@ body.ios-safe-area-mode .nav-content-mobile {
    frosted look card pages already get. 100vh, not 100dvh — 100dvh has a cold-start
    bug specific to installed standalone PWA that native/WKWebView does not share
    (see the html/body height comment above); both converge to the same value once
-   settled, so 100vh is the one value that is correct for both surfaces. */
+   settled, so 100vh is the one value that is correct for both surfaces. Unlike
+   Tauri (which excludes Entertainment/Resonance/Debt/About from the rise — see
+   above), iOS gives all five pages the same treatment; do not narrow this
+   selector list to match Tauri's. */
 body.ios-safe-area-mode .container-home,
 body.ios-safe-area-mode .container-entertainment,
 body.ios-safe-area-mode .container-resonance,
 body.ios-safe-area-mode .container-debt,
 body.ios-safe-area-mode .container-about {
-	margin-top: calc(env(safe-area-inset-top) * -1);
-	min-height: calc(100vh - 10px + env(safe-area-inset-top));
-	padding-top: calc(10px + env(safe-area-inset-top));
+	margin-top: calc(var(--top-reserve) * -1);
+	min-height: calc(100vh - 10px + var(--top-reserve));
+	padding-top: var(--top-reserve-inner-padding);
 }
 
+/* No .container-home:has(orbital) counterpart exists here (unlike Tauri above) —
+   do not add one; iOS's Home dashboard state is governed only by the rule above. */
 body.ios-safe-area-mode .access-denied-wrapper {
-	height: calc(100vh - 10px - env(safe-area-inset-top));
+	height: calc(100vh - 10px - var(--top-reserve));
 }
 
 /* Card pages (Portal, Today, Reminder, Recipe, Account, Vault, Patch Notes) rise
@@ -262,9 +295,11 @@ body.ios-safe-area-mode .access-denied-wrapper {
    the notch, and only the bottom corners stay rounded since the card is now
    flush with the top edge. */
 body.ios-safe-area-mode .glass-card {
-	margin-top: calc(env(safe-area-inset-top) * -1);
-	height: calc(100% + env(safe-area-inset-top));
-	padding-top: calc(10px + env(safe-area-inset-top));
+	margin-top: calc(var(--top-reserve) * -1);
+	height: calc(100% + var(--top-reserve));
+	padding-top: var(--top-reserve-inner-padding);
+	/* iOS-specific corner radius + !important tie-break — cosmetic, unrelated to
+	   the safe-area/reserve math. Confirmed intentional; do not merge. */
 	border-radius: 0 0 10px 10px !important;
 }
 

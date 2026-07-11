@@ -3,10 +3,22 @@
 ───────────────────────────────────────── */
 
 /* The host is a non-interactive layer pinned over the app; only the dock and
-   overlay capture pointer events so the page behind stays scrollable. */
+   overlay capture pointer events so the page behind stays scrollable.
+   position: fixed, not absolute: with no positioned ancestor between :host and
+   <body>, absolute's containing block was already the true viewport (the ICB) —
+   but :host is still a DOM descendant of body, and body has overflow: hidden.
+   On Android Chrome's edge-to-edge "chin" (see styles.css's ios-safe-area-mode
+   @supports block), body's own box can fall short of the true viewport height,
+   and overflow: hidden clips descendants against body's own (short) box even
+   though :host's position is computed against the larger true viewport — the
+   dock can end up positioned outside body's own clipping box entirely,
+   disappearing. fixed is immune to ancestor overflow: hidden clipping as long as
+   no ancestor between :host and <body> sets transform/filter/backdrop-filter
+   (none do here), so it always paints against the true viewport regardless of
+   body's box. inset: 0 behavior is otherwise identical — nothing else changes. */
 :host {
 	display: block;
-	position: absolute;
+	position: fixed;
 	inset: 0;
 	z-index: 40;
 	pointer-events: none;
@@ -215,16 +227,22 @@
 }
 
 /* Native iOS app AND installed mobile web app only — both render fullscreen with no
-   OS chrome, so the dock needs the actual home-indicator inset added, with no flat
-   base of its own (on a device with zero inset — older iPhones, Android — this
-   collapses to bottom: 0). Mobile browser is deliberately excluded from this rule
-   entirely — Safari/Chrome's own chrome already reserves the home-indicator zone. */
+   OS chrome. max(20px, inset) keeps the dock's normal 20px floating margin as a
+   floor, then rises to clear a larger home-indicator inset when one exists.
+   iOS (inset ≈ 34px) → 34px, unchanged from the old pure-inset value. Android web
+   app reports inset: 0px (confirmed on-device: screen 892 vs viewport 839.6, no
+   safe-area-inset-bottom), so a pure inset collapsed the dock flush to the very
+   bottom edge — the floor restores the 20px margin there. Mobile browser is
+   deliberately excluded — Safari/Chrome's own chrome already reserves that zone. */
 :host-context(body.ios-safe-area-mode) .dock-wrap {
-	bottom: calc(env(safe-area-inset-bottom));
+	bottom: max(20px, env(safe-area-inset-bottom));
 }
 
+/* Tracks the dock's max(20px, inset) so the overlay stays 63px above the dock's
+   bottom on every platform — on Android (inset: 0) this resolves to the 83px base,
+   preventing the panel from overlapping the risen dock. */
 :host-context(body.ios-safe-area-mode) .grid {
-	bottom: calc(63px + env(safe-area-inset-bottom));
+	bottom: calc(63px + max(20px, env(safe-area-inset-bottom)));
 }
 
 .dock {
@@ -421,10 +439,11 @@
 	pointer-events: auto;
 }
 
-/* Native iOS app AND installed mobile web app only — same reasoning as .dock-wrap
-   above. */
+/* Native iOS app AND installed mobile web app only — same max(20px, inset) floor as
+   .dock-wrap/.grid above, so the popover stays 64px above the dock's bottom on every
+   platform (on Android, inset: 0 → the 84px base) rather than overlapping the dock. */
 :host-context(body.ios-safe-area-mode) .account-popover {
-	bottom: calc(64px + env(safe-area-inset-bottom));
+	bottom: calc(64px + max(20px, env(safe-area-inset-bottom)));
 }
 
 .account-popover-header {

@@ -1,6 +1,6 @@
 import { Inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import { DatabaseService } from '../database-service/database.service';
 import { LOG } from '../../common/app.logs';
 import { NOTIF_SEND_FAILED, NOTIF_SUBSCRIBE_FAILED, NOTIF_UNSUBSCRIBE_FAILED } from '../../common/constants';

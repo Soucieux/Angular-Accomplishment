@@ -1,58 +1,44 @@
 {
-	"package": {
-		"productName": "Vision Canvas",
-		"version": "2.0.0"
-	},
-	"build": {
-		"beforeBuildCommand": "npm run build && rsync -a --delete --exclude='recipe/' --exclude='resonance/' --exclude='login/' --exclude='portal/' --exclude='patch/' --exclude='debt/' --exclude='entertainment/' --exclude='about/' --exclude='reminder/' --exclude='ngsw-worker.js' --exclude='ngsw.json' --exclude='safety-worker.js' --exclude='worker-basic.min.js' dist/my-own-website/browser/ src-tauri/dist/browser/",
-		"beforeDevCommand": "npm run start",
-		"devPath": "http://localhost:4200",
-		"distDir": "http://127.0.0.1:9527",
-		"withGlobalTauri": true
-	},
-	"tauri": {
-		"bundle": {
-			"active": true,
-			"targets": "all",
-			"identifier": "com.visioncanvas.app",
-			"icon": [
-				"icons/32x32.png",
-				"icons/128x128.png",
-				"icons/128x128@2x.png",
-				"icons/icon.icns",
-				"icons/icon.ico"
-			]
-		},
-		"allowlist": {
-			"all": false,
-			"clipboard": {
-				"all": true
-			},
-			"notification": {
-				"all": true
-			},
-			"shell": {
-				"open": true
-			},
-			"window": {
-				"startDragging": true
-			}
-		},
-		"windows": [
-			{
-				"title": "Vision Canvas",
-				"width": 1500,
-				"height": 938,
-				"minWidth": 940,
-				"minHeight": 650,
-				"transparent": false,
-				"hiddenTitle": true,
-				"titleBarStyle": "Overlay",
-				"decorations": true
-			}
-		],
-		"security": {
-			"csp": null
-		}
-	}
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "build": {
+    "beforeBuildCommand": "npm run build && rsync -a --delete --exclude='recipe/' --exclude='resonance/' --exclude='login/' --exclude='portal/' --exclude='patch/' --exclude='debt/' --exclude='entertainment/' --exclude='about/' --exclude='reminder/' --exclude='ngsw-worker.js' --exclude='ngsw.json' --exclude='safety-worker.js' --exclude='worker-basic.min.js' dist/my-own-website/browser/ src-tauri/dist/browser/",
+    "beforeDevCommand": "npm run start",
+    "frontendDist": "http://127.0.0.1:9527",
+    "devUrl": "http://localhost:4200"
+  },
+  "productName": "Vision Canvas",
+  "mainBinaryName": "Vision Canvas",
+  "version": "2.0.0",
+  "identifier": "com.visioncanvas.app",
+  "plugins": {},
+  "app": {
+    "security": {
+      "csp": null
+    },
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Vision Canvas",
+        "width": 1500,
+        "height": 938,
+        "minWidth": 940,
+        "minHeight": 650,
+        "transparent": false,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay",
+        "decorations": true,
+        "useHttpsScheme": true
+      }
+    ]
+  }
 }

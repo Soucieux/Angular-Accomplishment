@@ -5,7 +5,6 @@ import {
 	COMPONENT_DESTROY,
 	DIALOG_ADD,
 	DIALOG_BLOCK,
-	DIALOG_CONFIRM,
 	DIALOG_ERROR,
 	DIALOG_HISTORY,
 	RATE_DECREASED,
@@ -36,6 +35,7 @@ import {
 import {
 	SEARCH_CANCEL,
 	SEARCH_COMPLETE,
+	MSG_DELETING,
 	DIALOG_BTN_DELETE,
 	ENT_MSG_DELETE_CONFIRM_PREFIX,
 	ENT_DIALOG_TITLE_DELETE_MOVIE,
@@ -204,7 +204,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		/* Server has to access this line as well. Without it, movieList$ will be empty and this component will be destoryed immediately.
 		   Only logged in user can access the movie list */
 		if (isPlatformBrowser(this.platformId)) {
-
 			// Step 1: Inject View Transition animation styles into <head> at runtime.
 			/* ViewEncapsulation.Emulated would prefix ::view-transition-* selectors with
 			   an attribute hash, breaking the browser-generated pseudo-elements on the root. */
@@ -415,38 +414,31 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Calls the Douban third-party API to retrieve movie data. If that fails or
-	 * returns no data, falls back to scraping the Douban movie webpage directly.
+	 * Calls the Douban third-party API to retrieve movie data.
 	 *
 	 * @param movieId - The Douban movie ID to look up.
-	 * @returns An object containing the movie data (movieWebpageAsData) and a flag
-	 *          (thirdPartyApi) indicating whether the data came from the third-party API.
+	 * @returns The parsed movie data object from the third-party API.
+	 * @throws MovieFetchFailedError if the API returns no data or the request fails.
 	 */
 	private async invokeRetrieveMovieApi(movieId: number) {
-		let movieData = null;
-		let movieDataWebpage = null;
-
 		try {
-			/* Try the third-party API first; if it returns nothing (rate-limited or down),
-			   fall back to parsing the Douban webpage HTML directly. The webpage parse
-			   is more brittle but works when the API is unavailable. */
-			movieData = await firstValueFrom(this.doubanService.searchMovieByThirdPartyApi(movieId));
+			const movieData = await firstValueFrom(
+				this.doubanService.searchMovieByThirdPartyApi(movieId)
+			);
 			if (!movieData) {
-				movieDataWebpage = await firstValueFrom(this.doubanService.searchMovieByWebpage(movieId));
-				return { movieWebpageAsData: movieDataWebpage, thirdPartyApi: false };
+				throw new MovieFetchFailedError(movieId);
 			}
-			movieData = JSON.parse(movieData);
-			return { movieWebpageAsData: movieData, thirdPartyApi: true };
+			return JSON.parse(movieData);
 		} catch (error) {
 			throw new MovieFetchFailedError(movieId);
 		}
 	}
 
 	/**
-	 * Core data retrieval method. Fetches the movie webpage or API response from
-	 * Douban for the given movie, extracts the rating, and optionally extracts
-	 * additional metadata (release date, episode count, cover image, actors,
-	 * description, year, and title) based on the provided flags.
+	 * Core data retrieval method. Fetches the movie data from the Douban
+	 * third-party API for the given movie, extracts the rating, and optionally
+	 * extracts additional metadata (release date, episode count, cover image,
+	 * actors, description, year, and title) based on the provided flags.
 	 *
 	 * @param movieItemVO - The movie item to populate with retrieved data.
 	 * @param retrieveOtherData - If true, also retrieves release date, episode count,
@@ -460,37 +452,16 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		retrieveYearAndTitle: boolean
 	) {
 		try {
-			// Step 1: Get the movie webpage as text
-			const { movieWebpageAsData, thirdPartyApi } = await this.invokeRetrieveMovieApi(
-				movieItemVO.getMovieId()
-			);
+			// Step 1: Get the movie data from the third-party API
+			const movieData = await this.invokeRetrieveMovieApi(movieItemVO.getMovieId());
 
 			// Step 2: Get the latest movie rate for the current movie
-			if (thirdPartyApi) {
-				movieItemVO.setMovieRate(movieWebpageAsData['doubanRating']);
-			} else {
-				const regexForMovieRate = new RegExp(
-					'<strong class="ll rating_num" property="v:average">(.*?)</strong>',
-					'i'
-				);
-				const movieRate = movieWebpageAsData.match(regexForMovieRate)?.[1];
-				movieItemVO.setMovieRate(movieRate);
-			}
+			movieItemVO.setMovieRate(movieData['doubanRating']);
 
 			// Step 3: Retrieve other data if the flag is true
 			if (retrieveOtherData) {
 				// Step 4: Get the first release date for the current movie
-				let firstReleaseDate = '';
-				if (thirdPartyApi) {
-					firstReleaseDate = movieWebpageAsData['dateReleased'];
-				} else {
-					const regexForFirstReleaseDate = new RegExp(
-						'<span class="pl">首播:</span> <span property="v:initialReleaseDate" content="(.*?)">(.*?)</span><br/>',
-						'i'
-					);
-					firstReleaseDate = movieWebpageAsData.match(regexForFirstReleaseDate)?.[1];
-				}
-
+				let firstReleaseDate = movieData['dateReleased'];
 				firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
 				movieItemVO.setMovieFirstReleaseDate(firstReleaseDate);
 				LOG.info(
@@ -500,31 +471,12 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 
 				// Step 4.1: Retrieve year and title if the flag is true
 				if (retrieveYearAndTitle) {
-					let title = '';
-					let year = '';
-					if (thirdPartyApi) {
-						title = movieWebpageAsData['originalName'];
-						year = movieWebpageAsData['year'];
-					} else {
-						year = firstReleaseDate.substring(0, 4);
-
-						const regexForTitle = new RegExp('<meta property="og:title" content="(.*?)" />', 'i');
-						title = movieWebpageAsData.match(regexForTitle)?.[1];
-					}
-
-					movieItemVO.setMovieYear(Number(year));
-					movieItemVO.setMovieName(title);
+					movieItemVO.setMovieYear(Number(movieData['year']));
+					movieItemVO.setMovieName(movieData['originalName']);
 				}
 
 				// Step 5: Get the total episode number for the current movie
-				let episodeNumber = 0;
-				if (thirdPartyApi) {
-					episodeNumber = movieWebpageAsData['episodes'];
-				} else {
-					const regexForEpisodeNumber = new RegExp('<span class="pl">集数:</span> (.*?)<br/>', 'i');
-					episodeNumber = movieWebpageAsData.match(regexForEpisodeNumber)?.[1];
-				}
-
+				const episodeNumber = movieData['episodes'];
 				movieItemVO.setMovieEpisodeNumber(episodeNumber);
 				LOG.info(
 					this.className,
@@ -532,32 +484,18 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				);
 
 				// Step 6: Get movie actors and movie description
-				if (thirdPartyApi) {
-					movieItemVO.setDescription(movieWebpageAsData['data'][0]['description']);
-					let actors = movieWebpageAsData['actor'];
+				movieItemVO.setDescription(movieData['data'][0]['description']);
+				const allActors = movieData['actor']
+					.map((actor: any) => actor.data.find((d: any) => d.lang === CN)?.name)
+					.filter(Boolean);
+				const actorRetrieved =
+					allActors.length > 10
+						? allActors.slice(0, 10).join(', ') + ' 等'
+						: allActors.join(', ');
+				movieItemVO.setActors(actorRetrieved);
 
-					const allActors = actors
-						.map((actor: any) => actor.data.find((d: any) => d.lang === CN)?.name)
-						.filter(Boolean);
-
-					const actorRetrieved =
-						allActors.length > 10
-							? allActors.slice(0, 10).join(', ') + ' 等'
-							: allActors.join(', ');
-
-					movieItemVO.setActors(actorRetrieved);
-				}
-
-				// Step 7: Get the movie cover for the current movie and upload it to firebase storage
-				let movieCoverImageLink;
-
-				if (thirdPartyApi) {
-					movieCoverImageLink = movieWebpageAsData['data'][0]['poster'];
-				} else {
-					const regexForCoverImageLink = new RegExp('<img class="media" src="(.*?)" />', 'i');
-					movieCoverImageLink = movieWebpageAsData.match(regexForCoverImageLink)?.[1];
-				}
-				await this.getMovieCoverImageByLink(movieCoverImageLink, movieItemVO);
+				// Step 7: Get the movie cover for the current movie and upload it to storage
+				await this.getMovieCoverImageByLink(movieData['data'][0]['poster'], movieItemVO);
 			}
 		} catch (error) {
 			// For search dialog, record it inside.
@@ -704,7 +642,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param genre The genre string whose category card was clicked.
 	 */
 	protected filterByGenre(genre: string): void {
-
 		// Step 1: Determine the next genre value (clicking the active genre deselects it).
 		const currentGenre = this.selectedGenres$.getValue();
 		const newGenre = currentGenre === genre ? '' : genre;
@@ -742,7 +679,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param newGenre - The genre filter that will be active after the transition.
 	 */
 	private computeVtClassMap(currentGenre: string, newGenre: string): void {
-
 		// Step 1: Reset the map so stale transition classes from a previous filter do not bleed through.
 		this.vtClassMap.clear();
 
@@ -806,28 +742,29 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 
 	/**
 	 * Opens a confirmation dialog asking the user to confirm deletion of the
-	 * specified movie. If confirmed, the movie is removed from the database.
+	 * specified movie. The delete then runs behind the blocking overlay so a
+	 * repeat click cannot fire a duplicate database call.
 	 *
 	 * @param movieItemVO - The movie item to be deleted upon confirmation.
 	 */
 	protected openDeleteConfirmationDialog(movieItemVO: MovieItemVO) {
 		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, movieItemVO.getOpenId()))
 			return;
-		this.dialogService.openDialog(
+		this.dialogService.confirmThenBlock(
 			this.dialogComponentContainer,
-			DIALOG_CONFIRM,
+			[
+				`${ENT_MSG_DELETE_CONFIRM_PREFIX}${movieItemVO.getMovieName()}?`,
+				ENT_DIALOG_TITLE_DELETE_MOVIE,
+				DIALOG_BTN_DELETE
+			],
+			MSG_DELETING,
 			async () => {
 				try {
 					await this.databaseService.removeMovieFromDatabase(movieItemVO);
 				} catch (error) {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 				}
-			},
-			[
-				`${ENT_MSG_DELETE_CONFIRM_PREFIX}${movieItemVO.getMovieName()}?`,
-				ENT_DIALOG_TITLE_DELETE_MOVIE,
-				DIALOG_BTN_DELETE
-			]
+			}
 		);
 	}
 
@@ -842,7 +779,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			DIALOG_ADD,
 			// "Submit" button in the "Add New Movie" dialog
 			async (movie: MovieItemVO) => {
-				this.dialogService.runBlocking(this.dialogComponentContainer, ENT_MSG_ADDING, () =>
+				await this.dialogService.runBlocking(this.dialogComponentContainer, ENT_MSG_ADDING, () =>
 					this.handleAddDialogSubmit(movie)
 				);
 			},
@@ -890,7 +827,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @throws MovieAlreadyExistsError if the movie is already in the database.
 	 */
 	private async handleAddDialogSearch(newMovieItemVO: MovieItemVO): Promise<Blob | null> {
-
 		/* Step 1: Guard against duplicates BEFORE hitting the Douban API.
 		   The check uses name, year, AND ID so that re-adding a deleted movie
 		   with a known ID is blocked just as reliably as a name-only match. */
@@ -926,7 +862,6 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 *                         name and year to search with.
 	 */
 	private async searchNewMovie(newMovieItemVO: MovieItemVO) {
-
 		/* Branch A: No Douban ID supplied (sentinel value -1) — resolve the ID from name + year first.
 		   getNewMovieDataGivenYearAndTitle is called after, NOT getNewMovieDataGivenMovieId, because
 		   the ID was resolved from the search index and the year/title on the VO are already correct. */
@@ -986,12 +921,10 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * @param movie - The movie whose genre edit is being completed.
 	 */
 	protected async completeEdit(movie: MovieItemVO) {
-
 		// Step 1: Retrieve the snapshot captured when the user opened the genre dropdown.
 		const genreData = this.editedItems.get(movie.getMovieKey());
 		try {
 			if (genreData) {
-
 				// Step 2: Only write to the database if the genre value actually changed.
 				/* Skipping the write when nothing changed avoids a redundant network call
 				   and prevents an unnecessary activity log entry in the database. */
@@ -1023,7 +956,11 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 		try {
 			/* Toggle: pass the inverse of the current state. If currently true, set false;
 			   if currently false, set true. The database only stores the final boolean. */
-			await this.databaseService.updateMovieFavourite(movie.getMovieKey(), !movie.getIsFavourite(), movie.getMovieName());
+			await this.databaseService.updateMovieFavourite(
+				movie.getMovieKey(),
+				!movie.getIsFavourite(),
+				movie.getMovieName()
+			);
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 			LOG.error(this.className, ENT_LOG_UPDATE_FAVOURITE_FAILED);
@@ -1168,5 +1105,4 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			ENT_MOVIE_ENTRANCE_BASE_DELAY_MS + index * ENT_MOVIE_ENTRANCE_STEP_MS
 		);
 	}
-
 }

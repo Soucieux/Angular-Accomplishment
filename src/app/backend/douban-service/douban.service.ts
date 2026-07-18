@@ -91,9 +91,14 @@ export class DoubanService {
 	}
 
 	/**
-	 * Fetches a Douban movie page by ID and returns its HTML as text.
-	 * Used as a fallback when the JSON API is rate-limited or returns no data —
-	 * the HTML is parsed client-side to extract rating, release date, and other metadata.
+	 * Fetches a Douban movie page by ID and returns its HTML as text, for client-side
+	 * parsing of rating, release date, and other metadata.
+	 *
+	 * NOT CURRENTLY CALLED. The entertainment page now sources every movie lookup from the
+	 * wmdb.tv third-party API ({@link searchMovieByThirdPartyApi}); the webpage-scrape fallback
+	 * it used to back was retired. This method is deliberately retained — fully wired and
+	 * covered by its spec — so the fallback can be re-enabled without rebuilding it should the
+	 * third-party API ever become unreliable. Do not delete on a dead-code sweep.
 	 *
 	 * @param id - The Douban movie ID to fetch.
 	 * @returns An observable that emits the page HTML as a string.

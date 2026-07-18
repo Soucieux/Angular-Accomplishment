@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, ReplaySubject } from 'rxjs';
@@ -11,13 +11,8 @@ describe('AppComponent', () => {
     let mockAuth: jasmine.SpyObj<AuthService>;
 
     beforeEach(async () => {
-        mockAuth = jasmine.createSpyObj<AuthService>('AuthService', [
-            'getCurrentUser',
-            'logout',
-            'signOut'
-        ]);
+        mockAuth = jasmine.createSpyObj<AuthService>('AuthService', ['getCurrentUser', 'signOut']);
         mockAuth.getCurrentUser.and.returnValue(new BehaviorSubject(null).asObservable());
-        mockAuth.logout.and.stub();
         mockAuth.signOut.and.returnValue(Promise.resolve());
 
         await TestBed.configureTestingModule({
@@ -44,6 +39,8 @@ describe('AppComponent', () => {
         expect(app).toBeTruthy();
     });
 
+    // ── isCN ───────────────────────────────────────────────────────────────
+
     // ── navigateToLogin ─────────────────────────────────────────────────────
 
     describe('navigateToLogin', () => {
@@ -62,7 +59,7 @@ describe('AppComponent', () => {
     // ── logout ──────────────────────────────────────────────────────────────
 
     describe('logout', () => {
-        it('signs out through the CloudBase auth provider', fakeAsync(async () => {
+        it('calls authService.signOut', fakeAsync(async () => {
             const fixture = TestBed.createComponent(AppComponent);
             await (fixture.componentInstance as any).logout();
             expect(mockAuth.signOut).toHaveBeenCalled();

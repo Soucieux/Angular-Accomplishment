@@ -128,6 +128,8 @@ export const LABEL_NEW_PASSWORD = '新密码';
 export const LABEL_USERNAME = '用户名';
 export const LOGIN_MSG_USERNAME_REQUIRED = '请输入用户名。';
 export const LOGIN_LABEL_PASSWORD = '密码';
+export const LOGIN_LABEL_DIVIDER = '或';
+export const LOGIN_BTN_GOOGLE = '使用 Google 继续登录';
 export const ERROR_NO_DOCUMENT_UPDATED = '无数据更新';
 
 /* ─────────────────────────────────────────
@@ -715,6 +717,8 @@ export const ACCOUNT_MSG_DELETE_CONFIRMED = '账号删除请求已提交';
 export const ACCOUNT_MSG_DELETING_ACCOUNT = '正在删除账号...';
 export const ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER = '请输入密码以确认';
 export const ACCOUNT_DIALOG_DELETE_MSG = '此操作将永久删除你的账号及所有相关数据。此操作无法撤销。';
+export const ACCOUNT_DIALOG_DELETE_GOOGLE_MSG =
+	'此操作将永久删除你的账号及所有相关数据。系统可能会要求你重新选择 Google 账号以确认。此操作无法撤销。';
 export const ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE = '删除保险箱口令';
 export const ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION = '忘记保险箱口令时可将其删除。\n你的保险箱数据会被保留。';
 export const ACCOUNT_DIALOG_DELETE_VAULT_MSG =

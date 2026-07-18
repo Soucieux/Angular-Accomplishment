@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
+import { EnvironmentInjector } from '@angular/core';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
-import { BehaviorSubject, ReplaySubject } from 'rxjs';
+import { BehaviorSubject, of, ReplaySubject } from 'rxjs';
 
 import { AuthService } from './auth.service';
 import { DatabaseService } from '../database-service/database.service';
@@ -37,6 +38,9 @@ describe('AuthService', () => {
 
         mockUtilities = jasmine.createSpyObj<Utilities>('Utilities', ['setIsUserAlive', 'checkIfHoverCapable']);
         mockUtilities.setIsUserAlive.and.stub();
+
+        // Default to the CloudBase backend so cloudbaseGetCurrentUser is the active path
+        spyOn(Utilities, 'isFirebaseBackend').and.returnValue(false);
 
         TestBed.configureTestingModule({
             providers: [
@@ -140,7 +144,7 @@ describe('AuthService', () => {
         });
     });
 
-    // ── getCurrentUser (delegates to CloudBase) ──────────────────────────────
+    // ── getCurrentUser (CN context — delegates to CloudBase) ─────────────────
 
     describe('getCurrentUser', () => {
         it('returns an observable', () => {
@@ -187,14 +191,6 @@ describe('AuthService', () => {
         it('sets isUserAlive to false after sign-out', async () => {
             await service.signOut();
             expect(mockUtilities.setIsUserAlive).toHaveBeenCalledWith(false);
-        });
-    });
-
-    // ── logout (Firebase) ────────────────────────────────────────────────────
-
-    describe('logout', () => {
-        it('is a function on the service', () => {
-            expect(typeof service.logout).toBe('function');
         });
     });
 

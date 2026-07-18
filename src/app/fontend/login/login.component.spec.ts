@@ -7,6 +7,7 @@ import { LoginComponent } from './login.component';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { LOGIN_URL_DEFAULT_RETURN } from '../../common/constants';
+import { WrongCredentialsError } from '../../common/error/wrong-credentials.error';
 
 describe('LoginComponent', () => {
     let component: LoginComponent;
@@ -17,13 +18,11 @@ describe('LoginComponent', () => {
         mockAuth = jasmine.createSpyObj<AuthService>('AuthService', [
             'signIn',
             'signUp',
-            'emailPasswordLogin',
             'googleLogin',
             'getVerificationCodeEmail'
         ]);
         mockAuth.signIn.and.returnValue(Promise.resolve());
         mockAuth.signUp.and.returnValue(Promise.resolve());
-        mockAuth.emailPasswordLogin.and.returnValue(Promise.resolve());
         mockAuth.googleLogin.and.stub();
         mockAuth.getVerificationCodeEmail.and.returnValue(Promise.resolve());
 
@@ -193,7 +192,6 @@ describe('LoginComponent', () => {
         it('does not call any auth method when the form is invalid', async () => {
             await (component as any).onSubmit();
             expect(mockAuth.signIn).not.toHaveBeenCalled();
-            expect(mockAuth.emailPasswordLogin).not.toHaveBeenCalled();
             expect(mockAuth.signUp).not.toHaveBeenCalled();
         });
 

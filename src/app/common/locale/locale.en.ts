@@ -173,6 +173,8 @@ export const LABEL_NEW_PASSWORD = 'New password';
 export const LABEL_USERNAME = 'Username';
 export const LOGIN_MSG_USERNAME_REQUIRED = 'Username is required.';
 export const LOGIN_LABEL_PASSWORD = 'Password';
+export const LOGIN_LABEL_DIVIDER = 'or';
+export const LOGIN_BTN_GOOGLE = 'Continue with Google';
 export const ERROR_NO_DOCUMENT_UPDATED = 'No document was updated';
 
 /* ─────────────────────────────────────────
@@ -854,6 +856,8 @@ export const ACCOUNT_MSG_DELETING_ACCOUNT = 'Deleting account...';
 export const ACCOUNT_DIALOG_DELETE_PWD_PLACEHOLDER = 'Enter your password to confirm';
 export const ACCOUNT_DIALOG_DELETE_MSG =
 	'This will permanently delete your account and all associated data. This action cannot be undone.';
+export const ACCOUNT_DIALOG_DELETE_GOOGLE_MSG =
+	'This will permanently delete your account and all associated data. You may be asked to re-select your Google account to confirm. This action cannot be undone.';
 export const ACCOUNT_LABEL_DELETE_VAULT_PASSPHRASE = 'Delete Vault Passphrase';
 export const ACCOUNT_LABEL_DELETE_VAULT_DESCRIPTION =
 	'Removes the vault passphrase if you forgot it.\nYour vault data is kept.';

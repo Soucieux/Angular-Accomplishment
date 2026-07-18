@@ -22,6 +22,7 @@ import { Draggable } from 'gsap/Draggable';
 
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	COMPONENT_DESTROY,
 	DIALOG_ERROR,
@@ -63,7 +64,9 @@ import {
 	LOGIN_MSG_PASSWORD_REQUIRED,
 	LABEL_USERNAME,
 	LOGIN_MSG_USERNAME_REQUIRED,
-	LOGIN_LABEL_PASSWORD
+	LOGIN_LABEL_PASSWORD,
+	LOGIN_LABEL_DIVIDER,
+	LOGIN_BTN_GOOGLE
 } from '../../common/locale/locale-strings';
 import { LOG } from '../../common/app.logs';
 import { AccountRateLimitedError } from '../../common/error/account-rate-limited.error';
@@ -122,6 +125,8 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly LABEL_USERNAME = LABEL_USERNAME;
 	protected readonly LOGIN_MSG_USERNAME_REQUIRED = LOGIN_MSG_USERNAME_REQUIRED;
 	protected readonly LOGIN_LABEL_PASSWORD = LOGIN_LABEL_PASSWORD;
+	protected readonly LOGIN_LABEL_DIVIDER = LOGIN_LABEL_DIVIDER;
+	protected readonly LOGIN_BTN_GOOGLE = LOGIN_BTN_GOOGLE;
 	protected readonly LOGIN_LABEL_FORGOT_PASSWORD = LOGIN_LABEL_FORGOT_PASSWORD;
 	protected readonly LOGIN_LABEL_SEND_RESET_CODE = LOGIN_LABEL_SEND_RESET_CODE;
 	protected readonly LOGIN_LABEL_RESET_PASSWORD = LOGIN_LABEL_RESET_PASSWORD;
@@ -163,7 +168,8 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 		private authService: AuthService,
 		private dialogService: DialogService,
 		private cdr: ChangeDetectorRef,
-		private route: ActivatedRoute
+		private route: ActivatedRoute,
+		private utilities: Utilities
 	) {}
 
 	/**
@@ -585,7 +591,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 					this.loginForm.value['verificationCode']
 				);
 			} else {
-				// Step 2b: Sign-in path — the CloudBase signIn() flow
+				// Step 2b: Sign-in path — username/password always authenticates via CloudBase.
 				await this.authService.signIn(
 					this.loginForm.value['username'],
 					this.loginForm.value['password'],
@@ -614,7 +620,26 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 	}
 
+	/**
+	 * Initiates the Google sign-in flow, passing the stored return URL so the user lands back
+	 * on the page they came from — the same journey-preservation as sign-in and password reset.
+	 */
+	protected googleLogin(): void {
+		this.authService.googleLogin(this.returnUrl);
+	}
+
 	// ── Template helper methods ───────────────────────────────────────────────
+
+	/**
+	 * Gets whether Google sign-in is offered on the current surface — true in a browser tab or
+	 * installed web app (mobile or desktop), false inside the native Tauri desktop or iOS shells,
+	 * which hide the button until those platforms gain their own Google sign-in flow.
+	 *
+	 * @returns True on a browser or installed web app, false in a native shell.
+	 */
+	protected get isWebPlatform(): boolean {
+		return this.utilities.isWebPlatform();
+	}
 
 	/**
 	 * Gets the current date, evaluated on each change-detection cycle.

@@ -527,7 +527,7 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	 * Subscribes to the auth state and per-user stats observables.
 	 */
 	ngOnInit(): void {
-		this.currentUser$ = this.authService.currentUser$;
+		this.currentUser$ = this.authService.getCurrentUser();
 		this.userStatsSub = this.databaseService.getUserStats().subscribe((doc) => {
 			if (!doc) return;
 			this.activityStreak = (doc[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;

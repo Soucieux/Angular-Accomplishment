@@ -21,9 +21,8 @@ describe('OrbitalComponent', () => {
 	let fixture: ComponentFixture<OrbitalComponent>;
 
 	beforeEach(async () => {
-		const mockAuth = jasmine.createSpyObj('AuthService', [], {
-			currentUser$: of(null)
-		});
+		const mockAuth = jasmine.createSpyObj('AuthService', ['getCurrentUser']);
+		mockAuth.getCurrentUser.and.returnValue(of(null));
 
 		const mockRouter = jasmine.createSpyObj<Router>('Router', ['navigateByUrl']);
 

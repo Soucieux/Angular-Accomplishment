@@ -14,7 +14,6 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Observable, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '../../backend/authentication-service/auth.service';
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { ConnectedMember, DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Utilities } from '../../common/utilities/app.utilities';
@@ -70,6 +69,7 @@ import {
 	ACCOUNT_LABEL_PASSWORD_CHANGED,
 	ACCOUNT_LABEL_UPDATE_USERNAME,
 	ACCOUNT_MSG_DELETING_ACCOUNT,
+	ACCOUNT_DIALOG_DELETE_GOOGLE_MSG,
 	ACCOUNT_PLACEHOLDER_USERNAME,
 	ACCOUNT_MSG_USERNAME_UPDATED,
 	ACCOUNT_LABEL_CONNECTIONS_TITLE,
@@ -311,6 +311,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		{ label: CADENCE_GRACE_UNTIL_RELOAD, value: VAULT_GRACE_UNTIL_RELOAD }
 	];
 	private statsSub?: Subscription;
+	private userSub?: Subscription;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
@@ -332,16 +333,30 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		// Step 1: Wire up the current-user observable used by the template
 		this.currentUser$ = this.authService.getCurrentUser();
 
-		// Step 2: Once the first user emission resolves, seed stats and fetch the last-login date
+		/* Step 2: Redirect home the moment the signed-in user signs out on this page — unlike the
+		   content pages, which swap to a blocked card in place, the account page is purely personal
+		   and has nothing to show a signed-out visitor. Only a signed-in→signed-out transition
+		   triggers the redirect, so the initial null emitted while auth is still resolving on a
+		   refresh does not bounce a legitimately signed-in user. */
+		let hadUser = false;
+		this.userSub = this.currentUser$.subscribe((user) => {
+			if (user) {
+				hadUser = true;
+			} else if (hadUser) {
+				this.router.navigate(['/']).catch(() => {});
+			}
+		});
+
+		// Step 3: Once the first user emission resolves, seed stats and fetch the last-login date
 		firstValueFrom(this.currentUser$)
 			.then((user) => {
 				if (!user) return;
 				/* Ensure the users doc exists (and carries a connect code) before the live stream reads it,
 				   then self-heal any item totals that drifted when a permitted user removed one of this
 				   user's items (the remover never writes this user's counter — see reconcileUserStats). */
-				(this.databaseService as CloudbaseService)
+				this.databaseService
 					.ensureUserStatsExist()
-					.then(() => (this.databaseService as CloudbaseService).reconcileUserStats())
+					.then(() => this.databaseService.reconcileUserStats())
 					.catch(() => {});
 				this.authService
 					.getLastLoginTimestamp()
@@ -350,7 +365,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 						this.cdr.detectChanges();
 					})
 					.catch(() => {});
-				(this.databaseService as CloudbaseService)
+				this.databaseService
 					.getPassphraseLockStatus(PASSPHRASE_LOCK_KEY_VAULT)
 					.then((status) => {
 						this.hasVaultPassphrase = status.isSet;
@@ -360,10 +375,10 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			})
 			.catch(() => {});
 
-		/* Step 3: Subscribe to the live stats document and project all derived display fields.
+		/* Step 4: Subscribe to the live stats document and project all derived display fields.
 		   detectChanges is called explicitly here because this subscription fires outside the
 		   Angular zone (CloudBase SDK callbacks are not zone-patched). */
-		this.statsSub = (this.databaseService as CloudbaseService).getUserStats().subscribe((doc) => {
+		this.statsSub = this.databaseService.getUserStats().subscribe((doc) => {
 			if (!doc) return;
 			this.userStats = this.userStats.map((stat) => ({
 				...stat,
@@ -409,6 +424,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngOnDestroy(): void {
 		this.statsSub?.unsubscribe();
+		this.userSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
 	}
 
@@ -424,7 +440,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 
 			/* Record the change timestamp in the stats doc as a fire-and-forget write.
 			   It is intentionally not awaited — a failure here must not block the success toast. */
-			(this.databaseService as CloudbaseService)
+			this.databaseService
 				.updateUserStatsFields({
 					[STATS_FIELD_USERNAME_CHANGED]: Utilities.formatDateForStorage(new Date())
 				})
@@ -444,7 +460,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param value - The selected grace value (0 = always require, -1 = until reload, else minutes).
 	 */
 	protected onVaultGraceChange(value: number): void {
-		(this.databaseService as CloudbaseService)
+		this.databaseService
 			.updateUserStatsFields({ [STATS_FIELD_VAULT_GRACE]: value })
 			.then(() => this.dialogService.showToast(SUCCESS, CADENCE_MSG_GRACE_SAVED))
 			.catch(() => this.dialogService.showUnexpectedError(this.dialogComponentContainer));
@@ -472,7 +488,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 
 			/* Step 3: Record the change timestamp as a fire-and-forget write — same non-blocking
 			   pattern as updateUsername so a stats failure cannot suppress the success toast. */
-			(this.databaseService as CloudbaseService)
+			this.databaseService
 				.updateUserStatsFields({
 					[STATS_FIELD_PASSWORD_CHANGED]: Utilities.formatDateForStorage(new Date())
 				})
@@ -629,24 +645,53 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── Dialog opener methods ─────────────────────────────────────────────────
 
 	/**
-	 * Opens the delete-account dialog. On password confirmation, calls CloudBase to
-	 * permanently delete the account, then signs out and navigates to the home route.
+	 * Opens the delete-account dialog. A CloudBase session confirms with the account password;
+	 * a Firebase (Google) session has no password, so a plain confirm dialog is shown instead and
+	 * identity is re-proved by the Google reauthentication popup inside deleteUser. On
+	 * confirmation the account is permanently deleted, then the user is signed out and navigated
+	 * to the home route.
 	 */
 	protected openDeleteConfirmationDialog(): void {
-		/* Step 1: Open the password-confirmation dialog. The callback only fires when the user
-		   submits a valid password — cancellation silently closes with no side effects. */
+		/* Step 1: Google sessions confirm without a password — the reauthentication popup inside
+		   deleteUser is the identity proof, so a password prompt would be meaningless. */
+		if (this.isFirebaseSession) {
+			this.dialogService.openDialog(
+				this.dialogComponentContainer,
+				'confirm',
+				() => {
+					this.dialogService
+						.openDialog(
+							this.dialogComponentContainer,
+							'block',
+							async () => {
+								// Delete the account, sign out, then navigate away — order is mandatory
+								await this.authService.deleteUser('');
+								await this.authService.signOut();
+								this.router.navigate(['/']).catch(() => {});
+							},
+							ACCOUNT_MSG_DELETING_ACCOUNT
+						)
+						.catch(() => {});
+				},
+				[ACCOUNT_DIALOG_DELETE_GOOGLE_MSG, ACCOUNT_LABEL_DELETE_ACCOUNT, ACCOUNT_LABEL_DELETE_ACCOUNT]
+			);
+			return;
+		}
+
+		/* Step 2: CloudBase sessions open the password-confirmation dialog. The callback only fires
+		   when the user submits a valid password — cancellation silently closes with no side effects. */
 		this.dialogService.openDialog(
 			this.dialogComponentContainer,
 			'delete-account',
 			async (password: string) => {
-				/* Step 2: Replace the confirmation dialog with a blocking spinner while deletion runs.
+				/* Step 3: Replace the confirmation dialog with a blocking spinner while deletion runs.
 				   The block dialog must wrap both deleteUser and signOut — if it only wrapped deleteUser,
 				   the user could interact with the page between deletion and navigation. */
 				await this.dialogService.openDialog(
 					this.dialogComponentContainer,
 					'block',
 					async () => {
-						// Step 3: Delete the account, sign out, then navigate away — order is mandatory
+						// Step 4: Delete the account, sign out, then navigate away — order is mandatory
 						await this.authService.deleteUser(password);
 						await this.authService.signOut();
 						this.router.navigate(['/']).catch(() => {});
@@ -673,9 +718,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 				// delete-account makes. A wrong password throws WrongOldPasswordError, which the dialog
 				// shows inline without closing; only after it passes is the removal function called.
 				await this.authService.verifyPassword(password);
-				const result = await (this.databaseService as CloudbaseService).removePassphraseLock(
-					PASSPHRASE_LOCK_KEY_VAULT
-				);
+				const result = await this.databaseService.removePassphraseLock(PASSPHRASE_LOCK_KEY_VAULT);
 				if (!result.success) throw new UnexpectedError();
 				this.hasVaultPassphrase = false;
 				this.cdr.detectChanges();
@@ -769,6 +812,17 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	// ── Template helper methods ───────────────────────────────────────────────
+
+	/**
+	 * Gets whether the current session runs on the Firebase backend (Google sign-in). Google
+	 * accounts have no CloudBase password, so the password-change card is hidden and the
+	 * delete-account flow confirms without a password prompt.
+	 *
+	 * @returns True on a Firebase (Google) session, false on the CloudBase default.
+	 */
+	protected get isFirebaseSession(): boolean {
+		return Utilities.isFirebaseBackend();
+	}
 
 	/**
 	 * Gets the localized status label for a connection record.

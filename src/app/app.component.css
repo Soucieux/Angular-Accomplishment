@@ -601,9 +601,9 @@ mat-drawer.nav-collapsed {
 }
 
 mat-drawer-container:has(mat-drawer.nav-collapsed) mat-drawer-content {
-	/* With mat-drawer having 65px in width when collapsed and 4px margin on its left,
-	   we give at least 69px on the left to avoid overlap. */
-	margin-left: 73px !important;
+	/* Collapsed drawer right edge sits at 67px (2px margin + 65px width); +4px keeps the
+	   panel-to-content gap identical to the expanded state (243px − 2px − 237px = 4px). */
+	margin-left: 71px !important;
 }
 
 .nav-collapsed .nav-title {

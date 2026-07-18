@@ -223,7 +223,7 @@
 													class="vault-name-input"
 													type="text"
 													[(ngModel)]="nameDraft"
-													(keyup.enter)="updateAccountName(account.id)"
+													(keyup.enter)="completeNameEdit(account.id, $event)"
 													(blur)="updateAccountName(account.id)" />
 												<button
 													type="button"

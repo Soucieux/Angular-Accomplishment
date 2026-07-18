@@ -404,7 +404,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Toggles inline edit mode for an account card so its connection chips become removable.
 	 *
 	 * @param accountId - The id of the account whose edit mode to toggle.
-	 * @param event - The originating click event, stopped so it does not select the card.
+	 * @param event - The originating event, stopped so it does not select the card.
 	 */
 	protected toggleEditMode(accountId: string, event: Event): void {
 		event.stopPropagation();
@@ -414,6 +414,19 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.categoryPickerId = null;
 		this.noteDraft = '';
 		this.nameDraft = this.editId === accountId ? (this.findNode(accountId)?.name ?? '') : '';
+	}
+
+	/**
+	 * Commits the drafted account name and quits edit mode — the Enter-key finish for the inline
+	 * list-view rename. Blur stays save-only ({@link updateAccountName}) so clicking another
+	 * edit-mode control does not close the card.
+	 *
+	 * @param accountId - The id of the account being renamed.
+	 * @param event - The originating event, passed through to the edit-mode toggle.
+	 */
+	protected completeNameEdit(accountId: string, event: Event): void {
+		this.updateAccountName(accountId);
+		this.toggleEditMode(accountId, event);
 	}
 
 	/**
@@ -708,8 +721,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 *
 	 * @param accountData - The validated form data returned by the add-account dialog.
 	 */
-	private handleAccountSave(accountData: NewAccountData): void {
-		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
+	private handleAccountSave(accountData: NewAccountData): Promise<void> {
+		return this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
 				const isAccount = accountData.nodeType === VAULT_NODE_ACCOUNT;
 				// Resolve categories — persist a freshly created custom category first, then append its id
@@ -780,8 +793,8 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 *
 	 * @param data - The validated category data returned by the add-account dialog.
 	 */
-	private handleCategorySave(data: NewVaultCategoryData): void {
-		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
+	private handleCategorySave(data: NewVaultCategoryData): Promise<void> {
+		return this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
 				await this.databaseService.addVaultCategory({
 					label: data.label,
@@ -823,7 +836,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param data - The validated label and icon from the edit dialog.
 	 * @param categoryKey - The document id of the category being edited.
 	 */
-	private handleCategoryEdit(data: EditVaultCategoryData, categoryKey: string): void {
+	private async handleCategoryEdit(data: EditVaultCategoryData, categoryKey: string): Promise<void> {
 		const name = data.label.trim();
 		const current = this.getCategoryDef(categoryKey);
 		if (!name || (name === current.categoryLabel && data.icon === current.icon)) return;
@@ -837,7 +850,7 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.dialogService.showToast(TOAST_ERROR, VAULT_CATEGORY_DUPLICATE_NAME);
 			return;
 		}
-		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
+		await this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
 				await this.databaseService.updateVaultCategory(categoryKey, { label: name, icon: data.icon });
 				this.triggerSaveIndicator();
@@ -905,11 +918,11 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param data - The validated form data from the edit-non-account dialog.
 	 * @param nodeId - The id of the node being edited.
 	 */
-	private handleNonAccountEdit(data: EditNonAccountData, nodeId: string): void {
+	private async handleNonAccountEdit(data: EditNonAccountData, nodeId: string): Promise<void> {
 		this.renameNode(nodeId, data.name);
 		if (data.addedBackups.length === 0 && data.removedBackupEdgeKeys.length === 0) return;
 
-		this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
+		await this.dialogService.runBlocking(this.dialogComponentContainer, VAULT_MSG_SAVING, async () => {
 			try {
 				await this.enqueueVaultWrite(async () => {
 					await this.linkConnectionsByName(nodeId, data.addedBackups, VAULT_RELATION_BACKUP);

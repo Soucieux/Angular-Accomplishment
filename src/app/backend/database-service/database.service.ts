@@ -224,6 +224,46 @@ export abstract class DatabaseService {
 	public abstract clearConnection(otherOpenid: string): Promise<void>;
 
 	/**
+	 * Reports whether the caller has already set a passphrase for the given generic
+	 * passphrase-lock feature key (e.g. 'vault'). Used to decide whether a page shows its
+	 * first-time setup screen or its unlock prompt.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @returns A promise resolving to the status result.
+	 */
+	public abstract getPassphraseLockStatus(featureKey: string): Promise<PassphraseLockStatus>;
+
+	/**
+	 * Sets or replaces the caller's own passphrase for the given generic passphrase-lock feature
+	 * key. Used for both first-time setup and later changes.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @param passphrase - The new plaintext passphrase.
+	 * @returns A promise resolving to the set result.
+	 */
+	public abstract setPassphraseLock(featureKey: string, passphrase: string): Promise<ConnectResult>;
+
+	/**
+	 * Verifies a passphrase attempt against the caller's stored hash for the given generic
+	 * passphrase-lock feature key. The hash never leaves the server.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @param passphrase - The plaintext passphrase attempt.
+	 * @returns A promise resolving to the verify result.
+	 */
+	public abstract verifyPassphraseLock(featureKey: string, passphrase: string): Promise<ConnectResult>;
+
+	/**
+	 * Removes the caller's passphrase for the given feature key. Only that feature's entry is
+	 * deleted — every other feature's passphrase and the feature's own data are never touched,
+	 * so the page returns to first-time setup.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @returns A promise resolving to the removal result.
+	 */
+	public abstract removePassphraseLock(featureKey: string): Promise<ConnectResult>;
+
+	/**
 	 * Gets the Account Expenses (debt sonata) table details from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the Account Expenses table details.
@@ -513,6 +553,22 @@ export abstract class DatabaseService {
 	 * @returns A promise that resolves when the update completes.
 	 */
 	public abstract updateUserStatsFields(fields: Record<string, any>): Promise<void>;
+
+	/**
+	 * Ensures the current user's per-user stats document exists, seeding it on first use so the
+	 * account page always has a document to stream.
+	 *
+	 * @returns A promise that resolves when the document is verified or created.
+	 */
+	public abstract ensureUserStatsExist(): Promise<void>;
+
+	/**
+	 * Recomputes the current user's item totals against the authoritative per-collection counts
+	 * and corrects any drifted stat field on the user's own document.
+	 *
+	 * @returns A promise that resolves when any drifted totals have been corrected.
+	 */
+	public abstract reconcileUserStats(): Promise<void>;
 
 	/**
 	 * Updates the given fields on a single table record in one round-trip, then records the supplied

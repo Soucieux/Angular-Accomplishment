@@ -20,10 +20,17 @@
 
 import * as functions from 'firebase-functions';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { onCall } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
+import { initializeApp } from 'firebase-admin/app';
+import { getDatabase } from 'firebase-admin/database';
+import * as crypto from 'crypto';
 import fetch, { Response } from 'node-fetch';
 import type { Response as ExpressResponse } from 'express';
 import cloudbase from '@cloudbase/node-sdk';
+
+// Admin SDK for the passphrase-lock callables — reads its config from the Functions runtime env.
+initializeApp();
 
 const getMovieData = functions.https.onRequest(async (req, res) => {
 	const url = req.query.url as string;
@@ -307,3 +314,251 @@ export const cacheFavicons = onSchedule(
 		console.log(`favicon cache: ${cached} cached, ${failed} failed of ${toCache.length} candidates`);
 	}
 );
+
+/* ─────────────────────────────────────────
+   Passphrase-lock callables
+
+   Firebase mirror of the CloudBase passphrase Cloud Functions (cloudbase-functions/*PassphraseLock*).
+   Hashes live in the dedicated passphrase_locks/<uid> node — never under users/<uid> — so the
+   client's whole-node watches (e.g. getUserStats) can never pull a stored hash along for the ride.
+   Only these callables ever read or write it; database rules must deny all client access to
+   passphrase_locks. The hash never leaves the server — callers only receive booleans.
+───────────────────────────────────────── */
+
+const PASSPHRASE_LOCKS = 'passphrase_locks';
+const SCRYPT_KEYLEN = 64;
+const PASSPHRASE_MIN_LENGTH = 4;
+const FEATURE_KEY_PATTERN = /^[a-z][a-z0-9_-]{0,63}$/;
+
+/**
+ * Validates a passphrase-lock feature key before it is used as a database key, rejecting
+ * `__proto__` and anything outside a plain lowercase-alphanumeric/dash/underscore shape.
+ *
+ * @param featureKey - The candidate feature key from the caller.
+ * @returns True when the feature key is safe to use as a database key.
+ */
+const isValidFeatureKey = (featureKey: unknown): featureKey is string =>
+	typeof featureKey === 'string' && featureKey !== '__proto__' && FEATURE_KEY_PATTERN.test(featureKey);
+
+/**
+ * Hashes a passphrase with a random salt using scrypt — the same scheme as the CloudBase
+ * functions, so both backends store interchangeable "saltHex:hashHex" values.
+ *
+ * @param passphrase - The plaintext passphrase to hash.
+ * @returns The salt and hash encoded as "saltHex:hashHex".
+ */
+const hashPassphrase = (passphrase: string): string => {
+	const salt = crypto.randomBytes(16).toString('hex');
+	const hash = crypto.scryptSync(passphrase, salt, SCRYPT_KEYLEN).toString('hex');
+	return `${salt}:${hash}`;
+};
+
+/**
+ * Verifies a passphrase attempt against a stored "saltHex:hashHex" value using a timing-safe
+ * comparison.
+ *
+ * @param passphrase - The plaintext passphrase attempt.
+ * @param stored - The stored "saltHex:hashHex" value.
+ * @returns True when the passphrase matches the stored hash.
+ */
+const verifyPassphrase = (passphrase: string, stored: unknown): boolean => {
+	if (!stored || typeof stored !== 'string' || !stored.includes(':')) return false;
+	const [salt, hash] = stored.split(':');
+	const attempt = crypto.scryptSync(passphrase, salt, SCRYPT_KEYLEN);
+	const expected = Buffer.from(hash, 'hex');
+	return attempt.length === expected.length && crypto.timingSafeEqual(attempt, expected);
+};
+
+/**
+ * Loads the caller's passphrase-lock map — feature keys to stored hashes — from the dedicated
+ * passphrase_locks node.
+ *
+ * @param uid - The caller's Firebase uid.
+ * @returns The locks map, or an empty object when none exists.
+ */
+const loadLocks = async (uid: string): Promise<Record<string, unknown>> => {
+	const snapshot = await getDatabase().ref(`${PASSPHRASE_LOCKS}/${uid}/locks`).get();
+	return snapshot.val() ?? {};
+};
+
+/**
+ * Reports whether the caller has already set a passphrase for the given feature key. Never
+ * exposes the stored hash itself, only a boolean.
+ */
+export const getPassphraseLockStatus = onCall(async (request) => {
+	const uid = request.auth?.uid;
+	if (!uid) return { success: false, isSet: false };
+
+	const featureKey = request.data?.featureKey;
+	if (!isValidFeatureKey(featureKey)) return { success: false, isSet: false };
+
+	const locks = await loadLocks(uid);
+	return { success: true, isSet: typeof locks[featureKey] === 'string' };
+});
+
+/**
+ * Sets (or replaces) the caller's own passphrase hash for the given feature key. Used both for
+ * first-time setup and for later changes — always overwrites any existing hash for that key,
+ * leaving other feature keys' hashes untouched.
+ */
+export const setPassphraseLock = onCall(async (request) => {
+	const uid = request.auth?.uid;
+	if (!uid) return { success: false, error: 'UNAUTHENTICATED' };
+
+	const featureKey = request.data?.featureKey;
+	const passphrase = request.data?.passphrase;
+	if (
+		!isValidFeatureKey(featureKey) ||
+		typeof passphrase !== 'string' ||
+		passphrase.length < PASSPHRASE_MIN_LENGTH
+	) {
+		return { success: false, error: 'INVALID_INPUT' };
+	}
+
+	await getDatabase()
+		.ref(`${PASSPHRASE_LOCKS}/${uid}/locks/${featureKey}`)
+		.set(hashPassphrase(passphrase));
+	return { success: true };
+});
+
+/**
+ * Verifies a passphrase attempt against the caller's own stored hash for the given feature key.
+ * The hash never leaves the server — only a boolean success result is returned.
+ */
+export const verifyPassphraseLock = onCall(async (request) => {
+	const uid = request.auth?.uid;
+	if (!uid) return { success: false };
+
+	const featureKey = request.data?.featureKey;
+	const passphrase = request.data?.passphrase;
+	if (!isValidFeatureKey(featureKey) || typeof passphrase !== 'string') return { success: false };
+
+	const locks = await loadLocks(uid);
+	return { success: verifyPassphrase(passphrase, locks[featureKey]) };
+});
+
+/**
+ * Removes the caller's own passphrase for the given feature key, leaving every other feature
+ * key's passphrase — and all of the feature's own data (e.g. vault nodes) — untouched.
+ * Authorization is by uid: a caller can only ever clear their own. Removing an absent key is
+ * still success — the desired end state (no passphrase for this key) already holds.
+ */
+export const removePassphraseLock = onCall(async (request) => {
+	const uid = request.auth?.uid;
+	if (!uid) return { success: false, error: 'UNAUTHENTICATED' };
+
+	const featureKey = request.data?.featureKey;
+	if (!isValidFeatureKey(featureKey)) return { success: false, error: 'INVALID_INPUT' };
+
+	await getDatabase().ref(`${PASSPHRASE_LOCKS}/${uid}/locks/${featureKey}`).remove();
+	return { success: true };
+});
+
+/* ─────────────────────────────────────────
+   URL proxy
+
+   The Firebase counterpart of CloudBase's fetchUrl function: fetches a public http/https URL
+   server-side so the client can bypass browser CORS restrictions (Portal RSS feeds and
+   link-title auto-fetch). Every request — and every redirect hop — is validated against
+   private/reserved hosts so the proxy can never be steered at internal addresses (SSRF).
+───────────────────────────────────────── */
+
+const PROXY_FETCH_TIMEOUT_MS = 10000;
+const PROXY_FETCH_MAX_CHARS = 2000000;
+const PROXY_FETCH_MAX_REDIRECTS = 3;
+
+/**
+ * Checks whether a hostname points at a private, loopback, link-local, or otherwise internal
+ * address that the proxy must never fetch. IPv6 literals are blocked wholesale — public sites
+ * are reached by hostname, and allowing literals would reopen the loopback/link-local surface.
+ *
+ * @param hostname - The lowercase hostname extracted from the candidate URL.
+ * @returns True when the host must not be fetched.
+ */
+const isBlockedHost = (hostname: string): boolean => {
+	const host = hostname.toLowerCase();
+	if (
+		host === 'localhost' ||
+		host.endsWith('.localhost') ||
+		host.endsWith('.local') ||
+		host.endsWith('.internal')
+	) {
+		return true;
+	}
+	const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+	if (ipv4) {
+		const first = Number(ipv4[1]);
+		const second = Number(ipv4[2]);
+		return (
+			first === 0 ||
+			first === 10 ||
+			first === 127 ||
+			(first === 169 && second === 254) ||
+			(first === 172 && second >= 16 && second <= 31) ||
+			(first === 192 && second === 168)
+		);
+	}
+	return host.includes(':');
+};
+
+/**
+ * Validates a candidate proxy URL: must parse, must be plain http/https, and must not target a
+ * blocked host.
+ *
+ * @param candidate - The candidate URL from the caller (or a redirect Location header).
+ * @returns True when the URL is safe for the proxy to fetch.
+ */
+const isAllowedUrl = (candidate: unknown): candidate is string => {
+	if (typeof candidate !== 'string') return false;
+	try {
+		const parsed = new URL(candidate);
+		return (
+			(parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+			!isBlockedHost(parsed.hostname)
+		);
+	} catch {
+		return false;
+	}
+};
+
+/**
+ * Fetches a public URL server-side for an authenticated caller and returns its body and
+ * Content-Type. Redirects are followed manually so every hop is re-validated — an open redirect
+ * on an allowed host must never become a bridge to a private address. The body is capped so an
+ * oversized response cannot blow up the callable payload.
+ */
+export const proxyFetch = onCall(async (request) => {
+	if (!request.auth?.uid) return { success: false, error: 'UNAUTHENTICATED' };
+
+	let url = request.data?.url;
+	if (!isAllowedUrl(url)) return { success: false, error: 'INVALID_URL' };
+
+	try {
+		let response: Response | null = null;
+		for (let hop = 0; hop <= PROXY_FETCH_MAX_REDIRECTS; hop++) {
+			response = await fetch(url, {
+				redirect: 'manual',
+				signal: AbortSignal.timeout(PROXY_FETCH_TIMEOUT_MS)
+			});
+			const location = response.headers.get('location');
+			if (response.status >= 300 && response.status < 400 && location) {
+				const next = new URL(location, url).toString();
+				if (!isAllowedUrl(next)) return { success: false, error: 'BLOCKED_REDIRECT' };
+				url = next;
+				continue;
+			}
+			break;
+		}
+		if (!response || !response.ok) {
+			return { success: false, error: `HTTP_${response?.status ?? 'NO_RESPONSE'}` };
+		}
+		const content = (await response.text()).slice(0, PROXY_FETCH_MAX_CHARS);
+		return {
+			success: true,
+			content,
+			contentType: response.headers.get('content-type') ?? ''
+		};
+	} catch (error) {
+		return { success: false, error: error instanceof Error ? error.message : 'FETCH_FAILED' };
+	}
+});

@@ -6,8 +6,10 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import {
 	APP_BREAKPOINT_NARROW,
+	AUTH_BACKEND_FIREBASE,
 	PORTAL_BRAND_LOGO_PROXY_URL,
 	LS_AUTH_HINT_KEY,
+	LS_AUTH_BACKEND,
 	RECIPE_BAND_CHINESE,
 	RECIPE_BAND_DESSERT,
 	RECIPE_BAND_QUICK,
@@ -117,6 +119,18 @@ export class Utilities {
 	}
 
 	/**
+	 * Checks whether the app is running as a plain web surface — a browser tab or an installed
+	 * web app (PWA), on mobile or desktop — rather than a native Tauri desktop or Capacitor iOS
+	 * shell. Used to gate web-only features such as Google sign-in, which the native shells do
+	 * not yet offer.
+	 *
+	 * @returns True in a browser tab or installed web app, false inside the Tauri or Capacitor shell.
+	 */
+	public isWebPlatform(): boolean {
+		return !this.isTauriApp() && !this.isCapacitorApp();
+	}
+
+	/**
 	 * Opens a URL in the system browser. In a Tauri desktop build, delegates to
 	 * the Tauri opener plugin so the link opens outside the webview; in a regular
 	 * browser context, falls back to a temporary anchor click.
@@ -137,6 +151,20 @@ export class Utilities {
 		this.document.body.appendChild(a);
 		a.click();
 		this.document.body.removeChild(a);
+	}
+
+	/**
+	 * Gets whether the last sign-in used the Firebase backend (Google sign-in), read from
+	 * the persisted flag. Firebase-signed-in users store and read their data in Firebase;
+	 * everyone else (username/password) uses CloudBase, which is the default when unset.
+	 *
+	 * @returns True when the active data backend is Firebase, false when CloudBase (default).
+	 */
+	public static isFirebaseBackend(): boolean {
+		return (
+			typeof localStorage !== 'undefined' &&
+			localStorage.getItem(LS_AUTH_BACKEND) === AUTH_BACKEND_FIREBASE
+		);
 	}
 
 	/**
@@ -679,14 +707,18 @@ export class Utilities {
 	───────────────────────────────────────── */
 
 	/**
-	 * Gets the display name for an authenticated user from the CloudBase
-	 * `user_metadata.username` field.
+	 * Gets the display name for an authenticated user, choosing the correct field
+	 * based on the active auth backend (Firebase/Google users expose `displayName`,
+	 * CloudBase users expose `user_metadata.username`).
 	 *
 	 * @param user - The authenticated user object from the auth observable.
 	 * @returns The user's display name, or an empty string if unavailable.
 	 */
 	public static getUserDisplayName(user: any): string {
 		if (!user) return '';
+		if (Utilities.isFirebaseBackend()) {
+			return user.displayName ?? '';
+		}
 		return user.user_metadata?.username ?? '';
 	}
 

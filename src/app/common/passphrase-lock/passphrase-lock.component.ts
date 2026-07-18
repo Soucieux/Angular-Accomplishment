@@ -2,7 +2,6 @@ import { ChangeDetectorRef, Component, EventEmitter, Input, NgZone, OnInit, Outp
 import { FormsModule } from '@angular/forms';
 import { LOG } from '../app.logs';
 import { DatabaseService } from '../../backend/database-service/database.service';
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import {
 	PASSPHRASE_MIN_LENGTH,
 	PASSPHRASE_LOCK_STATE_SETUP,
@@ -82,7 +81,7 @@ export class PassphraseLockComponent implements OnInit {
 	 */
 	async ngOnInit(): Promise<void> {
 		try {
-			const status = await (this.databaseService as CloudbaseService).getPassphraseLockStatus(this.featureKey);
+			const status = await this.databaseService.getPassphraseLockStatus(this.featureKey);
 			this.ngZone.run(() => {
 				this.state = status.isSet ? PASSPHRASE_LOCK_STATE_LOCKED : PASSPHRASE_LOCK_STATE_SETUP;
 				this.cdr.detectChanges();
@@ -113,7 +112,7 @@ export class PassphraseLockComponent implements OnInit {
 
 		this.isSubmitting = true;
 		try {
-			const result = await (this.databaseService as CloudbaseService).setPassphraseLock(
+			const result = await this.databaseService.setPassphraseLock(
 				this.featureKey,
 				this.passphraseInput
 			);
@@ -144,7 +143,7 @@ export class PassphraseLockComponent implements OnInit {
 
 		this.isSubmitting = true;
 		try {
-			const result = await (this.databaseService as CloudbaseService).verifyPassphraseLock(
+			const result = await this.databaseService.verifyPassphraseLock(
 				this.featureKey,
 				this.passphraseInput
 			);

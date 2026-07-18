@@ -240,7 +240,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			/* Derive connection-dependent state from the live user document so it stays current even when
 			   the other account approves the link while this page is open: creator display names for
 			   shared items (from connections) and whether the share toggle is unlocked (from sharedWith). */
-			this.statsSub = (this.databaseService as CloudbaseService).getUserStats().subscribe((doc) => {
+			this.statsSub = this.databaseService.getUserStats().subscribe((doc) => {
 				if (!doc) return;
 				const connections = Utilities.toArray(doc[STATS_FIELD_CONNECTIONS]) as ConnectedMember[];
 				this.memberProfiles = Object.fromEntries(

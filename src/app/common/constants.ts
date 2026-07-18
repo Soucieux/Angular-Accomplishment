@@ -106,7 +106,7 @@ export const TIMEOUT_KEY_PATCH = 'patch';
 /** Timeout key for the Release Notes tab loading guard. */
 export const TIMEOUT_KEY_PATCH_RELEASE = 'patch-release';
 export const COMPONENT_DESTROY = 'Component Destroyed';
-/** Language marker for mainland-China entries in bilingual movie API data (e.g. actor names). */
+/** Language code for mainland Chinese — used as the language filter for CJK content (e.g. actor names). */
 export const CN = 'CN';
 /** DOM keyboard event key value for the Enter key. */
 export const KEY_ENTER = 'Enter';
@@ -123,6 +123,23 @@ export const KEY_ESCAPE = 'Escape';
    was authenticated so the UI can optimistically show content while CloudBase
    re-validates the real session in the background. Written on login, removed on logout. */
 export const LS_AUTH_HINT_KEY = 'auth_hint';
+/* localStorage key recording which auth backend the last sign-in used, so the app re-bootstraps
+   onto the matching data backend. CloudBase is the default (username/password + all data); Firebase
+   is used only when the user signed in with Google, in which case their data lives in Firebase. */
+export const LS_AUTH_BACKEND = 'auth_backend';
+export const AUTH_BACKEND_FIREBASE = 'firebase';
+export const AUTH_BACKEND_CLOUDBASE = 'cloudbase';
+/* sessionStorage key holding the post-sign-in destination across the Google redirect round-trip —
+   the redirect leaves the page entirely, so the in-memory returnUrl would otherwise be lost. Its
+   presence also marks a redirect as pending; it is cleared on every outcome (success, failure,
+   or the user backing out of the Google page). */
+export const SS_GOOGLE_RETURN_URL = 'google_return_url';
+/* Firebase auth error codes after which the Google popup flow falls back to the redirect flow —
+   surfaces that block popups (installed web apps) report one of these when the popup cannot open. */
+export const AUTH_POPUP_FALLBACK_CODES = [
+	'auth/popup-blocked',
+	'auth/operation-not-supported-in-this-environment'
+];
 /** localStorage key used to persist the nav sidebar collapsed state across page refreshes. */
 export const LS_NAV_COLLAPSED_KEY = 'nav_collapsed';
 /** localStorage key used to persist the user's selected display language across page refreshes. */
@@ -150,6 +167,7 @@ export const ROLE_ADMIN = 'administrator';
 export const CLOUDBASE_ERROR_INVALID_ARGUMENT = 'invalid_argument';
 /** CloudBase error category returned when credentials are wrong. */
 export const CLOUDBASE_ERROR_INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
+export const AUTH_LOG_GOOGLE_SIGN_IN_FAILED = 'Error when signing in through Google';
 export const AUTH_LOG_SIGN_OUT_FAILED = 'Error when signing out current user';
 /** CloudBase behaviour-log event type queried for the last sign-in timestamp. */
 export const AUTH_BEHAVIOR_LOG_TYPE_LOGIN = 'LOGIN';
@@ -172,8 +190,6 @@ export const DATABASE_STATISTICS = 'statistics';
 export const DATABASE_USERS = 'users';
 // stores both links (type:'link') and categories (type:'category')
 export const DATABASE_USEFUL_LINKS = 'useful_links';
-/** Per-user preferences stored as a keyed object under each user's uid. */
-export const DATABASE_USER_PREFERENCES = 'preferences';
 /** Per-user account-links graph (nodes, edges, custom categories) for the Vault page. */
 export const DATABASE_VAULT = 'vault';
 
@@ -223,6 +239,7 @@ export const DB_LOG_TABLE_RECORD_UPDATED = 'Table record has been updated';
 export const DB_LOG_PATCH_NOTES_UPDATED = 'Patch notes record has been updated';
 export const DB_LOG_PATCH_NOTES_UPDATE_FAILED = 'Error while updating patch notes record';
 export const DB_LOG_USER_STATS_UPDATE_FAILED = 'Error while updating user stats fields';
+export const DB_LOG_CLOUD_FUNCTION_CALL_FAILED = 'Error while calling cloud function';
 export const DB_LOG_STAT_COUNT_UPDATE_FAILED = 'Error while updating stat count';
 export const DB_LOG_MILESTONE_WRITE_FAILED = 'Error while writing milestone';
 export const DB_LOG_ACTIVITY_APPEND_FAILED = 'Error while appending activity log';

@@ -1,7 +1,6 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { DatabaseService } from '../database-service/database.service';
-import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	LS_VAULT_UNLOCKED_KEY,
@@ -40,7 +39,7 @@ export class VaultAccessService {
 	) {
 		/* Keep graceMinutes and lastLeftAt in sync with the live user stats document so a change on
 		   the account page, or a "left the vault" stamp from another device, takes effect immediately.
-		   Browser-only: getUserStats is a CloudbaseService op (inline cast) not available during SSR. */
+		   Browser-only: the database providers are registered in the browser bootstrap, not during SSR. */
 		if (isPlatformBrowser(this.platformId)) {
 			this.hasUnlockedBefore = localStorage.getItem(LS_VAULT_UNLOCKED_KEY) === '1';
 
@@ -50,7 +49,7 @@ export class VaultAccessService {
 				if (!isAlive) this.clearUnlock();
 			});
 
-			(this.databaseService as CloudbaseService).getUserStats().subscribe((doc) => {
+			this.databaseService.getUserStats().subscribe((doc) => {
 				if (!doc) return;
 				this.graceMinutes = (doc[STATS_FIELD_VAULT_GRACE] as number) ?? VAULT_GRACE_ALWAYS;
 				this.lastLeftAt = (doc[STATS_FIELD_VAULT_LAST_LEFT] as number) ?? null;
@@ -94,7 +93,7 @@ export class VaultAccessService {
 	public markLeft(): void {
 		this.lastLeftAt = Date.now();
 		if (isPlatformBrowser(this.platformId)) {
-			(this.databaseService as CloudbaseService)
+			this.databaseService
 				.updateUserStatsFields({ [STATS_FIELD_VAULT_LAST_LEFT]: this.lastLeftAt })
 				.catch(() => {});
 		}

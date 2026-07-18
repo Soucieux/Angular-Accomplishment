@@ -48,6 +48,7 @@ Thumbs.db
 # firebase
 .firebase/
 firebase.json
+database.rules.json
 
 # local-only config
 tsconfig.app.json

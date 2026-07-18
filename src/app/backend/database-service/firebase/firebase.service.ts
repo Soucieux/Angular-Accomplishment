@@ -28,6 +28,9 @@ import {
 	STATS_FIELD_TOTAL_RECIPES,
 	STATS_FIELD_TOTAL_LINKS,
 	STATS_FIELD_COMPLETED_PRIVATE,
+	STATS_FIELD_COMPLETED_SHARED,
+	MILESTONE_KEY_ACCOUNT_CREATED,
+	DATABASE_USERS,
 	DB_MOVIE_LIST_EMPTY,
 	MIME_IMAGE_JPEG,
 	MILESTONE_DOMAIN_STREAK,
@@ -62,7 +65,6 @@ import {
 	ACTIVITY_TYPE_GENRE_UPDATED,
 	ACTIVITY_TYPE_FAVOURITE_UPDATED,
 	ACTIVITY_TYPE_RESET,
-	DATABASE_USER_PREFERENCES,
 	STATS_FIELD_TAURI_NOTIF_ENABLED,
 	STATS_FIELD_MINIMIZE_ON_CLOSE,
 	STATS_FIELD_LOCALE,
@@ -84,6 +86,8 @@ import {
 	DB_LOG_PATCH_NOTES_UPDATE_FAILED,
 	DB_LOG_STATS_UPDATE_FAILED,
 	DB_LOG_USER_STATS_UPDATE_FAILED,
+	DB_LOG_CLOUD_FUNCTION_CALL_FAILED,
+	DB_LOG_PROXY_FETCH_FAILED,
 	DB_LOG_STAT_COUNT_UPDATE_FAILED,
 	DB_LOG_MILESTONE_WRITE_FAILED,
 	DB_LOG_ACTIVITY_APPEND_FAILED,
@@ -136,6 +140,7 @@ import {
 	update,
 	remove,
 	get,
+	set,
 	push
 } from 'firebase/database';
 import type { Auth } from 'firebase/auth';
@@ -149,7 +154,8 @@ import {
 	DatabaseService,
 	FIREBASE_AUTH,
 	FIREBASE_DATABASE,
-	FIREBASE_STORAGE
+	FIREBASE_STORAGE,
+	PassphraseLockStatus
 } from '../database.service';
 
 @Injectable({
@@ -190,13 +196,23 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets the current user's per-user stats document as a real-time observable.
-	 * Firebase deployment does not use per-user stat documents — returns an empty observable.
+	 * Gets the current user's per-user document as a real-time observable — the users/<uid>
+	 * node holding preferences, counters, and milestones, mirroring the CloudBase users
+	 * collection where each user owns exactly one entry.
 	 *
-	 * @returns An observable that never emits.
+	 * @returns An observable that emits the user's document, or null when signed out or absent.
 	 */
 	public getUserStats(): Observable<any> {
-		return of(null);
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return of(null);
+		return new Observable((observer) => {
+			const unsub = onValue(
+				dbRef(this.db, `${DATABASE_USERS}/${uid}`),
+				(snapshot) => observer.next(snapshot.val()),
+				(error) => observer.error(error)
+			);
+			return () => unsub();
+		});
 	}
 
 	/**
@@ -205,13 +221,16 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the date calculator table details.
 	 */
 	public getDateCalculatorTableDetails(): Observable<any[]> {
+		/* Scoped per user by path — each user owns a date_calculator/<uid> node, mirroring the
+		   CloudBase per-owner row scoping. Rows under it are keyed by index; Object.values()
+		   converts them back to the flat array the table binds to. */
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return of([]);
 		return new Observable((observer) => {
 			const unsub = onValue(
-				dbRef(this.db, DATABASE_DATE_CALCULATOR),
+				dbRef(this.db, `${DATABASE_DATE_CALCULATOR}/${uid}`),
 				(snapshot) => {
 					const data = snapshot.val();
-					/* Firebase stores the collection as an object keyed by push ID;
-					   Object.values() converts it to an array for PrimeNG table binding. */
 					observer.next(data ? Object.values(data) : []);
 				},
 				(error) => observer.error(error)
@@ -230,24 +249,30 @@ export class FirebaseService extends DatabaseService {
 		return this.listAsObservable(dbRef(this.db, DATABASE_USEFUL_LINKS)).pipe(
 			map((snapshots: any[]) =>
 				snapshots
-					.map((snapshot: any) => ({ key: snapshot.key, ...snapshot.val() }))
+					.map((snapshot: any) => this.toOwnedDoc(snapshot))
 					.filter((link: any) => link.type !== USEFUL_LINK_TYPE_CATEGORY)
 			)
 		);
 	}
 
 	/**
-	 * Gets the link categories from the database as a reactive observable.
-	 * Only category rows are kept; actual links are filtered out.
+	 * Gets the current user's link categories from the database as a reactive observable.
+	 * Only the caller's own category rows are kept — categories are per-user on CloudBase, so the
+	 * same per-owner scoping applies here (rows stamped with the caller's uid); actual links are
+	 * filtered out.
 	 *
 	 * @returns An observable that emits the link categories list.
 	 */
 	public getLinkCategories(): Observable<any[]> {
+		const uid = this.firebaseAuth.currentUser?.uid;
 		return this.listAsObservable(dbRef(this.db, DATABASE_USEFUL_LINKS)).pipe(
 			map((snapshots: any[]) =>
 				snapshots
-					.map((snapshot: any) => ({ key: snapshot.key, ...snapshot.val() }))
-					.filter((category: any) => category.type === USEFUL_LINK_TYPE_CATEGORY)
+					.map((snapshot: any) => this.toOwnedDoc(snapshot))
+					.filter(
+						(category: any) =>
+							category.type === USEFUL_LINK_TYPE_CATEGORY && category._openid === uid
+					)
 			)
 		);
 	}
@@ -261,10 +286,7 @@ export class FirebaseService extends DatabaseService {
 		return this.listAsObservable(dbRef(this.db, DATABASE_QUOTES)).pipe(
 			map((snapshots: any[]) =>
 				snapshots
-					.map((snapshot: any) => ({
-						key: snapshot.key,
-						...snapshot.val()
-					}))
+					.map((snapshot: any) => this.toOwnedDoc(snapshot))
 					.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp))
 			)
 		);
@@ -284,7 +306,7 @@ export class FirebaseService extends DatabaseService {
 						const recipe = snapshot.val();
 						return {
 							id: snapshot.key,
-							openid: recipe._openid ?? '',
+							openid: recipe.uid ?? '',
 							name: recipe.name,
 							detailName: recipe.detailName,
 							category: recipe.category,
@@ -322,6 +344,7 @@ export class FirebaseService extends DatabaseService {
 					movieItemVO.setIsFavourite(movie.isFavourite);
 					movieItemVO.setDescription(movie.description);
 					movieItemVO.setActors(movie.actors);
+					movieItemVO.setOpenId(movie.uid ?? '');
 					return movieItemVO;
 				})
 			),
@@ -354,25 +377,28 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets the reminder table details from Firebase as a reactive observable.
+	 * Gets the current user's reminder table details from Firebase as a reactive observable.
+	 * Reminders are private per user on CloudBase, so the same per-owner scoping applies here (rows stamped with the caller's uid) —
+	 * only the caller's own rows are emitted.
 	 *
 	 * @returns An observable that emits the reminder table details.
 	 */
 	public getReminderTableDetails(): Observable<any[]> {
 		// Content shape is {text, date, link}.
+		const uid = this.firebaseAuth.currentUser?.uid;
 		return this.listAsObservable(dbRef(this.db, DATABASE_REMINDER)).pipe(
 			map((snapshots: any[]) =>
-				snapshots.map((snapshot: any) => {
-					return {
-						key: snapshot.key,
-						...snapshot.val()
-					} as {
-						key: string;
-						content: string;
-						date: string;
-						link: string;
-					};
-				})
+				snapshots
+					.map(
+						(snapshot: any) =>
+							this.toOwnedDoc(snapshot) as {
+								key: string;
+								content: string;
+								date: string;
+								link: string;
+							}
+					)
+					.filter((reminder: any) => reminder._openid === uid)
 			)
 		);
 	}
@@ -463,43 +489,115 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets the Account Expenses (debt sonata) table details from Firebase as a reactive observable.
+	 * Reports whether the caller has already set a passphrase for the given feature key, via the
+	 * getPassphraseLockStatus callable — the Firebase mirror of the CloudBase Cloud Function.
+	 * Never exposes the stored hash, only a boolean.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @returns A promise resolving to the status result.
+	 */
+	public async getPassphraseLockStatus(featureKey: string): Promise<PassphraseLockStatus> {
+		const result = await this.callCloudFunction<PassphraseLockStatus>('getPassphraseLockStatus', {
+			featureKey
+		});
+		return result ?? { success: false, isSet: false };
+	}
+
+	/**
+	 * Sets or replaces the caller's own passphrase for the given feature key via the
+	 * setPassphraseLock callable, which hashes it server-side. Used for both first-time setup and
+	 * later changes.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @param passphrase - The new plaintext passphrase.
+	 * @returns A promise resolving to the set result.
+	 */
+	public async setPassphraseLock(featureKey: string, passphrase: string): Promise<ConnectResult> {
+		const result = await this.callCloudFunction<ConnectResult>('setPassphraseLock', {
+			featureKey,
+			passphrase
+		});
+		return result ?? { success: false };
+	}
+
+	/**
+	 * Verifies a passphrase attempt against the caller's stored hash via the verifyPassphraseLock
+	 * callable. The hash never leaves the server — only a boolean result returns.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @param passphrase - The plaintext passphrase attempt.
+	 * @returns A promise resolving to the verify result.
+	 */
+	public async verifyPassphraseLock(featureKey: string, passphrase: string): Promise<ConnectResult> {
+		const result = await this.callCloudFunction<ConnectResult>('verifyPassphraseLock', {
+			featureKey,
+			passphrase
+		});
+		return result ?? { success: false };
+	}
+
+	/**
+	 * Removes the caller's passphrase for the given feature key via the removePassphraseLock
+	 * callable. Only that feature's entry is deleted — other features' passphrases and the
+	 * feature's own data are never touched, so the page returns to first-time setup.
+	 *
+	 * @param featureKey - The generic passphrase-lock feature identifier.
+	 * @returns A promise resolving to the removal result.
+	 */
+	public async removePassphraseLock(featureKey: string): Promise<ConnectResult> {
+		const result = await this.callCloudFunction<ConnectResult>('removePassphraseLock', {
+			featureKey
+		});
+		return result ?? { success: false };
+	}
+
+	/**
+	 * Gets the current user's Account Expenses (debt sonata) table details from Firebase as a
+	 * reactive observable. Debt rows are private per user on CloudBase, so the same per-owner
+	 * scoping applies here (rows stamped with the caller's uid) — only the caller's own rows
+	 * are emitted.
 	 *
 	 * @returns An observable that emits the Account Expenses table details.
 	 */
 	public getDebtSonataTableDetails(): Observable<any[]> {
 		/* listAsObservable() reads once + subscribes to changes; pipe+map transforms
 		   each snapshot into {key, ...fields} for the table component. */
+		const uid = this.firebaseAuth.currentUser?.uid;
 		return this.listAsObservable(dbRef(this.db, DATABASE_DEBT_SONATA)).pipe(
 			map((snapshots: any[]) =>
-				snapshots.map((snapshot: any) => {
-					return {
-						key: snapshot.key,
-						...snapshot.val()
-					} as {
-						key: string;
-						name: string;
-						content: {
-							date: string;
-							debt: number;
-							original: number;
-							paid: boolean;
-						};
-					};
-				})
+				snapshots
+					.map(
+						(snapshot: any) =>
+							this.toOwnedDoc(snapshot) as {
+								key: string;
+								name: string;
+								content: {
+									date: string;
+									debt: number;
+									original: number;
+									paid: boolean;
+								};
+							}
+					)
+					.filter((debt: any) => debt._openid === uid)
 			)
 		);
 	}
 
 	/**
-	 * Gets the current user's vault graph from Firebase as a reactive observable.
+	 * Gets the current user's vault graph from Firebase as a reactive observable. The vault is
+	 * private per user on CloudBase, so the same per-owner scoping applies here (rows stamped with the caller's uid) — only the
+	 * caller's own nodes, edges, and categories are emitted.
 	 *
 	 * @returns An observable that emits the vault records list (nodes, edges, and custom categories).
 	 */
 	public getVault(): Observable<VaultRecord[]> {
+		const uid = this.firebaseAuth.currentUser?.uid;
 		return this.listAsObservable(dbRef(this.db, DATABASE_VAULT)).pipe(
 			map((snapshots: any[]) =>
-				snapshots.map((snapshot: any) => ({ key: snapshot.key, ...snapshot.val() }) as VaultRecord)
+				snapshots
+					.map((snapshot: any) => this.toOwnedDoc(snapshot) as VaultRecord)
+					.filter((record: any) => record._openid === uid)
 			)
 		);
 	}
@@ -519,7 +617,7 @@ export class FirebaseService extends DatabaseService {
 					.filter((doc: any) => (doc.lang ?? 'en') === ACTIVE_LOCALE)
 					.sort((a: any, b: any) => (b.order ?? 0) - (a.order ?? 0))
 					.map((doc: any) => {
-						const { key, _openid, order, lang, ...rest } = doc;
+						const { key, _openid, uid, order, lang, ...rest } = doc;
 						return rest;
 					})
 			)
@@ -537,10 +635,7 @@ export class FirebaseService extends DatabaseService {
 				snapshots
 					.map(
 						(snapshot: any) =>
-							({
-								key: snapshot.key,
-								...snapshot.val()
-							}) as {
+							this.toOwnedDoc(snapshot) as {
 								key: string;
 								component: string;
 								element: string;
@@ -601,7 +696,11 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public async updateDateCalculatorTable(updatedTable: any): Promise<void> {
 		try {
-			await update(dbRef(this.db, DATABASE_DATE_CALCULATOR), { ...updatedTable });
+			/* Written to the caller's own date_calculator/<uid> node — the same per-user path the
+			   read streams from — so users can never overwrite each other's rows. */
+			const uid = this.firebaseAuth.currentUser?.uid;
+			if (!uid) return;
+			await update(dbRef(this.db, `${DATABASE_DATE_CALCULATOR}/${uid}`), { ...updatedTable });
 			LOG.info(this.className, DB_LOG_TABLE_RECORD_UPDATED);
 			this.appendToActivityLog({
 				source: ACTIVITY_SOURCE_DATE_CALCULATOR,
@@ -846,16 +945,18 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Writes user-scoped statistics fields to the statistics document.
-	 * Firebase uses a single document for all stats, so this writes to the same
-	 * ref as {@link updateStatisticsFields}.
+	 * Merges the given fields into the current user's users/<uid> node — the same per-user
+	 * document that holds preferences and milestones, mirroring the CloudBase users collection
+	 * so per-user values never collide across accounts.
 	 *
-	 * @param fields - Fields to merge into the statistics document.
+	 * @param fields - Fields to merge into the per-user document.
 	 * @returns A promise that resolves when the update completes.
 	 */
 	public async updateUserStatsFields(fields: Record<string, any>): Promise<void> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return;
 		try {
-			await update(this.statisticsRef, fields);
+			await update(dbRef(this.db, `${DATABASE_USERS}/${uid}`), fields);
 		} catch (error) {
 			LOG.error(this.className, DB_LOG_USER_STATS_UPDATE_FAILED, error as Error);
 		}
@@ -955,8 +1056,9 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the link to remove.
 	 * @param domain - The hostname of the removed link, recorded in the activity log.
+	 * @param ownerOpenid - The _openid of the link's owner, so only the owner's counter is decremented.
 	 */
-	public async removeUsefulLink(key: string, domain: string): Promise<void> {
+	public async removeUsefulLink(key: string, domain: string, ownerOpenid: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_USEFUL_LINKS, key);
 		this.appendToActivityLog({
 			source: ACTIVITY_SOURCE_LINK,
@@ -964,6 +1066,7 @@ export class FirebaseService extends DatabaseService {
 			domain
 		}).catch(() => {});
 		this.updateStatCount(STATS_FIELD_TOTAL_LINKS, -1).catch(() => {});
+		this.decrementOwnStatCount(STATS_FIELD_TOTAL_LINKS, ownerOpenid);
 	}
 
 	/**
@@ -988,10 +1091,12 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the quote to remove.
 	 * @param author - The author of the quote (used for activity log).
+	 * @param ownerOpenid - The _openid of the quote's owner, so only the owner's counter is decremented.
 	 */
-	public async removeQuote(key: string, author: string): Promise<void> {
+	public async removeQuote(key: string, author: string, ownerOpenid: string): Promise<void> {
 		try {
 			await this.removeSingleItemFromDatabase(DATABASE_QUOTES, key);
+			this.decrementOwnStatCount(STATS_FIELD_TOTAL_QUOTES, ownerOpenid);
 			/* Update statistics: decrement total quote count.
 			   latestQuote is intentionally left as-is; it refreshes on the next submission. */
 			await runTransaction(this.statisticsRef, (currentData) => {
@@ -1016,8 +1121,9 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param recipeId - The database key of the recipe to delete.
 	 * @param name - The recipe name, recorded in the activity log.
+	 * @param ownerOpenid - The _openid of the recipe's owner, so only the owner's counter is decremented.
 	 */
-	public async removeRecipe(recipeId: string, name: string): Promise<void> {
+	public async removeRecipe(recipeId: string, name: string, ownerOpenid: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_RECIPES, recipeId);
 		this.appendToActivityLog({
 			source: ACTIVITY_SOURCE_RECIPE,
@@ -1025,6 +1131,7 @@ export class FirebaseService extends DatabaseService {
 			name
 		}).catch(() => {});
 		this.updateStatCount(STATS_FIELD_TOTAL_RECIPES, -1).catch(() => {});
+		this.decrementOwnStatCount(STATS_FIELD_TOTAL_RECIPES, ownerOpenid);
 	}
 
 	/**
@@ -1069,6 +1176,7 @@ export class FirebaseService extends DatabaseService {
 				type: HISTORY_STATUS_DELETED,
 				title: movieItemVO.getMovieName()
 			}).catch(() => {});
+			this.decrementOwnStatCount(STATS_FIELD_TOTAL_FILMS, movieItemVO.getOpenId());
 			LOG.info(this.className, DB_LOG_MOVIE_REMOVED);
 		} catch (error) {
 			LOG.error(
@@ -1085,11 +1193,13 @@ export class FirebaseService extends DatabaseService {
 	 * @param key - The key of the record to remove.
 	 * @param text - The reminder text, recorded in the activity log.
 	 * @param _isShared - Group-feed routing flag; unused in the Firebase backend (no shared groups).
+	 * @param ownerOpenid - The _openid of the reminder's owner, so only the owner's counter is decremented.
 	 */
 	public async removeRecordFromReminderTable(
 		key: string,
 		text: string,
-		_isShared?: boolean
+		_isShared: boolean,
+		ownerOpenid: string
 	): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_REMINDER, key);
 		this.appendToActivityLog({
@@ -1098,6 +1208,7 @@ export class FirebaseService extends DatabaseService {
 			text
 		}).catch(() => {});
 		this.updateStatCount(STATS_FIELD_TOTAL_REMINDERS, -1).catch(() => {});
+		this.decrementOwnStatCount(STATS_FIELD_TOTAL_REMINDERS, ownerOpenid);
 	}
 
 	/**
@@ -1116,6 +1227,8 @@ export class FirebaseService extends DatabaseService {
 		}).catch(() => {});
 		this.updateStatCount(STATS_FIELD_TOTAL_REMINDERS, -1).catch(() => {});
 		this.updateStatCount(STATS_FIELD_COMPLETED_PRIVATE, 1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_REMINDERS, -1).catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_COMPLETED_PRIVATE, 1).catch(() => {});
 	}
 
 	/**
@@ -1123,8 +1236,9 @@ export class FirebaseService extends DatabaseService {
 	 *
 	 * @param key - The key of the record to remove.
 	 * @param name - The debt entry name, recorded in the activity log.
+	 * @param ownerOpenid - The _openid of the debt's owner, so only the owner's counter is decremented.
 	 */
-	public async removeRecordFromDebtTable(key: string, name: string): Promise<void> {
+	public async removeRecordFromDebtTable(key: string, name: string, ownerOpenid: string): Promise<void> {
 		await this.removeSingleItemFromDatabase(DATABASE_DEBT_SONATA, key);
 		this.appendToActivityLog({
 			source: ACTIVITY_SOURCE_DEBT,
@@ -1132,6 +1246,7 @@ export class FirebaseService extends DatabaseService {
 			name
 		}).catch(() => {});
 		this.updateStatCount(STATS_FIELD_TOTAL_DEBTS, -1).catch(() => {});
+		this.decrementOwnStatCount(STATS_FIELD_TOTAL_DEBTS, ownerOpenid);
 	}
 
 	/**
@@ -1217,29 +1332,29 @@ export class FirebaseService extends DatabaseService {
 
 	/**
 	 * Gets whether Tauri desktop notifications are enabled for the current user
-	 * by reading the flag from the user's preferences node.
+	 * by reading the flag from the user's per-user node.
 	 *
-	 * @returns True when the Tauri notification flag is set in the user's preferences.
+	 * @returns True when the Tauri notification flag is set in the user's per-user node.
 	 */
 	public async getTauriNotifEnabled(): Promise<boolean> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return false;
-		const snap = await get(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`));
+		const snap = await get(dbRef(this.db, `${DATABASE_USERS}/${uid}`));
 		return snap.val()?.[STATS_FIELD_TAURI_NOTIF_ENABLED] === true;
 	}
 
 	/**
 	 * Persists the Tauri desktop notification preference for the current user
-	 * by updating the flag in the user's preferences node.
+	 * by updating the flag in the user's per-user node.
 	 *
 	 * @param enabled - The desired enabled state.
 	 */
 	public async setTauriNotifEnabled(enabled: boolean): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return;
-		/* update() merges into the node — set() would overwrite the entire preferences object,
+		/* update() merges into the node — set() would overwrite the entire per-user node,
 		   erasing minimize-on-close and locale fields stored at the same path. */
-		await update(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`), {
+		await update(dbRef(this.db, `${DATABASE_USERS}/${uid}`), {
 			[STATS_FIELD_TAURI_NOTIF_ENABLED]: enabled
 		});
 	}
@@ -1247,77 +1362,77 @@ export class FirebaseService extends DatabaseService {
 	/**
 	 * Gets whether the desktop app minimizes to Dock on close for the current user.
 	 *
-	 * @returns True when the minimize-on-close flag is set in the user's preferences.
+	 * @returns True when the minimize-on-close flag is set in the user's per-user node.
 	 */
 	public async getMinimizeOnClose(): Promise<boolean> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return true;
-		const snap = await get(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`));
+		const snap = await get(dbRef(this.db, `${DATABASE_USERS}/${uid}`));
 		return snap.val()?.[STATS_FIELD_MINIMIZE_ON_CLOSE] === true;
 	}
 
 	/**
 	 * Persists the minimize-on-close preference for the current user
-	 * by updating the flag in the user's preferences node.
+	 * by updating the flag in the user's per-user node.
 	 *
 	 * @param enabled - The desired enabled state.
 	 */
 	public async setMinimizeOnClose(enabled: boolean): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return;
-		await update(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`), {
+		await update(dbRef(this.db, `${DATABASE_USERS}/${uid}`), {
 			[STATS_FIELD_MINIMIZE_ON_CLOSE]: enabled
 		});
 	}
 
 	/**
-	 * Gets the display locale preference for the current user from the user preferences node.
+	 * Gets the display locale preference for the current user from the user's per-user node.
 	 *
 	 * @returns The stored locale ('en' or 'zh'), or null when not yet set.
 	 */
 	public async getLocale(): Promise<'en' | 'zh' | null> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return null;
-		const snap = await get(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`));
+		const snap = await get(dbRef(this.db, `${DATABASE_USERS}/${uid}`));
 		const value = snap.val()?.[STATS_FIELD_LOCALE];
 		return value === LOCALE_KEY_EN || value === LOCALE_KEY_ZH ? value : null;
 	}
 
 	/**
 	 * Persists the display locale preference for the current user
-	 * by updating the field in the user's preferences node.
+	 * by updating the field in the user's per-user node.
 	 *
 	 * @param locale - The locale key to store: 'en' or 'zh'.
 	 */
 	public async setLocale(locale: 'en' | 'zh'): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return;
-		await update(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`), { [STATS_FIELD_LOCALE]: locale });
+		await update(dbRef(this.db, `${DATABASE_USERS}/${uid}`), { [STATS_FIELD_LOCALE]: locale });
 	}
 
 	/**
-	 * Gets the backed-up Today page items for the current user from the user preferences node.
+	 * Gets the backed-up Today page items for the current user from the user's per-user node.
 	 *
 	 * @returns The stored Today items, or an empty array when none are backed up or the user is signed out.
 	 */
 	public async getTodayItems(): Promise<TodayTask[]> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return [];
-		const snap = await get(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`));
+		const snap = await get(dbRef(this.db, `${DATABASE_USERS}/${uid}`));
 		const value = snap.val()?.[STATS_FIELD_TODAY_ITEMS];
 		return Array.isArray(value) ? (value as TodayTask[]) : [];
 	}
 
 	/**
 	 * Persists the full set of locally created Today items for the current user
-	 * by replacing the backup field in the user's preferences node.
+	 * by replacing the backup field in the user's per-user node.
 	 *
 	 * @param items - The complete list of Today items to store; an empty array clears the backup.
 	 */
 	public async saveTodayItems(items: TodayTask[]): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return;
-		await update(dbRef(this.db, `${DATABASE_USER_PREFERENCES}/${uid}`), {
+		await update(dbRef(this.db, `${DATABASE_USERS}/${uid}`), {
 			[STATS_FIELD_TODAY_ITEMS]: items
 		});
 	}
@@ -1371,6 +1486,7 @@ export class FirebaseService extends DatabaseService {
 		this.updateStatCount(STATS_FIELD_TOTAL_LINKS, 1)
 			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_LINKS, MILESTONE_DOMAIN_LINK))
 			.catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, 1).catch(() => {});
 	}
 
 	/**
@@ -1394,8 +1510,16 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
 		try {
-			await push(dbRef(this.db, DATABASE_QUOTES), { text, author, timestamp });
+			// Stamp the owner's Firebase uid so quote ownership checks work on Firebase too
+			const uid = this.firebaseAuth.currentUser?.uid;
+			await push(dbRef(this.db, DATABASE_QUOTES), {
+				text,
+				author,
+				timestamp,
+				...(uid ? { uid } : {})
+			});
 			LOG.info(this.className, DB_LOG_QUOTE_ADDED);
+			this.updateUserStatCount(STATS_FIELD_TOTAL_QUOTES, 1).catch(() => {});
 			await runTransaction(this.statisticsRef, (currentData) => {
 				currentData = currentData ?? {};
 				currentData.totalQuotes = (currentData.totalQuotes ?? 0) + 1;
@@ -1434,6 +1558,7 @@ export class FirebaseService extends DatabaseService {
 		this.updateStatCount(STATS_FIELD_TOTAL_RECIPES, 1)
 			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_RECIPES, MILESTONE_DOMAIN_RECIPE))
 			.catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_RECIPES, 1).catch(() => {});
 	}
 
 	/**
@@ -1455,7 +1580,8 @@ export class FirebaseService extends DatabaseService {
 				movieKey = (Object.keys(snapshot.val()).length + 1).toString();
 			}
 
-			// Step 2 : Persist movie document
+			// Step 2 : Persist movie document, stamped with the owner's Firebase uid for ownership checks
+			const ownerUid = this.firebaseAuth.currentUser?.uid;
 			await update(dbRef(this.db, `movies/${movieKey}`), {
 				title: movieItemVO.getMovieName(),
 				year: movieItemVO.getMovieYear(),
@@ -1467,7 +1593,8 @@ export class FirebaseService extends DatabaseService {
 				episodeNumber: movieItemVO.getMovieEpisodeNumber(),
 				isFavourite: movieItemVO.getIsFavourite(),
 				description: movieItemVO.getDescription(),
-				actors: movieItemVO.getActors()
+				actors: movieItemVO.getActors(),
+				...(ownerUid ? { uid: ownerUid } : {})
 			});
 
 			// Step 3 : Add history entry
@@ -1488,6 +1615,7 @@ export class FirebaseService extends DatabaseService {
 			/* The runTransaction above already bumped totalFilms — record the milestone only, never a
 			   second increment, or the film total would double. Fire-and-forget: the add succeeded. */
 			this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_FILMS, MILESTONE_DOMAIN_FILM).catch(() => {});
+			this.updateUserStatCount(STATS_FIELD_TOTAL_FILMS, 1).catch(() => {});
 			LOG.info(this.className, DB_LOG_MOVIE_ADDED);
 		} catch (error) {
 			LOG.error(
@@ -1553,6 +1681,7 @@ export class FirebaseService extends DatabaseService {
 				this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER)
 			)
 			.catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_REMINDERS, 1).catch(() => {});
 		await this.addNewRecordToDB(DATABASE_REMINDER, newRecord);
 	}
 
@@ -1566,6 +1695,7 @@ export class FirebaseService extends DatabaseService {
 		this.updateStatCount(STATS_FIELD_TOTAL_DEBTS, 1)
 			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_DEBTS, MILESTONE_DOMAIN_DEBT))
 			.catch(() => {});
+		this.updateUserStatCount(STATS_FIELD_TOTAL_DEBTS, 1).catch(() => {});
 		return this.addNewRecordToDB(DATABASE_DEBT_SONATA, newRecord);
 	}
 
@@ -1610,8 +1740,11 @@ export class FirebaseService extends DatabaseService {
 	 */
 	protected async addNewRecordToDB(tableName: string, newRecord: any): Promise<void> {
 		try {
-			// Step 1: Push the record flat so the matching read's {key, ...val} spread round-trips.
-			await push(dbRef(this.db, tableName), { ...newRecord });
+			/* Step 1: Push the record flat so the matching read's {key, ...val} spread round-trips.
+			   The owner's Firebase uid is stamped so ownership checks work on Firebase-created
+			   documents — reads surface it to the app via toOwnedDoc; _openid never hits storage. */
+			const uid = this.firebaseAuth.currentUser?.uid;
+			await push(dbRef(this.db, tableName), { ...newRecord, ...(uid ? { uid } : {}) });
 			LOG.info(this.className, DB_LOG_TABLE_RECORD_UPDATED);
 
 			/* Step 2: Derive the correct activity type before enqueueing the log entry.
@@ -1644,7 +1777,12 @@ export class FirebaseService extends DatabaseService {
 	 * @returns The database key of the newly created document.
 	 */
 	protected async addVaultRecord(content: Record<string, unknown>): Promise<string> {
-		const reference = push(dbRef(this.db, DATABASE_VAULT), content);
+		// Stamp the owner's Firebase uid so vault documents carry ownership like CloudBase's
+		const uid = this.firebaseAuth.currentUser?.uid;
+		const reference = push(dbRef(this.db, DATABASE_VAULT), {
+			...content,
+			...(uid ? { uid } : {})
+		});
 		try {
 			await reference;
 			LOG.info(this.className, DB_LOG_TABLE_RECORD_UPDATED);
@@ -1740,16 +1878,225 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
-	 * Documented no-op on the Firebase backend. proxyFetch is a server-side CORS bypass — CloudBase
-	 * proxies the request through its own Express endpoint / Cloud Function. Firebase has no equivalent
-	 * deployed HTTP proxy, and the browser cannot fetch cross-origin URLs directly, so there is nothing
-	 * to call from the client. True parity needs a Firebase HTTPS Function mirroring /api/fetch-url.
+	 * Ensures the current user's users/<uid> node exists, seeding it on first sign-in with zeroed
+	 * counters and the account-created milestone so the account page has a document to stream —
+	 * the Firebase mirror of CloudBase's one-entry-per-user users collection. Connect codes are
+	 * not seeded: account linking is CloudBase-only (see the boundary note above the connect stubs).
 	 *
-	 * @param _url - The URL to proxy (no Firebase proxy endpoint exists to forward it to).
-	 * @returns A resolved promise with empty content and contentType.
+	 * @returns A promise that resolves when the node is verified or seeded.
 	 */
-	public proxyFetch(_url: string): Promise<{ content: string; contentType: string }> {
-		return Promise.resolve({ content: '', contentType: '' });
+	public async ensureUserStatsExist(): Promise<void> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return;
+		const userRef = dbRef(this.db, `${DATABASE_USERS}/${uid}`);
+		const snapshot = await get(userRef);
+		if (snapshot.exists()) return;
+		await set(userRef, {
+			[STATS_FIELD_TOTAL_FILMS]: 0,
+			[STATS_FIELD_TOTAL_QUOTES]: 0,
+			[STATS_FIELD_TOTAL_RECIPES]: 0,
+			[STATS_FIELD_TOTAL_REMINDERS]: 0,
+			[STATS_FIELD_COMPLETED_PRIVATE]: 0,
+			[STATS_FIELD_COMPLETED_SHARED]: 0,
+			[STATS_FIELD_TOTAL_DEBTS]: 0,
+			[STATS_FIELD_TOTAL_LINKS]: 0,
+			[STATS_FIELD_ACTIVITY_STREAK]: 0,
+			[STATS_FIELD_ACTIVITY_STREAK_DATE]: '',
+			[STATS_FIELD_MILESTONES]: {
+				[MILESTONE_KEY_ACCOUNT_CREATED]: Utilities.formatDateForStorage(new Date())
+			}
+		});
+	}
+
+	/**
+	 * Recomputes the current user's item totals from their owned documents and corrects any
+	 * drifted counter on the users/<uid> node. Realtime Database has no server-side counts, so
+	 * each collection is read once and filtered client-side to documents stamped with the user's
+	 * uid — acceptable on an account-page load, where these collections are fetched anyway.
+	 * Only the fields that differ are written.
+	 *
+	 * @returns A promise that resolves when any drifted totals have been corrected.
+	 */
+	public async reconcileUserStats(): Promise<void> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return;
+
+		// Step 1: Read every countable collection in parallel and count this user's documents
+		const [movies, quotes, recipes, reminders, debts, links] = await Promise.all([
+			get(this.moviesRef),
+			get(dbRef(this.db, DATABASE_QUOTES)),
+			get(dbRef(this.db, DATABASE_RECIPES)),
+			get(dbRef(this.db, DATABASE_REMINDER)),
+			get(dbRef(this.db, DATABASE_DEBT_SONATA)),
+			get(dbRef(this.db, DATABASE_USEFUL_LINKS))
+		]);
+		const authoritative: Record<string, number> = {
+			[STATS_FIELD_TOTAL_FILMS]: this.countOwnedDocs(movies, uid),
+			[STATS_FIELD_TOTAL_QUOTES]: this.countOwnedDocs(quotes, uid),
+			[STATS_FIELD_TOTAL_RECIPES]: this.countOwnedDocs(recipes, uid),
+			[STATS_FIELD_TOTAL_REMINDERS]: this.countOwnedDocs(reminders, uid),
+			[STATS_FIELD_TOTAL_DEBTS]: this.countOwnedDocs(debts, uid),
+			// Links share their collection with categories — count only actual link rows
+			[STATS_FIELD_TOTAL_LINKS]: this.countOwnedDocs(
+				links,
+				uid,
+				(doc) => doc.type === USEFUL_LINK_TYPE_LINK
+			)
+		};
+
+		// Step 2: Write back only the fields that drifted from the authoritative counts
+		const userRef = dbRef(this.db, `${DATABASE_USERS}/${uid}`);
+		const current = (await get(userRef)).val() ?? {};
+		const drifted: Record<string, number> = {};
+		for (const [field, count] of Object.entries(authoritative)) {
+			if ((current[field] ?? 0) !== count) {
+				drifted[field] = count;
+			}
+		}
+		if (Object.keys(drifted).length > 0) {
+			await update(userRef, drifted);
+		}
+	}
+
+	/**
+	 * Proxies an HTTP GET request through the proxyFetch callable Cloud Function to bypass browser
+	 * CORS restrictions — the Firebase counterpart of CloudBase's fetchUrl function, with all URL
+	 * and redirect validation done server-side. Used for RSS news feeds and link-title auto-fetch
+	 * on the Portal page.
+	 *
+	 * @param url - The fully-qualified http/https URL to fetch.
+	 * @returns The response body as a string and its Content-Type header value.
+	 * @throws Error when the callable fails or reports an unsuccessful fetch.
+	 */
+	public async proxyFetch(url: string): Promise<{ content: string; contentType: string }> {
+		const result = await this.callCloudFunction<{
+			success: boolean;
+			content?: string;
+			contentType?: string;
+			error?: string;
+		}>('proxyFetch', { url });
+		if (!result?.success) {
+			throw new Error(`${DB_LOG_PROXY_FETCH_FAILED} ${url}`);
+		}
+		return { content: result.content ?? '', contentType: result.contentType ?? '' };
+	}
+
+	/**
+	 * Changes one of the current user's item counters on their users/<uid> node by the given
+	 * delta. Runs in a transaction so concurrent writes cannot lose increments, starting from 0
+	 * when the field is absent. Failures surface to the caller — every call site treats stat
+	 * updates as fire-and-forget with its own .catch.
+	 *
+	 * @param field - The field name constant to update (e.g. STATS_FIELD_TOTAL_FILMS).
+	 * @param delta - The amount to change the counter — pass 1 to increment, -1 to decrement.
+	 * @returns A promise that resolves when the update completes.
+	 */
+	private async updateUserStatCount(field: string, delta: 1 | -1): Promise<void> {
+		const uid = this.firebaseAuth.currentUser?.uid;
+		if (!uid) return;
+		await runTransaction(
+			dbRef(this.db, `${DATABASE_USERS}/${uid}/${field}`),
+			(current: number | null) => Math.max(0, (current ?? 0) + delta)
+		);
+	}
+
+	/**
+	 * Decrements the current user's own item total for a removed item, but only when the item
+	 * belongs to them. When another user's item is removed, this user's counter is left
+	 * untouched — the owner's totals self-heal on their next account load via reconcileUserStats.
+	 *
+	 * {@link removeUsefulLink} - Decrements the owner's link total after a link is removed.
+	 * {@link removeQuote} - Decrements the owner's quote total after a quote is removed.
+	 * {@link removeRecipe} - Decrements the owner's recipe total after a recipe is removed.
+	 * {@link removeMovieFromDatabase} - Decrements the owner's film total after a movie is removed.
+	 * {@link removeRecordFromReminderTable} - Decrements the owner's reminder total after a reminder is removed.
+	 * {@link removeRecordFromDebtTable} - Decrements the owner's debt total after a debt is removed.
+	 *
+	 * @param field - The stats field to decrement.
+	 * @param ownerOpenid - The _openid of the removed item's owner.
+	 */
+	private decrementOwnStatCount(field: string, ownerOpenid: string): void {
+		if (ownerOpenid !== this.firebaseAuth.currentUser?.uid) return;
+		this.updateUserStatCount(field, -1).catch(() => {});
+	}
+
+	/**
+	 * Calls one of the app's callable Cloud Functions with the caller's Firebase auth context and
+	 * returns its result payload. The functions SDK is imported lazily so it only loads when a
+	 * callable-backed feature is actually used.
+	 *
+	 * {@link getPassphraseLockStatus} - Reads whether a passphrase is set for a feature key.
+	 * {@link setPassphraseLock} - Sets or replaces a feature key's passphrase.
+	 * {@link verifyPassphraseLock} - Verifies a passphrase attempt server-side.
+	 * {@link removePassphraseLock} - Removes a feature key's passphrase.
+	 * {@link proxyFetch} - Fetches a public URL server-side to bypass browser CORS.
+	 *
+	 * @param name - The deployed callable function name.
+	 * @param data - The request payload for the function.
+	 * @returns The function's result payload, or null when the call fails.
+	 */
+	private async callCloudFunction<T>(
+		name: string,
+		data: Record<string, string>
+	): Promise<T | null> {
+		try {
+			const { getFunctions, httpsCallable } = await import('firebase/functions');
+			const callable = httpsCallable(getFunctions(), name);
+			const response = await callable(data);
+			return response.data as T;
+		} catch (error) {
+			LOG.error(this.className, `${DB_LOG_CLOUD_FUNCTION_CALL_FAILED} ${name}`, error as Error);
+			return null;
+		}
+	}
+
+	/**
+	 * Counts the documents in a collection snapshot owned by the given user, optionally applying
+	 * an extra predicate (e.g. the link/category discriminator on the shared useful-links
+	 * collection).
+	 *
+	 * {@link reconcileUserStats} - Counts each collection's owned documents during reconciliation.
+	 *
+	 * @param snapshot - The one-time snapshot of the whole collection.
+	 * @param uid - The owner id a document's uid stamp must match.
+	 * @param extraFilter - The optional additional predicate a document must satisfy.
+	 * @returns The number of matching documents.
+	 */
+	private countOwnedDocs(
+		snapshot: DataSnapshot,
+		uid: string,
+		extraFilter?: (doc: any) => boolean
+	): number {
+		let count = 0;
+		snapshot.forEach((child) => {
+			const doc = child.val();
+			if (doc?.uid === uid && (!extraFilter || extraFilter(doc))) {
+				count++;
+			}
+		});
+		return count;
+	}
+
+	/**
+	 * Maps a raw child snapshot into the app's document shape — the flat value plus its key, with
+	 * the Firebase-native uid ownership stamp surfaced as _openid, the field name the shared
+	 * components and CloudBase documents use. Firebase storage itself never carries _openid; the
+	 * alias exists in memory only, at the read boundary.
+	 *
+	 * {@link getUsefulLinks} - Emits links with their owner surfaced for ownership checks.
+	 * {@link getLinkCategories} - Emits the caller's own link categories.
+	 * {@link getQuotes} - Emits quotes with their owner surfaced for ownership checks.
+	 * {@link getReminderTableDetails} - Emits the caller's own reminders.
+	 * {@link getDebtSonataTableDetails} - Emits the caller's own debt rows.
+	 * {@link getVault} - Emits the caller's own vault records.
+	 * {@link getPatchNotes} - Emits patch notes with their owner surfaced for permission checks.
+	 *
+	 * @param snapshot - The child snapshot to map.
+	 * @returns The document with its key and the aliased ownership field.
+	 */
+	private toOwnedDoc(snapshot: any): any {
+		const value = snapshot.val();
+		return { key: snapshot.key, ...value, _openid: value?.uid ?? '' };
 	}
 
 	/**

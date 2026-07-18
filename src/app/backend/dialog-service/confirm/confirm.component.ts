@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Output } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { DIALOG_BTN_CANCEL } from '../../../common/locale/locale-strings';
 
@@ -20,6 +20,8 @@ export class ConfirmDialogComponent {
 	protected acceptLabel = '';
 
 	private acceptCallback!: () => Promise<void>;
+
+	constructor(private readonly cdr: ChangeDetectorRef) {}
 
 	/**
 	 * Opens the confirm dialog with the given message, header, and accept label.
@@ -51,11 +53,15 @@ export class ConfirmDialogComponent {
 	}
 
 	/**
-	 * Invokes the accept callback, then closes the dialog.
+	 * Invokes the accept callback, then closes the dialog. Forces a change-detection
+	 * pass after hiding so the dialog still closes when the accept callback resolved
+	 * outside Angular's zone (e.g. CloudBase SDK writes on Tauri/iOS), where the
+	 * [(visible)] binding would otherwise never process the close and onHide never fires.
 	 */
 	protected async onAccept(): Promise<void> {
 		await this.acceptCallback();
 		this.visible = false;
+		this.cdr.detectChanges();
 	}
 
 	/**

@@ -76,7 +76,7 @@ export class AddDebtDialogComponent {
 	protected dueDateModel: Date | null = null;
 	protected selectedCurrency = '';
 	protected isPermanent = false;
-	private submitCallback?: (data: NewDebtData) => void;
+	private submitCallback?: (data: NewDebtData) => void | Promise<void>;
 
 	/**
 	 * Returns true when the form has enough valid data to submit.
@@ -99,7 +99,7 @@ export class AddDebtDialogComponent {
 	 * @param prefillData - Prefill values for edit mode, or null for add mode.
 	 */
 	public openDialog(
-		submitCallback: (data: NewDebtData) => void,
+		submitCallback: (data: NewDebtData) => void | Promise<void>,
 		prefillData: Partial<NewDebtData> | null
 	): void {
 		// Step 1: Register the callback and derive the mode from whether prefill data was supplied
@@ -131,14 +131,15 @@ export class AddDebtDialogComponent {
 	 * Validates the form, invokes the submit callback with the collected
 	 * debt data, and closes the dialog.
 	 */
-	protected onSubmit(): void {
+	protected async onSubmit(): Promise<void> {
 		// Step 1: Guard — the template disables the button, but this prevents keyboard/programmatic bypass
 		if (!this.isValid) return;
 
-		/* Step 2: Build the payload and invoke the caller's callback.
+		/* Step 2: Build the payload and await the caller's work so the dialog stays open under the
+		   blocking overlay and both close together when the save settles (consistent with undo).
 		   dueDate falls back to an empty string (not null) so the database field stays consistent
 		   across records regardless of whether the user set a date. */
-		this.submitCallback?.({
+		await this.submitCallback?.({
 			name: this.name.trim(),
 			amount: parseFloat(this.amount),
 			dueDate: this.dueDateModel ? Utilities.formatDateForStorage(this.dueDateModel) : '',

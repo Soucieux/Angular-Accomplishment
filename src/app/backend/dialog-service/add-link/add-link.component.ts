@@ -67,7 +67,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	protected category = '';
 	protected isPinned = false;
 	protected isShared = false;
-	private submitCallback?: (formData: NewLinkData) => void;
+	private submitCallback?: (formData: NewLinkData) => void | Promise<void>;
 	private categoriesSub?: Subscription;
 	private lastFetchedUrl = '';
 
@@ -104,7 +104,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	 * @param prefillData - Prefill values for edit mode, or null for add mode.
 	 */
 	public openDialog(
-		submitCallback: (formData: NewLinkData) => void,
+		submitCallback: (formData: NewLinkData) => void | Promise<void>,
 		prefillData: Partial<NewLinkData> | null
 	): void {
 		// Step 1: Wire up the callback and determine whether this is an add or edit session
@@ -202,7 +202,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	 * Validates the form, invokes the submit callback with the collected
 	 * link data, and closes the dialog.
 	 */
-	protected onSubmit(): void {
+	protected async onSubmit(): Promise<void> {
 		if (!this.isValid) return;
 
 		// Step 1: Build the payload — URL is re-normalized here in case the user edited it after the blur event
@@ -215,11 +215,11 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 		};
 
 		/*
-		 * Step 2: Close first, then invoke the callback — closing resets visible and emits closed$,
-		 * so the dialog is already dismissed before any async work the callback triggers begins.
+		 * Step 2: Await the caller's work so the dialog stays open under the blocking overlay and
+		 * both close together when the save settles (consistent with the undo flow).
 		 */
+		await this.submitCallback?.(formData);
 		this.onDialogClosed();
-		this.submitCallback?.(formData);
 	}
 
 	/**

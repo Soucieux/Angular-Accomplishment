@@ -101,7 +101,7 @@ export class DialogService {
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'add',
-		submitCallback: (movie: MovieItemVO) => void,
+		submitCallback: (movie: MovieItemVO) => void | Promise<void>,
 		searchCallback: (movie: MovieItemVO) => void
 	): void;
 
@@ -122,21 +122,21 @@ export class DialogService {
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'debt',
-		submitCallback: (data: NewDebtData) => void,
+		submitCallback: (data: NewDebtData) => void | Promise<void>,
 		prefillData: Partial<NewDebtData> | null
 	): void;
 
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'link',
-		submitCallback: (data: NewLinkData) => void,
+		submitCallback: (data: NewLinkData) => void | Promise<void>,
 		prefillData: Partial<NewLinkData> | null
 	): void;
 
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'multi-link',
-		submitCallback: (links: NewLinkData[]) => void,
+		submitCallback: (links: NewLinkData[]) => void | Promise<void>,
 		categories: string[]
 	): void;
 
@@ -152,7 +152,7 @@ export class DialogService {
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'category',
-		submitCallback: (data: NewCategoryData) => void,
+		submitCallback: (data: NewCategoryData) => void | Promise<void>,
 		options: {
 			prefillData: Partial<NewCategoryData> | null;
 			onDelete?: () => void;
@@ -163,21 +163,21 @@ export class DialogService {
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'edit-non-account',
-		submitCallback: (data: EditNonAccountData) => void,
+		submitCallback: (data: EditNonAccountData) => void | Promise<void>,
 		data: { name: string; icon: string; backups: VaultBackupRow[]; onDelete?: () => void }
 	): void;
 
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'edit-vault-category',
-		submitCallback: (data: EditVaultCategoryData) => void,
+		submitCallback: (data: EditVaultCategoryData) => void | Promise<void>,
 		dialogData: { name: string; icon: string; onDelete?: () => void }
 	): void;
 
 	public openDialog(
 		dialogContainerRef: ViewContainerRef,
 		dialogType: 'add-account',
-		submitCallback: (data: AddAccountDialogSubmitData) => void,
+		submitCallback: (data: AddAccountDialogSubmitData) => void | Promise<void>,
 		dialogData: AddAccountDialogData
 	): void;
 
@@ -271,11 +271,11 @@ export class DialogService {
 
 	/**
 	 * Opens a confirm dialog and, on accept, runs the given async work behind a blocking overlay.
-	 * The block dialog is opened fire-and-forget so the confirm closes at once and the overlay
-	 * replaces it; the overlay auto-removes when the work resolves. A repeat trigger while the
-	 * overlay is up is silently skipped (stackable rule), so the work can never double-fire.
-	 * The work callback owns its own error handling (try/catch with handleError) — a rejection
-	 * only closes the overlay.
+	 * The overlay opens on top of the confirm dialog while the confirm stays visible underneath;
+	 * when the work settles the overlay and the confirm dialog close together (consistent with the
+	 * history "undo" flow). The modal overlay blocks re-clicks and a repeat trigger while it is up
+	 * is silently skipped (stackable rule), so the work can never double-fire. The work callback
+	 * owns its own error handling (try/catch with handleError) — a rejection only closes the overlay.
 	 *
 	 * @param container - The ViewContainerRef to attach the dialogs to.
 	 * @param confirmData - The confirm dialog display data (fixed three-element array).
@@ -291,8 +291,11 @@ export class DialogService {
 		blockMessage: string,
 		work: () => Promise<void>
 	): void {
-		this.openDialog(container, 'confirm', () => {
-			this.runBlocking(container, blockMessage, work);
+		/* Await the overlay inside the confirm's accept callback so the confirm dialog stays open
+		   under the overlay and both close together when the work settles. runBlocking never
+		   rejects, so the confirm's onAccept always reaches its close. */
+		this.openDialog(container, 'confirm', async () => {
+			await this.runBlocking(container, blockMessage, work);
 		}, confirmData);
 	}
 

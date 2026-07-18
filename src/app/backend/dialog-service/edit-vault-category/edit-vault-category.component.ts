@@ -33,7 +33,7 @@ export class EditVaultCategoryDialogComponent {
 	protected visible = false;
 	protected name = '';
 	protected icon = '';
-	private submitCallback?: (data: EditVaultCategoryData) => void;
+	private submitCallback?: (data: EditVaultCategoryData) => void | Promise<void>;
 	protected deleteCallback?: () => void;
 
 	// ── Dialog lifecycle ─────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ export class EditVaultCategoryDialogComponent {
 	 * @param options.onDelete - Optional callback invoked when the user triggers deletion.
 	 */
 	public openDialog(
-		submitCallback: (data: EditVaultCategoryData) => void,
+		submitCallback: (data: EditVaultCategoryData) => void | Promise<void>,
 		options: { name: string; icon: string; onDelete?: () => void }
 	): void {
 		this.submitCallback = submitCallback;
@@ -73,10 +73,12 @@ export class EditVaultCategoryDialogComponent {
 	/**
 	 * Validates the form, closes the dialog, then invokes the submit callback with the edited label and icon.
 	 */
-	protected onSubmit(): void {
+	protected async onSubmit(): Promise<void> {
 		if (!this.isValid) return;
+		/* Await the caller's work so the dialog stays open under the blocking overlay and both
+		   close together when the save settles (consistent with the undo flow). */
+		await this.submitCallback?.({ label: this.name.trim(), icon: this.icon });
 		this.onDialogClosed();
-		this.submitCallback?.({ label: this.name.trim(), icon: this.icon });
 	}
 
 	/**

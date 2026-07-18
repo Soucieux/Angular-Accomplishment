@@ -147,7 +147,7 @@ export class AddAccountDialogComponent {
 	);
 	protected readonly identifierTypeOptions: { value: VaultNodeType; label: string }[] =
 		VAULT_BACKUP_CONNECTION_TYPES.map((entry) => ({ value: entry.value, label: this.labelForType(entry.value) }));
-	private submitCallback?: (data: AddAccountDialogSubmitData) => void;
+	private submitCallback?: (data: AddAccountDialogSubmitData) => void | Promise<void>;
 
 	// ── Dialog lifecycle ─────────────────────────────────────────────────────
 
@@ -159,7 +159,7 @@ export class AddAccountDialogComponent {
 	 * @param dialogData - The assignable categories plus existing account names used to reject duplicates.
 	 */
 	public openDialog(
-		submitCallback: (data: AddAccountDialogSubmitData) => void,
+		submitCallback: (data: AddAccountDialogSubmitData) => void | Promise<void>,
 		dialogData: AddAccountDialogData
 	): void {
 		this.submitCallback = submitCallback;
@@ -293,7 +293,7 @@ export class AddAccountDialogComponent {
 	 * Validates the form, invokes the submit callback with the collected account, identifier, or
 	 * standalone-category data (trimmed name, selected category, and non-empty connections), then closes.
 	 */
-	protected onSubmit(): void {
+	protected async onSubmit(): Promise<void> {
 		if (!this.isValid) return;
 
 		let payload: AddAccountDialogSubmitData;
@@ -321,10 +321,11 @@ export class AddAccountDialogComponent {
 			};
 		}
 
-		/* finally guarantees the dialog still closes even if submitCallback throws (e.g. a stale
-		   block-dialog entry from another in-flight vault write) — never leaves it stuck open. */
+		/* Await the caller's work so the dialog stays open under the blocking overlay and both close
+		   together when the save settles (consistent with the undo flow). finally guarantees the
+		   dialog still closes even if submitCallback throws — never leaves it stuck open. */
 		try {
-			this.submitCallback?.(payload);
+			await this.submitCallback?.(payload);
 		} finally {
 			this.onDialogClosed();
 		}

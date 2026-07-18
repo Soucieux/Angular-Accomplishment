@@ -820,8 +820,8 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 	 * @param formData - The validated link fields submitted by the dialog.
 	 * @param existingLink - The existing DB record when editing, or null when adding.
 	 */
-	private handleLinkSave(formData: NewLinkData, existingLink: PortalLink | null): void {
-		this.dialogService.runBlocking(this.dialogComponentContainer, PORTAL_MSG_SAVING_LINK, async () => {
+	private handleLinkSave(formData: NewLinkData, existingLink: PortalLink | null): Promise<void> {
+		return this.dialogService.runBlocking(this.dialogComponentContainer, PORTAL_MSG_SAVING_LINK, async () => {
 			// Step 1: Normalise the URL before any read or write (adds https:// if scheme is absent)
 			const finalUrl = Utilities.normalizeUrl(formData.url);
 			try {
@@ -877,8 +877,8 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 	 *
 	 * @param links - The batch of validated link data submitted by the multi-link dialog.
 	 */
-	private handleMultiLinkSave(links: NewLinkData[]): void {
-		this.dialogService.runBlocking(this.dialogComponentContainer, PORTAL_MSG_SAVING_LINKS, async () => {
+	private handleMultiLinkSave(links: NewLinkData[]): Promise<void> {
+		return this.dialogService.runBlocking(this.dialogComponentContainer, PORTAL_MSG_SAVING_LINKS, async () => {
 			try {
 				/* Step 1: Fan out all writes in parallel — Promise.all rejects at the first failure,
 				   so a partial batch is never silently committed without an error toast. */
@@ -1000,8 +1000,8 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 	 * @param data - The validated category fields submitted by the dialog.
 	 * @param existing - The existing DB record when editing, or null when adding.
 	 */
-	private handleCategorySave(data: NewCategoryData, existing: PortalCategory | null): void {
-		this.dialogService.runBlocking(this.dialogComponentContainer, PORTAL_MSG_SAVING_CATEGORY, async () => {
+	private handleCategorySave(data: NewCategoryData, existing: PortalCategory | null): Promise<void> {
+		return this.dialogService.runBlocking(this.dialogComponentContainer, PORTAL_MSG_SAVING_CATEGORY, async () => {
 			try {
 				// Update the name in-place when editing; append at end of ordered list when adding
 				if (existing) {

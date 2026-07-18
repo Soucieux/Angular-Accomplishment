@@ -64,7 +64,7 @@ export class EditNonAccountDialogComponent {
 	/** Newly typed backup rows not yet saved. */
 	protected addedBackups: VaultConnectionInput[] = [];
 	private removedBackupEdgeKeys: string[] = [];
-	private submitCallback?: (data: EditNonAccountData) => void;
+	private submitCallback?: (data: EditNonAccountData) => void | Promise<void>;
 	protected deleteCallback?: () => void;
 
 	// ── Dialog lifecycle ─────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ export class EditNonAccountDialogComponent {
 	 * optional delete callback.
 	 */
 	public openDialog(
-		submitCallback: (data: EditNonAccountData) => void,
+		submitCallback: (data: EditNonAccountData) => void | Promise<void>,
 		data: { name: string; icon: string; backups: VaultBackupRow[]; onDelete?: () => void }
 	): void {
 		this.submitCallback = submitCallback;
@@ -116,12 +116,14 @@ export class EditNonAccountDialogComponent {
 	 * Validates the form, closes the dialog, then invokes the submit callback with the trimmed name and
 	 * any added/removed backup links.
 	 */
-	protected onSubmit(): void {
+	protected async onSubmit(): Promise<void> {
 		if (!this.isValid) return;
 		const addedBackups = this.addedBackups.filter((backup) => backup.value.trim().length > 0);
 		const removedBackupEdgeKeys = this.removedBackupEdgeKeys;
+		/* Await the caller's work so the dialog stays open under the blocking overlay and both
+		   close together when the save settles (consistent with the undo flow). */
+		await this.submitCallback?.({ name: this.name.trim(), addedBackups, removedBackupEdgeKeys });
 		this.onDialogClosed();
-		this.submitCallback?.({ name: this.name.trim(), addedBackups, removedBackupEdgeKeys });
 	}
 
 	/**

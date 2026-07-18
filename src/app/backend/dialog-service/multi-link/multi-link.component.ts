@@ -54,7 +54,7 @@ export class MultiLinkDialogComponent {
 	protected links: BulkLink[] = [];
 	protected selectedCategory = '';
 	protected categoryOptions: string[] = [];
-	private submitCallback?: (links: NewLinkData[]) => void;
+	private submitCallback?: (links: NewLinkData[]) => void | Promise<void>;
 
 	constructor(private readonly cdr: ChangeDetectorRef) {}
 
@@ -66,7 +66,7 @@ export class MultiLinkDialogComponent {
 	 * @param categories - The category names to display as selectable pills.
 	 */
 	public openDialog(
-		submitCallback: (links: NewLinkData[]) => void,
+		submitCallback: (links: NewLinkData[]) => void | Promise<void>,
 		categories: string[]
 	): void {
 		this.submitCallback = submitCallback;
@@ -134,7 +134,7 @@ export class MultiLinkDialogComponent {
 	 * Validates the batch and invokes the submit callback with the
 	 * collected link data, then closes the dialog.
 	 */
-	protected onSubmit(): void {
+	protected async onSubmit(): Promise<void> {
 		if (this.count === 0) return;
 		const category = this.selectedCategory;
 		const result: NewLinkData[] = this.links.map(item => ({
@@ -143,8 +143,10 @@ export class MultiLinkDialogComponent {
 			category,
 			isPinned: false
 		}));
+		/* Await the caller's work so the dialog stays open under the blocking overlay and both
+		   close together when the save settles (consistent with the undo flow). */
+		await this.submitCallback?.(result);
 		this.onDialogClosed();
-		this.submitCallback?.(result);
 	}
 
 	/**

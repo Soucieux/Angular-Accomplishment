@@ -79,7 +79,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	protected readonly ADD_MOVIE_BTN_SEARCH = ADD_MOVIE_BTN_SEARCH;
 	protected readonly ADD_MOVIE_BTN_SUBMIT = ADD_MOVIE_BTN_SUBMIT;
 	protected readonly DIALOG_BTN_CANCEL = DIALOG_BTN_CANCEL;
-	private submitCallback?: (movie: MovieItemVO) => void;
+	private submitCallback?: (movie: MovieItemVO) => void | Promise<void>;
 	private searchCallback?: (movie: MovieItemVO) => Promise<Blob | null>;
 	private movieItemVO: MovieItemVO = new MovieItemVO();
 	protected visible: boolean = false;
@@ -122,7 +122,7 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	 * @param searchCallback - The callback to call to search for a movie and return its cover image blob.
 	 */
 	public openDialog(
-		submitCallback: (movie: MovieItemVO) => void,
+		submitCallback: (movie: MovieItemVO) => void | Promise<void>,
 		searchCallback: (movie: MovieItemVO) => Promise<Blob | null>
 	) {
 		this.visible = true;
@@ -197,18 +197,19 @@ export class AddDialogComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Submits the add movie form, closes the dialog, and calls the submit
-	 * callback with the populated movie item VO.
+	 * Submits the add movie form, invoking the submit callback with the populated
+	 * movie item VO, then closes the dialog and resets the VO.
 	 */
-	protected onSubmit() {
-		// Step 1: Close the dialog first so the UI hides immediately while the callback runs
-		this.onDialogClosed();
-
-		// Step 2: Stamp the favourite flag onto the VO and hand it to the caller
+	protected async onSubmit() {
+		// Step 1: Stamp the favourite flag onto the VO and hand it to the caller
 		this.movieItemVO.setIsFavourite(this.isFavourite);
-		this.submitCallback?.(this.movieItemVO);
 
-		// Step 3: Reset the VO so a re-opened dialog starts clean rather than carrying stale data
+		/* Step 2: Await the caller's work so the dialog stays open under the blocking overlay
+		   and both close together when the save settles (consistent with the undo flow). */
+		await this.submitCallback?.(this.movieItemVO);
+
+		// Step 3: Close the dialog, then reset the VO so a re-opened dialog starts clean
+		this.onDialogClosed();
 		this.movieItemVO = new MovieItemVO();
 	}
 

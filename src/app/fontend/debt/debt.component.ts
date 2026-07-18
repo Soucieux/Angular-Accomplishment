@@ -666,8 +666,8 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 	 *
 	 * @param debtData - The validated form data submitted from the add-debt dialog.
 	 */
-	private addNewDebt(debtData: NewDebtData): void {
-		this.dialogService.runBlocking(this.dialogComponentContainer, MSG_SAVING, async () => {
+	private addNewDebt(debtData: NewDebtData): Promise<void> {
+		return this.dialogService.runBlocking(this.dialogComponentContainer, MSG_SAVING, async () => {
 			try {
 				await this.databaseService.addNewRecordToDebt({
 					name: debtData.name,

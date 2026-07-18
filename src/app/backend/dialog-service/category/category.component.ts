@@ -35,7 +35,7 @@ export class CategoryDialogComponent {
 	protected visible = false;
 	protected name = '';
 	protected editTitle = PORTAL_CATEGORY_DIALOG_TITLE_EDIT;
-	private submitCallback?: (data: NewCategoryData) => void;
+	private submitCallback?: (data: NewCategoryData) => void | Promise<void>;
 	protected deleteCallback?: () => void;
 
 	/**
@@ -59,7 +59,7 @@ export class CategoryDialogComponent {
 	 * dialog (e.g. renaming a vault node); defaults to the category edit title.
 	 */
 	public openDialog(
-		submitCallback: (data: NewCategoryData) => void,
+		submitCallback: (data: NewCategoryData) => void | Promise<void>,
 		options: {
 			prefillData: Partial<NewCategoryData> | null;
 			onDelete?: () => void;
@@ -78,10 +78,12 @@ export class CategoryDialogComponent {
 	 * Validates the form, closes the dialog, then invokes the submit callback
 	 * with the collected category name.
 	 */
-	protected onSubmit(): void {
+	protected async onSubmit(): Promise<void> {
 		if (!this.isValid) return;
+		/* Await the caller's work so the dialog stays open under the blocking overlay and both
+		   close together when the save settles (consistent with the undo flow). */
+		await this.submitCallback?.({ name: this.name.trim() });
 		this.onDialogClosed();
-		this.submitCallback?.({ name: this.name.trim() });
 	}
 
 	/**

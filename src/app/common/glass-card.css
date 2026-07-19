@@ -34,6 +34,7 @@
 		opacity: 1;
 		transform: translateY(0);
 	}
+
 }
 
 .glass-card::-webkit-scrollbar {
@@ -50,16 +51,19 @@
 	transition: background 0.4s ease;
 }
 
+/* Page-level scrollbar tint. Defaults to the app rose; a page retints it to its own accent
+   by declaring --page-scroll-glow / --page-scroll-accent on :host. Panels are deliberately
+   excluded — they stay rose everywhere so they read as one component family. */
 .glass-card.is-scrolling {
-	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+	scrollbar-color: var(--page-scroll-glow, rgba(213, 51, 105, 0.28)) transparent;
 }
 
 .glass-card.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(213, 51, 105, 0.28);
+	background: var(--page-scroll-glow, rgba(213, 51, 105, 0.28));
 }
 
 .glass-card.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #d53369;
+	background: var(--page-scroll-accent, #d53369);
 }
 
 .access-denied-wrapper {
@@ -70,6 +74,7 @@
 	.glass-card {
 		padding: 10px;
 	}
+
 }
 
 /* The extra bottom padding only clears the floating dock, which itself appears
@@ -79,4 +84,5 @@
 	.glass-card {
 		padding-bottom: 100px;
 	}
+
 }

@@ -696,16 +696,21 @@
 	border-radius: 20%;
 }
 
-::ng-deep .dropdown-panel .p-select-option {
+/* Was .dropdown-panel, which matched nothing — every panel uses dropdown-panel-font.
+   Scoped to .genre-panel because the panel is appended to body, so :host cannot reach it
+   and these unprefixed (hence global) ::ng-deep rules would otherwise hit every panel. */
+::ng-deep .genre-panel .p-select-option {
 	padding: 5px 10px !important;
 }
 
+/* Wide enough for the longest English genre ("Suspense") at PrimeNG's default 1rem,
+   so the label never needs a smaller font than the options it opens. */
 .dropdown {
 	position: relative;
 	bottom: 5px;
 	left: 5px;
 	height: 30px;
-	width: 100px;
+	width: 125px;
 }
 
 ::ng-deep .favourite .p-button {
@@ -723,6 +728,13 @@
 
 ::ng-deep .dropdown .p-select-label {
 	padding: 5px 10px; /* Adjust these values as needed */
+}
+
+/* PrimeNG reserves 2.5rem (40px) for the chevron and never yields it (flex-shrink: 0),
+   though the icon inside is only ~14px. Narrowing it returns that dead space to the
+   label, so no locale needs its own font size — both read at PrimeNG's default 1rem. */
+:host ::ng-deep .dropdown .p-select-dropdown {
+	width: 1.25rem;
 }
 
 /* ─────────────────────────────────────────
@@ -928,7 +940,7 @@
 		font-size: 23px;
 	}
 
-	::ng-deep .dropdown-panel .p-select-option {
+	::ng-deep .genre-panel .p-select-option {
 		font-size: 14px;
 		padding: 3px 8px !important;
 	}

@@ -14,10 +14,18 @@
 
 	--ink: #1a1a1a;
 	--ink-muted: rgba(30, 15, 35, 0.55);
-	--rose: #d53369;
+	/* Single source of truth for this page's rose accent — the app accent, per the band
+	   comment further down. Held as raw RGB channels so every solid and translucent use
+	   derives from one value. The category band colours (green/purple/amber/pink) are a
+	   separate documented sub-system and deliberately stay literal. */
+	--rose-rgb: 213, 51, 105;
+	--rose: rgb(var(--rose-rgb));
+	/* Deeper companion shade of the same rose, used for hover and emphasis. */
+	--rose-deep-rgb: 184, 45, 90;
+	--rose-deep: rgb(var(--rose-deep-rgb));
 	--gold: #daae51;
-	--rose-soft: rgba(213, 51, 105, 0.1);
-	--rose-border: rgba(213, 51, 105, 0.28);
+	--rose-soft: rgba(var(--rose-rgb), 0.1);
+	--rose-border: rgba(var(--rose-rgb), 0.28);
 	--card-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
 
 	--veg-bg: #d4f5d4;
@@ -91,12 +99,12 @@
 @keyframes chipPulse {
 	0%,
 	100% {
-		box-shadow: 0 4px 12px rgba(213, 51, 105, 0.25);
+		box-shadow: 0 4px 12px rgba(var(--rose-rgb), 0.25);
 	}
 	50% {
 		box-shadow:
-			0 4px 22px rgba(213, 51, 105, 0.48),
-			0 0 0 3px rgba(213, 51, 105, 0.1);
+			0 4px 22px rgba(var(--rose-rgb), 0.48),
+			0 0 0 3px rgba(var(--rose-rgb), 0.1);
 	}
 }
 
@@ -146,11 +154,11 @@
 	margin: 6px 0 0;
 	line-height: 1;
 	padding-bottom: 0.2em;
-	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
+	background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
 	-webkit-background-clip: text;
 	background-clip: text;
 	color: transparent;
-	filter: drop-shadow(0 1px 4px rgba(213, 51, 105, 0.18));
+	filter: drop-shadow(0 1px 4px rgba(var(--rose-rgb), 0.18));
 }
 
 .detail-title {
@@ -168,7 +176,7 @@
 	width: 60px;
 	height: 2px;
 	margin: 12px 0 22px;
-	background: linear-gradient(90deg, #d53369, #b82d5a);
+	background: linear-gradient(90deg, var(--rose), var(--rose-deep));
 	border-radius: 1px;
 	opacity: 0.7;
 }
@@ -228,8 +236,8 @@
 }
 
 .search input:focus {
-	border-color: rgba(213, 51, 105, 0.4);
-	box-shadow: 0 0 0 4px rgba(213, 51, 105, 0.1);
+	border-color: rgba(var(--rose-rgb), 0.4);
+	box-shadow: 0 0 0 4px rgba(var(--rose-rgb), 0.1);
 }
 
 /* ─────────────────────────────────────────
@@ -261,13 +269,13 @@
 
 .btn-primary {
 	color: #fff !important;
-	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
-	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
+	background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
+	box-shadow: 0 6px 18px rgba(var(--rose-rgb), 0.28);
 }
 
 .btn-primary:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 10px 22px rgba(213, 51, 105, 0.36);
+	box-shadow: 0 10px 22px rgba(var(--rose-rgb), 0.36);
 }
 
 /* ─────────────────────────────────────────
@@ -298,13 +306,13 @@
 }
 
 .chip:hover {
-	border-color: rgba(213, 51, 105, 0.4);
-	color: #d53369;
-	box-shadow: 0 2px 8px rgba(213, 51, 105, 0.12);
+	border-color: rgba(var(--rose-rgb), 0.4);
+	color: var(--rose);
+	box-shadow: 0 2px 8px rgba(var(--rose-rgb), 0.12);
 }
 
 .chip.active {
-	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
+	background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
 	color: #fff !important;
 	border-color: transparent;
 	animation: chipPulse 2.4s ease-in-out infinite;
@@ -392,9 +400,9 @@
 	transform: translateY(-5px) scale(1.01);
 	box-shadow:
 		0 4px 8px rgba(0, 0, 0, 0.05),
-		0 16px 32px rgba(213, 51, 105, 0.08),
+		0 16px 32px rgba(var(--rose-rgb), 0.08),
 		0 32px 48px rgba(0, 0, 0, 0.04);
-	border-color: rgba(213, 51, 105, 0.12);
+	border-color: rgba(var(--rose-rgb), 0.12);
 }
 
 /* Left vertical colour strip — spans both content rows */
@@ -449,7 +457,7 @@
 }
 
 .band-dessert {
-	background: linear-gradient(135deg, #f8c1d8, #d53369);
+	background: linear-gradient(135deg, #f8c1d8, var(--rose));
 }
 
 .band-spicy {
@@ -558,12 +566,12 @@
 .view-recipe {
 	grid-row: 2;
 	grid-column: 2;
-	color: #d53369;
+	color: var(--rose);
 	font-size: 11px;
 	font-weight: 600;
 	letter-spacing: 1.6px;
 	text-transform: uppercase;
-	border-top: 1px solid rgba(213, 51, 105, 0.14);
+	border-top: 1px solid rgba(var(--rose-rgb), 0.14);
 	padding: 9px 22px 11px;
 	display: flex;
 	justify-content: flex-end;
@@ -575,7 +583,7 @@
 }
 
 .recipe-card:hover .view-recipe {
-	background: linear-gradient(to right, transparent, rgba(213, 51, 105, 0.06));
+	background: linear-gradient(to right, transparent, rgba(var(--rose-rgb), 0.06));
 	letter-spacing: 2.4px;
 	padding-right: 16px;
 }
@@ -596,7 +604,7 @@
 
 .empty-icon {
 	font-size: 48px;
-	color: rgba(213, 51, 105, 0.45);
+	color: rgba(var(--rose-rgb), 0.45);
 }
 
 /* ─────────────────────────────────────────
@@ -754,7 +762,7 @@
 	gap: 4px;
 	background: none;
 	border: none;
-	color: #d53369 !important;
+	color: var(--rose) !important;
 	font: inherit;
 	font-size: 25px;
 	font-weight: 500;
@@ -767,7 +775,7 @@
 
 .back-button:hover {
 	gap: 10px;
-	color: #b82d5a;
+	color: var(--rose-deep);
 }
 
 .back-button .material-symbols-outlined {
@@ -794,9 +802,9 @@
 }
 
 .detail-meta .category-chip {
-	background: rgba(213, 51, 105, 0.08);
-	color: #d53369;
-	border-color: rgba(213, 51, 105, 0.3);
+	background: rgba(var(--rose-rgb), 0.08);
+	color: var(--rose);
+	border-color: rgba(var(--rose-rgb), 0.3);
 	font-weight: 600;
 	letter-spacing: 0.4px;
 	text-transform: uppercase;
@@ -968,15 +976,15 @@
 }
 
 .panel-collapse-body.is-scrolling {
-	scrollbar-color: rgba(217, 119, 6, 0.28) transparent;
+	scrollbar-color: rgba(var(--rose-rgb), 0.28) transparent;
 }
 
 .panel-collapse-body.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(217, 119, 6, 0.28);
+	background: rgba(var(--rose-rgb), 0.28);
 }
 
 .panel-collapse-body.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #d97706;
+	background: var(--rose);
 }
 
 .panel.collapsed .panel-collapse-body {
@@ -1322,15 +1330,15 @@
 }
 
 .steps.is-scrolling {
-	scrollbar-color: rgba(217, 119, 6, 0.28) transparent;
+	scrollbar-color: rgba(var(--rose-rgb), 0.28) transparent;
 }
 
 .steps.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(217, 119, 6, 0.28);
+	background: rgba(var(--rose-rgb), 0.28);
 }
 
 .steps.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #d97706;
+	background: var(--rose);
 }
 
 .step {
@@ -1372,7 +1380,7 @@
 	font-weight: 600;
 	font-size: 16px;
 	background: linear-gradient(135deg, var(--rose) 0%, var(--gold) 100%);
-	box-shadow: 0 4px 14px rgba(213, 51, 105, 0.32);
+	box-shadow: 0 4px 14px rgba(var(--rose-rgb), 0.32);
 	margin-top: 0;
 	flex-shrink: 0;
 }
@@ -1525,13 +1533,13 @@
 
 .btn-secondary {
 	background: #fff;
-	color: #d53369 !important;
-	border: 1.5px solid rgba(213, 51, 105, 0.35);
+	color: var(--rose) !important;
+	border: 1.5px solid rgba(var(--rose-rgb), 0.35);
 }
 
 .btn-secondary:hover {
-	border-color: #d53369;
-	background: rgba(213, 51, 105, 0.06);
+	border-color: var(--rose);
+	background: rgba(var(--rose-rgb), 0.06);
 }
 
 .btn-danger {
@@ -1657,7 +1665,7 @@
 
 .editor-meta-chip.invalid {
 	border-color: var(--rose);
-	box-shadow: 0 0 0 4px rgba(213, 51, 105, 0.1);
+	box-shadow: 0 0 0 4px rgba(var(--rose-rgb), 0.1);
 }
 
 .field-error {
@@ -1795,15 +1803,15 @@
 }
 
 .editor-body.is-scrolling {
-	scrollbar-color: rgba(217, 119, 6, 0.28) transparent;
+	scrollbar-color: rgba(var(--rose-rgb), 0.28) transparent;
 }
 
 .editor-body.is-scrolling::-webkit-scrollbar-thumb {
-	background: rgba(217, 119, 6, 0.28);
+	background: rgba(var(--rose-rgb), 0.28);
 }
 
 .editor-body.is-scrolling::-webkit-scrollbar-thumb:hover {
-	background: #d97706;
+	background: var(--rose);
 }
 
 .panel-foot {
@@ -2358,7 +2366,7 @@
 .ingredient-editor-row .remove:hover,
 .step-card .remove:hover,
 .sub-row .remove:hover {
-	background: rgba(213, 51, 105, 0.08);
+	background: rgba(var(--rose-rgb), 0.08);
 	color: var(--rose);
 }
 
@@ -2428,7 +2436,7 @@
 	justify-content: center;
 	font-size: 15px;
 	font-weight: 600;
-	box-shadow: 0 4px 10px rgba(213, 51, 105, 0.3);
+	box-shadow: 0 4px 10px rgba(var(--rose-rgb), 0.3);
 	margin-top: 2px;
 }
 
@@ -2674,78 +2682,78 @@
 }
 
 .view.band-default .back-button {
-	color: #d53369 !important;
+	color: var(--rose) !important;
 }
 
 .view.band-default .back-button:hover {
-	color: #b82d5a !important;
+	color: var(--rose-deep) !important;
 }
 
 .view.band-default .title-field {
-	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
+	background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
 	-webkit-background-clip: text;
 	background-clip: text;
 }
 
 .view.band-default .title-field::placeholder {
-	-webkit-text-fill-color: rgba(213, 51, 105, 0.4);
+	-webkit-text-fill-color: rgba(var(--rose-rgb), 0.4);
 }
 
 .view.band-default .title-field:focus {
-	border-bottom-color: rgba(213, 51, 105, 0.5);
+	border-bottom-color: rgba(var(--rose-rgb), 0.5);
 }
 
 .view.band-default .editor-header .header-ornament {
-	background: linear-gradient(90deg, #d53369, #b82d5a);
+	background: linear-gradient(90deg, var(--rose), var(--rose-deep));
 }
 
 .view.band-default .panel::before {
-	background: linear-gradient(90deg, #d53369, #b82d5a, transparent 80%);
+	background: linear-gradient(90deg, var(--rose), var(--rose-deep), transparent 80%);
 }
 
 .view.band-default .panel-heading .material-symbols-outlined {
-	color: #d53369;
+	color: var(--rose);
 }
 
 .view.band-default .panel-heading.collapsible:hover {
-	background: rgba(213, 51, 105, 0.05);
+	background: rgba(var(--rose-rgb), 0.05);
 }
 
 .view.band-default .manage-button {
-	border-color: rgba(213, 51, 105, 0.3);
-	color: #d53369;
+	border-color: rgba(var(--rose-rgb), 0.3);
+	color: var(--rose);
 }
 
 .view.band-default .manage-button:hover {
-	background: rgba(213, 51, 105, 0.08);
-	border-color: #d53369;
+	background: rgba(var(--rose-rgb), 0.08);
+	border-color: var(--rose);
 }
 
 .view.band-default .manage-button .material-symbols-outlined {
-	color: #d53369;
+	color: var(--rose);
 }
 
 .view.band-default .notes-header .material-symbols-outlined {
-	color: #d53369;
+	color: var(--rose);
 }
 
 .view.band-default .btn-secondary {
-	color: #d53369 !important;
-	border-color: rgba(213, 51, 105, 0.35);
+	color: var(--rose) !important;
+	border-color: rgba(var(--rose-rgb), 0.35);
 }
 
 .view.band-default .btn-secondary:hover {
-	border-color: #d53369;
-	background: rgba(213, 51, 105, 0.06);
+	border-color: var(--rose);
+	background: rgba(var(--rose-rgb), 0.06);
 }
 
 .view.band-default .btn-primary {
-	background: linear-gradient(135deg, #d53369 0%, #b82d5a 100%);
-	box-shadow: 0 6px 18px rgba(213, 51, 105, 0.28);
+	background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
+	box-shadow: 0 6px 18px rgba(var(--rose-rgb), 0.28);
 }
 
 .view.band-default .btn-primary:hover {
-	box-shadow: 0 10px 22px rgba(213, 51, 105, 0.36);
+	box-shadow: 0 10px 22px rgba(var(--rose-rgb), 0.36);
 }
 
 /* ─────────────────────────────────────────
@@ -2755,10 +2763,12 @@
 /*
  * RECIPE PAGE — COLOR PALETTE
  * ─────────────────────────────────────────────────────────────────
- * page base     Rose    #d53369 / #b82d5a   rgba(213, 51, 105)
+ * page base     Rose    --rose / var(--rose-deep)   rgba(213, 51, 105)
  *               (list-view chrome: title, chips, Add Recipe btn — app accent)
+ *               Declared once as --rose-rgb on :host; --rose and every translucent
+ *               tint derive from it. Change the accent there, not here.
  *
- * band-default  Rose    #d53369 / #b82d5a   rgba(213, 51, 105)
+ * band-default  Rose    --rose / var(--rose-deep)   rgba(213, 51, 105)
  *               (app accent — shown when no category is chosen yet)
  *
  * band-quick    Green   #16a34a / #15803d   rgba(22, 163, 74)
@@ -3573,11 +3583,11 @@
 	}
 
 	.type-tabs.is-scrolling {
-		scrollbar-color: rgba(217, 119, 6, 0.28) transparent;
+		scrollbar-color: rgba(var(--rose-rgb), 0.28) transparent;
 	}
 
 	.type-tabs.is-scrolling::-webkit-scrollbar-thumb {
-		background: rgba(217, 119, 6, 0.28);
+		background: rgba(var(--rose-rgb), 0.28);
 	}
 
 	.type-tab {

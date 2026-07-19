@@ -5,6 +5,18 @@
 :host {
 	font-family: 'app-font';
 	display: block;
+	/* Single source of truth for this page's indigo accent (see the PAGE ACCENT COLOR block
+	   below). Held as raw RGB channels so the solid colour and the translucent scrollbar
+	   glow both derive from one value — no colour is written twice. rgb()/rgba() is used
+	   rather than color-mix() because the browser targets include Chrome 109, where
+	   color-mix would resolve invalid and leave the scrollbar thumb transparent. */
+	--patch-accent-rgb: 102, 126, 234;
+	--patch-accent-deep-rgb: 118, 75, 162;
+	--patch-accent: rgb(var(--patch-accent-rgb));
+	--patch-accent-deep: rgb(var(--patch-accent-deep-rgb));
+	/* Page scrollbar tint — derived from the accent above. */
+	--page-scroll-glow: rgba(var(--patch-accent-rgb), 0.28);
+	--page-scroll-accent: var(--patch-accent);
 }
 
 /* ─────────────────────────────────────────
@@ -339,7 +351,7 @@
 .rel-version {
 	font-size: 16px;
 	font-weight: 800;
-	color: #764ba2;
+	color: var(--patch-accent-deep);
 	min-width: 60px;
 }
 
@@ -397,21 +409,22 @@
  * All pages: font-weight 500
  */
 /* PAGE ACCENT COLOR — Patch Notes
- * Indigo  primary #667eea   rgba(102, 126, 234)
- *         dark    #764ba2   rgba(118, 75, 162)
- * Applied to: page-title gradient, buttons, version badge, timeline dots
- * To change: replace all #667eea and #764ba2 throughout this file.
+ * Indigo  primary --patch-accent        rgba(102, 126, 234)
+ *         dark    --patch-accent-deep   rgba(118, 75, 162)
+ * Applied to: page-title gradient, buttons, version badge, timeline dots, scrollbar
+ * To change: edit the two variables in :host at the top of this file — every usage,
+ * including the page scrollbar, reads from them.
  */
 .page-title {
 	font-size: 44px;
 	font-weight: 500;
 	letter-spacing: 2px;
 	margin: 6px 0 0;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: linear-gradient(135deg, var(--patch-accent) 0%, var(--patch-accent-deep) 100%);
 	-webkit-background-clip: text;
 	background-clip: text;
 	color: transparent;
-	filter: drop-shadow(0 1px 4px rgba(102, 126, 234, 0.18));
+	filter: drop-shadow(0 1px 4px rgba(var(--patch-accent-rgb), 0.18));
 }
 
 .page-subtitle {
@@ -424,7 +437,7 @@
 	width: 60px;
 	height: 2px;
 	margin: 10px 0;
-	background: linear-gradient(90deg, #667eea, #7c3aed);
+	background: linear-gradient(90deg, var(--patch-accent), #7c3aed);
 	border-radius: 1px;
 	opacity: 0.7;
 }
@@ -453,7 +466,7 @@
 	transform: translateY(-50%);
 	font-size: 20px;
 	pointer-events: none;
-	background: linear-gradient(135deg, #667eea, #7c3aed);
+	background: linear-gradient(135deg, var(--patch-accent), #7c3aed);
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -481,7 +494,7 @@
 
 .search input:focus {
 	border-color: rgba(124, 58, 237, 0.4);
-	box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+	box-shadow: 0 0 0 4px rgba(var(--patch-accent-rgb), 0.12);
 }
 
 /* ─────────────────────────────────────────
@@ -505,12 +518,12 @@
 
 .stat-chip--total:hover,
 .stat-chip--total.is-open {
-	background: rgba(102, 126, 234, 0.1);
-	border-color: rgba(102, 126, 234, 0.3);
+	background: rgba(var(--patch-accent-rgb), 0.1);
+	border-color: rgba(var(--patch-accent-rgb), 0.3);
 }
 
 .stat-chip--total .stat-number {
-	color: #667eea;
+	color: var(--patch-accent);
 	font-weight: 700;
 }
 
@@ -518,7 +531,7 @@
 	color: rgba(30, 15, 35, 0.55);
 	text-decoration: underline;
 	text-decoration-style: dashed;
-	text-decoration-color: rgba(102, 126, 234, 0.4);
+	text-decoration-color: rgba(var(--patch-accent-rgb), 0.4);
 	text-underline-offset: 3px;
 }
 
@@ -532,10 +545,10 @@
 	left: -5px;
 	width: 672px;
 	background: #fff;
-	border: 1px solid rgba(102, 126, 234, 0.18);
+	border: 1px solid rgba(var(--patch-accent-rgb), 0.18);
 	border-radius: 24px;
 	box-shadow:
-		0 14px 48px rgba(102, 126, 234, 0.16),
+		0 14px 48px rgba(var(--patch-accent-rgb), 0.16),
 		0 2px 10px rgba(0, 0, 0, 0.06);
 	padding: 24px 26px 22px;
 	z-index: 200;
@@ -649,7 +662,7 @@
 
 .heatmap-cell.has-data:hover {
 	transform: scale(1.2);
-	box-shadow: 0 3px 12px rgba(102, 126, 234, 0.35);
+	box-shadow: 0 3px 12px rgba(var(--patch-accent-rgb), 0.35);
 }
 
 .heatmap-cell.intensity-0 {
@@ -685,7 +698,7 @@
 .heatmap-footer {
 	margin-top: 17px;
 	padding-top: 14px;
-	border-top: 1px solid rgba(102, 126, 234, 0.1);
+	border-top: 1px solid rgba(var(--patch-accent-rgb), 0.1);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -694,7 +707,7 @@
 }
 
 .heatmap-footer strong {
-	color: #667eea;
+	color: var(--patch-accent);
 	font-weight: 700;
 }
 
@@ -783,7 +796,7 @@
 ───────────────────────────────────────── */
 
 ::ng-deep .p-datatable .p-datatable-thead > tr > th {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	background: linear-gradient(135deg, var(--patch-accent) 0%, var(--patch-accent-deep) 100%) !important;
 	color: rgba(255, 255, 255, 0.95) !important;
 	font-weight: 600 !important;
 	font-size: 15px !important;
@@ -823,7 +836,7 @@
 
 /* Hover — only the non-spanning cells (Details, Status, Timestamp, Edit) */
 ::ng-deep .p-datatable .p-datatable-tbody > tr:hover > td:not(.component):not(.element) {
-	background: rgba(102, 126, 234, 0.09) !important;
+	background: rgba(var(--patch-accent-rgb), 0.09) !important;
 }
 
 /* ─────────────────────────────────────────
@@ -834,11 +847,11 @@
 ───────────────────────────────────────── */
 
 ::ng-deep .p-datatable .p-datatable-tbody > tr.component-group-hovered > td.component {
-	background: rgba(102, 126, 234, 0.09) !important;
+	background: rgba(var(--patch-accent-rgb), 0.09) !important;
 }
 
 ::ng-deep .p-datatable .p-datatable-tbody > tr.element-group-hovered > td.element {
-	background: rgba(102, 126, 234, 0.09) !important;
+	background: rgba(var(--patch-accent-rgb), 0.09) !important;
 }
 
 /* ─────────────────────────────────────────
@@ -869,14 +882,14 @@
 
 /* Add button — indigo/purple (distinct from the rose-gold app background) */
 ::ng-deep .p-datatable .p-datatable-tfoot .p-button {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	background: linear-gradient(135deg, var(--patch-accent) 0%, var(--patch-accent-deep) 100%) !important;
 	border: none !important;
 	border-radius: 10px !important;
 	color: rgba(255, 255, 255, 0.95) !important;
 	font-weight: 700 !important;
 	height: 40px !important;
 	padding: 0 20px !important;
-	box-shadow: 0 3px 10px rgba(102, 126, 234, 0.28) !important;
+	box-shadow: 0 3px 10px rgba(var(--patch-accent-rgb), 0.28) !important;
 	transition:
 		transform 0.2s,
 		box-shadow 0.2s !important;
@@ -884,7 +897,7 @@
 
 ::ng-deep .p-datatable .p-datatable-tfoot .p-button:not(:disabled):hover {
 	transform: translateY(-2px) !important;
-	box-shadow: 0 6px 18px rgba(102, 126, 234, 0.38) !important;
+	box-shadow: 0 6px 18px rgba(var(--patch-accent-rgb), 0.38) !important;
 }
 
 /* ─────────────────────────────────────────
@@ -905,8 +918,8 @@
 }
 
 ::ng-deep .p-datatable [pinputtext]:focus {
-	border-color: #667eea !important;
-	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12) !important;
+	border-color: var(--patch-accent) !important;
+	box-shadow: 0 0 0 3px rgba(var(--patch-accent-rgb), 0.12) !important;
 	outline: none !important;
 }
 
@@ -926,12 +939,12 @@
 }
 
 ::ng-deep .p-datatable .p-select:not(.p-disabled):hover {
-	border-color: #667eea !important;
+	border-color: var(--patch-accent) !important;
 }
 
 ::ng-deep .p-datatable .p-select.p-focus {
-	border-color: #667eea !important;
-	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12) !important;
+	border-color: var(--patch-accent) !important;
+	box-shadow: 0 0 0 3px rgba(var(--patch-accent-rgb), 0.12) !important;
 }
 
 /* ─────────────────────────────────────────
@@ -955,13 +968,13 @@
 
 /* Edit — indigo */
 ::ng-deep .p-datatable .edit-button .p-button:has(.pi-pen-to-square) {
-	color: #667eea !important;
-	border-color: rgba(102, 126, 234, 0.3) !important;
+	color: var(--patch-accent) !important;
+	border-color: rgba(var(--patch-accent-rgb), 0.3) !important;
 }
 
 ::ng-deep .p-datatable .edit-button .p-button:has(.pi-pen-to-square):hover {
-	background: rgba(102, 126, 234, 0.08) !important;
-	border-color: rgba(102, 126, 234, 0.55) !important;
+	background: rgba(var(--patch-accent-rgb), 0.08) !important;
+	border-color: rgba(var(--patch-accent-rgb), 0.55) !important;
 }
 
 /* Confirm — green */
@@ -1029,9 +1042,9 @@
 
 ::ng-deep .p-datatable .p-paginator .p-highlight,
 ::ng-deep .p-datatable .p-paginator .p-paginator-page-selected {
-	background: rgba(102, 126, 234, 0.1) !important;
-	color: #667eea !important;
-	border-color: rgba(102, 126, 234, 0.3) !important;
+	background: rgba(var(--patch-accent-rgb), 0.1) !important;
+	color: var(--patch-accent) !important;
+	border-color: rgba(var(--patch-accent-rgb), 0.3) !important;
 	box-shadow: none !important;
 }
 
@@ -1123,10 +1136,10 @@
 ::ng-deep .p-columnfilter-overlay {
 	background: #ffffff !important;
 	border-radius: 16px !important;
-	border: 1px solid rgba(102, 126, 234, 0.18) !important;
+	border: 1px solid rgba(var(--patch-accent-rgb), 0.18) !important;
 	box-shadow:
 		0 4px 8px rgba(0, 0, 0, 0.06),
-		0 16px 48px rgba(102, 126, 234, 0.18) !important;
+		0 16px 48px rgba(var(--patch-accent-rgb), 0.18) !important;
 	overflow: hidden !important;
 	min-width: 190px !important;
 	padding: 0 !important;
@@ -1134,7 +1147,7 @@
 
 /* Purple gradient header strip */
 ::ng-deep .p-columnfilter-overlay .p-columnfilter-overlay-header {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	background: linear-gradient(135deg, var(--patch-accent) 0%, var(--patch-accent-deep) 100%) !important;
 	padding: 10px 14px !important;
 	border-bottom: none !important;
 }
@@ -1301,7 +1314,7 @@
 	width: 20px;
 	text-align: center;
 	flex-shrink: 0;
-	color: #667eea;
+	color: var(--patch-accent);
 }
 
 ::ng-deep .p-datatable .p-select .component-option .pi {
@@ -1309,14 +1322,17 @@
 	width: 20px;
 	text-align: center;
 	flex-shrink: 0;
-	color: #667eea;
+	color: var(--patch-accent);
 }
 
-/* Options inside the panel (appended to body) */
+/* Options inside the panel (appended to body). The font-size must match the trigger's
+   .component-option above — the selected value and the option it was picked from have to
+   read at the same size. */
 ::ng-deep .component-dropdown-panel .component-option {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+	font-size: 13px;
 }
 
 ::ng-deep .component-dropdown-panel .component-option .material-icons,
@@ -1327,10 +1343,10 @@
 	justify-content: center;
 	width: 22px;
 	height: 22px;
-	font-size: 18px;
+	font-size: 16px;
 	line-height: 1;
 	flex-shrink: 0;
-	color: #667eea;
+	color: var(--patch-accent);
 }
 
 /* ─────────────────────────────────────────
@@ -1355,7 +1371,7 @@
 
 ::ng-deep .dropdown-panel-font .status-option .pi-clock,
 .status-option .pi-clock {
-	color: #667eea;
+	color: var(--patch-accent);
 }
 
 ::ng-deep .dropdown-panel-font .status-option .pi-play-circle,
@@ -1500,7 +1516,7 @@
 }
 
 .icon-patch-notes {
-	background: linear-gradient(135deg, #667eea, #764ba2);
+	background: linear-gradient(135deg, var(--patch-accent), var(--patch-accent-deep));
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -1521,7 +1537,7 @@
 }
 
 .icon-login {
-	background: linear-gradient(135deg, #667eea, #764ba2);
+	background: linear-gradient(135deg, var(--patch-accent), var(--patch-accent-deep));
 	background-clip: text;
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;

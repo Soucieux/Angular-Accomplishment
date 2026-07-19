@@ -12,10 +12,16 @@
 ───────────────────────────────────────── */
 
 :host {
-	--rm-gradient: linear-gradient(135deg, #1a6dff 0%, #00d2ff 100%);
-	--rm-accent: #1a6dff;
-	--rm-soft: rgba(26, 109, 255, 0.09);
-	--rm-glow: rgba(26, 109, 255, 0.28);
+	/* Single source of truth for this page's blue accent. Held as raw RGB channels so every
+	   solid and translucent use derives from one value — never repeat the literal. */
+	--rm-accent-rgb: 26, 109, 255;
+	--rm-accent: rgb(var(--rm-accent-rgb));
+	--rm-gradient: linear-gradient(135deg, var(--rm-accent) 0%, #00d2ff 100%);
+	/* Page scrollbar tint — this page's blue accent. */
+	--page-scroll-glow: var(--rm-glow);
+	--page-scroll-accent: var(--rm-accent);
+	--rm-soft: rgba(var(--rm-accent-rgb), 0.09);
+	--rm-glow: rgba(var(--rm-accent-rgb), 0.28);
 	--individual-item-width: 360px;
 	--individual-item-gap: 16px;
 
@@ -345,8 +351,8 @@
 }
 
 .rm-checkbox:hover {
-	background: var(--check-color, #1a6dff);
-	border-color: var(--check-color, #1a6dff);
+	background: var(--check-color, var(--rm-accent));
+	border-color: var(--check-color, var(--rm-accent));
 }
 
 .rm-checkbox:hover .rm-icon {
@@ -558,7 +564,7 @@
 	gap: 4px;
 	font-size: 12px;
 	font-weight: 600;
-	color: var(--card-color, #1a6dff);
+	color: var(--card-color, var(--rm-accent));
 	cursor: pointer;
 	padding: 6px 8px;
 	border-radius: 6px;
@@ -584,7 +590,7 @@
 	gap: 4px;
 	font-size: 12px;
 	font-weight: 600;
-	color: var(--card-color, #1a6dff);
+	color: var(--card-color, var(--rm-accent));
 	cursor: pointer;
 	padding: 5px 8px;
 	border-radius: 6px;
@@ -870,10 +876,10 @@
 
 ::ng-deep .p-popover {
 	border-radius: 14px !important;
-	border: 1px solid rgba(26, 109, 255, 0.2) !important;
+	border: 1px solid rgba(var(--rm-accent-rgb), 0.2) !important;
 	box-shadow:
 		0 4px 8px rgba(0, 0, 0, 0.06),
-		0 16px 40px rgba(26, 109, 255, 0.12) !important;
+		0 16px 40px rgba(var(--rm-accent-rgb), 0.12) !important;
 	overflow: hidden !important;
 }
 

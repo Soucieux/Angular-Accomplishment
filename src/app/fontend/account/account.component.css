@@ -1,3 +1,28 @@
+:host {
+	font-family: 'app-font';
+	display: block;
+	/* Single source of truth for this page's navy accent. Held as raw RGB channels so the
+	   solid colour and the translucent scrollbar glow both derive from one value — no
+	   colour is written twice. rgb()/rgba() is used rather than color-mix() because the
+	   browser targets include Chrome 109, where color-mix would resolve invalid and leave
+	   the scrollbar thumb transparent. */
+	--account-accent-rgb: 30, 58, 138;
+	--account-accent: rgb(var(--account-accent-rgb));
+	/* Light companion shade — the second stop of every account gradient. */
+	--account-accent-light: #7dd3fc;
+	/* Page scrollbar tint — derived from the accent above. */
+	--page-scroll-glow: rgba(var(--account-accent-rgb), 0.28);
+	--page-scroll-accent: var(--account-accent);
+}
+
+/* PAGE ACCENT COLOR — Account
+ * Navy  primary --account-accent        rgba(30, 58, 138)
+ *       light   --account-accent-light  #7dd3fc
+ * Applied to: avatar and button gradients, profile chips, milestone dots, focus rings, scrollbar
+ * To change: edit the two variables in :host at the top of this file — every usage,
+ * including the page scrollbar, reads from them.
+ */
+
 /* ─────────────────────────────────────────
    Outer glass-card layout
 ───────────────────────────────────────── */
@@ -18,8 +43,8 @@
 	align-items: center;
 	gap: 20px;
 	padding: 20px 24px;
-	background: linear-gradient(135deg, rgba(30, 58, 138, 0.13) 0%, rgba(125, 211, 252, 0.07) 100%);
-	border: 1px solid rgba(30, 58, 138, 0.12);
+	background: linear-gradient(135deg, rgba(var(--account-accent-rgb), 0.13) 0%, rgba(125, 211, 252, 0.07) 100%);
+	border: 1px solid rgba(var(--account-accent-rgb), 0.12);
 	border-radius: 12px;
 }
 
@@ -28,7 +53,7 @@
 	width: 64px;
 	height: 64px;
 	border-radius: 50%;
-	background: linear-gradient(135deg, #1e3a8a 0%, #7dd3fc 100%);
+	background: linear-gradient(135deg, var(--account-accent) 0%, var(--account-accent-light) 100%);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -76,11 +101,11 @@
 	gap: 4px;
 	padding: 3px 10px;
 	border-radius: 999px;
-	background: rgba(30, 58, 138, 0.09);
-	border: 1px solid rgba(30, 58, 138, 0.2);
+	background: rgba(var(--account-accent-rgb), 0.09);
+	border: 1px solid rgba(var(--account-accent-rgb), 0.2);
 	font-size: 12px;
 	line-height: 1;
-	color: #1e3a8a;
+	color: var(--account-accent);
 }
 
 .profile-chip .material-symbols-outlined {
@@ -237,6 +262,11 @@
 	letter-spacing: 0.3px;
 }
 
+.card-hint {
+	font-size: 12px;
+	color: rgba(0, 0, 0, 0.4);
+}
+
 /* ─────────────────────────────────────────
    Identity & Security card
 ───────────────────────────────────────── */
@@ -268,7 +298,7 @@
 }
 
 .account-input:focus {
-	border-color: rgba(30, 58, 138, 0.45);
+	border-color: rgba(var(--account-accent-rgb), 0.45);
 }
 
 .account-input::placeholder {
@@ -290,7 +320,7 @@
 	padding: 8px 14px;
 	border-radius: 8px;
 	border: none;
-	background: linear-gradient(135deg, #1e3a8a, #7dd3fc);
+	background: linear-gradient(135deg, var(--account-accent), var(--account-accent-light));
 	color: #fff !important;
 	font-size: 13px;
 	font-weight: 600;
@@ -483,7 +513,7 @@ input[type='password']::placeholder {
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
-	background: #1e3a8a;
+	background: var(--account-accent);
 	margin-top: 5px;
 	position: relative;
 	z-index: 1;
@@ -497,7 +527,7 @@ input[type='password']::placeholder {
 	top: 15px;
 	width: 2px;
 	bottom: -10px;
-	background: rgba(30, 58, 138, 0.2);
+	background: rgba(var(--account-accent-rgb), 0.2);
 }
 
 .milestone-content {
@@ -515,7 +545,7 @@ input[type='password']::placeholder {
 
 .milestone-date {
 	font-size: 13px;
-	color: #1e3a8a;
+	color: var(--account-accent);
 	font-weight: 500;
 }
 
@@ -533,18 +563,19 @@ input[type='password']::placeholder {
 	0% {
 		opacity: 0;
 		transform: translateY(10px);
-		box-shadow: 0 0 0 0 rgba(30, 58, 138, 0.4);
+		box-shadow: 0 0 0 0 rgba(var(--account-accent-rgb), 0.4);
 	}
 	45% {
 		opacity: 1;
 		transform: translateY(0);
-		box-shadow: 0 0 0 0 rgba(30, 58, 138, 0.4);
+		box-shadow: 0 0 0 0 rgba(var(--account-accent-rgb), 0.4);
 	}
 	100% {
 		opacity: 1;
 		transform: translateY(0);
-		box-shadow: 0 0 0 10px rgba(30, 58, 138, 0);
+		box-shadow: 0 0 0 10px rgba(var(--account-accent-rgb), 0);
 	}
+
 }
 
 @keyframes acctGlowPulseDanger {
@@ -563,6 +594,7 @@ input[type='password']::placeholder {
 		transform: translateY(0);
 		box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
 	}
+
 }
 
 /* ─────────────────────────────────────────
@@ -576,6 +608,7 @@ input[type='password']::placeholder {
 	100% {
 		background-position: -200% 0;
 	}
+
 }
 
 .skeleton {
@@ -702,7 +735,7 @@ input[type='password']::placeholder {
 	font-size: 16px;
 	font-weight: 700;
 	letter-spacing: 2px;
-	color: #1e3a8a;
+	color: var(--account-accent);
 }
 
 .connected-accounts {
@@ -733,7 +766,7 @@ input[type='password']::placeholder {
 	gap: 10px;
 	padding: 8px 12px;
 	border-radius: 8px;
-	background: rgba(30, 58, 138, 0.05);
+	background: rgba(var(--account-accent-rgb), 0.05);
 }
 
 .connected-name {
@@ -774,7 +807,7 @@ input[type='password']::placeholder {
 }
 
 .connect-approve {
-	background: linear-gradient(135deg, #1e3a8a, #7dd3fc);
+	background: linear-gradient(135deg, var(--account-accent), var(--account-accent-light));
 	color: #fff !important;
 }
 
@@ -918,6 +951,7 @@ input[type='password']::placeholder {
 	.skeleton-milestone-date {
 		width: 24dvw;
 	}
+
 }
 
 /* ─────────────────────────────────────────
@@ -987,6 +1021,7 @@ input[type='password']::placeholder {
 		flex-direction: column;
 		align-items: flex-start;
 	}
+
 }
 
 /* The extra bottom padding only clears the floating dock, which appears on touch devices — gate it
@@ -996,4 +1031,5 @@ input[type='password']::placeholder {
 	.glass-card {
 		padding-bottom: 80px;
 	}
+
 }

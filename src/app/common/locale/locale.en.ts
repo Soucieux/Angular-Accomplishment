@@ -103,6 +103,7 @@ export const HISTORY_MSG_UNDO_CONFIRM = 'Undo this deletion?';
 export const HISTORY_DIALOG_UNDO_BTN = 'Undo';
 export const HISTORY_DIALOG_TITLE = 'Activities';
 export const HISTORY_SUBTITLE = 'Click on a deleted entry to recover it';
+export const HISTORY_EMPTY = 'No activity yet — added and deleted movies appear here.';
 
 /* ─────────────────────────────────────────
    Auth and login constants
@@ -312,7 +313,7 @@ export const ENT_GENRE_LABELS: Record<string, string> = {
 	谍战: 'Spy',
 	特别关注: 'Favourites'
 };
-export const ENT_LABEL_TYPE = 'Type:';
+export const ENT_LABEL_GENRE = 'Genre:';
 export const ENT_LABEL_EPISODES = 'Eps.';
 export const ENT_LABEL_YEAR = 'Year:';
 export const ENT_LABEL_SYNOPSIS = 'Synopsis:';
@@ -816,6 +817,7 @@ export const ACCOUNT_LABEL_UPDATE_USERNAME = 'Update Username';
 export const ACCOUNT_PLACEHOLDER_USERNAME = 'Enter your username';
 export const ACCOUNT_MSG_USERNAME_UPDATED = 'Username updated';
 export const ACCOUNT_LABEL_CONNECTIONS_TITLE = 'Connections';
+export const ACCOUNT_LABEL_CONNECTIONS_HINT = 'Reminder page only';
 export const ACCOUNT_LABEL_CONNECT_CODE = 'Connect code';
 export const ACCOUNT_LABEL_COPY = 'Copy';
 export const ACCOUNT_MSG_CODE_COPIED = 'Connect code copied';

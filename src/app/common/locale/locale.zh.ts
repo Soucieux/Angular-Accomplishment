@@ -62,6 +62,7 @@ export const HISTORY_MSG_UNDO_CONFIRM = '撤销此次删除？';
 export const HISTORY_DIALOG_UNDO_BTN = '撤销';
 export const HISTORY_DIALOG_TITLE = '历史记录';
 export const HISTORY_SUBTITLE = '点击恢复已删除条目';
+export const HISTORY_EMPTY = '暂无历史记录——添加或删除的影片会显示在这里。';
 
 /* ─────────────────────────────────────────
    Auth and login constants
@@ -246,7 +247,7 @@ export const ENT_DIALOG_TITLE_ADD_MOVIE = '添加新影片';
 export const ADD_MOVIE_SUBTITLE = '输入片名或 ID 开始搜索';
 export const ADD_MOVIE_LABEL_GENRE = '类型*';
 export const ENT_GENRE_LABELS: Record<string, string> = {};
-export const ENT_LABEL_TYPE = '类型：';
+export const ENT_LABEL_GENRE = '类型：';
 export const ENT_LABEL_EPISODES = '集数：';
 export const ENT_LABEL_YEAR = '年份：';
 export const ENT_LABEL_SYNOPSIS = '简介：';
@@ -679,6 +680,7 @@ export const ACCOUNT_LABEL_UPDATE_USERNAME = '更新用户名';
 export const ACCOUNT_PLACEHOLDER_USERNAME = '请输入用户名';
 export const ACCOUNT_MSG_USERNAME_UPDATED = '用户名已更新';
 export const ACCOUNT_LABEL_CONNECTIONS_TITLE = '关联';
+export const ACCOUNT_LABEL_CONNECTIONS_HINT = '仅限提醒页面';
 export const ACCOUNT_LABEL_CONNECT_CODE = '关联码';
 export const ACCOUNT_LABEL_COPY = '复制';
 export const ACCOUNT_MSG_CODE_COPIED = '关联码已复制';

@@ -211,6 +211,135 @@ export const brandlogo = functions.https.onRequest(
 	}
 );
 
+/** Firecrawl API key — used to read the Douban rating. Read from Secret Manager. */
+const firecrawlApiKey = defineSecret('FIRECRAWL_API_KEY');
+
+/** Returned when no rating can be resolved — mirrors MovieItemVO's unset rate. */
+const RATE_UNRESOLVED = -1;
+
+/**
+ * Milliseconds Firecrawl waits for the Douban page to finish rendering before extracting. Without
+ * it the capture lands on a half-built page and the extraction comes back empty.
+ */
+const SCRAPE_WAIT_MS = 3000;
+/** Ceiling on the whole Firecrawl call, comfortably above the render wait above. */
+const SCRAPE_TIMEOUT_MS = 25000;
+
+/**
+ * Fields Firecrawl extracts from the Douban subject page. Schema-guided extraction is used rather
+ * than a markup regex so a Douban layout change cannot silently break the lookup. Both are declared
+ * as strings because that is what the extractor returns ("6.6", "2026-06-11"); the numeric coercion
+ * happens below. Neither is marked required — a genuinely missing value must come back absent
+ * rather than invented.
+ */
+const MOVIE_DETAILS_SCHEMA = {
+	type: 'object',
+	properties: {
+		rate: { type: 'string', description: 'The Douban rating out of 10, for example "6.6"' },
+		releaseDate: {
+			type: 'string',
+			description: 'The first release or air date in YYYY-MM-DD form, for example "2026-06-11"'
+		}
+	}
+};
+
+/**
+ * Reads a single Douban subject page through Firecrawl and returns its rating and release date. The
+ * third-party metadata API leaves both blank for some titles (upcoming series especially), and
+ * Douban blocks the plain proxy, so Firecrawl's proxy/rendering layer is the only way to read them.
+ *
+ * This is a fallback: only the add and restore flows call it, and only when the third-party API left
+ * one of the two fields empty. The bulk rate refresh never does.
+ */
+export const movierate = functions.https.onRequest(
+	{ secrets: [firecrawlApiKey] },
+	async (req, res) => {
+		res.set('Access-Control-Allow-Origin', '*');
+
+		// Step 1: Guard — the id is interpolated into the target URL, so only digits are accepted
+		const movieId = ((req.query.id as string) || '').trim();
+		if (!/^\d+$/.test(movieId)) {
+			res.status(400).json({ error: 'Invalid movie id' });
+			return;
+		}
+
+		try {
+			// Step 2: Scrape the subject page with schema-guided JSON extraction
+			const upstream = await fetch('https://api.firecrawl.dev/v2/scrape', {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${firecrawlApiKey.value().trim()}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					url: `https://movie.douban.com/subject/${movieId}/`,
+					waitFor: SCRAPE_WAIT_MS,
+					formats: [
+						{
+							type: 'json',
+							schema: MOVIE_DETAILS_SCHEMA,
+							prompt: 'Extract the Douban rating (out of 10) and the first release or air date for this title.'
+						}
+					]
+				}),
+				/* Without a ceiling a hung Firecrawl holds a billed instance for the platform's full
+				   60s timeout, and the client sits behind its blocking overlay for all of it. */
+				signal: AbortSignal.timeout(SCRAPE_TIMEOUT_MS)
+			});
+
+			/* Step 3: Surface an upstream failure instead of masking it as an unresolved rating —
+			   a silent -1 is indistinguishable from an unrated page and hides key/quota errors.
+			   Checked before parsing: a 5xx from a gateway answers with HTML, and calling .json()
+			   on that throws, which would surface as a bare 500 without these diagnostics. */
+			if (!upstream.ok) {
+				console.error('Firecrawl scrape failed', upstream.status);
+				res.status(502).json({ error: 'Rate lookup failed' });
+				return;
+			}
+
+			const payload = (await upstream.json()) as {
+				success?: boolean;
+				error?: string;
+				data?: { json?: { rate?: string; releaseDate?: string } };
+			};
+
+			if (payload.success === false) {
+				console.error('Firecrawl scrape failed', upstream.status, payload.error);
+				res.status(502).json({ error: 'Rate lookup failed' });
+				return;
+			}
+
+			/* Step 4: Hand back the extracted fields, normalised for the client — the extractor answers
+			   with strings, so the rate is coerced here and a missing or non-numeric one falls back to
+			   the sentinel. The date stays the raw YYYY-MM-DD so the caller formats it exactly as it
+			   formats the third-party API's own date. */
+			/* A miss here means Firecrawl answered 200 but ran no extraction, so log both key sets:
+			   whether `json` is absent from `data` separates "the format request was ignored" from
+			   "the page yielded nothing", which need different fixes. */
+			const extracted = payload.data?.json;
+			if (!extracted) {
+				console.error(
+					'Firecrawl returned no json payload — top-level keys:',
+					Object.keys(payload),
+					'| data keys:',
+					payload.data ? Object.keys(payload.data) : '(no data)'
+				);
+				res.json({ rate: RATE_UNRESOLVED, releaseDate: '' });
+				return;
+			}
+
+			const rate = Number(extracted?.rate);
+			res.json({
+				rate: Number.isFinite(rate) && rate > 0 ? rate : RATE_UNRESOLVED,
+				releaseDate: typeof extracted?.releaseDate === 'string' ? extracted.releaseDate : ''
+			});
+		} catch (error: unknown) {
+			console.error(error);
+			res.status(500).send('Internal server error');
+		}
+	}
+);
+
 export const thread1 = functions.https.onRequest(getMovieData);
 export const thread2 = functions.https.onRequest(getMovieData);
 export const thread3 = functions.https.onRequest(getMovieData);

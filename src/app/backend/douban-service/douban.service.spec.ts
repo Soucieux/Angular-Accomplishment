@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
-import { DoubanService } from './douban.service';
+import { DoubanService, MovieDetails } from './douban.service';
+import { ENT_MOVIE_RATE_PROXY_URL } from '../../common/constants';
 
 describe('DoubanService', () => {
 	let service: DoubanService;
@@ -56,18 +57,6 @@ describe('DoubanService', () => {
 		});
 	});
 
-	// ── searchMovieByWebpage ───────────────────────────────────────────────
-
-	describe('searchMovieByWebpage', () => {
-		it('uses text as the response type', () => {
-			service.searchMovieByWebpage(1234567).subscribe();
-
-			const req = httpMock.expectOne(r => r.url.includes('thread') && r.url.includes('a.run.app'));
-			expect(req.request.responseType).toBe('text');
-			req.flush('<html></html>');
-		});
-	});
-
 	// ── searchMovieByThirdPartyApi ─────────────────────────────────────────
 
 	describe('searchMovieByThirdPartyApi', () => {
@@ -93,6 +82,39 @@ describe('DoubanService', () => {
 			const req = httpMock.expectOne(r => r.url.includes('thread') && r.url.includes('a.run.app'));
 			expect(req.request.responseType).toBe('text');
 			req.flush('{}');
+		});
+	});
+
+	// ── searchMovieDetails ─────────────────────────────────────────────────
+
+	describe('searchMovieDetails', () => {
+		it('calls the rate proxy with the movie ID', () => {
+			service.searchMovieDetails(35465012).subscribe();
+
+			const req = httpMock.expectOne(r => r.url.includes(ENT_MOVIE_RATE_PROXY_URL));
+			expect(req.request.method).toBe('GET');
+			expect(req.request.urlWithParams).toContain('35465012');
+			req.flush({ rate: -1, releaseDate: '' });
+		});
+
+		it('passes the rating and release date through unchanged', () => {
+			let received: MovieDetails | undefined;
+			service.searchMovieDetails(35465012).subscribe(details => (received = details));
+
+			const req = httpMock.expectOne(r => r.url.includes(ENT_MOVIE_RATE_PROXY_URL));
+			req.flush({ rate: 6.6, releaseDate: '2026-06-11' });
+
+			expect(received).toEqual({ rate: 6.6, releaseDate: '2026-06-11' });
+		});
+
+		it('propagates the error when the proxy fails', () => {
+			let failed = false;
+			service.searchMovieDetails(35465012).subscribe({ error: () => (failed = true) });
+
+			const req = httpMock.expectOne(r => r.url.includes(ENT_MOVIE_RATE_PROXY_URL));
+			req.flush('Rate lookup failed', { status: 502, statusText: 'Bad Gateway' });
+
+			expect(failed).toBeTrue();
 		});
 	});
 });

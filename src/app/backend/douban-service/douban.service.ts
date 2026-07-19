@@ -2,6 +2,21 @@ import { LOG } from '../../common/app.logs';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, throwError } from 'rxjs';
+import {
+	ENT_LOG_MOVIE_COVER_FAILED,
+	ENT_LOG_MOVIE_DATA_FAILED,
+	ENT_LOG_MOVIE_DETAILS_FAILED,
+	ENT_LOG_MOVIE_JSON_FAILED,
+	ENT_MOVIE_RATE_PROXY_URL
+} from '../../common/constants';
+
+/** Rating and release date scraped from a Douban subject page when the third-party API lacks them. */
+export interface MovieDetails {
+	/** The Douban rating, or -1 when the page carries none. */
+	rate: number;
+	/** The first release or air date as `YYYY-MM-DD`, or an empty string when the page carries none. */
+	releaseDate: string;
+}
 
 @Injectable({
 	providedIn: 'root'
@@ -57,7 +72,7 @@ export class DoubanService {
 				catchError((error: unknown) => {
 					LOG.error(
 						this.className,
-						'Error while retrieving movie JSON for ' + movieName,
+						`${ENT_LOG_MOVIE_JSON_FAILED} ${movieName}`,
 						error as Error
 					);
 					return throwError(() => error);
@@ -82,37 +97,7 @@ export class DoubanService {
 				catchError((error: unknown) => {
 					LOG.error(
 						this.className,
-						'Error while retrieving movie cover for ' + movieName,
-						error as Error
-					);
-					return throwError(() => error);
-				})
-			);
-	}
-
-	/**
-	 * Fetches a Douban movie page by ID and returns its HTML as text, for client-side
-	 * parsing of rating, release date, and other metadata.
-	 *
-	 * NOT CURRENTLY CALLED. The entertainment page now sources every movie lookup from the
-	 * wmdb.tv third-party API ({@link searchMovieByThirdPartyApi}); the webpage-scrape fallback
-	 * it used to back was retired. This method is deliberately retained — fully wired and
-	 * covered by its spec — so the fallback can be re-enabled without rebuilding it should the
-	 * third-party API ever become unreliable. Do not delete on a dead-code sweep.
-	 *
-	 * @param id - The Douban movie ID to fetch.
-	 * @returns An observable that emits the page HTML as a string.
-	 */
-	public searchMovieByWebpage(id: number): Observable<string> {
-		return this.http
-			.get(`${this.getFirebaseFunctionUrl()}?url=${this.doubanBaseUrl}/subject/${id}&type=json`, {
-				responseType: 'text'
-			})
-			.pipe(
-				catchError((error: unknown) => {
-					LOG.error(
-						this.className,
-						'Error while retrieving movie webpage for ID ' + id,
+						`${ENT_LOG_MOVIE_COVER_FAILED} ${movieName}`,
 						error as Error
 					);
 					return throwError(() => error);
@@ -122,9 +107,10 @@ export class DoubanService {
 
 	/**
 	 * Fetches movie data from the wmdb.tv third-party API by Douban movie ID.
-	 * This API returns structured JSON (rating, release date, actors, etc.),
-	 * which is preferred over parsing the Douban webpage. Used as the primary
-	 * data source; falls back to searchMovieByWebpage if it fails.
+	 * This API returns structured JSON (rating, release date, actors, etc.) and is the
+	 * only source of movie data — the bulk rate refresh relies on it alone, and the add
+	 * and restore flows fall back to {@link searchMovieDetails} for the two fields it
+	 * sometimes leaves empty.
 	 *
 	 * @param id - The Douban movie ID to look up.
 	 * @returns An observable that emits the API response as a string (parsed to JSON by the caller).
@@ -138,12 +124,33 @@ export class DoubanService {
 				catchError((error: unknown) => {
 					LOG.error(
 						this.className,
-						'Error while retrieving movie webpage for ID ' + id,
+						`${ENT_LOG_MOVIE_DATA_FAILED} ${id}`,
 						error as Error
 					);
 					return throwError(() => error);
 				})
 			);
+	}
+
+	/**
+	 * Fetches a movie's Douban rating and release date through the Firecrawl-backed Cloud Function.
+	 * This is the fallback source: the add and restore flows call it only when the third-party API
+	 * left one of those fields empty, and the bulk rate refresh never calls it at all.
+	 *
+	 * @param id - The Douban movie ID to look up.
+	 * @returns An observable that emits the rating and release date found on the Douban page.
+	 */
+	public searchMovieDetails(id: number): Observable<MovieDetails> {
+		return this.http.get<MovieDetails>(`${ENT_MOVIE_RATE_PROXY_URL}?id=${id}`).pipe(
+			catchError((error: unknown) => {
+				LOG.error(
+					this.className,
+					`${ENT_LOG_MOVIE_DETAILS_FAILED} ${id}`,
+					error as Error
+				);
+				return throwError(() => error);
+			})
+		);
 	}
 
 	/**

@@ -1,7 +1,7 @@
-import { Component, OnDestroy, Output, EventEmitter, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, Inject, OnDestroy, Output, EventEmitter, ViewChild, ViewContainerRef } from '@angular/core';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { DialogModule } from 'primeng/dialog';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { DividerModule } from 'primeng/divider';
 import { Observable } from 'rxjs';
 import { DialogService } from '../dialog.service';
@@ -13,6 +13,7 @@ import {
 	DIALOG_ERROR,
 	ENT_MSG_ADD_DIALOG_SEARCH_FAILED,
 	HISTORY_MOVIE_ID_UNKNOWN,
+	HISTORY_SCROLL_CONTAINER_SELECTOR,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
 	HISTORY_STATUS_SEARCH,
@@ -23,11 +24,14 @@ import {
 	DIALOG_BTN_CONFIRM,
 	HISTORY_DIALOG_TITLE,
 	HISTORY_DIALOG_UNDO_BTN,
+	HISTORY_EMPTY,
 	HISTORY_MSG_UNDO_CONFIRM,
-	HISTORY_SUBTITLE
+	HISTORY_SUBTITLE,
+	MSG_LOADING
 } from '../../../common/locale/locale-strings';
 import { MovieIdNotFoundError } from '../../../common/error/movie-id-not-found.error';
 import { HistoryEntry } from './history.model';
+import { Utilities } from '../../../common/utilities/app.utilities';
 
 @Component({
 	selector: 'history-dialog',
@@ -43,6 +47,8 @@ export class HistoryDialogComponent implements OnDestroy {
 	@Output() closed$ = new EventEmitter<void>();
 	protected readonly HISTORY_DIALOG_TITLE = HISTORY_DIALOG_TITLE;
 	protected readonly HISTORY_SUBTITLE = HISTORY_SUBTITLE;
+	protected readonly HISTORY_EMPTY = HISTORY_EMPTY;
+	protected readonly MSG_LOADING = MSG_LOADING;
 	protected readonly HISTORY_STATUS_SEARCH = HISTORY_STATUS_SEARCH;
 	protected readonly HISTORY_STATUS_ADDED = HISTORY_STATUS_ADDED;
 	protected readonly HISTORY_STATUS_DELETED = HISTORY_STATUS_DELETED;
@@ -50,7 +56,10 @@ export class HistoryDialogComponent implements OnDestroy {
 	protected entries$!: Observable<HistoryEntry[]>;
 	private revertDataCallback!: (movie: MovieItemVO) => Promise<void>;
 
-	constructor(private dialogService: DialogService) {}
+	constructor(
+		private dialogService: DialogService,
+		@Inject(DOCUMENT) private document: Document
+	) {}
 
 	/**
 	 * Opens the history dialog and stores the revert callback and entries observable.
@@ -125,6 +134,18 @@ export class HistoryDialogComponent implements OnDestroy {
 				}
 			},
 			[HISTORY_MSG_UNDO_CONFIRM, HISTORY_DIALOG_UNDO_BTN, DIALOG_BTN_CONFIRM]
+		);
+	}
+
+	/**
+	 * Attaches the auto-hide scrollbar behaviour to the dialog's scroll container once the
+	 * dialog has been shown. The container is PrimeNG's own content element and the dialog is
+	 * appended to body, so it is looked up from the document rather than through a ViewChild.
+	 * Re-opening the dialog is safe — attachScrollAutoHide ignores an already-bound element.
+	 */
+	protected onDialogShown(): void {
+		Utilities.attachScrollAutoHide(
+			this.document.querySelector<HTMLElement>(HISTORY_SCROLL_CONTAINER_SELECTOR) ?? undefined
 		);
 	}
 

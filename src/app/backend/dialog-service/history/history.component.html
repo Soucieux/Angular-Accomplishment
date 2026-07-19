@@ -4,32 +4,42 @@
 	[appendTo]="'body'"
 	[resizable]="false"
 	styleClass="history-dialog"
+	(onShow)="onDialogShown()"
 	(onHide)="onDialogClosed()">
 	<ng-template #header><span class="history-dialog-title">{{ HISTORY_DIALOG_TITLE }}</span></ng-template>
 	<p class="history-subtitle">{{ HISTORY_SUBTITLE }}</p>
 	<div class="dialog-content">
-		@for(entry of entries$ | async; track entry.key){
-		<div class="entry-row">
-			<div
-				class="icon-badge"
-				[ngClass]="{
-					'badge-search': entry.status === HISTORY_STATUS_SEARCH,
-					'badge-added': entry.status === HISTORY_STATUS_ADDED,
-					'badge-deleted': entry.status === HISTORY_STATUS_DELETED
-				}">
-				<span class="material-symbols-outlined badge-icon">
-					@if(entry.status === HISTORY_STATUS_SEARCH){ search }
-					@else if(entry.status === HISTORY_STATUS_ADDED){ add }
-					@else if(entry.status === HISTORY_STATUS_DELETED){ cancel }
-				</span>
+		@if((entries$ | async); as entries){
+			@for(entry of entries; track entry.key){
+				<div class="entry-row">
+					<div
+						class="icon-badge"
+						[ngClass]="{
+							'badge-search': entry.status === HISTORY_STATUS_SEARCH,
+							'badge-added': entry.status === HISTORY_STATUS_ADDED,
+							'badge-deleted': entry.status === HISTORY_STATUS_DELETED
+						}">
+						<span class="material-symbols-outlined badge-icon">
+							@if(entry.status === HISTORY_STATUS_SEARCH){ search }
+							@else if(entry.status === HISTORY_STATUS_ADDED){ add }
+							@else if(entry.status === HISTORY_STATUS_DELETED){ cancel }
+						</span>
+					</div>
+					<p
+						class="message"
+						[class.message-deleted]="entry.status === HISTORY_STATUS_DELETED"
+						(click)="entry.status === HISTORY_STATUS_DELETED ? openRestoreEntryDialog(entry) : null">
+						{{ entry.message }}
+					</p>
+				</div>
+			} @empty {
+				<div class="history-empty">{{ HISTORY_EMPTY }}</div>
+			}
+		} @else {
+			<div class="history-loading">
+				<span class="history-spinner"></span>
+				{{ MSG_LOADING }}
 			</div>
-			<p
-				class="message"
-				[class.message-deleted]="entry.status === HISTORY_STATUS_DELETED"
-				(click)="entry.status === HISTORY_STATUS_DELETED ? openRestoreEntryDialog(entry) : null">
-				{{ entry.message }}
-			</p>
-		</div>
 		}
 	</div>
 </p-dialog>

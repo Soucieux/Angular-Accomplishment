@@ -33,8 +33,44 @@
 ::ng-deep .history-dialog .p-dialog-content {
 	padding: 16px 20px 20px !important;
 	background: transparent !important;
+	/* Pinned to one value so the panel is the same size in every state — loading, empty, and
+	   loaded render identically instead of the height depending on how many entries exist. */
+	min-height: 460px;
 	max-height: 460px;
+	display: flex;
+	flex-direction: column;
 	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.4s ease;
+}
+
+/* App-standard scrollbar: hidden at rest, rose while scrolling. The is-scrolling class is
+   applied by Utilities.attachScrollAutoHide, wired up when the dialog is shown. */
+::ng-deep .history-dialog .p-dialog-content::-webkit-scrollbar {
+	width: 8px;
+}
+
+::ng-deep .history-dialog .p-dialog-content::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::ng-deep .history-dialog .p-dialog-content::-webkit-scrollbar-thumb {
+	background: transparent;
+	border-radius: 999px;
+	transition: background 0.4s ease;
+}
+
+::ng-deep .history-dialog .p-dialog-content.is-scrolling {
+	scrollbar-color: rgba(213, 51, 105, 0.28) transparent;
+}
+
+::ng-deep .history-dialog .p-dialog-content.is-scrolling::-webkit-scrollbar-thumb {
+	background: rgba(213, 51, 105, 0.28);
+}
+
+::ng-deep .history-dialog .p-dialog-content.is-scrolling::-webkit-scrollbar-thumb:hover {
+	background: #d53369;
 }
 
 .history-subtitle {
@@ -48,6 +84,56 @@
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+}
+
+/* Fills the height the content box holds open and centres the placeholder in it, on every screen
+   size. Scoped to the two placeholder states so a loaded list still starts at the top. */
+.dialog-content:has(.history-loading),
+.dialog-content:has(.history-empty) {
+	flex: 1;
+	justify-content: center;
+}
+
+/* Spinner over its label, matching the dashboard's loading treatment. */
+.history-loading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	color: rgba(40, 15, 35, 0.45);
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.8px;
+	text-transform: uppercase;
+	/* Forces a separate GPU compositing layer, preventing mobile WebKit spinner orbit. */
+	transform: translateZ(0);
+}
+
+.history-spinner {
+	display: block;
+	width: 48px;
+	height: 48px;
+	border: 3px solid rgba(213, 51, 105, 0.15);
+	border-top-color: #d53369;
+	border-radius: 50%;
+	animation: history-spin 0.9s linear infinite;
+	flex-shrink: 0;
+}
+
+.history-empty {
+	text-align: center;
+	font-size: 14px;
+	line-height: 1.5;
+	color: rgba(40, 15, 35, 0.45);
+	padding: 0 24px;
+}
+
+@keyframes history-spin {
+	to {
+		transform: rotate(360deg);
+	}
+
 }
 
 .entry-row {
@@ -123,5 +209,6 @@
 		flex: 1 !important;
 		max-height: none !important;
 	}
+
 }
 

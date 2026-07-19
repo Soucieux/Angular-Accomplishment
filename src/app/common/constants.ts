@@ -66,6 +66,10 @@ export const HISTORY_MOVIE_ID_UNKNOWN = 'unknown';
 export const HISTORY_STYLE_ADDED = 'solid green';
 /** Inline border style for a "deleted" history entry. */
 export const HISTORY_STYLE_DELETED = 'solid red';
+/* Scroll container inside the history dialog. It is PrimeNG's own content element and the
+   dialog is appended to body, so it sits outside the component's DOM and has to be looked
+   up from the document rather than through a ViewChild. */
+export const HISTORY_SCROLL_CONTAINER_SELECTOR = '.history-dialog .p-dialog-content';
 
 /* ─────────────────────────────────────────
    Application lifecycle constants
@@ -106,6 +110,10 @@ export const TIMEOUT_KEY_PATCH = 'patch';
 /** Timeout key for the Release Notes tab loading guard. */
 export const TIMEOUT_KEY_PATCH_RELEASE = 'patch-release';
 export const COMPONENT_DESTROY = 'Component Destroyed';
+/** Logged once by the bootstrap sequence when every startup step has completed. */
+export const APP_LOG_STARTUP_COMPLETED = 'All startup completed';
+/** Logged when the bootstrap sequence itself fails, leaving the app unable to render. */
+export const APP_LOG_STARTUP_FAILED = 'Startup failed';
 /** Language code for mainland Chinese — used as the language filter for CJK content (e.g. actor names). */
 export const CN = 'CN';
 /** DOM keyboard event key value for the Enter key. */
@@ -255,6 +263,19 @@ export const DB_LOG_REUSABLE_KEYS_RETRIEVED = 'Reusable keys retrieved';
 export const DB_LOG_REUSABLE_KEYS_GET_FAILED = 'Error while getting reusable keys';
 export const DB_LOG_REUSABLE_KEYS_UPDATED = 'Reusable keys have been updated';
 export const DB_LOG_REUSABLE_KEYS_SAVE_FAILED = 'Error while saving reusable keys';
+export const DB_LOG_COVER_URLS_RESOLVE_FAILED = 'Error resolving cover image URLs';
+export const DB_LOG_COLLECTION_WATCH_FAILED = 'Error watching collection';
+export const DB_LOG_TEMP_URL_MISSING = 'No temp URL for';
+export const DB_LOG_TEMP_URL_CODE = 'code:';
+export const DB_LOG_COVER_REMOVE_FAILED = 'Cover image removal failed for';
+export const DB_LOG_MOVIE_REMOVE_FAILED = 'Error while removing movie';
+export const DB_LOG_MOVIE_DELETE_FAILED = 'Error while deleting movie from database for';
+export const DB_LOG_MOVIE_ADD_FAILED = 'Error while adding new movie data for';
+export const DB_LOG_MOVIE_EXISTS_CHECK_FAILED =
+	'Error while checking if current movie exists in the database for movie';
+export const DB_LOG_IMAGE_UPLOAD_FAILED = 'Error while uploading image or getting download link for';
+export const DB_LOG_UNKNOWN = 'unknown';
+export const DB_LOG_UNKNOWN_ERROR = 'unknown error';
 /** Error thrown when the movie collection is empty during a duplicate-key scan. */
 export const DB_MOVIE_LIST_EMPTY = 'Movie list empty';
 /** MIME type used when uploading movie cover images to storage. */
@@ -572,7 +593,7 @@ export const ENT_MSG_UPDATE_RATE_FAILED_PREFIX = 'Error while updating movie rat
 export const ENT_MSG_API_EMPTY_RESPONSE = 'API responded with empty data due to too many requests';
 export const ENT_MSG_FETCH_FAILED_PREFIX = '❌ Fetch failed for ';
 export const ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX = '❌ Unable to retrieve rate for ';
-export const ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX = 'Error while retrieving movie webpage for movie ';
+export const ENT_MSG_RETRIEVE_MOVIE_DATA_FAILED_PREFIX = 'Error while retrieving movie data for movie ';
 export const ENT_LOG_SEARCH_CANCEL_REQUESTED = 'Search cancel requested';
 export const ENT_LOG_MOVIE_DETAILS_RETRIEVED = 'New movie details retrieved.';
 export const ENT_LOG_UPDATE_FAVOURITE_FAILED = 'Error while setting favourite';
@@ -589,6 +610,10 @@ export const ENT_VT_CLASS_ENTERING = 'vt-entering';
 export const ENT_VT_NAME_PREFIX = 'movie-';
 /** URL prefix a movie ID is appended to for the "Open on Douban" link. */
 export const ENT_DOUBAN_MOVIE_URL_PREFIX = 'https://movie.douban.com/subject/';
+/** Cloud Function that reads a movie's Douban rating through Firecrawl (add and restore flows only). */
+export const ENT_MOVIE_RATE_PROXY_URL = 'https://movierate-tfsps4dwza-uc.a.run.app';
+/** Rate value meaning "not resolved", matching MovieItemVO's unset rate. */
+export const ENT_MOVIE_RATE_UNRESOLVED = -1;
 
 export const NO_RATE = '-1';
 export const RATE_DECREASED = 'decreased';
@@ -602,6 +627,15 @@ export const GENRE_FAVOURITE = '特别关注';
 export const ENT_LOG_COVER_RETRIEVED = 'Movie cover retrieved for';
 export const ENT_LOG_COVER_UPLOADED = 'Movie cover uploaded for';
 export const ENT_LOG_SEARCHING_MOVIE_ID = 'Movie ID not given, start searching for it.';
+export const ENT_LOG_MOVIE_JSON_FAILED = 'Error while retrieving movie JSON for';
+export const ENT_LOG_MOVIE_COVER_FAILED = 'Error while retrieving movie cover for';
+export const ENT_LOG_MOVIE_DATA_FAILED = 'Error while retrieving movie data for ID';
+export const ENT_LOG_MOVIE_DETAILS_FAILED = 'Error while retrieving movie details for ID';
+export const ENT_LOG_RELEASE_DATE = 'First release date for';
+export const ENT_LOG_EPISODE_NUMBER = 'Total episode number for';
+export const ENT_LOG_MOVIE_ID_RETRIEVED = 'Movie ID retrieved for';
+export const ENT_LOG_MOVIE_ID_NOT_FOUND = 'Movie ID not found for';
+export const ENT_LOG_MOVIE_ID_NOT_FOUND_HINT = 'Possible wrong name and year combination.';
 
 /* ─────────────────────────────────────────
    Resonance page constants

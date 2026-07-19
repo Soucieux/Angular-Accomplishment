@@ -333,6 +333,11 @@
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(var(--individual-item-width), 1fr));
 	align-items: stretch;
+	/* flex:1 makes this grid fill the page height, and a grid's default align-content
+	   stretches its rows to match — so a search returning a single row grew that row to
+	   the full remaining height, and align-items stretched the card with it. Packing the
+	   rows to the top keeps every row at its content height regardless of how many there are. */
+	align-content: start;
 	gap: var(--individual-item-gap);
 	position: relative;
 	flex: 1;

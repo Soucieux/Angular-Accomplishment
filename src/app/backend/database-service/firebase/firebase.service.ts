@@ -97,6 +97,10 @@ import {
 	DB_LOG_MOVIE_REMOVED,
 	DB_LOG_RECORD_REMOVED_FROM,
 	DB_LOG_RECORD_REMOVE_FAILED,
+	DB_LOG_MOVIE_DELETE_FAILED,
+	DB_LOG_MOVIE_ADD_FAILED,
+	DB_LOG_MOVIE_EXISTS_CHECK_FAILED,
+	DB_LOG_IMAGE_UPLOAD_FAILED,
 	DB_LOG_QUOTE_ADDED,
 	DB_LOG_QUOTE_ADD_FAILED,
 	DB_LOG_MOVIE_ADDED,
@@ -708,7 +712,7 @@ export class FirebaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_DATE_CALC_UPDATE_FAILED, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -747,7 +751,7 @@ export class FirebaseService extends DatabaseService {
 			}
 		} catch (error) {
 			LOG.error(this.className, DB_LOG_MOVIE_RATE_UPDATE_FAILED, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -790,7 +794,7 @@ export class FirebaseService extends DatabaseService {
 			})
 			.catch((error: Error) => {
 				LOG.error(this.className, DB_LOG_MOVIE_GENRE_UPDATE_FAILED, error);
-				throw error;
+				this.rethrowCaught(error);
 			});
 	}
 
@@ -830,7 +834,7 @@ export class FirebaseService extends DatabaseService {
 			})
 			.catch((error: Error) => {
 				LOG.error(this.className, DB_LOG_MOVIE_FAVOURITE_UPDATE_FAILED, error);
-				throw error;
+				this.rethrowCaught(error);
 			});
 	}
 
@@ -924,7 +928,7 @@ export class FirebaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, DB_LOG_PATCH_NOTES_UPDATE_FAILED, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1044,7 +1048,7 @@ export class FirebaseService extends DatabaseService {
 			}
 		} catch (error) {
 			LOG.error(this.className, `${DB_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1111,7 +1115,7 @@ export class FirebaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, `${DB_LOG_QUOTE_REMOVE_FAILED} ${key}`, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1181,9 +1185,10 @@ export class FirebaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while deleting movie from database for ${movieItemVO.getMovieName()}`,
+				`${DB_LOG_MOVIE_DELETE_FAILED} ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1455,7 +1460,7 @@ export class FirebaseService extends DatabaseService {
 			})
 			.catch((error: Error) => {
 				LOG.error(this.className, `${DB_LOG_RECORD_REMOVE_FAILED} ${tablePath}`, error);
-				throw error;
+				this.rethrowCaught(error);
 			});
 	}
 
@@ -1538,7 +1543,7 @@ export class FirebaseService extends DatabaseService {
 			);
 		} catch (error) {
 			LOG.error(this.className, DB_LOG_QUOTE_ADD_FAILED, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1620,9 +1625,10 @@ export class FirebaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while adding new movie data for ${movieItemVO.getMovieName()}`,
+				`${DB_LOG_MOVIE_ADD_FAILED} ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1665,7 +1671,7 @@ export class FirebaseService extends DatabaseService {
 			LOG.info(this.className, DB_LOG_HISTORY_ADDED);
 		} catch (error) {
 			LOG.error(this.className, DB_LOG_HISTORY_ADD_FAILED, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1762,7 +1768,7 @@ export class FirebaseService extends DatabaseService {
 			}).catch(() => {});
 		} catch (error) {
 			LOG.error(this.className, DB_LOG_REMINDER_RECORD_ADD_FAILED, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1789,7 +1795,7 @@ export class FirebaseService extends DatabaseService {
 			return reference.key ?? '';
 		} catch (error) {
 			LOG.error(this.className, DB_LOG_VAULT_ADD_FAILED, error as Error);
-			throw error;
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1843,7 +1849,7 @@ export class FirebaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while checking if current movie exists in the database for movie ${movieName}`,
+				`${DB_LOG_MOVIE_EXISTS_CHECK_FAILED} ${movieName}`,
 				error as Error
 			);
 			return false;
@@ -1870,7 +1876,7 @@ export class FirebaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while uploading image to firebase or getting download link for ${movieName}`,
+				`${DB_LOG_IMAGE_UPLOAD_FAILED} ${movieName}`,
 				error as Error
 			);
 			return '';
@@ -2259,7 +2265,7 @@ export class FirebaseService extends DatabaseService {
 			})
 			.catch((error: Error) => {
 				LOG.error(this.className, DB_LOG_REUSABLE_KEYS_SAVE_FAILED, error);
-				throw error;
+				this.rethrowCaught(error);
 			});
 	}
 }

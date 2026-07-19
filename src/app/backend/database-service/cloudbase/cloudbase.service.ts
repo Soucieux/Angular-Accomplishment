@@ -150,7 +150,18 @@ import {
 	DB_LOG_VISIT_INCREMENT_FAILED,
 	DB_LOG_COVER_UPLOADED,
 	DB_LOG_FETCH_URL_ERROR,
-	DB_LOG_PROXY_FETCH_FAILED
+	DB_LOG_PROXY_FETCH_FAILED,
+	DB_LOG_COVER_URLS_RESOLVE_FAILED,
+	DB_LOG_COLLECTION_WATCH_FAILED,
+	DB_LOG_TEMP_URL_MISSING,
+	DB_LOG_TEMP_URL_CODE,
+	DB_LOG_COVER_REMOVE_FAILED,
+	DB_LOG_MOVIE_REMOVE_FAILED,
+	DB_LOG_MOVIE_ADD_FAILED,
+	DB_LOG_MOVIE_EXISTS_CHECK_FAILED,
+	DB_LOG_IMAGE_UPLOAD_FAILED,
+	DB_LOG_UNKNOWN,
+	DB_LOG_UNKNOWN_ERROR
 } from '../../../common/constants';
 import {
 	ERROR_NO_DOCUMENT_UPDATED,
@@ -522,7 +533,7 @@ export class CloudbaseService extends DatabaseService {
 										.catch((err) => {
 											LOG.error(
 												this.className,
-												'Error resolving cover image URLs',
+												DB_LOG_COVER_URLS_RESOLVE_FAILED,
 												err
 											);
 											observer.next(movies); // emit with unresolved links rather than nothing
@@ -1049,7 +1060,7 @@ export class CloudbaseService extends DatabaseService {
 									onError: (err: any) => {
 										LOG.error(
 											this.className,
-											`Error watching collection ${collectionName}`,
+											`${DB_LOG_COLLECTION_WATCH_FAILED} ${collectionName}`,
 											err
 										);
 										if (propagateErrors) observer.error(err);
@@ -1102,7 +1113,7 @@ export class CloudbaseService extends DatabaseService {
 						} else {
 							LOG.warn(
 								this.className,
-								`No temp URL for ${file.fileid} (code: ${file.code ?? 'unknown'})`
+								`${DB_LOG_TEMP_URL_MISSING} ${file.fileid} (${DB_LOG_TEMP_URL_CODE} ${file.code ?? DB_LOG_UNKNOWN})`
 							);
 						}
 					}
@@ -1510,7 +1521,7 @@ export class CloudbaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while removing a record from ${DATABASE_USEFUL_LINKS}`,
+				`${DB_LOG_RECORD_REMOVE_FAILED} ${DATABASE_USEFUL_LINKS}`,
 				error as Error
 			);
 			this.rethrowCaught(error);
@@ -1576,7 +1587,7 @@ export class CloudbaseService extends DatabaseService {
 				// Log but do not throw — a missing cover should not block the removal
 				LOG.warn(
 					this.className,
-					`Cover image removal failed for ${movieItemVO.getMovieName()}: ${coverRes?.result?.error ?? 'unknown error'}`
+					`${DB_LOG_COVER_REMOVE_FAILED} ${movieItemVO.getMovieName()}: ${coverRes?.result?.error ?? DB_LOG_UNKNOWN_ERROR}`
 				);
 			} else {
 				LOG.info(this.className, `${DB_LOG_COVER_REMOVED} ${movieItemVO.getMovieName()}`);
@@ -1609,7 +1620,7 @@ export class CloudbaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while removing movie ${movieItemVO.getMovieName()}`,
+				`${DB_LOG_MOVIE_REMOVE_FAILED} ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
 			this.rethrowCaught(error);
@@ -2042,7 +2053,7 @@ export class CloudbaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while adding new movie data for ${movieItemVO.getMovieName()}`,
+				`${DB_LOG_MOVIE_ADD_FAILED} ${movieItemVO.getMovieName()}`,
 				error as Error
 			);
 			this.rethrowCaught(error);
@@ -2352,7 +2363,7 @@ export class CloudbaseService extends DatabaseService {
 		} catch (error) {
 			LOG.error(
 				this.className,
-				`Error while checking if current movie exists in the database for movie ${movieName}`,
+				`${DB_LOG_MOVIE_EXISTS_CHECK_FAILED} ${movieName}`,
 				error as Error
 			);
 			return false;
@@ -2396,7 +2407,7 @@ export class CloudbaseService extends DatabaseService {
 		} catch (error: any) {
 			LOG.error(
 				this.className,
-				`Error while uploading image to CloudBase for ${movieName}: ${error?.message}`,
+				`${DB_LOG_IMAGE_UPLOAD_FAILED} ${movieName}: ${error?.message}`,
 				error as Error
 			);
 			return '';
@@ -2861,17 +2872,6 @@ export class CloudbaseService extends DatabaseService {
 	private throwIfCloudbaseError(result: { code?: string; message?: string }): void {
 		if (result.code === CLOUDBASE_ERR_PERMISSION_DENIED) throw new SessionExpiredError();
 		if (result.code) throw new UnexpectedError();
-	}
-
-	/**
-	 * Re-throws SessionExpiredError as-is so callers can handle it; wraps
-	 * everything else in UnexpectedError to avoid leaking raw SDK errors.
-	 *
-	 * @param error - The caught value from a catch block.
-	 */
-	private rethrowCaught(error: unknown): never {
-		if (error instanceof SessionExpiredError) throw error;
-		throw new UnexpectedError();
 	}
 
 	/**

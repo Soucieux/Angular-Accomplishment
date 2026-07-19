@@ -12,14 +12,16 @@ import {
 import { CloudbaseService } from './app/backend/database-service/cloudbase/cloudbase.service';
 import { FirebaseService } from './app/backend/database-service/firebase/firebase.service';
 import { LOG } from './app/common/app.logs';
+import { APP_LOG_STARTUP_COMPLETED, APP_LOG_STARTUP_FAILED } from './app/common/constants';
 import { environment } from './environment/environment';
 
 if ('__TAURI_INTERNALS__' in window) {
 	document.addEventListener('contextmenu', (e) => e.preventDefault(), true);
 }
 
-void (async () => {
-	const className = 'Main';
+const className = 'Main';
+
+(async () => {
 	/* The data backend follows the last sign-in method: Firebase for Google users, CloudBase for
 	   everyone else (the default). Both auth SDKs are always initialised so the login page can offer
 	   both username/password (CloudBase) and Google (Firebase) regardless of the current backend;
@@ -62,6 +64,9 @@ void (async () => {
 			{ provide: FIREBASE_STORAGE, useFactory: () => getStorage(firebaseApp) }
 		);
 	}
-	LOG.info(className, 'All startup completed');
+	LOG.info(className, APP_LOG_STARTUP_COMPLETED);
 	await bootstrapApplication(AppComponent, { providers: providers });
-})();
+})().catch((error: unknown) => {
+	// Logged rather than dropped: a failed bootstrap leaves a blank page with no other signal.
+	LOG.error(className, APP_LOG_STARTUP_FAILED, error as Error);
+});

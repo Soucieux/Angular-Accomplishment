@@ -7,6 +7,8 @@ import { VaultRecord, VaultNodeType } from '../../fontend/vault/vault.model';
 import { TodayTask } from '../../fontend/today/today.model';
 import { InjectionToken } from '@angular/core';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { SessionExpiredError } from '../../common/error/session-expired.error';
+import { UnexpectedError } from '../../common/error/unexpected.error';
 import {
 	NO_RATE,
 	HISTORY_STATUS_ADDED,
@@ -657,6 +659,9 @@ export abstract class DatabaseService {
 	 * Removes a movie from the database and updates the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to remove.
+	 * @throws SessionExpiredError if the session has lapsed.
+	 * @throws UnexpectedError if the removal fails for any other reason. Both backends propagate
+	 *         rather than resolving, so a failed removal can never look like a success.
 	 */
 	public abstract removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void>;
 
@@ -841,6 +846,9 @@ export abstract class DatabaseService {
 	 * Adds a new movie to the database and updates the statistics accordingly.
 	 *
 	 * @param movieItemVO - The movie item to add.
+	 * @throws SessionExpiredError if the session has lapsed.
+	 * @throws UnexpectedError if the add fails for any other reason. Both backends propagate
+	 *         rather than resolving, so a failed add can never look like a success.
 	 */
 	public abstract addNewMovieDataAndUpdateStatistics(movieItemVO: MovieItemVO): Promise<void>;
 
@@ -1078,9 +1086,13 @@ export abstract class DatabaseService {
 	/**
 	 * Uploads the movie cover image to storage and returns the downloadable link.
 	 *
+	 * A failed upload is deliberately not fatal — the movie is still worth adding without a
+	 * cover — so both backends log and return an empty string rather than throwing. Callers
+	 * must treat an empty result as "no cover" instead of storing it as a link.
+	 *
 	 * @param coverImage - The movie cover blob to upload.
 	 * @param movieName - The name of the movie (used as the filename in storage).
-	 * @returns A string that represents the downloadable link of the movie cover.
+	 * @returns The downloadable link, or an empty string when the upload failed.
 	 */
 	public abstract uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string>;
 
@@ -1105,7 +1117,7 @@ export abstract class DatabaseService {
 	 */
 	protected buildHistoryMessage(status: string, timestamp: string, movieItemVO?: MovieItemVO): string {
 		if (movieItemVO) {
-			const rate = movieItemVO.getMovieRate() === 0 ? NO_RATE : movieItemVO.getMovieRate();
+			const rate = movieItemVO.hasRate() ? movieItemVO.getMovieRate() : NO_RATE;
 			const rateStr = `${ENT_HISTORY_RATE_OPEN}${rate}${ENT_HISTORY_RATE_CLOSE}`;
 			const nameGenre = `${movieItemVO.getMovieName()} - ${movieItemVO.getMovieGenre()}`;
 			const statusLabel =
@@ -1116,5 +1128,20 @@ export abstract class DatabaseService {
 			return `${nameGenre} ${rateStr} was ${statusLabel} on ${timestamp}`;
 		}
 		return `${ENT_HISTORY_SEARCH_STARTED}${timestamp}`;
+	}
+
+	/**
+	 * Re-throws SessionExpiredError as-is so callers can route it to the retry dialog; wraps
+	 * everything else in UnexpectedError so no raw SDK error escapes the data layer untyped.
+	 * Both FirebaseService and CloudbaseService call this shared implementation so the two
+	 * backends surface failures identically.
+	 *
+	 * @param error - The caught value from a catch block.
+	 * @throws SessionExpiredError if the caught value is already that type.
+	 * @throws UnexpectedError for every other caught value.
+	 */
+	protected rethrowCaught(error: unknown): never {
+		if (error instanceof SessionExpiredError) throw error;
+		throw new UnexpectedError();
 	}
 }

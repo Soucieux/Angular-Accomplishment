@@ -100,7 +100,7 @@
 						'very-high-rate': movie.getMovieRate() >= 9,
 						'high-rate': movie.getMovieRate() >= 7.9 && movie.getMovieRate() < 9,
 						'medium-rate': movie.getMovieRate() >= 7 && movie.getMovieRate() < 7.9,
-						'low-rate': movie.getMovieRate() < 7
+						'low-rate': movie.hasRate() && movie.getMovieRate() < 7
 					}">
 					<div
 						class="image-container"
@@ -116,7 +116,7 @@
 							</span>
 						</div>
 						<div class="rate-row">
-							@if (movie.getMovieRate()) {
+							@if (movie.hasRate()) {
 								<span class="rate">{{ movie.getMovieRate().toFixed(1) }}</span>
 								<span class="rate-label">{{ getRateLabel(movie.getMovieRate()) }}</span>
 							} @else {
@@ -127,7 +127,7 @@
 							<div class="info-default">
 								<div class="rate-divider"></div>
 								<span class="text"
-									>{{ ENT_LABEL_TYPE }}
+									>{{ ENT_LABEL_GENRE }}
 									@if (editedItems.has(movie.getMovieKey())) {
 										<p-select
 											[options]="genres"
@@ -135,7 +135,7 @@
 											optionValue="value"
 											[appendTo]="'body'"
 											class="dropdown"
-											panelStyleClass="dropdown-panel-font"
+											panelStyleClass="dropdown-panel-font genre-panel"
 											[(ngModel)]="editedItems.get(movie.getMovieKey())!.genre" />
 									} @else {
 										{{ genreLabel(movie.getMovieGenre()) }}

@@ -19,18 +19,26 @@ import {
 	ENT_VT_CLASS_ENTERING,
 	ENT_VT_NAME_PREFIX,
 	ENT_DOUBAN_MOVIE_URL_PREFIX,
+	ENT_MOVIE_RATE_UNRESOLVED,
 	ENT_MSG_UPDATE_GENRE_FAILED,
 	ENT_MSG_UPDATE_RATE_FAILED_PREFIX,
 	ENT_MSG_API_EMPTY_RESPONSE,
 	ENT_MSG_FETCH_FAILED_PREFIX,
 	ENT_MSG_RETRIEVE_RATE_FAILED_PREFIX,
-	ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX,
+	ENT_MSG_RETRIEVE_MOVIE_DATA_FAILED_PREFIX,
 	ENT_LOG_SEARCH_CANCEL_REQUESTED,
 	ENT_LOG_MOVIE_DETAILS_RETRIEVED,
 	ENT_LOG_UPDATE_FAVOURITE_FAILED,
 	ENT_LOG_COVER_RETRIEVED,
 	ENT_LOG_COVER_UPLOADED,
-	ENT_LOG_SEARCHING_MOVIE_ID
+	ENT_LOG_SEARCHING_MOVIE_ID,
+	ENT_LOG_MOVIE_DETAILS_FAILED,
+	DB_LOG_IMAGE_UPLOAD_FAILED,
+	ENT_LOG_RELEASE_DATE,
+	ENT_LOG_EPISODE_NUMBER,
+	ENT_LOG_MOVIE_ID_RETRIEVED,
+	ENT_LOG_MOVIE_ID_NOT_FOUND,
+	ENT_LOG_MOVIE_ID_NOT_FOUND_HINT
 } from '../../common/constants';
 import {
 	SEARCH_CANCEL,
@@ -47,7 +55,7 @@ import {
 	ENT_TOOLTIP_HISTORY,
 	ENT_TITLE_PAGE,
 	ENT_SEARCH_PLACEHOLDER,
-	ENT_LABEL_TYPE,
+	ENT_LABEL_GENRE,
 	ENT_LABEL_EPISODES,
 	ENT_LABEL_YEAR,
 	ENT_LABEL_SYNOPSIS,
@@ -95,7 +103,7 @@ import {
 	take
 } from 'rxjs';
 import { LOG } from '../../common/app.logs';
-import { DoubanService } from '../../backend/douban-service/douban.service';
+import { DoubanService, MovieDetails } from '../../backend/douban-service/douban.service';
 import { MovieItemVO } from './movieItem.vo';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -108,6 +116,8 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { MovieFetchFailedError } from '../../common/error/movie-fetch-failed-error';
+import { UnexpectedError } from '../../common/error/unexpected.error';
+import { SessionExpiredError } from '../../common/error/session-expired.error';
 
 /**
  * View Transition styles injected directly into <head> at runtime.
@@ -155,7 +165,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	protected readonly ENT_TOOLTIP_HISTORY = ENT_TOOLTIP_HISTORY;
 	protected readonly ENT_TITLE_PAGE = ENT_TITLE_PAGE;
 	protected readonly ENT_SEARCH_PLACEHOLDER = ENT_SEARCH_PLACEHOLDER;
-	protected readonly ENT_LABEL_TYPE = ENT_LABEL_TYPE;
+	protected readonly ENT_LABEL_GENRE = ENT_LABEL_GENRE;
 	protected readonly ENT_LABEL_EPISODES = ENT_LABEL_EPISODES;
 	protected readonly ENT_LABEL_YEAR = ENT_LABEL_YEAR;
 	protected readonly ENT_LABEL_SYNOPSIS = ENT_LABEL_SYNOPSIS;
@@ -391,10 +401,10 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Retrieves the latest rating, first release date, total episode count,
+	 * Retrieves the latest rating, first release date, year, total episode count,
 	 * and cover image for a movie from the Douban API. Uses the movie's existing
-	 * name and year to locate the correct Douban page, but does not overwrite
-	 * the name or year on the movie item.
+	 * name and year to locate the correct Douban page, and refreshes every field
+	 * except the movie name.
 	 *
 	 * @param movieItemVO - The movie item to populate with retrieved data.
 	 */
@@ -403,9 +413,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Retrieves full movie data (rating, release date, episode count, cover image,
-	 * name, and year) from the Douban API using the movie's existing ID. Also
-	 * overwrites the movie name and year with the values returned by the API.
+	 * Retrieves full movie data (rating, release date, year, episode count, cover image,
+	 * and name) from the Douban API using the movie's existing ID. This is the only path
+	 * that also overwrites the movie name with the value returned by the API.
 	 *
 	 * @param movieItemVO - The movie item to populate with retrieved data.
 	 */
@@ -435,43 +445,96 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Retrieves a movie's rating and release date from Firecrawl. Used as the fallback for the add
+	 * and restore flows when the third-party API left either field empty. A failure degrades to
+	 * empty values rather than aborting the add — every other field is already retrieved by then.
+	 *
+	 * @param movieId - The Douban movie ID to look up.
+	 * @returns The scraped rating and release date, or empty values when the lookup fails.
+	 */
+	private async retrieveMovieDetails(movieId: number): Promise<MovieDetails> {
+		try {
+			return await firstValueFrom(this.doubanService.searchMovieDetails(movieId));
+		} catch (error) {
+			/* Logged rather than swallowed silently: the degraded result is indistinguishable from a
+			   genuinely unrated title, so a dead Firecrawl key or exhausted quota would otherwise
+			   write -1 across every movie added for as long as it stayed broken. */
+			LOG.error(this.className, `${ENT_LOG_MOVIE_DETAILS_FAILED} ${movieId}`, error as Error);
+			return { rate: ENT_MOVIE_RATE_UNRESOLVED, releaseDate: '' };
+		}
+	}
+
+	/**
 	 * Core data retrieval method. Fetches the movie data from the Douban
 	 * third-party API for the given movie, extracts the rating, and optionally
 	 * extracts additional metadata (release date, episode count, cover image,
 	 * actors, description, year, and title) based on the provided flags.
 	 *
 	 * @param movieItemVO - The movie item to populate with retrieved data.
-	 * @param retrieveOtherData - If true, also retrieves release date, episode count,
+	 * @param retrieveOtherData - If true, also retrieves release date, year, episode count,
 	 *                            cover image, actors, and description.
-	 * @param retrieveYearAndTitle - If true, also retrieves and overwrites the movie's
-	 *                               year and title.
+	 * @param retrieveTitle - If true, also overwrites the movie's title with the API's.
+	 * @throws UnexpectedError if the retrieval fails outside the search-dialog flow and the cause
+	 *                         is not a MovieFetchFailedError, which is shown in a dialog instead.
 	 */
 	private async getMovieData(
 		movieItemVO: MovieItemVO,
 		retrieveOtherData: boolean,
-		retrieveYearAndTitle: boolean
+		retrieveTitle: boolean
 	) {
 		try {
 			// Step 1: Get the movie data from the third-party API
 			const movieData = await this.invokeRetrieveMovieApi(movieItemVO.getMovieId());
 
-			// Step 2: Get the latest movie rate for the current movie
+			/* Step 2: Take the rate from the third-party API — the bulk refresh relies on this alone.
+			   setMovieRate normalises an unrated title's empty string to the -1 sentinel, so no
+			   caller has to reason about the API's "no rating" representation. */
 			movieItemVO.setMovieRate(movieData['doubanRating']);
 
 			// Step 3: Retrieve other data if the flag is true
 			if (retrieveOtherData) {
+				let dateReleased = movieData['dateReleased'];
+				let isCoverRetrieved = false;
+
+				/* Step 3.1: The API leaves both the rating and the release date empty for some titles
+				   (upcoming series especially), and Douban blocks the plain proxy, so one Firecrawl
+				   scrape backfills whichever is missing. When the scrape finds no rating either, the
+				   sentinel stays put — that is a title that genuinely has no rating yet. */
+				const isRateMissing = !movieItemVO.hasRate();
+				if (isRateMissing || !dateReleased) {
+					/* The cover download shares no data with the scrape, so it is started first and
+					   both are awaited together — otherwise the add waits out the scrape's render
+					   delay and the download back to back. Awaited here rather than at Step 7 so
+					   there is no window in which a rejection could go unhandled. */
+					const coverDownload = this.getMovieCoverImageByLink(
+						movieData['data'][0]['poster'],
+						movieItemVO
+					);
+					const [scrapedDetails] = await Promise.all([
+						this.retrieveMovieDetails(movieItemVO.getMovieId()),
+						coverDownload
+					]);
+					if (isRateMissing) {
+						movieItemVO.setMovieRate(scrapedDetails.rate);
+					}
+					dateReleased = dateReleased || scrapedDetails.releaseDate;
+					isCoverRetrieved = true;
+				}
+
 				// Step 4: Get the first release date for the current movie
-				let firstReleaseDate = movieData['dateReleased'];
-				firstReleaseDate = firstReleaseDate.substring(0, 10).replace(/-/g, '.');
+				const firstReleaseDate = dateReleased.substring(0, 10).replace(/-/g, '.');
 				movieItemVO.setMovieFirstReleaseDate(firstReleaseDate);
 				LOG.info(
 					this.className,
-					`First release date for ${movieItemVO.getMovieName()} is ${firstReleaseDate}`
+					`${ENT_LOG_RELEASE_DATE} ${movieItemVO.getMovieName()}: ${firstReleaseDate}`
 				);
 
-				// Step 4.1: Retrieve year and title if the flag is true
-				if (retrieveYearAndTitle) {
-					movieItemVO.setMovieYear(Number(movieData['year']));
+				/* Step 4.1: The year is refreshed from the API on every full retrieval. Nothing displays
+				   it — the card's "Year:" label shows the first release date — but it is the match key
+				   for a later name-based ID lookup. Only the title stays behind the flag, so a
+				   name-based search keeps the name the user typed rather than replacing it. */
+				movieItemVO.setMovieYear(Number(movieData['year']));
+				if (retrieveTitle) {
 					movieItemVO.setMovieName(movieData['originalName']);
 				}
 
@@ -480,7 +543,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				movieItemVO.setMovieEpisodeNumber(episodeNumber);
 				LOG.info(
 					this.className,
-					`Total episode number for ${movieItemVO.getMovieName()} is ${episodeNumber}`
+					`${ENT_LOG_EPISODE_NUMBER} ${movieItemVO.getMovieName()}: ${episodeNumber}`
 				);
 
 				// Step 6: Get movie actors and movie description
@@ -494,12 +557,14 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 						: allActors.join(', ');
 				movieItemVO.setActors(actorRetrieved);
 
-				// Step 7: Get the movie cover for the current movie and upload it to storage
-				await this.getMovieCoverImageByLink(movieData['data'][0]['poster'], movieItemVO);
+				// Step 7: Get the movie cover, unless Step 3.1 already fetched it alongside the scrape
+				if (!isCoverRetrieved) {
+					await this.getMovieCoverImageByLink(movieData['data'][0]['poster'], movieItemVO);
+				}
 			}
 		} catch (error) {
 			// For search dialog, record it inside.
-			if (!retrieveOtherData && !retrieveYearAndTitle) {
+			if (!retrieveOtherData && !retrieveTitle) {
 				if (error instanceof MovieFetchFailedError) {
 					this.searchStreamService.addSearchLog(
 						`${ENT_MSG_FETCH_FAILED_PREFIX}${movieItemVO.getMovieName()}${ENT_LOG_SKIPPING}`
@@ -516,10 +581,17 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 				} else {
 					LOG.error(
 						this.className,
-						`${ENT_MSG_RETRIEVE_WEBPAGE_FAILED_PREFIX}${movieItemVO.getMovieName()}`,
+						`${ENT_MSG_RETRIEVE_MOVIE_DATA_FAILED_PREFIX}${movieItemVO.getMovieName()}`,
 						error as Error
 					);
-					throw error;
+					/* Already-typed errors pass through unchanged: SessionExpiredError so handleError
+					   can route it to the retry dialog (flattening it would silently break that
+					   branch the moment a databaseService call is added inside this try), and
+					   UnexpectedError so an inner conversion is not wrapped a second time. */
+					if (error instanceof SessionExpiredError || error instanceof UnexpectedError) {
+						throw error;
+					}
+					throw new UnexpectedError();
 				}
 			}
 		}
@@ -560,7 +632,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 					movieItemVO.setMovieId(movieData.id);
 					LOG.info(
 						this.className,
-						`Movie ID retrieved for ${movieItemVO.getMovieName()} with ID ${movieData.id}`
+						`${ENT_LOG_MOVIE_ID_RETRIEVED} ${movieItemVO.getMovieName()}: ${movieData.id}`
 					);
 					return;
 				}
@@ -568,7 +640,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			// throw the error to let the calling method knows that no matching movie ID has been found.
 			LOG.warn(
 				this.className,
-				`Movie ID not found for ${movieItemVO.getMovieName()}. Possible wrong name and year combination.`
+				`${ENT_LOG_MOVIE_ID_NOT_FOUND} ${movieItemVO.getMovieName()}. ${ENT_LOG_MOVIE_ID_NOT_FOUND_HINT}`
 			);
 			throw new MovieIdNotFoundError(movieItemVO.getMovieName());
 		}
@@ -582,6 +654,7 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 *
 	 * @param movieCoverImageLink - The URL of the cover image on Douban's servers.
 	 * @param movieItemVO - The movie item on which to store the downloaded cover image.
+	 * @throws UnexpectedError if the cover image cannot be downloaded.
 	 */
 	private async getMovieCoverImageByLink(movieCoverImageLink: string, movieItemVO: MovieItemVO) {
 		LOG.info(
@@ -596,12 +669,8 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			movieItemVO.setMovieCoverImage(movieCoverImage);
 			LOG.info(this.className, `${ENT_LOG_COVER_RETRIEVED} ${movieItemVO.getMovieName()}`);
 		} catch (error) {
-			LOG.error(
-				this.className,
-				`Error while retrieving movie cover for ${movieItemVO.getMovieName()} from Douban`,
-				error as Error
-			);
-			throw error;
+			// searchMovieCover already logged the failure with the movie name — only the type is added here.
+			throw new UnexpectedError();
 		}
 	}
 
@@ -609,27 +678,26 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 	 * Uploads the movie cover image (stored as a Blob on the movie item) to
 	 * cloud storage and sets the resulting downloadable URL back on the movie item.
 	 *
+	 * A failed upload is not fatal — the movie is still added, just without a cover — so the
+	 * empty string the database service returns on failure is left unstored rather than saved
+	 * as a link, which would render as a broken image on the card.
+	 *
 	 * @param movieItemVO - The movie item containing the cover image blob to upload.
 	 *                      The downloadable link is set on this object on success.
 	 */
 	private async uploadMovieImageAndGetDownloadableLink(movieItemVO: MovieItemVO) {
-		try {
-			/* Upload the cover image Blob to cloud storage, then get the resultant
-			   downloadable URL. These are separate operations in Firebase/CloudBase. */
-			const downloadableLink = await this.databaseService.uploadImageAndGetDownloadLink(
-				movieItemVO.getMovieCoverImage()!,
-				movieItemVO.getMovieName()
-			);
-			movieItemVO.setMovieCoverImageDownloadableLink(downloadableLink);
-			LOG.info(this.className, `${ENT_LOG_COVER_UPLOADED} ${movieItemVO.getMovieName()}`);
-		} catch (error) {
-			LOG.error(
-				this.className,
-				`Error while uploading image to firebase or getting download link for ${movieItemVO.getMovieName()}`,
-				error as Error
-			);
-			throw error;
+		/* Upload the cover image Blob to cloud storage, then get the resultant
+		   downloadable URL. These are separate operations in Firebase/CloudBase. */
+		const downloadableLink = await this.databaseService.uploadImageAndGetDownloadLink(
+			movieItemVO.getMovieCoverImage()!,
+			movieItemVO.getMovieName()
+		);
+		if (!downloadableLink) {
+			LOG.warn(this.className, `${DB_LOG_IMAGE_UPLOAD_FAILED} ${movieItemVO.getMovieName()}`);
+			return;
 		}
+		movieItemVO.setMovieCoverImageDownloadableLink(downloadableLink);
+		LOG.info(this.className, `${ENT_LOG_COVER_UPLOADED} ${movieItemVO.getMovieName()}`);
 	}
 
 	// ── Event Handlers triggered by user actions ─────────────────────────────

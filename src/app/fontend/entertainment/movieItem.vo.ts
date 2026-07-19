@@ -182,14 +182,26 @@ export class MovieItemVO {
 	}
 
 	/**
-	 * Sets the movie rating. Coerces string values to number.
-	 * No-ops if the value is null or undefined.
+	 * Sets the movie rating, normalising every "no rating" form to the -1 sentinel.
+	 * The third-party API returns an empty string for an unrated title, which would coerce
+	 * to 0, and legacy database rows still hold that 0 — so both converge here rather than
+	 * at each caller. No-ops if the value is null or undefined.
 	 *
 	 * @param rate - The rating value.
 	 */
 	public setMovieRate(rate: number) {
 		if (rate === null || rate === undefined) return;
-		this.rate = typeof rate === 'string' ? Number(rate) : rate;
+		const numericRate = Number(rate);
+		this.rate = numericRate > 0 ? numericRate : -1;
+	}
+
+	/**
+	 * Gets whether the movie carries a real rating, as opposed to the -1 unresolved sentinel.
+	 *
+	 * @returns True when a rating has been resolved for this movie.
+	 */
+	public hasRate(): boolean {
+		return this.rate > 0;
 	}
 
 	/**

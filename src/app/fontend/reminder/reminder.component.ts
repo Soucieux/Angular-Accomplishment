@@ -296,6 +296,12 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 					this.pendingItemText = null;
 					if (pendingIndex >= 0) this.page = Math.floor(pendingIndex / this.itemsPerPage);
 				}
+
+				/* Step 5: Clamp the page when a removal shrinks the list. updateGridLayout below
+				   repeats this, but only after the render — and nothing re-renders afterwards in
+				   this out-of-zone callback, so the emptied page would stay on screen. */
+				this.clampPageToLastPage(this.itemsPerPage);
+
 				// detectChanges forces a synchronous render so updateGridLayout below measures the laid-out grid.
 				this.cdr.detectChanges();
 				this.updateGridLayout();
@@ -1617,9 +1623,21 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		const rowsPerPage =
 			itemsPerRow === REMINDER_MIN_COLUMNS ? REMINDER_ROWS_PER_PAGE_NARROW : REMINDER_ROWS_PER_PAGE;
 		const newPageSize = itemsPerRow * rowsPerPage;
-		const maxPage = Math.max(0, Math.ceil(this.filteredItems.length / newPageSize) - 1);
-		if (this.page > maxPage) this.page = maxPage;
+		this.clampPageToLastPage(newPageSize);
 		this.itemsPerPage = newPageSize;
+	}
+
+	/**
+	 * Clamps the current page index down to the last page that still holds items.
+	 *
+	 * {@link updateGridLayout} - Corrects the page after a resize changes the page size.
+	 * {@link ngOnInit} - Corrects the page when a removal shrinks the item list.
+	 *
+	 * @param pageSize - The number of items per page to measure the item count against.
+	 */
+	private clampPageToLastPage(pageSize: number): void {
+		const maxPage = Math.max(0, Math.ceil(this.filteredItems.length / pageSize) - 1);
+		if (this.page > maxPage) this.page = maxPage;
 	}
 
 	// ── utility counter getters used by the template ─────────────────────────

@@ -76,6 +76,8 @@ import {
 	STATS_FIELD_COMPLETED_PRIVATE,
 	STATS_FIELD_COMPLETED_SHARED,
 	STATS_FIELD_TOTAL_FILMS,
+	STATS_FIELD_GENRE,
+	STATS_FIELDS_GLOBAL_ONLY,
 	STATS_FIELD_TOTAL_LINKS,
 	STATS_FIELD_TOTAL_QUOTES,
 	STATS_FIELD_TOTAL_RECIPES,
@@ -1249,8 +1251,8 @@ export class CloudbaseService extends DatabaseService {
 
 			// Step 2 : Update movie statistics
 			const statRes = await this.statisticsRef.update({
-				[`genre.${oldGenre}`]: this._.inc(-1),
-				[`genre.${newGenre}`]: this._.inc(1)
+				[`${STATS_FIELD_GENRE}.${oldGenre}`]: this._.inc(-1),
+				[`${STATS_FIELD_GENRE}.${newGenre}`]: this._.inc(1)
 			});
 			this.throwIfCloudbaseError(statRes);
 			LOG.info(this.className, DB_LOG_MOVIE_STATS_UPDATED);
@@ -1288,9 +1290,9 @@ export class CloudbaseService extends DatabaseService {
 			// Step 2 : Update movie statistics
 			const updatedData: any = {};
 			if (isFavourite) {
-				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(1);
+				updatedData[`${STATS_FIELD_GENRE}.${GENRE_FAVOURITE}`] = this._.inc(1);
 			} else {
-				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
+				updatedData[`${STATS_FIELD_GENRE}.${GENRE_FAVOURITE}`] = this._.inc(-1);
 			}
 			const statRes = await this.statisticsRef.update(updatedData);
 			this.throwIfCloudbaseError(statRes);
@@ -1598,11 +1600,11 @@ export class CloudbaseService extends DatabaseService {
 
 			// Step 4: Decrement statistics (single call — no race condition with watcher)
 			const updatedData: any = {};
-			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(-1);
+			updatedData[`${STATS_FIELD_GENRE}.${movieItemVO.getMovieGenre()}`] = this._.inc(-1);
 			updatedData[STATS_FIELD_TOTAL_FILMS] = this._.inc(-1);
 
 			if (movieItemVO.getIsFavourite()) {
-				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(-1);
+				updatedData[`${STATS_FIELD_GENRE}.${GENRE_FAVOURITE}`] = this._.inc(-1);
 			}
 
 			const statRes = await this.statisticsRef.update(updatedData);
@@ -2029,11 +2031,11 @@ export class CloudbaseService extends DatabaseService {
 
 			// Step 3 : Update movie statistics (single call — no race condition with watcher)
 			const updatedData: any = {};
-			updatedData[`genre.${movieItemVO.getMovieGenre()}`] = this._.inc(1);
+			updatedData[`${STATS_FIELD_GENRE}.${movieItemVO.getMovieGenre()}`] = this._.inc(1);
 			updatedData[STATS_FIELD_TOTAL_FILMS] = this._.inc(1);
 
 			if (movieItemVO.getIsFavourite()) {
-				updatedData[`genre.${GENRE_FAVOURITE}`] = this._.inc(1);
+				updatedData[`${STATS_FIELD_GENRE}.${GENRE_FAVOURITE}`] = this._.inc(1);
 			}
 
 			const statRes = await this.statisticsRef.update(updatedData);
@@ -2633,6 +2635,13 @@ export class CloudbaseService extends DatabaseService {
 		const fields: Record<string, any> = { ...doc };
 		delete fields['_id'];
 		delete fields[STATS_FIELD_IS_USER_STATS];
+		/* The legacy document shares its shape with the global statistics document, so a blanket copy
+		   can carry global-only fields into the per-user one, where nothing ever updates them again —
+		   they would sit there permanently stale and shadow the real global values on the dashboard.
+		   Stripped here rather than suppressed on every read, so the bad copy never exists.
+		   A deny-list, not an allow-list: an allow-list would silently drop any per-user field not
+		   enumerated (prefs, milestones, today items, streak), turning contamination into data loss. */
+		for (const field of STATS_FIELDS_GLOBAL_ONLY) delete fields[field];
 		// Legacy docs predate the connect code — generate one so migrated users can be linked.
 		const connectCode =
 			fields[STATS_FIELD_CONNECT_CODE] ??

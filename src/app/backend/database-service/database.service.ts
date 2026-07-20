@@ -12,6 +12,7 @@ import { UnexpectedError } from '../../common/error/unexpected.error';
 import {
 	NO_RATE,
 	HISTORY_STATUS_ADDED,
+	STATS_FIELDS_PUBLIC_PAGES,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_RECIPES,
 	DATABASE_DEBT_SONATA,
@@ -101,15 +102,29 @@ export abstract class DatabaseService {
 	public abstract getUserStats(): Observable<any>;
 
 	/**
-	 * Gets the global and per-user stats documents combined into one object, with per-user values
-	 * winning on overlap. Emits after both underlying watches have produced a value, then on every
-	 * subsequent change to either. Concrete on the base class so both backends share one implementation.
+	 * Gets the global and per-user stats documents combined into one object. Per-user values win on
+	 * overlap, except the publicly-readable page stats, which always come from the global document.
+	 * Emits after both underlying watches have produced a value, then on every subsequent change to
+	 * either. Concrete on the base class so both backends share one implementation.
 	 *
 	 * @returns An observable that emits the merged stats object.
 	 */
 	public getCombinedStats(): Observable<any> {
 		return combineLatest([this.getStatistics(), this.getUserStats()]).pipe(
-			map(([generic, userSpecific]) => ({ ...generic, ...userSpecific }))
+			/* Re-applies the public-page stats from the global document last, so a per-user copy can
+			   never shadow them — see STATS_FIELDS_PUBLIC_PAGES for which fields and why. Only fields
+			   the global document actually carries are re-applied: an absent global doc (first emission,
+			   or a denied read) would otherwise stamp every one of them as undefined and blank out the
+			   per-user values that had just been merged in. */
+			map(([generic, userSpecific]) => ({
+				...generic,
+				...userSpecific,
+				...Object.fromEntries(
+					STATS_FIELDS_PUBLIC_PAGES.filter((field) => generic?.[field] !== undefined).map(
+						(field) => [field, generic[field]]
+					)
+				)
+			}))
 		);
 	}
 

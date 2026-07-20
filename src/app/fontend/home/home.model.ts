@@ -7,6 +7,7 @@ export interface HomeStats {
 	totalQuotes?: number;
 	totalRecipes?: number;
 	totalDebts?: number;
+	activityStreak?: number;
 	recipeList?: { id: string; name: string; category: string }[];
 }
 

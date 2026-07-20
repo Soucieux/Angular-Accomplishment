@@ -6,7 +6,6 @@ import {
 	Input,
 	NgZone,
 	OnChanges,
-	OnDestroy,
 	OnInit,
 	Output,
 	SimpleChanges,
@@ -14,8 +13,8 @@ import {
 } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { Observable, Subscription } from 'rxjs';
-import { ConnectedMember, DatabaseService } from '../../../backend/database-service/database.service';
+import { Observable } from 'rxjs';
+import { ConnectedMember } from '../../../backend/database-service/database.service';
 import { CloudbaseService } from '../../../backend/database-service/cloudbase/cloudbase.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../../backend/authentication-service/auth.service';
@@ -130,7 +129,6 @@ import {
 	HOME_QUICK_ACTION_ROUTE_RECIPE,
 	HOME_QUICK_ACTION_ROUTE_REMINDER,
 	HOME_REMINDER_ROW_ID_PREFIX,
-	STATS_FIELD_ACTIVITY_STREAK,
 	ORBITAL_URGENCY_CHIP_TYPE_DEBT,
 	ORBITAL_URGENCY_CHIP_TYPE_REMINDER,
 	ORBITAL_URGENCY_GROUP_SEPARATOR,
@@ -247,13 +245,12 @@ const MON_TO_SUN_LABELS = [...ORBITAL_DAY_NAMES_SHORT.slice(1), ORBITAL_DAY_NAME
 	styleUrl: './orbital.component.css',
 	providers: [OrbitalStore]
 })
-export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
+export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges {
 	protected readonly d = inject(OrbitalStore);
 	private readonly router = inject(Router);
 	private readonly elementRef = inject(ElementRef);
 	private readonly ngZone = inject(NgZone);
 	private readonly authService = inject(AuthService);
-	private readonly databaseService = inject(DatabaseService);
 
 	@Input() stats: HomeStats | null = null;
 	@Input() links: PortalLink[] = [];
@@ -305,8 +302,6 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	protected addedThisWeek = 0;
 	protected pinnedLinks: PortalLink[] = [];
 	protected shortcutLinks: PortalLink[] = [];
-	protected activityStreak = 0;
-	private userStatsSub?: Subscription;
 
 	/**
 	 * Truncates a detail string to 32 characters for activity row display.
@@ -524,21 +519,10 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	};
 
 	/**
-	 * Subscribes to the auth state and per-user stats observables.
+	 * Subscribes to the auth state observable.
 	 */
 	ngOnInit(): void {
 		this.currentUser$ = this.authService.getCurrentUser();
-		this.userStatsSub = this.databaseService.getUserStats().subscribe((doc) => {
-			if (!doc) return;
-			this.activityStreak = (doc[STATS_FIELD_ACTIVITY_STREAK] as number) ?? 0;
-		});
-	}
-
-	/**
-	 * Cleans up the per-user stats subscription on component teardown.
-	 */
-	ngOnDestroy(): void {
-		this.userStatsSub?.unsubscribe();
 	}
 
 	/**
@@ -603,6 +587,15 @@ export class OrbitalComponent implements OnInit, AfterViewInit, OnChanges, OnDes
 	 */
 	protected get openDebtCount(): number {
 		return this.stats?.totalDebts ?? 0;
+	}
+
+	/**
+	 * Gets the consecutive-day activity streak from the statistics document.
+	 *
+	 * @returns The streak day count from stats, or 0 if not yet loaded.
+	 */
+	protected get activityStreak(): number {
+		return this.stats?.activityStreak ?? 0;
 	}
 
 	/**

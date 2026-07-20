@@ -434,6 +434,30 @@ export const STATS_FIELD_MINIMIZE_ON_CLOSE = 'minimizeOnClose';
 export const STATS_FIELD_LOCALE = 'locale';
 /** Backup of the Today page's locally created items (timed, untimed, and tracked) stored on the per-user stats document. */
 export const STATS_FIELD_TODAY_ITEMS = 'todayItems';
+/* Stats fields owned by the publicly-readable pages — Entertainment, Recipe, Patch Notes and
+   Resonance. Every visitor sees the same records on those pages, so the dashboard reads these from
+   the global statistics document even where a per-user copy exists for the Account page.
+   Films, recipes and quotes are the live cases: those counters legitimately exist per-user too.
+   The rest are listed to neutralise documents migrated before STATS_FIELDS_GLOBAL_ONLY existed,
+   which may still carry a stale copy no code path updates. */
+export const STATS_FIELDS_PUBLIC_PAGES = [
+	STATS_FIELD_TOTAL_FILMS,
+	STATS_FIELD_GENRE,
+	STATS_FIELD_TOTAL_RECIPES,
+	STATS_FIELD_RECIPE_LIST,
+	STATS_FIELD_TOTAL_PATCH_NOTES,
+	STATS_FIELD_TOTAL_QUOTES
+];
+/* The subset of the above that exists ONLY on the global statistics document — no per-user code
+   path ever writes these. They are stripped when migrating a legacy document into the users
+   collection, so a per-user copy can never come into existence in the first place. The remaining
+   public-page fields (films, recipes, quotes) genuinely do have per-user counters for the Account
+   page, so those can only be handled on read. */
+export const STATS_FIELDS_GLOBAL_ONLY = [
+	STATS_FIELD_GENRE,
+	STATS_FIELD_RECIPE_LIST,
+	STATS_FIELD_TOTAL_PATCH_NOTES
+];
 /** Locale identifier value for English. */
 export const LOCALE_KEY_EN = 'en';
 /** Locale identifier value for Chinese. */

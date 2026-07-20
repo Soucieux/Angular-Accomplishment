@@ -87,6 +87,7 @@ import {
 	REMINDER_PLACEHOLDER_TAG,
 	REMINDER_PLACEHOLDER_TEXT,
 	BTN_ADD,
+	BTN_ADDING,
 	LABEL_ALL,
 	LABEL_PERSONAL,
 	NAV_LABEL_REMINDER,
@@ -163,6 +164,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly REMINDER_START_TIME_LABEL = REMINDER_START_TIME_LABEL;
 	protected readonly REMINDER_END_TIME_LABEL = REMINDER_END_TIME_LABEL;
 	protected readonly BTN_ADD = BTN_ADD;
+	protected readonly BTN_ADDING = BTN_ADDING;
 	protected readonly REMINDER_TIME_OPTIONS = REMINDER_TIME_OPTIONS;
 	protected readonly REMINDER_END_TIME_OPTIONS = REMINDER_END_TIME_OPTIONS;
 	protected readonly REMINDER_DUE_SOON_LABEL = REMINDER_DUE_SOON_LABEL;
@@ -217,8 +219,9 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private itemsSub?: Subscription;
 	private statsSub?: Subscription;
 	private saveIndicatorTimeouts: Record<string, ReturnType<typeof setTimeout>> = {};
-	// Re-entry guard so rapid add clicks (or Enter presses) cannot fire duplicate DB writes.
-	private isAddingItem = false;
+	/* Re-entry guard so rapid add clicks (or Enter presses) cannot fire duplicate DB writes.
+	   Also bound in the template to disable the add button and show its in-flight label. */
+	protected isAddingItem = false;
 
 	constructor(
 		@Inject(PLATFORM_ID) private readonly platformId: object,

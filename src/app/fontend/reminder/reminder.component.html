@@ -495,10 +495,10 @@
 					<button
 						class="rm-confirm-button"
 						[style.background]="tagColor(newItem.tag)"
-						[disabled]="!newItem.text.trim()"
+						[disabled]="!newItem.text.trim() || isAddingItem"
 						(click)="addNewItemWithDateOrLink()">
 						<span class="material-symbols-outlined rm-icon" style="font-size: 15px">check</span>
-						{{ BTN_ADD }}
+						{{ isAddingItem ? BTN_ADDING : BTN_ADD }}
 					</button>
 				</div>
 			</div>

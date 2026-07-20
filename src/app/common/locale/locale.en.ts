@@ -541,6 +541,8 @@ export const PORTAL_BTN_ADD_LINK = 'Add Link';
 export const LABEL_ADD_LINK = 'Add Link';
 /** Shared "Add" button label used across multiple pages. */
 export const BTN_ADD = 'Add';
+/** In-flight label replacing BTN_ADD while an add is being saved. */
+export const BTN_ADDING = 'Adding...';
 
 /** Dialog title when adding a new link. */
 export const PORTAL_DIALOG_TITLE_ADD_LINK = 'Add Link';

@@ -435,6 +435,7 @@ export const PORTAL_BTN_BATCH = '批量添加';
 export const PORTAL_BTN_ADD_LINK = '添加链接';
 export const LABEL_ADD_LINK = '添加链接';
 export const BTN_ADD = '添加';
+export const BTN_ADDING = '正在添加...';
 
 export const PORTAL_DIALOG_TITLE_ADD_LINK = '添加链接';
 export const PORTAL_DIALOG_TITLE_EDIT_LINK = '编辑链接';

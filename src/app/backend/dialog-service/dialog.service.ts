@@ -39,6 +39,7 @@ import { MessageService } from 'primeng/api';
 import { IngredientDialogComponent } from './ingredient/ingredient.component';
 import { IngredientType, TypeTab } from '../../fontend/recipe/recipe.model';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { AddDebtDialogComponent } from './add-debt/add-debt.component';
 import { NewDebtData } from '../../fontend/debt/debt.model';
 import { AddLinkDialogComponent } from './add-link/add-link.component';
@@ -367,7 +368,7 @@ export class DialogService {
 	 * @returns true when the user is permitted, false (dialog shown) otherwise.
 	 */
 	public ensurePermission(container: ViewContainerRef, openid: string): boolean {
-		if (Utilities.checkPermission(openid)) return true;
+		if (CloudbaseService.checkPermission(openid)) return true;
 		this.showPermissionError(container);
 		return false;
 	}

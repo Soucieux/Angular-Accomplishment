@@ -598,8 +598,21 @@ export const DEBT_LABEL_REMAINING_OF = '共';
 export const DEBT_LABEL_PAID_IN_FULL = '终章 · 已还清';
 export const DEBT_LABEL_CUSTOM_PAY = '自定义';
 export const DEBT_DAYS_LEFT_SUFFIX = '天后截止';
-export const DEBT_DAYS_OVERDUE_PREFIX = '已逾期';
-export const DEBT_DAYS_OVERDUE_SUFFIX = '天';
+
+/* ─────────────────────────────────────────
+   Shared countdown and relative-time labels
+───────────────────────────────────────── */
+
+export const COUNTDOWN_DAYS_OVERDUE_PREFIX = '已逾期';
+export const COUNTDOWN_DAYS_OVERDUE_SUFFIX = '天';
+export const COUNTDOWN_LABEL_TODAY = '今天';
+export const COUNTDOWN_LABEL_TOMORROW = '明天';
+export const COUNTDOWN_IN_DAYS_PREFIX = '';
+export const COUNTDOWN_IN_DAYS_SUFFIX = '天后';
+export const RELATIVE_TIME_JUST_NOW = '刚刚';
+export const RELATIVE_TIME_MINUTES_SUFFIX = '分钟前';
+export const RELATIVE_TIME_HOURS_SUFFIX = '小时前';
+export const RELATIVE_TIME_DAYS_SUFFIX = '天前';
 
 /* ─────────────────────────────────────────
    Patch Notes page constants

@@ -19,6 +19,12 @@ import {
 } from '../constants';
 import {
 	ACTIVE_LOCALE,
+	COUNTDOWN_DAYS_OVERDUE_PREFIX,
+	COUNTDOWN_DAYS_OVERDUE_SUFFIX,
+	COUNTDOWN_IN_DAYS_PREFIX,
+	COUNTDOWN_IN_DAYS_SUFFIX,
+	COUNTDOWN_LABEL_TODAY,
+	COUNTDOWN_LABEL_TOMORROW,
 	RATE_LABEL_AVERAGE,
 	RATE_LABEL_EXCELLENT,
 	RATE_LABEL_GOOD,
@@ -26,9 +32,30 @@ import {
 	RECIPE_CATEGORY_CHINESE,
 	RECIPE_CATEGORY_DESSERT,
 	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_WESTERN
+	RECIPE_CATEGORY_WESTERN,
+	RELATIVE_TIME_DAYS_SUFFIX,
+	RELATIVE_TIME_HOURS_SUFFIX,
+	RELATIVE_TIME_JUST_NOW,
+	RELATIVE_TIME_MINUTES_SUFFIX
 } from '../locale/locale-strings';
-import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
+
+/* Short month labels for the app's own timestamp rendering. Module-level so the array is built
+   once rather than per call, and deliberately not the locale MONTH_NAMES_SHORT — that one is
+   translated ('6月'), which would change this helper's output under the Chinese locale. */
+const MONTH_LABELS_SHORT = [
+	'Jan',
+	'Feb',
+	'Mar',
+	'Apr',
+	'May',
+	'Jun',
+	'Jul',
+	'Aug',
+	'Sep',
+	'Oct',
+	'Nov',
+	'Dec'
+];
 
 @Injectable({ providedIn: 'root' })
 export class Utilities {
@@ -50,16 +77,19 @@ export class Utilities {
 	───────────────────────────────────────── */
 
 	/**
-	 * Checks whether the current device is a phone in portrait orientation, using
-	 * viewport width, aspect ratio, and input precision to distinguish real phones
-	 * from narrow desktop browser windows.
+	 * Checks whether the current device is a phone, using viewport width and input precision
+	 * to distinguish real phones from narrow desktop browser windows. Deliberately tests
+	 * neither orientation nor aspect ratio — see the mobile-detection rule in the
+	 * coding-style skill for why both break on real iPhones.
 	 *
-	 * @returns True when the viewport matches phone portrait dimensions and a coarse
-	 * touch pointer, false on the server or on desktop.
+	 * @returns True when the viewport is phone-width with a coarse touch pointer, false on
+	 * the server or on desktop.
 	 */
 	public isMobile(): boolean {
 		return this.isBrowserCheck(
-			() => globalThis.matchMedia('(max-width: 900px) and (pointer: coarse)').matches
+			() =>
+				this.document.defaultView?.matchMedia('(max-width: 900px) and (pointer: coarse)').matches ??
+				false
 		);
 	}
 
@@ -72,7 +102,7 @@ export class Utilities {
 	 * false on the server.
 	 */
 	public isNarrowViewport(): boolean {
-		return this.isBrowserCheck(() => window.innerWidth <= APP_BREAKPOINT_NARROW);
+		return this.isBrowserCheck(() => (this.document.defaultView?.innerWidth ?? 0) <= APP_BREAKPOINT_NARROW);
 	}
 
 	/**
@@ -144,27 +174,13 @@ export class Utilities {
 			import('@tauri-apps/plugin-opener').then(({ openUrl }) => openUrl(url)).catch(() => {});
 			return;
 		}
-		const a = this.document.createElement('a');
-		a.href = url;
-		a.target = '_blank';
-		a.rel = 'noopener noreferrer';
-		this.document.body.appendChild(a);
-		a.click();
-		this.document.body.removeChild(a);
-	}
-
-	/**
-	 * Gets whether the last sign-in used the Firebase backend (Google sign-in), read from
-	 * the persisted flag. Firebase-signed-in users store and read their data in Firebase;
-	 * everyone else (username/password) uses CloudBase, which is the default when unset.
-	 *
-	 * @returns True when the active data backend is Firebase, false when CloudBase (default).
-	 */
-	public static isFirebaseBackend(): boolean {
-		return (
-			typeof localStorage !== 'undefined' &&
-			localStorage.getItem(LS_AUTH_BACKEND) === AUTH_BACKEND_FIREBASE
-		);
+		const anchor = this.document.createElement('a');
+		anchor.href = url;
+		anchor.target = '_blank';
+		anchor.rel = 'noopener noreferrer';
+		this.document.body.appendChild(anchor);
+		anchor.click();
+		this.document.body.removeChild(anchor);
 	}
 
 	/**
@@ -229,58 +245,15 @@ export class Utilities {
 
 	/**
 	 * Gets the short month-day display string from an app-format timestamp string.
+	 * Delegates the date-segment extraction to {@link getTimestampDate}.
 	 *
-	 * @param timestamp - The timestamp string in `'YYYY.MM.DD HH:mm:ss'` format.
+	 * @param timestamp - The timestamp string in `'YYYY.MM.DD HH:mm:ss'` or `'YYYY.MM.DD'` format.
 	 * @returns A formatted date string such as "Jun 13".
 	 */
 	public static getTimestampMonthDay(timestamp: string): string {
-		const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 		// Isolate the date segment ('YYYY.MM.DD') and split into components
-		const datePart = timestamp.split(' ')[0];
-		const [, monthStr, dayStr] = datePart.split('.');
-		return `${months[Number(monthStr) - 1]} ${Number(dayStr)}`;
-	}
-
-	/**
-	 * Formats an amount as a currency string with the locale-appropriate symbol,
-	 * keeping the negative sign ahead of the symbol (e.g. -$1,250.50).
-	 *
-	 * @param amount - The numeric value to format.
-	 * @param isChinese - Whether to use the ¥ symbol instead of $.
-	 * @returns The formatted currency string.
-	 */
-	public static formatMoney(amount: number, isChinese: boolean): string {
-		const symbol = Utilities.currencySymbol(isChinese);
-		const formatted = Math.abs(amount).toLocaleString('en-US', {
-			minimumFractionDigits: 0,
-			maximumFractionDigits: 2
-		});
-		return amount < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
-	}
-
-	/**
-	 * Formats an amount as a compact currency string (e.g. $1k for 1000).
-	 *
-	 * @param amount - The numeric value to format.
-	 * @param isChinese - Whether to use the ¥ symbol instead of $.
-	 * @returns A compact currency label string.
-	 */
-	public static formatCompactMoney(amount: number, isChinese: boolean): string {
-		const symbol = Utilities.currencySymbol(isChinese);
-		if (amount >= 1000) return `${symbol}${Math.floor(amount / 1000)}k`;
-		return `${symbol}${amount}`;
-	}
-
-	/**
-	 * Rounds a monetary value to 2 decimal places, avoiding the floating-point drift
-	 * that accumulates when currency arithmetic (subtraction, running totals) is
-	 * chained across multiple operations.
-	 *
-	 * @param value - The numeric value to round.
-	 * @returns The value rounded to 2 decimal places.
-	 */
-	public static roundToTwoDecimals(value: number): number {
-		return Math.round(value * 100) / 100;
+		const [, monthStr, dayStr] = Utilities.getTimestampDate(timestamp).split('.');
+		return `${MONTH_LABELS_SHORT[Number(monthStr) - 1]} ${Number(dayStr)}`;
 	}
 
 	/**
@@ -317,20 +290,20 @@ export class Utilities {
 		const diffDays = Math.floor(diffHours / 24);
 
 		// Step 3: Return the coarsest label that fits — fall back to absolute date beyond 7 days
-		if (diffSecs < 60) return 'just now';
-		if (diffMins < 60) return `${diffMins}m ago`;
-		if (diffHours < 24) return `${diffHours}h ago`;
-		if (diffDays < 7) return `${diffDays}d ago`;
+		if (diffSecs < 60) return RELATIVE_TIME_JUST_NOW;
+		if (diffMins < 60) return `${diffMins}${RELATIVE_TIME_MINUTES_SUFFIX}`;
+		if (diffHours < 24) return `${diffHours}${RELATIVE_TIME_HOURS_SUFFIX}`;
+		if (diffDays < 7) return `${diffDays}${RELATIVE_TIME_DAYS_SUFFIX}`;
 		return Utilities.formatDotDate(date);
 	}
 
 	/**
 	 * Safely coerce any date value to a "YYYY-MM-DD" display string.
-	 * Handles plain strings (returned as-is), JavaScript Date objects, and
-	 * database timestamp objects (CloudBase { $date: ms }, { seconds: s },
+	 * Handles plain strings (returned as-is), epoch-millisecond numbers, JavaScript Date
+	 * objects, and database timestamp objects (CloudBase { $date: ms }, { seconds: s },
 	 * { time: ms }) that may have been persisted before format guards were added.
 	 *
-	 * @param date - Any date representation (string, Date, timestamp object, or falsy).
+	 * @param date - Any date representation (string, epoch number, Date, timestamp object, or falsy).
 	 * @returns A "YYYY-MM-DD" string, or '' if the value is falsy or unparseable.
 	 */
 	public static coerceDateToString(date: unknown): string {
@@ -350,30 +323,35 @@ export class Utilities {
 			} else if (typeof date === 'object' && date !== null) {
 				/* Step 2.1: Probe object fields in priority order — $date wins because it is the
 				   canonical MongoDB/CloudBase wire format; time and seconds are legacy fallbacks. */
-				const d = date as Record<string, unknown>;
+				const fields = date as Record<string, unknown>;
+
 				// CloudBase/MongoDB: { $date: ms } or { $date: { $numberLong: "ms" } }
-				if (d['$date'] !== undefined) {
-					const raw = d['$date'];
+				if (fields['$date'] !== undefined) {
+					const raw = fields['$date'];
 					ms =
 						typeof raw === 'object' && raw !== null && '$numberLong' in raw
 							? Number((raw as Record<string, unknown>)['$numberLong'])
 							: Number(raw);
-					// Tencent CloudBase SDK: { time: ms }
-				} else if (d['time'] !== undefined) {
-					ms = Number(d['time']);
-					// Firestore-like: { seconds: s }
-				} else if (d['seconds'] !== undefined) {
-					ms = Number(d['seconds']) * 1000;
+				}
+
+				// Tencent CloudBase SDK: { time: ms }
+				else if (fields['time'] !== undefined) {
+					ms = Number(fields['time']);
+				}
+
+				// Firestore-like: { seconds: s }
+				else if (fields['seconds'] !== undefined) {
+					ms = Number(fields['seconds']) * 1000;
 				}
 			}
 
 			// Step 3: Last-resort — attempt native Date parsing; NaN guard catches junk values
 			if (ms === null) ms = Number(new Date(date as string));
-			const d = new Date(ms);
-			if (isNaN(d.getTime())) return '';
+			const resolved = new Date(ms);
+			if (isNaN(resolved.getTime())) return '';
 
 			// Step 4: Format the resolved Date into a "YYYY-MM-DD" storage string
-			return Utilities.formatDateForStorage(d);
+			return Utilities.formatDateForStorage(resolved);
 		} catch {
 			return '';
 		}
@@ -396,8 +374,8 @@ export class Utilities {
 	 * @returns The total minutes since midnight (e.g. 570 for "09:30").
 	 */
 	public static parseTimeToMinutes(hhmm: string): number {
-		const [h, m] = hhmm.split(':').map(Number);
-		return h * 60 + m;
+		const [hours, minutes] = hhmm.split(':').map(Number);
+		return hours * 60 + minutes;
 	}
 
 	/**
@@ -407,7 +385,7 @@ export class Utilities {
 	 * @param date - The date to format.
 	 * @returns The formatted month-year string.
 	 */
-	public static formatMonthYear(date: Date): string {
+	private static formatMonthYear(date: Date): string {
 		if (ACTIVE_LOCALE === 'zh') {
 			return `${date.getFullYear()}年${date.getMonth() + 1}月`;
 		}
@@ -449,10 +427,11 @@ export class Utilities {
 	public static getDaysUntil(dateStr: unknown): string {
 		const diff = Utilities.getDaysUntilNumber(dateStr);
 		if (diff === null) return '';
-		if (diff < 0) return `${Math.abs(diff)}d overdue`;
-		if (diff === 0) return 'Today';
-		if (diff === 1) return 'Tomorrow';
-		return `in ${diff}d`;
+		if (diff < 0)
+			return `${COUNTDOWN_DAYS_OVERDUE_PREFIX}${Math.abs(diff)}${COUNTDOWN_DAYS_OVERDUE_SUFFIX}`;
+		if (diff === 0) return COUNTDOWN_LABEL_TODAY;
+		if (diff === 1) return COUNTDOWN_LABEL_TOMORROW;
+		return `${COUNTDOWN_IN_DAYS_PREFIX}${diff}${COUNTDOWN_IN_DAYS_SUFFIX}`;
 	}
 
 	/**
@@ -502,6 +481,52 @@ export class Utilities {
 		return `${date.getFullYear()}.${Utilities.padTwoDigits(date.getMonth() + 1)}.${Utilities.padTwoDigits(date.getDate())}`;
 	}
 
+	/* ─────────────────────────────────────────
+	   Money & currency
+	───────────────────────────────────────── */
+
+	/**
+	 * Formats an amount as a currency string with the locale-appropriate symbol,
+	 * keeping the negative sign ahead of the symbol (e.g. -$1,250.50).
+	 *
+	 * @param amount - The numeric value to format.
+	 * @param isChinese - Whether to use the ¥ symbol instead of $.
+	 * @returns The formatted currency string.
+	 */
+	public static formatMoney(amount: number, isChinese: boolean): string {
+		const symbol = Utilities.currencySymbol(isChinese);
+		const formatted = Math.abs(amount).toLocaleString('en-US', {
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 2
+		});
+		return amount < 0 ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
+	}
+
+	/**
+	 * Formats an amount as a compact currency string (e.g. $1k for 1000).
+	 *
+	 * @param amount - The numeric value to format.
+	 * @param isChinese - Whether to use the ¥ symbol instead of $.
+	 * @returns A compact currency label string.
+	 */
+	public static formatCompactMoney(amount: number, isChinese: boolean): string {
+		const symbol = Utilities.currencySymbol(isChinese);
+		if (amount >= 1000) return `${symbol}${Math.floor(amount / 1000)}k`;
+		return `${symbol}${amount}`;
+	}
+
+	/**
+	 * Rounds a monetary value to 2 decimal places, avoiding the floating-point drift
+	 * that accumulates when currency arithmetic (subtraction, running totals) is
+	 * chained across multiple operations.
+	 *
+	 * @param value - The numeric value to round.
+	 * @returns The value rounded to 2 decimal places.
+	 */
+	public static roundToTwoDecimals(value: number): number {
+		return Math.round(value * 100) / 100;
+	}
+
 	/**
 	 * Gets the locale-appropriate currency symbol.
 	 * Shared hub for {@link formatMoney} and {@link formatCompactMoney}.
@@ -523,18 +548,21 @@ export class Utilities {
 	 * @param string - The string to capitalize.
 	 * @returns The capitalized string, or an empty string if the input is falsy.
 	 */
-	public static capitalizeFirstLetterOnEachWord(string: string | null | undefined) {
+	public static capitalizeFirstLetterOnEachWord(string: string | null | undefined): string {
 		return string ? string.replace(/\b\w/g, (char) => char.toUpperCase()) : '';
 	}
 
 	/**
-	 * Capitalizes only the first letter of the string, leaving all other characters unchanged.
+	 * Trims the string, then capitalizes only its first letter, leaving every other character
+	 * unchanged.
 	 *
 	 * @param string - The string to capitalize.
-	 * @returns The capitalized string, or an empty string if the input is falsy.
+	 * @returns The capitalized string, or an empty string when the input is falsy or whitespace-only.
 	 */
-	public static capitalizeFirstLetterWithOthersUnchanged(string: string | null | undefined) {
-		return string ? string.trim().charAt(0).toUpperCase() + string.slice(1) : '';
+	public static capitalizeFirstLetterWithOthersUnchanged(string: string | null | undefined): string {
+		// Both halves read from the trimmed value so the first character is never duplicated.
+		const trimmed = string?.trim();
+		return trimmed ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1) : '';
 	}
 
 	/**
@@ -707,6 +735,20 @@ export class Utilities {
 	───────────────────────────────────────── */
 
 	/**
+	 * Gets whether the last sign-in used the Firebase backend (Google sign-in), read from
+	 * the persisted flag. Firebase-signed-in users store and read their data in Firebase;
+	 * everyone else (username/password) uses CloudBase, which is the default when unset.
+	 *
+	 * @returns True when the active data backend is Firebase, false when CloudBase (default).
+	 */
+	public static isFirebaseBackend(): boolean {
+		return (
+			typeof localStorage !== 'undefined' &&
+			localStorage.getItem(LS_AUTH_BACKEND) === AUTH_BACKEND_FIREBASE
+		);
+	}
+
+	/**
 	 * Gets the display name for an authenticated user, choosing the correct field
 	 * based on the active auth backend (Firebase/Google users expose `displayName`,
 	 * CloudBase users expose `user_metadata.username`).
@@ -746,7 +788,8 @@ export class Utilities {
 	public static getUserInitials(user: any): string {
 		const displayName = Utilities.getUserDisplayName(user);
 		if (!displayName) return '?';
-		const parts = displayName.trim().split(' ');
+		// Split on whitespace runs so a multi-space name still yields two real initials.
+		const parts = displayName.trim().split(/\s+/);
 		return parts.length >= 2
 			? (parts[0][0] + parts[1][0]).toUpperCase()
 			: Utilities.getInitials(displayName);
@@ -760,23 +803,6 @@ export class Utilities {
 	 */
 	public static getUserAvatarUrl(user: any): string {
 		return user?.user_metadata?.avatarUrl ?? user?.user_metadata?.picture ?? '';
-	}
-
-	/**
-	 * Checks whether the current user has permission to modify an entry
-	 * owned by the given openid. Admin users bypass the check automatically.
-	 * Exceptions from the auth layer are treated as permission denied.
-	 *
-	 * @param openid - The owner ID stored on the database entry.
-	 * @returns True if the current user is permitted, false otherwise.
-	 */
-	public static checkPermission(openid: string): boolean {
-		try {
-			if (CloudbaseService.userHasAllRights()) return true;
-			return openid === CloudbaseService.getUserId();
-		} catch {
-			return false;
-		}
 	}
 
 	/**
@@ -914,23 +940,6 @@ export class Utilities {
 	}
 
 	/**
-	 * Counts the columns a CSS grid element currently renders by reading its resolved
-	 * grid-template-columns track list. Reflects every applied rule — auto-fill sizing and
-	 * media-query overrides alike — so it always matches what the user actually sees. Returns 0
-	 * when the element is not a grid or has no resolved tracks.
-	 *
-	 * @param grid - The grid element to measure.
-	 * @returns The number of rendered column tracks, or 0 when unmeasurable.
-	 */
-	public static countGridColumns(grid: HTMLElement): number {
-		// The resolved value lists one length per track; 'none' means the element is not a grid, in
-		// which case 0 lets the caller keep its fallback count rather than render zero cards.
-		const template = getComputedStyle(grid).gridTemplateColumns;
-		if (!template || template === 'none') return 0;
-		return template.split(' ').length;
-	}
-
-	/**
 	 * Gets the milestone key for a given domain and count, or null if the count is
 	 * not a milestone threshold. Thresholds are count === 1 ("1st") and every
 	 * multiple of 5 ("5th", "10th", etc.).
@@ -963,6 +972,23 @@ export class Utilities {
 	/* ─────────────────────────────────────────
 	   DOM
 	───────────────────────────────────────── */
+
+	/**
+	 * Counts the columns a CSS grid element currently renders by reading its resolved
+	 * grid-template-columns track list. Reflects every applied rule — auto-fill sizing and
+	 * media-query overrides alike — so it always matches what the user actually sees. Returns 0
+	 * when the element is not a grid or has no resolved tracks.
+	 *
+	 * @param grid - The grid element to measure.
+	 * @returns The number of rendered column tracks, or 0 when unmeasurable.
+	 */
+	public static countGridColumns(grid: HTMLElement): number {
+		/* The resolved value lists one length per track; 'none' means the element is not a grid, in
+		   which case 0 lets the caller keep its fallback count rather than render zero cards. */
+		const template = getComputedStyle(grid).gridTemplateColumns;
+		if (!template || template === 'none') return 0;
+		return template.split(' ').length;
+	}
 
 	/**
 	 * Copies the given text to the system clipboard.
@@ -1050,7 +1076,7 @@ export class Utilities {
 	 * @param movieItemVO - The movie item to validate.
 	 * @throws Error if the movie name is empty or the year is -1.
 	 */
-	public static checkMovieItemVO(movieItemVO: MovieItemVO) {
+	public static checkMovieItemVO(movieItemVO: MovieItemVO): void {
 		if (movieItemVO.getMovieName() === '' || movieItemVO.getMovieYear() === -1) {
 			throw new Error('Movie item VO is invalid');
 		}
@@ -1102,16 +1128,6 @@ export class Utilities {
 	 */
 	public getDomain(url: string): string {
 		return Utilities.getDomain(url);
-	}
-
-	/**
-	 * Instance wrapper around {@link Utilities.getDaysUntil} for use in Angular templates.
-	 *
-	 * @param dateStr - A date in any form accepted by {@link coerceDateToString}.
-	 * @returns A countdown label, or an empty string if no date is provided.
-	 */
-	public getDaysUntil(dateStr: unknown): string {
-		return Utilities.getDaysUntil(dateStr);
 	}
 
 	/**

@@ -736,8 +736,21 @@ export const DEBT_LABEL_REMAINING_OF = 'remaining of';
 export const DEBT_LABEL_PAID_IN_FULL = 'Coda · paid in full';
 export const DEBT_LABEL_CUSTOM_PAY = 'Custom';
 export const DEBT_DAYS_LEFT_SUFFIX = 'd left';
-export const DEBT_DAYS_OVERDUE_PREFIX = '';
-export const DEBT_DAYS_OVERDUE_SUFFIX = 'd overdue';
+
+/* ─────────────────────────────────────────
+   Shared countdown and relative-time labels
+───────────────────────────────────────── */
+
+export const COUNTDOWN_DAYS_OVERDUE_PREFIX = '';
+export const COUNTDOWN_DAYS_OVERDUE_SUFFIX = 'd overdue';
+export const COUNTDOWN_LABEL_TODAY = 'Today';
+export const COUNTDOWN_LABEL_TOMORROW = 'Tomorrow';
+export const COUNTDOWN_IN_DAYS_PREFIX = 'in ';
+export const COUNTDOWN_IN_DAYS_SUFFIX = 'd';
+export const RELATIVE_TIME_JUST_NOW = 'just now';
+export const RELATIVE_TIME_MINUTES_SUFFIX = 'm ago';
+export const RELATIVE_TIME_HOURS_SUFFIX = 'h ago';
+export const RELATIVE_TIME_DAYS_SUFFIX = 'd ago';
 
 /* ─────────────────────────────────────────
    Patch Notes page constants

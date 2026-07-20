@@ -339,6 +339,23 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Checks whether the current user has permission to modify an entry
+	 * owned by the given openid. Admin users bypass the check automatically.
+	 * Exceptions from the auth layer are treated as permission denied.
+	 *
+	 * @param openid - The owner ID stored on the database entry.
+	 * @returns True if the current user is permitted, false otherwise.
+	 */
+	public static checkPermission(openid: string): boolean {
+		try {
+			if (CloudbaseService.userHasAllRights()) return true;
+			return openid === CloudbaseService.getUserId();
+		} catch {
+			return false;
+		}
+	}
+
+	/**
 	 * Shorthand reference to the single statistics document.
 	 * All stat reads and writes should go through this getter so the collection
 	 * name and document ID never need to be repeated across methods.

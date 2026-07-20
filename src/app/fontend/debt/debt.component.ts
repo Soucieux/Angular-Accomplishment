@@ -19,6 +19,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { LOG } from '../../common/app.logs';
 import { Utilities } from '../../common/utilities/app.utilities';
+import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { SessionExpiredError } from '../../common/error/session-expired.error';
 import {
 	COMPONENT_DESTROY,
@@ -96,8 +97,8 @@ import {
 	DEBT_LABEL_PAID_IN_FULL,
 	DEBT_LABEL_CUSTOM_PAY,
 	DEBT_DAYS_LEFT_SUFFIX,
-	DEBT_DAYS_OVERDUE_PREFIX,
-	DEBT_DAYS_OVERDUE_SUFFIX,
+	COUNTDOWN_DAYS_OVERDUE_PREFIX,
+	COUNTDOWN_DAYS_OVERDUE_SUFFIX,
 	DEBT_TOOLTIP_UNLOCK,
 	DEBT_TOOLTIP_MARK_PERMANENT
 } from '../../common/locale/locale-strings';
@@ -527,13 +528,13 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Returns true when the current user owns the given debt item.
-	 * Delegates to the shared utilities ownership check, which also covers admin rights.
+	 * Delegates to the CloudBase ownership check, which also covers admin rights.
 	 *
 	 * @param item - The debt entry to check ownership for.
 	 * @returns True if the current user is permitted to act on the item.
 	 */
 	protected isOwner(item: DebtItem): boolean {
-		return Utilities.checkPermission(item._openid);
+		return CloudbaseService.checkPermission(item._openid);
 	}
 
 	/**
@@ -1279,7 +1280,7 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		// Step 2: Return the most specific short label for near-term dates
 		if (diffDays < 0)
-			return `${DEBT_DAYS_OVERDUE_PREFIX}${Math.abs(diffDays)}${DEBT_DAYS_OVERDUE_SUFFIX}`;
+			return `${COUNTDOWN_DAYS_OVERDUE_PREFIX}${Math.abs(diffDays)}${COUNTDOWN_DAYS_OVERDUE_SUFFIX}`;
 		if (diffDays === 0) return DEBT_DUE_LABEL_TODAY;
 		if (diffDays === 1) return DEBT_DUE_LABEL_TOMORROW;
 		if (diffDays <= 30) return `${diffDays}${DEBT_DAYS_LEFT_SUFFIX}`;

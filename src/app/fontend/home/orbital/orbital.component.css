@@ -10,6 +10,13 @@
 	align-items: center;
 	justify-content: center;
 	overflow: auto;
+
+	/* Dashboard canvas geometry, declared once. The bottom panel row and the footer beneath it
+	   are positioned from these, so changing a panel's height or the row's position moves the
+	   footer with it instead of silently closing the gap below it. */
+	--orbital-panel-height: 270px;
+	--orbital-row-bottom-top: clamp(870px, 70dvh, 900px);
+	--orbital-row-footer-gap: 20px;
 }
 
 /* ─────────────────────────────────────────
@@ -57,6 +64,18 @@
 	position: absolute;
 	color: #3a1226;
 	background: transparent;
+}
+
+/* Tauri — .container-home:has(orbital) is one reserve taller than its parent (styles.css) to
+   compensate its own negative margin, and deliberately carries no padding. Filling it with
+   inset: 0 rather than height: 100% keeps this scroll box exactly the container's size at every
+   width: a percentage height resolves against the container's padding box and overshoots into its
+   overflow: hidden, permanently clipping the end of the scroll range — where the bilingual footer
+   sits. The header clearance belongs here too, on the scrolling child, because the container's own
+   padding would position nothing while still inflating the box this element resolves against. */
+:host-context(body.tauri-mode) .orbital-root {
+	inset: 0;
+	padding-top: var(--top-reserve);
 }
 
 /* ─────────────────────────────────────────
@@ -529,7 +548,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
-	height: 270px;
+	height: var(--orbital-panel-height);
 	width: clamp(330px, 20vw, 450px);
 	animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -725,7 +744,7 @@
 
 .orbital-activity {
 	right: calc(24% - 258px);
-	top: clamp(870px, 70dvh, 900px);
+	top: var(--orbital-row-bottom-top);
 	animation-delay: 0.57s;
 }
 
@@ -739,14 +758,14 @@
 .orbital-recipes {
 	--panel-accent: #d53369;
 	left: calc(24% - 254px);
-	top: clamp(870px, 70dvh, 900px);
+	top: var(--orbital-row-bottom-top);
 	animation-delay: 0.67s;
 }
 
 .orbital-week {
 	left: calc(50%);
 	transform: translate(-50%);
-	top: clamp(870px, 70dvh, 900px);
+	top: var(--orbital-row-bottom-top);
 	width: clamp(460px, 25vw, 730px);
 	gap: 9px;
 	padding: 15px 18px;
@@ -1010,12 +1029,21 @@
 .orbital-activity-footer {
 	position: absolute;
 	width: 100%;
-	padding: 6px 0 2px;
+	/* The 12px bottom keeps a 10px gap below the text. Padding, not margin: this box is
+	   absolutely positioned, and a bottom margin on an abs-pos element is not counted in
+	   the scroll container's scrollable overflow, so it would produce no gap at all. */
+	padding: 6px 0 12px;
 	font-size: 15px;
 	display: flex;
 	flex-direction: column;
 	text-align: center;
-	top: clamp(1180px, 95dvh, 1200px);
+	/* Sits below the bottom panel row rather than being positioned from the viewport, so the
+	   gap holds at every viewport height — the previous independent 95dvh clamp drifted
+	   against the row's own 70dvh curve. Adding a constant to a clamp shifts all three arms
+	   by that constant, so this stays a true clamp. */
+	top: calc(
+		var(--orbital-row-bottom-top) + var(--orbital-panel-height) + var(--orbital-row-footer-gap)
+	);
 	animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
 }
 
@@ -1081,8 +1109,11 @@
 	   not a nested position:absolute child with its own overflow-y:auto. Matches
 	   .container-home:has(orbital)'s 30px (the dashboard state's own header
 	   clearance, not the 40px used by the editorial/logged-out state). */
+	/* Clearance and sizing both come from the base Tauri rule. This only releases the mobile
+	   block's own height: 100% above, which would otherwise win over that rule's inset: 0
+	   (an over-constrained box resolves in favour of height) and re-create the overshoot. */
 	:host-context(body.tauri-mode) .orbital-root {
-		padding-top: 30px;
+		height: auto;
 	}
 
 	.orbital-ring-inner,

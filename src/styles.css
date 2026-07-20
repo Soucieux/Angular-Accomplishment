@@ -208,9 +208,14 @@ body.tauri-mode .container-home {
 	padding-top: var(--top-reserve-inner-padding);
 }
 
+/* The dashboard state carries no padding-top: its only child, .orbital-root, is position:absolute
+   with its own overflow-y:auto, so a container padding would position nothing while still inflating
+   the box the child's own size resolves against. The clearance lives on .orbital-root itself
+   (orbital.component.css), which also fills this box via inset:0 rather than height:100% — a
+   percentage height resolves against this taller padding box and overshoots into the overflow:hidden
+   below, permanently clipping the end of the child's scroll range. See section 46. */
 body.tauri-mode .container-home:has(orbital) {
 	height: calc(100% + var(--top-reserve));
-	padding-top: var(--top-reserve);
 }
 
 /* access-denied-wrapper's non-reserve baseline is 28px on Tauri (8px mat-drawer-content

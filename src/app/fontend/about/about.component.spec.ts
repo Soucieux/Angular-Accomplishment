@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AboutComponent } from './about.component';
+import { ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS } from '../../common/constants';
 
 describe('AboutComponent', () => {
     let component: AboutComponent;
@@ -56,25 +57,35 @@ describe('AboutComponent', () => {
     // ── entryDelay ─────────────────────────────────────────────────────────
 
     describe('entryDelay', () => {
-        it('returns "0ms" for the first entry (index 0)', () => {
-            expect((component as any).entryDelay(0)).toBe('0ms');
+        it('returns the base reveal delay for the first entry (index 0)', () => {
+            expect((component as any).entryDelay(0)).toBe(`${ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS}ms`);
         });
 
-        it('returns "60ms" for index 1', () => {
-            expect((component as any).entryDelay(1)).toBe('60ms');
+        it('adds 60ms of stagger for index 1', () => {
+            expect((component as any).entryDelay(1)).toBe(
+                `${ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS + 60}ms`
+            );
         });
 
-        it('returns "120ms" for index 2', () => {
-            expect((component as any).entryDelay(2)).toBe('120ms');
+        it('adds 120ms of stagger for index 2', () => {
+            expect((component as any).entryDelay(2)).toBe(
+                `${ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS + 120}ms`
+            );
         });
 
-        it('returns "180ms" for index 3', () => {
-            expect((component as any).entryDelay(3)).toBe('180ms');
+        it('adds 180ms of stagger for index 3', () => {
+            expect((component as any).entryDelay(3)).toBe(
+                `${ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS + 180}ms`
+            );
         });
 
-        it('caps at "240ms" for index 4 and above', () => {
-            expect((component as any).entryDelay(4)).toBe('240ms');
-            expect((component as any).entryDelay(10)).toBe('240ms');
+        it('caps the stagger at 240ms for index 4 and above', () => {
+            expect((component as any).entryDelay(4)).toBe(
+                `${ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS + 240}ms`
+            );
+            expect((component as any).entryDelay(10)).toBe(
+                `${ABOUT_TIMELINE_REVEAL_BASE_DELAY_MS + 240}ms`
+            );
         });
     });
 

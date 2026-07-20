@@ -8,6 +8,12 @@ import {
 	RECIPE_BAND_WESTERN
 } from '../constants';
 import {
+	COUNTDOWN_DAYS_OVERDUE_PREFIX,
+	COUNTDOWN_DAYS_OVERDUE_SUFFIX,
+	COUNTDOWN_IN_DAYS_PREFIX,
+	COUNTDOWN_IN_DAYS_SUFFIX,
+	COUNTDOWN_LABEL_TODAY,
+	COUNTDOWN_LABEL_TOMORROW,
 	RATE_LABEL_AVERAGE,
 	RATE_LABEL_EXCELLENT,
 	RATE_LABEL_GOOD,
@@ -15,7 +21,11 @@ import {
 	RECIPE_CATEGORY_CHINESE,
 	RECIPE_CATEGORY_DESSERT,
 	RECIPE_CATEGORY_QUICK,
-	RECIPE_CATEGORY_WESTERN
+	RECIPE_CATEGORY_WESTERN,
+	RELATIVE_TIME_DAYS_SUFFIX,
+	RELATIVE_TIME_HOURS_SUFFIX,
+	RELATIVE_TIME_JUST_NOW,
+	RELATIVE_TIME_MINUTES_SUFFIX
 } from '../locale/locale.en';
 
 describe('Utilities', () => {
@@ -39,22 +49,22 @@ describe('Utilities', () => {
 		});
 
 		it('returns "just now" for timestamps less than 60 s ago', () => {
-			expect(Utilities.getRelativeTime(tsAt(30_000))).toBe('just now');
+			expect(Utilities.getRelativeTime(tsAt(30_000))).toBe(RELATIVE_TIME_JUST_NOW);
 		});
 
 		it('returns "Xm ago" for timestamps between 1 and 59 minutes ago', () => {
 			const result = Utilities.getRelativeTime(tsAt(5 * 60_000));
-			expect(result).toMatch(/^\d+m ago$/);
+			expect(result).toMatch(new RegExp(`^\\d+${RELATIVE_TIME_MINUTES_SUFFIX}$`));
 		});
 
 		it('returns "Xh ago" for timestamps between 1 and 23 hours ago', () => {
 			const result = Utilities.getRelativeTime(tsAt(3 * 60 * 60_000));
-			expect(result).toMatch(/^\d+h ago$/);
+			expect(result).toMatch(new RegExp(`^\\d+${RELATIVE_TIME_HOURS_SUFFIX}$`));
 		});
 
 		it('returns "Xd ago" for timestamps between 1 and 6 days ago', () => {
 			const result = Utilities.getRelativeTime(tsAt(3 * 24 * 60 * 60_000));
-			expect(result).toMatch(/^\d+d ago$/);
+			expect(result).toMatch(new RegExp(`^\\d+${RELATIVE_TIME_DAYS_SUFFIX}$`));
 		});
 
 		it('returns a YYYY.MM.DD string for timestamps 7+ days ago', () => {
@@ -64,7 +74,7 @@ describe('Utilities', () => {
 
 		it('accepts ISO 8601 timestamps', () => {
 			const iso = new Date(Date.now() - 30_000).toISOString();
-			expect(Utilities.getRelativeTime(iso)).toBe('just now');
+			expect(Utilities.getRelativeTime(iso)).toBe(RELATIVE_TIME_JUST_NOW);
 		});
 	});
 
@@ -347,28 +357,32 @@ describe('Utilities', () => {
 		it('returns "Today" for today\'s date', () => {
 			const today = new Date();
 			const str = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-			expect(Utilities.getDaysUntil(str)).toBe('Today');
+			expect(Utilities.getDaysUntil(str)).toBe(COUNTDOWN_LABEL_TODAY);
 		});
 
 		it('returns "Tomorrow" for tomorrow\'s date', () => {
 			const d = new Date();
 			d.setDate(d.getDate() + 1);
 			const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-			expect(Utilities.getDaysUntil(str)).toBe('Tomorrow');
+			expect(Utilities.getDaysUntil(str)).toBe(COUNTDOWN_LABEL_TOMORROW);
 		});
 
 		it('returns "Xd overdue" for a past date', () => {
 			const d = new Date();
 			d.setDate(d.getDate() - 3);
 			const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-			expect(Utilities.getDaysUntil(str)).toBe('3d overdue');
+			expect(Utilities.getDaysUntil(str)).toBe(
+				`${COUNTDOWN_DAYS_OVERDUE_PREFIX}3${COUNTDOWN_DAYS_OVERDUE_SUFFIX}`
+			);
 		});
 
 		it('returns "in Xd" for a future date', () => {
 			const d = new Date();
 			d.setDate(d.getDate() + 5);
 			const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-			expect(Utilities.getDaysUntil(str)).toBe('in 5d');
+			expect(Utilities.getDaysUntil(str)).toBe(
+				`${COUNTDOWN_IN_DAYS_PREFIX}5${COUNTDOWN_IN_DAYS_SUFFIX}`
+			);
 		});
 	});
 

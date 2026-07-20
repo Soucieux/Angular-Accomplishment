@@ -142,14 +142,14 @@ describe('AddDebtDialogComponent', () => {
 			);
 		});
 
-		it('closes the dialog after a successful submit', () => {
+		it('closes the dialog after a successful submit', async () => {
 			const callback = jasmine.createSpy('callback');
 			component.openDialog(callback, null);
 			(component as any).name = 'Rent';
 			(component as any).amount = '100';
 			(component as any).selectedCurrency = 'CNY';
 			(component as any).dueDateModel = null;
-			(component as any).onSubmit();
+			await (component as any).onSubmit();
 			expect((component as any).visible).toBeFalse();
 		});
 	});

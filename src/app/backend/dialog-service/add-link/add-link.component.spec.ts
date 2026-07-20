@@ -126,13 +126,13 @@ describe('AddLinkDialogComponent', () => {
 			);
 		});
 
-		it('closes the dialog before invoking the callback', () => {
+		it('closes the dialog once the callback settles', async () => {
 			const callback = jasmine.createSpy('callback');
 			component.openDialog(callback, null);
 			(component as any).url = 'https://angular.io';
 			(component as any).title = 'Angular';
 			(component as any).category = 'dev';
-			(component as any).onSubmit();
+			await (component as any).onSubmit();
 			expect((component as any).visible).toBeFalse();
 		});
 	});

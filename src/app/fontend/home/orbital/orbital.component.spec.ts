@@ -5,8 +5,8 @@ import { of } from 'rxjs';
 import { OrbitalComponent } from './orbital.component';
 import { OrbitalStore } from './orbital.store';
 import { AuthService } from '../../../backend/authentication-service/auth.service';
-import { DatabaseService } from '../../../backend/database-service/database.service';
 import { PortalCategory, PortalLink } from '../../portal/portal.model';
+import { Utilities } from '../../../common/utilities/app.utilities';
 
 function makeLink(id: string, category: string, isPinned = false): PortalLink {
 	return { _id: id, _openid: 'uid1', title: id, url: 'https://example.com', category, isPinned };
@@ -26,16 +26,12 @@ describe('OrbitalComponent', () => {
 
 		const mockRouter = jasmine.createSpyObj<Router>('Router', ['navigateByUrl']);
 
-		const mockDb = jasmine.createSpyObj<DatabaseService>('DatabaseService', ['getUserStats']);
-		mockDb.getUserStats.and.returnValue(of(null));
-
 		await TestBed.configureTestingModule({
 			imports: [OrbitalComponent],
 			providers: [
 				OrbitalStore,
 				{ provide: AuthService, useValue: mockAuth },
-				{ provide: Router, useValue: mockRouter },
-				{ provide: DatabaseService, useValue: mockDb }
+				{ provide: Router, useValue: mockRouter }
 			]
 		}).compileComponents();
 
@@ -112,6 +108,8 @@ describe('OrbitalComponent', () => {
 		});
 
 		it('returns the display name when the user object has one', () => {
+			// displayName is the Firebase-backend shape; CloudBase reads user_metadata.username instead.
+			spyOn(Utilities, 'isFirebaseBackend').and.returnValue(true);
 			const result = (component as any).getUserDisplayName({ displayName: 'Alice' });
 			expect(result).toBe('Alice');
 		});

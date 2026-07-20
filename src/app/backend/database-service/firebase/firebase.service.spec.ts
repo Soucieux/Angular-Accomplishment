@@ -132,11 +132,14 @@ describe('FirebaseService', () => {
 	describe('removeRecipe', () => {
 		it('deletes the recipe, logs the deletion, and decrements the recipe count', async () => {
 			const service = makeService();
+			// decrementOwnStatCount compares the owner against the signed-in uid, so both are stubbed.
+			service.firebaseAuth = { currentUser: { uid: 'owner-1' } };
 			const removeSpy = spyOn(service, 'removeSingleItemFromDatabase').and.returnValue(Promise.resolve());
 			const logSpy = spyOn(service, 'appendToActivityLog').and.returnValue(Promise.resolve());
 			const countSpy = spyOn(service, 'updateStatCount').and.returnValue(Promise.resolve());
+			const userCountSpy = spyOn(service, 'updateUserStatCount').and.returnValue(Promise.resolve());
 
-			await service.removeRecipe('recipe-1', 'Ramen');
+			await service.removeRecipe('recipe-1', 'Ramen', 'owner-1');
 
 			expect(removeSpy).toHaveBeenCalledWith(DATABASE_RECIPES, 'recipe-1');
 			expect(logSpy).toHaveBeenCalledWith({
@@ -145,6 +148,7 @@ describe('FirebaseService', () => {
 				name: 'Ramen'
 			});
 			expect(countSpy).toHaveBeenCalledWith(STATS_FIELD_TOTAL_RECIPES, -1);
+			expect(userCountSpy).toHaveBeenCalledWith(STATS_FIELD_TOTAL_RECIPES, -1);
 		});
 	});
 

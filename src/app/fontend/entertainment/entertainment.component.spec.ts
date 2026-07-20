@@ -25,7 +25,7 @@ describe('EntertainmentComponent', () => {
     mockDb.updateHistoryWithNewSearchActivity.and.returnValue(Promise.resolve());
 
     mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
-      'openDialog', 'ensurePermission', 'handleError', 'showUnexpectedError'
+      'openDialog', 'ensurePermission', 'handleError', 'showUnexpectedError', 'confirmThenBlock'
     ]);
     mockDialogService.ensurePermission.and.returnValue(true);
     mockDialogService.openDialog.and.stub();
@@ -142,13 +142,13 @@ describe('EntertainmentComponent', () => {
 
 		it('opens the confirm dialog when permission is granted', () => {
 			(component as any).openDeleteConfirmationDialog(movie);
-			expect(mockDialogService.openDialog).toHaveBeenCalled();
+			expect(mockDialogService.confirmThenBlock).toHaveBeenCalled();
 		});
 
 		it('does not open the dialog when permission is denied', () => {
 			mockDialogService.ensurePermission.and.returnValue(false);
 			(component as any).openDeleteConfirmationDialog(movie);
-			expect(mockDialogService.openDialog).not.toHaveBeenCalled();
+			expect(mockDialogService.confirmThenBlock).not.toHaveBeenCalled();
 		});
 	});
 });

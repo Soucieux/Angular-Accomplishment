@@ -102,9 +102,9 @@ describe('AddMovieDialogComponent', () => {
 			expect(submitCb).toHaveBeenCalledWith(jasmine.any(MovieItemVO));
 		});
 
-		it('closes the dialog', () => {
+		it('closes the dialog', async () => {
 			component.openDialog(() => {}, async () => new Blob());
-			(component as any).onSubmit();
+			await (component as any).onSubmit();
 			expect((component as any).visible).toBeFalse();
 		});
 	});

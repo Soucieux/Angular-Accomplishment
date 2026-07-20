@@ -5,7 +5,7 @@ import { provideRouter } from '@angular/router';
 import { BehaviorSubject, of, ReplaySubject } from 'rxjs';
 
 import { AuthService } from './auth.service';
-import { DatabaseService } from '../database-service/database.service';
+import { CLOUDBASE, FIREBASE_AUTH } from '../database-service/database.service';
 import { CloudbaseService } from '../database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import { CLOUDBASE_ERROR_INVALID_CREDENTIALS } from '../../common/constants';
@@ -13,10 +13,10 @@ import { WrongCredentialsError } from '../../common/error/wrong-credentials.erro
 
 describe('AuthService', () => {
     let service: AuthService;
-    let mockDb: jasmine.SpyObj<DatabaseService>;
     let mockRouter: jasmine.SpyObj<Router>;
     let mockUtilities: jasmine.SpyObj<Utilities>;
     let mockCloudbaseAuth: any;
+    let mockFirebaseAuth: any;
 
     beforeEach(() => {
         mockCloudbaseAuth = {
@@ -29,9 +29,12 @@ describe('AuthService', () => {
             signOut: jasmine.createSpy('signOut').and.returnValue(Promise.resolve())
         };
 
-        // AuthService casts databaseService as CloudbaseService internally.
-        // Provide a plain stub that satisfies the getCloudbaseAuth call.
-        mockDb = { getCloudbaseAuth: () => mockCloudbaseAuth } as unknown as jasmine.SpyObj<DatabaseService>;
+        /* AuthService resolves both auth SDKs from the environment injector in its constructor,
+           so the tokens themselves are stubbed rather than any database service. */
+        mockFirebaseAuth = {
+            currentUser: null,
+            authStateReady: () => Promise.resolve()
+        };
 
         mockRouter = jasmine.createSpyObj<Router>('Router', ['navigate']);
         mockRouter.navigate.and.returnValue(Promise.resolve(true));
@@ -46,9 +49,10 @@ describe('AuthService', () => {
             providers: [
                 provideRouter([]),
                 AuthService,
-                { provide: DatabaseService, useValue: mockDb },
                 { provide: Router, useValue: mockRouter },
-                { provide: Utilities, useValue: mockUtilities }
+                { provide: Utilities, useValue: mockUtilities },
+                { provide: CLOUDBASE, useValue: { auth: () => mockCloudbaseAuth } },
+                { provide: FIREBASE_AUTH, useValue: mockFirebaseAuth }
             ]
         });
 

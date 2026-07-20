@@ -3,7 +3,12 @@ import { Subject } from 'rxjs';
 
 import { VaultAccessService } from './vault-access.service';
 import { DatabaseService } from '../database-service/database.service';
-import { STATS_FIELD_VAULT_GRACE, VAULT_GRACE_ALWAYS, VAULT_GRACE_UNTIL_RELOAD } from '../../common/constants';
+import {
+	LS_VAULT_UNLOCKED_KEY,
+	STATS_FIELD_VAULT_GRACE,
+	VAULT_GRACE_ALWAYS,
+	VAULT_GRACE_UNTIL_RELOAD
+} from '../../common/constants';
 
 describe('VaultAccessService', () => {
 	let service: VaultAccessService;
@@ -17,7 +22,10 @@ describe('VaultAccessService', () => {
 	 */
 	function createService(): VaultAccessService {
 		stats$ = new Subject<Record<string, unknown>>();
-		const mockDb = { getUserStats: () => stats$ } as unknown as DatabaseService;
+		const mockDb = {
+			getUserStats: () => stats$,
+			updateUserStatsFields: () => Promise.resolve()
+		} as unknown as DatabaseService;
 		TestBed.configureTestingModule({
 			providers: [VaultAccessService, { provide: DatabaseService, useValue: mockDb }]
 		});
@@ -25,6 +33,9 @@ describe('VaultAccessService', () => {
 	}
 
 	beforeEach(() => {
+		/* markUnlocked() persists to real localStorage, and the constructor restores it — without
+		   clearing, the first test's unlock leaks into every later test's "first visit" state. */
+		localStorage.removeItem(LS_VAULT_UNLOCKED_KEY);
 		service = createService();
 	});
 

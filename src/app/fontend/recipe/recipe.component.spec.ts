@@ -209,12 +209,12 @@ describe('RecipeComponent', () => {
 		});
 	});
 
-	// ── onUnitFocus ───────────────────────────────────────────────────────
+	// ── markUnitFieldActive ───────────────────────────────────────────────
 
-	describe('onUnitFocus', () => {
+	describe('markUnitFieldActive', () => {
 		it('sets the unitFocused flag to true', () => {
 			(component as any).unitFocused = false;
-			(component as any).onUnitFocus();
+			(component as any).markUnitFieldActive();
 			expect((component as any).unitFocused).toBeTrue();
 		});
 	});

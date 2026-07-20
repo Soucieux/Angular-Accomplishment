@@ -185,6 +185,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly baseCategorySet = new Set<string>(REMINDER_KNOWN_CATEGORIES);
 	private gridResizeObserver?: ResizeObserver;
 	private itemsPerPage = REMINDER_ITEMS_PER_PAGE;
+	private pendingItemText: string | null = null;
 	protected completedPrivateCount = 0;
 	protected completedSharedCount = 0;
 	protected loading = true;
@@ -286,6 +287,15 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.updateUpcomingToStatistics();
 				this.timeoutService.clear(TIMEOUT_KEY_REMINDER);
 				this.loading = false;
+
+				/* Step 4: Land on the page holding a just-added item. Matching on the item's own
+				   text means an unrelated emission arriving mid-write cannot consume the jump.
+				   A new item outside the active filter clears the arm without moving the page. */
+				if (this.pendingItemText !== null && this.items.some((item) => item.text === this.pendingItemText)) {
+					const pendingIndex = this.filteredItems.findIndex((item) => item.text === this.pendingItemText);
+					this.pendingItemText = null;
+					if (pendingIndex >= 0) this.page = Math.floor(pendingIndex / this.itemsPerPage);
+				}
 				// detectChanges forces a synchronous render so updateGridLayout below measures the laid-out grid.
 				this.cdr.detectChanges();
 				this.updateGridLayout();
@@ -536,8 +546,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Gets the total number of pages, including the virtual add-card slot
-	 * only when no tags are selected in the filter.
+	 * Gets the total number of pages needed to hold the currently filtered items.
 	 *
 	 * @returns Page count (minimum 1).
 	 */
@@ -691,19 +700,21 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 
 		try {
-			// Step 3: Persist to the database
+			/* Step 3: Persist to the database. The page jump is armed before the write because the
+			   watch emission carrying the new record can land before this promise settles. */
+			this.pendingItemText = newRecord.text ?? null;
 			await this.databaseService.addNewRecordToReminder(newRecord);
 
 			// Step 4: Flash save indicator
 			this.triggerSaveIndicator();
 
-			// Step 5: Reset new-item state and navigate to last page
-			this.page = Math.max(0, Math.ceil((this.items.length + 1) / this.itemsPerPage) - 1);
+			// Step 5: Reset new-item state
 			this.resetNewItem();
 			if (!textOnly) {
 				this.dateOrLinkPopover.hide();
 			}
 		} catch (error) {
+			this.pendingItemText = null;
 			this.dialogService.handleError(this.dialogComponentContainer, error);
 		} finally {
 			this.isAddingItem = false;

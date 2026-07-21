@@ -136,7 +136,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	private readonly baseScaleBoost = 1.3225;
 	private readonly minBaseScale = 0.66;
 	private readonly settleFrames = 260;
-	private readonly maxReachLevel = 2;
+	// Selection highlights only first-degree links; second-degree and beyond dim out.
+	private readonly maxReachLevel = 1;
 	private readonly verifiedBadgeColor = '#0d9488';
 
 	protected legendCounts: VaultLegendCounts = { account: 0, email: 0, phone: 0, verified: 0, backup: 0 };
@@ -152,6 +153,8 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	private camera = { scale: 1, x: 0, y: 0 };
 	private animationFrame: number | null = null;
 	private frameCount = 0;
+	// Entrance animation plays on the first build only; later rebuilds (add node/link) skip it.
+	private hasRenderedOnce = false;
 	private dragNode: VaultSimNode | null = null;
 	private dragMoved = false;
 	private resizeObserver?: ResizeObserver;
@@ -481,11 +484,12 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
-	 * Creates the SVG element for every node and edge — including their staggered entrance —
-	 * wiring node pointer handlers, then applies the current visual highlight.
+	 * Creates the SVG element for every node and edge — including their staggered entrance on the
+	 * first build only — wiring node pointer handlers, then applies the current visual highlight.
 	 */
 	private buildSvg(): void {
 		this.computeRenderEdges();
+		const animateEntrance = !this.hasRenderedOnce;
 		const svg = this.svgRef.nativeElement;
 		if (!svg.querySelector('defs')) {
 			const defs = document.createElementNS(SVG_NS, 'defs');
@@ -551,9 +555,11 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			const line = document.createElementNS(SVG_NS, 'line');
 			line.setAttribute('stroke-linecap', 'round');
 
-			// Fades in once the graph first builds — see the CSS rule for why its fill-mode is
-			// "backwards" rather than "both" (applyVisual() must regain control of opacity after).
+			/* Fades in on the first build only — see the CSS rule for why its fill-mode is "backwards"
+			   rather than "both" (applyVisual() must regain control of opacity after). A later rebuild
+			   suppresses the animation so adding a node or link never replays the fade-in on existing edges. */
 			line.setAttribute('class', 'vault-edge-materialize');
+			if (!animateEntrance) line.style.animation = 'none';
 
 			// A backup edge (non-account identifier → its backup) reads distinctly as a bold dashed,
 			// arrowed line — see applyVisual() for its always-on styling and renderPositions() for the
@@ -598,10 +604,13 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			/* The node's visual content settles in with a plain fade + gentle scale on this inner
 			   wrapper rather than the outer group — the outer group's position transform is
 			   overwritten every frame by renderPositions(), which would fight a CSS transform set
-			   on that same element. */
+			   on that same element. The settle plays on the first build only; a later rebuild (adding
+			   a node or link while a node is selected) must not re-materialise the whole graph, which
+			   would flash the dimmed nodes to full before applyVisual re-dims them. */
 			const visual = document.createElementNS(SVG_NS, 'g');
 			visual.setAttribute('class', 'vault-node-visual');
-			visual.style.animationDelay = `${this.nodeEntranceDelay(index)}ms`;
+			if (animateEntrance) visual.style.animationDelay = `${this.nodeEntranceDelay(index)}ms`;
+			else visual.style.animation = 'none';
 
 			// Segmented category fill sits beneath the (transparent-filled) tile shape for multi-category accounts.
 			const fill = this.createNodeFill(node);
@@ -632,6 +641,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 		});
 
 		this.applyVisual();
+		this.hasRenderedOnce = true;
 	}
 
 	/**
@@ -899,9 +909,9 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 
 	/**
-	 * Applies the selection highlight and search dimming. When a node is selected,
-	 * its web is traced by hop distance (direct = rose, second-degree = amber) and
-	 * everything beyond two hops dims out.
+	 * Applies the selection highlight and search dimming. When a node is selected, its
+	 * first-degree links stay lit (rose) and everything beyond one hop dims out. During a
+	 * search, nodes and backup edges stay lit only while their own text matches the query.
 	 */
 	private applyVisual(): void {
 		if (!this.nodeShapeEls.length) return;
@@ -943,9 +953,12 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 					? levels[node.id] !== undefined && levels[node.id] <= this.maxReachLevel
 					: true;
 			let dim = false;
-			// While arming a link, keep every node full-colour so any target is easy to pick
-			if (selectedId && !this.linkMode) dim = !reach;
-			if (query && !node.name.toLowerCase().includes(query) && !(selectedId && reach)) dim = true;
+
+			// While arming a link, keep every node full-colour so any target is easy to pick.
+			if (!this.linkMode) {
+				if (selectedId) dim = !reach;
+				if (query && !node.name.toLowerCase().includes(query) && !(selectedId && reach)) dim = true;
+			}
 			group.style.opacity = dim ? '0.16' : '1';
 
 			const isAccount = node.nodeType === VAULT_NODE_ACCOUNT;
@@ -997,13 +1010,18 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				Math.max(sourceLevel, targetLevel) <= this.maxReachLevel;
 
 			if (edge.relation === VAULT_RELATION_BACKUP) {
-				/* Keeps its bold dashed styling regardless of selection, staying at full strength when
-				   nothing is selected (so it reads clearly at rest) or when it's part of the highlighted
-				   reach — but dims like any other out-of-reach edge once a different node is selected.
-				   Filter visibility above still applies (a backup edge to a filtered-out node still hides). */
+				/* Bold dashed at rest so it reads clearly, but it dims out of focus like any other edge:
+				   a selection keeps it bold only within the highlighted reach, and a search keeps it bold
+				   only while one of its own nodes matches the query — otherwise it greys, so searching no
+				   longer leaves every backup edge at full strength. Filter visibility above still applies. */
+				const matchesQuery =
+					!!query &&
+					((source?.name.toLowerCase().includes(query) ?? false) ||
+						(target?.name.toLowerCase().includes(query) ?? false));
+				const bold = selectedId ? reach : query ? matchesQuery : true;
 				line.setAttribute('stroke', VAULT_BACKUP_LINK_COLOR);
 				line.setAttribute('stroke-width', VAULT_BACKUP_LINK_WIDTH);
-				line.setAttribute('opacity', !selectedId || reach ? '1' : '0.08');
+				line.setAttribute('opacity', bold ? '1' : '0.08');
 				return;
 			}
 

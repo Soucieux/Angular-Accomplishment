@@ -1937,9 +1937,13 @@ export class CloudbaseService extends DatabaseService {
 	 * {@link getTodayItems} - Reads the Today page items backup.
 	 *
 	 * @param field - The field name to read from the stats document.
-	 * @returns The field value, or undefined when the document or field does not exist.
+	 * @returns The field value, or undefined when no user is signed in or the document or field does not exist.
 	 */
 	private async readUserStatField(field: string): Promise<unknown> {
+		/* No signed-in user yet — a preference read can fire before auth settles (the notification
+		   scheduler starts at bootstrap), and CloudBase rejects a { _openid: undefined } where-clause.
+		   There is no per-user document to read, so return undefined and let callers use their default. */
+		if (!CloudbaseService.getUserId()) return undefined;
 		const result = await this.database
 			.collection(DATABASE_USERS)
 			.where(this.getUserStatsFilter())

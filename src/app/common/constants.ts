@@ -97,6 +97,8 @@ export const NAV_LOCALE_SWITCH_TO_EN = 'Switch to English';
 export const TAURI_CMD_SET_MINIMIZE_ON_CLOSE = 'set_minimize_on_close';
 /** Milliseconds before the loading-timeout retry dialog appears when a page is stuck loading. */
 export const LOADING_TIMEOUT_MS = 7000;
+/** Longest a loading guard waits for auth to settle before starting its timer regardless. */
+export const AUTH_SETTLE_MAX_WAIT_MS = 7000;
 /** Timeout key for the Home page loading guard. */
 export const TIMEOUT_KEY_HOME = 'home';
 /** Timeout key for the Reminder page loading guard. */

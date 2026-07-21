@@ -3,6 +3,7 @@ import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { format } from 'date-fns';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import {
 	APP_BREAKPOINT_NARROW,
@@ -62,6 +63,9 @@ export class Utilities {
 	private static boundScrollEls = new WeakSet<HTMLElement>();
 	private static scrollTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
 	private readonly isUserAliveSubject = new BehaviorSubject<boolean>(false);
+	/* Distinct from isUserAliveSubject: that one is seeded optimistically from the localStorage
+	   presence hint below, whereas this only flips once the auth layer has actually answered. */
+	private readonly isAuthSettledSubject = new BehaviorSubject<boolean>(false);
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
@@ -826,7 +830,20 @@ export class Utilities {
 	}
 
 	/**
-	 * Set the user alive state and notify all subscribers reactively.
+	 * Gets an observable that emits once the auth layer has answered — the user is either
+	 * confirmed signed in or confirmed signed out. Emits `true` only, and replays, so a caller
+	 * subscribing after auth already settled fires immediately rather than waiting forever.
+	 * Loading guards time from this rather than from page load, because {@link getIsUserAlive}
+	 * reads the optimistic presence hint and is already true before auth has answered.
+	 *
+	 * @returns An Observable that emits true once the auth state is known.
+	 */
+	public getIsAuthSettled$(): Observable<boolean> {
+		return this.isAuthSettledSubject.asObservable().pipe(filter(Boolean));
+	}
+
+	/**
+	 * Sets the user alive state and notifies all subscribers reactively.
 	 * Also persists the state as a presence flag in localStorage so the
 	 * UI can restore the correct state immediately on the next page refresh
 	 * without waiting for Firebase / CloudBase to re-validate the session.
@@ -847,6 +864,11 @@ export class Utilities {
 
 		// Step 2: Notify all reactive subscribers — must happen after the localStorage write
 		this.isUserAliveSubject.next(isUserAlive);
+
+		/* Step 3: Mark auth as settled. Every auth resolution path on both backends lands here —
+		   signed in, signed out, and the failure fallbacks — so this is the one backend-agnostic
+		   point at which loading guards may safely start timing. */
+		this.isAuthSettledSubject.next(true);
 	}
 
 	/* ─────────────────────────────────────────

@@ -81,10 +81,12 @@ describe('ReminderComponent', () => {
 
 		mockUtilities = jasmine.createSpyObj<Utilities>('Utilities', [
 			'getIsUserAlive',
+			'getIsAuthSettled$',
 			'checkIfHoverCapable',
 			'checkIfChinese'
 		]);
 		mockUtilities.getIsUserAlive.and.returnValue(true);
+		mockUtilities.getIsAuthSettled$.and.returnValue(of(true));
 		mockUtilities.checkIfChinese.and.returnValue(false);
 
 		await TestBed.configureTestingModule({

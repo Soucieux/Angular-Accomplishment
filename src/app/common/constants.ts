@@ -62,10 +62,6 @@ export const HISTORY_STATUS_DELETED = 'deleted';
 export const HISTORY_STATUS_COMPLETED = 'completed';
 /** Sentinel movie ID string used when a history entry has no valid numeric ID. */
 export const HISTORY_MOVIE_ID_UNKNOWN = 'unknown';
-/** Inline border style for an "added" history entry. */
-export const HISTORY_STYLE_ADDED = 'solid green';
-/** Inline border style for a "deleted" history entry. */
-export const HISTORY_STYLE_DELETED = 'solid red';
 /* Scroll container inside the history dialog. It is PrimeNG's own content element and the
    dialog is appended to body, so it sits outside the component's DOM and has to be looked
    up from the document rather than through a ViewChild. */
@@ -257,9 +253,6 @@ export const DB_LOG_QUOTE_REMOVE_FAILED = 'Error while removing quote';
 export const DB_LOG_MOVIE_REMOVED = 'Movie removed and statistics have been updated';
 export const DB_LOG_QUOTE_ADDED = 'New quote has been added';
 export const DB_LOG_QUOTE_ADD_FAILED = 'Error while adding quote';
-export const DB_LOG_PATCH_NOTES_ADDED = 'New patch notes record has been added';
-export const DB_LOG_PATCH_NOTES_ADD_FAILED = 'Error while adding new patch notes record';
-export const DB_LOG_REMINDER_RECORD_ADD_FAILED = 'Error while adding new record for reminder table';
 export const DB_LOG_VAULT_ADD_FAILED = 'Error while adding new record for vault';
 export const DB_LOG_REUSABLE_KEYS_RETRIEVED = 'Reusable keys retrieved';
 export const DB_LOG_REUSABLE_KEYS_GET_FAILED = 'Error while getting reusable keys';
@@ -289,14 +282,12 @@ export const MIME_IMAGE_JPEG = 'image/jpeg';
 
 // Layout responsive breakpoints
 export const BREAKPOINT_MOBILE = '(max-width: 940px)';
-export const BREAKPOINT_NARROW_QUERY = `(max-width: ${APP_BREAKPOINT_NARROW}px)`;
 
 /** Skeleton rows rendered when a page's grid is at its minimum column count (its most compact layout), taller so the placeholder still fills a narrow screen. Shared by Debt, Resonance, and Portal. */
 export const SKELETON_MIN_COLUMN_ROWS = 5;
 
 export const SEARCH = 'search';
 export const SUCCESS = 'success';
-export const FAILURE = 'failure';
 /** Window target for opening links in a new browser tab. */
 export const LINK_TARGET_BLANK = '_blank';
 export const ERROR_DIALOG_ICON_CLASS = 'pi pi-times-circle text-red-500';
@@ -742,8 +733,6 @@ export const PORTAL_SKELETON_COUNT = 12;
 export const PORTAL_SKELETON_ROWS = 2;
 /** Minimum columns the grid renders (its mobile layout forces two columns); at this count the taller skeleton rows apply. */
 export const PORTAL_MIN_COLUMNS = 2;
-/** Default colour applied to new and un-styled link categories. */
-export const PORTAL_DEFAULT_CATEGORY_COLOR = '#d53369';
 /**
  * Firebase Cloud Function that proxies a site favicon through Google's favicon service. The mainland
  * browser reaches this function (its host clears the GFW), and the function fetches the icon from

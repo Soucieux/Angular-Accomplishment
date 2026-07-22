@@ -56,7 +56,6 @@ import { UnexpectedError } from '../../common/error/unexpected.error';
 export class BottomNavComponent implements AfterViewInit {
 	@ViewChild('gridCells') private gridCells!: ElementRef<HTMLElement>;
 
-	@Output() public readonly activeIdChange = new EventEmitter<string>();
 	@Output() public readonly navigate = new EventEmitter<string>();
 	@Output() public readonly signIn = new EventEmitter<void>();
 	@Output() public readonly signOut = new EventEmitter<void>();
@@ -146,14 +145,13 @@ export class BottomNavComponent implements AfterViewInit {
 	}
 
 	/**
-	 * Selects a destination, updates the two-way binding, and emits the
+	 * Selects a destination, updates the local active id, and emits the
 	 * navigate event.
 	 *
 	 * @param id - The id of the destination to activate.
 	 */
 	protected select(id: string): void {
 		this.activeId = id;
-		this.activeIdChange.emit(id);
 		this.navigate.emit(id);
 	}
 

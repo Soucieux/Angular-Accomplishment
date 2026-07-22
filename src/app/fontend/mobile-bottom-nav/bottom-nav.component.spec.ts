@@ -84,16 +84,13 @@ describe('BottomNavComponent', () => {
 	// ── select ───────────────────────────────────────────────────────────────────
 
 	describe('select', () => {
-		it('updates activeId and emits both activeIdChange and navigate', () => {
-			let activeIdEmit: string | undefined;
+		it('updates activeId and emits navigate', () => {
 			let navigateEmit: string | undefined;
-			component.activeIdChange.subscribe((id: string) => (activeIdEmit = id));
 			component.navigate.subscribe((id: string) => (navigateEmit = id));
 
 			(component as any).select('home');
 
 			expect(component.activeId).toBe('home');
-			expect(activeIdEmit).toBe('home');
 			expect(navigateEmit).toBe('home');
 		});
 	});

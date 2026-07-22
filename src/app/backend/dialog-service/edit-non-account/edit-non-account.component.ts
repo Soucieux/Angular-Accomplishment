@@ -113,8 +113,8 @@ export class EditNonAccountDialogComponent {
 	}
 
 	/**
-	 * Validates the form, closes the dialog, then invokes the submit callback with the trimmed name and
-	 * any added/removed backup links.
+	 * Validates the form, invokes the submit callback with the trimmed name and
+	 * any added/removed backup links, then closes the dialog.
 	 */
 	protected async onSubmit(): Promise<void> {
 		if (!this.isValid) return;

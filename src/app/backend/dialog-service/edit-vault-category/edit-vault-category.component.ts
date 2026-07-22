@@ -71,7 +71,7 @@ export class EditVaultCategoryDialogComponent {
 	// ── User action handlers ─────────────────────────────────────────────────
 
 	/**
-	 * Validates the form, closes the dialog, then invokes the submit callback with the edited label and icon.
+	 * Validates the form, invokes the submit callback with the edited label and icon, then closes the dialog.
 	 */
 	protected async onSubmit(): Promise<void> {
 		if (!this.isValid) return;

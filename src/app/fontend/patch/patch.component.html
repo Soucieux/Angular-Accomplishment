@@ -35,7 +35,7 @@
 		</div>
 	</div>
 
-	@if (currentView === 'patch') {
+	@if (currentView === PATCH_VIEW_PATCH) {
 		<div class="toolbar">
 			<label class="search">
 				<span class="material-symbols-outlined">search</span>
@@ -242,17 +242,7 @@
 					}
 					@if (shouldShowElement(getRenderedData(t), rowIndex)) {
 						<td [attr.rowspan]="getElementRowSpan(getRenderedData(t), rowIndex)" class="element">
-							<!-- This one is not needed as we are not updating the element name -->
-							<!-- @if(editedRows.has(row.key)){
-                            <input
-                                pInputText
-                                [(ngModel)]="editedRows.get(row.key).updated.element"
-                                class="input"
-                                (keyup.enter)="completeEdit(row)" />
-                            } @else{ -->
 							{{ row.element }}
-
-							<!-- } -->
 						</td>
 					}
 
@@ -422,7 +412,7 @@
 								</ng-template>
 							</p-select>
 						</td>
-						<td class="timeStamp" colspan="2">
+						<td class="timestamp" colspan="2">
 							<p-button
 								[label]="BTN_ADD"
 								icon="pi pi-plus"

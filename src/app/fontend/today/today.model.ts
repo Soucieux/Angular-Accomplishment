@@ -48,7 +48,7 @@ export const PIXELS_PER_HOUR = 112;
 /** Pixel offset above the current time to use when auto-scrolling on load. */
 export const SCROLL_AHEAD_PX = 150;
 
-/** Minimum visual height in minutes (~28 min at 56px/hour) so short blocks still claim their own layout column. */
+/** Minimum visual height in minutes (~14 min at 112px/hour) so short blocks still claim their own layout column. */
 export const MINIMUM_VISUAL_MINUTES = Math.ceil(26 / PIXELS_PER_HOUR * 60);
 
 /** Minimum pixel height for drag-create and pending range blocks. */

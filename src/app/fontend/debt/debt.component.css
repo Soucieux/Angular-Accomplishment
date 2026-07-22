@@ -480,25 +480,6 @@
 	color: #e53935;
 }
 
-/* ── Inline due date picker (replaces chip in edit mode) ── */
-::ng-deep .due-date-picker .p-datepicker-input {
-	height: 28px;
-	width: 114px;
-	padding: 0 10px;
-	border-radius: 9999px;
-	border: 1.5px solid #0d9488;
-	font-size: 12px;
-	font-weight: 600;
-	color: #0d9488;
-	background: rgba(255, 255, 255, 0.8);
-	outline: none;
-	cursor: pointer;
-}
-
-::ng-deep .due-date-picker .p-datepicker-input:focus {
-	box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
-}
-
 /* ── Balance ── */
 .card-balance-row {
 	display: flex;
@@ -1135,10 +1116,6 @@
 
 	.due-chip {
 		margin-left: auto;
-	}
-
-	::ng-deep .due-date-picker .p-datepicker-input {
-		width: 100px;
 	}
 }
 

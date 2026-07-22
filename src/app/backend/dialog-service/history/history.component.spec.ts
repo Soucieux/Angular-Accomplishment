@@ -2,12 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
-import {
-	HISTORY_STATUS_ADDED,
-	HISTORY_STATUS_DELETED,
-	HISTORY_STYLE_ADDED,
-	HISTORY_STYLE_DELETED
-} from '../../../common/constants';
 import { HistoryDialogComponent } from './history.component';
 
 describe('HistoryDialogComponent', () => {
@@ -44,21 +38,6 @@ describe('HistoryDialogComponent', () => {
 		});
 	});
 
-	// ── getBackgroundColor ─────────────────────────────────────────────────
-
-	describe('getBackgroundColor', () => {
-		it('returns the added style for HISTORY_STATUS_ADDED', () => {
-			expect((component as any).getBackgroundColor(HISTORY_STATUS_ADDED)).toBe(HISTORY_STYLE_ADDED);
-		});
-
-		it('returns the deleted style for HISTORY_STATUS_DELETED', () => {
-			expect((component as any).getBackgroundColor(HISTORY_STATUS_DELETED)).toBe(HISTORY_STYLE_DELETED);
-		});
-
-		it('returns empty string for an unrecognised status', () => {
-			expect((component as any).getBackgroundColor('unknown')).toBe('');
-		});
-	});
 
 	// ── onDialogClosed ─────────────────────────────────────────────────────
 

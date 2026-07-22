@@ -16,9 +16,7 @@ import {
 	HISTORY_SCROLL_CONTAINER_SELECTOR,
 	HISTORY_STATUS_ADDED,
 	HISTORY_STATUS_DELETED,
-	HISTORY_STATUS_SEARCH,
-	HISTORY_STYLE_ADDED,
-	HISTORY_STYLE_DELETED
+	HISTORY_STATUS_SEARCH
 } from '../../../common/constants';
 import {
 	DIALOG_BTN_CONFIRM,
@@ -71,21 +69,6 @@ export class HistoryDialogComponent implements OnDestroy {
 		this.visible = true;
 		this.entries$ = entries;
 		this.revertDataCallback = revertDataCallback;
-	}
-
-	/**
-	 * Gets the CSS background-color string for a history entry based on its status.
-	 *
-	 * @param status - The status of the history entry.
-	 * @returns The CSS background-color string, or empty string if the status is unrecognized.
-	 */
-	protected getBackgroundColor(status: string): string {
-		if (status === HISTORY_STATUS_ADDED) {
-			return HISTORY_STYLE_ADDED;
-		} else if (status === HISTORY_STATUS_DELETED) {
-			return HISTORY_STYLE_DELETED;
-		}
-		return '';
 	}
 
 	/**

@@ -63,7 +63,7 @@ export class DoubanService {
 			.get(
 				`${this.getFirebaseFunctionUrl()}?url=${
 					this.doubanBaseUrl
-				}/j/subject_suggest?q=${movieName}&type=json`,
+				}/j/subject_suggest?q=${encodeURIComponent(movieName)}&type=json`,
 				{
 					responseType: 'json'
 				}

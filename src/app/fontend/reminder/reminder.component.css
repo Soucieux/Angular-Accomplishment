@@ -1,10 +1,9 @@
 /* PAGE ACCENT COLOR — Reminder
- * Amber-Orange  primary #f7971e   rgba(247, 151, 30)
- *               dark    #e08900   rgba(224, 137, 0)
- *               gold    #ffd200
+ * Blue  primary #1a6dff   rgba(26, 109, 255)
+ *       cyan    #00d2ff
  * Applied to: title gradient, chip background, add-card hover, paginator active,
  *             counter number, field pills
- * To change: replace all #f7971e, #ffd200, #e08900 throughout this file.
+ * To change: replace the --rm-accent-rgb channels on :host below.
  */
 
 /* ─────────────────────────────────────────
@@ -283,7 +282,11 @@
 
 .rm-card:hover {
 	transform: translateY(-2px);
-	background: color-mix(in srgb, var(--card-color, #6b7280) 6%, #fff);
+	/* 6% of the dynamic card colour over white. A white overlay layered on the card colour
+	   avoids color-mix(), which resolves invalid (transparent) on the Chrome 109 / UC targets. */
+	background:
+		linear-gradient(rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.94)),
+		var(--card-color, #6b7280);
 	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
 
@@ -472,7 +475,7 @@
 	max-width: 250px;
 }
 
-::ng-deep .p-popover .p-popover-content {
+:host ::ng-deep .p-popover .p-popover-content {
 	padding: 12px !important;
 }
 
@@ -874,7 +877,7 @@
    Popover
 ───────────────────────────────────────── */
 
-::ng-deep .p-popover {
+:host ::ng-deep .p-popover {
 	border-radius: 14px !important;
 	border: 1px solid rgba(var(--rm-accent-rgb), 0.2) !important;
 	box-shadow:
@@ -883,14 +886,14 @@
 	overflow: hidden !important;
 }
 
-::ng-deep .p-popover::before {
+:host ::ng-deep .p-popover::before {
 	content: '';
 	display: block;
 	height: 4px;
 	background: var(--rm-gradient);
 }
 
-::ng-deep .p-popover-content {
+:host ::ng-deep .p-popover-content {
 	padding: 14px !important;
 }
 

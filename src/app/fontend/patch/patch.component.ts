@@ -291,7 +291,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	protected severity: { severity: string }[] | undefined;
 	protected bugSeverity: { severity: string }[] | undefined;
 	protected allSeverity: { severity: string }[] | undefined;
-	protected patchNotes$!: Observable<any[]>;
+	protected patchNotes$!: Observable<PatchNote[]>;
 	protected indexOfFirstItem = 0;
 	protected itemsPerPage = 8;
 	protected isNarrowViewport!: boolean;
@@ -308,14 +308,14 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * The page (first-item index) the user intends to be on.
 	 * Updated by user navigation and add/delete logic.
 	 */
-	private _savedFirst = 0;
+	private savedFirst = 0;
 	/**
 	 * Set to true inside the tap whenever CloudBase pushes fresh data.
 	 * onTableFilter() checks this to distinguish a data-driven _filter() reset
 	 * (where we must restore the page) from a user-initiated filter interaction
 	 * (where PrimeNG's default page-1 reset is the correct behaviour).
 	 */
-	private _isDataUpdate = false;
+	private isDataUpdate = false;
 	protected newRecord = this.emptyRecord();
 	protected searchQuery = '';
 	protected isHeatmapOpen = false;
@@ -390,28 +390,28 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 						   jump straight to the last page using the same formula as new-entry logic. */
 						if (prevLength === null && history.state?.goToLastPage) {
 							history.replaceState({}, '');
-							this._savedFirst = Math.max(
+							this.savedFirst = Math.max(
 								0,
 								Math.floor((data.length - 1) / this.itemsPerPage) * this.itemsPerPage
 							);
 						} else if (prevLength !== null && data.length > prevLength) {
-							this._savedFirst = Math.max(
+							this.savedFirst = Math.max(
 								0,
 								Math.floor((data.length - 1) / this.itemsPerPage) * this.itemsPerPage
 							);
 						} else if (
 							prevLength !== null &&
 							data.length < prevLength &&
-							this._savedFirst >= data.length &&
-							this._savedFirst > 0
+							this.savedFirst >= data.length &&
+							this.savedFirst > 0
 						) {
-							this._savedFirst = Math.max(0, this._savedFirst - this.itemsPerPage);
+							this.savedFirst = Math.max(0, this.savedFirst - this.itemsPerPage);
 						}
 
 						/* 2. Arm the "Firewall"
 						   This tells onTableFilter that the next page-reset is data-driven
 						   and should be ignored/overridden. */
-						this._isDataUpdate = true;
+						this.isDataUpdate = true;
 
 						// 3. Keep a local ordered copy for look-ups in edit/delete stats writes.
 						this.patchNotesList = data;
@@ -513,7 +513,7 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 *
 	 * @param row - The row to start editing.
 	 */
-	protected async startEdit(row: PatchNote) {
+	protected startEdit(row: PatchNote) {
 		if (!this.dialogService.ensurePermission(this.dialogComponentContainer, row._openid ?? '')) return;
 		this.editedRows.set(row.key, { original: { ...row }, updated: { ...row } });
 	}
@@ -577,7 +577,18 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * Captures a snapshot of the record before resetting so the stats update
 	 * can include the correct noteIndex and metadata after the async add.
 	 */
-	protected submitNewRecord() {
+	protected submitNewRecord(): void {
+		// Guard: Enter on the inputs bypasses the button's [disabled], so re-check every required
+		// field here; an incomplete record must never reach the database, and the synchronous form
+		// reset below means a repeat Enter lands on an empty form and is rejected here too.
+		if (
+			!this.newRecord.component.trim() ||
+			!this.newRecord.details.trim() ||
+			!this.newRecord.element.trim() ||
+			!this.newRecord.status
+		) {
+			return;
+		}
 
 		// Step 1: Stamp the record with time and derive the isBug flag from the chosen status
 		this.newRecord.timestamp = Utilities.getCurrentFormattedTime(true);
@@ -644,13 +655,13 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 
 	/**
 	 * Updates the saved page index when the user manually navigates to a new page.
-	 * This is the only place where _savedFirst is updated via UI interaction — it
+	 * This is the only place where savedFirst is updated via UI interaction — it
 	 * records the new page as the "Safe Zone" to restore during background data updates.
 	 *
 	 * @param event - The PrimeNG paginator event containing the new first-item index.
 	 */
 	protected pageChange(event: TablePageEvent) {
-		this._savedFirst = event.first;
+		this.savedFirst = event.first;
 		this.indexOfFirstItem = event.first;
 	}
 
@@ -662,22 +673,22 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	 * ───────────────
 	 * When data is pushed via CloudBase, PrimeNG triggers _filter(). Even with no
 	 * active user filters, it resets internal 'first' to 0.
-	 * If _isDataUpdate is true, it immediately overwrites the table's 'first'
-	 * property with our _savedFirst value before the function returns. This
+	 * If isDataUpdate is true, it immediately overwrites the table's 'first'
+	 * property with our savedFirst value before the function returns. This
 	 * prevents the UI from ever rendering Page 1, eliminating the "flicker"
 	 * or "clip" entirely.
 	 */
 	protected onTableFilter() {
-		if (!this._isDataUpdate) return;
+		if (!this.isDataUpdate) return;
 
 		// Force the table instance AND the local index to match our source of truth
 		if (this.table) {
-			this.table.first = this._savedFirst;
-			this.indexOfFirstItem = this._savedFirst;
+			this.table.first = this.savedFirst;
+			this.indexOfFirstItem = this.savedFirst;
 		}
 
 		// Reset the flag so manual user filtering works as intended
-		this._isDataUpdate = false;
+		this.isDataUpdate = false;
 	}
 
 	/**

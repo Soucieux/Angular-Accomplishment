@@ -1242,8 +1242,10 @@
 }
 
 .status-filter .p-tag.selected {
+	/* Accent-channel rgba rather than color-mix(), which resolves invalid (transparent) on the
+	   Chrome 109 / UC targets. The per-severity cue stays on the currentColor border above. */
 	border-color: currentColor !important;
-	box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent) !important;
+	box-shadow: 0 0 0 3px rgba(var(--patch-accent-rgb), 0.2) !important;
 	transform: translateX(2px);
 }
 

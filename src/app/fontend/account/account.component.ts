@@ -292,6 +292,8 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected outgoingRequests: OutgoingConnectRequest[] = [];
 	protected connectedMembers: ConnectedMember[] = [];
 	protected connectBusy = false;
+	// Re-entry guard so rapid clicks or Enter presses cannot fire duplicate credential writes.
+	private isSavingCredentials = false;
 	protected currentUser$!: Observable<any>;
 	protected usernameInput = '';
 	protected oldPasswordInput = '';
@@ -437,6 +439,9 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * or opens the unexpected error dialog if the service throws.
 	 */
 	protected async updateUsername(): Promise<void> {
+		// Enter on the input and the Save button both call this; guard so a repeat cannot double-write.
+		if (this.isSavingCredentials) return;
+		this.isSavingCredentials = true;
 		try {
 			await this.authService.updateUsername(this.usernameInput.trim());
 
@@ -452,6 +457,8 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_USERNAME_UPDATED);
 		} catch {
 			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+		} finally {
+			this.isSavingCredentials = false;
 		}
 	}
 
@@ -484,6 +491,10 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.dialogService.showToast(TOAST_WARN, ACCOUNT_MSG_PASSWORD_MISMATCH);
 			return;
 		}
+
+		// Enter on any password field and the Save button call this; guard against a duplicate write.
+		if (this.isSavingCredentials) return;
+		this.isSavingCredentials = true;
 		try {
 			// Step 2: Attempt the credential change — requires the current password for re-authentication
 			await this.authService.changePassword(this.oldPasswordInput, this.newPasswordInput);
@@ -513,6 +524,8 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			} else {
 				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
+		} finally {
+			this.isSavingCredentials = false;
 		}
 	}
 

@@ -3,6 +3,9 @@ const { db, loadUser, getCallerOpenid, isConnectedTo, USERS, REMINDER } = requir
 /** Stats field bumped for every linked member when a shared reminder is completed. */
 const COMPLETED_SHARED = 'completedShared';
 
+/** The only reminder fields a shared-edit caller may write — content only, never ownership or the shared flag. */
+const EDITABLE_FIELDS = ['text', 'date', 'link', 'tag', 'startTime', 'endTime'];
+
 /**
  * Writes to a reminder the caller does not necessarily own, enforcing the shared-edit rule in admin
  * context (the reminder collection rule is own-only, so cross-account writes must go through here).
@@ -61,8 +64,14 @@ exports.main = async (event) => {
 	const updates = event.updates;
 	if (!updates || typeof updates !== 'object') return { success: false };
 
-	// Never let the caller rewrite ownership metadata.
-	const { _id, _openid, ...safeUpdates } = updates;
+	// Allow-list the editable content fields. A connected non-owner must never write ownership
+	// metadata (_id/_openid) or flip the shared flag — only reminder content may change, so any
+	// key outside EDITABLE_FIELDS is dropped rather than passed through.
+	const safeUpdates = {};
+	for (const key of EDITABLE_FIELDS) {
+		if (Object.prototype.hasOwnProperty.call(updates, key)) safeUpdates[key] = updates[key];
+	}
+	if (Object.keys(safeUpdates).length === 0) return { success: false };
 	await db.collection(REMINDER).doc(entryKey).update(safeUpdates);
 	return { success: true };
 };

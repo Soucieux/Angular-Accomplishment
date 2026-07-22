@@ -13,6 +13,19 @@ import {
 	NO_RATE,
 	HISTORY_STATUS_ADDED,
 	STATS_FIELDS_PUBLIC_PAGES,
+	STATS_FIELD_REMINDER_UPCOMING,
+	STATS_FIELD_DEBT_UPCOMING,
+	STATS_CAP_ACTIVITY_LOG,
+	REMINDER_ITEM_MESSAGE,
+	REMINDER_VALUE_KEY_TEXT,
+	REMINDER_VALUE_KEY_DATE,
+	REMINDER_VALUE_KEY_LINK,
+	DEBT_ITEM_EXPENSE,
+	DEBT_VALUE_KEY_DATE,
+	DEBT_VALUE_KEY_PAID,
+	DEBT_VALUE_KEY_DEBT,
+	DEBT_VALUE_KEY_ORIGINAL,
+	DEBT_VALUE_KEY_CATEGORY,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_RECIPES,
 	DATABASE_DEBT_SONATA,
@@ -126,6 +139,48 @@ export abstract class DatabaseService {
 				)
 			}))
 		);
+	}
+
+	/**
+	 * Builds the capped upcoming-reminder and upcoming-debt stat lists from a user's raw reminder and
+	 * debt documents, matching the shape the reminder and debt pages write on edit. Seeded into the
+	 * per-user stats document when it is created so the dashboard reminder and debt panels populate
+	 * immediately, before the user has opened either page. Concrete on the base class so both backends
+	 * build the lists identically from the same field keys.
+	 *
+	 * @param reminders - The user's raw reminder documents.
+	 * @param debts - The user's raw debt documents.
+	 * @returns The reminder-upcoming and debt-upcoming stat fields, each capped at STATS_CAP_ACTIVITY_LOG.
+	 */
+	protected buildUpcomingStatFields(reminders: any[], debts: any[]): Record<string, unknown[]> {
+		// Only dated reminders reach the dashboard panel; the array is capped to the fixed stat-doc size.
+		const reminderUpcoming = reminders
+			.filter((reminder) => !!reminder?.[REMINDER_VALUE_KEY_DATE])
+			.map((reminder) => ({
+				type: REMINDER_ITEM_MESSAGE,
+				name: reminder[REMINDER_VALUE_KEY_TEXT] ?? '',
+				date: reminder[REMINDER_VALUE_KEY_DATE],
+				link: reminder[REMINDER_VALUE_KEY_LINK] ?? ''
+			}))
+			.slice(0, STATS_CAP_ACTIVITY_LOG);
+
+		// Debts mirror the page's own filter — dated and not yet paid off — before the same size cap.
+		const debtUpcoming = debts
+			.filter((debt) => debt?.[DEBT_VALUE_KEY_DATE] && !debt?.[DEBT_VALUE_KEY_PAID])
+			.map((debt) => ({
+				type: DEBT_ITEM_EXPENSE,
+				name: debt.name ?? '',
+				date: debt[DEBT_VALUE_KEY_DATE] ?? '',
+				debt: debt[DEBT_VALUE_KEY_DEBT] ?? 0,
+				original: debt[DEBT_VALUE_KEY_ORIGINAL] ?? 0,
+				category: debt[DEBT_VALUE_KEY_CATEGORY] ?? ''
+			}))
+			.slice(0, STATS_CAP_ACTIVITY_LOG);
+
+		return {
+			[STATS_FIELD_REMINDER_UPCOMING]: reminderUpcoming,
+			[STATS_FIELD_DEBT_UPCOMING]: debtUpcoming
+		};
 	}
 
 	/**

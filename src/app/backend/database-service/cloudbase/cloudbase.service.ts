@@ -2717,6 +2717,9 @@ export class CloudbaseService extends DatabaseService {
 			[STATS_FIELD_COMPLETED_SHARED]: 0,
 			[STATS_FIELD_TOTAL_DEBTS]: debts.data?.length ?? 0,
 			[STATS_FIELD_TOTAL_LINKS]: links.data?.length ?? 0,
+			// Seed the dashboard upcoming lists from the same documents already fetched for the counts,
+			// so the reminder and debt panels render before the user first opens either page.
+			...this.buildUpcomingStatFields(reminders.data ?? [], debts.data ?? []),
 			[STATS_FIELD_ACTIVITY_STREAK]: 0,
 			[STATS_FIELD_ACTIVITY_STREAK_DATE]: '',
 			[STATS_FIELD_CONNECT_CODE]: Utilities.randomCode(CONNECT_CODE_LENGTH, CONNECT_CODE_ALPHABET),

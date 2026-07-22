@@ -1918,10 +1918,11 @@ export class FirebaseService extends DatabaseService {
 	 * Recomputes the current user's item totals from their owned documents and corrects any
 	 * drifted counter on the users/<uid> node. Realtime Database has no server-side counts, so
 	 * each collection is read once and filtered client-side to documents stamped with the user's
-	 * uid — acceptable on an account-page load, where these collections are fetched anyway.
-	 * Only the fields that differ are written.
+	 * uid — acceptable on an account-page load, where these collections are fetched anyway. The
+	 * dashboard reminder and debt upcoming lists are rebuilt from the same owned documents. Only
+	 * the fields that differ are written.
 	 *
-	 * @returns A promise that resolves when any drifted totals have been corrected.
+	 * @returns A promise that resolves when any drifted totals or upcoming lists have been corrected.
 	 */
 	public async reconcileUserStats(): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
@@ -1936,12 +1937,16 @@ export class FirebaseService extends DatabaseService {
 			get(dbRef(this.db, DATABASE_DEBT_SONATA)),
 			get(dbRef(this.db, DATABASE_USEFUL_LINKS))
 		]);
+		// Reminders and debts are collected (not just counted) so the same owned docs feed both the
+		// counts and the dashboard upcoming lists — one walk of each snapshot, no second read.
+		const ownedReminders = this.collectOwnedDocs(reminders, uid);
+		const ownedDebts = this.collectOwnedDocs(debts, uid);
 		const authoritative: Record<string, number> = {
 			[STATS_FIELD_TOTAL_FILMS]: this.countOwnedDocs(movies, uid),
 			[STATS_FIELD_TOTAL_QUOTES]: this.countOwnedDocs(quotes, uid),
 			[STATS_FIELD_TOTAL_RECIPES]: this.countOwnedDocs(recipes, uid),
-			[STATS_FIELD_TOTAL_REMINDERS]: this.countOwnedDocs(reminders, uid),
-			[STATS_FIELD_TOTAL_DEBTS]: this.countOwnedDocs(debts, uid),
+			[STATS_FIELD_TOTAL_REMINDERS]: ownedReminders.length,
+			[STATS_FIELD_TOTAL_DEBTS]: ownedDebts.length,
 			// Links share their collection with categories — count only actual link rows
 			[STATS_FIELD_TOTAL_LINKS]: this.countOwnedDocs(
 				links,
@@ -1950,13 +1955,20 @@ export class FirebaseService extends DatabaseService {
 			)
 		};
 
-		// Step 2: Write back only the fields that drifted from the authoritative counts
+		// Step 2: Write back only the fields that drifted — the authoritative counts plus the dashboard
+		// upcoming lists, which never compare equal by reference and so are diffed on their serialised form.
 		const userRef = dbRef(this.db, `${DATABASE_USERS}/${uid}`);
 		const current = (await get(userRef)).val() ?? {};
-		const drifted: Record<string, number> = {};
+		const drifted: Record<string, unknown> = {};
 		for (const [field, count] of Object.entries(authoritative)) {
 			if ((current[field] ?? 0) !== count) {
 				drifted[field] = count;
+			}
+		}
+		const upcoming = this.buildUpcomingStatFields(ownedReminders, ownedDebts);
+		for (const [field, list] of Object.entries(upcoming)) {
+			if (JSON.stringify(current[field] ?? []) !== JSON.stringify(list)) {
+				drifted[field] = list;
 			}
 		}
 		if (Object.keys(drifted).length > 0) {
@@ -2057,6 +2069,33 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Collects the documents in a collection snapshot owned by the given user, optionally applying an
+	 * extra predicate (e.g. the link/category discriminator on the shared useful-links collection).
+	 *
+	 * {@link countOwnedDocs} - Counts the collected documents.
+	 * {@link reconcileUserStats} - Rebuilds the reminder and debt upcoming lists from the collected docs.
+	 *
+	 * @param snapshot - The one-time snapshot of the whole collection.
+	 * @param uid - The owner id a document's uid stamp must match.
+	 * @param extraFilter - The optional additional predicate a document must satisfy.
+	 * @returns The matching documents.
+	 */
+	private collectOwnedDocs(
+		snapshot: DataSnapshot,
+		uid: string,
+		extraFilter?: (doc: any) => boolean
+	): any[] {
+		const owned: any[] = [];
+		snapshot.forEach((child) => {
+			const doc = child.val();
+			if (doc?.uid === uid && (!extraFilter || extraFilter(doc))) {
+				owned.push(doc);
+			}
+		});
+		return owned;
+	}
+
+	/**
 	 * Counts the documents in a collection snapshot owned by the given user, optionally applying
 	 * an extra predicate (e.g. the link/category discriminator on the shared useful-links
 	 * collection).
@@ -2073,14 +2112,7 @@ export class FirebaseService extends DatabaseService {
 		uid: string,
 		extraFilter?: (doc: any) => boolean
 	): number {
-		let count = 0;
-		snapshot.forEach((child) => {
-			const doc = child.val();
-			if (doc?.uid === uid && (!extraFilter || extraFilter(doc))) {
-				count++;
-			}
-		});
-		return count;
+		return this.collectOwnedDocs(snapshot, uid, extraFilter).length;
 	}
 
 	/**

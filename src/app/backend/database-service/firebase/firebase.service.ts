@@ -3,11 +3,13 @@ import {
 	DATABASE_DATE_CALCULATOR,
 	DATABASE_DEBT_SONATA,
 	DATABASE_HISTORY,
+	DATABASE_MOVIES,
 	DATABASE_PATCH_NOTES,
 	DATABASE_QUOTES,
 	DATABASE_RECIPES,
 	DATABASE_RELEASE_NOTES,
 	DATABASE_REMINDER,
+	DATABASE_STATISTICS,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_VAULT,
 	VAULT_VALUE_KEY_CATEGORIES,
@@ -106,7 +108,7 @@ import {
 	DB_LOG_MOVIE_ADDED,
 	DB_LOG_HISTORY_ADDED,
 	DB_LOG_HISTORY_ADD_FAILED,
-	DB_LOG_REMINDER_RECORD_ADD_FAILED,
+	DB_LOG_RECORD_ADD_FAILED,
 	DB_LOG_COVER_UPLOADED,
 	DB_LOG_REUSABLE_KEYS_RETRIEVED,
 	DB_LOG_REUSABLE_KEYS_GET_FAILED,
@@ -136,6 +138,7 @@ import {
 import { LOG } from '../../../common/app.logs';
 import {
 	Database,
+	DatabaseReference,
 	DataSnapshot,
 	Query,
 	ref as dbRef,
@@ -167,8 +170,8 @@ import {
 })
 export class FirebaseService extends DatabaseService {
 	private readonly className = 'FirebaseService';
-	private moviesRef: any;
-	private statisticsRef: any;
+	private moviesRef: DatabaseReference;
+	private statisticsRef: DatabaseReference;
 
 	constructor(
 		@Inject(FIREBASE_STORAGE) private storage: FirebaseStorage,
@@ -177,8 +180,8 @@ export class FirebaseService extends DatabaseService {
 		private searchStreamService: SearchStreamService
 	) {
 		super();
-		this.moviesRef = dbRef(this.db, 'movies');
-		this.statisticsRef = dbRef(this.db, 'statistics');
+		this.moviesRef = dbRef(this.db, DATABASE_MOVIES);
+		this.statisticsRef = dbRef(this.db, DATABASE_STATISTICS);
 	}
 
 	// ── Retrieval methods ────────────────────────────────────────────────────
@@ -189,14 +192,7 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the statistics.
 	 */
 	public getStatistics(): Observable<any> {
-		return new Observable((observer) => {
-			const unsub = onValue(
-				this.statisticsRef,
-				(snapshot) => observer.next(snapshot.val()),
-				(error) => observer.error(error)
-			);
-			return () => unsub();
-		});
+		return this.observeValue(this.statisticsRef, (snapshot) => snapshot.val());
 	}
 
 	/**
@@ -209,14 +205,10 @@ export class FirebaseService extends DatabaseService {
 	public getUserStats(): Observable<any> {
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return of(null);
-		return new Observable((observer) => {
-			const unsub = onValue(
-				dbRef(this.db, `${DATABASE_USERS}/${uid}`),
-				(snapshot) => observer.next(snapshot.val()),
-				(error) => observer.error(error)
-			);
-			return () => unsub();
-		});
+		return this.observeValue(
+			dbRef(this.db, `${DATABASE_USERS}/${uid}`),
+			(snapshot) => snapshot.val()
+		);
 	}
 
 	/**
@@ -230,16 +222,9 @@ export class FirebaseService extends DatabaseService {
 		   converts them back to the flat array the table binds to. */
 		const uid = this.firebaseAuth.currentUser?.uid;
 		if (!uid) return of([]);
-		return new Observable((observer) => {
-			const unsub = onValue(
-				dbRef(this.db, `${DATABASE_DATE_CALCULATOR}/${uid}`),
-				(snapshot) => {
-					const data = snapshot.val();
-					observer.next(data ? Object.values(data) : []);
-				},
-				(error) => observer.error(error)
-			);
-			return () => unsub();
+		return this.observeValue(dbRef(this.db, `${DATABASE_DATE_CALCULATOR}/${uid}`), (snapshot) => {
+			const data = snapshot.val();
+			return data ? Object.values(data) : [];
 		});
 	}
 
@@ -618,7 +603,7 @@ export class FirebaseService extends DatabaseService {
 			map((snapshots: any[]) =>
 				snapshots
 					.map((snapshot: any) => ({ key: snapshot.key, ...snapshot.val() }))
-					.filter((doc: any) => (doc.lang ?? 'en') === ACTIVE_LOCALE)
+					.filter((doc: any) => (doc.lang ?? LOCALE_KEY_EN) === ACTIVE_LOCALE)
 					.sort((a: any, b: any) => (b.order ?? 0) - (a.order ?? 0))
 					.map((doc: any) => {
 						const { key, _openid, uid, order, lang, ...rest } = doc;
@@ -688,6 +673,30 @@ export class FirebaseService extends DatabaseService {
 		});
 	}
 
+	/**
+	 * Gets a reactive observable of the projected value snapshot at the given query.
+	 * The single-value analogue of {@link listAsObservable} — wraps onValue and re-emits
+	 * the projected snapshot value on every change.
+	 *
+	 * {@link getStatistics} - Streams the global statistics node.
+	 * {@link getUserStats} - Streams the current user's per-user node.
+	 * {@link getDateCalculatorTableDetails} - Streams the caller's date-calculator rows.
+	 *
+	 * @param query - The database query or reference to observe.
+	 * @param project - The mapping applied to each snapshot before it is emitted.
+	 * @returns An observable that emits the projected value on every change.
+	 */
+	private observeValue<T>(query: Query, project: (snapshot: DataSnapshot) => T): Observable<T> {
+		return new Observable<T>((observer) => {
+			const unsubscribe = onValue(
+				query,
+				(snapshot) => observer.next(project(snapshot)),
+				(error) => observer.error(error)
+			);
+			return () => unsubscribe();
+		});
+	}
+
 	// ── Update methods ───────────────────────────────────────────────────────
 
 	/**
@@ -724,7 +733,7 @@ export class FirebaseService extends DatabaseService {
 	public async updateMovieRate(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Step 1 : Gather necessary info
-			const movieRef = dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`);
+			const movieRef = dbRef(this.db, `${DATABASE_MOVIES}/${movieItemVO.getMovieKey()}`);
 			const snapshot = await get(movieRef);
 			const oldRate = snapshot.exists() ? snapshot.val().rate : undefined;
 
@@ -749,7 +758,7 @@ export class FirebaseService extends DatabaseService {
 					`${ENT_LOG_RATE_PRE}${movieItemVO.getMovieName()}${ENT_LOG_RATE_SAME}`
 				);
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_MOVIE_RATE_UPDATE_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
@@ -764,38 +773,35 @@ export class FirebaseService extends DatabaseService {
 	 * @param newGenre - The new genre value.
 	 * @param title - The movie title, recorded in the activity log.
 	 */
-	public updateMovieGenre(
+	public async updateMovieGenre(
 		movieKey: string,
 		oldGenre: string,
 		newGenre: string,
 		title: string
 	): Promise<void> {
-		const movieRef = dbRef(this.db, `movies/${movieKey}`);
+		try {
+			// Step 1 : Update movie genre
+			await update(dbRef(this.db, `${DATABASE_MOVIES}/${movieKey}`), { genre: newGenre });
+			LOG.info(this.className, DB_LOG_MOVIE_GENRE_UPDATED);
 
-		// Step 1 : Update movie genre
-		return update(movieRef, { genre: newGenre })
-			.then(() => {
-				LOG.info(this.className, DB_LOG_MOVIE_GENRE_UPDATED);
-
-				// Step 2 : Update movie statistics
-				return runTransaction(dbRef(this.db, `statistics`), (currentData) => {
-					currentData.genre[oldGenre] = currentData.genre[oldGenre] - 1;
-					currentData.genre[newGenre] = (currentData.genre[newGenre] ?? 0) + 1;
-					return currentData;
-				});
-			})
-			.then(() => {
-				LOG.info(this.className, DB_LOG_MOVIE_STATS_UPDATED);
-				this.appendToActivityLog({
-					source: ACTIVITY_SOURCE_MOVIE,
-					type: ACTIVITY_TYPE_GENRE_UPDATED,
-					title
-				}).catch(() => {});
-			})
-			.catch((error: Error) => {
-				LOG.error(this.className, DB_LOG_MOVIE_GENRE_UPDATE_FAILED, error);
-				this.rethrowCaught(error);
+			// Step 2 : Update movie statistics
+			await runTransaction(this.statisticsRef, (currentData) => {
+				currentData = currentData ?? {};
+				currentData.genre = currentData.genre ?? {};
+				currentData.genre[oldGenre] = (currentData.genre[oldGenre] ?? 0) - 1;
+				currentData.genre[newGenre] = (currentData.genre[newGenre] ?? 0) + 1;
+				return currentData;
 			});
+			LOG.info(this.className, DB_LOG_MOVIE_STATS_UPDATED);
+			this.appendToActivityLog({
+				source: ACTIVITY_SOURCE_MOVIE,
+				type: ACTIVITY_TYPE_GENRE_UPDATED,
+				title
+			}).catch(() => {});
+		} catch (error: unknown) {
+			LOG.error(this.className, DB_LOG_MOVIE_GENRE_UPDATE_FAILED, error as Error);
+			this.rethrowCaught(error);
+		}
 	}
 
 	/**
@@ -806,36 +812,33 @@ export class FirebaseService extends DatabaseService {
 	 * @param isFavourite - The boolean value to set.
 	 * @param title - The movie title, recorded in the activity log.
 	 */
-	public updateMovieFavourite(movieKey: string, isFavourite: boolean, title: string): Promise<void> {
-		const movieRef = dbRef(this.db, `movies/${movieKey}`);
+	public async updateMovieFavourite(movieKey: string, isFavourite: boolean, title: string): Promise<void> {
+		try {
+			// Step 1 : Update movie favourite
+			await update(dbRef(this.db, `${DATABASE_MOVIES}/${movieKey}`), { isFavourite });
+			LOG.info(this.className, DB_LOG_MOVIE_FAVOURITE_UPDATED);
 
-		// Step 1 : Update movie favourite
-		return update(movieRef, { isFavourite })
-			.then(() => {
-				LOG.info(this.className, DB_LOG_MOVIE_FAVOURITE_UPDATED);
-
-				// Step 2 : Update movie statistics
-				return runTransaction(dbRef(this.db, `statistics`), (currentData) => {
-					if (isFavourite) {
-						currentData.genre[GENRE_FAVOURITE] = (currentData.genre[GENRE_FAVOURITE] ?? 0) + 1;
-					} else {
-						currentData.genre[GENRE_FAVOURITE] = currentData.genre[GENRE_FAVOURITE] - 1;
-					}
-					return currentData;
-				});
-			})
-			.then(() => {
-				LOG.info(this.className, DB_LOG_MOVIE_STATS_UPDATED);
-				this.appendToActivityLog({
-					source: ACTIVITY_SOURCE_MOVIE,
-					type: ACTIVITY_TYPE_FAVOURITE_UPDATED,
-					title
-				}).catch(() => {});
-			})
-			.catch((error: Error) => {
-				LOG.error(this.className, DB_LOG_MOVIE_FAVOURITE_UPDATE_FAILED, error);
-				this.rethrowCaught(error);
+			// Step 2 : Update movie statistics
+			await runTransaction(this.statisticsRef, (currentData) => {
+				currentData = currentData ?? {};
+				currentData.genre = currentData.genre ?? {};
+				if (isFavourite) {
+					currentData.genre[GENRE_FAVOURITE] = (currentData.genre[GENRE_FAVOURITE] ?? 0) + 1;
+				} else {
+					currentData.genre[GENRE_FAVOURITE] = (currentData.genre[GENRE_FAVOURITE] ?? 0) - 1;
+				}
+				return currentData;
 			});
+			LOG.info(this.className, DB_LOG_MOVIE_STATS_UPDATED);
+			this.appendToActivityLog({
+				source: ACTIVITY_SOURCE_MOVIE,
+				type: ACTIVITY_TYPE_FAVOURITE_UPDATED,
+				title
+			}).catch(() => {});
+		} catch (error: unknown) {
+			LOG.error(this.className, DB_LOG_MOVIE_FAVOURITE_UPDATE_FAILED, error as Error);
+			this.rethrowCaught(error);
+		}
 	}
 
 	/**
@@ -926,7 +929,7 @@ export class FirebaseService extends DatabaseService {
 				element,
 				noteIndex
 			}).catch(() => {});
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_PATCH_NOTES_UPDATE_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
@@ -943,7 +946,7 @@ export class FirebaseService extends DatabaseService {
 	public async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
 		try {
 			await update(this.statisticsRef, fields);
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_STATS_UPDATE_FAILED, error as Error);
 		}
 	}
@@ -961,7 +964,7 @@ export class FirebaseService extends DatabaseService {
 		if (!uid) return;
 		try {
 			await update(dbRef(this.db, `${DATABASE_USERS}/${uid}`), fields);
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_USER_STATS_UPDATE_FAILED, error as Error);
 		}
 	}
@@ -1008,7 +1011,7 @@ export class FirebaseService extends DatabaseService {
 				[STATS_FIELD_ACTIVITY_STREAK_DATE]: today
 			});
 			this.checkAndWriteCountMilestone(MILESTONE_DOMAIN_STREAK, newStreak).catch(() => {});
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_ACTIVITY_APPEND_FAILED, error as Error);
 		}
 	}
@@ -1046,7 +1049,7 @@ export class FirebaseService extends DatabaseService {
 			if (Object.keys(activity).length > 0) {
 				this.appendToActivityLog(activity).catch(() => {});
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, `${DB_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
 			this.rethrowCaught(error);
 		}
@@ -1113,7 +1116,7 @@ export class FirebaseService extends DatabaseService {
 				type: HISTORY_STATUS_DELETED,
 				author
 			}).catch(() => {});
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, `${DB_LOG_QUOTE_REMOVE_FAILED} ${key}`, error as Error);
 			this.rethrowCaught(error);
 		}
@@ -1146,11 +1149,11 @@ export class FirebaseService extends DatabaseService {
 	public async removeMovieFromDatabase(movieItemVO: MovieItemVO): Promise<void> {
 		try {
 			// Step 1 : Remove cover image from storage
-			const storageRefer = storageRef(this.storage, `/movies/${movieItemVO.getMovieName()}`);
+			const storageRefer = storageRef(this.storage, `/${DATABASE_MOVIES}/${movieItemVO.getMovieName()}`);
 			await deleteObject(storageRefer);
 
 			// Step 2 : Remove movie document from database
-			await remove(dbRef(this.db, `movies/${movieItemVO.getMovieKey()}`));
+			await remove(dbRef(this.db, `${DATABASE_MOVIES}/${movieItemVO.getMovieKey()}`));
 
 			// Step 3 : Add history entry
 			await this.addNewHistoryEntry(HISTORY_STATUS_DELETED, movieItemVO);
@@ -1161,7 +1164,9 @@ export class FirebaseService extends DatabaseService {
 			await this.saveReusableKeys(keys);
 
 			// Step 5 : Update movie statistics
-			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+			await runTransaction(this.statisticsRef, (currentData) => {
+				currentData = currentData ?? {};
+				currentData.genre = currentData.genre ?? {};
 				currentData.genre[movieItemVO.getMovieGenre()] =
 					currentData.genre[movieItemVO.getMovieGenre()] - 1 > 0
 						? currentData.genre[movieItemVO.getMovieGenre()] - 1
@@ -1182,7 +1187,7 @@ export class FirebaseService extends DatabaseService {
 			}).catch(() => {});
 			this.decrementOwnStatCount(STATS_FIELD_TOTAL_FILMS, movieItemVO.getOpenId());
 			LOG.info(this.className, DB_LOG_MOVIE_REMOVED);
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(
 				this.className,
 				`${DB_LOG_MOVIE_DELETE_FAILED} ${movieItemVO.getMovieName()}`,
@@ -1541,7 +1546,7 @@ export class FirebaseService extends DatabaseService {
 			this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_QUOTES, MILESTONE_DOMAIN_QUOTE).catch(
 				() => {}
 			);
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_QUOTE_ADD_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
@@ -1587,7 +1592,7 @@ export class FirebaseService extends DatabaseService {
 
 			// Step 2 : Persist movie document, stamped with the owner's Firebase uid for ownership checks
 			const ownerUid = this.firebaseAuth.currentUser?.uid;
-			await update(dbRef(this.db, `movies/${movieKey}`), {
+			await update(dbRef(this.db, `${DATABASE_MOVIES}/${movieKey}`), {
 				title: movieItemVO.getMovieName(),
 				year: movieItemVO.getMovieYear(),
 				genre: movieItemVO.getMovieGenre(),
@@ -1606,7 +1611,9 @@ export class FirebaseService extends DatabaseService {
 			await this.addNewHistoryEntry(HISTORY_STATUS_ADDED, movieItemVO);
 
 			// Step 4 : Update movie statistics
-			await runTransaction(dbRef(this.db, `statistics`), (currentData) => {
+			await runTransaction(this.statisticsRef, (currentData) => {
+				currentData = currentData ?? {};
+				currentData.genre = currentData.genre ?? {};
 				currentData.genre[movieItemVO.getMovieGenre()] =
 					(currentData.genre[movieItemVO.getMovieGenre()] ?? 0) + 1;
 				if (movieItemVO.getIsFavourite()) {
@@ -1622,7 +1629,7 @@ export class FirebaseService extends DatabaseService {
 			this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_FILMS, MILESTONE_DOMAIN_FILM).catch(() => {});
 			this.updateUserStatCount(STATS_FIELD_TOTAL_FILMS, 1).catch(() => {});
 			LOG.info(this.className, DB_LOG_MOVIE_ADDED);
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(
 				this.className,
 				`${DB_LOG_MOVIE_ADD_FAILED} ${movieItemVO.getMovieName()}`,
@@ -1669,7 +1676,7 @@ export class FirebaseService extends DatabaseService {
 				}).catch(() => {});
 			}
 			LOG.info(this.className, DB_LOG_HISTORY_ADDED);
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_HISTORY_ADD_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
@@ -1766,8 +1773,8 @@ export class FirebaseService extends DatabaseService {
 						? ACTIVITY_TYPE_CATEGORY_ADDED
 						: HISTORY_STATUS_ADDED
 			}).catch(() => {});
-		} catch (error) {
-			LOG.error(this.className, DB_LOG_REMINDER_RECORD_ADD_FAILED, error as Error);
+		} catch (error: unknown) {
+			LOG.error(this.className, `${DB_LOG_RECORD_ADD_FAILED} ${tableName}`, error as Error);
 			this.rethrowCaught(error);
 		}
 	}
@@ -1793,7 +1800,7 @@ export class FirebaseService extends DatabaseService {
 			await reference;
 			LOG.info(this.className, DB_LOG_TABLE_RECORD_UPDATED);
 			return reference.key ?? '';
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_VAULT_ADD_FAILED, error as Error);
 			this.rethrowCaught(error);
 		}
@@ -1846,7 +1853,7 @@ export class FirebaseService extends DatabaseService {
 				}
 			}
 			return false;
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(
 				this.className,
 				`${DB_LOG_MOVIE_EXISTS_CHECK_FAILED} ${movieName}`,
@@ -1865,7 +1872,7 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public async uploadImageAndGetDownloadLink(coverImage: Blob, movieName: string): Promise<string> {
 		try {
-			const storageRefer = storageRef(this.storage, `/movies/${movieName}`);
+			const storageRefer = storageRef(this.storage, `/${DATABASE_MOVIES}/${movieName}`);
 			/* Firebase Storage separates upload from URL generation:
 			   first upload the Blob, then get a downloadable link. */
 			await uploadBytes(storageRefer, coverImage, {
@@ -1873,7 +1880,7 @@ export class FirebaseService extends DatabaseService {
 			});
 			LOG.info(this.className, DB_LOG_COVER_UPLOADED);
 			return await getDownloadURL(storageRefer);
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(
 				this.className,
 				`${DB_LOG_IMAGE_UPLOAD_FAILED} ${movieName}`,
@@ -2062,7 +2069,7 @@ export class FirebaseService extends DatabaseService {
 			const callable = httpsCallable(getFunctions(), name);
 			const response = await callable(data);
 			return response.data as T;
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, `${DB_LOG_CLOUD_FUNCTION_CALL_FAILED} ${name}`, error as Error);
 			return null;
 		}
@@ -2213,7 +2220,7 @@ export class FirebaseService extends DatabaseService {
 				current[field] = (current[field] ?? 0) + delta;
 				return current;
 			});
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_STAT_COUNT_UPDATE_FAILED, error as Error);
 		}
 	}
@@ -2264,7 +2271,7 @@ export class FirebaseService extends DatabaseService {
 			await update(this.statisticsRef, {
 				[`${STATS_FIELD_MILESTONES}/${key}`]: Utilities.formatDateForStorage(new Date())
 			});
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_MILESTONE_WRITE_FAILED, error as Error);
 		}
 	}
@@ -2276,10 +2283,10 @@ export class FirebaseService extends DatabaseService {
 	 */
 	private async getReusableKeys(): Promise<string[]> {
 		try {
-			const snapshot = await get(dbRef(this.db, 'statistics/reusableKeys'));
+			const snapshot = await get(dbRef(this.db, `${DATABASE_STATISTICS}/reusableKeys`));
 			LOG.info(this.className, DB_LOG_REUSABLE_KEYS_RETRIEVED);
 			return snapshot.exists() ? (Object.values(snapshot.val()) as string[]) : [];
-		} catch (error) {
+		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_REUSABLE_KEYS_GET_FAILED, error as Error);
 			return [];
 		}
@@ -2291,7 +2298,7 @@ export class FirebaseService extends DatabaseService {
 	 * @param keys - The reusable keys to persist.
 	 */
 	private saveReusableKeys(keys: string[]): Promise<void> {
-		return update(dbRef(this.db, 'statistics'), { reusableKeys: keys })
+		return update(this.statisticsRef, { reusableKeys: keys })
 			.then(() => {
 				LOG.info(this.className, DB_LOG_REUSABLE_KEYS_UPDATED);
 			})

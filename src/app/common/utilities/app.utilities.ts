@@ -362,7 +362,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Format a Date object to the app's canonical date-storage format: "YYYY-MM-DD".
+	 * Formats a Date object to the app's canonical date-storage format: "YYYY-MM-DD".
 	 *
 	 * @param date - The Date object to format.
 	 * @returns A "YYYY-MM-DD" string.
@@ -380,20 +380,6 @@ export class Utilities {
 	public static parseTimeToMinutes(hhmm: string): number {
 		const [hours, minutes] = hhmm.split(':').map(Number);
 		return hours * 60 + minutes;
-	}
-
-	/**
-	 * Formats a date as a locale-aware month-year string.
-	 * English: "Jun 2026". Chinese: "2026年6月".
-	 *
-	 * @param date - The date to format.
-	 * @returns The formatted month-year string.
-	 */
-	private static formatMonthYear(date: Date): string {
-		if (ACTIVE_LOCALE === 'zh') {
-			return `${date.getFullYear()}年${date.getMonth() + 1}月`;
-		}
-		return format(date, 'MMM yyyy');
 	}
 
 	/**
@@ -483,6 +469,20 @@ export class Utilities {
 	 */
 	private static formatDotDate(date: Date): string {
 		return `${date.getFullYear()}.${Utilities.padTwoDigits(date.getMonth() + 1)}.${Utilities.padTwoDigits(date.getDate())}`;
+	}
+
+	/**
+	 * Formats a date as a locale-aware month-year string.
+	 * English: "Jun 2026". Chinese: "2026年6月".
+	 *
+	 * @param date - The date to format.
+	 * @returns The formatted month-year string.
+	 */
+	private static formatMonthYear(date: Date): string {
+		if (ACTIVE_LOCALE === 'zh') {
+			return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+		}
+		return format(date, 'MMM yyyy');
 	}
 
 	/* ─────────────────────────────────────────
@@ -582,7 +582,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Compute the visual display width of a string in Chinese-character units.
+	 * Computes the visual display width of a string in Chinese-character units.
 	 * CJK unified ideographs and East Asian wide characters count as 1 unit;
 	 * all other characters (Latin, digits, punctuation) count as 0.5 units.
 	 *
@@ -605,7 +605,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Truncate a string to at most `max` characters, appending an ellipsis (`…`)
+	 * Truncates a string to at most `max` characters, appending an ellipsis (`…`)
 	 * when the text is cut. Returns an empty string for falsy input.
 	 *
 	 * @param text - The text to truncate.
@@ -630,7 +630,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Safely extract a human-readable error message from any thrown value.
+	 * Safely extracts a human-readable error message from any thrown value.
 	 * Guards against SDK objects whose `.message` getter itself throws.
 	 *
 	 * @param err - Any thrown value (Error, string, SDK error object, etc.).
@@ -710,7 +710,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Extract the hostname (domain) from a URL string.
+	 * Extracts the hostname (domain) from a URL string.
 	 *
 	 * @param url - The full URL of the website.
 	 * @returns The hostname string (e.g. "openai.com"), or the original value if unparseable.
@@ -876,7 +876,7 @@ export class Utilities {
 	───────────────────────────────────────── */
 
 	/**
-	 * Flatten a raw CloudBase statistics field (returned as either a true array
+	 * Flattens a raw CloudBase statistics field (returned as either a true array
 	 * or an object keyed by insertion index) into a plain array.
 	 * Returns an empty array when the field is absent or falsy.
 	 *
@@ -902,7 +902,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Sort an array of objects by their optional `order` field ascending.
+	 * Sorts an array of objects by their optional `order` field ascending.
 	 * Items without an `order` field are treated as order 0.
 	 * The original array is not mutated.
 	 *
@@ -1013,6 +1013,30 @@ export class Utilities {
 	}
 
 	/**
+	 * Computes how many skeleton cards fill a responsive grid: its rendered column count times a
+	 * per-page row count that grows at the page's minimum (mobile) column width. Returns 0 when the
+	 * grid is absent or unmeasurable, so the caller keeps its pre-measurement fallback rather than
+	 * rendering zero cards.
+	 *
+	 * @param grid - The grid element to measure, or null before it renders.
+	 * @param minColumns - The fewest columns this grid ever renders (its mobile layout).
+	 * @param minColumnRows - The row count applied at the minimum column count.
+	 * @param normalRows - The row count applied at every wider column count.
+	 * @returns The skeleton card count, or 0 when the grid is absent or unmeasurable.
+	 */
+	public static computeGridSkeletonCount(
+		grid: HTMLElement | null,
+		minColumns: number,
+		minColumnRows: number,
+		normalRows: number
+	): number {
+		if (!grid) return 0;
+		const columns = Utilities.countGridColumns(grid);
+		if (!columns) return 0;
+		return columns * (columns === minColumns ? minColumnRows : normalRows);
+	}
+
+	/**
 	 * Copies the given text to the system clipboard.
 	 *
 	 * @param text - The text to copy.
@@ -1105,7 +1129,7 @@ export class Utilities {
 	}
 
 	/**
-	 * Return the CSS band class name for a given recipe category.
+	 * Returns the CSS band class name for a given recipe category.
 	 * When adding a new category, add a corresponding case here and follow the
 	 * checklist in the RECIPE_BAND_* block inside app.constant.ts.
 	 *

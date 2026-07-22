@@ -52,6 +52,67 @@
 			(ngSubmit)="onSubmit()"
 			[class.slide-out-left]="animating === 'out'"
 			[class.slide-in-right]="animating === 'in'">
+			<!-- Password requirements checklist, shared by sign-up and forgot-password step 2 -->
+			<ng-template #passwordRequirements>
+				@let checks = passwordChecks;
+				<div class="password-requirements">
+					<div
+						class="req-row"
+						[class.req-met]="checks.meetsLength"
+						[class.req-unmet]="formSubmitted && !checks.meetsLength">
+						<span class="material-symbols-outlined req-icon">{{
+							checks.meetsLength ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_LENGTH }}</span>
+					</div>
+					<div
+						class="req-row"
+						[class.req-met]="checks.typesMet"
+						[class.req-unmet]="formSubmitted && !checks.typesMet">
+						<span class="material-symbols-outlined req-icon">{{
+							checks.typesMet ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_TYPES }}</span>
+					</div>
+					<div
+						class="req-row req-row--indented"
+						[class.req-met]="checks.hasUppercase"
+						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasUppercase">
+						<span class="material-symbols-outlined req-icon">{{
+							checks.hasUppercase ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_UPPERCASE }}</span>
+					</div>
+					<div
+						class="req-row req-row--indented"
+						[class.req-met]="checks.hasLowercase"
+						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasLowercase">
+						<span class="material-symbols-outlined req-icon">{{
+							checks.hasLowercase ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_LOWERCASE }}</span>
+					</div>
+					<div
+						class="req-row req-row--indented"
+						[class.req-met]="checks.hasDigit"
+						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasDigit">
+						<span class="material-symbols-outlined req-icon">{{
+							checks.hasDigit ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_DIGIT }}</span>
+					</div>
+					<div
+						class="req-row req-row--indented"
+						[class.req-met]="checks.hasSpecial"
+						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasSpecial">
+						<span class="material-symbols-outlined req-icon">{{
+							checks.hasSpecial ? 'check_circle' : 'radio_button_unchecked'
+						}}</span>
+						<span>{{ LOGIN_LABEL_PWD_REQ_SPECIAL }}</span>
+					</div>
+				</div>
+			</ng-template>
+
 			<!-- Forgot Password: Step 1 — email -->
 			@if (isForgotPassword && forgotPasswordStep === 1) {
 				<div class="input-field-container">
@@ -118,63 +179,7 @@
 						>
 					}
 				</div>
-				@let checks = passwordChecks;
-				<div class="password-requirements">
-					<div
-						class="req-row"
-						[class.req-met]="checks.meetsLength"
-						[class.req-unmet]="formSubmitted && !checks.meetsLength">
-						<span class="material-symbols-outlined req-icon">{{
-							checks.meetsLength ? 'check_circle' : 'radio_button_unchecked'
-						}}</span>
-						<span>{{ LOGIN_LABEL_PWD_REQ_LENGTH }}</span>
-					</div>
-					<div
-						class="req-row"
-						[class.req-met]="checks.typesMet"
-						[class.req-unmet]="formSubmitted && !checks.typesMet">
-						<span class="material-symbols-outlined req-icon">{{
-							checks.typesMet ? 'check_circle' : 'radio_button_unchecked'
-						}}</span>
-						<span>{{ LOGIN_LABEL_PWD_REQ_TYPES }}</span>
-					</div>
-					<div
-						class="req-row req-row--indented"
-						[class.req-met]="checks.hasUppercase"
-						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasUppercase">
-						<span class="material-symbols-outlined req-icon">{{
-							checks.hasUppercase ? 'check_circle' : 'radio_button_unchecked'
-						}}</span>
-						<span>{{ LOGIN_LABEL_PWD_REQ_UPPERCASE }}</span>
-					</div>
-					<div
-						class="req-row req-row--indented"
-						[class.req-met]="checks.hasLowercase"
-						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasLowercase">
-						<span class="material-symbols-outlined req-icon">{{
-							checks.hasLowercase ? 'check_circle' : 'radio_button_unchecked'
-						}}</span>
-						<span>{{ LOGIN_LABEL_PWD_REQ_LOWERCASE }}</span>
-					</div>
-					<div
-						class="req-row req-row--indented"
-						[class.req-met]="checks.hasDigit"
-						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasDigit">
-						<span class="material-symbols-outlined req-icon">{{
-							checks.hasDigit ? 'check_circle' : 'radio_button_unchecked'
-						}}</span>
-						<span>{{ LOGIN_LABEL_PWD_REQ_DIGIT }}</span>
-					</div>
-					<div
-						class="req-row req-row--indented"
-						[class.req-met]="checks.hasSpecial"
-						[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasSpecial">
-						<span class="material-symbols-outlined req-icon">{{
-							checks.hasSpecial ? 'check_circle' : 'radio_button_unchecked'
-						}}</span>
-						<span>{{ LOGIN_LABEL_PWD_REQ_SPECIAL }}</span>
-					</div>
-				</div>
+				<ng-container [ngTemplateOutlet]="passwordRequirements"></ng-container>
 			}
 
 			<!-- Sign In: Username -->
@@ -297,63 +302,7 @@
 
 				<!-- Password requirements (Sign Up only) -->
 				@if (isSignUp) {
-					@let checks = passwordChecks;
-					<div class="password-requirements">
-						<div
-							class="req-row"
-							[class.req-met]="checks.meetsLength"
-							[class.req-unmet]="formSubmitted && !checks.meetsLength">
-							<span class="material-symbols-outlined req-icon">{{
-								checks.meetsLength ? 'check_circle' : 'radio_button_unchecked'
-							}}</span>
-							<span>{{ LOGIN_LABEL_PWD_REQ_LENGTH }}</span>
-						</div>
-						<div
-							class="req-row"
-							[class.req-met]="checks.typesMet"
-							[class.req-unmet]="formSubmitted && !checks.typesMet">
-							<span class="material-symbols-outlined req-icon">{{
-								checks.typesMet ? 'check_circle' : 'radio_button_unchecked'
-							}}</span>
-							<span>{{ LOGIN_LABEL_PWD_REQ_TYPES }}</span>
-						</div>
-						<div
-							class="req-row req-row--indented"
-							[class.req-met]="checks.hasUppercase"
-							[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasUppercase">
-							<span class="material-symbols-outlined req-icon">{{
-								checks.hasUppercase ? 'check_circle' : 'radio_button_unchecked'
-							}}</span>
-							<span>{{ LOGIN_LABEL_PWD_REQ_UPPERCASE }}</span>
-						</div>
-						<div
-							class="req-row req-row--indented"
-							[class.req-met]="checks.hasLowercase"
-							[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasLowercase">
-							<span class="material-symbols-outlined req-icon">{{
-								checks.hasLowercase ? 'check_circle' : 'radio_button_unchecked'
-							}}</span>
-							<span>{{ LOGIN_LABEL_PWD_REQ_LOWERCASE }}</span>
-						</div>
-						<div
-							class="req-row req-row--indented"
-							[class.req-met]="checks.hasDigit"
-							[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasDigit">
-							<span class="material-symbols-outlined req-icon">{{
-								checks.hasDigit ? 'check_circle' : 'radio_button_unchecked'
-							}}</span>
-							<span>{{ LOGIN_LABEL_PWD_REQ_DIGIT }}</span>
-						</div>
-						<div
-							class="req-row req-row--indented"
-							[class.req-met]="checks.hasSpecial"
-							[class.req-unmet]="formSubmitted && !checks.typesMet && !checks.hasSpecial">
-							<span class="material-symbols-outlined req-icon">{{
-								checks.hasSpecial ? 'check_circle' : 'radio_button_unchecked'
-							}}</span>
-							<span>{{ LOGIN_LABEL_PWD_REQ_SPECIAL }}</span>
-						</div>
-					</div>
+					<ng-container [ngTemplateOutlet]="passwordRequirements"></ng-container>
 				}
 			}
 

@@ -259,15 +259,15 @@ export class ResonanceComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * {@link ngAfterViewInit} - Runs it on first render and on every container resize.
 	 */
 	private updateSkeletonCount(): void {
-		const host = this.elementRef.nativeElement as HTMLElement;
-		const grid = host.querySelector('.quote-grid') as HTMLElement | null;
-		if (!grid) return;
-		const columns = Utilities.countGridColumns(grid);
-		if (!columns) return;
-
-		// At the page's minimum (mobile) column count use taller rows so a narrow screen still fills.
-		const rows = columns === RESONANCE_MIN_COLUMNS ? SKELETON_MIN_COLUMN_ROWS : RESONANCE_SKELETON_ROWS;
-		this.skeletonCount = columns * rows;
+		const grid = (this.elementRef.nativeElement as HTMLElement).querySelector('.quote-grid') as HTMLElement | null;
+		const count = Utilities.computeGridSkeletonCount(
+			grid,
+			RESONANCE_MIN_COLUMNS,
+			SKELETON_MIN_COLUMN_ROWS,
+			RESONANCE_SKELETON_ROWS
+		);
+		if (!count) return;
+		this.skeletonCount = count;
 		this.cdr.markForCheck();
 	}
 
@@ -299,6 +299,8 @@ export class ResonanceComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * otherwise falls back to the manually entered author name or 'Anonymous'.
 	 */
 	protected async submitQuote(): Promise<void> {
+		// Re-entry guard: ignore repeat submits (incl. rapid Enter) while a write is already in flight.
+		if (this.submitting) return;
 
 		// Step 1: Guard — reject blank input before touching any state
 		const text = this.newQuoteText.trim();

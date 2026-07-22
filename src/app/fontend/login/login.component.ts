@@ -161,6 +161,8 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly HANDLE_MAX = 92;
 	/** Drag distance past which pulling the cord flips the lamp switch. */
 	private readonly PULL_THRESHOLD = 50;
+	/** Slide-out duration in ms before the form mutates and slides back in. */
+	private readonly MODE_SWITCH_DELAY = 280;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
@@ -353,33 +355,15 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * verification code fields depending on the selected mode.
 	 */
 	protected toggleMode(): void {
-		// Step 1: Trigger the slide-out animation before mutating any state
-		this.animating = LOGIN_ANIM_OUT;
-
-		/* Step 2: Defer state changes until the CSS transition has finished (~280 ms).
-		   Mutating isSignUp before the animation completes would cause the form fields
-		   to re-render mid-transition, producing a visible flash. */
-		setTimeout(() => {
-			// Step 2.1: Flip mode and clear all transient form state
+		this.animateModeSwitch(() => {
+			// Step 1: Flip mode and clear the forgot-password flag
 			this.isSignUp = !this.isSignUp;
 			this.isForgotPassword = false;
-			this.forgotPasswordStep = 1;
-			this.formSubmitted = false;
-			this.codeSent = false;
-			this.codeCountdown = 0;
-			if (this.codeCountdownInterval) {
-				clearInterval(this.codeCountdownInterval);
-				this.codeCountdownInterval = null;
-			}
 
-			this.loginForm.reset();
-
-			// Step 2.2: Reconfigure validators to match the new mode
+			// Step 2: Reconfigure validators to match the new mode
 			const usernameControl = this.loginForm.get('username');
 			const emailControl = this.loginForm.get('email');
-			const passwordControl = this.loginForm.get('password');
 			const codeControl = this.loginForm.get('verificationCode');
-
 			if (this.isSignUp) {
 				usernameControl?.setValidators([
 					Validators.required,
@@ -392,20 +376,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 				emailControl?.clearValidators();
 				codeControl?.clearValidators();
 			}
-
-			/* Step 2.3: Sync validity state after changing validators.
-			   updateValueAndValidity must be called on every control even if its
-			   validators did not change — Angular requires an explicit refresh to
-			   reflect the new validation rules in the form's valid/invalid state. */
-			usernameControl?.updateValueAndValidity();
-			emailControl?.updateValueAndValidity();
-			passwordControl?.updateValueAndValidity();
-			codeControl?.updateValueAndValidity();
-
-			// Step 3: Trigger the slide-in animation and push changes to the view
-			this.animating = LOGIN_ANIM_IN;
-			this.cdr.detectChanges();
-		}, 280);
+		});
 	}
 
 	/**
@@ -413,18 +384,8 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * transient state, and sets the email validator for step 1.
 	 */
 	protected toggleForgotPassword(): void {
-		this.animating = LOGIN_ANIM_OUT;
-		setTimeout(() => {
+		this.animateModeSwitch(() => {
 			this.isForgotPassword = true;
-			this.forgotPasswordStep = 1;
-			this.formSubmitted = false;
-			this.codeSent = false;
-			this.codeCountdown = 0;
-			if (this.codeCountdownInterval) {
-				clearInterval(this.codeCountdownInterval);
-				this.codeCountdownInterval = null;
-			}
-			this.loginForm.reset();
 
 			const emailControl = this.loginForm.get('email');
 			const usernameControl = this.loginForm.get('username');
@@ -434,14 +395,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 			usernameControl?.clearValidators();
 			passwordControl?.clearValidators();
 			codeControl?.clearValidators();
-			emailControl?.updateValueAndValidity();
-			usernameControl?.updateValueAndValidity();
-			passwordControl?.updateValueAndValidity();
-			codeControl?.updateValueAndValidity();
-
-			this.animating = LOGIN_ANIM_IN;
-			this.cdr.detectChanges();
-		}, 280);
+		});
 	}
 
 	/**
@@ -449,19 +403,9 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * isSignUp. Resets all transient state and restores sign-in validators.
 	 */
 	protected backToSignIn(): void {
-		this.animating = LOGIN_ANIM_OUT;
-		setTimeout(() => {
+		this.animateModeSwitch(() => {
 			this.isForgotPassword = false;
-			this.forgotPasswordStep = 1;
 			this.isSignUp = false;
-			this.formSubmitted = false;
-			this.codeSent = false;
-			this.codeCountdown = 0;
-			if (this.codeCountdownInterval) {
-				clearInterval(this.codeCountdownInterval);
-				this.codeCountdownInterval = null;
-			}
-			this.loginForm.reset();
 
 			const usernameControl = this.loginForm.get('username');
 			const emailControl = this.loginForm.get('email');
@@ -471,20 +415,63 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 			emailControl?.clearValidators();
 			passwordControl?.setValidators(Validators.required);
 			codeControl?.clearValidators();
-			usernameControl?.updateValueAndValidity();
-			emailControl?.updateValueAndValidity();
-			passwordControl?.updateValueAndValidity();
-			codeControl?.updateValueAndValidity();
+		});
+	}
 
+	/**
+	 * Runs the shared slide-out then slide-in mode transition. After the slide-out
+	 * completes, clears the transient form state shared by every mode switch, resets
+	 * the form, applies the caller's mode-specific flags and validators, refreshes
+	 * every control's validity, then slides the form back in.
+	 *
+	 * {@link toggleMode} - Switches between sign-in and sign-up.
+	 * {@link toggleForgotPassword} - Enters forgot-password step 1.
+	 * {@link backToSignIn} - Returns to the sign-in form.
+	 *
+	 * @param configureMode - The callback that sets the mode flags and control validators
+	 *   for the target mode.
+	 */
+	private animateModeSwitch(configureMode: () => void): void {
+		// Step 1: Trigger the slide-out animation before mutating any state
+		this.animating = LOGIN_ANIM_OUT;
+
+		/* Step 2: Defer state changes until the CSS transition has finished.
+		   Mutating the mode flags before the animation completes would cause the form
+		   fields to re-render mid-transition, producing a visible flash. */
+		setTimeout(() => {
+			// Step 2.1: Clear all transient form state shared by every mode switch
+			this.forgotPasswordStep = 1;
+			this.formSubmitted = false;
+			this.codeSent = false;
+			this.codeCountdown = 0;
+			if (this.codeCountdownInterval) {
+				clearInterval(this.codeCountdownInterval);
+				this.codeCountdownInterval = null;
+			}
+			this.loginForm.reset();
+
+			// Step 2.2: Apply the caller's mode-specific flags and validators
+			configureMode();
+
+			/* Step 2.3: Sync validity state after changing validators.
+			   updateValueAndValidity must be called on every control even if its
+			   validators did not change — Angular requires an explicit refresh to
+			   reflect the new validation rules in the form's valid/invalid state. */
+			this.loginForm.get('username')?.updateValueAndValidity();
+			this.loginForm.get('email')?.updateValueAndValidity();
+			this.loginForm.get('password')?.updateValueAndValidity();
+			this.loginForm.get('verificationCode')?.updateValueAndValidity();
+
+			// Step 3: Trigger the slide-in animation and push changes to the view
 			this.animating = LOGIN_ANIM_IN;
 			this.cdr.detectChanges();
-		}, 280);
+		}, this.MODE_SWITCH_DELAY);
 	}
 
 	/**
 	 * Sends a verification code to the email address entered in the form.
-	 * Prevents duplicate requests while a send is in progress.
-	 * The code-sent indicator auto-clears after 4 seconds.
+	 * Prevents duplicate requests while a send is in progress or during the
+	 * ten-second resend countdown that follows a successful send.
 	 */
 	protected async getVerificationCodeEmail(): Promise<void> {
 		// Step 1: Debounce — block if a send is already in flight or still cooling down

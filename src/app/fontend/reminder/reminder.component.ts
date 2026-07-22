@@ -479,7 +479,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns e.g. "03", "08".
 	 */
 	protected get filteredCountLabel(): string {
-		return String(this.filteredItems.length).padStart(2, '0');
+		return Utilities.padTwoDigits(this.filteredItems.length);
 	}
 
 	/**
@@ -542,8 +542,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Returns true when the add-card should be visible: no tag filter is active and the
-	 * current page has room for the virtual add slot.
+	 * Returns true when the add-card should be visible: no tag filter is active.
 	 *
 	 * @returns True when the add card is shown on the current page.
 	 */
@@ -567,7 +566,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns e.g. "01", "02".
 	 */
 	protected get pageLabel(): string {
-		return String(this.page + 1).padStart(2, '0');
+		return Utilities.padTwoDigits(this.page + 1);
 	}
 
 	/**
@@ -576,7 +575,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns e.g. "01", "03".
 	 */
 	protected get totalPagesLabel(): string {
-		return String(this.totalPages).padStart(2, '0');
+		return Utilities.padTwoDigits(this.totalPages);
 	}
 
 	/**
@@ -1026,7 +1025,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns A 2-character padded string e.g. "01", "12".
 	 */
 	protected globalLabel(localIndex: number): string {
-		return String(this.page * this.itemsPerPage + localIndex + 1).padStart(2, '0');
+		return Utilities.padTwoDigits(this.page * this.itemsPerPage + localIndex + 1);
 	}
 
 	// ── card edit popover event handlers ─────────────────────────────────────
@@ -1648,7 +1647,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @returns e.g. "01", "12".
 	 */
 	protected get counterLabel(): string {
-		return String(this.items.length).padStart(2, '0');
+		return Utilities.padTwoDigits(this.items.length);
 	}
 
 	/**

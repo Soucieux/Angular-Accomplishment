@@ -384,7 +384,7 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 		const raw = this.customInputState[entryKey] ?? '';
 		const amount = parseFloat(raw);
 		if (amount > 0) {
-			this.payDebt(entryKey, amount);
+			this.payDebt(entryKey, amount).catch(() => {});
 		}
 		this.cancelCustomPay(entryKey);
 	}
@@ -1125,15 +1125,15 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * {@link ngAfterViewInit} - Runs it on first render and on every container resize.
 	 */
 	private updateSkeletonCount(): void {
-		const host = this.elementRef.nativeElement as HTMLElement;
-		const grid = host.querySelector('.debts-grid') as HTMLElement | null;
-		if (!grid) return;
-		const columns = Utilities.countGridColumns(grid);
-		if (!columns) return;
-
-		// At the page's minimum (mobile) column count use taller rows so a narrow screen still fills.
-		const rows = columns === DEBT_MIN_COLUMNS ? SKELETON_MIN_COLUMN_ROWS : DEBT_SKELETON_ROWS;
-		this.skeletonCount = columns * rows;
+		const grid = (this.elementRef.nativeElement as HTMLElement).querySelector('.debts-grid') as HTMLElement | null;
+		const count = Utilities.computeGridSkeletonCount(
+			grid,
+			DEBT_MIN_COLUMNS,
+			SKELETON_MIN_COLUMN_ROWS,
+			DEBT_SKELETON_ROWS
+		);
+		if (!count) return;
+		this.skeletonCount = count;
 		this.cdr.markForCheck();
 	}
 

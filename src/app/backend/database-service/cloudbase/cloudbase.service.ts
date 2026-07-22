@@ -183,6 +183,8 @@ import { TodayTask } from '../../../fontend/today/today.model';
 import { SessionExpiredError } from '../../../common/error/session-expired.error';
 import { UnexpectedError } from '../../../common/error/unexpected.error';
 
+const CLOUDBASE_TEMP_URL_BATCH_SIZE = 50;
+
 @Injectable({ providedIn: 'root' })
 export class CloudbaseService extends DatabaseService {
 	private readonly className = 'CloudbaseService';
@@ -477,7 +479,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Watch the recipes collection and emit all recipes on every change.
+	 * Watches the recipes collection and emits all recipes on every change.
 	 * Read access is enforced by the database security rule (non-anonymous
 	 * authenticated users only); no additional client-side owner filter is applied
 	 * so that all users see the full shared recipe list.
@@ -773,8 +775,12 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise resolving to the shared activity entries, empty when the user has no connections.
 	 */
 	public async getSharedRecentActivity(): Promise<any[]> {
-		const response: any = await this.cloudbase.callFunction({ name: 'getSharedActivity', data: {} });
-		return Utilities.toArray(response?.result?.activity);
+		const result = await this.invokeResultFunction<{ activity?: any[] }>(
+			'getSharedActivity',
+			{},
+			{ activity: [] }
+		);
+		return Utilities.toArray(result.activity);
 	}
 
 	/**
@@ -785,11 +791,11 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise resolving to the request result.
 	 */
 	public async sendConnectRequest(code: string): Promise<ConnectResult> {
-		const response: any = await this.cloudbase.callFunction({
-			name: 'sendConnectRequest',
-			data: { code, name: CloudbaseService.getUserName() }
-		});
-		return response?.result ?? { success: false };
+		return this.invokeResultFunction<ConnectResult>(
+			'sendConnectRequest',
+			{ code, name: CloudbaseService.getUserName() },
+			{ success: false }
+		);
 	}
 
 	/**
@@ -800,11 +806,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise resolving to the cancel result.
 	 */
 	public async cancelConnectRequest(toOpenid: string): Promise<ConnectResult> {
-		const response: any = await this.cloudbase.callFunction({
-			name: 'cancelConnectRequest',
-			data: { toOpenid }
-		});
-		return response?.result ?? { success: false };
+		return this.invokeResultFunction<ConnectResult>('cancelConnectRequest', { toOpenid }, { success: false });
 	}
 
 	/**
@@ -837,11 +839,11 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise resolving to the response result.
 	 */
 	public async respondConnectRequest(fromOpenid: string, accept: boolean): Promise<ConnectResult> {
-		const response: any = await this.cloudbase.callFunction({
-			name: 'respondConnectRequest',
-			data: { fromOpenid, accept, name: CloudbaseService.getUserName() }
-		});
-		return response?.result ?? { success: false };
+		return this.invokeResultFunction<ConnectResult>(
+			'respondConnectRequest',
+			{ fromOpenid, accept, name: CloudbaseService.getUserName() },
+			{ success: false }
+		);
 	}
 
 	/**
@@ -852,11 +854,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise resolving to the disconnect result.
 	 */
 	public async disconnect(otherOpenid: string): Promise<ConnectResult> {
-		const response: any = await this.cloudbase.callFunction({
-			name: 'disconnect',
-			data: { otherOpenid }
-		});
-		return response?.result ?? { success: false };
+		return this.invokeResultFunction<ConnectResult>('disconnect', { otherOpenid }, { success: false });
 	}
 
 	/**
@@ -868,11 +866,11 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise resolving to the status result.
 	 */
 	public async getPassphraseLockStatus(featureKey: string): Promise<PassphraseLockStatus> {
-		const response: any = await this.cloudbase.callFunction({
-			name: 'getPassphraseLockStatus',
-			data: { featureKey }
-		});
-		return response?.result ?? { success: false, isSet: false };
+		return this.invokeResultFunction<PassphraseLockStatus>(
+			'getPassphraseLockStatus',
+			{ featureKey },
+			{ success: false, isSet: false }
+		);
 	}
 
 	/**
@@ -884,11 +882,11 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise resolving to the set result.
 	 */
 	public async setPassphraseLock(featureKey: string, passphrase: string): Promise<ConnectResult> {
-		const response: any = await this.cloudbase.callFunction({
-			name: 'setPassphraseLock',
-			data: { featureKey, passphrase }
-		});
-		return response?.result ?? { success: false };
+		return this.invokeResultFunction<ConnectResult>(
+			'setPassphraseLock',
+			{ featureKey, passphrase },
+			{ success: false }
+		);
 	}
 
 	/**
@@ -900,11 +898,11 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise resolving to the verify result.
 	 */
 	public async verifyPassphraseLock(featureKey: string, passphrase: string): Promise<ConnectResult> {
-		const response: any = await this.cloudbase.callFunction({
-			name: 'verifyPassphraseLock',
-			data: { featureKey, passphrase }
-		});
-		return response?.result ?? { success: false };
+		return this.invokeResultFunction<ConnectResult>(
+			'verifyPassphraseLock',
+			{ featureKey, passphrase },
+			{ success: false }
+		);
 	}
 
 	/**
@@ -918,11 +916,32 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise resolving to the removal result.
 	 */
 	public async removePassphraseLock(featureKey: string): Promise<ConnectResult> {
-		const response: any = await this.cloudbase.callFunction({
-			name: 'removePassphraseLock',
-			data: { featureKey }
-		});
-		return response?.result ?? { success: false };
+		return this.invokeResultFunction<ConnectResult>('removePassphraseLock', { featureKey }, { success: false });
+	}
+
+	/**
+	 * Invokes a Cloud Function and returns its result payload, falling back to the given value when the
+	 * call yields no result. Shared by every method whose whole body is a single callFunction followed by
+	 * a result-or-fallback return, so the invoke boilerplate lives in one place.
+	 *
+	 * {@link getSharedRecentActivity} - Fetches the aggregated shared activity feed.
+	 * {@link sendConnectRequest} - Sends a connect request to another account.
+	 * {@link cancelConnectRequest} - Withdraws a still-pending outgoing connect request.
+	 * {@link respondConnectRequest} - Approves or declines an incoming connect request.
+	 * {@link disconnect} - Leaves a single connection.
+	 * {@link getPassphraseLockStatus} - Reports whether a feature's passphrase lock is set.
+	 * {@link setPassphraseLock} - Sets or replaces a feature's passphrase.
+	 * {@link verifyPassphraseLock} - Verifies a passphrase attempt for a feature.
+	 * {@link removePassphraseLock} - Removes a feature's passphrase.
+	 *
+	 * @param name - The Cloud Function name to invoke.
+	 * @param data - The payload passed to the Cloud Function.
+	 * @param fallback - The value to return when the call yields no result.
+	 * @returns A promise resolving to the function's result payload, or the fallback.
+	 */
+	private async invokeResultFunction<T>(name: string, data: object, fallback: T): Promise<T> {
+		const response: any = await this.cloudbase.callFunction({ name, data });
+		return response?.result ?? fallback;
 	}
 
 	/**
@@ -1119,8 +1138,8 @@ export class CloudbaseService extends DatabaseService {
 
 		if (toResolve.length > 0) {
 			// CloudBase allows at most 50 file IDs per call
-			for (let i = 0; i < toResolve.length; i += 50) {
-				const batch = toResolve.slice(i, i + 50);
+			for (let i = 0; i < toResolve.length; i += CLOUDBASE_TEMP_URL_BATCH_SIZE) {
+				const batch = toResolve.slice(i, i + CLOUDBASE_TEMP_URL_BATCH_SIZE);
 				try {
 					const result: any = await this.cloudbase.getTempFileURL({ fileList: batch });
 					for (const file of result.fileList) {
@@ -1202,8 +1221,7 @@ export class CloudbaseService extends DatabaseService {
 				.where(this.buildWhereClause(movieItemVO.getMovieKey()));
 			const movieData = await movieRef.get();
 			const oldRate = movieData.data?.[0]?.rate;
-			if (oldRate === undefined)
-				throw new Error(`Movie document not found for key ${movieItemVO.getMovieKey()}`);
+			if (oldRate === undefined) throw new UnexpectedError();
 
 			if (oldRate !== movieItemVO.getMovieRate()) {
 				// Step 2: Persist the new rate only when it has actually changed
@@ -1555,7 +1573,8 @@ export class CloudbaseService extends DatabaseService {
 	 * @param ownerOpenid - The _openid of the quote's owner, so only the owner's counter is decremented.
 	 */
 	public async removeQuote(entryKey: string, author: string, ownerOpenid: string): Promise<void> {
-		this.removeRecordFromDB(DATABASE_QUOTES, { entryKey, author });
+		// Await the record delete first so a failed removal propagates and the counters below never drift.
+		await this.removeRecordFromDB(DATABASE_QUOTES, { entryKey, author });
 
 		await this.statisticsRef.update({ [STATS_FIELD_TOTAL_QUOTES]: this._.inc(-1) });
 		this.decrementOwnStatCount(STATS_FIELD_TOTAL_QUOTES, ownerOpenid);
@@ -1570,7 +1589,8 @@ export class CloudbaseService extends DatabaseService {
 	 * @param ownerOpenid - The _openid of the recipe's owner, so only the owner's counter is decremented.
 	 */
 	public async removeRecipe(recipeKey: string, name: string, ownerOpenid: string): Promise<void> {
-		this.removeRecordFromDB(DATABASE_RECIPES, { entryKey: recipeKey, name });
+		// Await the record delete first so a failed removal propagates and the counters below never drift.
+		await this.removeRecordFromDB(DATABASE_RECIPES, { entryKey: recipeKey, name });
 
 		// Fire-and-forget: keep totalRecipes in sync so the home stat chip updates in realtime.
 		this.statisticsRef.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(-1) }).catch(() => {});
@@ -1746,8 +1766,6 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * This is done by updating the data in DB.
-	 *
 	 * Removes the payment entry at the given index from a debt document and restores the
 	 * debt balance, both in a single DB write. Records the removal in the activity log.
 	 *
@@ -1965,9 +1983,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param link - The link object to add. `isShared` is persisted as a top-level flag.
 	 */
 	public async addUsefulLink(link: any): Promise<void> {
-		this.updateUserStatCount(STATS_FIELD_TOTAL_LINKS, 1)
-			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_LINKS, MILESTONE_DOMAIN_LINK))
-			.catch(() => {});
+		this.incrementUserStatWithMilestone(STATS_FIELD_TOTAL_LINKS, MILESTONE_DOMAIN_LINK);
 		const { isShared, category, ...linkData } = link;
 		return this.addNewRecordToDB(DATABASE_USEFUL_LINKS, {
 			type: USEFUL_LINK_TYPE_LINK,
@@ -1997,11 +2013,10 @@ export class CloudbaseService extends DatabaseService {
 	 * @param timestamp - The timestamp of the quote.
 	 */
 	public async addQuote(text: string, author: string, timestamp: string): Promise<void> {
-		this.addNewRecordToDB(DATABASE_QUOTES, { text, author, timestamp });
+		// Await the record add first so a failed write propagates and the counters below never drift.
+		await this.addNewRecordToDB(DATABASE_QUOTES, { text, author, timestamp });
 		await this.statisticsRef.update({ [STATS_FIELD_TOTAL_QUOTES]: this._.inc(1) });
-		this.updateUserStatCount(STATS_FIELD_TOTAL_QUOTES, 1)
-			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_QUOTES, MILESTONE_DOMAIN_QUOTE))
-			.catch(() => {});
+		this.incrementUserStatWithMilestone(STATS_FIELD_TOTAL_QUOTES, MILESTONE_DOMAIN_QUOTE);
 	}
 
 	/**
@@ -2012,14 +2027,13 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public async addRecipe(recipe: Recipe): Promise<void> {
 		const { id: _, ...payload } = recipe;
-		this.addNewRecordToDB(DATABASE_RECIPES, {
+		// Await the record add first so a failed write propagates and the counters below never drift.
+		await this.addNewRecordToDB(DATABASE_RECIPES, {
 			...payload,
 			steps: payload.steps.map((step) => ({ ...step, done: false }))
 		});
 		this.statisticsRef.update({ [STATS_FIELD_TOTAL_RECIPES]: this._.inc(1) }).catch(() => {});
-		this.updateUserStatCount(STATS_FIELD_TOTAL_RECIPES, 1)
-			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_RECIPES, MILESTONE_DOMAIN_RECIPE))
-			.catch(() => {});
+		this.incrementUserStatWithMilestone(STATS_FIELD_TOTAL_RECIPES, MILESTONE_DOMAIN_RECIPE);
 	}
 
 	/**
@@ -2068,9 +2082,7 @@ export class CloudbaseService extends DatabaseService {
 				type: HISTORY_STATUS_ADDED,
 				title: movieItemVO.getMovieName()
 			}).catch(() => {});
-			this.updateUserStatCount(STATS_FIELD_TOTAL_FILMS, 1)
-				.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_FILMS, MILESTONE_DOMAIN_FILM))
-				.catch(() => {});
+			this.incrementUserStatWithMilestone(STATS_FIELD_TOTAL_FILMS, MILESTONE_DOMAIN_FILM);
 
 			LOG.info(this.className, DB_LOG_MOVIE_ADDED);
 		} catch (error) {
@@ -2139,11 +2151,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new record to add.
 	 */
 	public async addNewRecordToReminder(newRecord: any): Promise<void> {
-		this.updateUserStatCount(STATS_FIELD_TOTAL_REMINDERS, 1)
-			.then(() =>
-				this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER)
-			)
-			.catch(() => {});
+		this.incrementUserStatWithMilestone(STATS_FIELD_TOTAL_REMINDERS, MILESTONE_DOMAIN_REMINDER);
 		await this.addNewRecordToDB(DATABASE_REMINDER, newRecord);
 
 		// A shared item must reach connections, who can't watch it live — signal them to re-fetch.
@@ -2156,9 +2164,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param newRecord - The new record to add.
 	 */
 	public async addNewRecordToDebt(newRecord: any): Promise<void> {
-		this.updateUserStatCount(STATS_FIELD_TOTAL_DEBTS, 1)
-			.then(() => this.checkAndWriteDomainMilestone(STATS_FIELD_TOTAL_DEBTS, MILESTONE_DOMAIN_DEBT))
-			.catch(() => {});
+		this.incrementUserStatWithMilestone(STATS_FIELD_TOTAL_DEBTS, MILESTONE_DOMAIN_DEBT);
 		return this.addNewRecordToDB(DATABASE_DEBT_SONATA, newRecord);
 	}
 
@@ -2330,7 +2336,7 @@ export class CloudbaseService extends DatabaseService {
 	// ── Utility methods ───────────────────────────────────────────────────────
 
 	/**
-	 * Increment the visit count for a useful link.
+	 * Increments the visit count for a useful link.
 	 *
 	 * @param key - The document key of the link.
 	 * @param currentCount - The current visit count.
@@ -2546,6 +2552,26 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Increments a domain's per-user total by one, then records the domain milestone when the new count
+	 * crosses a threshold. Fire-and-forget — a failed stat update never blocks the record write it follows.
+	 *
+	 * {@link addUsefulLink} - Bumps the link total after adding a link.
+	 * {@link addQuote} - Bumps the quote total after adding a quote.
+	 * {@link addRecipe} - Bumps the recipe total after adding a recipe.
+	 * {@link addNewMovieDataAndUpdateStatistics} - Bumps the film total after adding a movie.
+	 * {@link addNewRecordToReminder} - Bumps the reminder total after adding a reminder.
+	 * {@link addNewRecordToDebt} - Bumps the debt total after adding a debt.
+	 *
+	 * @param field - The per-user stats counter field to increment.
+	 * @param domain - The milestone domain prefix to evaluate after the increment.
+	 */
+	private incrementUserStatWithMilestone(field: string, domain: string): void {
+		this.updateUserStatCount(field, 1)
+			.then(() => this.checkAndWriteDomainMilestone(field, domain))
+			.catch(() => {});
+	}
+
+	/**
 	 * Checks whether a per-user stats document exists in the users collection and provisions it
 	 * if absent — migrating a legacy statistics document when one exists, otherwise seeding fresh.
 	 * Uses a one-time `.get()` so the check is not watcher-dependent — safe to call on every
@@ -2740,7 +2766,7 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Proxy an HTTP GET request server-side to bypass browser CORS restrictions.
+	 * Proxies an HTTP GET request server-side to bypass browser CORS restrictions.
 	 *
 	 * Strategy (in order):
 	 *  1. Call the Express server's `/api/fetch-url` endpoint — zero CloudBase
@@ -2786,7 +2812,7 @@ export class CloudbaseService extends DatabaseService {
 				data: { accessToken: environment.cloudbase.accessToken, url }
 			});
 			if (!result?.result?.success) {
-				throw new Error(result?.result?.error ?? 'fetchUrl returned an error');
+				throw new UnexpectedError();
 			}
 			return {
 				content: result.result.content ?? '',

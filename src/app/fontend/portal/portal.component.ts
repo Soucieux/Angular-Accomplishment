@@ -221,13 +221,10 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			/* If navigated from the home quick-action buttons, auto-open the add-link dialog.
+			/* If navigated from the home quick-action buttons, auto-open the multi-link dialog.
 			   history.state retains the router state passed via Router.navigate({ state: ... }).
 			   Immediately clear the state so a page refresh does not re-trigger the dialog. */
-			if (history.state?.openAddLinkDialog) {
-				history.replaceState({}, '');
-				setTimeout(() => this.openAddLinkDialog(), 0);
-			} else if (history.state?.openMultiLinkDialog) {
+			if (history.state?.openMultiLinkDialog) {
 				history.replaceState({}, '');
 				setTimeout(() => this.openMultiLinkDialog(), 0);
 			}
@@ -1055,15 +1052,15 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 	 * {@link ngAfterViewInit} - Runs it on first render and on every container resize.
 	 */
 	private updateSkeletonCount(): void {
-		const host = this.elementRef.nativeElement as HTMLElement;
-		const grid = host.querySelector('.links-grid') as HTMLElement | null;
-		if (!grid) return;
-		const columns = Utilities.countGridColumns(grid);
-		if (!columns) return;
-
-		// At the page's minimum (mobile) column count use taller rows so a narrow screen still fills.
-		const rows = columns === PORTAL_MIN_COLUMNS ? SKELETON_MIN_COLUMN_ROWS : PORTAL_SKELETON_ROWS;
-		this.skeletonCount = columns * rows;
+		const grid = (this.elementRef.nativeElement as HTMLElement).querySelector('.links-grid') as HTMLElement | null;
+		const count = Utilities.computeGridSkeletonCount(
+			grid,
+			PORTAL_MIN_COLUMNS,
+			SKELETON_MIN_COLUMN_ROWS,
+			PORTAL_SKELETON_ROWS
+		);
+		if (!count) return;
+		this.skeletonCount = count;
 		this.cdr.markForCheck();
 	}
 

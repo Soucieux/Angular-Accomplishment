@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    p-dialog shell overrides
 ───────────────────────────────────────── */
+
 ::ng-deep .category-dialog {
 	width: 360px;
 	border-radius: 20px !important;
@@ -38,6 +39,7 @@
 /* ─────────────────────────────────────────
    Dialog title
 ───────────────────────────────────────── */
+
 .category-dialog-title {
 	font-size: 20px;
 	font-weight: 700;
@@ -47,6 +49,7 @@
 /* ─────────────────────────────────────────
    Form field
 ───────────────────────────────────────── */
+
 .category-dialog-field {
 	display: flex;
 	flex-direction: column;
@@ -86,6 +89,7 @@
 /* ─────────────────────────────────────────
    Footer buttons
 ───────────────────────────────────────── */
+
 .category-dialog-button-delete {
 	border: none;
 	cursor: pointer;
@@ -152,6 +156,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	::ng-deep .category-dialog {
 		width: 100% !important;
@@ -166,4 +171,5 @@
 	::ng-deep .category-dialog .p-dialog-footer {
 		border-radius: 0 !important;
 	}
+
 }

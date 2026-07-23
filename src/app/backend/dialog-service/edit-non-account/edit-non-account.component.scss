@@ -163,6 +163,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	::ng-deep .edit-non-account-dialog {
 		width: 100% !important;
@@ -177,4 +178,5 @@
 	::ng-deep .edit-non-account-dialog .p-dialog-footer {
 		border-radius: 0 !important;
 	}
+
 }

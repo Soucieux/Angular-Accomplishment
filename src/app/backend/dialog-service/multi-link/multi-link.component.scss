@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    p-dialog shell overrides
 ───────────────────────────────────────── */
+
 ::ng-deep .multi-link-dialog {
 	width: 760px;
 	border-radius: 20px !important;
@@ -41,6 +42,7 @@
 /* ─────────────────────────────────────────
    Header
 ───────────────────────────────────────── */
+
 .multi-link-dialog-title {
 	font-size: 20px;
 	font-weight: 700;
@@ -55,6 +57,7 @@
 /* ─────────────────────────────────────────
    Shared category section
 ───────────────────────────────────────── */
+
 .multi-link-category {
 	padding: 18px 24px 16px;
 }
@@ -118,6 +121,7 @@
 /* ─────────────────────────────────────────
    Split body
 ───────────────────────────────────────── */
+
 .multi-link-body-split {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -144,6 +148,7 @@
 /* ─────────────────────────────────────────
    Textarea
 ───────────────────────────────────────── */
+
 .multi-link-textarea {
 	width: 100%;
 	min-height: 240px;
@@ -172,6 +177,7 @@
 /* ─────────────────────────────────────────
    Link rows
 ───────────────────────────────────────── */
+
 .multi-link-rows {
 	display: flex;
 	flex-direction: column;
@@ -222,6 +228,7 @@
 /* ─────────────────────────────────────────
    Favicon cell
 ───────────────────────────────────────── */
+
 .multi-link-favicon {
 	position: relative;
 	width: 36px;
@@ -272,11 +279,13 @@
 	to {
 		transform: rotate(360deg);
 	}
+
 }
 
 /* ─────────────────────────────────────────
    Row main content
 ───────────────────────────────────────── */
+
 .multi-link-row-main {
 	flex: 1;
 	min-width: 0;
@@ -343,6 +352,7 @@
 /* ─────────────────────────────────────────
    Empty state
 ───────────────────────────────────────── */
+
 .multi-link-empty {
 	display: flex;
 	flex-direction: column;
@@ -372,6 +382,7 @@
 /* ─────────────────────────────────────────
    Footer
 ───────────────────────────────────────── */
+
 .multi-link-footer-status {
 	flex: 1;
 	min-width: 0;
@@ -450,6 +461,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	::ng-deep .multi-link-dialog {
 		width: 100% !important;
@@ -476,4 +488,5 @@
 	.multi-link-textarea {
 		min-height: 120px;
 	}
+
 }

@@ -5,6 +5,7 @@
 /* ─────────────────────────────────────────
    p-dialog shell overrides
 ───────────────────────────────────────── */
+
 ::ng-deep .edit-vault-category-dialog {
 	width: 360px;
 	border-radius: 20px !important;
@@ -42,6 +43,7 @@
 /* ─────────────────────────────────────────
    Dialog title
 ───────────────────────────────────────── */
+
 .edit-vault-category-dialog-title {
 	font-size: 20px;
 	font-weight: 700;
@@ -51,6 +53,7 @@
 /* ─────────────────────────────────────────
    Form field
 ───────────────────────────────────────── */
+
 .edit-vault-category-dialog-field {
 	display: flex;
 	flex-direction: column;
@@ -105,6 +108,7 @@
 /* ─────────────────────────────────────────
    Footer buttons
 ───────────────────────────────────────── */
+
 .edit-vault-category-dialog-button-delete {
 	border: none;
 	cursor: pointer;
@@ -171,6 +175,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	::ng-deep .edit-vault-category-dialog {
 		width: 100% !important;
@@ -185,4 +190,5 @@
 	::ng-deep .edit-vault-category-dialog .p-dialog-footer {
 		border-radius: 0 !important;
 	}
+
 }

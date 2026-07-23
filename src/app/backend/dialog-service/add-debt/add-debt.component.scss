@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    p-dialog shell overrides
 ───────────────────────────────────────── */
+
 ::ng-deep .add-debt-dialog {
 	width: 440px;
 	border-radius: 20px !important;
@@ -38,6 +39,7 @@
 /* ─────────────────────────────────────────
    Dialog title
 ───────────────────────────────────────── */
+
 .add-debt-dialog-title {
 	font-size: 20px;
 	font-weight: 700;
@@ -47,6 +49,7 @@
 /* ─────────────────────────────────────────
    Form field
 ───────────────────────────────────────── */
+
 .add-debt-field {
 	display: flex;
 	flex-direction: column;
@@ -119,6 +122,7 @@
 /* ─────────────────────────────────────────
    Category grid
 ───────────────────────────────────────── */
+
 .add-debt-category-grid {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
@@ -183,6 +187,7 @@
 /* ─────────────────────────────────────────
    Currency picker
 ───────────────────────────────────────── */
+
 .add-debt-currency-picker {
 	display: flex;
 	gap: 8px;
@@ -226,6 +231,7 @@
 /* ─────────────────────────────────────────
    Toggle row (permanent / new-cycle)
 ───────────────────────────────────────── */
+
 .add-debt-toggle {
 	display: flex;
 	align-items: center;
@@ -314,6 +320,7 @@
 /* ─────────────────────────────────────────
    Footer buttons
 ───────────────────────────────────────── */
+
 .add-debt-button-ghost {
 	border: 1.5px solid rgba(213, 51, 105, 0.4);
 	background: transparent;
@@ -359,6 +366,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	::ng-deep .add-debt-dialog {
 		width: 100% !important;
@@ -385,4 +393,5 @@
 	.add-debt-field-row {
 		grid-template-columns: 1fr;
 	}
+
 }

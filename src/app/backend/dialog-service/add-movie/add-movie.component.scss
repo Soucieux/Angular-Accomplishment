@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    p-dialog shell overrides
 ───────────────────────────────────────── */
+
 ::ng-deep .add-dialog {
 	width: 560px;
 	border-radius: 20px !important;
@@ -49,6 +50,7 @@
 /* ─────────────────────────────────────────
    Inputs
 ───────────────────────────────────────── */
+
 ::ng-deep .add-dialog [pinputtext] {
 	height: 35px !important;
 	border-radius: 6px !important;
@@ -81,6 +83,7 @@
 /* ─────────────────────────────────────────
    Dropdowns
 ───────────────────────────────────────── */
+
 ::ng-deep .add-dialog .p-select {
 	height: 35px !important;
 	border-radius: 6px !important;
@@ -122,6 +125,7 @@
 /* ─────────────────────────────────────────
    Footer buttons — shared compact sizing
 ───────────────────────────────────────── */
+
 .add-dialog-button-search,
 .add-dialog-button-ghost,
 .add-dialog-button-gradient {
@@ -136,6 +140,7 @@
 /* ─────────────────────────────────────────
    Search button
 ───────────────────────────────────────── */
+
 .add-dialog-button-search {
 	border: none;
 	color: #fff !important;
@@ -145,6 +150,7 @@
 /* ─────────────────────────────────────────
    Cancel button
 ───────────────────────────────────────── */
+
 .add-dialog-button-ghost {
 	background: transparent;
 	border: 1.5px solid rgba(213, 51, 105, 0.4);
@@ -158,6 +164,7 @@
 /* ─────────────────────────────────────────
    Submit button
 ───────────────────────────────────────── */
+
 .add-dialog-button-gradient {
 	border: none;
 	color: #fff !important;
@@ -173,6 +180,7 @@
 /* ─────────────────────────────────────────
    Component styles
 ───────────────────────────────────────── */
+
 .dialog-subtitle {
 	font-size: 13px;
 	color: rgba(40, 15, 35, 0.5);
@@ -236,6 +244,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	::ng-deep .add-dialog {
 		min-width: 100% !important;
@@ -275,4 +284,5 @@
 	.form-grid {
 		width: 100%;
 	}
+
 }

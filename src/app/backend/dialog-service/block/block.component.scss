@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    p-dialog shell overrides
 ───────────────────────────────────────── */
+
 ::ng-deep .blocking-dialog {
 	width: min(380px, calc(100dvw - 2rem));
 	border-radius: 20px !important;
@@ -38,6 +39,7 @@
 /* ─────────────────────────────────────────
    Component styles
 ───────────────────────────────────────── */
+
 .blocking-content {
 	display: flex;
 	flex-direction: column;
@@ -73,6 +75,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	::ng-deep .blocking-dialog .p-dialog-content {
 		padding: 28px 20px !important;
@@ -81,5 +84,5 @@
 	.blocking-message {
 		font-size: 14px;
 	}
-}
 
+}

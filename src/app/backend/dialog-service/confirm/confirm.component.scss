@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────
    p-dialog shell overrides
 ───────────────────────────────────────── */
+
 ::ng-deep .confirm-dialog {
 	width: 380px;
 	border-radius: 20px !important;
@@ -44,6 +45,7 @@
 /* ─────────────────────────────────────────
    Component styles
 ───────────────────────────────────────── */
+
 .confirm-dialog-body {
 	display: flex;
 	align-items: center;
@@ -105,6 +107,7 @@
 /* ─────────────────────────────────────────
    Responsive ≤ 940 px (mobile)
 ───────────────────────────────────────── */
+
 @media (max-width: 940px) {
 	::ng-deep .confirm-dialog {
 		min-width: 100% !important;
@@ -123,4 +126,5 @@
 	::ng-deep .confirm-dialog .p-dialog-footer {
 		border-radius: 0 !important;
 	}
+
 }

@@ -268,9 +268,12 @@
 	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
 	overflow: hidden;
 	animation: rmCardIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+	/* background is intentionally excluded: the hover state layers a gradient over --card-color,
+	   and a gradient is a discrete (non-interpolatable) background-image. Transitioning it flips the
+	   overlay off at the tween midpoint while background-color is still mid-fade, exposing the raw
+	   dark card colour for a frame on mouse-out — the "dark blink". Snapping it avoids that. */
 	transition:
 		transform 0.2s ease,
-		background 0.2s ease,
 		box-shadow 0.2s ease;
 }
 

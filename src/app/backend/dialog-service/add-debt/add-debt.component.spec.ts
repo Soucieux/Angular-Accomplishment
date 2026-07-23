@@ -137,9 +137,19 @@ describe('AddDebtDialogComponent', () => {
 					name: 'Rent',
 					amount: 500,
 					currency: 'CNY',
-					isPermanent: false
+					isPermanent: false,
+					isNewCycle: false
 				})
 			);
+		});
+
+		it('passes isNewCycle through when the edit-mode toggle is on', () => {
+			const callback = jasmine.createSpy<(data: NewDebtData) => void>('callback');
+			component.openDialog(callback, { amount: 50, currency: 'CNY' });
+			(component as any).amount = '80';
+			(component as any).isNewCycle = true;
+			(component as any).onSubmit();
+			expect(callback).toHaveBeenCalledWith(jasmine.objectContaining({ isNewCycle: true }));
 		});
 
 		it('closes the dialog after a successful submit', async () => {

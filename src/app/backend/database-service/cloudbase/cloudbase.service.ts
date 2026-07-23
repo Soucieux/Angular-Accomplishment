@@ -1409,7 +1409,7 @@ export class CloudbaseService extends DatabaseService {
 			fields: {
 				[DEBT_VALUE_KEY_DEBT]: originalAmount,
 				[DEBT_VALUE_KEY_PAID]: paid,
-				[DEBT_VALUE_KEY_PAYMENTS]: this._.remove()
+				[DEBT_VALUE_KEY_PAYMENTS]: this.removeFieldCommand()
 			},
 			source: ACTIVITY_SOURCE_DEBT,
 			type: ACTIVITY_TYPE_RESET,
@@ -1524,6 +1524,16 @@ export class CloudbaseService extends DatabaseService {
 			LOG.error(this.className, `${DB_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
 			this.rethrowCaught(error);
 		}
+	}
+
+	/**
+	 * Gets CloudBase's field-deletion command, written to a field to remove it entirely in an
+	 * update() merge (passing an empty object would be a no-op).
+	 *
+	 * @returns The CloudBase remove command.
+	 */
+	protected removeFieldCommand(): unknown {
+		return this._.remove();
 	}
 
 	// ── Removal methods ──────────────────────────────────────────────────────
@@ -1795,7 +1805,7 @@ export class CloudbaseService extends DatabaseService {
 		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
 			entryKey,
 			fields: {
-				[`${DEBT_VALUE_KEY_PAYMENTS}.${index}`]: this._.remove(),
+				[`${DEBT_VALUE_KEY_PAYMENTS}.${index}`]: this.removeFieldCommand(),
 				[DEBT_VALUE_KEY_DEBT]: updatedDebt
 			},
 			source: ACTIVITY_SOURCE_DEBT,

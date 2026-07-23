@@ -8,7 +8,8 @@ import {
 	DEBT_CURRENCY_CNY,
 	DEBT_DIALOG_PLACEHOLDER_AMOUNT,
 	DEBT_ICON_LOCK,
-	DEBT_ICON_LOCK_OPEN
+	DEBT_ICON_LOCK_OPEN,
+	DEBT_ICON_NEW_CYCLE
 } from '../../../common/constants';
 import {
 	DEBT_DIALOG_LABEL_ADD,
@@ -19,6 +20,8 @@ import {
 	DEBT_DIALOG_LABEL_EDIT,
 	DEBT_DIALOG_LABEL_PERMANENT,
 	DEBT_DIALOG_LABEL_PERMANENT_DESC,
+	DEBT_DIALOG_LABEL_NEW_CYCLE,
+	DEBT_DIALOG_LABEL_NEW_CYCLE_DESC,
 	DEBT_DIALOG_LABEL_SAVE,
 	DEBT_DIALOG_PLACEHOLDER_NAME,
 	DEBT_DIALOG_TITLE,
@@ -52,8 +55,11 @@ export class AddDebtDialogComponent {
 	protected readonly DEBT_DIALOG_LABEL_CANCEL = DEBT_DIALOG_LABEL_CANCEL;
 	protected readonly DEBT_DIALOG_LABEL_PERMANENT = DEBT_DIALOG_LABEL_PERMANENT;
 	protected readonly DEBT_DIALOG_LABEL_PERMANENT_DESC = DEBT_DIALOG_LABEL_PERMANENT_DESC;
+	protected readonly DEBT_DIALOG_LABEL_NEW_CYCLE = DEBT_DIALOG_LABEL_NEW_CYCLE;
+	protected readonly DEBT_DIALOG_LABEL_NEW_CYCLE_DESC = DEBT_DIALOG_LABEL_NEW_CYCLE_DESC;
 	protected readonly DEBT_ICON_LOCK = DEBT_ICON_LOCK;
 	protected readonly DEBT_ICON_LOCK_OPEN = DEBT_ICON_LOCK_OPEN;
+	protected readonly DEBT_ICON_NEW_CYCLE = DEBT_ICON_NEW_CYCLE;
 	protected readonly DEBT_DIALOG_LABEL_CURRENCY_CNY = DEBT_DIALOG_LABEL_CURRENCY_CNY;
 	protected readonly DEBT_DIALOG_LABEL_CURRENCY_CAD = DEBT_DIALOG_LABEL_CURRENCY_CAD;
 	protected readonly LABEL_NAME = LABEL_NAME;
@@ -76,6 +82,7 @@ export class AddDebtDialogComponent {
 	protected dueDateModel: Date | null = null;
 	protected selectedCurrency = '';
 	protected isPermanent = false;
+	protected isNewCycle = false;
 	private submitCallback?: (data: NewDebtData) => void | Promise<void>;
 
 	/**
@@ -93,7 +100,8 @@ export class AddDebtDialogComponent {
 	/**
 	 * Opens the dialog in add mode (null prefill) or edit mode (object prefill).
 	 * When prefillData is not null, sets isEditMode to true and pre-populates
-	 * amount, due date, and currency; name, category, and permanent toggle are hidden.
+	 * amount, due date, and currency; name, category, and the permanent toggle are
+	 * hidden, while the new-cycle toggle is shown and reset to off.
 	 *
 	 * @param submitCallback - The callback invoked with the validated form data on submit.
 	 * @param prefillData - Prefill values for edit mode, or null for add mode.
@@ -113,6 +121,7 @@ export class AddDebtDialogComponent {
 			this.amount = String(prefillData.amount ?? '');
 			this.dueDateModel = prefillData.dueDate ? new Date(prefillData.dueDate + 'T00:00') : null;
 			this.selectedCurrency = prefillData.currency ?? DEBT_CURRENCY_CNY;
+			this.isNewCycle = false;
 		} else {
 			// Step 2 (add mode): Reset every field and seed due date 30 days out as a sensible default
 			this.name = '';
@@ -145,7 +154,8 @@ export class AddDebtDialogComponent {
 			dueDate: this.dueDateModel ? Utilities.formatDateForStorage(this.dueDateModel) : '',
 			isPermanent: this.isPermanent,
 			category: this.selectedCategoryKey,
-			currency: this.selectedCurrency
+			currency: this.selectedCurrency,
+			isNewCycle: this.isNewCycle
 		});
 
 		// Step 3: Close after the callback so the caller receives data before the component tears down

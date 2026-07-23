@@ -910,7 +910,7 @@ export class FirebaseService extends DatabaseService {
 			fields: {
 				[DEBT_VALUE_KEY_DEBT]: originalAmount,
 				[DEBT_VALUE_KEY_PAID]: paid,
-				[DEBT_VALUE_KEY_PAYMENTS]: null
+				[DEBT_VALUE_KEY_PAYMENTS]: this.removeFieldCommand()
 			},
 			source: ACTIVITY_SOURCE_DEBT,
 			type: ACTIVITY_TYPE_RESET,
@@ -1072,6 +1072,16 @@ export class FirebaseService extends DatabaseService {
 			LOG.error(this.className, `${DB_LOG_TABLE_UPDATE_FAILED} ${tableName}`, error as Error);
 			this.rethrowCaught(error);
 		}
+	}
+
+	/**
+	 * Gets the Realtime Database's field-deletion value: writing null at a path deletes it,
+	 * the RTDB analogue of CloudBase's remove command.
+	 *
+	 * @returns Null, which deletes the field when written to it.
+	 */
+	protected removeFieldCommand(): unknown {
+		return null;
 	}
 
 	// ── Removal methods ──────────────────────────────────────────────────────
@@ -1326,7 +1336,7 @@ export class FirebaseService extends DatabaseService {
 		return this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
 			entryKey,
 			fields: {
-				[`${DEBT_VALUE_KEY_PAYMENTS}/${index}`]: null,
+				[`${DEBT_VALUE_KEY_PAYMENTS}/${index}`]: this.removeFieldCommand(),
 				[DEBT_VALUE_KEY_DEBT]: updatedDebt
 			},
 			source: ACTIVITY_SOURCE_DEBT,

@@ -982,14 +982,16 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Applies the Set-debt dialog submission as a total-amount correction: sets the
-	 * original ceiling to the entered amount and recomputes the current balance as
-	 * the new total minus the payments already made, so every total-derived value
-	 * (progress bar, percent paid, paid-off badge, currency summary) follows the new
-	 * total. When the total changes, each history entry's stored running-balance
-	 * snapshot is also recomputed against the new total — the payment amounts and
-	 * timestamps themselves are left untouched, only the displayed balance shifts.
-	 * Persists currency and due date when they changed. Clearing the payment history
-	 * entirely is still the Reset button's job, not this dialog's.
+	 * original ceiling to the entered amount and recomputes the current balance, so
+	 * every total-derived value (progress bar, percent paid, paid-off badge, currency
+	 * summary) follows the new total. Persists currency and due date when they changed.
+	 *
+	 * Behaviour depends on the dialog's new-cycle toggle:
+	 * - Off (default): the balance is the new total minus the payments already made, and
+	 *   when the total changed each history entry's stored running-balance snapshot is
+	 *   recomputed against the new total — the amounts and timestamps are left untouched.
+	 * - On: the payment history is wiped and the balance resets to the full new total, as
+	 *   a fresh cycle owing the whole amount again.
 	 *
 	 * Both `item` and `original` are captured before any await so that realtime
 	 * subscription callbacks (which replace updatedDebtSonataItems and
@@ -1004,20 +1006,22 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 		const original = this.findOriginalItem(entryKey);
 		if (!item || !original) return;
 
-		/* Step 1 : Recompute the balance from the new total and the payments already made.
-		   Rounded to 2 decimals to avoid floating-point drift, matching payDebt. When the
-		   total itself changed, every history entry's stored balance is now stale against
-		   the new total, so recompute the whole running sequence too. */
+		/* Step 1 : Recompute the balance from the new total (rounded to 2 decimals to avoid
+		   floating-point drift, matching payDebt). A new cycle wipes the history, so no prior
+		   payments are subtracted and the balance is the full new total; otherwise the balance
+		   is the new total minus the payments already made, and — when the total itself changed —
+		   every stale running balance is recomputed against the new total. */
 		const currentPayments = this.paymentsData[entryKey] ?? {};
-		const paymentsPaid = Object.values(currentPayments).reduce(
-			(sum, entry) => sum + (entry.amount ?? 0),
-			0
-		);
+		const hasPayments = Object.keys(currentPayments).length > 0;
+		const clearHistory = data.isNewCycle && hasPayments;
+		const paymentsPaid = data.isNewCycle
+			? 0
+			: Object.values(currentPayments).reduce((sum, entry) => sum + (entry.amount ?? 0), 0);
 		const newDebt = Utilities.roundToTwoDecimals(data.amount - paymentsPaid);
 		const newPaid = this.isDebtFullySettled(newDebt);
 		const totalChanged = data.amount !== original.original;
 		const newPayments =
-			totalChanged && Object.keys(currentPayments).length > 0
+			!data.isNewCycle && totalChanged && hasPayments
 				? this.recomputeHistoryBalances(currentPayments, data.amount)
 				: null;
 
@@ -1038,8 +1042,9 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 			item[DEBT_VALUE_KEY_PAID] = newPaid;
 			if (data.dueDate !== original.date) item[DEBT_VALUE_KEY_DATE] = data.dueDate;
 			if (newPayments) this.paymentsData = { ...this.paymentsData, [entryKey]: newPayments };
+			else if (clearHistory) this.paymentsData = { ...this.paymentsData, [entryKey]: {} };
 			try {
-				await this.databaseService.updateDebtFields(entryKey, fields, item.name ?? '');
+				await this.databaseService.updateDebtFields(entryKey, fields, item.name ?? '', clearHistory);
 				this.triggerSaveIndicator();
 			} catch (error) {
 				this.dialogService.handleError(this.dialogComponentContainer, error);
@@ -1062,8 +1067,8 @@ export class DebtComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param original - The unmodified debt record as last received from the database.
 	 * @param newDebt - The balance recomputed as the new total minus payments already made.
 	 * @param newPaid - Whether the recomputed balance is fully settled.
-	 * @param newPayments - The recomputed payment history when the total changed, or null when
-	 * the total is unchanged and history has nothing to recompute.
+	 * @param newPayments - The recomputed payment history when the total changed on a non-cycle
+	 * edit, or null (a new cycle clears the history via the write's clearHistory flag, not here).
 	 * @returns A record of field keys to new values, containing only changed fields.
 	 */
 	private buildDebtCycleDiff(

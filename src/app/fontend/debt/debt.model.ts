@@ -38,6 +38,7 @@ export interface NewDebtData {
 	isPermanent: boolean;
 	category: string;
 	currency: string;
+	isNewCycle: boolean;
 }
 
 /** Display definition for a selectable category tile in the add-debt dialog. */

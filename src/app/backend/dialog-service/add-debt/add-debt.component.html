@@ -90,17 +90,33 @@
 		<p-datepicker [appendTo]="'body'" dateFormat="yy-mm-dd" [(ngModel)]="dueDateModel"></p-datepicker>
 	</div>
 
-	@if (!isEditMode) {
+	@if (isEditMode) {
+		<!-- New-cycle toggle -->
+		<button
+			type="button"
+			class="add-debt-toggle"
+			[class.on]="isNewCycle"
+			(click)="isNewCycle = !isNewCycle">
+			<span class="material-symbols-outlined add-debt-toggle-icon">{{ DEBT_ICON_NEW_CYCLE }}</span>
+			<span class="add-debt-toggle-text">
+				<b>{{ DEBT_DIALOG_LABEL_NEW_CYCLE }}</b>
+				<small>{{ DEBT_DIALOG_LABEL_NEW_CYCLE_DESC }}</small>
+			</span>
+			<span class="add-debt-switch" [class.on]="isNewCycle">
+				<span class="add-debt-switch-knob"></span>
+			</span>
+		</button>
+	} @else {
 		<!-- Permanent toggle -->
 		<button
 			type="button"
-			class="add-debt-permanent-toggle"
+			class="add-debt-toggle"
 			[class.on]="isPermanent"
 			(click)="isPermanent = !isPermanent">
-			<span class="material-symbols-outlined add-debt-permanent-icon">{{
+			<span class="material-symbols-outlined add-debt-toggle-icon">{{
 				isPermanent ? DEBT_ICON_LOCK : DEBT_ICON_LOCK_OPEN
 			}}</span>
-			<span class="add-debt-permanent-text">
+			<span class="add-debt-toggle-text">
 				<b>{{ DEBT_DIALOG_LABEL_PERMANENT }}</b>
 				<small>{{ DEBT_DIALOG_LABEL_PERMANENT_DESC }}</small>
 			</span>

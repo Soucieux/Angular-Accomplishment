@@ -224,9 +224,9 @@
 }
 
 /* ─────────────────────────────────────────
-   Permanent toggle
+   Toggle row (permanent / new-cycle)
 ───────────────────────────────────────── */
-.add-debt-permanent-toggle {
+.add-debt-toggle {
 	display: flex;
 	align-items: center;
 	gap: 13px;
@@ -252,17 +252,17 @@
 	}
 }
 
-.add-debt-permanent-icon {
+.add-debt-toggle-icon {
 	font-size: 22px;
 	color: #94a3b8;
 	transition: color 150ms;
 }
 
-.add-debt-permanent-toggle.on .add-debt-permanent-icon {
+.add-debt-toggle.on .add-debt-toggle-icon {
 	color: #d53369;
 }
 
-.add-debt-permanent-text {
+.add-debt-toggle-text {
 	flex: 1;
 	display: flex;
 	flex-direction: column;

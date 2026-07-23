@@ -11,6 +11,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import { DebtComponent } from './debt.component';
+import { NewDebtData } from './debt.model';
 
 /** Minimal Account Expenses row factory. */
 function makeDebtSonataRow(key = 'k1', debt = 100, paid = false) {
@@ -22,6 +23,20 @@ function makeDebtSonataRow(key = 'k1', debt = 100, paid = false) {
 		debt,
 		original: debt,
 		paid
+	};
+}
+
+/** Full Set-debt dialog submission factory (new-cycle off by default). */
+function makeSetDebtData(overrides: Partial<NewDebtData> = {}): NewDebtData {
+	return {
+		name: 'Row name',
+		amount: 1000,
+		dueDate: '2025-01-01',
+		isPermanent: false,
+		category: 'card',
+		currency: DEBT_CURRENCY_CNY,
+		isNewCycle: false,
+		...overrides
 	};
 }
 
@@ -164,6 +179,43 @@ describe('DebtComponent', () => {
 		it('does nothing when the entry key does not exist', async () => {
 			await (component as any).resetDebt('nonexistent');
 			expect(mockDb.resetDebtRecord).not.toHaveBeenCalled();
+		});
+	});
+
+	// ── setDebtForNewCycle ────────────────────────────────────────────────
+
+	describe('setDebtForNewCycle', () => {
+		beforeEach(() => {
+			// 1000 total, 300 already paid, so the current balance is 700.
+			(component as any).updatedDebtSonataItems = [{ ...makeDebtSonataRow('k1', 700), original: 1000 }];
+			(component as any).originalDebtSonataItems = [{ ...makeDebtSonataRow('k1', 700), original: 1000 }];
+			(component as any).paymentsData = {
+				k1: { 0: { amount: 300, balance: 700, timestamp: '2025.01.01 00:00' } }
+			};
+		});
+
+		it('new cycle resets the balance to the full amount and clears the history', async () => {
+			await (component as any).setDebtForNewCycle('k1', makeSetDebtData({ isNewCycle: true }));
+			expect((component as any).updatedDebtSonataItems[0].debt).toBe(1000);
+			expect((component as any).paymentsData['k1']).toEqual({});
+			expect(mockDb.updateDebtFields).toHaveBeenCalledWith(
+				'k1',
+				jasmine.any(Object),
+				jasmine.any(String),
+				true
+			);
+		});
+
+		it('non-cycle edit keeps the balance net of payments and does not clear the history', async () => {
+			await (component as any).setDebtForNewCycle('k1', makeSetDebtData({ amount: 1200 }));
+			expect((component as any).updatedDebtSonataItems[0].debt).toBe(900);
+			expect((component as any).paymentsData['k1'][0]).toBeTruthy();
+			expect(mockDb.updateDebtFields).toHaveBeenCalledWith(
+				'k1',
+				jasmine.any(Object),
+				jasmine.any(String),
+				false
+			);
 		});
 	});
 

@@ -26,6 +26,7 @@ import {
 	DEBT_VALUE_KEY_DEBT,
 	DEBT_VALUE_KEY_ORIGINAL,
 	DEBT_VALUE_KEY_CATEGORY,
+	DEBT_VALUE_KEY_PAYMENTS,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_RECIPES,
 	DATABASE_DEBT_SONATA,
@@ -527,20 +528,27 @@ export abstract class DatabaseService {
 
 	/**
 	 * Updates multiple fields on a single debt record in one round-trip.
-	 * Appends an activity log entry when a name is provided.
+	 * Appends an activity log entry when a name is provided. When clearHistory is set — the
+	 * new-cycle path — the payments field is removed entirely, since update() is a merge and
+	 * passing an empty object would be a no-op; the backend-specific delete sentinel is used.
 	 *
 	 * @param entryKey - The key of the entry to update.
 	 * @param fields - A record of field names and their new values.
 	 * @param name - The debt entry name, recorded in the activity log. Omit to skip logging.
+	 * @param clearHistory - Whether to also delete the payment-history field in the same write.
 	 */
 	public async updateDebtFields(
 		entryKey: string,
 		fields: Record<string, unknown>,
-		name?: string
+		name?: string,
+		clearHistory = false
 	): Promise<void> {
+		const finalFields = clearHistory
+			? { ...fields, [DEBT_VALUE_KEY_PAYMENTS]: this.removeFieldCommand() }
+			: fields;
 		await this.updateTableExistingFields(DATABASE_DEBT_SONATA, {
 			entryKey,
-			fields,
+			fields: finalFields,
 			// Include the activity values only when a name is supplied so no entry is logged otherwise.
 			...(name !== undefined ? { source: ACTIVITY_SOURCE_DEBT, type: ACTIVITY_TYPE_UPDATED, name } : {})
 		});
@@ -675,6 +683,18 @@ export abstract class DatabaseService {
 	 *   properties. When no activity property is supplied, no entry is logged.
 	 */
 	protected abstract updateTableExistingFields(tableName: string, newRecord: any): Promise<void>;
+
+	/**
+	 * Gets the backend's field-deletion sentinel — the value written to a field to remove it
+	 * entirely in an update() merge (CloudBase's remove command; null for the Realtime Database).
+	 *
+	 * {@link updateDebtFields} - Deletes the payment-history field when starting a new debt cycle.
+	 * {@link resetDebtRecord} - Deletes the payment-history field when resetting a debt to its ceiling.
+	 * {@link removeSingleHistoryFromDebt} - Deletes one indexed payment entry from the history.
+	 *
+	 * @returns The backend-specific value that deletes a field when written to it.
+	 */
+	protected abstract removeFieldCommand(): unknown;
 
 	/**
 	 * Writes updated fields to a patch note document and appends an activity log entry. Implemented

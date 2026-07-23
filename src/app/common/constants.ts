@@ -896,6 +896,8 @@ export const DEBT_DUE_ICON_DEFAULT = 'event';
 export const DEBT_ICON_LOCK = 'lock';
 /** Icon shown when a debt is not permanent. */
 export const DEBT_ICON_LOCK_OPEN = 'lock_open';
+/** Icon shown on the Set-debt dialog's new-cycle toggle. */
+export const DEBT_ICON_NEW_CYCLE = 'restart_alt';
 
 /* ─────────────────────────────────────────
    Patch Notes page constants

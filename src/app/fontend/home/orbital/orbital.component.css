@@ -15,8 +15,38 @@
 	   are positioned from these, so changing a panel's height or the row's position moves the
 	   footer with it instead of silently closing the gap below it. */
 	--orbital-panel-height: 270px;
-	--orbital-row-bottom-top: clamp(870px, 70dvh, 900px);
+	--orbital-panel-width: clamp(330px, 20vw, 450px);
+	--orbital-row-top-top: 270px;
+
+	/* Vertical gap between the three panel rows, and the gutter either side of the week panel.
+	   Each follows the axis it spaces along, so the dashboard opens up in whichever direction the
+	   window is given room: the gutter runs 10px to 30px as the window widens from 1400px to
+	   2400px, the row gap 20px to 45px as it grows taller from 800px to 1425px. The row gap was
+	   previously a 70dvh curve on the bottom row, which only moved between 1243px and 1286px of
+	   viewport height — a step rather than a growth, and past where most screens ever reach. */
+	--orbital-row-gap: clamp(20px, 4dvh - 12px, 45px);
+	--orbital-row-gutter: clamp(10px, 2vw - 18px, 30px);
+
+	/* The lower two rows stack off that gap instead of carrying curves of their own, which makes
+	   the two vertical gaps equal by construction — row n sits at top + n * (panel height + gap).
+	   The footer keeps deriving from the bottom row, so it still follows it down. */
+	--orbital-row-middle-top: calc(
+		var(--orbital-row-top-top) + var(--orbital-panel-height) + var(--orbital-row-gap)
+	);
+	--orbital-row-bottom-top: calc(
+		var(--orbital-row-top-top) + 2 * (var(--orbital-panel-height) + var(--orbital-row-gap))
+	);
 	--orbital-row-footer-gap: 20px;
+
+	/* Horizontal inset shared by both side columns — the margin between the canvas edge and the
+	   outer edge of each side panel. The percentage is how fast that margin opens up as the
+	   canvas widens, and the px constant pins the curve so a 1203px canvas (a 1440px window minus
+	   the 237px nav) keeps the inset the layout was tuned at. Both sides deliberately read the
+	   same value: that centres the pair on the canvas, which is what lets the week panel below
+	   sit with an equal gutter either side. Retune by changing the percentage and re-deriving the
+	   constant from that same anchor — but note the margin and the week panel share one budget,
+	   so whatever the margin gives up the week panel takes, since it fills what is left. */
+	--orbital-panel-inset: calc(4% - 16px);
 }
 
 /* ─────────────────────────────────────────
@@ -561,7 +591,7 @@
 	flex-direction: column;
 	gap: 6px;
 	height: var(--orbital-panel-height);
-	width: clamp(330px, 20vw, 450px);
+	width: var(--orbital-panel-width);
 	animation: orFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -735,41 +765,41 @@
 
 .orbital-entertainment {
 	--panel-accent: #4ade80;
-	left: calc(24% - 254px);
-	top: 270px;
+	left: var(--orbital-panel-inset);
+	top: var(--orbital-row-top-top);
 	animation-delay: 0.42s;
 }
 
 .orbital-reminders {
 	--panel-accent: #1a6dff;
-	right: calc(24% - 258px);
-	top: 270px;
+	right: var(--orbital-panel-inset);
+	top: var(--orbital-row-top-top);
 	animation-delay: 0.47s;
 }
 
 .orbital-shortcuts {
 	--panel-accent: #a3e635;
-	right: calc(24% - 258px);
-	top: clamp(570px, 45dvh, 600px);
+	right: var(--orbital-panel-inset);
+	top: var(--orbital-row-middle-top);
 	animation-delay: 0.52s;
 }
 
 .orbital-activity {
-	right: calc(24% - 258px);
+	right: var(--orbital-panel-inset);
 	top: var(--orbital-row-bottom-top);
 	animation-delay: 0.57s;
 }
 
 .orbital-debt-sonata {
 	--panel-accent: #f97316;
-	left: calc(24% - 254px);
-	top: clamp(570px, 45dvh, 600px);
+	left: var(--orbital-panel-inset);
+	top: var(--orbital-row-middle-top);
 	animation-delay: 0.62s;
 }
 
 .orbital-recipes {
 	--panel-accent: #d53369;
-	left: calc(24% - 254px);
+	left: var(--orbital-panel-inset);
 	top: var(--orbital-row-bottom-top);
 	animation-delay: 0.67s;
 }
@@ -778,7 +808,17 @@
 	left: calc(50%);
 	transform: translate(-50%);
 	top: var(--orbital-row-bottom-top);
-	width: clamp(460px, 25vw, 730px);
+
+	/* Fills the space left between the two side panels instead of following a curve of its own,
+	   so the gutter on each side holds steady rather than widening as the canvas grows. It is
+	   derived from the same inset and panel-width variables the side panels use, so it re-fits
+	   itself automatically if the drift speed is ever retuned. Doubling --orbital-row-gutter covers
+	   both sides at once, and because the side panels share a single inset the leftover space is
+	   centred, so the two gutters come out equal. */
+	width: calc(
+		100% - 2 * var(--orbital-panel-inset) - 2 * var(--orbital-panel-width) -
+			2 * var(--orbital-row-gutter)
+	);
 	gap: 9px;
 	padding: 15px 18px;
 	overflow: hidden;
@@ -1049,10 +1089,10 @@
 	display: flex;
 	flex-direction: column;
 	text-align: center;
-	/* Sits below the bottom panel row rather than being positioned from the viewport, so the
-	   gap holds at every viewport height — the previous independent 95dvh clamp drifted
-	   against the row's own 70dvh curve. Adding a constant to a clamp shifts all three arms
-	   by that constant, so this stays a true clamp. */
+	/* Sits below the bottom panel row rather than being positioned from the viewport, so the gap
+	   holds at every window size. A curve of its own would drift against the row's and quietly
+	   open or close that gap as the two moved at different rates; deriving it keeps the offset
+	   exact whatever --orbital-row-gap resolves to. */
 	top: calc(
 		var(--orbital-row-bottom-top) + var(--orbital-panel-height) + var(--orbital-row-footer-gap)
 	);

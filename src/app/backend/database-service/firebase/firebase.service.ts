@@ -12,6 +12,7 @@ import {
 	DATABASE_STATISTICS,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_VAULT,
+	FIREBASE_INFO_CONNECTED,
 	VAULT_VALUE_KEY_CATEGORIES,
 	GENRE_FAVOURITE,
 	HISTORY_STATUS_ADDED,
@@ -185,6 +186,24 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	// ── Retrieval methods ────────────────────────────────────────────────────
+
+	/**
+	 * Gets an observable that emits true once the Realtime Database has an active connection to the
+	 * backend — the point at which onValue subscriptions can deliver data. Reads the RTDB
+	 * '.info/connected' meta path and forwards only the connected (true) transition, so a loading
+	 * guard's countdown starts when the data layer can actually respond, not on a cold connection.
+	 *
+	 * @returns An observable that emits true when the Realtime Database is connected.
+	 */
+	public getIsDataLayerReady$(): Observable<boolean> {
+		return new Observable<boolean>((subscriber) => {
+			const unsubscribe = onValue(dbRef(this.db, FIREBASE_INFO_CONNECTED), (snapshot) => {
+				// Forward only the connected state; the initial false would start the guard countdown too early.
+				if (snapshot.val() === true) subscriber.next(true);
+			});
+			return () => unsubscribe();
+		});
+	}
 
 	/**
 	 * Gets the statistics from Firebase as a reactive observable.

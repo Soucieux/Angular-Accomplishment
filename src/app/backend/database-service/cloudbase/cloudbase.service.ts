@@ -218,6 +218,18 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
+	 * Gets an observable that emits true once CloudBase auth is ready and a .watch() can be
+	 * established — the point at which the data layer can deliver. Delegates to authReady$ so a
+	 * loading guard's countdown starts when the data layer can actually respond, not on a cold
+	 * post-sign-in connection.
+	 *
+	 * @returns An observable that emits true when the CloudBase data layer is ready to watch.
+	 */
+	public getIsDataLayerReady$(): Observable<boolean> {
+		return CloudbaseService.authReady$;
+	}
+
+	/**
 	 * Emits every real login-state change (true = non-anonymous user signed in,
 	 * false = signed out or anonymous). Starts as false so new subscribers always
 	 * get the correct initial state without waiting for a replay.

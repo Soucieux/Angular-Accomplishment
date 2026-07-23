@@ -4,21 +4,26 @@ import { filter } from 'rxjs/operators';
 
 import { TimeoutService } from './timeout.service';
 import { Utilities } from '../utilities/app.utilities';
-import { AUTH_SETTLE_MAX_WAIT_MS } from '../constants';
+import { DatabaseService } from '../../backend/database-service/database.service';
+import { AUTH_SETTLE_MAX_WAIT_MS, DATA_READY_MAX_WAIT_MS } from '../constants';
 
 describe('TimeoutService', () => {
 	let service: TimeoutService;
 	let mockUtilities: jasmine.SpyObj<Utilities>;
+	let mockDatabaseService: jasmine.SpyObj<DatabaseService>;
 	let authSettled$: BehaviorSubject<boolean>;
+	let dataReady$: BehaviorSubject<boolean>;
 
 	/**
-	 * Builds the service with a controllable auth-settled stream.
+	 * Builds the service with controllable auth-settled and data-ready streams.
 	 *
 	 * @param isUserAlive - What getIsUserAlive() reports once the guard checks it.
 	 * @param isAuthSettled - Whether auth has already settled before start() is called.
+	 * @param isDataReady - Whether the data layer already reports ready before start() is called.
 	 */
-	function setup(isUserAlive: boolean, isAuthSettled = true): void {
+	function setup(isUserAlive: boolean, isAuthSettled = true, isDataReady = true): void {
 		authSettled$ = new BehaviorSubject<boolean>(isAuthSettled);
+		dataReady$ = new BehaviorSubject<boolean>(isDataReady);
 
 		mockUtilities = jasmine.createSpyObj<Utilities>('Utilities', [
 			'getIsUserAlive',
@@ -27,8 +32,17 @@ describe('TimeoutService', () => {
 		mockUtilities.getIsUserAlive.and.returnValue(isUserAlive);
 		mockUtilities.getIsAuthSettled$.and.returnValue(authSettled$.pipe(filter(Boolean)));
 
+		mockDatabaseService = jasmine.createSpyObj<DatabaseService>('DatabaseService', [
+			'getIsDataLayerReady$'
+		]);
+		mockDatabaseService.getIsDataLayerReady$.and.returnValue(dataReady$.pipe(filter(Boolean)));
+
 		TestBed.configureTestingModule({
-			providers: [TimeoutService, { provide: Utilities, useValue: mockUtilities }]
+			providers: [
+				TimeoutService,
+				{ provide: Utilities, useValue: mockUtilities },
+				{ provide: DatabaseService, useValue: mockDatabaseService }
+			]
 		});
 
 		service = TestBed.inject(TimeoutService);
@@ -52,11 +66,33 @@ describe('TimeoutService', () => {
 			expect(callback).not.toHaveBeenCalled();
 		}));
 
-		it('invokes the callback after the delay when the user is signed in', fakeAsync(() => {
+		it('invokes the callback after the countdown once auth is settled and the data layer is ready', fakeAsync(() => {
 			setup(true);
 			const callback = jasmine.createSpy('callback');
 
 			service.start('key', callback, 100);
+			tick(99);
+			expect(callback).not.toHaveBeenCalled();
+
+			tick(1);
+			expect(callback).toHaveBeenCalledOnceWith();
+		}));
+
+		it('holds the countdown until the data layer signals ready, even when auth is already settled', fakeAsync(() => {
+			// The post-sign-in redirect path: auth is already settled the instant the guard arms, but the
+			// data layer is still connecting. The countdown must not start until the data layer is ready,
+			// so the retry dialog cannot race a cold connection.
+			setup(true, true, false);
+			const callback = jasmine.createSpy('callback');
+
+			service.start('key', callback, 100);
+
+			// The whole countdown could elapse while the data layer is still connecting — nothing fires.
+			tick(100);
+			expect(callback).not.toHaveBeenCalled();
+
+			// Data layer connects; only now does the countdown begin.
+			dataReady$.next(true);
 			tick(99);
 			expect(callback).not.toHaveBeenCalled();
 
@@ -94,13 +130,13 @@ describe('TimeoutService', () => {
 			expect(callbackB).toHaveBeenCalledOnceWith();
 		}));
 
-		it('does not start the delay until auth has settled', fakeAsync(() => {
+		it('does not start the countdown until auth has settled', fakeAsync(() => {
 			setup(true, false);
 			const callback = jasmine.createSpy('callback');
 
 			service.start('key', callback, 100);
 
-			// The full delay elapses while auth is still pending, so nothing fires yet.
+			// The countdown cannot start while auth is still pending, even though the data layer is ready.
 			tick(100);
 			expect(callback).not.toHaveBeenCalled();
 
@@ -112,12 +148,26 @@ describe('TimeoutService', () => {
 			expect(callback).toHaveBeenCalledOnceWith();
 		}));
 
-		it('starts the delay anyway once the auth wait cap elapses', fakeAsync(() => {
+		it('starts the countdown anyway once the auth wait cap elapses', fakeAsync(() => {
 			setup(true, false);
 			const callback = jasmine.createSpy('callback');
 
 			service.start('key', callback, 100);
 			tick(AUTH_SETTLE_MAX_WAIT_MS);
+			expect(callback).not.toHaveBeenCalled();
+
+			tick(100);
+			expect(callback).toHaveBeenCalledOnceWith();
+		}));
+
+		it('starts the countdown anyway once the data-ready wait cap elapses', fakeAsync(() => {
+			// The data layer never signals ready (a genuinely stuck connection); the cap must still let the
+			// countdown run so the retry dialog is surfaced rather than spinning forever.
+			setup(true, true, false);
+			const callback = jasmine.createSpy('callback');
+
+			service.start('key', callback, 100);
+			tick(DATA_READY_MAX_WAIT_MS);
 			expect(callback).not.toHaveBeenCalled();
 
 			tick(100);

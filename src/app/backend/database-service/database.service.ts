@@ -101,6 +101,17 @@ export abstract class DatabaseService {
 	// ── Retrieval methods ────────────────────────────────────────────────────
 
 	/**
+	 * Gets an observable that emits true once the backend's data layer is connected and able to
+	 * deliver realtime data — CloudBase auth ready to .watch(), or the Realtime Database connected.
+	 * A loading guard waits for this before starting its countdown so the retry dialog is not raised
+	 * while a freshly authenticated session's data layer is still connecting. Implemented per backend
+	 * since the readiness signal differs.
+	 *
+	 * @returns An observable that emits true when the data layer is ready to deliver data.
+	 */
+	public abstract getIsDataLayerReady$(): Observable<boolean>;
+
+	/**
 	 * Gets the statistics document from the database as a reactive observable.
 	 *
 	 * @returns An observable that emits the statistics.

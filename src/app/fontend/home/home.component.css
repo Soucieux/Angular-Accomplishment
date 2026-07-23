@@ -1,6 +1,11 @@
 :host {
 	font-family: 'app-font';
+	/* height:100% must accompany display:block: the dashboard's .container-home:has(orbital)
+	   sizes with height:100%, which needs a definite-height parent. A block host with no height
+	   auto-sizes to its content, so that child collapses to its min-height and leaves a gap
+	   below the dashboard. */
 	display: block;
+	height: 100%;
 }
 
 /* ─────────────────────────────────────────

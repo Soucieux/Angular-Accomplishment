@@ -73,9 +73,14 @@
    overflow: hidden, permanently clipping the end of the scroll range — where the bilingual footer
    sits. The header clearance belongs here too, on the scrolling child, because the container's own
    padding would position nothing while still inflating the box this element resolves against. */
+/* The dashboard's content is position:absolute, so each element resolves its `top` from
+   .orbital-root's padding-box edge — a padding-top would size the scroll box without moving any of
+   them, leaving the whole cluster tucked behind the reserved title-bar band. A transparent
+   border-top moves that padding-box edge down instead, so every element clears the band as one and
+   their relative spacing is untouched. */
 :host-context(body.tauri-mode) .orbital-root {
 	inset: 0;
-	padding-top: var(--top-reserve);
+	border-top: var(--top-reserve) solid transparent;
 }
 
 /* ─────────────────────────────────────────
@@ -260,7 +265,7 @@
 
 .orbital-links {
 	position: absolute;
-	top: 170px;
+	top: 155px;
 	left: 50%;
 	transform: translate(-50%);
 	width: 100%;
@@ -307,13 +312,20 @@
 
 .orbital-satellites {
 	position: absolute;
-	top: 240px;
+	top: 209px;
 	left: 50%;
 	transform: translate(-50%);
 	width: 1240px;
 	display: flex;
 	justify-content: center;
 	gap: 40px;
+}
+
+/* No pinned links shown: the .orbital-links row collapses. Unlike the tight 25px gaps around a
+   present pinned link, the raised Patch/Resonance discs here sit R (48px) below the quick-action
+   buttons — matching the date→button rhythm when nothing sits between them. */
+.orbital-root:not(:has(.orbital-link)) .orbital-satellites {
+	top: 170px;
 }
 
 .orbital-satellite {

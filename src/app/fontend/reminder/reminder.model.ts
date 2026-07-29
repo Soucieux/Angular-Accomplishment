@@ -54,7 +54,7 @@ export interface NewItem {
 }
 
 /** Tag categories available for reminder items. */
-export const REMINDER_KNOWN_CATEGORIES = ['Personal', 'Work', 'Utility', 'Other'] as const;
+export const REMINDER_KNOWN_CATEGORIES = ['Personal', 'Work', 'iCloud', 'Utility', 'Other'] as const;
 
 /** Milliseconds of entrance-animation delay added per reminder card position. */
 export const REMINDER_CARD_ENTRANCE_STEP_MS = 35;
@@ -65,6 +65,7 @@ export const REMINDER_CARD_ENTRANCE_MAX_DELAY_MS = 350;
 /** Maps each reminder tag category to its display colour. */
 export const REMINDER_CATEGORY_COLOR_MAP: Record<string, string> = {
 	Work: '#1a6dff',
+	iCloud: '#7c3aed',
 	Personal: '#d53369',
 	Utility: '#c2820a',
 	Other: '#0d9488'
@@ -72,10 +73,10 @@ export const REMINDER_CATEGORY_COLOR_MAP: Record<string, string> = {
 
 /**
  * Curated palette for custom tags. Colors are chosen to be distinct from each
- * other and from the four base-category colors above.
+ * other and from the base-category colors above.
  */
 export const REMINDER_CUSTOM_TAG_COLORS: string[] = [
-	'#7c3aed',
+	'#64748b',
 	'#059669',
 	'#dc2626',
 	'#0891b2',

@@ -771,6 +771,9 @@ export const PORTAL_LOG_CATEGORY_DELETE_FAILED = 'Failed to delete category:';
    Reminder page constants
 ───────────────────────────────────────── */
 
+/** iCloud reminder-category label — identical in all locales. */
+export const REMINDER_CATEGORY_ICLOUD = 'iCloud';
+
 /** Type value for a Messages item in the reminder upcoming list. */
 export const REMINDER_ITEM_MESSAGE = 'message';
 

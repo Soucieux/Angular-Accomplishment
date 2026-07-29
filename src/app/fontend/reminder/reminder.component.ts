@@ -363,8 +363,8 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Computes the ordered list of tags for the filter bar: the four base categories
-	 * first, followed by any unique custom tags found across all current items.
+	 * Computes the ordered list of tags for the filter bar: the base categories first,
+	 * followed by any unique custom tags found across all current items.
 	 * Called once per DB subscription emission; result is stored in {@link filterBarTags}.
 	 *
 	 * @returns The ordered array of tag strings with base categories leading.
@@ -1451,7 +1451,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── new-item category selection and paginator helpers ────────────────────
 
 	/**
-	 * Returns true when the given tag is one of the four built-in categories.
+	 * Returns true when the given tag is one of the built-in categories.
 	 *
 	 * @param tag - The tag string to test.
 	 * @returns True when the tag is a known base category.

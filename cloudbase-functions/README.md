@@ -1,26 +1,64 @@
-# CloudBase Cloud Functions — Connected Accounts
+# CloudBase Cloud Functions — Connected Accounts and Shared Reminders
 
-These three functions implement the server-side half of the Connected Accounts (account
-linking) feature (see `docs/plans/2026-06-30-connected-accounts-design.md`).
+These functions implement cross-account linking and shared-reminder operations that the
+Angular client cannot perform directly under the database security rules (see
+`docs/plans/2026-06-30-connected-accounts-design.md`).
 
-They are **NOT part of the Angular build**. They live here as deploy-ready source for
+The current design uses **pairwise connections**, not groups. Each connected account's openid
+appears in the other account's `users.sharedWith` list. Shared reminders remain owned by their
+creator and are visible to every account directly connected to that owner. There are no group
+documents, group merges, or `groupId` fields in this flow.
+
+These functions are **NOT part of the Angular build**. They live here as deploy-ready source for
 you to push to your CloudBase environment. The Angular app calls them via
 `cloudbase.callFunction({ name, data })`.
 
+This document covers the connected-account and shared-reminder functions. The passphrase-lock
+functions in this directory support a separate feature.
+
 | Function | Purpose | Triggered by |
 |----------|---------|--------------|
-| `sendConnectRequest` | Looks up a target by connect code and appends a pending request to their `users.incomingRequests` | Account → Connections → "Send request" |
-| `respondConnectRequest` | Approves (create / join / **merge** groups) or declines a pending request | Account → Connections → Approve / Decline |
-| `disconnect` | Removes the caller from their group; dissolves the group when one member remains | Account → Connections → Disconnect |
+| `sendConnectRequest` | Looks up a target by connect code and creates matching incoming/outgoing pending-request records | Account → Connections → Send request |
+| `cancelConnectRequest` | Removes a pending request from both accounts | Account → Connections → Cancel request |
+| `respondConnectRequest` | Approves or declines a pending request; approval creates a bidirectional `sharedWith` connection | Account → Connections → Approve / Decline |
+| `disconnect` | Removes one pairwise connection from both accounts and marks it as left | Account → Connections → Disconnect |
+| `getSharedReminders` | Returns shared reminders owned by the caller's connected accounts | Reminder page load or refresh signal |
+| `editSharedReminder` | Authorizes and performs cross-account edit, delete, or complete operations | Reminder → Edit / Delete / Complete |
+| `getSharedActivity` | Merges the caller's and connected accounts' shared-reminder activity, newest first | Home activity feed |
+| `notifySharedChange` | Bumps `sharedRev` on the caller and connected accounts so their live watches re-fetch shared reminders | After a shared reminder is created, edited, deleted, or completed |
 
-> The previous v1 trio (`joinGroup`, `leaveGroup`, `broadcastActivity`) was for the abandoned
-> denormalized `sharedWith`-per-reminder design and has been deleted.
+> The previous v1 trio (`joinGroup`, `leaveGroup`, `broadcastActivity`) and the later
+> `statistics`-group model were abandoned. The current implementation stores only direct
+> account-to-account edges in `users.sharedWith`.
+
+## How shared-reminder refresh works
+
+CloudBase's realtime reminder watcher cannot reliably push another account's documents to the
+current user. Each account can, however, reliably watch its own `users` document.
+
+1. A shared reminder is created or changed.
+2. The client calls `notifySharedChange` without reminder data.
+3. The function sets `sharedRev` to the current timestamp on the caller's user document and every
+   directly connected account's user document.
+4. Each affected client's own user-document watcher observes the new revision and calls
+   `getSharedReminders`.
+
+`notifySharedChange` does not edit the reminder itself. It is a fire-and-forget invalidation
+signal; if it fails, the reminder write can still succeed, but connected clients may not see the
+change until another refresh signal or a page reload.
+
+The recipient list comes from the **caller's** `sharedWith` list. If account A edits a reminder
+owned by account B, an account connected to B but not to A is not signalled by this call and may
+remain stale until its next refresh. Supporting that case would require the function to receive and
+validate the reminder owner, then notify the owner's connections as well.
 
 ## Deploying
 
-Each function is a folder with `index.js` + `package.json`. Deploy each one through the
-CloudBase console (云函数 → 新建/上传) or the CloudBase CLI, using the **same environment**
-as the app (`vision-canvas-2gs531jy76d7aaa9`). Runtime: Node.js 16+.
+Each function is a folder with `index.js` + `package.json`. Before deployment, run
+`node sync-shared.js` from this directory so every isolated function bundle receives the current
+shared `lib.js`. Deploy each function through the CloudBase console (云函数 → 新建/上传) or the
+CloudBase CLI, using the **same environment** as the app (`vision-canvas-2gs531jy76d7aaa9`).
+Runtime: Node.js 16+.
 
 ## ⚠️ Verify before relying on these (read this first)
 
@@ -40,29 +78,33 @@ as the app (`vision-canvas-2gs531jy76d7aaa9`). Runtime: Node.js 16+.
    built-in admin credentials — no secret needed. This is the documented pattern.
 
 3. **No `pull` / `addToSet`.** CloudBase `db.command` only has `push / pop / shift / unshift`.
-   Removing a request, removing a member, and merging arrays are done as read-modify-write with
-   `_.set(newArray)`. New requests are appended with `_.push([entry])`.
+   Removing requests or connection edges and deduplicating arrays are done as read-modify-write
+   with `_.set(newArray)`. New requests are appended with `_.push([entry])`.
 
 4. **`users._id == _openid`.** The migration guarantees each `users` doc is keyed by its owner's
    openid, so `db.collection('users').doc(openid)` targets that user. The same holds for `doc(user._id)`.
 
-5. **Activity cap = 20.** On a group merge, the two `sharedRecentActivity` arrays are concatenated,
-   sorted newest-first by `timestamp`, and trimmed to 20 — matching `STATS_CAP_ACTIVITY_LOG`.
+5. **Cross-account edits are allow-listed.** `editSharedReminder` permits only reminder content
+   fields (`text`, `date`, `link`, `tag`, `startTime`, `endTime`). A connected account cannot change
+   ownership metadata or the `isShared` flag.
 
-## Linking policy (respondConnectRequest)
+6. **Activity cap = 20.** `getSharedActivity` merges each connected account's
+   `sharedRecentActivity`, sorts entries newest-first by `timestamp`, and returns at most 20.
 
-On approve, the two `groupId`s decide the outcome:
+## Linking policy (`respondConnectRequest`)
 
-- **both null** → create a new group doc (`statistics`, `isGroup: true`) with both members.
-- **exactly one set** → the other joins that group.
-- **both set & different** → **merge**: union members, merge `memberProfiles`, concat+cap
-  `sharedRecentActivity` into the **approver's** group (survivor), re-point every absorbed member's
-  `users.groupId`, then delete the absorbed group doc.
-- **both set & same** → no-op (already connected).
+- **Decline** removes the incoming request and marks the sender's outgoing request as declined.
+- **Approve** adds each account's openid to the other's `sharedWith` list and upserts a connected
+  record in each account's `connections` list.
+- **Disconnect** removes only that pairwise edge. Other connections are unaffected.
+- **Reconnect** replaces the prior left-state record with a connected record.
 
 ## Field/collection names (must match the app)
 
-- collections: `users`, `statistics`, `reminder`
-- `users` fields: `_openid`, `connectCode`, `groupId`, `incomingRequests` (`{ fromOpenid, fromName, ts }`)
-- `statistics` group docs: `_id`, `isGroup`, `sharedWith` (openid[]), `memberProfiles` (`{ openid: { name } }`), `sharedRecentActivity`
-- `reminder` fields: `_openid`, `isShared`
+- Collections: `users`, `reminder`
+- `users` identity fields: `_id`, `_openid`, `connectCode`
+- `users` connection fields: `sharedWith` (openid[]), `connections`
+  (`{ openid, name, status }[]`), `incomingRequests`, `outgoingRequests`
+- `users` shared-reminder signal/feed fields: `sharedRev`, `sharedRecentActivity`,
+  `completedShared`
+- `reminder` ownership/sharing fields: `_id`, `_openid`, `isShared`

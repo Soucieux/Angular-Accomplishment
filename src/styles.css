@@ -27,6 +27,7 @@ html {
 }
 
 :root {
+	color-scheme: light;
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
 	/* The indigo-pink prebuilt theme hard-codes Roboto on every component-level

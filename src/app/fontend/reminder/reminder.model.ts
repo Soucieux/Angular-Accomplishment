@@ -88,21 +88,18 @@ export const REMINDER_CUSTOM_TAG_COLORS: string[] = [
 	'#be185d'
 ];
 
-/** All valid start-time options: 00:00 to 23:45 in 15-minute steps. */
+/** All valid start-time options from 00:00 through 23:59 in one-minute steps. */
 export const REMINDER_TIME_OPTIONS: TimeOption[] = (() => {
-	const pad = (n: number) => String(n).padStart(2, '0');
+	const padTwoDigits = (value: number): string => String(value).padStart(2, '0');
 	const options: TimeOption[] = [];
-	for (let h = 0; h <= 23; h++) {
-		for (const m of [0, 15, 30, 45]) {
-			const label = `${pad(h)}:${pad(m)}`;
+	for (let hour = 0; hour <= 23; hour++) {
+		for (let minute = 0; minute <= 59; minute++) {
+			const label = `${padTwoDigits(hour)}:${padTwoDigits(minute)}`;
 			options.push({ label, value: label });
 		}
 	}
 	return options;
 })();
 
-/** All valid end-time options: 00:00 to 24:00 in 15-minute steps (superset of start options). */
-export const REMINDER_END_TIME_OPTIONS: TimeOption[] = [
-	...REMINDER_TIME_OPTIONS,
-	{ label: '24:00', value: '24:00' }
-];
+/** All valid end-time options from 00:00 through 23:59 in one-minute steps. */
+export const REMINDER_END_TIME_OPTIONS: TimeOption[] = [...REMINDER_TIME_OPTIONS];

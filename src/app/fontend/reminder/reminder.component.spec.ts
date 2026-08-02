@@ -6,7 +6,9 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
 	REMINDER_VALUE_KEY_DATE,
+	REMINDER_VALUE_KEY_END_TIME,
 	REMINDER_VALUE_KEY_LINK,
+	REMINDER_VALUE_KEY_START_TIME,
 	REMINDER_VALUE_KEY_TAG,
 	REMINDER_VALUE_KEY_TEXT,
 	STATS_FIELD_REMINDER_UPCOMING,
@@ -461,6 +463,79 @@ describe('ReminderComponent', () => {
 			const item = (component as any).items[0];
 			await (component as any).clearLink(item);
 			expect(mockDb.updateReminderTable).not.toHaveBeenCalled();
+		});
+	});
+
+	// ── Reminder time ranges ─────────────────────────────────────────────────
+
+	describe('Reminder time ranges', () => {
+		it('auto-populates an exact one-hour end for an arbitrary start minute', async () => {
+			await (component as any).onStartTimeSelect('12:37');
+
+			expect((component as any).newItem.startTime).toBe('12:37');
+			expect((component as any).newItem.endTime).toBe('13:37');
+		});
+
+		it('caps an automatic end at 23:59', async () => {
+			await (component as any).onStartTimeSelect('23:30');
+
+			expect((component as any).newItem.endTime).toBe('23:59');
+		});
+
+		it('allows the automatic end to equal a 23:59 start', async () => {
+			await (component as any).onStartTimeSelect('23:59');
+
+			expect((component as any).newItem.endTime).toBe('23:59');
+		});
+
+		it('allows the filtered end options to begin at the selected start time', () => {
+			(component as any).editingStartTime = '12:37';
+
+			const options = (component as any).filteredEndTimeOptions;
+			expect(options[0]).toEqual({ label: '12:37', value: '12:37' });
+			expect(options.every((option: { value: string }) => option.value >= '12:37')).toBeTrue();
+		});
+
+		it('persists arbitrary start and automatic end minutes when editing', async () => {
+			const item = makeItem('k1', 'test', '2026-08-02');
+			(component as any).items = [item];
+			(component as any).editingItem = item;
+
+			await (component as any).onStartTimeSelect('08:22');
+
+			expect(item.startTime).toBe('08:22');
+			expect(item.endTime).toBe('09:22');
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
+				'k1',
+				REMINDER_VALUE_KEY_START_TIME,
+				'08:22',
+				'test',
+				false
+			);
+			expect(mockDb.updateReminderTable).toHaveBeenCalledWith(
+				'k1',
+				REMINDER_VALUE_KEY_END_TIME,
+				'09:22',
+				'test',
+				false
+			);
+		});
+
+		it('includes arbitrary start and end minutes when adding a reminder', async () => {
+			(component as any).dateOrLinkPopover = { hide: jasmine.createSpy('hide') };
+			(component as any).newItem = {
+				...(component as any).newItem,
+				text: 'test',
+				date: new Date(2026, 7, 2),
+				startTime: '08:22',
+				endTime: '09:22'
+			};
+
+			await (component as any).addNewItemWithDateOrLink();
+
+			expect(mockDb.addNewRecordToReminder).toHaveBeenCalledWith(
+				jasmine.objectContaining({ startTime: '08:22', endTime: '09:22' })
+			);
 		});
 	});
 

@@ -516,7 +516,10 @@
 							optionValue="value"
 							[placeholder]="REMINDER_START_TIME_LABEL"
 							[appendTo]="'body'"
-							panelStyleClass="dropdown-panel-font"
+							styleClass="rm-time-select"
+							panelStyleClass="dropdown-panel-font rm-time-panel"
+							[virtualScroll]="true"
+							[virtualScrollItemSize]="30"
 							[disabled]="isTimeInputDisabled"
 							[(ngModel)]="editingStartTime"
 							(onChange)="onStartTimeSelect($event.value)">
@@ -528,7 +531,10 @@
 							optionValue="value"
 							[placeholder]="REMINDER_END_TIME_LABEL"
 							[appendTo]="'body'"
-							panelStyleClass="dropdown-panel-font"
+							styleClass="rm-time-select"
+							panelStyleClass="dropdown-panel-font rm-time-panel"
+							[virtualScroll]="true"
+							[virtualScrollItemSize]="30"
 							[disabled]="isTimeInputDisabled || !editingStartTime"
 							[(ngModel)]="editingEndTime"
 							(onChange)="onEndTimeSelect($event.value)">

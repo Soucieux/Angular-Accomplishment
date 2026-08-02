@@ -852,15 +852,16 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Computes the auto-filled end time by adding 60 minutes to the given start time.
-	 * Caps the result at "24:00" when the computed time would exceed midnight.
+	 * Computes the auto-filled end time by adding 60 minutes without crossing midnight.
 	 *
 	 * @param startTime - The start time string in "HH:mm" format.
-	 * @returns The computed end time string in "HH:mm" format.
+	 * @returns The computed end time string in "HH:mm" format, capped at 23:59.
 	 */
 	private computeEndTimeFromStart(startTime: string): string {
-		const totalMinutes = Utilities.parseTimeToMinutes(startTime) + 60;
-		if (totalMinutes >= 24 * 60) return '24:00';
+		const totalMinutes = Math.min(
+			Utilities.parseTimeToMinutes(startTime) + 60,
+			23 * 60 + 59
+		);
 		return `${Utilities.padTwoDigits(Math.floor(totalMinutes / 60))}:${Utilities.padTwoDigits(totalMinutes % 60)}`;
 	}
 
@@ -1073,7 +1074,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected async onStartTimeSelect(value: string): Promise<void> {
 		this.editingStartTime = value;
 
-		// Compute and assign the auto-filled end time (start + 60 min, capped at 24:00)
+		// Compute and assign the auto-filled end time (start + 60 minutes, capped at 23:59)
 		const autoEnd = this.computeEndTimeFromStart(value);
 		this.editingEndTime = autoEnd;
 
@@ -1683,15 +1684,15 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ── time dropdown template helpers ───────────────────────────────────────
 
 	/**
-	 * Gets the filtered end-time options, excluding all values at or before the current
-	 * start time. String comparison is valid here because all values are zero-padded "HH:mm".
+	 * Gets the end-time options from the current start minute through the end of the day.
+	 * The selected time's minute offset matches its index in the minute-resolution option array.
 	 *
-	 * @returns The subset of REMINDER_END_TIME_OPTIONS whose value is strictly after editingStartTime.
+	 * @returns The subset of REMINDER_END_TIME_OPTIONS whose value is at or after editingStartTime.
 	 */
 	protected get filteredEndTimeOptions(): TimeOption[] {
 		const startTime = this.editingStartTime;
 		if (!startTime) return REMINDER_END_TIME_OPTIONS;
-		return REMINDER_END_TIME_OPTIONS.filter((option) => option.value > startTime);
+		return REMINDER_END_TIME_OPTIONS.slice(Utilities.parseTimeToMinutes(startTime));
 	}
 
 	/**

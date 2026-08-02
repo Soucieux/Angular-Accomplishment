@@ -1,10 +1,10 @@
-/* PAGE ACCENT COLOR — Reminder
- * Blue  primary #1a6dff   rgba(26, 109, 255)
- *       cyan    #00d2ff
- * Applied to: title gradient, chip background, add-card hover, paginator active,
- *             counter number, field pills
- * To change: replace the --rm-accent-rgb channels on :host below.
- */
+/* ─────────────────────────────────────────
+   Page accent color — Reminder
+───────────────────────────────────────── */
+
+/* Blue primary #1a6dff / cyan #00d2ff. Applied to the title gradient, chip background,
+   add-card hover, active paginator, counter number, and field pills. To change the accent,
+   replace the --rm-accent-rgb channels on :host below. */
 
 /* ─────────────────────────────────────────
    Host
@@ -454,13 +454,6 @@
 .rm-card-shared {
 	background: #faf8ff;
 	border-color: rgba(124, 58, 237, 0.18);
-}
-
-@media (max-width: 940px) {
-	.rm-shared-by {
-		max-width: 70px;
-	}
-
 }
 
 .rm-chip-custom {
@@ -924,16 +917,22 @@
 	flex-shrink: 0;
 }
 
-::ng-deep .rm-time-row .p-select {
+::ng-deep .rm-time-select.p-select {
 	flex: 1;
 	height: 30px;
+	font-size: 13px;
 }
 
-::ng-deep .rm-time-row .p-select-label {
-	padding-top: 0;
-	padding-bottom: 0;
+::ng-deep .rm-time-select .p-select-label {
 	display: flex;
 	align-items: center;
+	padding: 0 10px;
+	font-size: 13px;
+}
+
+::ng-deep .rm-time-panel .p-select-option {
+	padding: 6px 12px !important;
+	font-size: 13px;
 }
 
 /* ─────────────────────────────────────────
@@ -1052,6 +1051,10 @@
 ───────────────────────────────────────── */
 
 @media (max-width: 940px) {
+	.rm-shared-by {
+		max-width: 70px;
+	}
+
 	.rm-greeting {
 		display: block;
 	}

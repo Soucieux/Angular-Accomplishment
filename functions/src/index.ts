@@ -221,7 +221,7 @@ const RATE_UNRESOLVED = -1;
  * Milliseconds Firecrawl waits for the Douban page to finish rendering before extracting. Without
  * it the capture lands on a half-built page and the extraction comes back empty.
  */
-const SCRAPE_WAIT_MS = 3000;
+const SCRAPE_WAIT_MS = 4000;
 /** Ceiling on the whole Firecrawl call, comfortably above the render wait above. */
 const SCRAPE_TIMEOUT_MS = 25000;
 

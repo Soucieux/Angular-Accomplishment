@@ -35,6 +35,9 @@ package-lock.json
 .vscode/
 .history/*
 
+# GitHub configuration
+.github/
+
 # Miscellaneous
 /.angular/cache
 .sass-cache/

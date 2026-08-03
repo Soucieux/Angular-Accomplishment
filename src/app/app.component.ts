@@ -30,6 +30,7 @@ import { ToastModule } from 'primeng/toast';
 import { Utilities } from './common/utilities/app.utilities';
 import {
 	APP_BREAKPOINT_COMPACT,
+	ACCOUNT_ROUTE_PATH,
 	COMPONENT_DESTROY,
 	CTX_COLOR_CLIPBOARD,
 	CTX_COLOR_MY_ACCOUNT,
@@ -45,6 +46,8 @@ import {
 	CTX_ICON_SIGN_OUT,
 	CTX_ICON_INSPECT,
 	DIALOG_CONFIRM,
+	LOGIN_ROUTE_PATH,
+	LOGIN_URL_DEFAULT_RETURN,
 	LS_NAV_COLLAPSED_KEY,
 	LS_LOCALE_KEY,
 	TAURI_MODE_CLASS,
@@ -53,7 +56,19 @@ import {
 	TAURI_CMD_SET_MINIMIZE_ON_CLOSE,
 	LOCALE_EN_BODY_CLASS,
 	NAV_LOCALE_SWITCH_TO_ZH,
-	NAV_LOCALE_SWITCH_TO_EN
+	NAV_LOCALE_SWITCH_TO_EN,
+	RECOVERY_INACTIVITY_THRESHOLD_MS,
+	RECOVERY_STATUS_EXPIRED,
+	RECOVERY_STATUS_OFFLINE,
+	RECOVERY_STATUS_RECOVERED,
+	RECOVERY_TRIGGER_ONLINE,
+	RECOVERY_TRIGGER_RESUME,
+	RECOVERY_TRIGGER_STARTUP,
+	RECOVERY_TRIGGER_WATCH_ERROR,
+	RECOVERY_TRIGGER_WRITE_ERROR,
+	WINDOW_EVENT_BLUR,
+	WINDOW_EVENT_FOCUS,
+	WINDOW_EVENT_ONLINE
 } from './common/constants';
 import {
 	CTX_LABEL_COPY,
@@ -92,7 +107,9 @@ import { DesktopContextMenuComponent } from './fontend/desktop-context-menu/cont
 import { ContextMenuAction } from './fontend/desktop-context-menu/context-menu.model';
 import { readText } from '@tauri-apps/plugin-clipboard-manager';
 import { invoke } from '@tauri-apps/api/core';
-import { Observable, filter } from 'rxjs';
+import type { UnlistenFn } from '@tauri-apps/api/event';
+import type { Window as TauriWindow } from '@tauri-apps/api/window';
+import { Observable, Subscription, filter } from 'rxjs';
 import { BottomNavComponent } from './fontend/mobile-bottom-nav/bottom-nav.component';
 import { NavItem } from './fontend/mobile-bottom-nav/bottom-nav.model';
 import {
@@ -101,6 +118,8 @@ import {
 	PRIMARY_IDS,
 	ROUTE_TO_NAV_ID
 } from './fontend/mobile-bottom-nav/bottom-nav.data';
+import { SessionRecoveryService } from './backend/session-recovery/session-recovery.service';
+import { RecoveryStatus, RecoveryTrigger } from './backend/session-recovery/session-recovery.model';
 
 @Component({
 	selector: 'root',
@@ -164,7 +183,20 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected isTauriApp = false;
 	protected isCapacitorApp = false;
 	protected isStandalonePwa = false;
-	private tauriAppWindow: { startDragging: () => Promise<void> } | null = null;
+	private tauriAppWindow: TauriWindow | null = null;
+	private tauriEventUnlistenFunctions: UnlistenFn[] = [];
+	private inactivityStartedAt?: number;
+	private confirmedExpiryPending = false;
+	private recoveryOutcomePromise?: Promise<void>;
+	private logoutPromise?: Promise<void>;
+	private routerEventsSubscription?: Subscription;
+	private currentUserSubscription?: Subscription;
+	private sessionExpiredSubscription?: Subscription;
+	private watchErrorsSubscription?: Subscription;
+	private writeErrorsSubscription?: Subscription;
+	private documentScrollListener?: () => void;
+	private navReadyTimeout?: ReturnType<typeof setTimeout>;
+	private isDestroyed = false;
 	private userInitialized = false;
 	protected contextMenuVisible = false;
 	protected contextMenuX = 0;
@@ -186,6 +218,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	constructor(
 		private databaseService: DatabaseService,
 		private authService: AuthService,
+		private sessionRecoveryService: SessionRecoveryService,
 		private dialogService: DialogService,
 		private notificationService: NotificationService,
 		private notificationScheduler: NotificationSchedulerService,
@@ -223,36 +256,48 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngOnInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			// Step 1: Lazily import the Tauri window API so the bundle stays tree-shakeable
-			// in browser builds — the import resolves after init, so drag is unavailable for
-			// the first few ms but that is acceptable (no synchronous Tauri calls occur on load).
+			/* Step 1: Starts auth and database recovery before routed pages rely on their existing
+			   seven-second fresh-data guards, then routes watcher failures through the same workflow. */
+			this.sessionExpiredSubscription = this.authService.getSessionExpired$().subscribe(() => {
+				this.triggerSessionRecovery(RECOVERY_TRIGGER_WATCH_ERROR, true);
+			});
+			this.watchErrorsSubscription = this.databaseService.getWatchErrors$().subscribe(() => {
+				this.triggerSessionRecovery(RECOVERY_TRIGGER_WATCH_ERROR);
+			});
+			this.writeErrorsSubscription = this.databaseService.getWriteErrors$().subscribe(() => {
+				this.triggerSessionRecovery(RECOVERY_TRIGGER_WRITE_ERROR);
+			});
+			this.triggerSessionRecovery(RECOVERY_TRIGGER_STARTUP);
+
+			/* Step 2: Lazily initialises Tauri window lifecycle events so browser bundles remain
+			   tree-shakeable and desktop resume recovery does not depend on DOM focus delivery. */
 			if (this.isTauriApp) {
-				import('@tauri-apps/api/window')
-					.then(({ getCurrentWindow }) => {
-						this.tauriAppWindow = getCurrentWindow();
-					})
-					.catch(() => {});
+				this.initializeTauriWindowLifecycle().catch(() => {});
 			}
 
-			// Step 2: Wire the auth observable and track the active route for the bottom nav.
-			// Seed activeRoute from the current URL first — the router's initial navigation can
-			// finish before this subscription attaches, so without seeding the dock would show no
-			// (or a stale) active page on a direct load or hard refresh.
+			/* Step 3: Wire the auth observable and seed the active route first. Initial navigation can
+			   finish before the subscription attaches, otherwise the dock can show no or stale selection. */
 			this.currentUser$ = this.authService.getCurrentUser();
 			this.activeRoute = ROUTE_TO_NAV_ID[this.router.url.split('?')[0]] ?? '';
-			this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
-				const url = (event as NavigationEnd).urlAfterRedirects.split('?')[0];
-				this.activeRoute = ROUTE_TO_NAV_ID[url] ?? '';
-			});
+			this.routerEventsSubscription = this.router.events
+				.pipe(filter((event) => event instanceof NavigationEnd))
+				.subscribe((event) => {
+					const url = (event as NavigationEnd).urlAfterRedirects.split('?')[0];
+					this.activeRoute = ROUTE_TO_NAV_ID[url] ?? '';
+				});
 
-			// Step 3: Mirror auth state into plain fields used by the mobile nav template
-			this.currentUser$.subscribe((user) => {
+			// Step 4: Mirror auth state into plain fields used by the mobile nav template
+			this.currentUserSubscription = this.currentUser$.subscribe((user) => {
 				this.mobileSignedIn = !!user;
 				this.mobileUserName = Utilities.capitalizeFirstLetterOnEachWord(
 					Utilities.getUserDisplayName(user)
 				);
+				if (!user) this.userInitialized = false;
 				if (user && !this.userInitialized) {
 					this.userInitialized = true;
+					/* A same-backend CloudBase sign-in does not reload the root component. Restarting
+					   recovery here re-enables streams that the preceding sign-out intentionally cleared. */
+					this.triggerSessionRecovery(RECOVERY_TRIGGER_STARTUP);
 					if (this.isTauriApp) {
 						this.notificationService.init().catch(() => {});
 						this.databaseService.getMinimizeOnClose().then((enabled: boolean) => {
@@ -280,21 +325,22 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 				}
 			});
 
-			/* Step 4: Register a capture-phase scroll listener outside Angular's zone so it
+			/* Step 5: Register a capture-phase scroll listener outside Angular's zone so it
 			   does not trigger change detection on every scroll tick; re-enters the zone only
 			   when the context menu is actually open and needs to be dismissed. */
 			this.ngZone.runOutsideAngular(() => {
+				this.documentScrollListener = () => {
+					if (this.contextMenuVisible) this.ngZone.run(() => this.closeContextMenu());
+				};
 				document.addEventListener(
 					'scroll',
-					() => {
-						if (this.contextMenuVisible) this.ngZone.run(() => this.closeContextMenu());
-					},
+					this.documentScrollListener,
 					{ capture: true, passive: true }
 				);
 			});
 
-			// Step 5: Start the notification scheduler — scans immediately on subscription
-			// and arms the daily background check for when the app stays open.
+			/* Step 6: Start the notification scheduler, which scans immediately and arms the daily
+			   background check for when the app stays open. */
 			this.notificationScheduler.start();
 		}
 	}
@@ -305,7 +351,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngAfterViewInit(): void {
 		if (isPlatformBrowser(this.platformId)) {
-			setTimeout(() => {
+			this.navReadyTimeout = setTimeout(() => {
 				this.navReady = true;
 			});
 		}
@@ -315,8 +361,24 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Clears the dialog container, cancels the notification timers, and logs component teardown.
 	 */
 	ngOnDestroy(): void {
+		this.isDestroyed = true;
+		this.tauriEventUnlistenFunctions.forEach((unlistenFunction) => unlistenFunction());
+		this.routerEventsSubscription?.unsubscribe();
+		this.currentUserSubscription?.unsubscribe();
+		this.sessionExpiredSubscription?.unsubscribe();
+		this.watchErrorsSubscription?.unsubscribe();
+		this.writeErrorsSubscription?.unsubscribe();
+		if (this.documentScrollListener) {
+			document.removeEventListener('scroll', this.documentScrollListener, true);
+		}
+		if (this.navReadyTimeout) clearTimeout(this.navReadyTimeout);
 		this.notificationScheduler.stop();
 		this.dialogComponentContainer?.clear();
+		this.tauriEventUnlistenFunctions = [];
+		this.documentScrollListener = undefined;
+		this.navReadyTimeout = undefined;
+		this.inactivityStartedAt = undefined;
+		this.confirmedExpiryPending = false;
 		LOG.info(this.className, COMPONENT_DESTROY);
 	}
 
@@ -329,6 +391,30 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	@HostListener('window:resize')
 	protected onWindowResize(): void {
 		this.applyViewportState(window.innerWidth);
+	}
+
+	/**
+	 * Records browser inactivity when the non-Tauri window loses focus.
+	 */
+	@HostListener(WINDOW_EVENT_BLUR)
+	protected recordBrowserInactivity(): void {
+		if (!this.isTauriApp) this.recordSessionInactivity();
+	}
+
+	/**
+	 * Recovers the browser session when focus returns after the inactivity threshold.
+	 */
+	@HostListener(WINDOW_EVENT_FOCUS)
+	protected recoverBrowserSessionAfterInactivity(): void {
+		if (!this.isTauriApp) this.recoverSessionAfterInactivity();
+	}
+
+	/**
+	 * Recovers the active session when browser connectivity returns.
+	 */
+	@HostListener(WINDOW_EVENT_ONLINE)
+	protected recoverAfterConnectivityReturn(): void {
+		this.triggerSessionRecovery(RECOVERY_TRIGGER_ONLINE);
 	}
 
 	/**
@@ -595,7 +681,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	protected navigateToAccount(): void {
 		this.accountMenuOpen = false;
-		this.router.navigate(['/account']).catch(() => {});
+		this.router.navigate([ACCOUNT_ROUTE_PATH]).catch(() => {});
 	}
 
 	/**
@@ -603,23 +689,60 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * query param so the user is redirected back after signing in.
 	 */
 	protected navigateToLogin(): void {
-		this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } }).catch(() => {});
+		if (this.router.url.split('?')[0] === LOGIN_ROUTE_PATH) return;
+		this.router
+			.navigate([LOGIN_ROUTE_PATH], { queryParams: { returnUrl: this.router.url } })
+			.catch(() => {});
 	}
 
 	/**
-	 * Removes the push subscription then signs the current user out through
-	 * the CloudBase auth provider.
+	 * Preserves the current local session until remote sign-out is confirmed.
+	 * Restores the notification preference when the remote outcome remains unresolved.
+	 *
+	 * @returns The shared in-flight sign-out operation.
 	 */
-	protected async logout(): Promise<void> {
+	protected logout(): Promise<void> {
+		if (this.logoutPromise) return this.logoutPromise;
+		this.logoutPromise = this.runLogout();
+		return this.logoutPromise;
+	}
+
+	/**
+	 * Runs the coordinated manual sign-out transition once.
+	 *
+	 * @returns A promise that resolves after sign-out completes.
+	 */
+	private async runLogout(): Promise<void> {
 		// Step 1: Close the account popover immediately so the UI does not appear frozen
 		this.accountMenuOpen = false;
 
-		// Step 2: Remove the push subscription before signing out — errors are silently ignored
-		// because a stale subscription is harmless and must not block the sign-out flow.
-		await this.notificationService.unsubscribe().catch(() => {});
+		// Step 2: Preserve whether sign-out temporarily changes the notification preference
+		const wasNotificationSubscribed = this.notifSubscribed();
 
-		// Step 3: Sign out through the CloudBase auth provider
-		await this.authService.signOut();
+		try {
+			// Step 3: Removes notifications before revoking the authenticated provider session
+			if (wasNotificationSubscribed) await this.notificationService.unsubscribe();
+
+			// Step 4: Publishes database cleanup before the local signed-out auth state
+			const wasFirebase = Utilities.isFirebaseBackend();
+			await this.authService.confirmRemoteSignOut();
+			this.sessionRecoveryService.expireConfirmedSession();
+			if (wasFirebase) {
+				window.location.reload();
+			} else if (this.router.url.split('?')[0] === ACCOUNT_ROUTE_PATH) {
+				await this.router.navigateByUrl(LOGIN_URL_DEFAULT_RETURN);
+			}
+		} catch (error: unknown) {
+			/* Step 5: An unresolved remote outcome keeps the auth and database session intact.
+			   Restore the pre-logout notification preference before offering Retry or Cancel. */
+			if (wasNotificationSubscribed && !this.notifSubscribed()) {
+				await this.notificationService.restoreSubscription().catch(() => {});
+			}
+			this.dialogService.handleError(this.dialogComponentContainer, error);
+			throw error;
+		} finally {
+			this.logoutPromise = undefined;
+		}
 	}
 
 	/**
@@ -757,6 +880,146 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		   immediately, which would kill the in-flight DB write if not awaited first. */
 		await this.databaseService.setLocale(targetLocale).catch(() => {});
 		this.localeService.applyLocale(targetLocale);
+	}
+
+	// ── Session recovery helpers ────────────────────────────────────────────────
+
+	/**
+	 * Starts one app-level recovery outcome flow and ignores simultaneous trigger duplicates.
+	 *
+	 * {@link ngOnInit} - Routes startup, session-expiry, watcher, and write events into recovery.
+	 * {@link recoverAfterConnectivityReturn} - Routes browser online events into recovery.
+	 * {@link handleSessionRecoveryOutcome} - Replays a queued confirmed-expiry event after recovery.
+	 * {@link recoverSessionAfterInactivity} - Routes qualified focus or resume events into recovery.
+	 *
+	 * @param trigger - The lifecycle or data-layer event requesting recovery.
+	 * @param isConfirmedExpiry - Whether the provider explicitly confirmed session expiry.
+	 */
+	private triggerSessionRecovery(trigger: RecoveryTrigger, isConfirmedExpiry = false): void {
+		if (this.isDestroyed) return;
+		if (!isConfirmedExpiry && !this.utilities.getIsUserAlive()) return;
+		if (this.recoveryOutcomePromise) {
+			if (isConfirmedExpiry) this.confirmedExpiryPending = true;
+			return;
+		}
+
+		this.recoveryOutcomePromise = this.handleSessionRecoveryOutcome(trigger, isConfirmedExpiry);
+	}
+
+	/**
+	 * Handles central recovery outcomes without stacking navigation or retry dialogs.
+	 *
+	 * @param trigger - The lifecycle or data-layer event requesting recovery.
+	 * @param isConfirmedExpiry - Whether the provider explicitly confirmed session expiry.
+	 * @returns A promise that resolves after the recovery outcome is handled.
+	 */
+	private async handleSessionRecoveryOutcome(
+		trigger: RecoveryTrigger,
+		isConfirmedExpiry: boolean
+	): Promise<void> {
+		let recoveryStatus: RecoveryStatus | undefined;
+		try {
+			recoveryStatus = isConfirmedExpiry
+				? this.sessionRecoveryService.expireConfirmedSession()
+				: await this.sessionRecoveryService.recover(trigger);
+			if (recoveryStatus === RECOVERY_STATUS_EXPIRED) {
+				this.navigateToLogin();
+				return;
+			}
+			if (recoveryStatus === RECOVERY_STATUS_RECOVERED) {
+				this.notificationService.retryPendingRestore().catch(() => {});
+			}
+			if (
+				recoveryStatus === RECOVERY_STATUS_OFFLINE &&
+				trigger !== RECOVERY_TRIGGER_STARTUP &&
+				trigger !== RECOVERY_TRIGGER_WRITE_ERROR &&
+				!this.confirmedExpiryPending
+			) {
+				this.dialogService.showLoadingTimeout(this.dialogComponentContainer);
+			}
+		} finally {
+			const shouldRevalidateConfirmedExpiry =
+				this.confirmedExpiryPending && recoveryStatus !== RECOVERY_STATUS_EXPIRED;
+			this.confirmedExpiryPending = false;
+			this.recoveryOutcomePromise = undefined;
+			if (shouldRevalidateConfirmedExpiry) {
+				this.triggerSessionRecovery(RECOVERY_TRIGGER_WATCH_ERROR, true);
+			}
+		}
+	}
+
+	/**
+	 * Initialises native Tauri focus and suspend lifecycle listeners.
+	 *
+	 * @returns A promise that resolves after every native listener is registered.
+	 */
+	private async initializeTauriWindowLifecycle(): Promise<void> {
+		const [{ getCurrentWindow }, { TauriEvent }] = await Promise.all([
+			import('@tauri-apps/api/window'),
+			import('@tauri-apps/api/event')
+		]);
+		this.tauriAppWindow = getCurrentWindow();
+
+		/* Native window callbacks execute outside Angular's zone, so each state transition
+		   re-enters the zone before recording inactivity or invoking central recovery. */
+		const registeredUnlistenFunctions: UnlistenFn[] = [];
+		try {
+			registeredUnlistenFunctions.push(
+				await this.tauriAppWindow.onFocusChanged(({ payload: isFocused }) => {
+					this.ngZone.run(() => {
+						if (isFocused) {
+							this.recoverSessionAfterInactivity();
+						} else {
+							this.recordSessionInactivity();
+						}
+					});
+				})
+			);
+			registeredUnlistenFunctions.push(
+				await this.tauriAppWindow.listen(TauriEvent.WINDOW_SUSPENDED, () => {
+					this.ngZone.run(() => this.recordSessionInactivity());
+				})
+			);
+			registeredUnlistenFunctions.push(
+				await this.tauriAppWindow.listen(TauriEvent.WINDOW_RESUMED, () => {
+					this.ngZone.run(() => this.recoverSessionAfterInactivity());
+				})
+			);
+		} catch (error: unknown) {
+			registeredUnlistenFunctions.forEach((unlistenFunction) => unlistenFunction());
+			throw error;
+		}
+		if (this.isDestroyed) {
+			registeredUnlistenFunctions.forEach((unlistenFunction) => unlistenFunction());
+			return;
+		}
+		this.tauriEventUnlistenFunctions.push(...registeredUnlistenFunctions);
+	}
+
+	/**
+	 * Records the timestamp at which the active app session became inactive.
+	 *
+	 * {@link recordBrowserInactivity} - Records browser blur events.
+	 * {@link initializeTauriWindowLifecycle} - Records native blur and suspend events.
+	 */
+	private recordSessionInactivity(): void {
+		this.inactivityStartedAt ??= Date.now();
+	}
+
+	/**
+	 * Recovers the active session when the recorded inactivity meets the configured threshold.
+	 *
+	 * {@link recoverBrowserSessionAfterInactivity} - Handles browser focus events.
+	 * {@link initializeTauriWindowLifecycle} - Handles native focus and resume events.
+	 */
+	private recoverSessionAfterInactivity(): void {
+		if (this.inactivityStartedAt === undefined) return;
+
+		const inactivityDuration = Date.now() - this.inactivityStartedAt;
+		this.inactivityStartedAt = undefined;
+		if (inactivityDuration < RECOVERY_INACTIVITY_THRESHOLD_MS) return;
+
+		this.triggerSessionRecovery(RECOVERY_TRIGGER_RESUME);
 	}
 
 	// ── Template helpers ──────────────────────────────────────────────────────

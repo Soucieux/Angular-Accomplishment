@@ -3,8 +3,17 @@ import { isPlatformBrowser } from '@angular/common';
 import { invoke } from '@tauri-apps/api/core';
 import { DatabaseService } from '../database-service/database.service';
 import { LOG } from '../../common/app.logs';
-import { NOTIF_SEND_FAILED, NOTIF_SUBSCRIBE_FAILED, NOTIF_UNSUBSCRIBE_FAILED } from '../../common/constants';
+import {
+	NOTIF_RESTORE_FAILED,
+	NOTIF_SEND_FAILED,
+	NOTIF_SUBSCRIBE_FAILED,
+	NOTIF_UNSUBSCRIBE_FAILED,
+	LS_NOTIFICATION_RESTORE_PENDING_KEY,
+	LS_NOTIFICATION_RESTORE_PENDING_VALUE,
+	TAURI_CMD_SEND_NOTIFICATION
+} from '../../common/constants';
 import { NOTIF_ENABLED_BODY, NOTIF_ENABLED_TITLE } from '../../common/locale/locale-strings';
+import { Utilities } from '../../common/utilities/app.utilities';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
@@ -20,7 +29,8 @@ export class NotificationService {
 
 	constructor(
 		private readonly databaseService: DatabaseService,
-		@Inject(PLATFORM_ID) private readonly platformId: object
+		@Inject(PLATFORM_ID) private readonly platformId: object,
+		private utilities: Utilities
 	) {}
 
 	/**
@@ -30,15 +40,21 @@ export class NotificationService {
 	 * @returns True when running inside the Tauri runtime.
 	 */
 	public isSupported(): boolean {
-		return this.isTauri;
+		return this.utilities.isTauriApp();
 	}
 
 	/**
 	 * Loads the persisted notification preference from the database and applies it.
 	 * No-op on non-Tauri platforms.
+	 *
+	 * @returns A promise that resolves after the persisted preference is applied.
 	 */
 	public async init(): Promise<void> {
-		if (!this.isTauri) return;
+		if (!this.utilities.isTauriApp()) return;
+		if (localStorage.getItem(LS_NOTIFICATION_RESTORE_PENDING_KEY)) {
+			await this.restoreSubscription();
+			if (localStorage.getItem(LS_NOTIFICATION_RESTORE_PENDING_KEY)) return;
+		}
 		const enabled = await this.databaseService.getTauriNotifEnabled();
 		this._isSubscribed.set(enabled);
 	}
@@ -46,7 +62,9 @@ export class NotificationService {
 	/**
 	 * Activates the Tauri notification preference. Flips state immediately and
 	 * fires the confirmation notification before the DB write so neither can
-	 * block the other. Reverts state if the DB write fails.
+	 * block the other. Reverts state and rejects if the DB write fails.
+	 *
+	 * @returns A promise that resolves after the preference is persisted.
 	 */
 	public async subscribe(): Promise<void> {
 		this._isSubscribed.set(true);
@@ -58,12 +76,16 @@ export class NotificationService {
 		} catch (error: unknown) {
 			LOG.error(this.className, NOTIF_SUBSCRIBE_FAILED, error as Error);
 			this._isSubscribed.set(false);
+			throw error;
 		}
 	}
 
 	/**
 	 * Deactivates the Tauri notification preference. Flips state immediately so
-	 * the button responds without waiting for the DB write. Reverts on failure.
+	 * the button responds without waiting for the DB write. Reverts state and
+	 * rejects if persistence fails.
+	 *
+	 * @returns A promise that resolves after the preference is persisted.
 	 */
 	public async unsubscribe(): Promise<void> {
 		this._isSubscribed.set(false);
@@ -72,6 +94,45 @@ export class NotificationService {
 		} catch (error: unknown) {
 			LOG.error(this.className, NOTIF_UNSUBSCRIBE_FAILED, error as Error);
 			this._isSubscribed.set(true);
+			throw error;
+		}
+	}
+
+	/**
+	 * Restores the notification preference after a remote sign-out attempt fails.
+	 * Keeps the local preference enabled when the compensating database write is
+	 * temporarily unavailable so the rendered state matches the pre-logout state.
+	 *
+	 * @returns A promise that resolves after the restoration attempt settles.
+	 */
+	public async restoreSubscription(): Promise<void> {
+		this._isSubscribed.set(true);
+		localStorage.setItem(LS_NOTIFICATION_RESTORE_PENDING_KEY, LS_NOTIFICATION_RESTORE_PENDING_VALUE);
+		try {
+			await this.databaseService.setTauriNotifEnabled(true);
+			localStorage.removeItem(LS_NOTIFICATION_RESTORE_PENDING_KEY);
+		} catch (error: unknown) {
+			LOG.error(this.className, NOTIF_RESTORE_FAILED, error as Error);
+		}
+	}
+
+	/**
+	 * Retries a durable notification rollback after database connectivity recovers.
+	 *
+	 * @returns A promise that resolves after the pending rollback attempt settles.
+	 */
+	public async retryPendingRestore(): Promise<void> {
+		if (!isPlatformBrowser(this.platformId)) return;
+		if (!localStorage.getItem(LS_NOTIFICATION_RESTORE_PENDING_KEY)) return;
+		await this.restoreSubscription();
+	}
+
+	/**
+	 * Discards a rollback that belongs to the session being cleared.
+	 */
+	public clearPendingRestore(): void {
+		if (isPlatformBrowser(this.platformId)) {
+			localStorage.removeItem(LS_NOTIFICATION_RESTORE_PENDING_KEY);
 		}
 	}
 
@@ -81,18 +142,10 @@ export class NotificationService {
 	 *
 	 * @param title - The notification title.
 	 * @param body - The notification body text.
+	 * @returns A promise that resolves after the native notification is sent.
 	 */
 	public async sendNotification(title: string, body: string): Promise<void> {
-		if (!this.isTauri) return;
-		await invoke<void>('send_notification', { title, body });
-	}
-
-	/**
-	 * Gets whether the app is running inside the Tauri desktop wrapper.
-	 *
-	 * @returns True when the Tauri runtime is present.
-	 */
-	private get isTauri(): boolean {
-		return isPlatformBrowser(this.platformId) && '__TAURI__' in window;
+		if (!this.utilities.isTauriApp()) return;
+		await invoke<void>(TAURI_CMD_SEND_NOTIFICATION, { title, body });
 	}
 }

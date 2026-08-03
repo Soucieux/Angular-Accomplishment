@@ -670,15 +670,17 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 
 		// Step 3: Sync the confirmed counter and flush to the database
 		this.refreshConfirmedCount();
-		await this.updateDateCalculatorSingleValue();
+		await this.updateDateCalculatorSingleValue(true);
 	}
 
 	/**
 	 * Persists the current state of the date calculator (including the isNextMonth
 	 * flag) to the database. Shows a save indicator on success or an error
 	 * dialog on failure.
+	 *
+	 * @param shouldPropagateError - The flag indicating that a blocking confirmation owns the rejection.
 	 */
-	private async updateDateCalculatorSingleValue(): Promise<void> {
+	private async updateDateCalculatorSingleValue(shouldPropagateError = false): Promise<void> {
 		try {
 			/* Step 1: Locate the metadata row by field presence — CloudBase watch() delivers
 			   documents in arbitrary order so positional access (rows[5]) is unreliable. */
@@ -699,6 +701,7 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 			this.triggerSaveIndicator();
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
+			if (shouldPropagateError) throw error;
 		}
 	}
 
@@ -946,6 +949,7 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 						MSG_DELETE_FAILED,
 						PORTAL_MSG_LINK_DELETE_FAILED_DETAIL
 					);
+					throw error;
 				}
 			}
 		);
@@ -1152,6 +1156,7 @@ export class PortalComponent implements OnInit, AfterViewInit, AfterViewChecked,
 						MSG_DELETE_FAILED,
 						PORTAL_MSG_CATEGORY_DELETE_FAILED_DETAIL
 					);
+					throw error;
 				}
 			}
 		);

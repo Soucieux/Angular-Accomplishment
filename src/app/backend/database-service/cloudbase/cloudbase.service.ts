@@ -1,6 +1,17 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, NgZone, PLATFORM_ID } from '@angular/core';
-import { BehaviorSubject, Observable, ReplaySubject, combineLatest, from, of } from 'rxjs';
+import {
+	BehaviorSubject,
+	NEVER,
+	Observable,
+	ReplaySubject,
+	Subject,
+	combineLatest,
+	firstValueFrom,
+	from,
+	merge,
+	of
+} from 'rxjs';
 import {
 	shareReplay,
 	switchMap,
@@ -115,7 +126,7 @@ import {
 	MILESTONE_DOMAIN_DEBT,
 	MILESTONE_DOMAIN_LINK,
 	MILESTONE_DOMAIN_STREAK,
-	CLOUDBASE_ERR_PERMISSION_DENIED,
+	CLOUDBASE_ERROR_INVALID_CREDENTIALS,
 	DB_LOG_MOVIE_LIST_FAILED,
 	DB_LOG_TEMP_URLS_FAILED,
 	DB_LOG_DATE_CALC_UPDATED,
@@ -201,6 +212,8 @@ export class CloudbaseService extends DatabaseService {
 	// Memoized reminder stream — kept warm so navigating back to the reminder page replays instantly
 	// instead of rebuilding the (refCount) watch from scratch on every visit.
 	private reminderDetails$?: Observable<any[]>;
+	private realtimeStateSubject = new BehaviorSubject<number | null>(0);
+	private sessionClearedSubject = new Subject<void>();
 	private tempUrlCache = new Map<string, string>();
 	// Serializes activity log writes so each read-before-write completes before the next begins.
 	private activityLogQueue: Promise<void> = Promise.resolve();
@@ -218,15 +231,69 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Gets an observable that emits true once CloudBase auth is ready and a .watch() can be
-	 * established — the point at which the data layer can deliver. Delegates to authReady$ so a
-	 * loading guard's countdown starts when the data layer can actually respond, not on a cold
-	 * post-sign-in connection.
+	 * Gets an observable that emits true after CloudBase completes a protected authenticated read.
+	 * A failed read remains pending so the loading guard's independent readiness timeout wins.
 	 *
 	 * @returns An observable that emits true when the CloudBase data layer is ready to watch.
 	 */
 	public getIsDataLayerReady$(): Observable<boolean> {
-		return CloudbaseService.authReady$;
+		return CloudbaseService.authReady$.pipe(
+			take(1),
+			switchMap(() =>
+				from(this.checkConnection()).pipe(
+					map(() => true),
+					catchError(() => NEVER)
+				)
+			)
+		);
+	}
+
+	/**
+	 * Checks whether CloudBase can complete a protected read for the authenticated user.
+	 *
+	 * @returns A promise that resolves when the protected read succeeds.
+	 * @throws SessionExpiredError when CloudBase explicitly rejects the active credentials.
+	 * @throws UnexpectedError when the protected read fails for any other reason.
+	 */
+	public async checkConnection(): Promise<void> {
+		try {
+			if (!CloudbaseService.getUserId()) {
+				await firstValueFrom(CloudbaseService.authReady$.pipe(take(1)));
+			}
+			await this.database
+				.collection(DATABASE_USERS)
+				.where(this.getUserStatsFilter())
+				.limit(1)
+				.get();
+		} catch (error: unknown) {
+			const providerError = error as { category?: string };
+			if (providerError.category === CLOUDBASE_ERROR_INVALID_CREDENTIALS) {
+				throw new SessionExpiredError();
+			}
+			throw new UnexpectedError();
+		}
+	}
+
+	/**
+	 * Restarts every active CloudBase watcher with a new realtime generation.
+	 */
+	public restartRealtimeStreams(): void {
+		const hasActiveRealtimeListeners = this.activeRealtimeListenerCount > 0;
+		const currentGeneration = this.realtimeStateSubject.value ?? 0;
+		const nextGeneration = currentGeneration + 1;
+		this.prepareRealtimeRestart(nextGeneration);
+		this.realtimeStateSubject.next(nextGeneration);
+		if (!hasActiveRealtimeListeners) this.reportFreshStateWithoutListeners(nextGeneration);
+	}
+
+	/**
+	 * Clears session-bound streams, replayed values, and active CloudBase watchers.
+	 */
+	public clearSessionState(): void {
+		this.clearRealtimeRecoveryState();
+		this.realtimeStateSubject.next(null);
+		this.sessionClearedSubject.next();
+		this.tempUrlCache.clear();
 	}
 
 	/**
@@ -391,8 +458,7 @@ export class CloudbaseService extends DatabaseService {
 		return this.watchCollection(
 			DATABASE_STATISTICS,
 			(docs) => docs[0],
-			false,
-			(col) => col.where(this.getGlobalStatsFilter())
+			(collection) => collection.where(this.getGlobalStatsFilter())
 		);
 	}
 
@@ -407,8 +473,7 @@ export class CloudbaseService extends DatabaseService {
 		return (this.userStats$ ??= this.watchCollection(
 			DATABASE_USERS,
 			(docs) => docs[0],
-			false,
-			(col) => col.where(this.getUserStatsFilter())
+			(collection) => collection.where(this.getUserStatsFilter())
 		));
 	}
 
@@ -426,8 +491,7 @@ export class CloudbaseService extends DatabaseService {
 		return this.watchCollection(
 			DATABASE_DATE_CALCULATOR,
 			(docs) => docs ?? [],
-			false,
-			(col) => col.where({ _openid: CloudbaseService.getUserId() })
+			(collection) => collection.where({ _openid: CloudbaseService.getUserId() })
 		);
 	}
 
@@ -445,8 +509,7 @@ export class CloudbaseService extends DatabaseService {
 			(docs) =>
 				docs
 					.filter((doc: any) => doc.type !== USEFUL_LINK_TYPE_CATEGORY)
-					.map((doc: any) => ({ ...doc })),
-			true
+					.map((doc: any) => ({ ...doc }))
 		);
 	}
 
@@ -462,8 +525,7 @@ export class CloudbaseService extends DatabaseService {
 				docs
 					.filter((doc: any) => doc.type === USEFUL_LINK_TYPE_CATEGORY)
 					.map((doc: any) => ({ ...doc })),
-			true,
-			(col) => col.where({ _openid: CloudbaseService.getUserId() })
+			(collection) => collection.where({ _openid: CloudbaseService.getUserId() })
 		);
 	}
 
@@ -485,8 +547,7 @@ export class CloudbaseService extends DatabaseService {
 				// Step 2: Sort newest-first — CloudBase watch() emits in insertion order, not timestamp order
 				quotes.sort((a: any, b: any) => b.timestamp.localeCompare(a.timestamp));
 				return quotes;
-			},
-			true
+			}
 		);
 	}
 
@@ -515,8 +576,7 @@ export class CloudbaseService extends DatabaseService {
 					groups: doc.groups ?? [],
 					steps: (doc.steps ?? []).map((step: any) => ({ ...step, done: false })),
 					notes: doc.notes ?? ''
-				})) as Recipe[],
-			true
+				})) as Recipe[]
 		);
 	}
 
@@ -529,58 +589,92 @@ export class CloudbaseService extends DatabaseService {
 		return CloudbaseService.authReady$
 			.pipe(
 				take(1),
-				switchMap(
-					() =>
-						new Observable<MovieItemVO[]>((observer) => {
-							const watcher = this.database.collection(DATABASE_MOVIES).watch({
-								onChange: (snapshot: any) => {
-									// Step 1: Map raw CloudBase docs to typed MovieItemVO instances
-									const movies = snapshot.docs.map((doc: any) => {
-										const movieItemVO = new MovieItemVO(doc.title, Number(doc.year));
-										movieItemVO.setMovieKey(doc._id);
-										movieItemVO.setMovieId(doc.id);
-										movieItemVO.setMovieGenre(doc.genre);
-										movieItemVO.setMovieRate(doc.rate);
-										movieItemVO.setMovieCoverImageDownloadableLink(
-											doc.coverImageLink ?? ''
-										);
-										movieItemVO.setMovieFirstReleaseDate(doc.firstReleaseDate);
-										movieItemVO.setMovieEpisodeNumber(doc.episodeNumber);
-										movieItemVO.setIsFavourite(doc.isFavourite);
-										movieItemVO.setDescription(doc.description);
-										movieItemVO.setActors(doc.actors);
-										movieItemVO.setOpenId(doc._openid ?? '');
-										return movieItemVO;
-									});
+				switchMap(() =>
+					this.realtimeStateSubject.pipe(
+						switchMap((generation) => {
+							if (generation === null) return of({ hasValue: false as const });
+							return new Observable<MovieItemVO[]>((observer) => {
+								const listenerId = this.registerRealtimeListener(generation);
+								try {
+									const watcher = this.database.collection(DATABASE_MOVIES).watch({
+										onChange: (snapshot: any) => {
+											if (observer.closed) return;
+											// Step 1: Map raw CloudBase docs to typed MovieItemVO instances
+											const movies = snapshot.docs.map((doc: any) => {
+												const movieItemVO = new MovieItemVO(doc.title, Number(doc.year));
+												movieItemVO.setMovieKey(doc._id);
+												movieItemVO.setMovieId(doc.id);
+												movieItemVO.setMovieGenre(doc.genre);
+												movieItemVO.setMovieRate(doc.rate);
+												movieItemVO.setMovieCoverImageDownloadableLink(
+													doc.coverImageLink ?? ''
+												);
+												movieItemVO.setMovieFirstReleaseDate(doc.firstReleaseDate);
+												movieItemVO.setMovieEpisodeNumber(doc.episodeNumber);
+												movieItemVO.setIsFavourite(doc.isFavourite);
+												movieItemVO.setDescription(doc.description);
+												movieItemVO.setActors(doc.actors);
+												movieItemVO.setOpenId(doc._openid ?? '');
+												return movieItemVO;
+											});
 
-									// Step 2: Sort by release date — watcher emits in insertion order
-									movies.sort((a: MovieItemVO, b: MovieItemVO) =>
-										a
-											.getMovieFirstReleaseDate()
-											.localeCompare(b.getMovieFirstReleaseDate())
-									);
-
-									// Step 3: Resolve cloud:// file IDs to signed temp URLs before emitting
-									this.resolveMovieCoverUrls(movies)
-										.then((resolvedMovies) => observer.next(resolvedMovies))
-										.catch((err) => {
-											LOG.error(
-												this.className,
-												DB_LOG_COVER_URLS_RESOLVE_FAILED,
-												err
+											// Step 2: Sort by release date — watcher emits in insertion order
+											movies.sort((a: MovieItemVO, b: MovieItemVO) =>
+												a
+													.getMovieFirstReleaseDate()
+													.localeCompare(b.getMovieFirstReleaseDate())
 											);
-											observer.next(movies); // emit with unresolved links rather than nothing
-										});
-								},
-								onError: (err: any) => {
-									LOG.error(this.className, DB_LOG_MOVIE_LIST_FAILED, err);
+
+											// Step 3: Resolve cloud:// file IDs to signed temp URLs before emitting
+											this.resolveMovieCoverUrls(movies)
+												.then((resolvedMovies) => {
+													if (observer.closed) return;
+													this.ngZone.run(() => {
+														observer.next(resolvedMovies);
+														this.reportFreshSnapshot(generation, listenerId);
+													});
+												})
+												.catch((error) => {
+													LOG.error(
+														this.className,
+														DB_LOG_COVER_URLS_RESOLVE_FAILED,
+														error
+													);
+													if (observer.closed) return;
+													this.ngZone.run(() => {
+														observer.next(movies);
+														this.reportFreshSnapshot(generation, listenerId);
+													});
+												});
+										},
+										onError: (error: any) => {
+											if (observer.closed) return;
+											LOG.error(this.className, DB_LOG_MOVIE_LIST_FAILED, error);
+											this.ngZone.run(() => this.reportWatchError(error));
+										}
+									});
+									return () => {
+										try {
+											watcher.close();
+										} finally {
+											this.unregisterRealtimeListener(generation, listenerId);
+										}
+									};
+								} catch (error: unknown) {
+									LOG.error(this.className, DB_LOG_MOVIE_LIST_FAILED, error as Error);
+									this.ngZone.run(() => this.reportWatchError(error));
+									return () => this.unregisterRealtimeListener(generation, listenerId);
 								}
-							});
-							return () => watcher.close();
+							}).pipe(map((value) => ({ hasValue: true as const, value })));
 						})
+					)
 				)
 			)
-			.pipe(shareReplay(1));
+			.pipe(
+				shareReplay(1),
+				filter((state) => state.hasValue),
+				map((state) => state.value)
+			);
 	}
 
 	/**
@@ -622,38 +716,51 @@ export class CloudbaseService extends DatabaseService {
 		// getUserId() is read inside the query builder so it resolves after watchCollection's authReady
 		// gate — capturing it here would use an undefined openid on a cold reminder load and the watch
 		// would silently never emit, hanging the loading state.
-		const owned$ = this.watchCollection(DATABASE_REMINDER, mapDocs, false, (col) =>
-			col.where({ _openid: CloudbaseService.getUserId() })
+		const owned$ = this.watchCollection(DATABASE_REMINDER, mapDocs, (collection) =>
+			collection.where({ _openid: CloudbaseService.getUserId() })
 		);
 
 		/* Shared reminders, signal-driven: the live user document carries both the connection set and a
 		   sharedRev counter that connections bump on any shared-reminder change. On either signal, re-fetch
 		   the shared set via the admin Cloud Function. startWith keeps owned reminders flowing before the
 		   first fetch; catchError guards any rejection so an empty list means only owned reminders show. */
-		const shared$ = this.getUserStats().pipe(
-			map((doc) => ({
-				// sharedWith comes from an unordered watch() snapshot; sort so distinctUntilChanged
-				// compares membership by content, not position, avoiding spurious shared re-fetches.
-				members: [...((doc?.[STATS_FIELD_SHARED_WITH] as string[]) ?? [])].sort(),
-				rev: (doc?.[STATS_FIELD_SHARED_REV] as number) ?? 0
-			})),
-			distinctUntilChanged(
-				(a, b) =>
-					a.rev === b.rev &&
-					a.members.length === b.members.length &&
-					a.members.every((id, i) => id === b.members[i])
+		const shared$ = merge(
+			this.getUserStats().pipe(
+				map((doc) => ({
+					ownerOpenid: CloudbaseService.getUserId(),
+					realtimeGeneration: this.realtimeStateSubject.value,
+					// sharedWith comes from an unordered watch() snapshot; sort so distinctUntilChanged
+					// compares membership by content, not position, avoiding spurious shared re-fetches.
+					members: [...((doc?.[STATS_FIELD_SHARED_WITH] as string[]) ?? [])].sort(),
+					rev: (doc?.[STATS_FIELD_SHARED_REV] as number) ?? 0
+				})),
+				distinctUntilChanged(
+					(previousSignal, currentSignal) =>
+						previousSignal.ownerOpenid === currentSignal.ownerOpenid &&
+						previousSignal.realtimeGeneration === currentSignal.realtimeGeneration &&
+						previousSignal.rev === currentSignal.rev &&
+						previousSignal.members.length === currentSignal.members.length &&
+						previousSignal.members.every(
+							(openid, index) => openid === currentSignal.members[index]
+						)
+				),
+				switchMap((sharedSignal) =>
+					sharedSignal.members.length
+						? from(this.getSharedReminders()).pipe(catchError(() => of([] as any[])))
+						: of([] as any[])
+				)
 			),
-			switchMap((signal) =>
-				signal.members.length ? from(this.getSharedReminders()) : of([] as any[])
-			),
-			startWith([] as any[]),
-			catchError(() => of([] as any[]))
-		);
+			this.sessionClearedSubject.pipe(map(() => [] as any[]))
+		).pipe(startWith([] as any[]));
 
 		// De-duplicate by key so a reminder the user both owns and is shared into appears once. shareReplay
 		// keeps the merged stream (and its underlying watch) warm across navigations for instant re-entry.
-		this.reminderDetails$ = combineLatest([owned$, shared$]).pipe(
-			map(([owned, shared]) => Utilities.uniqueByKey([...owned, ...shared], (item) => item.key)),
+		this.reminderDetails$ = merge(
+			combineLatest([owned$, shared$]).pipe(
+				map(([owned, shared]) => Utilities.uniqueByKey([...owned, ...shared], (item) => item.key))
+			),
+			this.sessionClearedSubject.pipe(map(() => [] as any[]))
+		).pipe(
 			shareReplay(1)
 		);
 		return this.reminderDetails$;
@@ -993,8 +1100,7 @@ export class CloudbaseService extends DatabaseService {
 						};
 					};
 				}),
-			false,
-			(col) => col.where({ _openid: CloudbaseService.getUserId() })
+			(collection) => collection.where({ _openid: CloudbaseService.getUserId() })
 		);
 	}
 
@@ -1011,8 +1117,7 @@ export class CloudbaseService extends DatabaseService {
 					const { _id, ...rest } = doc;
 					return { key: _id, ...rest } as VaultRecord;
 				}),
-			false,
-			(col) => col.where({ _openid: CloudbaseService.getUserId() })
+			(collection) => collection.where({ _openid: CloudbaseService.getUserId() })
 		);
 	}
 
@@ -1075,59 +1180,74 @@ export class CloudbaseService extends DatabaseService {
 	 * Creates a real-time CloudBase watcher for a collection and exposes it as an Observable.
 	 * All watchers follow the same authReady → switchMap → watcher.close() lifecycle;
 	 * this helper eliminates the boilerplate so each public getter only supplies the
-	 * collection name, a mapping function, and an optional error-propagation flag.
+	 * collection name, a mapping function, and an optional query builder.
 	 *
 	 * @param collectionName - The CloudBase collection to watch.
 	 * @param mapper - Transforms the raw docs array into the emitted value T.
-	 * @param propagateErrors - When true, onError forwards the error to the observer
-	 *   (in addition to logging it). Defaults to false so unexpected watcher errors
-	 *   do not terminate subscriptions in components that lack an error handler.
 	 * @param queryBuilder - Optional function to add filters or ordering to the collection query.
 	 * @returns A shared, replayed Observable that emits on every collection change.
 	 */
 	private watchCollection<T>(
 		collectionName: string,
 		mapper: (docs: any[]) => T,
-		propagateErrors = false,
-		queryBuilder?: (col: any) => any
+		queryBuilder?: (collection: any) => any
 	): Observable<T> {
-		return (
-			CloudbaseService.authReady$
-				.pipe(
-					take(1),
-					switchMap(
-						() =>
-							new Observable<T>((observer) => {
-								const col = this.database.collection(collectionName);
-								const query = queryBuilder ? queryBuilder(col) : col;
-								const watcher = query.watch({
-									onChange: (snapshot: any) => {
-										// Emit inside Angular's zone — CloudBase fires watch callbacks outside it, so
-										// otherwise Default change detection never runs and the view only updates on the
-										// next user interaction (e.g. the reminder list staying blank after a refresh).
-										this.ngZone.run(() => observer.next(mapper(snapshot.docs)));
-									},
-									onError: (err: any) => {
-										LOG.error(
-											this.className,
-											`${DB_LOG_COLLECTION_WATCH_FAILED} ${collectionName}`,
-											err
-										);
-										if (propagateErrors) observer.error(err);
-									}
-								});
-								return () => watcher.close();
-							})
+		return CloudbaseService.authReady$
+			.pipe(
+				take(1),
+				switchMap(() =>
+					this.realtimeStateSubject.pipe(
+						switchMap((generation) => {
+							if (generation === null) return of({ hasValue: false as const });
+							return new Observable<T>((observer) => {
+								const listenerId = this.registerRealtimeListener(generation);
+								try {
+									const collection = this.database.collection(collectionName);
+									const query = queryBuilder ? queryBuilder(collection) : collection;
+									const watcher = query.watch({
+										onChange: (snapshot: any) => {
+											if (observer.closed) return;
+											this.ngZone.run(() => {
+												observer.next(mapper(snapshot.docs));
+												this.reportFreshSnapshot(generation, listenerId);
+											});
+										},
+										onError: (error: any) => {
+											if (observer.closed) return;
+											LOG.error(
+												this.className,
+												`${DB_LOG_COLLECTION_WATCH_FAILED} ${collectionName}`,
+												error
+											);
+											this.ngZone.run(() => this.reportWatchError(error));
+										}
+									});
+									return () => {
+										try {
+											watcher.close();
+										} finally {
+											this.unregisterRealtimeListener(generation, listenerId);
+										}
+									};
+								} catch (error: unknown) {
+									LOG.error(
+										this.className,
+										`${DB_LOG_COLLECTION_WATCH_FAILED} ${collectionName}`,
+										error as Error
+									);
+									this.ngZone.run(() => this.reportWatchError(error));
+									return () => this.unregisterRealtimeListener(generation, listenerId);
+								}
+							}).pipe(map((value) => ({ hasValue: true as const, value })));
+						})
 					)
 				)
-				/* shareReplay keeps each watch warm for the app's lifetime so navigating away and back replays
-			   the last snapshot instantly instead of tearing the CloudBase watch down and rebuilding it —
-			   the rebuild churns the realtime socket and can fail watch init with a transient SDK error
-			   ("Cannot read property 'code' of undefined"). refCount is intentionally omitted: under the
-			   adjacency model no consumer re-keys a watch via switchMap (shared reminders now read through a
-			   Cloud Function, not a watch), so warm watches never stack the duplicates refCount guarded against. */
-				.pipe(shareReplay(1))
-		);
+			)
+			.pipe(
+				shareReplay(1),
+				filter((state) => state.hasValue),
+				map((state) => state.value)
+			);
 	}
 
 	/**
@@ -1457,13 +1577,13 @@ export class CloudbaseService extends DatabaseService {
 	 * @param fields - Fields to merge into the statistics document.
 	 */
 	public async updateStatisticsFields(fields: Record<string, any>): Promise<void> {
-		// statId is resolved asynchronously after auth confirms; skip silently if not yet ready.
-		if (!this.statId) return;
+		if (!this.statId) this.rethrowCaught(new UnexpectedError());
 		try {
 			const result = await this.statisticsRef.update(fields);
 			this.throwIfCloudbaseError(result);
 		} catch (error) {
 			LOG.error(this.className, DB_LOG_STATS_UPDATE_FAILED, error as Error);
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -1475,11 +1595,16 @@ export class CloudbaseService extends DatabaseService {
 	 * @returns A promise that resolves when the update completes.
 	 */
 	public async updateUserStatsFields(fields: Record<string, any>): Promise<void> {
-		const result = await this.database
-			.collection(DATABASE_USERS)
-			.where(this.getUserStatsFilter())
-			.update(fields);
-		this.throwIfCloudbaseError(result);
+		try {
+			const result = await this.database
+				.collection(DATABASE_USERS)
+				.where(this.getUserStatsFilter())
+				.update(fields);
+			this.throwIfCloudbaseError(result);
+		} catch (error: unknown) {
+			LOG.error(this.className, DB_LOG_USER_STAT_UPDATE_FAILED, error as Error);
+			this.rethrowCaught(error);
+		}
 	}
 
 	/**
@@ -2842,7 +2967,7 @@ export class CloudbaseService extends DatabaseService {
 			};
 		} catch (error) {
 			LOG.error(this.className, `${DB_LOG_PROXY_FETCH_FAILED} ${url}`, error as Error);
-			this.rethrowCaught(error);
+			this.rethrowReadError(error);
 		}
 	}
 
@@ -2945,13 +3070,12 @@ export class CloudbaseService extends DatabaseService {
 
 	/**
 	 * Throws a typed error when a CloudBase result object signals a failure.
-	 * Maps permission_denied to SessionExpiredError so callers get the correct
-	 * retry dialog; all other error codes throw UnexpectedError.
+	 * Converts every database result code to UnexpectedError. Authentication expiry is
+	 * classified only by explicit credential errors from the provider boundary.
 	 *
 	 * @param result - The CloudBase SDK result object to inspect.
 	 */
 	private throwIfCloudbaseError(result: { code?: string; message?: string }): void {
-		if (result.code === CLOUDBASE_ERR_PERMISSION_DENIED) throw new SessionExpiredError();
 		if (result.code) throw new UnexpectedError();
 	}
 

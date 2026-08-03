@@ -9,6 +9,8 @@ import {
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
+import { SessionRecoveryService } from '../../backend/session-recovery/session-recovery.service';
+import { RECOVERY_STATUS_RECOVERED } from '../../common/constants';
 import { Utilities } from '../../common/utilities/app.utilities';
 import { DebtComponent } from './debt.component';
 import { NewDebtData } from './debt.model';
@@ -90,7 +92,11 @@ describe('DebtComponent', () => {
 			providers: [
 				MessageService,
 				{ provide: DatabaseService, useValue: mockDb },
-				{ provide: DialogService, useValue: mockDialogService }
+				{ provide: DialogService, useValue: mockDialogService },
+				{
+					provide: SessionRecoveryService,
+					useValue: { getRecoveryOutcomes$: () => of(RECOVERY_STATUS_RECOVERED) }
+				}
 			]
 		}).compileComponents();
 

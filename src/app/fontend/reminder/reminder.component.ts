@@ -454,6 +454,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.triggerSaveIndicator();
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
+			throw error;
 		}
 	}
 
@@ -996,6 +997,7 @@ export class ReminderComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.triggerSaveIndicator();
 		} catch (error) {
 			this.dialogService.handleError(this.dialogComponentContainer, error);
+			throw error;
 		}
 	}
 

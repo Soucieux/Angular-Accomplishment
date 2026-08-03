@@ -646,8 +646,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 					this.databaseService
 						.updateStatisticsFields({ [STATS_FIELD_TOTAL_PATCH_NOTES]: newTotal })
 						.catch(() => {});
-				} catch (error) {
+				} catch (error: unknown) {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+					throw error;
 				}
 			}
 		);

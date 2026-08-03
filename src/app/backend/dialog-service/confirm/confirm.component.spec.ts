@@ -53,14 +53,23 @@ describe('ConfirmDialogComponent', () => {
             expect(accepted).toBeTrue();
         });
 
-        it('closes the dialog after the callback resolves', async () => {
+		it('closes the dialog after the callback resolves', async () => {
             component.openDialog(async () => {}, ['msg', 'header', 'OK']);
 
             await (component as any).onAccept();
 
-            expect((component as any).visible).toBeFalse();
-        });
-    });
+			expect((component as any).visible).toBeFalse();
+		});
+
+		it('keeps the dialog open when the callback rejects', async () => {
+			const writeError = new Error('write failed');
+			component.openDialog(() => Promise.reject(writeError), ['msg', 'header', 'OK']);
+
+			await expectAsync((component as any).onAccept()).toBeRejectedWith(writeError);
+
+			expect((component as any).visible).toBeTrue();
+		});
+	});
 
     // ── onReject ───────────────────────────────────────────────────────────
 

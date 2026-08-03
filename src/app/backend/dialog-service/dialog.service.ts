@@ -197,6 +197,7 @@ export class DialogService {
 		dataOrCallback1: any,
 		dataOrCallback2?: any
 	): void | Promise<void> {
+
 		// Step 1: Guard — a null container means the component host is not yet initialized
 		if (!dialogContainerRef) {
 			const error = new DialogError(MSG_DIALOG_CONTAINER_NOT_FOUND);
@@ -211,8 +212,8 @@ export class DialogService {
 		 */
 		if (this.openedDialogs.has(dialogType)) {
 			if (this.stackableDialogTypes.has(dialogType)) {
-				/* Block callers chain .catch() on the result (see runBlocking) — a resolved promise
-				   keeps that safe, whereas plain undefined throws a TypeError on the chained .catch(). */
+				/* Block callers await the result (see runBlocking) — a resolved promise keeps that
+				   safe, whereas plain undefined breaks the declared Promise return contract. */
 				return dialogType === DIALOG_BLOCK ? Promise.resolve() : undefined;
 			}
 			const error = new DialogError(MSG_DIALOG_ALREADY_OPEN);
@@ -273,10 +274,10 @@ export class DialogService {
 	/**
 	 * Opens a confirm dialog and, on accept, runs the given async work behind a blocking overlay.
 	 * The overlay opens on top of the confirm dialog while the confirm stays visible underneath;
-	 * when the work settles the overlay and the confirm dialog close together (consistent with the
+	 * when the work resolves the overlay and the confirm dialog close together (consistent with the
 	 * history "undo" flow). The modal overlay blocks re-clicks and a repeat trigger while it is up
-	 * is silently skipped (stackable rule), so the work can never double-fire. The work callback
-	 * owns its own error handling (try/catch with handleError) — a rejection only closes the overlay.
+	 * is silently skipped (stackable rule), so the work can never double-fire. Rejected work closes
+	 * the overlay and propagates to the confirm callback, which keeps the confirm dialog open.
 	 *
 	 * @param container - The ViewContainerRef to attach the dialogs to.
 	 * @param confirmData - The confirm dialog display data (fixed three-element array).
@@ -293,8 +294,8 @@ export class DialogService {
 		work: () => Promise<void>
 	): void {
 		/* Await the overlay inside the confirm's accept callback so the confirm dialog stays open
-		   under the overlay and both close together when the work settles. runBlocking never
-		   rejects, so the confirm's onAccept always reaches its close. */
+		   under the overlay and both close together when the work resolves. A rejected write
+		   propagates and prevents the confirm dialog from reporting false success. */
 		this.openDialog(container, 'confirm', async () => {
 			await this.runBlocking(container, blockMessage, work);
 		}, confirmData);
@@ -304,16 +305,15 @@ export class DialogService {
 	 * Runs the given async work behind a blocking overlay that auto-removes when the work
 	 * resolves. A repeat call while the overlay is up is silently skipped (stackable rule),
 	 * which makes this the standard duplicate-click guard for dialog-triggered DB writes.
-	 * The work callback owns its own error handling — a rejection only closes the overlay.
+	 * A rejected task closes the overlay and propagates to the owning dialog or caller.
 	 *
 	 * @param container - The ViewContainerRef to attach the overlay to.
 	 * @param blockMessage - The message shown on the blocking overlay while the work runs.
 	 * @param work - The async DB work to run behind the overlay.
-	 * @returns A promise that resolves when the work settles, so callers that need to sequence
-	 *   after completion can await it; fire-and-forget callers may safely ignore it.
+	 * @returns A promise that resolves when the work completes and rejects when it fails.
 	 */
 	public runBlocking(container: ViewContainerRef, blockMessage: string, work: () => Promise<void>): Promise<void> {
-		return this.openDialog(container, 'block', work, blockMessage).catch(() => {});
+		return this.openDialog(container, 'block', work, blockMessage);
 	}
 
 	// ── Prebuilt dialog openers ──────────────────────────────────────────────

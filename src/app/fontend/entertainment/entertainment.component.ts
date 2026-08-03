@@ -829,8 +829,9 @@ export class EntertainmentComponent implements OnInit, OnDestroy {
 			async () => {
 				try {
 					await this.databaseService.removeMovieFromDatabase(movieItemVO);
-				} catch (error) {
+				} catch (error: unknown) {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+					throw error;
 				}
 			}
 		);

@@ -1,18 +1,27 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, ReplaySubject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
 import { TimeoutService } from './timeout.service';
 import { Utilities } from '../utilities/app.utilities';
 import { DatabaseService } from '../../backend/database-service/database.service';
-import { AUTH_SETTLE_MAX_WAIT_MS, DATA_READY_MAX_WAIT_MS } from '../constants';
+import {
+	AUTH_SETTLE_MAX_WAIT_MS,
+	DATA_READY_MAX_WAIT_MS,
+	RECOVERY_STATUS_EXPIRED,
+	RECOVERY_STATUS_RECOVERED
+} from '../constants';
+import { SessionRecoveryService } from '../../backend/session-recovery/session-recovery.service';
+import { RecoveryStatus } from '../../backend/session-recovery/session-recovery.model';
 
 describe('TimeoutService', () => {
 	let service: TimeoutService;
 	let mockUtilities: jasmine.SpyObj<Utilities>;
 	let mockDatabaseService: jasmine.SpyObj<DatabaseService>;
+	let mockSessionRecoveryService: jasmine.SpyObj<SessionRecoveryService>;
 	let authSettled$: BehaviorSubject<boolean>;
 	let dataReady$: BehaviorSubject<boolean>;
+	let recoveryOutcomes$: ReplaySubject<RecoveryStatus>;
 
 	/**
 	 * Builds the service with controllable auth-settled and data-ready streams.
@@ -20,10 +29,18 @@ describe('TimeoutService', () => {
 	 * @param isUserAlive - What getIsUserAlive() reports once the guard checks it.
 	 * @param isAuthSettled - Whether auth has already settled before start() is called.
 	 * @param isDataReady - Whether the data layer already reports ready before start() is called.
+	 * @param recoveryStatus - The completed central recovery outcome, or null to keep it pending.
 	 */
-	function setup(isUserAlive: boolean, isAuthSettled = true, isDataReady = true): void {
+	function setup(
+		isUserAlive: boolean,
+		isAuthSettled = true,
+		isDataReady = true,
+		recoveryStatus: RecoveryStatus | null = RECOVERY_STATUS_RECOVERED
+	): void {
 		authSettled$ = new BehaviorSubject<boolean>(isAuthSettled);
 		dataReady$ = new BehaviorSubject<boolean>(isDataReady);
+		recoveryOutcomes$ = new ReplaySubject<RecoveryStatus>(1);
+		if (recoveryStatus !== null) recoveryOutcomes$.next(recoveryStatus);
 
 		mockUtilities = jasmine.createSpyObj<Utilities>('Utilities', [
 			'getIsUserAlive',
@@ -36,12 +53,18 @@ describe('TimeoutService', () => {
 			'getIsDataLayerReady$'
 		]);
 		mockDatabaseService.getIsDataLayerReady$.and.returnValue(dataReady$.pipe(filter(Boolean)));
+		mockSessionRecoveryService = jasmine.createSpyObj<SessionRecoveryService>(
+			'SessionRecoveryService',
+			['getRecoveryOutcomes$']
+		);
+		mockSessionRecoveryService.getRecoveryOutcomes$.and.returnValue(recoveryOutcomes$.asObservable());
 
 		TestBed.configureTestingModule({
 			providers: [
 				TimeoutService,
 				{ provide: Utilities, useValue: mockUtilities },
-				{ provide: DatabaseService, useValue: mockDatabaseService }
+				{ provide: DatabaseService, useValue: mockDatabaseService },
+				{ provide: SessionRecoveryService, useValue: mockSessionRecoveryService }
 			]
 		});
 
@@ -97,6 +120,47 @@ describe('TimeoutService', () => {
 			expect(callback).not.toHaveBeenCalled();
 
 			tick(1);
+			expect(callback).toHaveBeenCalledOnceWith();
+		}));
+
+		it('holds the existing data-ready flow until central recovery completes', fakeAsync(() => {
+			setup(true, true, true, null);
+			const callback = jasmine.createSpy('callback');
+
+			service.start('key', callback, 100);
+			tick(200);
+			expect(callback).not.toHaveBeenCalled();
+
+			recoveryOutcomes$.next(RECOVERY_STATUS_RECOVERED);
+			tick(99);
+			expect(callback).not.toHaveBeenCalled();
+
+			tick(1);
+			expect(callback).toHaveBeenCalledOnceWith();
+		}));
+
+		it('does not arm the page countdown after central recovery confirms expiry', fakeAsync(() => {
+			setup(true, true, true, RECOVERY_STATUS_EXPIRED);
+			const callback = jasmine.createSpy('callback');
+
+			service.start('key', callback, 100);
+			tick(200);
+
+			expect(callback).not.toHaveBeenCalled();
+			expect(mockDatabaseService.getIsDataLayerReady$).not.toHaveBeenCalled();
+		}));
+
+		it('waits past a replayed expiry for the next signed-in session recovery', fakeAsync(() => {
+			setup(true, true, true, RECOVERY_STATUS_EXPIRED);
+			const callback = jasmine.createSpy('callback');
+
+			service.start('key', callback, 100);
+			tick(200);
+			expect(callback).not.toHaveBeenCalled();
+
+			recoveryOutcomes$.next(RECOVERY_STATUS_RECOVERED);
+			tick(100);
+
 			expect(callback).toHaveBeenCalledOnceWith();
 		}));
 

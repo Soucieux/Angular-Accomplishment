@@ -3,6 +3,7 @@ import { ViewContainerRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
 import { DIALOG_CONFIRM } from '../../common/constants';
+import { MSG_DIALOG_ALREADY_OPEN } from '../../common/locale/locale-strings';
 import { DialogService } from './dialog.service';
 
 describe('DialogService', () => {
@@ -10,12 +11,12 @@ describe('DialogService', () => {
 	let messageService: jasmine.SpyObj<MessageService>;
 
 	beforeEach(() => {
-		const msgSpy = jasmine.createSpyObj('MessageService', ['add']);
+		const messageSpy = jasmine.createSpyObj('MessageService', ['add']);
 
 		TestBed.configureTestingModule({
 			providers: [
 				DialogService,
-				{ provide: MessageService, useValue: msgSpy }
+				{ provide: MessageService, useValue: messageSpy }
 			]
 		});
 		service = TestBed.inject(DialogService);
@@ -72,15 +73,16 @@ describe('DialogService', () => {
 
 		beforeEach(() => {
 			mockContainer = jasmine.createSpyObj('ViewContainerRef', ['createComponent']);
-			spyOn(service as any, 'showPermissionError');
+			spyOn(service, 'showPermissionError');
 		});
 
 		it('returns false and shows permission error when permission is denied', () => {
-			spyOn(service as any, 'ensurePermission').and.callThrough();
+			spyOn(service, 'ensurePermission').and.callThrough();
+
 			// checkPermission returns false when no user is signed in
 			const result = service.ensurePermission(mockContainer, 'some-other-user-id');
 			expect(result).toBeFalse();
-			expect((service as any).showPermissionError).toHaveBeenCalledWith(mockContainer);
+			expect(service.showPermissionError).toHaveBeenCalledWith(mockContainer);
 		});
 	});
 
@@ -88,14 +90,35 @@ describe('DialogService', () => {
 
 	describe('openDialog', () => {
 		it('throws when the container reference is null', () => {
-			expect(() => service.openDialog(null as any, 'confirm', () => {}, [])).toThrow();
+			expect(() => service.openDialog(null as unknown as ViewContainerRef, 'confirm', () => {}, [])).toThrow();
 		});
 
 		it('throws when the same non-error dialog type is already open', () => {
 			const mockContainer = jasmine.createSpyObj('ViewContainerRef', ['createComponent']);
-			(service as any).openedDialogs.set(DIALOG_CONFIRM, {});
+			(service as unknown as { openedDialogs: Map<string, unknown> }).openedDialogs.set(DIALOG_CONFIRM, {});
 			expect(() => service.openDialog(mockContainer, 'confirm', () => {}, []))
-				.toThrowError('Dialog already opened');
+				.toThrowError(MSG_DIALOG_ALREADY_OPEN);
+		});
+	});
+
+	// ── runBlocking ─────────────────────────────────────────────────────────
+
+	describe('runBlocking', () => {
+		it('propagates a rejected write after the blocking dialog closes', async () => {
+			const mockContainer = jasmine.createSpyObj<ViewContainerRef>('ViewContainerRef', ['createComponent']);
+			const writeError = new Error('write failed');
+			const blockingDialogService = service as unknown as {
+				openDialog(
+					dialogContainerRef: ViewContainerRef,
+					dialogType: 'block',
+					task: () => Promise<void>,
+					message: string
+				): Promise<void>;
+			};
+			spyOn(blockingDialogService, 'openDialog').and.returnValue(Promise.reject(writeError));
+
+			await expectAsync(service.runBlocking(mockContainer, 'Saving', async () => {}))
+				.toBeRejectedWith(writeError);
 		});
 	});
 });

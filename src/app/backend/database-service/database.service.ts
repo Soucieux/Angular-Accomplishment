@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, combineLatest } from 'rxjs';
+import { Observable, Subject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MovieItemVO } from '../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../fontend/recipe/recipe.model';
@@ -97,6 +97,18 @@ export interface PassphraseLockStatus {
 
 @Injectable({ providedIn: 'root' })
 export abstract class DatabaseService {
+	private readonly realtimeRecoveryState = {
+		generation: null as number | null,
+		expectedListenerCount: 0,
+		eligibleListenerIds: new Set<number>(),
+		acknowledgedListenerIds: new Set<number>(),
+		nextListenerId: 0
+	};
+	protected readonly watchErrorsSubject = new Subject<unknown>();
+	protected readonly writeErrorsSubject = new Subject<unknown>();
+	protected readonly freshSnapshotSubject = new Subject<void>();
+	protected activeRealtimeListenerCount = 0;
+
 	protected constructor() {}
 
 	// ── Retrieval methods ────────────────────────────────────────────────────
@@ -111,6 +123,50 @@ export abstract class DatabaseService {
 	 * @returns An observable that emits true when the data layer is ready to deliver data.
 	 */
 	public abstract getIsDataLayerReady$(): Observable<boolean>;
+
+	/**
+	 * Checks whether the authenticated database session can complete a real protected read.
+	 *
+	 * @returns A promise that resolves when the protected read succeeds.
+	 */
+	public abstract checkConnection(): Promise<void>;
+
+	/**
+	 * Restarts every active realtime stream without waiting for a consumer snapshot.
+	 */
+	public abstract restartRealtimeStreams(): void;
+
+	/**
+	 * Clears session-bound realtime state and closes every active database listener.
+	 */
+	public abstract clearSessionState(): void;
+
+	/**
+	 * Gets realtime-listener failures that may require connection recovery.
+	 *
+	 * @returns An observable that emits the original database failure.
+	 */
+	public getWatchErrors$(): Observable<unknown> {
+		return this.watchErrorsSubject.asObservable();
+	}
+
+	/**
+	 * Gets database write failures that may require silent connection recovery.
+	 *
+	 * @returns An observable that emits the original database write failure.
+	 */
+	public getWriteErrors$(): Observable<unknown> {
+		return this.writeErrorsSubject.asObservable();
+	}
+
+	/**
+	 * Gets a signal emitted after every listener active at restart acknowledges the new generation.
+	 *
+	 * @returns An observable that emits after the restarted listener generation is fresh.
+	 */
+	public getFreshSnapshot$(): Observable<void> {
+		return this.freshSnapshotSubject.asObservable();
+	}
 
 	/**
 	 * Gets the statistics document from the database as a reactive observable.
@@ -1232,8 +1288,8 @@ export abstract class DatabaseService {
 	}
 
 	/**
-	 * Re-throws SessionExpiredError as-is so callers can route it to the retry dialog; wraps
-	 * everything else in UnexpectedError so no raw SDK error escapes the data layer untyped.
+	 * Reports the original failure, re-throws SessionExpiredError as-is so callers can route it to
+	 * the retry dialog, and wraps everything else in UnexpectedError so no raw SDK error escapes.
 	 * Both FirebaseService and CloudbaseService call this shared implementation so the two
 	 * backends surface failures identically.
 	 *
@@ -1242,7 +1298,161 @@ export abstract class DatabaseService {
 	 * @throws UnexpectedError for every other caught value.
 	 */
 	protected rethrowCaught(error: unknown): never {
+		this.reportWriteError(error);
 		if (error instanceof SessionExpiredError) throw error;
 		throw new UnexpectedError();
+	}
+
+	/**
+	 * Translates a failed read without publishing it as a database write-recovery trigger.
+	 *
+	 * @param error - The caught read failure.
+	 * @throws SessionExpiredError if the caught value is already that type.
+	 * @throws UnexpectedError for every other caught value.
+	 */
+	protected rethrowReadError(error: unknown): never {
+		if (error instanceof SessionExpiredError) throw error;
+		if (error instanceof UnexpectedError) throw error;
+		throw new UnexpectedError();
+	}
+
+	/**
+	 * Reports the original realtime-listener failure to the central recovery stream.
+	 *
+	 * @param error - The realtime-listener failure to report.
+	 */
+	protected reportWatchError(error: unknown): void {
+		this.watchErrorsSubject.next(error);
+	}
+
+	/**
+	 * Reports the original database write failure to the central recovery stream.
+	 *
+	 * @param error - The database write failure to report.
+	 */
+	private reportWriteError(error: unknown): void {
+		this.writeErrorsSubject.next(error);
+	}
+
+	/**
+	 * Starts a fresh-snapshot quorum for the next realtime generation.
+	 *
+	 * @param generation - The generation about to replace the current active listeners.
+	 */
+	protected prepareRealtimeRestart(generation: number): void {
+		// Snapshot the old active count before providers tear down and recreate their listeners.
+		this.realtimeRecoveryState.generation = generation;
+		this.realtimeRecoveryState.expectedListenerCount = this.activeRealtimeListenerCount;
+		this.realtimeRecoveryState.eligibleListenerIds.clear();
+		this.realtimeRecoveryState.acknowledgedListenerIds.clear();
+	}
+
+	/**
+	 * Reports that one restarted listener has received a snapshot for the expected generation.
+	 *
+	 * @param generation - The generation that produced the snapshot.
+	 * @param listenerId - The registered listener that produced the snapshot.
+	 */
+	protected reportFreshSnapshot(generation: number, listenerId: number): void {
+		// Ignore late callbacks and listeners created after the replacement quorum was filled.
+		if (
+			this.realtimeRecoveryState.generation !== generation ||
+			!this.realtimeRecoveryState.eligibleListenerIds.has(listenerId)
+		) {
+			return;
+		}
+
+		// A listener contributes only once because acknowledgements are stored in a Set.
+		this.realtimeRecoveryState.acknowledgedListenerIds.add(listenerId);
+		if (
+			this.realtimeRecoveryState.acknowledgedListenerIds.size >=
+			this.realtimeRecoveryState.expectedListenerCount
+		) {
+			this.completeRealtimeRestart();
+		}
+	}
+
+	/**
+	 * Records that a provider realtime listener has started in a generation.
+	 *
+	 * @param generation - The realtime generation owning the listener.
+	 * @returns The unique listener identifier used for recovery acknowledgement.
+	 */
+	protected registerRealtimeListener(generation: number): number {
+		this.activeRealtimeListenerCount++;
+		const listenerId = ++this.realtimeRecoveryState.nextListenerId;
+
+		// Only the first replacement for each previously active listener belongs to this quorum.
+		if (
+			this.realtimeRecoveryState.generation === generation &&
+			this.realtimeRecoveryState.eligibleListenerIds.size <
+				this.realtimeRecoveryState.expectedListenerCount
+		) {
+			this.realtimeRecoveryState.eligibleListenerIds.add(listenerId);
+		}
+		return listenerId;
+	}
+
+	/**
+	 * Records that a provider realtime listener has stopped.
+	 *
+	 * @param generation - The realtime generation that owned the listener.
+	 * @param listenerId - The unique identifier of the stopped listener.
+	 */
+	protected unregisterRealtimeListener(generation: number, listenerId: number): void {
+		this.activeRealtimeListenerCount = Math.max(0, this.activeRealtimeListenerCount - 1);
+
+		// A deliberately removed consumer no longer blocks the pending recovery generation.
+		if (
+			this.realtimeRecoveryState.generation !== generation ||
+			!this.realtimeRecoveryState.eligibleListenerIds.has(listenerId) ||
+			this.realtimeRecoveryState.acknowledgedListenerIds.has(listenerId)
+		) {
+			return;
+		}
+		this.realtimeRecoveryState.eligibleListenerIds.delete(listenerId);
+		this.realtimeRecoveryState.expectedListenerCount--;
+		if (
+			this.realtimeRecoveryState.acknowledgedListenerIds.size >=
+			this.realtimeRecoveryState.expectedListenerCount
+		) {
+			this.completeRealtimeRestart();
+		}
+	}
+
+	/**
+	 * Reports an immediately fresh state when no realtime consumers need a replacement snapshot.
+	 *
+	 * @param generation - The generation started without active listeners.
+	 */
+	protected reportFreshStateWithoutListeners(generation: number): void {
+		if (
+			this.realtimeRecoveryState.generation === generation &&
+			this.realtimeRecoveryState.expectedListenerCount === 0
+		) {
+			this.completeRealtimeRestart();
+		}
+	}
+
+	/**
+	 * Cancels any pending listener acknowledgement when the authenticated session is cleared.
+	 */
+	protected clearRealtimeRecoveryState(): void {
+		this.realtimeRecoveryState.generation = null;
+		this.realtimeRecoveryState.expectedListenerCount = 0;
+		this.realtimeRecoveryState.eligibleListenerIds.clear();
+		this.realtimeRecoveryState.acknowledgedListenerIds.clear();
+	}
+
+	/**
+	 * Completes the current listener quorum and publishes one fresh-generation signal.
+	 *
+	 * {@link reportFreshSnapshot} - Completes after every expected listener acknowledges.
+	 * {@link unregisterRealtimeListener} - Completes when remaining unacknowledged listeners stop.
+	 * {@link reportFreshStateWithoutListeners} - Completes a generation with no realtime consumers.
+	 */
+	private completeRealtimeRestart(): void {
+		this.clearRealtimeRecoveryState();
+		this.freshSnapshotSubject.next();
 	}
 }

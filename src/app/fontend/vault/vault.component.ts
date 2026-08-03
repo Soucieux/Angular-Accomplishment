@@ -615,12 +615,13 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 					if (this.selectedId === node.id) this.selectedId = null;
 					this.triggerSaveIndicator();
 					this.dialogService.showToast(SUCCESS, VAULT_MSG_NODE_REMOVED);
-				} catch {
+				} catch (error: unknown) {
 					this.dialogService.showToast(
 						TOAST_ERROR,
 						MSG_SAVE_FAILED,
 						VAULT_MSG_REMOVE_NODE_FAILED_DETAIL
 					);
+					throw error;
 				}
 			}
 		);
@@ -650,12 +651,13 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 					if (this.categoryFilter === categoryKey) this.categoryFilter = null;
 					this.triggerSaveIndicator();
 					this.dialogService.showToast(SUCCESS, VAULT_MSG_CATEGORY_REMOVED);
-				} catch {
+				} catch (error: unknown) {
 					this.dialogService.showToast(
 						TOAST_ERROR,
 						MSG_SAVE_FAILED,
 						VAULT_MSG_REMOVE_CATEGORY_FAILED_DETAIL
 					);
+					throw error;
 				}
 			}
 		);

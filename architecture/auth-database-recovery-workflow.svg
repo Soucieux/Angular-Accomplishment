@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1320" viewBox="0 0 1800 1320">
+  <defs>
+    <linearGradient id="header" x1="0" x2="1">
+      <stop offset="0" stop-color="#172554"/>
+      <stop offset="1" stop-color="#3730a3"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#16a34a"/></marker>
+    <marker id="arrow-amber" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#d97706"/></marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#dc2626"/></marker>
+    <style>
+      .title { font: 700 31px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #fff; }
+      .subtitle { font: 400 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #dbeafe; }
+      .section { font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+      .section-note { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; }
+      .node-title { font: 700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; text-anchor: middle; }
+      .node-note { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; text-anchor: middle; }
+      .edge { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #334155; }
+      .tiny { font: 500 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; }
+      .line-blue { fill: none; stroke: #2563eb; stroke-width: 3; marker-end: url(#arrow-blue); }
+      .line-green { fill: none; stroke: #16a34a; stroke-width: 3; marker-end: url(#arrow-green); }
+      .line-amber { fill: none; stroke: #d97706; stroke-width: 3; marker-end: url(#arrow-amber); }
+      .line-red { fill: none; stroke: #dc2626; stroke-width: 3; marker-end: url(#arrow-red); }
+      .line-gray { fill: none; stroke: #64748b; stroke-width: 2.5; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1320" fill="#f8fafc"/>
+  <rect width="1800" height="108" fill="url(#header)"/>
+  <text x="54" y="48" class="title">Authentication &amp; Database Recovery Workflow</text>
+  <text x="54" y="79" class="subtitle">Recovery begins before the existing page-data guard and gates its readiness wait and countdown; only an expected signed-in session enters it.</text>
+
+  <!-- Entry triggers -->
+  <rect x="38" y="132" width="1724" height="200" rx="22" fill="#eff6ff" stroke="#93c5fd" stroke-width="2"/>
+  <text x="64" y="164" class="section">1 · Recovery entry points</text>
+  <text x="64" y="188" class="section-note">Simultaneous events share one in-flight operation. Focus/resume requires at least 5 minutes of inactivity.</text>
+
+  <g filter="url(#shadow)"><rect x="72" y="215" width="250" height="82" rx="14" fill="#fff" stroke="#60a5fa" stroke-width="2"/></g>
+  <text x="197" y="248" class="node-title">Signed-in app startup</text><text x="197" y="272" class="node-note">auth_hint says a session is expected</text>
+  <g filter="url(#shadow)"><rect x="352" y="215" width="250" height="82" rx="14" fill="#fff" stroke="#60a5fa" stroke-width="2"/></g>
+  <text x="477" y="248" class="node-title">Focus / resume</text><text x="477" y="272" class="node-note">only after ≥ 5 minutes inactive</text>
+  <g filter="url(#shadow)"><rect x="632" y="215" width="220" height="82" rx="14" fill="#fff" stroke="#60a5fa" stroke-width="2"/></g>
+  <text x="742" y="248" class="node-title">Network returns</text><text x="742" y="272" class="node-note">online event</text>
+  <g filter="url(#shadow)"><rect x="882" y="215" width="270" height="82" rx="14" fill="#fff" stroke="#60a5fa" stroke-width="2"/></g>
+  <text x="1017" y="248" class="node-title">Watcher / write failure</text><text x="1017" y="272" class="node-note">write recovery stays silent</text>
+  <g filter="url(#shadow)"><rect x="1205" y="215" width="250" height="82" rx="14" fill="#fff" stroke="#a78bfa" stroke-width="2"/></g>
+  <text x="1330" y="248" class="node-title">Manual sign-out</text><text x="1330" y="272" class="node-note">separate consistency transaction</text>
+  <g filter="url(#shadow)"><rect x="1485" y="215" width="235" height="82" rx="14" fill="#fff1f2" stroke="#fb7185" stroke-width="2"/></g>
+  <text x="1602" y="248" class="node-title">Provider confirms expiry</text><text x="1602" y="272" class="node-note">bypasses health probes</text>
+
+  <!-- Automatic recovery -->
+  <rect x="38" y="356" width="1110" height="746" rx="22" fill="#f8fbff" stroke="#bfdbfe" stroke-width="2"/>
+  <text x="64" y="390" class="section">2 · Automatic authentication and data recovery</text>
+  <text x="64" y="414" class="section-note">This block is the new insertion point. Signed-out/public use bypasses it and remains unchanged.</text>
+
+  <path d="M197 297 V444 H400" class="line-blue"/>
+  <path d="M477 297 V430 H400 V444" class="line-blue"/>
+  <path d="M742 297 V420 H400 V444" class="line-blue"/>
+  <path d="M1017 297 V410 H400 V444" class="line-blue"/>
+
+  <polygon points="400,438 500,492 400,546 300,492" fill="#fff" stroke="#64748b" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="400" y="484" class="node-title">Session expected?</text><text x="400" y="507" class="node-note">auth hint / live user state</text>
+  <path d="M300 492 H176 V596" class="line-gray"/>
+  <text x="203" y="478" class="edge">No</text>
+  <rect x="76" y="596" width="200" height="76" rx="14" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+  <text x="176" y="627" class="node-title">Do nothing</text><text x="176" y="650" class="node-note">stay signed out / public</text>
+
+  <path d="M500 492 H596" class="line-blue"/>
+  <text x="535" y="478" class="edge">Yes</text>
+  <rect x="596" y="446" width="444" height="92" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="818" y="480" class="node-title">A · Validate authentication</text>
+  <text x="818" y="504" class="node-note">server-backed provider check · maximum 5 seconds</text>
+  <text x="818" y="524" class="node-note">valid · expired · unknown (never guess)</text>
+
+  <path d="M818 538 V578" class="line-blue"/>
+  <polygon points="818,578 908,626 818,674 728,626" fill="#fff" stroke="#64748b" stroke-width="2.5"/>
+  <text x="818" y="620" class="node-title">Auth result</text><text x="818" y="643" class="node-note">classified</text>
+  <path d="M728 626 H584" class="line-red"/>
+  <text x="623" y="612" class="edge">Expired</text>
+  <path d="M908 626 H1070 V692" class="line-amber"/>
+  <text x="945" y="612" class="edge">Unknown / timeout</text>
+  <path d="M818 674 V716" class="line-blue"/>
+  <text x="834" y="698" class="edge">Valid</text>
+
+  <rect x="596" y="716" width="444" height="84" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="818" y="749" class="node-title">B · Check database health</text>
+  <text x="818" y="774" class="node-note">real protected user read · maximum 5 seconds</text>
+  <path d="M818 800 V834" class="line-blue"/>
+  <polygon points="818,834 908,882 818,930 728,882" fill="#fff" stroke="#64748b" stroke-width="2.5"/>
+  <text x="818" y="876" class="node-title">DB result</text><text x="818" y="899" class="node-note">healthy / expired / offline</text>
+  <path d="M728 882 H584" class="line-red"/>
+  <text x="614" y="868" class="edge">Invalid credentials</text>
+  <path d="M908 882 H1070 V846" class="line-amber"/>
+  <text x="930" y="868" class="edge">Offline / timeout</text>
+  <path d="M818 930 V966" class="line-green"/>
+
+  <rect x="552" y="966" width="532" height="94" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="818" y="998" class="node-title">C · Restart active realtime streams</text>
+  <text x="818" y="1022" class="node-note">close old generation → recreate watchers → ignore late old snapshots</text>
+  <text x="818" y="1044" class="node-note">Runtime waits for every active listener; startup then releases the existing page guard.</text>
+
+  <rect x="76" y="740" width="260" height="116" rx="14" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/>
+  <text x="206" y="774" class="node-title">Retryable offline state</text>
+  <text x="206" y="799" class="node-note">keep login and rendered data</text>
+  <text x="206" y="821" class="node-note">watch/resume/online: Retry dialog</text>
+  <text x="206" y="843" class="node-note">write: owning form shows error</text>
+  <path d="M1070 692 H336 V765" class="line-amber"/>
+  <path d="M1070 846 H336 V814" class="line-amber"/>
+
+  <rect x="76" y="914" width="260" height="116" rx="14" fill="#ffe4e6" stroke="#f43f5e" stroke-width="2.5"/>
+  <text x="206" y="948" class="node-title">Confirmed session expiry</text>
+  <text x="206" y="973" class="node-note">no remote sign-out retry required</text>
+  <text x="206" y="995" class="node-note">enter atomic cleanup</text>
+  <path d="M584 626 H456 V950 H336" class="line-red"/>
+  <path d="M584 882 H456 V978 H336" class="line-red"/>
+
+  <!-- Existing timer -->
+  <rect x="1172" y="356" width="590" height="360" rx="22" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+  <text x="1198" y="390" class="section">3 · Recovery completion + existing page-data guard</text>
+  <text x="1198" y="414" class="section-note">Runtime recovery already proves all restarted listeners.</text>
+  <text x="1198" y="431" class="section-note">Startup: recovery → data-ready wait (≤ 5s) → page-data countdown (7s).</text>
+  <path d="M1084 1013 H1128 V466 H1230" class="line-green"/>
+  <rect x="1230" y="446" width="474" height="90" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="1467" y="480" class="node-title">D · Release existing page guard</text>
+  <text x="1467" y="505" class="node-note">startup: data-ready wait ≤ 5s → existing page countdown 7s</text>
+  <path d="M1467 536 V575" class="line-green"/>
+  <polygon points="1467,575 1557,622 1467,669 1377,622" fill="#fff" stroke="#64748b" stroke-width="2.5"/>
+  <text x="1467" y="616" class="node-title">Page data arrives?</text><text x="1467" y="639" class="node-note">during the retained guard</text>
+  <path d="M1377 622 H1260" class="line-green"/>
+  <text x="1300" y="608" class="edge">Yes → normal UI</text>
+  <path d="M1557 622 H1685 V684" class="line-amber"/>
+  <text x="1575" y="608" class="edge">No → Retry / Reload</text>
+
+  <!-- Manual logout -->
+  <rect x="1172" y="740" width="590" height="362" rx="22" fill="#faf5ff" stroke="#d8b4fe" stroke-width="2"/>
+  <text x="1198" y="774" class="section">4 · Manual sign-out consistency transaction</text>
+  <text x="1198" y="798" class="section-note">Local auth and database state stay intact until the remote outcome is known.</text>
+  <path d="M1330 297 V830" class="line-blue"/>
+  <rect x="1240" y="830" width="454" height="70" rx="14" fill="#f3e8ff" stroke="#a855f7" stroke-width="2.5"/>
+  <text x="1467" y="859" class="node-title">Remote sign-out · maximum 5 seconds</text>
+  <text x="1467" y="882" class="node-note">unknown result is revalidated for another 5 seconds</text>
+  <path d="M1467 900 V932" class="line-blue"/>
+  <polygon points="1467,932 1552,976 1467,1020 1382,976" fill="#fff" stroke="#64748b" stroke-width="2.5"/>
+  <text x="1467" y="970" class="node-title">Remote result</text><text x="1467" y="992" class="node-note">confirmed or unknown</text>
+  <path d="M1382 976 H1240 V1050" class="line-red"/>
+  <text x="1248" y="960" class="edge">Success / already expired</text>
+  <path d="M1552 976 H1694 V1048" class="line-amber"/>
+  <text x="1565" y="960" class="edge">Valid / still unknown</text>
+  <text x="1572" y="1075" class="node-note">restore preference; no cleanup</text>
+  <text x="1572" y="1093" class="node-note">dismiss error, then sign out again to retry</text>
+
+  <!-- Atomic cleanup -->
+  <rect x="38" y="1126" width="1724" height="154" rx="22" fill="#fff1f2" stroke="#fda4af" stroke-width="2"/>
+  <text x="64" y="1160" class="section">5 · One atomic client-side signed-out transition</text>
+  <text x="64" y="1184" class="section-note">Entered only after confirmed expiry, successful remote sign-out, or revalidation proving the server already ended the session.</text>
+  <path d="M206 1030 V1204 H420" class="line-red"/>
+  <path d="M1602 297 V1110 H420 V1204" class="line-red"/>
+  <path d="M1240 1050 V1110 H420 V1204" class="line-red"/>
+  <rect x="420" y="1196" width="960" height="58" rx="14" fill="#fff" stroke="#f43f5e" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="900" y="1220" class="node-title">Database first: stop watchers + clear caches → Auth second: clear SDK/local identity + login hint</text>
+  <text x="900" y="1242" class="node-note">Expiry: show Login with returnUrl · manual sign-out: leave protected Account UI</text>
+  <path d="M1380 1225 H1650" class="line-red"/>
+  <rect x="1650" y="1196" width="86" height="58" rx="14" fill="#ffe4e6" stroke="#f43f5e" stroke-width="2.5"/>
+  <text x="1693" y="1230" class="node-title">Signed out</text>
+
+  <circle cx="64" cy="1304" r="7" fill="#2563eb"/><text x="80" y="1309" class="tiny">validation / recovery</text>
+  <circle cx="245" cy="1304" r="7" fill="#16a34a"/><text x="261" y="1309" class="tiny">healthy / active</text>
+  <circle cx="405" cy="1304" r="7" fill="#d97706"/><text x="421" y="1309" class="tiny">unknown / retryable</text>
+  <circle cx="590" cy="1304" r="7" fill="#dc2626"/><text x="606" y="1309" class="tiny">confirmed expiry / cleanup</text>
+</svg>

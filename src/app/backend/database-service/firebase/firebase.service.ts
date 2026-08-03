@@ -12,6 +12,9 @@ import {
 	DATABASE_STATISTICS,
 	DATABASE_USEFUL_LINKS,
 	DATABASE_VAULT,
+	FIREBASE_ERROR_ID_TOKEN_EXPIRED,
+	FIREBASE_ERROR_INVALID_USER_TOKEN,
+	FIREBASE_ERROR_USER_TOKEN_EXPIRED,
 	FIREBASE_INFO_CONNECTED,
 	VAULT_VALUE_KEY_CATEGORIES,
 	GENRE_FAVOURITE,
@@ -128,7 +131,7 @@ import {
 	ACTIVITY_INVALID_TABLE_TEXT
 } from '../../../common/locale/locale-strings';
 import { SearchStreamService } from '../../dialog-service/search/search-stream.service';
-import { Inject, Injectable } from '@angular/core';
+import { Inject, Injectable, NgZone } from '@angular/core';
 import {
 	FirebaseStorage,
 	ref as storageRef,
@@ -142,6 +145,7 @@ import {
 	DatabaseReference,
 	DataSnapshot,
 	Query,
+	child,
 	ref as dbRef,
 	onValue,
 	runTransaction,
@@ -152,7 +156,8 @@ import {
 	push
 } from 'firebase/database';
 import type { Auth } from 'firebase/auth';
-import { Observable, map, of } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, firstValueFrom, map, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { MovieItemVO } from '../../../fontend/entertainment/movieItem.vo';
 import { Recipe } from '../../../fontend/recipe/recipe.model';
 import { VaultRecord } from '../../../fontend/vault/vault.model';
@@ -165,6 +170,8 @@ import {
 	FIREBASE_STORAGE,
 	PassphraseLockStatus
 } from '../database.service';
+import { SessionExpiredError } from '../../../common/error/session-expired.error';
+import { UnexpectedError } from '../../../common/error/unexpected.error';
 
 @Injectable({
 	providedIn: 'root'
@@ -173,12 +180,14 @@ export class FirebaseService extends DatabaseService {
 	private readonly className = 'FirebaseService';
 	private moviesRef: DatabaseReference;
 	private statisticsRef: DatabaseReference;
+	private realtimeStateSubject = new BehaviorSubject<number | null>(0);
 
 	constructor(
 		@Inject(FIREBASE_STORAGE) private storage: FirebaseStorage,
 		@Inject(FIREBASE_DATABASE) private db: Database,
 		@Inject(FIREBASE_AUTH) private firebaseAuth: Auth,
-		private searchStreamService: SearchStreamService
+		private searchStreamService: SearchStreamService,
+		private ngZone: NgZone
 	) {
 		super();
 		this.moviesRef = dbRef(this.db, DATABASE_MOVIES);
@@ -197,12 +206,67 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public getIsDataLayerReady$(): Observable<boolean> {
 		return new Observable<boolean>((subscriber) => {
-			const unsubscribe = onValue(dbRef(this.db, FIREBASE_INFO_CONNECTED), (snapshot) => {
-				// Forward only the connected state; the initial false would start the guard countdown too early.
-				if (snapshot.val() === true) subscriber.next(true);
-			});
-			return () => unsubscribe();
+			try {
+				const unsubscribe = onValue(
+					dbRef(this.db, FIREBASE_INFO_CONNECTED),
+					(snapshot) => {
+						// Forward only the connected state; the initial false would start the guard countdown too early.
+						if (snapshot.val() === true) this.ngZone.run(() => subscriber.next(true));
+					},
+					(error) => this.ngZone.run(() => this.reportWatchError(error))
+				);
+				return () => unsubscribe();
+			} catch (error: unknown) {
+				this.ngZone.run(() => this.reportWatchError(error));
+				return undefined;
+			}
 		});
+	}
+
+	/**
+	 * Checks whether Firebase can complete a protected read for the authenticated user.
+	 *
+	 * @returns A promise that resolves when the protected read succeeds.
+	 * @throws SessionExpiredError if Firebase has no authenticated user.
+	 * @throws UnexpectedError when the protected read fails for any other reason.
+	 */
+	public async checkConnection(): Promise<void> {
+		const userId = this.firebaseAuth.currentUser?.uid;
+		if (!userId) throw new SessionExpiredError();
+		try {
+			await firstValueFrom(this.getIsDataLayerReady$());
+			await this.readAuthenticatedUser(userId);
+		} catch (error: unknown) {
+			const providerErrorCode = (error as { code?: string })?.code;
+			if (
+				providerErrorCode === FIREBASE_ERROR_ID_TOKEN_EXPIRED ||
+				providerErrorCode === FIREBASE_ERROR_INVALID_USER_TOKEN ||
+				providerErrorCode === FIREBASE_ERROR_USER_TOKEN_EXPIRED
+			) {
+				throw new SessionExpiredError();
+			}
+			throw new UnexpectedError();
+		}
+	}
+
+	/**
+	 * Restarts active Firebase listeners while preserving native automatic reconnection.
+	 */
+	public restartRealtimeStreams(): void {
+		const hasActiveRealtimeListeners = this.activeRealtimeListenerCount > 0;
+		const currentGeneration = this.realtimeStateSubject.value ?? 0;
+		const nextGeneration = currentGeneration + 1;
+		this.prepareRealtimeRestart(nextGeneration);
+		this.realtimeStateSubject.next(nextGeneration);
+		if (!hasActiveRealtimeListeners) this.reportFreshStateWithoutListeners(nextGeneration);
+	}
+
+	/**
+	 * Clears session-bound Firebase listeners and prevents them from reconnecting.
+	 */
+	public clearSessionState(): void {
+		this.clearRealtimeRecoveryState();
+		this.realtimeStateSubject.next(null);
 	}
 
 	/**
@@ -661,6 +725,16 @@ export class FirebaseService extends DatabaseService {
 	}
 
 	/**
+	 * Gets the authenticated user's protected database node as a connection proof.
+	 *
+	 * @param userId - The authenticated Firebase user identifier.
+	 * @returns A promise that resolves after the protected read succeeds.
+	 */
+	private async readAuthenticatedUser(userId: string): Promise<void> {
+		await get(child(dbRef(this.db, DATABASE_USERS), userId));
+	}
+
+	/**
 	 * Gets a reactive observable of the child snapshots under the given query.
 	 * Replaces the RxFire list() helper that was removed alongside @angular/fire —
 	 * wraps onValue and re-emits all children as snapshot rows on every change.
@@ -676,20 +750,32 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the array of child snapshots.
 	 */
 	private listAsObservable(query: Query): Observable<DataSnapshot[]> {
-		return new Observable((observer) => {
-			const unsubscribe = onValue(
-				query,
-				(snapshot) => {
-					const rows: DataSnapshot[] = [];
-					snapshot.forEach((child) => {
-						rows.push(child);
-					});
-					observer.next(rows);
-				},
-				(error) => observer.error(error)
-			);
-			return () => unsubscribe();
-		});
+		return this.realtimeStateSubject.pipe(
+			switchMap((generation) => {
+				if (generation === null) return EMPTY;
+				return new Observable<DataSnapshot[]>((observer) =>
+					this.createValueListener(
+						query,
+						generation,
+						(snapshot, listenerId) => {
+							if (observer.closed) return;
+							const rows: DataSnapshot[] = [];
+							snapshot.forEach((child) => {
+								rows.push(child);
+							});
+							this.ngZone.run(() => {
+								observer.next(rows);
+								this.reportFreshSnapshot(generation, listenerId);
+							});
+						},
+						(error) => {
+							if (observer.closed) return;
+							this.ngZone.run(() => this.reportWatchError(error));
+						}
+					)
+				);
+			})
+		);
 	}
 
 	/**
@@ -706,14 +792,66 @@ export class FirebaseService extends DatabaseService {
 	 * @returns An observable that emits the projected value on every change.
 	 */
 	private observeValue<T>(query: Query, project: (snapshot: DataSnapshot) => T): Observable<T> {
-		return new Observable<T>((observer) => {
+		return this.realtimeStateSubject.pipe(
+			switchMap((generation) => {
+				if (generation === null) return EMPTY;
+				return new Observable<T>((observer) =>
+					this.createValueListener(
+						query,
+						generation,
+						(snapshot, listenerId) => {
+							if (observer.closed) return;
+							this.ngZone.run(() => {
+								observer.next(project(snapshot));
+								this.reportFreshSnapshot(generation, listenerId);
+							});
+						},
+						(error) => {
+							if (observer.closed) return;
+							this.ngZone.run(() => this.reportWatchError(error));
+						}
+					)
+				);
+			})
+		);
+	}
+
+	/**
+	 * Creates a Firebase value listener through the shared SDK boundary.
+	 *
+	 * {@link listAsObservable} - Streams list snapshots through the restartable listener lifecycle.
+	 * {@link observeValue} - Streams projected snapshots through the restartable listener lifecycle.
+	 *
+	 * @param query - The Firebase query to observe.
+	 * @param generation - The realtime generation that owns the listener.
+	 * @param valueCallback - The callback invoked with every database snapshot and listener identifier.
+	 * @param errorCallback - The callback invoked when the database listener fails.
+	 * @returns A callback that closes the Firebase listener.
+	 */
+	private createValueListener(
+		query: Query,
+		generation: number,
+		valueCallback: (snapshot: DataSnapshot, listenerId: number) => void,
+		errorCallback: (error: unknown) => void
+	): () => void {
+		const listenerId = this.registerRealtimeListener(generation);
+		try {
 			const unsubscribe = onValue(
 				query,
-				(snapshot) => observer.next(project(snapshot)),
-				(error) => observer.error(error)
+				(snapshot) => valueCallback(snapshot, listenerId),
+				errorCallback
 			);
-			return () => unsubscribe();
-		});
+			return () => {
+				try {
+					unsubscribe();
+				} finally {
+					this.unregisterRealtimeListener(generation, listenerId);
+				}
+			};
+		} catch (error: unknown) {
+			this.ngZone.run(() => this.reportWatchError(error));
+			return () => this.unregisterRealtimeListener(generation, listenerId);
+		}
 	}
 
 	// ── Update methods ───────────────────────────────────────────────────────
@@ -967,6 +1105,7 @@ export class FirebaseService extends DatabaseService {
 			await update(this.statisticsRef, fields);
 		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_STATS_UPDATE_FAILED, error as Error);
+			this.rethrowCaught(error);
 		}
 	}
 
@@ -980,11 +1119,12 @@ export class FirebaseService extends DatabaseService {
 	 */
 	public async updateUserStatsFields(fields: Record<string, any>): Promise<void> {
 		const uid = this.firebaseAuth.currentUser?.uid;
-		if (!uid) return;
+		if (!uid) this.rethrowCaught(new SessionExpiredError());
 		try {
 			await update(dbRef(this.db, `${DATABASE_USERS}/${uid}`), fields);
 		} catch (error: unknown) {
 			LOG.error(this.className, DB_LOG_USER_STATS_UPDATE_FAILED, error as Error);
+			this.rethrowCaught(error);
 		}
 	}
 

@@ -357,8 +357,9 @@ export class ResonanceComponent implements OnInit, AfterViewInit, OnDestroy {
 			async () => {
 				try {
 					await this.databaseService.removeQuote(quote.key ?? '', quote.author ?? '', quote._openid ?? '');
-				} catch {
+				} catch (error: unknown) {
 					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+					throw error;
 				}
 			}
 		);

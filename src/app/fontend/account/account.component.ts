@@ -11,10 +11,11 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom, Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '../../backend/authentication-service/auth.service';
 import { ConnectedMember, DatabaseService } from '../../backend/database-service/database.service';
+import { SessionRecoveryService } from '../../backend/session-recovery/session-recovery.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
@@ -42,7 +43,8 @@ import {
 	VAULT_GRACE_ALWAYS,
 	VAULT_GRACE_UNTIL_RELOAD,
 	VAULT_GRACE_MINUTE_OPTIONS,
-	CADENCE_ICON
+	CADENCE_ICON,
+	LOGIN_URL_DEFAULT_RETURN
 } from '../../common/constants';
 import {
 	DIALOG_BTN_DELETE,
@@ -315,13 +317,16 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		{ label: CADENCE_GRACE_UNTIL_RELOAD, value: VAULT_GRACE_UNTIL_RELOAD }
 	];
 	private statsSub?: Subscription;
-	private userSub?: Subscription;
+	private initialUserSub?: Subscription;
+	private vaultGraceUpdatePromise: Promise<void> = Promise.resolve();
+	private isDestroyed = false;
 
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private router: Router,
 		private authService: AuthService,
 		private databaseService: DatabaseService,
+		private sessionRecoveryService: SessionRecoveryService,
 		private dialogService: DialogService,
 		private cdr: ChangeDetectorRef
 	) {}
@@ -337,24 +342,12 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		// Step 1: Wire up the current-user observable used by the template
 		this.currentUser$ = this.authService.getCurrentUser();
 
-		/* Step 2: Redirect home the moment the signed-in user signs out on this page — unlike the
-		   content pages, which swap to a blocked card in place, the account page is purely personal
-		   and has nothing to show a signed-out visitor. Only a signed-in→signed-out transition
-		   triggers the redirect, so the initial null emitted while auth is still resolving on a
-		   refresh does not bounce a legitimately signed-in user. */
-		let hadUser = false;
-		this.userSub = this.currentUser$.subscribe((user) => {
-			if (user) {
-				hadUser = true;
-			} else if (hadUser) {
-				this.router.navigate(['/']).catch(() => {});
-			}
-		});
+		// Step 2: Once the first resolved user emission arrives, seed stats and fetch the last-login date
+		this.initialUserSub = this.currentUser$
+			.pipe(take(1))
+			.subscribe((user) => {
+				if (!user || this.isDestroyed) return;
 
-		// Step 3: Once the first user emission resolves, seed stats and fetch the last-login date
-		firstValueFrom(this.currentUser$)
-			.then((user) => {
-				if (!user) return;
 				/* Ensure the users doc exists (and carries a connect code) before the live stream reads it,
 				   then self-heal any item totals that drifted when a permitted user removed one of this
 				   user's items (the remover never writes this user's counter — see reconcileUserStats). */
@@ -365,6 +358,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.authService
 					.getLastLoginTimestamp()
 					.then((date) => {
+						if (this.isDestroyed) return;
 						this.lastLoginDate = date;
 						this.cdr.detectChanges();
 					})
@@ -372,14 +366,14 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 				this.databaseService
 					.getPassphraseLockStatus(PASSPHRASE_LOCK_KEY_VAULT)
 					.then((status) => {
+						if (this.isDestroyed) return;
 						this.hasVaultPassphrase = status.isSet;
 						this.cdr.detectChanges();
 					})
 					.catch(() => {});
-			})
-			.catch(() => {});
+			});
 
-		/* Step 4: Subscribe to the live stats document and project all derived display fields.
+		/* Step 3: Subscribe to the live stats document and project all derived display fields.
 		   detectChanges is called explicitly here because this subscription fires outside the
 		   Angular zone (CloudBase SDK callbacks are not zone-patched). */
 		this.statsSub = this.databaseService.getUserStats().subscribe((doc) => {
@@ -428,8 +422,9 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 */
 	ngOnDestroy(): void {
 		this.statsSub?.unsubscribe();
-		this.userSub?.unsubscribe();
+		this.initialUserSub?.unsubscribe();
 		this.dialogComponentContainer?.clear();
+		this.isDestroyed = true;
 	}
 
 	// ── User action handlers ──────────────────────────────────────────────────
@@ -437,6 +432,8 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	/**
 	 * Submits the username update to CloudBase. Shows a success toast on success
 	 * or opens the unexpected error dialog if the service throws.
+	 *
+	 * @returns A promise that resolves after the username request settles.
 	 */
 	protected async updateUsername(): Promise<void> {
 		// Enter on the input and the Save button both call this; guard so a repeat cannot double-write.
@@ -444,6 +441,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.isSavingCredentials = true;
 		try {
 			await this.authService.updateUsername(this.usernameInput.trim());
+			if (this.isDestroyed) return;
 
 			/* Record the change timestamp in the stats doc as a fire-and-forget write.
 			   It is intentionally not awaited — a failure here must not block the success toast. */
@@ -456,7 +454,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			// Confirm success to the user only after the auth update resolves
 			this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_USERNAME_UPDATED);
 		} catch {
-			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+			if (!this.isDestroyed) this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 		} finally {
 			this.isSavingCredentials = false;
 		}
@@ -469,10 +467,18 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * @param value - The selected grace value (0 = always require, -1 = until reload, else minutes).
 	 */
 	protected onVaultGraceChange(value: number): void {
-		this.databaseService
-			.updateUserStatsFields({ [STATS_FIELD_VAULT_GRACE]: value })
-			.then(() => this.dialogService.showToast(SUCCESS, CADENCE_MSG_GRACE_SAVED))
-			.catch(() => this.dialogService.showUnexpectedError(this.dialogComponentContainer));
+		this.vaultGraceUpdatePromise = this.vaultGraceUpdatePromise.then(async () => {
+			try {
+				await this.databaseService.updateUserStatsFields({ [STATS_FIELD_VAULT_GRACE]: value });
+				if (!this.isDestroyed) {
+					this.dialogService.showToast(SUCCESS, CADENCE_MSG_GRACE_SAVED);
+				}
+			} catch {
+				if (!this.isDestroyed) {
+					this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+				}
+			}
+		});
 	}
 
 	/**
@@ -480,6 +486,8 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Shows a contextual warn toast for known errors (wrong current password, weak new
 	 * password) and opens the unexpected-error dialog for all other failures.
 	 * Clears all three password fields on success.
+	 *
+	 * @returns A promise that resolves after validation or the password request settles.
 	 */
 	protected async updatePassword(): Promise<void> {
 		// Step 1: Validate new password locally before making any network call
@@ -498,6 +506,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		try {
 			// Step 2: Attempt the credential change — requires the current password for re-authentication
 			await this.authService.changePassword(this.oldPasswordInput, this.newPasswordInput);
+			if (this.isDestroyed) return;
 
 			/* Step 3: Record the change timestamp as a fire-and-forget write — same non-blocking
 			   pattern as updateUsername so a stats failure cannot suppress the success toast. */
@@ -513,6 +522,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.newPasswordInput = '';
 			this.confirmPasswordInput = '';
 		} catch (error: unknown) {
+			if (this.isDestroyed) return;
 			/* Step 5: Surface known error types with contextual messages; fall back to the generic
 			   unexpected-error dialog for anything else to avoid leaking internal error details. */
 			if (error instanceof WrongOldPasswordError || error instanceof PasswordTooWeakError) {
@@ -533,19 +543,24 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Copies the user's connect code to the clipboard and confirms with a toast.
+	 *
+	 * @returns A promise that resolves after the clipboard request settles.
 	 */
 	protected async copyConnectCode(): Promise<void> {
 		try {
 			await Utilities.copyToClipboard(this.connectCode);
+			if (this.isDestroyed) return;
 			this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_CODE_COPIED);
 		} catch {
-			this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+			if (!this.isDestroyed) this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 		}
 	}
 
 	/**
 	 * Sends a connect request to the account owning the entered connect code, then clears the input
 	 * and confirms (or warns on a known failure).
+	 *
+	 * @returns A promise that resolves after the guarded connection request settles.
 	 */
 	protected async sendConnectRequest(): Promise<void> {
 		const code = this.connectCodeInput.trim();
@@ -553,6 +568,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 		await this.runConnectAction(async () => {
 			try {
 				const result = await this.databaseService.sendConnectRequest(code);
+				if (this.isDestroyed) return;
 				if (result.success) {
 					this.connectCodeInput = '';
 					this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_REQUEST_SENT);
@@ -560,7 +576,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 					this.dialogService.showToast(TOAST_WARN, this.connectErrorMessage(result.error));
 				}
 			} catch {
-				this.dialogService.showToast(TOAST_WARN, ACCOUNT_MSG_REQUEST_FAILED);
+				if (!this.isDestroyed) this.dialogService.showToast(TOAST_WARN, ACCOUNT_MSG_REQUEST_FAILED);
 			}
 		});
 	}
@@ -569,14 +585,16 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Approves a pending connect request, linking the accounts, then refreshes the lists.
 	 *
 	 * @param fromOpenid - The openid of the requesting account.
+	 * @returns A promise that resolves after the guarded approval request settles.
 	 */
 	protected async approveRequest(fromOpenid: string): Promise<void> {
 		await this.runConnectAction(async () => {
 			try {
 				const result = await this.databaseService.respondConnectRequest(fromOpenid, true);
+				if (this.isDestroyed) return;
 				if (result.success) this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_CONNECTED);
 			} catch {
-				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+				if (!this.isDestroyed) this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		});
 	}
@@ -585,13 +603,14 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Declines a pending connect request, then refreshes the request list.
 	 *
 	 * @param fromOpenid - The openid of the requesting account.
+	 * @returns A promise that resolves after the guarded decline request settles.
 	 */
 	protected async declineRequest(fromOpenid: string): Promise<void> {
 		await this.runConnectAction(async () => {
 			try {
 				await this.databaseService.respondConnectRequest(fromOpenid, false);
 			} catch {
-				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+				if (!this.isDestroyed) this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		});
 	}
@@ -602,6 +621,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * user's own list. The live stream updates the row either way.
 	 *
 	 * @param member - The connection record, carrying its openid and status.
+	 * @returns A promise that resolves after the guarded removal request settles.
 	 */
 	protected async onConnectionRemove(member: ConnectedMember): Promise<void> {
 		await this.runConnectAction(async () => {
@@ -611,9 +631,10 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 					return;
 				}
 				const result = await this.databaseService.disconnect(member.openid);
+				if (this.isDestroyed) return;
 				if (result.success) this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_DISCONNECTED);
 			} catch {
-				this.dialogService.showUnexpectedError(this.dialogComponentContainer);
+				if (!this.isDestroyed) this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		});
 	}
@@ -624,14 +645,22 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * The live stream removes the row either way.
 	 *
 	 * @param request - The sent-request entry, carrying its target openid and status.
+	 * @returns A promise that resolves after the guarded request removal settles.
 	 */
 	protected async removeOutgoingRequest(request: OutgoingConnectRequest): Promise<void> {
 		await this.runConnectAction(async () => {
-			if (request.status === CONNECT_STATUS_PENDING) {
-				await this.databaseService.cancelConnectRequest(request.toOpenid).catch(() => {});
-				this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_REQUEST_CANCELED);
-			} else {
-				await this.databaseService.clearOutgoingRequest(request.toOpenid).catch(() => {});
+			try {
+				if (request.status === CONNECT_STATUS_PENDING) {
+					const result = await this.databaseService.cancelConnectRequest(request.toOpenid);
+					if (!result.success) throw new UnexpectedError();
+					if (!this.isDestroyed) {
+						this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_REQUEST_CANCELED);
+					}
+				} else {
+					await this.databaseService.clearOutgoingRequest(request.toOpenid);
+				}
+			} catch {
+				if (!this.isDestroyed) this.dialogService.showUnexpectedError(this.dialogComponentContainer);
 			}
 		});
 	}
@@ -662,33 +691,29 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	/**
 	 * Opens the delete-account dialog. A CloudBase session confirms with the account password;
 	 * a Firebase (Google) session has no password, so a plain confirm dialog is shown instead and
-	 * identity is re-proved by the Google reauthentication popup inside deleteUser. On
-	 * confirmation the account is permanently deleted, then the user is signed out and navigated
-	 * to the home route.
+	 * identity is re-proved by the Google reauthentication popup inside deleteUser. Confirmation
+	 * permanently deletes the account, clears local session state, and leaves the account page.
 	 */
 	protected openDeleteConfirmationDialog(): void {
 		/* Step 1: Google sessions confirm without a password — the reauthentication popup inside
 		   deleteUser is the identity proof, so a password prompt would be meaningless. */
 		if (this.isFirebaseSession) {
-			this.dialogService.openDialog(
+			this.dialogService.confirmThenBlock(
 				this.dialogComponentContainer,
-				'confirm',
-				() => {
-					this.dialogService
-						.openDialog(
-							this.dialogComponentContainer,
-							'block',
-							async () => {
-								// Delete the account, sign out, then navigate away — order is mandatory
-								await this.authService.deleteUser('');
-								await this.authService.signOut();
-								this.router.navigate(['/']).catch(() => {});
-							},
-							ACCOUNT_MSG_DELETING_ACCOUNT
-						)
-						.catch(() => {});
-				},
-				[ACCOUNT_DIALOG_DELETE_GOOGLE_MSG, ACCOUNT_LABEL_DELETE_ACCOUNT, ACCOUNT_LABEL_DELETE_ACCOUNT]
+				[ACCOUNT_DIALOG_DELETE_GOOGLE_MSG, ACCOUNT_LABEL_DELETE_ACCOUNT, ACCOUNT_LABEL_DELETE_ACCOUNT],
+				ACCOUNT_MSG_DELETING_ACCOUNT,
+				async () => {
+					try {
+						await this.authService.deleteUser('');
+						this.sessionRecoveryService.expireConfirmedSession();
+						window.location.reload();
+					} catch (error: unknown) {
+						if (!this.isDestroyed) {
+							this.dialogService.handleError(this.dialogComponentContainer, error);
+						}
+						throw error;
+					}
+				}
 			);
 			return;
 		}
@@ -700,16 +725,16 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			'delete-account',
 			async (password: string) => {
 				/* Step 3: Replace the confirmation dialog with a blocking spinner while deletion runs.
-				   The block dialog must wrap both deleteUser and signOut — if it only wrapped deleteUser,
-				   the user could interact with the page between deletion and navigation. */
+				   The block dialog wraps deletion, local cleanup, and navigation so the user cannot
+				   interact with the page between those state transitions. */
 				await this.dialogService.openDialog(
 					this.dialogComponentContainer,
 					'block',
 					async () => {
-						// Step 4: Delete the account, sign out, then navigate away — order is mandatory
+						// Step 4: Delete the account, clear local session state, then navigate away
 						await this.authService.deleteUser(password);
-						await this.authService.signOut();
-						this.router.navigate(['/']).catch(() => {});
+						this.sessionRecoveryService.expireConfirmedSession();
+						this.router.navigate([LOGIN_URL_DEFAULT_RETURN]).catch(() => {});
 					},
 					ACCOUNT_MSG_DELETING_ACCOUNT
 				);
@@ -729,12 +754,12 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.dialogComponentContainer,
 			'delete-account',
 			async (password: string) => {
-				// Verify the account password server-side against CloudBase Auth — the same check
-				// delete-account makes. A wrong password throws WrongOldPasswordError, which the dialog
-				// shows inline without closing; only after it passes is the removal function called.
+				/* Verifies the account password with CloudBase Auth. A wrong password stays inline in the
+				   dialog; only a successful check removes the vault passphrase. */
 				await this.authService.verifyPassword(password);
 				const result = await this.databaseService.removePassphraseLock(PASSPHRASE_LOCK_KEY_VAULT);
 				if (!result.success) throw new UnexpectedError();
+				if (this.isDestroyed) return;
 				this.hasVaultPassphrase = false;
 				this.cdr.detectChanges();
 				this.dialogService.showToast(SUCCESS, ACCOUNT_MSG_VAULT_PASSPHRASE_REMOVED);
@@ -750,7 +775,14 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * requests. Ignores the call while another connection action is in flight, and always clears the
 	 * busy flag when the action settles.
 	 *
+	 * {@link sendConnectRequest} - Guards a new outgoing connection request.
+	 * {@link approveRequest} - Guards approval of an incoming request.
+	 * {@link declineRequest} - Guards rejection of an incoming request.
+	 * {@link onConnectionRemove} - Guards removal of an existing connection.
+	 * {@link removeOutgoingRequest} - Guards cancellation or dismissal of an outgoing request.
+	 *
 	 * @param action - The connection action to run exclusively.
+	 * @returns A promise that resolves after the guarded action settles.
 	 */
 	private async runConnectAction(action: () => Promise<void>): Promise<void> {
 		if (this.connectBusy) return;
@@ -760,7 +792,7 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 			await action();
 		} finally {
 			this.connectBusy = false;
-			this.cdr.detectChanges();
+			if (!this.isDestroyed) this.cdr.detectChanges();
 		}
 	}
 
@@ -863,6 +895,9 @@ export class AccountComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	/**
 	 * Gets the strength level index (0–4) for the given password based on its length.
+	 *
+	 * {@link getStrengthColor} - Selects the color for the computed strength level.
+	 * {@link getStrengthLabel} - Selects the label for the computed strength level.
 	 *
 	 * @param password - The current password string to evaluate.
 	 * @returns The index into ACCOUNT_STRENGTH_LEVELS matching the password strength.

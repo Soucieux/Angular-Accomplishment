@@ -107,5 +107,14 @@ describe('AddMovieDialogComponent', () => {
 			await (component as any).onSubmit();
 			expect((component as any).visible).toBeFalse();
 		});
+
+		it('keeps the dialog open when the database save rejects', async () => {
+			const writeError = new Error('write failed');
+			component.openDialog(() => Promise.reject(writeError), async () => new Blob());
+
+			await expectAsync((component as any).onSubmit()).toBeRejectedWith(writeError);
+
+			expect((component as any).visible).toBeTrue();
+		});
 	});
 });

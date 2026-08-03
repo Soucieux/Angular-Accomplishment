@@ -4,6 +4,8 @@ import { MessageService } from 'primeng/api';
 
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
+import { SessionRecoveryService } from '../../backend/session-recovery/session-recovery.service';
+import { RECOVERY_STATUS_RECOVERED } from '../../common/constants';
 import { Utilities } from '../../common/utilities/app.utilities';
 import { HomeComponent } from './home.component';
 
@@ -43,6 +45,10 @@ describe('HomeComponent', () => {
 				MessageService,
 				{ provide: DatabaseService, useValue: mockDb },
 				{ provide: DialogService, useValue: mockDialogService },
+				{
+					provide: SessionRecoveryService,
+					useValue: { getRecoveryOutcomes$: () => of(RECOVERY_STATUS_RECOVERED) }
+				},
 				{ provide: Utilities, useValue: mockUtilities }
 			]
 		}).compileComponents();

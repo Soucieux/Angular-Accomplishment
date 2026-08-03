@@ -11,6 +11,8 @@ import {
 	STATUS_TODO
 } from '../../common/locale/locale.en';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { SessionRecoveryService } from '../../backend/session-recovery/session-recovery.service';
+import { RECOVERY_STATUS_RECOVERED } from '../../common/constants';
 import { PatchComponent } from './patch.component';
 
 describe('PatchComponent', () => {
@@ -20,7 +22,13 @@ describe('PatchComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			imports: [PatchComponent],
-			providers: [MessageService]
+			providers: [
+				MessageService,
+				{
+					provide: SessionRecoveryService,
+					useValue: { getRecoveryOutcomes$: () => of(RECOVERY_STATUS_RECOVERED) }
+				}
+			]
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(PatchComponent);
@@ -326,7 +334,14 @@ describe('PatchComponent — submitNewRecord isBug derivation', () => {
 
 		await TestBed.configureTestingModule({
 			imports: [PatchComponent],
-			providers: [MessageService, { provide: DatabaseService, useValue: mockDb }]
+			providers: [
+				MessageService,
+				{ provide: DatabaseService, useValue: mockDb },
+				{
+					provide: SessionRecoveryService,
+					useValue: { getRecoveryOutcomes$: () => of(RECOVERY_STATUS_RECOVERED) }
+				}
+			]
 		}).compileComponents();
 
 		const fixture = TestBed.createComponent(PatchComponent);

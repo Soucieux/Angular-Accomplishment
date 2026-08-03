@@ -91,6 +91,8 @@ export const NAV_LOCALE_SWITCH_TO_ZH = '切换到中文';
 export const NAV_LOCALE_SWITCH_TO_EN = 'Switch to English';
 /** Tauri backend command name that toggles the minimize-on-close window behaviour. */
 export const TAURI_CMD_SET_MINIMIZE_ON_CLOSE = 'set_minimize_on_close';
+/** Tauri backend command name that sends a native desktop notification. */
+export const TAURI_CMD_SEND_NOTIFICATION = 'send_notification';
 /** Milliseconds before the loading-timeout retry dialog appears when a page is stuck loading. */
 export const LOADING_TIMEOUT_MS = 7000;
 /** Longest a loading guard waits for auth to settle before starting its timer regardless. */
@@ -98,6 +100,38 @@ export const AUTH_SETTLE_MAX_WAIT_MS = 5000;
 /** Longest a loading guard waits for the data layer to signal ready before starting its countdown
     regardless — the fail-safe so a data layer that never connects still surfaces the retry dialog. */
 export const DATA_READY_MAX_WAIT_MS = 5000;
+/** Minimum inactive duration before a focus or resume event revalidates the active session. */
+export const RECOVERY_INACTIVITY_THRESHOLD_MS = 5 * 60 * 1000;
+/** Maximum duration for an authentication or database connection recovery probe. */
+export const RECOVERY_PROBE_TIMEOUT_MS = 5000;
+/** Valid authentication validation result used by the recovery coordinator. */
+export const RECOVERY_AUTH_VALID = 'valid';
+/** Confirmed-expiry authentication validation result used by the recovery coordinator. */
+export const RECOVERY_AUTH_EXPIRED = 'expired';
+/** Indeterminate authentication validation result used by the recovery coordinator. */
+export const RECOVERY_AUTH_UNKNOWN = 'unknown';
+/** Successful recovery result returned after active realtime streams are refreshed. */
+export const RECOVERY_STATUS_RECOVERED = 'recovered';
+/** Confirmed-expiry recovery result returned after local session cleanup. */
+export const RECOVERY_STATUS_EXPIRED = 'expired';
+/** Retryable recovery result returned when connection health cannot be established. */
+export const RECOVERY_STATUS_OFFLINE = 'offline';
+/** Startup recovery trigger emitted while the root component initialises. */
+export const RECOVERY_TRIGGER_STARTUP = 'startup';
+/** Resume recovery trigger emitted after the configured inactivity threshold. */
+export const RECOVERY_TRIGGER_RESUME = 'resume';
+/** Online recovery trigger emitted when browser connectivity returns. */
+export const RECOVERY_TRIGGER_ONLINE = 'online';
+/** Watcher recovery trigger emitted after a central realtime-stream error. */
+export const RECOVERY_TRIGGER_WATCH_ERROR = 'watch-error';
+/** Write recovery trigger available to database-writing callers after a connection failure. */
+export const RECOVERY_TRIGGER_WRITE_ERROR = 'write-error';
+/** Angular host-listener event name for browser-window inactivity. */
+export const WINDOW_EVENT_BLUR = 'window:blur';
+/** Angular host-listener event name for browser-window focus recovery. */
+export const WINDOW_EVENT_FOCUS = 'window:focus';
+/** Angular host-listener event name for browser connectivity restoration. */
+export const WINDOW_EVENT_ONLINE = 'window:online';
 /** Timeout key for the Home page loading guard. */
 export const TIMEOUT_KEY_HOME = 'home';
 /** Timeout key for the Reminder page loading guard. */
@@ -138,6 +172,10 @@ export const LS_AUTH_HINT_KEY = 'auth_hint';
 export const LS_AUTH_BACKEND = 'auth_backend';
 export const AUTH_BACKEND_FIREBASE = 'firebase';
 export const AUTH_BACKEND_CLOUDBASE = 'cloudbase';
+/** localStorage key marking a notification preference restoration that still needs persistence. */
+export const LS_NOTIFICATION_RESTORE_PENDING_KEY = 'notificationRestorePending';
+/** Stored value indicating that notification preference restoration is pending. */
+export const LS_NOTIFICATION_RESTORE_PENDING_VALUE = 'true';
 /* sessionStorage key holding the post-sign-in destination across the Google redirect round-trip —
    the redirect leaves the page entirely, so the in-memory returnUrl would otherwise be lost. Its
    presence also marks a redirect as pending; it is cleared on every outcome (success, failure,
@@ -161,6 +199,8 @@ export const NAV_AVATAR_FALLBACK_INITIAL = '?';
 /** Fallback background gradient for the avatar element when no user-specific colour is set. */
 export const NAV_AVATAR_GRADIENT = 'linear-gradient(135deg,#d53369,#daae51)';
 export const LOGIN_URL_DEFAULT_RETURN = '/';
+/** Route path for the account page, used when manual sign-out must leave protected account UI. */
+export const ACCOUNT_ROUTE_PATH = '/account';
 /** Route path for the login page, used when redirecting an unauthenticated visitor. */
 export const LOGIN_ROUTE_PATH = '/login';
 /** Query param name carrying the URL to return to after a successful sign-in. */
@@ -176,6 +216,16 @@ export const ROLE_ADMIN = 'administrator';
 export const CLOUDBASE_ERROR_INVALID_ARGUMENT = 'invalid_argument';
 /** CloudBase error category returned when credentials are wrong. */
 export const CLOUDBASE_ERROR_INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
+/** Firebase error code returned when an authentication request cannot reach the server. */
+export const FIREBASE_ERROR_NETWORK_REQUEST_FAILED = 'auth/network-request-failed';
+/** Firebase error code returned when the current ID token has expired. */
+export const FIREBASE_ERROR_ID_TOKEN_EXPIRED = 'auth/id-token-expired';
+/** Firebase error code returned when the current user token is invalid. */
+export const FIREBASE_ERROR_INVALID_USER_TOKEN = 'auth/invalid-user-token';
+/** Firebase error code returned when the current user token has expired. */
+export const FIREBASE_ERROR_USER_TOKEN_EXPIRED = 'auth/user-token-expired';
+/** Firebase error code returned when the current account has been disabled. */
+export const FIREBASE_ERROR_USER_DISABLED = 'auth/user-disabled';
 export const AUTH_LOG_GOOGLE_SIGN_IN_FAILED = 'Error when signing in through Google';
 export const AUTH_LOG_SIGN_OUT_FAILED = 'Error when signing out current user';
 /** CloudBase behaviour-log event type queried for the last sign-in timestamp. */
@@ -840,6 +890,8 @@ export const NOTIF_SEND_FAILED = 'Failed to send notification';
 export const NOTIF_SUBSCRIBE_FAILED = 'Failed to persist notification subscription';
 /** Error message logged when the unsubscribe DB write fails. */
 export const NOTIF_UNSUBSCRIBE_FAILED = 'Failed to persist notification unsubscription';
+/** Error message logged when a sign-out rollback cannot restore notifications. */
+export const NOTIF_RESTORE_FAILED = 'Failed to restore notification subscription';
 
 /* ─────────────────────────────────────────
    Debt Sonata page constants

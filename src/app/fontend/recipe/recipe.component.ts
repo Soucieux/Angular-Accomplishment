@@ -763,6 +763,7 @@ export class RecipeComponent implements OnInit, OnDestroy, AfterViewChecked, Aft
 				} catch (error: unknown) {
 					LOG.error(this.className, MSG_DELETE_FAILED, error as Error);
 					this.dialogService.showToast(TOAST_ERROR, MSG_DELETE_FAILED, RECIPE_MSG_DELETE_FAILED_DETAIL);
+					throw error;
 				}
 			}
 		);

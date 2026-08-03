@@ -109,6 +109,12 @@ The app runs on **one of two independent backends per session**, chosen by *how 
 
 > The two datasets are **fully separate** — signing in as the same person two different ways yields two independent datasets. Google sign-in is available on **browser and installed web app only** (mobile & desktop); it is hidden in the desktop (Tauri) and iOS native apps, which are username / password only.
 
+### Long-running session recovery
+
+When the app returns after an extended period in the background, regains network access, or detects a failed live-data listener, it verifies authentication before refreshing the active real-time data streams. A valid session resumes without a page reload; a temporary network failure preserves the signed-in UI for retry; and only a confirmed expired session clears user-specific rendered and cached data before returning to sign-in.
+
+Database saves report success only after the active provider confirms the write. Failed writes return to the owning form or confirmation flow so they remain retryable. Manual sign-out likewise keeps the signed-in state intact until the provider confirms sign-out; an ambiguous timeout is revalidated before local state is cleared.
+
 ### Feature availability by backend
 
 Everything not listed below behaves **identically** on both backends: movies, reminders, recipes, Portal links, debt, vault, quotes, patch / release notes, Today, activity log, per-user stats & live counters, milestones, preferences, and the Vault passphrase gate.
@@ -155,7 +161,8 @@ src/app/
 │   ├── database-service/         # Unified database interface (dual-backend)
 │   ├── dialog-service/           # Global dialog management
 │   ├── douban-service/           # Douban API proxy client
-│   ├── notification-service/     # Web push notification subscription management
+│   ├── notification-service/     # Tauri-native notification preference management
+│   ├── session-recovery/         # Authentication and realtime-stream recovery coordination
 │   └── vault-access-service/     # Vault passphrase-gate cadence — tracks the unlock grace window
 │
 ├── common/                   # Shared utilities and value objects

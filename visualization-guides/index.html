@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en" data-language="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="description"
+			content="A bilingual visual field guide to every page and core workflow in Vision Canvas." />
+		<meta name="color-scheme" content="light" />
+		<meta name="theme-color" content="#f7f4ed" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="Vision Canvas Field Guide" />
+		<meta
+			property="og:description"
+			content="An interactive bilingual guide to all 13 Vision Canvas pages and their shared messages." />
+		<title>Complete Field Guide - Vision Canvas</title>
+		<link rel="stylesheet" href="assets/styles/guide.css?v=8" />
+		<script defer src="assets/scripts/guide-pages.js?v=8"></script>
+		<script defer src="assets/scripts/guide-shared-reference.js?v=8"></script>
+		<script defer src="assets/scripts/guide-scenarios.js?v=8"></script>
+		<script defer src="assets/scripts/guide-complete-scenarios.js?v=8"></script>
+		<script defer src="assets/scripts/guide-content.js?v=8"></script>
+		<script defer src="assets/scripts/guide.js?v=8"></script>
+	</head>
+	<body>
+		<svg class="icon-library" aria-hidden="true">
+			<symbol id="icon-menu" viewBox="0 0 24 24">
+				<path d="M4 7h16M4 12h16M4 17h16" />
+			</symbol>
+			<symbol id="icon-check" viewBox="0 0 24 24">
+				<path d="m5 12 4 4L19 6" />
+			</symbol>
+			<symbol id="icon-link" viewBox="0 0 24 24">
+				<path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1" />
+			</symbol>
+			<symbol id="icon-calendar" viewBox="0 0 24 24">
+				<path d="M6 3v3M18 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" />
+			</symbol>
+			<symbol id="icon-schedule" viewBox="0 0 24 24">
+				<circle cx="12" cy="12" r="9" />
+				<path d="M12 7v5l3 2" />
+			</symbol>
+			<symbol id="icon-delete" viewBox="0 0 24 24">
+				<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" />
+			</symbol>
+			<symbol id="icon-close" viewBox="0 0 24 24">
+				<path d="m7 7 10 10M17 7 7 17" />
+			</symbol>
+			<symbol id="icon-group" viewBox="0 0 24 24">
+				<circle cx="9" cy="8" r="3" />
+				<circle cx="17" cy="9" r="2" />
+				<path d="M3 19c0-3.1 2.7-5 6-5s6 1.9 6 5M15 15c2.7 0 5 1.5 5 4" />
+			</symbol>
+			<symbol id="icon-arrow" viewBox="0 0 24 24">
+				<path d="M5 12h14M14 7l5 5-5 5" />
+			</symbol>
+			<symbol id="icon-bell" viewBox="0 0 24 24">
+				<path d="M6 9a6 6 0 0 1 12 0c0 7 3 7 3 7H3s3 0 3-7M10 20h4" />
+			</symbol>
+			<symbol id="icon-pencil" viewBox="0 0 24 24">
+				<path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20ZM13.5 8l3 3" />
+			</symbol>
+			<symbol id="icon-home" viewBox="0 0 24 24">
+				<path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6" />
+			</symbol>
+			<symbol id="icon-portal" viewBox="0 0 24 24">
+				<circle cx="7" cy="7" r="3" /><circle cx="17" cy="7" r="3" /><circle cx="7" cy="17" r="3" /><circle cx="17" cy="17" r="3" />
+			</symbol>
+			<symbol id="icon-vault" viewBox="0 0 24 24">
+				<rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="12" cy="12" r="3" /><path d="M12 9V6M12 18v-3M9 12H6M18 12h-3" />
+			</symbol>
+			<symbol id="icon-film" viewBox="0 0 24 24">
+				<rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 5v14M17 5v14M3 9h4M17 9h4M3 15h4M17 15h4" />
+			</symbol>
+			<symbol id="icon-recipe" viewBox="0 0 24 24">
+				<path d="M7 4h10v16H7zM9 8h6M9 12h6M9 16h4" />
+			</symbol>
+			<symbol id="icon-quote" viewBox="0 0 24 24">
+				<path d="M4 11h6v7H4v-7c0-4 2-6 6-7M14 11h6v7h-6v-7c0-4 2-6 6-7" />
+			</symbol>
+			<symbol id="icon-debt" viewBox="0 0 24 24">
+				<circle cx="12" cy="12" r="9" /><path d="M15 8.5c-.7-.7-1.7-1-3-1-1.7 0-3 1-3 2.3 0 3.5 6 1.5 6 4.7 0 1.3-1.3 2.3-3 2.3-1.3 0-2.5-.4-3.3-1.2M12 5.5v13" />
+			</symbol>
+			<symbol id="icon-account" viewBox="0 0 24 24">
+				<circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7" />
+			</symbol>
+			<symbol id="icon-login" viewBox="0 0 24 24">
+				<path d="M10 4H4v16h6M14 8l4 4-4 4M7 12h11" />
+			</symbol>
+			<symbol id="icon-patch" viewBox="0 0 24 24">
+				<path d="M12 3 5 6v5c0 4.8 2.8 8.3 7 10 4.2-1.7 7-5.2 7-10V6l-7-3Z" /><path d="m9 12 2 2 4-5" />
+			</symbol>
+			<symbol id="icon-about" viewBox="0 0 24 24">
+				<circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" />
+			</symbol>
+			<symbol id="icon-alert" viewBox="0 0 24 24">
+				<path d="M12 3 2.7 20h18.6L12 3Z" /><path d="M12 9v5M12 17h.01" />
+			</symbol>
+		</svg>
+
+		<a class="skip-link" href="#main-content" data-copy="accessibility.skip">Skip to the guide</a>
+		<div class="reading-progress" data-copy-aria-label="accessibility.progress">
+			<span class="reading-progress-fill" data-reading-progress-fill></span>
+		</div>
+
+		<header class="mobile-guide-header">
+			<a class="mobile-brand" href="?page=directory" data-page-link="directory">
+				<span class="mobile-brand-mark">VC</span>
+				<span data-copy="brand.title">Field notes</span>
+			</a>
+			<button
+				class="icon-button mobile-menu-button"
+				type="button"
+				data-menu-button
+				aria-expanded="false"
+				aria-controls="guide-sidebar"
+				data-copy-aria-label="accessibility.menuOpen">
+				<svg aria-hidden="true"><use href="#icon-menu"></use></svg>
+			</button>
+		</header>
+
+		<div class="guide-shell">
+			<aside class="guide-sidebar" id="guide-sidebar" data-guide-sidebar>
+				<button
+					class="icon-button sidebar-close-button"
+					type="button"
+					data-menu-button
+					aria-expanded="false"
+					aria-controls="guide-sidebar"
+					data-copy-aria-label="accessibility.menuClose">
+					<svg aria-hidden="true"><use href="#icon-close"></use></svg>
+				</button>
+				<a class="guide-brand" href="?page=directory" data-page-link="directory">
+					<span class="guide-brand-mark">VC</span>
+					<span class="guide-brand-copy">
+						<span class="guide-brand-kicker" data-copy="brand.kicker">Vision Canvas</span>
+						<strong data-copy="brand.title">Field notes</strong>
+						<small data-copy="brand.subtitle">A living handbook for the app</small>
+					</span>
+				</a>
+
+				<div class="edition-label" data-edition-label>Complete guide</div>
+
+				<nav class="page-navigation" data-page-navigation aria-label="Page guides"></nav>
+				<nav class="chapter-navigation" data-chapter-navigation data-copy-aria-label="navigation.label"></nav>
+			</aside>
+
+			<main class="guide-main" id="main-content">
+				<div class="guide-toolbar">
+					<button
+						class="mobile-chapter-button"
+						type="button"
+						data-menu-button
+						aria-expanded="false"
+						aria-controls="guide-sidebar">
+						<svg aria-hidden="true"><use href="#icon-menu"></use></svg>
+						<span data-copy="controls.menu">Chapters</span>
+					</button>
+					<div class="language-control" role="group" data-copy-aria-label="accessibility.language">
+						<button
+							class="language-button language-button-selected"
+							type="button"
+							data-language-option="en"
+							aria-pressed="true"
+							data-copy="controls.english">
+							English
+						</button>
+						<button
+							class="language-button"
+							type="button"
+							data-language-option="zh"
+							aria-pressed="false"
+							data-copy="controls.chinese">
+							中文
+						</button>
+					</div>
+				</div>
+
+				<section class="guide-directory" data-guide-directory hidden></section>
+				<div data-generated-pages-before></div>
+
+				<article class="guide-article guide-page" data-guide-page="reminder">
+					<section class="hero-section" id="reminder-overview" data-guide-section data-navigation-label-en="Overview" data-navigation-label-zh="总览">
+						<div class="hero-copy">
+							<div class="section-eyebrow" data-copy="hero.eyebrow">Reminder · complete field guide</div>
+							<h1 data-copy="hero.title">Turn a loose thought into a reminder you can trust.</h1>
+							<p class="hero-summary" data-copy="hero.summary">
+								Capture it quickly, add only the structure it needs, and keep every edit on the card.
+							</p>
+							<div class="hero-actions">
+								<a class="primary-action" href="#reminder-capture">
+									<span data-copy="hero.primaryAction">Start with a thought</span>
+									<svg aria-hidden="true"><use href="#icon-arrow"></use></svg>
+								</a>
+								<a class="secondary-action" href="#reminder-journey" data-copy="hero.secondaryAction">
+									See the whole loop
+								</a>
+							</div>
+							<div class="hero-facts">
+								<div>
+									<strong data-copy="hero.factOneValue">7</strong>
+									<span data-copy="hero.factOneLabel">days in the due-soon window</span>
+								</div>
+								<div>
+									<strong data-copy="hero.factTwoValue">1 min</strong>
+									<span data-copy="hero.factTwoLabel">time-slot precision</span>
+								</div>
+								<div>
+									<strong data-copy="hero.factThreeValue">2</strong>
+									<span data-copy="hero.factThreeLabel">ways to add a reminder</span>
+								</div>
+							</div>
+						</div>
+
+						<figure class="capture-board capture-board-hero">
+							<div class="capture-board-heading">
+								<span>REAL APP · LIVE STATE</span>
+								<strong>Reminder, populated and ready</strong>
+							</div>
+							<div class="capture-frame capture-frame-hero">
+								<img
+									src="assets/images/reminder/page-populated-live.jpg"
+									alt="Live Reminder page with two demonstration cards, the composer, filters, and due-soon count" />
+							</div>
+							<div class="capture-note capture-note-hero-left" aria-hidden="true">
+								Start with the sentence<br /><span>先写下要记住的事</span>
+							</div>
+							<div class="capture-note capture-note-hero-right" aria-hidden="true">
+								Details stay on the card<br /><span>细节都留在卡片上</span>
+							</div>
+							<svg class="capture-arrow capture-arrow-hero" viewBox="0 0 900 430" aria-hidden="true">
+								<defs>
+									<marker id="capture-arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+										<path d="M1 1 11 6 1 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+									</marker>
+								</defs>
+								<path d="M175 352 C242 332 257 285 342 274" marker-end="url(#capture-arrowhead)" />
+								<path d="M760 348 C702 329 695 239 626 218" marker-end="url(#capture-arrowhead)" />
+							</svg>
+							<figcaption>One live page, cropped to the working area—no decorative empty canvas.</figcaption>
+						</figure>
+					</section>
+
+					<section class="journey-section" id="reminder-journey">
+						<div class="journey-heading">
+							<span data-copy="journey.kicker">The whole loop</span>
+							<h2 data-copy="journey.title">Seven actions, one calm place</h2>
+						</div>
+						<div class="journey-track">
+							<a href="#reminder-capture"><strong>01</strong><span data-copy="journey.capture">Capture</span></a>
+							<a href="#reminder-schedule"><strong>02</strong><span data-copy="journey.schedule">Schedule</span></a>
+							<a href="#reminder-save"><strong>03</strong><span data-copy="journey.add">Add</span></a>
+							<a href="#reminder-edit"><strong>04</strong><span data-copy="journey.edit">Edit</span></a>
+							<a href="#reminder-complete"><strong>05</strong><span data-copy="journey.complete">Complete</span></a>
+							<a href="#reminder-filter"><strong>06</strong><span data-copy="journey.filter">Filter</span></a>
+							<a href="#reminder-remove"><strong>07</strong><span data-copy="journey.remove">Remove</span></a>
+						</div>
+					</section>
+
+					<section class="guide-section" id="reminder-capture" data-guide-section data-navigation-label-en="Write it down" data-navigation-label-zh="记下来">
+						<div class="section-copy">
+							<div class="section-number" data-copy="capture.number">01</div>
+							<div class="section-eyebrow" data-copy="capture.kicker">Capture</div>
+							<h2 data-copy="capture.title">Start with the sentence, not the settings.</h2>
+							<p data-copy="capture.summary">
+								The composer waits below the card grid. Type the thing you want to remember, then choose a category.
+							</p>
+							<aside class="field-note field-note-blue">
+								<strong data-copy="capture.tipTitle">Colour has a job</strong>
+								<p data-copy="capture.tipBody">The selected category colour follows the reminder throughout the page.</p>
+							</aside>
+							<div class="instruction-scenarios">
+								<article class="instruction-scenario">
+									<header class="instruction-scenario-header">
+										<div><span>01</span><h3><span class="language-en">Create a basic reminder</span><span class="language-zh">创建基础提醒</span></h3></div>
+										<p><span class="language-en">Available after sign-in, once loading finishes and no category or Shared filter is active.</span><span class="language-zh">登录并完成载入后可用；分类或「共享」筛选必须处于关闭状态。</span></p>
+									</header>
+									<div class="instruction-block">
+										<strong><span class="language-en">Steps</span><span class="language-zh">操作步骤</span></strong>
+										<ol class="instruction-steps">
+											<li><span class="language-en">Find the composer below the reminder cards.</span><span class="language-zh">在提醒卡片下方找到新建输入区。</span></li>
+											<li><span class="language-en">Type the action or fact you need to remember.</span><span class="language-zh">输入需要记住的行动或事项。</span></li>
+											<li><span class="language-en">Keep Personal or select Work, iCloud, Utility, Other, or Custom.</span><span class="language-zh">保留「个人」，或选择「工作」、iCloud、「工具」、「其他」或「自定义」。</span></li>
+											<li><span class="language-en">Press Enter for text + category only, or continue adding details and use Add.</span><span class="language-zh">只需文字与分类时按回车；需要更多细节时继续填写并点击「添加」。</span></li>
+										</ol>
+									</div>
+									<div class="instruction-block">
+										<strong><span class="language-en">Inputs and rules</span><span class="language-zh">输入与规则</span></strong>
+										<div class="instruction-inputs">
+											<div class="instruction-input-row"><b><span class="language-en">Reminder text</span><span class="language-zh">提醒文字</span></b><span><span class="language-en">Required; surrounding spaces are removed. A blank value cannot be added.</span><span class="language-zh">必填；首尾空格会被移除。空白内容无法添加。</span></span></div>
+											<div class="instruction-input-row"><b><span class="language-en">Category</span><span class="language-zh">分类</span></b><span><span class="language-en">One category per reminder. Personal is the default.</span><span class="language-zh">每条提醒只能有一个分类；默认为「个人」。</span></span></div>
+										</div>
+									</div>
+									<p class="instruction-result"><strong><span class="language-en">Result</span><span class="language-zh">结果</span></strong><span class="language-en"> A new card appears in the matching category. Its color controls the card stripe, detail chips, and filter chip.</span><span class="language-zh"> 新卡片会出现在对应分类中；分类颜色同时用于卡片边条、细节胶囊和筛选项。</span></p>
+									<div class="instruction-issues">
+										<strong><span class="language-en">If something is missing</span><span class="language-zh">如果找不到或无法添加</span></strong>
+										<div class="instruction-issue"><strong><span class="language-en">Composer is hidden</span><span class="language-zh">输入区未显示</span></strong><p><span class="language-en">Fix</span><span class="language-zh">处理</span><span class="language-en">Choose All to clear category and Shared filters.</span><span class="language-zh">点击「全部」，清除分类和「共享」筛选。</span></p></div>
+										<div class="instruction-issue"><strong><span class="language-en">Add is disabled</span><span class="language-zh">「添加」不可点击</span></strong><p><span class="language-en">Fix</span><span class="language-zh">处理</span><span class="language-en">Enter non-blank text or wait for the current save to finish.</span><span class="language-zh">输入非空文字，或等待当前保存完成。</span></p></div>
+									</div>
+								</article>
+							</div>
+						</div>
+						<div class="scenario-gallery scenario-gallery-capture">
+							<figure class="scenario-card scenario-card-wide">
+								<div class="scenario-card-heading"><span>01</span><strong>Empty composer · 空白输入区</strong></div>
+								<img src="assets/images/reminder/composer-empty-live.jpg" alt="Empty live Reminder composer" />
+								<figcaption>Text is the only required field; Add remains disabled until the sentence exists.</figcaption>
+							</figure>
+							<figure class="scenario-card scenario-card-wide">
+								<div class="scenario-card-heading"><span>02</span><strong>Type, then classify · 先写，再分类</strong></div>
+								<img src="assets/images/reminder/composer-typed-live.jpg" alt="Live composer with reminder text and Work category selected" />
+								<figcaption>The selected category controls the stripe, chips, and future filter behavior.</figcaption>
+							</figure>
+							<figure class="scenario-card scenario-card-wide">
+								<div class="scenario-card-heading"><span>03</span><strong>Custom category · 自定义分类</strong></div>
+								<img src="assets/images/reminder/custom-category-live.jpg" alt="Live composer while entering a custom Travel category" />
+								<figcaption>Custom names become reusable filter chips and receive a stable color.</figcaption>
+							</figure>
+						</div>
+					</section>
+
+					<section class="guide-section guide-section-reversed" id="reminder-schedule" data-guide-section data-navigation-label-en="Give it a when" data-navigation-label-zh="给它一个时间">
+						<div class="section-copy">
+							<div class="section-number" data-copy="schedule.number">02</div>
+							<div class="section-eyebrow" data-copy="schedule.kicker">Date and time</div>
+							<h2 data-copy="schedule.title">Add a when only when a when helps.</h2>
+							<p data-copy="schedule.summary">
+								A reminder can remain undated forever. When timing matters, choose a date and start time.
+							</p>
+							<div class="detail-pair">
+								<div>
+									<strong data-copy="schedule.precisionTitle">Minute precision</strong>
+									<p data-copy="schedule.precisionBody">Start and end selectors offer every minute of the day.</p>
+								</div>
+								<div>
+									<strong data-copy="schedule.cascadeTitle">Date owns time</strong>
+									<p data-copy="schedule.cascadeBody">Removing the date also clears both times.</p>
+								</div>
+							</div>
+							<div class="instruction-scenarios">
+								<article class="instruction-scenario">
+									<header class="instruction-scenario-header">
+										<div><span>02</span><h3><span class="language-en">Add a date and time range</span><span class="language-zh">添加日期与时间段</span></h3></div>
+										<p><span class="language-en">A date is optional. Time becomes available only after a date has been selected.</span><span class="language-zh">日期为可选项；只有先选择日期，时间控件才会启用。</span></p>
+									</header>
+									<div class="instruction-block"><strong><span class="language-en">Steps</span><span class="language-zh">操作步骤</span></strong><ol class="instruction-steps">
+										<li><span class="language-en">Select Add date on the composer or an existing card.</span><span class="language-zh">在新建输入区或已有卡片上点击「添加日期」。</span></li>
+										<li><span class="language-en">Choose a day. The popover stays open so you can continue with time.</span><span class="language-zh">选择日期；弹出层会保持打开，以便继续设置时间。</span></li>
+										<li><span class="language-en">Choose a start minute. Reminder proposes an end exactly one hour later.</span><span class="language-zh">选择开始时间（精确到分钟）；系统会建议一小时后的结束时间。</span></li>
+										<li><span class="language-en">Keep the proposal or choose any end at or after the start.</span><span class="language-zh">保留建议，或选择不早于开始时间的其他结束时间。</span></li>
+									</ol></div>
+									<div class="instruction-block"><strong><span class="language-en">Inputs and rules</span><span class="language-zh">输入与规则</span></strong><div class="instruction-inputs">
+										<div class="instruction-input-row"><b><span class="language-en">Date</span><span class="language-zh">日期</span></b><span><span class="language-en">Required only when using time; it also contributes to Due soon.</span><span class="language-zh">仅在使用时间时必需；也会计入「即将到期」。</span></span></div>
+										<div class="instruction-input-row"><b><span class="language-en">Start</span><span class="language-zh">开始</span></b><span><span class="language-en">00:00–23:59 in one-minute steps.</span><span class="language-zh">00:00–23:59，精确到每分钟。</span></span></div>
+										<div class="instruction-input-row"><b><span class="language-en">End</span><span class="language-zh">结束</span></b><span><span class="language-en">May equal the start but cannot be earlier. Automatic end is capped at 23:59.</span><span class="language-zh">可与开始时间相同，但不能更早；自动结束时间最晚为 23:59。</span></span></div>
+									</div></div>
+									<p class="instruction-result"><strong><span class="language-en">Triggers</span><span class="language-zh">联动结果</span></strong><span class="language-en"> Dated reminders affect the seven-day Due soon count. Timed reminders also appear read-only in Today.</span><span class="language-zh"> 有日期的提醒会影响未来七天的「即将到期」数量；有时间段的提醒还会以只读方式出现在「今日」。</span></p>
+									<div class="instruction-issues"><strong><span class="language-en">Clear and recovery behavior</span><span class="language-zh">清除与恢复</span></strong>
+										<div class="instruction-issue"><strong><span class="language-en">Clear time</span><span class="language-zh">清除时间</span></strong><p><span class="language-en">Result</span><span class="language-zh">结果</span><span class="language-en">Removes start and end together but keeps the date.</span><span class="language-zh">同时移除开始与结束时间，但保留日期。</span></p></div>
+										<div class="instruction-issue"><strong><span class="language-en">Clear date</span><span class="language-zh">清除日期</span></strong><p><span class="language-en">Result</span><span class="language-zh">结果</span><span class="language-en">Also clears both times. If a write fails, the previous saved values return and an error appears.</span><span class="language-zh">也会清除两个时间；若写入失败，页面会恢复原已保存值并显示错误。</span></p></div>
+									</div>
+								</article>
+							</div>
+						</div>
+						<div class="scenario-gallery scenario-gallery-schedule">
+							<figure class="scenario-card">
+								<div class="scenario-card-heading"><span>01</span><strong>Open scheduling · 打开日期设置</strong></div>
+								<img src="assets/images/reminder/date-popover-live.jpg" alt="Live date and time popover before a date is selected" />
+								<figcaption>Time stays disabled until a date is present.</figcaption>
+							</figure>
+							<figure class="scenario-card scenario-card-portrait">
+								<div class="scenario-card-heading"><span>02</span><strong>Choose a date · 选择日期</strong></div>
+								<img src="assets/images/reminder/calendar-live.jpg" alt="Live Reminder calendar opened to August 2026" />
+								<figcaption>A date activates both time selectors.</figcaption>
+							</figure>
+							<figure class="scenario-card scenario-card-portrait">
+								<div class="scenario-card-heading"><span>03</span><strong>Set the minute · 精确到分钟</strong></div>
+								<img src="assets/images/reminder/time-dropdown-live.jpg" alt="Live start-time selector with minute-level options" />
+								<figcaption>The end time is proposed one hour later and cannot precede the start.</figcaption>
+							</figure>
+							<figure class="scenario-card scenario-card-wide">
+								<div class="scenario-card-heading"><span>04</span><strong>Review before Add · 添加前检查</strong></div>
+								<img src="assets/images/reminder/composer-full-live.jpg" alt="Live fully composed reminder with category, link, date, and time" />
+								<figcaption>Link, date, and time are visible together before the database write.</figcaption>
+							</figure>
+						</div>
+					</section>
+
+					<section class="guide-section guide-section-stacked" id="reminder-save" data-guide-section data-navigation-label-en="Choose how to add" data-navigation-label-zh="选择添加方式">
+						<div class="section-copy section-copy-wide">
+							<div class="section-number" data-copy="save.number">03</div>
+							<div class="section-eyebrow" data-copy="save.kicker">Create</div>
+							<h2 data-copy="save.title">Use the fast path or the full path deliberately.</h2>
+							<p data-copy="save.summary">Reminder has two creation routes. They are intentionally different.</p>
+						</div>
+						<div class="instruction-scenarios">
+							<article class="instruction-scenario">
+								<header class="instruction-scenario-header"><div><span>03</span><h3><span class="language-en">Choose the correct save path</span><span class="language-zh">选择正确的保存方式</span></h3></div><p><span class="language-en">Enter and Add do not save the same fields.</span><span class="language-zh">回车与「添加」保存的字段并不相同。</span></p></header>
+								<div class="instruction-block"><strong><span class="language-en">Enter — quick capture</span><span class="language-zh">回车——快速记录</span></strong><ol class="instruction-steps"><li><span class="language-en">Enter the text and choose a category.</span><span class="language-zh">输入文字并选择分类。</span></li><li><span class="language-en">Press Enter in the text field.</span><span class="language-zh">在文字输入框中按回车。</span></li></ol><p><span class="language-en">Only text and category are saved. Any date, time, link, or sharing choice still visible in the composer is intentionally skipped.</span><span class="language-zh">只保存文字与分类；输入区中仍显示的日期、时间、链接或共享选择会被有意忽略。</span></p></div>
+								<div class="instruction-block"><strong><span class="language-en">Add — full reminder</span><span class="language-zh">添加——完整提醒</span></strong><ol class="instruction-steps"><li><span class="language-en">Review every visible chip and the sharing state.</span><span class="language-zh">检查所有可见胶囊和共享状态。</span></li><li><span class="language-en">Select Add and wait while the button shows Adding.</span><span class="language-zh">点击「添加」，并等待按钮显示「添加中」。</span></li></ol><p><span class="language-en">Text, category, date, time, normalized link, and supported sharing choice are saved together.</span><span class="language-zh">文字、分类、日期、时间、规范化链接以及受支持的共享选择会一起保存。</span></p></div>
+								<p class="instruction-safety"><strong><span class="language-en">Avoid accidental data loss</span><span class="language-zh">避免遗漏信息</span></strong><span class="language-en"> If you entered any optional detail, use Add—not Enter. If saving fails, the composer stays available and an error dialog lets you retry.</span><span class="language-zh"> 如果填写了任何可选细节，请使用「添加」而不是回车。保存失败时输入区仍可继续处理，错误对话框会提示重试。</span></p>
+							</article>
+						</div>
+						<div class="creation-paths">
+							<div class="creation-path creation-path-fast">
+								<div class="creation-path-heading">
+									<span class="keyboard-key" data-copy="save.enterKey">Enter</span>
+									<span class="path-badge" data-copy="save.fastBadge">Fast path</span>
+								</div>
+								<h3 data-copy="save.fastTitle">Press Enter</h3>
+								<p data-copy="save.fastBody">Creates a text-and-category reminder immediately.</p>
+								<figure class="path-capture">
+									<img src="assets/images/reminder/card-quick-live.jpg" alt="Live text-only reminder card created with Enter" />
+									<figcaption>Text + category only</figcaption>
+								</figure>
+							</div>
+							<div class="creation-path creation-path-full">
+								<div class="creation-path-heading">
+									<span class="add-key"><svg><use href="#icon-check"></use></svg></span>
+									<span class="path-badge" data-copy="save.fullBadge">Full path</span>
+								</div>
+								<h3 data-copy="save.fullTitle">Press Add</h3>
+								<p data-copy="save.fullBody">Creates the reminder with all optional details.</p>
+								<figure class="path-capture">
+									<img src="assets/images/reminder/card-scheduled-live.jpg" alt="Live reminder card created with link, date, and time details" />
+									<figcaption>Text + category + optional details</figcaption>
+								</figure>
+							</div>
+						</div>
+						<aside class="field-note field-note-amber field-note-wide">
+							<strong data-copy="save.safetyTitle">Why the distinction matters</strong>
+							<p data-copy="save.safetyBody">Enter is for capture. Add is for a composed reminder.</p>
+						</aside>
+					</section>
+
+					<section class="guide-section" id="reminder-edit" data-guide-section data-navigation-label-en="Edit on the card" data-navigation-label-zh="在卡片上编辑">
+						<div class="section-copy">
+							<div class="section-number" data-copy="edit.number">04</div>
+							<div class="section-eyebrow" data-copy="edit.kicker">Inline editing</div>
+							<h2 data-copy="edit.title">Change the reminder where you already see it.</h2>
+							<p data-copy="edit.summary">There is no separate edit screen. Every editable value remains on the card.</p>
+							<aside class="field-note field-note-violet">
+								<strong data-copy="edit.clearTitle">Small close buttons clear one value</strong>
+								<p data-copy="edit.clearBody">Clearing the date also clears time because time depends on a date.</p>
+							</aside>
+							<div class="instruction-scenarios">
+								<article class="instruction-scenario">
+									<header class="instruction-scenario-header"><div><span>04</span><h3><span class="language-en">Edit every field on the card</span><span class="language-zh">直接在卡片上编辑所有字段</span></h3></div><p><span class="language-en">Changes save immediately; there is no separate edit form or Save button.</span><span class="language-zh">修改会直接保存；没有独立编辑页面或「保存」按钮。</span></p></header>
+									<div class="instruction-block"><strong><span class="language-en">Control map</span><span class="language-zh">控件说明</span></strong><div class="instruction-inputs">
+										<div class="instruction-input-row"><b><span class="language-en">Title</span><span class="language-zh">标题</span></b><span><span class="language-en">Click the text, edit it, then press Enter or leave the field. Unchanged text does not write again.</span><span class="language-zh">点击文字并修改，然后按回车或移开焦点；内容未变化时不会重复写入。</span></span></div>
+										<div class="instruction-input-row"><b><span class="language-en">Category</span><span class="language-zh">分类</span></b><span><span class="language-en">Click the category label, choose a known category, or choose Custom and press Enter.</span><span class="language-zh">点击分类名称，选择预设分类，或选择「自定义」并按回车。</span></span></div>
+										<div class="instruction-input-row"><b><span class="language-en">Link</span><span class="language-zh">链接</span></b><span><span class="language-en">Click Add link or the existing host chip. Enter or leaving the field saves a normalized URL; the external icon opens it.</span><span class="language-zh">点击「添加链接」或已有域名胶囊；按回车或移开焦点会保存规范化网址，外部图标用于打开链接。</span></span></div>
+										<div class="instruction-input-row"><b><span class="language-en">Date / time</span><span class="language-zh">日期／时间</span></b><span><span class="language-en">Click its chip to reopen the shared date-and-time popover. Selection saves immediately.</span><span class="language-zh">点击对应胶囊重新打开日期与时间弹出层；选择后会立即保存。</span></span></div>
+										<div class="instruction-input-row"><b><span class="language-en">Close icon</span><span class="language-zh">关闭图标</span></b><span><span class="language-en">Removes that detail. Clearing date also clears time; clearing time keeps date.</span><span class="language-zh">移除对应细节；清除日期也会清除时间，清除时间则保留日期。</span></span></div>
+									</div></div>
+									<p class="instruction-result"><strong><span class="language-en">Feedback</span><span class="language-zh">反馈</span></strong><span class="language-en"> The small spinner beside the page title flashes during saves. Shared-card changes also enter the connected activity feed.</span><span class="language-zh"> 保存时页面标题旁会短暂显示小型转圈；共享卡片的修改也会进入关联账户的动态记录。</span></p>
+									<div class="instruction-issues"><strong><span class="language-en">Validation and recovery</span><span class="language-zh">校验与恢复</span></strong>
+										<div class="instruction-issue"><strong><span class="language-en">Blank or duplicate custom category</span><span class="language-zh">自定义分类为空或重复</span></strong><p><span class="language-en">Behavior</span><span class="language-zh">表现</span><span class="language-en">Blank input cancels. A duplicate shows a message instead of creating another category.</span><span class="language-zh">空白输入会取消；重复名称会显示提示，不会创建第二个分类。</span></p></div>
+										<div class="instruction-issue"><strong><span class="language-en">Permission denied</span><span class="language-zh">权限不足</span></strong><p><span class="language-en">Fix</span><span class="language-zh">处理</span><span class="language-en">Only the owner or a currently authorized connected member can edit. Reconnect or use the owning account.</span><span class="language-zh">只有所有者或当前获授权的关联成员可编辑；请重新建立关联，或使用所属账户。</span></p></div>
+										<div class="instruction-issue"><strong><span class="language-en">Write fails</span><span class="language-zh">写入失败</span></strong><p><span class="language-en">Recovery</span><span class="language-zh">恢复</span><span class="language-en">The last saved value is restored and an error dialog appears; close it and retry after the connection recovers.</span><span class="language-zh">页面会恢复上次已保存值并显示错误对话框；网络恢复后关闭对话框并重试。</span></p></div>
+									</div>
+								</article>
+							</div>
+						</div>
+						<div class="scenario-gallery scenario-gallery-edit">
+							<figure class="scenario-card scenario-card-wide">
+								<div class="scenario-card-heading"><span>01</span><strong>Read the card · 先看卡片结构</strong></div>
+								<img src="assets/images/reminder/card-grid-live.jpg" alt="Two live Reminder cards showing text-only and fully scheduled states" />
+								<figcaption>Complete, title, category, delete, link, date, and time stay in one compact surface.</figcaption>
+							</figure>
+							<figure class="scenario-card">
+								<div class="scenario-card-heading"><span>02</span><strong>Edit the title · 直接修改标题</strong></div>
+								<img src="assets/images/reminder/card-inline-edit-live.jpg" alt="Live Reminder card with its title input focused for editing" />
+								<figcaption>Enter or blur commits the inline title.</figcaption>
+							</figure>
+							<figure class="scenario-card">
+								<div class="scenario-card-heading"><span>03</span><strong>Change category · 修改分类</strong></div>
+								<img src="assets/images/reminder/card-category-picker-live.jpg" alt="Live category picker opened from an existing reminder card" />
+								<figcaption>Known and custom categories are available without leaving the card.</figcaption>
+							</figure>
+							<figure class="scenario-card">
+								<div class="scenario-card-heading"><span>04</span><strong>Edit the link · 修改链接</strong></div>
+								<img src="assets/images/reminder/card-link-edit-live.jpg" alt="Live link popover opened from an existing reminder card" />
+								<figcaption>The chip shows the host; the external icon opens the full URL.</figcaption>
+							</figure>
+							<figure class="scenario-card">
+								<div class="scenario-card-heading"><span>05</span><strong>Edit date and time · 修改日期和时间</strong></div>
+								<img src="assets/images/reminder/card-date-edit-live.jpg" alt="Live date and time popover opened from an existing reminder card" />
+								<figcaption>Closing date clears its dependent time range; time can be cleared independently.</figcaption>
+							</figure>
+						</div>
+					</section>
+
+					<section class="guide-section guide-section-reversed" id="reminder-complete" data-guide-section data-navigation-label-en="Complete safely" data-navigation-label-zh="安全完成">
+						<div class="section-copy">
+							<div class="section-number" data-copy="complete.number">05</div>
+							<div class="section-eyebrow" data-copy="complete.kicker">Completion</div>
+							<h2 data-copy="complete.title">A finished reminder leaves the grid, but its work is counted.</h2>
+							<p data-copy="complete.summary">Select the round check control and confirm the action.</p>
+							<aside class="field-note field-note-red">
+								<strong data-copy="complete.warningTitle">Completion is not an archive</strong>
+								<p data-copy="complete.warningBody">The card cannot be reopened from the Reminder grid.</p>
+							</aside>
+							<div class="instruction-scenarios">
+								<article class="instruction-scenario">
+									<header class="instruction-scenario-header"><div><span>05</span><h3><span class="language-en">Complete and count finished work</span><span class="language-zh">完成并计入已完成数量</span></h3></div><p><span class="language-en">Use this only when the task actually happened. Completion permanently removes the open card.</span><span class="language-zh">仅在事项确实完成时使用；完成操作会永久移除未完成卡片。</span></p></header>
+									<div class="instruction-block"><strong><span class="language-en">Steps</span><span class="language-zh">操作步骤</span></strong><ol class="instruction-steps"><li><span class="language-en">Select the round check control at the left of the card.</span><span class="language-zh">点击卡片左侧的圆形勾选控件。</span></li><li><span class="language-en">Read the confirmation dialog. Cancel leaves the reminder unchanged.</span><span class="language-zh">阅读确认对话框；点击取消不会改变提醒。</span></li><li><span class="language-en">Confirm and wait for the blocking operation to finish.</span><span class="language-zh">确认操作，并等待阻塞式写入完成。</span></li></ol></div>
+									<p class="instruction-result"><strong><span class="language-en">Result</span><span class="language-zh">结果</span></strong><span class="language-en"> A private card increments your private completed count. A shared card is removed for linked members and increments the shared completion count.</span><span class="language-zh"> 私人卡片会增加你的私人完成数；共享卡片会从关联成员处移除，并增加共享完成数。</span></p>
+									<p class="instruction-safety"><strong><span class="language-en">Permanent action</span><span class="language-zh">永久操作</span></strong><span class="language-en"> Completion is not an archive and has no restore control. If the write fails, an error is shown and the operation is not presented as complete.</span><span class="language-zh"> 完成不是归档，也没有恢复控件；写入失败时会显示错误，并且不会把操作呈现为已完成。</span></p>
+								</article>
+							</div>
+						</div>
+						<div class="completion-evidence">
+							<figure class="capture-dialog-card">
+								<div class="capture-dialog-label">REAL CONFIRMATION · 真实确认框</div>
+								<img src="assets/images/reminder/complete-dialog-live.jpg" alt="Live completion confirmation dialog for a reminder" />
+							</figure>
+							<div class="completion-results completion-results-live">
+								<div>
+									<span class="completion-result-icon completion-result-private">1</span>
+									<strong data-copy="complete.privateTitle">Private reminder</strong>
+									<p data-copy="complete.privateBody">Increments your private completed count.</p>
+								</div>
+								<div>
+									<span class="completion-result-icon completion-result-shared"><svg><use href="#icon-group"></use></svg></span>
+									<strong data-copy="complete.sharedTitle">Shared reminder</strong>
+									<p data-copy="complete.sharedBody">Increments the shared completed count.</p>
+								</div>
+							</div>
+						</div>
+					</section>
+
+					<section class="guide-section guide-section-stacked" id="reminder-filter" data-guide-section data-navigation-label-en="Focus and share" data-navigation-label-zh="聚焦与共享">
+						<div class="section-copy section-copy-wide">
+							<div class="section-number" data-copy="filter.number">06</div>
+							<div class="section-eyebrow" data-copy="filter.kicker">Focus and sharing</div>
+							<h2 data-copy="filter.title">Narrow the grid without losing the larger picture.</h2>
+							<p data-copy="filter.summary">Category filters use OR logic. Select All to clear category and shared filters.</p>
+						</div>
+						<div class="instruction-scenarios">
+							<article class="instruction-scenario">
+								<header class="instruction-scenario-header"><div><span>06A</span><h3><span class="language-en">Filter the grid</span><span class="language-zh">筛选卡片网格</span></h3></div><p><span class="language-en">Filters change what is visible, not what is stored.</span><span class="language-zh">筛选只改变可见内容，不会改变已保存数据。</span></p></header>
+								<div class="instruction-block"><strong><span class="language-en">Category behavior</span><span class="language-zh">分类行为</span></strong><ol class="instruction-steps"><li><span class="language-en">Select one category to show its cards.</span><span class="language-zh">选择一个分类以显示对应卡片。</span></li><li><span class="language-en">Select more categories to use OR logic: cards matching any selected category remain.</span><span class="language-zh">继续选择其他分类时使用「或」逻辑：匹配任意已选分类的卡片都会保留。</span></li><li><span class="language-en">Select a category again to remove it, or choose All to reset everything.</span><span class="language-zh">再次点击某分类即可取消，或点击「全部」重置所有筛选。</span></li></ol></div>
+								<p class="instruction-result"><strong><span class="language-en">Secondary effects</span><span class="language-zh">次要影响</span></strong><span class="language-en"> Changing a filter returns to page 1. Category filters clear Shared mode, and the composer is hidden while a category filter is active.</span><span class="language-zh"> 改变筛选会回到第 1 页；分类筛选会关闭「共享」模式，并在启用期间隐藏新建输入区。</span></p>
+							</article>
+							<article class="instruction-scenario">
+								<header class="instruction-scenario-header"><div><span>06B</span><h3><span class="language-en">Create and work with shared reminders</span><span class="language-zh">创建与处理共享提醒</span></h3></div><p><span class="language-en">Sharing is available only to supported CloudBase accounts with at least one active connected member.</span><span class="language-zh">共享仅对拥有至少一个有效关联成员的 CloudBase 账户开放。</span></p></header>
+								<div class="instruction-block"><strong><span class="language-en">Steps</span><span class="language-zh">操作步骤</span></strong><ol class="instruction-steps"><li><span class="language-en">Connect the accounts from Account first.</span><span class="language-zh">先在「账户」页面建立账户关联。</span></li><li><span class="language-en">In the Reminder composer, turn on Share and finish with Add.</span><span class="language-zh">在提醒输入区打开「共享」，并使用「添加」完成创建。</span></li><li><span class="language-en">Use the Shared filter when it appears to isolate shared cards.</span><span class="language-zh">「共享」筛选出现后，可用它只查看共享卡片。</span></li></ol></div>
+								<p class="instruction-result"><strong><span class="language-en">Result</span><span class="language-zh">结果</span></strong><span class="language-en"> Connected members see live shared cards. Incoming cards show their creator; edits, completion, and removal are rechecked by the server.</span><span class="language-zh"> 关联成员会看到实时共享卡片；收到的卡片会显示创建者，编辑、完成和删除均会由服务器再次校验。</span></p>
+								<div class="instruction-issues"><strong><span class="language-en">Why a sharing control may be absent</span><span class="language-zh">共享控件为何可能不出现</span></strong><div class="instruction-issue"><strong><span class="language-en">No active connection</span><span class="language-zh">没有有效关联</span></strong><p><span class="language-en">Fix</span><span class="language-zh">处理</span><span class="language-en">Finish or restore the account connection first.</span><span class="language-zh">先完成或恢复账户关联。</span></p></div><div class="instruction-issue"><strong><span class="language-en">Google / Firebase session</span><span class="language-zh">Google／Firebase 会话</span></strong><p><span class="language-en">Reason</span><span class="language-zh">原因</span><span class="language-en">Connected Accounts and cross-account sharing are unavailable for this backend.</span><span class="language-zh">该后端不支持关联账户与跨账户共享。</span></p></div></div>
+							</article>
+						</div>
+						<div class="scenario-gallery scenario-gallery-filter">
+							<figure class="scenario-card">
+								<div class="scenario-card-heading"><span>01</span><strong>One category · 单个分类</strong></div>
+								<img src="assets/images/reminder/filter-work-live.png" alt="Live Reminder list filtered to Work" />
+								<figcaption>An active category hides non-matching cards and the composer.</figcaption>
+							</figure>
+							<figure class="scenario-card">
+								<div class="scenario-card-heading"><span>02</span><strong>OR selection · 多选为或</strong></div>
+								<img src="assets/images/reminder/filter-or-live.jpg" alt="Live Reminder list filtered to Personal or Work" />
+								<figcaption>Selecting Personal and Work shows cards from either category.</figcaption>
+							</figure>
+						</div>
+						<div class="sharing-grid">
+							<div class="sharing-card sharing-card-overview">
+								<div class="sharing-card-icon"><svg><use href="#icon-group"></use></svg></div>
+								<strong data-copy="filter.sharedTitle">Shared view</strong>
+								<p data-copy="filter.sharedBody">The Shared control shows only shared reminders.</p>
+							</div>
+							<div class="sharing-card sharing-card-cloudbase">
+								<span class="backend-badge backend-badge-cloudbase">CloudBase</span>
+								<strong data-copy="filter.cloudbaseTitle">Username and password · CloudBase</strong>
+								<p data-copy="filter.cloudbaseBody">Connected accounts can share reminders in real time.</p>
+							</div>
+							<div class="sharing-card sharing-card-firebase">
+								<span class="backend-badge backend-badge-firebase">Firebase</span>
+								<strong data-copy="filter.firebaseTitle">Google · Firebase</strong>
+								<p data-copy="filter.firebaseBody">Connected Accounts and sharing are unavailable.</p>
+							</div>
+						</div>
+					</section>
+
+					<section class="guide-section" id="reminder-remove" data-guide-section data-navigation-label-en="Remove a card" data-navigation-label-zh="删除卡片">
+						<div class="section-copy">
+							<div class="section-number" data-copy="remove.number">07</div>
+							<div class="section-eyebrow" data-copy="remove.kicker">Removal</div>
+							<h2 data-copy="remove.title">Delete only when the reminder should leave without credit.</h2>
+							<p data-copy="remove.summary">Use the bin in the card header, then confirm.</p>
+							<aside class="field-note field-note-red">
+								<strong data-copy="remove.warningTitle">No undo bin</strong>
+								<p data-copy="remove.warningBody">Both actions are permanent and ask for confirmation.</p>
+							</aside>
+							<div class="instruction-scenarios">
+								<article class="instruction-scenario">
+									<header class="instruction-scenario-header"><div><span>07</span><h3><span class="language-en">Remove without completion credit</span><span class="language-zh">删除但不计入完成</span></h3></div><p><span class="language-en">Use Delete for mistakes, duplicates, or work that is no longer needed—not for finished work.</span><span class="language-zh">删除适用于错误、重复或不再需要的事项，不适用于已完成事项。</span></p></header>
+									<div class="instruction-block"><strong><span class="language-en">Steps</span><span class="language-zh">操作步骤</span></strong><ol class="instruction-steps"><li><span class="language-en">Select the bin in the card header.</span><span class="language-zh">点击卡片标题区域中的垃圾桶。</span></li><li><span class="language-en">Read the confirmation dialog and verify the intended card.</span><span class="language-zh">阅读确认对话框，并确认是要删除的卡片。</span></li><li><span class="language-en">Confirm to remove it, or Cancel to return unchanged.</span><span class="language-zh">确认后移除；点击取消则原样返回。</span></li></ol></div>
+									<p class="instruction-result"><strong><span class="language-en">Result</span><span class="language-zh">结果</span></strong><span class="language-en"> The card disappears permanently and no completed counter changes. Shared removal is propagated to authorized linked members.</span><span class="language-zh"> 卡片会永久消失，任何完成计数都不会改变；共享删除会同步给获授权的关联成员。</span></p>
+									<p class="instruction-safety"><strong><span class="language-en">No undo</span><span class="language-zh">无法撤销</span></strong><span class="language-en"> If you only want to remove a date, time, or link, use that chip’s close icon instead of deleting the card.</span><span class="language-zh"> 如果只想移除日期、时间或链接，请使用对应胶囊的关闭图标，不要删除整张卡片。</span></p>
+							</article>
+							</div>
+						</div>
+						<div class="section-visual decision-visual decision-visual-live">
+							<figure class="capture-dialog-card capture-dialog-card-delete">
+								<div class="capture-dialog-label">REAL CONFIRMATION · 真实确认框</div>
+								<img src="assets/images/reminder/delete-dialog-live.jpg" alt="Live delete confirmation dialog for a reminder" />
+							</figure>
+							<div class="visual-label" data-copy="remove.compareTitle">Complete or remove?</div>
+							<div class="decision-card decision-card-complete">
+								<span><svg><use href="#icon-check"></use></svg></span>
+								<div>
+									<strong data-copy="remove.completeLabel">Complete</strong>
+									<p data-copy="remove.completeBody">The task happened. Count the completion.</p>
+								</div>
+							</div>
+							<div class="decision-divider"><span data-copy="remove.orLabel">or</span></div>
+							<div class="decision-card decision-card-remove">
+								<span><svg><use href="#icon-delete"></use></svg></span>
+								<div>
+									<strong data-copy="remove.removeLabel">Remove</strong>
+									<p data-copy="remove.removeBody">The task should disappear without credit.</p>
+								</div>
+							</div>
+						</div>
+					</section>
+
+					<section class="guide-section guide-section-stacked rules-section" id="reminder-rules" data-guide-section data-navigation-label-en="Small rules worth knowing" data-navigation-label-zh="值得记住的小规则">
+						<div class="section-copy section-copy-wide">
+							<div class="section-number" data-copy="rules.number">08</div>
+							<div class="section-eyebrow" data-copy="rules.kicker">Reference</div>
+							<h2 data-copy="rules.title">Small rules worth remembering</h2>
+							<p data-copy="rules.summary">These details explain the page when it behaves differently from a basic to-do list.</p>
+						</div>
+						<div class="instruction-scenarios">
+							<article class="instruction-scenario">
+								<header class="instruction-scenario-header"><div><span>08A</span><h3><span class="language-en">Understand loading, empty, and protected states</span><span class="language-zh">理解载入、空白与受保护状态</span></h3></div><p><span class="language-en">The page changes its available controls according to session and data state.</span><span class="language-zh">页面会根据会话与数据状态改变可用控件。</span></p></header>
+								<div class="instruction-inputs">
+									<div class="instruction-input-row"><b><span class="language-en">Loading</span><span class="language-zh">载入中</span></b><span><span class="language-en">Skeleton cards reserve the layout. Wait before editing; a timeout dialog appears if data does not arrive.</span><span class="language-zh">骨架卡片会保留布局；请等待后再编辑。数据未能到达时会出现超时对话框。</span></span></div>
+									<div class="instruction-input-row"><b><span class="language-en">Empty account</span><span class="language-zh">空账户</span></b><span><span class="language-en">No reminder cards appear, but the composer remains ready.</span><span class="language-zh">不会显示提醒卡片，但新建输入区仍可使用。</span></span></div>
+									<div class="instruction-input-row"><b><span class="language-en">Signed out / inactive</span><span class="language-zh">未登录／会话失效</span></b><span><span class="language-en">Private content is replaced by a protected-access card. Sign in again before continuing.</span><span class="language-zh">私人内容会被受保护访问卡片替代；请重新登录后继续。</span></span></div>
+								</div>
+							</article>
+							<article class="instruction-scenario">
+								<header class="instruction-scenario-header"><div><span>08B</span><h3><span class="language-en">Read counts, pagination, and cross-page effects</span><span class="language-zh">理解计数、分页与跨页面联动</span></h3></div><p><span class="language-en">These indicators explain what the page has done after your action.</span><span class="language-zh">这些指标用于确认操作后的页面结果。</span></p></header>
+								<div class="instruction-inputs">
+									<div class="instruction-input-row"><b><span class="language-en">Open / completed</span><span class="language-zh">未完成／已完成</span></b><span><span class="language-en">Open counts non-blank cards. Private and shared completed counts increase only through Complete.</span><span class="language-zh">未完成数统计非空卡片；私人和共享完成数只会通过「完成」增加。</span></span></div>
+									<div class="instruction-input-row"><b><span class="language-en">Due soon</span><span class="language-zh">即将到期</span></b><span><span class="language-en">Includes dates from today through seven days ahead, inclusive.</span><span class="language-zh">包含今天至未来七天（含边界）的日期。</span></span></div>
+									<div class="instruction-input-row"><b><span class="language-en">Pages</span><span class="language-zh">分页</span></b><span><span class="language-en">Use numbered or arrow controls. Page capacity adapts to visible columns; additions and deletions automatically clamp the current page.</span><span class="language-zh">使用页码或箭头；每页容量会随可见列数调整，新增或删除后当前页会自动校正。</span></span></div>
+									<div class="instruction-input-row"><b><span class="language-en">Home and Today</span><span class="language-zh">主页与今天</span></b><span><span class="language-en">Reminder updates Home statistics. Timed reminders appear in Today, but must be edited or completed here.</span><span class="language-zh">提醒会更新主页统计；有时间的提醒会出现在「今日」，但必须回到本页编辑或完成。</span></span></div>
+								</div>
+							</article>
+							<article class="instruction-scenario">
+								<header class="instruction-scenario-header"><div><span>08C</span><h3><span class="language-en">Recover from errors safely</span><span class="language-zh">安全处理错误</span></h3></div><p><span class="language-en">Do not repeat a destructive action until the dialog or loading overlay has resolved.</span><span class="language-zh">在对话框或载入遮罩结束前，不要重复执行破坏性操作。</span></p></header>
+								<div class="instruction-issues">
+									<div class="instruction-issue"><strong><span class="language-en">Timeout while opening</span><span class="language-zh">打开时超时</span></strong><p><span class="language-en">Recovery</span><span class="language-zh">恢复</span><span class="language-en">Check the network/session, close the timeout message, and reload or revisit Reminder.</span><span class="language-zh">检查网络与会话，关闭超时提示后重新载入或再次进入提醒页。</span></p></div>
+									<div class="instruction-issue"><strong><span class="language-en">Create fails</span><span class="language-zh">创建失败</span></strong><p><span class="language-en">Recovery</span><span class="language-zh">恢复</span><span class="language-en">The Adding lock is released. Keep or re-enter the intended details, then retry once connectivity returns.</span><span class="language-zh">「添加中」锁定会解除；保留或重新输入目标细节，网络恢复后再试。</span></p></div>
+									<div class="instruction-issue"><strong><span class="language-en">Edit fails</span><span class="language-zh">编辑失败</span></strong><p><span class="language-en">Recovery</span><span class="language-zh">恢复</span><span class="language-en">The previous saved value is restored. Reapply the edit only after resolving the reported connection or permission problem.</span><span class="language-zh">页面会恢复之前已保存值；请先解决提示的网络或权限问题，再重新修改。</span></p></div>
+									<div class="instruction-issue"><strong><span class="language-en">Permission denied</span><span class="language-zh">权限不足</span></strong><p><span class="language-en">Recovery</span><span class="language-zh">恢复</span><span class="language-en">Use the owning account or restore the supported connected-account relationship. Repeated clicks cannot bypass server checks.</span><span class="language-zh">使用所属账户，或恢复受支持的账户关联；重复点击无法绕过服务器校验。</span></p></div>
+								</div>
+							</article>
+						</div>
+						<div class="reference-captures">
+							<figure>
+								<img src="assets/images/reminder/overview-live.jpg" alt="Live Reminder masthead and due-soon count" />
+								<figcaption>Due-soon count · 未来七天内到期</figcaption>
+							</figure>
+							<figure>
+								<img src="assets/images/reminder/pagination-live.jpg" alt="Live Reminder pagination controls" />
+								<figcaption>Range and pagination · 范围与分页</figcaption>
+							</figure>
+						</div>
+						<div class="rules-grid">
+							<div class="rule-card"><span>01</span><strong data-copy="rules.ruleOneTitle">Due soon</strong><p data-copy="rules.ruleOneBody">Counts dated reminders from today through seven days ahead.</p></div>
+							<div class="rule-card"><span>02</span><strong data-copy="rules.ruleTwoTitle">Today integration</strong><p data-copy="rules.ruleTwoBody">Timed reminders appear in the Today planner.</p></div>
+							<div class="rule-card"><span>03</span><strong data-copy="rules.ruleThreeTitle">Links</strong><p data-copy="rules.ruleThreeBody">Saved links are normalized and displayed by host name.</p></div>
+							<div class="rule-card"><span>04</span><strong data-copy="rules.ruleFourTitle">Pagination</strong><p data-copy="rules.ruleFourBody">Page size follows the visible column count.</p></div>
+							<div class="rule-card"><span>05</span><strong data-copy="rules.ruleFiveTitle">Filtered creation</strong><p data-copy="rules.ruleFiveBody">Clear filters when the composer is not visible.</p></div>
+							<div class="rule-card"><span>06</span><strong data-copy="rules.ruleSixTitle">Permissions</strong><p data-copy="rules.ruleSixBody">Only an owner or authorized administrator can change a reminder.</p></div>
+							<div class="rule-card"><span>07</span><strong data-copy="rules.ruleSevenTitle">Loading and timeout</strong><p data-copy="rules.ruleSevenBody">Skeleton cards hold the layout while data loads.</p></div>
+							<div class="rule-card"><span>08</span><strong data-copy="rules.ruleEightTitle">Empty and signed out</strong><p data-copy="rules.ruleEightBody">An empty account keeps the composer ready.</p></div>
+							<div class="rule-card"><span>09</span><strong data-copy="rules.ruleNineTitle">Write recovery</strong><p data-copy="rules.ruleNineBody">Failed edits restore the previous value and release saving controls.</p></div>
+							<div class="rule-card"><span>10</span><strong data-copy="rules.ruleTenTitle">Sharing availability</strong><p data-copy="rules.ruleTenBody">Sharing appears only for supported connected accounts.</p></div>
+						</div>
+					</section>
+
+					<footer class="guide-footer">
+						<div class="section-eyebrow" data-copy="footer.eyebrow">End of Reminder · Edition 01</div>
+						<h2 data-copy="footer.title">Capture lightly. Schedule precisely. Finish honestly.</h2>
+						<p data-copy="footer.body">The guide shell is ready for future chapters.</p>
+					</footer>
+				</article>
+				<div data-generated-pages-after></div>
+			</main>
+		</div>
+		<dialog class="image-lightbox" data-image-lightbox aria-labelledby="image-lightbox-caption">
+			<button
+				class="image-lightbox-close"
+				type="button"
+				data-lightbox-close
+				data-copy-aria-label="accessibility.imageClose">
+				<svg aria-hidden="true"><use href="#icon-close"></use></svg>
+			</button>
+			<figure>
+				<img data-lightbox-image alt="" />
+				<figcaption id="image-lightbox-caption" data-lightbox-caption></figcaption>
+			</figure>
+		</dialog>
+	</body>
+</html>

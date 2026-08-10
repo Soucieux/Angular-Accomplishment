@@ -15,12 +15,19 @@
 ## Table of Contents
 
 - [Core Features](#-core-features)
+- [User Guide](#-user-guide)
 - [Development Timeline](#-development-timeline)
 - [Authentication & Data Backends](#-authentication--data-backends)
 - [Project Structure](#-project-structure)
 - [Tech Stack](#-tech-stack)
 - [Prerequisites](#-prerequisites)
 - [Getting Started](#-getting-started)
+
+---
+
+## 📖 User Guide
+
+The web-first [Vision Canvas Field Guide](visualization-guides/index.html) documents all 13 routed pages in mirrored English and Chinese editions. The same responsive source opens directly from disk, is included at `/guide/` in the Firebase-ready Angular output, and generates one self-contained offline HTML file for transfer between devices. The guide no longer includes PDFs. Select any instructional screenshot to enlarge it on the current screen; the in-page viewer never opens a separate browser tab. Reminder establishes the guide-wide evidence standard: every chapter explains applicable workflows, validation, loading, empty, permission, recovery, responsive, and destructive states with privacy-safe screenshots captured from the real running application rather than generated interface reconstructions.
 
 ---
 

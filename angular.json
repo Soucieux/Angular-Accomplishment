@@ -26,6 +26,21 @@
                 "glob": "*.png",
                 "input": "src/assets/icons",
                 "output": "/"
+              },
+              {
+                "glob": "index.html",
+                "input": "visualization-guides",
+                "output": "/guide"
+              },
+              {
+                "glob": "**/*",
+                "input": "visualization-guides/assets",
+                "output": "/guide/assets"
+              },
+              {
+                "glob": "accomplishment-field-guide.html",
+                "input": "visualization-guides/portable",
+                "output": "/guide/offline"
               }
             ],
             "styles": [

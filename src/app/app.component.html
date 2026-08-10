@@ -282,7 +282,17 @@
 		(navigate)="navigateToRoute($event)"
 		(signIn)="navigateToLogin()"
 		(signOut)="handleMobileSignOut()"
-		(switchLocale)="doSwitchLocale()" />
+		(switchLocale)="doSwitchLocale()"
+		(openGuide)="openGuide()" />
+} @else {
+	<button
+		class="guide-launcher-button"
+		type="button"
+		[attr.aria-label]="NAV_ARIA_OPEN_GUIDE"
+		[attr.title]="NAV_LABEL_GUIDE"
+		(click)="openGuide()">
+		<span class="material-symbols-outlined">{{ GUIDE_LAUNCHER_ICON }}</span>
+	</button>
 }
 @if (isTauriApp) {
 	<div class="app-header-container">

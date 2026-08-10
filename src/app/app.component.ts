@@ -46,6 +46,11 @@ import {
 	CTX_ICON_SIGN_OUT,
 	CTX_ICON_INSPECT,
 	DIALOG_CONFIRM,
+	GUIDE_DIRECTORY_PAGE,
+	GUIDE_LANGUAGE_QUERY_PARAM,
+	GUIDE_LAUNCHER_ICON,
+	GUIDE_PAGE_QUERY_PARAM,
+	GUIDE_ROUTE_PATH,
 	LOGIN_ROUTE_PATH,
 	LOGIN_URL_DEFAULT_RETURN,
 	LS_NAV_COLLAPSED_KEY,
@@ -92,10 +97,12 @@ import {
 	NAV_LABEL_DEBT_SONATA,
 	NAV_LABEL_PATCH_NOTES,
 	NAV_LABEL_ABOUT,
+	NAV_LABEL_GUIDE,
 	NAV_LABEL_VAULT,
 	NAV_LABEL_SIGN_OUT,
 	NAV_LABEL_SIGN_IN,
 	NAV_STATUS_OFFLINE,
+	NAV_ARIA_OPEN_GUIDE,
 	LABEL_ONLINE,
 	DIALOG_BTN_SIGN_OUT,
 	MSG_LOGOUT_CONFIRM,
@@ -162,7 +169,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected readonly NAV_LABEL_DEBT_SONATA = NAV_LABEL_DEBT_SONATA;
 	protected readonly NAV_LABEL_PATCH_NOTES = NAV_LABEL_PATCH_NOTES;
 	protected readonly NAV_LABEL_ABOUT = NAV_LABEL_ABOUT;
+	protected readonly NAV_LABEL_GUIDE = NAV_LABEL_GUIDE;
 	protected readonly NAV_LABEL_VAULT = NAV_LABEL_VAULT;
+	protected readonly NAV_ARIA_OPEN_GUIDE = NAV_ARIA_OPEN_GUIDE;
+	protected readonly GUIDE_LAUNCHER_ICON = GUIDE_LAUNCHER_ICON;
 	protected readonly NAV_LABEL_SIGN_OUT = NAV_LABEL_SIGN_OUT;
 	protected readonly NAV_LABEL_SIGN_IN = NAV_LABEL_SIGN_IN;
 	protected readonly LABEL_ONLINE = LABEL_ONLINE;
@@ -682,6 +692,30 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	protected navigateToAccount(): void {
 		this.accountMenuOpen = false;
 		this.router.navigate([ACCOUNT_ROUTE_PATH]).catch(() => {});
+	}
+
+	/**
+	 * Opens the complete guide directory in the active application language.
+	 * Browser, PWA, and Tauri surfaces keep the application open while the
+	 * guide opens separately; Capacitor uses its packaged guide in the current
+	 * native WebView because its private app origin is not valid in a system browser.
+	 */
+	protected openGuide(): void {
+		if (!isPlatformBrowser(this.platformId)) return;
+
+		// Step 1: Build the packaged guide URL in the active language.
+		const guideUrl = new URL(GUIDE_ROUTE_PATH, window.location.origin);
+		guideUrl.searchParams.set(GUIDE_PAGE_QUERY_PARAM, GUIDE_DIRECTORY_PAGE);
+		guideUrl.searchParams.set(GUIDE_LANGUAGE_QUERY_PARAM, ACTIVE_LOCALE);
+
+		// Step 2: Keep Capacitor inside its offline-capable native WebView.
+		if (this.isCapacitorApp) {
+			window.location.assign(guideUrl.toString());
+			return;
+		}
+
+		// Step 3: Preserve the current app window on browser and desktop surfaces.
+		this.utilities.openInNewTab(guideUrl.toString());
 	}
 
 	/**

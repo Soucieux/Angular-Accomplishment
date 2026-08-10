@@ -8,7 +8,17 @@
 	[attr.aria-label]="NAV_MOBILE_ALL_SECTIONS"
 	[cdkTrapFocus]="gridOpen()"
 	[cdkTrapFocusAutoCapture]="gridOpen()">
-	<div class="grid-head">{{ NAV_MOBILE_ALL_SECTIONS }}</div>
+	<div class="grid-head">
+		<span>{{ NAV_MOBILE_ALL_SECTIONS }}</span>
+		<button
+			class="grid-guide-button"
+			type="button"
+			[attr.aria-label]="NAV_ARIA_OPEN_GUIDE"
+			(click)="doOpenGuide()">
+			<span class="material-symbols-outlined grid-guide-icon">{{ GUIDE_LAUNCHER_ICON }}</span>
+			<span class="grid-guide-label">{{ NAV_LABEL_GUIDE }}</span>
+		</button>
+	</div>
 	<div class="grid-cells" #gridCells>
 		@for (navItem of secondary; track navItem.id) {
 			<button

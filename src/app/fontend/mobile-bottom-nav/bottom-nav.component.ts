@@ -17,6 +17,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { LOG } from '../../common/app.logs';
 import {
+	GUIDE_LAUNCHER_ICON,
 	NAV_AVATAR_FALLBACK_INITIAL,
 	NAV_AVATAR_GRADIENT,
 	NAV_LOCALE_SWITCH_TO_ZH,
@@ -34,10 +35,12 @@ import {
 	NAV_MOBILE_WELCOME,
 	NAV_MOBILE_OFFLINE,
 	NAV_LABEL_SIGN_IN,
+	NAV_LABEL_GUIDE,
 	NAV_ARIA_ACCOUNT,
 	NAV_ARIA_PRIMARY,
 	NAV_ARIA_CLOSE_SECTIONS,
 	NAV_ARIA_SHOW_SECTIONS,
+	NAV_ARIA_OPEN_GUIDE,
 	NAV_ARIA_ACCOUNT_PREFIX
 } from '../../common/locale/locale-strings';
 import { NotificationService } from '../../backend/notification-service/notification.service';
@@ -54,12 +57,15 @@ import { UnexpectedError } from '../../common/error/unexpected.error';
 	styleUrl: './bottom-nav.component.css'
 })
 export class BottomNavComponent implements AfterViewInit {
+	private readonly className = 'BottomNavComponent';
+
 	@ViewChild('gridCells') private gridCells!: ElementRef<HTMLElement>;
 
 	@Output() public readonly navigate = new EventEmitter<string>();
 	@Output() public readonly signIn = new EventEmitter<void>();
 	@Output() public readonly signOut = new EventEmitter<void>();
 	@Output() public readonly switchLocale = new EventEmitter<void>();
+	@Output() public readonly openGuide = new EventEmitter<void>();
 
 	@Input() public items: NavItem[] = [];
 	@Input() public primaryIds: string[] = [];
@@ -67,9 +73,8 @@ export class BottomNavComponent implements AfterViewInit {
 	@Input() public signedIn = false;
 	@Input() public userName = '';
 
-	private readonly className = 'BottomNavComponent';
-
 	protected readonly ACCOUNT_TITLE_PAGE = ACCOUNT_TITLE_PAGE;
+	protected readonly GUIDE_LAUNCHER_ICON = GUIDE_LAUNCHER_ICON;
 	protected readonly NAV_AVATAR_GRADIENT = NAV_AVATAR_GRADIENT;
 	protected readonly NAV_NOTIF_LABEL_ENABLE = NAV_NOTIF_LABEL_ENABLE;
 	protected readonly NAV_NOTIF_LABEL_DISABLE = NAV_NOTIF_LABEL_DISABLE;
@@ -79,10 +84,12 @@ export class BottomNavComponent implements AfterViewInit {
 	protected readonly NAV_MOBILE_WELCOME = NAV_MOBILE_WELCOME;
 	protected readonly NAV_MOBILE_OFFLINE = NAV_MOBILE_OFFLINE;
 	protected readonly NAV_LABEL_SIGN_IN = NAV_LABEL_SIGN_IN;
+	protected readonly NAV_LABEL_GUIDE = NAV_LABEL_GUIDE;
 	protected readonly NAV_ARIA_ACCOUNT = NAV_ARIA_ACCOUNT;
 	protected readonly NAV_ARIA_PRIMARY = NAV_ARIA_PRIMARY;
 	protected readonly NAV_ARIA_CLOSE_SECTIONS = NAV_ARIA_CLOSE_SECTIONS;
 	protected readonly NAV_ARIA_SHOW_SECTIONS = NAV_ARIA_SHOW_SECTIONS;
+	protected readonly NAV_ARIA_OPEN_GUIDE = NAV_ARIA_OPEN_GUIDE;
 	protected readonly NAV_ARIA_ACCOUNT_PREFIX = NAV_ARIA_ACCOUNT_PREFIX;
 	protected readonly localeSwitchLabel: string =
 		ACTIVE_LOCALE === 'en' ? NAV_LOCALE_SWITCH_TO_ZH : NAV_LOCALE_SWITCH_TO_EN;
@@ -190,6 +197,14 @@ export class BottomNavComponent implements AfterViewInit {
 	protected closeAll(): void {
 		this.gridOpen.set(false);
 		this.accountOpen.set(false);
+	}
+
+	/**
+	 * Closes the all-sections panel and emits the guide-opening request.
+	 */
+	protected doOpenGuide(): void {
+		this.gridOpen.set(false);
+		this.openGuide.emit();
 	}
 
 	/**

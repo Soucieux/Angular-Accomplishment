@@ -73,6 +73,7 @@
 	display: block;
 	position: relative;
 	height: 100%;
+	font-family: 'app-font';
 }
 
 /* No background of its own — html (styles.css) is the sole gradient source app-wide.
@@ -666,16 +667,77 @@ mat-drawer-container:has(mat-drawer.nav-collapsed) mat-drawer-content {
 	height: fit-content;
 }
 
-/* ── Mobile only bottom navigation ─────────────────────────────────── */
+/* ─────────────────────────────────────────
+   Guide launcher
+───────────────────────────────────────── */
+.guide-launcher-button {
+	position: fixed;
+	right: 22px;
+	bottom: 22px;
+	z-index: 35;
+	width: 48px;
+	height: 48px;
+	display: grid;
+	place-items: center;
+	padding: 0;
+	border: 1px solid rgba(255, 255, 255, 0.8);
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.82);
+	backdrop-filter: blur(18px) saturate(160%);
+	-webkit-backdrop-filter: blur(18px) saturate(160%);
+	box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+	cursor: pointer;
+	transition:
+		transform 0.18s var(--ease-out),
+		box-shadow 0.18s var(--ease-out),
+		background 0.18s ease;
+}
+
+.guide-launcher-button .material-symbols-outlined {
+	font-size: 25px;
+	background: linear-gradient(135deg, #d53369, #daae51);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.guide-launcher-button:hover {
+	transform: translateY(-2px);
+	background: rgba(255, 255, 255, 0.94);
+	box-shadow: 0 12px 30px rgba(15, 23, 42, 0.2);
+}
+
+.guide-launcher-button:active {
+	transform: scale(0.94);
+}
+
+.guide-launcher-button:focus-visible {
+	outline: 2px solid #d53369;
+	outline-offset: 3px;
+}
+
+/* ─────────────────────────────────────────
+   Responsive layout
+───────────────────────────────────────── */
+@media (max-width: 940px) {
+	.guide-launcher-button {
+		right: 16px;
+		bottom: 16px;
+	}
+
+}
+
 @media (max-width: 900px) and (pointer: coarse) {
-	/* Hide the left nav before JS runs to prevent the SSR hydration flash */
-	mat-drawer {
+	/* Hide desktop-only navigation before JS runs to prevent the SSR hydration flash. */
+	mat-drawer,
+	.guide-launcher-button {
 		display: none !important;
 	}
 
 	mat-drawer-content {
 		margin: 4px !important;
 	}
+
 }
 
 /* ── iOS PWA — notch/home-indicator coverage, researched and verified (see chat).

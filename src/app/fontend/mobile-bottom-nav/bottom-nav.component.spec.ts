@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { PLATFORM_ID, signal } from '@angular/core';
+import { PLATFORM_ID, WritableSignal, signal } from '@angular/core';
 
 import { BottomNavComponent } from './bottom-nav.component';
 import { NotificationService } from '../../backend/notification-service/notification.service';
@@ -7,6 +7,11 @@ import { NavItem } from './bottom-nav.model';
 
 function makeNavItem(id: string, label = id): NavItem {
 	return { id, label, icon: 'home' };
+}
+
+interface BottomNavComponentTestAccess {
+	gridOpen: WritableSignal<boolean>;
+	doOpenGuide(): void;
 }
 
 describe('BottomNavComponent', () => {
@@ -144,6 +149,24 @@ describe('BottomNavComponent', () => {
 			(component as any).closeAll();
 			expect((component as any).gridOpen()).toBeFalse();
 			expect((component as any).accountOpen()).toBeFalse();
+		});
+	});
+
+	/* ─────────────────────────────────────────
+	   Guide launcher
+	───────────────────────────────────────── */
+
+	describe('doOpenGuide', () => {
+		it('closes the grid and emits the guide request', () => {
+			const testComponent = component as unknown as BottomNavComponentTestAccess;
+			let guideEmitted = false;
+			component.openGuide.subscribe(() => (guideEmitted = true));
+			testComponent.gridOpen.set(true);
+
+			testComponent.doOpenGuide();
+
+			expect(testComponent.gridOpen()).toBeFalse();
+			expect(guideEmitted).toBeTrue();
 		});
 	});
 

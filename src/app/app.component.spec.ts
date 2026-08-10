@@ -10,9 +10,20 @@ import { DatabaseService } from './backend/database-service/database.service';
 import { DialogService } from './backend/dialog-service/dialog.service';
 import { NotificationService } from './backend/notification-service/notification.service';
 import { SessionRecoveryService } from './backend/session-recovery/session-recovery.service';
-import { RECOVERY_INACTIVITY_THRESHOLD_MS } from './common/constants';
+import {
+	GUIDE_DIRECTORY_PAGE,
+	GUIDE_LANGUAGE_QUERY_PARAM,
+	GUIDE_PAGE_QUERY_PARAM,
+	GUIDE_ROUTE_PATH,
+	RECOVERY_INACTIVITY_THRESHOLD_MS
+} from './common/constants';
+import { ACTIVE_LOCALE } from './common/locale/locale-strings';
 import { UnexpectedError } from './common/error/unexpected.error';
 import { Utilities } from './common/utilities/app.utilities';
+
+interface AppComponentTestAccess {
+	openGuide(): void;
+}
 
 describe('AppComponent', () => {
 	let mockAuthService: jasmine.SpyObj<AuthService>;
@@ -328,6 +339,25 @@ describe('AppComponent', () => {
 			(fixture.componentInstance as any).navigateToLogin();
 
 			expect(navigateSpy).not.toHaveBeenCalled();
+		});
+	});
+
+	/* ─────────────────────────────────────────
+	   Guide launcher
+	───────────────────────────────────────── */
+
+	describe('openGuide', () => {
+		it('opens the complete guide directory in the active language', () => {
+			const fixture = TestBed.createComponent(AppComponent);
+			const openInNewTabSpy = spyOn(TestBed.inject(Utilities), 'openInNewTab');
+
+			(fixture.componentInstance as unknown as AppComponentTestAccess).openGuide();
+
+			expect(openInNewTabSpy).toHaveBeenCalledTimes(1);
+			const guideUrl = new URL(openInNewTabSpy.calls.mostRecent().args[0]);
+			expect(guideUrl.pathname).toBe(GUIDE_ROUTE_PATH);
+			expect(guideUrl.searchParams.get(GUIDE_PAGE_QUERY_PARAM)).toBe(GUIDE_DIRECTORY_PAGE);
+			expect(guideUrl.searchParams.get(GUIDE_LANGUAGE_QUERY_PARAM)).toBe(ACTIVE_LOCALE);
 		});
 	});
 

@@ -130,12 +130,14 @@ export const NAV_LABEL_DEBT_SONATA = 'Debt Sonata';
 export const NAV_LABEL_PATCH_NOTES = 'Patch Notes';
 export const NAV_LABEL_ABOUT = 'About';
 export const NAV_LABEL_VAULT = 'Vault';
+export const NAV_LABEL_GUIDE = 'Guide';
 export const NAV_LABEL_SIGN_OUT = 'Sign out';
 export const NAV_LABEL_SIGN_IN = 'Sign in';
 export const NAV_ARIA_ACCOUNT = 'Account';
 export const NAV_ARIA_PRIMARY = 'Primary navigation';
 export const NAV_ARIA_CLOSE_SECTIONS = 'Close all sections';
 export const NAV_ARIA_SHOW_SECTIONS = 'Show all sections';
+export const NAV_ARIA_OPEN_GUIDE = 'Open the complete user guide';
 export const NAV_ARIA_ACCOUNT_PREFIX = 'Account: ';
 export const NAV_STATUS_OFFLINE = 'Offline';
 /** Shared "Online" label used across nav and mobile-nav status indicators. */

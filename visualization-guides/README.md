@@ -2,6 +2,8 @@
 
 This folder contains the web-first, bilingual field guide for all 13 routed Vision Canvas pages plus one guide-only shared message and error reference. One canonical HTML, CSS, and JavaScript source supports direct local use, Firebase Hosting, and a generated self-contained offline file. The guide does not include or generate PDFs.
 
+The running application opens the hosted guide from a small book launcher: fixed at the lower-right on desktop/web/PWA/Tauri, and placed in the header of the expanded mobile **All sections** panel on Capacitor and other mobile surfaces.
+
 ## Included pages
 
 Home, Today, Reminder, Portal, Vault, Entertainment, Recipe, Resonance, Debt Sonata, Account, Login, Patch Notes, and About share one responsive guide shell and mirrored English and Chinese content. Messages & Errors documents behavior reused by several routes without pretending it is another application page.

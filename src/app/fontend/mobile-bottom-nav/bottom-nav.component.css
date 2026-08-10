@@ -90,12 +90,57 @@
 }
 
 .grid-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
 	font-size: 13px;
 	font-weight: 700;
 	letter-spacing: 1px;
 	color: var(--vc-ink-muted);
 	text-transform: uppercase;
 	margin: 0 2px 10px;
+}
+
+.grid-guide-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 0 12px;
+	border: 1px solid rgba(213, 51, 105, 0.16);
+	border-radius: 14px;
+	background: rgba(213, 51, 105, 0.08);
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0;
+	text-transform: none;
+	cursor: pointer;
+	transition:
+		background 0.18s ease,
+		transform 0.18s var(--vc-ease);
+}
+
+.grid-guide-button:active {
+	transform: scale(0.94);
+}
+
+.grid-guide-button:focus-visible {
+	outline: 2px solid var(--vc-rose);
+	outline-offset: 2px;
+}
+
+.grid-guide-icon {
+	font-size: 21px;
+	background: linear-gradient(135deg, #d53369, #daae51);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.grid-guide-label {
+	white-space: nowrap;
 }
 
 .grid-cells {
@@ -556,6 +601,17 @@
 }
 
 /* ─────────────────────────────────────────
+   Responsive layout
+───────────────────────────────────────── */
+@media (max-width: 940px) {
+	.grid-guide-button {
+		min-width: 44px;
+		min-height: 44px;
+	}
+
+}
+
+/* ─────────────────────────────────────────
    Reduced motion
 ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -569,4 +625,5 @@
 	.account-popover {
 		transition-duration: 0.01ms !important;
 	}
+
 }

@@ -75,6 +75,16 @@ export const HISTORY_SCROLL_CONTAINER_SELECTOR = '.history-dialog .p-dialog-cont
 export const APP_BREAKPOINT_COMPACT = 1300;
 /** Layout breakpoint for narrow viewport mode: below this width the sidebar collapses to an icon-only strip and nav labels are hidden. */
 export const APP_BREAKPOINT_NARROW = 940;
+/** Public build path for the complete interactive field guide. */
+export const GUIDE_ROUTE_PATH = '/guide/';
+/** Query parameter that selects the first field-guide page shown after launch. */
+export const GUIDE_PAGE_QUERY_PARAM = 'page';
+/** Query parameter that keeps the field-guide language aligned with the application. */
+export const GUIDE_LANGUAGE_QUERY_PARAM = 'lang';
+/** Field-guide page identifier for the complete directory. */
+export const GUIDE_DIRECTORY_PAGE = 'directory';
+/** Material Symbol used by the field-guide launcher on every application platform. */
+export const GUIDE_LAUNCHER_ICON = 'auto_stories';
 /** CSS class added to body when running inside the Tauri desktop app — scopes Tauri-only global styles. */
 export const TAURI_MODE_CLASS = 'tauri-mode';
 /** CSS class added to body when running inside the Capacitor native iOS app — scopes Capacitor-only global styles. */

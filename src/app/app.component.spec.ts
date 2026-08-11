@@ -14,6 +14,7 @@ import {
 	GUIDE_DIRECTORY_PAGE,
 	GUIDE_LANGUAGE_QUERY_PARAM,
 	GUIDE_PAGE_QUERY_PARAM,
+	GUIDE_PUBLIC_WEB_ORIGIN,
 	GUIDE_ROUTE_PATH,
 	RECOVERY_INACTIVITY_THRESHOLD_MS
 } from './common/constants';
@@ -355,6 +356,7 @@ describe('AppComponent', () => {
 
 			expect(openInNewTabSpy).toHaveBeenCalledTimes(1);
 			const guideUrl = new URL(openInNewTabSpy.calls.mostRecent().args[0]);
+			expect(guideUrl.origin).toBe(GUIDE_PUBLIC_WEB_ORIGIN);
 			expect(guideUrl.pathname).toBe(GUIDE_ROUTE_PATH);
 			expect(guideUrl.searchParams.get(GUIDE_PAGE_QUERY_PARAM)).toBe(GUIDE_DIRECTORY_PAGE);
 			expect(guideUrl.searchParams.get(GUIDE_LANGUAGE_QUERY_PARAM)).toBe(ACTIVE_LOCALE);

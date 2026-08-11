@@ -50,6 +50,7 @@ import {
 	GUIDE_LANGUAGE_QUERY_PARAM,
 	GUIDE_LAUNCHER_ICON,
 	GUIDE_PAGE_QUERY_PARAM,
+	GUIDE_PUBLIC_WEB_ORIGIN,
 	GUIDE_ROUTE_PATH,
 	LOGIN_ROUTE_PATH,
 	LOGIN_URL_DEFAULT_RETURN,
@@ -695,20 +696,19 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Opens the complete guide directory in the active application language.
-	 * Browser, PWA, and Tauri surfaces keep the application open while the
-	 * guide opens separately; Capacitor uses its packaged guide in the current
-	 * native WebView because its private app origin is not valid in a system browser.
+	 * Opens the public guide entry point in the active application language.
+	 * Every platform uses the canonical production origin so local and native
+	 * runtimes cannot fall through to the authenticated Angular application.
 	 */
 	protected openGuide(): void {
 		if (!isPlatformBrowser(this.platformId)) return;
 
-		// Step 1: Build the packaged guide URL in the active language.
-		const guideUrl = new URL(GUIDE_ROUTE_PATH, window.location.origin);
+		// Step 1: Build the public guide URL independently of the current app runtime origin.
+		const guideUrl = new URL(GUIDE_ROUTE_PATH, GUIDE_PUBLIC_WEB_ORIGIN);
 		guideUrl.searchParams.set(GUIDE_PAGE_QUERY_PARAM, GUIDE_DIRECTORY_PAGE);
 		guideUrl.searchParams.set(GUIDE_LANGUAGE_QUERY_PARAM, ACTIVE_LOCALE);
 
-		// Step 2: Keep Capacitor inside its offline-capable native WebView.
+		// Step 2: Navigate the Capacitor WebView directly to the public guide.
 		if (this.isCapacitorApp) {
 			window.location.assign(guideUrl.toString());
 			return;

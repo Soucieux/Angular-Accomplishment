@@ -75,8 +75,10 @@ export const HISTORY_SCROLL_CONTAINER_SELECTOR = '.history-dialog .p-dialog-cont
 export const APP_BREAKPOINT_COMPACT = 1300;
 /** Layout breakpoint for narrow viewport mode: below this width the sidebar collapses to an icon-only strip and nav labels are hidden. */
 export const APP_BREAKPOINT_NARROW = 940;
-/** Public build path for the complete interactive field guide. */
-export const GUIDE_ROUTE_PATH = '/guide/';
+/** Canonical public production origin used by every field-guide launcher. */
+export const GUIDE_PUBLIC_WEB_ORIGIN = 'https://www.visioncanvas.net';
+/** Public static entry point for the complete interactive field guide. */
+export const GUIDE_ROUTE_PATH = '/guide/index.html';
 /** Query parameter that selects the first field-guide page shown after launch. */
 export const GUIDE_PAGE_QUERY_PARAM = 'page';
 /** Query parameter that keeps the field-guide language aligned with the application. */

@@ -530,10 +530,16 @@ describe('AuthService', () => {
             expect(mockCloudbaseAuth.signOut).toHaveBeenCalled();
         });
 
-        it('sets isUserAlive to false after sign-out', async () => {
-            await service.signOut();
+        /* fakeAsync so the RECOVERY_PROBE_TIMEOUT_MS guard inside waitWithinTimeout becomes a virtual
+           timer. On a real clock a loaded runner can stall past those five seconds, letting the guard
+           win the race against an already-resolved mock: sign-out then rejects before it ever clears
+           local state, and this assertion fails for reasons unrelated to the behaviour under test. */
+        it('sets isUserAlive to false after sign-out', fakeAsync(() => {
+            service.signOut();
+            flushMicrotasks();
+
             expect(mockUtilities.setIsUserAlive).toHaveBeenCalledWith(false);
-        });
+        }));
 
         it('preserves local authentication state and rejects when remote sign-out is unresolved', async () => {
             localStorage.setItem(LS_AUTH_BACKEND, AUTH_BACKEND_CLOUDBASE);

@@ -4,24 +4,51 @@ This ledger records the publication scope of the bilingual field guide. The guid
 
 ## Published coverage
 
-| Chapter | Operating scenarios | Real-app captures | Coverage focus |
-|---|---:|---:|---|
-| Home | 15 | 28 | Every widget, satellite, value, link, empty/populated state, urgency, activity, responsive behavior, and source-page consequence |
-| Today | 12 | 21 | Planner orientation, quick add, edit, move, resize, tracking, clearing, read-only Reminder items, silent failures, and unsupported width |
-| Reminder | Authored walkthrough | 21 | Compose, classify, schedule, create, read, edit, filter, complete, delete, pagination, confirmations, and recovery |
-| Portal | 4 | 6 | Shared/personal ownership, categories, single/batch links, card behavior, administrator calculator boundary, and recovery |
-| Vault | 4 | 4 | Passphrase boundary, graph/list views, record creation, relationships, permissions, and protected recovery |
-| Entertainment | 5 | 8 | Loading/populated libraries, selected and zero-result filtering, add/edit/history, refresh, validation, deletion, and Home consequences |
-| Recipes | 4 | 7 | Library/search, details, editor inputs, ingredients, steps, reordering, permissions, deletion, and Home consequences |
-| Resonance | 10 | 10 | Loading/empty/populated wall, card anatomy, signed-in/visitor posting, keyboard behavior, validation, recovery, and moderation |
-| Debt Sonata | 5 | 13 | Empty/populated states, complete creation form, payments, history, editing, protection, confirmations, known overshoot behavior, and Home consequences |
-| Account | 5 | 21 | Loading/loaded cards, every account statistic, identity/password states, connection requests and errors, Vault cadence, and danger actions |
-| Login | 4 | 5 | Lamp entry, sign in, inline validation, sign up, verification requirements, recovery, provider differences, and failure handling |
-| Patch Notes | 4 | 6 | Sprint/release modes, loading/empty states, combined filters, statistics, heatmap meaning, authorized maintenance, and failures |
-| About | 4 | 5 | Product orientation, status, all six figures, every milestone, hover-only emphasis, and read-only behavior |
-| Messages & Errors | 5 | 5 | Signed-out access, protected-write confirmation, permission errors, connection/session recovery, and desktop/mobile feedback |
+The **Captures show** column describes only what a stored image actually renders. It is not a
+statement of feature coverage: a chapter can satisfy the build gate while leaving real application
+states undocumented. Those are counted in **Open gaps** and specified in `CAPTURE-BACKLOG.md`.
+
+| Chapter | Operating scenarios | Real-app captures | Captures show | Open gaps |
+|---|---:|---:|---|---:|
+| Home | 15 | 28 | Signed-out cover, dashboard loading and ready, life clock, four satellites with two tooltips, narrow rings and cards, week agenda across three days, Reminders/Shortcuts/Debt panels empty and populated, Entertainment genre bars, Recipes list, Activity rows and footer, urgency strip, quick actions, pinned link | 7 |
+| Today | 12 | 21 | Planner orientation, quick add, Anytime create/complete/rename, drawing and saving a timed block, drag modes, move, resize, overlap columns, return to Anytime, tracking start/band/stop/short-session, Clear All confirmation and result, unsupported narrow width | 2 |
+| Reminder | Authored walkthrough | 21 | Compose, classify, schedule, create, card grid, inline/date/link editing, filters, complete and delete confirmations, pagination, calendar | 1 |
+| Portal | 4 | 6 | Shared and personal library, loading boundary, category editor, single and batch link entry, standard-account calculator boundary | 1 |
+| Vault | 4 | 4 | Locked entry, record-type choice on add, populated graph with legend, populated list | 5 |
+| Entertainment | 5 | 9 | Library loading and loaded, favourites filter, zero-result filter, lookup dialog, card-level controls, cancellable refresh progress, update history, the film total reaching Home | 3 |
+| Recipes | 4 | 8 | Cookbook library, no-search-match state, recipe detail, ordered steps, blank editor, edit-permission boundary, instruction reordering, the cookbook reaching Home | 1 |
+| Resonance | 10 | 10 | Loading wall, populated wall and card anatomy, signed-in and visitor composers, keyboard behavior, blank draft, character-limit feedback, submission and moderation failure recovery | 4 |
+| Debt Sonata | 5 | 14 | Currency totals and due states, card anatomy, empty and complete creation form, new cycle, custom payment, overshoot behavior, expanded and empty history, three confirmations, permanent protection, the ledger reaching Home | 1 |
+| Account | 5 | 21 | Two loading boundaries, profile, Inner World counts, milestones, security dates, narrow stack, identity controls, four password states, connection code and three request errors, Vault cadence, danger zone and two deletion states | 0 |
+| Login | 4 | 5 | Lamp entrance, returning-member form, inline field validation, account-creation requirements, password-recovery start | 2 |
+| Patch Notes | 4 | 7 | Sprint Notes ledger with totals, published release story, search narrowed to one component, status filter menu, activity heatmap popover with legend and year-by-month grid | 6 |
+| About | 4 | 5 | Product and creator orientation, freshness status, all six figures, milestones 1–6 | 1 |
+| Messages & Errors | 5 | 5 | Signed-out recovery route, protected-write confirmation, permission boundary, Connection Lost retry, desktop feedback with changed control | 0 |
 
 The 13 generated chapters contain 81 mapped operating scenarios. Reminder remains the deliberately authored reference chapter and uses 21 focused captures inside its custom walkthrough.
+
+## Known gaps
+
+34 real application states are documented in prose or implied by a scenario but have no rendered
+capture. All are specified — filename, source line, setup, framing — in `CAPTURE-BACKLOG.md`.
+
+Four of the original 38 are now closed: the Patch activity heatmap was captured from the running
+application, and the Entertainment, Recipes, and Debt Sonata "reaches Home" claims were satisfied by
+referencing the Home panel evidence already stored under `assets/images/home/`.
+
+This ledger previously described intended scope as though it were delivered scope. Patch Notes
+claimed loading/empty states, heatmap meaning, and authorized maintenance; Resonance claimed an
+empty wall and moderation; Entertainment claimed editing, validation, and deletion. None of those
+had captures. The claims are corrected above, and three were retired outright because the described
+state does not exist as a distinct page surface:
+
+- **Vault permissions and protected recovery** — Vault opens only add-account, edit-category, and
+  edit-non-account dialogs. Permission and recovery messaging is the shared Messages & Errors set.
+- **Login provider differences** — the Google control is one conditional button on the sign-in
+  form, not a separate provider journey.
+- **Portal recovery** — Portal surfaces the shared error dialog; it owns no distinct recovery state.
+
+A claim belongs in this ledger only when an image in `assets/images/` renders it.
 
 ## Evidence discipline
 

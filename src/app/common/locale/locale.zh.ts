@@ -195,7 +195,7 @@ export const ACTIVITY_INVALID_TABLE_TEXT = '数据库无效';
 export const HOME_OVERFLOW_LABEL_REMINDERS = '前往提醒页面以查看全部';
 export const HOME_OVERFLOW_LABEL_DEBT = '前往债务页面以查看全部';
 export const HOME_OVERFLOW_LABEL_RECIPES = '前往食谱页面以查看全部';
-export const HOME_OVERFLOW_LABEL_LINKS = '前往链接页面查以看全部';
+export const HOME_OVERFLOW_LABEL_LINKS = '前往链接页面以查看全部';
 
 export const HOME_WEEK_AGENDA_EMPTY_TEXT = '今日无事，好好享受。';
 export const HOME_SATELLITE_TOOLTIP_STREAK = '连续记录至少一次活动的天数';

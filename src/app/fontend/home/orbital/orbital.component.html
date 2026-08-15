@@ -186,7 +186,7 @@
 							<span class="orbital-saved-link-title">{{ link.title }}</span>
 						</div>
 					}
-					@if (shortcutLinks.length === 20) {
+					@if (shortcutLinks.length >= 20) {
 						<div
 							class="orbital-panel-overflow-row"
 							(click)="navigateToPage(HOME_QUICK_ACTION_ROUTE_PORTAL)">

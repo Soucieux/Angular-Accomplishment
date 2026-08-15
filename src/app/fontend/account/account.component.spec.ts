@@ -24,6 +24,7 @@ describe('AccountComponent', () => {
 		mockAuthService = jasmine.createSpyObj<AuthService>('AuthService', ['deleteUser']);
 		mockDatabaseService = jasmine.createSpyObj<DatabaseService>('DatabaseService', ['getUserStats']);
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
+			'closeLoadingTimeout',
 			'confirmThenBlock',
 			'handleError',
 			'openDialog'

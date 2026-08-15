@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ViewContainerRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
-import { DIALOG_CONFIRM } from '../../common/constants';
+import { DIALOG_CONFIRM, DIALOG_RETRY } from '../../common/constants';
 import { MSG_DIALOG_ALREADY_OPEN } from '../../common/locale/locale-strings';
 import { DialogService } from './dialog.service';
 
@@ -119,6 +119,48 @@ describe('DialogService', () => {
 
 			await expectAsync(service.runBlocking(mockContainer, 'Saving', async () => {}))
 				.toBeRejectedWith(writeError);
+		});
+	});
+
+	// ── loading-timeout ownership ───────────────────────────────────────────
+
+	describe('showLoadingTimeout / closeLoadingTimeout', () => {
+		/** Exposes the private registry the service tracks open dialogs in. */
+		const getOpenedDialogs = (): Map<string, unknown> =>
+			(service as unknown as { openedDialogs: Map<string, unknown> }).openedDialogs;
+
+		/** Builds a stand-in for an open retry dialog, recording whether it gets resolved away. */
+		const makeRetryDialog = () => ({ instance: { resolve: jasmine.createSpy('resolve') } });
+
+		it('leaves a session-expired dialog alone, since it shares the retry type', () => {
+			const mockContainer = jasmine.createSpyObj<ViewContainerRef>('ViewContainerRef', [
+				'createComponent'
+			]);
+			/* A retry dialog is already on screen, raised by session expiry rather than a slow load.
+			   Retry is stackable, so openDialog silently skips it — the loading timeout must not then
+			   treat that dialog as its own and close a state the user still has to act on. */
+			const sessionExpiredDialog = makeRetryDialog();
+			getOpenedDialogs().set(DIALOG_RETRY, sessionExpiredDialog);
+
+			service.showLoadingTimeout(mockContainer);
+			service.closeLoadingTimeout();
+
+			expect(mockContainer.createComponent).not.toHaveBeenCalled();
+			expect(sessionExpiredDialog.instance.resolve).not.toHaveBeenCalled();
+		});
+
+		it('resolves the dialog the loading timeout itself opened', () => {
+			const timeoutDialog = makeRetryDialog();
+			(service as unknown as { isLoadingTimeoutOpen: boolean }).isLoadingTimeoutOpen = true;
+			getOpenedDialogs().set(DIALOG_RETRY, timeoutDialog);
+
+			service.closeLoadingTimeout();
+
+			expect(timeoutDialog.instance.resolve).toHaveBeenCalledTimes(1);
+		});
+
+		it('does nothing when no loading-timeout dialog is open', () => {
+			expect(() => service.closeLoadingTimeout()).not.toThrow();
 		});
 	});
 });

@@ -11,6 +11,7 @@ import {
 	RECOVERY_STATUS_EXPIRED,
 	RECOVERY_STATUS_RECOVERED
 } from '../constants';
+import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { SessionRecoveryService } from '../../backend/session-recovery/session-recovery.service';
 import { RecoveryStatus } from '../../backend/session-recovery/session-recovery.model';
 
@@ -19,6 +20,7 @@ describe('TimeoutService', () => {
 	let mockUtilities: jasmine.SpyObj<Utilities>;
 	let mockDatabaseService: jasmine.SpyObj<DatabaseService>;
 	let mockSessionRecoveryService: jasmine.SpyObj<SessionRecoveryService>;
+	let mockDialogService: jasmine.SpyObj<DialogService>;
 	let authSettled$: BehaviorSubject<boolean>;
 	let dataReady$: BehaviorSubject<boolean>;
 	let recoveryOutcomes$: ReplaySubject<RecoveryStatus>;
@@ -58,13 +60,15 @@ describe('TimeoutService', () => {
 			['getRecoveryOutcomes$']
 		);
 		mockSessionRecoveryService.getRecoveryOutcomes$.and.returnValue(recoveryOutcomes$.asObservable());
+		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', ['closeLoadingTimeout']);
 
 		TestBed.configureTestingModule({
 			providers: [
 				TimeoutService,
 				{ provide: Utilities, useValue: mockUtilities },
 				{ provide: DatabaseService, useValue: mockDatabaseService },
-				{ provide: SessionRecoveryService, useValue: mockSessionRecoveryService }
+				{ provide: SessionRecoveryService, useValue: mockSessionRecoveryService },
+				{ provide: DialogService, useValue: mockDialogService }
 			]
 		});
 
@@ -257,6 +261,18 @@ describe('TimeoutService', () => {
 			setup(true);
 			expect(() => service.clear('nonexistent')).not.toThrow();
 		});
+
+		it('closes a retry dialog raised by an earlier countdown once the data arrives', fakeAsync(() => {
+			setup(true);
+			const callback = jasmine.createSpy('callback');
+
+			service.start('key', callback, 100);
+			tick(200);
+			service.clear('key');
+
+			expect(callback).toHaveBeenCalledOnceWith();
+			expect(mockDialogService.closeLoadingTimeout).toHaveBeenCalled();
+		}));
 
 		it('does not affect timers registered under other keys', fakeAsync(() => {
 			setup(true);

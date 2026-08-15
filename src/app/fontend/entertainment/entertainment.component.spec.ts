@@ -25,7 +25,8 @@ describe('EntertainmentComponent', () => {
     mockDb.updateHistoryWithNewSearchActivity.and.returnValue(Promise.resolve());
 
     mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
-      'openDialog', 'ensurePermission', 'handleError', 'showUnexpectedError', 'confirmThenBlock'
+      'closeLoadingTimeout', 'openDialog', 'ensurePermission', 'handleError', 'showUnexpectedError',
+      'confirmThenBlock'
     ]);
     mockDialogService.ensurePermission.and.returnValue(true);
     mockDialogService.openDialog.and.stub();

@@ -9,6 +9,7 @@ import {
 } from '../constants';
 import { Utilities } from '../utilities/app.utilities';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { SessionRecoveryService } from '../../backend/session-recovery/session-recovery.service';
 
 @Injectable({ providedIn: 'root' })
@@ -18,7 +19,8 @@ export class TimeoutService {
 	constructor(
 		private readonly utilities: Utilities,
 		private readonly databaseService: DatabaseService,
-		private readonly sessionRecoveryService: SessionRecoveryService
+		private readonly sessionRecoveryService: SessionRecoveryService,
+		private readonly dialogService: DialogService
 	) {}
 
 	/**
@@ -75,6 +77,10 @@ export class TimeoutService {
 	 * Cancels the guard for the given key, whether it is still waiting on auth or already
 	 * counting down. Safe to call even when no guard is running for that key.
 	 *
+	 * Pages call this the moment their data arrives, so it is also the point where a retry dialog
+	 * raised by an earlier countdown stops being true. Closing it here covers every page from one
+	 * place: a merely slow load resolves itself instead of leaving a modal over ready content.
+	 *
 	 * @param key - The timer key to cancel.
 	 */
 	public clear(key: string): void {
@@ -83,5 +89,6 @@ export class TimeoutService {
 			guard.unsubscribe();
 			this.guards.delete(key);
 		}
+		this.dialogService.closeLoadingTimeout();
 	}
 }

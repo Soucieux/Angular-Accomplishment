@@ -39,6 +39,7 @@ describe('PortalComponent', () => {
 		mockDb.updateDateCalculatorTable.and.returnValue(Promise.resolve());
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
+			'closeLoadingTimeout',
 			'ensurePermission',
 			'openDialog',
 			'handleError',

@@ -68,6 +68,7 @@ export class DialogService {
 	private readonly className = 'DialogService';
 	private openedDialogs = new Map<string, ComponentRef<any>>();
 	private readonly stackableDialogTypes = new Set([DIALOG_ERROR, DIALOG_BLOCK, DIALOG_RETRY]);
+	private isLoadingTimeoutOpen = false;
 
 	constructor(
 		private messageService: MessageService,
@@ -324,7 +325,26 @@ export class DialogService {
 	 * @param container - The ViewContainerRef to attach the dialog to.
 	 */
 	public showLoadingTimeout(container: ViewContainerRef): void {
+		/* A retry dialog already on screen belongs to another caller — session expiry, which the user
+		   must still act on. Retry is a stackable type, so openDialog silently skips it rather than
+		   replacing it; without this guard the flag below would read that dialog as our own and
+		   closeLoadingTimeout() would later resolve somebody else's dialog away. */
+		if (this.openedDialogs.has(DIALOG_RETRY)) return;
+
 		this.openDialog(container, 'retry', RETRY_DIALOG_MSG);
+		this.isLoadingTimeoutOpen = this.openedDialogs.has(DIALOG_RETRY);
+	}
+
+	/**
+	 * Closes the retry dialog once the awaited data arrives, so a slow load that already tripped the
+	 * countdown does not leave a modal covering a page that is now ready. Only a dialog opened by
+	 * {@link showLoadingTimeout} is closed: the session-expired dialog shares the retry type but
+	 * describes a state the user must still act on, so it is deliberately left in place.
+	 */
+	public closeLoadingTimeout(): void {
+		if (!this.isLoadingTimeoutOpen) return;
+		this.isLoadingTimeoutOpen = false;
+		this.openedDialogs.get(DIALOG_RETRY)?.instance.resolve();
 	}
 
 	/**

@@ -26,7 +26,7 @@ describe('HomeComponent', () => {
 		mockDb.getLinkCategories.and.returnValue(of([]));
 		mockDb.getUsefulLinks.and.returnValue(of([]));
 
-		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', ['showLoadingTimeout']);
+		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', ['closeLoadingTimeout', 'showLoadingTimeout']);
 
 		mockUtilities = jasmine.createSpyObj<Utilities>('Utilities', [
 			'getIsUserAlive$',

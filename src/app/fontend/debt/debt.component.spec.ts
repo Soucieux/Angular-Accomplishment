@@ -71,6 +71,7 @@ describe('DebtComponent', () => {
 		mockDb.updateUserStatsFields.and.returnValue(Promise.resolve());
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
+			'closeLoadingTimeout',
 			'openDialog',
 			'runBlocking',
 			'handleError',

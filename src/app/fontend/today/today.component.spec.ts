@@ -33,7 +33,7 @@ describe('TodayComponent', () => {
 		mockDb.getReminderTableDetails.and.returnValue(of([]));
 		mockDb.getTodayItems.and.resolveTo([]);
 		mockDb.saveTodayItems.and.resolveTo();
-		const mockDialog = jasmine.createSpyObj<DialogService>('DialogService', ['openDialog']);
+		const mockDialog = jasmine.createSpyObj<DialogService>('DialogService', ['closeLoadingTimeout', 'openDialog']);
 
 		await TestBed.configureTestingModule({
 			imports: [TodayComponent],

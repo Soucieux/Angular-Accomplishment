@@ -72,6 +72,7 @@ describe('ReminderComponent', () => {
 			.and.returnValue(of(null));
 
 		mockDialogService = jasmine.createSpyObj<DialogService>('DialogService', [
+			'closeLoadingTimeout',
 			'openDialog',
 			'confirmThenBlock',
 			'handleError',

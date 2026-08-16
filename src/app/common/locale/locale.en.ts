@@ -247,7 +247,7 @@ export const HOME_OVERFLOW_LABEL_DEBT = 'View all in Debt Sonata';
 /** Overflow-row label for the recipes panel. */
 export const HOME_OVERFLOW_LABEL_RECIPES = 'View all in Recipes';
 /** Overflow-row label for the shortcuts panel. */
-export const HOME_OVERFLOW_LABEL_LINKS = 'View all in Shortcuts';
+export const HOME_OVERFLOW_LABEL_LINKS = 'View all in Portal';
 
 export const HOME_WEEK_AGENDA_EMPTY_TEXT = 'Nothing due — an open day.';
 /** Tooltip shown on the Streak satellite on the orbital dashboard. */

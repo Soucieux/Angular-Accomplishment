@@ -59,7 +59,7 @@
 					{
 						title: 'Read and open every Shortcuts panel state',
 						purpose: 'Use personal Portal links without confusing them with shared links or pinned links.',
-						steps: ['Read the badge as the number of personal links loaded for the account.', 'Read No links yet when none are available.', 'Match each row dot to its Portal category color; uncategorized links use the fallback color.', 'Select a row to open its URL in a new tab and request a visit-count increment.', 'At the twenty-row cap, use View all in Shortcuts or select the Shortcuts heading.'],
+						steps: ['Read the badge as the number of personal links loaded for the account.', 'Read No links yet when none are available.', 'Match each row dot to its Portal category color; uncategorized links use the fallback color.', 'Select a row to open its URL in a new tab and request a visit-count increment.', 'From twenty links onward, use View all in Portal or select the Shortcuts heading; this panel lists every personal link, so neither route reveals hidden rows.'],
 						result: 'The destination opens even when the background visit-count update later fails.',
 						issues: [{ problem: 'Visit count does not change', reason: 'The increment failure is logged without a user-visible Home dialog.', fix: 'Do not reopen repeatedly. Continue using the destination and verify the count later in Portal.' }]
 					},
@@ -125,7 +125,7 @@
 				panels: [
 					{ title: '使用周一到周日的周议程', purpose: '无需编辑来源，就能查看本周带日期的提醒与债务。', steps: ['从周一到周日读取七个日期标签和数字。', '区分今日、过去日期与当前选中日期的样式。', '选择一天，读取其「截止」列表。', '读取提醒／债务图标、名称与日期标签；无项目时读取「今日无事，好好享受。」'], result: '日期选择只改变可见议程；编辑仍在「提醒」或「债务」。' },
 					{ title: '读取「提醒」面板的所有状态', purpose: '理解真实待办数、日期行、颜色、空状态与溢出入口。', steps: ['徽标是完整待办提醒数，不等于可见行数。', '日期行按日历升序排列。', '过期日期使用红色，其他带日期项目使用蓝色。', '没有符合条件的日期行时读取「暂无提醒」。', '来源达到 20 行上限时，使用「前往提醒页面以查看全部」或点击「提醒」标题。'], result: '标题与溢出入口前往「提醒」；主页不会完成、编辑或删除提醒。' },
-					{ title: '读取并打开「快捷指令」面板的所有状态', purpose: '使用个人链接，同时区分共享链接与置顶链接。', steps: ['徽标是当前载入的个人链接数量。', '没有内容时读取「暂无链接」。', '每行圆点对应链接类别颜色；找不到类别时使用后备色。', '点击一行在新标签页打开网址，并请求增加访问次数。', '达到 20 行上限时，使用「前往链接页面查以看全部」或点击「快捷指令」标题。'], result: '即使后台访问次数更新失败，目标网址仍会打开。', issues: [{ problem: '访问次数没有变化', reason: '更新失败只会记录，不显示主页对话框。', fix: '不要连续重复打开；继续使用目标，并稍后在「链接」核对。' }] },
+					{ title: '读取并打开「快捷指令」面板的所有状态', purpose: '使用个人链接，同时区分共享链接与置顶链接。', steps: ['徽标是当前载入的个人链接数量。', '没有内容时读取「暂无链接」。', '每行圆点对应链接类别颜色；找不到类别时使用后备色。', '点击一行在新标签页打开网址，并请求增加访问次数。', '链接达到 20 个及以上时，可使用「前往链接页面以查看全部」或点击「快捷指令」标题；此面板已列出全部个人链接，两种方式都不会显示被隐藏的行。'], result: '即使后台访问次数更新失败，目标网址仍会打开。', issues: [{ problem: '访问次数没有变化', reason: '更新失败只会记录，不显示主页对话框。', fix: '不要连续重复打开；继续使用目标，并稍后在「链接」核对。' }] },
 					{ title: '读取「债务」面板的所有状态', purpose: '解释完整待还数、最近日期、进度、类别颜色与紧迫性。', steps: ['徽标是完整未还债务数。', '没有带日期债务行时读取「暂无还款项」。', '各行按到期日升序排列。', '百分比表示已还进度：（原始金额−剩余金额）÷原始金额；缺少或为零的原始金额显示 0%。', '过期项目使用红色日期，其他带日期项目使用橙色。', '达到 20 行时，使用「前往债务页面以查看全部」或点击标题。'], result: '主页不会记录还款、重置周期、改变锁定或删除债务。' },
 					{ title: '读取「影视」总数与类型分布', purpose: '理解主页类型条如何汇总片库。', steps: ['徽标是影片总数。', '没有正数类型统计时读取「暂无类型数据」。', '最多读取五个非「收藏」类型，并按数量从高到低排列。', '最长条为 100%；其他条相对第一名计算，不是占整个片库的百分比。', '点击「影视」进入来源片库。'], result: '类型颜色按排名循环，不表示状态或评分。' },
 					{ title: '读取「食谱」总数与紧凑列表', purpose: '查看食谱名和本地化类别，同时把烹饪与编辑留在来源页面。', steps: ['徽标是食谱总数。', '紧凑来源列表为空时读取「暂无食谱」。', '每行同时读取食谱名与已存类别的本地化名称。', '达到 20 行时，使用「前往食谱页面以查看全部」或点击标题。'], result: '主页不打开食谱详情，也不调整份量；标题会进入「食谱」。' },

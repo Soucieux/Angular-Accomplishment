@@ -97,11 +97,13 @@ shown. Read the overflow note below before attempting those four.
 | `home-reminders-overflow.png` | Reminders overflow row (`:156-164`) | ≥20 dated reminders | The bottom of the panel: last rows plus the `open_in_new` overflow row |
 | `home-debt-overflow.png` | Debt overflow row (`:238-246`) | ≥20 unpaid debts | The bottom of the panel: last bars plus the overflow row |
 | `home-recipes-overflow.png` | Recipes overflow row (`:306-314`) | ≥20 recipes | The bottom of the panel: last rows plus the overflow row |
-| `home-shortcuts-overflow.png` | Shortcuts overflow row (`:189-197`) | **Exactly 20** personal links — see the defect note | The bottom of the panel: last links plus the overflow row |
+| `home-shortcuts-overflow.png` | Shortcuts overflow row (`:189-197`) | ≥20 personal (non-shared) links | The bottom of the panel: last links plus the overflow row |
 
 **Overflow-row note.** Reminders, Debt, and Recipes read from stats arrays the writer caps at 20
 (`constants.ts:438`, `orbital.component.ts:798`/`:858`), so their `length === 20` test behaves as
-"20 or more" and the row appears once the account crosses 20 items. Shortcuts does not — see below.
+"20 or more" and the row appears once the account crosses 20 items. Shortcuts reaches the same
+behaviour a different way — its list is uncapped but the test is `>= 20` — so all four overflow rows
+now appear at 20 or more items. The note at the end records why that difference is correct and stays.
 
 ## Resonance — 4
 
@@ -215,16 +217,27 @@ index.
 
 ---
 
-## Defect found while specifying
+## Defect found while specifying — FIXED (capture now unblocked)
 
-**The Home shortcuts overflow row is unreachable above 20 links.**
+**Was: the Home shortcuts overflow row was unreachable above 20 links.**
 `shortcutLinks` is assigned uncapped at `orbital.component.ts:557`
-(`this.links.filter((link) => !link.isShared)`), but the template tests
-`shortcutLinks.length === 20` (`orbital.component.html:189`). The sibling panels read from stats
-arrays the writer caps at 20, so their identical `=== 20` test means "20 or more". Shortcuts has no
-such cap, so the "open Portal" row appears at exactly 20 personal links and disappears again at 21,
-after which all 21+ rows render inside the panel with no overflow affordance.
+(`this.links.filter((link) => !link.isShared)`), while the template tested
+`shortcutLinks.length === 20`. The sibling panels read from stats arrays the writer caps at 20, so
+their identical `=== 20` test means "20 or more". Shortcuts had no such cap, so the "open Portal"
+row appeared at exactly 20 personal links and vanished again at 21.
 
-This is a product defect, not a documentation gap. Capturing `home-shortcuts-overflow.png` requires
-trimming to exactly 20 links, which is why it sits last in the Home table. Worth fixing at the
-source — `>= 20`, or a `.slice(0, 20)` to match the sibling panels — before capturing it.
+**Fixed** in `R2 - Home - Fix shortcuts overflow row and its label typo` — the test is now
+`shortcutLinks.length >= 20` (`orbital.component.html:189`). The row appears at 20 links and stays
+for every count above it, so `home-shortcuts-overflow.png` no longer needs an account trimmed to
+exactly 20 — any account with 20 or more personal links will do.
+
+**Reviewed and closed — no cap is owed here (2026-08-16).** `shortcutLinks` stays uncapped. The
+siblings' 20 is a storage limit, not a display rule: `constants.ts:530` caps the stats arrays "on
+every write" to keep the stats document small, and notes that "counters are always the uncapped true
+total" — which is why those panels each need a separate count field (`orbital.component.ts:562`) to
+report a number their own array cannot supply. Shortcuts is fed from `@Input() links`, the full
+Portal array, so it was never subject to that constraint and its badge at
+`orbital.component.html:177` is already the true count. Capping it would trade a truthful badge and a
+scrollable full list for symmetry with a limit that exists for a reason Shortcuts does not share.
+The two overflow tests differ for the same reason: `=== 20` detects truncation, `>= 20` cannot,
+because this list is never truncated. Capturing the overflow row does not depend on any of this.

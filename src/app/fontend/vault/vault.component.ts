@@ -1128,14 +1128,15 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	 * Builds the list-view row view-model for a single account, including its connection chips.
 	 *
 	 * @param account - The account node to build a row for.
+	 * @param nodesById - Every node keyed by id, used to resolve each edge's far end.
 	 * @returns The account row view-model.
 	 */
-	private buildAccountRow(account: VaultNode): VaultAccountRow {
+	private buildAccountRow(account: VaultNode, nodesById: Map<string, VaultNode>): VaultAccountRow {
 		const links: VaultLinkChip[] = this.edges
 			.filter((edge) => edge.sourceId === account.id || edge.targetId === account.id)
 			.map((edge) => {
 				const otherId = edge.sourceId === account.id ? edge.targetId : edge.sourceId;
-				const other = this.nodes.find((node) => node.id === otherId);
+				const other = nodesById.get(otherId);
 				return {
 					edgeKey: edge.id,
 					name: other?.name ?? '',
@@ -1227,6 +1228,22 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.categoryFilter === VAULT_FILTER_KEY_VERIFIED) return node.verified;
 		if (this.categoryFilter === VAULT_CATEGORY_OTHER.key) return node.categories.length === 0;
 		return node.categories.includes(this.categoryFilter);
+	}
+
+	/**
+	 * Returns true when a card shows text containing the search query — its account name, any
+	 * connection value (an email address, a phone number, or a note), or any category chip label.
+	 * Every value the card renders is searchable, so a note fragment or a phone number finds each
+	 * account carrying it.
+	 *
+	 * @param row - The account row to test against the search query.
+	 * @param query - The trimmed, lower-cased search query.
+	 * @returns Whether the card shows text containing the query.
+	 */
+	private matchesQuery(row: VaultAccountRow, query: string): boolean {
+		if (row.name.toLowerCase().includes(query)) return true;
+		if (row.links.some((link) => link.name.toLowerCase().includes(query))) return true;
+		return row.categoryChips.some((chip) => chip.label.toLowerCase().includes(query));
 	}
 
 	/**
@@ -1353,20 +1370,28 @@ export class VaultComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Gets the account rows for the list view, filtered by the search query and
-	 * category filter, sorted by connection count (most-connected first). The card
-	 * currently in edit mode is kept regardless of the category filter, so editing
-	 * its category (which persists immediately) does not make it vanish before Done.
+	 * Gets the account rows for the list view, narrowed by the category filter first and then by
+	 * the search query — which matches every value a card shows, not only the account name — and
+	 * sorted by connection count (most-connected first). The card currently in edit mode is kept
+	 * regardless of the category filter, so editing its category (which persists immediately)
+	 * does not make it vanish before Done.
 	 *
 	 * @returns The filtered, sorted account row view-models.
 	 */
 	protected get accountRows(): VaultAccountRow[] {
 		const query = this.query.trim().toLowerCase();
+
+		/* Keyed once per read rather than scanning the node list for every edge — each row resolves
+		   its connections through this map, and a typed query now builds every category-passing row. */
+		const nodesById = new Map(this.nodes.map((node) => [node.id, node]));
+
+		/* The query filter runs after the row is built, not before: connection values and
+		   category labels live on the built row, and the search matches those too. */
 		return this.nodes
 			.filter((node) => node.nodeType === VAULT_NODE_ACCOUNT)
 			.filter((node) => node.id === this.editId || this.matchesCategoryFilter(node))
-			.filter((node) => !query || node.name.toLowerCase().includes(query))
-			.map((account) => this.buildAccountRow(account))
+			.map((account) => this.buildAccountRow(account, nodesById))
+			.filter((row) => !query || this.matchesQuery(row, query))
 			.sort((a, b) => b.linkCount - a.linkCount);
 	}
 

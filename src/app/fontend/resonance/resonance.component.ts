@@ -22,7 +22,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { DialogService } from '../../backend/dialog-service/dialog.service';
-import { AuthService } from '../../backend/authentication-service/auth.service';
+import { AnonymousSessionService } from '../../backend/anonymous-session-service/anonymous-session.service';
 import { CloudbaseService } from '../../backend/database-service/cloudbase/cloudbase.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import {
@@ -105,7 +105,7 @@ export class ResonanceComponent implements OnInit, AfterViewInit, OnDestroy {
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
 		private dialogService: DialogService,
-		private authService: AuthService,
+		private anonymousSessionService: AnonymousSessionService,
 		private cdr: ChangeDetectorRef,
 		private ngZone: NgZone,
 		private elementRef: ElementRef,
@@ -122,15 +122,12 @@ export class ResonanceComponent implements OnInit, AfterViewInit, OnDestroy {
 
 			// Step 2: If no session exists, start an anonymous one before subscribing
 			if (!CloudbaseService.getUserId()) {
-				/* Wait for anonymous sign-in before starting the watcher —
+				/* Wait for the anonymous session before starting the watcher —
 				   the CloudBase WebSocket needs valid credentials to connect. */
-				this.authService
-					.signInAnonymously()
-					.then(() => {
-						this.signedInAnonymously = true;
-
-						// Step 2.1: Signal that credentials are ready — resonance manages its own auth via anonymous sign-in
-						CloudbaseService.markAuthReady();
+				this.anonymousSessionService
+					.openIfNeeded()
+					.then((wasOpenedHere) => {
+						this.signedInAnonymously = wasOpenedHere;
 						this.quotes$ = this.databaseService.getQuotes().pipe(catchError(() => of([])));
 
 						/* Promise callback fires outside Angular's zone; detectChanges() is
@@ -176,12 +173,8 @@ export class ResonanceComponent implements OnInit, AfterViewInit, OnDestroy {
 		// Step 1: Cancel any pending success-chip timer so it cannot fire after the component is gone
 		if (this.postSuccessTimer !== null) clearTimeout(this.postSuccessTimer);
 
-		/* Step 2: Sign out only if this component opened the anonymous session —
-		   avoids signing out a legitimate named-user session on other pages. */
-		if (this.signedInAnonymously) {
-			this.authService.signOut().catch(() => {});
-		}
-		this.signedInAnonymously = false;
+		// Step 2: Releases the anonymous session only if this component opened it (see AnonymousSessionService).
+		this.anonymousSessionService.release(this.signedInAnonymously).catch(() => {});
 
 		// Step 3: Release the dialog view container and log the teardown event
 		this.dialogComponentContainer?.clear();

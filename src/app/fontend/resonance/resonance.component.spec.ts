@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
-import { AuthService } from '../../backend/authentication-service/auth.service';
+import { AnonymousSessionService } from '../../backend/anonymous-session-service/anonymous-session.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { Utilities } from '../../common/utilities/app.utilities';
 import { ResonanceComponent } from './resonance.component';
@@ -16,9 +16,9 @@ describe('ResonanceComponent', () => {
 		const mockDb = jasmine.createSpyObj('DatabaseService', ['getQuotes']);
 		mockDb.getQuotes.and.returnValue(of([]));
 
-		const mockAuth = jasmine.createSpyObj('AuthService', ['signInAnonymously', 'signOut']);
-		mockAuth.signInAnonymously.and.returnValue(Promise.resolve());
-		mockAuth.signOut.and.returnValue(Promise.resolve());
+		const mockSession = jasmine.createSpyObj('AnonymousSessionService', ['openIfNeeded', 'release']);
+		mockSession.openIfNeeded.and.returnValue(Promise.resolve(false));
+		mockSession.release.and.returnValue(Promise.resolve());
 
 		const mockUtilities = jasmine.createSpyObj<Utilities>('Utilities', ['getRelativeTime']);
 		mockUtilities.getRelativeTime.and.returnValue('');
@@ -28,7 +28,7 @@ describe('ResonanceComponent', () => {
 			providers: [
 				MessageService,
 				{ provide: DatabaseService, useValue: mockDb },
-				{ provide: AuthService, useValue: mockAuth },
+				{ provide: AnonymousSessionService, useValue: mockSession },
 				{ provide: Utilities, useValue: mockUtilities }
 			]
 		}).compileComponents();

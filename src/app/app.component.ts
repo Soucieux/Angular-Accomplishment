@@ -54,6 +54,7 @@ import {
 	GUIDE_ROUTE_PATH,
 	LOGIN_ROUTE_PATH,
 	LOGIN_URL_DEFAULT_RETURN,
+	PUBLIC_ROUTE_PATHS,
 	LS_NAV_COLLAPSED_KEY,
 	LS_LOCALE_KEY,
 	TAURI_MODE_CLASS,
@@ -719,6 +720,23 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	/**
+	 * Returns true when the visitor is on a page that stays readable without a session.
+	 *
+	 * Reads the browser location as well as the router because an expiry can resolve before the
+	 * router has settled on its destination — at that moment `router.url` is still the root path,
+	 * so checking it alone sends a public-page visitor to login anyway.
+	 *
+	 * @returns Whether the current page is public.
+	 */
+	private isOnPublicRoute(): boolean {
+		const trimTrailingSlash = (path: string): string => path.replace(/\/+$/, '') || '/';
+		const routerPath = trimTrailingSlash(this.router.url.split('?')[0]);
+		if (PUBLIC_ROUTE_PATHS.includes(routerPath)) return true;
+		if (!isPlatformBrowser(this.platformId)) return false;
+		return PUBLIC_ROUTE_PATHS.includes(trimTrailingSlash(window.location.pathname));
+	}
+
+	/**
 	 * Navigates to the login page, preserving the current URL as a returnUrl
 	 * query param so the user is redirected back after signing in.
 	 */
@@ -957,7 +975,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 				? this.sessionRecoveryService.expireConfirmedSession()
 				: await this.sessionRecoveryService.recover(trigger);
 			if (recoveryStatus === RECOVERY_STATUS_EXPIRED) {
-				this.navigateToLogin();
+				/* A public page stays readable once the session goes — only a protected route bounces to
+				   login, so a visitor reading Patch Notes, Resonance, or About is never interrupted. */
+				if (!this.isOnPublicRoute()) this.navigateToLogin();
 				return;
 			}
 			if (recoveryStatus === RECOVERY_STATUS_RECOVERED) {

@@ -749,6 +749,25 @@ export class AuthService {
 	}
 
 	/**
+	 * Releases an anonymous session a public page opened, but only while the session is still
+	 * anonymous.
+	 *
+	 * A named account can be restored after that anonymous sign-in began, and signing out on that
+	 * race would end the user's own session instead of the throwaway one. The current identity is
+	 * therefore re-read at teardown rather than trusted from a flag captured earlier: a real account
+	 * carries a username in its metadata, an anonymous session does not.
+	 *
+	 * {@link AnonymousSessionService.release} - Releases a session a public page opened for a signed-out reader.
+	 *
+	 * @returns A promise that resolves once the session has been released, or deliberately kept.
+	 */
+	public async signOutIfStillAnonymous(): Promise<void> {
+		const response = await this.cloudbaseAuth.getUser();
+		if (response?.data?.user?.user_metadata?.username) return;
+		await this.signOut();
+	}
+
+	/**
 	 * Confirms remote sign-out without publishing a local auth-state change. Concurrent callers
 	 * share one provider request so the manual-sign-out suppression flag cannot be reset early.
 	 *

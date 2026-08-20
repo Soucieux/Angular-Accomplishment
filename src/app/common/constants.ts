@@ -217,6 +217,12 @@ export const ACCOUNT_ROUTE_PATH = '/account';
 export const LOGIN_ROUTE_PATH = '/login';
 /** Query param name carrying the URL to return to after a successful sign-in. */
 export const LOGIN_RETURN_URL_PARAM = 'returnUrl';
+/* Routes any visitor may read without a session. An expired or absent session never redirects away
+   from these, so a reader on Patch Notes, Resonance, or About is not interrupted by a sign-in page;
+   every other route is protected and still bounces to login. */
+export const PUBLIC_ROUTE_PATHS = ['/patch', '/resonance', '/about'];
+/** Logged when a public page cannot open its read-only anonymous session. */
+export const LOG_ANONYMOUS_SESSION_FAILED = 'Anonymous session could not be opened for a public page';
 export const LOGIN_ANIM_OUT = 'out';
 export const LOGIN_ANIM_IN = 'in';
 /** Loading indicator character shown on the sign-in button while an auth request is in flight. */

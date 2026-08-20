@@ -114,6 +114,7 @@ import { DialogService } from '../../backend/dialog-service/dialog.service';
 import { TimeoutService } from '../../common/timeout/timeout.service';
 import { PaginatorModule } from 'primeng/paginator';
 import { DatabaseService } from '../../backend/database-service/database.service';
+import { AnonymousSessionService } from '../../backend/anonymous-session-service/anonymous-session.service';
 
 @Component({
 	selector: 'patch',
@@ -322,9 +323,14 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	private _heatmapData: Map<number, number[]> = new Map();
 	private _heatmapYears: number[] = [];
 	private heatmapCloseTimer: ReturnType<typeof setTimeout> | null = null;
+	/* True only when this component opened the anonymous session, so teardown never signs out a
+	   named user who arrived here with a session of their own. */
+	private signedInAnonymously = false;
+
 	constructor(
 		@Inject(PLATFORM_ID) private platformId: object,
 		private databaseService: DatabaseService,
+		private anonymousSessionService: AnonymousSessionService,
 		private dialogService: DialogService,
 		private timeoutService: TimeoutService,
 		protected utilities: Utilities,
@@ -353,6 +359,15 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 			// Step 1: Detect layout and arm the loading-timeout watchdog
 			this.isNarrowViewport = this.utilities.isNarrowViewport();
 			this.timeoutService.start(TIMEOUT_KEY_PATCH, () => this.onLoadingTimeout());
+
+			/* Step 1.1: Patch Notes is public, so a visitor may arrive with no session at all. Start the
+			   anonymous sign-in without awaiting it: every watch already waits on authReady$, so the
+			   observables below can be built now and connect the moment credentials land. Awaiting here
+			   would stall their construction entirely if the SDK call never settles. */
+			this.anonymousSessionService
+				.openIfNeeded()
+				.then((wasOpenedHere) => (this.signedInAnonymously = wasOpenedHere))
+				.catch(() => {});
 
 			/* Step 2: Build the release-notes observable with lazy-load semantics.
 			   startWith(null) lets the template distinguish "not yet arrived" from
@@ -459,6 +474,9 @@ export class PatchComponent implements OnInit, OnDestroy, AfterViewChecked {
 	ngOnDestroy() {
 		this.timeoutService.clear(TIMEOUT_KEY_PATCH);
 		this.timeoutService.clear(TIMEOUT_KEY_PATCH_RELEASE);
+
+		// Releases the anonymous session only if this component opened it (see AnonymousSessionService).
+		this.anonymousSessionService.release(this.signedInAnonymously).catch(() => {});
 		this.dialogComponentContainer?.clear();
 		if (this.heatmapCloseTimer !== null) clearTimeout(this.heatmapCloseTimer);
 		LOG.info(this.className, COMPONENT_DESTROY);

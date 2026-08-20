@@ -10,6 +10,7 @@ import {
 	STATUS_RESOLVED,
 	STATUS_TODO
 } from '../../common/locale/locale.en';
+import { AnonymousSessionService } from '../../backend/anonymous-session-service/anonymous-session.service';
 import { DatabaseService } from '../../backend/database-service/database.service';
 import { SessionRecoveryService } from '../../backend/session-recovery/session-recovery.service';
 import { RECOVERY_STATUS_RECOVERED } from '../../common/constants';
@@ -20,10 +21,17 @@ describe('PatchComponent', () => {
 	let fixture: ComponentFixture<PatchComponent>;
 
 	beforeEach(async () => {
+		/* The real service reaches AuthService, which needs the CLOUDBASE injection token that only the
+		   browser bootstrap provides, so the public-page session is stubbed here. */
+		const mockSession = jasmine.createSpyObj('AnonymousSessionService', ['openIfNeeded', 'release']);
+		mockSession.openIfNeeded.and.returnValue(Promise.resolve(false));
+		mockSession.release.and.returnValue(Promise.resolve());
+
 		await TestBed.configureTestingModule({
 			imports: [PatchComponent],
 			providers: [
 				MessageService,
+				{ provide: AnonymousSessionService, useValue: mockSession },
 				{
 					provide: SessionRecoveryService,
 					useValue: { getRecoveryOutcomes$: () => of(RECOVERY_STATUS_RECOVERED) }
@@ -324,7 +332,8 @@ describe('PatchComponent — submitNewRecord isBug derivation', () => {
 			'addNewRecordToPatchNotes',
 			'updateStatisticsFields',
 			'updateExistingRecordToPatchNotes',
-			'removePatchNote'
+			'removePatchNote',
+			'restartRealtimeStreams'
 		]);
 		mockDb.getPatchNotes.and.returnValue(of([]));
 		mockDb.getReleaseNotes.and.returnValue(of([]));
@@ -332,11 +341,18 @@ describe('PatchComponent — submitNewRecord isBug derivation', () => {
 		mockDb.addNewRecordToPatchNotes.and.returnValue(Promise.resolve());
 		mockDb.updateStatisticsFields.and.returnValue(Promise.resolve());
 
+		/* The real service reaches AuthService, which needs the CLOUDBASE injection token that only the
+		   browser bootstrap provides, so the public-page session is stubbed here. */
+		const mockSession = jasmine.createSpyObj('AnonymousSessionService', ['openIfNeeded', 'release']);
+		mockSession.openIfNeeded.and.returnValue(Promise.resolve(false));
+		mockSession.release.and.returnValue(Promise.resolve());
+
 		await TestBed.configureTestingModule({
 			imports: [PatchComponent],
 			providers: [
 				MessageService,
 				{ provide: DatabaseService, useValue: mockDb },
+				{ provide: AnonymousSessionService, useValue: mockSession },
 				{
 					provide: SessionRecoveryService,
 					useValue: { getRecoveryOutcomes$: () => of(RECOVERY_STATUS_RECOVERED) }

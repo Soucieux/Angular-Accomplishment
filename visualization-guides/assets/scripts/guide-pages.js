@@ -1668,6 +1668,7 @@ window.VISION_GUIDE_PAGES = [
 						{ text: { en: 'Time stays relative and readable', zh: '时间以相对方式保持易读' }, position: 'lower-right', tone: 'blue' }
 					]
 				},
+				{ src: 'assets/images/resonance/moderation-control-live.jpg', scenario: 1, layout: 'wide', label: { en: 'The administrator delete control', zh: '管理员删除控件' }, alt: { en: 'Real quote card meta row showing author, date, and the administrator delete control', zh: '真实的语录卡片信息行，显示作者、日期与管理员删除控件' }, caption: { en: 'The control sits in the meta row beside the author and date, and only administrators ever render it. It stays hidden until the pointer is over the card, so a resting card looks identical for every reader.', zh: '该控件位于信息行中，与作者和日期并列，且只对管理员渲染。指针移到卡片上之前它始终隐藏，因此静止状态下每位读者看到的卡片完全相同。' } },
 				{ src: 'assets/images/resonance/moderation-confirm-live.jpg', scenario: 1, layout: 'portrait', label: { en: 'Removing a quote asks first', zh: '删除语录前先确认' }, alt: { en: 'Real Delete Quote confirmation with Cancel and Delete', zh: '真实的删除语录确认框，提供取消与删除' }, caption: { en: 'An administrator removing a quote passes through this confirmation first; Cancel is the default way out. This capture was dismissed, not accepted.', zh: '管理员删除语录前会先经过此确认框，取消是默认的退出方式。本次拍摄已取消，未执行删除。' } }
 			],
 			post: [
@@ -1700,7 +1701,8 @@ window.VISION_GUIDE_PAGES = [
 					annotations: [
 						{ text: { en: 'Enter = Post · Shift+Enter = new line', zh: 'Enter＝发布 · Shift+Enter＝换行' }, position: 'lower-left', tone: 'rose' }
 					]
-				}
+				},
+				{ src: 'assets/images/resonance/post-success-live.jpg', scenario: 2, layout: 'wide', label: { en: 'Confirmation after a quote posts', zh: '语录发布后的确认提示' }, alt: { en: 'Real Resonance submit footer showing the character count reset to zero, a Posted chip, and the Post button', zh: '真实的语录提交栏，显示字数已归零、「已发布」标签与「发布」按钮' }, caption: { en: 'The count returns to 0 / 500 and a Posted chip appears beside the button. The chip clears itself after a moment, so it confirms the write without leaving anything to dismiss.', zh: '字数回到 0 / 500，按钮旁出现「已发布」标签。该标签稍后自动消失，因此它在确认写入的同时不留下需要手动关闭的内容。' } }
 			],
 			feedback: [
 				{
@@ -2379,6 +2381,13 @@ window.VISION_GUIDE_PAGES = [
 					label: { en: 'Inline validation feedback', zh: '行内校验反馈' },
 					alt: { en: 'The real Login form showing required-field validation feedback', zh: '真实的登录表单，显示必填字段校验反馈' },
 					caption: { en: 'Validation stays beside the action so the next correction is obvious.', zh: '校验反馈留在操作附近，让下一步修改清楚可见。' }
+				},
+				{
+					src: 'assets/images/login/sign-in-error-live.jpg',
+					presentation: 'side-by-side',
+					label: { en: 'Rejected credentials', zh: '凭据被拒绝' },
+					alt: { en: 'The real Login form behind an error dialog reading that the username or password is incorrect', zh: '真实的登录表单，前方错误对话框提示用户名或密码不正确' },
+					caption: { en: 'A rejected sign-in returns one dialog that names neither field as the wrong one, so an onlooker learns nothing about which half exists. Confirm returns to the form with the entry intact.', zh: '登录被拒绝时只弹出一个对话框，不指明哪一项有误，旁观者无法据此判断账号是否存在。点击「确认」返回表单，已输入内容保持不变。' }
 				}
 			],
 			signup: [
@@ -2791,7 +2800,8 @@ window.VISION_GUIDE_PAGES = [
 			],
 			milestones: [
 				{ src: 'assets/images/about/about-milestones-01-03-live.jpg', layout: 'wide', label: { en: 'Milestones 1–3 · current work to graduate study', zh: '里程碑 1–3 · 当前工作至硕士学习' }, alt: { en: 'Real About timeline showing Self-employed, Software Developer, and Master Student milestones', zh: '真实的关于页时间线，显示自由职业者、软件开发人员和硕士生里程碑' }, caption: { en: 'The first half records current independent work, the preceding software role, and graduate study with dates, places, and full notes always visible.', zh: '前半段记录当前独立工作、此前的软件职位与硕士学习；日期、地点和完整说明始终可见。' } },
-				{ src: 'assets/images/about/about-milestones-04-06-live.jpg', layout: 'wide', label: { en: 'Milestones 4–6 · undergraduate and co-op foundations', zh: '里程碑 4–6 · 本科与带薪实习基础' }, alt: { en: 'Real About timeline showing final-year Bachelor Student, Co-op Student, and earlier Bachelor Student milestones', zh: '真实的关于页时间线，显示本科毕业年、带薪实习与早期本科生里程碑' }, caption: { en: 'The second half completes the chronology with final-year study, the CRA co-op period, and the earlier undergraduate foundation.', zh: '后半段用本科毕业年、CRA 带薪实习阶段和早期本科学习补完整段时间顺序。' } }
+				{ src: 'assets/images/about/about-milestones-04-06-live.jpg', layout: 'wide', label: { en: 'Milestones 4–6 · undergraduate and co-op foundations', zh: '里程碑 4–6 · 本科与带薪实习基础' }, alt: { en: 'Real About timeline showing final-year Bachelor Student, Co-op Student, and earlier Bachelor Student milestones', zh: '真实的关于页时间线，显示本科毕业年、带薪实习与早期本科生里程碑' }, caption: { en: 'The second half completes the chronology with final-year study, the CRA co-op period, and the earlier undergraduate foundation.', zh: '后半段用本科毕业年、CRA 带薪实习阶段和早期本科学习补完整段时间顺序。' } },
+				{ src: 'assets/images/about/about-milestone-hover-live.jpg', layout: 'wide', label: { en: 'Hover emphasis beside plain neighbours', zh: '悬停强调与普通相邻条目对比' }, alt: { en: 'Real About timeline with the middle milestone hovered, its node filled and its card shifted, between two unhovered milestones', zh: '真实的关于页时间线，中间里程碑处于悬停状态，节点填充、卡片位移，上下为未悬停的里程碑' }, caption: { en: 'The hovered milestone fills its node and shifts its card; the entries above and below stay flat. Title, period, place, and notes stay readable in all three, so the emphasis adds nothing and hides nothing.', zh: '悬停的里程碑节点被填充、卡片发生位移；上下条目保持平面。三者的标题、时间、地点与说明始终可读，因此强调既不增加也不隐藏信息。' } }
 			]
 		},
 		copy: {

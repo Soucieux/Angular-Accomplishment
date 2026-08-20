@@ -7,7 +7,7 @@ Every entry is a state that exists in the running application and has no rendere
 guide. `tools/audit-guide.mjs` cannot detect these: it verifies that every *authored scenario* has
 a capture, so a feature with no scenario written passes silently.
 
-**21 gaps across 8 chapters.** Patch Notes, About, Account, and Messages & Errors are clean.
+**18 gaps across 8 chapters.** Patch Notes, About, Account, and Messages & Errors are clean.
 
 Fifteen of the original 38 are closed: the entire Patch Notes chapter is now captured from the
 running application — `heatmap-live.jpg` earlier, then its remaining six states on 2026-08-16 — the
@@ -169,7 +169,7 @@ maintenance flow end to end.
 
 </details>
 
-## Vault — 4 🔒
+## Vault — 1 🔒
 
 Existing: `locked-live.jpg`, `vault-add-dialog-live.png`, `vault-empty-live.png`,
 `vault-graph-populated-live.png`, `vault-list-populated-live.png`. Convention:
@@ -181,10 +181,32 @@ the registry before assuming a row is still open.)
 
 | File to create | State | Setup | Frame |
 |---|---|---|---|
-| `vault-overview-empty-live.png` | Empty overview strip (`:173-176`, `VAULT_OVERVIEW_EMPTY`) | Unlocked vault where `overviewStats` resolves empty | The overview row showing only its empty message, with surrounding chrome for context |
-| `vault-graph-mobile-blocked-live.png` | Graph unavailable on mobile (`:381-387`) | Narrow/touch viewport, Vault graph view | The `blocked-card` with its `desktop_windows` icon and message |
-| `vault-edit-category-live.png` | Category editor (`vault.component.ts:825`, `DIALOG_EDIT_VAULT_CATEGORY`) | Unlocked vault, click the edit affordance on an overview category chip | The dialog: name field, icon picker, and the delete action |
-| `vault-edit-node-live.png` | Non-account node editor (`vault.component.ts:877`, `DIALOG_EDIT_NON_ACCOUNT`) | Unlocked vault, select a non-account node in Graph, open its edit dialog | The dialog: name, icon, and the backup rows list |
+| `vault-overview-empty-live.png` | Empty overview strip (`:173-176`, `VAULT_OVERVIEW_EMPTY`) | **Unreachable — see below** | — |
+
+**`vault-overview-empty` cannot be produced, and the branch behind it is dead code (2026-08-20).**
+Three states were tested directly on an unlocked vault:
+
+| Vault contents | What renders |
+|---|---|
+| No nodes at all | The empty **card** (`:367-378`) — the overview strip is not in the DOM |
+| One account with no categories | The overview strip carrying an **Uncategorized** chip |
+| One non-account node, no accounts | The empty **card** again — the strip needs an account, not just a node |
+
+`overviewStats` (`vault.component.ts:1453`) files an uncategorised account into the `Uncategorized`
+bucket rather than skipping it, so any account guarantees at least one chip, and the strip only
+renders when an account exists. `overviewStats.length === 0` inside that block is therefore never
+true and `VAULT_OVERVIEW_EMPTY` ("No categorized accounts yet") can never display. **This is an
+application finding, not a capture problem** — either the branch should be removed, or
+`overviewStats` should omit the Uncategorized bucket so the message can appear as its text intends.
+Do not attempt this capture until that is decided.
+
+**`vault-graph-mobile-blocked` was dropped by the repository owner (2026-08-20)**, not missed. The
+state is real and was captured successfully — the card renders once `utilities.isMobile()` is true,
+which needs `(max-width: 900px) and (pointer: coarse)` — but the owner does not want a
+narrow-viewport capture in the guide. The file was deleted and the row closed. Do not re-open it.
+
+**Two rows closed on 2026-08-20** — `vault-edit-node-live.png` and `vault-edit-category-live.png`;
+see [Closed](#closed) for the route used.
 
 ## Home — 7 🔒
 
@@ -346,6 +368,11 @@ so treat it as a separate task from the other twelve.
 | Patch Notes | All six remaining states | Captured 2026-08-16 from the running app and wired into `modes`, `find`, and `manage` — the chapter is now complete |
 | About | Hover-only emphasis | `about/about-milestone-hover-live.jpg` captured 2026-08-20 and wired into `milestones`, closing that scenario's unevidenced `Emphasis` step — the chapter is now complete |
 | Login | Credential failure dialog | `login/sign-in-error-live.jpg` captured 2026-08-20 and wired into `signin`. The dialog names neither field, so the capture also documents that a rejected sign-in reveals nothing about which half was wrong |
+| Resonance | Administrator delete control | `resonance/moderation-control-live.jpg` captured 2026-08-20 by injecting the component's own `:hover` declaration — synthetic events cannot match `:hover` |
+| Resonance | Posted-quote confirmation | `resonance/post-success-live.jpg` captured 2026-08-20. Post normally, then `clearTimeout` the component's `postSuccessTimer` so the transient chip persists for the shot; the quote created for it was deleted afterwards |
+| Vault | Non-account node editor | `vault/vault-edit-node-live.png` captured 2026-08-20. Select the node with the component's own `onGraphNodeSelect`, then open `openEditNodeNameDialog` with `selectionDetail`; `ng.applyChanges` is required because an `evaluate` call runs outside Angular's zone |
+| Vault | Category editor | `vault/vault-edit-category-live.png` captured 2026-08-20. Needs a **custom** category *and* an account filed under it — `overviewStats` only lists categories with a non-zero count, and presets have no editor. Both were created for the capture and deleted afterwards |
+| Vault | Graph blocked on mobile | Row dropped by the repository owner 2026-08-20 — the state is real and was captured, but a narrow-viewport image is not wanted in the guide |
 | Entertainment | A film reaches Home | References `home/home-entertainment-populated.png` from the `manage` section |
 | Recipes | A recipe reaches Home | References `home/home-recipes-populated.png` from the `browse` section |
 | Debt Sonata | A debt reaches Home | References `home/home-debt-populated.png` from the `summary` section |

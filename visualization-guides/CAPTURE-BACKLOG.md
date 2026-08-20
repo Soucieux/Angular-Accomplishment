@@ -7,11 +7,12 @@ Every entry is a state that exists in the running application and has no rendere
 guide. `tools/audit-guide.mjs` cannot detect these: it verifies that every *authored scenario* has
 a capture, so a feature with no scenario written passes silently.
 
-**34 gaps across 11 chapters.** Account and Messages & Errors are clean.
+**28 gaps across 10 chapters.** Patch Notes, Account, and Messages & Errors are clean.
 
-Four of the original 38 are closed: `patch/heatmap-live.jpg` was captured from the running
-application, and the three "reaches Home" claims were satisfied by referencing existing Home
-evidence (see [Closed](#closed)).
+Ten of the original 38 are closed: the entire Patch Notes chapter is now captured from the running
+application — `heatmap-live.jpg` earlier, then its remaining six states on 2026-08-16 — and the
+three "reaches Home" claims were satisfied by referencing existing Home evidence (see
+[Closed](#closed)).
 
 Capture discipline is unchanged: crop in the image file, no CSS crop metadata, real application
 only. Add the scenario and capture entries to `assets/scripts/guide-pages.js` **after** the image
@@ -24,22 +25,54 @@ convention — note that `home/` and `debt/` use no `-live` suffix while every o
 
 ## Capture method
 
-`patch/heatmap-live.jpg` was produced this way, and the same route works for the rest:
+All seven Patch Notes captures were produced this way, and the same route works for the rest:
 
-- Drive the app with **DOM events via `evaluate`**, not synthetic input. Playwright's `hover`,
-  element-screenshot, and `page.screenshot` all hang in this environment; `evaluate` and raw CDP
-  do not.
-- Capture with **CDP `Page.captureScreenshot` and an explicit `clip`** taken from the target's
-  `getBoundingClientRect()`. That is what produces a cropped image rather than a full page.
-- Keep each call short. A call that overruns resets the page to `about:blank`, costing the
-  reload.
+- Drive the app with **DOM events via `evaluate`**, not synthetic input. Playwright's `hover` and
+  element-screenshot hang here; `evaluate` does not.
+- **Never use an element-handle screenshot.** It waits for the element to be "stable" and that wait
+  never settles in this app — every such call times out, animations frozen or not. Screenshot the
+  page with an explicit `clip` taken from the target's `getBoundingClientRect()` instead.
+- **Choose the coordinate space by where the scroll lives.** For content inside the viewport, clip
+  in document coordinates (`rect + window.scrollX/Y`) with `fullPage: true`. That fails for anything
+  below the fold on a **glass-card page** (Patch Notes, Portal, Today, Recipe, Reminder, Account,
+  Vault): the card scrolls internally, so `document.scrollHeight` stays at the viewport height and
+  the clip lands outside the image. For those, raise the viewport tall enough to hold the element,
+  `scrollIntoView` it, and clip in **viewport** coordinates with `fullPage` off.
+- **Freeze animations before capturing**: `*{animation:none!important;transition:none!important}`
+  plus `caret-color:transparent`. Also hide `.guide-launcher-button`, which floats over the
+  lower-right of any full-width frame.
+- **Wait for a settled height, not a first sighting.** The add-row footer reports a height and then
+  collapses as the page re-renders; poll until the same non-zero height is seen twice.
+- Match the folder's existing width. A 1440-wide viewport at `deviceScaleFactor: 1` yields the
+  ~1153px card these folders already use.
 - The app's stats take about 8s to arrive here but its retry timer fires at 7s, so a
   **"Connection Lost" dialog appears on a healthy load** and its modal mask blocks interaction.
   Remove `.p-dialog-mask` before driving the page, or the click lands on the mask.
+- **Always open the saved file and look at it.** A clip whose element moved between measuring and
+  shooting writes a plausible-looking file containing only the page background.
+
+**Where to run the app (verified 2026-08-16).**
+
+- **Public pages now load without a session.** Patch Notes, Resonance, and About render for a
+  signed-out visitor, so their non-🔒 states can be captured in a clean browser profile. This was
+  not true before 2026-08-16: session recovery treated a visitor with no session as expired,
+  redirected every route to login, and tore down the realtime streams. Anything 🔒 still needs a
+  real sign-in, and an account that **owns** the records — a non-owner opening the Patch Notes row
+  editor gets "User does not have permission" instead of the editor.
+- **The deployed site may still redirect** until it is rebuilt with that fix; capture against a
+  local `ng serve` rather than `my-own-website-2024.web.app`.
+- **`preview_start` could not launch the dev server** in one sandboxed session: the spawned process
+  died at Node bootstrap with `EPERM: operation not permitted, uv_cwd` before the CLI ran, while
+  `ng version` / `ng build` succeeded from the same shell. The failure is in the spawn environment,
+  not `launch.json` or the Angular CLI, so swapping `ng` for `npx` will not help. Run `ng serve`
+  from a normal terminal and point the capture tooling at `localhost:4200`.
+- **To sign a headless capture run in**, open a visible browser on a dedicated profile directory,
+  sign in there by hand, then point the headless run at a copy of that profile. The password stays
+  with the operator and the session is reusable across runs.
 
 ## Priority
 
-1. **Patch Notes (6) and Vault (5)** — the two thinnest chapters relative to their claims.
+1. **Vault (5)** — now the thinnest chapter relative to its claims.
 2. **Home (7) and Resonance (4)** — Home is the landing chapter; Resonance's moderation path is
    documented in prose but never shown.
 3. **Entertainment (3), Today (2), Login (2), Portal (1), Recipes (1), Debt (1)** — one or two
@@ -50,10 +83,24 @@ convention — note that `home/` and `debt/` use no `-live` suffix while every o
 
 ---
 
-## Patch Notes — 6
+## Patch Notes — 0 (chapter complete, 2026-08-16)
 
-Existing: `heatmap-live.jpg`, `release-story-live.jpg`, `search-live.jpg`, `sprint-ledger-live.jpg`,
-`status-filter-live.jpg`. Convention: `<thing>-live.jpg`.
+All six outstanding states were captured from the running application and wired into
+`guide-pages.js`: `loading-skeleton-live.jpg`, `release-loading-live.jpg` and
+`release-expanded-live.jpg` under `modes`, `empty-search-live.jpg` under `find`, and
+`inline-edit-live.jpg` with `add-row-live.jpg` under `manage`. Together with the five that already
+existed, the chapter now holds eleven real-app images and the audit passes at 155.
+
+Two of them needed conditions worth remembering: **`inline-edit-live.jpg` requires an account that
+owns the records** (a non-owner gets a permission error rather than the row editor), and
+**`add-row-live.jpg` only renders on the final page**, where the footer's height must be polled
+until it settles. The original table of the six is preserved below for reference.
+
+<details>
+<summary>Original gap table (all closed)</summary>
+
+Existing at the time: `heatmap-live.jpg`, `release-story-live.jpg`, `search-live.jpg`,
+`sprint-ledger-live.jpg`, `status-filter-live.jpg`. Convention: `<thing>-live.jpg`.
 
 | File to create | State | Setup | Frame |
 |---|---|---|---|
@@ -67,6 +114,8 @@ Existing: `heatmap-live.jpg`, `release-story-live.jpg`, `search-live.jpg`, `spri
 Delete confirmation (`:320`) is the shared confirm dialog and is already represented in
 Messages & Errors; it does not need a Patch-specific capture unless the chapter documents the
 maintenance flow end to end.
+
+</details>
 
 ## Vault — 5 🔒
 
@@ -129,8 +178,20 @@ deletion; none had a capture.
 | File to create | State | Setup | Frame |
 |---|---|---|---|
 | 🔒 `edit-dialog-live.jpg` | Edit dialog (`entertainment.component.html:157-171`) | Hover a poster card, click the edit control | The populated edit dialog over the dimmed library |
-| 🔒 `add-validation-live.jpg` | Add-dialog validation | Open the add dialog, submit with a required field empty | The dialog with its inline validation message visible |
+| ~~`add-validation-live.jpg`~~ | **Retargeted and captured** as `add-required-fields-live.jpg` | — | — |
 | 🔒 `delete-confirm-live.jpg` | Delete confirmation (`:196`, `openDeleteConfirmationDialog`) | Hover a poster card, click the red delete control | The confirmation dialog over the dimmed library |
+
+**Two corrections from the 2026-08-16 capture run.**
+
+*The add dialog has no inline validation state.* `add-movie.component.html` disables Search on
+`addMovieForm.invalid` (`:100`) and Submit on `!canSubmit` (`:110`), so an invalid submission is
+prevented rather than reported and no validation message is ever rendered. The row was retargeted to
+`add-required-fields-live.jpg`, which shows that gate, and is **captured and wired**.
+
+*The remaining two need an account that owns the films.* Opening the delete control as a non-owner
+returns "User does not have permission" instead of the confirmation dialog, exactly as on Patch
+Notes. Note also that film cards only exist after a **genre card is opened** — the page lists genres
+first, so `.individual-item` is absent on arrival.
 
 ## Today — 2 🔒
 
@@ -203,6 +264,7 @@ so treat it as a separate task from the other twelve.
 | Chapter | Gap | How it was closed |
 |---|---|---|
 | Patch Notes | Heatmap meaning | `patch/heatmap-live.jpg` captured from the running app and wired into the `signals` section |
+| Patch Notes | All six remaining states | Captured 2026-08-16 from the running app and wired into `modes`, `find`, and `manage` — the chapter is now complete |
 | Entertainment | A film reaches Home | References `home/home-entertainment-populated.png` from the `manage` section |
 | Recipes | A recipe reaches Home | References `home/home-recipes-populated.png` from the `browse` section |
 | Debt Sonata | A debt reaches Home | References `home/home-debt-populated.png` from the `summary` section |

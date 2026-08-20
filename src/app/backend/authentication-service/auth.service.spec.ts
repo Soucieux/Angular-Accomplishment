@@ -115,6 +115,91 @@ describe('AuthService', () => {
         });
     });
 
+    // ── hasNamedSession ──────────────────────────────────────────────────────
+
+    describe('hasNamedSession', () => {
+        it('returns true when the CloudBase session carries an account username', async () => {
+            mockCloudbaseAuth.getUser.and.returnValue(
+                Promise.resolve({ data: { user: { user_metadata: { username: 'named-user' } } } })
+            );
+
+            await expectAsync(service.hasNamedSession()).toBeResolvedTo(true);
+        });
+
+        it('returns false when the CloudBase session is anonymous', async () => {
+            mockCloudbaseAuth.getUser.and.returnValue(Promise.resolve({ data: { user: { user_metadata: {} } } }));
+
+            await expectAsync(service.hasNamedSession()).toBeResolvedTo(false);
+        });
+
+        /* The gap this closes: a public page opening during startup finds the cached identity still
+           empty, and would treat the signed-in user as a visitor without asking the provider. */
+        it('reads the provider rather than the cached identity that is still empty during startup', async () => {
+            CloudbaseService['userId'] = '';
+            mockCloudbaseAuth.getUser.and.returnValue(
+                Promise.resolve({ data: { user: { user_metadata: { username: 'named-user' } } } })
+            );
+
+            await expectAsync(service.hasNamedSession()).toBeResolvedTo(true);
+        });
+
+        it('waits for Firebase auth state before reporting a signed-in Google user', async () => {
+            (Utilities.isFirebaseBackend as jasmine.Spy).and.returnValue(true);
+            mockFirebaseAuth.currentUser = { uid: 'firebase-user' };
+
+            await expectAsync(service.hasNamedSession()).toBeResolvedTo(true);
+            expect(mockFirebaseAuth.authStateReady).toHaveBeenCalled();
+        });
+
+        it('returns false when the Firebase backend has no signed-in user', async () => {
+            (Utilities.isFirebaseBackend as jasmine.Spy).and.returnValue(true);
+            mockFirebaseAuth.currentUser = null;
+
+            await expectAsync(service.hasNamedSession()).toBeResolvedTo(false);
+        });
+    });
+
+    // ── signOutIfStillAnonymous ──────────────────────────────────────────────
+
+    describe('signOutIfStillAnonymous', () => {
+        it('signs out a session that is still anonymous', async () => {
+            mockCloudbaseAuth.getUser.and.returnValue(Promise.resolve({ data: { user: { user_metadata: {} } } }));
+
+            await service.signOutIfStillAnonymous();
+
+            expect(mockCloudbaseAuth.signOut).toHaveBeenCalled();
+        });
+
+        it('keeps a named CloudBase account signed in', async () => {
+            mockCloudbaseAuth.getUser.and.returnValue(
+                Promise.resolve({ data: { user: { user_metadata: { username: 'named-user' } } } })
+            );
+
+            await service.signOutIfStillAnonymous();
+
+            expect(mockCloudbaseAuth.signOut).not.toHaveBeenCalled();
+        });
+
+        it('keeps a signed-in Google user on the Firebase backend', async () => {
+            (Utilities.isFirebaseBackend as jasmine.Spy).and.returnValue(true);
+            mockFirebaseAuth.currentUser = { uid: 'firebase-user' };
+
+            await service.signOutIfStillAnonymous();
+
+            expect(mockFirebaseAuth.signOut).not.toHaveBeenCalled();
+            expect(mockCloudbaseAuth.signOut).not.toHaveBeenCalled();
+        });
+
+        /* An unreadable identity must never cost a user their session — the rejection propagates to
+           the page's catch, which leaves the session exactly as it was. */
+        it('leaves the session untouched when the provider read fails', async () => {
+            mockCloudbaseAuth.getUser.and.returnValue(Promise.reject(new Error('offline')));
+
+            await expectAsync(service.signOutIfStillAnonymous()).toBeRejected();
+            expect(mockCloudbaseAuth.signOut).not.toHaveBeenCalled();
+        });
+    });
+
     // ── getVerificationCodeEmail ─────────────────────────────────────────────
 
     describe('getVerificationCodeEmail', () => {

@@ -25,14 +25,17 @@ export class AnonymousSessionService {
 	) {}
 
 	/**
-	 * Opens an anonymous session when the visitor has none, so a public page's watches can connect.
-	 * Does nothing when a session already exists, named or otherwise.
+	 * Opens an anonymous session when the reader has no account signed in, so a public page's watches
+	 * can connect. Does nothing for a signed-in user, whose own session already serves the page.
 	 *
 	 * @returns Whether this call opened the session — the caller passes it back to {@link release}.
 	 */
 	public async openIfNeeded(): Promise<boolean> {
-		if (CloudbaseService.getUserId()) return false;
 		try {
+			/* The provider is asked rather than the cached identity, which is still empty while a stored
+			   session is being restored — trusting it would open a throwaway session on top of the
+			   user's own and end that session when the page is left. */
+			if (await this.authService.hasNamedSession()) return false;
 			await this.authService.signInAnonymously();
 		} catch (error: unknown) {
 			/* Logged here so no caller has to: the page still builds its observables, which fall back to

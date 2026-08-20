@@ -130,6 +130,31 @@ export class AuthService {
 	}
 
 	/**
+	 * Asks the active provider whether a named account holds the current session.
+	 *
+	 * The cached identity cannot answer this during startup: it stays empty until the provider
+	 * finishes restoring a stored session, so a page reading it on arrival mistakes a signed-in user
+	 * for a visitor. The provider waits for that restore instead of racing it. A named account
+	 * carries a Firebase user or a CloudBase username; an anonymous session carries neither.
+	 *
+	 * A failed provider read is deliberately left to propagate rather than answered with false, because
+	 * the two callers need opposite fallbacks on an unknown identity: releasing a session must keep it,
+	 * opening one must go ahead.
+	 *
+	 * {@link signOutIfStillAnonymous} - Keeps a named session a public page must never end.
+	 *
+	 * @returns True when a named account is signed in, false when the session is anonymous or absent.
+	 */
+	public async hasNamedSession(): Promise<boolean> {
+		if (Utilities.isFirebaseBackend()) {
+			await this.firebaseAuth.authStateReady();
+			return !!this.firebaseAuth.currentUser;
+		}
+		const response = await this.cloudbaseAuth.getUser();
+		return this.isNamedAccount(response?.data?.user);
+	}
+
+	/**
 	 * Gets the authentication provider expiry signal for central recovery coordination.
 	 * The signal deliberately leaves local state untouched until the recovery service clears all layers.
 	 *
@@ -368,7 +393,7 @@ export class AuthService {
 					: RECOVERY_AUTH_UNKNOWN;
 			}
 			const user = userResponse?.data?.user;
-			if (user?.user_metadata?.username) {
+			if (this.isNamedAccount(user)) {
 				if (shouldPublishUser) this.publishCloudbaseUser(user);
 				return RECOVERY_AUTH_VALID;
 			}
@@ -509,19 +534,18 @@ export class AuthService {
 					}
 					return;
 				}
-				const data = response?.data;
+				const user = response?.data?.user;
 
-				/* Distinguish a real account from an anonymous session.
-				   Anonymous users have no username in metadata — emit null for them
-				   to keep the dashboard hidden until a proper sign-in occurs. */
-				if (data?.user?.user_metadata?.username) {
+				/* An anonymous session emits null rather than a user, keeping the dashboard hidden
+				   until a proper sign-in occurs. */
+				if (this.isNamedAccount(user)) {
 					/* Inside ngZone for the same reason as signOut() above — this .then()
 					   callback runs outside Angular's zone, so without it Angular never
 					   notices the state change and dependent views (e.g. the home
 					   dashboard) stay stuck on their loading state until an unrelated
 					   zone-patched event (like a route navigation) forces a redraw. */
-					this.publishCloudbaseUser(data.user);
-				} else if (data?.user === null || data?.user !== undefined) {
+					this.publishCloudbaseUser(user);
+				} else if (user === null || user !== undefined) {
 					if (this.hasExpectedAuthenticatedSession()) {
 						/* A missing account after an expected session is confirmed expiry. */
 						this.emitSessionExpired();
@@ -752,18 +776,18 @@ export class AuthService {
 	 * Releases an anonymous session a public page opened, but only while the session is still
 	 * anonymous.
 	 *
-	 * A named account can be restored after that anonymous sign-in began, and signing out on that
-	 * race would end the user's own session instead of the throwaway one. The current identity is
-	 * therefore re-read at teardown rather than trusted from a flag captured earlier: a real account
-	 * carries a username in its metadata, an anonymous session does not.
+	 * A named account can be restored, or signed into elsewhere, after that anonymous sign-in began,
+	 * and signing out on that race would end the user's own session instead of the throwaway one.
+	 * The current identity is therefore re-read at teardown rather than trusted from a flag captured
+	 * earlier. A provider read that fails leaves the session untouched: an unknown identity must
+	 * never cost a signed-in user their session.
 	 *
 	 * {@link AnonymousSessionService.release} - Releases a session a public page opened for a signed-out reader.
 	 *
 	 * @returns A promise that resolves once the session has been released, or deliberately kept.
 	 */
 	public async signOutIfStillAnonymous(): Promise<void> {
-		const response = await this.cloudbaseAuth.getUser();
-		if (response?.data?.user?.user_metadata?.username) return;
+		if (await this.hasNamedSession()) return;
 		await this.signOut();
 	}
 
@@ -900,6 +924,22 @@ export class AuthService {
 	}
 
 	// ── Private authentication helpers ───────────────────────────────────────
+
+	/**
+	 * Checks whether a provider user object belongs to a registered account rather than an anonymous
+	 * session. CloudBase writes the chosen username into user metadata at sign-up, so its presence is
+	 * the only field that separates the two.
+	 *
+	 * {@link hasNamedSession} - Answers the public "is anyone signed in" question for public pages.
+	 * {@link validateCloudbaseSession} - Treats an anonymous session as an expired account session.
+	 * {@link cloudbaseGetCurrentUser} - Withholds the dashboard until a registered account is present.
+	 *
+	 * @param user - The CloudBase user object returned by the provider, possibly absent.
+	 * @returns True when the user is a registered account, false when anonymous or absent.
+	 */
+	private isNamedAccount(user: any): boolean {
+		return !!user?.user_metadata?.username;
+	}
 
 	/**
 	 * Checks whether a provider error explicitly confirms that the active session is invalid.

@@ -7,12 +7,15 @@ Every entry is a state that exists in the running application and has no rendere
 guide. `tools/audit-guide.mjs` cannot detect these: it verifies that every *authored scenario* has
 a capture, so a feature with no scenario written passes silently.
 
-**28 gaps across 10 chapters.** Patch Notes, Account, and Messages & Errors are clean.
+**21 gaps across 8 chapters.** Patch Notes, About, Account, and Messages & Errors are clean.
 
-Ten of the original 38 are closed: the entire Patch Notes chapter is now captured from the running
-application — `heatmap-live.jpg` earlier, then its remaining six states on 2026-08-16 — and the
-three "reaches Home" claims were satisfied by referencing existing Home evidence (see
-[Closed](#closed)).
+Fifteen of the original 38 are closed: the entire Patch Notes chapter is now captured from the
+running application — `heatmap-live.jpg` earlier, then its remaining six states on 2026-08-16 — the
+three "reaches Home" claims were satisfied by referencing existing Home evidence, and About plus the
+Login credential-failure dialog were captured on 2026-08-20 (see [Closed](#closed)).
+
+**Every remaining gap needs a signed-in session**, and most need an account that *owns* the records.
+Signed-in capture is now proven to work — see the foreground note in Capture method.
 
 Capture discipline is unchanged: crop in the image file, no CSS crop metadata, real application
 only. Add the scenario and capture entries to `assets/scripts/guide-pages.js` **after** the image
@@ -51,6 +54,50 @@ All seven Patch Notes captures were produced this way, and the same route works 
 - **Always open the saved file and look at it.** A clip whose element moved between measuring and
   shooting writes a plausible-looking file containing only the page background.
 
+**Screenshot timeouts on signed-in pages (found 2026-08-20).** `browser_take_screenshot` has a
+fixed 5-second ceiling and fails with `Timeout 5000ms exceeded` after logging "fonts loaded". Two
+distinct causes, with different symptoms — measure `requestAnimationFrame` cadence to tell them
+apart (30 frames, report the median delta):
+
+- **~1000ms per frame → the tab is throttled.** Chrome throttles a backgrounded or occluded tab to
+  1fps, and the screenshot cannot get a fresh frame. `document.visibilityState` still reports
+  `visible` and `hasFocus()` still returns true, so neither is a reliable check — the rAF cadence is.
+  Fix: `browser_tabs` with `action: 'select'` to bring the page to the front, then shoot. Verified:
+  About failed three times in a row, then succeeded immediately after a tab select. This appears once
+  the operator signs in by hand, because their own window ends up in front of the automated one.
+- **~8ms per frame → the page is painting at full speed but the shot still times out.** Seen on
+  Resonance while signed in. **Resolved 2026-08-20: it is contention for the foreground, not the
+  page.** A tab select, clearing every `setInterval`/`setTimeout` id, neutralising
+  `requestAnimationFrame`, freezing CSS animations, dropping the viewport to 700px tall, and encoding
+  as JPEG instead of PNG all failed while the operator was using the machine. With the machine left
+  untouched for the duration of the run, the identical page captured on the **first attempt**, three
+  times consecutively (`moderation-control`, `moderation-confirm`, `post-success`). **The fix is
+  procedural: agree an uninterrupted window, then do not touch the mouse, keyboard, or window focus
+  until the run reports done.** Nothing about the page needs changing.
+
+  **`backdrop-filter` was tested and ruled out (2026-08-20).** Resonance carries three blurred
+  layers (`mat-drawer` at `blur(50px)`, `.submit-card` at `blur(40px) saturate(1.6)`, and the guide
+  launcher). Disabling all of them made two screenshots succeed, and disabling only `.submit-card`
+  made a third succeed, which looked like a clean isolation — but the identical configuration then
+  failed four times in a row, and a fresh blanket `backdrop-filter: none` failed as well. **The two
+  successes were coincidence, not causation.** Do not re-run this experiment expecting a fix.
+
+  What the evidence actually supports is that the failure is **intermittent and unrelated to page
+  content** — the same DOM, same styles, and same rAF cadence produce a success or a timeout on
+  different attempts. The most likely remaining explanation is the automated window losing foreground
+  to the operator's own window, since the 5s ceiling leaves no margin once the compositor stalls.
+  Practical advice: retry `tabs select` → screenshot several times rather than changing the page, and
+  leave the machine untouched while a signed-in capture run is in progress.
+
+**CSS `:hover` cannot be reached with synthetic events.** Dispatching `mouseenter`/`mouseover` via
+`evaluate` runs the Angular handler but leaves `:hover` unmatched, so a control revealed only by CSS
+stays at `opacity: 0` and the capture shows an empty slot. This is what invalidated the first attempt
+at `moderation-control-live.jpg`. Playwright's own `hover` hangs here (see above), so the working
+route is to inject **exactly the declaration from the component's own `:hover` rule** and nothing
+else — for the Resonance delete control that is `opacity: 1`, copied from
+`resonance.component.css:536-538`. Read the rule first and reproduce every property it sets, or the
+capture will differ from the real hover state.
+
 **Where to run the app (verified 2026-08-16).**
 
 - **Public pages now load without a session.** Patch Notes, Resonance, and About render for a
@@ -75,11 +122,16 @@ All seven Patch Notes captures were produced this way, and the same route works 
 1. **Vault (5)** — now the thinnest chapter relative to its claims.
 2. **Home (7) and Resonance (4)** — Home is the landing chapter; Resonance's moderation path is
    documented in prose but never shown.
-3. **Entertainment (3), Today (2), Login (2), Portal (1), Recipes (1), Debt (1)** — one or two
+3. **Entertainment (3), Today (2), Portal (1), Recipes (1), Debt (1), Login (1)** — one to three
    states each.
-4. **About (1)** — hover-only emphasis on a static page. Lowest value; skip without loss.
-5. **Reminder (1)** — the authored chapter; adding to it means editing the custom walkthrough
+4. **Reminder (1)** — the authored chapter; adding to it means editing the custom walkthrough
    rather than the scenario registry.
+
+**Four rows need a data state the capture operator must arrange, not just a session.** Resonance's
+`wall-empty-live.jpg` needs the quote wall genuinely empty and the quotes are global, so it cannot
+be reached without clearing real content; Home's four overflow rows need an account holding 20+
+items in that panel; Debt's `debt-page-empty.png` and Vault's two empty states need an account with
+none. Decide per row whether to use a throwaway account or to add and then remove records.
 
 ---
 
@@ -117,15 +169,18 @@ maintenance flow end to end.
 
 </details>
 
-## Vault — 5 🔒
+## Vault — 4 🔒
 
-Existing: `locked-live.jpg`, `vault-add-dialog-live.png`, `vault-graph-populated-live.png`,
-`vault-list-populated-live.png`. The thinnest chapter in the guide. Convention:
-`vault-<thing>-live.png`. All five need the vault unlocked.
+Existing: `locked-live.jpg`, `vault-add-dialog-live.png`, `vault-empty-live.png`,
+`vault-graph-populated-live.png`, `vault-list-populated-live.png`. Convention:
+`vault-<thing>-live.png`. All four remaining need the vault unlocked.
+
+(`vault-empty-live.png` was listed here as outstanding until 2026-08-20; it had in fact already been
+captured, wired, and committed — 720×380, one reference in `guide-pages.js`. Check the folder and
+the registry before assuming a row is still open.)
 
 | File to create | State | Setup | Frame |
 |---|---|---|---|
-| `vault-empty-live.png` | Empty vault (`vault.component.html:367-378`) | Unlock a vault with no accounts stored | The empty card: `hub` icon, title, body, and the Add button below it |
 | `vault-overview-empty-live.png` | Empty overview strip (`:173-176`, `VAULT_OVERVIEW_EMPTY`) | Unlocked vault where `overviewStats` resolves empty | The overview row showing only its empty message, with surrounding chrome for context |
 | `vault-graph-mobile-blocked-live.png` | Graph unavailable on mobile (`:381-387`) | Narrow/touch viewport, Vault graph view | The `blocked-card` with its `desktop_windows` icon and message |
 | `vault-edit-category-live.png` | Category editor (`vault.component.ts:825`, `DIALOG_EDIT_VAULT_CATEGORY`) | Unlocked vault, click the edit affordance on an overview category chip | The dialog: name field, icon picker, and the delete action |
@@ -154,7 +209,7 @@ shown. Read the overflow note below before attempting those four.
 behaviour a different way — its list is uncapped but the test is `>= 20` — so all four overflow rows
 now appear at 20 or more items. The note at the end records why that difference is correct and stays.
 
-## Resonance — 4
+## Resonance — 1
 
 Existing: `character-limit-focused-live.jpg`, `composer-ready-live.jpg`, `visitor-composer-live.jpg`,
 `visitor-ready-live.jpg`, `wall-live.jpg`, `wall-loading-live.jpg`. Convention: `<thing>-live.jpg`.
@@ -166,14 +221,30 @@ labelled "Standard-reader card controls" — the absence of the control, not the
 | File to create | State | Setup | Frame |
 |---|---|---|---|
 | `wall-empty-live.jpg` | Empty quote wall (`resonance.component.html:50-54`) | `/resonance` with no quotes stored | The empty state: `format_quote` icon and `RESONANCE_EMPTY_TEXT` |
-| 🔒 `moderation-control-live.jpg` | Administrator delete button (`:73-87`) | Signed in as an admin, hover/focus a quote card | One card's meta row: author, relative time, and the visible `pi pi-times` control |
-| 🔒 `moderation-confirm-live.jpg` | Delete confirmation (`openDeleteConfirmationDialog`, `:85`) | Admin session, click the delete control | The confirmation dialog over the dimmed wall |
-| 🔒 `post-success-live.jpg` | Posted chip (`:34-36`, `RESONANCE_MSG_POSTED`) | Post a quote and capture immediately — the chip is transient | The submit footer: character count, the success chip, and the Post button |
 
-## Entertainment — 3
+**The one remaining row is effectively unreachable — recommend dropping it.** Quotes are global, not
+per-account, so an empty wall cannot be produced without deleting the real ones. A new account sees
+every existing quote. Forcing `quotes$` to `of([])` locally would render the genuine empty branch,
+but that decision belongs to the repository owner; until then this row stays open and honest rather
+than being satisfied with content nobody could otherwise see.
 
-Existing: 7 images. Convention: `<thing>-live.jpg`. The ledger claimed editing, validation, and
-deletion; none had a capture.
+**Two rows closed on 2026-08-20**, and a third was never open:
+- `moderation-control-live.jpg` — captured. The control is CSS-hover-revealed; see the synthetic-event
+  note in [Capture method](#capture-method) for why the first attempt failed and how to force it.
+- `post-success-live.jpg` — captured. The chip is transient; the working method is to post normally,
+  then `clearTimeout` the component's `postSuccessTimer` so the real rendered chip persists for the
+  shot. The quote created for it was deleted afterwards through the admin control.
+- `moderation-confirm-live.jpg` — **was already captured, wired, and committed** in `209802d6`; it was
+  listed here in error, the same staleness as `vault-empty-live.png`. Check the folder and the
+  registry before treating a row as open.
+
+## Entertainment — 2
+
+Existing: 8 images. Convention: `<thing>-live.jpg`. The ledger claimed editing, validation, and
+deletion; none had a capture. The validation row was retargeted and captured on 2026-08-16, so two
+remain — the struck-through row below is kept for its correction note, not as outstanding work.
+(This heading read `3` until 2026-08-20, counting that captured row; the chapter's own prose already
+said "the remaining two".)
 
 | File to create | State | Setup | Frame |
 |---|---|---|---|
@@ -202,17 +273,27 @@ Existing: 21 images. Convention: `today-<thing>-live.png`.
 | `today-reminder-readonly-live.png` | Reminder-sourced item is read-only (`today.component.html:41`, `:251`, `:281`) | A dated reminder that surfaces in Today; hover both its Anytime row and its timed block | Both variants with the `is-reminder` styling and **no** edit/delete controls — those are gated on `TASK_SOURCE_LOCAL` (`:290`, `:353`) |
 | `today-source-failure-live.png` | Source-refresh failure message (`[limits]` scenario 0) | Break the reminder source (offline, then refresh Today) | The message surface Today shows when source data cannot refresh |
 
-## Login — 2
+## Login — 1
 
-Existing: 5 images. Convention: `<thing>-live.jpg`. "Provider differences" was retired from the
+Existing: 6 images. Convention: `<thing>-live.jpg`. "Provider differences" was retired from the
 ledger — the Google control is one conditional button (`login.component.html:335-343`), not a
 separate journey; it is already visible in `sign-in-live.jpg` if that capture was taken in a
 browser.
 
 | File to create | State | Setup | Frame |
 |---|---|---|---|
-| `sign-in-error-live.jpg` | Credential failure dialog (`login.component.ts:603`, `DIALOG_ERROR`) | Sign in with a valid-format but wrong password | The error dialog over the dimmed sign-in form |
 | `recovery-complete-live.jpg` | End of the recovery flow | Complete a password reset through to its final screen | The final confirmation step — `forgot-password-live.jpg` shows only the start |
+
+**The remaining row needs a real inbox.** Password recovery is gated on an emailed verification
+code, so the final screen cannot be reached without receiving that code — this row is blocked on the
+account owner, not on capture technique.
+
+**Pull the lamp before capturing anything on Login.** The form is hidden until `lampOn` flips
+(`login.component.ts:291`); a capture taken on arrival shows an error dialog floating over an empty
+dark stage rather than over the form. GSAP's Draggable owns the cord, so synthetic pointer events on
+`.lamp-handle` are unreliable — call the component's own `toggleLamp()` through
+`ng.getOwningComponent('.v-lamp')` instead, which produces the identical real state. The lamp hue is
+randomised on every pull, so each Login capture legitimately carries a different accent colour.
 
 ## Portal — 1
 
@@ -239,14 +320,12 @@ Existing: 13 images. Convention: `debt-<thing>.png` — **no `-live` suffix in t
 |---|---|---|---|
 | 🔒 `debt-page-empty.png` | Empty Debt page | Account with no debt records | The page's empty state — `debt-create-empty.png` shows the empty *form*, not the empty page |
 
-## About — 1
+## About — 0 (chapter complete, 2026-08-20)
 
-Existing: 4 images. Lowest value in the backlog; the ledger claim has been corrected, so skipping
-this leaves nothing inaccurate.
-
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| `about-milestone-hover-live.jpg` | Hover-only emphasis | Hover one milestone entry | The emphasized entry beside an un-emphasized neighbour, so the difference is readable |
+Existing: 5 images. The `milestones` scenario already promised that hover "only emphasizes the
+current card and node and never hides or reveals information", and carried an `Emphasis` step, with
+no image behind either claim. `about-milestone-hover-live.jpg` now supplies it — see
+[Closed](#closed).
 
 ## Reminder — 1
 
@@ -265,6 +344,8 @@ so treat it as a separate task from the other twelve.
 |---|---|---|
 | Patch Notes | Heatmap meaning | `patch/heatmap-live.jpg` captured from the running app and wired into the `signals` section |
 | Patch Notes | All six remaining states | Captured 2026-08-16 from the running app and wired into `modes`, `find`, and `manage` — the chapter is now complete |
+| About | Hover-only emphasis | `about/about-milestone-hover-live.jpg` captured 2026-08-20 and wired into `milestones`, closing that scenario's unevidenced `Emphasis` step — the chapter is now complete |
+| Login | Credential failure dialog | `login/sign-in-error-live.jpg` captured 2026-08-20 and wired into `signin`. The dialog names neither field, so the capture also documents that a rejected sign-in reveals nothing about which half was wrong |
 | Entertainment | A film reaches Home | References `home/home-entertainment-populated.png` from the `manage` section |
 | Recipes | A recipe reaches Home | References `home/home-recipes-populated.png` from the `browse` section |
 | Debt Sonata | A debt reaches Home | References `home/home-debt-populated.png` from the `summary` section |

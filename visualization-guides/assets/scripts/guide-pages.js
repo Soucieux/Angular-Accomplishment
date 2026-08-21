@@ -162,6 +162,13 @@ window.VISION_GUIDE_PAGES = [
 					caption: { en: 'Overdue dates turn red while eligible rows remain in ascending date order.', zh: '过期日期会显示为红色；符合条件的行仍按日期升序排列。' }
 				},
 				{
+					src: 'assets/images/home/home-reminders-overflow.png',
+					scenario: 1,
+					label: { en: 'The route out of the panel', zh: '离开面板的路径' },
+					alt: { en: 'Home Reminders widget with two rows and a View all in Reminders link', zh: '主页提醒组件显示两行内容与「在提醒中查看全部」链接' },
+					caption: { en: 'View all in Reminders leaves the dashboard for the source page; the panel itself never grows past its preview rows.', zh: '「在提醒中查看全部」会离开仪表盘前往来源页面；面板本身不会超出预览行数。' }
+				},
+				{
 					src: 'assets/images/home/home-shortcuts-empty.png',
 					scenario: 2,
 					label: { en: 'No personal shortcuts', zh: '没有个人快捷指令' },
@@ -174,6 +181,13 @@ window.VISION_GUIDE_PAGES = [
 					label: { en: 'A personal Portal link appears', zh: '个人链接会显示在这里' },
 					alt: { en: 'Populated Home Shortcuts widget with a Guide Demo personal link', zh: '主页快捷指令组件显示 Guide Demo 个人链接' },
 					caption: { en: 'Selecting the row opens the URL and requests a visit-count update.', zh: '点击这一行会打开网址，并请求更新访问次数。' }
+				},
+				{
+					src: 'assets/images/home/home-shortcuts-overflow.png',
+					scenario: 2,
+					label: { en: 'Shortcuts route to Portal', zh: '快捷指令跳转到链接页' },
+					alt: { en: 'Home Shortcuts widget with two personal links and a View all in Portal link', zh: '主页快捷指令组件显示两个个人链接与「在链接中查看全部」链接' },
+					caption: { en: 'The badge counts personal links only, and View all in Portal is the way to reach the rest.', zh: '徽标只统计个人链接；「在链接中查看全部」是查看其余内容的入口。' }
 				},
 				{
 					src: 'assets/images/home/home-debt-empty.png',
@@ -197,6 +211,20 @@ window.VISION_GUIDE_PAGES = [
 					caption: { en: 'Both rows keep their own paid percentage while the due label communicates urgency.', zh: '两行分别保留自己的已还百分比，同时由到期标签表达紧迫性。' }
 				},
 				{
+					src: 'assets/images/home/home-debt-overflow.png',
+					scenario: 3,
+					label: { en: 'Two debts and the route out', zh: '两项债务与离开面板的路径' },
+					alt: { en: 'Home Debt Sonata widget with two zero-percent debts and a View all in Debt Sonata link', zh: '主页债务组件显示两项进度为零的债务与「在债务中查看全部」链接' },
+					caption: { en: 'Each row keeps its own paid percentage and days remaining; View all in Debt Sonata opens the full ledger.', zh: '每行分别保留自己的已还百分比与剩余天数；「在债务中查看全部」会打开完整账本。' }
+				},
+				{
+					src: 'assets/images/home/home-entertainment-empty.png',
+					scenario: 4,
+					label: { en: 'No films stored yet', zh: '尚未收录影片' },
+					alt: { en: 'Empty Home Entertainment widget with a zero badge and a no genre data message', zh: '主页娱乐空组件，徽标为零并显示「暂无类型数据」提示' },
+					caption: { en: 'With nothing in the library the badge reads zero and the genre bars are replaced by a short message; no route-out link is offered.', zh: '片库为空时徽标显示为零，类型分布条会被一句简短提示替代，且不会提供跳转链接。' }
+				},
+				{
 					src: 'assets/images/home/home-entertainment-populated.png',
 					scenario: 4,
 					label: { en: 'Top five genre bars', zh: '前五个类型条' },
@@ -204,11 +232,32 @@ window.VISION_GUIDE_PAGES = [
 					caption: { en: 'Bar widths are relative to the leading genre, not percentages of the full library.', zh: '条形宽度相对于第一名计算，不是占整个片库的百分比。' }
 				},
 				{
+					src: 'assets/images/home/home-recipes-empty.png',
+					scenario: 5,
+					label: { en: 'An empty recipe book', zh: '空白食谱库' },
+					alt: { en: 'Empty Home Recipes widget with a zero badge and a no recipes message', zh: '主页食谱空组件，徽标为零并显示「暂无食谱」提示' },
+					caption: { en: 'The count and the message are all the panel shows; the route-out link appears only once recipes exist.', zh: '面板只显示数量与提示；只有存在食谱后才会出现跳转链接。' }
+				},
+				{
 					src: 'assets/images/home/home-recipes-populated.png',
 					scenario: 5,
 					label: { en: 'Recipe names and localized categories', zh: '食谱名称与本地化类别' },
 					alt: { en: 'Home Recipes widget with recipe names and categories', zh: '主页食谱组件显示食谱名称与类别' },
 					caption: { en: 'The badge is the recipe total while the panel presents a compact source list.', zh: '徽标显示食谱总数；面板呈现紧凑的来源列表。' }
+				},
+				{
+					src: 'assets/images/home/home-recipes-overflow.png',
+					scenario: 5,
+					label: { en: 'Six recipes and the route out', zh: '六个食谱与离开面板的路径' },
+					alt: { en: 'Home Recipes widget listing six recipes with a View all in Recipes link', zh: '主页食谱组件列出六个食谱并显示「在食谱中查看全部」链接' },
+					caption: { en: 'Categories are shown in the reading language while the names stay as written; View all in Recipes opens the full book.', zh: '类别按阅读语言显示，名称保持录入时的原文；「在食谱中查看全部」会打开完整食谱库。' }
+				},
+				{
+					src: 'assets/images/home/home-activity-empty.png',
+					scenario: 6,
+					label: { en: 'A feed with nothing in it', zh: '没有任何记录的动态' },
+					alt: { en: 'Empty Home Activity widget with a no activity message and no badge', zh: '主页动态空组件，显示「暂无动态」提示且没有徽标' },
+					caption: { en: 'Activity carries no badge, so the message is the only signal that the feed is empty rather than still loading.', zh: '动态面板没有徽标，因此这句提示是判断动态为空（而非仍在载入）的唯一依据。' }
 				},
 				{
 					src: 'assets/images/home/home-activity-latest.png',
@@ -562,6 +611,12 @@ window.VISION_GUIDE_PAGES = [
 					label: { en: '05 · Return a block to Anytime', zh: '05 · 把时间块放回无时间事件区' },
 					alt: { en: 'Focused real Today Anytime lane after a scheduled local block is returned', zh: '真实「今日」无时间事件区局部，排程后的本地时间块已被放回' },
 					caption: { en: 'The same local record remains, but its start and end are removed.', zh: '同一条本地记录会保留，但开始与结束时间会被移除。' }
+				},
+				{
+					scenario: 0, src: 'assets/images/today/today-reminder-readonly-live.png', layout: 'wide',
+					label: { en: '06 · A reminder block cannot be moved', zh: '06 · 提醒时间块无法移动' },
+					alt: { en: 'Focused real Today anytime chip and timed block, both padlocked and sourced from Reminder', zh: '真实「今日」无时间胶囊与定时时间块局部，两者均带挂锁并来自「提醒」' },
+					caption: { en: 'A dated reminder arrives locked in both lanes: the padlock and the REMINDER read-only tag stand in place of the edit and delete controls, and Drag to move leaves the block where it is.', zh: '带日期的提醒会以锁定状态出现在两个区域：挂锁与「REMINDER read-only」标记取代了编辑与删除控件，「拖拽以移动」也不会改变它的位置。' }
 				}
 			],
 			track: [
@@ -838,7 +893,8 @@ window.VISION_GUIDE_PAGES = [
 		captures: {
 			library: [
 				{ src: 'assets/images/portal/library-live.jpg', layout: 'wide', label: { en: 'Shared and personal library', zh: '共享与个人链接库' }, alt: { en: 'Real Portal page with shared link cards and the personal section', zh: '真实的链接页面，显示共享链接卡片和个人分区' }, caption: { en: 'The running app keeps shared resources above the separate personal library.', zh: '运行中的应用把共享资源放在独立个人库上方。' } },
-				{ src: 'assets/images/portal/empty-library-live.jpg', layout: 'wide', label: { en: 'Library loading boundary', zh: '链接库载入边界' }, alt: { en: 'Real Portal page before shared link records finish loading', zh: '真实的链接页面，共享链接记录尚未载入完成' }, caption: { en: 'The real initial state preserves both ownership sections while records arrive.', zh: '记录载入时，真实初始状态仍保留两个所有权分区。' } }
+				{ src: 'assets/images/portal/empty-library-live.jpg', layout: 'wide', label: { en: 'Library loading boundary', zh: '链接库载入边界' }, alt: { en: 'Real Portal page before shared link records finish loading', zh: '真实的链接页面，共享链接记录尚未载入完成' }, caption: { en: 'The real initial state preserves both ownership sections while records arrive.', zh: '记录载入时，真实初始状态仍保留两个所有权分区。' } },
+				{ src: 'assets/images/portal/sections-empty-live.jpg', layout: 'wide', label: { en: 'Both sections resolved and empty', zh: '两个分区都已载入且为空' }, alt: { en: 'Real Portal page with an empty shared section above an empty personal section offering Add Link', zh: '真实的链接页面，空的共享分区位于提供「添加链接」的空个人分区上方' }, caption: { en: 'Each ownership section reports its own empty state, and only the personal one carries an inline Add Link; a shared entry is created from the toolbar instead.', zh: '两个所有权分区分别显示各自的空状态，只有个人分区内含「添加链接」；共享条目改由工具栏入口创建。' } }
 			],
 			categories: [
 				{ src: 'assets/images/portal/category-dialog-live.jpg', layout: 'wide', label: { en: 'Category editor', zh: '类别编辑器' }, alt: { en: 'Real Portal category dialog', zh: '真实的链接类别对话框' }, caption: { en: 'Category management stays in a focused dialog beside the filter context.', zh: '类别管理留在筛选上下文旁的聚焦对话框中。' } }
@@ -1254,6 +1310,7 @@ window.VISION_GUIDE_PAGES = [
 			],
 			manage: [
 				{ src: 'assets/images/entertainment/library-live.jpg', layout: 'wide', label: { en: 'Card-level controls', zh: '卡片级控件' }, alt: { en: 'Real movie cards with their available actions', zh: '真实电影卡片及其可用操作' }, caption: { en: 'Lightweight management stays attached to the item it affects.', zh: '轻量管理操作紧贴受影响的电影卡片。' } },
+				{ src: 'assets/images/entertainment/edit-inline-live.jpg', layout: 'portrait', label: { en: 'Editing happens on the card, not in a dialog', zh: '编辑在卡片上进行，而不是在对话框中' }, alt: { en: 'Real movie card in edit mode with Genre as a dropdown and confirm and cancel actions', zh: '真实电影卡片处于编辑状态，类型显示为下拉选择，并提供确认与取消操作' }, caption: { en: 'Choosing edit turns Genre into a dropdown and swaps the card actions for confirm and cancel. The card stays in the grid and nothing opens over the library.', zh: '选择编辑后，类型会变成下拉选择，卡片操作切换为确认与取消。卡片仍留在网格中，片库上方不会打开任何界面。' } },
 				{ src: 'assets/images/home/home-entertainment-populated.png', layout: 'wide', label: { en: 'The library reaches Home', zh: '片库结果抵达主页' }, alt: { en: 'Real Home Entertainment panel showing the film total and its top genre bars', zh: '真实的主页娱乐面板，显示影片总数与主要类型分布条' }, caption: { en: 'Card-level changes are not local: the film total and genre distribution reappear on the Home dashboard.', zh: '卡片级的改动并非局部：影片总数与类型分布会重新出现在主页仪表盘上。' } },
 				{ src: 'assets/images/entertainment/delete-confirm-live.jpg', layout: 'portrait', label: { en: 'Removing a film asks first', zh: '删除影片前先确认' }, alt: { en: 'Real Delete Movie confirmation naming the film, with Cancel and Delete', zh: '真实的删除电影确认框，写明影片名称，并提供取消与删除' }, caption: { en: 'The confirmation names the exact film before anything is removed, and Cancel is the default way out. This capture was dismissed, not accepted.', zh: '确认框在删除前写明具体影片，取消是默认的退出方式。本次拍摄已取消，未执行删除。' } }
 			],
@@ -1660,6 +1717,12 @@ window.VISION_GUIDE_PAGES = [
 					]
 				},
 				{
+					src: 'assets/images/resonance/wall-empty-live.jpg', scenario: 0, layout: 'wide',
+					label: { en: 'The wall resolved with no quotes', zh: '语录墙载入完成但没有内容' },
+					alt: { en: 'Focused real Resonance empty state with the quote mark and an invitation line', zh: '真实语录页面空状态局部，显示引号图形与一句邀请文案' },
+					caption: { en: 'Once loading resolves with no records the skeleton cards are gone for good, replaced by a single invitation line. This is the state the loading capture must not be mistaken for.', zh: '载入结束且没有记录时，骨架卡会彻底消失，由一句邀请文案替代。这正是不应与载入状态混淆的画面。' }
+				},
+				{
 					src: 'assets/images/resonance/wall-live.jpg', scenario: 1, layout: 'wide',
 					label: { en: 'Read one real quote card', zh: '阅读一张真实语录卡' },
 					alt: { en: 'Focused real Resonance quote card with author and relative time', zh: '聚焦真实语录语录卡，显示作者与相对时间' },
@@ -1942,6 +2005,7 @@ window.VISION_GUIDE_PAGES = [
 		id: 'debt', order: '09', icon: 'icon-debt', accent: '13, 148, 136', generated: true,
 		captures: {
 			summary: [
+				{ src: 'assets/images/debt/debt-page-empty.png', scenario: 0, layout: 'wide', label: { en: 'The ledger before any debt exists', zh: '尚未记录任何债务的账本' }, alt: { en: 'Real Debt Sonata page with six zero counts and a single empty-state card offering Add a debt', zh: '真实债务页面，六项统计均为零，只有一张提供「添加债务」的空状态卡' }, caption: { en: 'All six summary counts read zero and the card grid is replaced by one invitation card; New debt in the masthead and Add a debt inside the card open the same dialog.', zh: '总览六项统计全部为零，卡片网格被一张邀请卡替代；标题栏的「新增债务」与卡片内的「添加债务」打开同一个对话框。' } },
 				{ src: 'assets/images/debt/debt-overview-populated.png', scenario: 0, layout: 'wide', label: { en: 'Currency totals, six counts, and two due states', zh: '货币总额、六项统计与两种到期状态' }, alt: { en: 'Real Debt Sonata summary with CAD totals, portfolio counts, a due-tomorrow debt, and an overdue debt', zh: '真实债务页面总览，显示加元总额、组合统计、明日到期债务与已逾期债务' }, caption: { en: 'The summary and cards use the same live records: CAD remains separate, one payment contributes to the total, and urgency is visible before any action.', zh: '总览与卡片使用同一批实时记录：加元独立汇总，一次还款计入总数，操作前即可看见紧迫程度。' } },
 				{ src: 'assets/images/debt/debt-card-anatomy.png', scenario: 0, presentation: 'side-by-side', label: { en: 'Read one complete debt card', zh: '读懂一张完整债务卡' }, alt: { en: 'Real Debt Sonata card with category, due status, balance, progress, payment chips, Set, Reset, lock, delete, and History controls', zh: '真实债务卡，显示分类、到期状态、余额、进度、还款、设置、重置、锁定、删除与记录控件' }, caption: { en: 'Everything needed for the active ledger stays on one card; the due chip and progress values are calculated from its stored date, original amount, balance, and history.', zh: '当前账本所需信息集中在一张卡上；到期标签与进度来自保存的日期、原始金额、余额和还款记录。' } },
 				{ src: 'assets/images/home/home-debt-populated.png', scenario: 0, layout: 'wide', label: { en: 'The ledger reaches Home', zh: '账本抵达主页' }, alt: { en: 'Real Home Debt Sonata panel showing payment progress bars and due dates', zh: '真实的主页债务面板，显示还款进度条与到期日' }, caption: { en: 'The same records drive the dashboard: payment progress and due urgency reappear in the Home Debt Sonata panel.', zh: '同一批记录同时驱动仪表盘：还款进度与到期紧迫程度会重新出现在主页债务面板中。' } }

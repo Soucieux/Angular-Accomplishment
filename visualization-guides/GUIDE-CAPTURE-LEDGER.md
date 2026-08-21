@@ -14,13 +14,13 @@ states undocumented. Those are counted in **Open gaps** and specified in `CAPTUR
 | Today | 12 | 22 | Planner orientation, quick add, Anytime create/complete/rename, drawing and saving a timed block, drag modes, move, resize, overlap columns, return to Anytime, a padlocked read-only reminder in both lanes, tracking start/band/stop/short-session, Clear All confirmation and result, unsupported narrow width | 0 |
 | Reminder | Authored walkthrough | 22 | Compose, classify, schedule, create, card grid, inline/date/link editing, filters, complete and delete confirmations, pagination, calendar, the error dialog raised by a failed write | 0 |
 | Portal | 4 | 7 | Shared and personal library, loading boundary, both sections resolved and empty, category editor, single and batch link entry, standard-account calculator boundary | 0 |
-| Vault | 4 | 7 | Locked entry, record-type choice on add, populated graph with legend, populated list, node and category editors, the empty vault card | 1 |
+| Vault | 4 | 7 | Locked entry, record-type choice on add, populated graph with legend, populated list, node and category editors, the empty vault card | 0 |
 | Entertainment | 5 | 11 | Library loading and loaded, favourites filter, zero-result filter, lookup dialog, required-field validation, card-level controls, inline card editing, the delete confirmation, cancellable refresh progress, update history, the film total reaching Home | 0 |
 | Recipes | 4 | 9 | Cookbook library, no-search-match state, recipe detail, ordered steps, blank editor, the delete confirmation, edit-permission boundary, instruction reordering, the cookbook reaching Home | 0 |
 | Resonance | 10 | 11 | Loading wall, the resolved empty wall, populated wall and card anatomy, signed-in and visitor composers, keyboard behavior, character-limit feedback, submission and moderation failure recovery, the administrator delete control in a card meta row, the delete confirmation | 0 |
 | Debt Sonata | 5 | 15 | The empty ledger, currency totals and due states, card anatomy, empty and complete creation form, new cycle, custom payment, overshoot behavior, expanded and empty history, three confirmations, permanent protection, the ledger reaching Home | 0 |
 | Account | 5 | 21 | Two loading boundaries, profile, Inner World counts, milestones, security dates, narrow stack, identity controls, four password states, connection code and three request errors, Vault cadence, danger zone and two deletion states | 0 |
-| Login | 4 | 6 | Lamp entrance, returning-member form, inline field validation, account-creation requirements, password-recovery start, rejected credentials over the lit form | 1 |
+| Login | 4 | 6 | Lamp entrance, returning-member form, inline field validation, account-creation requirements, password-recovery start, rejected credentials over the lit form | 0 |
 | Patch Notes | 4 | 11 | Sprint Notes ledger with totals, published release story, search narrowed to one component, status filter menu, activity heatmap popover, the no-results search state, the table and release-hero loading skeletons, an expanded previous release, inline row editing, the new-record footer row | 0 |
 | About | 4 | 5 | Product and creator orientation, freshness status, milestones 1-6, hover emphasis on one milestone beside two plain neighbours | 0 |
 | Messages & Errors | 5 | 5 | Signed-out recovery route, protected-write confirmation, permission boundary, Connection Lost retry, desktop feedback with changed control | 0 |
@@ -38,21 +38,16 @@ The 13 generated chapters contain 81 mapped operating scenarios. Reminder remain
 
 ## Known gaps
 
-**Two rows remain open, and neither is blocked on capture technique.** Both are specified —
-filename, source line, setup, framing — in `CAPTURE-BACKLOG.md`.
+**No rows remain open.** Every operating scenario in every chapter is now paired with rendered
+real-application evidence.
 
-| Chapter | Row | Why it is still open |
+**Three rows were retired rather than captured**, each for a different and recorded reason:
+
+| Chapter | Row | Why it was retired |
 |---|---|---|
-| Vault | `vault-overview-empty-live.png` | The state cannot be produced. `overviewStats` files an uncategorised account into an `Uncategorized` bucket, so the strip's `length === 0` branch is unreachable and its message can never display. This needs an application decision — remove the branch, or omit the bucket — not a screenshot. |
-| Login | `recovery-complete-live.jpg` | The final recovery screen is gated on an emailed verification code, so it is reachable only by the account owner. |
-
-**One row was retired on 2026-08-21 rather than captured.** Today's `today-source-failure-live.png`
-asked for "the message surface Today shows when source data cannot refresh". No such surface exists:
-`refreshReminderSub` (`today.component.ts:927`) subscribes without an error callback, and the only
-availability branch in `today.component.html` is `@if (isMobile)` at line 1, already captured as
-`today-unsupported-width-live.png`. A failed reminder stream leaves the board rendered and simply
-short one item — visually identical to a board that never had it. The chapter's own copy already
-states this correctly, so the row described a screen the application cannot draw.
+| Today | `today-source-failure-live.png` | **The state does not exist.** The row asked for "the message surface Today shows when source data cannot refresh". `refreshReminderSub` (`today.component.ts:927`) subscribes with no error callback, and the only availability branch in `today.component.html` is `@if (isMobile)` at line 1, already captured as `today-unsupported-width-live.png`. A failed reminder stream leaves the board rendered and one item short — indistinguishable from a board that never had it. The chapter's own copy already said so; the row was what was wrong. |
+| Vault | `vault-overview-empty-live.png` | **The state was removed from the application.** `overviewStats` filed an uncategorised account into an `Uncategorized` bucket, so the strip's `length === 0` branch was unreachable and `VAULT_OVERVIEW_EMPTY` could never display. Rather than reshape `overviewStats` so a dead message could appear, the branch, its string, its CSS, and its locale entries were deleted (2026-08-21). There is no longer a state to document. |
+| Login | `recovery-complete-live.jpg` | **The cost outweighed the evidence.** Reaching the final recovery screen requires performing a real password reset on a live account — an emailed verification code plus a new password — purely to photograph one confirmation screen. `forgot-password-live.jpg` already documents where the flow starts. Retired by the repository owner (2026-08-21); do not re-open it. |
 
 **Thirteen rows were closed on 2026-08-21** — all seven Home panel gaps, Today's read-only reminder,
 Portal's resolved-empty sections, Resonance's empty wall, Debt Sonata's empty ledger, Entertainment's

@@ -7,15 +7,15 @@ Every entry is a state that exists in the running application and has no rendere
 guide. `tools/audit-guide.mjs` cannot detect these: it verifies that every *authored scenario* has
 a capture, so a feature with no scenario written passes silently.
 
-**2 gaps remain, in 2 chapters, and neither is waiting on capture technique.** Vault's
-`vault-overview-empty-live.png` documents a branch the application can never reach and needs a code
-decision; Login's `recovery-complete-live.jpg` needs an emailed verification code only the account
-owner receives. Every other chapter is clean.
+**No gaps remain. Every chapter is complete.** This file is now a record of how the backlog was
+worked and why three rows were retired rather than captured — keep it for the capture-method notes
+and the corrections, not as a to-do list.
 
-Twenty-eight of the original 38 are closed and one was retired as invalid. The 2026-08-21 run closed
-thirteen at once: all seven Home panel rows, Today's read-only reminder, Portal's resolved-empty
-sections, Resonance's empty wall, Debt Sonata's empty ledger, Entertainment's card edit, and
-Reminder's write-failure dialog. See [Closed](#closed).
+Twenty-eight of the original 38 were captured; three were retired with reasons recorded in
+`GUIDE-CAPTURE-LEDGER.md` and in each chapter's section below; the rest were closed earlier by
+referencing existing evidence. The 2026-08-21 run closed thirteen at once: all seven Home panel
+rows, Today's read-only reminder, Portal's resolved-empty sections, Resonance's empty wall, Debt
+Sonata's empty ledger, Entertainment's card edit, and Reminder's write-failure dialog.
 
 **Check the folder and the registry before treating any row here as open.** Four rows in this file
 were found already captured, wired, and committed — `vault-empty-live.png`, `moderation-confirm-live.jpg`,
@@ -125,13 +125,8 @@ capture will differ from the real hover state.
 
 ## Priority
 
-Neither open row is capture work.
-
-1. **Vault (1)** — blocked on an application decision. Either delete the unreachable branch or make
-   `overviewStats` skip the `Uncategorized` bucket so the message can appear as its text intends.
-   Until one of those happens there is nothing to photograph.
-2. **Login (1)** — blocked on the account owner, who must receive the emailed recovery code and
-   drive the flow to its final screen.
+Nothing outstanding. The notes below are kept because they were learned the hard way and will apply
+to the next capture round.
 
 **Forcing an unreachable state in code is an accepted route, with two conditions.** The 2026-08-21
 run produced nine captures by temporarily emptying a data source or lowering an overflow threshold,
@@ -182,37 +177,31 @@ maintenance flow end to end.
 
 </details>
 
-## Vault — 1 🔒
+## Vault — 0 (chapter complete, 2026-08-21)
 
-Existing: 7 images — `locked-live.jpg`, `vault-add-dialog-live.png`, `vault-empty-live.png`,
-`vault-graph-populated-live.png`, `vault-list-populated-live.png`, `vault-edit-node-live.png`,
-`vault-edit-category-live.png`. Convention: `vault-<thing>-live.png`. The one remaining row needs
-the vault unlocked, but that is not what blocks it.
+Existing: 7 images. Convention: `vault-<thing>-live.png`.
 
-(`vault-empty-live.png` was listed here as outstanding until 2026-08-20; it had in fact already been
-captured, wired, and committed — 720×380, one reference in `guide-pages.js`. Check the folder and
-the registry before assuming a row is still open.)
+**`vault-overview-empty-live.png` was retired by deleting the state from the application**, not by
+capturing it. The message could never display, for two independent reasons: the overview strip only
+renders inside `@if (hasAccounts)` (`vault.component.html:73`), so an account-less vault shows the
+empty *card* instead and the strip is not in the DOM at all; and whenever an account does exist,
+`overviewStats` (`vault.component.ts:1453`) files an uncategorised one into the `Uncategorized`
+bucket rather than skipping it, guaranteeing at least one chip. `overviewStats.length === 0` was
+therefore unreachable, and `VAULT_OVERVIEW_EMPTY` — "No categorized accounts yet" — described
+exactly the case its own fallback bucket absorbed.
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| `vault-overview-empty-live.png` | Empty overview strip (`:173-176`, `VAULT_OVERVIEW_EMPTY`) | **Unreachable — see below** | — |
+Given the choice between reshaping `overviewStats` so the message could fire and deleting the dead
+branch, the repository owner chose deletion (2026-08-21): the template block, the CSS rule, the
+component field and import, and both locale entries plus the barrel export were removed. Deleting
+was the option that could not change anything a user sees. Do not re-open this row.
 
-**`vault-overview-empty` cannot be produced, and the branch behind it is dead code (2026-08-20).**
-Three states were tested directly on an unlocked vault:
+Three states were tested directly on an unlocked vault before that decision:
 
 | Vault contents | What renders |
 |---|---|
 | No nodes at all | The empty **card** (`:367-378`) — the overview strip is not in the DOM |
 | One account with no categories | The overview strip carrying an **Uncategorized** chip |
 | One non-account node, no accounts | The empty **card** again — the strip needs an account, not just a node |
-
-`overviewStats` (`vault.component.ts:1453`) files an uncategorised account into the `Uncategorized`
-bucket rather than skipping it, so any account guarantees at least one chip, and the strip only
-renders when an account exists. `overviewStats.length === 0` inside that block is therefore never
-true and `VAULT_OVERVIEW_EMPTY` ("No categorized accounts yet") can never display. **This is an
-application finding, not a capture problem** — either the branch should be removed, or
-`overviewStats` should omit the Uncategorized bucket so the message can appear as its text intends.
-Do not attempt this capture until that is decided.
 
 **`vault-graph-mobile-blocked` was dropped by the repository owner (2026-08-20)**, not missed. The
 state is real and was captured successfully — the card renders once `utilities.isMobile()` is true,
@@ -221,6 +210,9 @@ narrow-viewport capture in the guide. The file was deleted and the row closed. D
 
 **Two rows closed on 2026-08-20** — `vault-edit-node-live.png` and `vault-edit-category-live.png`;
 see [Closed](#closed) for the route used.
+
+(`vault-empty-live.png` was listed as outstanding until 2026-08-20; it had in fact already been
+captured, wired, and committed. Check the folder and the registry before assuming a row is open.)
 
 ## Home — 0 (chapter complete, 2026-08-21)
 
@@ -309,20 +301,19 @@ item"), so the row was the thing that was wrong. Do not re-open it.
 auth resolves — it bails early when `getUserId()` is empty. Re-invoke it rather than reloading.
 Storage is also date-shifted: passing `2026-08-21` stored `2026-08-20`, so compensate by one day.
 
-## Login — 1
+## Login — 0 (chapter complete, 2026-08-21)
 
-Existing: 6 images. Convention: `<thing>-live.jpg`. "Provider differences" was retired from the
-ledger — the Google control is one conditional button (`login.component.html:335-343`), not a
-separate journey; it is already visible in `sign-in-live.jpg` if that capture was taken in a
-browser.
+Existing: 6 images. Convention: `<thing>-live.jpg`.
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| `recovery-complete-live.jpg` | End of the recovery flow | Complete a password reset through to its final screen | The final confirmation step — `forgot-password-live.jpg` shows only the start |
+**`recovery-complete-live.jpg` was retired by the repository owner (2026-08-21).** Reaching the
+final recovery screen means performing a real password reset on a live account: `login.component.ts:551`
+sends the email, and step 2 (`:563`) needs the emailed code plus a new password. Doing that purely
+to photograph one confirmation screen was judged not worth it, and `forgot-password-live.jpg`
+already documents where the flow starts. Do not re-open this row.
 
-**The remaining row needs a real inbox.** Password recovery is gated on an emailed verification
-code, so the final screen cannot be reached without receiving that code — this row is blocked on the
-account owner, not on capture technique.
+"Provider differences" was retired from the ledger earlier — the Google control is one conditional
+button (`login.component.html:335-343`), not a separate journey; it is already visible in
+`sign-in-live.jpg` if that capture was taken in a browser.
 
 **Pull the lamp before capturing anything on Login.** The form is hidden until `lampOn` flips
 (`login.component.ts:291`); a capture taken on arrival shows an error dialog floating over an empty

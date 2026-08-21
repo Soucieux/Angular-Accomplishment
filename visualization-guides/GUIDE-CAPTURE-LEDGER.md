@@ -10,31 +10,57 @@ states undocumented. Those are counted in **Open gaps** and specified in `CAPTUR
 
 | Chapter | Operating scenarios | Real-app captures | Captures show | Open gaps |
 |---|---:|---:|---|---:|
-| Home | 15 | 31 | Signed-out cover, dashboard loading and ready, life clock, four satellites with two tooltips, narrow rings and cards, week agenda across three days, Reminders/Shortcuts/Debt panels empty and populated, Entertainment genre bars, Recipes list, Activity rows and footer, urgency strip, quick actions, pinned link | 7 |
-| Today | 12 | 21 | Planner orientation, quick add, Anytime create/complete/rename, drawing and saving a timed block, drag modes, move, resize, overlap columns, return to Anytime, tracking start/band/stop/short-session, Clear All confirmation and result, unsupported narrow width | 2 |
-| Reminder | Authored walkthrough | 21 | Compose, classify, schedule, create, card grid, inline/date/link editing, filters, complete and delete confirmations, pagination, calendar | 1 |
-| Portal | 4 | 6 | Shared and personal library, loading boundary, category editor, single and batch link entry, standard-account calculator boundary | 1 |
-| Vault | 4 | 5 | Locked entry, record-type choice on add, populated graph with legend, populated list, the empty vault card | 4 |
-| Entertainment | 5 | 10 | Library loading and loaded, favourites filter, zero-result filter, lookup dialog, card-level controls, cancellable refresh progress, update history, the film total reaching Home | 2 |
-| Recipes | 4 | 8 | Cookbook library, no-search-match state, recipe detail, ordered steps, blank editor, edit-permission boundary, instruction reordering, the cookbook reaching Home | 1 |
-| Resonance | 10 | 11 | Loading wall, populated wall and card anatomy, signed-in and visitor composers, keyboard behavior, blank draft, character-limit feedback, submission and moderation failure recovery, the administrator delete control in a card meta row, the delete confirmation, the posted-quote chip in the submit footer | 1 |
-| Debt Sonata | 5 | 13 | Currency totals and due states, card anatomy, empty and complete creation form, new cycle, custom payment, overshoot behavior, expanded and empty history, three confirmations, permanent protection, the ledger reaching Home | 1 |
+| Home | 15 | 35 | Signed-out cover, dashboard loading and ready, life clock, four satellites with two tooltips, narrow rings and cards, week agenda across three days, every panel in both its empty and populated form, the four route-out footers, Entertainment genre bars, Recipes list, Activity rows and footer, urgency strip, quick actions, pinned link | 0 |
+| Today | 12 | 22 | Planner orientation, quick add, Anytime create/complete/rename, drawing and saving a timed block, drag modes, move, resize, overlap columns, return to Anytime, a padlocked read-only reminder in both lanes, tracking start/band/stop/short-session, Clear All confirmation and result, unsupported narrow width | 0 |
+| Reminder | Authored walkthrough | 22 | Compose, classify, schedule, create, card grid, inline/date/link editing, filters, complete and delete confirmations, pagination, calendar, the error dialog raised by a failed write | 0 |
+| Portal | 4 | 7 | Shared and personal library, loading boundary, both sections resolved and empty, category editor, single and batch link entry, standard-account calculator boundary | 0 |
+| Vault | 4 | 7 | Locked entry, record-type choice on add, populated graph with legend, populated list, node and category editors, the empty vault card | 1 |
+| Entertainment | 5 | 11 | Library loading and loaded, favourites filter, zero-result filter, lookup dialog, required-field validation, card-level controls, inline card editing, the delete confirmation, cancellable refresh progress, update history, the film total reaching Home | 0 |
+| Recipes | 4 | 9 | Cookbook library, no-search-match state, recipe detail, ordered steps, blank editor, the delete confirmation, edit-permission boundary, instruction reordering, the cookbook reaching Home | 0 |
+| Resonance | 10 | 11 | Loading wall, the resolved empty wall, populated wall and card anatomy, signed-in and visitor composers, keyboard behavior, character-limit feedback, submission and moderation failure recovery, the administrator delete control in a card meta row, the delete confirmation | 0 |
+| Debt Sonata | 5 | 15 | The empty ledger, currency totals and due states, card anatomy, empty and complete creation form, new cycle, custom payment, overshoot behavior, expanded and empty history, three confirmations, permanent protection, the ledger reaching Home | 0 |
 | Account | 5 | 21 | Two loading boundaries, profile, Inner World counts, milestones, security dates, narrow stack, identity controls, four password states, connection code and three request errors, Vault cadence, danger zone and two deletion states | 0 |
 | Login | 4 | 6 | Lamp entrance, returning-member form, inline field validation, account-creation requirements, password-recovery start, rejected credentials over the lit form | 1 |
-| Patch Notes | 4 | 13 | Sprint Notes ledger with totals, published release story, search narrowed to one component, status filter menu, activity heatmap popover with legend and year-by-month grid, the no-results search state, the table and release-hero loading skeletons, an expanded previous release, inline row editing, the new-record footer row | 0 |
-| About | 4 | 6 | Product and creator orientation, freshness status, all six figures, milestones 1–6, hover emphasis on one milestone beside two plain neighbours | 0 |
+| Patch Notes | 4 | 11 | Sprint Notes ledger with totals, published release story, search narrowed to one component, status filter menu, activity heatmap popover, the no-results search state, the table and release-hero loading skeletons, an expanded previous release, inline row editing, the new-record footer row | 0 |
+| About | 4 | 5 | Product and creator orientation, freshness status, milestones 1-6, hover emphasis on one milestone beside two plain neighbours | 0 |
 | Messages & Errors | 5 | 5 | Signed-out recovery route, protected-write confirmation, permission boundary, Connection Lost retry, desktop feedback with changed control | 0 |
 
-The 13 generated chapters contain 81 mapped operating scenarios. Reminder remains the deliberately authored reference chapter and uses 21 focused captures inside its custom walkthrough.
+**How the capture column is counted.** A chapter's figure is the number of **distinct image sources
+the chapter renders**, taken from the registry (or, for the authored Reminder chapter, from
+`index.html`). Cross-chapter references count for the chapter that renders them, which is why the
+Entertainment, Recipes, and Debt Sonata "reaches Home" images appear in two rows and why several
+figures exceed their own folder's file count. Counting by folder instead gives different numbers;
+an earlier revision of this ledger mixed the two methods and overstated Patch Notes (13 against a
+measured 11) and About (6 against 5) while understating Vault (5 against 7). The numbers above were
+measured against the registry on 2026-08-21.
+
+The 13 generated chapters contain 81 mapped operating scenarios. Reminder remains the deliberately authored reference chapter and uses 22 focused captures inside its custom walkthrough.
 
 ## Known gaps
 
-34 real application states are documented in prose or implied by a scenario but have no rendered
-capture. All are specified — filename, source line, setup, framing — in `CAPTURE-BACKLOG.md`.
+**Two rows remain open, and neither is blocked on capture technique.** Both are specified —
+filename, source line, setup, framing — in `CAPTURE-BACKLOG.md`.
 
-Four of the original 38 are now closed: the Patch activity heatmap was captured from the running
-application, and the Entertainment, Recipes, and Debt Sonata "reaches Home" claims were satisfied by
-referencing the Home panel evidence already stored under `assets/images/home/`.
+| Chapter | Row | Why it is still open |
+|---|---|---|
+| Vault | `vault-overview-empty-live.png` | The state cannot be produced. `overviewStats` files an uncategorised account into an `Uncategorized` bucket, so the strip's `length === 0` branch is unreachable and its message can never display. This needs an application decision — remove the branch, or omit the bucket — not a screenshot. |
+| Login | `recovery-complete-live.jpg` | The final recovery screen is gated on an emailed verification code, so it is reachable only by the account owner. |
+
+**One row was retired on 2026-08-21 rather than captured.** Today's `today-source-failure-live.png`
+asked for "the message surface Today shows when source data cannot refresh". No such surface exists:
+`refreshReminderSub` (`today.component.ts:927`) subscribes without an error callback, and the only
+availability branch in `today.component.html` is `@if (isMobile)` at line 1, already captured as
+`today-unsupported-width-live.png`. A failed reminder stream leaves the board rendered and simply
+short one item — visually identical to a board that never had it. The chapter's own copy already
+states this correctly, so the row described a screen the application cannot draw.
+
+**Thirteen rows were closed on 2026-08-21** — all seven Home panel gaps, Today's read-only reminder,
+Portal's resolved-empty sections, Resonance's empty wall, Debt Sonata's empty ledger, Entertainment's
+inline card edit, and Reminder's write-failure dialog.
+
+**Four earlier rows were closed before that**: the Patch activity heatmap was captured from the
+running application, and the Entertainment, Recipes, and Debt Sonata "reaches Home" claims were
+satisfied by referencing the Home panel evidence already stored under `assets/images/home/`.
 
 This ledger previously described intended scope as though it were delivered scope. Patch Notes
 claimed loading/empty states, heatmap meaning, and authorized maintenance; Resonance claimed an

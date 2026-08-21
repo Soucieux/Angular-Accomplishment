@@ -7,15 +7,21 @@ Every entry is a state that exists in the running application and has no rendere
 guide. `tools/audit-guide.mjs` cannot detect these: it verifies that every *authored scenario* has
 a capture, so a feature with no scenario written passes silently.
 
-**18 gaps across 8 chapters.** Patch Notes, About, Account, and Messages & Errors are clean.
+**2 gaps remain, in 2 chapters, and neither is waiting on capture technique.** Vault's
+`vault-overview-empty-live.png` documents a branch the application can never reach and needs a code
+decision; Login's `recovery-complete-live.jpg` needs an emailed verification code only the account
+owner receives. Every other chapter is clean.
 
-Fifteen of the original 38 are closed: the entire Patch Notes chapter is now captured from the
-running application — `heatmap-live.jpg` earlier, then its remaining six states on 2026-08-16 — the
-three "reaches Home" claims were satisfied by referencing existing Home evidence, and About plus the
-Login credential-failure dialog were captured on 2026-08-20 (see [Closed](#closed)).
+Twenty-eight of the original 38 are closed and one was retired as invalid. The 2026-08-21 run closed
+thirteen at once: all seven Home panel rows, Today's read-only reminder, Portal's resolved-empty
+sections, Resonance's empty wall, Debt Sonata's empty ledger, Entertainment's card edit, and
+Reminder's write-failure dialog. See [Closed](#closed).
 
-**Every remaining gap needs a signed-in session**, and most need an account that *owns* the records.
-Signed-in capture is now proven to work — see the foreground note in Capture method.
+**Check the folder and the registry before treating any row here as open.** Four rows in this file
+were found already captured, wired, and committed — `vault-empty-live.png`, `moderation-confirm-live.jpg`,
+`entertainment/delete-confirm-live.jpg`, and `recipe/delete-confirm-live.jpg`. Two of them were
+overwritten by a re-capture before the staleness was noticed and had to be restored from `HEAD`.
+This file is a to-do list, not a record of state.
 
 Capture discipline is unchanged: crop in the image file, no CSS crop metadata, real application
 only. Add the scenario and capture entries to `assets/scripts/guide-pages.js` **after** the image
@@ -119,19 +125,26 @@ capture will differ from the real hover state.
 
 ## Priority
 
-1. **Vault (5)** — now the thinnest chapter relative to its claims.
-2. **Home (7) and Resonance (4)** — Home is the landing chapter; Resonance's moderation path is
-   documented in prose but never shown.
-3. **Entertainment (3), Today (2), Portal (1), Recipes (1), Debt (1), Login (1)** — one to three
-   states each.
-4. **Reminder (1)** — the authored chapter; adding to it means editing the custom walkthrough
-   rather than the scenario registry.
+Neither open row is capture work.
 
-**Four rows need a data state the capture operator must arrange, not just a session.** Resonance's
-`wall-empty-live.jpg` needs the quote wall genuinely empty and the quotes are global, so it cannot
-be reached without clearing real content; Home's four overflow rows need an account holding 20+
-items in that panel; Debt's `debt-page-empty.png` and Vault's two empty states need an account with
-none. Decide per row whether to use a throwaway account or to add and then remove records.
+1. **Vault (1)** — blocked on an application decision. Either delete the unreachable branch or make
+   `overviewStats` skip the `Uncategorized` bucket so the message can appear as its text intends.
+   Until one of those happens there is nothing to photograph.
+2. **Login (1)** — blocked on the account owner, who must receive the emailed recovery code and
+   drive the flow to its final screen.
+
+**Forcing an unreachable state in code is an accepted route, with two conditions.** The 2026-08-21
+run produced nine captures by temporarily emptying a data source or lowering an overflow threshold,
+then reverting with `git restore src/`. Start from a clean tree so the revert is total, and never
+force a *partial* state: zeroing `genreBars` alone produced a panel reading "badge 79 / No genre
+data yet", which is a screen the application cannot draw. Zero the counts the panel derives from as
+well, or the capture is fiction.
+
+**Test data must be removed in the same session.** Every record created for a capture — reminders,
+debts, links, a recipe, a film — was deleted afterwards and each list re-read to confirm. Deleting
+reminders also decrements `totalReminders`, which can be driven negative; correct it with
+`updateUserStatCount('totalReminders', +1)` rather than `seedUserStats()`, which would zero the
+completion counters and restamp the account creation date.
 
 ---
 
@@ -171,9 +184,10 @@ maintenance flow end to end.
 
 ## Vault — 1 🔒
 
-Existing: `locked-live.jpg`, `vault-add-dialog-live.png`, `vault-empty-live.png`,
-`vault-graph-populated-live.png`, `vault-list-populated-live.png`. Convention:
-`vault-<thing>-live.png`. All four remaining need the vault unlocked.
+Existing: 7 images — `locked-live.jpg`, `vault-add-dialog-live.png`, `vault-empty-live.png`,
+`vault-graph-populated-live.png`, `vault-list-populated-live.png`, `vault-edit-node-live.png`,
+`vault-edit-category-live.png`. Convention: `vault-<thing>-live.png`. The one remaining row needs
+the vault unlocked, but that is not what blocks it.
 
 (`vault-empty-live.png` was listed here as outstanding until 2026-08-20; it had in fact already been
 captured, wired, and committed — 720×380, one reference in `guide-pages.js`. Check the folder and
@@ -208,47 +222,37 @@ narrow-viewport capture in the guide. The file was deleted and the row closed. D
 **Two rows closed on 2026-08-20** — `vault-edit-node-live.png` and `vault-edit-category-live.png`;
 see [Closed](#closed) for the route used.
 
-## Home — 7 🔒
+## Home — 0 (chapter complete, 2026-08-21)
 
-Existing: 28 images. Convention: `home-<thing>.png` — **no `-live` suffix in this folder.**
+Existing: 35 images. Convention: `home-<thing>.png` — **no `-live` suffix in this folder.**
 
-Three panels have a populated capture but no empty one, and none of the four overflow rows is
-shown. Read the overflow note below before attempting those four.
+All seven rows closed on 2026-08-21. Three empty panels (Entertainment, Recipes, Activity) and all
+four overflow rows are now captured and wired into the `panels` group.
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| `home-entertainment-empty.png` | Entertainment panel empty (`orbital.component.html:263-264`) | Account with no films | The Entertainment panel: header, `0` badge, `ORBITAL_PANEL_EMPTY_GENRES` message |
-| `home-recipes-empty.png` | Recipes panel empty (`:294-295`) | Account with no recipes | The Recipes panel with its empty message and `0` badge |
-| `home-activity-empty.png` | Activity panel empty (`:326-327`) | Account with no logged activity | The Activity panel with its empty message |
-| `home-reminders-overflow.png` | Reminders overflow row (`:156-164`) | ≥20 dated reminders | The bottom of the panel: last rows plus the `open_in_new` overflow row |
-| `home-debt-overflow.png` | Debt overflow row (`:238-246`) | ≥20 unpaid debts | The bottom of the panel: last bars plus the overflow row |
-| `home-recipes-overflow.png` | Recipes overflow row (`:306-314`) | ≥20 recipes | The bottom of the panel: last rows plus the overflow row |
-| `home-shortcuts-overflow.png` | Shortcuts overflow row (`:189-197`) | ≥20 personal (non-shared) links | The bottom of the panel: last links plus the overflow row |
+**How the empties were produced.** Entertainment and Recipes read live counts, so emptying only the
+list left an incoherent panel — a `79` badge above "No genre data yet". `totalFilms` and
+`totalRecipes` were zeroed alongside the list data so each capture shows a state the application
+could actually reach.
 
-**Overflow-row note.** Reminders, Debt, and Recipes read from stats arrays the writer caps at 20
-(`constants.ts:438`, `orbital.component.ts:798`/`:858`), so their `length === 20` test behaves as
-"20 or more" and the row appears once the account crosses 20 items. Shortcuts reaches the same
-behaviour a different way — its list is uncapped but the test is `>= 20` — so all four overflow rows
-now appear at 20 or more items. The note at the end records why that difference is correct and stays.
+**How the overflow rows were produced.** The four thresholds were lowered from `20` to `>= 1` in
+`orbital.component.html` (`:156`, `:189`, `:238`, `:306`) so the route-out row rendered against a
+handful of real records instead of requiring an account with 20+ items in each panel. The row's
+appearance is threshold-driven and its rendering is identical either way, so the capture is honest;
+building four 20-item data sets would have changed nothing visible. All edits were reverted.
 
-## Resonance — 1
+**One thing the captures document that the backlog did not predict.** The route-out row is not
+merely capped-list overflow — it is absent entirely from the empty panels. `home-recipes-empty.png`
+and `home-entertainment-empty.png` show the count and message with no route out, so the control
+appears only once the panel has content.
 
-Existing: `character-limit-focused-live.jpg`, `composer-ready-live.jpg`, `visitor-composer-live.jpg`,
-`visitor-ready-live.jpg`, `wall-live.jpg`, `wall-loading-live.jpg`. Convention: `<thing>-live.jpg`.
+## Resonance — 0 (chapter complete, 2026-08-21)
 
-The guide's `[read]` scenario 0 promises "loading, empty, and populated" but only loading and
-populated exist, and the `[moderate]` section illustrates the administrator control with an image
-labelled "Standard-reader card controls" — the absence of the control, not the control itself.
+Existing: 11 images. Convention: `<thing>-live.jpg`.
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| `wall-empty-live.jpg` | Empty quote wall (`resonance.component.html:50-54`) | `/resonance` with no quotes stored | The empty state: `format_quote` icon and `RESONANCE_EMPTY_TEXT` |
-
-**The one remaining row is effectively unreachable — recommend dropping it.** Quotes are global, not
-per-account, so an empty wall cannot be produced without deleting the real ones. A new account sees
-every existing quote. Forcing `quotes$` to `of([])` locally would render the genuine empty branch,
-but that decision belongs to the repository owner; until then this row stays open and honest rather
-than being satisfied with content nobody could otherwise see.
+`wall-empty-live.jpg` was captured on 2026-08-21 by forcing `quotes$` to `of([])` in
+`resonance.component.ts` (`:131`, `:141`) and reverting afterwards. Quotes are global rather than
+per-account, so an empty wall cannot otherwise be reached without deleting real content that belongs
+to other people; the forced branch is the genuine empty template, not a mock.
 
 **Two rows closed on 2026-08-20**, and a third was never open:
 - `moderation-control-live.jpg` — captured. The control is CSS-hover-revealed; see the synthetic-event
@@ -257,43 +261,53 @@ than being satisfied with content nobody could otherwise see.
   then `clearTimeout` the component's `postSuccessTimer` so the real rendered chip persists for the
   shot. The quote created for it was deleted afterwards through the admin control.
 - `moderation-confirm-live.jpg` — **was already captured, wired, and committed** in `209802d6`; it was
-  listed here in error, the same staleness as `vault-empty-live.png`. Check the folder and the
-  registry before treating a row as open.
+  listed here in error, the same staleness as `vault-empty-live.png`.
 
-## Entertainment — 2
+## Entertainment — 0 (chapter complete, 2026-08-21)
 
-Existing: 8 images. Convention: `<thing>-live.jpg`. The ledger claimed editing, validation, and
-deletion; none had a capture. The validation row was retargeted and captured on 2026-08-16, so two
-remain — the struck-through row below is kept for its correction note, not as outstanding work.
-(This heading read `3` until 2026-08-20, counting that captured row; the chapter's own prose already
-said "the remaining two".)
+Existing: 11 images. Convention: `<thing>-live.jpg`.
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| 🔒 `edit-dialog-live.jpg` | Edit dialog (`entertainment.component.html:157-171`) | Hover a poster card, click the edit control | The populated edit dialog over the dimmed library |
-| ~~`add-validation-live.jpg`~~ | **Retargeted and captured** as `add-required-fields-live.jpg` | — | — |
-| 🔒 `delete-confirm-live.jpg` | Delete confirmation (`:196`, `openDeleteConfirmationDialog`) | Hover a poster card, click the red delete control | The confirmation dialog over the dimmed library |
+| Row | Outcome |
+|---|---|
+| ~~`edit-dialog-live.jpg`~~ | **Retargeted and captured** as `edit-inline-live.jpg` — see below |
+| ~~`add-validation-live.jpg`~~ | **Retargeted and captured** as `add-required-fields-live.jpg` |
+| ~~`delete-confirm-live.jpg`~~ | **Was already captured, wired, and committed** in `209802d6`; the row was stale |
 
-**Two corrections from the 2026-08-16 capture run.**
+**There is no edit dialog.** The row asked for "the populated edit dialog over the dimmed library",
+but `startEdit` toggles *inline* edit mode on the card itself: Genre becomes a dropdown, the card
+actions become confirm and cancel, and the card never leaves the grid. Nothing opens over the
+library. The capture was saved under the name the state actually has.
 
-*The add dialog has no inline validation state.* `add-movie.component.html` disables Search on
-`addMovieForm.invalid` (`:100`) and Submit on `!canSubmit` (`:110`), so an invalid submission is
-prevented rather than reported and no validation message is ever rendered. The row was retargeted to
-`add-required-fields-live.jpg`, which shows that gate, and is **captured and wired**.
+**The add dialog has no inline validation state either.** `add-movie.component.html` disables Search
+on `addMovieForm.invalid` (`:100`) and Submit on `!canSubmit` (`:110`), so an invalid submission is
+prevented rather than reported and no validation message is ever rendered.
 
-*The remaining two need an account that owns the films.* Opening the delete control as a non-owner
-returns "User does not have permission" instead of the confirmation dialog, exactly as on Patch
-Notes. Note also that film cards only exist after a **genre card is opened** — the page lists genres
-first, so `.individual-item` is absent on arrival.
+**Two notes for anyone capturing here again.** Film cards only exist after a **genre card is
+opened** — the page lists genres first, so `.individual-item` is absent on arrival. And a film whose
+genre write fails is created anyway: it lands in no genre bucket, so it is invisible on the page and
+cannot be deleted through the UI. Set the genre by clicking the `p-select` option, never by writing
+a bare string to the FormControl — the control binds `{genre, label}`, not the value.
 
-## Today — 2 🔒
+## Today — 0 (chapter complete, 2026-08-21)
 
-Existing: 21 images. Convention: `today-<thing>-live.png`.
+Existing: 22 images. Convention: `today-<thing>-live.png`.
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| `today-reminder-readonly-live.png` | Reminder-sourced item is read-only (`today.component.html:41`, `:251`, `:281`) | A dated reminder that surfaces in Today; hover both its Anytime row and its timed block | Both variants with the `is-reminder` styling and **no** edit/delete controls — those are gated on `TASK_SOURCE_LOCAL` (`:290`, `:353`) |
-| `today-source-failure-live.png` | Source-refresh failure message (`[limits]` scenario 0) | Break the reminder source (offline, then refresh Today) | The message surface Today shows when source data cannot refresh |
+`today-reminder-readonly-live.png` was captured on 2026-08-21 and shows **both** variants in one
+frame: the padlocked Anytime chip and the timed block carrying the `REMINDER · read-only` tag, with
+no edit or delete controls in either.
+
+**`today-source-failure-live.png` was retired, not captured — the state does not exist.** The row
+asked for "the message surface Today shows when source data cannot refresh". There is no such
+surface: `refreshReminderSub` (`today.component.ts:927`) subscribes with no error callback, and the
+only availability branch in `today.component.html` is `@if (isMobile)` at line 1, already captured
+as `today-unsupported-width-live.png`. A failed reminder stream leaves the board rendered and one
+item short — indistinguishable from a board that never had the item. The `[limits]` section's own
+copy already states this correctly ("can leave the Today board visible without the expected source
+item"), so the row was the thing that was wrong. Do not re-open it.
+
+**Capture note.** A reminder will not surface in Today until `refreshReminderSub()` has run *after*
+auth resolves — it bails early when `getUserId()` is empty. Re-invoke it rather than reloading.
+Storage is also date-shifted: passing `2026-08-21` stored `2026-08-20`, so compensate by one day.
 
 ## Login — 1
 
@@ -317,30 +331,32 @@ dark stage rather than over the form. GSAP's Draggable owns the cord, so synthet
 `ng.getOwningComponent('.v-lamp')` instead, which produces the identical real state. The lamp hue is
 randomised on every pull, so each Login capture legitimately carries a different accent colour.
 
-## Portal — 1
+## Portal — 0 (chapter complete, 2026-08-21)
 
-Existing: 6 images. Convention: `<thing>-live.jpg`. Note `empty-library-live.jpg` is mislabelled by
+Existing: 7 images. Convention: `<thing>-live.jpg`. Note `empty-library-live.jpg` is mislabelled by
 expectation — its registry label is "Library loading boundary", so it shows loading, not empty.
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| `sections-empty-live.jpg` | Both section empties (`portal.component.html:283-287` shared, `:309-317` personal) | A filter or account state where neither section has links | Both sections at once: shared empty message, divider, personal empty message **and** its Add link button |
+`sections-empty-live.jpg` was captured on 2026-08-21 by emptying both link collections in
+`portal.component.ts` (`:1089-1090`) and reverting afterwards. The capture confirms the framing the
+row asked for and one detail it did not: the inline **Add Link** button lives inside the *personal*
+empty state only (`portal.component.html:310-317`). The shared empty state carries no create
+control, so a shared entry is created from the toolbar instead.
 
-## Recipes — 1
+## Recipes — 0 (chapter complete)
 
-Existing: 7 images. Convention: `<thing>-live.jpg`.
+Existing: 9 images. Convention: `<thing>-live.jpg`.
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| 🔒 `delete-confirm-live.jpg` | Delete confirmation (`recipe.component.ts:745`, confirm-then-block) | Open a recipe you own, trigger delete | The confirmation dialog; if the blocking overlay is visible behind it, keep it in frame — it is part of the guard |
+`delete-confirm-live.jpg` was listed here as outstanding until 2026-08-21; it had in fact already
+been captured, wired, and committed in `209802d6`. A re-capture overwrote the committed file before
+the staleness was noticed and it was restored with `git show HEAD:<path>`.
 
-## Debt Sonata — 1
+## Debt Sonata — 0 (chapter complete, 2026-08-21)
 
-Existing: 13 images. Convention: `debt-<thing>.png` — **no `-live` suffix in this folder.**
+Existing: 15 images. Convention: `debt-<thing>.png` — **no `-live` suffix in this folder.**
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| 🔒 `debt-page-empty.png` | Empty Debt page | Account with no debt records | The page's empty state — `debt-create-empty.png` shows the empty *form*, not the empty page |
+`debt-page-empty.png` was captured on 2026-08-21. No forcing was needed — the capture account had no
+debt records — so the image is the genuine page state: six zero counts and a single invitation card
+replacing the grid. `debt-create-empty.png` shows the empty *form* and is a different state.
 
 ## About — 0 (chapter complete, 2026-08-20)
 
@@ -349,14 +365,23 @@ current card and node and never hides or reveals information", and carried an `E
 no image behind either claim. `about-milestone-hover-live.jpg` now supplies it — see
 [Closed](#closed).
 
-## Reminder — 1
+## Reminder — 0 (chapter complete, 2026-08-21)
 
-The authored chapter. Adding here means editing the custom walkthrough, not the scenario registry,
-so treat it as a separate task from the other twelve.
+The authored chapter. Adding here means editing the custom walkthrough in `index.html`, not the
+scenario registry.
 
-| File to create | State | Setup | Frame |
-|---|---|---|---|
-| 🔒 `recovery-live.jpg` | Failure/recovery during a reminder write | Trigger a write while offline | The recovery surface in Reminder's own context |
+`recovery-live.jpg` was captured on 2026-08-21 and added as a third figure in the `08C Recover from
+errors safely` reference strip. It shows the shared unexpected-error dialog raised over a real
+Reminder card — which is itself the finding: Reminder owns no bespoke recovery surface, and a failed
+write routes through `dialogService.handleError` to `showUnexpectedError` like everywhere else.
+
+**Capture note — the dev server may not rebuild.** A temporary `throw` was added to
+`updateTableSingleValue` and the edit never reached the served bundle: `curl localhost:4200/main.js`
+showed the old code and a `touch` did not trigger a rebuild. Rather than restart the user's server,
+the dialog was raised through the component's own handler with Angular DevTools:
+`ng.getOwningComponent(el).dialogService.handleError(c.dialogComponentContainer, new Error(...))`
+followed by `ng.applyChanges(c)`. Same code path from `handleError` onward, no source edit at all.
+Verify the bundle actually contains a forced state before concluding the state is unreachable.
 
 ---
 
@@ -376,6 +401,15 @@ so treat it as a separate task from the other twelve.
 | Entertainment | A film reaches Home | References `home/home-entertainment-populated.png` from the `manage` section |
 | Recipes | A recipe reaches Home | References `home/home-recipes-populated.png` from the `browse` section |
 | Debt Sonata | A debt reaches Home | References `home/home-debt-populated.png` from the `summary` section |
+| Home | Three empty panels | `home-entertainment-empty.png`, `home-recipes-empty.png`, `home-activity-empty.png` captured 2026-08-21. The list data *and* the counts the panel derives from were zeroed together, so each shows a coherent state |
+| Home | Four overflow rows | `home-reminders-overflow.png`, `home-shortcuts-overflow.png`, `home-debt-overflow.png`, `home-recipes-overflow.png` captured 2026-08-21 by lowering the four thresholds from `20` to `>= 1` in `orbital.component.html`, then reverting |
+| Today | Read-only reminder item | `today/today-reminder-readonly-live.png` captured 2026-08-21 with both variants in one frame — the padlocked Anytime chip and the timed block tagged `REMINDER · read-only` |
+| Today | Source-refresh failure | **Retired, not captured.** No such surface exists; see the Today section |
+| Portal | Both sections empty | `portal/sections-empty-live.jpg` captured 2026-08-21 by emptying both link collections in `portal.component.ts`, then reverting |
+| Resonance | Empty quote wall | `resonance/wall-empty-live.jpg` captured 2026-08-21 by forcing `quotes$` to `of([])`, then reverting — quotes are global, so the state is otherwise unreachable without deleting other people's content |
+| Debt Sonata | Empty ledger page | `debt/debt-page-empty.png` captured 2026-08-21 from a genuinely empty account; no forcing required |
+| Entertainment | Edit dialog | **Retargeted and captured** as `entertainment/edit-inline-live.jpg` — the state is inline card editing, not a dialog |
+| Reminder | Write failure recovery | `reminder/recovery-live.jpg` captured 2026-08-21 by raising the component's own `handleError` through Angular DevTools, after a source-level `throw` failed to reach the served bundle |
 
 Reusing an image across chapters is established practice — Messages & Errors sources all five of its
 captures from other chapters' folders. The three Home references needed no new photography.

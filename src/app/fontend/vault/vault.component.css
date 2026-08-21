@@ -1115,12 +1115,6 @@
 	overflow-x: auto;
 }
 
-.vault-overview-empty {
-	padding: 8px 2px;
-	font-size: 13px;
-	color: #64748b;
-}
-
 .vault-overview-chip {
 	display: flex;
 	align-items: center;

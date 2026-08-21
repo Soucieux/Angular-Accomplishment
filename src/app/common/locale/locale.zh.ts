@@ -840,7 +840,6 @@ export const VAULT_BTN_ADD_CONNECTIONS = '添加新关联';
 export const VAULT_BTN_EDIT_NAME = '编辑名称';
 export const VAULT_NODE_NAME_DIALOG_TITLE = '编辑名称';
 export const VAULT_EDIT_NON_ACCOUNT_TITLE = '编辑非账户';
-export const VAULT_OVERVIEW_EMPTY = '暂无已分类账户';
 export const VAULT_GRAPH_MOBILE_BLOCKED_BODY = '关系图谱需要更宽的屏幕，可切换到列表视图，或使用桌面端、笔记本或平板访问。';
 
 export const VAULT_LEGEND_TITLE = '图例';

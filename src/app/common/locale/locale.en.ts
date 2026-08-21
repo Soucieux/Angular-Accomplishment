@@ -994,8 +994,6 @@ export const VAULT_BTN_EDIT_NAME = 'Edit name';
 export const VAULT_NODE_NAME_DIALOG_TITLE = 'Edit Name';
 /** Title of the dedicated dialog for editing a non-account node's name and backup links. */
 export const VAULT_EDIT_NON_ACCOUNT_TITLE = 'Edit non-account';
-/** Placeholder text shown in the category overview bar when no account has a category yet. */
-export const VAULT_OVERVIEW_EMPTY = 'No categorized accounts yet';
 /** Body text shown when Graph view is blocked on mobile, offering List view as an alternative. */
 export const VAULT_GRAPH_MOBILE_BLOCKED_BODY =
 	'The graph needs a wider screen. Switch to List view, or use a desktop, laptop, or tablet.';

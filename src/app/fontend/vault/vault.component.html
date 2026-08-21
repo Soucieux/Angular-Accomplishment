@@ -171,9 +171,6 @@
 						</div>
 					} @else {
 						<div class="vault-overview">
-							@if (overviewStats.length === 0) {
-								<span class="vault-overview-empty">{{ VAULT_OVERVIEW_EMPTY }}</span>
-							}
 							@for (stat of overviewStats; track stat.key) {
 								<button
 									type="button"

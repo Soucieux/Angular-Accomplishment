@@ -53,6 +53,8 @@ import {
 	VAULT_LABEL_COLOR_SELECTED,
 	VAULT_LEVEL_COLORS,
 	VAULT_LINK_META,
+	VAULT_NODE_DIM_COLOR_MATRIX,
+	VAULT_NODE_DIM_FILTER_ID,
 	VAULT_NODE_ENTRANCE_MAX_DELAY_MS,
 	VAULT_NODE_ENTRANCE_STEP_MS,
 	VAULT_NODE_STROKE,
@@ -512,6 +514,22 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				height: '220%'
 			});
 			filter.appendChild(shadow);
+
+			/* Blends each source color toward white while retaining alpha, so a dimmed opaque node
+			   continues to mask the edge painted beneath it. */
+			const nodeDimmingFilter = this.createSvgElement('filter', {
+				id: VAULT_NODE_DIM_FILTER_ID,
+				x: '-100%',
+				y: '-100%',
+				width: '300%',
+				height: '300%',
+				'color-interpolation-filters': 'sRGB'
+			});
+			const nodeDimmingColorMatrix = this.createSvgElement('feColorMatrix', {
+				type: 'matrix',
+				values: VAULT_NODE_DIM_COLOR_MATRIX
+			});
+			nodeDimmingFilter.appendChild(nodeDimmingColorMatrix);
 			const clipRect = this.createSvgElement('rect', {
 				x: String(-clipRadius),
 				y: String(-clipRadius),
@@ -541,6 +559,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 			});
 			backupArrowMarker.appendChild(backupArrowShape);
 			defs.appendChild(filter);
+			defs.appendChild(nodeDimmingFilter);
 			defs.appendChild(clipPath);
 			defs.appendChild(backupArrowMarker);
 			svg.insertBefore(defs, svg.firstChild);
@@ -959,7 +978,7 @@ export class GraphCanvasComponent implements AfterViewInit, OnChanges, OnDestroy
 				if (selectedId) dim = !reach;
 				if (query && !node.name.toLowerCase().includes(query) && !(selectedId && reach)) dim = true;
 			}
-			group.style.opacity = dim ? '0.16' : '1';
+			group.setAttribute('filter', dim ? `url(#${VAULT_NODE_DIM_FILTER_ID})` : 'none');
 
 			const isAccount = node.nodeType === VAULT_NODE_ACCOUNT;
 			const baseWidth = isAccount ? this.borderResting : 2;

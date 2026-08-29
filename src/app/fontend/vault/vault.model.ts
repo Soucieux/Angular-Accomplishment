@@ -328,6 +328,11 @@ export const VAULT_CATEGORY_ICONS = [
 export const VAULT_LEVEL_COLORS = ['#b02257', '#d53369', '#e8961a', '#0d9488'];
 /** Stroke color for the white ring around every graph node. */
 export const VAULT_NODE_STROKE = '#ffffff';
+/** SVG filter id used to dim graph nodes without making their shapes transparent. */
+export const VAULT_NODE_DIM_FILTER_ID = 'vault-node-dim';
+/** SVG color matrix that blends dimmed node colors toward white while retaining alpha. */
+export const VAULT_NODE_DIM_COLOR_MATRIX =
+	'0.16 0 0 0.84 0 0 0.16 0 0.84 0 0 0 0.16 0.84 0 0 0 0 1 0';
 /** Icon color for the glyph inside a non-account identifier node — dark for contrast on the fill. */
 export const VAULT_GLYPH_COLOR_IDENTIFIER = '#1e293b';
 /** Edge color when the edge is not part of the selected node's highlighted web. */

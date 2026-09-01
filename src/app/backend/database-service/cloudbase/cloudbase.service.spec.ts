@@ -321,6 +321,32 @@ describe('CloudbaseService', () => {
 			expect(close).toHaveBeenCalledTimes(1);
 		});
 
+		it('closes an abandoned generic watcher and excludes it from the next recovery', () => {
+			const service = makeRecoveryService();
+			const close = jasmine.createSpy('close');
+			const watch = jasmine.createSpy('watch').and.returnValue({ close });
+			service.database = {
+				collection: jasmine.createSpy('collection').and.returnValue({ watch })
+			};
+			CloudbaseService.setUseId('user-123');
+			const history$ = service.getHistory();
+			const firstConsumer = history$.subscribe();
+			const secondConsumer = history$.subscribe();
+
+			expect(watch).toHaveBeenCalledTimes(1);
+			firstConsumer.unsubscribe();
+			expect(close).not.toHaveBeenCalled();
+
+			secondConsumer.unsubscribe();
+			let freshSnapshotCount = 0;
+			service.getFreshSnapshot$().subscribe(() => freshSnapshotCount++);
+			service.restartRealtimeStreams();
+
+			expect(close).toHaveBeenCalledTimes(1);
+			expect(watch).toHaveBeenCalledTimes(1);
+			expect(freshSnapshotCount).toBe(1);
+		});
+
 		it('ignores a late snapshot from the watcher generation that was replaced', () => {
 			const service = makeRecoveryService();
 			const watchOptions: any[] = [];
@@ -384,6 +410,26 @@ describe('CloudbaseService', () => {
 
 			expect(watch).toHaveBeenCalledTimes(2);
 			expect(close).toHaveBeenCalledTimes(1);
+		});
+
+		it('closes an abandoned movie watcher and excludes it from the next recovery', () => {
+			const service = makeRecoveryService();
+			const close = jasmine.createSpy('close');
+			const watch = jasmine.createSpy('watch').and.returnValue({ close });
+			service.database = {
+				collection: jasmine.createSpy('collection').and.returnValue({ watch })
+			};
+			CloudbaseService.setUseId('user-123');
+			const subscription = service.getMovieList().subscribe();
+
+			subscription.unsubscribe();
+			let freshSnapshotCount = 0;
+			service.getFreshSnapshot$().subscribe(() => freshSnapshotCount++);
+			service.restartRealtimeStreams();
+
+			expect(close).toHaveBeenCalledTimes(1);
+			expect(watch).toHaveBeenCalledTimes(1);
+			expect(freshSnapshotCount).toBe(1);
 		});
 
 		it('does not treat a closed movie generation as a fresh snapshot', fakeAsync(() => {
@@ -671,5 +717,34 @@ describe('CloudbaseService', () => {
 			expect(service.getSharedReminders).toHaveBeenCalledTimes(2);
 			expect(reminderValues.at(-1)).toEqual([{ key: 'shared-retry' }]);
 		}));
+	});
+
+	describe('proxyFetch', () => {
+		it('calls the fetchUrl Cloud Function without a dead local endpoint attempt', async () => {
+			const service = makeRecoveryService();
+			const browserFetch = spyOn(globalThis, 'fetch').and.rejectWith(
+				new Error('local endpoint should not be called')
+			);
+			const callFunction = jasmine.createSpy('callFunction').and.resolveTo({
+				result: {
+					success: true,
+					content: '<title>Example</title>',
+					contentType: 'text/html'
+				}
+			});
+			service.cloudbase = { callFunction };
+
+			const result = await service.proxyFetch('https://example.com');
+
+			expect(browserFetch).not.toHaveBeenCalled();
+			expect(callFunction).toHaveBeenCalledOnceWith({
+				name: 'fetchUrl',
+				data: jasmine.objectContaining({ url: 'https://example.com' })
+			});
+			expect(result).toEqual({
+				content: '<title>Example</title>',
+				contentType: 'text/html'
+			});
+		});
 	});
 });

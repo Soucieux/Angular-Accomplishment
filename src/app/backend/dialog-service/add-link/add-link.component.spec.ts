@@ -1,8 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+	ComponentFixture,
+	TestBed,
+	fakeAsync,
+	flushMicrotasks,
+	tick
+} from '@angular/core/testing';
 import { of } from 'rxjs';
 
 import { AddLinkDialogComponent } from './add-link.component';
 import { DatabaseService } from '../../database-service/database.service';
+import { PORTAL_TITLE_FETCH_TIMEOUT_MS } from '../../../common/constants';
 
 describe('AddLinkDialogComponent', () => {
 	let component: AddLinkDialogComponent;
@@ -95,6 +102,73 @@ describe('AddLinkDialogComponent', () => {
 			component.openDialog(() => {}, null);
 			expect((component as any).url).toBe('');
 			expect((component as any).title).toBe('');
+		});
+	});
+
+	// ── onUrlConfirm ────────────────────────────────────────────────────────────
+
+	describe('onUrlConfirm', () => {
+		it('extracts the remote page title and clears the loading state', async () => {
+			mockDb.proxyFetch.and.resolveTo({
+				content: '<html><head><title> Example Site </title></head></html>',
+				contentType: 'text/html'
+			});
+			(component as any).url = 'https://example.com';
+
+			await (component as any).onUrlConfirm();
+
+			expect(mockDb.proxyFetch).toHaveBeenCalledOnceWith('https://example.com');
+			expect((component as any).title).toBe('Example Site');
+			expect((component as any).metaLoading).toBeFalse();
+		});
+
+		it('restores manual title entry and refreshes OnPush state when the fetch fails', async () => {
+			const markForCheck = spyOn((component as any).cdr, 'markForCheck');
+			mockDb.proxyFetch.and.rejectWith(new Error('metadata unavailable'));
+			(component as any).url = 'https://example.com';
+
+			await (component as any).onUrlConfirm();
+
+			expect((component as any).metaLoading).toBeFalse();
+			expect(markForCheck).toHaveBeenCalled();
+		});
+
+		it('stops waiting at the deadline and does not retry the same URL automatically', fakeAsync(() => {
+			mockDb.proxyFetch.and.returnValue(
+				new Promise<{ content: string; contentType: string }>(() => {})
+			);
+			(component as any).url = 'https://example.com';
+			let settled = false;
+
+			(component as any).onUrlConfirm().then(() => (settled = true));
+			expect((component as any).metaLoading).toBeTrue();
+
+			tick(PORTAL_TITLE_FETCH_TIMEOUT_MS);
+			flushMicrotasks();
+
+			expect(settled).toBeTrue();
+			expect((component as any).metaLoading).toBeFalse();
+			(component as any).onUrlConfirm();
+			flushMicrotasks();
+			expect(mockDb.proxyFetch).toHaveBeenCalledTimes(1);
+		}));
+
+		it('does not apply a late title response after the URL changes', async () => {
+			let resolveFetch!: (result: { content: string; contentType: string }) => void;
+			mockDb.proxyFetch.and.returnValue(
+				new Promise<{ content: string; contentType: string }>((resolve) => {
+					resolveFetch = resolve;
+				})
+			);
+			(component as any).url = 'https://first.example';
+
+			const confirmation = (component as any).onUrlConfirm();
+			(component as any).url = 'https://second.example';
+			resolveFetch({ content: '<title>First Site</title>', contentType: 'text/html' });
+			await confirmation;
+
+			expect((component as any).title).toBe('');
+			expect((component as any).metaLoading).toBeFalse();
 		});
 	});
 

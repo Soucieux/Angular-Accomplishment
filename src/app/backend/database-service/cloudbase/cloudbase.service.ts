@@ -162,7 +162,6 @@ import {
 	DB_LOG_RECORD_ADD_FAILED,
 	DB_LOG_VISIT_INCREMENT_FAILED,
 	DB_LOG_COVER_UPLOADED,
-	DB_LOG_FETCH_URL_ERROR,
 	DB_LOG_PROXY_FETCH_FAILED,
 	DB_LOG_COVER_URLS_RESOLVE_FAILED,
 	DB_LOG_COLLECTION_WATCH_FAILED,
@@ -469,7 +468,7 @@ export class CloudbaseService extends DatabaseService {
 	 */
 	public getUserStats(): Observable<any> {
 		// Memoized so all consumers (account page, reminder toggle, shared-reminder watcher) share one
-		// watch on the user document; watchCollection already applies shareReplay(1) to fan it out.
+		// watch on the user document; watchCollection already applies ref-counted replay to fan it out.
 		return (this.userStats$ ??= this.watchCollection(
 			DATABASE_USERS,
 			(docs) => docs[0],
@@ -671,7 +670,7 @@ export class CloudbaseService extends DatabaseService {
 				)
 			)
 			.pipe(
-				shareReplay(1),
+				shareReplay({ bufferSize: 1, refCount: true }),
 				filter((state) => state.hasValue),
 				map((state) => state.value)
 			);
@@ -1185,7 +1184,7 @@ export class CloudbaseService extends DatabaseService {
 	 * @param collectionName - The CloudBase collection to watch.
 	 * @param mapper - Transforms the raw docs array into the emitted value T.
 	 * @param queryBuilder - Optional function to add filters or ordering to the collection query.
-	 * @returns A shared, replayed Observable that emits on every collection change.
+	 * @returns A shared, replayed Observable that closes its watcher when its last consumer leaves.
 	 */
 	private watchCollection<T>(
 		collectionName: string,
@@ -1244,7 +1243,7 @@ export class CloudbaseService extends DatabaseService {
 				)
 			)
 			.pipe(
-				shareReplay(1),
+				shareReplay({ bufferSize: 1, refCount: true }),
 				filter((state) => state.hasValue),
 				map((state) => state.value)
 			);
@@ -2913,46 +2912,13 @@ export class CloudbaseService extends DatabaseService {
 	}
 
 	/**
-	 * Proxies an HTTP GET request server-side to bypass browser CORS restrictions.
-	 *
-	 * Strategy (in order):
-	 *  1. Call the Express server's `/api/fetch-url` endpoint — zero CloudBase
-	 *     overhead, same Node.js process as the Angular SSR server.
-	 *  2. Fall back to the `fetchUrl` CloudBase function if the server endpoint
-	 *     is unavailable (e.g. running against a remote CloudBase-only deploy).
+	 * Proxies an HTTP GET request through the fetchUrl CloudBase function to bypass
+	 * browser CORS restrictions.
 	 *
 	 * @param url - The fully-qualified http/https URL to fetch.
 	 * @returns The response body and Content-Type header value.
 	 */
 	public async proxyFetch(url: string): Promise<{ content: string; contentType: string }> {
-		// Step 1: Try own Express server endpoint (production SSR server only)
-
-		/* The endpoint only exists when the compiled Express server is running.
-		   In `ng serve` dev mode Angular intercepts all requests and returns HTML,
-		   so we guard on Content-Type before attempting to parse JSON — this keeps
-		   the dev experience clean with no spurious warnings. */
-		try {
-			const res = await fetch(`/api/fetch-url?url=${encodeURIComponent(url)}`);
-			if (res.ok && (res.headers.get('content-type') ?? '').includes('application/json')) {
-				const json = (await res.json()) as {
-					success: boolean;
-					content?: string;
-					contentType?: string;
-					error?: string;
-				};
-				if (json.success) {
-					return { content: json.content ?? '', contentType: json.contentType ?? '' };
-				}
-				// Endpoint exists but reported an error — log and fall through to CloudBase.
-				LOG.warn(this.className, `${DB_LOG_FETCH_URL_ERROR} ${url}: ${json.error}`);
-			}
-			/* Non-JSON response means the Express server is not running (ng serve).
-			   Fall through silently to CloudBase. */
-		} catch {
-			// Network error reaching /api/fetch-url — fall through silently.
-		}
-
-		// Step 2: CloudBase callFunction (dev mode and CloudBase-only deploys)
 		try {
 			const result: any = await this.cloudbase.callFunction({
 				name: 'fetchUrl',

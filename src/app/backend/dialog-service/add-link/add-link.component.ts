@@ -1,13 +1,23 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	EventEmitter,
+	OnDestroy,
+	OnInit,
+	Output
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom, from } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import { DatabaseService } from '../../database-service/database.service';
 import { Utilities } from '../../../common/utilities/app.utilities';
 import {
 	ADD_LINK_LABEL_URL,
-	ADD_LINK_PLACEHOLDER_URL
+	ADD_LINK_PLACEHOLDER_URL,
+	PORTAL_TITLE_FETCH_TIMEOUT_MS
 } from '../../../common/constants';
 import {
 	LABEL_ADD_LINK,
@@ -69,7 +79,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	protected isShared = false;
 	private submitCallback?: (formData: NewLinkData) => void | Promise<void>;
 	private categoriesSub?: Subscription;
-	private lastFetchedUrl = '';
+	private lastAttemptedUrl = '';
 
 	constructor(
 		private readonly databaseService: DatabaseService,
@@ -141,7 +151,7 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 		this.isPinned = false;
 		this.isShared = false;
 		this.faviconPreview = '';
-		this.lastFetchedUrl = '';
+		this.lastAttemptedUrl = '';
 	}
 
 	/**
@@ -162,9 +172,11 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 	 * Normalizes the entered URL, updates the favicon preview, and fetches the
 	 * page title when the URL field is confirmed via Enter or blur.
 	 * Auto-fetch is skipped when a title exists, a fetch is in progress, or the
-	 * same URL was already fetched in this dialog session.
+	 * same URL was already attempted in this dialog session.
+	 *
+	 * @returns A promise that resolves after the title attempt finishes or reaches its deadline.
 	 */
-	protected onUrlConfirm(): void {
+	protected async onUrlConfirm(): Promise<void> {
 		const rawUrl = this.url.trim();
 		if (!rawUrl) return;
 
@@ -175,27 +187,30 @@ export class AddLinkDialogComponent implements OnInit, OnDestroy {
 
 		/*
 		 * Step 2: Guard against redundant fetches — skip if a title already exists, a fetch is
-		 * already in flight, or this exact URL was already fetched during this dialog session.
-		 * lastFetchedUrl is reset on each openDialog() call so a reopened dialog always re-fetches.
+		 * already in flight, or this exact URL was already attempted during this dialog session.
+		 * lastAttemptedUrl is reset on each openDialog() call so a reopened dialog can try again.
 		 */
-		if (this.title || this.metaLoading || this.lastFetchedUrl === normalizedUrl) return;
+		if (this.title || this.metaLoading || this.lastAttemptedUrl === normalizedUrl) return;
 
-		// Step 3: Fetch the remote page HTML and extract the <title> tag via regex
+		// Step 3: Fetch the remote page HTML once, within a bounded wait
 		this.metaLoading = true;
-		this.databaseService
-			.proxyFetch(normalizedUrl)
-			.then((result) => {
-				const match = result.content?.match(/<title[^>]*>([^<]+)<\/title>/i);
-				if (match?.[1]) this.title = match[1].trim();
-
-				// Mark URL as fetched so repeated blur/enter events on the same URL are no-ops
-				this.lastFetchedUrl = normalizedUrl;
-				this.metaLoading = false;
-				this.cdr.markForCheck();
-			})
-			.catch(() => {
-				this.metaLoading = false;
-			});
+		this.lastAttemptedUrl = normalizedUrl;
+		try {
+			const result = await firstValueFrom(
+				from(this.databaseService.proxyFetch(normalizedUrl)).pipe(
+					timeout(PORTAL_TITLE_FETCH_TIMEOUT_MS)
+				)
+			);
+			// A late response for an edited URL must not overwrite the current title field.
+			if (this.url !== normalizedUrl) return;
+			const match = result.content?.match(/<title[^>]*>([^<]+)<\/title>/i);
+			if (match?.[1]) this.title = match[1].trim();
+		} catch {
+			// Keep the title field available for manual entry when metadata retrieval fails.
+		} finally {
+			this.metaLoading = false;
+			this.cdr.markForCheck();
+		}
 	}
 
 	/**

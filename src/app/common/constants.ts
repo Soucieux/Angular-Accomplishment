@@ -312,7 +312,6 @@ export const DB_LOG_HAS_BEEN_UPDATED = 'has been updated';
 export const DB_LOG_RECORD_ADD_FAILED = 'Error while adding new record to';
 export const DB_LOG_VISIT_INCREMENT_FAILED = 'Error while incrementing visit count for link';
 export const DB_LOG_COVER_UPLOADED = 'Movie cover image uploaded successfully for';
-export const DB_LOG_FETCH_URL_ERROR = '/api/fetch-url error for';
 export const DB_LOG_PROXY_FETCH_FAILED = 'Error while proxying fetch for';
 export const DB_LOG_TABLE_RECORD_UPDATED = 'Table record has been updated';
 export const DB_LOG_PATCH_NOTES_UPDATED = 'Patch notes record has been updated';
@@ -824,6 +823,8 @@ export const MULTI_LINK_LABEL_ARROW = '→';
 export const ADD_LINK_LABEL_URL = 'URL *';
 /** URL field placeholder in the add-link dialog — identical in all locales. */
 export const ADD_LINK_PLACEHOLDER_URL = 'https://example.com';
+/** Maximum time the add-link dialog waits for a remote page title before restoring manual entry. */
+export const PORTAL_TITLE_FETCH_TIMEOUT_MS = 10000;
 export const PORTAL_LOG_VISIT_INCREMENT_FAILED = 'Failed to increment visit count for';
 export const PORTAL_LOG_LINK_UPDATED = 'Link updated:';
 export const PORTAL_LOG_LINK_SAVED = 'Link saved:';
